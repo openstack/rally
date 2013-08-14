@@ -1,0 +1,6 @@
+oslo.config
+paramiko>=1.8.0
+pbr>=0.5.21,<1.0
+psutil
+sh
+six
