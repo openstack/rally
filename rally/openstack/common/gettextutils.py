@@ -26,7 +26,7 @@ Usual usage in an openstack.common module:
 
 import copy
 import gettext
-import logging.handlers
+import logging
 import os
 import re
 import UserString
@@ -37,11 +37,27 @@ import six
 _localedir = os.environ.get('rally'.upper() + '_LOCALEDIR')
 _t = gettext.translation('rally', localedir=_localedir, fallback=True)
 
-_AVAILABLE_LANGUAGES = []
+_AVAILABLE_LANGUAGES = {}
+USE_LAZY = False
+
+
+def enable_lazy():
+    """Convenience function for configuring _() to use lazy gettext
+
+    Call this at the start of execution to enable the gettextutils._
+    function to use lazy gettext functionality. This is useful if
+    your project is importing _ directly instead of using the
+    gettextutils.install() way of importing the _ function.
+    """
+    global USE_LAZY
+    USE_LAZY = True
 
 
 def _(msg):
-    return _t.ugettext(msg)
+    if USE_LAZY:
+        return Message(msg, 'rally')
+    else:
+        return _t.ugettext(msg)
 
 
 def install(domain, lazy=False):
@@ -244,8 +260,8 @@ def get_available_languages(domain):
 
     :param domain: the domain to get languages for
     """
-    if _AVAILABLE_LANGUAGES:
-        return _AVAILABLE_LANGUAGES
+    if domain in _AVAILABLE_LANGUAGES:
+        return copy.copy(_AVAILABLE_LANGUAGES[domain])
 
     localedir = '%s_LOCALEDIR' % domain.upper()
     find = lambda x: gettext.find(domain,
@@ -254,7 +270,7 @@ def get_available_languages(domain):
 
     # NOTE(mrodden): en_US should always be available (and first in case
     # order matters) since our in-line message strings are en_US
-    _AVAILABLE_LANGUAGES.append('en_US')
+    language_list = ['en_US']
     # NOTE(luisg): Babel <1.0 used a function called list(), which was
     # renamed to locale_identifiers() in >=1.0, the requirements master list
     # requires >=0.9.6, uncapped, so defensively work with both. We can remove
@@ -264,13 +280,14 @@ def get_available_languages(domain):
     locale_identifiers = list_identifiers()
     for i in locale_identifiers:
         if find(i) is not None:
-            _AVAILABLE_LANGUAGES.append(i)
-    return _AVAILABLE_LANGUAGES
+            language_list.append(i)
+    _AVAILABLE_LANGUAGES[domain] = language_list
+    return copy.copy(language_list)
 
 
 def get_localized_message(message, user_locale):
     """Gets a localized version of the given message in the given locale."""
-    if (isinstance(message, Message)):
+    if isinstance(message, Message):
         if user_locale:
             message.locale = user_locale
         return unicode(message)
