@@ -57,3 +57,41 @@ def db_create():
 def db_drop():
     """Drop DB. This method drop existing database."""
     IMPL.db_drop()
+
+
+def task_get_by_uuid(uuid):
+    """Returns task by uuid."""
+    return IMPL.task_get_by_uuid(uuid)
+
+
+def task_create(values):
+    """Create task record in DB.
+
+    :param values: dict with record values
+    Returns task UUID.
+    """
+    return IMPL.task_create(values)
+
+
+def task_update(uuid, values):
+    """Update task by values.
+
+    Returns new updated task dict
+    """
+    return IMPL.task_update(uuid, values)
+
+
+def task_list(status=None, active=True):
+    """Get list of tasks.
+    :param status: if None returns any task with any status.
+    :param active: if None returns all tasks,
+                   if True returns only active task,
+                   if False returns only completed tasks.
+    Retruns list of dicts with tasks data.
+    """
+    return IMPL.task_list(status, active)
+
+
+def task_delete(uuid):
+    """Mark task with correspondig uuid as deleted."""
+    return IMPL.task_delete(uuid)

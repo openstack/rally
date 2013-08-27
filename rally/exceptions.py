@@ -82,3 +82,11 @@ class RallyException(Exception):
 
 class ImmutableException(RallyException):
     msg_fmt = _("This object is immutable.")
+
+
+class NotFound(RallyException):
+    msg_fmt = _("Not found.")
+
+
+class TaskNotFound(NotFound):
+    msg_fmt = _("Task with uuid=%(uuid)s not found.")

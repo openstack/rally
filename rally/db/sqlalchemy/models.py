@@ -29,10 +29,27 @@ from rally.openstack.common.db.sqlalchemy import session
 BASE = declarative_base()
 
 
+def UUID():
+    return str(uuid.uuid4())
+
+
 class RallyBase(models.SoftDeleteMixin,
                 models.TimestampMixin,
                 models.ModelBase):
     metadata = None
+
+
+class Task(BASE, RallyBase):
+    """Represents a Benchamrk task."""
+    __tablename__ = 'tasks'
+    __table_args__ = ()
+
+    id = sa.Column(sa.Integer, primary_key=True, autoincrement=True)
+    uuid = sa.Column(sa.String(36), default=UUID, nullable=False)
+    status = sa.Column(sa.Enum(*list(consts.TaskStatus),
+                               name='enum_tasks_status'),
+                       default=consts.TaskStatus.INIT, nullable=False)
+    failed = sa.Column(sa.Boolean, default=False, nullable=False)
 
 
 def create_db():
