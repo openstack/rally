@@ -15,21 +15,18 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import fixtures
-
-from oslo.config import cfg
 
 from rally import db
+from rally.openstack.common.fixture import config
 from rally.openstack.common import test
 
 
-CONF = cfg.CONF
-
-
-class DatabaseFixture(fixtures.Fixture):
+class DatabaseFixture(config.Config):
     """Create clean DB before starting test."""
     def setUp(self):
         super(DatabaseFixture, self).setUp()
+        db.db_cleanup()
+        self.conf.set_default('connection', "sqlite://", group='database')
         db.db_create()
 
 

@@ -49,6 +49,11 @@ _BACKEND_MAPPING = {'sqlalchemy': 'rally.db.sqlalchemy.api'}
 IMPL = db_api.DBAPI(backend_mapping=_BACKEND_MAPPING)
 
 
+def db_cleanup():
+    """Recreate engine."""
+    IMPL.db_cleanup()
+
+
 def db_create():
     """Initialize DB. This method will drop existing database."""
     IMPL.db_create()

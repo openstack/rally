@@ -30,6 +30,10 @@ def get_backend():
     return sys.modules[__name__]
 
 
+def db_cleanup():
+    db_session.cleanup()
+
+
 def db_create():
     models.create_db()
 

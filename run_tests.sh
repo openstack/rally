@@ -45,7 +45,7 @@ export PROJECT_NAME="rally"
 # if equals to 1
 export OMIT_OSLO_FROM_COVERAGE=0
 # path to directory with tests
-export TESTS_DIR="rally/tests/"
+export TESTS_DIR="tests/"
 export EGG_INFO_FILE="rally.egg-info/entry_points.txt"
 
 # run common test script
