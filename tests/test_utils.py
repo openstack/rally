@@ -46,3 +46,21 @@ class StdIOCaptureTestCase(test.NoDBTestCase):
 
         self.assertEqual(err.getvalue().rstrip('\n').split('\n'), messages)
         self.assertEqual(stderr, sys.stderr)
+
+
+class IterSubclassesTestCase(test.NoDBTestCase):
+
+    def test_itersubclasses(self):
+        class A(object):
+            pass
+
+        class B(A):
+            pass
+
+        class C(A):
+            pass
+
+        class D(C):
+            pass
+
+        self.assertEqual([B, C, D], list(utils.itersubclasses(A)))
