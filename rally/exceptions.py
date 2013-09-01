@@ -84,9 +84,13 @@ class ImmutableException(RallyException):
     msg_fmt = _("This object is immutable.")
 
 
-class NotFound(RallyException):
+class NotFoundException(RallyException):
     msg_fmt = _("Not found.")
 
 
-class TaskNotFound(NotFound):
+class NoSuchEngine(NotFoundException):
+    msg_fmt = _("There is no engine with name `%(engine_name)s`.")
+
+
+class TaskNotFound(NotFoundException):
     msg_fmt = _("Task with uuid=%(uuid)s not found.")

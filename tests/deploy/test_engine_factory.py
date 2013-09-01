@@ -1,0 +1,87 @@
+# vim: tabstop=4 shiftwidth=4 softtabstop=4
+
+# Copyright 2013: Mirantis Inc.
+# All Rights Reserved.
+#
+#    Licensed under the Apache License, Version 2.0 (the "License"); you may
+#    not use this file except in compliance with the License. You may obtain
+#    a copy of the License at
+#
+#         http://www.apache.org/licenses/LICENSE-2.0
+#
+#    Unless required by applicable law or agreed to in writing, software
+#    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+#    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+#    License for the specific language governing permissions and limitations
+#    under the License.
+
+"""Test for deploy engines."""
+
+from rally.deploy import engine as deploy_engine
+from rally import exceptions
+from rally import test
+
+
+class EngineFactoryTestCase(test.NoDBTestCase):
+
+    def test_get_engine_not_found(self):
+        self.assertRaises(exceptions.NoSuchEngine,
+                          deploy_engine.EngineFactory.get_engine,
+                          "non_existing_engine", None)
+
+    def _create_fake_engines(self):
+        class EngineMixIn(object):
+            def deploy(self):
+                pass
+
+            def cleanup(self):
+                pass
+
+        class EngineFake1(EngineMixIn, deploy_engine.EngineFactory):
+            def __init__(self, config):
+                pass
+
+        class EngineFake2(EngineMixIn, deploy_engine.EngineFactory):
+            def __init__(self, config):
+                pass
+
+        class EngineFake3(EngineFake2):
+            def __init__(self, config):
+                pass
+
+        return [EngineFake1, EngineFake2, EngineFake3]
+
+    def test_get_engine(self):
+        engines = self._create_fake_engines()
+        for e in engines:
+            engine_inst = deploy_engine.EngineFactory.get_engine(e.__name__,
+                                                                 None)
+            # TODO(boris-42): make it work through assertIsInstance
+            self.assertEqual(str(type(engine_inst)), str(e))
+
+    def test_get_available_engines(self):
+        engines = [e.__name__ for e in self._create_fake_engines()]
+        real_engines = deploy_engine.EngineFactory.get_available_engines()
+        self.assertEqual(sorted(engines), sorted(real_engines))
+
+    def test_engine_factory_is_abstract(self):
+        self.assertRaises(TypeError, deploy_engine.EngineFactory)
+
+    def test_with_statement(self):
+
+        class A(deploy_engine.EngineFactory):
+
+            def __init__(self, config):
+                pass
+
+            def deploy(self):
+                self.deployed = True
+                return self
+
+            def cleanup(self):
+                self.cleanuped = True
+
+        with deploy_engine.EngineFactory.get_engine('A', None) as deployment:
+            self.assertTrue(deployment.deployed)
+
+        self.assertTrue(deployment.cleanuped)
