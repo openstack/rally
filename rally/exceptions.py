@@ -92,5 +92,9 @@ class NoSuchEngine(NotFoundException):
     msg_fmt = _("There is no engine with name `%(engine_name)s`.")
 
 
+class NoSuchVMProvider(NotFoundException):
+    msg_fmt = _("There is no vm provider with name `%(vm_provider_name)s`.")
+
+
 class TaskNotFound(NotFoundException):
     msg_fmt = _("Task with uuid=%(uuid)s not found.")
