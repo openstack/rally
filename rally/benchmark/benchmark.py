@@ -18,7 +18,9 @@
 import multiprocessing
 import os
 import pytest
+import time
 
+import fuel_health.cleanup as fuel_cleanup
 from rally import utils
 
 
@@ -54,6 +56,8 @@ class Tester(object):
                     res[item['proc_name']] = item
             if not running:
                 break
+            time.sleep(0.5)
+        self._cleanup(self.config)
         return res
 
     @staticmethod
@@ -64,3 +68,8 @@ class Tester(object):
             msg = filter(lambda line: line and '===' not in line,
                          out.getvalue().split('\n'))
             queue.put({'msg': msg, 'status': status, 'proc_name': proc_name})
+
+    @staticmethod
+    def _cleanup(path):
+        os.environ['OSTF_CONFIG'] = path
+        fuel_cleanup.cleanup()

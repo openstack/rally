@@ -28,7 +28,7 @@ def test_dummy():
 class BenchmarkTestCase(test.NoDBTestCase):
 
     def test_running_test(self):
-        tester = benchmark.Tester('')
+        tester = benchmark.Tester('rally/benchmark/test.conf')
         tester.tests['test'] = ['./tests/benchmark/test_benchmark.py',
                                 '-k', 'test_dummy']
         for result in tester.run('test', 3).itervalues():
