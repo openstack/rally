@@ -16,6 +16,7 @@
 #    under the License.
 
 """Tests for benchmarks."""
+import mock
 
 from rally.benchmark import benchmark
 from rally import test
@@ -26,6 +27,14 @@ def test_dummy():
 
 
 class BenchmarkTestCase(test.NoDBTestCase):
+    def setUp(self):
+        super(BenchmarkTestCase, self).setUp()
+        self.fc = mock.patch('fuel_health.cleanup.cleanup')
+        self.fc.start()
+
+    def tearDown(self):
+        self.fc.stop()
+        super(BenchmarkTestCase, self).tearDown()
 
     def test_running_test(self):
         tester = benchmark.Tester('rally/benchmark/test.conf')
