@@ -18,11 +18,15 @@
 """Tests for benchmarks."""
 import mock
 
-from rally.benchmark import benchmark
+from rally.benchmark import utils
 from rally import test
 
 
 def test_dummy():
+    pass
+
+
+def test_dummy_2():
     pass
 
 
@@ -37,8 +41,19 @@ class BenchmarkTestCase(test.NoDBTestCase):
         super(BenchmarkTestCase, self).tearDown()
 
     def test_running_test(self):
-        tester = benchmark.Tester('rally/benchmark/test.conf')
-        tester.tests['test'] = ['./tests/benchmark/test_benchmark.py',
-                                '-k', 'test_dummy']
-        for result in tester.run('test', 3).itervalues():
+        tester = utils.Tester('rally/benchmark/test.conf')
+        test = ['./tests/benchmark/test_benchmark.py', '-k', 'test_dummy']
+        for result in tester.run(test, times=1, concurrent=1).itervalues():
             self.assertEqual(result['status'], 0)
+        for result in tester.run(test, times=3, concurrent=2).itervalues():
+            self.assertEqual(result['status'], 0)
+        for result in tester.run(test, times=2, concurrent=3).itervalues():
+            self.assertEqual(result['status'], 0)
+
+    def test_running_multiple_tests(self):
+        tester = utils.Tester('rally/benchmark/test.conf')
+        tests = [['./tests/benchmark/test_benchmark.py', '-k', 'test_dummy'],
+                 ['./tests/benchmark/test_benchmark.py', '-k', 'test_dummy_2']]
+        for test_results in tester.run_all(tests):
+            for result in test_results.itervalues():
+                self.assertEqual(result['status'], 0)
