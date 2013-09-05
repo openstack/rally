@@ -15,7 +15,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-"""Tests for benchmarks."""
+"""Tests for utils."""
 import mock
 
 from rally.benchmark import utils
@@ -30,19 +30,19 @@ def test_dummy_2():
     pass
 
 
-class BenchmarkTestCase(test.NoDBTestCase):
+class UtilsTestCase(test.NoDBTestCase):
     def setUp(self):
-        super(BenchmarkTestCase, self).setUp()
+        super(UtilsTestCase, self).setUp()
         self.fc = mock.patch('fuel_health.cleanup.cleanup')
         self.fc.start()
 
     def tearDown(self):
         self.fc.stop()
-        super(BenchmarkTestCase, self).tearDown()
+        super(UtilsTestCase, self).tearDown()
 
     def test_running_test(self):
         tester = utils.Tester('rally/benchmark/test.conf')
-        test = ['./tests/benchmark/test_benchmark.py', '-k', 'test_dummy']
+        test = ['./tests/benchmark/test_utils.py', '-k', 'test_dummy']
         for result in tester.run(test, times=1, concurrent=1).itervalues():
             self.assertEqual(result['status'], 0)
         for result in tester.run(test, times=3, concurrent=2).itervalues():
@@ -52,8 +52,8 @@ class BenchmarkTestCase(test.NoDBTestCase):
 
     def test_running_multiple_tests(self):
         tester = utils.Tester('rally/benchmark/test.conf')
-        tests = [['./tests/benchmark/test_benchmark.py', '-k', 'test_dummy'],
-                 ['./tests/benchmark/test_benchmark.py', '-k', 'test_dummy_2']]
+        tests = [['./tests/benchmark/test_utils.py', '-k', 'test_dummy'],
+                 ['./tests/benchmark/test_utils.py', '-k', 'test_dummy_2']]
         for test_results in tester.run_all(tests):
             for result in test_results.itervalues():
                 self.assertEqual(result['status'], 0)

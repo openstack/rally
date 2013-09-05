@@ -21,6 +21,7 @@ import string
 
 from rally.benchmark import tests
 from rally.benchmark import utils
+from rally import exceptions
 
 import ConfigParser
 
@@ -47,18 +48,18 @@ class TestEngine(object):
 
         :param test_config: {
                                 'verify': ['sanity', 'snapshot', 'smoke'],
-                                'benchmark': {[
+                                'benchmark': [
                                     {'method1': {'args': [...], 'times': 1,
                                                  'concurrency': 1}},
                                     {'method2': {'args': [...], 'times': 2,
                                                  'concurrency': 4}},
-                                ]},
+                                ],
                             }
         """
         self._verify_test_config(test_config)
         self.test_config = test_config
 
-    def _verify_test_config(test_config):
+    def _verify_test_config(self, test_config):
         """Verifies and possibly modifies the given test config so that it can
         be used during verification and benchmarking tests.
 
@@ -68,27 +69,26 @@ class TestEngine(object):
         :raises: Exception if the test config is not valid
         """
         if 'verify' in test_config:
-            for verification_test in test_config['verify']:
-                if verification_test not in tests.verification_tests:
-                    # TODO(msdubov): Raise some special Exception class here?
-                    raise Exception('Unknown verification test: %s' %
-                                    verification_test)
+            for test_name in test_config['verify']:
+                if test_name not in tests.verification_tests:
+                    raise exceptions.NoSuchTestException(test_name=test_name)
         else:
             # NOTE(msdubov): if 'verify' not specified, run all verification
             #                tests by default.
             test_config['verify'] = tests.verification_tests.keys()
         # TODO(msdubov): Also verify the 'benchmark' part of the config here.
 
-    def _write_temporary_config(config, config_path):
+    def _write_temporary_config(self, config, config_path):
         cp = ConfigParser.RawConfigParser()
         for section in config.iterkeys():
+            cp.add_section(section)
             for option in config[section].iterkeys():
                 value = config[section][option]
                 cp.set(section, option, value)
         with open(config_path, 'w') as f:
             cp.write(f)
 
-    def _delete_temporary_config(config, config_path):
+    def _delete_temporary_config(self, config_path):
         os.remove(config_path)
 
     def _random_file_path(self):
@@ -129,11 +129,18 @@ class TestEngine(object):
         return self
 
     def verify(self):
-        """Runs OSTF tests to verify the current cloud deployment."""
+        """Runs OSTF tests to verify the current cloud deployment.
+
+        :returns: True if all tests have passed; False otherwise
+        """
         tester = utils.Tester(self.cloud_config_path)
-        tester.tests = [tests.verification_tests[test_name]
-                        for test_name in self.test_config['verify']]
-        tester.run_all()
+        verification_tests = [tests.verification_tests[test_name]
+                              for test_name in self.test_config['verify']]
+        for test_results in tester.run_all(verification_tests):
+            for result in test_results.itervalues():
+                if result['status'] != 0:
+                    return False
+        return True
 
     def benchmark(self):
         """Runs the benchmarks according to the test configuration

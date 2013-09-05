@@ -84,6 +84,14 @@ class ImmutableException(RallyException):
     msg_fmt = _("This object is immutable.")
 
 
+class InvalidConfigException(RallyException):
+    msg_fmt = _("This config is invalid")
+
+
+class NoSuchTestException(InvalidConfigException):
+    msg_fmt = _("No such test: `%(test_name)s`.")
+
+
 class NotFoundException(RallyException):
     msg_fmt = _("Not found.")
 
