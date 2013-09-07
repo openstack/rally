@@ -19,14 +19,14 @@
 
 from rally import exceptions
 from rally import test
-from rally.vmprovider import provider as vm_provider
+from rally import vmprovider
 
 
 class VMProviderTestCase(test.NoDBTestCase):
 
     def test_get_provider_not_found(self):
         self.assertRaises(exceptions.NoSuchVMProvider,
-                          vm_provider.VMProviderFactory.get_provider,
+                          vmprovider.VMProviderFactory.get_provider,
                           "non_existing", None)
 
     def _create_fake_providers(self):
@@ -43,11 +43,11 @@ class VMProviderTestCase(test.NoDBTestCase):
             def destroy_vms(self, vm_uuids):
                 pass
 
-        class ProviderA(ProviderMixIn, vm_provider.VMProviderFactory):
+        class ProviderA(ProviderMixIn, vmprovider.VMProviderFactory):
             def __init__(self, config):
                 pass
 
-        class ProviderB(ProviderMixIn, vm_provider.VMProviderFactory):
+        class ProviderB(ProviderMixIn, vmprovider.VMProviderFactory):
             def __init__(self, config):
                 pass
 
@@ -59,15 +59,15 @@ class VMProviderTestCase(test.NoDBTestCase):
 
     def test_get_provider(self):
         for p in self._create_fake_providers():
-                p_inst = vm_provider.VMProviderFactory.get_provider(p.__name__,
-                                                                    None)
+                p_inst = vmprovider.VMProviderFactory.get_provider(p.__name__,
+                                                                   None)
                 # TODO(boris-42): make it work through assertIsInstance
                 self.assertEqual(str(type(p_inst)), str(p))
 
     def test_get_all_provider(self):
         provider = [p.__name__ for p in self._create_fake_providers()]
-        real_provider = vm_provider.VMProviderFactory.get_available_providers()
+        real_provider = vmprovider.VMProviderFactory.get_available_providers()
         self.assertEqual(sorted(provider), sorted(real_provider))
 
     def test_vm_prvoider_factory_is_abstract(self):
-            self.assertRaises(TypeError, vm_provider.VMProviderFactory)
+            self.assertRaises(TypeError, vmprovider.VMProviderFactory)

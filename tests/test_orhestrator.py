@@ -27,7 +27,7 @@ class OrchestratorTestCase(test.NoDBTestCase):
 
     def setUp(self):
         super(OrchestratorTestCase, self).setUp()
-        self.de = mock.patch('rally.deploy.engine.EngineFactory')
+        self.de = mock.patch('rally.deploy.EngineFactory')
         self.te = mock.patch('rally.benchmark.engine.TestEngine')
         self.de.start()
         self.te.start()

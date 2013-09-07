@@ -64,3 +64,10 @@ class IterSubclassesTestCase(test.NoDBTestCase):
             pass
 
         self.assertEqual([B, C, D], list(utils.itersubclasses(A)))
+
+
+class ImportModulesTestCase(test.NoDBTestCase):
+    def test_try_append_module_into_sys_modules(self):
+        modules = {}
+        utils.try_append_module('rally.version', modules)
+        self.assertTrue('rally.version' in modules)

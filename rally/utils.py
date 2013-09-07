@@ -15,10 +15,12 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import os
 import StringIO
 import sys
 
 from rally.openstack.common.gettextutils import _   # noqa
+from rally.openstack.common import importutils
 
 
 class StdOutCapture(object):
@@ -62,3 +64,26 @@ def itersubclasses(cls, _seen=None):
             yield sub
             for sub in itersubclasses(sub, _seen):
                 yield sub
+
+
+def try_append_module(name, modules):
+    if name not in modules:
+        module = importutils.try_import(name)
+        if module is not None:
+            modules[name] = module
+
+
+def import_modules_from_package(package):
+    """Import modules from package and append into sys.modules
+
+    :param: package - Full package name. For example: rally.deploy.engines
+    """
+    path = [os.path.dirname(__file__), '..'] + package.split('.')
+    path = os.path.join(*path)
+    for filename in os.listdir(path):
+        module_name = '%s.%s' % (package, filename)
+        if filename.endswith('.py') and not filename.startswith('__'):
+            module_name = module_name[:-3]
+        elif os.path.isfile(os.path.join(path, filename)):
+            continue
+        try_append_module(module_name, sys.modules)

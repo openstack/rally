@@ -17,7 +17,7 @@
 
 """Test for deploy engines."""
 
-from rally.deploy import engine as deploy_engine
+from rally import deploy
 from rally import exceptions
 from rally import test
 
@@ -26,7 +26,7 @@ class EngineFactoryTestCase(test.NoDBTestCase):
 
     def test_get_engine_not_found(self):
         self.assertRaises(exceptions.NoSuchEngine,
-                          deploy_engine.EngineFactory.get_engine,
+                          deploy.EngineFactory.get_engine,
                           "non_existing_engine", None)
 
     def _create_fake_engines(self):
@@ -37,11 +37,11 @@ class EngineFactoryTestCase(test.NoDBTestCase):
             def cleanup(self):
                 pass
 
-        class EngineFake1(EngineMixIn, deploy_engine.EngineFactory):
+        class EngineFake1(EngineMixIn, deploy.EngineFactory):
             def __init__(self, config):
                 pass
 
-        class EngineFake2(EngineMixIn, deploy_engine.EngineFactory):
+        class EngineFake2(EngineMixIn, deploy.EngineFactory):
             def __init__(self, config):
                 pass
 
@@ -54,22 +54,21 @@ class EngineFactoryTestCase(test.NoDBTestCase):
     def test_get_engine(self):
         engines = self._create_fake_engines()
         for e in engines:
-            engine_inst = deploy_engine.EngineFactory.get_engine(e.__name__,
-                                                                 None)
+            engine_inst = deploy.EngineFactory.get_engine(e.__name__, None)
             # TODO(boris-42): make it work through assertIsInstance
             self.assertEqual(str(type(engine_inst)), str(e))
 
     def test_get_available_engines(self):
-        engines = [e.__name__ for e in self._create_fake_engines()]
-        real_engines = deploy_engine.EngineFactory.get_available_engines()
-        self.assertEqual(sorted(engines), sorted(real_engines))
+        engines = set([e.__name__ for e in self._create_fake_engines()])
+        real_engines = set(deploy.EngineFactory.get_available_engines())
+        self.assertEqual(engines & real_engines, engines)
 
     def test_engine_factory_is_abstract(self):
-        self.assertRaises(TypeError, deploy_engine.EngineFactory)
+        self.assertRaises(TypeError, deploy.EngineFactory)
 
     def test_with_statement(self):
 
-        class A(deploy_engine.EngineFactory):
+        class A(deploy.EngineFactory):
 
             def __init__(self, config):
                 pass
@@ -81,7 +80,7 @@ class EngineFactoryTestCase(test.NoDBTestCase):
             def cleanup(self):
                 self.cleanuped = True
 
-        with deploy_engine.EngineFactory.get_engine('A', None) as deployment:
+        with deploy.EngineFactory.get_engine('A', None) as deployment:
             self.assertTrue(deployment.deployed)
 
         self.assertTrue(deployment.cleanuped)

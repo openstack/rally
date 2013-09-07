@@ -16,8 +16,8 @@
 #    under the License.
 
 
-from rally.benchmark import engine as test_engine
-from rally.deploy import engine as deploy_engine
+from rally.benchmark import engine
+from rally import deploy
 
 
 def start_task(config):
@@ -30,9 +30,9 @@ def start_task(config):
     Returns task uuid
     """
     deploy_conf = config['deploy']
-    deployer = deploy_engine.EngineFactory.get_engine(deploy_conf['name'],
-                                                      deploy_conf)
-    tester = test_engine.TestEngine(config['tests'])
+    deployer = deploy.EngineFactory.get_engine(deploy_conf['name'],
+                                               deploy_conf)
+    tester = engine.TestEngine(config['tests'])
 
     with deployer as deployment:
         with tester.bind(deployment):
