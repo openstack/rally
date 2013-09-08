@@ -59,17 +59,6 @@ class Tester(object):
                 break
             time.sleep(0.5)
 
-        running = processes.keys()
-        while 1:
-            for process in running:
-                if not processes[process].is_alive():
-                    running.remove(process)
-                    item = self._q.get()
-                    res[item['proc_name']] = item
-            if not running:
-                break
-            time.sleep(0.5)
-
         self._cleanup(self._config_path)
         return res
 
