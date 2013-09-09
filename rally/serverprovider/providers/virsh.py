@@ -31,6 +31,7 @@ class VirshProvider(provider.ProviderFactory):
             "name": "VirshProvider",
             "connection": "alex@performance-01",  # ssh connection to vms host
             "template_name": "stack-01-devstack-template",  # vm image template
+            "template_user": "ubuntu",  # vm user to launch devstack
         },
     '''
 
@@ -59,11 +60,13 @@ class VirshProvider(provider.ProviderFactory):
         cmd = 'virsh --connect=%s start %s' % (virt_url, vm_name)
         subprocess.check_call(cmd, shell=True)
 
-        return {
-            'id': id,
-            'name': vm_name,
-            'ip': self._determine_vm_ip(vm_name),
-        }
+        return provider.ServerDTO(
+            vm_name,
+            self._determine_vm_ip(vm_name),
+            self._config['template_user'],
+            None,
+            self._config.get('template_password')
+        )
 
     def destroy_vms(self, vm_uuids):
         '''Destroy already created vms by vm_uuids.'''
@@ -72,14 +75,14 @@ class VirshProvider(provider.ProviderFactory):
 
     def destroy_vm(self, vm):
         '''Destroy single vm and delete all allocated resources.'''
-        print('Destroy VM %s' % vm['name'])
+        print('Destroy VM %s' % vm.uuid)
         vconnection = self._get_virt_connection_url(self._config['connection'])
 
-        cmd = 'virsh --connect=%s destroy %s' % (vconnection, vm['name'])
+        cmd = 'virsh --connect=%s destroy %s' % (vconnection, vm.uuid)
         subprocess.check_call(cmd, shell=True)
 
         cmd = 'virsh --connect=%s undefine %s --remove-all-storage' % (
-                vconnection, vm['name'])
+                vconnection, vm.uuid)
         subprocess.check_call(cmd, shell=True)
         return True
 

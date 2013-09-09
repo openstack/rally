@@ -5,9 +5,9 @@
             "name": "VirshProvider",
             "connection": "alex@performance-01",
             "template_name": "stack-01-devstack-template"
+            "template_user": "alex",
         },
         "vm_count": 1,
-        "template_user": "alex",
         "services": {
             "admin_password": "71789845d5ceb06f9609",
             "nova": {

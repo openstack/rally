@@ -28,7 +28,6 @@ class DevstackDeployment(engine.EngineFactory):
     '''Deploys Devstack cloud.
     deploy config example:
         "deploy": {
-            "template_user": "ubuntu",  # vm user to launch devstack
             "vm_provider": {
                 "name": "%name%",
                 ...
@@ -52,7 +51,7 @@ class DevstackDeployment(engine.EngineFactory):
             self.start_devstack(vm)
             self._vms.append(vm)
 
-        identity_host = {'host': self._vms[0]['ip']}
+        identity_host = {'host': self._vms[0].ip}
 
         return {
             'identity': {
@@ -82,8 +81,8 @@ class DevstackDeployment(engine.EngineFactory):
         cmd = 'scp %(opts)s %(config)s %(usr)s@%(host)s:~/devstack/localrc' % {
             'opts': '-o StrictHostKeyChecking=no',
             'config': config_path,
-            'usr': self._config['template_user'],
-            'host': vm['ip']
+            'usr': vm.user,
+            'host': vm.ip
         }
         subprocess.check_call(cmd, shell=True)
 
@@ -93,8 +92,8 @@ class DevstackDeployment(engine.EngineFactory):
     def start_devstack(self, vm):
         cmd = 'ssh %(opts)s %(usr)s@%(host)s devstack/stack.sh' % {
             'opts': '-o StrictHostKeyChecking=no',
-            'usr': self._config['template_user'],
-            'host': vm['ip']
+            'usr': vm.user,
+            'host': vm.ip
         }
         subprocess.check_call(cmd, shell=True)
         return True
