@@ -92,6 +92,14 @@ class NoSuchTestException(InvalidConfigException):
     msg_fmt = _("No such test: `%(test_name)s`.")
 
 
+class TestException(RallyException):
+    msg_fmt = _("Test failed: %(test_message)s")
+
+
+class VerificationException(TestException):
+    msg_fmt = _("Verification test failed: %(test_message)s")
+
+
 class NotFoundException(RallyException):
     msg_fmt = _("Not found.")
 

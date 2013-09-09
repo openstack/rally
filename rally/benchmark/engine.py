@@ -131,7 +131,7 @@ class TestEngine(object):
     def verify(self):
         """Runs OSTF tests to verify the current cloud deployment.
 
-        :returns: True if all tests have passed; False otherwise
+        :raises: VerificationException if some of the verification tests failed
         """
         tester = utils.Tester(self.cloud_config_path)
         verification_tests = [tests.verification_tests[test_name]
@@ -139,8 +139,8 @@ class TestEngine(object):
         for test_results in tester.run_all(verification_tests):
             for result in test_results.itervalues():
                 if result['status'] != 0:
-                    return False
-        return True
+                    raise exceptions.VerificationException(
+                                            test_message=result['msg'])
 
     def benchmark(self):
         """Runs the benchmarks according to the test configuration

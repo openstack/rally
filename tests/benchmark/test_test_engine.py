@@ -74,4 +74,8 @@ class TestEngineTestCase(test.NoDBTestCase):
     def test_verify(self):
         test_engine = engine.TestEngine(self.valid_test_config)
         with test_engine.bind(self.valid_cloud_config):
-            self.assertTrue(test_engine.verify())
+            try:
+                test_engine.verify()
+            except Exception as e:
+                self.fail("Unexpected exception in TestEngine.verify: %s" %
+                          str(e))
