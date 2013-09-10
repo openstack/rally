@@ -43,12 +43,11 @@ class UtilsTestCase(test.NoDBTestCase):
     def test_running_test(self):
         tester = utils.Tester('rally/benchmark/test.conf')
         test = ['./tests/benchmark/test_utils.py', '-k', 'test_dummy']
-        for result in tester.run(test, times=1, concurrent=1).itervalues():
-            self.assertEqual(result['status'], 0)
-        for result in tester.run(test, times=3, concurrent=2).itervalues():
-            self.assertEqual(result['status'], 0)
-        for result in tester.run(test, times=2, concurrent=3).itervalues():
-            self.assertEqual(result['status'], 0)
+        for (times, concurrent) in [(1, 1), (3, 2), (2, 3)]:
+            results = tester.run(test, times=times, concurrent=concurrent)
+            self.assertEqual(len(results), times)
+            for result in results.itervalues():
+                self.assertEqual(result['status'], 0)
 
     def test_running_multiple_tests(self):
         tester = utils.Tester('rally/benchmark/test.conf')
