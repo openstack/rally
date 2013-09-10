@@ -27,6 +27,7 @@ class DatabaseFixture(config.Config):
         super(DatabaseFixture, self).setUp()
         db.db_cleanup()
         self.conf.set_default('connection', "sqlite://", group='database')
+        db.db_drop()
         db.db_create()
 
 

@@ -53,7 +53,6 @@ class Task(BASE, RallyBase):
 
 
 def create_db():
-    drop_db()
     BASE.metadata.create_all(session.get_engine())
 
 
