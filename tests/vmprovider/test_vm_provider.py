@@ -64,10 +64,11 @@ class VMProviderTestCase(test.NoDBTestCase):
                 # TODO(boris-42): make it work through assertIsInstance
                 self.assertEqual(str(type(p_inst)), str(p))
 
-    def test_get_all_provider(self):
-        provider = [p.__name__ for p in self._create_fake_providers()]
-        real_provider = vmprovider.VMProviderFactory.get_available_providers()
-        self.assertEqual(sorted(provider), sorted(real_provider))
+    def test_get_available_providers(self):
+        providers = set([p.__name__ for p in self._create_fake_providers()])
+        real_providers = \
+            set(vmprovider.VMProviderFactory.get_available_providers())
+        self.assertEqual(providers & real_providers, providers)
 
     def test_vm_prvoider_factory_is_abstract(self):
             self.assertRaises(TypeError, vmprovider.VMProviderFactory)
