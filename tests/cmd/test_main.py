@@ -17,7 +17,7 @@
 
 import uuid
 
-from rally.cmd import task_cli
+from rally.cmd import main
 from rally.openstack.common import test
 
 
@@ -25,7 +25,7 @@ class TaskCommandsTestCase(test.BaseTestCase):
 
     def setUp(self):
         super(TaskCommandsTestCase, self).setUp()
-        self.task = task_cli.TaskCommands()
+        self.task = main.TaskCommands()
 
     def test_start(self):
         self.task.start('path_to_config.json')
