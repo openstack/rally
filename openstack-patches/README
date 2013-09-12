@@ -1,0 +1,8 @@
+This directory is used to patch existing openstack code
+
+All patches are applied to appropriate projects to add needed functionality (e.g. profiling code)
+
+git format-patch is used to create new patches
+
+Since this patches will become outdated we have a test that makes sure that they can be applied to latest openstack repositories.
+In case this test fails patches must be updated
