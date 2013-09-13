@@ -32,12 +32,17 @@ Rally is basically split into 4 main components:
 4. **Orchestrator**, which is the central component of the system. It uses the Deployment Engine to run control and compute nodes and to launch an OpenStack distribution and, after that, calls the Benchmarking Tool to start the benchmarking process.
 
 
-Implementation details
+Links
 ----------------------
 
-The only thing that has to be implemented by the Rally user in order for the system to work correctly is the *VM Provider* class. An object of this class will be used by the Orchestrator during the virtual machines initialization process and thus should have different implementations for each specific cloud provider (like Amazon or SoftLayer). Each *VM Provider* class implementation should inherit from the base *VM_Provider* class and implement 4 basic methods with the following signatures:
+Wiki page:
 
-* *run_n_vms(image_id): vm_ids*
-* *destroy_vms(vm_ids)*
-* (optional) *load_image(image_file): image_id*
-* (optional) *destroy_image(image_id)*
+    https://wiki.openstack.org/wiki/Rally
+
+Launchpad page:
+
+    https://launchpad.net/rally
+
+Code is hosted on github:
+
+    https://github.com/stackforge/rally
