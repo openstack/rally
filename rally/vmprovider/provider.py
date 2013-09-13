@@ -46,18 +46,16 @@ class VMProviderFactory(object):
         """Returns list of names of available engines."""
         return [e.__name__ for e in utils.itersubclasses(VMProviderFactory)]
 
-    @abc.abstractmethod
     def upload_image(self, image):
         """Upload image that could be used in creating new vms.
         :image: Image file
         Returns uuid of added image.
         """
-        pass
+        raise NotImplementedError()
 
-    @abc.abstractmethod
     def destroy_image(self, image_uuid):
         """Destroy image by image_uuid."""
-        pass
+        raise NotImplementedError()
 
     @abc.abstractmethod
     def create_vms(self, image_uuid=None, amount=1):

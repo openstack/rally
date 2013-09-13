@@ -31,12 +31,6 @@ class VMProviderTestCase(test.NoDBTestCase):
 
     def _create_fake_providers(self):
         class ProviderMixIn(object):
-            def upload_image(self, image):
-                pass
-
-            def destroy_image(self, image_uuid):
-                pass
-
             def create_vms(self, image_uuid=None, amount=1):
                 pass
 
@@ -71,4 +65,9 @@ class VMProviderTestCase(test.NoDBTestCase):
         self.assertEqual(providers & real_providers, providers)
 
     def test_vm_prvoider_factory_is_abstract(self):
-            self.assertRaises(TypeError, vmprovider.VMProviderFactory)
+        self.assertRaises(TypeError, vmprovider.VMProviderFactory)
+
+    def test_image_methods_raise_not_implemented(self):
+        provider = self._create_fake_providers()[0](None)
+        self.assertRaises(NotImplementedError, provider.upload_image, None)
+        self.assertRaises(NotImplementedError, provider.destroy_image, None)
