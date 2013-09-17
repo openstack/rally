@@ -122,3 +122,7 @@ class TaskNotFound(NotFoundException):
 
 class TimeoutException(RallyException):
     msg_fmt = _("Timeout exceeded.")
+
+
+class GetResourceFailure(RallyException):
+    msg_fmt = _("Failed to get the resource.")
