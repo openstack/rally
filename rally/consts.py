@@ -47,6 +47,7 @@ class _TaskStatus(_Immutable, _Enum):
 
     REPO_TOOL_GETTING_REPOS = 'repo_tool->getting_repos'
 
+    DEPLOY_STARTED = 'deploy->started'
     DEPLOY_CREATING_VENV = 'deploy->create_venv_to_deploy_openstack'
     DEPLOY_BUILDING_OPENSTACK_IN_VENV = 'deploy->building_openstack_in_venv'
     DEPLOY_BUILDING_IMAGE = 'deploy->building_images_with_openstack'
