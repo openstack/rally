@@ -28,13 +28,26 @@ class TestEngineTestCase(test.NoDBTestCase):
 
     def setUp(self):
         super(TestEngineTestCase, self).setUp()
+
         self.valid_test_config = {
-            'verify': ['sanity', 'smoke'],
-            'benchmark': []
+            'verify': {
+                'tests_to_run': ['sanity', 'smoke']
+            },
+            'benchmark': {
+                'tests_to_run': {}
+            }
         }
-        self.invalid_test_config = {
-            'verify': ['sanity', 'some_not_existing_test'],
-            'benchmark': []
+        self.invalid_test_config_bad_test_name = {
+            'verify': {
+                'tests_to_run': ['sanity', 'some_not_existing_test']
+            },
+            'benchmark': {}
+        }
+        self.invalid_test_config_bad_key = {
+            'verify': {
+                'tests_to_run': ['sanity', 'smoke']
+            },
+            'benchmarck': {}
         }
         self.valid_cloud_config = {
             'identity': {
@@ -45,8 +58,9 @@ class TestEngineTestCase(test.NoDBTestCase):
                 'controller_nodes': 'localhost'
             }
         }
+
         run_success = {
-            'proc': {'msg': 'msg', 'status': 0, 'proc_name': 'proc'}
+            'proc': {'msg': ['msg'], 'status': 0, 'proc_name': 'proc'}
         }
         self.run_mock = mock.patch('rally.benchmark.utils.Tester.run',
                                    mock.Mock(return_value=run_success))
@@ -63,13 +77,19 @@ class TestEngineTestCase(test.NoDBTestCase):
             self.fail("Unexpected exception in test config" +
                       "verification: %s" % str(e))
         self.assertRaises(exceptions.NoSuchTestException,
-                          engine.TestEngine, self.invalid_test_config)
+                          engine.TestEngine,
+                          self.invalid_test_config_bad_test_name)
+        self.assertRaises(exceptions.InvalidConfigException,
+                          engine.TestEngine,
+                          self.invalid_test_config_bad_key)
 
     def test_bind(self):
         test_engine = engine.TestEngine(self.valid_test_config)
         with test_engine.bind(self.valid_cloud_config):
             self.assertTrue(os.path.exists(test_engine.cloud_config_path))
+            self.assertTrue(os.path.exists(test_engine.test_config_path))
         self.assertFalse(os.path.exists(test_engine.cloud_config_path))
+        self.assertFalse(os.path.exists(test_engine.test_config_path))
 
     def test_verify(self):
         test_engine = engine.TestEngine(self.valid_test_config)
@@ -79,3 +99,8 @@ class TestEngineTestCase(test.NoDBTestCase):
             except Exception as e:
                 self.fail("Unexpected exception in TestEngine.verify: %s" %
                           str(e))
+
+    def test_benchmark(self):
+        test_engine = engine.TestEngine(self.valid_test_config)
+        with test_engine.bind(self.valid_cloud_config):
+            test_engine.benchmark()

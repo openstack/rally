@@ -15,6 +15,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+# NOTE(msdubov): This file contains the pre-defined mappings from test names
+#                to pytest arguments passed while launching these tests. The
+#                test names listed here should be used in test configuration
+#                files.
 
 verification_tests = {
     'sanity': ['--pyargs', 'fuel_health.tests.sanity'],
@@ -23,3 +27,8 @@ verification_tests = {
     'snapshot': ['--pyargs', 'fuel_health.tests.smoke', '-k',
                  '"test_snapshot"']
 }
+
+# TODO(msdubov): Implement an automatic benchmark tests collector.
+benchmark_tests = {}
+
+tests = {'verify': verification_tests, 'benchmark': benchmark_tests}

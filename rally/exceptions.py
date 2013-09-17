@@ -85,7 +85,7 @@ class ImmutableException(RallyException):
 
 
 class InvalidConfigException(RallyException):
-    msg_fmt = _("This config is invalid")
+    msg_fmt = _("This config is invalid: `%(message)s`")
 
 
 class NoSuchTestException(InvalidConfigException):
@@ -96,7 +96,7 @@ class TestException(RallyException):
     msg_fmt = _("Test failed: %(test_message)s")
 
 
-class VerificationException(TestException):
+class DeploymentVerificationException(TestException):
     msg_fmt = _("Verification test failed: %(test_message)s")
 
 

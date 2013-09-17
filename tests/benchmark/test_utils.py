@@ -20,6 +20,8 @@ import mock
 import os
 
 from rally.benchmark import config
+from rally.benchmark import engine
+from rally.benchmark import tests
 from rally.benchmark import utils
 from rally import test
 
@@ -59,8 +61,31 @@ class UtilsTestCase(test.NoDBTestCase):
 
     def test_running_multiple_tests(self):
         tester = utils.Tester(self.cloud_config_path)
-        tests = [['./tests/benchmark/test_utils.py', '-k', 'test_dummy'],
-                 ['./tests/benchmark/test_utils.py', '-k', 'test_dummy_2']]
-        for test_results in tester.run_all(tests):
+        tests_dict = {
+            'test1': ['./tests/benchmark/test_utils.py', '-k', 'test_dummy'],
+            'test2': ['./tests/benchmark/test_utils.py', '-k', 'test_dummy_2']
+        }
+        for test_results in tester.run_all(tests_dict):
             for result in test_results.itervalues():
                 self.assertEqual(result['status'], 0)
+
+    def test_parameterize_inside_class_from_test_config(self):
+        old_benchmark_tests = tests.benchmark_tests.copy()
+        tests.benchmark_tests.update({
+            'fake.test_parameterize': ['--pyargs',
+                                       'rally.benchmark.test_scenarios.fake',
+                                       '-k', 'test_parameterize']
+        })
+        cloud_config = {}
+        test_config = {
+            'benchmark': {
+                'tests_to_run': {
+                    'fake.test_parameterize': [{'args': {'arg': 5}}]
+                }
+            }
+        }
+        test_engine = engine.TestEngine(test_config)
+        with test_engine.bind(cloud_config):
+            res = test_engine.benchmark()
+            self.assertEqual(res[0].values()[0]['status'], 0)
+        tests.benchmark_tests = old_benchmark_tests
