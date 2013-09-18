@@ -18,6 +18,7 @@
 """Tests for utils."""
 import mock
 import os
+import time
 
 from rally.benchmark import config
 from rally.benchmark import engine
@@ -32,6 +33,10 @@ def test_dummy():
 
 def test_dummy_2():
     pass
+
+
+def test_dummy_timeout():
+    time.sleep(5)
 
 
 class UtilsTestCase(test.NoDBTestCase):
@@ -89,3 +94,10 @@ class UtilsTestCase(test.NoDBTestCase):
             res = test_engine.benchmark()
             self.assertEqual(res[0].values()[0]['status'], 0)
         tests.benchmark_tests = old_benchmark_tests
+
+    def test_tester_timeout(self):
+        tester = utils.Tester(self.cloud_config_path)
+        test = ['./tests/benchmark/test_utils.py', '-k',
+                'test_dummy_timeout', '--timeout', '2']
+        results = tester.run(test, times=10, concurrent=2)
+        self.assertFalse('Timeout' in results.values()[0]['msg'][-2])

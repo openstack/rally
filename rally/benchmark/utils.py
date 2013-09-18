@@ -19,7 +19,6 @@ import functools
 import multiprocessing
 import os
 import pytest
-import time
 
 import fuel_health.cleanup as fuel_cleanup
 
@@ -49,6 +48,19 @@ def parameterize_from_test_config(benchmark_name):
             test_function(*args, **kwargs)
         return wrapper
     return decorator
+
+
+def _run_test(args):
+    test_args = args[0]
+    proc_n = args[2]
+    os.environ['OSTF_CONFIG'] = args[1]
+
+    with utils.StdOutCapture() as out:
+        status = pytest.main(args=test_args)
+
+    return {'msg': [line for line in out.getvalue().split('\n')
+                    if '===' not in line or line],
+            'status': status, 'proc_name': proc_n}
 
 
 class Tester(object):
@@ -106,46 +118,23 @@ class Tester(object):
                   The keys in the top-level dictionary are the corresponding
                   process names
         """
-        res = {}
-        processes = {}
-        proc_id = 0
+        if '--timeout' not in test_args:
+            timeout = str(60 * 60 * 60 / times)
+            test_args.extend(['--timeout', timeout])
 
-        for i in xrange(min(concurrent, times)):
-            proc_id = proc_id + 1
-            processes.update(self._start_test_process(proc_id, test_args))
+        iterable_test_args = ((test_args, self._cloud_config_path, n)
+                              for n in xrange(times))
+        pool = multiprocessing.Pool(concurrent)
+        result_generator = pool.imap(_run_test, iterable_test_args)
 
-        while 1:
-            for process in processes.keys():
-                if not processes[process].is_alive():
-                    del processes[process]
-                    item = self._q.get()
-                    res[item['proc_name']] = item
-                    if proc_id < times:
-                        proc_id = proc_id + 1
-                        processes.update(self._start_test_process(proc_id,
-                                                                  test_args))
-            if not processes and proc_id >= times:
+        results = {}
+        for result in result_generator:
+            results.update({result['proc_name']: result})
+            if 'Timeout' in result['msg'][-2]:
                 break
-            time.sleep(0.5)
 
         self._cleanup(self._cloud_config_path)
-        return res
-
-    def _start_test_process(self, id, test_args):
-        proc_name = 'test_%d' % id
-        args = (test_args, proc_name)
-        test = multiprocessing.Process(name=proc_name, args=args,
-                                       target=self._run_test)
-        test.start()
-        return {proc_name: test}
-
-    def _run_test(self, test_args, proc_name):
-        os.environ['OSTF_CONFIG'] = self._cloud_config_path
-        with utils.StdOutCapture() as out:
-            status = pytest.main(args=test_args)
-            msg = filter(lambda line: line and '===' not in line,
-                         out.getvalue().split('\n'))
-            self._q.put({'msg': msg, 'status': status, 'proc_name': proc_name})
+        return results
 
     def _cleanup(self, cloud_config_path):
         os.environ['OSTF_CONFIG'] = cloud_config_path
