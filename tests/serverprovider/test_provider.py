@@ -69,5 +69,6 @@ class ProviderTestCase(test.NoDBTestCase):
 
     def test_image_methods_raise_not_implemented(self):
         provider = self._create_fake_providers()[0](None)
-        self.assertRaises(NotImplementedError, provider.upload_image, None)
+        self.assertRaises(NotImplementedError,
+                          provider.upload_image, None, None, None)
         self.assertRaises(NotImplementedError, provider.destroy_image, None)

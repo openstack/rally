@@ -46,21 +46,27 @@ class ProviderFactory(object):
         """Returns list of names of available engines."""
         return [e.__name__ for e in utils.itersubclasses(ProviderFactory)]
 
-    def upload_image(self, image):
+    def upload_image(self, file_path, disk_format, container_format):
         """Upload image that could be used in creating new vms.
-        :image: Image file
-        Returns uuid of added image.
+        :file_path: Path to the file with image
+        :disk_format: qcow, qcow2, iso and so on..
+        :container_format: bare, ovf, aki and so on..
+            For more details about formats take a look at:
+            http://docs.openstack.org/developer/glance/formats.html
+
+        :returns: image indentificator
         """
         raise NotImplementedError()
 
     def destroy_image(self, image_uuid):
-        """Destroy image by image_uuid."""
+        """Destroy image by image indentificator."""
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def create_vms(self, image_uuid=None, amount=1):
+    def create_vms(self, image_uuid=None, type_id=None, amount=1):
         """Create VMs with chosen image.
         :param image_uuid: Indetificator of image
+        :param type_id: Vm type identificator
         :param amount: amount of required VMs
         Returns list of VMs uuids.
         """
