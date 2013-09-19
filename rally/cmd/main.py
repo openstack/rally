@@ -22,6 +22,8 @@ from __future__ import print_function
 import json
 import sys
 
+import prettytable
+
 from rally.cmd import cliutils
 from rally import db
 from rally.openstack.common.gettextutils import _   # noqa
@@ -64,7 +66,15 @@ class TaskCommands(object):
         """Get list of all tasks
         Returns list of active tasks
         """
-        print(_("Not implemented"))
+
+        headers = ['uuid', 'created_at', 'status', 'failed']
+        table = prettytable.PrettyTable(headers)
+
+        for t in db.task_list():
+            r = [t['uuid'], str(t['created_at']), t['status'], t['failed']]
+            table.add_row(r)
+
+        print(table)
 
 
 def main():

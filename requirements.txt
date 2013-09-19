@@ -5,6 +5,7 @@ jsonschema>=2.0.0
 netaddr>=0.7.6
 paramiko>=1.8.0
 pbr>=0.5.21,<1.0
+PrettyTable>=0.6,<0.8
 psutil
 pytest
 pytest-timeout
