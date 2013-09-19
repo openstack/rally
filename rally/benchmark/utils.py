@@ -51,16 +51,15 @@ def parameterize_from_test_config(benchmark_name):
 
 
 def _run_test(args):
-    test_args = args[0]
-    proc_n = args[2]
-    os.environ['OSTF_CONFIG'] = args[1]
+    test_args, ostf_config, proc_n = args
+    os.environ['OSTF_CONFIG'] = ostf_config
 
     with utils.StdOutCapture() as out:
-        status = pytest.main(args=test_args)
+        status = pytest.main(test_args)
 
-    return {'msg': [line for line in out.getvalue().split('\n')
-                    if '===' not in line or line],
-            'status': status, 'proc_name': proc_n}
+    return {'msg': out.getvalue(),
+            'status': status,
+            'proc_name': proc_n}
 
 
 class Tester(object):
@@ -109,7 +108,7 @@ class Tester(object):
 
         :param test_args: Arguments to be passed to pytest, e.g.
                           ['--pyargs', 'fuel_health.tests.sanity']
-        :param test_args: The number of times the test should be launched
+        :param times: The number of times the test should be launched
         :param concurrent: The number of concurrent processed to be used while
                            launching the test
 
@@ -126,13 +125,7 @@ class Tester(object):
                               for n in xrange(times))
         pool = multiprocessing.Pool(concurrent)
         result_generator = pool.imap(_run_test, iterable_test_args)
-
-        results = {}
-        for result in result_generator:
-            results.update({result['proc_name']: result})
-            if 'Timeout' in result['msg'][-2]:
-                break
-
+        results = dict([(r['proc_name'], r) for r in result_generator])
         self._cleanup(self._cloud_config_path)
         return results
 

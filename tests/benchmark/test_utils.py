@@ -27,7 +27,7 @@ from rally.benchmark import utils
 from rally import test
 
 
-def test_dummy():
+def test_dummy_1():
     pass
 
 
@@ -36,7 +36,7 @@ def test_dummy_2():
 
 
 def test_dummy_timeout():
-    time.sleep(5)
+    time.sleep(1.1)
 
 
 class UtilsTestCase(test.NoDBTestCase):
@@ -57,7 +57,7 @@ class UtilsTestCase(test.NoDBTestCase):
 
     def test_running_test(self):
         tester = utils.Tester(self.cloud_config_path)
-        test = ['./tests/benchmark/test_utils.py', '-k', 'test_dummy']
+        test = ['./tests/benchmark/test_utils.py', '-k', 'test_dummy_1']
         for (times, concurrent) in [(1, 1), (3, 2), (2, 3)]:
             results = tester.run(test, times=times, concurrent=concurrent)
             self.assertEqual(len(results), times)
@@ -67,7 +67,7 @@ class UtilsTestCase(test.NoDBTestCase):
     def test_running_multiple_tests(self):
         tester = utils.Tester(self.cloud_config_path)
         tests_dict = {
-            'test1': ['./tests/benchmark/test_utils.py', '-k', 'test_dummy'],
+            'test1': ['./tests/benchmark/test_utils.py', '-k', 'test_dummy_1'],
             'test2': ['./tests/benchmark/test_utils.py', '-k', 'test_dummy_2']
         }
         for test_results in tester.run_all(tests_dict):
@@ -98,6 +98,17 @@ class UtilsTestCase(test.NoDBTestCase):
     def test_tester_timeout(self):
         tester = utils.Tester(self.cloud_config_path)
         test = ['./tests/benchmark/test_utils.py', '-k',
+                'test_dummy_timeout', '--timeout', '1']
+        results = tester.run(test, times=2, concurrent=2)
+        for result in results.values():
+            self.assertTrue('Timeout' in result['msg'])
+            self.assertTrue(result['status'] != 0)
+
+    def test_tester_no_timeout(self):
+        tester = utils.Tester(self.cloud_config_path)
+        test = ['./tests/benchmark/test_utils.py', '-k',
                 'test_dummy_timeout', '--timeout', '2']
-        results = tester.run(test, times=10, concurrent=2)
-        self.assertFalse('Timeout' in results.values()[0]['msg'][-2])
+        results = tester.run(test, times=2, concurrent=2)
+        for result in results.values():
+            self.assertTrue('Timeout' not in result['msg'])
+            self.assertTrue(result['status'] == 0)
