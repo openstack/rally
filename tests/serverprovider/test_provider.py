@@ -18,16 +18,18 @@
 """Test for vm providers."""
 
 from rally import exceptions
+from rally import serverprovider
 from rally import test
-from rally import vmprovider
 
 
-class VMProviderTestCase(test.NoDBTestCase):
+ProviderFactory = serverprovider.ProviderFactory
+
+
+class ProviderTestCase(test.NoDBTestCase):
 
     def test_get_provider_not_found(self):
         self.assertRaises(exceptions.NoSuchVMProvider,
-                          vmprovider.VMProviderFactory.get_provider,
-                          "non_existing", None)
+                          ProviderFactory.get_provider, "non_existing", None)
 
     def _create_fake_providers(self):
         class ProviderMixIn(object):
@@ -37,11 +39,11 @@ class VMProviderTestCase(test.NoDBTestCase):
             def destroy_vms(self, vm_uuids):
                 pass
 
-        class ProviderA(ProviderMixIn, vmprovider.VMProviderFactory):
+        class ProviderA(ProviderMixIn, ProviderFactory):
             def __init__(self, config):
                 pass
 
-        class ProviderB(ProviderMixIn, vmprovider.VMProviderFactory):
+        class ProviderB(ProviderMixIn, ProviderFactory):
             def __init__(self, config):
                 pass
 
@@ -53,19 +55,17 @@ class VMProviderTestCase(test.NoDBTestCase):
 
     def test_get_provider(self):
         for p in self._create_fake_providers():
-                p_inst = vmprovider.VMProviderFactory.get_provider(p.__name__,
-                                                                   None)
+                p_inst = ProviderFactory.get_provider(p.__name__, None)
                 # TODO(boris-42): make it work through assertIsInstance
                 self.assertEqual(str(type(p_inst)), str(p))
 
     def test_get_available_providers(self):
         providers = set([p.__name__ for p in self._create_fake_providers()])
-        real_providers = \
-            set(vmprovider.VMProviderFactory.get_available_providers())
+        real_providers = set(ProviderFactory.get_available_providers())
         self.assertEqual(providers & real_providers, providers)
 
     def test_vm_prvoider_factory_is_abstract(self):
-        self.assertRaises(TypeError, vmprovider.VMProviderFactory)
+        self.assertRaises(TypeError, ProviderFactory)
 
     def test_image_methods_raise_not_implemented(self):
         provider = self._create_fake_providers()[0](None)

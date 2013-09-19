@@ -21,8 +21,8 @@ from rally import exceptions
 from rally import utils
 
 
-class VMProviderFactory(object):
-    """rally.vmprovider.provider.VMProviderFactory is base class for providers
+class ProviderFactory(object):
+    """ProviderFactory should be base class for all providers.
 
     All provider should be added to rally.vmprovider.providers.some_moduule.py
     and implement 4 methods:
@@ -36,7 +36,7 @@ class VMProviderFactory(object):
     @staticmethod
     def get_provider(name, config):
         """Returns instance of vm provider by name."""
-        for provider in utils.itersubclasses(VMProviderFactory):
+        for provider in utils.itersubclasses(ProviderFactory):
             if name == provider.__name__:
                 return provider(config)
         raise exceptions.NoSuchVMProvider(vm_provider_name=name)
@@ -44,7 +44,7 @@ class VMProviderFactory(object):
     @staticmethod
     def get_available_providers():
         """Returns list of names of available engines."""
-        return [e.__name__ for e in utils.itersubclasses(VMProviderFactory)]
+        return [e.__name__ for e in utils.itersubclasses(ProviderFactory)]
 
     def upload_image(self, image):
         """Upload image that could be used in creating new vms.

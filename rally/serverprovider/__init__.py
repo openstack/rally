@@ -15,4 +15,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from rally import vmprovider  # noqa
+from rally.serverprovider.provider import *  # noqa
+from rally import utils
+
+
+utils.import_modules_from_package('rally.serverprovider.providers')
