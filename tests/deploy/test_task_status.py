@@ -53,7 +53,6 @@ class TaskStatusTestCase(test.NoDBTestCase):
                 pass
         s = consts.TaskStatus
         expected = [
-            mock.call.task_create({'uuid': task_uuid}),
             mock.call.task_update(task_uuid, {'status': s.DEPLOY_STARTED}),
             mock.call.task_update(task_uuid, {'status': s.DEPLOY_FINISHED}),
             mock.call.task_update(task_uuid, {'status': s.CLEANUP}),
@@ -75,7 +74,6 @@ class TaskStatusTestCase(test.NoDBTestCase):
         task_uuid = str(uuid.uuid4())
         s = consts.TaskStatus
         expected = [
-            mock.call.task_create({'uuid': task_uuid}),
             mock.call.task_update(task_uuid, {'status': s.DEPLOY_STARTED}),
         ]
         self._test_failure(task_uuid, 'EngineFailedDeploy', expected)
@@ -84,7 +82,6 @@ class TaskStatusTestCase(test.NoDBTestCase):
         task_uuid = str(uuid.uuid4())
         s = consts.TaskStatus
         expected = [
-            mock.call.task_create({'uuid': task_uuid}),
             mock.call.task_update(task_uuid, {'status': s.DEPLOY_STARTED}),
             mock.call.task_update(task_uuid, {'status': s.DEPLOY_FINISHED}),
             mock.call.task_update(task_uuid, {'status': s.CLEANUP}),

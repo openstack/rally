@@ -17,6 +17,7 @@
 
 
 from rally.benchmark import engine
+from rally import db
 from rally import deploy
 
 
@@ -30,7 +31,9 @@ def start_task(config):
     Returns task uuid
     """
     deploy_conf = config['deploy']
+    task = db.task_create({})
     deployer = deploy.EngineFactory.get_engine(deploy_conf['name'],
+                                               task['uuid'],
                                                deploy_conf)
     tester = engine.TestEngine(config['tests'])
 

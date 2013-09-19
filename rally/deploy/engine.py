@@ -57,7 +57,6 @@ class EngineFactory(object):
             if name == engine.__name__:
                 new_engine = engine(config)
                 new_engine.task_uuid = str(uuid)
-                db.task_create({'uuid': str(uuid)})
                 return new_engine
         raise exceptions.NoSuchEngine(engine_name=name)
 
