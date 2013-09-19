@@ -24,6 +24,12 @@ class ConfigManager(ConfigParser.RawConfigParser, object):
     __metaclass__ = abc.ABCMeta
 
     def __init__(self, config=None):
+        """Initializes the config manager with the default values and
+        (if given) with a config.
+
+        :param config: Path to the config file or a two-level dictionary
+                       containing the config contents
+        """
         super(ConfigManager, self).__init__()
         if config:
             if isinstance(config, basestring):
@@ -31,7 +37,19 @@ class ConfigManager(ConfigParser.RawConfigParser, object):
             elif isinstance(config, dict):
                 self.read_from_dict(config)
 
-    def read_from_dict(self, dct, transform=str, replace=False):
+    def read_from_dict(self, dct, transform=str, replace=True):
+        """Reads the config from a dictionary.
+
+        :param dct: The config represented as a two-level dictionary: the
+                    top-level keys should be section names while the keys on
+                    the second level should represent option names
+        :param transform: Function that will be applied to all the config
+                          values: it should take a string as its only argument
+                          and produce the result that will be stored in the
+                          ConfigManager instance
+        :param replace: True to replace already existing options while reading
+                        the config; False to keep old values
+        """
         for section_name, section in dct.iteritems():
             if not self.has_section(section_name):
                 self.add_section(section_name)
@@ -113,7 +131,7 @@ class CloudConfigManager(ConfigManager):
 
     def __init__(self, config=None):
         super(CloudConfigManager, self).__init__(config)
-        self.read_from_dict(self._DEFAULT_CLOUD_CONFIG)
+        self.read_from_dict(self._DEFAULT_CLOUD_CONFIG, replace=False)
 
     def to_dict(self):
         res = {}
@@ -124,8 +142,8 @@ class CloudConfigManager(ConfigManager):
 
 class TestConfigManager(ConfigManager):
 
-    def read_from_dict(self, dct):
-        super(TestConfigManager, self).read_from_dict(dct, json.dumps)
+    def read_from_dict(self, dct, transform=json.dumps, replace=True):
+        super(TestConfigManager, self).read_from_dict(dct, transform, replace)
 
     def to_dict(self):
         res = {}
