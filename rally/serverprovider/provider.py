@@ -21,6 +21,30 @@ from rally import exceptions
 from rally import utils
 
 
+class ServerDTO(utils.ImmutableMixin):
+    """Represent information about created Server.
+    Provider.create_vms should return list of instance of ServerDTO
+    """
+    def __init__(self, uuid, ip, user, key, password=None):
+        self.uuid = uuid
+        self.ip = ip
+        self.user = user
+        self.key = key
+        self.password = password
+        super(ServerDTO, self).__init__()
+
+
+class ImageDTO(utils.ImmutableMixin):
+    """Represent information about created image.
+    ProviderFactory.upload_image should return instance of this class.
+    """
+    def __init__(self, uuid, image_format, container_format):
+        self.uuid = uuid
+        self.image_format = image_format
+        self.container_format = container_format
+        super(ImageDTO, self).__init__()
+
+
 class ProviderFactory(object):
     """ProviderFactory should be base class for all providers.
 
@@ -54,7 +78,7 @@ class ProviderFactory(object):
             For more details about formats take a look at:
             http://docs.openstack.org/developer/glance/formats.html
 
-        :returns: image indentificator
+        :returns: ImageDTO instance
         """
         raise NotImplementedError()
 
@@ -68,7 +92,7 @@ class ProviderFactory(object):
         :param image_uuid: Indetificator of image
         :param type_id: Vm type identificator
         :param amount: amount of required VMs
-        Returns list of VMs uuids.
+        :returns: list of ServerDTO instances.
         """
         pass
 

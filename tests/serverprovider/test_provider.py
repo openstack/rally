@@ -72,3 +72,22 @@ class ProviderTestCase(test.NoDBTestCase):
         self.assertRaises(NotImplementedError,
                           provider.upload_image, None, None, None)
         self.assertRaises(NotImplementedError, provider.destroy_image, None)
+
+
+class ServerDTOTestCase(test.NoDBTestCase):
+
+    def test_init_server_dto(self):
+        vals = ['uuid', '192.168.1.1', 'admin', 'some_key', 'pwd']
+        keys = ['uuid', 'ip', 'user', 'key', 'password']
+        server = serverprovider.ServerDTO(*vals)
+        for k, v in dict(zip(keys, vals)).iteritems():
+            self.assertEqual(getattr(server, k), v)
+
+
+class ImageDTOTestCase(test.NoDBTestCase):
+    def test_init_image_dto(self):
+        vals = ['uuid', 'qcow2', 'bare']
+        keys = ['uuid', 'image_format', 'container_format']
+        server = serverprovider.ImageDTO(*vals)
+        for k, v in dict(zip(keys, vals)).iteritems():
+            self.assertEqual(getattr(server, k), v)
