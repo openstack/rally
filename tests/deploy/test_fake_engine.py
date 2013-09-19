@@ -18,7 +18,6 @@
 """Test fake deploy engines."""
 
 import mock
-import uuid
 
 from rally import deploy
 from rally.deploy.engines import fake_engine
@@ -43,7 +42,5 @@ class TestFakeDeployEngine(test.NoDBTestCase):
         fake_engine.FakeEngine({}).cleanup()
 
     def test_fake_engine_is_in_factory(self):
-        with mock.patch('rally.db'):
-            engine = deploy.EngineFactory.get_engine('FakeEngine',
-                                                     uuid.uuid4(), {})
-            self.assertIsInstance(engine, fake_engine.FakeEngine)
+        engine = deploy.EngineFactory.get_engine('FakeEngine', mock.Mock(), {})
+        self.assertIsInstance(engine, fake_engine.FakeEngine)

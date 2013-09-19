@@ -20,6 +20,7 @@ import mock
 import os
 
 from rally.benchmark import engine
+from rally import consts
 from rally import exceptions
 from rally import test
 
@@ -72,19 +73,21 @@ class TestEngineTestCase(test.NoDBTestCase):
 
     def test_verify_test_config(self):
         try:
-            engine.TestEngine(self.valid_test_config)
+            engine.TestEngine(self.valid_test_config, mock.Mock())
         except Exception as e:
             self.fail("Unexpected exception in test config" +
                       "verification: %s" % str(e))
         self.assertRaises(exceptions.NoSuchTestException,
                           engine.TestEngine,
-                          self.invalid_test_config_bad_test_name)
+                          self.invalid_test_config_bad_test_name,
+                          mock.Mock())
         self.assertRaises(exceptions.InvalidConfigException,
                           engine.TestEngine,
-                          self.invalid_test_config_bad_key)
+                          self.invalid_test_config_bad_key,
+                          mock.Mock())
 
     def test_bind(self):
-        test_engine = engine.TestEngine(self.valid_test_config)
+        test_engine = engine.TestEngine(self.valid_test_config, mock.Mock())
         with test_engine.bind(self.valid_cloud_config):
             self.assertTrue(os.path.exists(test_engine.cloud_config_path))
             self.assertTrue(os.path.exists(test_engine.test_config_path))
@@ -92,15 +95,28 @@ class TestEngineTestCase(test.NoDBTestCase):
         self.assertFalse(os.path.exists(test_engine.test_config_path))
 
     def test_verify(self):
-        test_engine = engine.TestEngine(self.valid_test_config)
+        test_engine = engine.TestEngine(self.valid_test_config, mock.Mock())
         with test_engine.bind(self.valid_cloud_config):
             try:
                 test_engine.verify()
             except Exception as e:
-                self.fail("Unexpected exception in TestEngine.verify: %s" %
-                          str(e))
+                self.fail("Exception in TestEngine.verify: %s" % str(e))
 
     def test_benchmark(self):
-        test_engine = engine.TestEngine(self.valid_test_config)
+        test_engine = engine.TestEngine(self.valid_test_config, mock.Mock())
         with test_engine.bind(self.valid_cloud_config):
             test_engine.benchmark()
+
+    def test_task_status_basic_chain(self):
+        fake_task = mock.MagicMock()
+        test_engine = engine.TestEngine(self.valid_test_config, fake_task)
+        with test_engine.bind(self.valid_cloud_config):
+            test_engine.verify()
+            test_engine.benchmark()
+
+        s = consts.TaskStatus
+        expected = [
+            mock.call.update_status(s.TEST_TOOL_VERIFY_OPENSTACK),
+            mock.call.update_status(s.TEST_TOOL_BENCHMARKING),
+        ]
+        self.assertEqual(fake_task.mock_calls, expected)

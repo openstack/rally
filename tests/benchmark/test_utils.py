@@ -89,7 +89,7 @@ class UtilsTestCase(test.NoDBTestCase):
                 }
             }
         }
-        test_engine = engine.TestEngine(test_config)
+        test_engine = engine.TestEngine(test_config, mock.Mock())
         with test_engine.bind(cloud_config):
             res = test_engine.benchmark()
             self.assertEqual(res[0].values()[0]['status'], 0)

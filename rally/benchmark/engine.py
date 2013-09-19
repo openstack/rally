@@ -24,6 +24,7 @@ import string
 from rally.benchmark import config
 from rally.benchmark import tests
 from rally.benchmark import utils
+from rally import consts
 from rally import exceptions
 
 
@@ -43,7 +44,7 @@ class TestEngine(object):
                 test.benchmark()
     """
 
-    def __init__(self, test_config):
+    def __init__(self, test_config, task):
         """TestEngine constructor.
 
         :param test_config: Dictionary of form {
@@ -63,6 +64,7 @@ class TestEngine(object):
             }
         }
         """
+        self.task = task
         self._validate_test_config(test_config)
         test_config = self._format_test_config(test_config)
         self.test_config = config.TestConfigManager(test_config)
@@ -160,6 +162,7 @@ class TestEngine(object):
 
         :raises: VerificationException if some of the verification tests failed
         """
+        self.task.update_status(consts.TaskStatus.TEST_TOOL_VERIFY_OPENSTACK)
         tester = utils.Tester(self.cloud_config_path)
         tests_to_run = self.test_config.to_dict()['verify']['tests_to_run']
         verification_tests = dict((test, tests.verification_tests[test])
@@ -177,6 +180,7 @@ class TestEngine(object):
         :returns: List of dicts, each dict containing the results of all the
                   corresponding benchmark test launches
         """
+        self.task.update_status(consts.TaskStatus.TEST_TOOL_BENCHMARKING)
         tester = utils.Tester(self.cloud_config_path, self.test_config_path)
         tests_to_run = self.test_config.to_dict()['benchmark']['tests_to_run']
         benchmark_tests = dict((test, tests.benchmark_tests[test])

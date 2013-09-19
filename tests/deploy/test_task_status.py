@@ -43,7 +43,7 @@ class EngineFailedCleanup(deploy.engines.fake_engine.FakeEngine):
 get_engine = deploy.EngineFactory.get_engine
 
 
-class TaskStatusTestCase(test.NoDBTestCase):
+class DeployEngineTaskStatusTestCase(test.NoDBTestCase):
 
     def test_task_status_basic_chain(self):
         fake_task = mock.MagicMock()
