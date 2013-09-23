@@ -18,7 +18,6 @@
 """Test task status update."""
 
 import mock
-import uuid
 
 from rally import consts
 from rally import deploy
@@ -47,43 +46,40 @@ get_engine = deploy.EngineFactory.get_engine
 class TaskStatusTestCase(test.NoDBTestCase):
 
     def test_task_status_basic_chain(self):
-        task_uuid = str(uuid.uuid4())
-        with mock.patch('rally.deploy.engine.db') as mock_obj:
-            with get_engine('FakeEngine', task_uuid, {}):
-                pass
+        fake_task = mock.MagicMock()
+        with get_engine('FakeEngine', fake_task, {}):
+            pass
         s = consts.TaskStatus
         expected = [
-            mock.call.task_update(task_uuid, {'status': s.DEPLOY_STARTED}),
-            mock.call.task_update(task_uuid, {'status': s.DEPLOY_FINISHED}),
-            mock.call.task_update(task_uuid, {'status': s.CLEANUP}),
-            mock.call.task_update(task_uuid, {'status': s.FINISHED}),
+            mock.call.update_status(s.DEPLOY_STARTED),
+            mock.call.update_status(s.DEPLOY_FINISHED),
+            mock.call.update_status(s.CLEANUP),
+            mock.call.update_status(s.FINISHED),
         ]
-        self.assertEqual(mock_obj.mock_calls, expected)
+        self.assertEqual(fake_task.mock_calls, expected)
 
-    def _test_failure(self, task_uuid, engine, expected_calls):
-        with mock.patch('rally.deploy.engine.db') as mock_obj:
-            engine = get_engine(engine, task_uuid, {})
-            try:
-                with engine:
-                    pass
-            except FakeFailure:
+    def _test_failure(self, engine, expected_calls):
+        fake_task = mock.MagicMock()
+        engine = get_engine(engine, fake_task, {})
+        try:
+            with engine:
                 pass
-        self.assertEqual(mock_obj.mock_calls, expected_calls)
+        except FakeFailure:
+            pass
+        self.assertEqual(fake_task.mock_calls, expected_calls)
 
     def test_task_status_failed_deploy(self):
-        task_uuid = str(uuid.uuid4())
         s = consts.TaskStatus
         expected = [
-            mock.call.task_update(task_uuid, {'status': s.DEPLOY_STARTED}),
+            mock.call.update_status(s.DEPLOY_STARTED),
         ]
-        self._test_failure(task_uuid, 'EngineFailedDeploy', expected)
+        self._test_failure('EngineFailedDeploy', expected)
 
     def test_task_status_failed_cleanup(self):
-        task_uuid = str(uuid.uuid4())
         s = consts.TaskStatus
         expected = [
-            mock.call.task_update(task_uuid, {'status': s.DEPLOY_STARTED}),
-            mock.call.task_update(task_uuid, {'status': s.DEPLOY_FINISHED}),
-            mock.call.task_update(task_uuid, {'status': s.CLEANUP}),
+            mock.call.update_status(s.DEPLOY_STARTED),
+            mock.call.update_status(s.DEPLOY_FINISHED),
+            mock.call.update_status(s.CLEANUP),
         ]
-        self._test_failure(task_uuid, 'EngineFailedCleanup', expected)
+        self._test_failure('EngineFailedCleanup', expected)
