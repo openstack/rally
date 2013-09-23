@@ -37,10 +37,10 @@ class DBCommands(object):
             print(_("Something went wrong %s") % e)
 
 
-def main(argv):
+def main():
     categories = {'db': DBCommands}
-    cliutils.run(argv, categories)
+    cliutils.run(sys.argv, categories)
 
 
 if __name__ == '__main__':
-    main(sys.argv)
+    main()

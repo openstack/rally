@@ -76,10 +76,10 @@ class TaskCommands(object):
         print(_("Not implemented"))
 
 
-def main(argv):
+def main():
     categories = {'task': TaskCommands}
-    cliutils.run(argv, categories)
+    cliutils.run(sys.argv, categories)
 
 
 if __name__ == '__main__':
-    main(sys.argv)
+    main()
