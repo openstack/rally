@@ -31,14 +31,15 @@ from rally.orchestrator import api
 
 class TaskCommands(object):
 
-    @cliutils.args('--config', help='Full configuration of ')
-    def start(self, config):
+    @cliutils.args('--task',
+                   help='Path to the file with full configuration of task')
+    def start(self, task):
         """Run Benchmark task
         :param config: File with json configration
         Returns task_uuid
         """
         try:
-            api.start_task(json.load(open(config)))
+            api.start_task(json.load(open(task)))
         except Exception as e:
             print(_("Something went wrong %s") % e)
 
