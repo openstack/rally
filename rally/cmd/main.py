@@ -24,7 +24,6 @@ import sys
 
 from rally.cmd import cliutils
 from rally import db
-from rally import exceptions
 from rally.openstack.common.gettextutils import _   # noqa
 from rally.orchestrator import api
 
@@ -38,10 +37,9 @@ class TaskCommands(object):
         :param config: File with json configration
         Returns task_uuid
         """
-        try:
-            api.start_task(json.load(open(task)))
-        except Exception as e:
-            print(_("Something went wrong %s") % e)
+        with open(task) as task_file:
+            config_dict = json.load(task_file)
+            api.start_task(config_dict)
 
     @cliutils.args('--task_id', type=str, help='UUID of task')
     def abort(self, task_id):
@@ -49,10 +47,7 @@ class TaskCommands(object):
 
         :param task_uuid: Task uuid
         """
-        try:
-            api.abort_task(task_id)
-        except Exception as e:
-            print(_("Something went wrong %s") % e)
+        api.abort_task(task_id)
 
     @cliutils.args('--task_id', type=str, help='UUID of task')
     def status(self, task_id):
@@ -61,14 +56,9 @@ class TaskCommands(object):
         :param task_uuid: Task uuid
         Returns current status of task
         """
-        try:
-            task = db.task_get_by_uuid(task_id)
-            print(_("Task %(task_id)s is %(status)s.")
-                  % {'task_id': task_id, 'status': task['status']})
-        except exceptions.TaskNotFound as e:
-            print(e)
-        except Exception as e:
-            print(_("Something went wrong %s") % e)
+        task = db.task_get_by_uuid(task_id)
+        print(_("Task %(task_id)s is %(status)s.")
+              % {'task_id': task_id, 'status': task['status']})
 
     def list(self):
         """Get list of all tasks

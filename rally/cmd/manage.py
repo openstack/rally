@@ -30,11 +30,8 @@ class DBCommands(object):
     """Commands for DB management."""
 
     def recreate(self):
-        try:
-            db.db_drop()
-            db.db_create()
-        except Exception as e:
-            print(_("Something went wrong %s") % e)
+        db.db_drop()
+        db.db_create()
 
 
 def main():

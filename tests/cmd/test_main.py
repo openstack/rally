@@ -15,6 +15,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import json
+import mock
 import uuid
 
 from rally.cmd import main
@@ -28,13 +30,29 @@ class TaskCommandsTestCase(test.BaseTestCase):
         self.task = main.TaskCommands()
 
     def test_start(self):
-        self.task.start('path_to_config.json')
+        read_data = '{"some": "json"}'
+        file_path = 'path_to_config.json'
+        m = mock.mock_open(read_data=read_data)
+        main.api.start_task = mock.MagicMock()
+        with mock.patch("rally.cmd.main.open", m, create=True) as m_open:
+            self.task.start(file_path)
+            m_open.assert_called_once_with(file_path)
+            main.api.start_task.assert_called_once_with(json.loads(read_data))
 
     def test_abort(self):
-        self.task.abort(str(uuid.uuid4()))
+        test_uuid = str(uuid.uuid4())
+        with mock.patch("rally.cmd.main.api") as mock_api:
+            mock_api.abort_task = mock.MagicMock()
+            self.task.abort(test_uuid)
+            main.api.abort_task.assert_called_once_with(test_uuid)
 
     def test_status(self):
-        self.task.status(str(uuid.uuid4()))
+        test_uuid = str(uuid.uuid4())
+        value = {'task_id': "task", "status": "status"}
+        with mock.patch("rally.cmd.main.db") as mock_db:
+            mock_db.task_get_by_uuid = mock.MagicMock(return_value=value)
+            self.task.status(test_uuid)
+            mock_db.task_get_by_uuid.assert_called_once_with(test_uuid)
 
     def test_list(self):
         self.task.list()
