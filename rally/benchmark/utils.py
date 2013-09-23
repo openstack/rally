@@ -125,7 +125,12 @@ class Tester(object):
                               for n in xrange(times))
         pool = multiprocessing.Pool(concurrent)
         result_generator = pool.imap(_run_test, iterable_test_args)
-        results = dict([(r['proc_name'], r) for r in result_generator])
+        results = {}
+        for result in result_generator:
+            results[result['proc_name']] = result
+            if result['status'] and 'Timeout' in result['msg']:
+                # cancel remaining tests if one test was timed out
+                break
         self._cleanup(self._cloud_config_path)
         return results
 
