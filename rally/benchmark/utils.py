@@ -52,7 +52,7 @@ def parameterize_from_test_config(benchmark_name):
 
 def _run_test(args):
     test_args, ostf_config, proc_n = args
-    os.environ['OSTF_CONFIG'] = ostf_config
+    os.environ['CUSTOM_FUEL_CONFIG'] = ostf_config
 
     with utils.StdOutCapture() as out:
         status = pytest.main(test_args)
@@ -135,5 +135,5 @@ class Tester(object):
         return results
 
     def _cleanup(self, cloud_config_path):
-        os.environ['OSTF_CONFIG'] = cloud_config_path
+        os.environ['CUSTOM_FUEL_CONFIG'] = cloud_config_path
         fuel_cleanup.cleanup()
