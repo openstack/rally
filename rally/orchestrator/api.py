@@ -37,8 +37,9 @@ def start_task(config):
                                                deploy_conf)
     tester = engine.TestEngine(config['tests'], task_object)
 
-    with deployer as deployment:
-        with tester.bind(deployment):
+    with deployer:
+        endpoints = deployer.make()
+        with tester.bind(endpoints):
             tester.verify()
             tester.benchmark()
 

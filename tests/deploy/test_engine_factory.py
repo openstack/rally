@@ -86,7 +86,8 @@ class EngineFactoryTestCase(test.NoDBTestCase):
                 self.cleanuped = True
 
         with deploy.EngineFactory.get_engine('A', mock.Mock(),
-                                             None) as deployment:
-            self.assertTrue(deployment.deployed)
+                                             None) as deployer:
+            endpoints = deployer.make()
+            self.assertTrue(endpoints.deployed)
 
-        self.assertTrue(deployment.cleanuped)
+        self.assertTrue(endpoints.cleanuped)

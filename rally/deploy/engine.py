@@ -72,13 +72,23 @@ class EngineFactory(object):
     def cleanup(self):
         """Cleanup OpenStack deployment."""
 
-    def __enter__(self):
+    def make(self):
         self.task.update_status(consts.TaskStatus.DEPLOY_STARTED)
-        deploy = self.deploy()
+        endpoints = self.deploy()
         self.task.update_status(consts.TaskStatus.DEPLOY_FINISHED)
-        return deploy
+        return endpoints
+
+    def __enter__(self):
+        return self
 
     def __exit__(self, type, value, traceback):
+        if type:
+            self.task.set_failed()
         self.task.update_status(consts.TaskStatus.CLEANUP)
-        self.cleanup()
-        self.task.update_status(consts.TaskStatus.FINISHED)
+        try:
+            self.cleanup()
+        except Exception:
+            self.task.set_failed()
+            raise
+        finally:
+            self.task.update_status(consts.TaskStatus.FINISHED)

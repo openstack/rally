@@ -31,3 +31,6 @@ class Task(object):
 
     def update_status(self, status):
         db.task_update(self.task['uuid'], {'status': status})
+
+    def set_failed(self):
+        db.task_update(self.task['uuid'], {'failed': True})

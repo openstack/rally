@@ -120,3 +120,12 @@ class TestEngineTestCase(test.NoDBTestCase):
             mock.call.update_status(s.TEST_TOOL_BENCHMARKING),
         ]
         self.assertEqual(fake_task.mock_calls, expected)
+
+    def test_task_status_invalid_config(self):
+        fake_task = mock.MagicMock()
+        try:
+            engine.TestEngine(self.invalid_test_config_bad_key, fake_task)
+        except exceptions.InvalidConfigException:
+            pass
+        expected = []
+        self.assertEqual(fake_task.mock_calls, expected)

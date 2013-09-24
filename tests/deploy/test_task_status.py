@@ -47,8 +47,8 @@ class DeployEngineTaskStatusTestCase(test.NoDBTestCase):
 
     def test_task_status_basic_chain(self):
         fake_task = mock.MagicMock()
-        with get_engine('FakeEngine', fake_task, {}):
-            pass
+        with get_engine('FakeEngine', fake_task, {}) as deployer:
+            deployer.make()
         s = consts.TaskStatus
         expected = [
             mock.call.update_status(s.DEPLOY_STARTED),
@@ -56,22 +56,24 @@ class DeployEngineTaskStatusTestCase(test.NoDBTestCase):
             mock.call.update_status(s.CLEANUP),
             mock.call.update_status(s.FINISHED),
         ]
-        self.assertEqual(fake_task.mock_calls, expected)
+        self.assertEqual(expected, fake_task.mock_calls)
 
     def _test_failure(self, engine, expected_calls):
         fake_task = mock.MagicMock()
-        engine = get_engine(engine, fake_task, {})
         try:
-            with engine:
-                pass
+            with get_engine(engine, fake_task, {}) as deployer:
+                deployer.make()
         except FakeFailure:
             pass
-        self.assertEqual(fake_task.mock_calls, expected_calls)
+        self.assertEqual(expected_calls, fake_task.mock_calls)
 
     def test_task_status_failed_deploy(self):
         s = consts.TaskStatus
         expected = [
             mock.call.update_status(s.DEPLOY_STARTED),
+            mock.call.set_failed(),
+            mock.call.update_status(s.CLEANUP),
+            mock.call.update_status(s.FINISHED),
         ]
         self._test_failure('EngineFailedDeploy', expected)
 
@@ -81,5 +83,7 @@ class DeployEngineTaskStatusTestCase(test.NoDBTestCase):
             mock.call.update_status(s.DEPLOY_STARTED),
             mock.call.update_status(s.DEPLOY_FINISHED),
             mock.call.update_status(s.CLEANUP),
+            mock.call.set_failed(),
+            mock.call.update_status(s.FINISHED),
         ]
         self._test_failure('EngineFailedCleanup', expected)
