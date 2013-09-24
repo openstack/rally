@@ -35,7 +35,7 @@ def start_task(config):
     deployer = deploy.EngineFactory.get_engine(deploy_conf['name'],
                                                task_object,
                                                deploy_conf)
-    tester = engine.TestEngine(config['tests'])
+    tester = engine.TestEngine(config['tests'], task_object)
 
     with deployer as deployment:
         with tester.bind(deployment):
