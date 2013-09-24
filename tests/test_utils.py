@@ -71,3 +71,15 @@ class ImportModulesTestCase(test.NoDBTestCase):
         modules = {}
         utils.try_append_module('rally.version', modules)
         self.assertTrue('rally.version' in modules)
+
+    def test_try_append_broken_module(self):
+        modules = {}
+        self.assertRaises(ImportError,
+                          utils.try_append_module,
+                          'tests.fixtures.import.broken',
+                          modules)
+
+    def test_import_modules_from_package(self):
+        utils.import_modules_from_package('tests.fixtures.import.package')
+        self.assertTrue('tests.fixtures.import.package.a' in sys.modules)
+        self.assertTrue('tests.fixtures.import.package.b' in sys.modules)

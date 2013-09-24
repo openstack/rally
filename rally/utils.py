@@ -68,9 +68,7 @@ def itersubclasses(cls, _seen=None):
 
 def try_append_module(name, modules):
     if name not in modules:
-        module = importutils.try_import(name)
-        if module is not None:
-            modules[name] = module
+        modules[name] = importutils.import_module(name)
 
 
 def import_modules_from_package(package):
@@ -81,9 +79,7 @@ def import_modules_from_package(package):
     path = [os.path.dirname(__file__), '..'] + package.split('.')
     path = os.path.join(*path)
     for filename in os.listdir(path):
-        module_name = '%s.%s' % (package, filename)
-        if filename.endswith('.py') and not filename.startswith('__'):
-            module_name = module_name[:-3]
-        elif os.path.isfile(os.path.join(path, filename)):
+        if filename.startswith('__') or not filename.endswith('.py'):
             continue
+        module_name = '%s.%s' % (package, filename[:-3])
         try_append_module(module_name, sys.modules)
