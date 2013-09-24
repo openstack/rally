@@ -18,7 +18,6 @@
 """Test for deploy engines."""
 
 import mock
-import uuid
 
 from rally import deploy
 from rally import exceptions
@@ -29,7 +28,7 @@ class EngineFactoryTestCase(test.NoDBTestCase):
 
     def test_get_engine_not_found(self):
         self.assertRaises(exceptions.NoSuchEngine,
-                          deploy.EngineFactory.get_engine, uuid.uuid4(),
+                          deploy.EngineFactory.get_engine, mock.Mock(),
                           "non_existing_engine", None)
 
     def _create_fake_engines(self):
@@ -57,13 +56,12 @@ class EngineFactoryTestCase(test.NoDBTestCase):
 
     def test_get_engine(self):
         engines = self._create_fake_engines()
-        with mock.patch('rally.deploy.engine.db'):
-            for e in engines:
-                engine_inst = deploy.EngineFactory.get_engine(e.__name__,
-                                                              uuid.uuid4(),
-                                                              {})
-                # TODO(boris-42): make it work through assertIsInstance
-                self.assertEqual(str(type(engine_inst)), str(e))
+        for e in engines:
+            engine_inst = deploy.EngineFactory.get_engine(e.__name__,
+                                                          mock.Mock(),
+                                                          {})
+            # TODO(boris-42): make it work through assertIsInstance
+            self.assertEqual(str(type(engine_inst)), str(e))
 
     def test_get_available_engines(self):
         engines = set([e.__name__ for e in self._create_fake_engines()])
@@ -87,9 +85,8 @@ class EngineFactoryTestCase(test.NoDBTestCase):
             def cleanup(self):
                 self.cleanuped = True
 
-        with mock.patch('rally.deploy.engine.db'):
-            with deploy.EngineFactory.get_engine('A', uuid.uuid4(),
-                                                 None) as deployment:
-                self.assertTrue(deployment.deployed)
+        with deploy.EngineFactory.get_engine('A', mock.Mock(),
+                                             None) as deployment:
+            self.assertTrue(deployment.deployed)
 
         self.assertTrue(deployment.cleanuped)

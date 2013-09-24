@@ -18,7 +18,6 @@
 import abc
 
 from rally import consts
-from rally import db
 from rally import exceptions
 from rally import utils
 
@@ -51,12 +50,12 @@ class EngineFactory(object):
     __metaclass__ = abc.ABCMeta
 
     @staticmethod
-    def get_engine(name, uuid, config):
+    def get_engine(name, task, config):
         """Returns instance of deploy engine with corresponding name."""
         for engine in utils.itersubclasses(EngineFactory):
             if name == engine.__name__:
                 new_engine = engine(config)
-                new_engine.task_uuid = str(uuid)
+                new_engine.task = task
                 return new_engine
         raise exceptions.NoSuchEngine(engine_name=name)
 
@@ -73,16 +72,13 @@ class EngineFactory(object):
     def cleanup(self):
         """Cleanup OpenStack deployment."""
 
-    def update_status(self, status):
-        db.task_update(self.task_uuid, {'status': status})
-
     def __enter__(self):
-        self.update_status(consts.TaskStatus.DEPLOY_STARTED)
+        self.task.update_status(consts.TaskStatus.DEPLOY_STARTED)
         deploy = self.deploy()
-        self.update_status(consts.TaskStatus.DEPLOY_FINISHED)
+        self.task.update_status(consts.TaskStatus.DEPLOY_FINISHED)
         return deploy
 
     def __exit__(self, type, value, traceback):
-        self.update_status(consts.TaskStatus.CLEANUP)
+        self.task.update_status(consts.TaskStatus.CLEANUP)
         self.cleanup()
-        self.update_status(consts.TaskStatus.FINISHED)
+        self.task.update_status(consts.TaskStatus.FINISHED)
