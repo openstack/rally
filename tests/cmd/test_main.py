@@ -55,4 +55,10 @@ class TaskCommandsTestCase(test.BaseTestCase):
             mock_db.task_get_by_uuid.assert_called_once_with(test_uuid)
 
     def test_list(self):
-        self.task.list()
+        db_response = [
+            {'uuid': 'a', 'created_at': 'b', 'status': 'c', 'failed': True}
+        ]
+        with mock.patch("rally.cmd.main.db") as mock_db:
+            mock_db.task_list = mock.MagicMock(return_value=db_response)
+            self.task.list()
+            mock_db.task_list.assert_called_once_with()
