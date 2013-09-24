@@ -3,6 +3,7 @@ eventlet>=0.9.17
 iso8601>=0.1.4
 jsonschema>=2.0.0
 netaddr>=0.7.6
+oslo.config>=1.2.0
 paramiko>=1.8.0
 pbr>=0.5.21,<1.0
 PrettyTable>=0.6,<0.8
@@ -15,5 +16,4 @@ six
 
 -e git+https://github.com/simpleranchero/fuel-ostf-tests#egg=fuel-ostf-tests
 
--f http://tarballs.openstack.org/oslo.config/oslo.config-1.2.0a3.tar.gz#egg=oslo.config-1.2.0a3
-oslo.config>=1.2.0a3
+
