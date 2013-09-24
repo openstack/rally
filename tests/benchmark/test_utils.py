@@ -56,7 +56,7 @@ class UtilsTestCase(test.NoDBTestCase):
         super(UtilsTestCase, self).tearDown()
 
     def test_running_test(self):
-        tester = utils.Tester(self.cloud_config_path)
+        tester = utils.Tester(mock.MagicMock(), self.cloud_config_path)
         test = ['./tests/benchmark/test_utils.py', '-k', 'test_dummy_1']
         for (times, concurrent) in [(1, 1), (3, 2), (2, 3)]:
             results = tester.run(test, times=times, concurrent=concurrent)
@@ -65,7 +65,7 @@ class UtilsTestCase(test.NoDBTestCase):
                 self.assertEqual(result['status'], 0)
 
     def test_running_multiple_tests(self):
-        tester = utils.Tester(self.cloud_config_path)
+        tester = utils.Tester(mock.MagicMock(), self.cloud_config_path)
         tests_dict = {
             'test1': ['./tests/benchmark/test_utils.py', '-k', 'test_dummy_1'],
             'test2': ['./tests/benchmark/test_utils.py', '-k', 'test_dummy_2']
@@ -89,14 +89,14 @@ class UtilsTestCase(test.NoDBTestCase):
                 }
             }
         }
-        test_engine = engine.TestEngine(test_config, mock.Mock())
+        test_engine = engine.TestEngine(test_config, mock.MagicMock())
         with test_engine.bind(cloud_config):
             res = test_engine.benchmark()
             self.assertEqual(res[0].values()[0]['status'], 0)
         tests.benchmark_tests = old_benchmark_tests
 
     def test_tester_timeout(self):
-        tester = utils.Tester(self.cloud_config_path)
+        tester = utils.Tester(mock.MagicMock(), self.cloud_config_path)
         test = ['./tests/benchmark/test_utils.py', '-k',
                 'test_dummy_timeout', '--timeout', '1']
         results = tester.run(test, times=2, concurrent=2)
@@ -105,7 +105,7 @@ class UtilsTestCase(test.NoDBTestCase):
             self.assertTrue(result['status'] != 0)
 
     def test_tester_no_timeout(self):
-        tester = utils.Tester(self.cloud_config_path)
+        tester = utils.Tester(mock.MagicMock(), self.cloud_config_path)
         test = ['./tests/benchmark/test_utils.py', '-k',
                 'test_dummy_timeout', '--timeout', '2']
         results = tester.run(test, times=2, concurrent=2)

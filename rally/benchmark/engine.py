@@ -26,6 +26,10 @@ from rally.benchmark import tests
 from rally.benchmark import utils
 from rally import consts
 from rally import exceptions
+from rally.openstack.common.gettextutils import _  # noqa
+from rally.openstack.common import log as logging
+
+LOG = logging.getLogger(__name__)
 
 
 class TestEngine(object):
@@ -63,6 +67,7 @@ class TestEngine(object):
                 }
             }
         }
+        :param task: The current task which is being performed
         """
         self.task = task
         self._validate_test_config(test_config)
@@ -78,10 +83,14 @@ class TestEngine(object):
 
         :raises: Exception if the test config is not valid
         """
-        # Perform schema verification
+        task_uuid = self.task['uuid']
+        LOG.info(_('Task %s: Validating the passed test config...') %
+                 task_uuid)
+        # Perform schema validation
         try:
             jsonschema.validate(test_config, config.test_config_schema)
         except jsonschema.ValidationError as e:
+            LOG.exception(_('Task %s: Error: %s') % (task_uuid, e.message))
             raise exceptions.InvalidConfigException(message=e.message)
 
         # Check for test names
@@ -91,7 +100,11 @@ class TestEngine(object):
                 continue
             for test in test_config[test_type]['tests_to_run']:
                 if test not in tests.tests[test_type]:
+                    LOG.exception(_('Task %s: Error: specified '
+                                    'test does not exist: %s') %
+                                  (task_uuid, test))
                     raise exceptions.NoSuchTestException(test_name=test)
+        LOG.info(_('Task %s: Test config validation succeeded.') % task_uuid)
 
     def _format_test_config(self, test_config):
         """Returns a formatted copy of the given valid test config so that
@@ -102,6 +115,9 @@ class TestEngine(object):
 
         :returns: Dictionary
         """
+        task_uuid = self.task['uuid']
+        LOG.debug(_('Task %s: Formatting the given test config...') %
+                  task_uuid)
         formatted_test_config = copy.deepcopy(test_config)
         # NOTE(msdubov): if 'verify' or 'benchmark' tests are not specified,
         #                run them all by default.
@@ -117,17 +133,27 @@ class TestEngine(object):
             formatted_test_config['benchmark'] = {
                 'tests_to_run': tests_to_run
             }
+        LOG.debug(_('Task %s: Test config formatting succeeded.') % task_uuid)
         return formatted_test_config
 
     def __enter__(self):
+        task_uuid = self.task['uuid']
+        LOG.debug(_('Task %s: Writing cloud & test configs into '
+                    'temporary files...') % task_uuid)
         with os.fdopen(self.cloud_config_fd, 'w') as f:
             self.cloud_config.write(f)
         with os.fdopen(self.test_config_fd, 'w') as f:
             self.test_config.write(f)
+        LOG.debug(_('Task %s: Completed writing temporary '
+                    'config files.') % task_uuid)
 
     def __exit__(self, type, value, traceback):
+        task_uuid = self.task['uuid']
+        LOG.debug(_('Task %s: Deleting temporary config files...') % task_uuid)
         os.remove(self.cloud_config_path)
         os.remove(self.test_config_path)
+        LOG.debug(_('Task %s: Completed deleting temporary '
+                    'config files.') % task_uuid)
 
     def bind(self, cloud_config):
         """Binds an existing deployment configuration to the test engine.
@@ -141,8 +167,11 @@ class TestEngine(object):
 
         :returns: self (the method should be called in a 'with' statement)
         """
+        task_uuid = self.task['uuid']
+        LOG.info(_('Task %s: Binding the cloud config...') % task_uuid)
         self.cloud_config = config.CloudConfigManager()
         self.cloud_config.read_from_dict(cloud_config)
+        LOG.info(_('Task %s: Successfuly bound the cloud config.') % task_uuid)
 
         self.cloud_config_fd, self.cloud_config_path = tempfile.mkstemp(
                                                 suffix='rallycfg', text=True)
@@ -156,8 +185,10 @@ class TestEngine(object):
 
         :raises: VerificationException if some of the verification tests failed
         """
+        task_uuid = self.task['uuid']
         self.task.update_status(consts.TaskStatus.TEST_TOOL_VERIFY_OPENSTACK)
-        tester = utils.Tester(self.cloud_config_path)
+        LOG.info(_('Task %s: Verifying the cloud deployment...') % task_uuid)
+        tester = utils.Tester(self.task, self.cloud_config_path)
         tests_to_run = self.test_config.to_dict()['verify']['tests_to_run']
         verification_tests = dict((test, tests.verification_tests[test])
                                   for test in tests_to_run)
@@ -166,8 +197,13 @@ class TestEngine(object):
         for test_results in test_run_results:
             for result in test_results.itervalues():
                 if result['status'] != 0:
+                    error_msg = '\n'.join(result['msg'])
+                    LOG.exception(_('Task %s: One of verification '
+                                    'tests failed: %s') %
+                                 (task_uuid, error_msg))
                     raise exceptions.DeploymentVerificationException(
-                                                    test_message=result['msg'])
+                                                        test_message=error_msg)
+        LOG.info(_('Task %s: Verification succeeded.') % task_uuid)
 
     def benchmark(self):
         """Runs the benchmarks according to the test configuration
@@ -176,9 +212,14 @@ class TestEngine(object):
         :returns: List of dicts, each dict containing the results of all the
                   corresponding benchmark test launches
         """
+        task_uuid = self.task['uuid']
         self.task.update_status(consts.TaskStatus.TEST_TOOL_BENCHMARKING)
-        tester = utils.Tester(self.cloud_config_path, self.test_config_path)
+        LOG.info(_('Task %s: Launching benchmark scenarios...') % task_uuid)
+        tester = utils.Tester(self.task, self.cloud_config_path,
+                              self.test_config_path)
         tests_to_run = self.test_config.to_dict()['benchmark']['tests_to_run']
         benchmark_tests = dict((test, tests.benchmark_tests[test])
                                for test in tests_to_run)
-        return tester.run_all(benchmark_tests)
+        result = tester.run_all(benchmark_tests)
+        LOG.info(_('Task %s: Completed benchmarking.') % task_uuid)
+        return result

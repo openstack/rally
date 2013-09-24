@@ -23,7 +23,11 @@ import pytest
 import fuel_health.cleanup as fuel_cleanup
 
 from rally.benchmark import config
+from rally.openstack.common.gettextutils import _  # noqa
+from rally.openstack.common import log as logging
 from rally import utils
+
+LOG = logging.getLogger(__name__)
 
 
 def parameterize_from_test_config(benchmark_name):
@@ -69,7 +73,7 @@ def _run_cleanup(config):
 
 class Tester(object):
 
-    def __init__(self, cloud_config_path, test_config_path=None):
+    def __init__(self, task, cloud_config_path, test_config_path=None):
         self._cloud_config_path = os.path.abspath(cloud_config_path)
         if test_config_path:
             self._test_config_manager = config.TestConfigManager(
@@ -77,6 +81,7 @@ class Tester(object):
             os.environ['PYTEST_CONFIG'] = os.path.abspath(test_config_path)
         else:
             self._test_config_manager = None
+        self.task = task
         self._q = multiprocessing.Queue()
 
     def run_all(self, tests):
@@ -96,8 +101,11 @@ class Tester(object):
         else:
             tests_to_run = {}
 
+        task_uuid = self.task['uuid']
         res = []
         for test_name in tests:
+            LOG.debug(_('Task %s: Launching benchmark `%s`...') %
+                      (task_uuid, test_name))
             test_runs = tests_to_run.get(test_name, [{}])
             for i, test_run in enumerate(test_runs):
                 times = test_run.get('times', 1)
@@ -105,6 +113,8 @@ class Tester(object):
                 os.environ['PYTEST_RUN_INDEX'] = str(i)
                 res.append(self.run(tests[test_name],
                                     times=times, concurrent=concurrent))
+            LOG.debug(_('Task %s: Completed benchmark `%s`.') %
+                      (task_uuid, test_name))
         return res
 
     def run(self, test_args, times=1, concurrent=1):
@@ -126,17 +136,27 @@ class Tester(object):
             timeout = str(60 * 60 * 60 / times)
             test_args.extend(['--timeout', timeout])
 
+        task_uuid = self.task['uuid']
+        LOG.debug(_('Task %s: Running test: creating multiprocessing pool') %
+                  task_uuid)
+        LOG.debug(_('Times = %i, Concurrent = %i') % (times, concurrent))
         iterable_test_args = ((test_args, self._cloud_config_path, n)
                               for n in xrange(times))
         pool = multiprocessing.Pool(concurrent)
         result_generator = pool.imap(_run_test, iterable_test_args)
         results = {}
         for result in result_generator:
+            LOG.debug(_('Task %s: Process %s returned.') %
+                      (task_uuid, result['proc_name']))
             results[result['proc_name']] = result
             if result['status'] and 'Timeout' in result['msg']:
                 # cancel remaining tests if one test was timed out
+                LOG.debug(_('Task %s: One of the tests timed out, '
+                            'cancelling remaining tests...') % task_uuid)
                 break
+        LOG.debug(_('Task %s: Cleaning up...') % task_uuid)
         self._cleanup(self._cloud_config_path)
+        LOG.debug(_('Task %s: Cleanup completed.') % task_uuid)
         return results
 
     def _cleanup(self, cloud_config_path):

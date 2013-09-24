@@ -74,21 +74,22 @@ class TestEngineTestCase(test.NoDBTestCase):
 
     def test_verify_test_config(self):
         try:
-            engine.TestEngine(self.valid_test_config, mock.Mock())
+            engine.TestEngine(self.valid_test_config, mock.MagicMock())
         except Exception as e:
             self.fail("Unexpected exception in test config" +
                       "verification: %s" % str(e))
         self.assertRaises(exceptions.NoSuchTestException,
                           engine.TestEngine,
                           self.invalid_test_config_bad_test_name,
-                          mock.Mock())
+                          mock.MagicMock())
         self.assertRaises(exceptions.InvalidConfigException,
                           engine.TestEngine,
                           self.invalid_test_config_bad_key,
-                          mock.Mock())
+                          mock.MagicMock())
 
     def test_bind(self):
-        test_engine = engine.TestEngine(self.valid_test_config, mock.Mock())
+        test_engine = engine.TestEngine(self.valid_test_config,
+                                        mock.MagicMock())
         with test_engine.bind(self.valid_cloud_config):
             self.assertTrue(os.path.exists(test_engine.cloud_config_path))
             self.assertTrue(os.path.exists(test_engine.test_config_path))
@@ -96,7 +97,8 @@ class TestEngineTestCase(test.NoDBTestCase):
         self.assertFalse(os.path.exists(test_engine.test_config_path))
 
     def test_verify(self):
-        test_engine = engine.TestEngine(self.valid_test_config, mock.Mock())
+        test_engine = engine.TestEngine(self.valid_test_config,
+                                        mock.MagicMock())
         with test_engine.bind(self.valid_cloud_config):
             try:
                 test_engine.verify()
@@ -104,7 +106,8 @@ class TestEngineTestCase(test.NoDBTestCase):
                 self.fail("Exception in TestEngine.verify: %s" % str(e))
 
     def test_benchmark(self):
-        test_engine = engine.TestEngine(self.valid_test_config, mock.Mock())
+        test_engine = engine.TestEngine(self.valid_test_config,
+                                        mock.MagicMock())
         with test_engine.bind(self.valid_cloud_config):
             test_engine.benchmark()
 
@@ -120,9 +123,12 @@ class TestEngineTestCase(test.NoDBTestCase):
             mock.call.update_status(s.TEST_TOOL_VERIFY_OPENSTACK),
             mock.call.update_verification_log(json.dumps(
                 [self.run_success, self.run_success])),
-            mock.call.update_status(s.TEST_TOOL_BENCHMARKING),
+            mock.call.update_status(s.TEST_TOOL_BENCHMARKING)
         ]
-        self.assertEqual(fake_task.mock_calls, expected)
+        # NOTE(msdubov): Ignore task['uuid'] calls which are used for logging
+        mock_calls = filter(lambda call: '__getitem__' not in call[0],
+                            fake_task.mock_calls)
+        self.assertEqual(mock_calls, expected)
 
     def test_task_status_invalid_config(self):
         fake_task = mock.MagicMock()
@@ -131,4 +137,7 @@ class TestEngineTestCase(test.NoDBTestCase):
         except exceptions.InvalidConfigException:
             pass
         expected = []
-        self.assertEqual(fake_task.mock_calls, expected)
+        # NOTE(msdubov): Ignore task['uuid'] calls which are used for logging
+        mock_calls = filter(lambda call: '__getitem__' not in call[0],
+                            fake_task.mock_calls)
+        self.assertEqual(mock_calls, expected)
