@@ -18,8 +18,7 @@
 import copy
 import jsonschema
 import os
-import random
-import string
+import tempfile
 
 from rally.benchmark import config
 from rally.benchmark import tests
@@ -119,18 +118,10 @@ class TestEngine(object):
             }
         return formatted_test_config
 
-    def _delete_temporary_config(self, config_path):
-        os.remove(config_path)
-
-    def _generate_temporary_file_path(self):
-        file_name = ''.join(random.choice(string.letters) for i in xrange(16))
-        file_path = 'rally/benchmark/temp/'
-        return os.path.abspath(file_path + file_name)
-
     def __enter__(self):
-        with open(self.cloud_config_path, 'w') as f:
+        with os.fdopen(self.cloud_config_fd, 'w') as f:
             self.cloud_config.write(f)
-        with open(self.test_config_path, 'w') as f:
+        with os.fdopen(self.test_config_fd, 'w') as f:
             self.test_config.write(f)
 
     def __exit__(self, type, value, traceback):
@@ -152,8 +143,10 @@ class TestEngine(object):
         self.cloud_config = config.CloudConfigManager()
         self.cloud_config.read_from_dict(cloud_config)
 
-        self.cloud_config_path = self._generate_temporary_file_path()
-        self.test_config_path = self._generate_temporary_file_path()
+        self.cloud_config_fd, self.cloud_config_path = tempfile.mkstemp(
+                                                suffix='rallycfg', text=True)
+        self.test_config_fd, self.test_config_path = tempfile.mkstemp(
+                                                suffix='rallycfg', text=True)
 
         return self
 
