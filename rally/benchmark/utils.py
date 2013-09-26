@@ -62,6 +62,11 @@ def _run_test(args):
             'proc_name': proc_n}
 
 
+def _run_cleanup(config):
+    os.environ['CUSTOM_FUEL_CONFIG'] = config
+    fuel_cleanup.cleanup()
+
+
 class Tester(object):
 
     def __init__(self, cloud_config_path, test_config_path=None):
@@ -135,5 +140,8 @@ class Tester(object):
         return results
 
     def _cleanup(self, cloud_config_path):
-        os.environ['CUSTOM_FUEL_CONFIG'] = cloud_config_path
-        fuel_cleanup.cleanup()
+        cleanup = multiprocessing.Process(target=_run_cleanup,
+                                          args=(cloud_config_path,))
+        cleanup.start()
+        cleanup.join()
+        return
