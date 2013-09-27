@@ -16,6 +16,7 @@
 #    under the License.
 
 import copy
+import json
 import jsonschema
 import os
 import tempfile
@@ -160,7 +161,9 @@ class TestEngine(object):
         tests_to_run = self.test_config.to_dict()['verify']['tests_to_run']
         verification_tests = dict((test, tests.verification_tests[test])
                                   for test in tests_to_run)
-        for test_results in tester.run_all(verification_tests):
+        test_run_results = tester.run_all(verification_tests)
+        self.task.update_verification_log(json.dumps(test_run_results))
+        for test_results in test_run_results:
             for result in test_results.itervalues():
                 if result['status'] != 0:
                     raise exceptions.DeploymentVerificationException(

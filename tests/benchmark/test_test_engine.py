@@ -16,6 +16,7 @@
 #    under the License.
 
 """Tests for the Test engine."""
+import json
 import mock
 import os
 
@@ -60,11 +61,11 @@ class TestEngineTestCase(test.NoDBTestCase):
             }
         }
 
-        run_success = {
+        self.run_success = {
             'proc': {'msg': ['msg'], 'status': 0, 'proc_name': 'proc'}
         }
         self.run_mock = mock.patch('rally.benchmark.utils.Tester.run',
-                                   mock.Mock(return_value=run_success))
+                                   mock.Mock(return_value=self.run_success))
         self.run_mock.start()
 
     def tearDown(self):
@@ -117,6 +118,8 @@ class TestEngineTestCase(test.NoDBTestCase):
         s = consts.TaskStatus
         expected = [
             mock.call.update_status(s.TEST_TOOL_VERIFY_OPENSTACK),
+            mock.call.update_verification_log(json.dumps(
+                [self.run_success, self.run_success])),
             mock.call.update_status(s.TEST_TOOL_BENCHMARKING),
         ]
         self.assertEqual(fake_task.mock_calls, expected)

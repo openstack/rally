@@ -32,5 +32,8 @@ class Task(object):
     def update_status(self, status):
         db.task_update(self.task['uuid'], {'status': status})
 
+    def update_verification_log(self, log):
+        db.task_update(self.task['uuid'], {'verification_log': log})
+
     def set_failed(self):
         db.task_update(self.task['uuid'], {'failed': True})

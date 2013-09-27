@@ -50,6 +50,7 @@ class Task(BASE, RallyBase):
                                name='enum_tasks_status'),
                        default=consts.TaskStatus.INIT, nullable=False)
     failed = sa.Column(sa.Boolean, default=False, nullable=False)
+    verification_log = sa.Column(sa.Text, default='', nullable=True)
 
 
 def create_db():
