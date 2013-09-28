@@ -15,12 +15,33 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import itertools
 import os
 import StringIO
 import sys
 
+from rally import exceptions
 from rally.openstack.common.gettextutils import _   # noqa
 from rally.openstack.common import importutils
+
+
+class ImmutableMixin(object):
+    _inited = False
+
+    def __init__(self):
+        self._inited = True
+
+    def __setattr__(self, key, value):
+        if self._inited:
+            raise exceptions.ImmutableException()
+        super(ImmutableMixin, self).__setattr__(key, value)
+
+
+class EnumMixin(object):
+    def __iter__(self):
+        for k, v in itertools.imap(lambda x: (x, getattr(self, x)), dir(self)):
+            if not k.startswith('_'):
+                yield v
 
 
 class StdOutCapture(object):

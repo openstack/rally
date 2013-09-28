@@ -23,24 +23,10 @@ so to avoid copy paste or dirrect usage of enums values we create singltons
 for each enum. (e.g TaskStatus)
 """
 
-import itertools
-
-from rally import exceptions
+from rally import utils
 
 
-class _Immutable(object):
-    def __setattr__(self, key, value):
-        raise exceptions.ImmutableException()
-
-
-class _Enum(object):
-    def __iter__(self):
-        for k, v in itertools.imap(lambda x: (x, getattr(self, x)), dir(self)):
-            if not k.startswith('_') and isinstance(v, str):
-                yield v
-
-
-class _TaskStatus(_Immutable, _Enum):
+class _TaskStatus(utils.ImmutableMixin, utils.EnumMixin):
     INIT = 'init'
     CLEANUP = 'cleanup'
     FINISHED = 'finished'

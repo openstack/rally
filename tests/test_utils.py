@@ -21,8 +21,41 @@ from __future__ import print_function
 
 import sys
 
+from rally import exceptions
 from rally import test
 from rally import utils
+
+
+class ImmutableMixinTestCase(test.NoDBTestCase):
+
+    def test_without_base_values(self):
+        im = utils.ImmutableMixin()
+        self.assertRaises(exceptions.ImmutableException,
+                          im.__setattr__, 'test', 'test')
+
+    def test_with_base_values(self):
+
+        class A(utils.ImmutableMixin):
+            def __init__(self, test):
+                self.test = test
+                super(A, self).__init__()
+
+        a = A('test')
+        self.assertRaises(exceptions.ImmutableException,
+                          a.__setattr__, 'abc', 'test')
+        self.assertEqual(a.test, 'test')
+
+
+class EnumMixinTestCase(test.NoDBTestCase):
+
+    def test_enum_mix_in(self):
+
+        class Foo(utils.EnumMixin):
+            a = 10
+            b = 20
+            CC = "2000"
+
+        self.assertEqual(set(list(Foo())), set([10, 20, "2000"]))
 
 
 class StdIOCaptureTestCase(test.NoDBTestCase):
