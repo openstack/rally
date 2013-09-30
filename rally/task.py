@@ -25,6 +25,9 @@ class Task(object):
         else:
             self.task = db.task_create({})
 
+    def __getitem__(self, key):
+            return self.task[key]
+
     @staticmethod
     def get_by_uuid(uuid):
         return Task(db.task_get_by_uuid(uuid))
