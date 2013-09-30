@@ -34,7 +34,8 @@ class FakeEngine(engine.EngineFactory):
        }
     """
 
-    def __init__(self, config):
+    def __init__(self, task, config):
+        self.task = task
         self.config = config.get('cloud_config', {})
         # TODO(boris-42): We should verify endpoints here.
 

@@ -56,7 +56,10 @@ class DeployEngineTaskStatusTestCase(test.NoDBTestCase):
             mock.call.update_status(s.CLEANUP),
             mock.call.update_status(s.FINISHED),
         ]
-        self.assertEqual(expected, fake_task.mock_calls)
+        # NOTE(msdubov): Ignore task['uuid'] calls which are used for logging
+        mock_calls = filter(lambda call: '__getitem__' not in call[0],
+                            fake_task.mock_calls)
+        self.assertEqual(expected, mock_calls)
 
     def _test_failure(self, engine, expected_calls):
         fake_task = mock.MagicMock()
@@ -65,7 +68,10 @@ class DeployEngineTaskStatusTestCase(test.NoDBTestCase):
                 deployer.make()
         except FakeFailure:
             pass
-        self.assertEqual(expected_calls, fake_task.mock_calls)
+        # NOTE(msdubov): Ignore task['uuid'] calls which are used for logging
+        mock_calls = filter(lambda call: '__getitem__' not in call[0],
+                            fake_task.mock_calls)
+        self.assertEqual(expected_calls, mock_calls)
 
     def test_task_status_failed_deploy(self):
         s = consts.TaskStatus
