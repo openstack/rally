@@ -27,20 +27,21 @@ from rally import test
 class TestFakeDeployEngine(test.NoDBTestCase):
 
     def test_fake_egnine_init(self):
-        fake_engine.FakeEngine({})
+        fake_engine.FakeEngine(mock.MagicMock(), {})
 
     def test_fake_engine_init_with_deploy_config(self):
         cloud_config = {'cloud_config': {'a': 1, 'b': 2}}
-        fake_engine.FakeEngine(cloud_config)
+        fake_engine.FakeEngine(mock.MagicMock(), cloud_config)
 
     def test_fake_engine_deploy(self):
         cloud_config = {'cloud_config': {'a': 1, 'b': 2}}
-        engine = fake_engine.FakeEngine(cloud_config)
+        engine = fake_engine.FakeEngine(mock.MagicMock(), cloud_config)
         self.assertEqual(engine.deploy(), cloud_config['cloud_config'])
 
     def test_fake_engine_cleanup(self):
-        fake_engine.FakeEngine({}).cleanup()
+        fake_engine.FakeEngine(mock.MagicMock(), {}).cleanup()
 
     def test_fake_engine_is_in_factory(self):
-        engine = deploy.EngineFactory.get_engine('FakeEngine', mock.Mock(), {})
+        engine = deploy.EngineFactory.get_engine('FakeEngine',
+                                                 mock.MagicMock(), {})
         self.assertIsInstance(engine, fake_engine.FakeEngine)

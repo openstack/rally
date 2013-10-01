@@ -28,14 +28,14 @@ class EngineFactoryTestCase(test.NoDBTestCase):
 
     def test_get_engine_not_found(self):
         self.assertRaises(exceptions.NoSuchEngine,
-                          deploy.EngineFactory.get_engine, mock.Mock(),
-                          "non_existing_engine", None)
+                          deploy.EngineFactory.get_engine,
+                          "non_existing_engine", mock.MagicMock(), None)
 
     def _create_fake_engines(self):
         class EngineMixIn(object):
 
-            def __init__(self, config):
-                pass
+            def __init__(self, task, config):
+                self.task = task
 
             def deploy(self):
                 pass
@@ -58,7 +58,7 @@ class EngineFactoryTestCase(test.NoDBTestCase):
         engines = self._create_fake_engines()
         for e in engines:
             engine_inst = deploy.EngineFactory.get_engine(e.__name__,
-                                                          mock.Mock(),
+                                                          mock.MagicMock(),
                                                           {})
             # TODO(boris-42): make it work through assertIsInstance
             self.assertEqual(str(type(engine_inst)), str(e))
@@ -75,8 +75,8 @@ class EngineFactoryTestCase(test.NoDBTestCase):
 
         class A(deploy.EngineFactory):
 
-            def __init__(self, config):
-                pass
+            def __init__(self, task, config):
+                self.task = task
 
             def deploy(self):
                 self.deployed = True
@@ -85,7 +85,7 @@ class EngineFactoryTestCase(test.NoDBTestCase):
             def cleanup(self):
                 self.cleanuped = True
 
-        with deploy.EngineFactory.get_engine('A', mock.Mock(),
+        with deploy.EngineFactory.get_engine('A', mock.MagicMock(),
                                              None) as deployer:
             endpoints = deployer.make()
             self.assertTrue(endpoints.deployed)

@@ -21,7 +21,11 @@ import subprocess
 import tempfile
 
 from rally.deploy import engine
+from rally.openstack.common.gettextutils import _  # noqa
+from rally.openstack.common import log as logging
 from rally.serverprovider import provider
+
+LOG = logging.getLogger(__name__)
 
 
 class DevstackDeployment(engine.EngineFactory):
@@ -68,6 +72,9 @@ class DevstackDeployment(engine.EngineFactory):
             self._vm_provider.destroy_vm(vm)
 
     def patch_devstack(self, vm):
+        task_uuid = self.task['uuid']
+        LOG.info(_('Task %(uuid)s: Patching DevStack for VM %(vm_ip)s...') %
+                 {'uuid': task_uuid, 'vm_ip': vm.ip})
         template_path = os.path.dirname(__file__) + '/devstack/'
         env = jinja2.Environment(loader=jinja2.FileSystemLoader(template_path))
 
@@ -87,13 +94,20 @@ class DevstackDeployment(engine.EngineFactory):
         subprocess.check_call(cmd, shell=True)
 
         os.unlink(config_path)
+        LOG.info(_('Task %(uuid)s: DevStack for VM %(vm_ip)s successfully '
+                   'patched.') % {'uuid': task_uuid, 'vm_ip': vm.ip})
         return True
 
     def start_devstack(self, vm):
+        task_uuid = self.task['uuid']
+        LOG.info(_('Task %(uuid)s: Starting DevStack for VM %(vm_ip)s...') %
+                 {'uuid': task_uuid, 'vm_ip': vm.ip})
         cmd = 'ssh %(opts)s %(usr)s@%(host)s devstack/stack.sh' % {
             'opts': '-o StrictHostKeyChecking=no',
             'usr': vm.user,
             'host': vm.ip
         }
         subprocess.check_call(cmd, shell=True)
+        LOG.info(_('Task %(uuid)s: DevStack for VM %(vm_ip)s successfully '
+                   'started.') % {'uuid': task_uuid, 'vm_ip': vm.ip})
         return True
