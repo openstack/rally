@@ -78,7 +78,7 @@ class UtilsTestCase(test.NoDBTestCase):
         old_benchmark_tests = tests.benchmark_tests.copy()
         tests.benchmark_tests.update({
             'fake.test_parameterize': ['--pyargs',
-                                       'rally.benchmark.test_scenarios.fake',
+                                       'rally.benchmark.scenarios.fake',
                                        '-k', 'test_parameterize']
         })
         cloud_config = {}
