@@ -20,6 +20,7 @@ import os
 import StringIO
 import sys
 import time
+import traceback
 
 from rally import exceptions
 from rally.openstack.common.gettextutils import _   # noqa
@@ -67,6 +68,22 @@ class StdErrCapture(object):
 
     def __exit__(self, type, value, traceback):
         sys.stderr = self.stderr
+
+
+class Timer(object):
+    def __enter__(self):
+        self.error = None
+        self.start = time.time()
+        return self
+
+    def __exit__(self, type, value, tb):
+        self.finish = time.time()
+        if type:
+            tb = traceback.print_exception(type, value, tb)
+            self.error = (type, value, tb)
+
+    def duration(self):
+        return self.finish - self.start
 
 
 def itersubclasses(cls, _seen=None):

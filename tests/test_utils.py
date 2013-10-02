@@ -20,7 +20,9 @@
 from __future__ import print_function
 
 import datetime
+import mock
 import sys
+import time
 
 from rally import exceptions
 from rally import test
@@ -80,6 +82,30 @@ class StdIOCaptureTestCase(test.NoDBTestCase):
 
         self.assertEqual(err.getvalue().rstrip('\n').split('\n'), messages)
         self.assertEqual(stderr, sys.stderr)
+
+
+class TimerTestCase(test.NoDBTestCase):
+
+    def test_timer_duration(self):
+        start_time = time.time()
+        end_time = time.time()
+
+        with mock.patch('rally.utils.time') as mock_time:
+            mock_time.time = mock.MagicMock(return_value=start_time)
+            with utils.Timer() as timer:
+                mock_time.time = mock.MagicMock(return_value=end_time)
+
+        self.assertIsNone(timer.error)
+        self.assertEqual(end_time - start_time, timer.duration())
+
+    def test_timer_exception(self):
+        try:
+            with utils.Timer() as timer:
+                raise Exception()
+        except Exception:
+            pass
+        self.assertEqual(3, len(timer.error))
+        self.assertEqual(timer.error[0], type(Exception()))
 
 
 class IterSubclassesTestCase(test.NoDBTestCase):
