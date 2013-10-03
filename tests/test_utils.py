@@ -135,8 +135,8 @@ class SyncExecuteTestCase(test.NoDBTestCase):
         def fake_updater(obj):
             return obj
 
-        utils.sync_execute(fake_factory, {}, fake_checker_based_on_time,
+        utils.sync_execute(fake_factory, [], {}, fake_checker_based_on_time,
                            fake_updater)
         self.assertRaises(exceptions.TimeoutException, utils.sync_execute,
-                          fake_factory, {}, fake_checker_always_false,
+                          fake_factory, [], {}, fake_checker_always_false,
                           fake_updater, 3)

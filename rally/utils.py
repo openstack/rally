@@ -107,14 +107,15 @@ def import_modules_from_package(package):
         try_append_module(module_name, sys.modules)
 
 
-def sync_execute(func, kwargs, is_ready, update_result=None,
+def sync_execute(func, args, kwargs, is_ready, update_result=None,
                  timeout=60, sleep=1):
     """Wraps an asynchronous function call into a synchronous one. Assumes that
     the called function immediately returns an object for which it takes some
     time to get to the 'ready for use' state.
 
     :param func: Asynchronous function to be called
-    :param kwargs: Dict of args for the function to be called with
+    :param args: List of args for the function to be called with
+    :param kwargs: Dict of named args for the function to be called with
     :param is_ready: A predicate that should take the func(**kwarg) execution
                      result and return True iff it is ready to be returned
     :param update_result: Function that should take the func(**kwarg) execution
@@ -124,10 +125,10 @@ def sync_execute(func, kwargs, is_ready, update_result=None,
                     raised
     :param sleep: Pause in seconds between the two consecutive readiness checks
 
-    :returns: The 'ready for use' result of func(**kwargs) function call
+    :returns: The 'ready for use' result of func(*args, **kwargs) function call
     """
     start = time.time()
-    result = func(**kwargs)
+    result = func(*args, **kwargs)
     while not is_ready(result):
         time.sleep(sleep)
         if time.time() - start > timeout:
