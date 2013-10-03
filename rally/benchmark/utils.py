@@ -109,7 +109,7 @@ def _run_cleanup(config):
     fuel_cleanup.cleanup()
 
 
-class Tester(object):
+class Verifier(object):
 
     def __init__(self, task, cloud_config_path, test_config_path=None):
         self._cloud_config_path = os.path.abspath(cloud_config_path)
