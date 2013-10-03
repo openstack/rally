@@ -19,6 +19,7 @@ import itertools
 import os
 import StringIO
 import sys
+import time
 
 from rally import exceptions
 from rally.openstack.common.gettextutils import _   # noqa
@@ -104,3 +105,33 @@ def import_modules_from_package(package):
             continue
         module_name = '%s.%s' % (package, filename[:-3])
         try_append_module(module_name, sys.modules)
+
+
+def sync_execute(func, kwargs, is_ready, update_result=None,
+                 timeout=60, sleep=1):
+    """Wraps an asynchronous function call into a synchronous one. Assumes that
+    the called function immediately returns an object for which it takes some
+    time to get to the 'ready for use' state.
+
+    :param func: Asynchronous function to be called
+    :param kwargs: Dict of args for the function to be called with
+    :param is_ready: A predicate that should take the func(**kwarg) execution
+                     result and return True iff it is ready to be returned
+    :param update_result: Function that should take the func(**kwarg) execution
+                          result and return an 'updated' result. If set to
+                          None, no result updating is performed
+    :param timeout: Timeout in seconds after which a TimeoutException will be
+                    raised
+    :param sleep: Pause in seconds between the two consecutive readiness checks
+
+    :returns: The 'ready for use' result of func(**kwargs) function call
+    """
+    start = time.time()
+    result = func(**kwargs)
+    while not is_ready(result):
+        time.sleep(sleep)
+        if time.time() - start > timeout:
+            raise exceptions.TimeoutException()
+        if update_result:
+            result = update_result(result)
+    return result

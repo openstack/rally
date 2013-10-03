@@ -19,6 +19,7 @@
 
 from __future__ import print_function
 
+import datetime
 import sys
 
 from rally import exceptions
@@ -116,3 +117,26 @@ class ImportModulesTestCase(test.NoDBTestCase):
         utils.import_modules_from_package('tests.fixtures.import.package')
         self.assertTrue('tests.fixtures.import.package.a' in sys.modules)
         self.assertTrue('tests.fixtures.import.package.b' in sys.modules)
+
+
+class SyncExecuteTestCase(test.NoDBTestCase):
+
+    def test_sync_execute(self):
+
+        def fake_factory():
+            return object()
+
+        def fake_checker_based_on_time(obj):
+            return datetime.datetime.now().second % 5 == 0
+
+        def fake_checker_always_false(obj):
+            return False
+
+        def fake_updater(obj):
+            return obj
+
+        utils.sync_execute(fake_factory, {}, fake_checker_based_on_time,
+                           fake_updater)
+        self.assertRaises(exceptions.TimeoutException, utils.sync_execute,
+                          fake_factory, {}, fake_checker_always_false,
+                          fake_updater, 3)
