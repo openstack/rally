@@ -15,7 +15,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import functools
 import multiprocessing
 import os
 import pytest
@@ -27,31 +26,8 @@ from rally.openstack.common.gettextutils import _  # noqa
 from rally.openstack.common import log as logging
 from rally import utils
 
+
 LOG = logging.getLogger(__name__)
-
-
-def parameterize_from_test_config(benchmark_name):
-    """Decorator that configures the test function parameters through the
-    test configuration stored in the temporary file (created by TestEngine).
-
-    :param benchmark_name: The benchmark name. The test function settings
-                           will be searched in the configuration under the key
-                           `benchmark_name`.`function_name`
-    """
-    def decorator(test_function):
-        @functools.wraps(test_function)
-        def wrapper(*args, **kwargs):
-            test_config = config.TestConfigManager()
-            test_config.read(os.environ['PYTEST_CONFIG'])
-            current_test_run_index = int(os.environ['PYTEST_RUN_INDEX'])
-            tests_to_run = test_config.to_dict()['benchmark']['tests_to_run']
-            current_test_runs = tests_to_run['%s.%s' % (benchmark_name,
-                                             test_function.__name__)]
-            current_test_config = current_test_runs[current_test_run_index]
-            kwargs.update(current_test_config.get('args', {}))
-            test_function(*args, **kwargs)
-        return wrapper
-    return decorator
 
 
 def _run_test(args):

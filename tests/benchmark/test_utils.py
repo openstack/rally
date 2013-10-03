@@ -21,8 +21,6 @@ import os
 import time
 
 from rally.benchmark import config
-from rally.benchmark import engine
-from rally.benchmark import tests
 from rally.benchmark import utils
 from rally import test
 
@@ -73,27 +71,6 @@ class UtilsTestCase(test.NoDBTestCase):
         for test_results in tester.run_all(tests_dict):
             for result in test_results.itervalues():
                 self.assertEqual(result['status'], 0)
-
-    def test_parameterize_inside_class_from_test_config(self):
-        old_benchmark_tests = tests.benchmark_tests.copy()
-        tests.benchmark_tests.update({
-            'fake.test_parameterize': ['--pyargs',
-                                       'rally.benchmark.scenarios.fake',
-                                       '-k', 'test_parameterize']
-        })
-        cloud_config = {}
-        test_config = {
-            'benchmark': {
-                'tests_to_run': {
-                    'fake.test_parameterize': [{'args': {'arg': 5}}]
-                }
-            }
-        }
-        test_engine = engine.TestEngine(test_config, mock.MagicMock())
-        with test_engine.bind(cloud_config):
-            res = test_engine.benchmark()
-            self.assertEqual(res[0].values()[0]['status'], 0)
-        tests.benchmark_tests = old_benchmark_tests
 
     def test_tester_timeout(self):
         tester = utils.Tester(mock.MagicMock(), self.cloud_config_path)
