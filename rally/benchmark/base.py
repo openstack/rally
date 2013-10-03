@@ -1,0 +1,67 @@
+# vim: tabstop=4 shiftwidth=4 softtabstop=4
+
+# Copyright 2013: Mirantis Inc.
+# All Rights Reserved.
+#
+#    Licensed under the Apache License, Version 2.0 (the "License"); you may
+#    not use this file except in compliance with the License. You may obtain
+#    a copy of the License at
+#
+#         http://www.apache.org/licenses/LICENSE-2.0
+#
+#    Unless required by applicable law or agreed to in writing, software
+#    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+#    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+#    License for the specific language governing permissions and limitations
+#    under the License.
+
+from rally import exceptions
+from rally import osclients
+from rally import utils
+
+# NOTE(boris-42): Load all modules with scenarios. This is required by
+#                 Scenraio.get_by_name() function. So it will be able to find
+#                 all scenarios that are written in rally.bencmark.scenarios.*
+utils.import_modules_from_package("rally.benchmark.scenarios")
+
+
+class Scenario(object):
+    """This is base class for any benchmark scenario.
+       You should create subclass of this class. And you test scnerios will
+       be autodiscoverd and you will be able to specify it in test config.
+    """
+    @staticmethod
+    def get_by_name(name):
+        """Returns Scenario class by name."""
+        for scenario in utils.itersubclasses(Scenario):
+            if name == scenario.__name__:
+                return scenario
+        raise exceptions.NoSuchScenario(name=name)
+
+    @classmethod
+    def class_init(cls, cloud_endpoints):
+        keys = ["admin_username", "admin_password", "admin_tenant_name",
+                "auth_url"]
+        clients = osclients.Clients(*[cloud_endpoints[k] for k in keys])
+
+        cls.cloud_endpoints = cloud_endpoints
+        cls.nova = clients.get_nova_client()
+        cls.keystone = clients.get_keystone_client()
+        cls.glance = clients.get_glance_client()
+        cls.cinder = clients.get_cinder_client()
+
+    @staticmethod
+    def init(config):
+        """This method will be called with test config. It purpose is to
+            prepare test enviorment. E.g. if you would like to test
+            performance of assing of FloatingIps here you will create 200k
+            FloatinigIps anre retun information about it to
+        """
+        return {}
+
+    @staticmethod
+    def cleanup(context):
+        """This method will be called with context that was returned by init,
+            after test scneario will be finished. And it should free all
+            allocated resources.
+        """

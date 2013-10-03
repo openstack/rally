@@ -112,6 +112,10 @@ class NoSuchVMProvider(NotFoundException):
     msg_fmt = _("There is no vm provider with name `%(vm_provider_name)s`.")
 
 
+class NoSuchScenario(NotFoundException):
+    msg_fmt = _("There is no benchmark scenario with name `%(name)s`.")
+
+
 class TaskNotFound(NotFoundException):
     msg_fmt = _("Task with uuid=%(uuid)s not found.")
 
