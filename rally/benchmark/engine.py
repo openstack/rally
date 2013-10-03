@@ -212,14 +212,18 @@ class TestEngine(object):
         :returns: List of dicts, each dict containing the results of all the
                   corresponding benchmark test launches
         """
+
         task_uuid = self.task['uuid']
         self.task.update_status(consts.TaskStatus.TEST_TOOL_BENCHMARKING)
         LOG.info(_('Task %s: Launching benchmark scenarios...') % task_uuid)
-        tester = utils.Tester(self.task, self.cloud_config_path,
-                              self.test_config_path)
-        tests_to_run = self.test_config.to_dict()['benchmark']['tests_to_run']
-        benchmark_tests = dict((test, tests.benchmark_tests[test])
-                               for test in tests_to_run)
-        result = tester.run_all(benchmark_tests)
+
+        runer = utils.ScenarioRunner(self.task, self.cloud_config.to_dict())
+
+        results = {}
+        scenarios = self.test_config.to_dict()['benchmark']['tests_to_run']
+        for name in scenarios:
+            for n, kwargs in enumerate(scenarios[name]):
+                results[(n, name, str(kwargs))] = runer.run(name, kwargs)
+
         LOG.info(_('Task %s: Completed benchmarking.') % task_uuid)
-        return result
+        return results
