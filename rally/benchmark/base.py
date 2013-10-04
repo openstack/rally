@@ -50,8 +50,8 @@ class Scenario(object):
         cls.glance = clients.get_glance_client()
         cls.cinder = clients.get_cinder_client()
 
-    @staticmethod
-    def init(config):
+    @classmethod
+    def init(cls, config):
         """This method will be called with test config. It purpose is to
             prepare test enviorment. E.g. if you would like to test
             performance of assing of FloatingIps here you will create 200k
@@ -59,8 +59,8 @@ class Scenario(object):
         """
         return {}
 
-    @staticmethod
-    def cleanup(context):
+    @classmethod
+    def cleanup(cls, context):
         """This method will be called with context that was returned by init,
             after test scneario will be finished. And it should free all
             allocated resources.
