@@ -25,22 +25,14 @@ from rally import test
 
 class OrchestratorTestCase(test.NoDBTestCase):
 
-    def setUp(self):
-        super(OrchestratorTestCase, self).setUp()
-        self.de = mock.patch('rally.deploy.EngineFactory')
-        self.te = mock.patch('rally.benchmark.engine.TestEngine')
-        self.de.start()
-        self.te.start()
-
-    def tearDonw(self):
-        self.de.stop()
-        self.te.stop()
-        super(OrchestratorTestCase, self).tearDonw()
-
     def test_start_task(self):
-        # TODO(boris-42): Improve these tests, to check that requried mehtods
-        #                 are called.
-        api.start_task({'deploy': {'name': 'test'}, 'tests': {}})
+        config = {'deploy': {'name': 'test'}, 'tests': {}}
+
+        with mock.patch("rally.orchestrator.api.task"):
+            with mock.patch("rally.orchestrator.api.deploy"):
+                with mock.patch("rally.orchestrator.api.engine"):
+                    # NOTE(boris-42) Improve this test case.
+                    api.start_task(config)
 
     def test_abort_task(self):
         self.assertRaises(NotImplementedError, api.abort_task, 'uuid')
