@@ -17,8 +17,8 @@
 
 
 from rally.benchmark import engine
+from rally.db import task
 from rally import deploy
-from rally import task
 
 
 def start_task(config):
