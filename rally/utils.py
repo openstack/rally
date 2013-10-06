@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import functools
 import itertools
 import os
 import StringIO
@@ -151,3 +152,26 @@ def wait_for(resource, is_ready, update_resource=None, timeout=60,
         if update_resource:
             resource = update_resource(resource)
     return resource
+
+
+def log_task_wrapper(log, msg, **kw):
+    """Log any method of class (instance should have self.task instance).
+    This wrapper add before and after method excecution logs messages:
+
+    params = {'task': self.task['uuid'], 'msg': msg % kw}
+
+    Log _("Task %(task)s start: %(msg)s") % params
+    Exectue your method
+    Log _("Task %(task)s finish: %(msg)s) % params
+    """
+
+    def decorator(f):
+        @functools.wraps(f)
+        def wrapper(self, *args, **kwargs):
+            params = {'msg': msg % kw, 'task': self.task['uuid']}
+            log(_("Task %(task)s start: %(msg)s") % params)
+            result = f(self, *args, **kwargs)
+            log(_("Task %(task)s finish: %(msg)s") % params)
+            return result
+        return wrapper
+    return decorator

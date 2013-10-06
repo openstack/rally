@@ -23,6 +23,7 @@ import sys
 import time
 
 from rally import exceptions
+from rally.openstack.common.gettextutils import _   # noqa
 from rally import test
 from rally import utils
 
@@ -170,3 +171,29 @@ class WaitForTestCase(test.NoDBTestCase):
 
         self.assertRaises(exceptions.TimeoutException, utils.wait_for,
                           object(), fake_checker_false, fake_updater, 0.3, 0.1)
+
+
+class LogTestCase(test.NoDBTestCase):
+
+    def test_log_method(self):
+        mock_log = mock.MagicMock()
+        msg = "test %(a)s %(b)s"
+
+        class TaskLog(object):
+
+            def __init__(self):
+                self.task = {'uuid': 'some_uuid'}
+
+            @utils.log_task_wrapper(mock_log, msg, a=10, b=20)
+            def some_method(self, x, y):
+                return x + y
+
+        t = TaskLog()
+        self.assertEqual(t.some_method.__name__, "some_method")
+        self.assertEqual(t.some_method(2, 2), 4)
+        params = {'msg': msg % {'a': 10, 'b': 20}, 'task': t.task['uuid']}
+        expected = [
+            mock.call(_("Task %(task)s start: %(msg)s") % params),
+            mock.call(_("Task %(task)s finish: %(msg)s") % params)
+        ]
+        self.assertEqual(mock_log.mock_calls, expected)
