@@ -64,7 +64,7 @@ class TestEngineTestCase(test.NoDBTestCase):
         self.run_success = {
             'proc': {'msg': ['msg'], 'status': 0, 'proc_name': 'proc'}
         }
-        self.run_mock = mock.patch('rally.benchmark.utils.Tester.run',
+        self.run_mock = mock.patch('rally.benchmark.utils.Verifier.run',
                                    mock.Mock(return_value=self.run_success))
         self.run_mock.start()
 

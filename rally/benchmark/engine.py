@@ -188,7 +188,7 @@ class TestEngine(object):
         task_uuid = self.task['uuid']
         self.task.update_status(consts.TaskStatus.TEST_TOOL_VERIFY_OPENSTACK)
         LOG.info(_('Task %s: Verifying the cloud deployment...') % task_uuid)
-        tester = utils.Tester(self.task, self.cloud_config_path)
+        tester = utils.Verifier(self.task, self.cloud_config_path)
         tests_to_run = self.test_config.to_dict()['verify']['tests_to_run']
         verification_tests = dict((test, tests.verification_tests[test])
                                   for test in tests_to_run)
