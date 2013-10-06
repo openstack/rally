@@ -153,7 +153,7 @@ class SyncExecuteTestCase(test.NoDBTestCase):
             return object()
 
         def fake_checker_based_on_time(obj):
-            return datetime.datetime.now().second % 5 == 0
+            return datetime.datetime.now().microsecond > 500000
 
         def fake_checker_always_false(obj):
             return False
@@ -162,7 +162,7 @@ class SyncExecuteTestCase(test.NoDBTestCase):
             return obj
 
         utils.sync_execute(fake_factory, [], {}, fake_checker_based_on_time,
-                           fake_updater)
+                           fake_updater, 1, 0.2)
         self.assertRaises(exceptions.TimeoutException, utils.sync_execute,
                           fake_factory, [], {}, fake_checker_always_false,
-                          fake_updater, 3)
+                          fake_updater, 0.3, 0.1)
