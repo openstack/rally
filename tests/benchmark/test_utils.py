@@ -17,12 +17,136 @@
 
 """Tests for utils."""
 import mock
+import multiprocessing
 import os
 import time
 
+from rally.benchmark import base
 from rally.benchmark import config
 from rally.benchmark import utils
 from rally import test
+from rally import utils as rally_utils
+
+
+class FakeScenario(base.Scenario):
+
+    @classmethod
+    def class_init(cls, endpoints):
+        pass
+
+    @classmethod
+    def do_it(cls, ctx, **kwargs):
+        pass
+
+    @classmethod
+    def too_long(cls, ctx, **kwargs):
+        time.sleep(2)
+
+    @classmethod
+    def something_went_wrong(cls, ctx, **kwargs):
+        raise Exception("Something went wrong")
+
+
+class FakeTimer(rally_utils.Timer):
+
+    def duration(self):
+        return 10
+
+
+class ScenarioTestCase(test.NoDBTestCase):
+
+    def test_run_scenario(self):
+        runner = utils.ScenarioRunner(mock.MagicMock(), {})
+        times = 3
+
+        with mock.patch("rally.benchmark.utils.utils") as mock_utils:
+            mock_utils.Timer = FakeTimer
+            results = runner._run_scenario("context", FakeScenario, "do_it",
+                                           {}, times, 1, 2)
+
+        expected = [{"time": 10, "error": None} for i in range(times)]
+        self.assertEqual(results, expected)
+
+    def test_run_scenario_timeout(self):
+        runner = utils.ScenarioRunner(mock.MagicMock(), {})
+        times = 4
+        results = runner._run_scenario("context", FakeScenario, "too_long",
+                                       {}, times, 1, 0.1)
+        self.assertEqual(len(results), times)
+        for r in results:
+            self.assertEqual(r['time'], 0.1)
+            self.assertEqual(r['error'][0], multiprocessing.TimeoutError)
+
+    def test_run_scenario_exception_inside_test(self):
+        runner = utils.ScenarioRunner(mock.MagicMock(), {})
+        times = 1
+        with mock.patch("rally.benchmark.utils.utils") as mock_utils:
+            mock_utils.Timer = FakeTimer
+            results = runner._run_scenario("context", FakeScenario,
+                                           "something_went_wrong",
+                                           {}, times, 1, 1)
+
+        self.assertEqual(len(results), times)
+        for r in results:
+            self.assertEqual(r['time'], 10)
+            self.assertEqual(r['error'][:2],
+                             [Exception, "Something went wrong"])
+
+    def test_run_scenario_exception_outside_test(self):
+        pass
+
+    def test_runc_scenario_concurrency(self):
+        runner = utils.ScenarioRunner(mock.MagicMock(), {})
+        times = 3
+        concurrent = 4
+        timeout = 5
+        with mock.patch("rally.benchmark.utils.multiprocessing") as mock_multi:
+            mock_multi.Pool = mock.MagicMock()
+            runner._run_scenario("context", FakeScenario, "do_it",
+                                 {}, times, concurrent, timeout)
+
+        expect = [
+            mock.call(concurrent),
+            mock.call().imap(
+                utils._run_scenario_loop,
+                [(FakeScenario, {}, "do_it", "context", {})] * times
+            )
+        ]
+        expect.extend([mock.call().imap().next(timeout) for i in range(times)])
+        self.assertEqual(mock_multi.Pool.mock_calls, expect)
+
+    def test_run(self):
+        FakeScenario = mock.MagicMock()
+        FakeScenario.init = mock.MagicMock(return_value="context")
+
+        runner = utils.ScenarioRunner(mock.MagicMock(), {})
+        runner._run_scenario = mock.MagicMock(return_value="result")
+
+        with mock.patch("rally.benchmark.utils.base") as mock_base:
+            mock_base.Scenario.get_by_name = \
+                mock.MagicMock(return_value=FakeScenario)
+
+            result = runner.run("FakeScenario.fake", {})
+            self.assertEqual(result, "result")
+            runner.run("FakeScenario.fake",
+                       {'args': {'a': 1}, 'init': {'arg': 1},
+                        'timeout': 1, 'times': 2, 'concurrent': 3})
+
+        expected = [
+            mock.call("context", FakeScenario, "fake", {}, 1, 1, 10000),
+            mock.call("context", FakeScenario, "fake", {'a': 1}, 2, 3, 1)
+        ]
+        self.assertEqual(runner._run_scenario.mock_calls, expected)
+
+        expected = [
+            mock.call.class_init({}),
+            mock.call.init({}),
+            mock.call.cleanup('context'),
+            mock.call.class_init({}),
+            mock.call.init({'arg': 1}),
+            mock.call.cleanup('context')
+        ]
+        self.assertEqual(FakeScenario.mock_calls, expected)
 
 
 def test_dummy_1():
