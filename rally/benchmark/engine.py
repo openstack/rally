@@ -197,7 +197,7 @@ class TestEngine(object):
         for test_results in test_run_results:
             for result in test_results.itervalues():
                 if result['status'] != 0:
-                    error_msg = '\n'.join(result['msg'])
+                    error_msg = result['msg']
                     LOG.exception(_('Task %s: One of verification '
                                     'tests failed: %s') %
                                  (task_uuid, error_msg))
