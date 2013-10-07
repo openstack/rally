@@ -2,7 +2,6 @@ Babel>=0.9.6
 eventlet>=0.9.17
 iso8601>=0.1.4
 jsonschema>=2.0.0
-Jinja2
 netaddr>=0.7.6
 oslo.config>=1.2.0
 paramiko>=1.8.0

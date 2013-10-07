@@ -1,19 +1,9 @@
 {
     "deploy": {
-        "name": "DevstackDeployment",
-        "vm_provider": {
-            "name": "VirshProvider",
-            "connection": "alex@performance-01",
-            "template_name": "stack-01-devstack-template"
-            "template_user": "alex",
-        },
-        "vm_count": 1,
-        "services": {
-            "admin_password": "71789845d5ceb06f9609",
-            "nova": {
-                "repo": "https://github.com/Alexei-Kornienko/nova",
-                "branch": "rally"
-            }
+        "name": "DevstackEngine",
+        "provider": {
+            "name": "DummyProvider",
+            "credentials": ["eye@10.2.250.35"]
         }
     },
     "tests": {}

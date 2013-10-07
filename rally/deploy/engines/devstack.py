@@ -1,5 +1,3 @@
-# vim: tabstop=4 shiftwidth=4 softtabstop=4
-
 # Copyright 2013: Mirantis Inc.
 # All Rights Reserved.
 #
@@ -15,84 +13,95 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import jinja2
 import os
-import subprocess
 import tempfile
 
 from rally.deploy import engine
 from rally.openstack.common.gettextutils import _  # noqa
 from rally.openstack.common import log as logging
 from rally.serverprovider import provider
+from rally import sshutils
 
 LOG = logging.getLogger(__name__)
+DEVSTACK_REPO = 'https://github.com/openstack-dev/devstack.git'
 
 
-class DevstackDeployment(engine.EngineFactory):
+class DevstackEngine(engine.EngineFactory):
     '''Deploys Devstack cloud.
     deploy config example:
         "deploy": {
-            "vm_provider": {
+            "name": "DevstackEngine",
+            "openrc": {
+                "ADMIN_PASSWORD": "secret"
+            },
+            "devstack_repo": "git://example.com/devstack/",
+            "provider": {
                 "name": "%name%",
                 ...
             }
-            "vm_count": 1,
         },
     '''
 
-    def __init__(self, config):
+    def __init__(self, task, config):
+        self.task = task
         self._config = config
         self._vms = []
-        provider_config = config['vm_provider']
+        provider_config = config['provider']
         self._vm_provider = provider.ProviderFactory.get_provider(
             provider_config)
+        self.localrc = {
+            'DATABASE_PASSWORD': 'rally',
+            'RABBIT_PASSWORD': 'rally',
+            'SERVICE_TOKEN': 'rally',
+            'SERVICE_PASSWORD': 'rally',
+            'ADMIN_PASSWORD': 'admin',
+            'RECLONE': 'yes',
+            'SYSLOG': 'yes',
+        }
+        if 'localrc' in config:
+            self.localrc.update(config['localrc'])
 
     def deploy(self):
-        self._vms = self._vm_provider.create_vms(
-            amount=int(self._config['vm_count']))
+        self._vms = self._vm_provider.create_vms()
+        devstack_repo = self._config.get('devstack_repo', DEVSTACK_REPO)
         for vm in self._vms:
-            self.patch_devstack(vm)
+            sshutils.execute_command(vm.user, vm.ip,
+                                     ['git', 'clone', devstack_repo])
+            self.configure_devstack(vm)
             self.start_devstack(vm)
-            self._vms.append(vm)
+        self._vms.append(vm)
 
-        identity_host = {'host': self._vms[0].ip}
+        identity_host = self._vms[0].ip
 
         return {
             'identity': {
                 'url': 'http://%s/' % identity_host,
                 'uri': 'http://%s:5000/v2.0/' % identity_host,
                 'admin_username': 'admin',
-                'admin_password': self._config['services']['admin_password'],
-                'admin_tenant_name': 'service',
+                'admin_password': self.localrc['ADMIN_PASSWORD'],
+                'admin_tenant_name': 'admin',
+            },
+            'compute': {
+                'controller_nodes': self._vms[0].ip,
+                'compute_nodes': self._vms[0].ip,
+                'controller_node_ssh_user': self._vms[0].user,
             }
         }
 
     def cleanup(self):
-        for vm in self._vms:
-            self._vm_provider.destroy_vm(vm)
+        self._vm_provider.destroy_vms()
 
-    def patch_devstack(self, vm):
+    def configure_devstack(self, vm):
         task_uuid = self.task['uuid']
         LOG.info(_('Task %(uuid)s: Patching DevStack for VM %(vm_ip)s...') %
                  {'uuid': task_uuid, 'vm_ip': vm.ip})
-        template_path = os.path.dirname(__file__) + '/devstack/'
-        env = jinja2.Environment(loader=jinja2.FileSystemLoader(template_path))
-
-        config_file, config_path = tempfile.mkstemp()
-        config_file = os.fdopen(config_file, 'w')
-
-        config_template = env.get_template('localrc.tpl')
-        config_file.write(config_template.render(self._config['services']))
+        fd, config_path = tempfile.mkstemp()
+        config_file = open(config_path, "w")
+        for k, v in self.localrc.iteritems():
+            config_file.write('%s=%s\n' % (k, v))
         config_file.close()
-
-        cmd = 'scp %(opts)s %(config)s %(usr)s@%(host)s:~/devstack/localrc' % {
-            'opts': '-o StrictHostKeyChecking=no',
-            'config': config_path,
-            'usr': vm.user,
-            'host': vm.ip
-        }
-        subprocess.check_call(cmd, shell=True)
-
+        os.close(fd)
+        sshutils.upload_file(vm.user, vm.ip, config_path, "~/devstack/localrc")
         os.unlink(config_path)
         LOG.info(_('Task %(uuid)s: DevStack for VM %(vm_ip)s successfully '
                    'patched.') % {'uuid': task_uuid, 'vm_ip': vm.ip})
@@ -102,12 +111,7 @@ class DevstackDeployment(engine.EngineFactory):
         task_uuid = self.task['uuid']
         LOG.info(_('Task %(uuid)s: Starting DevStack for VM %(vm_ip)s...') %
                  {'uuid': task_uuid, 'vm_ip': vm.ip})
-        cmd = 'ssh %(opts)s %(usr)s@%(host)s devstack/stack.sh' % {
-            'opts': '-o StrictHostKeyChecking=no',
-            'usr': vm.user,
-            'host': vm.ip
-        }
-        subprocess.check_call(cmd, shell=True)
+        sshutils.execute_command(vm.user, vm.ip, ['~/devstack/stack.sh'])
         LOG.info(_('Task %(uuid)s: DevStack for VM %(vm_ip)s successfully '
                    'started.') % {'uuid': task_uuid, 'vm_ip': vm.ip})
         return True
