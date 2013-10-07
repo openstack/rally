@@ -94,7 +94,7 @@ class TestEngine(object):
             raise exceptions.InvalidConfigException(message=e.message)
 
         # Check for test names
-        for test_type in ['verify', 'benchmark']:
+        for test_type in ['verify']:
             if (test_type not in test_config or
                'tests_to_run' not in test_config[test_type]):
                 continue
@@ -217,7 +217,8 @@ class TestEngine(object):
         self.task.update_status(consts.TaskStatus.TEST_TOOL_BENCHMARKING)
         LOG.info(_('Task %s: Launching benchmark scenarios...') % task_uuid)
 
-        runer = utils.ScenarioRunner(self.task, self.cloud_config.to_dict())
+        runer = utils.ScenarioRunner(self.task,
+                                     self.cloud_config.to_dict()["identity"])
 
         results = {}
         scenarios = self.test_config.to_dict()['benchmark']['tests_to_run']
