@@ -1,0 +1,23 @@
+{
+    "deploy": {
+        "name": "DevstackEngine",
+        "localrc": {
+            "VIRT_DRIVER": "fake"
+        },
+        "provider": {
+            "name": "LxcProvider",
+            "containers_per_host": 1,
+            "distribution": "ubuntu",
+            "ipv4_start_address": "10.2.232.1",
+            "ipv4_prefixlen": 16,
+            "host_provider": {
+                "name": "DummyProvider",
+                "credentials": ["root@10.2.250.103"]
+            }
+        }
+    },
+    "tests": {
+        "verify": [],
+        "benchmark": {}
+    }
+}
