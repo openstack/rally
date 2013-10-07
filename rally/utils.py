@@ -117,11 +117,13 @@ def import_modules_from_package(package):
     """
     path = [os.path.dirname(__file__), '..'] + package.split('.')
     path = os.path.join(*path)
-    for filename in os.listdir(path):
-        if filename.startswith('__') or not filename.endswith('.py'):
-            continue
-        module_name = '%s.%s' % (package, filename[:-3])
-        try_append_module(module_name, sys.modules)
+    for root, dirs, files in os.walk(path):
+        for filename in files:
+            if filename.startswith('__') or not filename.endswith('.py'):
+                continue
+            new_package = ".".join(root.split(os.sep)).split("....")[1]
+            module_name = '%s.%s' % (new_package, filename[:-3])
+            try_append_module(module_name, sys.modules)
 
 
 def sync_execute(func, args, kwargs, is_ready, update_result=None,
