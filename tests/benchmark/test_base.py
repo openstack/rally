@@ -24,6 +24,16 @@ from rally import test
 
 class ScenarioTestCase(test.NoDBTestCase):
 
+    def test_register(self):
+        with mock.patch("rally.benchmark.base.utils") as mock_utils:
+            base.Scenario.register()
+            base.Scenario.register()
+
+        expected = [
+            mock.call.import_modules_from_package("rally.benchmark.scenarios")
+        ]
+        self.assertEqual(mock_utils.mock_calls, expected)
+
     def test_get_by_name(self):
 
         class Scenario1(base.Scenario):
@@ -59,7 +69,7 @@ class ScenarioTestCase(test.NoDBTestCase):
             mock_osclients.Clients = mock.MagicMock(return_value=FakeClients())
 
             keys = ["admin_username", "admin_password", "admin_tenant_name",
-                    "auth_url"]
+                    "uri"]
             kw = dict(zip(keys, keys))
 
             base.Scenario.class_init(kw)

@@ -55,6 +55,7 @@ class ScenarioRunner(object):
     def __init__(self, task, cloud_config):
         self.task = task
         self.endpoints = cloud_config
+        base.Scenario.register()
 
     def _run_scenario(self, ctx, cls, method, args, times, concurrent,
                       timeout):

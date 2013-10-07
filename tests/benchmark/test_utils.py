@@ -55,6 +55,11 @@ class FakeTimer(rally_utils.Timer):
 
 class ScenarioTestCase(test.NoDBTestCase):
 
+    def test_init_calls_register(self):
+        with mock.patch("rally.benchmark.utils.base") as mock_base:
+            utils.ScenarioRunner(mock.MagicMock(), {})
+        self.assertEqual(mock_base.mock_calls, [mock.call.Scenario.register()])
+
     def test_run_scenario(self):
         runner = utils.ScenarioRunner(mock.MagicMock(), {})
         times = 3

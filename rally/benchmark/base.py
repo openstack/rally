@@ -19,17 +19,20 @@ from rally import exceptions
 from rally import osclients
 from rally import utils
 
-# NOTE(boris-42): Load all modules with scenarios. This is required by
-#                 Scenraio.get_by_name() function. So it will be able to find
-#                 all scenarios that are written in rally.bencmark.scenarios.*
-utils.import_modules_from_package("rally.benchmark.scenarios")
-
 
 class Scenario(object):
     """This is base class for any benchmark scenario.
        You should create subclass of this class. And you test scnerios will
        be autodiscoverd and you will be able to specify it in test config.
     """
+    registred = False
+
+    @staticmethod
+    def register():
+        if not Scenario.registred:
+            utils.import_modules_from_package("rally.benchmark.scenarios")
+            Scenario.registred = True
+
     @staticmethod
     def get_by_name(name):
         """Returns Scenario class by name."""
@@ -40,8 +43,7 @@ class Scenario(object):
 
     @classmethod
     def class_init(cls, cloud_endpoints):
-        keys = ["admin_username", "admin_password", "admin_tenant_name",
-                "auth_url"]
+        keys = ["admin_username", "admin_password", "admin_tenant_name", "uri"]
         clients = osclients.Clients(*[cloud_endpoints[k] for k in keys])
 
         cls.cloud_endpoints = cloud_endpoints
