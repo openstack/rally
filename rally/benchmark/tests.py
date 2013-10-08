@@ -23,7 +23,11 @@
 verification_tests = {
     'sanity': ['--pyargs', 'fuel_health.tests.sanity'],
     'smoke': ['--pyargs', 'fuel_health.tests.smoke', '-k',
-              '"not (test_007 or test_008 or test_009)"']
+              'not (test_007 or test_008 or test_009)'],
+    'no_compute_sanity': ['--pyargs', 'fuel_health.tests.sanity',
+                          '-k', 'not infrastructure'],
+    'no_compute_smoke': ['--pyargs', 'fuel_health.tests.smoke',
+                         '-k', 'user or flavor']
 }
 
 # TODO(msdubov): Implement an automatic benchmark tests collector.
