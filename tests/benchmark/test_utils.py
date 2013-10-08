@@ -166,9 +166,9 @@ def test_dummy_timeout():
     time.sleep(1.1)
 
 
-class UtilsTestCase(test.NoDBTestCase):
+class VerifierTestCase(test.NoDBTestCase):
     def setUp(self):
-        super(UtilsTestCase, self).setUp()
+        super(VerifierTestCase, self).setUp()
         self.fc = mock.patch('fuel_health.cleanup.cleanup')
         self.fc.start()
         self.cloud_config_manager = config.CloudConfigManager()
@@ -180,7 +180,7 @@ class UtilsTestCase(test.NoDBTestCase):
         self.fc.stop()
         if os.path.exists(self.cloud_config_path):
             os.remove(self.cloud_config_path)
-        super(UtilsTestCase, self).tearDown()
+        super(VerifierTestCase, self).tearDown()
 
     def test_running_test(self):
         tester = utils.Verifier(mock.MagicMock(), self.cloud_config_path)
