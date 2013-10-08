@@ -169,27 +169,25 @@ def test_dummy_timeout():
 class VerifierTestCase(test.NoDBTestCase):
     def setUp(self):
         super(VerifierTestCase, self).setUp()
-        self.fc = mock.patch('fuel_health.cleanup.cleanup')
-        self.fc.start()
         self.cloud_config_manager = config.CloudConfigManager()
         self.cloud_config_path = os.path.abspath('dummy_test.conf')
         with open(self.cloud_config_path, 'w') as f:
             self.cloud_config_manager.write(f)
 
     def tearDown(self):
-        self.fc.stop()
         if os.path.exists(self.cloud_config_path):
             os.remove(self.cloud_config_path)
         super(VerifierTestCase, self).tearDown()
 
     def test_running_test(self):
         tester = utils.Verifier(mock.MagicMock(), self.cloud_config_path)
-        test = ['./tests/benchmark/test_utils.py', '-k', 'test_dummy_1']
-        for (times, concurrent) in [(1, 1), (3, 2), (2, 3)]:
-            results = tester.run(test, times=times, concurrent=concurrent)
-            self.assertEqual(len(results), times)
-            for result in results.itervalues():
-                self.assertEqual(result['status'], 0)
+        with mock.patch('rally.benchmark.utils.fuel_cleanup.cleanup'):
+            test = ['./tests/benchmark/test_utils.py', '-k', 'test_dummy_1']
+            for (times, concurrent) in [(1, 1), (3, 2), (2, 3)]:
+                results = tester.run(test, times=times, concurrent=concurrent)
+                self.assertEqual(len(results), times)
+                for result in results.itervalues():
+                    self.assertEqual(result['status'], 0)
 
     def test_running_multiple_tests(self):
         tester = utils.Verifier(mock.MagicMock(), self.cloud_config_path)
@@ -197,24 +195,27 @@ class VerifierTestCase(test.NoDBTestCase):
             'test1': ['./tests/benchmark/test_utils.py', '-k', 'test_dummy_1'],
             'test2': ['./tests/benchmark/test_utils.py', '-k', 'test_dummy_2']
         }
-        for test_results in tester.run_all(tests_dict):
-            for result in test_results.itervalues():
-                self.assertEqual(result['status'], 0)
+        with mock.patch('rally.benchmark.utils.fuel_cleanup.cleanup'):
+            for test_results in tester.run_all(tests_dict):
+                for result in test_results.itervalues():
+                    self.assertEqual(result['status'], 0)
 
     def test_tester_timeout(self):
         tester = utils.Verifier(mock.MagicMock(), self.cloud_config_path)
         test = ['./tests/benchmark/test_utils.py', '-k',
                 'test_dummy_timeout', '--timeout', '1']
-        results = tester.run(test, times=2, concurrent=2)
-        for result in results.values():
-            self.assertTrue('Timeout' in result['msg'])
-            self.assertTrue(result['status'] != 0)
+        with mock.patch('rally.benchmark.utils.fuel_cleanup.cleanup'):
+            results = tester.run(test, times=2, concurrent=2)
+            for result in results.values():
+                self.assertTrue('Timeout' in result['msg'])
+                self.assertTrue(result['status'] != 0)
 
     def test_tester_no_timeout(self):
         tester = utils.Verifier(mock.MagicMock(), self.cloud_config_path)
         test = ['./tests/benchmark/test_utils.py', '-k',
                 'test_dummy_timeout', '--timeout', '2']
-        results = tester.run(test, times=2, concurrent=2)
-        for result in results.values():
-            self.assertTrue('Timeout' not in result['msg'])
-            self.assertTrue(result['status'] == 0)
+        with mock.patch('rally.benchmark.utils.fuel_cleanup.cleanup'):
+            results = tester.run(test, times=2, concurrent=2)
+            for result in results.values():
+                self.assertTrue('Timeout' not in result['msg'])
+                self.assertTrue(result['status'] == 0)

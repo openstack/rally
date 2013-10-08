@@ -64,13 +64,6 @@ class TestEngineTestCase(test.NoDBTestCase):
         self.run_success = {
             'proc': {'msg': ['msg'], 'status': 0, 'proc_name': 'proc'}
         }
-        self.run_mock = mock.patch('rally.benchmark.utils.Verifier.run',
-                                   mock.Mock(return_value=self.run_success))
-        self.run_mock.start()
-
-    def tearDown(self):
-        self.run_mock.stop()
-        super(TestEngineTestCase, self).tearDown()
 
     def test_verify_test_config(self):
         try:
@@ -99,11 +92,13 @@ class TestEngineTestCase(test.NoDBTestCase):
     def test_verify(self):
         test_engine = engine.TestEngine(self.valid_test_config,
                                         mock.MagicMock())
-        with test_engine.bind(self.valid_cloud_config):
-            try:
-                test_engine.verify()
-            except Exception as e:
-                self.fail("Exception in TestEngine.verify: %s" % str(e))
+        with mock.patch('rally.benchmark.utils.Verifier.run') as mock_run:
+            mock_run.return_value = self.run_success
+            with test_engine.bind(self.valid_cloud_config):
+                try:
+                    test_engine.verify()
+                except Exception as e:
+                    self.fail("Exception in TestEngine.verify: %s" % str(e))
 
     def test_benchmark(self):
         test_engine = engine.TestEngine(self.valid_test_config,
@@ -114,9 +109,11 @@ class TestEngineTestCase(test.NoDBTestCase):
     def test_task_status_basic_chain(self):
         fake_task = mock.MagicMock()
         test_engine = engine.TestEngine(self.valid_test_config, fake_task)
-        with test_engine.bind(self.valid_cloud_config):
-            test_engine.verify()
-            test_engine.benchmark()
+        with mock.patch('rally.benchmark.utils.Verifier.run') as mock_run:
+            mock_run.return_value = self.run_success
+            with test_engine.bind(self.valid_cloud_config):
+                test_engine.verify()
+                test_engine.benchmark()
 
         s = consts.TaskStatus
         expected = [
