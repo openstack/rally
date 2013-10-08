@@ -20,6 +20,8 @@ SQLAlchemy implementation for DB.API
 
 import sys
 
+import sqlalchemy as sa
+
 from rally.db.sqlalchemy import models
 from rally import exceptions
 from rally.openstack.common.db.sqlalchemy import session as db_session
@@ -78,6 +80,13 @@ def task_get_by_uuid(uuid):
     return _task_get_by_uuid(uuid)
 
 
+def task_get_detailed(uuid):
+    return model_query(models.Task).\
+                options(sa.orm.joinedload('results')).\
+                filter_by(uuid=uuid).\
+                first()
+
+
 def task_create(values):
     task = models.Task()
     task.update(values)
@@ -108,3 +117,10 @@ def task_delete(uuid):
                 soft_delete()
     if not count:
         raise exceptions.TaskNotFound(uuid=uuid)
+
+
+def task_result_create(task_uuid, name, data):
+    result = models.TaskResult()
+    result.update({"task_uuid": task_uuid, "name": name, "data": data})
+    result.save()
+    return result

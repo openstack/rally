@@ -69,6 +69,11 @@ def task_get_by_uuid(uuid):
     return IMPL.task_get_by_uuid(uuid)
 
 
+def task_get_detailed(uuid):
+    """Returns task with results by uuid."""
+    return IMPL.task_get_detailed(uuid)
+
+
 def task_create(values):
     """Create task record in DB.
 
@@ -100,3 +105,8 @@ def task_list(status=None, active=True):
 def task_delete(uuid):
     """Mark task with correspondig uuid as deleted."""
     return IMPL.task_delete(uuid)
+
+
+def task_result_create(task_uuid, name, data):
+    """Append result record to task."""
+    return IMPL.task_result_create(task_uuid, name, data)
