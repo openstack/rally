@@ -45,7 +45,7 @@ class DevstackDeployment(engine.EngineFactory):
         self._vms = []
         provider_config = config['vm_provider']
         self._vm_provider = provider.ProviderFactory.get_provider(
-            provider_config['name'], provider_config)
+            provider_config)
 
     def deploy(self):
         self._vms = self._vm_provider.create_vms(

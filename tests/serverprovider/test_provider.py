@@ -29,7 +29,7 @@ class ProviderTestCase(test.NoDBTestCase):
 
     def test_get_provider_not_found(self):
         self.assertRaises(exceptions.NoSuchVMProvider,
-                          ProviderFactory.get_provider, "non_existing", None)
+                          ProviderFactory.get_provider, {"name": "fail"})
 
     def _create_fake_providers(self):
         class ProviderMixIn(object):
@@ -55,7 +55,7 @@ class ProviderTestCase(test.NoDBTestCase):
 
     def test_get_provider(self):
         for p in self._create_fake_providers():
-                p_inst = ProviderFactory.get_provider(p.__name__, None)
+                p_inst = ProviderFactory.get_provider({"name": p.__name__})
                 # TODO(boris-42): make it work through assertIsInstance
                 self.assertEqual(str(type(p_inst)), str(p))
 
