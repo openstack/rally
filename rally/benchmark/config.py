@@ -176,8 +176,10 @@ test_config_schema = {
                                 "type": "object",
                                 "properties": {
                                     "args": {"type": "object"},
+                                    "init": {"type": "object"},
                                     "times": {"type": "number"},
-                                    "concurrent": {"type": "number"}
+                                    "concurrent": {"type": "number"},
+                                    "timeout": {"type": "number"}
                                 },
                                 "additionalProperties": False
                             }
