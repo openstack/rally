@@ -22,6 +22,7 @@ from sqlalchemy.ext.declarative import declarative_base
 import uuid
 
 from rally import consts
+from rally.db.sqlalchemy import types as sa_types
 from rally.openstack.common.db.sqlalchemy import models
 from rally.openstack.common.db.sqlalchemy import session
 
@@ -51,6 +52,23 @@ class Task(BASE, RallyBase):
                        default=consts.TaskStatus.INIT, nullable=False)
     failed = sa.Column(sa.Boolean, default=False, nullable=False)
     verification_log = sa.Column(sa.Text, default='', nullable=True)
+
+
+class TaskResult(BASE, RallyBase):
+    __tablename__ = "task_results"
+    __table_args__ = ()
+
+    id = sa.Column(sa.Integer, primary_key=True, autoincrement=True)
+
+    name = sa.Column(sa.Text, nullable=False)
+    data = sa.Column(sa_types.MutableDict.as_mutable(sa_types.JSONEncodedDict),
+                     nullable=False)
+
+    task_uuid = sa.Column(sa.String(36), sa.ForeignKey('tasks.uuid'))
+    task = sa.orm.relationship(Task,
+                               backref=sa.orm.backref('results'),
+                               foreign_keys=task_uuid,
+                               primaryjoin='TaskResult.task_uuid == Task.uuid')
 
 
 def create_db():

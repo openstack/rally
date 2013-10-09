@@ -104,3 +104,15 @@ class TasksTestCase(test.TestCase):
     def test_task_delete_not_found(self):
         self.assertRaises(exceptions.TaskNotFound,
                           db.task_delete, str(uuid.uuid4()))
+
+    def test_task_get_detailed(self):
+        task1 = self._create_task()
+        name = "some_keys"
+        data = {'a': 'b', 'c': 'd'}
+
+        db.task_result_create(task1['uuid'], name, data)
+        task1_full = db.task_get_detailed(task1['uuid'])
+        results = task1_full["results"]
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0]["name"], name)
+        self.assertEqual(results[0]["data"], data)

@@ -20,6 +20,7 @@
 from __future__ import print_function
 
 import json
+import pprint
 import sys
 
 import prettytable
@@ -61,6 +62,38 @@ class TaskCommands(object):
         task = db.task_get_by_uuid(task_id)
         print(_("Task %(task_id)s is %(status)s.")
               % {'task_id': task_id, 'status': task['status']})
+
+    @cliutils.args('--task-id', type=str, help='uuid of task')
+    def detailed(self, task_id):
+        """Get detailed information about task
+        :param task_id: Task uuid
+        Prints detailed infomration of task.
+        """
+        task = db.task_get_detailed(task_id)
+
+        print()
+        print("=" * 80)
+        print(_("Task %(task_id)s is %(status)s.")
+              % {'task_id': task_id, 'status': task['status']})
+
+        for result in task["results"]:
+            print("-" * 80)
+            print()
+
+            name = json.loads(result["name"])
+            print("test scenario %s" % name[0])
+            print("args position %s" % name[1])
+            print("args values:")
+            pprint.pprint(name[2])
+
+            raw = result["data"]["raw"]
+            times = map(lambda x: x['time'],
+                        filter(lambda r: not r['error'], raw))
+
+            table = prettytable.PrettyTable(["max", "avg", "min", "ratio"])
+            table.add_row([max(times), sum(times) / len(times), min(times),
+                           float(len(times)) / len(raw)])
+            print(table)
 
     def list(self):
         """Get list of all tasks

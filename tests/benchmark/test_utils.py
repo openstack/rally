@@ -80,7 +80,7 @@ class ScenarioTestCase(test.NoDBTestCase):
         self.assertEqual(len(results), times)
         for r in results:
             self.assertEqual(r['time'], 0.1)
-            self.assertEqual(r['error'][0], multiprocessing.TimeoutError)
+            self.assertEqual(r['error'][0], str(multiprocessing.TimeoutError))
 
     def test_run_scenario_exception_inside_test(self):
         runner = utils.ScenarioRunner(mock.MagicMock(), {})
@@ -95,12 +95,12 @@ class ScenarioTestCase(test.NoDBTestCase):
         for r in results:
             self.assertEqual(r['time'], 10)
             self.assertEqual(r['error'][:2],
-                             [Exception, "Something went wrong"])
+                             [str(Exception), "Something went wrong"])
 
     def test_run_scenario_exception_outside_test(self):
         pass
 
-    def test_runc_scenario_concurrency(self):
+    def test_run_scenario_concurrency(self):
         runner = utils.ScenarioRunner(mock.MagicMock(), {})
         times = 3
         concurrent = 4
@@ -114,7 +114,8 @@ class ScenarioTestCase(test.NoDBTestCase):
             mock.call(concurrent),
             mock.call().imap(
                 utils._run_scenario_loop,
-                [(FakeScenario, {}, "do_it", "context", {})] * times
+                [(i, FakeScenario, {}, "do_it", "context", {})
+                    for i in xrange(times)]
             )
         ]
         expect.extend([mock.call().imap().next(timeout) for i in range(times)])

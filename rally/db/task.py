@@ -40,3 +40,6 @@ class Task(object):
 
     def set_failed(self):
         db.task_update(self.task['uuid'], {'failed': True})
+
+    def append_results(self, key, value):
+        db.task_result_create(self.task['uuid'], key, value)

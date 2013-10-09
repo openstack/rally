@@ -33,14 +33,16 @@ LOG = logging.getLogger(__name__)
 
 
 def _format_exc(exc):
-    return [type(exc), str(exc), traceback.format_exc()]
+    return [str(type(exc)), str(exc), traceback.format_exc()]
 
 
 def _run_scenario_loop(args):
-    cls, endpoints, method_name, context, kwargs = args
+    i, cls, endpoints, method_name, context, kwargs = args
 
     # NOTE(boris-42): Before each call of Scneraio we should init cls.
     #                 This is cause because this method is run by Pool.
+
+    LOG.info("ITER: %s" % i)
     cls.class_init(endpoints)
     try:
         with utils.Timer() as timer:
@@ -59,7 +61,7 @@ class ScenarioRunner(object):
 
     def _run_scenario(self, ctx, cls, method, args, times, concurrent,
                       timeout):
-        test_args = [(cls, self.endpoints, method, ctx, args)
+        test_args = [(i, cls, self.endpoints, method, ctx, args)
                      for i in xrange(times)]
 
         pool = multiprocessing.Pool(concurrent)
