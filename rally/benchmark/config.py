@@ -18,6 +18,7 @@
 import abc
 import ConfigParser
 import json
+import os
 
 
 class ConfigManager(ConfigParser.RawConfigParser, object):
@@ -82,7 +83,7 @@ class CloudConfigManager(ConfigManager):
             'controller_node_ssh_user': 'root',
             'controller_node_ssh_password': 'r00tme',
             'compute_nodes': 'localhost',
-            'path_to_private_key': '/root/.ssh/id_rsa',
+            'path_to_private_key': os.path.expanduser('~/.ssh/id_rsa'),
             'image_name': 'cirros-0.3.1-x86_64-uec',
             'image_ssh_user': 'cirros',
             'image_alt_ssh_user': 'cirros',
