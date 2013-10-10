@@ -126,32 +126,28 @@ def import_modules_from_package(package):
             try_append_module(module_name, sys.modules)
 
 
-def sync_execute(func, args, kwargs, is_ready, update_result=None,
-                 timeout=60, sleep=1):
-    """Wraps an asynchronous function call into a synchronous one. Assumes that
-    the called function immediately returns an object for which it takes some
-    time to get to the 'ready for use' state.
+def wait_for(resource, is_ready, update_resource=None, timeout=60, sleep=1):
+    """Waits for the given resource to come into the desired state.
 
-    :param func: Asynchronous function to be called
-    :param args: List of args for the function to be called with
-    :param kwargs: Dict of named args for the function to be called with
-    :param is_ready: A predicate that should take the func(**kwarg) execution
-                     result and return True iff it is ready to be returned
-    :param update_result: Function that should take the func(**kwarg) execution
-                          result and return an 'updated' result. If set to
+    Uses the readiness check function passed as a parameter and (optionally)
+    a function that updates the resource being waited for.
+
+    :param is_ready: A predicate that should take the resource object and
+                     return True iff it is ready to be returned
+    :param update_resource: Function that should take the resource object
+                          and return an 'updated' resource. If set to
                           None, no result updating is performed
     :param timeout: Timeout in seconds after which a TimeoutException will be
                     raised
     :param sleep: Pause in seconds between the two consecutive readiness checks
 
-    :returns: The 'ready for use' result of func(*args, **kwargs) function call
+    :returns: The "ready" resource object
     """
     start = time.time()
-    result = func(*args, **kwargs)
-    while not is_ready(result):
+    while not is_ready(resource):
         time.sleep(sleep)
         if time.time() - start > timeout:
             raise exceptions.TimeoutException()
-        if update_result:
-            result = update_result(result)
-    return result
+        if update_resource:
+            resource = update_resource(resource)
+    return resource

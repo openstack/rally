@@ -145,24 +145,26 @@ class ImportModulesTestCase(test.NoDBTestCase):
         self.assertTrue('tests.fixtures.import.package.b' in sys.modules)
 
 
-class SyncExecuteTestCase(test.NoDBTestCase):
+class WaitForTestCase(test.NoDBTestCase):
 
-    def test_sync_execute(self):
+    def test_wait_for(self):
 
-        def fake_factory():
-            return object()
+        def get_fake_checker_delayed(**delay):
+            deadline = datetime.datetime.now() + datetime.timedelta(**delay)
+            return lambda obj: datetime.datetime.now() > deadline
 
-        def fake_checker_based_on_time(obj):
-            return datetime.datetime.now().microsecond > 500000
-
-        def fake_checker_always_false(obj):
+        def fake_checker_false(obj):
             return False
 
         def fake_updater(obj):
             return obj
 
-        utils.sync_execute(fake_factory, [], {}, fake_checker_based_on_time,
-                           fake_updater, 1, 0.2)
-        self.assertRaises(exceptions.TimeoutException, utils.sync_execute,
-                          fake_factory, [], {}, fake_checker_always_false,
-                          fake_updater, 0.3, 0.1)
+        resource = object()
+        fake_checker_delayed = get_fake_checker_delayed(seconds=0.5)
+
+        loaded_resource = utils.wait_for(resource, fake_checker_delayed,
+                                         fake_updater, 1, 0.2)
+        self.assertEqual(loaded_resource, resource)
+
+        self.assertRaises(exceptions.TimeoutException, utils.wait_for,
+                          object(), fake_checker_false, fake_updater, 0.3, 0.1)
