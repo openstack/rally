@@ -1,0 +1,32 @@
+From ecbd4c4b2a1e6bb1331eda834b3087ce1e34d808 Mon Sep 17 00:00:00 2001
+From: Alexei Kornienko <alexei.kornienko@gmail.com>
+Date: Fri, 4 Oct 2013 10:49:26 +0300
+Subject: [PATCH] Added trace header forwarding
+
+---
+ glanceclient/common/http.py | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/glanceclient/common/http.py b/glanceclient/common/http.py
+index 4cd66ec..1fa2d17 100644
+--- a/glanceclient/common/http.py
++++ b/glanceclient/common/http.py
+@@ -21,6 +21,7 @@ import logging
+ import socket
+ import StringIO
+ import struct
++import tomograph
+ import urlparse
+ 
+ try:
+@@ -172,6 +173,7 @@ class HTTPClient(object):
+         # Copy the kwargs so we can reuse the original in case of redirects
+         kwargs['headers'] = copy.deepcopy(kwargs.get('headers', {}))
+         kwargs['headers'].setdefault('User-Agent', USER_AGENT)
++        tomograph.add_trace_info_header(kwargs['headers'])
+         if self.auth_token:
+             kwargs['headers'].setdefault('X-Auth-Token', self.auth_token)
+ 
+-- 
+1.8.1.2
+
