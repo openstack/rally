@@ -86,10 +86,6 @@ class InvalidConfigException(RallyException):
     msg_fmt = _("This config is invalid: `%(message)s`")
 
 
-class NoSuchTestException(InvalidConfigException):
-    msg_fmt = _("No such test: `%(test_name)s`.")
-
-
 class TestException(RallyException):
     msg_fmt = _("Test failed: %(test_message)s")
 
@@ -108,6 +104,10 @@ class NoSuchEngine(NotFoundException):
 
 class NoSuchVMProvider(NotFoundException):
     msg_fmt = _("There is no vm provider with name `%(vm_provider_name)s`.")
+
+
+class NoSuchVerificationTest(NotFoundException):
+    msg_fmt = _("No such verification test: `%(test_name)s`.")
 
 
 class NoSuchScenario(NotFoundException):

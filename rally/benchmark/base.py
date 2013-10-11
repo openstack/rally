@@ -13,6 +13,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import itertools
+
 from rally import exceptions
 from rally import osclients
 from rally import utils
@@ -38,6 +40,25 @@ class Scenario(object):
             if name == scenario.__name__:
                 return scenario
         raise exceptions.NoSuchScenario(name=name)
+
+    @staticmethod
+    def list_benchmark_scenarios():
+        """Lists all the existing methods in the benchmark scenario classes.
+
+        Returns the method names in format <Class name>.<Method name>, which
+        is used in the test config.
+
+        :returns: List of strings
+        """
+        utils.import_modules_from_package("rally.benchmark.scenarios")
+        benchmark_scenarios = [
+            ["%s.%s" % (scenario.__name__, method)
+             for method in dir(scenario) if not method.startswith("_")]
+            for scenario in utils.itersubclasses(Scenario)
+        ]
+        benchmark_scenarios_flattened = list(itertools.chain.from_iterable(
+                                                        benchmark_scenarios))
+        return benchmark_scenarios_flattened
 
     @classmethod
     def class_init(cls, cloud_endpoints):

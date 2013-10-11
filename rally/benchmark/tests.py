@@ -18,6 +18,8 @@
 #                test names listed here should be used in test configuration
 #                files.
 
+from rally.benchmark import base
+
 verification_tests = {
     'sanity': ['--pyargs', 'fuel_health.tests.sanity'],
     'smoke': ['--pyargs', 'fuel_health.tests.smoke', '-k',
@@ -28,7 +30,4 @@ verification_tests = {
                          '-k', 'user or flavor']
 }
 
-# TODO(msdubov): Implement an automatic benchmark tests collector.
-benchmark_tests = {}
-
-tests = {'verify': verification_tests, 'benchmark': benchmark_tests}
+benchmark_scenarios = set(base.Scenario.list_benchmark_scenarios())

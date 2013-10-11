@@ -91,17 +91,20 @@ class TestEngine(object):
             LOG.exception(_('Task %s: Error: %s') % (task_uuid, e.message))
             raise exceptions.InvalidConfigException(message=e.message)
 
-        # Check for test names
-        for test_type in ['verify']:
-            if (test_type not in test_config or
-               'tests_to_run' not in test_config[test_type]):
-                continue
-            for test in test_config[test_type]['tests_to_run']:
-                if test not in tests.tests[test_type]:
-                    LOG.exception(_('Task %s: Error: specified '
-                                    'test does not exist: %s') %
-                                  (task_uuid, test))
-                    raise exceptions.NoSuchTestException(test_name=test)
+        # Check for verification test names
+        for test in test_config['verify']['tests_to_run']:
+            if test not in tests.verification_tests:
+                LOG.exception(_('Task %s: Error: the specified '
+                                'verification test does not exist: %s') %
+                              (task_uuid, test))
+                raise exceptions.NoSuchVerificationTest(test_name=test)
+        # Check for benchmark scenario names
+        for scenario in test_config['benchmark']['tests_to_run']:
+            if scenario not in tests.benchmark_scenarios:
+                LOG.exception(_('Task %s: Error: the specified '
+                                'benchmark scenario does not exist: %s') %
+                              (task_uuid, scenario))
+                raise exceptions.NoSuchScenario(name=scenario)
         LOG.info(_('Task %s: Test config validation succeeded.') % task_uuid)
 
     def _format_test_config(self, test_config):
@@ -123,13 +126,6 @@ class TestEngine(object):
            'tests_to_run' not in formatted_test_config['verify']):
             formatted_test_config['verify'] = {
                 'tests_to_run': tests.verification_tests.keys()
-            }
-        if ('benchmark' not in formatted_test_config or
-           'tests_to_run' not in formatted_test_config['benchmark']):
-            tests_to_run = dict((test_name, [{}])
-                                for test_name in tests.benchmark_tests.keys())
-            formatted_test_config['benchmark'] = {
-                'tests_to_run': tests_to_run
             }
         LOG.debug(_('Task %s: Test config formatting succeeded.') % task_uuid)
         return formatted_test_config
@@ -186,21 +182,19 @@ class TestEngine(object):
         task_uuid = self.task['uuid']
         self.task.update_status(consts.TaskStatus.TEST_TOOL_VERIFY_OPENSTACK)
         LOG.info(_('Task %s: Verifying the cloud deployment...') % task_uuid)
-        tester = utils.Verifier(self.task, self.cloud_config_path)
+        verifier = utils.Verifier(self.task, self.cloud_config_path)
         tests_to_run = self.test_config.to_dict()['verify']['tests_to_run']
         verification_tests = dict((test, tests.verification_tests[test])
                                   for test in tests_to_run)
-        test_run_results = tester.run_all(verification_tests)
+        test_run_results = verifier.run_all(verification_tests)
         self.task.update_verification_log(json.dumps(test_run_results))
-        for test_results in test_run_results:
-            for result in test_results.itervalues():
-                if result['status'] != 0:
-                    error_msg = result['msg']
-                    LOG.exception(_('Task %s: One of verification '
-                                    'tests failed: %s') %
-                                 (task_uuid, error_msg))
-                    raise exceptions.DeploymentVerificationException(
-                                                        test_message=error_msg)
+        for result in test_run_results:
+            if result['status'] != 0:
+                error_msg = result['msg']
+                LOG.exception(_('Task %s: One of verification '
+                                'tests failed: %s') % (task_uuid, error_msg))
+                raise exceptions.DeploymentVerificationException(
+                                                    test_message=error_msg)
         LOG.info(_('Task %s: Verification succeeded.') % task_uuid)
 
     def benchmark(self):

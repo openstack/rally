@@ -59,9 +59,7 @@ class TestEngineTestCase(test.NoDBTestCase):
             }
         }
 
-        self.run_success = {
-            'proc': {'msg': ['msg'], 'status': 0, 'proc_name': 'proc'}
-        }
+        self.run_success = {'msg': 'msg', 'status': 0, 'proc_name': 'proc'}
 
     def test_verify_test_config(self):
         try:
@@ -69,7 +67,7 @@ class TestEngineTestCase(test.NoDBTestCase):
         except Exception as e:
             self.fail("Unexpected exception in test config" +
                       "verification: %s" % str(e))
-        self.assertRaises(exceptions.NoSuchTestException,
+        self.assertRaises(exceptions.NoSuchVerificationTest,
                           engine.TestEngine,
                           self.invalid_test_config_bad_test_name,
                           mock.MagicMock())
