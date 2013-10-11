@@ -3,7 +3,7 @@
         "name": "DevstackEngine",
         "provider": {
             "name": "DummyProvider",
-            "credentials": ["eye@10.2.250.35"]
+            "credentials": ["root@10.2.250.50"]
         }
     },
     "tests": {}

@@ -24,6 +24,7 @@ from rally import sshutils
 
 LOG = logging.getLogger(__name__)
 DEVSTACK_REPO = 'https://github.com/openstack-dev/devstack.git'
+DEVSTACK_USER = 'rally'
 
 
 class DevstackEngine(engine.EngineFactory):
@@ -61,12 +62,18 @@ class DevstackEngine(engine.EngineFactory):
         if 'localrc' in config:
             self.localrc.update(config['localrc'])
 
+    def install_devstack(self, vm):
+        devstack_repo = self._config.get('devstack_repo', DEVSTACK_REPO)
+        script_path = os.path.join(os.path.dirname(__file__),
+                                   'devstack', 'install.sh')
+        sshutils.execute_script(vm.user, vm.ip, script_path)
+        sshutils.execute_command(DEVSTACK_USER, vm.ip,
+                                 ['git', 'clone', devstack_repo])
+
     def deploy(self):
         self._vms = self._vm_provider.create_vms()
-        devstack_repo = self._config.get('devstack_repo', DEVSTACK_REPO)
         for vm in self._vms:
-            sshutils.execute_command(vm.user, vm.ip,
-                                     ['git', 'clone', devstack_repo])
+            self.install_devstack(vm)
             self.configure_devstack(vm)
             self.start_devstack(vm)
         self._vms.append(vm)
@@ -101,7 +108,8 @@ class DevstackEngine(engine.EngineFactory):
             config_file.write('%s=%s\n' % (k, v))
         config_file.close()
         os.close(fd)
-        sshutils.upload_file(vm.user, vm.ip, config_path, "~/devstack/localrc")
+        sshutils.upload_file(DEVSTACK_USER, vm.ip, config_path,
+                             "~/devstack/localrc")
         os.unlink(config_path)
         LOG.info(_('Task %(uuid)s: DevStack for VM %(vm_ip)s successfully '
                    'patched.') % {'uuid': task_uuid, 'vm_ip': vm.ip})
@@ -111,7 +119,7 @@ class DevstackEngine(engine.EngineFactory):
         task_uuid = self.task['uuid']
         LOG.info(_('Task %(uuid)s: Starting DevStack for VM %(vm_ip)s...') %
                  {'uuid': task_uuid, 'vm_ip': vm.ip})
-        sshutils.execute_command(vm.user, vm.ip, ['~/devstack/stack.sh'])
+        sshutils.execute_command(DEVSTACK_USER, vm.ip, ['~/devstack/stack.sh'])
         LOG.info(_('Task %(uuid)s: DevStack for VM %(vm_ip)s successfully '
                    'started.') % {'uuid': task_uuid, 'vm_ip': vm.ip})
         return True
