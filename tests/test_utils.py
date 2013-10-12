@@ -160,10 +160,14 @@ class WaitForTestCase(test.NoDBTestCase):
             return obj
 
         resource = object()
-        fake_checker_delayed = get_fake_checker_delayed(seconds=0.5)
+        fake_checker_delayed = get_fake_checker_delayed(seconds=0.3)
 
         loaded_resource = utils.wait_for(resource, fake_checker_delayed,
                                          fake_updater, 1, 0.2)
+        self.assertEqual(loaded_resource, resource)
+
+        loaded_resource = utils.wait_for(resource, fake_checker_delayed,
+                                         None, 1, 0.2)
         self.assertEqual(loaded_resource, resource)
 
         self.assertRaises(exceptions.TimeoutException, utils.wait_for,

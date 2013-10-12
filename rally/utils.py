@@ -126,7 +126,8 @@ def import_modules_from_package(package):
             try_append_module(module_name, sys.modules)
 
 
-def wait_for(resource, is_ready, update_resource=None, timeout=60, sleep=1):
+def wait_for(resource, is_ready, update_resource=None, timeout=60,
+             check_interval=1):
     """Waits for the given resource to come into the desired state.
 
     Uses the readiness check function passed as a parameter and (optionally)
@@ -139,13 +140,14 @@ def wait_for(resource, is_ready, update_resource=None, timeout=60, sleep=1):
                           None, no result updating is performed
     :param timeout: Timeout in seconds after which a TimeoutException will be
                     raised
-    :param sleep: Pause in seconds between the two consecutive readiness checks
+    :param check_interval: Interval in seconds between the two consecutive
+                           readiness checks
 
     :returns: The "ready" resource object
     """
     start = time.time()
     while not is_ready(resource):
-        time.sleep(sleep)
+        time.sleep(check_interval)
         if time.time() - start > timeout:
             raise exceptions.TimeoutException()
         if update_resource:
