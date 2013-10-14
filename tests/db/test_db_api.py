@@ -105,12 +105,12 @@ class TasksTestCase(test.TestCase):
 
     def test_task_get_detailed(self):
         task1 = self._create_task()
-        name = "some_keys"
+        key = {'name': 'atata'}
         data = {'a': 'b', 'c': 'd'}
 
-        db.task_result_create(task1['uuid'], name, data)
+        db.task_result_create(task1['uuid'], key, data)
         task1_full = db.task_get_detailed(task1['uuid'])
         results = task1_full["results"]
         self.assertEqual(len(results), 1)
-        self.assertEqual(results[0]["name"], name)
+        self.assertEqual(results[0]["key"], key)
         self.assertEqual(results[0]["data"], data)

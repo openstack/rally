@@ -75,14 +75,13 @@ class TaskCommands(object):
               % {'task_id': task_id, 'status': task['status']})
 
         for result in task["results"]:
+            key = result["key"]
             print("-" * 80)
             print()
-
-            name = json.loads(result["name"])
-            print("test scenario %s" % name[0])
-            print("args position %s" % name[1])
+            print("test scenario %s" % key["name"])
+            print("args position %s" % key["pos"])
             print("args values:")
-            pprint.pprint(name[2])
+            pprint.pprint(key["kw"])
 
             raw = result["data"]["raw"]
             times = map(lambda x: x['time'],

@@ -117,8 +117,8 @@ def task_delete(uuid):
         raise exceptions.TaskNotFound(uuid=uuid)
 
 
-def task_result_create(task_uuid, name, data):
+def task_result_create(task_uuid, key, data):
     result = models.TaskResult()
-    result.update({"task_uuid": task_uuid, "name": name, "data": data})
+    result.update({"task_uuid": task_uuid, "key": key, "data": data})
     result.save()
     return result

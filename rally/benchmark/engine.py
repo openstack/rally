@@ -222,9 +222,10 @@ class TestEngine(object):
         scenarios = self.test_config.to_dict()['benchmark']['tests_to_run']
         for name in scenarios:
             for n, kwargs in enumerate(scenarios[name]):
-                key = json.dumps([name, n, kwargs])
-                results[key] = runer.run(name, kwargs)
-                self.task.append_results(key, {"raw": results[key]})
+                key = {'name': name, 'pos': n, 'kw': kwargs}
+                result = runer.run(name, kwargs)
+                self.task.append_results(key, {"raw": result})
+                results[json.dumps(key)] = result
 
         LOG.info(_('Task %s: Completed benchmarking.') % task_uuid)
         return results

@@ -105,6 +105,6 @@ def task_delete(uuid):
     return IMPL.task_delete(uuid)
 
 
-def task_result_create(task_uuid, name, data):
+def task_result_create(task_uuid, key, data):
     """Append result record to task."""
-    return IMPL.task_result_create(task_uuid, name, data)
+    return IMPL.task_result_create(task_uuid, key, data)

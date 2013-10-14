@@ -58,7 +58,8 @@ class TaskResult(BASE, RallyBase):
 
     id = sa.Column(sa.Integer, primary_key=True, autoincrement=True)
 
-    name = sa.Column(sa.Text, nullable=False)
+    key = sa.Column(sa_types.MutableDict.as_mutable(sa_types.JSONEncodedDict),
+                    nullable=False)
     data = sa.Column(sa_types.MutableDict.as_mutable(sa_types.JSONEncodedDict),
                      nullable=False)
 
