@@ -31,7 +31,7 @@ class DevstackEngine(engine.EngineFactory):
     deploy config example:
         "deploy": {
             "name": "DevstackEngine",
-            "openrc": {
+            "localrc": {
                 "ADMIN_PASSWORD": "secret"
             },
             "devstack_repo": "git://example.com/devstack/",
