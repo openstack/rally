@@ -16,10 +16,10 @@
 from rally.deploy import engine
 
 
-class FakeEngine(engine.EngineFactory):
-    """FakeEngine doesn't deploy OpenStack it just use existing.
+class DummyEngine(engine.EngineFactory):
+    """DummyEngine doesn't deploy OpenStack it just use existing.
 
-       To use FakeEngine you should put in task deploy config `cloud_config`:
+       To use DummyEngine you should put in task deploy config `cloud_config`:
        {'deploy': {'cloud_config': {/* here you should specify endpoints */}}}
 
        E.g.

@@ -26,13 +26,13 @@ class FakeFailure(Exception):
     pass
 
 
-class EngineFailedDeploy(deploy.engines.fake_engine.FakeEngine):
+class EngineFailedDeploy(deploy.engines.dummy_engine.DummyEngine):
 
     def deploy(self):
         raise FakeFailure('fake deploy failed')
 
 
-class EngineFailedCleanup(deploy.engines.fake_engine.FakeEngine):
+class EngineFailedCleanup(deploy.engines.dummy_engine.DummyEngine):
 
     def cleanup(self):
         raise FakeFailure('fake deploy failed')
@@ -45,7 +45,7 @@ class DeployEngineTaskStatusTestCase(test.NoDBTestCase):
 
     def test_task_status_basic_chain(self):
         fake_task = mock.MagicMock()
-        with get_engine('FakeEngine', fake_task, {}) as deployer:
+        with get_engine('DummyEngine', fake_task, {}) as deployer:
             deployer.make()
         s = consts.TaskStatus
         expected = [

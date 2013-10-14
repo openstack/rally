@@ -13,33 +13,33 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-"""Test fake deploy engines."""
+"""Test dummy deploy engines."""
 
 import mock
 
 from rally import deploy
-from rally.deploy.engines import fake_engine
+from rally.deploy.engines import dummy_engine
 from rally import test
 
 
-class TestFakeDeployEngine(test.NoDBTestCase):
+class TestDummyDeployEngine(test.NoDBTestCase):
 
-    def test_fake_egnine_init(self):
-        fake_engine.FakeEngine(mock.MagicMock(), {})
+    def test_dummy_egnine_init(self):
+        dummy_engine.DummyEngine(mock.MagicMock(), {})
 
-    def test_fake_engine_init_with_deploy_config(self):
+    def test_dummy_engine_init_with_deploy_config(self):
         cloud_config = {'cloud_config': {'a': 1, 'b': 2}}
-        fake_engine.FakeEngine(mock.MagicMock(), cloud_config)
+        dummy_engine.DummyEngine(mock.MagicMock(), cloud_config)
 
-    def test_fake_engine_deploy(self):
+    def test_dummy_engine_deploy(self):
         cloud_config = {'cloud_config': {'a': 1, 'b': 2}}
-        engine = fake_engine.FakeEngine(mock.MagicMock(), cloud_config)
+        engine = dummy_engine.DummyEngine(mock.MagicMock(), cloud_config)
         self.assertEqual(engine.deploy(), cloud_config['cloud_config'])
 
-    def test_fake_engine_cleanup(self):
-        fake_engine.FakeEngine(mock.MagicMock(), {}).cleanup()
+    def test_dummy_engine_cleanup(self):
+        dummy_engine.DummyEngine(mock.MagicMock(), {}).cleanup()
 
-    def test_fake_engine_is_in_factory(self):
-        engine = deploy.EngineFactory.get_engine('FakeEngine',
+    def test_dummy_engine_is_in_factory(self):
+        engine = deploy.EngineFactory.get_engine('DummyEngine',
                                                  mock.MagicMock(), {})
-        self.assertIsInstance(engine, fake_engine.FakeEngine)
+        self.assertIsInstance(engine, dummy_engine.DummyEngine)
