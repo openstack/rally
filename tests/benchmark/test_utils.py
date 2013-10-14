@@ -117,6 +117,7 @@ class ScenarioTestCase(test.NoDBTestCase):
             )
         ]
         expect.extend([mock.call().imap().next(timeout) for i in range(times)])
+        expect.extend([mock.call().close(), mock.call().join()])
         self.assertEqual(mock_multi.Pool.mock_calls, expect)
 
     def test_run(self):

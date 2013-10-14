@@ -74,6 +74,9 @@ class ScenarioRunner(object):
             except Exception as e:
                 result = {"time": None, "error": _format_exc(e)}
             results.append(result)
+
+        pool.close()
+        pool.join()
         return results
 
     def run(self, name, kwargs):
