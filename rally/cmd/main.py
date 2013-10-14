@@ -92,6 +92,15 @@ class TaskCommands(object):
                            float(len(times)) / len(raw)])
             print(table)
 
+    @cliutils.args('--task-id', type=str, help='uuid of task')
+    def raw_results(self, task_id):
+        """Print raw results of task."""
+        print()
+        results = map(lambda x: {"key": x["key"], 'result': x['data']['raw']},
+                      db.task_get_detailed(task_id)["results"])
+        pprint.pprint(results)
+        print()
+
     def list(self):
         """Get list of all tasks
         Returns list of active tasks
