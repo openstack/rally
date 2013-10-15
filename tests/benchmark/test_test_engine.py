@@ -30,23 +30,15 @@ class TestEngineTestCase(test.NoDBTestCase):
         super(TestEngineTestCase, self).setUp()
 
         self.valid_test_config = {
-            'verify': {
-                'tests_to_run': ['sanity', 'smoke']
-            },
-            'benchmark': {
-                'tests_to_run': {}
-            }
+            'verify': ['sanity', 'smoke'],
+            'benchmark': {}
         }
         self.invalid_test_config_bad_test_name = {
-            'verify': {
-                'tests_to_run': ['sanity', 'some_not_existing_test']
-            },
+            'verify': ['sanity', 'some_not_existing_test'],
             'benchmark': {}
         }
         self.invalid_test_config_bad_key = {
-            'verify': {
-                'tests_to_run': ['sanity', 'smoke']
-            },
+            'verify': ['sanity', 'smoke'],
             'benchmarck': {}
         }
         self.valid_cloud_config = {
@@ -81,9 +73,7 @@ class TestEngineTestCase(test.NoDBTestCase):
                                         mock.MagicMock())
         with test_engine.bind(self.valid_cloud_config):
             self.assertTrue(os.path.exists(test_engine.cloud_config_path))
-            self.assertTrue(os.path.exists(test_engine.test_config_path))
         self.assertFalse(os.path.exists(test_engine.cloud_config_path))
-        self.assertFalse(os.path.exists(test_engine.test_config_path))
 
     def test_verify(self):
         test_engine = engine.TestEngine(self.valid_test_config,

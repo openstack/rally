@@ -13,55 +13,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import abc
 import ConfigParser
-import json
 import os
 
 
-class ConfigManager(ConfigParser.RawConfigParser, object):
-    __metaclass__ = abc.ABCMeta
-
-    def __init__(self, config=None):
-        """Initializes the config manager with the default values and
-        (if given) with a config.
-
-        :param config: Path to the config file or a two-level dictionary
-                       containing the config contents
-        """
-        super(ConfigManager, self).__init__()
-        if config:
-            if isinstance(config, basestring):
-                self.read(config)
-            elif isinstance(config, dict):
-                self.read_from_dict(config)
-
-    def read_from_dict(self, dct, transform=str, replace=True):
-        """Reads the config from a dictionary.
-
-        :param dct: The config represented as a two-level dictionary: the
-                    top-level keys should be section names while the keys on
-                    the second level should represent option names
-        :param transform: Function that will be applied to all the config
-                          values: it should take a string as its only argument
-                          and produce the result that will be stored in the
-                          ConfigManager instance
-        :param replace: True to replace already existing options while reading
-                        the config; False to keep old values
-        """
-        for section_name, section in dct.iteritems():
-            if not self.has_section(section_name):
-                self.add_section(section_name)
-            for opt in section:
-                if not self.has_option(section_name, opt) or replace:
-                    self.set(section_name, opt, transform(section[opt]))
-
-    @abc.abstractmethod
-    def to_dict(self):
-        pass
-
-
-class CloudConfigManager(ConfigManager):
+class CloudConfigManager(ConfigParser.RawConfigParser, object):
 
     _DEFAULT_CLOUD_CONFIG = {
         'identity': {
@@ -130,8 +86,35 @@ class CloudConfigManager(ConfigManager):
     }
 
     def __init__(self, config=None):
-        super(CloudConfigManager, self).__init__(config)
-        self.read_from_dict(self._DEFAULT_CLOUD_CONFIG, replace=False)
+        """Initializes the cloud config manager with the default values and
+        (if given) with a config.
+
+        :param config: Path to the config file or a two-level dictionary
+                       containing the config contents
+        """
+        super(CloudConfigManager, self).__init__()
+        self.read_from_dict(self._DEFAULT_CLOUD_CONFIG)
+        if config:
+            if isinstance(config, basestring):
+                self.read(config)
+            elif isinstance(config, dict):
+                self.read_from_dict(config)
+
+    def read_from_dict(self, dct, replace=True):
+        """Reads the config from a dictionary.
+
+        :param dct: The config represented as a two-level dictionary: the
+                    top-level keys should be section names while the keys on
+                    the second level should represent option names
+        :param replace: True to replace already existing options while reading
+                        the config; False to keep old values
+        """
+        for section_name, section in dct.iteritems():
+            if not self.has_section(section_name):
+                self.add_section(section_name)
+            for opt in section:
+                if not self.has_option(section_name, opt) or replace:
+                    self.set(section_name, opt, section[opt])
 
     def to_dict(self):
         res = {}
@@ -140,59 +123,31 @@ class CloudConfigManager(ConfigManager):
         return res
 
 
-class TestConfigManager(ConfigManager):
-
-    def read_from_dict(self, dct, transform=json.dumps, replace=True):
-        super(TestConfigManager, self).read_from_dict(dct, transform, replace)
-
-    def to_dict(self):
-        res = {}
-        for section in self.sections():
-            # NOTE(msdubov): test configs contain json strings as their values.
-            parsed_items = map(lambda (opt, val): (opt, json.loads(val)),
-                               self.items(section))
-            res[section] = dict(parsed_items)
-        return res
-
 test_config_schema = {
     "type": "object",
     "$schema": "http://json-schema.org/draft-03/schema",
     "properties": {
         "verify": {
-            "type": "object",
-            "properties": {"tests_to_run": {"type": "array"}},
-            "additionalProperties": False
+            "type": "array"
         },
         "benchmark": {
             "type": "object",
-            "properties": {
-                "tests_to_run": {
-                    "type": "object",
-                    "patternProperties": {
-                        ".*": {
-                            "type": "array",
-                            "items": {
-                                "type": "object",
-                                "properties": {
-                                    "args": {"type": "object"},
-                                    "init": {"type": "object"},
-                                    "times": {"type": "number"},
-                                    "concurrent": {"type": "number"},
-                                    "timeout": {"type": "number"}
-                                },
-                                "additionalProperties": False
-                            }
-                        }
-                    }
-                },
-                "tests_setUp": {
-                    "type": "object",
-                    "patternProperties": {
-                        ".*": {"type": "object"},
+            "patternProperties": {
+                ".*": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "args": {"type": "object"},
+                            "init": {"type": "object"},
+                            "times": {"type": "number"},
+                            "concurrent": {"type": "number"},
+                            "timeout": {"type": "number"}
+                        },
+                        "additionalProperties": False
                     }
                 }
-            },
-            "additionalProperties": False
+            }
         }
     },
     "additionalProperties": False

@@ -50,19 +50,16 @@ class TestEngine(object):
         """TestEngine constructor.
 
         :param test_config: Dictionary of form {
-            "verify": {
-                "tests_to_run": ["sanity", "snapshot", "smoke"]
-            },
+            "verify": ["sanity", "smoke"]
             "benchmark": {
-                "tests_setUp": {
-                    "nova.server_metadata": {"servers_to_boot": 10}
-                }
-                "tests_to_run": {
-                    "nova.server_metadata.test_set_and_delete_meta": [
-                        {"args": {"amount": 5}, "times": 1, "concurrent": 1},
-                        {"args": {"amount": 10}, "times": 4, "concurrent": 2}
-                    ]
-                }
+                "NovaServers.boot_and_delete_server": [
+                    {"args": {"flavor_id": <flavor_id>,
+                              "image_id": "<image_id>"},
+                     "times": 1, "concurrent": 1},
+                    {"args": {"flavor_id": <flavor_id>,
+                              "image_id": "<image_id>"},
+                     "times": 4, "concurrent": 2}
+                ]
             }
         }
         :param task: The current task which is being performed
@@ -77,7 +74,7 @@ class TestEngine(object):
 
         self._validate_test_config(test_config)
         test_config = self._format_test_config(test_config)
-        self.test_config = config.TestConfigManager(test_config)
+        self.test_config = test_config
 
     def _validate_test_config(self, test_config):
         """Checks whether the given test config is valid and can be used during
@@ -99,7 +96,7 @@ class TestEngine(object):
             raise exceptions.InvalidConfigException(message=e.message)
 
         # Check for verification test names
-        for test in test_config['verify']['tests_to_run']:
+        for test in test_config['verify']:
             if test not in self.verification_tests:
                 LOG.exception(_('Task %s: Error: the specified '
                                 'verification test does not exist: %s') %
@@ -107,7 +104,7 @@ class TestEngine(object):
                 raise exceptions.NoSuchVerificationTest(test_name=test)
         # Check for benchmark scenario names
         benchmark_scenarios_set = set(self.benchmark_scenarios)
-        for scenario in test_config['benchmark']['tests_to_run']:
+        for scenario in test_config['benchmark']:
             if scenario not in benchmark_scenarios_set:
                 LOG.exception(_('Task %s: Error: the specified '
                                 'benchmark scenario does not exist: %s') %
@@ -128,13 +125,10 @@ class TestEngine(object):
         LOG.debug(_('Task %s: Formatting the given test config...') %
                   task_uuid)
         formatted_test_config = copy.deepcopy(test_config)
-        # NOTE(msdubov): if 'verify' or 'benchmark' tests are not specified,
-        #                run them all by default.
-        if ('verify' not in formatted_test_config or
-           'tests_to_run' not in formatted_test_config['verify']):
-            formatted_test_config['verify'] = {
-                'tests_to_run': self.verification_tests.keys()
-            }
+        # NOTE(msdubov): if 'verify' is not specified, just run all
+        #                verification tests.
+        if 'verify' not in formatted_test_config:
+            formatted_test_config['verify'] = self.verification_tests.keys()
         LOG.debug(_('Task %s: Test config formatting succeeded.') % task_uuid)
         return formatted_test_config
 
@@ -144,8 +138,6 @@ class TestEngine(object):
                     'temporary files...') % task_uuid)
         with os.fdopen(self.cloud_config_fd, 'w') as f:
             self.cloud_config.write(f)
-        with os.fdopen(self.test_config_fd, 'w') as f:
-            self.test_config.write(f)
         LOG.debug(_('Task %s: Completed writing temporary '
                     'config files.') % task_uuid)
 
@@ -153,7 +145,6 @@ class TestEngine(object):
         task_uuid = self.task['uuid']
         LOG.debug(_('Task %s: Deleting temporary config files...') % task_uuid)
         os.remove(self.cloud_config_path)
-        os.remove(self.test_config_path)
         LOG.debug(_('Task %s: Completed deleting temporary '
                     'config files.') % task_uuid)
 
@@ -177,8 +168,6 @@ class TestEngine(object):
 
         self.cloud_config_fd, self.cloud_config_path = tempfile.mkstemp(
                                                 suffix='rallycfg', text=True)
-        self.test_config_fd, self.test_config_path = tempfile.mkstemp(
-                                                suffix='rallycfg', text=True)
 
         return self
 
@@ -191,7 +180,7 @@ class TestEngine(object):
         self.task.update_status(consts.TaskStatus.TEST_TOOL_VERIFY_OPENSTACK)
         LOG.info(_('Task %s: Verifying the cloud deployment...') % task_uuid)
         verifier = utils.Verifier(self.task, self.cloud_config_path)
-        tests_to_run = self.test_config.to_dict()['verify']['tests_to_run']
+        tests_to_run = self.test_config['verify']
         verification_tests = dict((test, self.verification_tests[test])
                                   for test in tests_to_run)
         test_run_results = verifier.run_all(verification_tests)
@@ -221,7 +210,7 @@ class TestEngine(object):
                                      self.cloud_config.to_dict()["identity"])
 
         results = {}
-        scenarios = self.test_config.to_dict()['benchmark']['tests_to_run']
+        scenarios = self.test_config['benchmark']
         for name in scenarios:
             for n, kwargs in enumerate(scenarios[name]):
                 key = {'name': name, 'pos': n, 'kw': kwargs}
