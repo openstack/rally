@@ -1,4 +1,3 @@
-# Copyright 2013: Mirantis Inc.
 # All Rights Reserved.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -16,6 +15,7 @@
 import mock
 
 from rally.benchmark.scenarios.nova import utils
+from rally import exceptions as rally_exceptions
 from rally import test
 
 
@@ -41,6 +41,13 @@ class FakeServer(FakeResource):
 
     def suspend(self):
         self.status = "SUSPENDED"
+
+
+class FakeFailedServer(FakeResource):
+
+    def __init__(self, manager=None):
+        super(FakeFailedServer, self).__init__(manager)
+        self.status = "ERROR"
 
 
 class FakeImage(FakeResource):
@@ -73,6 +80,12 @@ class FakeServerManager(FakeManager):
 
     def remove_floating_ip(self, server, fip):
         pass
+
+
+class FakeFailedServerManager(FakeServerManager):
+
+    def create(self, name, image_id, flavor_id):
+        return FakeFailedServer(self)
 
 
 class FakeImageManager(FakeManager):
@@ -117,6 +130,12 @@ class NovaScenarioTestCase(test.NoDBTestCase):
             name = utils.NovaScenario._generate_random_name(length)
             self.assertEqual(len(name), length)
             self.assertTrue(name.isalpha())
+
+    def test_failed_server_status(self):
+        server_manager = FakeFailedServerManager()
+        self.assertRaises(rally_exceptions.GetResourceFailure,
+                          utils._get_from_manager,
+                          server_manager.create('fails', '1', '2'))
 
     def test_server_helper_methods(self):
 

@@ -30,7 +30,7 @@ def _resource_is(status):
 
 def _get_from_manager(resource):
     resource = resource.manager.get(resource)
-    if resource.status == "FAILED":
+    if resource.status == "ERROR":
         raise rally_exceptions.GetResourceFailure()
     return resource
 
