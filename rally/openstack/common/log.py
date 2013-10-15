@@ -39,6 +39,7 @@ import sys
 import traceback
 
 from oslo.config import cfg
+import six
 from six import moves
 
 from rally.openstack.common.gettextutils import _  # noqa
@@ -207,6 +208,8 @@ def _get_log_file_path(binary=None):
         binary = binary or _get_binary_name()
         return '%s.log' % (os.path.join(logdir, binary),)
 
+    return None
+
 
 class BaseLoggerAdapter(logging.LoggerAdapter):
 
@@ -249,6 +252,13 @@ class ContextAdapter(BaseLoggerAdapter):
             self.warn(stdmsg, *args, **kwargs)
 
     def process(self, msg, kwargs):
+        # NOTE(mrodden): catch any Message/other object and
+        #                coerce to unicode before they can get
+        #                to the python logging and possibly
+        #                cause string encoding trouble
+        if not isinstance(msg, six.string_types):
+            msg = six.text_type(msg)
+
         if 'extra' not in kwargs:
             kwargs['extra'] = {}
         extra = kwargs['extra']
@@ -260,14 +270,14 @@ class ContextAdapter(BaseLoggerAdapter):
             extra.update(_dictify_context(context))
 
         instance = kwargs.pop('instance', None)
+        instance_uuid = (extra.get('instance_uuid', None) or
+                         kwargs.pop('instance_uuid', None))
         instance_extra = ''
         if instance:
             instance_extra = CONF.instance_format % instance
-        else:
-            instance_uuid = kwargs.pop('instance_uuid', None)
-            if instance_uuid:
-                instance_extra = (CONF.instance_uuid_format
-                                  % {'uuid': instance_uuid})
+        elif instance_uuid:
+            instance_extra = (CONF.instance_uuid_format
+                              % {'uuid': instance_uuid})
         extra.update({'instance': instance_extra})
 
         extra.update({"project": self.project})

@@ -246,7 +246,6 @@ import os.path
 import re
 import time
 
-from eventlet import greenthread
 from oslo.config import cfg
 import six
 from sqlalchemy import exc as sqla_exc
@@ -280,7 +279,9 @@ database_opts = [
                deprecated_opts=[cfg.DeprecatedOpt('sql_connection',
                                                   group='DEFAULT'),
                                 cfg.DeprecatedOpt('sql_connection',
-                                                  group='DATABASE')]),
+                                                  group='DATABASE'),
+                                cfg.DeprecatedOpt('connection',
+                                                  group='sql'), ]),
     cfg.StrOpt('slave_connection',
                default='',
                help='The SQLAlchemy connection string used to connect to the '
@@ -590,14 +591,16 @@ def _add_regexp_listener(dbapi_con, con_record):
     dbapi_con.create_function('regexp', 2, regexp)
 
 
-def _greenthread_yield(dbapi_con, con_record):
+def _thread_yield(dbapi_con, con_record):
     """Ensure other greenthreads get a chance to be executed.
 
+    If we use eventlet.monkey_patch(), eventlet.greenthread.sleep(0) will
+    execute instead of time.sleep(0).
     Force a context switch. With common database backends (eg MySQLdb and
     sqlite), there is no implicit yield caused by network I/O since they are
     implemented by C libraries that eventlet cannot monkey patch.
     """
-    greenthread.sleep(0)
+    time.sleep(0)
 
 
 def _ping_listener(dbapi_conn, connection_rec, connection_proxy):
@@ -666,7 +669,7 @@ def create_engine(sql_connection, sqlite_fk=False):
 
     engine = sqlalchemy.create_engine(sql_connection, **engine_args)
 
-    sqlalchemy.event.listen(engine, 'checkin', _greenthread_yield)
+    sqlalchemy.event.listen(engine, 'checkin', _thread_yield)
 
     if 'mysql' in connection_dict.drivername:
         sqlalchemy.event.listen(engine, 'checkout', _ping_listener)

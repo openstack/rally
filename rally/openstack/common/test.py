@@ -30,6 +30,7 @@ class BaseTestCase(testtools.TestCase):
         self._set_timeout()
         self._fake_output()
         self.useFixture(fixtures.FakeLogger('rally.openstack.common'))
+        self.useFixture(fixtures.NestedTempfile())
 
     def _set_timeout(self):
         test_timeout = os.environ.get('OS_TEST_TIMEOUT', 0)
