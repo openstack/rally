@@ -46,14 +46,16 @@ class DevstackEngineTestCase(test.BaseTestCase):
     def test_deploy(self):
         with mock.patch('rally.deploy.engines.devstack.sshutils') as ssh:
             self.de.deploy()
-
-        config_tmp_filename = ssh.mock_calls[1][1][2]
+        config_tmp_filename = ssh.mock_calls[2][1][2]
         call = mock.call
         expected = [
-            call.execute_command('root', 'example.com', ['git', 'clone',
-                                                         DEVSTACK_REPO]),
-            call.upload_file('root', 'example.com',
-                             config_tmp_filename, '~/devstack/localrc'),
-            call.execute_command('root', 'example.com',
-                                 ['~/devstack/stack.sh'])]
+            call.execute_script('root', 'example.com',
+                                'rally/deploy/engines/devstack/install.sh'),
+            call.execute_command('rally', 'example.com',
+                                 ['git', 'clone', DEVSTACK_REPO]),
+            call.upload_file('rally', 'example.com', config_tmp_filename,
+                             '~/devstack/localrc'),
+            call.execute_command('rally', 'example.com',
+                                 ['~/devstack/stack.sh'])
+        ]
         self.assertEqual(expected, ssh.mock_calls)
