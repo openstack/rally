@@ -64,8 +64,8 @@ class DevstackEngine(engine.EngineFactory):
 
     def install_devstack(self, vm):
         devstack_repo = self._config.get('devstack_repo', DEVSTACK_REPO)
-        script_path = os.path.join(os.path.dirname(__file__),
-                                   'devstack', 'install.sh')
+        script_path = os.path.abspath(os.path.join(os.path.dirname(__file__),
+                                                   'devstack', 'install.sh'))
         sshutils.execute_script(vm.user, vm.ip, script_path)
         sshutils.execute_command(DEVSTACK_USER, vm.ip,
                                  ['git', 'clone', devstack_repo])
