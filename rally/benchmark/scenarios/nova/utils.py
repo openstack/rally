@@ -99,6 +99,13 @@ class NovaScenario(base.Scenario):
             pass
 
     @classmethod
+    def _delete_all_servers(cls):
+        """Deletes all servers in current tenant."""
+        servers = cls.nova.servers.list()
+        for server in servers:
+            cls._delete_server(server)
+
+    @classmethod
     def _delete_image(cls, image):
         """Deletes the given image.
 
@@ -166,3 +173,7 @@ class NovaScenario(base.Scenario):
     @classmethod
     def _generate_random_name(cls, length):
         return ''.join(random.choice(string.lowercase) for i in range(length))
+
+    @classmethod
+    def cleanup(cls, context):
+        cls._delete_all_servers()

@@ -38,3 +38,9 @@ class NovaServers(utils.NovaScenario):
         server = cls._boot_server(server_name, image.id, flavor_id, **kwargs)
         cls._delete_server(server)
         cls._delete_image(image)
+
+    @classmethod
+    def boot_server(cls, context, image_id, flavor_id, **kwargs):
+        """Test VM boot - assumed clean-up is done elsewhere."""
+        server_name = cls._generate_random_name(16)
+        cls._boot_server(server_name, image_id, flavor_id, **kwargs)

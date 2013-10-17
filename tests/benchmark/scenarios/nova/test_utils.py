@@ -13,7 +13,9 @@
 #    under the License.
 
 import mock
+import uuid
 
+from novaclient import exceptions
 from rally.benchmark.scenarios.nova import utils
 from rally import exceptions as rally_exceptions
 from rally import test
@@ -26,9 +28,10 @@ from rally import test
 class FakeResource(object):
 
     def __init__(self, manager=None):
-        self.name = "resource"
+        self.name = uuid.uuid4()
         self.status = "ACTIVE"
         self.manager = manager
+        self.uuid = uuid.uuid4()
 
     def __getattr__(self, name):
         # NOTE(msdubov): e.g. server.delete() -> manager.delete(server)
@@ -38,6 +41,9 @@ class FakeResource(object):
 
 
 class FakeServer(FakeResource):
+
+    def __init__(self, manager=None):
+        super(FakeServer, self).__init__(manager)
 
     def suspend(self):
         self.status = "SUSPENDED"
@@ -60,17 +66,50 @@ class FakeFloatingIP(FakeResource):
 
 class FakeManager(object):
 
+    def __init__(self):
+        super(FakeManager, self).__init__()
+        self.cache = {}
+
     def get(self, resource):
-        return resource
+        if resource == 'img_uuid':
+            return 'img_uuid'
+        return self.cache.get(resource.uuid, None)
 
     def delete(self, resource):
-        pass
+        cached = self.cache.get(resource.uuid, None)
+        if cached is not None:
+            del self.cache[cached.uuid]
+
+    def _cache(self, resource):
+        self.cache[resource.uuid] = resource
+        return resource
+
+    def list(self, **kwargs):
+        resources = []
+        for uuid in self.cache.keys():
+            resources.append(self.cache[uuid])
+        return resources
 
 
 class FakeServerManager(FakeManager):
 
+    def __init__(self):
+        super(FakeServerManager, self).__init__()
+
+    def get(self, resource):
+        server = self.cache.get(resource.uuid, None)
+        if server is not None:
+            return server
+        raise exceptions.NotFound("Server %s not found" % (resource.name))
+
+    def _create(self, server_class=FakeServer, name=None):
+        server = self._cache(server_class(self))
+        if name is not None:
+            server.name = name
+        return server
+
     def create(self, name, image_id, flavor_id):
-        return FakeServer(self)
+        return self._create(name=name)
 
     def create_image(self, server, name):
         return "img_uuid"
@@ -85,7 +124,7 @@ class FakeServerManager(FakeManager):
 class FakeFailedServerManager(FakeServerManager):
 
     def create(self, name, image_id, flavor_id):
-        return FakeFailedServer(self)
+        return self._create(FakeFailedServer, name)
 
 
 class FakeImageManager(FakeManager):
@@ -125,6 +164,18 @@ class FakeClients(object):
 
 class NovaScenarioTestCase(test.NoDBTestCase):
 
+    def setUp(self):
+        super(NovaScenarioTestCase, self).setUp()
+        self.rally_utils = "rally.benchmark.scenarios.nova.utils.utils"
+        self.utils_resource_is = "rally.benchmark.scenarios.nova.utils"\
+            "._resource_is"
+        self.osclients = "rally.benchmark.base.osclients"
+        self.nova_scenario = "rally.benchmark.scenarios.nova.utils."\
+            "NovaScenario"
+        self.servers_create = ("rally.benchmark.scenarios.nova.utils"
+                               ".NovaScenario.nova.servers.create")
+        self.sleep = "rally.benchmark.scenarios.nova.utils.time.sleep"
+
     def test_generate_random_name(self):
         for length in [8, 16, 32, 64]:
             name = utils.NovaScenario._generate_random_name(length)
@@ -137,28 +188,56 @@ class NovaScenarioTestCase(test.NoDBTestCase):
                           utils._get_from_manager,
                           server_manager.create('fails', '1', '2'))
 
+    def test_cleanup_failed(self):
+        with mock.patch(self.osclients) as mock_osclients:
+            mock_osclients.Clients.return_value = FakeClients()
+            keys = ["admin_username", "admin_password",
+                    "admin_tenant_name", "uri"]
+            kw = dict(zip(keys, keys))
+            utils.NovaScenario.class_init(kw)
+
+            manager = FakeFailedServerManager()
+            utils.NovaScenario.nova.servers = manager
+
+            # NOTE(boden): verify failed server cleanup
+            self.assertRaises(rally_exceptions.GetResourceFailure,
+                              utils.NovaScenario._boot_server, "fails", 0, 1)
+            self.assertEquals(len(manager.list()), 1, "Server not created")
+            utils.NovaScenario.cleanup({})
+            self.assertEquals(len(manager.list()), 0, "Servers not purged")
+
+    def test_cleanup(self):
+        with mock.patch(self.osclients) as mock_osclients:
+            mock_osclients.Clients.return_value = FakeClients()
+            keys = ["admin_username", "admin_password",
+                    "admin_tenant_name", "uri"]
+            kw = dict(zip(keys, keys))
+            utils.NovaScenario.class_init(kw)
+
+            # NOTE(boden): verify active server cleanup
+            manager = FakeServerManager()
+            utils.NovaScenario.nova.servers = manager
+            for i in range(5):
+                utils.NovaScenario._boot_server("server-%s" % i, 0, 1)
+            self.assertEquals(len(manager.list()), 5, "Server not created")
+            utils.NovaScenario.cleanup({})
+            self.assertEquals(len(manager.list()), 0, "Servers not purged")
+
     def test_server_helper_methods(self):
 
-        rally_utils = "rally.benchmark.scenarios.nova.utils.utils"
-        utils_resource_is = "rally.benchmark.scenarios.nova.utils._resource_is"
-        osclients = "rally.benchmark.base.osclients"
-        servers_create = ("rally.benchmark.scenarios.nova.utils.NovaScenario."
-                          "nova.servers.create")
-        sleep = "rally.benchmark.scenarios.nova.utils.time.sleep"
-
-        with mock.patch(rally_utils) as mock_rally_utils:
-            with mock.patch(utils_resource_is) as mock_resource_is:
+        with mock.patch(self.rally_utils) as mock_rally_utils:
+            with mock.patch(self.utils_resource_is) as mock_resource_is:
                 mock_resource_is.return_value = {}
-                with mock.patch(osclients) as mock_osclients:
+                with mock.patch(self.osclients) as mock_osclients:
                     mock_osclients.Clients.return_value = FakeClients()
                     keys = ["admin_username", "admin_password",
                             "admin_tenant_name", "uri"]
                     kw = dict(zip(keys, keys))
                     utils.NovaScenario.class_init(kw)
-                    with mock.patch(servers_create) as mock_create:
+                    with mock.patch(self.servers_create) as mock_create:
                         fake_server = FakeServerManager().create("s1", "i1", 1)
                         mock_create.return_value = fake_server
-                        with mock.patch(sleep):
+                        with mock.patch(self.sleep):
                             utils.NovaScenario._boot_server("s1", "i1", 1)
                             utils.NovaScenario._create_image(fake_server)
                             utils.NovaScenario._suspend_server(fake_server)

@@ -144,13 +144,17 @@ def wait_for(resource, is_ready, update_resource=None, timeout=60,
 
     :returns: The "ready" resource object
     """
+
     start = time.time()
-    while not is_ready(resource):
+    while True:
+        # NOTE(boden): mitigate 1st iteration waits by updating immediately
+        if update_resource:
+            resource = update_resource(resource)
+        if is_ready(resource):
+            break
         time.sleep(check_interval)
         if time.time() - start > timeout:
             raise exceptions.TimeoutException()
-        if update_resource:
-            resource = update_resource(resource)
     return resource
 
 

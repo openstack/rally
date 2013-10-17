@@ -22,8 +22,7 @@ from tests.benchmark.scenarios.nova import test_utils
 
 class NovaServersTestCase(test.NoDBTestCase):
 
-    def test_boot_and_delete_server(self):
-
+    def _verify_boot_server(self, assert_delete=False):
         fake_server = object()
 
         scenario = "rally.benchmark.scenarios.nova.servers.NovaServers"
@@ -39,7 +38,14 @@ class NovaServersTestCase(test.NoDBTestCase):
                                                                fakearg="f")
 
         mock_boot.assert_called_once_with("random_name", "img", 0, fakearg="f")
-        mock_delete.assert_called_once_with(fake_server)
+        if assert_delete:
+            mock_delete.assert_called_once_with(fake_server)
+
+    def test_boot_and_delete_server(self):
+        self._verify_boot_server(assert_delete=True)
+
+    def test_boot_server(self):
+        self._verify_boot_server()
 
     def test_snapshot_server(self):
 
