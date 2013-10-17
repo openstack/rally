@@ -19,8 +19,8 @@ import jsonschema
 import os
 import tempfile
 
+from rally.benchmark import base
 from rally.benchmark import config
-from rally.benchmark import tests
 from rally.benchmark import utils
 from rally import consts
 from rally import exceptions
@@ -68,6 +68,13 @@ class TestEngine(object):
         :param task: The current task which is being performed
         """
         self.task = task
+
+        # NOTE(msdubov): self.verification_tests is a dict since it has
+        #                to contain pytest running args, while
+        #                self.benchmark_scenarios is just a list of names.
+        self.verification_tests = utils.Verifier.list_verification_tests()
+        self.benchmark_scenarios = base.Scenario.list_benchmark_scenarios()
+
         self._validate_test_config(test_config)
         test_config = self._format_test_config(test_config)
         self.test_config = config.TestConfigManager(test_config)
@@ -93,14 +100,15 @@ class TestEngine(object):
 
         # Check for verification test names
         for test in test_config['verify']['tests_to_run']:
-            if test not in tests.verification_tests:
+            if test not in self.verification_tests:
                 LOG.exception(_('Task %s: Error: the specified '
                                 'verification test does not exist: %s') %
                               (task_uuid, test))
                 raise exceptions.NoSuchVerificationTest(test_name=test)
         # Check for benchmark scenario names
+        benchmark_scenarios_set = set(self.benchmark_scenarios)
         for scenario in test_config['benchmark']['tests_to_run']:
-            if scenario not in tests.benchmark_scenarios:
+            if scenario not in benchmark_scenarios_set:
                 LOG.exception(_('Task %s: Error: the specified '
                                 'benchmark scenario does not exist: %s') %
                               (task_uuid, scenario))
@@ -125,7 +133,7 @@ class TestEngine(object):
         if ('verify' not in formatted_test_config or
            'tests_to_run' not in formatted_test_config['verify']):
             formatted_test_config['verify'] = {
-                'tests_to_run': tests.verification_tests.keys()
+                'tests_to_run': self.verification_tests.keys()
             }
         LOG.debug(_('Task %s: Test config formatting succeeded.') % task_uuid)
         return formatted_test_config
@@ -184,7 +192,7 @@ class TestEngine(object):
         LOG.info(_('Task %s: Verifying the cloud deployment...') % task_uuid)
         verifier = utils.Verifier(self.task, self.cloud_config_path)
         tests_to_run = self.test_config.to_dict()['verify']['tests_to_run']
-        verification_tests = dict((test, tests.verification_tests[test])
+        verification_tests = dict((test, self.verification_tests[test])
                                   for test in tests_to_run)
         test_run_results = verifier.run_all(verification_tests)
         self.task.update_verification_log(json.dumps(test_run_results))
