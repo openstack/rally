@@ -32,7 +32,6 @@ class NovaServers(utils.NovaScenario):
         server_name = cls._generate_random_name(16)
 
         server = cls._boot_server(server_name, image_id, flavor_id, **kwargs)
-        cls._suspend_server(server)
         image = cls._create_image(server)
         cls._delete_server(server)
 
