@@ -14,6 +14,7 @@
 #    under the License.
 
 import mock
+import os
 
 from rally.deploy.engines import devstack
 from rally.openstack.common import test
@@ -48,9 +49,10 @@ class DevstackEngineTestCase(test.BaseTestCase):
             self.de.deploy()
         config_tmp_filename = ssh.mock_calls[2][1][2]
         call = mock.call
+        install_script = 'rally/deploy/engines/devstack/install.sh'
         expected = [
             call.execute_script('root', 'example.com',
-                                'rally/deploy/engines/devstack/install.sh'),
+                                os.path.abspath(install_script)),
             call.execute_command('rally', 'example.com',
                                  ['git', 'clone', DEVSTACK_REPO]),
             call.upload_file('rally', 'example.com', config_tmp_filename,
