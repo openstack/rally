@@ -66,3 +66,11 @@ class TaskCommandsTestCase(test.BaseTestCase):
             self.task.delete(task_uuid, force)
             mock_api.delete_task.assert_called_once_with(task_uuid,
                                                          force=force)
+
+    def test_plot(self):
+        test_uuid = str(uuid.uuid4())
+        mock_plot = mock.Mock()
+        PLOTS = {"aggregated": mock_plot}
+        with mock.patch("rally.cmd.main.processing.PLOTS", new=PLOTS):
+            self.task.plot("aggregated", "concurrent", test_uuid)
+        mock_plot.assert_called_once_with(test_uuid, "concurrent")

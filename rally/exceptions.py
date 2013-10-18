@@ -118,6 +118,10 @@ class NoSuchScenario(NotFoundException):
     msg_fmt = _("There is no benchmark scenario with name `%(name)s`.")
 
 
+class NoSuchConfigField(NotFoundException):
+    msg_fmt = _("There is no field in the task config with name `%(name)s`.")
+
+
 class TaskNotFound(NotFoundException):
     msg_fmt = _("Task with uuid=%(uuid)s not found.")
 
