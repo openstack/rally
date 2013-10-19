@@ -1,0 +1,32 @@
+From f319e1f01fa8566d3076755741ea54d5eeda6005 Mon Sep 17 00:00:00 2001
+From: Alexei Kornienko <alexei.kornienko@gmail.com>
+Date: Fri, 4 Oct 2013 10:47:10 +0300
+Subject: [PATCH] Added trace header forwarding
+
+---
+ cinderclient/client.py | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/cinderclient/client.py b/cinderclient/client.py
+index 4846e4a..b893c1a 100644
+--- a/cinderclient/client.py
++++ b/cinderclient/client.py
+@@ -45,6 +45,7 @@ if not hasattr(urlparse, 'parse_qsl'):
+     urlparse.parse_qsl = cgi.parse_qsl
+ 
+ import requests
++import tomograph
+ 
+ from cinderclient import exceptions
+ from cinderclient import service_catalog
+@@ -167,6 +168,7 @@ class HTTPClient(object):
+             if not self.management_url or not self.auth_token:
+                 self.authenticate()
+             kwargs.setdefault('headers', {})['X-Auth-Token'] = self.auth_token
++            tomograph.add_trace_info_header(kwargs['headers'])
+             if self.projectid:
+                 kwargs['headers']['X-Auth-Project-Id'] = self.projectid
+             try:
+-- 
+1.8.1.2
+

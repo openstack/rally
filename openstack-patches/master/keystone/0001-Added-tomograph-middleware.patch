@@ -1,0 +1,44 @@
+From b446eb5b463f944ae7af900fc818b28d0779feb1 Mon Sep 17 00:00:00 2001
+From: Alexei Kornienko <alexei.kornienko@gmail.com>
+Date: Fri, 11 Oct 2013 12:28:28 +0300
+Subject: [PATCH 1/3] Added tomograph middleware
+
+---
+ etc/keystone-paste.ini | 10 +++++++---
+ 1 file changed, 7 insertions(+), 3 deletions(-)
+
+diff --git a/etc/keystone-paste.ini b/etc/keystone-paste.ini
+index 6b709ba..a5c1e1a 100644
+--- a/etc/keystone-paste.ini
++++ b/etc/keystone-paste.ini
+@@ -48,6 +48,10 @@ paste.filter_factory = keystone.contrib.stats:StatsExtension.factory
+ [filter:access_log]
+ paste.filter_factory = keystone.contrib.access:AccessLogMiddleware.factory
+ 
++[filter:tomograph]
++paste.filter_factory = tomograph:Middleware.factory
++service_name = keystone
++
+ [app:public_service]
+ paste.app_factory = keystone.service:public_app_factory
+ 
+@@ -58,13 +62,13 @@ paste.app_factory = keystone.service:v3_app_factory
+ paste.app_factory = keystone.service:admin_app_factory
+ 
+ [pipeline:public_api]
+-pipeline = access_log sizelimit url_normalize token_auth admin_token_auth xml_body json_body ec2_extension user_crud_extension public_service
++pipeline = access_log sizelimit tomograph url_normalize token_auth admin_token_auth xml_body json_body ec2_extension user_crud_extension public_service
+ 
+ [pipeline:admin_api]
+-pipeline = access_log sizelimit url_normalize token_auth admin_token_auth xml_body json_body ec2_extension s3_extension crud_extension admin_service
++pipeline = access_log sizelimit tomograph url_normalize token_auth admin_token_auth xml_body json_body ec2_extension s3_extension crud_extension admin_service
+ 
+ [pipeline:api_v3]
+-pipeline = access_log sizelimit url_normalize token_auth admin_token_auth xml_body json_body ec2_extension s3_extension service_v3
++pipeline = access_log sizelimit tomograph url_normalize token_auth admin_token_auth xml_body json_body ec2_extension s3_extension service_v3
+ 
+ [app:public_version_service]
+ paste.app_factory = keystone.service:public_version_app_factory
+-- 
+1.8.1.2
+

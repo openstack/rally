@@ -1,0 +1,32 @@
+From 3cec56665a5720d0a70f00cadf0dc2daa2a85408 Mon Sep 17 00:00:00 2001
+From: Alexei Kornienko <alexei.kornienko@gmail.com>
+Date: Fri, 4 Oct 2013 10:53:54 +0300
+Subject: [PATCH] Added trace header forwarding
+
+---
+ neutronclient/client.py | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/neutronclient/client.py b/neutronclient/client.py
+index c1ba8c4..e887c5f 100644
+--- a/neutronclient/client.py
++++ b/neutronclient/client.py
+@@ -21,6 +21,7 @@ except ImportError:
+     import simplejson as json
+ import logging
+ import os
++import tomograph
+ import urlparse
+ # Python 2.5 compat fix
+ if not hasattr(urlparse, 'parse_qsl'):
+@@ -122,6 +123,7 @@ class HTTPClient(httplib2.Http):
+         kargs = {}
+         kargs.setdefault('headers', kwargs.get('headers', {}))
+         kargs['headers']['User-Agent'] = self.USER_AGENT
++        tomograph.add_trace_info_header(kwargs['headers'])
+ 
+         if 'content_type' in kwargs:
+             kargs['headers']['Content-Type'] = kwargs['content_type']
+-- 
+1.8.1.2
+
