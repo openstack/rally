@@ -119,6 +119,19 @@ class Verifier(object):
         self.task = task
         self._q = multiprocessing.Queue()
 
+    @staticmethod
+    def list_verification_tests():
+        verification_tests_dict = {
+            'sanity': ['--pyargs', 'fuel_health.tests.sanity'],
+            'smoke': ['--pyargs', 'fuel_health.tests.smoke', '-k',
+                      'not (test_007 or test_008 or test_009)'],
+            'no_compute_sanity': ['--pyargs', 'fuel_health.tests.sanity',
+                                  '-k', 'not infrastructure'],
+            'no_compute_smoke': ['--pyargs', 'fuel_health.tests.smoke',
+                                 '-k', 'user or flavor']
+        }
+        return verification_tests_dict
+
     def run_all(self, tests):
         """Launches all the given tests, trying to parameterize the tests
         using the test configuration.
