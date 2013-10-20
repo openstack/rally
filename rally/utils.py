@@ -155,23 +155,28 @@ def wait_for(resource, is_ready, update_resource=None, timeout=60,
 
 
 def log_task_wrapper(log, msg, **kw):
-    """Log any method of class (instance should have self.task instance).
-    This wrapper add before and after method excecution logs messages:
+    """A logging wrapper for any method of a class.
 
-    params = {'task': self.task['uuid'], 'msg': msg % kw}
+    Class instances that use this decorator should have self.task attribute.
+    The wrapper produces logs messages both before and after the method
+    excecution, in the following format:
 
-    Log _("Task %(task)s start: %(msg)s") % params
-    Exectue your method
-    Log _("Task %(task)s finish: %(msg)s) % params
+    "Task <Task UUID> | Starting:  <Logging message>"
+    [Method execution...]
+    "Task <Task UUID> | Completed: <Logging message>"
+
+    :param log: Logging method to be used, e.g. LOG.info
+    :param msg: Text message (possibly parameterized) to be put to the log
+    :param **kw: Parameters for msg
     """
 
     def decorator(f):
         @functools.wraps(f)
         def wrapper(self, *args, **kwargs):
-            params = {'msg': msg % kw, 'task': self.task['uuid']}
-            log(_("Task %(task)s start: %(msg)s") % params)
+            params = {"msg": msg % kw, "task": self.task["uuid"]}
+            log(_("Task %(task)s | Starting:  %(msg)s") % params)
             result = f(self, *args, **kwargs)
-            log(_("Task %(task)s finish: %(msg)s") % params)
+            log(_("Task %(task)s | Completed: %(msg)s") % params)
             return result
         return wrapper
     return decorator
