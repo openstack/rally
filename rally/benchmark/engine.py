@@ -26,6 +26,8 @@ from rally import consts
 from rally import exceptions
 from rally.openstack.common.gettextutils import _  # noqa
 from rally.openstack.common import log as logging
+from rally import utils as rutils
+
 
 LOG = logging.getLogger(__name__)
 
@@ -76,6 +78,8 @@ class TestEngine(object):
         test_config = self._format_test_config(test_config)
         self.test_config = test_config
 
+    @rutils.log_task_wrapper(LOG.info,
+                             _("Benchmark & Verification configs validation."))
     def _validate_test_config(self, test_config):
         """Checks whether the given test config is valid and can be used during
         verification and benchmarking tests.
@@ -86,8 +90,6 @@ class TestEngine(object):
         :raises: Exception if the test config is not valid
         """
         task_uuid = self.task['uuid']
-        LOG.info(_('Task %s: Validating the passed test config...') %
-                 task_uuid)
         # Perform schema validation
         try:
             jsonschema.validate(test_config, config.test_config_schema)
@@ -110,8 +112,8 @@ class TestEngine(object):
                                 'benchmark scenario does not exist: %s') %
                               (task_uuid, scenario))
                 raise exceptions.NoSuchScenario(name=scenario)
-        LOG.info(_('Task %s: Test config validation succeeded.') % task_uuid)
 
+    @rutils.log_task_wrapper(LOG.debug, _("Test config formatting."))
     def _format_test_config(self, test_config):
         """Returns a formatted copy of the given valid test config so that
         it can be used during verification and benchmarking tests.
@@ -121,33 +123,24 @@ class TestEngine(object):
 
         :returns: Dictionary
         """
-        task_uuid = self.task['uuid']
-        LOG.debug(_('Task %s: Formatting the given test config...') %
-                  task_uuid)
         formatted_test_config = copy.deepcopy(test_config)
         # NOTE(msdubov): if 'verify' is not specified, just run all
         #                verification tests.
         if 'verify' not in formatted_test_config:
             formatted_test_config['verify'] = self.verification_tests.keys()
-        LOG.debug(_('Task %s: Test config formatting succeeded.') % task_uuid)
         return formatted_test_config
 
+    @rutils.log_task_wrapper(LOG.debug,
+                             _("Verification configs writing into temp file."))
     def __enter__(self):
-        task_uuid = self.task['uuid']
-        LOG.debug(_('Task %s: Writing cloud & test configs into '
-                    'temporary files...') % task_uuid)
         with os.fdopen(self.cloud_config_fd, 'w') as f:
             self.cloud_config.write(f)
-        LOG.debug(_('Task %s: Completed writing temporary '
-                    'config files.') % task_uuid)
 
+    @rutils.log_task_wrapper(LOG.debug, _("Verification temp file deletion."))
     def __exit__(self, type, value, traceback):
-        task_uuid = self.task['uuid']
-        LOG.debug(_('Task %s: Deleting temporary config files...') % task_uuid)
         os.remove(self.cloud_config_path)
-        LOG.debug(_('Task %s: Completed deleting temporary '
-                    'config files.') % task_uuid)
 
+    @rutils.log_task_wrapper(LOG.info, _('OS cloud binding to Rally.'))
     def bind(self, cloud_config):
         """Binds an existing deployment configuration to the test engine.
 
@@ -160,25 +153,20 @@ class TestEngine(object):
 
         :returns: self (the method should be called in a 'with' statement)
         """
-        task_uuid = self.task['uuid']
-        LOG.info(_('Task %s: Binding the cloud config...') % task_uuid)
         self.cloud_config = config.CloudConfigManager()
         self.cloud_config.read_from_dict(cloud_config)
-        LOG.info(_('Task %s: Successfuly bound the cloud config.') % task_uuid)
 
         self.cloud_config_fd, self.cloud_config_path = tempfile.mkstemp(
                                                 suffix='rallycfg', text=True)
-
         return self
 
+    @rutils.log_task_wrapper(LOG.info, _('OpenStack cloud verification.'))
     def verify(self):
         """Runs OSTF tests to verify the current cloud deployment.
 
         :raises: VerificationException if some of the verification tests failed
         """
-        task_uuid = self.task['uuid']
         self.task.update_status(consts.TaskStatus.TEST_TOOL_VERIFY_OPENSTACK)
-        LOG.info(_('Task %s: Verifying the cloud deployment...') % task_uuid)
         verifier = utils.Verifier(self.task, self.cloud_config_path)
         tests_to_run = self.test_config['verify']
         verification_tests = dict((test, self.verification_tests[test])
@@ -187,13 +175,12 @@ class TestEngine(object):
         self.task.update_verification_log(json.dumps(test_run_results))
         for result in test_run_results:
             if result['status'] != 0:
-                error_msg = result['msg']
-                LOG.exception(_('Task %s: One of verification '
-                                'tests failed: %s') % (task_uuid, error_msg))
-                raise exceptions.DeploymentVerificationException(
-                                                    test_message=error_msg)
-        LOG.info(_('Task %s: Verification succeeded.') % task_uuid)
+                params = {'task': self.task['uuid'], 'err': result['msg']}
+                LOG.exception(_('Task %(task)s: One of verification tests '
+                                'failed: %(err)s') % params)
+                raise exceptions.DeploymentVerificationException(params['err'])
 
+    @rutils.log_task_wrapper(LOG.info, _("Benchmarking."))
     def benchmark(self):
         """Runs the benchmarks according to the test configuration
         the test engine was initialized with.
@@ -201,11 +188,7 @@ class TestEngine(object):
         :returns: List of dicts, each dict containing the results of all the
                   corresponding benchmark test launches
         """
-
-        task_uuid = self.task['uuid']
         self.task.update_status(consts.TaskStatus.TEST_TOOL_BENCHMARKING)
-        LOG.info(_('Task %s: Launching benchmark scenarios...') % task_uuid)
-
         runer = utils.ScenarioRunner(self.task,
                                      self.cloud_config.to_dict()["identity"])
 
@@ -217,6 +200,4 @@ class TestEngine(object):
                 result = runer.run(name, kwargs)
                 self.task.append_results(key, {"raw": result})
                 results[json.dumps(key)] = result
-
-        LOG.info(_('Task %s: Completed benchmarking.') % task_uuid)
         return results

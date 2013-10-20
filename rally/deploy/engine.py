@@ -54,18 +54,12 @@ class EngineFactory(object):
     @staticmethod
     def get_engine(name, task, config):
         """Returns instance of deploy engine with corresponding name."""
-        task_uuid = task['uuid']
-        LOG.info(_('Task %(uuid)s: Creating the deploy engine for '
-                   '%(name)s...') % {'uuid': task_uuid, 'name': name})
         for engine in utils.itersubclasses(EngineFactory):
             if name == engine.__name__:
                 new_engine = engine(task, config)
-                LOG.info(_('Task %(uuid)s: Deploy engine for %(name)s '
-                           'successfully created.') %
-                         {'uuid': task_uuid, 'name': name})
                 return new_engine
-        LOG.exception(_('Task %(uuid)s: Deploy engine for %(name)s '
-                        'does not exist.') % {'uuid': task_uuid, 'name': name})
+        LOG.exception(_('Task %(uuid)s: Deploy engine for %(name)s does not '
+                        'exist.') % {'uuid': task['uuid'], 'name': name})
         raise exceptions.NoSuchEngine(engine_name=name)
 
     @staticmethod
@@ -81,25 +75,24 @@ class EngineFactory(object):
     def cleanup(self):
         """Cleanup OpenStack deployment."""
 
+    @utils.log_task_wrapper(LOG.info, _("OpenStack cloud deployment."))
     def make(self):
-        task_uuid = self.task['uuid']
-        LOG.info(_('Task %s: Starting the deployment...') % task_uuid)
         self.task.update_status(consts.TaskStatus.DEPLOY_STARTED)
         endpoints = self.deploy()
-        LOG.info(_('Task %s: Deployment completed.') % task_uuid)
         self.task.update_status(consts.TaskStatus.DEPLOY_FINISHED)
         return endpoints
 
     def __enter__(self):
         return self
 
+    @utils.log_task_wrapper(LOG.info,
+                            _("Destroy cloud and free allocated resources."))
     def __exit__(self, type, value, traceback):
         task_uuid = self.task['uuid']
         if type:
             LOG.exception(_('Task %(uuid)s: Error: %(msg)s') %
                           {'uuid': task_uuid, 'msg': value.message})
             self.task.set_failed()
-        LOG.info(_('Task %s: Starting cleanup...') % task_uuid)
         self.task.update_status(consts.TaskStatus.CLEANUP)
         try:
             self.cleanup()
@@ -109,4 +102,3 @@ class EngineFactory(object):
             raise
         finally:
             self.task.update_status(consts.TaskStatus.FINISHED)
-        LOG.info(_('Task %s: Cleanup completed.') % task_uuid)

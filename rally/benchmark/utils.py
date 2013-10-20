@@ -212,9 +212,7 @@ class Verifier(object):
         else:
             LOG.debug(_('Task %s: Process %s returned.') %
                       (task_uuid, result['proc_name']))
-        LOG.debug(_('Task %s: Cleaning up...') % task_uuid)
         self._cleanup()
-        LOG.debug(_('Task %s: Cleanup completed.') % task_uuid)
         return result
 
     def _cleanup(self):
