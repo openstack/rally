@@ -100,9 +100,28 @@ def task_list(status=None):
     return IMPL.task_list(status=status)
 
 
-def task_delete(uuid):
-    """Mark task with correspondig uuid as deleted."""
-    return IMPL.task_delete(uuid)
+def task_delete(uuid, status=None):
+    """Delete a task.
+
+    This method removes the task by the uuid, but if the status
+    argument is specified, then the task is removed only when these
+    statuses are equal otherwise an exception is raised.
+
+    :param uuid: UUID of the task.
+    :raises: :class:`rally.exceptions.Task` if the task does not exist.
+    :raises: :class:`rally.exceptions.TaskInvalidStatus` if the status
+             of the task does not equal to the status argument.
+    """
+    return IMPL.task_delete(uuid, status=status)
+
+
+def task_result_get_all_by_uuid(task_uuid):
+    """Get list of task results.
+
+    :param task_uuid: string with UUID of Task instance
+    :returns: list instances of TaskResult
+    """
+    return IMPL.task_result_get_all_by_uuid(task_uuid)
 
 
 def task_result_create(task_uuid, key, data):

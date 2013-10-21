@@ -32,6 +32,10 @@ class Task(object):
     def get_by_uuid(uuid):
         return Task(db.task_get_by_uuid(uuid))
 
+    @staticmethod
+    def delete_by_uuid(uuid, status=None):
+        db.task_delete(uuid, status=status)
+
     def update_status(self, status):
         db.task_update(self.task['uuid'], {'status': status})
 

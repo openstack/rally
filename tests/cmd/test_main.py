@@ -60,3 +60,12 @@ class TaskCommandsTestCase(test.BaseTestCase):
             mock_db.task_list = mock.MagicMock(return_value=db_response)
             self.task.list()
             mock_db.task_list.assert_called_once_with()
+
+    def test_delete(self):
+        task_uuid = str(uuid.uuid4())
+        force = False
+        with mock.patch("rally.cmd.main.api") as mock_api:
+            mock_api.delete_task = mock.Mock()
+            self.task.delete(task_uuid, force)
+            mock_api.delete_task.assert_called_once_with(task_uuid,
+                                                         force=force)

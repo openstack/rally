@@ -109,12 +109,25 @@ def task_list(status=None):
     return query.all()
 
 
-def task_delete(uuid):
-    count = model_query(models.Task).\
-                filter_by(uuid=uuid).\
-                delete(synchronize_session=False)
-    if not count:
-        raise exceptions.TaskNotFound(uuid=uuid)
+def task_delete(uuid, status=None):
+    session = db_session.get_session()
+    with session.begin():
+        query = base_query = model_query(models.Task).filter_by(uuid=uuid)
+        if status is not None:
+            query = base_query.filter_by(status=status)
+        count = query.delete(synchronize_session=False)
+        if not count:
+            if status is not None:
+                task = base_query.first()
+                if task:
+                    raise exceptions.TaskInvalidStatus(uuid=uuid,
+                                                       require=status,
+                                                       actual=task.status)
+            raise exceptions.TaskNotFound(uuid=uuid)
+
+        model_query(models.TaskResult).\
+            filter_by(task_uuid=uuid).\
+            delete(synchronize_session=False)
 
 
 def task_result_create(task_uuid, key, data):
@@ -122,3 +135,9 @@ def task_result_create(task_uuid, key, data):
     result.update({"task_uuid": task_uuid, "key": key, "data": data})
     result.save()
     return result
+
+
+def task_result_get_all_by_uuid(uuid):
+    return model_query(models.TaskResult).\
+                filter_by(task_uuid=uuid).\
+                all()

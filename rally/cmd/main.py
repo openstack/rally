@@ -97,7 +97,7 @@ class TaskCommands(object):
     def results(self, task_id, pretty=False):
         """Print raw results of task."""
         results = map(lambda x: {"key": x["key"], 'result': x['data']['raw']},
-                      db.task_get_detailed(task_id)["results"])
+                      db.task_result_get_all_by_uuid(task_id))
         if not pretty or pretty == 'json':
             print(json.dumps(results))
         elif pretty == 'pprint':
@@ -118,6 +118,12 @@ class TaskCommands(object):
             table.add_row(r)
 
         print(table)
+
+    @cliutils.args('--task-id', type=str, dest='task_id', help='uuid of task')
+    @cliutils.args('--force', action='store_true', help='force delete')
+    def delete(self, task_id, force):
+        """Delete a specific task and related results."""
+        api.delete_task(task_id, force=force)
 
 
 def main():

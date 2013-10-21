@@ -102,6 +102,55 @@ class TasksTestCase(test.DBTestCase):
         self.assertRaises(exceptions.TaskNotFound,
                           db.task_delete, str(uuid.uuid4()))
 
+    def test_task_delete_with_results(self):
+        task_id = self._create_task()['uuid']
+        db.task_result_create(task_id,
+                              {task_id: task_id},
+                              {task_id: task_id})
+        res = db.task_result_get_all_by_uuid(task_id)
+        self.assertEqual(len(res), 1)
+        db.task_delete(task_id)
+        res = db.task_result_get_all_by_uuid(task_id)
+        self.assertEqual(len(res), 0)
+
+    def test_task_delete_by_uuid_and_status(self):
+        values = {
+            'status': consts.TaskStatus.FINISHED,
+        }
+        task1 = self._create_task(values=values)['uuid']
+        task2 = self._create_task(values=values)['uuid']
+        db.task_delete(task1, status=consts.TaskStatus.FINISHED)
+        self.assertRaises(exceptions.TaskNotFound, self._get_task, task1)
+        self.assertEqual(task2, self._get_task(task2)['uuid'])
+
+    def test_task_delete_by_uuid_and_status_invalid(self):
+        task = self._create_task(values={
+            'status': consts.TaskStatus.INIT,
+        })['uuid']
+        self.assertRaises(exceptions.TaskInvalidStatus, db.task_delete, task,
+                          status=consts.TaskStatus.FINISHED)
+
+    def test_task_delete_by_uuid_and_status_not_found(self):
+        self.assertRaises(exceptions.TaskNotFound,
+                          db.task_delete, str(uuid.uuid4()),
+                          status=consts.TaskStatus.FINISHED)
+
+    def test_task_result_get_all_by_uuid(self):
+        task1 = self._create_task()['uuid']
+        task2 = self._create_task()['uuid']
+
+        for task_id in (task1, task2):
+            db.task_result_create(task_id,
+                                  {task_id: task_id},
+                                  {task_id: task_id})
+
+        for task_id in (task1, task2):
+            res = db.task_result_get_all_by_uuid(task_id)
+            data = {task_id: task_id}
+            self.assertEqual(len(res), 1)
+            self.assertEqual(res[0]['key'], data)
+            self.assertEqual(res[0]['data'], data)
+
     def test_task_get_detailed(self):
         task1 = self._create_task()
         key = {'name': 'atata'}

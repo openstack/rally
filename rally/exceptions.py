@@ -132,3 +132,8 @@ class GetResourceFailure(RallyException):
 
 class SSHError(RallyException):
     msg_fmt = _("Remote command failed.")
+
+
+class TaskInvalidStatus(RallyException):
+    msg_fmt = _("Task `%(uuid)s` in `%(actual)s` status but `%(require)s` is "
+                "required.")
