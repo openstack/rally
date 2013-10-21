@@ -20,6 +20,7 @@ import sys
 
 from oslo.config import cfg
 
+from rally.openstack.common.apiclient import exceptions
 from rally.openstack.common import cliutils
 from rally.openstack.common.gettextutils import _   # noqa
 from rally.openstack.common import log as logging
@@ -136,7 +137,7 @@ def run(argv, categories):
     # check arguments
     try:
         cliutils.validate_args(fn, *fn_args, **fn_kwargs)
-    except cliutils.MissingArgs as e:
+    except exceptions.MissingArgs as e:
         # NOTE(mikal): this isn't the most helpful error message ever. It is
         # long, and tells you a lot of things you probably don't want to know
         # if you just got a single arg wrong.
