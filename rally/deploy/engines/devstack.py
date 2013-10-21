@@ -49,7 +49,7 @@ class DevstackEngine(engine.EngineFactory):
         self._vms = []
         provider_config = config['provider']
         self._vm_provider = provider.ProviderFactory.get_provider(
-            provider_config)
+            provider_config, task)
         self.localrc = {
             'DATABASE_PASSWORD': 'rally',
             'RABBIT_PASSWORD': 'rally',

@@ -25,7 +25,7 @@ class DummyProviderTestCase(test.NoDBTestCase):
     def test_create_vms(self):
         config = {'name': 'DummyProvider',
                   'credentials': ['user@host1', 'user@host2']}
-        provider = serverprovider.ProviderFactory.get_provider(config)
+        provider = serverprovider.ProviderFactory.get_provider(config, None)
         credentials = provider.create_vms()
         self.assertEqual(['host1', 'host2'], [s.ip for s in credentials])
         self.assertEqual(['user', 'user'], [s.user for s in credentials])
