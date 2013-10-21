@@ -42,7 +42,7 @@ class TaskCommands(object):
             config_dict = json.load(task_file)
             api.start_task(config_dict)
 
-    @cliutils.args('--task_id', type=str, help='UUID of task')
+    @cliutils.args('--task-id', type=str, dest='task_id', help='UUID of task')
     def abort(self, task_id):
         """Force abort task
 
@@ -50,7 +50,7 @@ class TaskCommands(object):
         """
         api.abort_task(task_id)
 
-    @cliutils.args('--task_id', type=str, help='UUID of task')
+    @cliutils.args('--task-id', type=str, dest='task_id', help='UUID of task')
     def status(self, task_id):
         """Get status of task
 
@@ -61,7 +61,7 @@ class TaskCommands(object):
         print(_("Task %(task_id)s is %(status)s.")
               % {'task_id': task_id, 'status': task['status']})
 
-    @cliutils.args('--task-id', type=str, help='uuid of task')
+    @cliutils.args('--task-id', type=str, dest='task_id', help='uuid of task')
     def detailed(self, task_id):
         """Get detailed information about task
         :param task_id: Task uuid
@@ -92,7 +92,7 @@ class TaskCommands(object):
                            float(len(times)) / len(raw)])
             print(table)
 
-    @cliutils.args('--task-id', type=str, help='uuid of task')
+    @cliutils.args('--task-id', type=str, dest='task_id', help='uuid of task')
     @cliutils.args('--pretty', type=str, help='uuid of task')
     def results(self, task_id, pretty=False):
         """Print raw results of task."""
