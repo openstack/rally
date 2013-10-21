@@ -199,9 +199,11 @@ class NovaScenarioTestCase(test.NoDBTestCase):
             manager = FakeFailedServerManager()
             utils.NovaScenario.nova.servers = manager
 
-            # NOTE(boden): verify failed server cleanup
-            self.assertRaises(rally_exceptions.GetResourceFailure,
-                              utils.NovaScenario._boot_server, "fails", 0, 1)
+            with mock.patch(self.sleep):
+                # NOTE(boden): verify failed server cleanup
+                self.assertRaises(rally_exceptions.GetResourceFailure,
+                                  utils.NovaScenario._boot_server,
+                                  "fails", 0, 1)
             self.assertEquals(len(manager.list()), 1, "Server not created")
             utils.NovaScenario.cleanup({})
             self.assertEquals(len(manager.list()), 0, "Servers not purged")
@@ -217,8 +219,9 @@ class NovaScenarioTestCase(test.NoDBTestCase):
             # NOTE(boden): verify active server cleanup
             manager = FakeServerManager()
             utils.NovaScenario.nova.servers = manager
-            for i in range(5):
-                utils.NovaScenario._boot_server("server-%s" % i, 0, 1)
+            with mock.patch(self.sleep):
+                for i in range(5):
+                    utils.NovaScenario._boot_server("server-%s" % i, 0, 1)
             self.assertEquals(len(manager.list()), 5, "Server not created")
             utils.NovaScenario.cleanup({})
             self.assertEquals(len(manager.list()), 0, "Servers not purged")
