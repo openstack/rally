@@ -93,13 +93,19 @@ class TaskCommands(object):
             print(table)
 
     @cliutils.args('--task-id', type=str, help='uuid of task')
-    def raw_results(self, task_id):
+    @cliutils.args('--pretty', type=str, help='uuid of task')
+    def results(self, task_id, pretty=False):
         """Print raw results of task."""
-        print()
         results = map(lambda x: {"key": x["key"], 'result': x['data']['raw']},
                       db.task_get_detailed(task_id)["results"])
-        pprint.pprint(results)
-        print()
+        if not pretty or pretty == 'json':
+            print(json.dumps(results))
+        elif pretty == 'pprint':
+            print()
+            pprint.pprint(results)
+            print()
+        else:
+            print(_("Wrong value for --pretty=%s") % pretty)
 
     def list(self):
         """Get list of all tasks
