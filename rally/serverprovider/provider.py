@@ -56,12 +56,14 @@ class ProviderFactory(object):
     __metaclass__ = abc.ABCMeta
 
     @staticmethod
-    def get_provider(config):
+    def get_provider(config, task):
         """Returns instance of vm provider by name."""
         name = config['name']
         for provider in utils.itersubclasses(ProviderFactory):
             if name == provider.__name__:
-                return provider(config)
+                provider = provider(config)
+                provider.task = task
+                return provider
         raise exceptions.NoSuchVMProvider(vm_provider_name=name)
 
     @staticmethod
