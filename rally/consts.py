@@ -36,12 +36,12 @@ class _TaskStatus(utils.ImmutableMixin, utils.EnumMixin):
     DEPLOY_BUILDING_OPENSTACK_IN_VENV = 'deploy->building_openstack_in_venv'
     DEPLOY_BUILDING_IMAGE = 'deploy->building_images_with_openstack'
     DEPLOY_BUILDING_OPENSTACK = 'deploy->building_openstack'
-    DEPLOY_STARTING_OPENSTACK = 'deply->starting_openstack'
+    DEPLOY_STARTING_OPENSTACK = 'deploy->starting_openstack'
     DEPLOY_FINISHED = 'deploy->finished'
 
     VM_PROVIDER_UPLOADING_IMAGE = 'vm_provider->uploading_vm_image'
     VM_PROVIDER_DESTROYING_IMAGE = 'vm_provider->destroying_image'
-    VM_PROVIDER_GETTING_VMS = 'vm_provide->:getting_vms'
+    VM_PROVIDER_GETTING_VMS = 'vm_provide->getting_vms'
     VM_PROVIDER_DESTROYING_VMS = 'vm_provider->destroying_vms'
 
     TEST_TOOL_PATCHING_OPENSTACK = 'test_tool->patching_openstack'
