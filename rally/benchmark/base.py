@@ -14,6 +14,7 @@
 #    under the License.
 
 import itertools
+import random
 
 from rally import exceptions
 from rally import osclients
@@ -62,14 +63,24 @@ class Scenario(object):
 
     @classmethod
     def class_init(cls, cloud_endpoints):
-        keys = ["admin_username", "admin_password", "admin_tenant_name", "uri"]
-        clients = osclients.Clients(*[cloud_endpoints[k] for k in keys])
+        # NOTE(msdubov): Creating here separate openstack clients for each of
+        #                the temporary users involved in benchmarking.
+        keys = ["username", "password", "tenant_name", "uri"]
+        client_managers = [osclients.Clients(*[credentials[k] for k in keys])
+                           for credentials in cloud_endpoints["temp_users"]]
 
         cls.cloud_endpoints = cloud_endpoints
-        cls.nova = clients.get_nova_client()
-        cls.keystone = clients.get_keystone_client()
-        cls.glance = clients.get_glance_client()
-        cls.cinder = clients.get_cinder_client()
+        cls.clients = {
+            "nova": [cl.get_nova_client() for cl in client_managers],
+            "keystone": [cl.get_keystone_client() for cl in client_managers],
+            "glance": [cl.get_glance_client() for cl in client_managers],
+            "cinder": [cl.get_cinder_client() for cl in client_managers],
+        }
+
+    @classmethod
+    def client(cls, client_type):
+        """Return a client of the given type for a random tenant/user."""
+        return random.choice(cls.clients[client_type])
 
     @classmethod
     def init(cls, config):

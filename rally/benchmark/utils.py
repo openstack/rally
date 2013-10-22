@@ -23,6 +23,7 @@ import fuel_health.cleanup as fuel_cleanup
 from rally.benchmark import base
 from rally.openstack.common.gettextutils import _  # noqa
 from rally.openstack.common import log as logging
+from rally import osclients
 from rally import utils
 
 
@@ -54,7 +55,36 @@ class ScenarioRunner(object):
     def __init__(self, task, cloud_config):
         self.task = task
         self.endpoints = cloud_config
+        keys = ["admin_username", "admin_password", "admin_tenant_name", "uri"]
+        clients = osclients.Clients(*[self.endpoints[k] for k in keys])
+        self.keystone = clients.get_keystone_client()
         base.Scenario.register()
+
+    def _create_temp_tenants_and_users(self, tenants, users_per_tenant):
+        self.tenants = [self.keystone.tenants.create("tenant_%d" % i)
+                        for i in range(tenants)]
+        self.users = []
+        temporary_endpoints = []
+        for tenant in self.tenants:
+            for uid in range(users_per_tenant):
+                username = "user_%(tid)s_%(uid)d" % {"tid": tenant.id,
+                                                     "uid": uid}
+                password = "password"
+                user = self.keystone.users.create(username, password,
+                                                  "%s@test.com" % username,
+                                                  tenant.id)
+                self.users.append(user)
+                user_credentials = {"username": username, "password": password,
+                                    "tenant_name": tenant.name,
+                                    "uri": self.endpoints["uri"]}
+                temporary_endpoints.append(user_credentials)
+        return temporary_endpoints
+
+    def _delete_temp_tenants_and_users(self):
+        for user in self.users:
+            user.delete()
+        for tenant in self.tenants:
+            tenant.delete()
 
     def _run_scenario(self, ctx, cls, method, args, times, concurrent,
                       timeout):
@@ -86,12 +116,21 @@ class ScenarioRunner(object):
         timeout = kwargs.get('timeout', 10000)
         times = kwargs.get('times', 1)
         concurrent = kwargs.get('concurrent', 1)
+        tenants = kwargs.get('tenants', 1)
+        users_per_tenant = kwargs.get('users_per_tenant', 1)
+
+        self.endpoints["temp_users"] = self._create_temp_tenants_and_users(
+                                                    tenants, users_per_tenant)
 
         cls.class_init(self.endpoints)
         ctx = cls.init(kwargs.get('init', {}))
         results = self._run_scenario(ctx, cls, method_name, args,
                                      times, concurrent, timeout)
         cls.cleanup(ctx)
+
+        self._delete_temp_tenants_and_users()
+        del self.endpoints["temp_users"]
+
         return results
 
 

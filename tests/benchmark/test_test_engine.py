@@ -22,6 +22,7 @@ from rally.benchmark import engine
 from rally import consts
 from rally import exceptions
 from rally import test
+from tests.benchmark.scenarios.nova import test_utils
 
 
 class TestEngineTestCase(test.NoDBTestCase):
@@ -87,19 +88,23 @@ class TestEngineTestCase(test.NoDBTestCase):
                     self.fail("Exception in TestEngine.verify: %s" % str(e))
 
     def test_benchmark(self):
-        test_engine = engine.TestEngine(self.valid_test_config,
-                                        mock.MagicMock())
-        with test_engine.bind(self.valid_cloud_config):
-            test_engine.benchmark()
+        with mock.patch('rally.benchmark.utils.osclients') as mock_osclients:
+            mock_osclients.Clients.return_value = test_utils.FakeClients()
+            test_engine = engine.TestEngine(self.valid_test_config,
+                                            mock.MagicMock())
+            with test_engine.bind(self.valid_cloud_config):
+                test_engine.benchmark()
 
     def test_task_status_basic_chain(self):
         fake_task = mock.MagicMock()
         test_engine = engine.TestEngine(self.valid_test_config, fake_task)
-        with mock.patch('rally.benchmark.utils.Verifier.run') as mock_run:
-            mock_run.return_value = self.run_success
-            with test_engine.bind(self.valid_cloud_config):
-                test_engine.verify()
-                test_engine.benchmark()
+        with mock.patch('rally.benchmark.utils.osclients') as mock_osclients:
+            mock_osclients.Clients.return_value = test_utils.FakeClients()
+            with mock.patch('rally.benchmark.utils.Verifier.run') as mock_run:
+                mock_run.return_value = self.run_success
+                with test_engine.bind(self.valid_cloud_config):
+                    test_engine.verify()
+                    test_engine.benchmark()
 
         s = consts.TaskStatus
         expected = [
