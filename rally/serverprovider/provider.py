@@ -16,6 +16,7 @@
 import abc
 
 from rally import exceptions
+from rally import sshutils
 from rally import utils
 
 
@@ -29,6 +30,7 @@ class ServerDTO(utils.ImmutableMixin):
         self.user = user
         self.key = key
         self.password = password
+        self.ssh = sshutils.SSH(ip, user)
         super(ServerDTO, self).__init__()
 
 

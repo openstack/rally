@@ -16,6 +16,7 @@
 
 from rally import exceptions
 from rally import serverprovider
+from rally import sshutils
 from rally import test
 
 
@@ -81,6 +82,7 @@ class ServerDTOTestCase(test.TestCase):
         server = serverprovider.ServerDTO(*vals)
         for k, v in dict(zip(keys, vals)).iteritems():
             self.assertEqual(getattr(server, k), v)
+        self.assertIsInstance(server.ssh, sshutils.SSH)
 
 
 class ImageDTOTestCase(test.TestCase):
