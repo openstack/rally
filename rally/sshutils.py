@@ -13,9 +13,16 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import eventlet
 import subprocess
 
+from rally import exceptions
+from rally.openstack.common.gettextutils import _  # noqa
+from rally.openstack.common import log as logging
+
 DEFAULT_OPTIONS = ['-o', 'StrictHostKeyChecking=no']
+
+LOG = logging.getLogger(__name__)
 
 
 class SSHException(Exception):
@@ -23,8 +30,8 @@ class SSHException(Exception):
 
 
 def upload_file(user, host, source, destination):
-    cmd = ['scp'] + DEFAULT_OPTIONS + [
-        source, '%s@%s:%s' % (user, host, destination)]
+    cmd = ['scp'] + DEFAULT_OPTIONS + [source, '%s@%s:%s' % (user, host,
+                                                             destination)]
     pipe = subprocess.Popen(cmd, stderr=subprocess.PIPE)
     (so, se) = pipe.communicate()
     if pipe.returncode:
@@ -43,3 +50,48 @@ def execute_command(user, host, cmd):
     (so, se) = pipe.communicate()
     if pipe.returncode:
         raise SSHException(se)
+
+
+class SSH(object):
+    """SSH common functions."""
+
+    OPTIONS = ['-o', 'StrictHostKeyChecking=no']
+
+    def __init__(self, ip, user, port=22):
+        self.ip = ip
+        self.user = user
+
+    def execute(self, *cmd):
+        pipe = subprocess.Popen(['ssh'] + self.OPTIONS +
+                                ['%s@%s' % (self.user, self.ip)] + list(cmd),
+                                stderr=subprocess.PIPE)
+        (out, err) = pipe.communicate()
+        if pipe.returncode:
+            raise exceptions.SSHError(err)
+
+    def execute_script(self, script, enterpreter='/bin/sh'):
+        cmd = ['ssh'] + self.OPTIONS + ['%s@%s' % (self.user, self.ip),
+                                        enterpreter]
+        pipe = subprocess.Popen(cmd, stdin=open(script, 'r'),
+                                stderr=subprocess.PIPE)
+        (out, err) = pipe.communicate()
+        if pipe.returncode:
+            raise exceptions.SSHError(err)
+
+    def wait(self, timeout=15, interval=1):
+        with eventlet.timeout.Timeout(timeout, exceptions.TimeoutException):
+            while True:
+                try:
+                    return self.execute('uname')
+                except exceptions.SSHError as e:
+                    LOG.debug(_('Ssh is still unavailable. '
+                                'Exception is: ') + repr(e))
+                    eventlet.sleep(interval)
+
+    def upload(self, source, destination):
+        cmd = ['scp'] + self.OPTIONS + [
+            source, '%s@%s:%s' % (self.user, self.ip, destination)]
+        pipe = subprocess.Popen(cmd, stderr=subprocess.PIPE)
+        (out, err) = pipe.communicate()
+        if pipe.returncode:
+            raise exceptions.SSHError(err)

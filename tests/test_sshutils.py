@@ -16,11 +16,12 @@
 
 import mock
 
-from rally.openstack.common import test
+from rally import exceptions
 from rally import sshutils
+from rally import test
 
 
-class SshutilsTestCase(test.BaseTestCase):
+class SshutilsTestCase(test.TestCase):
 
     def setUp(self):
         super(SshutilsTestCase, self).setUp()
@@ -64,3 +65,59 @@ class SshutilsTestCase(test.BaseTestCase):
                              'user@host', 'command', 'arg'], stderr=self.pipe),
             mock.call.PIPE.communicate()]
         self.assertEqual(sp.mock_calls, expected)
+
+
+class SSHTestCase(test.TestCase):
+
+    def setUp(self):
+        super(SSHTestCase, self).setUp()
+        self.ssh = sshutils.SSH('example.net', 'root')
+        self.pipe = mock.MagicMock()
+        self.pipe.communicate = mock.MagicMock(return_value=(mock.MagicMock(),
+                                               mock.MagicMock()))
+        self.pipe.returncode = 0
+        self.sp = mock.MagicMock()
+        self.sp.PIPE = self.pipe
+        self.sp.Popen = mock.MagicMock(return_value=self.pipe)
+        self.mod = 'rally.sshutils'
+
+    def test_execute(self):
+        with mock.patch(self.mod + '.subprocess', new=self.sp) as sp:
+            self.ssh.execute('ps', 'ax')
+        expected = [
+            mock.call.Popen(['ssh', '-o', 'StrictHostKeyChecking=no',
+                             'root@example.net', 'ps', 'ax'],
+                            stderr=self.pipe),
+            mock.call.PIPE.communicate()]
+        self.assertEqual(sp.mock_calls, expected)
+
+    def test_execute_script(self):
+        with mock.patch(self.mod + '.subprocess', new=self.sp) as sp:
+            with mock.patch(self.mod + '.open', create=True) as op:
+                self.ssh.execute_script('/bin/script')
+        expected = [
+            mock.call.Popen(['ssh', '-o', 'StrictHostKeyChecking=no',
+                             'root@example.net', '/bin/sh'],
+                            stdin=op(), stderr=self.pipe),
+            mock.call.PIPE.communicate()]
+        self.assertEqual(sp.mock_calls, expected)
+
+    def test_upload_file(self):
+        with mock.patch(self.mod + '.subprocess', new=self.sp) as sp:
+            self.ssh.upload('/tmp/s', '/tmp/d')
+        expected = [mock.call.Popen(['scp', '-o',
+                                     'StrictHostKeyChecking=no',
+                                     '/tmp/s', 'root@example.net:/tmp/d'],
+                    stderr=self.pipe),
+                    mock.call.PIPE.communicate()]
+        self.assertEqual(sp.mock_calls, expected)
+
+    def test_wait(self):
+        with mock.patch(self.mod + '.SSH.execute'):
+            self.ssh.wait()
+
+    def test_wait_timeout(self):
+        with mock.patch(self.mod + '.SSH.execute', new=mock.Mock(
+                        side_effect=exceptions.SSHError)):
+            self.assertRaises(exceptions.TimeoutException,
+                              self.ssh.wait, 1, 1)

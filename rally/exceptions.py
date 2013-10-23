@@ -124,3 +124,7 @@ class TimeoutException(RallyException):
 
 class GetResourceFailure(RallyException):
     msg_fmt = _("Failed to get the resource.")
+
+
+class SSHError(RallyException):
+    msg_fmt = _("Remote command failed.")
