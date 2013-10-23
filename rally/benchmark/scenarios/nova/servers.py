@@ -13,6 +13,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import random
+
 from rally.benchmark.scenarios.nova import utils
 
 
@@ -43,4 +45,7 @@ class NovaServers(utils.NovaScenario):
     def boot_server(cls, context, image_id, flavor_id, **kwargs):
         """Test VM boot - assumed clean-up is done elsewhere."""
         server_name = cls._generate_random_name(16)
+        if 'nics' not in kwargs:
+            random_nic = random.choice(cls.nova.networks.list())
+            kwargs['nics'] = [{'net-id': random_nic.id}]
         cls._boot_server(server_name, image_id, flavor_id, **kwargs)
