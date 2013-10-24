@@ -13,6 +13,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import urlparse
+
 from cinderclient import client as cinder
 import glanceclient as glance
 from keystoneclient.v2_0 import client as keystone
@@ -28,7 +30,11 @@ class Clients(object):
 
     def get_keystone_client(self):
         """Return keystone client."""
-        return keystone.Client(**self.kw)
+        new_kw = {"endpoint": self._change_port(self.kw["auth_url"], "35357")}
+        kw = dict(self.kw.items() + new_kw.items())
+        client = keystone.Client(**kw)
+        client.authenticate()
+        return client
 
     def get_nova_client(self, version='2'):
         """Returns nova client."""
@@ -55,3 +61,17 @@ class Clients(object):
                              self.kw['tenant_name'],
                              auth_url=self.kw['auth_url'],
                              service_type='volume')
+
+    def _change_port(self, url, new_port):
+        """Change the port of a given url.
+
+        :param url: URL string
+        :param new_port: The new port
+
+        :returns: URL string
+        """
+        url_obj = urlparse.urlparse(url)
+        new_url = "%(scheme)s://%(hostname)s:%(port)s%(path)s" % {
+                    "scheme": url_obj.scheme, "hostname": url_obj.hostname,
+                    "port": new_port, "path": url_obj.path}
+        return new_url

@@ -29,11 +29,14 @@ class FakeKeystone(object):
         self.auth_token = 'fake'
         self.service_catalog = FakeServiceCatalog()
 
+    def authenticate(self):
+        return True
+
 
 class OSClientsTestCase(test.NoDBTestCase):
 
     def _get_auth_params(self):
-        args = ['user', 'pass', 'tenant', 'auth_url']
+        args = ['user', 'pass', 'tenant', 'http://auth_url']
         keys = ['username', 'password', 'tenant_name', 'auth_url']
         return (args, dict(zip(keys, args)))
 
@@ -47,10 +50,13 @@ class OSClientsTestCase(test.NoDBTestCase):
 
     def test_get_keystone_client(self):
         with mock.patch('rally.osclients.keystone') as mock_keystone:
-            mock_keystone.Client = mock.MagicMock(return_value={})
+            fake_keystone = FakeKeystone()
+            mock_keystone.Client = mock.MagicMock(return_value=fake_keystone)
             client = self.clients.get_keystone_client()
-            self.assertEqual(client, {})
-            mock_keystone.Client.assert_called_once_with(**self.kwargs)
+            self.assertEqual(client, fake_keystone)
+            endpoint = {"endpoint": "http://auth_url:35357"}
+            kwargs = dict(self.kwargs.items() + endpoint.items())
+            mock_keystone.Client.assert_called_once_with(**kwargs)
 
     def test_get_nova_client(self):
         with mock.patch('rally.osclients.nova') as mock_nova:
