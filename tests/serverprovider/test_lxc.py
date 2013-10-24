@@ -15,6 +15,7 @@
 
 
 import mock
+import os
 
 from rally.openstack.common import test
 from rally.serverprovider.providers import lxc
@@ -136,13 +137,11 @@ class LxcProviderTestCase(test.BaseTestCase):
     def test_lxc_install(self):
         with mock.patch('rally.serverprovider.providers.lxc.sshutils') as ssh:
             self.provider.lxc_install()
+        expected_script = os.path.abspath('rally/serverprovider/providers/'
+                                          'lxc/lxc-install.sh')
         expected = [
-            mock.call.execute_script('root', 'host1.net',
-                                     'rally/serverprovider/providers/'
-                                     'lxc/lxc-install.sh'),
-            mock.call.execute_script('root', 'host2.net',
-                                     'rally/serverprovider/providers/'
-                                     'lxc/lxc-install.sh')
+            mock.call.execute_script('root', 'host1.net', expected_script),
+            mock.call.execute_script('root', 'host2.net', expected_script)
         ]
         self.assertEqual(ssh.mock_calls, expected)
 

@@ -122,8 +122,8 @@ class LxcProvider(provider.ProviderFactory):
         host_provider = provider.ProviderFactory.get_provider(
             self.config['host_provider'], self.task)
         self.connections = host_provider.create_vms()
-        script = os.path.join(os.path.dirname(__file__),
-                              'lxc', 'lxc-install.sh')
+        script = os.path.abspath(os.path.join(os.path.dirname(__file__),
+                                              'lxc', 'lxc-install.sh'))
         for conn in self.connections:
             sshutils.execute_script(conn.user, conn.ip, script)
 
