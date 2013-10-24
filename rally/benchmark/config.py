@@ -142,6 +142,8 @@ test_config_schema = {
                             "init": {"type": "object"},
                             "times": {"type": "number"},
                             "concurrent": {"type": "number"},
+                            "tenants": {"type": "number"},
+                            "users_per_tenant": {"type": "number"},
                             "timeout": {"type": "number"}
                         },
                         "additionalProperties": False

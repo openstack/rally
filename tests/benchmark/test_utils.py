@@ -25,6 +25,7 @@ from rally.benchmark import config
 from rally.benchmark import utils
 from rally import test
 from rally import utils as rally_utils
+from tests.benchmark.scenarios.nova import test_utils
 
 
 class FakeScenario(base.Scenario):
@@ -54,41 +55,70 @@ class FakeTimer(rally_utils.Timer):
 
 class ScenarioTestCase(test.NoDBTestCase):
 
+    def setUp(self):
+        super(ScenarioTestCase, self).setUp()
+        self.osclients = "rally.benchmark.utils.osclients"
+        admin_keys = ["admin_username", "admin_password",
+                      "admin_tenant_name", "uri"]
+        self.fake_kw = dict(zip(admin_keys, admin_keys))
+
     def test_init_calls_register(self):
-        with mock.patch("rally.benchmark.utils.base") as mock_base:
-            utils.ScenarioRunner(mock.MagicMock(), {})
-        self.assertEqual(mock_base.mock_calls, [mock.call.Scenario.register()])
+        with mock.patch(self.osclients) as mock_osclients:
+            mock_osclients.Clients.return_value = test_utils.FakeClients()
+            with mock.patch("rally.benchmark.utils.base") as mock_base:
+                utils.ScenarioRunner(mock.MagicMock(), self.fake_kw)
+            self.assertEqual(mock_base.mock_calls,
+                             [mock.call.Scenario.register()])
+
+    def test_create_temp_tenants_and_users(self):
+        with mock.patch(self.osclients) as mock_osclients:
+            mock_osclients.Clients.return_value = test_utils.FakeClients()
+            runner = utils.ScenarioRunner(mock.MagicMock(), self.fake_kw)
+            tenants = 10
+            users_per_tenant = 5
+            endpoints = runner._create_temp_tenants_and_users(tenants,
+                                                              users_per_tenant)
+            self.assertEqual(len(endpoints), tenants * users_per_tenant)
+            endpoint_keys = set(["username", "password", "tenant_name", "uri"])
+            for endpoint in endpoints:
+                self.assertEqual(set(endpoint.keys()), endpoint_keys)
 
     def test_run_scenario(self):
-        runner = utils.ScenarioRunner(mock.MagicMock(), {})
-        times = 3
+        with mock.patch(self.osclients) as mock_osclients:
+            mock_osclients.Clients.return_value = test_utils.FakeClients()
+            with mock.patch("rally.benchmark.utils.utils") as mock_utils:
+                runner = utils.ScenarioRunner(mock.MagicMock(), self.fake_kw)
+                times = 3
 
-        with mock.patch("rally.benchmark.utils.utils") as mock_utils:
-            mock_utils.Timer = FakeTimer
-            results = runner._run_scenario("context", FakeScenario, "do_it",
-                                           {}, times, 1, 2)
+                mock_utils.Timer = FakeTimer
+                results = runner._run_scenario("context", FakeScenario,
+                                               "do_it", {}, times, 1, 2)
 
         expected = [{"time": 10, "error": None} for i in range(times)]
         self.assertEqual(results, expected)
 
     def test_run_scenario_timeout(self):
-        runner = utils.ScenarioRunner(mock.MagicMock(), {})
-        times = 4
-        results = runner._run_scenario("context", FakeScenario, "too_long",
-                                       {}, times, 1, 0.1)
+        with mock.patch(self.osclients) as mock_osclients:
+            mock_osclients.Clients.return_value = test_utils.FakeClients()
+            runner = utils.ScenarioRunner(mock.MagicMock(), self.fake_kw)
+            times = 4
+            results = runner._run_scenario("context", FakeScenario, "too_long",
+                                           {}, times, 1, 0.1)
         self.assertEqual(len(results), times)
         for r in results:
             self.assertEqual(r['time'], 0.1)
             self.assertEqual(r['error'][0], str(multiprocessing.TimeoutError))
 
     def test_run_scenario_exception_inside_test(self):
-        runner = utils.ScenarioRunner(mock.MagicMock(), {})
-        times = 1
-        with mock.patch("rally.benchmark.utils.utils") as mock_utils:
-            mock_utils.Timer = FakeTimer
-            results = runner._run_scenario("context", FakeScenario,
-                                           "something_went_wrong",
-                                           {}, times, 1, 1)
+        with mock.patch(self.osclients) as mock_osclients:
+            mock_osclients.Clients.return_value = test_utils.FakeClients()
+            runner = utils.ScenarioRunner(mock.MagicMock(), self.fake_kw)
+            times = 1
+            with mock.patch("rally.benchmark.utils.utils") as mock_utils:
+                mock_utils.Timer = FakeTimer
+                results = runner._run_scenario("context", FakeScenario,
+                                               "something_went_wrong",
+                                               {}, times, 1, 1)
 
         self.assertEqual(len(results), times)
         for r in results:
@@ -100,20 +130,23 @@ class ScenarioTestCase(test.NoDBTestCase):
         pass
 
     def test_run_scenario_concurrency(self):
-        runner = utils.ScenarioRunner(mock.MagicMock(), {})
-        times = 3
-        concurrent = 4
-        timeout = 5
-        with mock.patch("rally.benchmark.utils.multiprocessing") as mock_multi:
-            mock_multi.Pool = mock.MagicMock()
-            runner._run_scenario("context", FakeScenario, "do_it",
-                                 {}, times, concurrent, timeout)
+        with mock.patch(self.osclients) as mock_osclients:
+            mock_osclients.Clients.return_value = test_utils.FakeClients()
+            runner = utils.ScenarioRunner(mock.MagicMock(), self.fake_kw)
+            times = 3
+            concurrent = 4
+            timeout = 5
+            multiprocessing = "rally.benchmark.utils.multiprocessing"
+            with mock.patch(multiprocessing) as mock_multi:
+                mock_multi.Pool = mock.MagicMock()
+                runner._run_scenario("context", FakeScenario, "do_it",
+                                     {}, times, concurrent, timeout)
 
         expect = [
             mock.call(concurrent),
             mock.call().imap(
                 utils._run_scenario_loop,
-                [(i, FakeScenario, {}, "do_it", "context", {})
+                [(i, FakeScenario, self.fake_kw, "do_it", "context", {})
                     for i in xrange(times)]
             )
         ]
@@ -125,30 +158,43 @@ class ScenarioTestCase(test.NoDBTestCase):
         FakeScenario = mock.MagicMock()
         FakeScenario.init = mock.MagicMock(return_value="context")
 
-        runner = utils.ScenarioRunner(mock.MagicMock(), {})
-        runner._run_scenario = mock.MagicMock(return_value="result")
+        with mock.patch(self.osclients) as mock_osclients:
+            mock_osclients.Clients.return_value = test_utils.FakeClients()
+            runner = utils.ScenarioRunner(mock.MagicMock(), self.fake_kw)
+            runner._run_scenario = mock.MagicMock(return_value="result")
+            runner._create_temp_tenants_and_users = mock.MagicMock(
+                                                            return_value=[])
+            runner._delete_temp_tenants_and_users = mock.MagicMock()
 
-        with mock.patch("rally.benchmark.utils.base") as mock_base:
-            mock_base.Scenario.get_by_name = \
-                mock.MagicMock(return_value=FakeScenario)
+            with mock.patch("rally.benchmark.utils.base") as mock_base:
+                mock_base.Scenario.get_by_name = \
+                    mock.MagicMock(return_value=FakeScenario)
 
-            result = runner.run("FakeScenario.fake", {})
-            self.assertEqual(result, "result")
-            runner.run("FakeScenario.fake",
-                       {'args': {'a': 1}, 'init': {'arg': 1},
-                        'timeout': 1, 'times': 2, 'concurrent': 3})
+                result = runner.run("FakeScenario.do_it", {})
+                self.assertEqual(result, "result")
+                runner.run("FakeScenario.do_it",
+                           {'args': {'a': 1}, 'init': {'arg': 1},
+                            'timeout': 1, 'times': 2, 'concurrent': 3,
+                            'tenants': 5, 'users_per_tenant': 2})
 
         expected = [
-            mock.call("context", FakeScenario, "fake", {}, 1, 1, 10000),
-            mock.call("context", FakeScenario, "fake", {'a': 1}, 2, 3, 1)
+            mock.call("context", FakeScenario, "do_it", {}, 1, 1, 10000),
+            mock.call("context", FakeScenario, "do_it", {'a': 1}, 2, 3, 1)
         ]
         self.assertEqual(runner._run_scenario.mock_calls, expected)
 
         expected = [
-            mock.call.class_init({}),
+            mock.call(1, 1),
+            mock.call(5, 2)
+        ]
+        self.assertEqual(runner._create_temp_tenants_and_users.mock_calls,
+                         expected)
+
+        expected = [
+            mock.call.class_init(self.fake_kw),
             mock.call.init({}),
             mock.call.cleanup('context'),
-            mock.call.class_init({}),
+            mock.call.class_init(self.fake_kw),
             mock.call.init({'arg': 1}),
             mock.call.cleanup('context')
         ]

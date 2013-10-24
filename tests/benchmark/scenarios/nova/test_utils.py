@@ -64,6 +64,14 @@ class FakeFloatingIP(FakeResource):
     pass
 
 
+class FakeTenant(FakeResource):
+    pass
+
+
+class FakeUser(FakeResource):
+    pass
+
+
 class FakeManager(object):
 
     def __init__(self):
@@ -139,18 +147,40 @@ class FakeFloatingIPsManager(FakeManager):
         return FakeFloatingIP(self)
 
 
+class FakeTenantsManager(FakeManager):
+
+    def create(self, name):
+        return FakeTenant(self)
+
+
+class FakeUsersManager(FakeManager):
+
+    def create(self, username, password, email, tenant_id):
+        return FakeUser(self)
+
+
 class FakeNovaClient(object):
 
-    def __init__(self):
-        self.servers = FakeServerManager()
+    def __init__(self, failed_server_manager=False):
+        if failed_server_manager:
+            self.servers = FakeFailedServerManager()
+        else:
+            self.servers = FakeServerManager()
         self.images = FakeImageManager()
         self.floating_ips = FakeFloatingIPsManager()
+
+
+class FakeKeystoneClient(object):
+
+    def __init__(self):
+        self.tenants = FakeTenantsManager()
+        self.users = FakeUsersManager()
 
 
 class FakeClients(object):
 
     def get_keystone_client(self):
-        return "keystone"
+        return FakeKeystoneClient()
 
     def get_nova_client(self):
         return FakeNovaClient()
@@ -167,13 +197,11 @@ class NovaScenarioTestCase(test.NoDBTestCase):
     def setUp(self):
         super(NovaScenarioTestCase, self).setUp()
         self.rally_utils = "rally.benchmark.scenarios.nova.utils.utils"
-        self.utils_resource_is = "rally.benchmark.scenarios.nova.utils"\
-            "._resource_is"
+        self.utils_resource_is = ("rally.benchmark.scenarios.nova.utils"
+                                  "._resource_is")
         self.osclients = "rally.benchmark.base.osclients"
-        self.nova_scenario = "rally.benchmark.scenarios.nova.utils."\
-            "NovaScenario"
-        self.servers_create = ("rally.benchmark.scenarios.nova.utils"
-                               ".NovaScenario.nova.servers.create")
+        self.nova_scenario = ("rally.benchmark.scenarios.nova.utils."
+                              "NovaScenario")
         self.sleep = "rally.benchmark.scenarios.nova.utils.time.sleep"
 
     def test_generate_random_name(self):
@@ -190,61 +218,78 @@ class NovaScenarioTestCase(test.NoDBTestCase):
 
     def test_cleanup_failed(self):
         with mock.patch(self.osclients) as mock_osclients:
-            mock_osclients.Clients.return_value = FakeClients()
-            keys = ["admin_username", "admin_password",
-                    "admin_tenant_name", "uri"]
-            kw = dict(zip(keys, keys))
-            utils.NovaScenario.class_init(kw)
+            fc = FakeClients()
+            mock_osclients.Clients.return_value = fc
+            failed_nova = FakeNovaClient(failed_server_manager=True)
+            fc.get_nova_client = lambda: failed_nova
 
-            manager = FakeFailedServerManager()
-            utils.NovaScenario.nova.servers = manager
+            admin_keys = ["admin_username", "admin_password",
+                          "admin_tenant_name", "uri"]
+            temp_keys = ["username", "password", "tenant_name", "uri"]
+            kw = dict(zip(admin_keys, admin_keys))
+            kw["temp_users"] = [dict(zip(temp_keys, temp_keys))]
+            utils.NovaScenario.class_init(kw)
 
             with mock.patch(self.sleep):
                 # NOTE(boden): verify failed server cleanup
                 self.assertRaises(rally_exceptions.GetResourceFailure,
                                   utils.NovaScenario._boot_server,
                                   "fails", 0, 1)
-            self.assertEquals(len(manager.list()), 1, "Server not created")
+            self.assertEquals(len(failed_nova.servers.list()), 1,
+                              "Server not created")
             utils.NovaScenario.cleanup({})
-            self.assertEquals(len(manager.list()), 0, "Servers not purged")
+            self.assertEquals(len(failed_nova.servers.list()), 0,
+                              "Servers not purged")
 
     def test_cleanup(self):
         with mock.patch(self.osclients) as mock_osclients:
-            mock_osclients.Clients.return_value = FakeClients()
-            keys = ["admin_username", "admin_password",
-                    "admin_tenant_name", "uri"]
-            kw = dict(zip(keys, keys))
+            fc = FakeClients()
+            mock_osclients.Clients.return_value = fc
+            fake_nova = FakeNovaClient()
+            fc.get_nova_client = lambda: fake_nova
+
+            admin_keys = ["admin_username", "admin_password",
+                          "admin_tenant_name", "uri"]
+            temp_keys = ["username", "password", "tenant_name", "uri"]
+            kw = dict(zip(admin_keys, admin_keys))
+            kw["temp_users"] = [dict(zip(temp_keys, temp_keys))]
             utils.NovaScenario.class_init(kw)
 
             # NOTE(boden): verify active server cleanup
-            manager = FakeServerManager()
-            utils.NovaScenario.nova.servers = manager
             with mock.patch(self.sleep):
                 for i in range(5):
                     utils.NovaScenario._boot_server("server-%s" % i, 0, 1)
-            self.assertEquals(len(manager.list()), 5, "Server not created")
+            self.assertEquals(len(fake_nova.servers.list()), 5,
+                              "Server not created")
             utils.NovaScenario.cleanup({})
-            self.assertEquals(len(manager.list()), 0, "Servers not purged")
+            self.assertEquals(len(fake_nova.servers.list()), 0,
+                              "Servers not purged")
 
     def test_server_helper_methods(self):
-
         with mock.patch(self.rally_utils) as mock_rally_utils:
             with mock.patch(self.utils_resource_is) as mock_resource_is:
                 mock_resource_is.return_value = {}
                 with mock.patch(self.osclients) as mock_osclients:
-                    mock_osclients.Clients.return_value = FakeClients()
-                    keys = ["admin_username", "admin_password",
-                            "admin_tenant_name", "uri"]
-                    kw = dict(zip(keys, keys))
+                    fc = FakeClients()
+                    mock_osclients.Clients.return_value = fc
+                    fake_nova = FakeNovaClient()
+                    fc.get_nova_client = lambda: fake_nova
+                    fsm = FakeServerManager()
+                    fake_server = fsm.create("s1", "i1", 1)
+                    fsm.create = lambda name, iid, fid: fake_server
+                    fake_nova.servers = fsm
+
+                    admin_keys = ["admin_username", "admin_password",
+                                  "admin_tenant_name", "uri"]
+                    temp_keys = ["username", "password", "tenant_name", "uri"]
+                    kw = dict(zip(admin_keys, admin_keys))
+                    kw["temp_users"] = [dict(zip(temp_keys, temp_keys))]
                     utils.NovaScenario.class_init(kw)
-                    with mock.patch(self.servers_create) as mock_create:
-                        fake_server = FakeServerManager().create("s1", "i1", 1)
-                        mock_create.return_value = fake_server
-                        with mock.patch(self.sleep):
-                            utils.NovaScenario._boot_server("s1", "i1", 1)
-                            utils.NovaScenario._create_image(fake_server)
-                            utils.NovaScenario._suspend_server(fake_server)
-                            utils.NovaScenario._delete_server(fake_server)
+                    with mock.patch(self.sleep):
+                        utils.NovaScenario._boot_server("s1", "i1", 1)
+                        utils.NovaScenario._create_image(fake_server)
+                        utils.NovaScenario._suspend_server(fake_server)
+                        utils.NovaScenario._delete_server(fake_server)
 
         expected = [
             mock.call.wait_for(fake_server, is_ready={},
