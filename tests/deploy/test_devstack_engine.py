@@ -45,19 +45,16 @@ class DevstackEngineTestCase(test.BaseTestCase):
         self.assertEqual(self.de.localrc['ADMIN_PASSWORD'], 'secret')
 
     def test_deploy(self):
-        with mock.patch('rally.deploy.engines.devstack.sshutils') as ssh:
+        with mock.patch('rally.sshutils.SSH') as ssh:
             self.de.deploy()
-        config_tmp_filename = ssh.mock_calls[2][1][2]
+        config_tmp_filename = ssh.mock_calls[4][1][0]
         call = mock.call
         install_script = 'rally/deploy/engines/devstack/install.sh'
         expected = [
-            call.execute_script('root', 'example.com',
-                                os.path.abspath(install_script)),
-            call.execute_command('rally', 'example.com',
-                                 ['git', 'clone', DEVSTACK_REPO]),
-            call.upload_file('rally', 'example.com', config_tmp_filename,
-                             '~/devstack/localrc'),
-            call.execute_command('rally', 'example.com',
-                                 ['~/devstack/stack.sh'])
-        ]
+            call('example.com', 'root'),
+            call().execute_script(os.path.abspath(install_script)),
+            call('example.com', 'rally'),
+            call().execute('git', 'clone', DEVSTACK_REPO),
+            call().upload(config_tmp_filename, '~/devstack/localrc'),
+            call().execute('~/devstack/stack.sh')]
         self.assertEqual(expected, ssh.mock_calls)
