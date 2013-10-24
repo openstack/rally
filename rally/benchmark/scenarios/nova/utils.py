@@ -55,8 +55,8 @@ class NovaScenario(base.Scenario):
 
         :returns: Created server object
         """
-        server = cls.client("nova").servers.create(server_name, image_id,
-                                                   flavor_id, **kwargs)
+        server = cls.clients["nova"].servers.create(server_name, image_id,
+                                                    flavor_id, **kwargs)
         # NOTE(msdubov): It is reasonable to wait 5 secs before starting to
         #                check whether the server is ready => less API calls.
         time.sleep(5)
@@ -90,7 +90,7 @@ class NovaScenario(base.Scenario):
         """
         server.delete()
         # NOTE(msdubov): When the server gets deleted, the
-        #                client("nova").servers.get() method raises
+        #                clients["nova"].servers.get() method raises
         #                a NotFound exception.
         try:
             utils.wait_for(server, is_ready=_false,
@@ -102,7 +102,7 @@ class NovaScenario(base.Scenario):
     @classmethod
     def _delete_all_servers(cls):
         """Deletes all servers in current tenant."""
-        servers = cls.client("nova").servers.list()
+        servers = cls.clients["nova"].servers.list()
         for server in servers:
             cls._delete_server(server)
 
@@ -130,9 +130,9 @@ class NovaScenario(base.Scenario):
 
         :returns: Created image object
         """
-        image_uuid = cls.client("nova").servers.create_image(server,
-                                                             server.name)
-        image = cls.client("nova").images.get(image_uuid)
+        image_uuid = cls.clients["nova"].servers.create_image(server,
+                                                              server.name)
+        image = cls.clients["nova"].images.get(image_uuid)
         image = utils.wait_for(image, is_ready=_resource_is("ACTIVE"),
                                update_resource=_get_from_manager,
                                timeout=600, check_interval=3)
@@ -157,16 +157,16 @@ class NovaScenario(base.Scenario):
         :returns: List of created server objects
         """
         for i in range(requests):
-            cls.client("nova").servers.create('%s_%d' % (name_prefix, i),
-                                              image_id, flavor_id,
-                                              min_count=instances_per_request,
-                                              max_count=instances_per_request,
-                                              **kwargs)
+            cls.clients["nova"].servers.create('%s_%d' % (name_prefix, i),
+                                               image_id, flavor_id,
+                                               min_count=instances_per_request,
+                                               max_count=instances_per_request,
+                                               **kwargs)
         # NOTE(msdubov): Nova python client returns only one server even when
         #                min_count > 1, so we have to rediscover all the
         #                created servers manyally.
         servers = filter(lambda server: server.name.startswith(name_prefix),
-                         cls.client("nova").servers.list())
+                         cls.clients["nova"].servers.list())
         time.sleep(5)
         servers = [utils.wait_for(server, is_ready=_resource_is("ACTIVE"),
                                   update_resource=_get_from_manager,

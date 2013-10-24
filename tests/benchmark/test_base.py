@@ -47,39 +47,6 @@ class ScenarioTestCase(test.TestCase):
         self.assertRaises(exceptions.NoSuchScenario,
                           base.Scenario.get_by_name, "non existing scenario")
 
-    def test_class_init(self):
-
-        class FakeClients(object):
-
-            def get_keystone_client(self):
-                return "keystone"
-
-            def get_nova_client(self):
-                return "nova"
-
-            def get_glance_client(self):
-                return "glance"
-
-            def get_cinder_client(self):
-                return "cinder"
-
-        with mock.patch('rally.benchmark.base.osclients') as mock_osclients:
-            mock_osclients.Clients = mock.MagicMock(return_value=FakeClients())
-
-            admin_keys = ["admin_username", "admin_password",
-                          "admin_tenant_name", "uri"]
-            temp_keys = ["username", "password", "tenant_name", "uri"]
-            kw = dict(zip(admin_keys, admin_keys))
-            kw["temp_users"] = [dict(zip(temp_keys, temp_keys))]
-
-            base.Scenario.class_init(kw)
-            self.assertEqual(mock_osclients.Clients.mock_calls,
-                             [mock.call(*temp_keys)])
-
-            clients = ["keystone", "nova", "glance", "cinder"]
-            clients_dict = dict((client, [client]) for client in clients)
-            self.assertEqual(base.Scenario.clients, clients_dict)
-
     def test_init(self):
         self.assertEqual({}, base.Scenario.init(None))
 

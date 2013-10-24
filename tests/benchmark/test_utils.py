@@ -88,11 +88,12 @@ class ScenarioTestCase(test.TestCase):
             mock_osclients.Clients.return_value = test_utils.FakeClients()
             with mock.patch("rally.benchmark.utils.utils") as mock_utils:
                 runner = utils.ScenarioRunner(mock.MagicMock(), self.fake_kw)
+                utils.__openstack_clients__ = ["client"]
                 times = 3
 
                 mock_utils.Timer = FakeTimer
-                results = runner._run_scenario("context", FakeScenario,
-                                               "do_it", {}, times, 1, 2)
+                results = runner._run_scenario({}, FakeScenario, "do_it", {},
+                                               times, 1, 2)
 
         expected = [{"time": 10, "error": None} for i in range(times)]
         self.assertEqual(results, expected)
@@ -101,9 +102,10 @@ class ScenarioTestCase(test.TestCase):
         with mock.patch(self.osclients) as mock_osclients:
             mock_osclients.Clients.return_value = test_utils.FakeClients()
             runner = utils.ScenarioRunner(mock.MagicMock(), self.fake_kw)
+            utils.__openstack_clients__ = ["client"]
             times = 4
-            results = runner._run_scenario("context", FakeScenario, "too_long",
-                                           {}, times, 1, 0.1)
+            results = runner._run_scenario({}, FakeScenario, "too_long", {},
+                                           times, 1, 0.1)
         self.assertEqual(len(results), times)
         for r in results:
             self.assertEqual(r['time'], 0.1)
@@ -113,10 +115,11 @@ class ScenarioTestCase(test.TestCase):
         with mock.patch(self.osclients) as mock_osclients:
             mock_osclients.Clients.return_value = test_utils.FakeClients()
             runner = utils.ScenarioRunner(mock.MagicMock(), self.fake_kw)
+            utils.__openstack_clients__ = ["client"]
             times = 1
             with mock.patch("rally.benchmark.utils.utils") as mock_utils:
                 mock_utils.Timer = FakeTimer
-                results = runner._run_scenario("context", FakeScenario,
+                results = runner._run_scenario({}, FakeScenario,
                                                "something_went_wrong",
                                                {}, times, 1, 1)
 
@@ -133,20 +136,21 @@ class ScenarioTestCase(test.TestCase):
         with mock.patch(self.osclients) as mock_osclients:
             mock_osclients.Clients.return_value = test_utils.FakeClients()
             runner = utils.ScenarioRunner(mock.MagicMock(), self.fake_kw)
+            utils.__openstack_clients__ = ["client"]
             times = 3
             concurrent = 4
             timeout = 5
             multiprocessing = "rally.benchmark.utils.multiprocessing"
             with mock.patch(multiprocessing) as mock_multi:
                 mock_multi.Pool = mock.MagicMock()
-                runner._run_scenario("context", FakeScenario, "do_it",
-                                     {}, times, concurrent, timeout)
+                runner._run_scenario({}, FakeScenario, "do_it", {},
+                                     times, concurrent, timeout)
 
         expect = [
             mock.call(concurrent),
             mock.call().imap(
                 utils._run_scenario_loop,
-                [(i, FakeScenario, self.fake_kw, "do_it", "context", {})
+                [(i, FakeScenario, "do_it", {}, {})
                     for i in xrange(times)]
             )
         ]
@@ -156,7 +160,7 @@ class ScenarioTestCase(test.TestCase):
 
     def test_run(self):
         FakeScenario = mock.MagicMock()
-        FakeScenario.init = mock.MagicMock(return_value="context")
+        FakeScenario.init = mock.MagicMock(return_value={})
 
         with mock.patch(self.osclients) as mock_osclients:
             mock_osclients.Clients.return_value = test_utils.FakeClients()
@@ -169,17 +173,19 @@ class ScenarioTestCase(test.TestCase):
             with mock.patch("rally.benchmark.utils.base") as mock_base:
                 mock_base.Scenario.get_by_name = \
                     mock.MagicMock(return_value=FakeScenario)
-
-                result = runner.run("FakeScenario.do_it", {})
-                self.assertEqual(result, "result")
-                runner.run("FakeScenario.do_it",
-                           {'args': {'a': 1}, 'init': {'arg': 1},
-                            'timeout': 1, 'times': 2, 'concurrent': 3,
-                            'tenants': 5, 'users_per_tenant': 2})
+                with mock.patch("rally.benchmark.utils."
+                                "_create_openstack_clients") as mock_clients:
+                    mock_clients.return_value = ["client"]
+                    result = runner.run("FakeScenario.do_it", {})
+                    self.assertEqual(result, "result")
+                    runner.run("FakeScenario.do_it",
+                               {'args': {'a': 1}, 'init': {'arg': 1},
+                                'timeout': 1, 'times': 2, 'concurrent': 3,
+                                'tenants': 5, 'users_per_tenant': 2})
 
         expected = [
-            mock.call("context", FakeScenario, "do_it", {}, 1, 1, 10000),
-            mock.call("context", FakeScenario, "do_it", {'a': 1}, 2, 3, 1)
+            mock.call({}, FakeScenario, "do_it", {}, 1, 1, 10000),
+            mock.call({}, FakeScenario, "do_it", {'a': 1}, 2, 3, 1)
         ]
         self.assertEqual(runner._run_scenario.mock_calls, expected)
 
@@ -190,13 +196,11 @@ class ScenarioTestCase(test.TestCase):
         self.assertEqual(runner._create_temp_tenants_and_users.mock_calls,
                          expected)
 
+        self.assertEqual(mock_clients.call_count, 2)
+
         expected = [
-            mock.call.class_init(self.fake_kw),
             mock.call.init({}),
-            mock.call.cleanup('context'),
-            mock.call.class_init(self.fake_kw),
             mock.call.init({'arg': 1}),
-            mock.call.cleanup('context')
         ]
         self.assertEqual(FakeScenario.mock_calls, expected)
 

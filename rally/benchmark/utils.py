@@ -16,6 +16,7 @@
 import multiprocessing
 import os
 import pytest
+import random
 import traceback
 
 import fuel_health.cleanup as fuel_cleanup
@@ -29,25 +30,51 @@ from rally import utils
 
 LOG = logging.getLogger(__name__)
 
+# NOTE(msdubov): This list is shared between multiple scenario processes.
+__openstack_clients__ = []
+
 
 def _format_exc(exc):
     return [str(type(exc)), str(exc), traceback.format_exc()]
 
 
 def _run_scenario_loop(args):
-    i, cls, endpoints, method_name, context, kwargs = args
-
-    # NOTE(boris-42): Before each call of Scneraio we should init cls.
-    #                 This is cause because this method is run by Pool.
+    i, cls, method_name, context, kwargs = args
 
     LOG.info("ITER: %s" % i)
-    cls.class_init(endpoints)
+
+    # NOTE(msdubov): Each scenario run uses a random openstack client
+    #                from a predefined set to act from different users.
+    cls.clients = random.choice(__openstack_clients__)
+
     try:
         with utils.Timer() as timer:
             getattr(cls, method_name)(context, **kwargs)
     except Exception as e:
         return {"time": timer.duration(), "error": _format_exc(e)}
     return {"time": timer.duration(), "error": None}
+
+    # NOTE(msdubov): Cleaning up after each scenario loop enables to delete
+    #                the resources of the user the scenario was run from.
+    cls.cleanup(context)
+
+
+def _create_openstack_clients(users_endpoints, keys):
+    # NOTE(msdubov): Creating here separate openstack clients for each of
+    #                the temporary users involved in benchmarking.
+    client_managers = [osclients.Clients(*[credentials[k] for k in keys])
+                       for credentials in users_endpoints]
+
+    clients = [
+        dict((
+            ("nova", cl.get_nova_client()),
+            ("keystone", cl.get_keystone_client()),
+            ("glance", cl.get_glance_client()),
+            ("cinder", cl.get_cinder_client())
+        )) for cl in client_managers
+    ]
+
+    return clients
 
 
 class ScenarioRunner(object):
@@ -56,12 +83,12 @@ class ScenarioRunner(object):
         self.task = task
         self.endpoints = cloud_config
         keys = ["admin_username", "admin_password", "admin_tenant_name", "uri"]
-        clients = osclients.Clients(*[self.endpoints[k] for k in keys])
-        self.keystone = clients.get_keystone_client()
+        self.clients = _create_openstack_clients([self.endpoints], keys)[0]
         base.Scenario.register()
 
     def _create_temp_tenants_and_users(self, tenants, users_per_tenant):
-        self.tenants = [self.keystone.tenants.create("tenant_%d" % i)
+        self.tenants = [self.clients["keystone"].tenants.create("tenant_%d" %
+                                                                i)
                         for i in range(tenants)]
         self.users = []
         temporary_endpoints = []
@@ -70,9 +97,11 @@ class ScenarioRunner(object):
                 username = "user_%(tid)s_%(uid)d" % {"tid": tenant.id,
                                                      "uid": uid}
                 password = "password"
-                user = self.keystone.users.create(username, password,
-                                                  "%s@test.com" % username,
-                                                  tenant.id)
+                user = self.clients["keystone"].users.create(username,
+                                                             password,
+                                                             "%s@test.com" %
+                                                             username,
+                                                             tenant.id)
                 self.users.append(user)
                 user_credentials = {"username": username, "password": password,
                                     "tenant_name": tenant.name,
@@ -88,8 +117,7 @@ class ScenarioRunner(object):
 
     def _run_scenario(self, ctx, cls, method, args, times, concurrent,
                       timeout):
-        test_args = [(i, cls, self.endpoints, method, ctx, args)
-                     for i in xrange(times)]
+        test_args = [(i, cls, method, ctx, args) for i in xrange(times)]
 
         pool = multiprocessing.Pool(concurrent)
         iter_result = pool.imap(_run_scenario_loop, test_args)
@@ -119,17 +147,22 @@ class ScenarioRunner(object):
         tenants = kwargs.get('tenants', 1)
         users_per_tenant = kwargs.get('users_per_tenant', 1)
 
-        self.endpoints["temp_users"] = self._create_temp_tenants_and_users(
-                                                    tenants, users_per_tenant)
+        temp_users = self._create_temp_tenants_and_users(tenants,
+                                                         users_per_tenant)
 
-        cls.class_init(self.endpoints)
+        # NOTE(msdubov): Call init() with admin openstack clients
+        cls.clients = self.clients
         ctx = cls.init(kwargs.get('init', {}))
+
+        # NOTE(msdubov): Launch scenarios with non-admin openstack clients
+        global __openstack_clients__
+        keys = ["username", "password", "tenant_name", "uri"]
+        __openstack_clients__ = _create_openstack_clients(temp_users, keys)
+
         results = self._run_scenario(ctx, cls, method_name, args,
                                      times, concurrent, timeout)
-        cls.cleanup(ctx)
 
         self._delete_temp_tenants_and_users()
-        del self.endpoints["temp_users"]
 
         return results
 

@@ -17,6 +17,7 @@ import uuid
 
 from novaclient import exceptions
 from rally.benchmark.scenarios.nova import utils
+from rally.benchmark import utils as butils
 from rally import exceptions as rally_exceptions
 from rally import test
 
@@ -199,7 +200,7 @@ class NovaScenarioTestCase(test.TestCase):
         self.rally_utils = "rally.benchmark.scenarios.nova.utils.utils"
         self.utils_resource_is = ("rally.benchmark.scenarios.nova.utils"
                                   "._resource_is")
-        self.osclients = "rally.benchmark.base.osclients"
+        self.osclients = "rally.benchmark.utils.osclients"
         self.nova_scenario = ("rally.benchmark.scenarios.nova.utils."
                               "NovaScenario")
         self.sleep = "rally.benchmark.scenarios.nova.utils.time.sleep"
@@ -223,12 +224,10 @@ class NovaScenarioTestCase(test.TestCase):
             failed_nova = FakeNovaClient(failed_server_manager=True)
             fc.get_nova_client = lambda: failed_nova
 
-            admin_keys = ["admin_username", "admin_password",
-                          "admin_tenant_name", "uri"]
             temp_keys = ["username", "password", "tenant_name", "uri"]
-            kw = dict(zip(admin_keys, admin_keys))
-            kw["temp_users"] = [dict(zip(temp_keys, temp_keys))]
-            utils.NovaScenario.class_init(kw)
+            users_endpoints = [dict(zip(temp_keys, temp_keys))]
+            utils.NovaScenario.clients = butils._create_openstack_clients(
+                                                users_endpoints, temp_keys)[0]
 
             with mock.patch(self.sleep):
                 # NOTE(boden): verify failed server cleanup
@@ -248,12 +247,10 @@ class NovaScenarioTestCase(test.TestCase):
             fake_nova = FakeNovaClient()
             fc.get_nova_client = lambda: fake_nova
 
-            admin_keys = ["admin_username", "admin_password",
-                          "admin_tenant_name", "uri"]
             temp_keys = ["username", "password", "tenant_name", "uri"]
-            kw = dict(zip(admin_keys, admin_keys))
-            kw["temp_users"] = [dict(zip(temp_keys, temp_keys))]
-            utils.NovaScenario.class_init(kw)
+            users_endpoints = [dict(zip(temp_keys, temp_keys))]
+            utils.NovaScenario.clients = butils._create_openstack_clients(
+                                                users_endpoints, temp_keys)[0]
 
             # NOTE(boden): verify active server cleanup
             with mock.patch(self.sleep):
@@ -279,12 +276,13 @@ class NovaScenarioTestCase(test.TestCase):
                     fsm.create = lambda name, iid, fid: fake_server
                     fake_nova.servers = fsm
 
-                    admin_keys = ["admin_username", "admin_password",
-                                  "admin_tenant_name", "uri"]
-                    temp_keys = ["username", "password", "tenant_name", "uri"]
-                    kw = dict(zip(admin_keys, admin_keys))
-                    kw["temp_users"] = [dict(zip(temp_keys, temp_keys))]
-                    utils.NovaScenario.class_init(kw)
+                    temp_keys = ["username", "password",
+                                 "tenant_name", "uri"]
+                    users_endpoints = [dict(zip(temp_keys, temp_keys))]
+                    utils.NovaScenario.clients = butils.\
+                        _create_openstack_clients(users_endpoints,
+                                                  temp_keys)[0]
+
                     with mock.patch(self.sleep):
                         utils.NovaScenario._boot_server("s1", "i1", 1)
                         utils.NovaScenario._create_image(fake_server)
