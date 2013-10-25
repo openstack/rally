@@ -33,7 +33,7 @@ class FakeKeystone(object):
         return True
 
 
-class OSClientsTestCase(test.NoDBTestCase):
+class OSClientsTestCase(test.TestCase):
 
     def _get_auth_params(self):
         args = ['user', 'pass', 'tenant', 'http://auth_url']

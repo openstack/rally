@@ -18,7 +18,7 @@ from rally.benchmark import config
 from rally import test
 
 
-class CloudConfigManagerTestCase(test.NoDBTestCase):
+class CloudConfigManagerTestCase(test.TestCase):
 
     def setUp(self):
         super(CloudConfigManagerTestCase, self).setUp()

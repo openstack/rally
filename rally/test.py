@@ -30,23 +30,13 @@ class DatabaseFixture(config.Config):
 
 
 class TestCase(test.BaseTestCase):
-    """Test case base class for all unit tests.
+    """Test case base class for all unit tests."""
+    pass
 
-    Due to the slowness of DB access, please consider deriving from
-    `NoDBTestCase` first.
-    """
-    USES_DB = True
+
+class DBTestCase(TestCase):
+    """Base class for tests which use DB."""
 
     def setUp(self):
         super(TestCase, self).setUp()
-        if self.USES_DB:
-            self.useFixture(DatabaseFixture())
-
-
-class NoDBTestCase(TestCase):
-    """`NoDBTestCase` differs from TestCase in that it doesn't create DB.
-
-    This makes tests run significantly faster. If possible, all new tests
-    should derive from this class.
-    """
-    USES_DB = False
+        self.useFixture(DatabaseFixture())

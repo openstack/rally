@@ -22,7 +22,7 @@ from rally import exceptions
 from rally import test
 
 
-class EngineFactoryTestCase(test.NoDBTestCase):
+class EngineFactoryTestCase(test.TestCase):
 
     def test_get_engine_not_found(self):
         self.assertRaises(exceptions.NoSuchEngine,

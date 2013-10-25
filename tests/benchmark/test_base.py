@@ -20,7 +20,7 @@ from rally import exceptions
 from rally import test
 
 
-class ScenarioTestCase(test.NoDBTestCase):
+class ScenarioTestCase(test.TestCase):
 
     def test_register(self):
         with mock.patch("rally.benchmark.base.utils") as mock_utils:

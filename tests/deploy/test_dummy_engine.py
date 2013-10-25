@@ -22,7 +22,7 @@ from rally.deploy.engines import dummy_engine
 from rally import test
 
 
-class TestDummyDeployEngine(test.NoDBTestCase):
+class TestDummyDeployEngine(test.TestCase):
 
     def test_dummy_egnine_init(self):
         dummy_engine.DummyEngine(mock.MagicMock(), {})

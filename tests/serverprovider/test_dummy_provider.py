@@ -20,7 +20,7 @@ from rally import test
 ProviderFactory = serverprovider.ProviderFactory
 
 
-class DummyProviderTestCase(test.NoDBTestCase):
+class DummyProviderTestCase(test.TestCase):
 
     def test_create_vms(self):
         config = {'name': 'DummyProvider',

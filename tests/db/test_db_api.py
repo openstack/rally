@@ -23,7 +23,7 @@ from rally import exceptions
 from rally import test
 
 
-class TasksTestCase(test.TestCase):
+class TasksTestCase(test.DBTestCase):
 
     def _get_task(self, uuid):
         return db.task_get_by_uuid(uuid)

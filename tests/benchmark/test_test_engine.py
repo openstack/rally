@@ -25,7 +25,7 @@ from rally import test
 from tests.benchmark.scenarios.nova import test_utils
 
 
-class TestEngineTestCase(test.NoDBTestCase):
+class TestEngineTestCase(test.TestCase):
 
     def setUp(self):
         super(TestEngineTestCase, self).setUp()

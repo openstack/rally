@@ -21,7 +21,7 @@ from rally.orchestrator import api
 from rally import test
 
 
-class OrchestratorTestCase(test.NoDBTestCase):
+class OrchestratorTestCase(test.TestCase):
 
     def test_start_task(self):
         config = {'deploy': {'name': 'test'}, 'tests': {}}

@@ -53,7 +53,7 @@ class FakeTimer(rally_utils.Timer):
         return 10
 
 
-class ScenarioTestCase(test.NoDBTestCase):
+class ScenarioTestCase(test.TestCase):
 
     def setUp(self):
         super(ScenarioTestCase, self).setUp()
@@ -213,7 +213,7 @@ def test_dummy_timeout():
     time.sleep(1.1)
 
 
-class VerifierTestCase(test.NoDBTestCase):
+class VerifierTestCase(test.TestCase):
 
     def setUp(self):
         super(VerifierTestCase, self).setUp()

@@ -20,7 +20,7 @@ from rally import test
 from tests.benchmark.scenarios.nova import test_utils
 
 
-class NovaServersTestCase(test.NoDBTestCase):
+class NovaServersTestCase(test.TestCase):
 
     def _verify_boot_server(self, assert_delete=False):
         fake_server = object()

@@ -192,7 +192,7 @@ class FakeClients(object):
         return "cinder"
 
 
-class NovaScenarioTestCase(test.NoDBTestCase):
+class NovaScenarioTestCase(test.TestCase):
 
     def setUp(self):
         super(NovaScenarioTestCase, self).setUp()

@@ -22,7 +22,7 @@ from rally import test
 ProviderFactory = serverprovider.ProviderFactory
 
 
-class ProviderTestCase(test.NoDBTestCase):
+class ProviderTestCase(test.TestCase):
 
     def test_get_provider_not_found(self):
         self.assertRaises(exceptions.NoSuchVMProvider,
@@ -73,7 +73,7 @@ class ProviderTestCase(test.NoDBTestCase):
         self.assertRaises(NotImplementedError, provider.destroy_image, None)
 
 
-class ServerDTOTestCase(test.NoDBTestCase):
+class ServerDTOTestCase(test.TestCase):
 
     def test_init_server_dto(self):
         vals = ['uuid', '192.168.1.1', 'admin', 'some_key', 'pwd']
@@ -83,7 +83,7 @@ class ServerDTOTestCase(test.NoDBTestCase):
             self.assertEqual(getattr(server, k), v)
 
 
-class ImageDTOTestCase(test.NoDBTestCase):
+class ImageDTOTestCase(test.TestCase):
     def test_init_image_dto(self):
         vals = ['uuid', 'qcow2', 'bare']
         keys = ['uuid', 'image_format', 'container_format']

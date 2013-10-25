@@ -28,7 +28,7 @@ from rally import test
 from rally import utils
 
 
-class ImmutableMixinTestCase(test.NoDBTestCase):
+class ImmutableMixinTestCase(test.TestCase):
 
     def test_without_base_values(self):
         im = utils.ImmutableMixin()
@@ -48,7 +48,7 @@ class ImmutableMixinTestCase(test.NoDBTestCase):
         self.assertEqual(a.test, 'test')
 
 
-class EnumMixinTestCase(test.NoDBTestCase):
+class EnumMixinTestCase(test.TestCase):
 
     def test_enum_mix_in(self):
 
@@ -60,7 +60,7 @@ class EnumMixinTestCase(test.NoDBTestCase):
         self.assertEqual(set(list(Foo())), set([10, 20, "2000"]))
 
 
-class StdIOCaptureTestCase(test.NoDBTestCase):
+class StdIOCaptureTestCase(test.TestCase):
 
     def test_stdout_capture(self):
         stdout = sys.stdout
@@ -83,7 +83,7 @@ class StdIOCaptureTestCase(test.NoDBTestCase):
         self.assertEqual(stderr, sys.stderr)
 
 
-class TimerTestCase(test.NoDBTestCase):
+class TimerTestCase(test.TestCase):
 
     def test_timer_duration(self):
         start_time = time.time()
@@ -107,7 +107,7 @@ class TimerTestCase(test.NoDBTestCase):
         self.assertEqual(timer.error[0], type(Exception()))
 
 
-class IterSubclassesTestCase(test.NoDBTestCase):
+class IterSubclassesTestCase(test.TestCase):
 
     def test_itersubclasses(self):
         class A(object):
@@ -125,7 +125,7 @@ class IterSubclassesTestCase(test.NoDBTestCase):
         self.assertEqual([B, C, D], list(utils.itersubclasses(A)))
 
 
-class ImportModulesTestCase(test.NoDBTestCase):
+class ImportModulesTestCase(test.TestCase):
     def test_try_append_module_into_sys_modules(self):
         modules = {}
         utils.try_append_module('rally.version', modules)
@@ -144,7 +144,7 @@ class ImportModulesTestCase(test.NoDBTestCase):
         self.assertTrue('tests.fixtures.import.package.b' in sys.modules)
 
 
-class WaitForTestCase(test.NoDBTestCase):
+class WaitForTestCase(test.TestCase):
 
     def test_wait_for(self):
 
@@ -173,7 +173,7 @@ class WaitForTestCase(test.NoDBTestCase):
                           object(), fake_checker_false, fake_updater, 0.3, 0.1)
 
 
-class LogTestCase(test.NoDBTestCase):
+class LogTestCase(test.TestCase):
 
     def test_log_method(self):
         mock_log = mock.MagicMock()
