@@ -25,9 +25,9 @@ class LxcContainerTestCase(test.BaseTestCase):
 
     def setUp(self):
         super(LxcContainerTestCase, self).setUp()
-        self.container = lxc.LxcContainer('user', 'host',
-                                          {'ip': '1.2.3.4/24',
-                                           'name': 'name'})
+        self.server = mock.MagicMock()
+        self.container = lxc.LxcContainer(self.server, {'ip': '1.2.3.4/24',
+                                                        'name': 'name'})
 
     def test_container_construct(self):
         expected_config = {'network_bridge': 'br0', 'name': 'name',
@@ -35,66 +35,51 @@ class LxcContainerTestCase(test.BaseTestCase):
         self.assertEqual(self.container.config, expected_config)
 
     def test_container_create(self):
-        with mock.patch('rally.serverprovider.providers.lxc.sshutils') as ssh:
-            self.container.create('ubuntu')
-        expected = [
-            mock.call.execute_command('user', 'host', ['lxc-create',
-                                                       '-n', 'name',
-                                                       '-t', 'ubuntu'])]
-        self.assertEqual(ssh.mock_calls, expected)
+        self.container.create('ubuntu')
+        expected = [mock.call.ssh.execute('lxc-create',
+                                          '-n', 'name',
+                                          '-t', 'ubuntu')]
+        self.assertEqual(expected, self.server.mock_calls)
 
     def test_container_clone(self):
-        with mock.patch('rally.serverprovider.providers.lxc.sshutils') as ssh:
-            self.container.clone('src')
-        expected = [
-            mock.call.execute_command('user', 'host',
-                                      ['lxc-clone',
-                                       '-o', 'src',
-                                       '-n', 'name'])]
-        self.assertEqual(expected, ssh.mock_calls)
+        self.container.clone('src')
+        expected = [mock.call.ssh.execute('lxc-clone',
+                                          '-o', 'src',
+                                          '-n', 'name')]
+        self.assertEqual(expected, self.server.mock_calls)
 
     def test_container_configure(self):
-        with mock.patch('rally.serverprovider.providers.lxc.sshutils') as ssh:
-            self.container.configure()
-        filename = ssh.mock_calls[0][1][2]
+        self.container.configure()
+        filename = self.server.mock_calls[0][1][0]
         expected = [
-            mock.call.upload_file('user', 'host', filename,
-                                  '/var/lib/lxc/name/config'),
-            mock.call.execute_command('user', 'host',
-                                      ['mkdir',
-                                       '/var/lib/lxc/name/rootfs/root/.ssh']),
-            mock.call.execute_command('user', 'host',
-                                      ['cp', '~/.ssh/authorized_keys',
-                                       '/var/lib/lxc/name/rootfs/root/.ssh/'])
+            mock.call.ssh.upload(filename, '/var/lib/lxc/name/config'),
+            mock.call.ssh.execute('mkdir',
+                                  '/var/lib/lxc/name/rootfs/root/.ssh'),
+            mock.call.ssh.execute('cp', '~/.ssh/authorized_keys',
+                                  '/var/lib/lxc/name/rootfs/root/.ssh/')
         ]
-        self.assertEqual(ssh.mock_calls, expected)
+        self.assertEqual(expected, self.server.mock_calls)
 
     def test_container_start(self):
-        with mock.patch('rally.serverprovider.providers.lxc.sshutils') as ssh:
-            self.container.start()
+        self.container.start()
         expected = [
-            mock.call.execute_command('user', 'host',
-                                      ['lxc-start', '-d', '-n', 'name'])
+            mock.call.ssh.execute('lxc-start', '-d', '-n', 'name')
         ]
-        self.assertEqual(ssh.mock_calls, expected)
+        self.assertEqual(expected, self.server.mock_calls)
 
     def test_container_stop(self):
-        with mock.patch('rally.serverprovider.providers.lxc.sshutils') as ssh:
-            self.container.stop()
+        self.container.stop()
         expected = [
-            mock.call.execute_command('user', 'host',
-                                      ['lxc-stop', '-n', 'name'])
+            mock.call.ssh.execute('lxc-stop', '-n', 'name')
         ]
-        self.assertEqual(ssh.mock_calls, expected)
+        self.assertEqual(expected, self.server.mock_calls)
 
     def test_container_destroy(self):
-        with mock.patch('rally.serverprovider.providers.lxc.sshutils') as ssh:
-            self.container.destroy()
+        self.container.destroy()
         expected = [
-            mock.call.execute_command('user', 'host',
-                                      ['lxc-destroy', '-n', 'name'])
+            mock.call.ssh.execute('lxc-destroy', '-n', 'name')
         ]
-        self.assertEqual(ssh.mock_calls, expected)
+        self.assertEqual(expected, self.server.mock_calls)
 
 
 class FakeContainer(lxc.LxcContainer):
@@ -134,20 +119,29 @@ class LxcProviderTestCase(test.BaseTestCase):
         self.provider = lxc.provider.ProviderFactory.get_provider(
             self.config, {"uuid": "fake-uuid"})
 
+        self.h1 = mock.MagicMock()
+        self.h2 = mock.MagicMock()
+        self.fake_provider = mock.MagicMock()
+        self.fake_provider.create_vms = mock.MagicMock(
+                                            return_value=[self.h1, self.h2])
+
     def test_lxc_install(self):
-        with mock.patch('rally.serverprovider.providers.lxc.sshutils') as ssh:
+
+        with mock.patch('rally.serverprovider.providers.lxc.provider') as p:
+            p.ProviderFactory.get_provider =\
+                mock.MagicMock(return_value=self.fake_provider)
             self.provider.lxc_install()
         expected_script = os.path.abspath('rally/serverprovider/providers/'
                                           'lxc/lxc-install.sh')
-        expected = [
-            mock.call.execute_script('root', 'host1.net', expected_script),
-            mock.call.execute_script('root', 'host2.net', expected_script)
-        ]
-        self.assertEqual(ssh.mock_calls, expected)
+        expected = [mock.call.ssh.execute_script(expected_script)]
+        self.assertEqual(expected, self.h1.mock_calls)
+        self.assertEqual(expected, self.h2.mock_calls)
 
     def test_lxc_create_destroy_vms(self):
         mod = 'rally.serverprovider.providers.lxc.'
-        with mock.patch(mod + 'sshutils'):
+        with mock.patch(mod + 'provider') as p:
+            p.ProviderFactory.get_provider =\
+                mock.MagicMock(return_value=self.fake_provider)
             with mock.patch(mod + 'LxcContainer', new=FakeContainer):
                 self.provider.create_vms()
                 self.provider.destroy_vms()
@@ -171,6 +165,12 @@ class LxcProviderTestCase(test.BaseTestCase):
 class LxcProviderStaticIpTestCase(test.BaseTestCase):
 
     def test_static_ips(self):
+
+        self.h1 = mock.MagicMock()
+        self.h2 = mock.MagicMock()
+        self.fake_provider = mock.MagicMock()
+        self.fake_provider.create_vms = mock.MagicMock(
+                                            return_value=[self.h1, self.h2])
         config = {
             'name': 'LxcProvider',
             'containers_per_host': 3,
@@ -184,7 +184,9 @@ class LxcProviderStaticIpTestCase(test.BaseTestCase):
             config, {'uuid': 'fake-task-uuid'})
 
         mod = 'rally.serverprovider.providers.lxc.'
-        with mock.patch(mod + 'sshutils'):
+        with mock.patch(mod + 'provider') as p:
+            p.ProviderFactory.get_provider =\
+                mock.MagicMock(return_value=self.fake_provider)
             with mock.patch(mod + 'LxcContainer', new=FakeContainer):
                 provider.create_vms()
 

@@ -13,7 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import eventlet
 import netaddr
 import os
 import tempfile
@@ -22,7 +21,6 @@ import uuid
 from rally.openstack.common.gettextutils import _  # noqa
 from rally.openstack.common import log as logging
 from rally.serverprovider import provider
-from rally import sshutils
 from rally import utils
 
 LOG = logging.getLogger(__name__)
@@ -31,16 +29,15 @@ LOG = logging.getLogger(__name__)
 class LxcContainer(object):
     path = '/var/lib/lxc/%s/'
 
-    def __init__(self, user, host, config):
-        self.user = user
-        self.host = host
+    def __init__(self, server, config):
+        self.server = server
         self.config = {'network_bridge': 'br0', 'dhcp': ''}
         self.config.update(config)
         if self.config['ip'] == 'dhcp':
             self.config['dhcp'] = '#'
 
     def ssh(self, *args):
-        return sshutils.execute_command(self.user, self.host, list(args))
+        return self.server.ssh.execute(*args)
 
     def configure(self):
         template_filename = os.path.join(os.path.dirname(__file__),
@@ -50,8 +47,9 @@ class LxcContainer(object):
         fd, config_path = tempfile.mkstemp()
         with os.fdopen(fd, 'w') as config_file:
             config_file.write(template.format(**self.config))
-        sshutils.upload_file(self.user, self.host, config_path,
-                             self.path % self.config['name'] + 'config')
+        self.server.ssh.upload(config_path,
+                               self.path % self.config['name'] +
+                               'config')
         self.ssh('mkdir', self.path % self.config['name'] + 'rootfs/root/.ssh')
         self.ssh('cp', '~/.ssh/authorized_keys',
                  self.path % self.config['name'] + 'rootfs/root/.ssh/')
@@ -71,16 +69,6 @@ class LxcContainer(object):
 
     def destroy(self):
         self.ssh('lxc-destroy', '-n', self.config['name'])
-
-    def wait_for_ssh(self, timeout=10):
-        with eventlet.timeout.Timeout(timeout):
-            while True:
-                try:
-                    return sshutils.execute_command(
-                        'root', self.config['ip'].split('/')[0], ['uname'])
-                except sshutils.SSHException as e:
-                    LOG.debug('ssh is still unavailable.' + repr(e))
-                    eventlet.sleep(3)
 
 
 def ipgen(ip, prefixlen):
@@ -125,7 +113,7 @@ class LxcProvider(provider.ProviderFactory):
         script = os.path.abspath(os.path.join(os.path.dirname(__file__),
                                               'lxc', 'lxc-install.sh'))
         for conn in self.connections:
-            sshutils.execute_script(conn.user, conn.ip, script)
+            conn.ssh.execute_script(script)
 
     @utils.log_task_wrapper(LOG.info, _("Create lxc containers"))
     def create_vms(self):
@@ -134,30 +122,28 @@ class LxcProvider(provider.ProviderFactory):
                    self.config.get('ipv4_prefixlen', None))
         for conn in self.connections:
             name = str(uuid.uuid4())
-            base_container = LxcContainer(conn.user, conn.ip,
-                                          {'name': name,
-                                           'ip': ip.next()})
+            base_container = LxcContainer(conn, {'name': name,
+                                                 'ip': ip.next()})
             base_container.create(self.config.get('distribution', 'ubuntu'))
             self.containers.append(base_container)
             for i in range(self.config['containers_per_host'] - 1):
                 name = str(uuid.uuid4())
-                container = LxcContainer(conn.user, conn.ip,
-                                         {'name': name,
-                                          'ip': ip.next()})
+                container = LxcContainer(conn, {'name': name,
+                                                'ip': ip.next()})
                 container.clone(base_container.config['name'])
                 self.containers.append(container)
         for container in self.containers:
             container.configure()
             container.start()
 
-        dtos = []
+        servers = []
         for c in self.containers:
-            c.wait_for_ssh()
-            dto = provider.ServerDTO(self.config['name'],
-                                     c.config['ip'].split('/')[0],
-                                     'root', None, None)
-            dtos.append(dto)
-        return dtos
+            server = provider.ServerDTO(self.config['name'],
+                                        c.config['ip'].split('/')[0],
+                                        'root', None, None)
+            server.ssh.wait()
+            servers.append(server)
+        return servers
 
     @utils.log_task_wrapper(LOG.info, _("Destroy lxc containers"))
     def destroy_vms(self):
