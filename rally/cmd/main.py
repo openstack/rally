@@ -108,9 +108,7 @@ class TaskCommands(object):
             print(_("Wrong value for --pretty=%s") % pretty)
 
     def list(self):
-        """Get list of all tasks
-        Returns list of active tasks
-        """
+        """Print a list of all tasks."""
 
         headers = ['uuid', 'created_at', 'status', 'failed']
         table = prettytable.PrettyTable(headers)

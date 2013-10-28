@@ -42,27 +42,28 @@ def db_drop():
     models.drop_db()
 
 
-def model_query(model, session=None, read_deleted=False, **kwargs):
+def model_query(model, session=None):
+    """The helper method to create query.
+
+    :param model: The instance of
+                  :class:`rally.db.sqlalchemy.models.RallyBase` to
+                  request it.
+    :param session: Reuse the session object or get new one if it is
+                    None.
+    :returns: The query object.
+    :raises: :class:`Exception` when the model is not a sublcass of
+             :class:`rally.db.sqlalchemy.models.RallyBase`.
+    """
     session = session or db_session.get_session()
     query = session.query(model)
-
-    if read_deleted is None:
-        return query
 
     def issubclassof_rally_base(obj):
         return isinstance(obj, type) and issubclass(obj, models.RallyBase)
 
-    base_model = model
-    if not issubclassof_rally_base(base_model):
-        base_model = kwargs.get('base_model', None)
-        if not issubclassof_rally_base(base_model):
-            raise Exception(_("model or base_model parameter should be "
-                              "subclass of RallyBase"))
+    if not issubclassof_rally_base(model):
+        raise Exception(_("The model should be a subclass of RallyBase"))
 
-    default_deleted_value = base_model.__mapper__.c.deleted.default.arg
-    if read_deleted:
-        return query.filter(base_model.deleted != default_deleted_value)
-    return query.filter(base_model.deleted == default_deleted_value)
+    return query
 
 
 def _task_get_by_uuid(uuid, session=None):
@@ -101,9 +102,8 @@ def task_update(uuid, values):
     return task
 
 
-def task_list(status=None, active=True):
-    read_deleted = None if active is None else not active
-    query = model_query(models.Task, read_deleted=read_deleted)
+def task_list(status=None):
+    query = model_query(models.Task)
     if status is not None:
         query = query.filter_by(status=status)
     return query.all()
@@ -112,7 +112,7 @@ def task_list(status=None, active=True):
 def task_delete(uuid):
     count = model_query(models.Task).\
                 filter_by(uuid=uuid).\
-                soft_delete()
+                delete(synchronize_session=False)
     if not count:
         raise exceptions.TaskNotFound(uuid=uuid)
 

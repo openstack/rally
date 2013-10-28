@@ -89,15 +89,15 @@ def task_update(uuid, values):
     return IMPL.task_update(uuid, values)
 
 
-def task_list(status=None, active=True):
-    """Get list of tasks.
-    :param status: if None returns any task with any status.
-    :param active: if None returns all tasks,
-                   if True returns only active task,
-                   if False returns only completed tasks.
-    Retruns list of dicts with tasks data.
+def task_list(status=None):
+    """Get a list of tasks.
+
+    :param status: Task status to filter the returned list on. If set to
+                   None, all the tasks will be returned.
+
+    :returns: A list of dicts with data on the tasks.
     """
-    return IMPL.task_list(status, active)
+    return IMPL.task_list(status=status)
 
 
 def task_delete(uuid):

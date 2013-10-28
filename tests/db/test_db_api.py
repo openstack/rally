@@ -78,8 +78,8 @@ class TasksTestCase(test.DBTestCase):
 
         task_all = sorted(task_init + task_finished)
 
-        def get_uuids(status, active=True):
-            tasks = db.task_list(status=status, active=active)
+        def get_uuids(status):
+            tasks = db.task_list(status=status)
             return sorted(task['uuid'] for task in tasks)
 
         self.assertEqual(task_all, get_uuids(None))
@@ -89,9 +89,8 @@ class TasksTestCase(test.DBTestCase):
 
         deleted_task_uuid = task_finished.pop()
         db.task_delete(deleted_task_uuid)
+        self.assertEqual(task_init, get_uuids(INIT))
         self.assertEqual(sorted(task_finished), get_uuids(FINISHED))
-        self.assertEqual(task_all, get_uuids(None, active=None))
-        self.assertEqual([deleted_task_uuid], get_uuids(None, active=False))
 
     def test_task_delete(self):
         task1, task2 = self._create_task()['uuid'], self._create_task()['uuid']

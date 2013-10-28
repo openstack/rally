@@ -32,8 +32,7 @@ def UUID():
     return str(uuid.uuid4())
 
 
-class RallyBase(models.SoftDeleteMixin,
-                models.TimestampMixin,
+class RallyBase(models.TimestampMixin,
                 models.ModelBase):
     metadata = None
 
