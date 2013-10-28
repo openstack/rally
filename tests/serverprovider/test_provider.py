@@ -23,6 +23,31 @@ from rally import test
 ProviderFactory = serverprovider.ProviderFactory
 
 
+class ProviderMixIn(object):
+    def create_vms(self, image_uuid=None, amount=1):
+        pass
+
+    def destroy_vms(self, vm_uuids):
+        pass
+
+
+class ProviderA(ProviderMixIn, ProviderFactory):
+    def __init__(self, config):
+        pass
+
+
+class ProviderB(ProviderMixIn, ProviderFactory):
+    def __init__(self, config):
+        pass
+
+
+class ProviderC(ProviderB):
+    def __init__(self, config):
+        pass
+
+FAKE_PROVIDERS = [ProviderA, ProviderB, ProviderC]
+
+
 class ProviderTestCase(test.TestCase):
 
     def test_get_provider_not_found(self):
@@ -30,37 +55,15 @@ class ProviderTestCase(test.TestCase):
                           ProviderFactory.get_provider,
                           {"name": "fail"}, None)
 
-    def _create_fake_providers(self):
-        class ProviderMixIn(object):
-            def create_vms(self, image_uuid=None, amount=1):
-                pass
-
-            def destroy_vms(self, vm_uuids):
-                pass
-
-        class ProviderA(ProviderMixIn, ProviderFactory):
-            def __init__(self, config):
-                pass
-
-        class ProviderB(ProviderMixIn, ProviderFactory):
-            def __init__(self, config):
-                pass
-
-        class ProviderC(ProviderB):
-            def __init__(self, config):
-                pass
-
-        return [ProviderA, ProviderB, ProviderC]
-
     def test_get_provider(self):
-        for p in self._create_fake_providers():
+        for p in FAKE_PROVIDERS:
                 p_inst = ProviderFactory.get_provider({"name": p.__name__},
                                                       None)
                 # TODO(boris-42): make it work through assertIsInstance
                 self.assertEqual(str(type(p_inst)), str(p))
 
     def test_get_available_providers(self):
-        providers = set([p.__name__ for p in self._create_fake_providers()])
+        providers = set([p.__name__ for p in FAKE_PROVIDERS])
         real_providers = set(ProviderFactory.get_available_providers())
         self.assertEqual(providers & real_providers, providers)
 
@@ -68,7 +71,7 @@ class ProviderTestCase(test.TestCase):
         self.assertRaises(TypeError, ProviderFactory)
 
     def test_image_methods_raise_not_implemented(self):
-        provider = self._create_fake_providers()[0](None)
+        provider = FAKE_PROVIDERS[0](None)
         self.assertRaises(NotImplementedError,
                           provider.upload_image, None, None, None)
         self.assertRaises(NotImplementedError, provider.destroy_image, None)
