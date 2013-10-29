@@ -13,9 +13,15 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import jsonschema
 import random
 
 from rally.benchmark.scenarios.nova import utils
+from rally.benchmark.scenarios import utils as scenario_utils
+from rally import exceptions as rally_exceptions
+
+ACTION_BUILDER = scenario_utils.ActionBuilder(
+        ['hard_reboot', 'soft_reboot', 'stop_start'])
 
 
 class NovaServers(utils.NovaScenario):
@@ -27,6 +33,23 @@ class NovaServers(utils.NovaScenario):
 
         server = cls._boot_server(server_name, image_id, flavor_id, **kwargs)
         cls._delete_server(server)
+
+    @classmethod
+    def boot_and_bounce_server(cls, context, image_id, flavor_id, **kwargs):
+        """Tests booting a server then performing stop/start or hard/soft
+        reboot a number of times.
+        """
+        actions = kwargs.get('actions', [])
+        try:
+            ACTION_BUILDER.validate(actions)
+        except jsonschema.exceptions.ValidationError as error:
+            raise rally_exceptions.InvalidConfigException(
+                "Invalid server actions configuration \'%(actions)s\' due to: "
+                "%(error)s" % {'actions': str(actions), 'error': str(error)})
+        server = cls._boot_server(cls._generate_random_name(16),
+                                  image_id, flavor_id, **kwargs)
+        for action in ACTION_BUILDER.build_actions(actions, server):
+            action()
 
     @classmethod
     def snapshot_server(cls, context, image_id, flavor_id, **kwargs):
@@ -49,3 +72,25 @@ class NovaServers(utils.NovaScenario):
             random_nic = random.choice(cls.nova.networks.list())
             kwargs['nics'] = [{'net-id': random_nic.id}]
         cls._boot_server(server_name, image_id, flavor_id, **kwargs)
+
+    @classmethod
+    def _stop_and_start_server(cls, server):
+        """Stop and then start the given server.
+
+        A stop will be issued on the given server upon which time
+        this method will wait for the server to become 'SHUTOFF'.
+        Once the server is SHUTOFF a start will be issued and this
+        method will wait for the server to become 'ACTIVE' again.
+
+        :param server: The server to stop and then start.
+
+        """
+        cls._stop_server(server)
+        cls._start_server(server)
+
+ACTION_BUILDER.bind_action('hard_reboot',
+                           utils.NovaScenario._reboot_server, soft=False)
+ACTION_BUILDER.bind_action('soft_reboot',
+                           utils.NovaScenario._reboot_server, soft=True)
+ACTION_BUILDER.bind_action('stop_start',
+                           NovaServers._stop_and_start_server)

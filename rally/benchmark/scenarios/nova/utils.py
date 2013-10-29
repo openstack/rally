@@ -66,6 +66,51 @@ class NovaScenario(base.Scenario):
         return server
 
     @classmethod
+    def _reboot_server(cls, server, soft=True):
+        """Reboots the given server using hard or soft reboot.
+
+        A reboot will be issued on the given server upon which time
+        this method will wait for the server to become active.
+
+        :param server: The server to reboot.
+        :param soft: False if hard reboot should be used, otherwise
+        soft reboot is done (default).
+        """
+        server.reboot(reboot_type=("SOFT" if soft else "HARD"))
+        time.sleep(5)
+        utils.wait_for(server, is_ready=_resource_is("ACTIVE"),
+                       update_resource=_get_from_manager,
+                       timeout=600, check_interval=3)
+
+    @classmethod
+    def _start_server(cls, server):
+        """Starts the given server.
+
+        A start will be issued for the given server upon which time
+        this method will wait for it to become ACTIVE.
+
+        :param server: The server to start and wait to become ACTIVE.
+        """
+        server.start()
+        utils.wait_for(server, is_ready=_resource_is("ACTIVE"),
+                       update_resource=_get_from_manager,
+                       timeout=600, check_interval=2)
+
+    @classmethod
+    def _stop_server(cls, server):
+        """Stop the given server.
+
+        Issues a stop on the given server and waits for the server
+        to become SHUTOFF.
+
+        :param server: The server to stop.
+        """
+        server.stop()
+        utils.wait_for(server, is_ready=_resource_is("SHUTOFF"),
+                       update_resource=_get_from_manager,
+                       timeout=600, check_interval=2)
+
+    @classmethod
     def _suspend_server(cls, server):
         """Suspends the given server.
 
