@@ -47,12 +47,16 @@ def _run_scenario_loop(args):
     #                from a predefined set to act from different users.
     cls.clients = random.choice(__openstack_clients__)
 
+    cls.idle_time = 0
+
     try:
         with utils.Timer() as timer:
             getattr(cls, method_name)(context, **kwargs)
     except Exception as e:
-        return {"time": timer.duration(), "error": _format_exc(e)}
-    return {"time": timer.duration(), "error": None}
+        return {"time": timer.duration() - cls.idle_time,
+                "idle_time": cls.idle_time, "error": _format_exc(e)}
+    return {"time": timer.duration() - cls.idle_time,
+            "idle_time": cls.idle_time, "error": None}
 
     # NOTE(msdubov): Cleaning up after each scenario loop enables to delete
     #                the resources of the user the scenario was run from.

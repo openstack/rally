@@ -14,6 +14,8 @@
 #    under the License.
 
 import itertools
+import random
+import time
 
 from rally import exceptions
 from rally import utils
@@ -74,3 +76,22 @@ class Scenario(object):
             after test scneario will be finished. And it should free all
             allocated resources.
         """
+
+    @classmethod
+    def sleep_between(cls, min_sleep, max_sleep):
+        """Performs a time.sleep() call for a random amount of seconds.
+
+        The exact time is chosen uniformly randomly from the interval
+        [min_sleep; max_sleep). The method also updates the idle_time class
+        variable to take into account the overall time spent on sleeping.
+
+        :param min_sleep: Minimum sleep time in seconds (non-negative)
+        :param max_sleep: Maximum sleep time in seconds (non-negative)
+        """
+        if not 0 <= min_sleep <= max_sleep:
+            raise exceptions.InvalidArgumentsException(
+                                        message="0 <= min_sleep <= max_sleep")
+
+        sleep_time = random.uniform(min_sleep, max_sleep)
+        time.sleep(sleep_time)
+        cls.idle_time += sleep_time

@@ -34,6 +34,7 @@ class NovaServersTestCase(test.TestCase):
         self.start = "%s._start_server" % self.scenario
         self.stop = "%s._stop_server" % self.scenario
         self.stop_start = "%s._stop_and_start_server" % self.scenario
+        self.sleep_between = "%s.sleep_between" % self.scenario
         self.random_choice = "rally.benchmark.scenarios.nova.servers."\
             "random.choice"
         self.osclients = "rally.benchmark.utils.osclients"
@@ -43,12 +44,15 @@ class NovaServersTestCase(test.TestCase):
         with mock.patch(self.boot) as mock_boot:
             with mock.patch(self.delete) as mock_delete:
                 with mock.patch(self.random_name) as mock_random_name:
-                    mock_boot.return_value = fake_server
-                    mock_random_name.return_value = "random_name"
-                    servers.NovaServers.boot_and_delete_server({}, "img", 0,
-                                                               fakearg="f")
+                    with mock.patch(self.sleep_between) as mock_sleep:
+                        mock_boot.return_value = fake_server
+                        mock_random_name.return_value = "random_name"
+                        servers.NovaServers.boot_and_delete_server({}, "img",
+                                                                   0, 10, 20,
+                                                                   fakearg="f")
 
         mock_boot.assert_called_once_with("random_name", "img", 0, fakearg="f")
+        mock_sleep.assert_called_once_with(10, 20)
         mock_delete.assert_called_once_with(fake_server)
 
     def _verify_boot_server(self, nic=None, assert_nic=False):

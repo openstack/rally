@@ -82,6 +82,10 @@ class ImmutableException(RallyException):
     msg_fmt = _("This object is immutable.")
 
 
+class InvalidArgumentsException(RallyException):
+    msg_fmt = _("Invalid arguments: '%(message)s'")
+
+
 class InvalidConfigException(RallyException):
     msg_fmt = _("This config is invalid: `%(message)s`")
 

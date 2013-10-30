@@ -27,11 +27,13 @@ ACTION_BUILDER = scenario_utils.ActionBuilder(
 class NovaServers(utils.NovaScenario):
 
     @classmethod
-    def boot_and_delete_server(cls, context, image_id, flavor_id, **kwargs):
+    def boot_and_delete_server(cls, context, image_id, flavor_id,
+                               min_sleep=0, max_sleep=0, **kwargs):
         """Tests booting and then deleting an image."""
         server_name = cls._generate_random_name(16)
 
         server = cls._boot_server(server_name, image_id, flavor_id, **kwargs)
+        cls.sleep_between(min_sleep, max_sleep)
         cls._delete_server(server)
 
     @classmethod

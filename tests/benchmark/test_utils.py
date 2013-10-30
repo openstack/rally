@@ -95,7 +95,8 @@ class ScenarioTestCase(test.TestCase):
                 results = runner._run_scenario({}, FakeScenario, "do_it", {},
                                                times, 1, 2)
 
-        expected = [{"time": 10, "error": None} for i in range(times)]
+        expected = [{"time": 10, "idle_time": 0, "error": None}
+                    for i in range(times)]
         self.assertEqual(results, expected)
 
     def test_run_scenario_timeout(self):
