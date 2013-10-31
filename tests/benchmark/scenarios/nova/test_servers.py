@@ -16,6 +16,7 @@
 import mock
 
 from rally.benchmark.scenarios.nova import servers
+from rally.benchmark import utils as butils
 from rally import exceptions as rally_exceptions
 from rally import test
 from tests.benchmark.scenarios.nova import test_utils
@@ -33,8 +34,11 @@ class NovaServersTestCase(test.TestCase):
         self.start = "%s._start_server" % self.scenario
         self.stop = "%s._stop_server" % self.scenario
         self.stop_start = "%s._stop_and_start_server" % self.scenario
+        self.random_choice = "rally.benchmark.scenarios.nova.servers."\
+            "random.choice"
+        self.osclients = "rally.benchmark.utils.osclients"
 
-    def _verify_boot_server(self, assert_delete=False):
+    def _verify_boot_and_delete_server(self):
         fake_server = object()
         with mock.patch(self.boot) as mock_boot:
             with mock.patch(self.delete) as mock_delete:
@@ -45,8 +49,41 @@ class NovaServersTestCase(test.TestCase):
                                                                fakearg="f")
 
         mock_boot.assert_called_once_with("random_name", "img", 0, fakearg="f")
-        if assert_delete:
-            mock_delete.assert_called_once_with(fake_server)
+        mock_delete.assert_called_once_with(fake_server)
+
+    def _verify_boot_server(self, nic=None, assert_nic=False):
+        assert_nic = nic or assert_nic
+        kwargs = {'fakearg': 'f'}
+        expected_kwargs = {'fakearg': 'f'}
+
+        with mock.patch(self.osclients) as mock_osclients:
+            fc = test_utils.FakeClients()
+            mock_osclients.Clients.return_value = fc
+            nova = test_utils.FakeNovaClient()
+            fc.get_nova_client = lambda: nova
+
+            temp_keys = ["username", "password", "tenant_name", "uri"]
+            users_endpoints = [dict(zip(temp_keys, temp_keys))]
+            servers.NovaServers.clients = butils._create_openstack_clients(
+                                                users_endpoints, temp_keys)[0]
+
+            with mock.patch(self.boot) as mock_boot:
+                with mock.patch(self.random_name) as mock_random_name:
+                    with mock.patch(self.random_choice) as mock_choice:
+                        mock_boot.return_value = object()
+                        mock_random_name.return_value = "random_name"
+                        if nic:
+                            kwargs['nics'] = nic
+                        if assert_nic:
+                            nova.networks.create('net-1')
+                            network = nova.networks.create('net-2')
+                            mock_choice.return_value = network
+                            expected_kwargs['nics'] = nic or\
+                                [{'net-id': 'net-2'}]
+                        servers.NovaServers.boot_server({}, "img", 0, **kwargs)
+
+        mock_boot.assert_called_once_with("random_name", "img", 0,
+                                          **expected_kwargs)
 
     def test_boot_stop_start(self):
         actions = [{'stop_start': 5}]
@@ -157,10 +194,17 @@ class NovaServersTestCase(test.TestCase):
         self._verify_reboot(soft=False)
 
     def test_boot_and_delete_server(self):
-        self._verify_boot_server(assert_delete=True)
+        self._verify_boot_and_delete_server()
 
-    def test_boot_server(self):
-        self._verify_boot_server()
+    def test_boot_server_no_nics(self):
+        self._verify_boot_server(nic=None, assert_nic=False)
+
+    def test_boot_server_with_nic(self):
+        self._verify_boot_server(nic=[{'net-id': 'net-1'}],
+                                 assert_nic=True)
+
+    def test_boot_server_random_nic(self):
+        self._verify_boot_server(nic=None, assert_nic=True)
 
     def test_snapshot_server(self):
 

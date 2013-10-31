@@ -69,8 +69,10 @@ class NovaServers(utils.NovaScenario):
         """Test VM boot - assumed clean-up is done elsewhere."""
         server_name = cls._generate_random_name(16)
         if 'nics' not in kwargs:
-            random_nic = random.choice(cls.nova.networks.list())
-            kwargs['nics'] = [{'net-id': random_nic.id}]
+            nets = cls.clients["nova"].networks.list()
+            if nets:
+                random_nic = random.choice(nets)
+                kwargs['nics'] = [{'net-id': random_nic.id}]
         cls._boot_server(server_name, image_id, flavor_id, **kwargs)
 
     @classmethod

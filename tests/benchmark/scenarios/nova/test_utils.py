@@ -73,6 +73,10 @@ class FakeUser(FakeResource):
     pass
 
 
+class FakeNetwork(FakeResource):
+    pass
+
+
 class FakeManager(object):
 
     def __init__(self):
@@ -154,6 +158,14 @@ class FakeTenantsManager(FakeManager):
         return FakeTenant(self)
 
 
+class FakeNetworkManager(FakeManager):
+
+    def create(self, net_id):
+        net = FakeNetwork(self)
+        net.id = net_id
+        return self._cache(net)
+
+
 class FakeUsersManager(FakeManager):
 
     def create(self, username, password, email, tenant_id):
@@ -169,6 +181,7 @@ class FakeNovaClient(object):
             self.servers = FakeServerManager()
         self.images = FakeImageManager()
         self.floating_ips = FakeFloatingIPsManager()
+        self.networks = FakeNetworkManager()
 
 
 class FakeKeystoneClient(object):
