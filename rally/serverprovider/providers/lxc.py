@@ -27,60 +27,56 @@ LOG = logging.getLogger(__name__)
 
 
 class LxcContainer(object):
-    path = '/var/lib/lxc/%s/'
 
     def __init__(self, server, config):
-        self.server = server
-        self.config = {'network_bridge': 'br0', 'dhcp': ''}
+        self.path = '/var/lib/lxc/%s/rootfs/'
+        self.host = server
+        self.config = {'network_bridge': 'br0'}
         self.config.update(config)
-        if self.config['ip'] == 'dhcp':
-            self.config['dhcp'] = '#'
+        self.server = provider.ServerDTO('', self.config['ip'].split('/')[0],
+                                         'root', '')
 
-    def ssh(self, *args):
-        return self.server.ssh.execute(*args)
+    def prepare_host(self):
+        script = os.path.abspath(os.path.join(os.path.dirname(__file__),
+                                              'lxc', 'lxc-install.sh'))
+        self.host.ssh.execute_script(script)
 
     def configure(self):
+        path = self.path % self.config['name']
         template_filename = os.path.join(os.path.dirname(__file__),
                                          'lxc',
                                          'container_config_template')
+        configure_script = os.path.join(os.path.dirname(__file__),
+                                        'lxc',
+                                        'configure_container.sh')
         template = open(template_filename, 'r').read()
         fd, config_path = tempfile.mkstemp()
         with os.fdopen(fd, 'w') as config_file:
             config_file.write(template.format(**self.config))
-        self.server.ssh.upload(config_path,
-                               self.path % self.config['name'] +
-                               'config')
-        self.ssh('mkdir', self.path % self.config['name'] + 'rootfs/root/.ssh')
-        self.ssh('cp', '~/.ssh/authorized_keys',
-                 self.path % self.config['name'] + 'rootfs/root/.ssh/')
+        self.host.ssh.upload(config_path, path + '../config')
+        self.host.ssh.upload(configure_script, '/tmp/.rally_cont_conf.sh')
+        self.host.ssh.execute('/bin/sh', '/tmp/.rally_cont_conf.sh', path,
+                              self.config['nameserver'])
         os.unlink(config_path)
 
     def create(self, distribution):
-        self.ssh('lxc-create', '-n', self.config['name'], '-t', distribution)
+        self.host.ssh.execute('lxc-create', '-n', self.config['name'],
+                              '-t', distribution)
+        self.configure()
 
     def clone(self, source):
-        self.ssh('lxc-clone', '-o', source, '-n', self.config['name'])
+        self.host.ssh.execute('lxc-clone', '-o', source, '-n',
+                              self.config['name'])
+        self.configure()
 
     def start(self):
-        self.ssh('lxc-start', '-d', '-n', self.config['name'])
+        self.host.ssh.execute('lxc-start', '-d', '-n', self.config['name'])
 
     def stop(self):
-        self.ssh('lxc-stop', '-n', self.config['name'])
+        self.host.ssh.execute('lxc-stop', '-n', self.config['name'])
 
     def destroy(self):
-        self.ssh('lxc-destroy', '-n', self.config['name'])
-
-
-def ipgen(ip, prefixlen):
-    if ip != 'dhcp':
-        net = netaddr.IPNetwork('%s/%d' % (ip, prefixlen))
-        ip = netaddr.IPAddress(ip)
-        while ip in net:
-            yield '%s/%d' % (ip, prefixlen)
-            ip += 1
-    else:
-        while True:
-            yield ip
+        self.host.ssh.execute('lxc-destroy', '-n', self.config['name'])
 
 
 class LxcProvider(provider.ProviderFactory):
@@ -89,10 +85,14 @@ class LxcProvider(provider.ProviderFactory):
     Sample configuration:
     {
         'name': 'LxcProvider',
-        'network_bridge': 'br0',
         'distribution': 'ubuntu',
-        'ipv4_start_address': '10.0.0.1',
-        'ipv4_prefix_len': '24',
+        'start_ip_address': '10.0.0.10/24',
+        'containers_per_host': 32,
+        'container_config': {
+            'network_bridge': 'br0',
+            'nameserver': '10.0.0.1',
+            'gateway': '10.0.0.1',
+        },
         'host_provider': {
             'name': 'DummyProvider',
             'credentials': ['root@host.net']
@@ -105,48 +105,38 @@ class LxcProvider(provider.ProviderFactory):
         self.config = config
         self.containers = []
 
-    @utils.log_task_wrapper(LOG.info, _("Install lxc on host"))
-    def lxc_install(self):
-        host_provider = provider.ProviderFactory.get_provider(
-            self.config['host_provider'], self.task)
-        self.connections = host_provider.create_vms()
-        script = os.path.abspath(os.path.join(os.path.dirname(__file__),
-                                              'lxc', 'lxc-install.sh'))
-        for conn in self.connections:
-            conn.ssh.execute_script(script)
+    def _next_ip(self):
+        self.ip += 1
+        return '%s/%d' % (self.ip, self.network.prefixlen)
 
-    @utils.log_task_wrapper(LOG.info, _("Create lxc containers"))
+    @utils.log_task_wrapper(LOG.info, _("Create containers on host"))
     def create_vms(self):
-        self.lxc_install()
-        ip = ipgen(self.config.get('ipv4_start_address', 'dhcp'),
-                   self.config.get('ipv4_prefixlen', None))
-        for conn in self.connections:
-            name = str(uuid.uuid4())
-            base_container = LxcContainer(conn, {'name': name,
-                                                 'ip': ip.next()})
-            base_container.create(self.config.get('distribution', 'ubuntu'))
-            self.containers.append(base_container)
-            for i in range(self.config['containers_per_host'] - 1):
-                name = str(uuid.uuid4())
-                container = LxcContainer(conn, {'name': name,
-                                                'ip': ip.next()})
-                container.clone(base_container.config['name'])
+        self.host_provider = provider.ProviderFactory.get_provider(
+            self.config['host_provider'], self.task)
+        self.network = netaddr.IPNetwork(self.config['start_ip_address'])
+        self.ip = self.network.ip - 1
+        config = self.config['container_config']
+        first = str(uuid.uuid4())
+        for server in self.host_provider.create_vms():
+            config.update({'ip': self._next_ip(), 'name': first})
+            first_container = LxcContainer(server, config)
+            first_container.prepare_host()
+            first_container.create(self.config['distribution'])
+            self.containers.append(first_container)
+            for i in range(1, self.config['containers_per_host']):
+                config.update({'ip': self._next_ip(),
+                               'name': '%s-%d' % (first, i)})
+                container = LxcContainer(server, config)
+                container.clone(first)
+                container.start()
                 self.containers.append(container)
+            first_container.start()
         for container in self.containers:
-            container.configure()
-            container.start()
+            container.server.ssh.wait()
+        return [c.server for c in self.containers]
 
-        servers = []
-        for c in self.containers:
-            server = provider.ServerDTO(self.config['name'],
-                                        c.config['ip'].split('/')[0],
-                                        'root', None, None)
-            server.ssh.wait()
-            servers.append(server)
-        return servers
-
-    @utils.log_task_wrapper(LOG.info, _("Destroy lxc containers"))
+    @utils.log_task_wrapper(LOG.info, _("Destroy host(s)"))
     def destroy_vms(self):
         for c in self.containers:
             c.stop()
-            c.destroy()
+        self.host_provider.destroy_vms()

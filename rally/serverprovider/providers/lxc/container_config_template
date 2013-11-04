@@ -4,7 +4,8 @@ lxc.network.type=veth
 lxc.network.link={network_bridge}
 lxc.network.flags=up
 
-{dhcp}lxc.network.ipv4={ip}
+lxc.network.ipv4={ip}
+lxc.network.ipv4.gateway={gateway}
 
 lxc.utsname = {name}
 
