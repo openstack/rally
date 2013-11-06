@@ -239,7 +239,7 @@ class NovaScenarioTestCase(test.TestCase):
 
             temp_keys = ["username", "password", "tenant_name", "uri"]
             users_endpoints = [dict(zip(temp_keys, temp_keys))]
-            utils.NovaScenario.clients = butils._create_openstack_clients(
+            utils.NovaScenario._clients = butils._create_openstack_clients(
                                                 users_endpoints, temp_keys)[0]
 
             with mock.patch(self.sleep):
@@ -249,7 +249,7 @@ class NovaScenarioTestCase(test.TestCase):
                                   "fails", 0, 1)
             self.assertEquals(len(failed_nova.servers.list()), 1,
                               "Server not created")
-            utils.NovaScenario.cleanup({})
+            utils.NovaScenario.cleanup()
             self.assertEquals(len(failed_nova.servers.list()), 0,
                               "Servers not purged")
 
@@ -262,7 +262,7 @@ class NovaScenarioTestCase(test.TestCase):
 
             temp_keys = ["username", "password", "tenant_name", "uri"]
             users_endpoints = [dict(zip(temp_keys, temp_keys))]
-            utils.NovaScenario.clients = butils._create_openstack_clients(
+            utils.NovaScenario._clients = butils._create_openstack_clients(
                                                 users_endpoints, temp_keys)[0]
 
             # NOTE(boden): verify active server cleanup
@@ -271,7 +271,7 @@ class NovaScenarioTestCase(test.TestCase):
                     utils.NovaScenario._boot_server("server-%s" % i, 0, 1)
             self.assertEquals(len(fake_nova.servers.list()), 5,
                               "Server not created")
-            utils.NovaScenario.cleanup({})
+            utils.NovaScenario.cleanup()
             self.assertEquals(len(fake_nova.servers.list()), 0,
                               "Servers not purged")
 
@@ -292,7 +292,7 @@ class NovaScenarioTestCase(test.TestCase):
                     temp_keys = ["username", "password",
                                  "tenant_name", "uri"]
                     users_endpoints = [dict(zip(temp_keys, temp_keys))]
-                    utils.NovaScenario.clients = butils.\
+                    utils.NovaScenario._clients = butils.\
                         _create_openstack_clients(users_endpoints,
                                                   temp_keys)[0]
 

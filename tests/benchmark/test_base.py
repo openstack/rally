@@ -51,7 +51,7 @@ class ScenarioTestCase(test.TestCase):
         self.assertEqual({}, base.Scenario.init(None))
 
     def test_cleanup(self):
-        base.Scenario.cleanup(None)
+        base.Scenario.cleanup()
 
     def test_sleep_between(self):
         base.Scenario.idle_time = 0
@@ -77,3 +77,28 @@ class ScenarioTestCase(test.TestCase):
                           base.Scenario.sleep_between, -1, 0)
         self.assertRaises(exceptions.InvalidArgumentsException,
                           base.Scenario.sleep_between, 0, -2)
+
+    def test_context(self):
+
+        context = {"test": "context"}
+
+        class Scenario(base.Scenario):
+            @classmethod
+            def init(cls, config):
+                return context
+
+        Scenario._context = Scenario.init({})
+        self.assertEqual(context, Scenario.context())
+
+    def test_clients(self):
+
+        nova_client = object()
+        glance_client = object()
+        clients = {"nova": nova_client, "glance": glance_client}
+
+        class Scenario(base.Scenario):
+            pass
+
+        Scenario._clients = clients
+        self.assertEqual(nova_client, Scenario.clients("nova"))
+        self.assertEqual(glance_client, Scenario.clients("glance"))

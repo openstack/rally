@@ -30,8 +30,9 @@ from rally import utils
 
 LOG = logging.getLogger(__name__)
 
-# NOTE(msdubov): This list is shared between multiple scenario processes.
+# NOTE(msdubov): These objects are shared between multiple scenario processes.
 __openstack_clients__ = []
+__scenario_context__ = {}
 
 
 def _format_exc(exc):
@@ -39,19 +40,20 @@ def _format_exc(exc):
 
 
 def _run_scenario_loop(args):
-    i, cls, method_name, context, kwargs = args
+    i, cls, method_name, kwargs = args
 
     LOG.info("ITER: %s" % i)
 
     # NOTE(msdubov): Each scenario run uses a random openstack client
     #                from a predefined set to act from different users.
-    cls.clients = random.choice(__openstack_clients__)
+    cls._clients = random.choice(__openstack_clients__)
+    cls._context = __scenario_context__
 
     cls.idle_time = 0
 
     try:
         with utils.Timer() as timer:
-            getattr(cls, method_name)(context, **kwargs)
+            getattr(cls, method_name)(**kwargs)
     except Exception as e:
         return {"time": timer.duration() - cls.idle_time,
                 "idle_time": cls.idle_time, "error": _format_exc(e)}
@@ -60,7 +62,7 @@ def _run_scenario_loop(args):
 
     # NOTE(msdubov): Cleaning up after each scenario loop enables to delete
     #                the resources of the user the scenario was run from.
-    cls.cleanup(context)
+    cls.cleanup()
 
 
 def _create_openstack_clients(users_endpoints, keys):
@@ -119,9 +121,9 @@ class ScenarioRunner(object):
         for tenant in self.tenants:
             tenant.delete()
 
-    def _run_scenario_continuously_for_times(self, ctx, cls, method, args,
+    def _run_scenario_continuously_for_times(self, cls, method, args,
                                              times, concurrent, timeout):
-        test_args = [(i, cls, method, ctx, args) for i in xrange(times)]
+        test_args = [(i, cls, method, args) for i in xrange(times)]
 
         pool = multiprocessing.Pool(concurrent)
         iter_result = pool.imap(_run_scenario_loop, test_args)
@@ -142,13 +144,13 @@ class ScenarioRunner(object):
 
         return results
 
-    def _run_scenario(self, ctx, cls, method, args, execution_type, config):
+    def _run_scenario(self, cls, method, args, execution_type, config):
         timeout = config.get("timeout", 10000)
         times = config.get("times", 1)
         concurrent = config.get("active_users", 1)
 
         if execution_type == "continuous":
-            return self._run_scenario_continuously_for_times(ctx, cls, method,
+            return self._run_scenario_continuously_for_times(cls, method,
                                                              args, times,
                                                              concurrent,
                                                              timeout)
@@ -167,16 +169,17 @@ class ScenarioRunner(object):
         temp_users = self._create_temp_tenants_and_users(tenants,
                                                          users_per_tenant)
 
+        global __openstack_clients__, __scenario_context__
+
         # NOTE(msdubov): Call init() with admin openstack clients
         cls.clients = self.clients
-        ctx = cls.init(init_args)
+        __scenario_context__ = cls.init(init_args)
 
         # NOTE(msdubov): Launch scenarios with non-admin openstack clients
-        global __openstack_clients__
         keys = ["username", "password", "tenant_name", "uri"]
         __openstack_clients__ = _create_openstack_clients(temp_users, keys)
 
-        results = self._run_scenario(ctx, cls, method_name, args,
+        results = self._run_scenario(cls, method_name, args,
                                      execution_type, config)
 
         self._delete_temp_tenants_and_users()

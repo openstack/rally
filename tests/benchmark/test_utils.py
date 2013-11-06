@@ -35,15 +35,15 @@ class FakeScenario(base.Scenario):
         pass
 
     @classmethod
-    def do_it(cls, ctx, **kwargs):
+    def do_it(cls, **kwargs):
         pass
 
     @classmethod
-    def too_long(cls, ctx, **kwargs):
+    def too_long(cls, **kwargs):
         time.sleep(2)
 
     @classmethod
-    def something_went_wrong(cls, ctx, **kwargs):
+    def something_went_wrong(cls, **kwargs):
         raise Exception("Something went wrong")
 
 
@@ -91,7 +91,7 @@ class ScenarioTestCase(test.TestCase):
                 times = 3
 
                 mock_utils.Timer = FakeTimer
-                results = runner._run_scenario({}, FakeScenario, "do_it", {},
+                results = runner._run_scenario(FakeScenario, "do_it", {},
                                                "continuous",
                                                {"times": times,
                                                 "active_users": 1,
@@ -107,7 +107,7 @@ class ScenarioTestCase(test.TestCase):
             runner = utils.ScenarioRunner(mock.MagicMock(), self.fake_kw)
             utils.__openstack_clients__ = ["client"]
             times = 4
-            results = runner._run_scenario({}, FakeScenario, "too_long", {},
+            results = runner._run_scenario(FakeScenario, "too_long", {},
                                            "continuous",
                                            {"times": times,
                                            "active_users": 1,
@@ -125,7 +125,7 @@ class ScenarioTestCase(test.TestCase):
             times = 1
             with mock.patch("rally.benchmark.utils.utils") as mock_utils:
                 mock_utils.Timer = FakeTimer
-                results = runner._run_scenario({}, FakeScenario,
+                results = runner._run_scenario(FakeScenario,
                                                "something_went_wrong", {},
                                                "continuous",
                                                {"times": times,
@@ -152,15 +152,15 @@ class ScenarioTestCase(test.TestCase):
         active_users = 4
         timeout = 5
         mock_multi.Pool = mock.MagicMock()
-        runner._run_scenario_continuously_for_times({}, FakeScenario, "do_it",
-                                                    {}, times, active_users,
+        runner._run_scenario_continuously_for_times(FakeScenario, "do_it", {},
+                                                    times, active_users,
                                                     timeout)
 
         expect = [
             mock.call(active_users),
             mock.call().imap(
                 utils._run_scenario_loop,
-                [(i, FakeScenario, "do_it", {}, {})
+                [(i, FakeScenario, "do_it", {})
                     for i in xrange(times)]
             )
         ]
@@ -187,13 +187,13 @@ class ScenarioTestCase(test.TestCase):
         mock_base.Scenario.get_by_name = \
             mock.MagicMock(return_value=FakeScenario)
         mock_clients.return_value = ["client"]
-        result = runner._run_scenario({}, FakeScenario, "do_it", {"a": 1},
+        result = runner._run_scenario(FakeScenario, "do_it", {"a": 1},
                                       "continuous", {"times": 2,
                                                      "active_users": 3,
                                                      "timeout": 1})
         self.assertEqual(result, "result")
         expected = [
-            mock.call({}, FakeScenario, "do_it", {"a": 1}, 2, 3, 1)
+            mock.call(FakeScenario, "do_it", {"a": 1}, 2, 3, 1)
         ]
         self.assertEqual(runner._run_scenario_continuously_for_times.
                          mock_calls, expected)
@@ -222,8 +222,8 @@ class ScenarioTestCase(test.TestCase):
                                "tenants": 5, "users_per_tenant": 2}})
 
         expected = [
-            mock.call({}, FakeScenario, "do_it", {}, "continuous", {}),
-            mock.call({}, FakeScenario, "do_it", {"a": 1}, "continuous",
+            mock.call(FakeScenario, "do_it", {}, "continuous", {}),
+            mock.call(FakeScenario, "do_it", {"a": 1}, "continuous",
                       {"timeout": 1, "times": 2, "active_users": 3,
                        "tenants": 5, "users_per_tenant": 2})
         ]

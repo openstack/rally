@@ -27,7 +27,7 @@ ACTION_BUILDER = scenario_utils.ActionBuilder(
 class NovaServers(utils.NovaScenario):
 
     @classmethod
-    def boot_and_delete_server(cls, context, image_id, flavor_id,
+    def boot_and_delete_server(cls, image_id, flavor_id,
                                min_sleep=0, max_sleep=0, **kwargs):
         """Tests booting and then deleting an image."""
         server_name = cls._generate_random_name(16)
@@ -37,7 +37,7 @@ class NovaServers(utils.NovaScenario):
         cls._delete_server(server)
 
     @classmethod
-    def boot_and_bounce_server(cls, context, image_id, flavor_id, **kwargs):
+    def boot_and_bounce_server(cls, image_id, flavor_id, **kwargs):
         """Tests booting a server then performing stop/start or hard/soft
         reboot a number of times.
         """
@@ -54,7 +54,7 @@ class NovaServers(utils.NovaScenario):
             action()
 
     @classmethod
-    def snapshot_server(cls, context, image_id, flavor_id, **kwargs):
+    def snapshot_server(cls, image_id, flavor_id, **kwargs):
         """Tests Nova instance snapshotting."""
         server_name = cls._generate_random_name(16)
 
@@ -67,11 +67,11 @@ class NovaServers(utils.NovaScenario):
         cls._delete_image(image)
 
     @classmethod
-    def boot_server(cls, context, image_id, flavor_id, **kwargs):
+    def boot_server(cls, image_id, flavor_id, **kwargs):
         """Test VM boot - assumed clean-up is done elsewhere."""
         server_name = cls._generate_random_name(16)
         if 'nics' not in kwargs:
-            nets = cls.clients["nova"].networks.list()
+            nets = cls.clients("nova").networks.list()
             if nets:
                 random_nic = random.choice(nets)
                 kwargs['nics'] = [{'net-id': random_nic.id}]

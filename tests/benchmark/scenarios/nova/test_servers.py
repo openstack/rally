@@ -36,7 +36,7 @@ class NovaServersTestCase(test.TestCase):
         fake_server = object()
         mock_boot.return_value = fake_server
         mock_random_name.return_value = "random_name"
-        servers.NovaServers.boot_and_delete_server({}, "img", 0, 10, 20,
+        servers.NovaServers.boot_and_delete_server("img", 0, 10, 20,
                                                    fakearg="f")
 
         mock_boot.assert_called_once_with("random_name", "img", 0, fakearg="f")
@@ -60,7 +60,7 @@ class NovaServersTestCase(test.TestCase):
 
         temp_keys = ["username", "password", "tenant_name", "uri"]
         users_endpoints = [dict(zip(temp_keys, temp_keys))]
-        servers.NovaServers.clients = butils._create_openstack_clients(
+        servers.NovaServers._clients = butils._create_openstack_clients(
                                                 users_endpoints, temp_keys)[0]
 
         mock_boot.return_value = object()
@@ -72,7 +72,7 @@ class NovaServersTestCase(test.TestCase):
             network = nova.networks.create('net-2')
             mock_choice.return_value = network
             expected_kwargs['nics'] = nic or [{'net-id': 'net-2'}]
-        servers.NovaServers.boot_server({}, "img", 0, **kwargs)
+        servers.NovaServers.boot_server("img", 0, **kwargs)
 
         mock_boot.assert_called_once_with("random_name", "img", 0,
                                           **expected_kwargs)
@@ -87,7 +87,7 @@ class NovaServersTestCase(test.TestCase):
         fake_server = object()
         mock_boot.return_value = fake_server
         mock_name.return_value = 'random_name'
-        servers.NovaServers.boot_and_bounce_server({}, "img", 1,
+        servers.NovaServers.boot_and_bounce_server("img", 1,
                                                    actions=actions)
         mock_boot.assert_called_once_with("random_name", "img", 1,
                                           actions=actions)
@@ -116,7 +116,7 @@ class NovaServersTestCase(test.TestCase):
         self._bind_server_actions(mock_reboot, None)
         mock_boot.return_value = fake_server
         mock_name.return_value = 'random_name'
-        servers.NovaServers.boot_and_bounce_server({}, "img", 1,
+        servers.NovaServers.boot_and_bounce_server("img", 1,
                                                    actions=actions)
         mock_boot.assert_called_once_with("random_name", "img", 1,
                                           actions=actions)
@@ -138,7 +138,7 @@ class NovaServersTestCase(test.TestCase):
         self._bind_server_actions(mock_reboot, mock_stop_start)
         mock_boot.return_value = fake_server
         mock_name.return_value = 'random_name'
-        servers.NovaServers.boot_and_bounce_server({}, "img", 1,
+        servers.NovaServers.boot_and_bounce_server("img", 1,
                                                    actions=actions)
         mock_boot.assert_called_once_with("random_name", "img", 1,
                                           actions=actions)
@@ -159,23 +159,23 @@ class NovaServersTestCase(test.TestCase):
         actions = [{"hardd_reboot": 6}]
         self.assertRaises(rally_exceptions.InvalidConfigException,
                           servers.NovaServers.boot_and_bounce_server,
-                          {}, 1, 1, actions=actions)
+                          1, 1, actions=actions)
         actions = [{"hard_reboot": "no"}]
         self.assertRaises(rally_exceptions.InvalidConfigException,
                           servers.NovaServers.boot_and_bounce_server,
-                          {}, 1, 1, actions=actions)
+                          1, 1, actions=actions)
         actions = {"hard_reboot": 6}
         self.assertRaises(rally_exceptions.InvalidConfigException,
                           servers.NovaServers.boot_and_bounce_server,
-                          {}, 1, 1, actions=actions)
+                          1, 1, actions=actions)
         actions = {"hard_reboot": -1}
         self.assertRaises(rally_exceptions.InvalidConfigException,
                           servers.NovaServers.boot_and_bounce_server,
-                          {}, 1, 1, actions=actions)
+                          1, 1, actions=actions)
         actions = {"hard_reboot": 0}
         self.assertRaises(rally_exceptions.InvalidConfigException,
                           servers.NovaServers.boot_and_bounce_server,
-                          {}, 1, 1, actions=actions)
+                          1, 1, actions=actions)
 
     def test_boot_soft_reboot(self):
         self._verify_reboot(soft=True)
@@ -212,7 +212,7 @@ class NovaServersTestCase(test.TestCase):
         mock_random_name.return_value = "random_name"
         mock_boot.return_value = fake_server
         mock_create_image.return_value = fake_image
-        servers.NovaServers.snapshot_server({}, "i", 0, fakearg=2)
+        servers.NovaServers.snapshot_server("i", 0, fakearg=2)
 
         mock_boot.assert_has_calls([
             mock.call("random_name", "i", 0, fakearg=2),

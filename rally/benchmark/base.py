@@ -71,11 +71,28 @@ class Scenario(object):
         return {}
 
     @classmethod
-    def cleanup(cls, context):
-        """This method will be called with context that was returned by init,
-            after test scneario will be finished. And it should free all
-            allocated resources.
+    def cleanup(cls):
+        """This method should free all allocated resources."""
+
+    @classmethod
+    def context(cls):
+        """Returns the context of the current benchmark scenario.
+
+        The context is the return value of the init() class.
+
+        :returns: Dict
         """
+        return cls._context
+
+    @classmethod
+    def clients(cls, client_type):
+        """Returns a python openstack client of the requested type.
+
+        :param client_type: Client type ("nova"/"glance" etc.)
+
+        :returns: Python openstack client object
+        """
+        return cls._clients[client_type]
 
     @classmethod
     def sleep_between(cls, min_sleep, max_sleep):
