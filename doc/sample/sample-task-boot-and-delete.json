@@ -1,17 +1,19 @@
 {
     "deploy": {
-        "name": "DevstackEngine",
-        "provider": {
-            "name": "DummyProvider",
-            "credentials": ["root@10.2.250.50"]
+        "name": "DummyEngine",
+        "cloud_config": {
+            "identity": {
+                "url": "http://example.net/",
+                "uri": "http://example.net:5000/v2.0/",
+                "admin_username": "admin",
+                "admin_password": "myadminpass",
+                "admin_tenant_name": "demo"
+            }
         }
     },
 
     "tests": {
-        "verify": [
-            "no_compute_sanity",
-            "no_compute_smoke"
-        ],
+        "verify": [],
         "benchmark": {
             "NovaServers.boot_and_delete_server": [
                 {"args": {"flavor_id": 1,
