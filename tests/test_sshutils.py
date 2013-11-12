@@ -13,8 +13,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-
 import mock
+import os
 
 from rally import exceptions
 from rally import sshutils
@@ -26,52 +26,69 @@ class SSHTestCase(test.TestCase):
     def setUp(self):
         super(SSHTestCase, self).setUp()
         self.ssh = sshutils.SSH('example.net', 'root')
-        self.pipe = mock.MagicMock()
-        self.pipe.communicate = mock.MagicMock(return_value=(mock.MagicMock(),
-                                               mock.MagicMock()))
-        self.pipe.returncode = 0
-        self.sp = mock.MagicMock()
-        self.sp.PIPE = self.pipe
-        self.sp.Popen = mock.MagicMock(return_value=self.pipe)
-        self.mod = 'rally.sshutils'
+        self.channel = mock.Mock()
+        self.channel.fileno.return_value = 15
+        self.channel.recv.return_value = 0
+        self.channel.recv_stderr.return_value = 0
+        self.channel.recv_exit_status.return_value = 0
+        self.transport = mock.Mock()
+        self.transport.open_session = mock.MagicMock(return_value=self.channel)
+        self.poll = mock.Mock()
+        self.poll.poll.return_value = [(self.channel, 1)]
+        self.policy = mock.Mock()
+        self.client = mock.Mock()
+        self.client.get_transport = mock.MagicMock(return_value=self.transport)
 
-    def test_execute(self):
-        with mock.patch(self.mod + '.subprocess', new=self.sp) as sp:
-            self.ssh.execute('ps', 'ax')
-        expected = [
-            mock.call.Popen(['ssh', '-o', 'StrictHostKeyChecking=no',
-                             'root@example.net', 'ps', 'ax'],
-                            stderr=self.pipe),
-            mock.call.PIPE.communicate()]
-        self.assertEqual(sp.mock_calls, expected)
+    @mock.patch('rally.sshutils.paramiko')
+    @mock.patch('rally.sshutils.select')
+    def test_execute(self, st, pk):
+        pk.SSHClient.return_value = self.client
+        st.poll.return_value = self.poll
+        self.ssh.execute('uname')
 
-    def test_execute_script(self):
-        with mock.patch(self.mod + '.subprocess', new=self.sp) as sp:
-            with mock.patch(self.mod + '.open', create=True) as op:
-                self.ssh.execute_script('/bin/script')
-        expected = [
-            mock.call.Popen(['ssh', '-o', 'StrictHostKeyChecking=no',
-                             'root@example.net', '/bin/sh'],
-                            stdin=op(), stderr=self.pipe),
-            mock.call.PIPE.communicate()]
-        self.assertEqual(sp.mock_calls, expected)
+        expected = [mock.call.fileno(),
+                    mock.call.exec_command('uname'),
+                    mock.call.shutdown_write(),
+                    mock.call.recv_ready(),
+                    mock.call.recv(4096),
+                    mock.call.recv_stderr_ready(),
+                    mock.call.recv_stderr(4096),
+                    mock.call.recv_exit_status()]
 
-    def test_upload_file(self):
-        with mock.patch(self.mod + '.subprocess', new=self.sp) as sp:
-            self.ssh.upload('/tmp/s', '/tmp/d')
-        expected = [mock.call.Popen(['scp', '-o',
-                                     'StrictHostKeyChecking=no',
-                                     '/tmp/s', 'root@example.net:/tmp/d'],
-                    stderr=self.pipe),
-                    mock.call.PIPE.communicate()]
-        self.assertEqual(sp.mock_calls, expected)
+        self.assertEqual(self.channel.mock_calls, expected)
 
-    def test_wait(self):
-        with mock.patch(self.mod + '.SSH.execute'):
-            self.ssh.wait()
+    @mock.patch('rally.sshutils.paramiko')
+    def test_upload_file(self, pk):
+        pk.AutoAddPolicy.return_value = self.policy
+        self.ssh.upload('/tmp/s', '/tmp/d')
 
-    def test_wait_timeout(self):
-        with mock.patch(self.mod + '.SSH.execute', new=mock.Mock(
-                        side_effect=exceptions.SSHError)):
-            self.assertRaises(exceptions.TimeoutException,
-                              self.ssh.wait, 1, 1)
+        expected = [mock.call.set_missing_host_key_policy(self.policy),
+                    mock.call.connect('example.net', username='root',
+                                      key_filename=os.path.expanduser(
+                                          '~/.ssh/id_rsa')),
+                    mock.call.open_sftp(),
+                    mock.call.open_sftp().put('/tmp/s', '/tmp/d'),
+                    mock.call.open_sftp().close()]
+
+        self.assertEqual(pk.SSHClient().mock_calls, expected)
+
+    @mock.patch('rally.sshutils.SSH.execute')
+    @mock.patch('rally.sshutils.SSH.upload')
+    @mock.patch('rally.sshutils.random.choice')
+    def test_execute_script_new(self, rc, up, ex):
+        rc.return_value = 'a'
+        self.ssh.execute_script('/bin/script')
+
+        up.assert_called_once_with('/bin/script', '/tmp/aaaaaaaaaaaaaaaa')
+        ex.assert_has_calls([mock.call('/bin/sh /tmp/aaaaaaaaaaaaaaaa'),
+                             mock.call('rm /tmp/aaaaaaaaaaaaaaaa')])
+
+    @mock.patch('rally.sshutils.SSH.execute')
+    def test_wait(self, ex):
+        self.ssh.wait()
+
+    @mock.patch('rally.sshutils.SSH.execute')
+    def test_wait_timeout(self, ex):
+        ex.side_effect = exceptions.SSHError
+        self.assertRaises(exceptions.TimeoutException,
+                          self.ssh.wait, 1, 1)
