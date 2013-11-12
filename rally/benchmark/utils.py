@@ -119,14 +119,15 @@ class ScenarioRunner(object):
         for tenant in self.tenants:
             tenant.delete()
 
-    def _run_scenario(self, ctx, cls, method, args, times, concurrent,
-                      timeout):
+    def _run_scenario_continuously_for_times(self, ctx, cls, method, args,
+                                             times, concurrent, timeout):
         test_args = [(i, cls, method, ctx, args) for i in xrange(times)]
 
         pool = multiprocessing.Pool(concurrent)
         iter_result = pool.imap(_run_scenario_loop, test_args)
 
         results = []
+
         for i in range(len(test_args)):
             try:
                 result = iter_result.next(timeout)
@@ -138,25 +139,37 @@ class ScenarioRunner(object):
 
         pool.close()
         pool.join()
+
         return results
+
+    def _run_scenario(self, ctx, cls, method, args, execution_type, config):
+        timeout = config.get("timeout", 10000)
+        times = config.get("times", 1)
+        concurrent = config.get("active_users", 1)
+
+        if execution_type == "continuous":
+            return self._run_scenario_continuously_for_times(ctx, cls, method,
+                                                             args, times,
+                                                             concurrent,
+                                                             timeout)
 
     def run(self, name, kwargs):
         cls_name, method_name = name.split(".")
         cls = base.Scenario.get_by_name(cls_name)
 
         args = kwargs.get('args', {})
-        timeout = kwargs.get('timeout', 10000)
-        times = kwargs.get('times', 1)
-        concurrent = kwargs.get('concurrent', 1)
-        tenants = kwargs.get('tenants', 1)
-        users_per_tenant = kwargs.get('users_per_tenant', 1)
+        init_args = kwargs.get('init', {})
+        execution_type = kwargs.get('execution', 'continuous')
+        config = kwargs.get('config', {})
+        tenants = config.get('tenants', 1)
+        users_per_tenant = config.get('users_per_tenant', 1)
 
         temp_users = self._create_temp_tenants_and_users(tenants,
                                                          users_per_tenant)
 
         # NOTE(msdubov): Call init() with admin openstack clients
         cls.clients = self.clients
-        ctx = cls.init(kwargs.get('init', {}))
+        ctx = cls.init(init_args)
 
         # NOTE(msdubov): Launch scenarios with non-admin openstack clients
         global __openstack_clients__
@@ -164,7 +177,7 @@ class ScenarioRunner(object):
         __openstack_clients__ = _create_openstack_clients(temp_users, keys)
 
         results = self._run_scenario(ctx, cls, method_name, args,
-                                     times, concurrent, timeout)
+                                     execution_type, config)
 
         self._delete_temp_tenants_and_users()
 

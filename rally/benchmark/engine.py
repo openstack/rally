@@ -57,10 +57,12 @@ class TestEngine(object):
                 "NovaServers.boot_and_delete_server": [
                     {"args": {"flavor_id": <flavor_id>,
                               "image_id": "<image_id>"},
-                     "times": 1, "concurrent": 1},
+                     "execution": "continuous",
+                     "config": {"times": 1, "active_users": 1}},
                     {"args": {"flavor_id": <flavor_id>,
                               "image_id": "<image_id>"},
-                     "times": 4, "concurrent": 2}
+                     "execution": "continuous",
+                     "config": {"times": 4, "active_users": 2}}
                 ]
             }
         }

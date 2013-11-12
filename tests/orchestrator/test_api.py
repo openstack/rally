@@ -45,11 +45,14 @@ FAKE_TASK_CONFIG = {
         'FakeScenario.fake': [
             {
                 'args': {},
-                'timeout': 10000,
-                'times': 1,
-                'concurrent': 1,
-                'tenants': 1,
-                'users_per_tenant': 1,
+                'execution': 'continuous',
+                'config': {
+                    'timeout': 10000,
+                    'times': 1,
+                    'active_users': 1,
+                    'tenants': 1,
+                    'users_per_tenant': 1,
+                }
             },
         ],
     },
@@ -119,11 +122,14 @@ class APITestCase(test.TestCase):
             {
                 'kw': {
                     'args': {},
-                    'times': 1,
-                    'concurrent': 1,
-                    'timeout': 10000,
-                    'users_per_tenant': 1,
-                    'tenants': 1,
+                    'execution': 'continuous',
+                    'config': {
+                        'timeout': 10000,
+                        'times': 1,
+                        'active_users': 1,
+                        'tenants': 1,
+                        'users_per_tenant': 1,
+                    }
                 },
                 'name': 'FakeScenario.fake',
                 'pos': 0,
