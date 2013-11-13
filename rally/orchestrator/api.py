@@ -20,6 +20,33 @@ from rally import deploy
 from rally import objects
 
 
+def create_deploy(config, name):
+    """Create a deployment.
+
+    :param config: a dict with deployment configuration
+    :param name: a str represents a name of the deployment
+    """
+    raise NotImplementedError()
+
+
+def destroy_deploy(deploy_uuid):
+    """Destroy the deployment.
+
+    :param deploy_uuid: UUID of the deployment
+    """
+    raise NotImplementedError()
+
+
+def recreate_deploy(deploy_uuid):
+    """Performs a clean up and then start to deploy.
+
+    :param deploy_uuid: UUID of the deployment
+    """
+    raise NotImplementedError()
+
+
+# TODO(akscram): The additional argument with the UUID of the
+#                deployment.
 def start_task(config):
     """Start Benchmark task.
         1) Deploy OpenStack Cloud

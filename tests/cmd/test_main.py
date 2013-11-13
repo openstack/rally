@@ -74,3 +74,29 @@ class TaskCommandsTestCase(test.BaseTestCase):
         with mock.patch("rally.cmd.main.processing.PLOTS", new=PLOTS):
             self.task.plot("aggregated", "concurrent", test_uuid)
         mock_plot.assert_called_once_with(test_uuid, "concurrent")
+
+
+class DeploymentCommandsTestCase(test.BaseTestCase):
+    def setUp(self):
+        super(DeploymentCommandsTestCase, self).setUp()
+        self.deployment = main.DeploymentCommands()
+
+    @mock.patch('rally.cmd.main.api.create_deploy')
+    @mock.patch('rally.cmd.main.open',
+                mock.mock_open(read_data='{"some": "json"}'),
+                create=True)
+    def test_create(self, mock_create):
+        self.deployment.create('path_to_config.json', 'fake_deploy')
+        mock_create.assert_called_once_with({'some': 'json'}, 'fake_deploy')
+
+    @mock.patch('rally.cmd.main.api.recreate_deploy')
+    def test_recreate(self, mock_recreate):
+        deploy_id = str(uuid.uuid4())
+        self.deployment.recreate(deploy_id)
+        mock_recreate.assert_called_once_with(deploy_id)
+
+    @mock.patch('rally.cmd.main.api.destroy_deploy')
+    def test_destroy(self, mock_destroy):
+        deploy_id = str(uuid.uuid4())
+        self.deployment.destroy(deploy_id)
+        mock_destroy.assert_called_once_with(deploy_id)

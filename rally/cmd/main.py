@@ -30,8 +30,83 @@ from rally.orchestrator import api
 from rally import processing
 
 
+class DeploymentCommands(object):
+
+    @cliutils.args('--filename', type=str, required=True,
+                   help='A path to the configuration file of the deployment.')
+    @cliutils.args('--name', type=str, required=True,
+                   help='A name of the deployment.')
+    def create(self, filename, name):
+        """Create a new deployment on the basis of configuration file.
+
+        :param filename: a path to the configuration file
+        :param name: a name of the deployment
+        """
+        with open(filename) as f:
+            config = json.load(f)
+            api.create_deploy(config, name)
+
+    @cliutils.args('--deploy-id', dest='deploy_id', type=str, required=True,
+                   help='UUID of a deployment.')
+    def recreate(self, deploy_id):
+        """Destroy and create an existing deployment.
+
+        :param deploy_id: a UUID of the deployment
+        """
+        api.recreate_deploy(deploy_id)
+
+    @cliutils.args('--deploy-id', dest='deploy_id', type=str, required=True,
+                   help='UUID of a deployment.')
+    def destroy(self, deploy_id):
+        """Destroy the deployment.
+
+        Release resources that are allocated for the deployment. The
+        Deployment, related tasks and their results are also deleted.
+
+        :param deploy_id: a UUID of the deployment
+        """
+        api.destroy_deploy(deploy_id)
+
+    def list(self):
+        """Print list of deployments."""
+        headers = ['uuid', 'created_at', 'name', 'status']
+        table = prettytable.PrettyTable(headers)
+
+        for t in db.deployment_list():
+            r = [str(t[column]) for column in headers]
+            table.add_row(r)
+
+        print(table)
+
+    @cliutils.args('--deploy-id', dest='deploy_id', type=str, required=True,
+                   help='UUID of a deployment.')
+    def config(self, deploy_id):
+        """Print on stdout a config of the deployment in JSON format."""
+        deploy = db.deployment_get(deploy_id)
+        print(json.dumps(deploy['config']))
+
+    @cliutils.args('--deploy-id', dest='deploy_id', type=str, required=True,
+                   help='UUID of a deployment.')
+    def endpoint(self, deploy_id):
+        """Print endpoint of the deployment."""
+        attribute_map = [
+            ('auth_url', 'uri'),
+            ('user_name', 'admin_username'),
+            ('password', 'admin_password'),
+            ('tenant_name', 'admin_tenant_name'),
+        ]
+        headers = [m[0] for m in attribute_map]
+        table = prettytable.PrettyTable(headers)
+        endpoint = db.deployment_get(deploy_id)['endpoint']
+        identity = endpoint.get('identity', {})
+        table.add_row([identity.get(m[1], '') for m in attribute_map])
+        print(table)
+
+
 class TaskCommands(object):
 
+    # TODO(akscram): We should to specify an UUID of the deployment via
+    #                the --deploy-id argument.
     @cliutils.args('--task',
                    help='Path to the file with full configuration of task')
     def start(self, task):
@@ -139,7 +214,10 @@ class TaskCommands(object):
 
 
 def main():
-    categories = {'task': TaskCommands}
+    categories = {
+        'task': TaskCommands,
+        'deployment': DeploymentCommands,
+    }
     cliutils.run(sys.argv, categories)
 
 

@@ -80,6 +80,7 @@ class APITestCase(test.TestCase):
         }
         self.deployment = {
             'uuid': self.deploy_uuid,
+            'name': 'fake_name',
             'config': self.deploy_config,
             'endpoint': self.endpoint,
         }
@@ -176,3 +177,12 @@ class APITestCase(test.TestCase):
     def test_delete_task_force(self, mock_delete):
         api.delete_task(self.task_uuid, force=True)
         mock_delete.assert_called_once_with(self.task_uuid, status=None)
+
+    def test_create_deploy(self):
+        self.assertRaises(NotImplementedError, api.create_deploy, 'name', {})
+
+    def test_destroy_deploy(self):
+        self.assertRaises(NotImplementedError, api.destroy_deploy, 'uuid')
+
+    def test_recreate_deploy(self):
+        self.assertRaises(NotImplementedError, api.recreate_deploy, 'uuid')
