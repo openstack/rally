@@ -141,3 +141,47 @@ def task_result_get_all_by_uuid(uuid):
     return model_query(models.TaskResult).\
                 filter_by(task_uuid=uuid).\
                 all()
+
+
+def _deployment_get(uuid, session=None):
+    deploy = model_query(models.Deployment, session=session).\
+                filter_by(uuid=uuid).\
+                first()
+    if not deploy:
+        raise exceptions.DeploymentNotFound(uuid=uuid)
+    return deploy
+
+
+def deployment_create(values):
+    deployment = models.Deployment()
+    deployment.update(values)
+    deployment.save()
+    return deployment
+
+
+def deployment_delete(uuid):
+    count = model_query(models.Deployment).\
+                filter_by(uuid=uuid).\
+                delete(synchronize_session=False)
+    if not count:
+        raise exceptions.DeploymentNotFound(uuid=uuid)
+
+
+def deployment_get(uuid):
+    return _deployment_get(uuid)
+
+
+def deployment_update(uuid, values):
+    session = db_session.get_session()
+    values.pop('uuid', None)
+    with session.begin():
+        deploy = _deployment_get(uuid, session=session)
+        deploy.update(values)
+    return deploy
+
+
+def deployment_list(status=None):
+    query = model_query(models.Deployment)
+    if status is not None:
+        query = query.filter_by(status=status)
+    return query.all()

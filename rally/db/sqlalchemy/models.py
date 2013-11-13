@@ -37,10 +37,49 @@ class RallyBase(models.TimestampMixin,
     metadata = None
 
 
+class Deployment(BASE, RallyBase):
+    """Represent a deployment of OpenStack."""
+    __tablename__ = "deployments"
+    __table_args__ = (
+        sa.Index('deployment_uuid', 'uuid', unique=True),
+    )
+
+    id = sa.Column(sa.Integer, primary_key=True, autoincrement=True)
+    uuid = sa.Column(sa.String(36), default=UUID, nullable=False)
+    name = sa.Column(sa.String(255))
+    # XXX(akscram): Do we need to explicitly store a name of the
+    #               deployment engine?
+    #engine_name = sa.Column(sa.String(36))
+
+    config = sa.Column(
+        sa_types.MutableDict.as_mutable(sa_types.JSONEncodedDict),
+        default={},
+        nullable=False,
+    )
+
+    # TODO(akscram): Actually a endpoint of a deployment can be
+    #                represented by a set of parameters are auth_url,
+    #                user, password and project.
+    endpoint = sa.Column(
+        sa_types.MutableDict.as_mutable(sa_types.JSONEncodedDict),
+        default={},
+        nullable=False,
+    )
+
+    status = sa.Column(
+        sa.Enum(*consts.DeployStatus),
+        name='enum_deployments_status',
+        default=consts.DeployStatus.DEPLOY_INIT,
+        nullable=False,
+    )
+
+
 class Task(BASE, RallyBase):
     """Represents a Benchamrk task."""
     __tablename__ = 'tasks'
-    __table_args__ = ()
+    __table_args__ = (
+        sa.Index('task_uuid', 'uuid', unique=True),
+    )
 
     id = sa.Column(sa.Integer, primary_key=True, autoincrement=True)
     uuid = sa.Column(sa.String(36), default=UUID, nullable=False)
@@ -49,6 +88,20 @@ class Task(BASE, RallyBase):
                        default=consts.TaskStatus.INIT, nullable=False)
     failed = sa.Column(sa.Boolean, default=False, nullable=False)
     verification_log = sa.Column(sa.Text, default='', nullable=True)
+
+    deployment_uuid = sa.Column(
+        sa.String(36),
+        sa.ForeignKey(Deployment.uuid),
+        # TODO(akscram): We should to set nullable=False after
+        #                separation. It's True only for compatibility.
+        nullable=True,
+    )
+    deployment = sa.orm.relationship(
+        Deployment,
+        backref=sa.orm.backref('tasks'),
+        foreign_keys=deployment_uuid,
+        primaryjoin=(deployment_uuid == Deployment.uuid),
+    )
 
 
 class TaskResult(BASE, RallyBase):

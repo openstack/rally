@@ -127,3 +127,48 @@ def task_result_get_all_by_uuid(task_uuid):
 def task_result_create(task_uuid, key, data):
     """Append result record to task."""
     return IMPL.task_result_create(task_uuid, key, data)
+
+
+def deployment_create(values):
+    """Create a deployment from the values dictionary.
+
+    :param uuid: UUID of the deployment
+    :returns: a dict with data on the deployment
+    """
+    return IMPL.deployment_create(values)
+
+
+def deployment_delete(uuid):
+    """Delete a deployment by UUID.
+
+    :param uuid: UUID of the deployment
+    """
+    return IMPL.deployment_delete(uuid)
+
+
+def deployment_get(uuid):
+    """Get a deployment by UUID.
+
+    :param uuid: UUID of the deployment
+    :returns: a dict with data on the deployment
+    """
+    return IMPL.deployment_get(uuid)
+
+
+def deployment_update(uuid, values):
+    """Update a deployment by values.
+
+    :param uuid: UUID of the deployment
+    :param values: dict with items to update
+    :returns: a dict with data on the deployment
+    """
+    return IMPL.deployment_update(uuid, values)
+
+
+def deployment_list(status=None):
+    """Get list of deployments.
+
+    :param status: if None returns any deployments with any status.
+    :returns: a list of dicts with data on the deployments
+    """
+    return IMPL.deployment_list(status=status)

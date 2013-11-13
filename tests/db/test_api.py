@@ -162,3 +162,119 @@ class TasksTestCase(test.DBTestCase):
         self.assertEqual(len(results), 1)
         self.assertEqual(results[0]["key"], key)
         self.assertEqual(results[0]["data"], data)
+
+
+class DeploymentTestCase(test.DBTestCase):
+    def test_deployment_create(self):
+        deploy = db.deployment_create({'config': {'opt': 'val'}})
+        deploys = db.deployment_list()
+        self.assertEqual(len(deploys), 1)
+        self.assertEqual(deploy['uuid'], deploys[0]['uuid'])
+        self.assertEqual(deploy['status'], consts.DeployStatus.DEPLOY_INIT)
+        self.assertEqual(deploy['config'], {'opt': 'val'})
+
+    def test_deployment_create_several(self):
+        # Create a deployment
+        deploys = db.deployment_list()
+        self.assertEqual(len(deploys), 0)
+        deploy_one = db.deployment_create({'config': {'opt1': 'val1'}})
+        deploys = db.deployment_list()
+        self.assertEqual(len(deploys), 1)
+        self.assertEqual(deploy_one['uuid'], deploys[0]['uuid'])
+        self.assertEqual(deploy_one['status'], consts.DeployStatus.DEPLOY_INIT)
+        self.assertEqual(deploy_one['config'], {'opt1': 'val1'})
+
+        # Create another deployment and sure that they are different
+        deploy_two = db.deployment_create({'config': {'opt2': 'val2'}})
+        deploys = db.deployment_list()
+        self.assertEqual(len(deploys), 2)
+        self.assertEqual([deploy_one['uuid'], deploy_two['uuid']],
+                         [deploy['uuid'] for deploy in deploys])
+        self.assertNotEqual(deploy_one['uuid'], deploy_two['uuid'])
+        self.assertEqual(deploy_two['status'], consts.DeployStatus.DEPLOY_INIT)
+        self.assertEqual(deploy_two['config'], {'opt2': 'val2'})
+
+    def test_deployment_update(self):
+        deploy = db.deployment_create({})
+        self.assertEqual(deploy['config'], {})
+        update_deploy = db.deployment_update(deploy['uuid'],
+                                             {'config': {'opt': 'val'}})
+        self.assertEqual(update_deploy['uuid'], deploy['uuid'])
+        self.assertEqual(update_deploy['config'], {'opt': 'val'})
+        get_deploy = db.deployment_get(deploy['uuid'])
+        self.assertEqual(get_deploy['uuid'], deploy['uuid'])
+        self.assertEqual(get_deploy['config'], {'opt': 'val'})
+
+    def test_deployment_update_several(self):
+        # Create a deployment and update it
+        deploy_one = db.deployment_create({})
+        self.assertEqual(deploy_one['config'], {})
+        update_deploy_one = db.deployment_update(
+            deploy_one['uuid'],
+            {'config': {'opt1': 'val1'}},
+        )
+        self.assertEqual(update_deploy_one['uuid'], deploy_one['uuid'])
+        self.assertEqual(update_deploy_one['config'], {'opt1': 'val1'})
+        get_deploy_one = db.deployment_get(deploy_one['uuid'])
+        self.assertEqual(get_deploy_one['uuid'], deploy_one['uuid'])
+        self.assertEqual(get_deploy_one['config'], {'opt1': 'val1'})
+
+        # Create another deployment
+        deploy_two = db.deployment_create({})
+        update_deploy_two = db.deployment_update(
+            deploy_two['uuid'],
+            {'config': {'opt2': 'val2'}},
+        )
+        self.assertEqual(update_deploy_two['uuid'], deploy_two['uuid'])
+        self.assertEqual(update_deploy_two['config'], {'opt2': 'val2'})
+        get_deploy_one_again = db.deployment_get(deploy_one['uuid'])
+        self.assertEqual(get_deploy_one_again['uuid'], deploy_one['uuid'])
+        self.assertEqual(get_deploy_one_again['config'], {'opt1': 'val1'})
+
+    def test_deployment_get(self):
+        deploy_one = db.deployment_create({'config': {'opt1': 'val1'}})
+        deploy_two = db.deployment_create({'config': {'opt2': 'val2'}})
+        get_deploy_one = db.deployment_get(deploy_one['uuid'])
+        get_deploy_two = db.deployment_get(deploy_two['uuid'])
+        self.assertNotEqual(get_deploy_one['uuid'], get_deploy_two['uuid'])
+        self.assertEqual(get_deploy_one['config'], {'opt1': 'val1'})
+        self.assertEqual(get_deploy_two['config'], {'opt2': 'val2'})
+
+    def test_deployment_get_not_found(self):
+        self.assertRaises(exceptions.DeploymentNotFound,
+                          db.deployment_get, str(uuid.uuid4()))
+
+    def test_deployment_list(self):
+        deploy_one = db.deployment_create({})
+        deploy_two = db.deployment_create({})
+        deploys = db.deployment_list()
+        self.assertEqual(sorted([deploy_one['uuid'], deploy_two['uuid']]),
+                         sorted([deploy['uuid'] for deploy in deploys]))
+
+    def test_deployment_list_with_status(self):
+        deploy_one = db.deployment_create({})
+        deploy_two = db.deployment_create({
+            'config': {},
+            'status': consts.DeployStatus.DEPLOY_FAILED,
+        })
+        deploys = db.deployment_list(status=consts.DeployStatus.DEPLOY_INIT)
+        self.assertEqual(len(deploys), 1)
+        self.assertEqual(deploys[0]['uuid'], deploy_one['uuid'])
+        deploys = db.deployment_list(status=consts.DeployStatus.DEPLOY_FAILED)
+        self.assertEqual(len(deploys), 1)
+        self.assertEqual(deploys[0]['uuid'], deploy_two['uuid'])
+        deploys = db.deployment_list(
+            status=consts.DeployStatus.DEPLOY_FINISHED)
+        self.assertEqual(len(deploys), 0)
+
+    def test_deployment_delete(self):
+        deploy_one = db.deployment_create({})
+        deploy_two = db.deployment_create({})
+        db.deployment_delete(deploy_two['uuid'])
+        deploys = db.deployment_list()
+        self.assertEqual(len(deploys), 1)
+        self.assertEqual(deploys[0]['uuid'], deploy_one['uuid'])
+
+    def test_deployment_delete_not_found(self):
+        self.assertRaises(exceptions.DeploymentNotFound,
+                          db.deployment_delete, str(uuid.uuid4()))

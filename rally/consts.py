@@ -31,6 +31,8 @@ class _TaskStatus(utils.ImmutableMixin, utils.EnumMixin):
 
     REPO_TOOL_GETTING_REPOS = 'repo_tool->getting_repos'
 
+    # TODO(akscram): It's should be deprecated after separation of
+    #                deployments from tasks.
     DEPLOY_STARTED = 'deploy->started'
     DEPLOY_CREATING_VENV = 'deploy->create_venv_to_deploy_openstack'
     DEPLOY_BUILDING_OPENSTACK_IN_VENV = 'deploy->building_openstack_in_venv'
@@ -50,4 +52,18 @@ class _TaskStatus(utils.ImmutableMixin, utils.EnumMixin):
     TEST_TOOL_PROCESSING_RESULTS = 'test_tool->result_processing'
 
 
+class _DeployStatus(utils.ImmutableMixin, utils.EnumMixin):
+    DEPLOY_INIT = 'deploy->init'
+    DEPLOY_STARTED = 'deploy->started'
+    DEPLOY_FINISHED = 'deploy->finished'
+    DEPLOY_FAILED = 'deploy->failed'
+
+    DEPLOY_INCONSISTENT = 'deploy->inconsistent'
+
+    CLEANUP_STARTED = 'cleanup->started'
+    CLEANUP_FINISHED = 'cleanup->finished'
+    CLEANUP_FAILED = 'cleanup->failed'
+
+
 TaskStatus = _TaskStatus()
+DeployStatus = _DeployStatus()

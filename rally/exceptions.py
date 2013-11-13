@@ -122,6 +122,10 @@ class TaskNotFound(NotFoundException):
     msg_fmt = _("Task with uuid=%(uuid)s not found.")
 
 
+class DeploymentNotFound(NotFoundException):
+    msg_fmt = _("Deployment with uuid=%(uuid)s not found.")
+
+
 class TimeoutException(RallyException):
     msg_fmt = _("Timeout exceeded.")
 
