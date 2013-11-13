@@ -44,6 +44,7 @@ class LxcContainerTestCase(test.BaseTestCase):
         with mock.patch.object(lxc.LxcContainer, 'configure') as configure:
             self.container.create('ubuntu')
         expected = [mock.call.ssh.execute('lxc-create',
+                                          '-B', 'btrfs',
                                           '-n', 'name',
                                           '-t', 'ubuntu')]
         self.assertEqual(expected, self.server.mock_calls)
@@ -53,6 +54,7 @@ class LxcContainerTestCase(test.BaseTestCase):
         with mock.patch.object(lxc.LxcContainer, 'configure') as configure:
             self.container.clone('src')
         expected = [mock.call.ssh.execute('lxc-clone',
+                                          '--snapshot',
                                           '-o', 'src',
                                           '-n', 'name')]
         self.assertEqual(expected, self.server.mock_calls)
@@ -60,14 +62,12 @@ class LxcContainerTestCase(test.BaseTestCase):
 
     def test_container_configure(self):
         self.container.configure()
-        c_filename = self.server.mock_calls[0][1][0]
-        s_filename = self.server.mock_calls[1][1][0]
+        s_filename = self.server.mock_calls[0][1][0]
         expected = [
-            mock.call.ssh.upload(c_filename,
-                                 '/var/lib/lxc/name/rootfs/../config'),
             mock.call.ssh.upload(s_filename, '/tmp/.rally_cont_conf.sh'),
             mock.call.ssh.execute('/bin/sh', '/tmp/.rally_cont_conf.sh',
-                                  '/var/lib/lxc/name/rootfs/', '1.2.3.1')
+                                  '/var/lib/lxc/name/rootfs/', '1.2.3.4',
+                                  '255.255.255.0', '1.2.3.1', '1.2.3.1')
         ]
         self.assertEqual(expected, self.server.mock_calls)
 
