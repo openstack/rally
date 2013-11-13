@@ -13,7 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import json
 import mock
 import uuid
 
@@ -27,15 +26,13 @@ class TaskCommandsTestCase(test.BaseTestCase):
         super(TaskCommandsTestCase, self).setUp()
         self.task = main.TaskCommands()
 
-    def test_start(self):
-        read_data = '{"some": "json"}'
-        file_path = 'path_to_config.json'
-        m = mock.mock_open(read_data=read_data)
-        main.api.start_task = mock.MagicMock()
-        with mock.patch("rally.cmd.main.open", m, create=True) as m_open:
-            self.task.start(file_path)
-            m_open.assert_called_once_with(file_path)
-            main.api.start_task.assert_called_once_with(json.loads(read_data))
+    @mock.patch('rally.cmd.main.api.start_task')
+    @mock.patch('rally.cmd.main.open',
+                mock.mock_open(read_data='{"some": "json"}'),
+                create=True)
+    def test_start(self, mock_api):
+        self.task.start('path_to_config.json')
+        mock_api.assert_called_once_with({'some': 'json'})
 
     def test_abort(self):
         test_uuid = str(uuid.uuid4())
