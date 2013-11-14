@@ -16,8 +16,8 @@
 
 from rally.benchmark import engine
 from rally import consts
-from rally.db import task
 from rally import deploy
+from rally import objects
 
 
 def start_task(config):
@@ -30,12 +30,12 @@ def start_task(config):
     Returns task uuid
     """
     deploy_conf = config['deploy']
-    task_object = task.Task()
-    deployer = deploy.EngineFactory.get_engine(deploy_conf['name'],
-                                               task_object,
-                                               deploy_conf)
-    tester = engine.TestEngine(config['tests'], task_object)
+    task = objects.Task()
 
+    deployer = deploy.EngineFactory.get_engine(deploy_conf['name'],
+                                               task,
+                                               deploy_conf)
+    tester = engine.TestEngine(config['tests'], task)
     with deployer:
         endpoints = deployer.make()
         with tester.bind(endpoints):
@@ -59,4 +59,4 @@ def delete_task(task_uuid, force=False):
              if not True
     """
     status = None if force else consts.TaskStatus.FINISHED
-    task.Task.delete_by_uuid(task_uuid, status=status)
+    objects.Task.delete_by_uuid(task_uuid, status=status)

@@ -82,9 +82,9 @@ class APITestCase(test.TestCase):
 
     @mock.patch('rally.benchmark.engine.utils.ScenarioRunner')
     @mock.patch('rally.benchmark.engine.utils.Verifier')
-    @mock.patch('rally.db.task.db.task_result_create')
-    @mock.patch('rally.db.task.db.task_update')
-    @mock.patch('rally.db.task.db.task_create')
+    @mock.patch('rally.objects.task.db.task_result_create')
+    @mock.patch('rally.objects.task.db.task_update')
+    @mock.patch('rally.objects.task.db.task_create')
     def test_start_task(self, mock_task_create, mock_task_update,
                         mock_task_result_create, mock_utils_verifier,
                         mock_utils_runner):
@@ -136,14 +136,14 @@ class APITestCase(test.TestCase):
         self.assertRaises(NotImplementedError, api.abort_task,
                           self.task_uuid)
 
-    @mock.patch('rally.db.task.db.task_delete')
+    @mock.patch('rally.objects.task.db.task_delete')
     def test_delete_task(self, mock_delete):
         api.delete_task(self.task_uuid)
         mock_delete.assert_called_once_with(
             self.task_uuid,
             status=consts.TaskStatus.FINISHED)
 
-    @mock.patch('rally.db.task.db.task_delete')
+    @mock.patch('rally.objects.task.db.task_delete')
     def test_delete_task_force(self, mock_delete):
         api.delete_task(self.task_uuid, force=True)
         mock_delete.assert_called_once_with(self.task_uuid, status=None)
