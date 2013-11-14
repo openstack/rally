@@ -32,13 +32,8 @@ class DummyEngine(engine.EngineFactory):
        }
     """
 
-    def __init__(self, task, config):
-        self.task = task
-        self.config = config.get('cloud_config', {})
-        # TODO(boris-42): We should verify endpoints here.
-
     def deploy(self):
-        return self.config
+        return self.deployment['config'].get('cloud_config', {})
 
     def cleanup(self):
         pass

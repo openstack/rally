@@ -22,35 +22,35 @@ from rally.openstack.common import log as logging
 from rally.serverprovider import provider
 from rally import utils
 
+
 LOG = logging.getLogger(__name__)
 DEVSTACK_REPO = 'https://github.com/openstack-dev/devstack.git'
 DEVSTACK_USER = 'rally'
 
 
 class DevstackEngine(engine.EngineFactory):
-    '''Deploys Devstack cloud.
+    """Deploy Devstack cloud.
 
-    deploy config example:
-        "deploy": {
+    Sample of a configuration:
+        {
             "name": "DevstackEngine",
+            "devstack_repo": "git://example.com/devstack/",
             "localrc": {
                 "ADMIN_PASSWORD": "secret"
             },
-            "devstack_repo": "git://example.com/devstack/",
             "provider": {
-                "name": "%name%",
-                ...
+                "name": "DummyProvider",
+                "credentials": ["root@10.2.0.8"]
             }
-        },
-    '''
+        }
+    """
 
-    def __init__(self, task, config):
-        self.task = task
-        self._config = config
+    def __init__(self, deployment):
+        super(DevstackEngine, self).__init__(deployment)
+        self._config = deployment['config']
         self._vms = []
-        provider_config = config['provider']
         self._vm_provider = provider.ProviderFactory.get_provider(
-            provider_config, task)
+            self._config['provider'], deployment)
         self.localrc = {
             'DATABASE_PASSWORD': 'rally',
             'RABBIT_PASSWORD': 'rally',
@@ -60,16 +60,16 @@ class DevstackEngine(engine.EngineFactory):
             'RECLONE': 'yes',
             'SYSLOG': 'yes',
         }
-        if 'localrc' in config:
-            self.localrc.update(config['localrc'])
+        if 'localrc' in self._config:
+            self.localrc.update(self._config['localrc'])
 
-    @utils.log_task_wrapper(LOG.info, _("Prepare server for devstack"))
+    @utils.log_deploy_wrapper(LOG.info, _("Prepare server for devstack"))
     def prepare_server(self, server):
         script_path = os.path.abspath(os.path.join(os.path.dirname(__file__),
                                                    'devstack', 'install.sh'))
         server.ssh.execute_script(script_path)
 
-    @utils.log_task_wrapper(LOG.info, _("Deploy devstack"))
+    @utils.log_deploy_wrapper(LOG.info, _("Deploy devstack"))
     def deploy(self):
         self.servers = self._vm_provider.create_vms()
         for server in self.servers:
@@ -97,7 +97,7 @@ class DevstackEngine(engine.EngineFactory):
     def cleanup(self):
         self._vm_provider.destroy_vms()
 
-    @utils.log_task_wrapper(LOG.info, _("Configure devstack"))
+    @utils.log_deploy_wrapper(LOG.info, _("Configure devstack"))
     def configure_devstack(self, server):
         devstack_repo = self._config.get('devstack_repo', DEVSTACK_REPO)
         server.ssh.execute('git', 'clone', devstack_repo)
@@ -111,7 +111,7 @@ class DevstackEngine(engine.EngineFactory):
         os.unlink(config_path)
         return True
 
-    @utils.log_task_wrapper(LOG.info, _("Run devstack"))
+    @utils.log_deploy_wrapper(LOG.info, _("Run devstack"))
     def start_devstack(self, server):
         server.ssh.execute('~/devstack/stack.sh')
         return True

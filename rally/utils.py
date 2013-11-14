@@ -184,3 +184,33 @@ def log_task_wrapper(log, msg, **kw):
             return result
         return wrapper
     return decorator
+
+
+# TODO(akscram): It's a very similar to the "log_task_wrapper", we will
+#                should to reduce code duplication here.
+def log_deploy_wrapper(log, msg, **kw):
+    """A logging wrapper for any method of a class.
+
+    Class instances that use this decorator should have self.deployment
+    attribute. The wrapper produces logs messages both before and after
+    the method excecution, in the following format:
+
+    "Deployment <Deployment UUID> | Starting:  <Logging message>"
+    [Method execution...]
+    "Deployment <Deployment UUID> | Completed: <Logging message>"
+
+    :param log: Logging method to be used, e.g. LOG.info
+    :param msg: Text message (possibly parameterized) to be put to the log
+    :param **kw: Parameters for msg
+    """
+
+    def decorator(f):
+        @functools.wraps(f)
+        def wrapper(self, *args, **kwargs):
+            params = {"msg": msg % kw, "deploy": self.deployment["uuid"]}
+            log(_("Deployment %(deploy)s | Starting:  %(msg)s") % params)
+            result = f(self, *args, **kwargs)
+            log(_("Deployment %(deploy)s | Completed: %(msg)s") % params)
+            return result
+        return wrapper
+    return decorator

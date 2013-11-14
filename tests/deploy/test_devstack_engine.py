@@ -15,12 +15,14 @@
 
 import mock
 import os
+import uuid
 
 from rally.deploy.engines import devstack
 from rally.openstack.common import test
 
 
 SAMPLE_CONFIG = {
+    'name': 'DevstackEngine',
     'provider': {
         'name': 'DummyProvider',
         'credentials': ['root@example.com'],
@@ -36,10 +38,12 @@ DEVSTACK_REPO = 'https://github.com/openstack-dev/devstack.git'
 class DevstackEngineTestCase(test.BaseTestCase):
 
     def setUp(self):
-        self.task = mock.MagicMock()
-        self.task['uuid'] = mock.MagicMock()
-        self.de = devstack.DevstackEngine(self.task, SAMPLE_CONFIG)
         super(DevstackEngineTestCase, self).setUp()
+        self.deployment = {
+            'uuid': str(uuid.uuid4()),
+            'config': SAMPLE_CONFIG,
+        }
+        self.de = devstack.DevstackEngine(self.deployment)
 
     def test_construct(self):
         self.assertEqual(self.de.localrc['ADMIN_PASSWORD'], 'secret')

@@ -30,17 +30,23 @@ def start_task(config):
     Returns task uuid
     """
     deploy_conf = config['deploy']
-    task = objects.Task()
+    benchmark_conf = config['tests']
 
-    deployer = deploy.EngineFactory.get_engine(deploy_conf['name'],
-                                               task,
-                                               deploy_conf)
-    tester = engine.TestEngine(config['tests'], task)
+    deployment = objects.Deployment(config=deploy_conf)
+    task = objects.Task(deployment_uuid=deployment['uuid'])
+
+    deployer = deploy.EngineFactory.get_engine(deployment['config']['name'],
+                                               deployment)
+    tester = engine.TestEngine(benchmark_conf, task)
+
     with deployer:
-        endpoints = deployer.make()
-        with tester.bind(endpoints):
+        endpoint = deployer.make()
+        deployment.update_endpoint(endpoint)
+        with tester.bind(endpoint):
             tester.verify()
             tester.benchmark()
+    # TODO(akscram): It's just to follow legacy logic.
+    deployment.delete()
 
 
 def abort_task(task_uuid):

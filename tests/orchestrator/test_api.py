@@ -78,6 +78,11 @@ class APITestCase(test.TestCase):
         self.task = {
             'uuid': self.task_uuid,
         }
+        self.deployment = {
+            'uuid': self.deploy_uuid,
+            'config': self.deploy_config,
+            'endpoint': self.endpoint,
+        }
         self.full_config = {
             'deploy': FAKE_DEPLOY_CONFIG,
             'tests': FAKE_TASK_CONFIG,
@@ -86,13 +91,19 @@ class APITestCase(test.TestCase):
     @mock.patch('rally.benchmark.engine.utils.ScenarioRunner')
     @mock.patch('rally.benchmark.engine.utils.Verifier')
     @mock.patch('rally.objects.task.db.task_result_create')
+    @mock.patch('rally.objects.deploy.db.deployment_delete')
+    @mock.patch('rally.objects.deploy.db.deployment_create')
+    @mock.patch('rally.objects.deploy.db.deployment_update')
     @mock.patch('rally.objects.task.db.task_update')
     @mock.patch('rally.objects.task.db.task_create')
     def test_start_task(self, mock_task_create, mock_task_update,
-                        mock_task_result_create, mock_utils_verifier,
-                        mock_utils_runner):
+                        mock_deploy_update, mock_deploy_create,
+                        mock_deploy_delete, mock_task_result_create,
+                        mock_utils_verifier, mock_utils_runner):
         mock_task_create.return_value = self.task
         mock_task_update.return_value = self.task
+        mock_deploy_create.return_value = self.deployment
+        mock_deploy_update.return_value = self.deployment
 
         mock_utils_verifier.return_value = mock_verifier = mock.Mock()
         mock_utils_verifier.list_verification_tests.return_value = {
@@ -107,7 +118,16 @@ class APITestCase(test.TestCase):
 
         api.start_task(self.full_config)
 
-        mock_task_create.assert_called_once_with({})
+        mock_deploy_create.assert_called_once_with(
+            {'config': self.deploy_config})
+        mock_deploy_update.assert_has_calls([
+            mock.call(self.deploy_uuid, {'status': 'deploy->started'}),
+            mock.call(self.deploy_uuid, {'status': 'deploy->finished'}),
+            mock.call(self.deploy_uuid, {'endpoint': self.endpoint}),
+        ])
+        mock_task_create.assert_called_once_with({
+            'deployment_uuid': self.deploy_uuid,
+        })
         mock_task_update.assert_has_calls([
             mock.call(self.task_uuid,
                       {'status': 'test_tool->verify_openstack'}),
@@ -138,6 +158,8 @@ class APITestCase(test.TestCase):
                 'raw': ['fake_result'],
             },
         )
+        # TODO(akscram): It's just to follow legacy logic.
+        mock_deploy_delete.assert_called_once_with(self.deploy_uuid)
 
     def test_abort_task(self):
         self.assertRaises(NotImplementedError, api.abort_task,
