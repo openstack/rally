@@ -15,7 +15,6 @@
 
 import netaddr
 import os
-import tempfile
 import uuid
 
 from rally.openstack.common.gettextutils import _  # noqa
@@ -43,29 +42,25 @@ class LxcContainer(object):
 
     def configure(self):
         path = self.path % self.config['name']
-        template_filename = os.path.join(os.path.dirname(__file__),
-                                         'lxc',
-                                         'container_config_template')
         configure_script = os.path.join(os.path.dirname(__file__),
                                         'lxc',
                                         'configure_container.sh')
-        template = open(template_filename, 'r').read()
-        fd, config_path = tempfile.mkstemp()
-        with os.fdopen(fd, 'w') as config_file:
-            config_file.write(template.format(**self.config))
-        self.host.ssh.upload(config_path, path + '../config')
         self.host.ssh.upload(configure_script, '/tmp/.rally_cont_conf.sh')
+        ip = netaddr.IPNetwork(self.config['ip'])
+        netmask = str(ip.netmask)
+        ip = str(ip.ip)
         self.host.ssh.execute('/bin/sh', '/tmp/.rally_cont_conf.sh', path,
+                              ip, netmask, self.config['gateway'],
                               self.config['nameserver'])
-        os.unlink(config_path)
 
     def create(self, distribution):
-        self.host.ssh.execute('lxc-create', '-n', self.config['name'],
+        self.host.ssh.execute('lxc-create', '-B', 'btrfs',
+                              '-n', self.config['name'],
                               '-t', distribution)
         self.configure()
 
     def clone(self, source):
-        self.host.ssh.execute('lxc-clone', '-o', source, '-n',
+        self.host.ssh.execute('lxc-clone', '--snapshot', '-o', source, '-n',
                               self.config['name'])
         self.configure()
 
