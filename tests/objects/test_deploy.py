@@ -68,7 +68,19 @@ class DeploymentTestCase(test.TestCase):
         mock_delete.assert_called_once_with(self.deployment['uuid'])
 
     @mock.patch('rally.objects.deploy.db.deployment_update')
+    @mock.patch('rally.objects.deploy.db.deployment_create')
+    def test_update(self, mock_create, mock_update):
+        mock_create.return_value = self.deployment
+        mock_update.return_value = {'opt': 'val2'}
+        deploy = objects.Deployment(opt='val1')
+        deploy._update({'opt': 'val2'})
+        mock_update.assert_called_once_with(self.deployment['uuid'],
+                                            {'opt': 'val2'})
+        self.assertEqual(deploy['opt'], 'val2')
+
+    @mock.patch('rally.objects.deploy.db.deployment_update')
     def test_update_status(self, mock_update):
+        mock_update.return_value = self.deployment
         deploy = objects.Deployment(deployment=self.deployment)
         deploy.update_status(consts.DeployStatus.DEPLOY_FAILED)
         mock_update.assert_called_once_with(
@@ -78,6 +90,7 @@ class DeploymentTestCase(test.TestCase):
 
     @mock.patch('rally.objects.deploy.db.deployment_update')
     def test_update_name(self, mock_update):
+        mock_update.return_value = self.deployment
         deploy = objects.Deployment(deployment=self.deployment)
         deploy.update_name('new_name')
         mock_update.assert_called_once_with(
@@ -87,6 +100,7 @@ class DeploymentTestCase(test.TestCase):
 
     @mock.patch('rally.objects.deploy.db.deployment_update')
     def test_update_config(self, mock_update):
+        mock_update.return_value = self.deployment
         deploy = objects.Deployment(deployment=self.deployment)
         deploy.update_config({'opt': 'val'})
         mock_update.assert_called_once_with(
@@ -96,6 +110,7 @@ class DeploymentTestCase(test.TestCase):
 
     @mock.patch('rally.objects.deploy.db.deployment_update')
     def test_update_endpoint(self, mock_update):
+        mock_update.return_value = self.deployment
         deploy = objects.Deployment(deployment=self.deployment)
         deploy.update_endpoint({'opt': 'val'})
         mock_update.assert_called_once_with(

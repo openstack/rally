@@ -89,6 +89,7 @@ class APITestCase(test.TestCase):
                         mock_task_result_create, mock_utils_verifier,
                         mock_utils_runner):
         mock_task_create.return_value = self.task
+        mock_task_update.return_value = self.task
 
         mock_utils_verifier.return_value = mock_verifier = mock.Mock()
         mock_utils_verifier.list_verification_tests.return_value = {

@@ -36,19 +36,20 @@ class Deployment(object):
     def delete_by_uuid(uuid):
         db.deployment_delete(uuid)
 
+    def _update(self, values):
+        self.deployment = db.deployment_update(self.deployment['uuid'], values)
+
     def update_status(self, status):
-        db.deployment_update(self.deployment['uuid'], {'status': status})
+        self._update({'status': status})
 
     def update_name(self, name):
-        db.deployment_update(self.deployment['uuid'], {'name': name})
+        self._update({'name': name})
 
     def update_config(self, config):
-        db.deployment_update(self.deployment['uuid'], {'config': config})
+        self._update({'config': config})
 
     def update_endpoint(self, endpoint):
-        db.deployment_update(self.deployment['uuid'], {
-            'endpoint': endpoint,
-        })
+        self._update({'endpoint': endpoint})
 
     def delete(self):
         db.deployment_delete(self.deployment['uuid'])

@@ -82,8 +82,20 @@ class TaskTestCase(test.TestCase):
         mock_delete.assert_called_once_with(self.task['uuid'],
                                             status=consts.TaskStatus.FINISHED)
 
+    @mock.patch('rally.objects.deploy.db.task_update')
+    @mock.patch('rally.objects.task.db.task_create')
+    def test_update(self, mock_create, mock_update):
+        mock_create.return_value = self.task
+        mock_update.return_value = {'opt': 'val2'}
+        deploy = objects.Task(opt='val1')
+        deploy._update({'opt': 'val2'})
+        mock_update.assert_called_once_with(self.task['uuid'],
+                                            {'opt': 'val2'})
+        self.assertEqual(deploy['opt'], 'val2')
+
     @mock.patch('rally.objects.task.db.task_update')
     def test_update_status(self, mock_update):
+        mock_update.return_value = self.task
         task = objects.Task(task=self.task)
         task.update_status(consts.TaskStatus.FINISHED)
         mock_update.assert_called_once_with(
@@ -93,6 +105,7 @@ class TaskTestCase(test.TestCase):
 
     @mock.patch('rally.objects.task.db.task_update')
     def test_update_verification_log(self, mock_update):
+        mock_update.return_value = self.task
         task = objects.Task(task=self.task)
         task.update_verification_log('fake')
         mock_update.assert_called_once_with(
@@ -109,6 +122,7 @@ class TaskTestCase(test.TestCase):
 
     @mock.patch('rally.objects.task.db.task_update')
     def test_set_failed(self, mock_update):
+        mock_update.return_value = self.task
         task = objects.Task(task=self.task)
         task.set_failed()
         mock_update.assert_called_once_with(
