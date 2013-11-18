@@ -19,11 +19,11 @@ from rally import db
 class Deployment(object):
     """Represents a deployment object."""
 
-    def __init__(self, deployment=None):
+    def __init__(self, deployment=None, **attributes):
         if deployment:
             self.deployment = deployment
         else:
-            self.deployment = db.deployment_create({})
+            self.deployment = db.deployment_create(attributes)
 
     def __getitem__(self, key):
         return self.deployment[key]
@@ -31,6 +31,10 @@ class Deployment(object):
     @staticmethod
     def get(uuid):
         return Deployment(db.deployment_get(uuid))
+
+    @staticmethod
+    def delete_by_uuid(uuid):
+        db.deployment_delete(uuid)
 
     def update_status(self, status):
         db.deployment_update(self.deployment['uuid'], {'status': status})

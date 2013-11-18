@@ -62,9 +62,9 @@ def db_drop():
     IMPL.db_drop()
 
 
-def task_get_by_uuid(uuid):
+def task_get(uuid):
     """Returns task by uuid."""
-    return IMPL.task_get_by_uuid(uuid)
+    return IMPL.task_get(uuid)
 
 
 def task_get_detailed(uuid):

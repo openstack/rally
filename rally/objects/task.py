@@ -17,20 +17,20 @@ from rally import db
 
 
 class Task(object):
-    """Represents task object."""
+    """Represents a task object."""
 
-    def __init__(self, db_task=None):
-        if db_task:
-            self.task = db_task
+    def __init__(self, task=None, **attributes):
+        if task:
+            self.task = task
         else:
-            self.task = db.task_create({})
+            self.task = db.task_create(attributes)
 
     def __getitem__(self, key):
             return self.task[key]
 
     @staticmethod
-    def get_by_uuid(uuid):
-        return Task(db.task_get_by_uuid(uuid))
+    def get(uuid):
+        return Task(db.task_get(uuid))
 
     @staticmethod
     def delete_by_uuid(uuid, status=None):
@@ -47,3 +47,6 @@ class Task(object):
 
     def append_results(self, key, value):
         db.task_result_create(self.task['uuid'], key, value)
+
+    def delete(self, status=None):
+        db.task_delete(self.task['uuid'], status=status)

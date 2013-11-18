@@ -62,6 +62,11 @@ class DeploymentTestCase(test.TestCase):
         deploy.delete()
         mock_delete.assert_called_once_with(self.deployment['uuid'])
 
+    @mock.patch('rally.objects.deploy.db.deployment_delete')
+    def test_delete_by_uuid(self, mock_delete):
+        objects.Deployment.delete_by_uuid(self.deployment['uuid'])
+        mock_delete.assert_called_once_with(self.deployment['uuid'])
+
     @mock.patch('rally.objects.deploy.db.deployment_update')
     def test_update_status(self, mock_update):
         deploy = objects.Deployment(deployment=self.deployment)

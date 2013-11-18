@@ -57,7 +57,7 @@ class TaskCommands(object):
         :param task_uuid: Task uuid
         Returns current status of task
         """
-        task = db.task_get_by_uuid(task_id)
+        task = db.task_get(task_id)
         print(_("Task %(task_id)s is %(status)s.")
               % {'task_id': task_id, 'status': task['status']})
 

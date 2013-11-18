@@ -66,7 +66,7 @@ def model_query(model, session=None):
     return query
 
 
-def _task_get_by_uuid(uuid, session=None):
+def _task_get(uuid, session=None):
     task = model_query(models.Task, session=session).\
                 filter_by(uuid=uuid).\
                 first()
@@ -75,8 +75,8 @@ def _task_get_by_uuid(uuid, session=None):
     return task
 
 
-def task_get_by_uuid(uuid):
-    return _task_get_by_uuid(uuid)
+def task_get(uuid):
+    return _task_get(uuid)
 
 
 def task_get_detailed(uuid):
@@ -97,7 +97,7 @@ def task_update(uuid, values):
     session = db_session.get_session()
     values.pop('uuid', None)
     with session.begin():
-        task = _task_get_by_uuid(uuid, session=session)
+        task = _task_get(uuid, session=session)
         task.update(values)
     return task
 
