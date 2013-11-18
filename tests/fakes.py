@@ -587,3 +587,7 @@ class FakeUserContext(FakeContext):
         context.setdefault("tenants", [FakeUserContext.tenant])
         context.setdefault("scenario_name",
                            'NovaServers.boot_server_from_volume_and_delete')
+
+
+class FakeDeployment(dict):
+    update_status = mock.Mock()

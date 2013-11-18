@@ -1,0 +1,25 @@
+{
+    "name": "MultihostEngine",
+    "controller": {
+        "name": "DevstackEngine",
+        "localrc": {
+            "ENABLED_SERVICES+": ",-n-cpu,-n-net",
+            "MULTI_HOST": "1",
+            "SCREEN_LOGDIR": "$DEST/logs/screen"
+        },
+        "provider": {"name": "DummyProvider",
+                     "credentials": [{"host": "host-1.net",
+                                      "user": "root"}]}
+    },
+    "nodes": [
+        {
+            "name": "DevstackEngine",
+            "localrc": {"ENABLED_SERVICES": "n-cpu,n-net"},
+            "provider": {
+                "name": "DummyProvider",
+                "credentials": [{"host": "host-2.net",
+                                 "user": "root"}]
+            }
+        }
+    ]
+}
