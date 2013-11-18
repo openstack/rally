@@ -78,9 +78,9 @@ class EngineFactoryTestCase(test.TestCase):
         })
 
     @mock.patch.object(FakeDeployment, 'update_status')
-    def test_make(self, mock_update_status):
+    def test_make_deploy(self, mock_update_status):
         engine = FakeEngine(self.deployment)
-        endpoint = engine.make()
+        endpoint = engine.make_deploy()
         self.assertEqual(engine, endpoint)
         self.assertTrue(endpoint.deployed)
         self.assertFalse(endpoint.cleanuped)
@@ -92,14 +92,10 @@ class EngineFactoryTestCase(test.TestCase):
     @mock.patch.object(FakeDeployment, 'update_status')
     def test_with_statement(self, mock_update_status):
         engine = FakeEngine(self.deployment)
-        with engine:
-            pass
-
-        mock_update_status.assert_has_calls([
-            mock.call(consts.DeployStatus.CLEANUP_STARTED),
-            mock.call(consts.DeployStatus.CLEANUP_FINISHED),
-        ])
-        self.assertTrue(engine.cleanuped)
+        with engine as deployer:
+            self.assertEqual(engine, deployer)
+        self.assertFalse(mock_update_status.called)
+        self.assertFalse(engine.cleanuped)
         self.assertFalse(engine.deployed)
 
     @mock.patch.object(FakeDeployment, 'update_status')
@@ -109,32 +105,49 @@ class EngineFactoryTestCase(test.TestCase):
 
         engine = FakeEngine(self.deployment)
         self.assertRaises(SomeError, engine_with_error, SomeError(), engine)
+        mock_update_status.assert_called_once_with(
+            consts.DeployStatus.DEPLOY_INCONSISTENT)
+        self.assertFalse(engine.cleanuped)
+        self.assertFalse(engine.deployed)
+
+    @mock.patch.object(FakeDeployment, 'update_status')
+    @mock.patch.object(FakeEngine, 'deploy')
+    def test_make_deploy_failed(self, mock_deploy, mock_update_status):
+        class DeployFailed(Exception):
+            pass
+
+        engine = FakeEngine(self.deployment)
+        mock_deploy.side_effect = DeployFailed()
+        self.assertRaises(DeployFailed, engine.make_deploy)
         mock_update_status.assert_has_calls([
+            mock.call(consts.DeployStatus.DEPLOY_STARTED),
             mock.call(consts.DeployStatus.DEPLOY_FAILED),
+        ])
+
+    @mock.patch.object(FakeDeployment, 'update_status')
+    def test_make_cleanup(self, mock_update_status):
+        engine = FakeEngine(self.deployment)
+        engine.make_cleanup()
+        self.assertTrue(engine.cleanuped)
+        self.assertFalse(engine.deployed)
+        mock_update_status.assert_has_calls([
             mock.call(consts.DeployStatus.CLEANUP_STARTED),
             mock.call(consts.DeployStatus.CLEANUP_FINISHED),
         ])
         self.assertTrue(engine.cleanuped)
 
-    @mock.patch.object(FakeEngine, 'cleanup')
     @mock.patch.object(FakeDeployment, 'update_status')
-    def test_with_statement_failed_with_cleanup_failed(self,
-                                                       mock_update_status,
-                                                       mock_cleanup):
-        class SomeError(Exception):
+    @mock.patch.object(FakeEngine, 'cleanup')
+    def test_make_cleanup_failed(self, mock_cleanup, mock_update_status):
+        class CleanUpFailed(Exception):
             pass
 
-        class AnotherError(Exception):
-            pass
-
-        mock_cleanup.side_effect = AnotherError()
         engine = FakeEngine(self.deployment)
-        self.assertRaises(AnotherError, engine_with_error, SomeError(), engine)
+        mock_cleanup.side_effect = CleanUpFailed()
+        self.assertRaises(CleanUpFailed, engine.make_cleanup)
         mock_update_status.assert_has_calls([
-            mock.call(consts.DeployStatus.DEPLOY_FAILED),
             mock.call(consts.DeployStatus.CLEANUP_STARTED),
             mock.call(consts.DeployStatus.CLEANUP_FAILED),
-            mock.call(consts.DeployStatus.CLEANUP_FINISHED),
         ])
         self.assertFalse(engine.cleanuped)
 
