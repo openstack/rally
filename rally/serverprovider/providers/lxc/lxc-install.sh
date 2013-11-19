@@ -1,5 +1,6 @@
 #!/bin/sh
 
+apt-get update
 apt-get install -yq btrfs-tools
 
 # configure btrfs storage

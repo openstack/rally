@@ -2,6 +2,7 @@
 
 if command -v apt-get
     then
+        apt-get update
         apt-get install -y --force-yes git sudo
 elif command -v yum
     then
