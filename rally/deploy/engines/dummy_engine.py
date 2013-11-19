@@ -26,11 +26,37 @@ class DummyEngine(engine.EngineFactory):
        cloud_config: {
            'identity': {
                'url': 'http://localhost/',
-               'admin_user': 'amdin'
+               'admin_username': 'admin'
                ....
            }
        }
     """
+
+    IDENTITY_SCHEMA = {
+        'type': 'object',
+        'properties': {
+            'uri': {'type': 'string'},
+            'admin_username': {'type': 'string'},
+            'admin_password': {'type': 'string'},
+            'admin_tenant_name': {'type': 'string'},
+        },
+        'required': ['uri', 'admin_username', 'admin_password',
+                     'admin_tenant_name'],
+    }
+
+    CONFIG_SCHEMA = {
+        'type': 'object',
+        'properties': {
+            'cloud_config': {
+                'type': 'object',
+                'properties': {
+                    'identity': IDENTITY_SCHEMA,
+                },
+                'required': ['identity'],
+            },
+        },
+        'required': ['cloud_config'],
+    }
 
     def deploy(self):
         return self.deployment['config'].get('cloud_config', {})

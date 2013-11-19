@@ -15,6 +15,8 @@
 
 """Test dummy deploy engines."""
 
+import jsonschema
+
 from rally import deploy
 from rally.deploy.engines import dummy_engine
 from rally import test
@@ -31,8 +33,8 @@ class TestDummyDeployEngine(test.TestCase):
                         'uri': 'http://example.net:5000/v2.0/',
                         'admin_username': 'admin',
                         'admin_password': 'myadminpass',
-                        'admin_tenant_name': 'demo'
-                    }
+                        'admin_tenant_name': 'demo',
+                    },
                 },
             },
         }
@@ -54,3 +56,13 @@ class TestDummyDeployEngine(test.TestCase):
         engine = deploy.EngineFactory.get_engine(name,
                                                  self.deployment)
         self.assertIsInstance(engine, dummy_engine.DummyEngine)
+
+    def test_init_invalid_config(self):
+        self.deployment['config']['cloud_config']['identity'] = 42
+        self.assertRaises(jsonschema.ValidationError,
+                          dummy_engine.DummyEngine, self.deployment)
+
+    def test_deploy(self):
+        engine = dummy_engine.DummyEngine(self.deployment)
+        self.assertEqual(self.deployment['config']['cloud_config'],
+                         engine.deploy())
