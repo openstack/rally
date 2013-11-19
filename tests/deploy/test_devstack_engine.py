@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import jsonschema
 import mock
 import os
 import uuid
@@ -44,6 +45,11 @@ class DevstackEngineTestCase(test.BaseTestCase):
             'config': SAMPLE_CONFIG,
         }
         self.de = devstack.DevstackEngine(self.deployment)
+
+    def test_invalid_config(self):
+        self.deployment['config']['name'] = 42
+        self.assertRaises(jsonschema.ValidationError,
+                          devstack.DevstackEngine, self.deployment)
 
     def test_construct(self):
         self.assertEqual(self.de.localrc['ADMIN_PASSWORD'], 'secret')
