@@ -55,6 +55,7 @@ class FakeEngine(deploy.EngineFactory):
     cleanuped = False
 
     def __init__(self, deployment):
+        super(FakeEngine, self).__init__(deployment)
         self.deployment = deployment
 
     def deploy(self):
@@ -87,6 +88,11 @@ class EngineFake3(EngineFake2):
 
 class EngineFactoryTestCase(test.TestCase):
     FAKE_ENGINES = [EngineFake1, EngineFake2, EngineFake3]
+
+    @mock.patch.object(FakeEngine, 'validate')
+    def test_init(self, fake_validate):
+        FakeEngine({'config': {}})
+        fake_validate.assert_called_once_with()
 
     @mock.patch.object(FakeDeployment, 'update_status')
     def test_get_engine_not_found(self, mock_update_status):
