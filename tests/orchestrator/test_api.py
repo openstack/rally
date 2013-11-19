@@ -16,21 +16,134 @@
 """ Test for orchestrator. """
 
 import mock
+import uuid
 
+from rally.benchmark import base
+from rally import consts
 from rally.orchestrator import api
 from rally import test
 
 
-class OrchestratorTestCase(test.TestCase):
+FAKE_DEPLOY_CONFIG = {
+    # TODO(akscram): A fake engine is more suitable for that.
+    'name': 'DummyEngine',
+    'cloud_config': {
+        'identity': {
+            'url': 'http://example.net/',
+            'uri': 'http://example.net:5000/v2.0/',
+            'admin_username': 'admin',
+            'admin_password': 'myadminpass',
+            'admin_tenant_name': 'demo'
+        },
+    },
+}
 
-    def test_start_task(self):
-        config = {'deploy': {'name': 'test'}, 'tests': {}}
 
-        with mock.patch("rally.orchestrator.api.task"):
-            with mock.patch("rally.orchestrator.api.deploy"):
-                with mock.patch("rally.orchestrator.api.engine"):
-                    # NOTE(boris-42) Improve this test case.
-                    api.start_task(config)
+FAKE_TASK_CONFIG = {
+    'verify': ['fake_test'],
+    'benchmark': {
+        'FakeScenario.fake': [
+            {
+                'args': {},
+                'timeout': 10000,
+                'times': 1,
+                'concurrent': 1,
+                'tenants': 1,
+                'users_per_tenant': 1,
+            },
+        ],
+    },
+}
+
+
+class FakeScenario(base.Scenario):
+    @classmethod
+    def fake(cls, context):
+        pass
+
+
+# TODO(akscram): The test cases are very superficial because they test
+#                only database operations and actually no more. Each
+#                case in this test should to mock everything external.
+class APITestCase(test.TestCase):
+    def setUp(self):
+        super(APITestCase, self).setUp()
+        self.deploy_config = FAKE_DEPLOY_CONFIG
+        self.deploy_uuid = str(uuid.uuid4())
+        self.endpoint = FAKE_DEPLOY_CONFIG['cloud_config']
+        self.task_uuid = str(uuid.uuid4())
+        self.task = {
+            'uuid': self.task_uuid,
+        }
+        self.full_config = {
+            'deploy': FAKE_DEPLOY_CONFIG,
+            'tests': FAKE_TASK_CONFIG,
+        }
+
+    @mock.patch('rally.benchmark.engine.utils.ScenarioRunner')
+    @mock.patch('rally.benchmark.engine.utils.Verifier')
+    @mock.patch('rally.db.task.db.task_result_create')
+    @mock.patch('rally.db.task.db.task_update')
+    @mock.patch('rally.db.task.db.task_create')
+    def test_start_task(self, mock_task_create, mock_task_update,
+                        mock_task_result_create, mock_utils_verifier,
+                        mock_utils_runner):
+        mock_task_create.return_value = self.task
+
+        mock_utils_verifier.return_value = mock_verifier = mock.Mock()
+        mock_utils_verifier.list_verification_tests.return_value = {
+            'fake_test': mock.Mock(),
+        }
+        mock_verifier.run_all.return_value = [{
+            'status': 0,
+        }]
+
+        mock_utils_runner.return_value = mock_runner = mock.Mock()
+        mock_runner.run.return_value = ['fake_result']
+
+        api.start_task(self.full_config)
+
+        mock_task_create.assert_called_once_with({})
+        mock_task_update.assert_has_calls([
+            mock.call(self.task_uuid,
+                      {'status': 'test_tool->verify_openstack'}),
+            mock.call(self.task_uuid,
+                      {'verification_log': '[{"status": 0}]'}),
+            mock.call(self.task_uuid,
+                      {'status': 'test_tool->benchmarking'})
+        ])
+        # NOTE(akscram): It looks really awful, but checks degradation.
+        mock_task_result_create.assert_called_once_with(
+            self.task_uuid,
+            {
+                'kw': {
+                    'args': {},
+                    'times': 1,
+                    'concurrent': 1,
+                    'timeout': 10000,
+                    'users_per_tenant': 1,
+                    'tenants': 1,
+                },
+                'name': 'FakeScenario.fake',
+                'pos': 0,
+            },
+            {
+                'raw': ['fake_result'],
+            },
+        )
 
     def test_abort_task(self):
-        self.assertRaises(NotImplementedError, api.abort_task, 'uuid')
+        self.assertRaises(NotImplementedError, api.abort_task,
+                          self.task_uuid)
+
+    @mock.patch('rally.db.task.db.task_delete')
+    def test_delete_task(self, mock_delete):
+        api.delete_task(self.task_uuid)
+        mock_delete.assert_called_once_with(
+            self.task_uuid,
+            status=consts.TaskStatus.FINISHED)
+
+    @mock.patch('rally.db.task.db.task_delete')
+    def test_delete_task_force(self, mock_delete):
+        api.delete_task(self.task_uuid, force=True)
+        mock_delete.assert_called_once_with(self.task_uuid, status=None)
