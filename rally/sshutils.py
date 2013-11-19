@@ -20,36 +20,7 @@ from rally import exceptions
 from rally.openstack.common.gettextutils import _  # noqa
 from rally.openstack.common import log as logging
 
-DEFAULT_OPTIONS = ['-o', 'StrictHostKeyChecking=no']
-
 LOG = logging.getLogger(__name__)
-
-
-class SSHException(Exception):
-    pass
-
-
-def upload_file(user, host, source, destination):
-    cmd = ['scp'] + DEFAULT_OPTIONS + [source, '%s@%s:%s' % (user, host,
-                                                             destination)]
-    pipe = subprocess.Popen(cmd, stderr=subprocess.PIPE)
-    (so, se) = pipe.communicate()
-    if pipe.returncode:
-        raise SSHException(se)
-
-
-def execute_script(user, host, script, enterpreter='/bin/sh'):
-    cmd = ['ssh'] + DEFAULT_OPTIONS + ['%s@%s' % (user, host), enterpreter]
-    subprocess.check_call(cmd, stdin=open(script, 'r'))
-
-
-def execute_command(user, host, cmd):
-    pipe = subprocess.Popen(['ssh'] + DEFAULT_OPTIONS +
-                            ['%s@%s' % (user, host)] + cmd,
-                            stderr=subprocess.PIPE)
-    (so, se) = pipe.communicate()
-    if pipe.returncode:
-        raise SSHException(se)
 
 
 class SSH(object):
