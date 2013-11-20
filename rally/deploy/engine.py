@@ -21,6 +21,7 @@ from rally.openstack.common.gettextutils import _  # noqa
 from rally.openstack.common import log as logging
 from rally import utils
 
+
 LOG = logging.getLogger(__name__)
 
 
@@ -33,7 +34,7 @@ class EngineFactory(object):
 
     # Add new engine with __name__ == 'A'
     class A(EngineFactory):
-        def __init__(self, config):
+        def __init__(self, task, config):
             # do something
 
         def deploy(self):
@@ -45,7 +46,7 @@ class EngineFactory(object):
 
     Now to use new engine 'A' we should use with statement:
 
-    with EngineFactory.get_engine('A', some_config) as deployment:
+    with EngineFactory.get_engine('A', task, some_config) as deployment:
         # deployment is returned value of deploy() method
         # do all stuff that you need with your cloud
     """
@@ -53,13 +54,15 @@ class EngineFactory(object):
 
     @staticmethod
     def get_engine(name, task, config):
-        """Returns instance of deploy engine with corresponding name."""
+        """Returns instance of a deploy engine with corresponding name."""
         for engine in utils.itersubclasses(EngineFactory):
             if name == engine.__name__:
                 new_engine = engine(task, config)
                 return new_engine
-        LOG.exception(_('Task %(uuid)s: Deploy engine for %(name)s does not '
-                        'exist.') % {'uuid': task['uuid'], 'name': name})
+        LOG.error(_('Task %(uuid)s: Deploy engine for %(name)s '
+                    'does not exist.') %
+                  {'uuid': task['uuid'], 'name': name})
+        task.set_failed()
         raise exceptions.NoSuchEngine(engine_name=name)
 
     @staticmethod
@@ -90,8 +93,8 @@ class EngineFactory(object):
     def __exit__(self, type, value, traceback):
         task_uuid = self.task['uuid']
         if type:
-            LOG.exception(_('Task %(uuid)s: Error: %(msg)s') %
-                          {'uuid': task_uuid, 'msg': value.message})
+            LOG.exception(_('Task %(uuid)s: Error: %(msg)r') %
+                          {'uuid': task_uuid, 'msg': value})
             self.task.set_failed()
         self.task.update_status(consts.TaskStatus.CLEANUP)
         try:

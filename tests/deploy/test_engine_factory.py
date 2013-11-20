@@ -22,12 +22,29 @@ from rally import exceptions
 from rally import test
 
 
+class FakeTask(object):
+
+    def __init__(self, values={}):
+        self._values = values
+
+    def __getitem__(self, name):
+        return self._values[name]
+
+    def set_failed(self):
+        pass
+
+
 class EngineFactoryTestCase(test.TestCase):
 
-    def test_get_engine_not_found(self):
+    @mock.patch.object(FakeTask, 'set_failed')
+    def test_get_engine_not_found(self, mock_set_failed):
+        task = FakeTask(values={
+            'uuid': 'fakeuuid',
+        })
         self.assertRaises(exceptions.NoSuchEngine,
                           deploy.EngineFactory.get_engine,
-                          "non_existing_engine", mock.MagicMock(), None)
+                          "non_existing_engine", task, {})
+        mock_set_failed.assert_called_once_with()
 
     def _create_fake_engines(self):
         class EngineMixIn(object):
