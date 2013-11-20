@@ -31,8 +31,9 @@ class TaskCommandsTestCase(test.BaseTestCase):
                 mock.mock_open(read_data='{"some": "json"}'),
                 create=True)
     def test_start(self, mock_api):
-        self.task.start('path_to_config.json')
-        mock_api.assert_called_once_with({'some': 'json'})
+        deploy_id = str(uuid.uuid4())
+        self.task.start(deploy_id, 'path_to_config.json')
+        mock_api.assert_called_once_with(deploy_id, {'some': 'json'})
 
     def test_abort(self):
         test_uuid = str(uuid.uuid4())

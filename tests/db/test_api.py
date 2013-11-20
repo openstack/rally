@@ -24,12 +24,18 @@ from rally import test
 
 
 class TasksTestCase(test.DBTestCase):
+    def setUp(self):
+        super(TasksTestCase, self).setUp()
+        self.deploy = db.deployment_create({})
 
     def _get_task(self, uuid):
         return db.task_get(uuid)
 
     def _create_task(self, values=None):
-        return db.task_create(values or {})
+        values = values or {}
+        if 'deployment_uuid' not in values:
+            values['deployment_uuid'] = self.deploy['uuid']
+        return db.task_create(values)
 
     def test_task_get_not_found(self):
         self.assertRaises(exceptions.TaskNotFound,

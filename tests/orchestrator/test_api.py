@@ -72,6 +72,7 @@ class APITestCase(test.TestCase):
     def setUp(self):
         super(APITestCase, self).setUp()
         self.deploy_config = FAKE_DEPLOY_CONFIG
+        self.task_config = FAKE_TASK_CONFIG
         self.deploy_uuid = str(uuid.uuid4())
         self.endpoint = FAKE_DEPLOY_CONFIG['cloud_config']
         self.task_uuid = str(uuid.uuid4())
@@ -84,27 +85,19 @@ class APITestCase(test.TestCase):
             'config': self.deploy_config,
             'endpoint': self.endpoint,
         }
-        self.full_config = {
-            'deploy': FAKE_DEPLOY_CONFIG,
-            'tests': FAKE_TASK_CONFIG,
-        }
 
     @mock.patch('rally.benchmark.engine.utils.ScenarioRunner')
     @mock.patch('rally.benchmark.engine.utils.Verifier')
+    @mock.patch('rally.objects.deploy.db.deployment_get')
     @mock.patch('rally.objects.task.db.task_result_create')
-    @mock.patch('rally.objects.deploy.db.deployment_delete')
-    @mock.patch('rally.objects.deploy.db.deployment_create')
-    @mock.patch('rally.objects.deploy.db.deployment_update')
     @mock.patch('rally.objects.task.db.task_update')
     @mock.patch('rally.objects.task.db.task_create')
     def test_start_task(self, mock_task_create, mock_task_update,
-                        mock_deploy_update, mock_deploy_create,
-                        mock_deploy_delete, mock_task_result_create,
+                        mock_task_result_create, mock_deploy_get,
                         mock_utils_verifier, mock_utils_runner):
         mock_task_create.return_value = self.task
         mock_task_update.return_value = self.task
-        mock_deploy_create.return_value = self.deployment
-        mock_deploy_update.return_value = self.deployment
+        mock_deploy_get.return_value = self.deployment
 
         mock_utils_verifier.return_value = mock_verifier = mock.Mock()
         mock_utils_verifier.list_verification_tests.return_value = {
@@ -117,15 +110,9 @@ class APITestCase(test.TestCase):
         mock_utils_runner.return_value = mock_runner = mock.Mock()
         mock_runner.run.return_value = ['fake_result']
 
-        api.start_task(self.full_config)
+        api.start_task(self.deploy_uuid, self.task_config)
 
-        mock_deploy_create.assert_called_once_with(
-            {'config': self.deploy_config})
-        mock_deploy_update.assert_has_calls([
-            mock.call(self.deploy_uuid, {'status': 'deploy->started'}),
-            mock.call(self.deploy_uuid, {'status': 'deploy->finished'}),
-            mock.call(self.deploy_uuid, {'endpoint': self.endpoint}),
-        ])
+        mock_deploy_get.assert_called_once_with(self.deploy_uuid)
         mock_task_create.assert_called_once_with({
             'deployment_uuid': self.deploy_uuid,
         })
@@ -159,8 +146,6 @@ class APITestCase(test.TestCase):
                 'raw': ['fake_result'],
             },
         )
-        # TODO(akscram): It's just to follow legacy logic.
-        mock_deploy_delete.assert_called_once_with(self.deploy_uuid)
 
     def test_abort_task(self):
         self.assertRaises(NotImplementedError, api.abort_task,
@@ -178,11 +163,37 @@ class APITestCase(test.TestCase):
         api.delete_task(self.task_uuid, force=True)
         mock_delete.assert_called_once_with(self.task_uuid, status=None)
 
-    def test_create_deploy(self):
-        self.assertRaises(NotImplementedError, api.create_deploy, 'name', {})
+    @mock.patch('rally.objects.deploy.db.deployment_update')
+    @mock.patch('rally.objects.deploy.db.deployment_create')
+    def test_create_deploy(self, mock_create, mock_update):
+        mock_create.return_value = self.deployment
+        mock_update.return_value = self.deployment
+        api.create_deploy(self.deploy_config, 'fake_deploy')
+        mock_create.assert_called_once_with({
+            'name': 'fake_deploy',
+            'config': self.deploy_config,
+        })
+        mock_update.assert_has_calls([
+            mock.call(self.deploy_uuid, {'endpoint': self.endpoint}),
+        ])
 
-    def test_destroy_deploy(self):
-        self.assertRaises(NotImplementedError, api.destroy_deploy, 'uuid')
+    @mock.patch('rally.objects.deploy.db.deployment_delete')
+    @mock.patch('rally.objects.deploy.db.deployment_update')
+    @mock.patch('rally.objects.deploy.db.deployment_get')
+    def test_destroy_deploy(self, mock_get, mock_update, mock_delete):
+        mock_get.return_value = self.deployment
+        mock_update.return_value = self.deployment
+        api.destroy_deploy(self.deploy_uuid)
+        mock_get.assert_called_once_with(self.deploy_uuid)
+        mock_delete.assert_called_once_with(self.deploy_uuid)
 
-    def test_recreate_deploy(self):
-        self.assertRaises(NotImplementedError, api.recreate_deploy, 'uuid')
+    @mock.patch('rally.objects.deploy.db.deployment_update')
+    @mock.patch('rally.objects.deploy.db.deployment_get')
+    def test_recreate_deploy(self, mock_get, mock_update):
+        mock_get.return_value = self.deployment
+        mock_update.return_value = self.deployment
+        api.recreate_deploy(self.deploy_uuid)
+        mock_get.assert_called_once_with(self.deploy_uuid)
+        mock_update.assert_has_calls([
+            mock.call(self.deploy_uuid, {'endpoint': self.endpoint}),
+        ])

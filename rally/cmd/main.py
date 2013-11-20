@@ -105,18 +105,19 @@ class DeploymentCommands(object):
 
 class TaskCommands(object):
 
-    # TODO(akscram): We should to specify an UUID of the deployment via
-    #                the --deploy-id argument.
+    @cliutils.args('--deploy-id', type=str, dest='deploy_id', required=True,
+                   help='UUID of the deployment')
     @cliutils.args('--task',
                    help='Path to the file with full configuration of task')
-    def start(self, task):
-        """Run Benchmark task
-        :param config: File with json configration
-        Returns task_uuid
+    def start(self, deploy_id, task):
+        """Run a benchmark task.
+
+        :param deploy_id: an UUID of a deployment
+        :param config: a file with json configration
         """
         with open(task) as task_file:
             config_dict = json.load(task_file)
-            api.start_task(config_dict)
+            api.start_task(deploy_id, config_dict)
 
     @cliutils.args('--task-id', type=str, dest='task_id', help='UUID of task')
     def abort(self, task_id):

@@ -26,7 +26,12 @@ def create_deploy(config, name):
     :param config: a dict with deployment configuration
     :param name: a str represents a name of the deployment
     """
-    raise NotImplementedError()
+    deployment = objects.Deployment(name=name, config=config)
+    deployer = deploy.EngineFactory.get_engine(deployment['config']['name'],
+                                               deployment)
+    with deployer:
+        endpoint = deployer.make_deploy()
+        deployment.update_endpoint(endpoint)
 
 
 def destroy_deploy(deploy_uuid):
@@ -34,7 +39,16 @@ def destroy_deploy(deploy_uuid):
 
     :param deploy_uuid: UUID of the deployment
     """
-    raise NotImplementedError()
+    # TODO(akscram): We have to be sure that there are no running
+    #                tasks for this deployment.
+    # TODO(akscram): Check that the deployment have got a status that
+    #                is equal to "*->finised" or "deploy->inconsistent".
+    deployment = objects.Deployment.get(deploy_uuid)
+    deployer = deploy.EngineFactory.get_engine(deployment['config']['name'],
+                                               deployment)
+    with deployer:
+        deployer.make_cleanup()
+        deployment.delete()
 
 
 def recreate_deploy(deploy_uuid):
@@ -42,38 +56,37 @@ def recreate_deploy(deploy_uuid):
 
     :param deploy_uuid: UUID of the deployment
     """
-    raise NotImplementedError()
-
-
-# TODO(akscram): The additional argument with the UUID of the
-#                deployment.
-def start_task(config):
-    """Start Benchmark task.
-        1) Deploy OpenStack Cloud
-        2) Verify Deployment
-        3) Run Benchmarks
-        4) Process benchmark results
-        5) Destroy cloud and cleanup
-    Returns task uuid
-    """
-    deploy_conf = config['deploy']
-    benchmark_conf = config['tests']
-
-    deployment = objects.Deployment(config=deploy_conf)
-    task = objects.Task(deployment_uuid=deployment['uuid'])
-
+    deployment = objects.Deployment.get(deploy_uuid)
     deployer = deploy.EngineFactory.get_engine(deployment['config']['name'],
                                                deployment)
-    tester = engine.TestEngine(benchmark_conf, task)
     with deployer:
+        deployer.make_cleanup()
         endpoint = deployer.make_deploy()
         deployment.update_endpoint(endpoint)
+
+
+def start_task(deploy_uuid, config):
+    """Start a task.
+
+    A task is performed in two stages: a verification of a deployment
+    and a benchmark.
+
+    :param deploy_uuid: UUID of the deployment
+    :param config: a dict with a task configuration
+    """
+    deployment = objects.Deployment.get(deploy_uuid)
+    task = objects.Task(deployment_uuid=deploy_uuid)
+
+    tester = engine.TestEngine(config, task)
+    deployer = deploy.EngineFactory.get_engine(deployment['config']['name'],
+                                               deployment)
+    endpoint = deployment['endpoint']
+    with deployer:
         with tester.bind(endpoint):
+            # TODO(akscram): The verifications should be a part of
+            #                deployment.
             tester.verify()
             tester.benchmark()
-        deployer.make_cleanup()
-    # TODO(akscram): It's just to follow legacy logic.
-    deployment.delete()
 
 
 def abort_task(task_uuid):

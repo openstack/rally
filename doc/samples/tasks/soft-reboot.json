@@ -1,18 +1,4 @@
 {
-  "deploy": {
-    "name": "DummyEngine",
-    "cloud_config": {
-      "identity": {
-        "url": "http://example.net/",
-        "uri": "http://example.net:5000/v2.0/",
-        "admin_username": "admin",
-        "admin_password": "myadminpass",
-        "admin_tenant_name": "demo"
-      }
-    }
-  },
-
-  "tests": {
     "verify": [],
     "benchmark": {
         "NovaServers.boot_and_bounce_server": [
@@ -22,5 +8,4 @@
            "config": {"times": 3, "active_users": 2}}
         ]
     }
-  }
 }

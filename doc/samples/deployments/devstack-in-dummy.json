@@ -1,0 +1,7 @@
+{
+    "name": "DevstackEngine",
+    "provider": {
+        "name": "DummyProvider",
+        "credentials": ["root@10.2.0.8"]
+    }
+}

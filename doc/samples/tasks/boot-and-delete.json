@@ -1,27 +1,12 @@
 {
-    "deploy": {
-        "name": "DummyEngine",
-        "cloud_config": {
-            "identity": {
-                "url": "http://example.net/",
-                "uri": "http://example.net:5000/v2.0/",
-                "admin_username": "admin",
-                "admin_password": "myadminpass",
-                "admin_tenant_name": "demo"
-            }
-        }
-    },
-
-    "tests": {
-        "verify": [],
-        "benchmark": {
-            "NovaServers.boot_and_delete_server": [
-                {"args": {"flavor_id": 1,
-                          "image_id": "73257560-c59b-4275-a1ec-ab140e5b9979"},
-                 "execution": "continuous",
-                 "config": {"times": 10, "active_users": 2,
-                            "tenants": 3, "users_per_tenant": 2}}
-            ]
-        }
+    "verify": [],
+    "benchmark": {
+        "NovaServers.boot_and_delete_server": [
+            {"args": {"flavor_id": 1,
+                      "image_id": "73257560-c59b-4275-a1ec-ab140e5b9979"},
+             "execution": "continuous",
+             "config": {"times": 10, "active_users": 2,
+                        "tenants": 3, "users_per_tenant": 2}}
+        ]
     }
 }

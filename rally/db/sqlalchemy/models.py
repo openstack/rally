@@ -126,9 +126,7 @@ class Task(BASE, RallyBase):
     deployment_uuid = sa.Column(
         sa.String(36),
         sa.ForeignKey(Deployment.uuid),
-        # TODO(akscram): We should to set nullable=False after
-        #                separation. It's True only for compatibility.
-        nullable=True,
+        nullable=False,
     )
     deployment = sa.orm.relationship(
         Deployment,
