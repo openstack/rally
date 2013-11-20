@@ -114,6 +114,14 @@ class TestEngine(object):
                                 'benchmark scenario does not exist: %s') %
                               (task_uuid, scenario))
                 raise exceptions.NoSuchScenario(name=scenario)
+            for run in test_config['benchmark'][scenario]:
+                if 'times' in run['config'] and 'duration' in run['config']:
+                    message = _("'times' and 'duration' cannot be set "
+                                "simultaneously for one continuous "
+                                "scenario run.")
+                    LOG.exception(_('Task %s: Error: %s') % (task_uuid,
+                                                             message))
+                    raise exceptions.InvalidConfigException(message=message)
 
     @rutils.log_task_wrapper(LOG.debug, _("Test config formatting."))
     def _format_test_config(self, test_config):

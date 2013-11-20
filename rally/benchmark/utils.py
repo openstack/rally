@@ -13,10 +13,12 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import collections
 import multiprocessing
 import os
 import pytest
 import random
+import time
 import traceback
 import uuid
 
@@ -39,6 +41,13 @@ __scenario_context__ = {}
 
 def _format_exc(exc):
     return [str(type(exc)), str(exc), traceback.format_exc()]
+
+
+def _infinite_run_args(args):
+    i = 0
+    while True:
+        yield (i,) + args
+        i += 1
 
 
 def _run_scenario_loop(args):
@@ -152,16 +161,59 @@ class ScenarioRunner(object):
 
         return results
 
+    def _run_scenario_continuously_for_duration(self, cls, method, args,
+                                                duration, concurrent, timeout):
+        pool = multiprocessing.Pool(concurrent)
+        run_args = _infinite_run_args((cls, method, args))
+        iter_result = pool.imap(_run_scenario_loop, run_args)
+
+        start = time.time()
+
+        results_queue = collections.deque([], maxlen=concurrent)
+
+        while True:
+
+            if time.time() - start > duration * 60:
+                break
+
+            try:
+                result = iter_result.next(timeout)
+            except multiprocessing.TimeoutError as e:
+                result = {"time": timeout, "error": _format_exc(e)}
+            except Exception as e:
+                result = {"time": None, "error": _format_exc(e)}
+            results_queue.append(result)
+
+        results = list(results_queue)
+
+        pool.terminate()
+        pool.join()
+
+        return results
+
     def _run_scenario(self, cls, method, args, execution_type, config):
         timeout = config.get("timeout", 10000)
-        times = config.get("times", 1)
         concurrent = config.get("active_users", 1)
 
         if execution_type == "continuous":
-            return self._run_scenario_continuously_for_times(cls, method,
-                                                             args, times,
-                                                             concurrent,
-                                                             timeout)
+
+            # NOTE(msdubov): If not specified, perform single scenario run.
+            if "duration" not in config and "times" not in config:
+                config["times"] = 1
+
+            # Continiously run a benchmark scenario the specified
+            # amount of times.
+            if "times" in config:
+                times = config["times"]
+                return self._run_scenario_continuously_for_times(
+                                cls, method, args, times, concurrent, timeout)
+
+            # Continiously run a scenario as many times as needed
+            # to fill up the given period of time.
+            elif "duration" in config:
+                duration = config["duration"]
+                return self._run_scenario_continuously_for_duration(
+                            cls, method, args, duration, concurrent, timeout)
 
     def run(self, name, kwargs):
         cls_name, method_name = name.split(".")

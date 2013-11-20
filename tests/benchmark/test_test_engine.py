@@ -30,13 +30,24 @@ class TestEngineTestCase(test.TestCase):
     def setUp(self):
         super(TestEngineTestCase, self).setUp()
 
-        self.valid_test_config = {
+        self.valid_test_config_continuous_times = {
             'verify': ['sanity', 'smoke'],
             'benchmark': {
                 'NovaServers.boot_and_delete_server': [
                     {'args': {'flavor_id': 1, 'image_id': 'img'},
                      'execution': 'continuous',
                      'config': {'times': 10, 'active_users': 2,
+                                'tenants': 3, 'users_per_tenant': 2}}
+                ]
+            }
+        }
+        self.valid_test_config_continuous_duration = {
+            'verify': ['sanity', 'smoke'],
+            'benchmark': {
+                'NovaServers.boot_and_delete_server': [
+                    {'args': {'flavor_id': 1, 'image_id': 'img'},
+                     'execution': 'continuous',
+                     'config': {'duration': 4, 'active_users': 2,
                                 'tenants': 3, 'users_per_tenant': 2}}
                 ]
             }
@@ -71,6 +82,17 @@ class TestEngineTestCase(test.TestCase):
                 ]
             }
         }
+        self.invalid_test_config_parameters_conflict = {
+            'verify': ['sanity', 'smoke'],
+            'benchmark': {
+                'NovaServers.boot_and_delete_server': [
+                    {'args': {'flavor_id': 1, 'image_id': 'img'},
+                     'execution': 'continuous',
+                     'config': {'times': 10, 'duration': 100,
+                                'tenants': 3, 'users_per_tenant': 2}}
+                ]
+            }
+        }
         self.valid_cloud_config = {
             'identity': {
                 'admin_name': 'admin',
@@ -85,7 +107,10 @@ class TestEngineTestCase(test.TestCase):
 
     def test_verify_test_config(self):
         try:
-            engine.TestEngine(self.valid_test_config, mock.MagicMock())
+            engine.TestEngine(self.valid_test_config_continuous_times,
+                              mock.MagicMock())
+            engine.TestEngine(self.valid_test_config_continuous_duration,
+                              mock.MagicMock())
         except Exception as e:
             self.fail("Unexpected exception in test config" +
                       "verification: %s" % str(e))
@@ -105,22 +130,26 @@ class TestEngineTestCase(test.TestCase):
                           engine.TestEngine,
                           self.invalid_test_config_bad_config_parameter,
                           mock.MagicMock())
+        self.assertRaises(exceptions.InvalidConfigException,
+                          engine.TestEngine,
+                          self.invalid_test_config_parameters_conflict,
+                          mock.MagicMock())
 
     def test_bind(self):
-        test_engine = engine.TestEngine(self.valid_test_config,
-                                        mock.MagicMock())
-        with test_engine.bind(self.valid_cloud_config):
-            self.assertTrue(os.path.exists(test_engine.cloud_config_path))
-        self.assertFalse(os.path.exists(test_engine.cloud_config_path))
+        tester = engine.TestEngine(self.valid_test_config_continuous_times,
+                                   mock.MagicMock())
+        with tester.bind(self.valid_cloud_config):
+            self.assertTrue(os.path.exists(tester.cloud_config_path))
+        self.assertFalse(os.path.exists(tester.cloud_config_path))
 
     @mock.patch('rally.benchmark.utils.Verifier.run')
     def test_verify(self, mock_run):
-        test_engine = engine.TestEngine(self.valid_test_config,
-                                        mock.MagicMock())
+        tester = engine.TestEngine(self.valid_test_config_continuous_times,
+                                   mock.MagicMock())
         mock_run.return_value = self.run_success
-        with test_engine.bind(self.valid_cloud_config):
+        with tester.bind(self.valid_cloud_config):
             try:
-                test_engine.verify()
+                tester.verify()
             except Exception as e:
                 self.fail("Exception in TestEngine.verify: %s" % str(e))
 
@@ -128,10 +157,10 @@ class TestEngineTestCase(test.TestCase):
     @mock.patch("rally.benchmark.utils.osclients")
     def test_benchmark(self, mock_osclients, mock_run):
         mock_osclients.Clients.return_value = test_utils.FakeClients()
-        test_engine = engine.TestEngine(self.valid_test_config,
-                                        mock.MagicMock())
-        with test_engine.bind(self.valid_cloud_config):
-            test_engine.benchmark()
+        tester = engine.TestEngine(self.valid_test_config_continuous_times,
+                                   mock.MagicMock())
+        with tester.bind(self.valid_cloud_config):
+            tester.benchmark()
 
     @mock.patch("rally.benchmark.utils.ScenarioRunner.run")
     @mock.patch("rally.benchmark.utils.Verifier.run")
@@ -139,18 +168,20 @@ class TestEngineTestCase(test.TestCase):
     def test_task_status_basic_chain(self, mock_osclients, mock_run,
                                      mock_scenario_run):
         fake_task = mock.MagicMock()
-        test_engine = engine.TestEngine(self.valid_test_config, fake_task)
+        tester = engine.TestEngine(self.valid_test_config_continuous_times,
+                                   fake_task)
         mock_osclients.Clients.return_value = test_utils.FakeClients()
         mock_run.return_value = self.run_success
         mock_scenario_run.return_value = {}
-        with test_engine.bind(self.valid_cloud_config):
-            test_engine.verify()
-            test_engine.benchmark()
+        with tester.bind(self.valid_cloud_config):
+            tester.verify()
+            tester.benchmark()
 
         benchmark_name = 'NovaServers.boot_and_delete_server'
         benchmark_results = {
             'name': benchmark_name, 'pos': 0,
-            'kw': self.valid_test_config['benchmark'][benchmark_name][0],
+            'kw': self.valid_test_config_continuous_times['benchmark']
+                                                         [benchmark_name][0],
         }
 
         s = consts.TaskStatus
@@ -173,14 +204,15 @@ class TestEngineTestCase(test.TestCase):
     def test_task_status_failed(self, mock_osclients, mock_run,
                                 mock_scenario_run):
         fake_task = mock.MagicMock()
-        test_engine = engine.TestEngine(self.valid_test_config, fake_task)
+        tester = engine.TestEngine(self.valid_test_config_continuous_times,
+                                   fake_task)
         mock_osclients.Clients.return_value = test_utils.FakeClients()
         mock_run.return_value = self.run_success
         mock_scenario_run.side_effect = exceptions.TestException()
         try:
-            with test_engine.bind(self.valid_cloud_config):
-                test_engine.verify()
-                test_engine.benchmark()
+            with tester.bind(self.valid_cloud_config):
+                tester.verify()
+                tester.benchmark()
         except exceptions.TestException:
             pass
 

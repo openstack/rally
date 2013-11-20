@@ -145,6 +145,7 @@ test_config_schema = {
                                 "type": "object",
                                 "properties": {
                                     "times": {"type": "number"},
+                                    "duration": {"type": "number"},
                                     "active_users": {"type": "number"},
                                     "tenants": {"type": "number"},
                                     "users_per_tenant": {"type": "number"},
