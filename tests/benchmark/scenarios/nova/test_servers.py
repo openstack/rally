@@ -78,11 +78,12 @@ class NovaServersTestCase(test.TestCase):
                                           **expected_kwargs)
 
     @mock.patch(NOVA_SERVERS + "._generate_random_name")
+    @mock.patch(NOVA_SERVERS + "._delete_server")
     @mock.patch(NOVA_SERVERS + "._stop_server")
     @mock.patch(NOVA_SERVERS + "._start_server")
     @mock.patch(NOVA_SERVERS + "._boot_server")
     def test_boot_stop_start(self, mock_boot, mock_start, mock_stop,
-                             mock_name):
+                             mock_delete, mock_name):
         actions = [{'stop_start': 5}]
         fake_server = object()
         mock_boot.return_value = fake_server
@@ -98,6 +99,7 @@ class NovaServersTestCase(test.TestCase):
         self.assertEqual(5, mock_start.call_count, "Start not called 5 times")
         mock_stop.assert_has_calls(server_calls)
         mock_start.assert_has_calls(server_calls)
+        mock_delete.assert_called_once_with(fake_server)
 
     def _bind_server_actions(self, mock_reboot, mock_stop_start):
         bindings = servers.ACTION_BUILDER._bindings
@@ -108,9 +110,11 @@ class NovaServersTestCase(test.TestCase):
             bindings['stop_start']['action'] = mock_stop_start
 
     @mock.patch(NOVA_SERVERS + "._generate_random_name")
+    @mock.patch(NOVA_SERVERS + "._delete_server")
     @mock.patch(NOVA_SERVERS + "._reboot_server")
     @mock.patch(NOVA_SERVERS + "._boot_server")
-    def _verify_reboot(self, mock_boot, mock_reboot, mock_name, soft=True):
+    def _verify_reboot(self, mock_boot, mock_reboot, mock_delete, mock_name,
+                       soft=True):
         actions = [{'soft_reboot' if soft else 'hard_reboot': 5}]
         fake_server = object()
         self._bind_server_actions(mock_reboot, None)
@@ -126,13 +130,15 @@ class NovaServersTestCase(test.TestCase):
         self.assertEqual(5, mock_reboot.call_count,
                          "Reboot not called 5 times")
         mock_reboot.assert_has_calls(server_calls)
+        mock_delete.assert_called_once_with(fake_server)
 
     @mock.patch(NOVA_SERVERS + "._generate_random_name")
+    @mock.patch(NOVA_SERVERS + "._delete_server")
     @mock.patch(NOVA_SERVERS + "._stop_and_start_server")
     @mock.patch(NOVA_SERVERS + "._reboot_server")
     @mock.patch(NOVA_SERVERS + "._boot_server")
     def test_multiple_bounce_actions(self, mock_boot, mock_reboot,
-                                     mock_stop_start, mock_name):
+                                     mock_stop_start, mock_delete, mock_name):
         actions = [{'hard_reboot': 5}, {'stop_start': 8}]
         fake_server = object()
         self._bind_server_actions(mock_reboot, mock_stop_start)
@@ -154,6 +160,7 @@ class NovaServersTestCase(test.TestCase):
         self.assertEqual(8, mock_stop_start.call_count,
                          "Stop/Start not called 8 times")
         mock_stop_start.assert_has_calls(server_calls)
+        mock_delete.assert_called_once_with(fake_server)
 
     def test_validate_actions(self):
         actions = [{"hardd_reboot": 6}]

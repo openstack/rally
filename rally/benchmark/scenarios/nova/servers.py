@@ -52,6 +52,7 @@ class NovaServers(utils.NovaScenario):
                                   image_id, flavor_id, **kwargs)
         for action in ACTION_BUILDER.build_actions(actions, server):
             action()
+        cls._delete_server(server)
 
     @classmethod
     def snapshot_server(cls, image_id, flavor_id, **kwargs):
