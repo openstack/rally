@@ -15,6 +15,7 @@
 
 import collections
 import multiprocessing
+from multiprocessing import pool as multiprocessing_pool
 import os
 import pytest
 import random
@@ -292,11 +293,36 @@ class ScenarioRunner(object):
 
         return results
 
+    def _run_scenario_periodically(self, cls, method, args,
+                                   times, period, timeout):
+        async_results = []
+
+        for i in xrange(times):
+            thread = multiprocessing_pool.ThreadPool(processes=1)
+            async_result = thread.apply_async(_run_scenario_loop,
+                                              ((i, cls, method, args),))
+            async_results.append(async_result)
+
+            if i != times - 1:
+                time.sleep(period * 60)
+
+        results = []
+        for async_result in async_results:
+            try:
+                result = async_result.get()
+            except multiprocessing.TimeoutError as e:
+                result = {"time": timeout, "error": _format_exc(e)}
+            results.append(result)
+
+        return results
+
     def _run_scenario(self, cls, method, args, execution_type, config):
+
         timeout = config.get("timeout", 10000)
-        concurrent = config.get("active_users", 1)
 
         if execution_type == "continuous":
+
+            concurrent = config.get("active_users", 1)
 
             # NOTE(msdubov): If not specified, perform single scenario run.
             if "duration" not in config and "times" not in config:
@@ -315,6 +341,16 @@ class ScenarioRunner(object):
                 duration = config["duration"]
                 return self._run_scenario_continuously_for_duration(
                             cls, method, args, duration, concurrent, timeout)
+
+        elif execution_type == "periodic":
+
+            times = config["times"]
+            period = config["period"]
+
+            # Run a benchmark scenario the specified amount of times
+            # with a specified period between two consecutive launches.
+            return self._run_scenario_periodically(cls, method, args,
+                                                   times, period, timeout)
 
     def run(self, name, kwargs):
         cls_name, method_name = name.split(".")

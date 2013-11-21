@@ -140,13 +140,14 @@ test_config_schema = {
                         "properties": {
                             "args": {"type": "object"},
                             "init": {"type": "object"},
-                            "execution": {"enum": ["continuous"]},
+                            "execution": {"enum": ["continuous", "periodic"]},
                             "config": {
                                 "type": "object",
                                 "properties": {
                                     "times": {"type": "number"},
                                     "duration": {"type": "number"},
                                     "active_users": {"type": "number"},
+                                    "period": {"type": "number"},
                                     "tenants": {"type": "number"},
                                     "users_per_tenant": {"type": "number"},
                                     "timeout": {"type": "number"}

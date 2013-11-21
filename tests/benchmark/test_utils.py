@@ -224,11 +224,31 @@ class ScenarioTestCase(test.TestCase):
         ]
         self.assertEqual(mock_multi.Pool.mock_calls, expect)
 
+    @mock.patch("rally.benchmark.utils._run_scenario_loop")
+    @mock.patch("rally.benchmark.utils.time.sleep")
+    @mock.patch("rally.benchmark.utils.osclients")
+    def test_run_scenario_periodically(self, mock_osclients,
+                                       mock_sleep, mock_run_scenario_loop):
+        mock_osclients.Clients.return_value = fakes.FakeClients()
+        runner = utils.ScenarioRunner(mock.MagicMock(), self.fake_kw)
+        utils.__openstack_clients__ = ["client"]
+        times = 3
+        period = 4
+        timeout = 5
+        runner._run_scenario_periodically(fakes.FakeScenario, "do_it", {},
+                                          times, period, timeout)
+
+        expected = [mock.call((i, fakes.FakeScenario, "do_it", {}))
+                    for i in xrange(times)]
+        self.assertEqual(mock_run_scenario_loop.mock_calls, expected)
+
+        expected = [mock.call(period * 60) for i in xrange(times - 1)]
+        mock_sleep.has_calls(expected)
+
     @mock.patch("rally.benchmark.utils.osclients")
     @mock.patch("rally.benchmark.utils.base")
     @mock.patch("rally.benchmark.utils.osclients")
-    def test_run_scenario_continuously(self, mock_osclients, mock_base,
-                                       mock_clients):
+    def test_run_continuous(self, mock_osclients, mock_base, mock_clients):
         FakeScenario = mock.MagicMock()
         FakeScenario.init = mock.MagicMock(return_value={})
 
@@ -258,6 +278,31 @@ class ScenarioTestCase(test.TestCase):
                                                      "timeout": 1})
         self.assertEqual(result, "result")
         runner._run_scenario_continuously_for_duration.assert_called_once_with(
+                                    FakeScenario, "do_it", {"a": 1}, 2, 3, 1)
+
+    @mock.patch("rally.benchmark.utils.osclients")
+    @mock.patch("rally.benchmark.utils.base")
+    @mock.patch("rally.benchmark.utils.osclients")
+    def test_run_periodic(self, mock_osclients, mock_base, mock_clients):
+        FakeScenario = mock.MagicMock()
+        FakeScenario.init = mock.MagicMock(return_value={})
+
+        mock_osclients.Clients.return_value = fakes.FakeClients()
+        runner = utils.ScenarioRunner(mock.MagicMock(), self.fake_kw)
+        runner._run_scenario_periodically = mock.MagicMock(
+                                                        return_value="result")
+        runner._create_temp_tenants_and_users = mock.MagicMock(
+                                                            return_value=[])
+        runner._delete_temp_tenants_and_users = mock.MagicMock()
+
+        mock_base.Scenario.get_by_name = \
+            mock.MagicMock(return_value=FakeScenario)
+        mock_clients.return_value = ["client"]
+        result = runner._run_scenario(FakeScenario, "do_it", {"a": 1},
+                                      "periodic", {"times": 2, "period": 3,
+                                                   "timeout": 1})
+        self.assertEqual(result, "result")
+        runner._run_scenario_periodically.assert_called_once_with(
                                     FakeScenario, "do_it", {"a": 1}, 2, 3, 1)
 
     @mock.patch("rally.benchmark.utils._create_openstack_clients")
