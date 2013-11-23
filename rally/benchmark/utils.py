@@ -18,6 +18,7 @@ import os
 import pytest
 import random
 import traceback
+import uuid
 
 import fuel_health.cleanup as fuel_cleanup
 
@@ -93,15 +94,17 @@ class ScenarioRunner(object):
         base.Scenario.register()
 
     def _create_temp_tenants_and_users(self, tenants, users_per_tenant):
-        self.tenants = [self.clients["keystone"].tenants.create("tenant_%d" %
-                                                                i)
+        run_id = str(uuid.uuid4())
+        self.tenants = [self.clients["keystone"].tenants.create(
+                            "temp_%(rid)s_tenant_%(iter)i" % {"rid": run_id,
+                                                              "iter": i})
                         for i in range(tenants)]
         self.users = []
         temporary_endpoints = []
         for tenant in self.tenants:
             for uid in range(users_per_tenant):
-                username = "user_%(tid)s_%(uid)d" % {"tid": tenant.id,
-                                                     "uid": uid}
+                username = "%(tname)s_user_%(uid)d" % {"tname": tenant.name,
+                                                       "uid": uid}
                 password = "password"
                 user = self.clients["keystone"].users.create(username,
                                                              password,
