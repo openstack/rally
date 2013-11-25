@@ -102,3 +102,16 @@ class ScenarioTestCase(test.TestCase):
         Scenario._clients = clients
         self.assertEqual(nova_client, Scenario.clients("nova"))
         self.assertEqual(glance_client, Scenario.clients("glance"))
+
+    def test_admin_clients(self):
+
+        nova_client = object()
+        glance_client = object()
+        clients = {"nova": nova_client, "glance": glance_client}
+
+        class Scenario(base.Scenario):
+            pass
+
+        Scenario._admin_clients = clients
+        self.assertEqual(nova_client, Scenario.admin_clients("nova"))
+        self.assertEqual(glance_client, Scenario.admin_clients("glance"))
