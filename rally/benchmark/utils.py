@@ -172,7 +172,7 @@ class ScenarioRunner(object):
         global __openstack_clients__, __scenario_context__
 
         # NOTE(msdubov): Call init() with admin openstack clients
-        cls.clients = self.clients
+        cls._clients = self.clients
         __scenario_context__ = cls.init(init_args)
 
         # NOTE(msdubov): Launch scenarios with non-admin openstack clients
