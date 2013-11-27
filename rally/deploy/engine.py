@@ -17,6 +17,7 @@ import abc
 
 from rally import consts
 from rally import exceptions
+from rally.openstack.common import excutils
 from rally.openstack.common.gettextutils import _  # noqa
 from rally.openstack.common import log as logging
 from rally import utils
@@ -47,11 +48,13 @@ class EngineFactory(object):
         def cleanup(self):
             # Destory OpenStack deployment and free resource
 
-    Now to use the new engine 'A' we should use with statement:
+    An instance of this class used as a context manager on any unsafe
+    operations to a deployment. Any unhandled exceptions bring a status
+    of the deployment to the inconsistent state.
 
     with EngineFactory.get_engine('A', deployment) as deploy:
         # deploy is an instance of the A engine
-        # do all stuff that you need with your cloud
+        # perform all unsage operations on your cloud
     """
     __metaclass__ = abc.ABCMeta
 
@@ -85,32 +88,43 @@ class EngineFactory(object):
         """Cleanup OpenStack deployment."""
 
     @utils.log_deploy_wrapper(LOG.info, _("OpenStack cloud deployment."))
-    def make(self):
+    def make_deploy(self):
         self.deployment.update_status(consts.DeployStatus.DEPLOY_STARTED)
-        endpoint = self.deploy()
-        self.deployment.update_status(consts.DeployStatus.DEPLOY_FINISHED)
-        return endpoint
-
-    def __enter__(self):
-        return self
+        try:
+            endpoint = self.deploy()
+        except Exception:
+            with excutils.save_and_reraise_exception():
+                self.deployment.update_status(
+                    consts.DeployStatus.DEPLOY_FAILED)
+        else:
+            self.deployment.update_status(consts.DeployStatus.DEPLOY_FINISHED)
+            return endpoint
 
     @utils.log_deploy_wrapper(LOG.info,
                               _("Destroy cloud and free allocated resources."))
-    def __exit__(self, type, value, traceback):
-        uuid = self.deployment['uuid']
-        if type:
-            LOG.exception(_('Deployment %(uuid)s: Error: %(msg)r') %
-                          {'uuid': uuid, 'msg': value})
-            self.deployment.update_status(consts.DeployStatus.DEPLOY_FAILED)
+    def make_cleanup(self):
         self.deployment.update_status(consts.DeployStatus.CLEANUP_STARTED)
         try:
             self.cleanup()
         except Exception:
-            # TODO(akscram): We lost the original exception
-            #                (type, value, traceback).
-            LOG.exception(_('Deployment %s: Cleanup failed.') % uuid)
-            self.deployment.update_status(
-                consts.DeployStatus.CLEANUP_FAILED)
-            raise
-        finally:
+            with excutils.save_and_reraise_exception():
+                self.deployment.update_status(
+                    consts.DeployStatus.CLEANUP_FAILED)
+        else:
             self.deployment.update_status(consts.DeployStatus.CLEANUP_FINISHED)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, exc_traceback):
+        deploy_uuid = self.deployment['uuid']
+        # TODO(akscram): We have to catch more specific exceptions to
+        #                change a value of status of deployment on
+        #                failed.
+        if exc_type is not None:
+            # TODO(akscram): We'll lose the original exception if a next
+            #                block have raised an yet another one.
+            LOG.exception(_('Deployment %(uuid)s: Error: %(msg)s') %
+                          {'uuid': deploy_uuid, 'msg': str(exc_value)})
+            self.deployment.update_status(
+                consts.DeployStatus.DEPLOY_INCONSISTENT)
