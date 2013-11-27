@@ -24,17 +24,15 @@ from rally import exceptions
 from rally import test
 
 
-# XXX(akscram): The assertRaises of testtools can't be used as a
-#               context manager:
-#                   with self.assertRaises(SomeError):
-#                       with engine as deployer:
-#                           raise SomeError()
-#               instead of:
-#                   self.assertRaises(SomeError, engine_with_error,
-#                                     engine, SomeError())
-def engine_with_error(error, engine):
-    with engine:
-        raise error
+def make_fake_deployment(**kwargs):
+    values = dict({
+        'uuid': uuid.uuid4(),
+        'config': {
+            'name': 'fake',
+        },
+        'status': consts.DeployStatus.DEPLOY_INIT,
+    }, **kwargs)
+    return FakeDeployment(values=values)
 
 
 class FakeDeployment(object):
@@ -68,18 +66,20 @@ class FakeEngine(deploy.EngineFactory):
 
 
 class EngineFactoryTestCase(test.TestCase):
-    def setUp(self):
-        super(EngineFactoryTestCase, self).setUp()
-        self.deployment = FakeDeployment({
-            'uuid': uuid.uuid4(),
-            'config': {
-                'name': 'fake',
-            },
-        })
+
+    @mock.patch.object(FakeDeployment, 'update_status')
+    def test_get_engine_not_found(self, mock_update_status):
+        deployment = make_fake_deployment()
+        self.assertRaises(exceptions.NoSuchEngine,
+                          deploy.EngineFactory.get_engine,
+                          "non_existing_engine", deployment)
+        mock_update_status.assert_called_once_with(
+            consts.DeployStatus.DEPLOY_FAILED)
 
     @mock.patch.object(FakeDeployment, 'update_status')
     def test_make_deploy(self, mock_update_status):
-        engine = FakeEngine(self.deployment)
+        deployment = make_fake_deployment()
+        engine = FakeEngine(deployment)
         endpoint = engine.make_deploy()
         self.assertEqual(engine, endpoint)
         self.assertTrue(endpoint.deployed)
@@ -90,43 +90,23 @@ class EngineFactoryTestCase(test.TestCase):
         ])
 
     @mock.patch.object(FakeDeployment, 'update_status')
-    def test_with_statement(self, mock_update_status):
-        engine = FakeEngine(self.deployment)
-        with engine as deployer:
-            self.assertEqual(engine, deployer)
-        self.assertFalse(mock_update_status.called)
-        self.assertFalse(engine.cleanuped)
-        self.assertFalse(engine.deployed)
-
-    @mock.patch.object(FakeDeployment, 'update_status')
-    def test_with_statement_failed(self, mock_update_status):
-        class SomeError(Exception):
-            pass
-
-        engine = FakeEngine(self.deployment)
-        self.assertRaises(SomeError, engine_with_error, SomeError(), engine)
-        mock_update_status.assert_called_once_with(
-            consts.DeployStatus.DEPLOY_INCONSISTENT)
-        self.assertFalse(engine.cleanuped)
-        self.assertFalse(engine.deployed)
-
-    @mock.patch.object(FakeDeployment, 'update_status')
     @mock.patch.object(FakeEngine, 'deploy')
     def test_make_deploy_failed(self, mock_deploy, mock_update_status):
         class DeployFailed(Exception):
             pass
 
-        engine = FakeEngine(self.deployment)
+        deployment = make_fake_deployment()
+        engine = FakeEngine(deployment)
         mock_deploy.side_effect = DeployFailed()
         self.assertRaises(DeployFailed, engine.make_deploy)
         mock_update_status.assert_has_calls([
             mock.call(consts.DeployStatus.DEPLOY_STARTED),
-            mock.call(consts.DeployStatus.DEPLOY_FAILED),
         ])
 
     @mock.patch.object(FakeDeployment, 'update_status')
     def test_make_cleanup(self, mock_update_status):
-        engine = FakeEngine(self.deployment)
+        deployment = make_fake_deployment()
+        engine = FakeEngine(deployment)
         engine.make_cleanup()
         self.assertTrue(engine.cleanuped)
         self.assertFalse(engine.deployed)
@@ -142,22 +122,70 @@ class EngineFactoryTestCase(test.TestCase):
         class CleanUpFailed(Exception):
             pass
 
-        engine = FakeEngine(self.deployment)
+        deployment = make_fake_deployment()
+        engine = FakeEngine(deployment)
         mock_cleanup.side_effect = CleanUpFailed()
         self.assertRaises(CleanUpFailed, engine.make_cleanup)
         mock_update_status.assert_has_calls([
             mock.call(consts.DeployStatus.CLEANUP_STARTED),
-            mock.call(consts.DeployStatus.CLEANUP_FAILED),
         ])
         self.assertFalse(engine.cleanuped)
 
     @mock.patch.object(FakeDeployment, 'update_status')
-    def test_get_engine_not_found(self, mock_update_status):
-        self.assertRaises(exceptions.NoSuchEngine,
-                          deploy.EngineFactory.get_engine,
-                          "non_existing_engine", self.deployment)
-        mock_update_status.assert_called_once_with(
+    def test_with_statement(self, mock_update_status):
+        deployment = make_fake_deployment()
+        engine = FakeEngine(deployment)
+        with engine as deployer:
+            self.assertEqual(engine, deployer)
+        self.assertFalse(mock_update_status.called)
+        self.assertFalse(engine.cleanuped)
+        self.assertFalse(engine.deployed)
+
+    def test_with_statement_failed_on_init(self):
+        self._assert_changed_status_on_error(
+            consts.DeployStatus.DEPLOY_INIT,
             consts.DeployStatus.DEPLOY_FAILED)
+
+    def test_with_statement_failed_on_started(self):
+        self._assert_changed_status_on_error(
+            consts.DeployStatus.DEPLOY_STARTED,
+            consts.DeployStatus.DEPLOY_FAILED)
+
+    def test_with_statement_failed_on_finished(self):
+        self._assert_changed_status_on_error(
+            consts.DeployStatus.DEPLOY_FINISHED,
+            consts.DeployStatus.DEPLOY_INCONSISTENT)
+
+    def test_with_statement_failed_on_cleanup(self):
+        self._assert_changed_status_on_error(
+            consts.DeployStatus.CLEANUP_STARTED,
+            consts.DeployStatus.CLEANUP_FAILED)
+
+    @mock.patch.object(FakeDeployment, 'update_status')
+    def _assert_changed_status_on_error(self, initial, final,
+                                        mock_update_status):
+        # NOTE(akscram): The assertRaises of testtools can't be used as
+        #                a context manager in python26:
+        #                   with self.assertRaises(SomeError):
+        #                       with engine as deployer:
+        #                           raise SomeError()
+        #                instead of:
+        #                   self.assertRaises(SomeError,
+        #                                     context_with_error,
+        #                                     SomeError(), engine)
+        def context_with_error(error, manager):
+            with manager:
+                raise error
+
+        class SomeError(Exception):
+            pass
+
+        deployment = make_fake_deployment(status=initial)
+        engine = FakeEngine(deployment)
+        self.assertRaises(SomeError, context_with_error, SomeError(), engine)
+        mock_update_status.assert_called_once_with(final)
+        self.assertFalse(engine.cleanuped)
+        self.assertFalse(engine.deployed)
 
     def _create_fake_engines(self):
         class EngineMixIn(object):
@@ -179,10 +207,11 @@ class EngineFactoryTestCase(test.TestCase):
         return [EngineFake1, EngineFake2, EngineFake3]
 
     def test_get_engine(self):
+        deployment = make_fake_deployment()
         engines = self._create_fake_engines()
         for e in engines:
             engine_inst = deploy.EngineFactory.get_engine(e.__name__,
-                                                          self.deployment)
+                                                          deployment)
             # TODO(boris-42): make it work through assertIsInstance
             self.assertEqual(str(type(engine_inst)), str(e))
 

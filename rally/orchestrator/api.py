@@ -38,16 +38,13 @@ def start_task(config):
     deployer = deploy.EngineFactory.get_engine(deployment['config']['name'],
                                                deployment)
     tester = engine.TestEngine(benchmark_conf, task)
-
-    endpoint = deployer.make_deploy()
-    deployment.update_endpoint(endpoint)
-
     with deployer:
+        endpoint = deployer.make_deploy()
+        deployment.update_endpoint(endpoint)
         with tester.bind(endpoint):
             tester.verify()
             tester.benchmark()
-
-    deployer.make_cleanup()
+        deployer.make_cleanup()
     # TODO(akscram): It's just to follow legacy logic.
     deployment.delete()
 
