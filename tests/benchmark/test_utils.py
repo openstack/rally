@@ -40,7 +40,7 @@ class FakeScenario(base.Scenario):
 
     @classmethod
     def too_long(cls, **kwargs):
-        time.sleep(2)
+        time.sleep(0.1)
 
     @classmethod
     def something_went_wrong(cls, **kwargs):
@@ -111,10 +111,10 @@ class ScenarioTestCase(test.TestCase):
                                            "continuous",
                                            {"times": times,
                                            "active_users": 1,
-                                           "timeout": 0.1})
+                                           "timeout": 0.01})
         self.assertEqual(len(results), times)
         for r in results:
-            self.assertEqual(r['time'], 0.1)
+            self.assertEqual(r['time'], 0.01)
             self.assertEqual(r['error'][0], str(multiprocessing.TimeoutError))
 
     def test_run_scenario_exception_inside_test(self):
