@@ -141,3 +141,7 @@ class SSHError(RallyException):
 class TaskInvalidStatus(RallyException):
     msg_fmt = _("Task `%(uuid)s` in `%(actual)s` status but `%(require)s` is "
                 "required.")
+
+
+class ChecksumMismatch(RallyException):
+    msg_fmt = _("Checksum mismatch for image: %(url)s")

@@ -1,0 +1,25 @@
+{
+    "deploy": {
+        "name": "DevstackEngine",
+        "provider": {
+            "name": "OpenStackProvider",
+            "user": "admin",
+            "tenant": "admin",
+            "flavor_id": "2",
+            "password": "admin",
+            "auth_url": "http://example.net:5000/v2.0",
+            "amount": 1,
+            "image": {
+                "checksum": "5101b2013b31d9f2f96f64f728926054",
+                "name": "Ubuntu raring(added by rally)",
+                "format": "qcow2",
+                "userdata": "#cloud-config\r\n disable_root: false\r\n manage_etc_hosts: true\r\n",
+                "url": "http://cloud-images.ubuntu.com/raring/current/raring-server-cloudimg-amd64-disk1.img"
+            }
+        }
+    },
+    "tests": {
+        "verify": ["sanity", "smoke"],
+        "benchmark": {}
+    }
+}
