@@ -88,11 +88,24 @@ class Scenario(object):
     def clients(cls, client_type):
         """Returns a python openstack client of the requested type.
 
+        The client will be that for one of the temporary non-administrator
+        users created before the benchmark launch.
+
         :param client_type: Client type ("nova"/"glance" etc.)
 
         :returns: Python openstack client object
         """
         return cls._clients[client_type]
+
+    @classmethod
+    def admin_clients(cls, client_type):
+        """Returns a python admin openstack client of the requested type.
+
+        :param client_type: Client type ("nova"/"glance" etc.)
+
+        :returns: Python openstack client object
+        """
+        return cls._admin_clients[client_type]
 
     @classmethod
     def sleep_between(cls, min_sleep, max_sleep):

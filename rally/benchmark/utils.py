@@ -33,6 +33,7 @@ LOG = logging.getLogger(__name__)
 
 # NOTE(msdubov): These objects are shared between multiple scenario processes.
 __openstack_clients__ = []
+__admin_clients__ = {}
 __scenario_context__ = {}
 
 
@@ -48,6 +49,7 @@ def _run_scenario_loop(args):
     # NOTE(msdubov): Each scenario run uses a random openstack client
     #                from a predefined set to act from different users.
     cls._clients = random.choice(__openstack_clients__)
+    cls._admin_clients = __admin_clients__
     cls._context = __scenario_context__
 
     cls.idle_time = 0
@@ -89,13 +91,16 @@ class ScenarioRunner(object):
     def __init__(self, task, cloud_config):
         self.task = task
         self.endpoints = cloud_config
+
+        global __admin_clients__
         keys = ["admin_username", "admin_password", "admin_tenant_name", "uri"]
-        self.clients = _create_openstack_clients([self.endpoints], keys)[0]
+        __admin_clients__ = _create_openstack_clients([self.endpoints],
+                                                      keys)[0]
         base.Scenario.register()
 
     def _create_temp_tenants_and_users(self, tenants, users_per_tenant):
         run_id = str(uuid.uuid4())
-        self.tenants = [self.clients["keystone"].tenants.create(
+        self.tenants = [__admin_clients__["keystone"].tenants.create(
                             "temp_%(rid)s_tenant_%(iter)i" % {"rid": run_id,
                                                               "iter": i})
                         for i in range(tenants)]
@@ -106,11 +111,11 @@ class ScenarioRunner(object):
                 username = "%(tname)s_user_%(uid)d" % {"tname": tenant.name,
                                                        "uid": uid}
                 password = "password"
-                user = self.clients["keystone"].users.create(username,
-                                                             password,
-                                                             "%s@test.com" %
-                                                             username,
-                                                             tenant.id)
+                user = __admin_clients__["keystone"].users.create(username,
+                                                                  password,
+                                                                  "%s@test.com"
+                                                                  % username,
+                                                                  tenant.id)
                 self.users.append(user)
                 user_credentials = {"username": username, "password": password,
                                     "tenant_name": tenant.name,
@@ -175,7 +180,7 @@ class ScenarioRunner(object):
         global __openstack_clients__, __scenario_context__
 
         # NOTE(msdubov): Call init() with admin openstack clients
-        cls._clients = self.clients
+        cls._clients = __admin_clients__
         __scenario_context__ = cls.init(init_args)
 
         # NOTE(msdubov): Launch scenarios with non-admin openstack clients
