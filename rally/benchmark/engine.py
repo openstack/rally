@@ -138,9 +138,14 @@ class TestEngine(object):
         with os.fdopen(self.cloud_config_fd, 'w') as f:
             self.cloud_config.write(f)
 
-    @rutils.log_task_wrapper(LOG.debug, _("Verification temp file deletion."))
-    def __exit__(self, type, value, traceback):
+    @rutils.log_task_wrapper(LOG.debug, _("Deleting the temp verification "
+                                          "config file & Finishing the task."))
+    def __exit__(self, exc_type, exc_value, exc_traceback):
         os.remove(self.cloud_config_path)
+        if exc_type is not None:
+            self.task.update_status(consts.TaskStatus.FAILED)
+        else:
+            self.task.update_status(consts.TaskStatus.FINISHED)
 
     @rutils.log_task_wrapper(LOG.info, _('OS cloud binding to Rally.'))
     def bind(self, cloud_config):

@@ -28,6 +28,7 @@ class _TaskStatus(utils.ImmutableMixin, utils.EnumMixin):
     INIT = 'init'
     CLEANUP = 'cleanup'
     FINISHED = 'finished'
+    FAILED = 'failed'
 
     TEST_TOOL_PATCHING_OPENSTACK = 'test_tool->patching_openstack'
     TEST_TOOL_VERIFY_OPENSTACK = 'test_tool->verify_openstack'
