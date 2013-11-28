@@ -42,10 +42,13 @@ class Deployment(BASE, RallyBase):
     __tablename__ = "deployments"
     __table_args__ = (
         sa.Index('deployment_uuid', 'uuid', unique=True),
+        sa.Index('deployment_parent_uuid', 'parent_uuid'),
     )
 
     id = sa.Column(sa.Integer, primary_key=True, autoincrement=True)
     uuid = sa.Column(sa.String(36), default=UUID, nullable=False)
+    parent_uuid = sa.Column(sa.String(36), sa.ForeignKey("deployments.uuid"),
+                            default=None, nullable=True)
     name = sa.Column(sa.String(255))
     started_at = sa.Column(sa.DateTime, nullable=True)
     completed_at = sa.Column(sa.DateTime, nullable=True)
@@ -73,6 +76,13 @@ class Deployment(BASE, RallyBase):
         name='enum_deployments_status',
         default=consts.DeployStatus.DEPLOY_INIT,
         nullable=False,
+    )
+
+    parent = sa.orm.relationship(
+        "Deployment",
+        backref="subdeploys",
+        remote_side=[uuid],
+        foreign_keys=parent_uuid,
     )
 
 

@@ -188,8 +188,8 @@ def deployment_update(uuid, values):
     return deploy
 
 
-def deployment_list(status=None):
-    query = model_query(models.Deployment)
+def deployment_list(status=None, parent_uuid=None):
+    query = model_query(models.Deployment).filter_by(parent_uuid=parent_uuid)
     if status is not None:
         query = query.filter_by(status=status)
     return query.all()

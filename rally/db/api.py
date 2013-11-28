@@ -165,13 +165,15 @@ def deployment_update(uuid, values):
     return IMPL.deployment_update(uuid, values)
 
 
-def deployment_list(status=None):
+def deployment_list(status=None, parent_uuid=None):
     """Get list of deployments.
 
     :param status: if None returns any deployments with any status.
+    :param parent_uuid: filter by parent. If None, return only "root"
+                        deployments.
     :returns: a list of dicts with data on the deployments
     """
-    return IMPL.deployment_list(status=status)
+    return IMPL.deployment_list(status=status, parent_uuid=parent_uuid)
 
 
 def resource_create(values):

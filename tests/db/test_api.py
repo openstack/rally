@@ -273,6 +273,15 @@ class DeploymentTestCase(test.DBTestCase):
             status=consts.DeployStatus.DEPLOY_FINISHED)
         self.assertEqual(len(deploys), 0)
 
+    def test_deployment_list_parent(self):
+        deploy = db.deployment_create({})
+        subdeploy1 = db.deployment_create({'parent_uuid': deploy.uuid})
+        subdeploy2 = db.deployment_create({'parent_uuid': deploy.uuid})
+        self.assertEqual([deploy.uuid], [d.uuid for d in db.deployment_list()])
+        subdeploys = db.deployment_list(parent_uuid=deploy.uuid)
+        self.assertEqual(set([subdeploy1.uuid, subdeploy2.uuid]),
+                         set([d.uuid for d in subdeploys]))
+
     def test_deployment_delete(self):
         deploy_one = db.deployment_create({})
         deploy_two = db.deployment_create({})
