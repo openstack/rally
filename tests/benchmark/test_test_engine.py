@@ -159,7 +159,38 @@ class TestEngineTestCase(test.TestCase):
             mock.call.update_verification_log(json.dumps(
                 [self.run_success, self.run_success])),
             mock.call.update_status(s.TEST_TOOL_BENCHMARKING),
-            mock.call.append_results(benchmark_results, {'raw': {}})
+            mock.call.append_results(benchmark_results, {'raw': {}}),
+            mock.call.update_status(s.FINISHED)
+        ]
+        # NOTE(msdubov): Ignore task['uuid'] calls which are used for logging
+        mock_calls = filter(lambda call: '__getitem__' not in call[0],
+                            fake_task.mock_calls)
+        self.assertEqual(mock_calls, expected)
+
+    @mock.patch("rally.benchmark.utils.ScenarioRunner.run")
+    @mock.patch("rally.benchmark.utils.Verifier.run")
+    @mock.patch("rally.benchmark.utils.osclients")
+    def test_task_status_failed(self, mock_osclients, mock_run,
+                                mock_scenario_run):
+        fake_task = mock.MagicMock()
+        test_engine = engine.TestEngine(self.valid_test_config, fake_task)
+        mock_osclients.Clients.return_value = test_utils.FakeClients()
+        mock_run.return_value = self.run_success
+        mock_scenario_run.side_effect = exceptions.TestException()
+        try:
+            with test_engine.bind(self.valid_cloud_config):
+                test_engine.verify()
+                test_engine.benchmark()
+        except exceptions.TestException:
+            pass
+
+        s = consts.TaskStatus
+        expected = [
+            mock.call.update_status(s.TEST_TOOL_VERIFY_OPENSTACK),
+            mock.call.update_verification_log(json.dumps(
+                [self.run_success, self.run_success])),
+            mock.call.update_status(s.TEST_TOOL_BENCHMARKING),
+            mock.call.update_status(s.FAILED)
         ]
         # NOTE(msdubov): Ignore task['uuid'] calls which are used for logging
         mock_calls = filter(lambda call: '__getitem__' not in call[0],
