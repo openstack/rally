@@ -27,40 +27,64 @@ class Clients(object):
     def __init__(self, username, password, tenant_name, auth_url):
         self.kw = {'username': username, 'password': password,
                    'tenant_name': tenant_name, 'auth_url': auth_url}
+        self.cache = {}
 
     def get_keystone_client(self):
         """Return keystone client."""
+        if "keystone" in self.cache:
+            return self.cache["keystone"]
+
         new_kw = {"endpoint": self._change_port(self.kw["auth_url"], "35357")}
         kw = dict(self.kw.items() + new_kw.items())
         client = keystone.Client(**kw)
         client.authenticate()
+
+        self.cache["keystone"] = client
         return client
 
     def get_nova_client(self, version='2'):
         """Returns nova client."""
-        return nova.Client(version,
-                           self.kw['username'],
-                           self.kw['password'],
-                           self.kw['tenant_name'],
-                           auth_url=self.kw['auth_url'],
-                           service_type='compute')
+        if "nova" in self.cache:
+            return self.cache["nova"]
 
-    def get_glance_client(self, version='1'):
-        """Returns glance client."""
-        kc = self.get_keystone_client()
-        endpoint = kc.service_catalog.get_endpoints()['image'][0]
-        return glance.Client(version,
-                             endpoint=endpoint['publicURL'],
-                             token=kc.auth_token)
-
-    def get_cinder_client(self, version='1'):
-        """Returns cinder client."""
-        return cinder.Client(version,
+        client = nova.Client(version,
                              self.kw['username'],
                              self.kw['password'],
                              self.kw['tenant_name'],
                              auth_url=self.kw['auth_url'],
-                             service_type='volume')
+                             service_type='compute')
+
+        self.cache["nova"] = client
+        return client
+
+    def get_glance_client(self, version='1'):
+        """Returns glance client."""
+        if "glance" in self.cache:
+            return self.cache["glance"]
+
+        kc = self.get_keystone_client()
+        endpoint = kc.service_catalog.get_endpoints()['image'][0]
+        client = glance.Client(version,
+                               endpoint=endpoint['publicURL'],
+                               token=kc.auth_token)
+
+        self.cache["glance"] = client
+        return client
+
+    def get_cinder_client(self, version='1'):
+        """Returns cinder client."""
+        if "cinder" in self.cache:
+            return self.cache["cinder"]
+
+        client = cinder.Client(version,
+                               self.kw['username'],
+                               self.kw['password'],
+                               self.kw['tenant_name'],
+                               auth_url=self.kw['auth_url'],
+                               service_type='volume')
+
+        self.cache["cinder"] = client
+        return client
 
     def _change_port(self, url, new_port):
         """Change the port of a given url.
