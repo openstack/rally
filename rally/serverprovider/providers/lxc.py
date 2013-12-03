@@ -32,8 +32,8 @@ class LxcContainer(object):
         self.host = server
         self.config = {'network_bridge': 'br0'}
         self.config.update(config)
-        self.server = provider.ServerDTO('', self.config['ip'].split('/')[0],
-                                         'root', '')
+        self.server = provider.Server('', self.config['ip'].split('/')[0],
+                                      'root', '')
 
     def prepare_host(self):
         script = os.path.abspath(os.path.join(os.path.dirname(__file__),

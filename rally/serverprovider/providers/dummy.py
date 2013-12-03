@@ -29,10 +29,10 @@ class DummyProvider(provider.ProviderFactory):
         credentials = []
         for ep in self.credentials:
             user, host = ep.split('@')
-            credentials.append(provider.ServerDTO(uuid=uuid.uuid4(),
-                                                  ip=host,
-                                                  user=user,
-                                                  key=None))
+            credentials.append(provider.Server(uuid=uuid.uuid4(),
+                                               ip=host,
+                                               user=user,
+                                               key=None))
         return credentials
 
     def destroy_vms(self):

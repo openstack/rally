@@ -77,12 +77,12 @@ class ProviderTestCase(test.TestCase):
         self.assertRaises(NotImplementedError, provider.destroy_image, None)
 
 
-class ServerDTOTestCase(test.TestCase):
+class ServerTestCase(test.TestCase):
 
     def test_init_server_dto(self):
         vals = ['uuid', '192.168.1.1', 'admin', 'some_key', 'pwd']
         keys = ['uuid', 'ip', 'user', 'key', 'password']
-        server = serverprovider.ServerDTO(*vals)
+        server = serverprovider.Server(*vals)
         for k, v in dict(zip(keys, vals)).iteritems():
             self.assertEqual(getattr(server, k), v)
         self.assertIsInstance(server.ssh, sshutils.SSH)
