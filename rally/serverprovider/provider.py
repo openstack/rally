@@ -14,6 +14,7 @@
 #    under the License.
 
 import abc
+import jsonschema
 
 from rally import exceptions
 from rally import sshutils
@@ -102,6 +103,13 @@ class ProviderFactory(object):
         self.config = config
         self.resources = ResourceManager(deployment,
                                          self.__class__.__name__)
+        self.validate()
+
+    def validate(self):
+        # TODO(miarmak): remove this checking, when config schema is done for
+        # all available providers
+        if hasattr(self, 'CONFIG_SCHEMA'):
+            jsonschema.validate(self.config, self.CONFIG_SCHEMA)
 
     @staticmethod
     def get_provider(config, deployment):

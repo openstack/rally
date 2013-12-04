@@ -34,24 +34,26 @@ class ProviderMixIn(object):
 
 
 class ProviderA(ProviderMixIn, ProviderFactory):
-    def __init__(self, deployment, config):
-        pass
+    pass
 
 
 class ProviderB(ProviderMixIn, ProviderFactory):
-    def __init__(self, deployment, config):
-        pass
+    pass
 
 
 class ProviderC(ProviderB):
-    def __init__(self, deployment, config):
-        pass
+    pass
 
 
 FAKE_PROVIDERS = [ProviderA, ProviderB, ProviderC]
 
 
 class ProviderTestCase(test.TestCase):
+
+    @mock.patch.object(ProviderFactory, 'validate')
+    def test_init(self, fake_validate):
+        ProviderA(None, None)
+        fake_validate.assert_called_once_with()
 
     def test_get_provider_not_found(self):
         self.assertRaises(exceptions.NoSuchVMProvider,
