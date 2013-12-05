@@ -58,7 +58,7 @@ class VirshProvider(provider.ProviderFactory):
         cmd = 'virsh --connect=%s start %s' % (virt_url, vm_name)
         subprocess.check_call(cmd, shell=True)
 
-        return provider.ServerDTO(
+        return provider.Server(
             vm_name,
             self._determine_vm_ip(vm_name),
             self._config['template_user'],

@@ -20,9 +20,9 @@ from rally import sshutils
 from rally import utils
 
 
-class ServerDTO(utils.ImmutableMixin):
+class Server(utils.ImmutableMixin):
     """Represent information about created Server.
-    Provider.create_vms should return list of instance of ServerDTO
+    Provider.create_vms should return list of instance of Server
     """
     def __init__(self, uuid, ip, user, key, password=None):
         self.uuid = uuid
@@ -31,7 +31,7 @@ class ServerDTO(utils.ImmutableMixin):
         self.key = key
         self.password = password
         self.ssh = sshutils.SSH(ip, user)
-        super(ServerDTO, self).__init__()
+        super(Server, self).__init__()
 
 
 class ImageDTO(utils.ImmutableMixin):
@@ -95,7 +95,7 @@ class ProviderFactory(object):
         :param image_uuid: Indetificator of image
         :param type_id: Vm type identificator
         :param amount: amount of required VMs
-        :returns: list of ServerDTO instances.
+        :returns: list of Server instances.
         """
         pass
 

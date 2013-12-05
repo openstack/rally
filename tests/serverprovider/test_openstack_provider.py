@@ -123,7 +123,7 @@ class OpenStackProviderTestCase(test.TestCase):
     def test_openstack_provider_create_vms(self, g, provider, clients):
         self._init_mock_clients()
         clients.Clients = mock.MagicMock(return_value=self.clients)
-        provider.ServerDTO = mock.MagicMock()
+        provider.Server = mock.MagicMock()
         prov = OSProvider(self._get_valid_config())
         prov.get_image_uuid = mock.Mock()
         prov.create_vms()

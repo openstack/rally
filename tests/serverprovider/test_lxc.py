@@ -38,7 +38,7 @@ class LxcContainerTestCase(test.BaseTestCase):
                     'nameserver': '1.2.3.1',
                     'network_bridge': 'br0'}
         self.assertEqual(expected, self.container.config)
-        self.assertIsInstance(self.container.server, lxc.provider.ServerDTO)
+        self.assertIsInstance(self.container.server, lxc.provider.Server)
 
     def test_container_create(self):
         with mock.patch.object(lxc.LxcContainer, 'configure') as configure:
@@ -149,7 +149,7 @@ class LxcProviderTestCase(test.BaseTestCase):
         provider.create_vms = mock.Mock(return_value=[s1, s2])
         get_provider = mock.Mock(return_value=provider)
         with contextlib.nested(
-            mock.patch(self.mod + 'provider.ServerDTO'),
+            mock.patch(self.mod + 'provider.Server'),
             mock.patch(self.mod + 'LxcContainer', new=FakeContainer),
             mock.patch(self.mod + 'provider.ProviderFactory.get_provider',
                        new=get_provider)):
