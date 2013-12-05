@@ -160,11 +160,19 @@ def deployment_create(values):
 
 
 def deployment_delete(uuid):
-    count = model_query(models.Deployment).\
-                filter_by(uuid=uuid).\
-                delete(synchronize_session=False)
-    if not count:
-        raise exceptions.DeploymentNotFound(uuid=uuid)
+    session = db_session.get_session()
+    with session.begin():
+        count = model_query(models.Resource, session=session).\
+                filter_by(deployment_uuid=uuid).\
+                count()
+        if count:
+            raise exceptions.DeploymentIsBusy(uuid=uuid)
+
+        count = model_query(models.Deployment, session=session).\
+            filter_by(uuid=uuid).\
+            delete(synchronize_session=False)
+        if not count:
+            raise exceptions.DeploymentNotFound(uuid=uuid)
 
 
 def deployment_get(uuid):
@@ -185,3 +193,28 @@ def deployment_list(status=None):
     if status is not None:
         query = query.filter_by(status=status)
     return query.all()
+
+
+def resource_create(values):
+    resource = models.Resource()
+    resource.update(values)
+    resource.save()
+    return resource
+
+
+def resource_get_all(deployment_uuid, provider_name=None, type=None):
+    query = model_query(models.Resource).\
+                filter_by(deployment_uuid=deployment_uuid)
+    if provider_name is not None:
+        query = query.filter_by(provider_name=provider_name)
+    if type is not None:
+        query = query.filter_by(type=type)
+    return query.all()
+
+
+def resource_delete(id):
+    count = model_query(models.Resource).\
+                filter_by(id=id).\
+                delete(synchronize_session=False)
+    if not count:
+        raise exceptions.ResourceNotFound(id=id)

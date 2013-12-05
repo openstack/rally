@@ -278,3 +278,89 @@ class DeploymentTestCase(test.DBTestCase):
     def test_deployment_delete_not_found(self):
         self.assertRaises(exceptions.DeploymentNotFound,
                           db.deployment_delete, str(uuid.uuid4()))
+
+    def test_deployment_delete_is_busy(self):
+        deployment = db.deployment_create({})
+        db.resource_create({'deployment_uuid': deployment['uuid']})
+        db.resource_create({'deployment_uuid': deployment['uuid']})
+        self.assertRaises(exceptions.DeploymentIsBusy, db.deployment_delete,
+                          deployment['uuid'])
+
+
+class ResourceTestCase(test.DBTestCase):
+    def test_create(self):
+        deployment = db.deployment_create({})
+        resource = db.resource_create({
+            'deployment_uuid': deployment['uuid'],
+            'provider_name': 'fakeprovider',
+            'type': 'faketype',
+        })
+        resources = db.resource_get_all(deployment['uuid'])
+        self.assertTrue(resource['id'])
+        self.assertEqual(len(resources), 1)
+        self.assertTrue(resource['id'], resources[0]['id'])
+        self.assertEqual(resource['deployment_uuid'], deployment['uuid'])
+        self.assertEqual(resource['provider_name'], 'fakeprovider')
+        self.assertEqual(resource['type'], 'faketype')
+
+    def test_delete(self):
+        deployment = db.deployment_create({})
+        res = db.resource_create({'deployment_uuid': deployment['uuid']})
+        db.resource_delete(res['id'])
+        resources = db.resource_get_all(deployment['id'])
+        self.assertEqual(len(resources), 0)
+
+    def test_delete_not_found(self):
+        self.assertRaises(exceptions.ResourceNotFound,
+                          db.resource_delete, str(uuid.uuid4()))
+
+    def test_get_all(self):
+        deployment0 = db.deployment_create({})
+        deployment1 = db.deployment_create({})
+        res0 = db.resource_create({'deployment_uuid': deployment0['uuid']})
+        res1 = db.resource_create({'deployment_uuid': deployment1['uuid']})
+        res2 = db.resource_create({'deployment_uuid': deployment1['uuid']})
+        resources = db.resource_get_all(deployment1['uuid'])
+        self.assertEqual(sorted([res1['id'], res2['id']]),
+                         sorted([r['id'] for r in resources]))
+        resources = db.resource_get_all(deployment0['uuid'])
+        self.assertEqual(len(resources), 1)
+        self.assertEqual(res0['id'], resources[0]['id'])
+
+    def test_get_all_by_provider_name(self):
+        deployment = db.deployment_create({})
+        res_one = db.resource_create({
+            'deployment_uuid': deployment['uuid'],
+            'provider_name': 'one',
+        })
+        res_two = db.resource_create({
+            'deployment_uuid': deployment['uuid'],
+            'provider_name': 'two',
+        })
+        resources = db.resource_get_all(deployment['uuid'],
+                                        provider_name='one')
+        self.assertEqual(len(resources), 1)
+        self.assertEqual(res_one['id'], resources[0]['id'])
+        resources = db.resource_get_all(deployment['uuid'],
+                                        provider_name='two')
+        self.assertEqual(len(resources), 1)
+        self.assertEqual(res_two['id'], resources[0]['id'])
+
+    def test_get_all_by_provider_type(self):
+        deployment = db.deployment_create({})
+        res_one = db.resource_create({
+            'deployment_uuid': deployment['uuid'],
+            'type': 'one',
+        })
+        res_two = db.resource_create({
+            'deployment_uuid': deployment['uuid'],
+            'type': 'two',
+        })
+        resources = db.resource_get_all(deployment['uuid'],
+                                        type='one')
+        self.assertEqual(len(resources), 1)
+        self.assertEqual(res_one['id'], resources[0]['id'])
+        resources = db.resource_get_all(deployment['uuid'],
+                                        type='two')
+        self.assertEqual(len(resources), 1)
+        self.assertEqual(res_two['id'], resources[0]['id'])

@@ -172,3 +172,34 @@ def deployment_list(status=None):
     :returns: a list of dicts with data on the deployments
     """
     return IMPL.deployment_list(status=status)
+
+
+def resource_create(values):
+    """Create a resource from the values dictionary.
+
+    :param values: a dict with data on the resource
+    :returns: a dict with updated data on the resource
+    """
+    return IMPL.resource_create(values)
+
+
+def resource_get_all(deployment_uuid, provider_name=None, type=None):
+    """Return resources of a deployment.
+
+    :param deployment_uuid: filter by uuid of a deployment
+    :param provider_name: filter by provider_name, if is None, then
+                          return all prorivders
+    :param type: filter by type, if is None, then return all types
+    :returns: a list of dicts with data on a resource
+    """
+    return IMPL.resource_get_all(deployment_uuid,
+                                 provider_name=provider_name,
+                                 type=type)
+
+
+def resource_delete(id):
+    """Delete a resource.
+
+    :param id: ID of a resource
+    """
+    return IMPL.resource_delete(id)

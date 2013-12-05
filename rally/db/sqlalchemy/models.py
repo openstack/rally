@@ -74,6 +74,40 @@ class Deployment(BASE, RallyBase):
     )
 
 
+class Resource(BASE, RallyBase):
+    """Represent a resource of a deployment."""
+    __tablename__ = 'resources'
+    __table_args__ = (
+        sa.Index('resource_deployment_uuid', 'deployment_uuid'),
+        sa.Index('resource_provider_name', 'deployment_uuid', 'provider_name'),
+        sa.Index('resource_type', 'deployment_uuid', 'type'),
+        sa.Index('resource_provider_name_and_type', 'deployment_uuid',
+                 'provider_name', 'type'),
+    )
+
+    id = sa.Column(sa.Integer, primary_key=True, autoincrement=True)
+    provider_name = sa.Column(sa.String(255))
+    type = sa.Column(sa.String(255))
+
+    info = sa.Column(
+        sa_types.MutableDict.as_mutable(sa_types.JSONEncodedDict),
+        default={},
+        nullable=False,
+    )
+
+    deployment_uuid = sa.Column(
+        sa.String(36),
+        sa.ForeignKey(Deployment.uuid),
+        nullable=False,
+    )
+    deployment = sa.orm.relationship(
+        Deployment,
+        backref=sa.orm.backref('resources'),
+        foreign_keys=deployment_uuid,
+        primaryjoin=(deployment_uuid == Deployment.uuid),
+    )
+
+
 class Task(BASE, RallyBase):
     """Represents a Benchamrk task."""
     __tablename__ = 'tasks'

@@ -130,6 +130,15 @@ class DeploymentNotFound(NotFoundException):
     msg_fmt = _("Deployment with uuid=%(uuid)s not found.")
 
 
+class DeploymentIsBusy(RallyException):
+    msg_fmt = _("There are allocated resources for the deployment with "
+                "uuid=%(uuid)s.")
+
+
+class ResourceNotFound(NotFoundException):
+    msg_fmt = _("Resource with id=%(id)s not found.")
+
+
 class TimeoutException(RallyException):
     msg_fmt = _("Timeout exceeded.")
 

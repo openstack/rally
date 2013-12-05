@@ -51,5 +51,21 @@ class Deployment(object):
     def update_endpoint(self, endpoint):
         self._update({'endpoint': endpoint})
 
+    def add_resource(self, provider_name, type=None, info=None):
+        return db.resource_create({
+            'deployment_uuid': self.deployment['uuid'],
+            'provider_name': provider_name,
+            'type': type,
+            'info': info,
+        })
+
+    def get_resources(self, provider_name=None, type=None):
+        return db.resource_get_all(self.deployment['uuid'],
+                                   provider_name=provider_name, type=type)
+
+    @staticmethod
+    def delete_resource(resource_id):
+        db.resource_delete(resource_id)
+
     def delete(self):
         db.deployment_delete(self.deployment['uuid'])

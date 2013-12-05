@@ -33,6 +33,13 @@ class DeploymentTestCase(test.TestCase):
             'endpoint': {},
             'status': consts.DeployStatus.DEPLOY_INIT,
         }
+        self.resource = {
+            'id': 42,
+            'deployment_uuid': self.deployment['uuid'],
+            'provider_name': 'provider',
+            'type': 'some',
+            'info': {'key': 'value'},
+        }
 
     @mock.patch('rally.objects.deploy.db.deployment_create')
     def test_init_with_create(self, mock_create):
@@ -117,3 +124,30 @@ class DeploymentTestCase(test.TestCase):
             self.deployment['uuid'],
             {'endpoint': {'opt': 'val'}},
         )
+
+    @mock.patch('rally.objects.deploy.db.resource_create')
+    def test_add_resource(self, mock_create):
+        mock_create.return_value = self.resource
+        deploy = objects.Deployment(deployment=self.deployment)
+        resource = deploy.add_resource('provider', type='some',
+                                       info={'key': 'value'})
+        self.assertEqual(resource['id'], self.resource['id'])
+        mock_create.assert_called_once_with({
+            'deployment_uuid': self.deployment['uuid'],
+            'provider_name': 'provider',
+            'type': 'some',
+            'info': {'key': 'value'},
+        })
+
+    @mock.patch('rally.objects.task.db.resource_delete')
+    def test_delete(self, mock_delete):
+        objects.Deployment.delete_resource(42)
+        mock_delete.assert_called_once_with(42)
+
+    @mock.patch('rally.objects.task.db.resource_get_all')
+    def test_get_resources(self, mock_get_all):
+        mock_get_all.return_value = [self.resource]
+        deploy = objects.Deployment(deployment=self.deployment)
+        resources = deploy.get_resources(provider_name='provider', type='some')
+        self.assertEqual(len(resources), 1)
+        self.assertEqual(resources[0]['id'], self.resource['id'])
