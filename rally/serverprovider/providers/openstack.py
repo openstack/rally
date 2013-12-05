@@ -13,7 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import jsonschema
 import os
 import time
 import urllib2
@@ -32,35 +31,6 @@ LOG = logging.getLogger(__name__)
 
 SERVER_TYPE = 'server'
 KEYPAIR_TYPE = 'keypair'
-SCHEMA_TEMPLATE = {
-    'type': 'object',
-    'properties': {
-        'name': {'type': 'string'},
-        'deployment_name': {'type': 'string'},
-        'amount': {'type': 'integer'},
-        'user': {'type': 'string'},
-        'password': {'type': 'string'},
-        'tenant': {'type': 'string'},
-        'auth_url': {'type': 'string'},
-        'flavor_id': {'type': 'string'},
-        'image': {
-            'type': 'object',
-            'properties': {
-                'checksum': {'type': 'string'},
-                'name': {'type': 'string'},
-                'format': {'type': 'string'},
-                'userdata': {'type': 'string'},
-                'url': {'type': 'string'},
-                'uuid': {'type': 'string'},
-            },
-            'additionalProperties': False,
-            'required': ['name', 'format', 'url', 'checksum'],
-        },
-    },
-    'additionalProperties': False,
-    'required': ['user', 'password', 'tenant', 'deployment_name',
-                 'auth_url', 'flavor_id', 'image']
-}
 
 
 class OpenStackProvider(provider.ProviderFactory):
@@ -87,8 +57,37 @@ class OpenStackProvider(provider.ProviderFactory):
 
     """
 
+    CONFIG_SCHEMA = {
+        'type': 'object',
+        'properties': {
+            'name': {'type': 'string'},
+            'deployment_name': {'type': 'string'},
+            'amount': {'type': 'integer'},
+            'user': {'type': 'string'},
+            'password': {'type': 'string'},
+            'tenant': {'type': 'string'},
+            'auth_url': {'type': 'string'},
+            'flavor_id': {'type': 'string'},
+            'image': {
+                'type': 'object',
+                'properties': {
+                    'checksum': {'type': 'string'},
+                    'name': {'type': 'string'},
+                    'format': {'type': 'string'},
+                    'userdata': {'type': 'string'},
+                    'url': {'type': 'string'},
+                    'uuid': {'type': 'string'},
+                },
+                'additionalProperties': False,
+                'required': ['name', 'format', 'url', 'checksum'],
+            },
+        },
+        'additionalProperties': False,
+        'required': ['user', 'password', 'tenant', 'deployment_name',
+                     'auth_url', 'flavor_id', 'image']
+    }
+
     def __init__(self, deployment, config):
-        jsonschema.validate(config, SCHEMA_TEMPLATE)
         super(OpenStackProvider, self).__init__(deployment, config)
         clients = osclients.Clients(config['user'], config['password'],
                                     config['tenant'], config['auth_url'])
