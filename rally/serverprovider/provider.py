@@ -45,8 +45,48 @@ class ImageDTO(utils.ImmutableMixin):
         super(ImageDTO, self).__init__()
 
 
+class ResourceManager(object):
+    """Supervise resources of a deployment.
+
+    :param deployment: a dict with data on a deployment
+    :param provider_name: a string of a name of the provider
+    """
+    def __init__(self, deployment, provider_name):
+        self.deployment = deployment
+        self.provider_name = provider_name
+
+    def create(self, info, type=None):
+        """Create a resource.
+
+        :param info: a payload of a resource
+        :param type: a string of a resource or None
+        :returns: a list of dicts with data on a resource
+        """
+        return self.deployment.add_resource(self.provider_name, type=type,
+                                            info=info)
+
+    def get_all(self, type=None):
+        """Return registered resources.
+
+        :param type: a string to filter by a type, if is None, then
+                     returns all
+        :returns: a list of dicts with data on a resource
+        """
+        return self.deployment.get_resources(provider_name=self.provider_name,
+                                             type=type)
+
+    def delete(self, resource_id):
+        """Delete a resource.
+
+        :param resource_id: an ID of a resource
+        """
+        self.deployment.delete_resource(resource_id)
+
+
 class ProviderFactory(object):
     """ProviderFactory should be base class for all providers.
+
+    Each provider supervises own resources using ResourceManager.
 
     All provider should be added to rally.vmprovider.providers.some_moduule.py
     and implement 4 methods:
@@ -60,6 +100,8 @@ class ProviderFactory(object):
     def __init__(self, deployment, config):
         self.deployment = deployment
         self.config = config
+        self.resources = ResourceManager(deployment,
+                                         self.__class__.__name__)
 
     @staticmethod
     def get_provider(config, deployment):

@@ -14,6 +14,8 @@
 #    under the License.
 """Test for vm providers."""
 
+import mock
+
 from rally import exceptions
 from rally import serverprovider
 from rally import sshutils
@@ -96,3 +98,26 @@ class ImageDTOTestCase(test.TestCase):
         server = serverprovider.ImageDTO(*vals)
         for k, v in dict(zip(keys, vals)).iteritems():
             self.assertEqual(getattr(server, k), v)
+
+
+class ResourceManagerTestCase(test.TestCase):
+    def setUp(self):
+        super(ResourceManagerTestCase, self).setUp()
+        self.deployment = mock.Mock()
+        self.resources = serverprovider.ResourceManager(self.deployment,
+                                                        'provider')
+
+    def test_create(self):
+        self.resources.create('info', type='type')
+        self.deployment.add_resource.assert_called_once_with('provider',
+                                                             type='type',
+                                                             info='info')
+
+    def test_get_all(self):
+        self.resources.get_all(type='type')
+        self.deployment.get_resources.assert_called_once_with(
+            provider_name='provider', type='type')
+
+    def test_delete(self):
+        self.resources.delete('resource_id')
+        self.deployment.delete_resource.assert_called_once_with('resource_id')
