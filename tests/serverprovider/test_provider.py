@@ -83,14 +83,23 @@ class ProviderTestCase(test.TestCase):
 
 
 class ServerTestCase(test.TestCase):
+    def setUp(self):
+        super(ServerTestCase, self).setUp()
+        self.vals = ['uuid', '192.168.1.1', 'admin', 'some_key', 'pwd']
+        self.keys = ['uuid', 'ip', 'user', 'key', 'password']
 
     def test_init_server_dto(self):
-        vals = ['uuid', '192.168.1.1', 'admin', 'some_key', 'pwd']
-        keys = ['uuid', 'ip', 'user', 'key', 'password']
-        server = serverprovider.Server(*vals)
-        for k, v in dict(zip(keys, vals)).iteritems():
+        server = serverprovider.Server(*self.vals)
+        for k, v in dict(zip(self.keys, self.vals)).iteritems():
             self.assertEqual(getattr(server, k), v)
         self.assertIsInstance(server.ssh, sshutils.SSH)
+
+    def test_credentials(self):
+        server_one = serverprovider.Server(*self.vals)
+        creds = server_one.get_credentials()
+        server_two = serverprovider.Server.from_credentials(creds)
+        for k in self.keys:
+            self.assertEqual(getattr(server_one, k), getattr(server_two, k))
 
 
 class ImageDTOTestCase(test.TestCase):
