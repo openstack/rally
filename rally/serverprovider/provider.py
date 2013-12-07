@@ -34,6 +34,20 @@ class Server(utils.ImmutableMixin):
         self.ssh = sshutils.SSH(ip, user)
         super(Server, self).__init__()
 
+    def get_credentials(self):
+        return {
+            'uuid': self.uuid,
+            'ip': self.ip,
+            'user': self.user,
+            'key': self.key,
+            'password': self.password,
+        }
+
+    @classmethod
+    def from_credentials(cls, creds):
+        return cls(creds['uuid'], creds['ip'], creds['user'], creds['key'],
+                   password=creds['password'])
+
 
 class ImageDTO(utils.ImmutableMixin):
     """Represent information about created image.
