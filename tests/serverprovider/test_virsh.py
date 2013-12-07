@@ -16,6 +16,7 @@
 import mock
 import netaddr
 
+from rally.openstack.common.fixture import mockpatch
 from rally.openstack.common import test
 from rally.serverprovider.providers import virsh
 
@@ -32,6 +33,7 @@ class VirshProviderTestCase(test.BaseTestCase):
             'template_password': 'password',
         }
         self.provider = virsh.VirshProvider(self.deployment, self.config)
+        self.useFixture(mockpatch.PatchObject(self.provider, 'resources'))
 
     @mock.patch('rally.serverprovider.providers.virsh.netaddr.IPAddress')
     @mock.patch('rally.serverprovider.providers.virsh.subprocess')
@@ -57,6 +59,9 @@ class VirshProviderTestCase(test.BaseTestCase):
         self.assertEqual(server.user, 'user')
         self.assertEqual(server.key, None)
         self.assertEqual(server.password, 'password')
+        self.provider.resources.create.assert_called_once_with({
+            'name': 'name',
+        })
 
     @mock.patch('rally.serverprovider.providers.virsh.netaddr.IPAddress')
     @mock.patch('rally.serverprovider.providers.virsh.subprocess')
@@ -71,8 +76,7 @@ class VirshProviderTestCase(test.BaseTestCase):
 
     @mock.patch('rally.serverprovider.providers.virsh.subprocess')
     def test_destroy_vm(self, mock_subp):
-        vm = mock.Mock(uuid='uuid')
-        self.provider.destroy_vm(vm)
+        self.provider.destroy_vm('uuid')
         mock_subp.assert_has_calls([
             mock.call.check_call('virsh --connect=qemu+ssh://user@host/system '
                                  'destroy uuid', shell=True),
@@ -96,9 +100,15 @@ class VirshProviderTestCase(test.BaseTestCase):
 
     @mock.patch.object(virsh.VirshProvider, 'destroy_vm')
     def test_destroy_vms(self, mock_destroy):
-        self.provider.destroy_vms(['1', '2', '3'])
+        self.provider.resources.get_all.return_value = [
+            {'info': {'name': '1'}},
+            {'info': {'name': '2'}},
+            {'info': {'name': '3'}},
+        ]
+        self.provider.destroy_vms()
         mock_destroy.assert_has_calls([
             mock.call('1'),
             mock.call('2'),
             mock.call('3'),
         ])
+        self.provider.resources.get_all.assert_called_once_with()

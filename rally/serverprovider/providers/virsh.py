@@ -54,6 +54,7 @@ class VirshProvider(provider.ProviderFactory):
 
         cmd = 'virsh --connect=%s start %s' % (virt_url, vm_name)
         subprocess.check_call(cmd, shell=True)
+        self.resources.create({'name': vm_name})
 
         return provider.Server(
             vm_name,
@@ -63,21 +64,22 @@ class VirshProvider(provider.ProviderFactory):
             self.config.get('template_password')
         )
 
-    def destroy_vms(self, vm_uuids):
-        '''Destroy already created vms by vm_uuids.'''
-        for vm in vm_uuids:
-            self.destroy_vm(vm)
+    def destroy_vms(self):
+        '''Destroy already created vms.'''
+        for resource in self.resources.get_all():
+            self.destroy_vm(resource['info']['name'])
+            self.resources.delete(resource)
 
-    def destroy_vm(self, vm):
+    def destroy_vm(self, vm_name):
         '''Destroy single vm and delete all allocated resources.'''
-        print('Destroy VM %s' % vm.uuid)
+        print('Destroy VM %s' % vm_name)
         vconnection = self._get_virt_connection_url(self.config['connection'])
 
-        cmd = 'virsh --connect=%s destroy %s' % (vconnection, vm.uuid)
+        cmd = 'virsh --connect=%s destroy %s' % (vconnection, vm_name)
         subprocess.check_call(cmd, shell=True)
 
         cmd = 'virsh --connect=%s undefine %s --remove-all-storage' % (
-                vconnection, vm.uuid)
+                vconnection, vm_name)
         subprocess.check_call(cmd, shell=True)
         return True
 
