@@ -112,4 +112,5 @@ class VirshProvider(provider.ProviderFactory):
                 ip = None
             tries += 1
             time.sleep(10)
+        # TODO(akscram): In case of None this method returns result 'None'.
         return str(ip)

@@ -117,6 +117,7 @@ class ProviderFactory(object):
         """Returns list of names of available engines."""
         return [e.__name__ for e in utils.itersubclasses(ProviderFactory)]
 
+    # TODO(akscram): Unsed method.
     def upload_image(self, file_path, disk_format, container_format):
         """Upload image that could be used in creating new vms.
         :file_path: Path to the file with image
@@ -129,6 +130,7 @@ class ProviderFactory(object):
         """
         raise NotImplementedError()
 
+    # TODO(akscram): Unsed method.
     def destroy_image(self, image_uuid):
         """Destroy image by image indentificator."""
         raise NotImplementedError()
@@ -143,6 +145,8 @@ class ProviderFactory(object):
         """
         pass
 
+    # TODO(akscram): After that all provider would to use a resource
+    #                manager the argument 'vm_uuids' should be removed.
     @abc.abstractmethod
     def destroy_vms(self, vm_uuids):
         """Destroy already created vms by vm_uuids."""
