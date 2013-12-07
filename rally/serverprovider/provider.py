@@ -145,9 +145,7 @@ class ProviderFactory(object):
         """
         pass
 
-    # TODO(akscram): After that all provider would to use a resource
-    #                manager the argument 'vm_uuids' should be removed.
     @abc.abstractmethod
-    def destroy_vms(self, vm_uuids):
-        """Destroy already created vms by vm_uuids."""
+    def destroy_vms(self):
+        """Destroy already created vms."""
         pass
