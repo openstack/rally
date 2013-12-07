@@ -33,9 +33,6 @@ class VirshProvider(provider.ProviderFactory):
         },
     '''
 
-    def __init__(self, config):
-        self._config = config
-
     def create_vms(self, image_uuid=None, type_id=None, amount=1):
         """Create VMs with chosen image.
         :param image_uuid: Indetificator of image
@@ -47,9 +44,9 @@ class VirshProvider(provider.ProviderFactory):
     def create_vm(self, vm_name):
         '''Clones prebuilt VM template and starts it.'''
 
-        virt_url = self._get_virt_connection_url(self._config['connection'])
+        virt_url = self._get_virt_connection_url(self.config['connection'])
         cmd = 'virt-clone --connect=%(url)s -o %(t)s -n %(n)s --auto-clone' % {
-            't': self._config['template_name'],
+            't': self.config['template_name'],
             'n': vm_name,
             'url': virt_url
         }
@@ -61,9 +58,9 @@ class VirshProvider(provider.ProviderFactory):
         return provider.Server(
             vm_name,
             self._determine_vm_ip(vm_name),
-            self._config['template_user'],
+            self.config['template_user'],
             None,
-            self._config.get('template_password')
+            self.config.get('template_password')
         )
 
     def destroy_vms(self, vm_uuids):
@@ -74,7 +71,7 @@ class VirshProvider(provider.ProviderFactory):
     def destroy_vm(self, vm):
         '''Destroy single vm and delete all allocated resources.'''
         print('Destroy VM %s' % vm.uuid)
-        vconnection = self._get_virt_connection_url(self._config['connection'])
+        vconnection = self._get_virt_connection_url(self.config['connection'])
 
         cmd = 'virsh --connect=%s destroy %s' % (vconnection, vm.uuid)
         subprocess.check_call(cmd, shell=True)
@@ -96,7 +93,7 @@ class VirshProvider(provider.ProviderFactory):
         cmd = 'scp %(opts)s  %(name)s %(host)s:~/get_domain_ip.sh' % {
             'opts': ssh_opt,
             'name': script_path,
-            'host': self._config['connection']
+            'host': self.config['connection']
         }
         subprocess.check_call(cmd, shell=True)
 
@@ -105,7 +102,7 @@ class VirshProvider(provider.ProviderFactory):
         while tries < 3 and not ip:
             cmd = 'ssh %(opts)s %(host)s ./get_domain_ip.sh %(name)s' % {
                 'opts': ssh_opt,
-                'host': self._config['connection'],
+                'host': self.config['connection'],
                 'name': vm_name
             }
             out = subprocess.check_output(cmd, shell=True)

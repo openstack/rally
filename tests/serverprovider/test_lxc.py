@@ -139,8 +139,9 @@ class LxcProviderTestCase(test.BaseTestCase):
                 'name': 'DummyProvider',
                 'credentials': ['root@host1.net', 'root@host2.net']}
         }
+        self.mock_deployment = mock.MagicMock()
         self.provider = lxc.provider.ProviderFactory.get_provider(
-            self.config, {'uuid': 'fake-uuid'})
+            self.config, self.mock_deployment)
 
     def test_create_vms(self):
         s1 = mock.Mock()
@@ -166,4 +167,4 @@ class LxcProviderTestCase(test.BaseTestCase):
         self.assertEqual(expected_ips, ips)
 
         get_provider.assert_called_once_with(self.config['host_provider'],
-                                             {'uuid': 'fake-uuid'})
+                                             self.mock_deployment)

@@ -32,18 +32,19 @@ class ProviderMixIn(object):
 
 
 class ProviderA(ProviderMixIn, ProviderFactory):
-    def __init__(self, config):
+    def __init__(self, deployment, config):
         pass
 
 
 class ProviderB(ProviderMixIn, ProviderFactory):
-    def __init__(self, config):
+    def __init__(self, deployment, config):
         pass
 
 
 class ProviderC(ProviderB):
-    def __init__(self, config):
+    def __init__(self, deployment, config):
         pass
+
 
 FAKE_PROVIDERS = [ProviderA, ProviderB, ProviderC]
 
@@ -71,7 +72,7 @@ class ProviderTestCase(test.TestCase):
         self.assertRaises(TypeError, ProviderFactory)
 
     def test_image_methods_raise_not_implemented(self):
-        provider = FAKE_PROVIDERS[0](None)
+        provider = FAKE_PROVIDERS[0](None, None)
         self.assertRaises(NotImplementedError,
                           provider.upload_image, None, None, None)
         self.assertRaises(NotImplementedError, provider.destroy_image, None)

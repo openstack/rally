@@ -96,18 +96,18 @@ class LxcProvider(provider.ProviderFactory):
 
     """
 
-    def __init__(self, config):
-        self.config = config
+    def __init__(self, deployment, config):
+        super(LxcProvider, self).__init__(deployment, config)
         self.containers = []
 
     def _next_ip(self):
         self.ip += 1
         return '%s/%d' % (self.ip, self.network.prefixlen)
 
-    @utils.log_task_wrapper(LOG.info, _("Create containers on host"))
+    @utils.log_deploy_wrapper(LOG.info, _("Create containers on host"))
     def create_vms(self):
         self.host_provider = provider.ProviderFactory.get_provider(
-            self.config['host_provider'], self.task)
+            self.config['host_provider'], self.deployment)
         self.network = netaddr.IPNetwork(self.config['start_ip_address'])
         self.ip = self.network.ip - 1
         config = self.config['container_config']
@@ -130,7 +130,7 @@ class LxcProvider(provider.ProviderFactory):
             container.server.ssh.wait()
         return [c.server for c in self.containers]
 
-    @utils.log_task_wrapper(LOG.info, _("Destroy host(s)"))
+    @utils.log_deploy_wrapper(LOG.info, _("Destroy host(s)"))
     def destroy_vms(self):
         for c in self.containers:
             c.stop()

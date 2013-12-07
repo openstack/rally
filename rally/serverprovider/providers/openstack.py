@@ -85,9 +85,9 @@ class OpenStackProvider(provider.ProviderFactory):
 
     """
 
-    def __init__(self, config):
+    def __init__(self, deployment, config):
         jsonschema.validate(config, SCHEMA_TEMPLATE)
-        self.config = dict(config)
+        super(OpenStackProvider, self).__init__(deployment, config)
         clients = osclients.Clients(config['user'], config['password'],
                                     config['tenant'], config['auth_url'])
         self.nova = clients.get_nova_client()

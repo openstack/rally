@@ -22,7 +22,8 @@ from rally.serverprovider import provider
 class DummyProvider(provider.ProviderFactory):
     """Just return endpoints from own configuration."""
 
-    def __init__(self, config):
+    def __init__(self, deployment, config):
+        super(DummyProvider, self).__init__(deployment, config)
         self.credentials = config['credentials']
 
     def create_vms(self):
