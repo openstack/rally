@@ -30,6 +30,8 @@ from rally import utils
 LOG = logging.getLogger(__name__)
 
 
+SERVER_TYPE = 'server'
+KEYPAIR_TYPE = 'keypair'
 SCHEMA_TEMPLATE = {
     'type': 'object',
     'properties': {
@@ -141,15 +143,18 @@ class OpenStackProvider(provider.ProviderFactory):
             'ssh_public_key_file', os.path.expanduser('~/.ssh/id_rsa.pub'))
         public_key = open(public_key_path, 'r').read().strip()
         key_name = self.config['deployment_name'] + '-key'
-        self.keypair = self.nova.keypairs.create(key_name, public_key)
+        keypair = self.nova.keypairs.create(key_name, public_key)
+        self.resources.create({'id': keypair.id}, type=KEYPAIR_TYPE)
 
-        self.os_servers = []
+        os_servers = []
         for i in range(self.config.get('amount', 1)):
             name = "%s-%d" % (self.config['deployment_name'], i)
             server = self.nova.servers.create(name, image_uuid, flavor,
-                                              key_name=self.keypair.name,
+                                              key_name=keypair.name,
                                               userdata=userdata)
-            self.os_servers.append(server)
+
+            os_servers.append(server)
+            self.resources.create({'id': server.id}, type=SERVER_TYPE)
 
         kwargs = {
             'is_ready': nova_utils._resource_is("ACTIVE"),
@@ -158,14 +163,14 @@ class OpenStackProvider(provider.ProviderFactory):
             'check_interval': 5
         }
 
-        for os_server in self.os_servers:
+        for os_server in os_servers:
             utils.wait_for(os_server, **kwargs)
 
         servers = [provider.Server(s.id,
                                    s.addresses.values()[0][0]['addr'],
                                    'root',
                                    public_key_path)
-                   for s in self.os_servers]
+                   for s in os_servers]
         for s in servers:
             s.ssh.wait(timeout=120, interval=5)
 
@@ -174,7 +179,9 @@ class OpenStackProvider(provider.ProviderFactory):
         return servers
 
     def destroy_vms(self):
-        for server in getattr(self, 'os_servers', []):
-            server.delete()
-        if hasattr(self, 'keypair'):
-            self.keypair.delete()
+        for resource in self.resources.get_all(type=SERVER_TYPE):
+            self.nova.servers.delete(resource['info']['id'])
+            self.resources.delete(resource)
+        for resource in self.resources.get_all(type=KEYPAIR_TYPE):
+            self.nova.keypairs.delete(resource['info']['id'])
+            self.resources.delete(resource)

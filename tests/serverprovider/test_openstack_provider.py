@@ -18,6 +18,7 @@
 import jsonschema
 import mock
 
+from rally.openstack.common.fixture import mockpatch
 from rally.serverprovider.providers import openstack as provider
 from rally import test
 
@@ -36,6 +37,11 @@ class FakeOSClients(object):
 
 
 class OpenStackProviderTestCase(test.TestCase):
+
+    def setUp(self):
+        super(OpenStackProviderTestCase, self).setUp()
+        self.useFixture(mockpatch.Patch('rally.serverprovider.provider.'
+                                        'ResourceManager'))
 
     def _get_valid_config(self):
         return {
@@ -129,9 +135,16 @@ class OpenStackProviderTestCase(test.TestCase):
         provider.Server = mock.MagicMock()
         prov = OSProvider(mock.MagicMock(), self._get_valid_config())
         prov.get_image_uuid = mock.Mock()
+        prov.nova.keypairs.create.return_value = mock.Mock(id='keypair_id',
+                                                           name='keypair_name')
+        self.instance.id = 'instance_id'
         prov.create_vms()
         self.assertEqual(['keypairs.create', 'servers.create'],
                          [call[0] for call in self.nova_client.mock_calls])
+        prov.resources.create.assert_has_calls([
+            mock.call({'id': 'keypair_id'}, type='keypair'),
+            mock.call({'id': 'instance_id'}, type='server'),
+        ])
 
     @mock.patch(MOD_NAME + '.osclients')
     @mock.patch(MOD_NAME + '.urllib2')
@@ -154,13 +167,21 @@ class OpenStackProviderTestCase(test.TestCase):
         self.assertEqual(u.mock_calls,
                          [mock.call.urlopen('http://example.net/img.qcow2')])
 
-    def test_openstack_provider_destroy_vms(self):
-        with mock.patch(MOD_NAME + '.osclients'):
-            prov = OSProvider(mock.MagicMock(), self._get_valid_config())
-            server = mock.MagicMock()
-            keypair = mock.MagicMock()
-            prov.os_servers = [server]
-            prov.keypair = keypair
-            prov.destroy_vms()
-        self.assertEqual(server.mock_calls, [mock.call.delete()])
-        self.assertEqual(keypair.mock_calls, [mock.call.delete()])
+    @mock.patch(MOD_NAME + '.osclients')
+    def test_openstack_provider_destroy_vms(self, mock_osclients):
+        prov = OSProvider(mock.MagicMock(), self._get_valid_config())
+        prov.resources.get_all.side_effect = [
+            [{'info': {'id': '1'}}],
+            [{'info': {'id': '2'}}],
+        ]
+        prov.destroy_vms()
+        prov.resources.get_all.assert_has_calls([
+            mock.call(type='server'),
+            mock.call(type='keypair'),
+        ])
+        prov.nova.servers.delete.assert_called_once_with('1')
+        prov.nova.keypairs.delete.assert_called_once_with('2')
+        prov.resources.delete.assert_has_calls([
+            mock.call({'info': {'id': '1'}}),
+            mock.call({'info': {'id': '2'}}),
+        ])
