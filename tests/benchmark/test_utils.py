@@ -40,7 +40,7 @@ class FakeScenario(base.Scenario):
 
     @classmethod
     def too_long(cls, **kwargs):
-        time.sleep(0.1)
+        pass
 
     @classmethod
     def something_went_wrong(cls, **kwargs):
@@ -126,37 +126,39 @@ class ScenarioTestCase(test.TestCase):
                             for i in range(active_users)]
                 self.assertEqual(results, expected)
 
-    def test_run_scenario_timeout(self):
-        with mock.patch("rally.benchmark.utils.osclients") as mock_osclients:
-            mock_osclients.Clients.return_value = test_utils.FakeClients()
-            runner = utils.ScenarioRunner(mock.MagicMock(), self.fake_kw)
-            utils.__openstack_clients__ = ["client"]
-            times = 4
-            active_users = 2
-            results = runner._run_scenario(FakeScenario, "too_long", {},
-                                           "continuous",
-                                           {"times": times,
-                                            "active_users": active_users,
-                                            "timeout": 0.01})
-            self.assertEqual(len(results), times)
-            for r in results:
-                #NOTE(boden): parrallelized tests can't ensure exactly 0.01
-                if r['time'] < 0.01:
-                    self.assertFalse(True, "Premature timeout")
-                self.assertEqual(r['error'][0],
-                                 str(multiprocessing.TimeoutError))
+    @mock.patch("rally.benchmark.utils.osclients")
+    @mock.patch("multiprocessing.pool.IMapIterator.next")
+    @mock.patch("rally.benchmark.utils.time.time")
+    def test_run_scenario_timeout(self, mock_time, mock_next, mock_osclients):
+        mock_time.side_effect = [1, 2, 3, 10]
+        mock_next.side_effect = multiprocessing.TimeoutError()
+        mock_osclients.Clients.return_value = test_utils.FakeClients()
+        runner = utils.ScenarioRunner(mock.MagicMock(), self.fake_kw)
+        utils.__openstack_clients__ = ["client"]
+        times = 4
+        active_users = 2
+        results = runner._run_scenario(FakeScenario, "too_long", {},
+                                       "continuous",
+                                       {"times": times,
+                                        "active_users": active_users,
+                                        "timeout": 0.01})
+        self.assertEqual(len(results), times)
+        for r in results:
+            self.assertEqual(r['time'], 0.01)
+            self.assertEqual(r['error'][0],
+                             str(multiprocessing.TimeoutError))
 
-            duration = 0.1
-            results = runner._run_scenario(FakeScenario, "too_long", {},
-                                           "continuous",
-                                           {"duration": duration,
-                                            "active_users": active_users,
-                                            "timeout": 0.01})
-            self.assertEqual(len(results), active_users)
-            for r in results:
-                self.assertEqual(r['time'], 0.01)
-                self.assertEqual(r['error'][0],
-                                 str(multiprocessing.TimeoutError))
+        duration = 0.1
+        results = runner._run_scenario(FakeScenario, "too_long", {},
+                                       "continuous",
+                                       {"duration": duration,
+                                        "active_users": active_users,
+                                        "timeout": 0.01})
+        self.assertEqual(len(results), active_users)
+        for r in results:
+            self.assertEqual(r['time'], 0.01)
+            self.assertEqual(r['error'][0],
+                             str(multiprocessing.TimeoutError))
 
     def test_run_scenario_exception_inside_test(self):
         with mock.patch("rally.benchmark.utils.osclients") as mock_osclients:
