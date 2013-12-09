@@ -65,7 +65,28 @@ class FakeEngine(deploy.EngineFactory):
         self.cleanuped = True
 
 
+class EngineMixIn(object):
+    def deploy(self):
+        pass
+
+    def cleanup(self):
+        pass
+
+
+class EngineFake1(EngineMixIn, deploy.EngineFactory):
+    pass
+
+
+class EngineFake2(EngineMixIn, deploy.EngineFactory):
+    pass
+
+
+class EngineFake3(EngineFake2):
+    pass
+
+
 class EngineFactoryTestCase(test.TestCase):
+    FAKE_ENGINES = [EngineFake1, EngineFake2, EngineFake3]
 
     @mock.patch.object(FakeDeployment, 'update_status')
     def test_get_engine_not_found(self, mock_update_status):
@@ -187,28 +208,9 @@ class EngineFactoryTestCase(test.TestCase):
         self.assertFalse(engine.cleanuped)
         self.assertFalse(engine.deployed)
 
-    def _create_fake_engines(self):
-        class EngineMixIn(object):
-            def deploy(self):
-                pass
-
-            def cleanup(self):
-                pass
-
-        class EngineFake1(EngineMixIn, deploy.EngineFactory):
-            pass
-
-        class EngineFake2(EngineMixIn, deploy.EngineFactory):
-            pass
-
-        class EngineFake3(EngineFake2):
-            pass
-
-        return [EngineFake1, EngineFake2, EngineFake3]
-
     def test_get_engine(self):
         deployment = make_fake_deployment()
-        engines = self._create_fake_engines()
+        engines = EngineFactoryTestCase.FAKE_ENGINES
         for e in engines:
             engine_inst = deploy.EngineFactory.get_engine(e.__name__,
                                                           deployment)
@@ -216,7 +218,7 @@ class EngineFactoryTestCase(test.TestCase):
             self.assertEqual(str(type(engine_inst)), str(e))
 
     def test_get_available_engines(self):
-        engines = set([e.__name__ for e in self._create_fake_engines()])
+        engines = set([e.__name__ for e in EngineFactoryTestCase.FAKE_ENGINES])
         real_engines = set(deploy.EngineFactory.get_available_engines())
         self.assertEqual(engines & real_engines, engines)
 

@@ -25,6 +25,7 @@ import uuid
 import fuel_health.cleanup as fuel_cleanup
 
 from rally.benchmark import base
+from rally.benchmark import cleanup_utils
 from rally import exceptions as rally_exceptions
 from rally.openstack.common.gettextutils import _  # noqa
 from rally.openstack.common import log as logging
@@ -133,10 +134,6 @@ def _run_scenario_loop(args):
     return {"time": timer.duration() - cls.idle_time,
             "idle_time": cls.idle_time, "error": None}
 
-    # NOTE(msdubov): Cleaning up after each scenario loop enables to delete
-    #                the resources of the user the scenario was run from.
-    cls.cleanup()
-
 
 def _create_openstack_clients(users_endpoints, keys):
     # NOTE(msdubov): Creating here separate openstack clients for each of
@@ -192,6 +189,49 @@ class ScenarioRunner(object):
                                     "uri": self.endpoints["uri"]}
                 temporary_endpoints.append(user_credentials)
         return temporary_endpoints
+
+    @classmethod
+    def _delete_nova_resources(cls, nova):
+        cleanup_utils._delete_servers(nova)
+        cleanup_utils._delete_keypairs(nova)
+        cleanup_utils._delete_security_groups(nova)
+        cleanup_utils._delete_networks(nova)
+
+    @classmethod
+    def _delete_cinder_resources(cls, cinder):
+        cleanup_utils._delete_volume_transfers(cinder)
+        cleanup_utils._delete_volumes(cinder)
+        cleanup_utils._delete_volume_types(cinder)
+        cleanup_utils._delete_volume_snapshots(cinder)
+        cleanup_utils._delete_volume_backups(cinder)
+
+    @classmethod
+    def _delete_glance_resources(cls, glance, project_uuid):
+        cleanup_utils._delete_images(glance, project_uuid)
+
+    @classmethod
+    def _cleanup_with_clients(cls, indexes):
+        for index in indexes:
+            clients = __openstack_clients__[index]
+            try:
+                cls._delete_nova_resources(clients["nova"])
+                cls._delete_glance_resources(clients["glance"],
+                                             clients["keystone"].project_id)
+                cls._delete_cinder_resources(clients["cinder"])
+            except Exception as e:
+                LOG.exception(_('Encountered error during cleanup: %s') %
+                              (e.message))
+
+    def _cleanup_scenario(self, concurrent):
+        indexes = range(0, len(__openstack_clients__))
+        chunked_indexes = [indexes[i:i + concurrent]
+                           for i in range(0, len(indexes), concurrent)]
+        pool = multiprocessing.Pool(concurrent)
+        for client_indicies in chunked_indexes:
+            pool.apply_async(_async_cleanup, args=(ScenarioRunner,
+                                                   client_indicies,))
+        pool.close()
+        pool.join()
 
     def _delete_temp_tenants_and_users(self):
         for user in self.users:
@@ -303,6 +343,7 @@ class ScenarioRunner(object):
         results = self._run_scenario(cls, method_name, args,
                                      execution_type, config)
 
+        self._cleanup_scenario(config.get("active_users", 1))
         self._delete_temp_tenants_and_users()
 
         return results

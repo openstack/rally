@@ -53,6 +53,21 @@ class FakeTimer(rally_utils.Timer):
         return 10
 
 
+class MockedPool(object):
+
+    def __init__(self, concurrent=1):
+        pass
+
+    def close(self):
+        pass
+
+    def join(self):
+        pass
+
+    def apply_async(self, func, args=()):
+        func(*args)
+
+
 class ScenarioTestCase(test.TestCase):
 
     def setUp(self):
@@ -125,7 +140,9 @@ class ScenarioTestCase(test.TestCase):
                                             "timeout": 0.01})
             self.assertEqual(len(results), times)
             for r in results:
-                self.assertEqual(r['time'], 0.01)
+                #NOTE(boden): parrallelized tests can't ensure exactly 0.01
+                if r['time'] < 0.01:
+                    self.assertFalse(True, "Premature timeout")
                 self.assertEqual(r['error'][0],
                                  str(multiprocessing.TimeoutError))
 
@@ -320,6 +337,83 @@ class ScenarioTestCase(test.TestCase):
             mock.call.init({"fake": "arg"}),
         ]
         self.assertEqual(FakeScenario.mock_calls, expected)
+
+    @mock.patch("rally.benchmark.utils._create_openstack_clients")
+    @mock.patch("rally.benchmark.utils.base")
+    @mock.patch("rally.benchmark.utils.osclients")
+    @mock.patch("multiprocessing.Pool")
+    def test_generic_cleanup(self, mock_pool, mock_osclients,
+                             mock_base, mock_clients):
+        FakeScenario = mock.MagicMock()
+        FakeScenario.init = mock.MagicMock(return_value={})
+
+        mock_cms = [test_utils.FakeClients(), test_utils.FakeClients(),
+                    test_utils.FakeClients()]
+        clients = [
+            dict((
+                ("nova", cl.get_nova_client()),
+                ("keystone", cl.get_keystone_client()),
+                ("glance", cl.get_glance_client()),
+                ("cinder", cl.get_cinder_client())
+            )) for cl in mock_cms
+        ]
+        mock_clients.return_value = clients
+
+        runner = utils.ScenarioRunner(mock.MagicMock(), self.fake_kw)
+        runner._run_scenario = mock.MagicMock(return_value="result")
+        runner._create_temp_tenants_and_users = mock.MagicMock(
+                                                        return_value=[])
+        runner._delete_temp_tenants_and_users = mock.MagicMock()
+
+        mock_base.Scenario.get_by_name = \
+            mock.MagicMock(return_value=FakeScenario)
+
+        for index in range(len(clients)):
+            client = clients[index]
+            nova = client["nova"]
+            cinder = client["cinder"]
+            for count in range(3):
+                uid = index + count
+                img = nova.images.create()
+                nova.servers.create("svr-%s" % (uid), img.uuid, index)
+                nova.keypairs.create("keypair-%s" % (uid))
+                nova.security_groups.create("secgroup-%s" % (uid))
+                nova.networks.create("net-%s" % (uid))
+                cinder.volumes.create("vol-%s" % (uid))
+                cinder.volume_types.create("voltype-%s" % (uid))
+                cinder.transfers.create("voltransfer-%s" % (uid))
+                cinder.volume_snapshots.create("snap-%s" % (uid))
+                cinder.backups.create("backup-%s" % (uid))
+
+        mock_pool.return_value = MockedPool()
+
+        runner.run("FakeScenario.do_it",
+                   {"args": {"a": 1}, "init": {"arg": 1},
+                    "config": {"timeout": 1, "times": 2, "active_users": 3,
+                               "tenants": 5, "users_per_tenant": 2}})
+
+        def _assert_purged(manager, resource_type):
+            resources = manager.list()
+            self.assertEqual([], resources, "%s not purged: %s" %
+                             (resource_type, resources))
+
+        for client in clients:
+            nova = client["nova"]
+            cinder = client["cinder"]
+            _assert_purged(nova.servers, "servers")
+            _assert_purged(nova.keypairs, "key pairs")
+            _assert_purged(nova.security_groups, "security groups")
+            _assert_purged(nova.networks, "networks")
+
+            _assert_purged(cinder.volumes, "volumes")
+            _assert_purged(cinder.volume_types, "volume types")
+            _assert_purged(cinder.backups, "volume backups")
+            _assert_purged(cinder.transfers, "volume transfers")
+            _assert_purged(cinder.volume_snapshots, "volume snapshots")
+
+            for image in nova.images.list():
+                self.assertEqual("DELETED", image.status,
+                                 "image not purged: %s" % (image))
 
 
 def test_dummy_1():

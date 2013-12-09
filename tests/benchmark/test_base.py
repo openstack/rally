@@ -23,6 +23,7 @@ from rally import test
 class ScenarioTestCase(test.TestCase):
 
     def test_register(self):
+        base.Scenario.registred = False
         with mock.patch("rally.benchmark.base.utils") as mock_utils:
             base.Scenario.register()
             base.Scenario.register()
