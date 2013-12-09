@@ -210,13 +210,6 @@ class NovaScenarioTestCase(test.TestCase):
 
     def setUp(self):
         super(NovaScenarioTestCase, self).setUp()
-        self.rally_utils = "rally.benchmark.scenarios.nova.utils.utils"
-        self.utils_resource_is = ("rally.benchmark.scenarios.nova.utils"
-                                  "._resource_is")
-        self.osclients = "rally.benchmark.utils.osclients"
-        self.nova_scenario = ("rally.benchmark.scenarios.nova.utils."
-                              "NovaScenario")
-        self.sleep = "rally.benchmark.scenarios.nova.utils.time.sleep"
 
     def test_generate_random_name(self):
         for length in [8, 16, 32, 64]:
@@ -227,94 +220,59 @@ class NovaScenarioTestCase(test.TestCase):
     def test_failed_server_status(self):
         server_manager = FakeFailedServerManager()
         self.assertRaises(rally_exceptions.GetResourceFailure,
-                          utils._get_from_manager,
+                          butils.get_from_manager(),
                           server_manager.create('fails', '1', '2'))
 
-    def test_cleanup_failed(self):
-        with mock.patch(self.osclients) as mock_osclients:
-            fc = FakeClients()
-            mock_osclients.Clients.return_value = fc
-            failed_nova = FakeNovaClient(failed_server_manager=True)
-            fc.get_nova_client = lambda: failed_nova
+    @mock.patch("rally.benchmark.scenarios.nova.utils.time.sleep")
+    @mock.patch("rally.utils")
+    @mock.patch("rally.benchmark.utils.osclients")
+    @mock.patch("rally.benchmark.utils.resource_is")
+    def test_server_helper_methods(self, mock_ris, mock_osclients,
+                                   mock_rally_utils, mock_sleep):
 
-            temp_keys = ["username", "password", "tenant_name", "uri"]
-            users_endpoints = [dict(zip(temp_keys, temp_keys))]
-            utils.NovaScenario._clients = butils._create_openstack_clients(
-                                                users_endpoints, temp_keys)[0]
+        def _is_ready(resource):
+            return resource.status == "ACTIVE"
 
-            with mock.patch(self.sleep):
-                # NOTE(boden): verify failed server cleanup
-                self.assertRaises(rally_exceptions.GetResourceFailure,
-                                  utils.NovaScenario._boot_server,
-                                  "fails", 0, 1)
-            self.assertEquals(len(failed_nova.servers.list()), 1,
-                              "Server not created")
-            utils.NovaScenario.cleanup()
-            self.assertEquals(len(failed_nova.servers.list()), 0,
-                              "Servers not purged")
+        mock_ris.return_value = _is_ready
+        get_from_mgr = butils.get_from_manager()
 
-    def test_cleanup(self):
-        with mock.patch(self.osclients) as mock_osclients:
-            fc = FakeClients()
-            mock_osclients.Clients.return_value = fc
-            fake_nova = FakeNovaClient()
-            fc.get_nova_client = lambda: fake_nova
+        fc = FakeClients()
+        mock_osclients.Clients.return_value = fc
+        fake_nova = FakeNovaClient()
+        fc.get_nova_client = lambda: fake_nova
+        fsm = FakeServerManager()
+        fake_server = fsm.create("s1", "i1", 1)
+        fsm.create = lambda name, iid, fid: fake_server
+        fake_nova.servers = fsm
+        fake_image_id = fsm.create_image(fake_server, 'img')
+        fake_image = fake_nova.images.get(fake_image_id)
+        fsm.create_image = lambda svr, name: fake_image
+        temp_keys = ["username", "password", "tenant_name", "uri"]
+        users_endpoints = [dict(zip(temp_keys, temp_keys))]
+        utils.NovaScenario._clients = butils.\
+            _create_openstack_clients(users_endpoints, temp_keys)[0]
 
-            temp_keys = ["username", "password", "tenant_name", "uri"]
-            users_endpoints = [dict(zip(temp_keys, temp_keys))]
-            utils.NovaScenario._clients = butils._create_openstack_clients(
-                                                users_endpoints, temp_keys)[0]
+        utils.utils = mock_rally_utils
+        utils.bench_utils.get_from_manager = lambda: get_from_mgr
 
-            # NOTE(boden): verify active server cleanup
-            with mock.patch(self.sleep):
-                for i in range(5):
-                    utils.NovaScenario._boot_server("server-%s" % i, 0, 1)
-            self.assertEquals(len(fake_nova.servers.list()), 5,
-                              "Server not created")
-            utils.NovaScenario.cleanup()
-            self.assertEquals(len(fake_nova.servers.list()), 0,
-                              "Servers not purged")
-
-    def test_server_helper_methods(self):
-        with mock.patch(self.rally_utils) as mock_rally_utils:
-            with mock.patch(self.utils_resource_is) as mock_resource_is:
-                mock_resource_is.return_value = {}
-                with mock.patch(self.osclients) as mock_osclients:
-                    fc = FakeClients()
-                    mock_osclients.Clients.return_value = fc
-                    fake_nova = FakeNovaClient()
-                    fc.get_nova_client = lambda: fake_nova
-                    fsm = FakeServerManager()
-                    fake_server = fsm.create("s1", "i1", 1)
-                    fsm.create = lambda name, iid, fid: fake_server
-                    fake_nova.servers = fsm
-
-                    temp_keys = ["username", "password",
-                                 "tenant_name", "uri"]
-                    users_endpoints = [dict(zip(temp_keys, temp_keys))]
-                    utils.NovaScenario._clients = butils.\
-                        _create_openstack_clients(users_endpoints,
-                                                  temp_keys)[0]
-
-                    with mock.patch(self.sleep):
-                        utils.NovaScenario._boot_server("s1", "i1", 1)
-                        utils.NovaScenario._create_image(fake_server)
-                        utils.NovaScenario._suspend_server(fake_server)
-                        utils.NovaScenario._delete_server(fake_server)
+        utils.NovaScenario._boot_server("s1", "i1", 1)
+        utils.NovaScenario._create_image(fake_server)
+        utils.NovaScenario._suspend_server(fake_server)
+        utils.NovaScenario._delete_server(fake_server)
 
         expected = [
-            mock.call.wait_for(fake_server, is_ready={},
-                               update_resource=utils._get_from_manager,
-                               timeout=600, check_interval=3),
-            mock.call.wait_for("img_uuid", is_ready={},
-                               update_resource=utils._get_from_manager,
-                               timeout=600, check_interval=3),
-            mock.call.wait_for(fake_server, is_ready={},
-                               update_resource=utils._get_from_manager,
-                               timeout=600, check_interval=3),
-            mock.call.wait_for(fake_server, is_ready=utils._false,
-                               update_resource=utils._get_from_manager,
-                               timeout=600, check_interval=3)
+            mock.call.wait_for(fake_server, is_ready=_is_ready,
+                               update_resource=butils.get_from_manager(),
+                               check_interval=3, timeout=600),
+            mock.call.wait_for(fake_image, is_ready=_is_ready,
+                               update_resource=butils.get_from_manager(),
+                               check_interval=3, timeout=600),
+            mock.call.wait_for(fake_server, is_ready=_is_ready,
+                               update_resource=butils.get_from_manager(),
+                               check_interval=3, timeout=600),
+            mock.call.wait_for(fake_server, is_ready=butils.is_none,
+                               update_resource=butils.get_from_manager(),
+                               check_interval=3, timeout=600)
         ]
 
-        self.assertEqual(mock_rally_utils.mock_calls, expected)
+        self.assertEqual(expected, mock_rally_utils.mock_calls)

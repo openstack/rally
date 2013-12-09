@@ -17,26 +17,9 @@ import random
 import string
 import time
 
-from novaclient import exceptions
-
 from rally.benchmark import base
-from rally import exceptions as rally_exceptions
+from rally.benchmark import utils as bench_utils
 from rally import utils
-
-
-def _resource_is(status):
-    return lambda resource: resource.status == status
-
-
-def _get_from_manager(resource):
-    resource = resource.manager.get(resource)
-    if resource.status == "ERROR":
-        raise rally_exceptions.GetResourceFailure()
-    return resource
-
-
-def _false(resource):
-    return False
 
 
 class NovaScenario(base.Scenario):
@@ -60,8 +43,9 @@ class NovaScenario(base.Scenario):
         # NOTE(msdubov): It is reasonable to wait 5 secs before starting to
         #                check whether the server is ready => less API calls.
         time.sleep(5)
-        server = utils.wait_for(server, is_ready=_resource_is("ACTIVE"),
-                                update_resource=_get_from_manager,
+        server = utils.wait_for(server,
+                                is_ready=bench_utils.resource_is("ACTIVE"),
+                                update_resource=bench_utils.get_from_manager(),
                                 timeout=600, check_interval=3)
         return server
 
@@ -78,8 +62,8 @@ class NovaScenario(base.Scenario):
         """
         server.reboot(reboot_type=("SOFT" if soft else "HARD"))
         time.sleep(5)
-        utils.wait_for(server, is_ready=_resource_is("ACTIVE"),
-                       update_resource=_get_from_manager,
+        utils.wait_for(server, is_ready=bench_utils.resource_is("ACTIVE"),
+                       update_resource=bench_utils.get_from_manager(),
                        timeout=600, check_interval=3)
 
     @classmethod
@@ -92,8 +76,8 @@ class NovaScenario(base.Scenario):
         :param server: The server to start and wait to become ACTIVE.
         """
         server.start()
-        utils.wait_for(server, is_ready=_resource_is("ACTIVE"),
-                       update_resource=_get_from_manager,
+        utils.wait_for(server, is_ready=bench_utils.resource_is("ACTIVE"),
+                       update_resource=bench_utils.get_from_manager(),
                        timeout=600, check_interval=2)
 
     @classmethod
@@ -106,8 +90,8 @@ class NovaScenario(base.Scenario):
         :param server: The server to stop.
         """
         server.stop()
-        utils.wait_for(server, is_ready=_resource_is("SHUTOFF"),
-                       update_resource=_get_from_manager,
+        utils.wait_for(server, is_ready=bench_utils.resource_is("SHUTOFF"),
+                       update_resource=bench_utils.get_from_manager(),
                        timeout=600, check_interval=2)
 
     @classmethod
@@ -121,8 +105,8 @@ class NovaScenario(base.Scenario):
         """
         server.suspend()
         time.sleep(2)
-        utils.wait_for(server, is_ready=_resource_is("SUSPENDED"),
-                       update_resource=_get_from_manager,
+        utils.wait_for(server, is_ready=bench_utils.resource_is("SUSPENDED"),
+                       update_resource=bench_utils.get_from_manager(),
                        timeout=600, check_interval=3)
 
     @classmethod
@@ -134,15 +118,9 @@ class NovaScenario(base.Scenario):
         :param server: Server object
         """
         server.delete()
-        # NOTE(msdubov): When the server gets deleted, the
-        #                clients("nova").servers.get() method raises
-        #                a NotFound exception.
-        try:
-            utils.wait_for(server, is_ready=_false,
-                           update_resource=_get_from_manager,
-                           timeout=600, check_interval=3)
-        except exceptions.NotFound:
-            pass
+        utils.wait_for(server, is_ready=bench_utils.is_none,
+                       update_resource=bench_utils.get_from_manager(),
+                       timeout=600, check_interval=3)
 
     @classmethod
     def _delete_all_servers(cls):
@@ -160,8 +138,8 @@ class NovaScenario(base.Scenario):
         :param image: Image object
         """
         image.delete()
-        utils.wait_for(image, is_ready=_resource_is("DELETED"),
-                       update_resource=_get_from_manager,
+        utils.wait_for(image, is_ready=bench_utils.resource_is("DELETED"),
+                       update_resource=bench_utils.get_from_manager(),
                        timeout=600, check_interval=3)
 
     @classmethod
@@ -178,8 +156,9 @@ class NovaScenario(base.Scenario):
         image_uuid = cls.clients("nova").servers.create_image(server,
                                                               server.name)
         image = cls.clients("nova").images.get(image_uuid)
-        image = utils.wait_for(image, is_ready=_resource_is("ACTIVE"),
-                               update_resource=_get_from_manager,
+        image = utils.wait_for(image,
+                               is_ready=bench_utils.resource_is("ACTIVE"),
+                               update_resource=bench_utils.get_from_manager(),
                                timeout=600, check_interval=3)
         return image
 
@@ -213,8 +192,10 @@ class NovaScenario(base.Scenario):
         servers = filter(lambda server: server.name.startswith(name_prefix),
                          cls.clients("nova").servers.list())
         time.sleep(5)
-        servers = [utils.wait_for(server, is_ready=_resource_is("ACTIVE"),
-                                  update_resource=_get_from_manager,
+        servers = [utils.wait_for(server,
+                                  is_ready=bench_utils.resource_is("ACTIVE"),
+                                  update_resource=bench_utils.
+                                  get_from_manager(),
                                   timeout=600, check_interval=3)
                    for server in servers]
         return servers
@@ -222,7 +203,3 @@ class NovaScenario(base.Scenario):
     @classmethod
     def _generate_random_name(cls, length):
         return ''.join(random.choice(string.lowercase) for i in range(length))
-
-    @classmethod
-    def cleanup(cls):
-        cls._delete_all_servers()

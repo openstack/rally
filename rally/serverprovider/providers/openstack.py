@@ -18,7 +18,7 @@ import os
 import time
 import urllib2
 
-from rally.benchmark.scenarios.nova import utils as nova_utils
+from rally.benchmark import utils as benchmark_utils
 from rally import exceptions
 from rally.openstack.common.gettextutils import _  # noqa
 from rally.openstack.common import log as logging
@@ -157,8 +157,8 @@ class OpenStackProvider(provider.ProviderFactory):
             self.resources.create({'id': server.id}, type=SERVER_TYPE)
 
         kwargs = {
-            'is_ready': nova_utils._resource_is("ACTIVE"),
-            'update_resource': nova_utils._get_from_manager,
+            'is_ready': benchmark_utils.resource_is("ACTIVE"),
+            'update_resource': benchmark_utils.get_from_manager(),
             'timeout': 120,
             'check_interval': 5
         }

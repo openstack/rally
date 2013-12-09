@@ -25,6 +25,7 @@ import uuid
 import fuel_health.cleanup as fuel_cleanup
 
 from rally.benchmark import base
+from rally import exceptions as rally_exceptions
 from rally.openstack.common.gettextutils import _  # noqa
 from rally.openstack.common import log as logging
 from rally import osclients
@@ -37,6 +38,66 @@ LOG = logging.getLogger(__name__)
 __openstack_clients__ = []
 __admin_clients__ = {}
 __scenario_context__ = {}
+
+
+def resource_is(status):
+    return lambda resource: resource.status == status
+
+
+def is_none(obj):
+    return obj is None
+
+
+def get_from_manager(error_statuses=["ERROR"]):
+    def _get_from_manager(resource):
+        try:
+            resource = resource.manager.get(resource)
+        except Exception as e:
+            if getattr(e, 'http_status', 400) == 404:
+                return None
+            raise e
+        if resource.status in error_statuses:
+            raise rally_exceptions.GetResourceFailure(status=resource.status)
+        return resource
+    return _get_from_manager
+
+
+def manager_list_size(sizes):
+    def _list(mgr):
+        return len(mgr.list()) in sizes
+    return _list
+
+
+def _wait_for_list_statuses(mgr, statuses, list_query={},
+                            timeout=10, check_interval=1):
+
+    def _list_statuses(mgr):
+        for resource in mgr.list(**list_query):
+            if resource.status not in statuses:
+                return False
+        return True
+
+    utils.wait_for(mgr, is_ready=_list_statuses, update_resource=None,
+                   timeout=timeout, check_interval=check_interval)
+
+
+def _wait_for_empty_list(mgr, timeout=10, check_interval=1):
+    _wait_for_list_size(mgr, sizes=[0], timeout=timeout,
+                        check_interval=check_interval)
+
+
+def _wait_for_list_size(mgr, sizes=[0], timeout=10, check_interval=1):
+    utils.wait_for(mgr, is_ready=manager_list_size(sizes),
+                   update_resource=None, timeout=timeout,
+                   check_interval=check_interval)
+
+
+def false(resource):
+    return False
+
+
+def _async_cleanup(cls, indicies):
+    cls._cleanup_with_clients(indicies)
 
 
 def _format_exc(exc):
