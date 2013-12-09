@@ -13,11 +13,14 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import contextlib
 import mock
 
+from rally.openstack.common.fixture import mockpatch
 from rally.openstack.common import test
 from rally.serverprovider.providers import lxc
+
+
+MOD_NAME = 'rally.serverprovider.providers.lxc.'
 
 
 class LxcContainerTestCase(test.BaseTestCase):
@@ -93,39 +96,10 @@ class LxcContainerTestCase(test.BaseTestCase):
         self.assertEqual(expected, self.server.mock_calls)
 
 
-class FakeContainer(lxc.LxcContainer):
-
-    def __init__(self, *args, **kwargs):
-        super(FakeContainer, self).__init__(*args, **kwargs)
-        self.status = []
-
-    def prepare_host(self, *args):
-        self.status.append('prepared')
-
-    def create(self, *args):
-        self.status.append('created')
-
-    def clone(self, src):
-        self.status.append('cloned ' + src)
-
-    def start(self, *args):
-        self.status.append('started')
-
-    def stop(self, *args):
-        self.status.append('stopped')
-
-    def destroy(self, *args):
-        self.status.append('destroyed')
-
-    def configure(self, *args):
-        self.status.append('configured')
-
-
 class LxcProviderTestCase(test.BaseTestCase):
 
     def setUp(self):
         super(LxcProviderTestCase, self).setUp()
-        self.mod = 'rally.serverprovider.providers.lxc.'
         self.config = {
             'name': 'LxcProvider',
             'containers_per_host': 3,
@@ -142,29 +116,94 @@ class LxcProviderTestCase(test.BaseTestCase):
         self.mock_deployment = mock.MagicMock()
         self.provider = lxc.provider.ProviderFactory.get_provider(
             self.config, self.mock_deployment)
+        self.useFixture(mockpatch.PatchObject(self.provider, 'resources'))
 
-    def test_create_vms(self):
+    @mock.patch(MOD_NAME + 'uuid')
+    @mock.patch('rally.serverprovider.provider.Server')
+    @mock.patch(MOD_NAME + 'LxcContainer')
+    @mock.patch(MOD_NAME + 'provider.ProviderFactory.get_provider')
+    def test_create_vms(self, get_provider, mock_lxc_container, mock_server,
+                        mock_uuid):
+        def create_config(ip, name):
+            conf = self.config['container_config'].copy()
+            conf['ip'] = ip
+            conf['name'] = name
+            return conf
+
+        mock_uuid.uuid4.return_value = 'fakeuuid'
+        mock_first_conts = [mock.Mock(), mock.Mock()]
+        mock_conts = [mock.Mock() for i in range(4)]
+        mock_lxc_container.side_effect = containers = \
+            [mock_first_conts[0]] + mock_conts[:2] + \
+            [mock_first_conts[1]] + mock_conts[2:]
+        for (i, mock_cont_i) in enumerate(containers):
+            mock_cont_i.server.get_credentials.return_value = i
         s1 = mock.Mock()
         s2 = mock.Mock()
         provider = mock.Mock()
         provider.create_vms = mock.Mock(return_value=[s1, s2])
-        get_provider = mock.Mock(return_value=provider)
-        with contextlib.nested(
-            mock.patch(self.mod + 'provider.Server'),
-            mock.patch(self.mod + 'LxcContainer', new=FakeContainer),
-            mock.patch(self.mod + 'provider.ProviderFactory.get_provider',
-                       new=get_provider)):
-            self.provider.create_vms()
-        name = self.provider.containers[0].config['name']
-        s_first = ['prepared', 'created', 'started']
-        s_clone = ['cloned ' + name, 'started']
-        statuses = [c.status for c in self.provider.containers]
-        self.assertEqual(6, len(statuses))
-        self.assertEqual(([s_first] + [s_clone] * 2) * 2, statuses)
+        get_provider.return_value = provider
 
-        expected_ips = ['192.168.0.%d/24' % i for i in range(10, 16)]
-        ips = [c.config['ip'] for c in self.provider.containers]
-        self.assertEqual(expected_ips, ips)
+        self.provider.create_vms()
 
+        configs = [
+            create_config('192.168.0.10/24', 'fakeuuid'),
+            create_config('192.168.0.11/24', 'fakeuuid-1'),
+            create_config('192.168.0.12/24', 'fakeuuid-2'),
+            create_config('192.168.0.13/24', 'fakeuuid'),
+            create_config('192.168.0.14/24', 'fakeuuid-1'),
+            create_config('192.168.0.15/24', 'fakeuuid-2'),
+        ]
+
+        mock_lxc_container.assert_has_calls(
+            [mock.call(*a) for a in zip(3 * [s1] + 3 * [s2], configs)])
+
+        for mock_cont_i in mock_first_conts:
+            mock_cont_i.assert_has_calls([
+                mock.call.prepare_host(),
+                mock.call.create('ubuntu'),
+                mock.call.server.get_credentials(),
+                mock.call.start(),
+                mock.call.server.ssh.wait(),
+            ])
+        for mock_cont_i in mock_conts:
+            mock_cont_i.assert_has_calls([
+                mock.call.clone('fakeuuid'),
+                mock.call.start(),
+                mock.call.server.get_credentials(),
+                mock.call.server.ssh.wait(),
+            ])
         get_provider.assert_called_once_with(self.config['host_provider'],
                                              self.mock_deployment)
+        self.provider.resources.create.assert_has_calls(
+            [mock.call({'config': a[0], 'server': a[1]})
+             for a in zip(configs, range(6))])
+
+    @mock.patch(MOD_NAME + 'provider.ProviderFactory.get_provider')
+    @mock.patch(MOD_NAME + 'provider.Server')
+    @mock.patch(MOD_NAME + 'LxcContainer')
+    def test_destroy_vms(self, mock_lxc_container, mock_server,
+                         mock_get_provider):
+        mock_lxc_container.return_value = mock_container = mock.Mock()
+        mock_get_provider.return_value = mock_provider = mock.Mock()
+        resource = {
+            'info': {
+                'config': 'fakeconfig',
+                'server': 'fakeserver0',
+            },
+        }
+        self.provider.resources.get_all.return_value = [resource]
+        mock_server.from_credentials.return_value = 'fakeserver1'
+        self.provider.destroy_vms()
+        mock_server.from_credentials.assert_called_once_with('fakeserver0')
+        mock_lxc_container.assert_called_once_with('fakeserver1', 'fakeconfig')
+        mock_container.assert_has_calls([
+            mock.call.stop(),
+            mock.call.destroy(),
+        ])
+        self.provider.resources.delete.asert_called_once_with(resource)
+        mock_get_provider.assert_called_once_with(self.config['host_provider'],
+                                                  self.mock_deployment)
+        mock_provider.assert_has_calls([
+            mock.call.destroy_vms(),
+        ])

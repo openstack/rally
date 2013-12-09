@@ -96,42 +96,58 @@ class LxcProvider(provider.ProviderFactory):
 
     """
 
-    def __init__(self, deployment, config):
-        super(LxcProvider, self).__init__(deployment, config)
-        self.containers = []
-
     def _next_ip(self):
         self.ip += 1
         return '%s/%d' % (self.ip, self.network.prefixlen)
 
     @utils.log_deploy_wrapper(LOG.info, _("Create containers on host"))
     def create_vms(self):
-        self.host_provider = provider.ProviderFactory.get_provider(
+        host_provider = provider.ProviderFactory.get_provider(
             self.config['host_provider'], self.deployment)
         self.network = netaddr.IPNetwork(self.config['start_ip_address'])
         self.ip = self.network.ip - 1
-        config = self.config['container_config']
         first = str(uuid.uuid4())
-        for server in self.host_provider.create_vms():
-            config.update({'ip': self._next_ip(), 'name': first})
+        containers = []
+        for server in host_provider.create_vms():
+            config = self.config['container_config'].copy()
+            config['ip'] = self._next_ip()
+            config['name'] = first
             first_container = LxcContainer(server, config)
             first_container.prepare_host()
             first_container.create(self.config['distribution'])
-            self.containers.append(first_container)
+            containers.append(first_container)
+            self.resources.create({
+                'server': first_container.server.get_credentials(),
+                'config': config,
+            })
             for i in range(1, self.config['containers_per_host']):
-                config.update({'ip': self._next_ip(),
-                               'name': '%s-%d' % (first, i)})
+                config = self.config['container_config'].copy()
+                config['ip'] = self._next_ip()
+                config['name'] = '%s-%d' % (first, i)
                 container = LxcContainer(server, config)
                 container.clone(first)
                 container.start()
-                self.containers.append(container)
+                containers.append(container)
+                self.resources.create({
+                    'server': container.server.get_credentials(),
+                    'config': config,
+                })
             first_container.start()
-        for container in self.containers:
+        for container in containers:
             container.server.ssh.wait()
-        return [c.server for c in self.containers]
+        return [c.server for c in containers]
 
     @utils.log_deploy_wrapper(LOG.info, _("Destroy host(s)"))
     def destroy_vms(self):
-        for c in self.containers:
-            c.stop()
-        self.host_provider.destroy_vms()
+        for resource in self.resources.get_all():
+            config = resource['info']['config']
+            server = provider.Server.from_credentials(
+                resource['info']['server'])
+            container = LxcContainer(server, config)
+            container.stop()
+            container.destroy()
+            self.resources.delete(resource)
+
+        host_provider = provider.ProviderFactory.get_provider(
+            self.config['host_provider'], self.deployment)
+        host_provider.destroy_vms()
