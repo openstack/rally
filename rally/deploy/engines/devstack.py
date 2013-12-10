@@ -47,10 +47,9 @@ class DevstackEngine(engine.EngineFactory):
 
     def __init__(self, deployment):
         super(DevstackEngine, self).__init__(deployment)
-        self._config = deployment['config']
         self._vms = []
         self._vm_provider = provider.ProviderFactory.get_provider(
-            self._config['provider'], deployment)
+            self.config['provider'], deployment)
         self.localrc = {
             'DATABASE_PASSWORD': 'rally',
             'RABBIT_PASSWORD': 'rally',
@@ -60,8 +59,8 @@ class DevstackEngine(engine.EngineFactory):
             'RECLONE': 'yes',
             'SYSLOG': 'yes',
         }
-        if 'localrc' in self._config:
-            self.localrc.update(self._config['localrc'])
+        if 'localrc' in self.config:
+            self.localrc.update(self.config['localrc'])
 
     @utils.log_deploy_wrapper(LOG.info, _("Prepare server for devstack"))
     def prepare_server(self, server):
@@ -99,7 +98,7 @@ class DevstackEngine(engine.EngineFactory):
 
     @utils.log_deploy_wrapper(LOG.info, _("Configure devstack"))
     def configure_devstack(self, server):
-        devstack_repo = self._config.get('devstack_repo', DEVSTACK_REPO)
+        devstack_repo = self.config.get('devstack_repo', DEVSTACK_REPO)
         server.ssh.execute('git', 'clone', devstack_repo)
         fd, config_path = tempfile.mkstemp()
         config_file = open(config_path, "w")

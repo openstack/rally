@@ -14,6 +14,7 @@
 #    under the License.
 
 import abc
+import jsonschema
 
 from rally import consts
 from rally import exceptions
@@ -59,6 +60,14 @@ class EngineFactory(object):
 
     def __init__(self, deployment):
         self.deployment = deployment
+        self.config = deployment['config']
+        self.validate()
+
+    def validate(self):
+        # TODO(sskripnick): remove this checking when config schema
+        # is done for all available engines
+        if hasattr(self, 'CONFIG_SCHEMA'):
+            jsonschema.validate(self.config, self.CONFIG_SCHEMA)
 
     @staticmethod
     def get_engine(name, deployment):
