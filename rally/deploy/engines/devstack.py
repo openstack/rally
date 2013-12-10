@@ -45,6 +45,17 @@ class DevstackEngine(engine.EngineFactory):
         }
     """
 
+    CONFIG_SCHEMA = {
+        'type': 'object',
+        'properties': {
+            'name': {'type': 'string'},
+            'provider': {'type': 'object'},
+            'localrc': {'type': 'object'},
+            'devstack_repo': {'type': 'string'},
+        },
+        'required': ['name', 'provider']
+    }
+
     def __init__(self, deployment):
         super(DevstackEngine, self).__init__(deployment)
         self._vms = []
