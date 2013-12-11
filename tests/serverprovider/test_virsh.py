@@ -65,7 +65,8 @@ class VirshProviderTestCase(test.BaseTestCase):
 
     @mock.patch('rally.serverprovider.providers.virsh.netaddr.IPAddress')
     @mock.patch('rally.serverprovider.providers.virsh.subprocess')
-    def test_create_vm_ip_failed(self, mock_subp, mock_ipaddress):
+    @mock.patch('time.sleep')
+    def test_create_vm_ip_failed(self, mock_sleep, mock_subp, mock_ipaddress):
         mock_ipaddress.side_effect = netaddr.core.AddrFormatError
         server = self.provider.create_vm('name')
         mock_subp.assert_has_calls(3 * [
