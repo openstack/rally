@@ -22,6 +22,23 @@ from rally.serverprovider import provider
 class DummyProvider(provider.ProviderFactory):
     """Just return endpoints from own configuration."""
 
+    CONFIG_SCHEMA = {
+        'type': 'object',
+        'properties': {
+            'name': {
+                'type': 'string'
+            },
+            'credentials': {
+                'type': 'array',
+                'items': {
+                    "type": "string",
+                    "pattern": "^.+@.+$"
+                },
+            },
+        },
+        'required': ['credentials']
+    }
+
     def __init__(self, deployment, config):
         super(DummyProvider, self).__init__(deployment, config)
         self.credentials = config['credentials']
