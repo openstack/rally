@@ -219,8 +219,8 @@ class ScenarioRunner(object):
                                              clients["keystone"].project_id)
                 cls._delete_cinder_resources(clients["cinder"])
             except Exception as e:
-                LOG.exception(_('Encountered error during cleanup: %s') %
-                              (e.message))
+                LOG.info(_('Unable to fully cleanup the cloud: %s') %
+                        (e.message))
 
     def _cleanup_scenario(self, concurrent):
         indexes = range(0, len(__openstack_clients__))
