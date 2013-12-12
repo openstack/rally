@@ -79,6 +79,32 @@ class NovaServersTestCase(test.TestCase):
 
     @mock.patch(NOVA_SERVERS + "._generate_random_name")
     @mock.patch(NOVA_SERVERS + "._delete_server")
+    @mock.patch(NOVA_SERVERS + "._rescue_server")
+    @mock.patch(NOVA_SERVERS + "._unrescue_server")
+    @mock.patch(NOVA_SERVERS + "._boot_server")
+    def test_boot_rescue_unrescue(self, mock_boot, mock_unrescue,
+                                  mock_rescue, mock_delete, mock_name):
+        actions = [{'rescue_unrescue': 5}]
+        fake_server = object()
+        mock_boot.return_value = fake_server
+        mock_name.return_value = 'random_name'
+        servers.NovaServers.boot_and_bounce_server("img", 1,
+                                                   actions=actions)
+        mock_boot.assert_called_once_with("random_name", "img", 1,
+                                          actions=actions)
+        server_calls = []
+        for i in range(5):
+            server_calls.append(mock.call(fake_server))
+        self.assertEqual(5, mock_rescue.call_count,
+                         "Rescue not called 5 times")
+        self.assertEqual(5, mock_unrescue.call_count,
+                         "Unrescue not called 5 times")
+        mock_rescue.assert_has_calls(server_calls)
+        mock_unrescue.assert_has_calls(server_calls)
+        mock_delete.assert_called_once_with(fake_server)
+
+    @mock.patch(NOVA_SERVERS + "._generate_random_name")
+    @mock.patch(NOVA_SERVERS + "._delete_server")
     @mock.patch(NOVA_SERVERS + "._stop_server")
     @mock.patch(NOVA_SERVERS + "._start_server")
     @mock.patch(NOVA_SERVERS + "._boot_server")

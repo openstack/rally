@@ -95,6 +95,35 @@ class NovaScenario(base.Scenario):
                        timeout=600, check_interval=2)
 
     @classmethod
+    def _rescue_server(cls, server):
+        """Rescue the given server.
+
+        Returns when the server is actually rescue and is in the "Rescue"
+        state.
+
+        :param server: Server object
+        """
+        server.rescue()
+        time.sleep(2)
+        utils.wait_for(server, is_ready=bench_utils.resource_is("RESCUE"),
+                       update_resource=bench_utils.get_from_manager(),
+                       timeout=600, check_interval=3)
+
+    @classmethod
+    def _unrescue_server(cls, server):
+        """Unrescue the given server.
+
+        Returns when the server is unrescue and waits to become ACTIVE
+
+        :param server: Server object
+        """
+        server.unrescue()
+        time.sleep(2)
+        utils.wait_for(server, is_ready=bench_utils.resource_is("ACTIVE"),
+                       update_resource=bench_utils.get_from_manager(),
+                       timeout=600, check_interval=3)
+
+    @classmethod
     def _suspend_server(cls, server):
         """Suspends the given server.
 

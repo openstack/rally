@@ -1,0 +1,11 @@
+{
+    "verify": [],
+    "benchmark": {
+      "NovaServers.boot_and_bounce_server": [
+        {"args": {"flavor_id": 1,
+                   "image_id": "3fa4482f-677a-4488-adaf-c48befac5e5a",
+                   "actions": [{"rescue_unrescue": 1}] },
+         "config": {"times": 1, "active_users": 1}}
+      ]
+    }
+}
