@@ -1,0 +1,10 @@
+{
+    "CinderVolumes.create_and_delete_volume": [
+        {
+            "args": {"size": 1},
+            "execution": "continuous",
+            "config": {"times": 3, "active_users": 2,
+                       "tenants": 2, "users_per_tenant": 2}
+        }
+    ]
+}
