@@ -1,0 +1,28 @@
+{
+    "type": "FuelEngine",
+    "deploy_name": "Rally HA 01",
+    "release": "Havana on CentOS 6.4",
+    "api_url": "http://10.20.0.2:8000/api/v1/",
+    "mode": "ha_compact",
+    "nodes": {
+       "controller": {"amount": 3, "filters": ["storage>80G"]},
+       "compute": {"amount": 1, "filters": ["storage>80G"]}
+    },
+    "net_provider": "nova_network",
+    "dns_nameservers": ["172.18.208.44", "8.8.8.8"],
+    "networks": {
+
+        "public": {
+            "cidr": "10.3.5.0/24",
+            "gateway": "10.3.5.1",
+            "ip_ranges": [["10.3.5.5", "10.3.5.254"]],
+            "vlan_start": 15
+        },
+
+        "floating": {
+            "cidr": "10.3.6.0/24",
+            "ip_ranges": [["10.3.6.5", "10.3.6.254"]],
+            "vlan_start": 15
+        }
+    }
+}
