@@ -24,6 +24,18 @@ class FakeServiceCatalog(object):
         return {'image': [{'publicURL': 'http://fake.to'}]}
 
 
+class FakeNova(object):
+    pass
+
+
+class FakeGlance(object):
+    pass
+
+
+class FakeCinder(object):
+    pass
+
+
 class FakeKeystone(object):
     def __init__(self):
         self.auth_token = 'fake'
@@ -52,38 +64,49 @@ class OSClientsTestCase(test.TestCase):
         with mock.patch('rally.osclients.keystone') as mock_keystone:
             fake_keystone = FakeKeystone()
             mock_keystone.Client = mock.MagicMock(return_value=fake_keystone)
+            self.assertTrue("keystone" not in self.clients.cache)
             client = self.clients.get_keystone_client()
             self.assertEqual(client, fake_keystone)
             endpoint = {"endpoint": "http://auth_url:35357"}
             kwargs = dict(self.kwargs.items() + endpoint.items())
             mock_keystone.Client.assert_called_once_with(**kwargs)
+            self.assertEqual(self.clients.cache["keystone"], fake_keystone)
 
     def test_get_nova_client(self):
         with mock.patch('rally.osclients.nova') as mock_nova:
-            mock_nova.Client = mock.MagicMock(return_value={})
+            fake_nova = FakeNova()
+            mock_nova.Client = mock.MagicMock(return_value=fake_nova)
+            self.assertTrue("nova" not in self.clients.cache)
             client = self.clients.get_nova_client()
-            self.assertEqual(client, {})
+            self.assertEqual(client, fake_nova)
             mock_nova.Client.assert_called_once_with('2', *self.args[:3],
                                                      auth_url=self.args[-1],
                                                      service_type='compute')
+            self.assertEqual(self.clients.cache["nova"], fake_nova)
 
     def test_get_glance_client(self):
         with mock.patch('rally.osclients.glance') as mock_glance:
-            mock_glance.Client = mock.MagicMock(return_value={})
+            fake_glance = FakeGlance()
+            mock_glance.Client = mock.MagicMock(return_value=fake_glance)
             kc = FakeKeystone()
             self.clients.get_keystone_client = mock.MagicMock(return_value=kc)
+            self.assertTrue("glance" not in self.clients.cache)
             client = self.clients.get_glance_client()
-            self.assertEqual(client, {})
+            self.assertEqual(client, fake_glance)
             endpoint = kc.service_catalog.get_endpoints()['image'][0]
 
             kw = {'endpoint': endpoint['publicURL'], 'token': kc.auth_token}
             mock_glance.Client.assert_called_once_with('1', **kw)
+            self.assertEqual(self.clients.cache["glance"], fake_glance)
 
     def test_get_cinder_client(self):
         with mock.patch('rally.osclients.cinder') as mock_cinder:
-            mock_cinder.Client = mock.MagicMock(return_value={})
+            fake_cinder = FakeCinder()
+            mock_cinder.Client = mock.MagicMock(return_value=fake_cinder)
+            self.assertTrue("cinder" not in self.clients.cache)
             client = self.clients.get_cinder_client()
-            self.assertEqual(client, {})
+            self.assertEqual(client, fake_cinder)
             mock_cinder.Client.assert_called_once_with('1', *self.args[:3],
                                                        auth_url=self.args[-1],
                                                        service_type='volume')
+            self.assertEqual(self.clients.cache["cinder"], fake_cinder)
