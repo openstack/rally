@@ -12,5 +12,6 @@ python-keystoneclient>=0.4.1
 python-novaclient>=2.15.0
 python-neutronclient>=2.3.0,<3
 python-cinderclient>=1.0.6
+requests>=1.1
 SQLAlchemy>=0.7.8,<=0.7.99
 six>=1.4.1
