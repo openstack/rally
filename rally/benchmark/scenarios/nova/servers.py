@@ -21,7 +21,7 @@ from rally.benchmark.scenarios import utils as scenario_utils
 from rally import exceptions as rally_exceptions
 
 ACTION_BUILDER = scenario_utils.ActionBuilder(
-        ['hard_reboot', 'soft_reboot', 'stop_start'])
+        ['hard_reboot', 'soft_reboot', 'stop_start', 'rescue_unrescue'])
 
 
 class NovaServers(utils.NovaScenario):
@@ -93,9 +93,27 @@ class NovaServers(utils.NovaScenario):
         cls._stop_server(server)
         cls._start_server(server)
 
+    @classmethod
+    def _rescue_and_unrescue_server(cls, server):
+        """Rescue and then unrescue the given server.
+        A rescue will be issued on the given server upon which time
+        this method will wait for the server to become 'RESCUE'.
+        Once the server is RESCUE a unrescue will be issued and
+        this method will wait for the server to become 'ACTIVE'
+        again.
+
+        :param server: The server to rescue and then unrescue.
+
+        """
+        cls._rescue_server(server)
+        cls._unrescue_server(server)
+
+
 ACTION_BUILDER.bind_action('hard_reboot',
                            utils.NovaScenario._reboot_server, soft=False)
 ACTION_BUILDER.bind_action('soft_reboot',
                            utils.NovaScenario._reboot_server, soft=True)
 ACTION_BUILDER.bind_action('stop_start',
                            NovaServers._stop_and_start_server)
+ACTION_BUILDER.bind_action('rescue_unrescue',
+                           NovaServers._rescue_and_unrescue_server)
