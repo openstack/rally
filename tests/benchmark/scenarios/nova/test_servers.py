@@ -19,7 +19,7 @@ from rally.benchmark.scenarios.nova import servers
 from rally.benchmark import utils as butils
 from rally import exceptions as rally_exceptions
 from rally import test
-from tests.benchmark.scenarios.nova import test_utils
+from tests import fakes
 
 
 NOVA_SERVERS = "rally.benchmark.scenarios.nova.servers.NovaServers"
@@ -53,9 +53,9 @@ class NovaServersTestCase(test.TestCase):
         kwargs = {'fakearg': 'f'}
         expected_kwargs = {'fakearg': 'f'}
 
-        fc = test_utils.FakeClients()
+        fc = fakes.FakeClients()
         mock_osclients.Clients.return_value = fc
-        nova = test_utils.FakeNovaClient()
+        nova = fakes.FakeNovaClient()
         fc.get_nova_client = lambda: nova
 
         temp_keys = ["username", "password", "tenant_name", "uri"]
@@ -239,7 +239,7 @@ class NovaServersTestCase(test.TestCase):
                              mock_random_name):
 
         fake_server = object()
-        fake_image = test_utils.FakeImageManager().create()
+        fake_image = fakes.FakeImageManager().create()
         fake_image.id = "image_id"
 
         mock_random_name.return_value = "random_name"

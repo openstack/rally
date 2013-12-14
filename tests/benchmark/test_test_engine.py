@@ -22,7 +22,7 @@ from rally.benchmark import engine
 from rally import consts
 from rally import exceptions
 from rally import test
-from tests.benchmark.scenarios.nova import test_utils
+from tests import fakes
 
 
 class TestEngineTestCase(test.TestCase):
@@ -156,7 +156,7 @@ class TestEngineTestCase(test.TestCase):
     @mock.patch("rally.benchmark.utils.ScenarioRunner.run")
     @mock.patch("rally.benchmark.utils.osclients")
     def test_benchmark(self, mock_osclients, mock_run):
-        mock_osclients.Clients.return_value = test_utils.FakeClients()
+        mock_osclients.Clients.return_value = fakes.FakeClients()
         tester = engine.TestEngine(self.valid_test_config_continuous_times,
                                    mock.MagicMock())
         with tester.bind(self.valid_cloud_config):
@@ -170,7 +170,7 @@ class TestEngineTestCase(test.TestCase):
         fake_task = mock.MagicMock()
         tester = engine.TestEngine(self.valid_test_config_continuous_times,
                                    fake_task)
-        mock_osclients.Clients.return_value = test_utils.FakeClients()
+        mock_osclients.Clients.return_value = fakes.FakeClients()
         mock_run.return_value = self.run_success
         mock_scenario_run.return_value = {}
         with tester.bind(self.valid_cloud_config):
@@ -206,7 +206,7 @@ class TestEngineTestCase(test.TestCase):
         fake_task = mock.MagicMock()
         tester = engine.TestEngine(self.valid_test_config_continuous_times,
                                    fake_task)
-        mock_osclients.Clients.return_value = test_utils.FakeClients()
+        mock_osclients.Clients.return_value = fakes.FakeClients()
         mock_run.return_value = self.run_success
         mock_scenario_run.side_effect = exceptions.TestException()
         try:
