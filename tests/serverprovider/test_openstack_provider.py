@@ -129,7 +129,9 @@ class OpenStackProviderTestCase(test.TestCase):
     @mock.patch(MOD_NAME + '.open', create=True)
     @mock.patch(MOD_NAME + '.provider')
     @mock.patch('rally.benchmark.utils.get_from_manager')
-    def test_openstack_provider_create_vms(self, get, g, provider, clients):
+    @mock.patch('time.sleep')
+    def test_openstack_provider_create_vms(self, mock_sleep, get, g, provider,
+                                           clients):
         get.return_value = lambda r: r
         self._init_mock_clients()
         clients.Clients = mock.MagicMock(return_value=self.clients)
