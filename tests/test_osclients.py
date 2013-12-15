@@ -17,32 +17,7 @@ import mock
 
 from rally import osclients
 from rally import test
-
-
-class FakeServiceCatalog(object):
-    def get_endpoints(self):
-        return {'image': [{'publicURL': 'http://fake.to'}]}
-
-
-class FakeNova(object):
-    pass
-
-
-class FakeGlance(object):
-    pass
-
-
-class FakeCinder(object):
-    pass
-
-
-class FakeKeystone(object):
-    def __init__(self):
-        self.auth_token = 'fake'
-        self.service_catalog = FakeServiceCatalog()
-
-    def authenticate(self):
-        return True
+from tests import fakes
 
 
 class OSClientsTestCase(test.TestCase):
@@ -62,7 +37,7 @@ class OSClientsTestCase(test.TestCase):
 
     def test_get_keystone_client(self):
         with mock.patch('rally.osclients.keystone') as mock_keystone:
-            fake_keystone = FakeKeystone()
+            fake_keystone = fakes.FakeKeystoneClient()
             mock_keystone.Client = mock.MagicMock(return_value=fake_keystone)
             self.assertTrue("keystone" not in self.clients.cache)
             client = self.clients.get_keystone_client()
@@ -74,7 +49,7 @@ class OSClientsTestCase(test.TestCase):
 
     def test_get_nova_client(self):
         with mock.patch('rally.osclients.nova') as mock_nova:
-            fake_nova = FakeNova()
+            fake_nova = fakes.FakeNovaClient()
             mock_nova.Client = mock.MagicMock(return_value=fake_nova)
             self.assertTrue("nova" not in self.clients.cache)
             client = self.clients.get_nova_client()
@@ -86,9 +61,9 @@ class OSClientsTestCase(test.TestCase):
 
     def test_get_glance_client(self):
         with mock.patch('rally.osclients.glance') as mock_glance:
-            fake_glance = FakeGlance()
+            fake_glance = fakes.FakeGlanceClient()
             mock_glance.Client = mock.MagicMock(return_value=fake_glance)
-            kc = FakeKeystone()
+            kc = fakes.FakeKeystoneClient()
             self.clients.get_keystone_client = mock.MagicMock(return_value=kc)
             self.assertTrue("glance" not in self.clients.cache)
             client = self.clients.get_glance_client()
@@ -101,7 +76,7 @@ class OSClientsTestCase(test.TestCase):
 
     def test_get_cinder_client(self):
         with mock.patch('rally.osclients.cinder') as mock_cinder:
-            fake_cinder = FakeCinder()
+            fake_cinder = fakes.FakeCinderClient()
             mock_cinder.Client = mock.MagicMock(return_value=fake_cinder)
             self.assertTrue("cinder" not in self.clients.cache)
             client = self.clients.get_cinder_client()

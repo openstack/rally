@@ -259,10 +259,16 @@ class FakeVolumeBackupManager(FakeManager):
         return self._cache(backup)
 
 
+class FakeServiceCatalog(object):
+    def get_endpoints(self):
+        return {'image': [{'publicURL': 'http://fake.to'}]}
+
+
 class FakeGlanceClient(object):
 
-    def __init__(self, nova_client):
-        self.images = nova_client.images
+    def __init__(self, nova_client=None):
+        if nova_client:
+            self.images = nova_client.images
 
 
 class FakeCinderClient(object):
@@ -295,6 +301,11 @@ class FakeKeystoneClient(object):
         self.tenants = FakeTenantsManager()
         self.users = FakeUsersManager()
         self.project_id = 'abc123'
+        self.auth_token = 'fake'
+        self.service_catalog = FakeServiceCatalog()
+
+    def authenticate(self):
+        return True
 
 
 class FakeClients(object):
