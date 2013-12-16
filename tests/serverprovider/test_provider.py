@@ -85,8 +85,8 @@ class ProviderTestCase(test.TestCase):
 class ServerTestCase(test.TestCase):
     def setUp(self):
         super(ServerTestCase, self).setUp()
-        self.vals = ['uuid', '192.168.1.1', 'admin', 'some_key', 'pwd']
-        self.keys = ['uuid', 'ip', 'user', 'key', 'password']
+        self.vals = ['192.168.1.1', 'admin', 'some_key', 'pwd']
+        self.keys = ['ip', 'user', 'key', 'password']
 
     def test_init_server_dto(self):
         server = serverprovider.Server(*self.vals)

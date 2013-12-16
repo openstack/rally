@@ -14,8 +14,6 @@
 #    under the License.
 
 
-import uuid
-
 from rally.serverprovider import provider
 
 
@@ -47,10 +45,7 @@ class DummyProvider(provider.ProviderFactory):
         credentials = []
         for ep in self.credentials:
             user, host = ep.split('@')
-            credentials.append(provider.Server(uuid=uuid.uuid4(),
-                                               ip=host,
-                                               user=user,
-                                               key=None))
+            credentials.append(provider.Server(host, user))
         return credentials
 
     def destroy_servers(self):

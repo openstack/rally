@@ -56,7 +56,6 @@ class VirshProviderTestCase(test.BaseTestCase):
                                    './get_domain_ip.sh name', shell=True),
         ])
         mock_ipaddress.assert_called_once_with('10.0.0.1')
-        self.assertEqual(server.uuid, 'name')
         self.assertEqual(server.ip, '10.0.0.2')
         self.assertEqual(server.user, 'user')
         self.assertEqual(server.key, None)

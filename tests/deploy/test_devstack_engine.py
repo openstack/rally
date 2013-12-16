@@ -61,9 +61,9 @@ class DevstackEngineTestCase(test.BaseTestCase):
         call = mock.call
         install_script = 'rally/deploy/engines/devstack/install.sh'
         expected = [
-            call('example.com', 'root'),
+            call('example.com', 'root', 22, None),
             call().execute_script(os.path.abspath(install_script)),
-            call('example.com', 'rally'),
+            call('example.com', 'rally', 22, None),
             call().execute('git', 'clone', DEVSTACK_REPO),
             call().upload(config_tmp_filename, '~/devstack/localrc'),
             call().execute('~/devstack/stack.sh')]

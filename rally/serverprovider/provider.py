@@ -23,21 +23,22 @@ from rally import utils
 
 class Server(utils.ImmutableMixin):
     """Represent information about created Server.
+
     Provider.create_servers should return list of instance of Server
     """
-    def __init__(self, uuid, ip, user, key, password=None):
-        self.uuid = uuid
+    def __init__(self, ip, user, key=None, password=None, port=22):
         self.ip = ip
+        self.port = port
         self.user = user
         self.key = key
         self.password = password
-        self.ssh = sshutils.SSH(ip, user)
+        self.ssh = sshutils.SSH(ip, user, port, key)
         super(Server, self).__init__()
 
     def get_credentials(self):
         return {
-            'uuid': self.uuid,
             'ip': self.ip,
+            'port': self.port,
             'user': self.user,
             'key': self.key,
             'password': self.password,
@@ -45,8 +46,8 @@ class Server(utils.ImmutableMixin):
 
     @classmethod
     def from_credentials(cls, creds):
-        return cls(creds['uuid'], creds['ip'], creds['user'], creds['key'],
-                   password=creds['password'])
+        return cls(creds['ip'], creds['user'], key=creds['key'],
+                   port=creds['port'], password=creds['password'])
 
 
 class ImageDTO(utils.ImmutableMixin):

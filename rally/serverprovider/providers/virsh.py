@@ -81,11 +81,9 @@ class VirshProvider(provider.ProviderFactory):
         self.resources.create({'name': vm_name})
 
         return provider.Server(
-            vm_name,
             self._determine_vm_ip(vm_name),
             self.config['template_user'],
-            None,
-            self.config.get('template_password')
+            password=self.config.get('template_password'),
         )
 
     def destroy_servers(self):
