@@ -54,8 +54,40 @@ class SSH(object):
     def _is_timed_out(self, start_time):
         return (time.time() - self.timeout) > start_time
 
-    def execute(self, *cmd):
-        """Execute the specified command on the server."""
+    def execute(self, *cmd, **kwargs):
+        """Execute the specified command on the server.
+
+        Return tuple (stdout, stderr).
+
+        :param *cmd:       Command and arguments to be executed.
+        :param get_stdout: Collect stdout data. Boolean.
+        :param get_stderr: Collect stderr data. Boolean.
+
+        """
+        get_stdout = kwargs.get("get_stdout", False)
+        get_stderr = kwargs.get("get_stderr", False)
+        stdout = ''
+        stderr = ''
+        for chunk in self.execute_generator(*cmd, get_stdout=get_stdout,
+                                            get_stderr=get_stderr):
+            if chunk[0] == 1:
+                stdout += chunk[1]
+            elif chunk[0] == 2:
+                stderr += chunk[1]
+        return (stdout, stderr)
+
+    def execute_generator(self, *cmd, **kwargs):
+        """Execute the specified command on the server.
+
+        Return generator. Stdout and stderr data can be collected by chunks.
+
+        :param *cmd:       Command and arguments to be executed.
+        :param get_stdout: Collect stdout data. Boolean.
+        :param get_stderr: Collect stderr data. Boolean.
+
+        """
+        get_stdout = kwargs.get("get_stdout", True)
+        get_stderr = kwargs.get("get_stderr", True)
         self._get_ssh_connection()
         cmd = ' '.join(cmd)
         transport = self.client.get_transport()
@@ -77,10 +109,14 @@ class SSH(object):
             out_chunk = err_chunk = None
             if channel.recv_ready():
                 out_chunk = channel.recv(4096)
-                LOG.debug(out_chunk)
+                if get_stdout:
+                    yield (1, out_chunk)
+                LOG.debug("stdout: %s" % out_chunk)
             if channel.recv_stderr_ready():
                 err_chunk = channel.recv_stderr(4096)
-                LOG.debug(err_chunk)
+                if get_stderr:
+                    yield (2, err_chunk)
+                LOG.debug("stderr: %s" % err_chunk)
             if channel.closed and not err_chunk and not out_chunk:
                 break
         exit_status = channel.recv_exit_status()
