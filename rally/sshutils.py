@@ -38,6 +38,7 @@ class SSH(object):
         timeout - the timeout for execution of the command
         """
         self.ip = ip
+        self.port = port
         self.user = user
         self.timeout = timeout
         self.client = None
@@ -49,7 +50,8 @@ class SSH(object):
     def _get_ssh_connection(self):
         self.client = paramiko.SSHClient()
         self.client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        self.client.connect(self.ip, username=self.user, key_filename=self.key)
+        self.client.connect(self.ip, username=self.user,
+                            key_filename=self.key, port=self.port)
 
     def _is_timed_out(self, start_time):
         return (time.time() - self.timeout) > start_time
