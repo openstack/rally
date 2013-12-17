@@ -101,14 +101,14 @@ class LxcProvider(provider.ProviderFactory):
         return '%s/%d' % (self.ip, self.network.prefixlen)
 
     @utils.log_deploy_wrapper(LOG.info, _("Create containers on host"))
-    def create_vms(self):
+    def create_servers(self):
         host_provider = provider.ProviderFactory.get_provider(
             self.config['host_provider'], self.deployment)
         self.network = netaddr.IPNetwork(self.config['start_ip_address'])
         self.ip = self.network.ip - 1
         first = str(uuid.uuid4())
         containers = []
-        for server in host_provider.create_vms():
+        for server in host_provider.create_servers():
             config = self.config['container_config'].copy()
             config['ip'] = self._next_ip()
             config['name'] = first

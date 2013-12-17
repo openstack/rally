@@ -57,7 +57,7 @@ class VirshProvider(provider.ProviderFactory):
         'required': ['connection', 'template_name', 'template_user']
     }
 
-    def create_vms(self, image_uuid=None, type_id=None, amount=1):
+    def create_servers(self, image_uuid=None, type_id=None, amount=1):
         """Create VMs with chosen image.
         :param image_uuid: Indetificator of image
         :param amount: amount of required VMs

@@ -23,7 +23,7 @@ from rally import utils
 
 class Server(utils.ImmutableMixin):
     """Represent information about created Server.
-    Provider.create_vms should return list of instance of Server
+    Provider.create_servers should return list of instance of Server
     """
     def __init__(self, uuid, ip, user, key, password=None):
         self.uuid = uuid
@@ -107,7 +107,7 @@ class ProviderFactory(object):
     and implement 4 methods:
         *) upload_image
         *) destroy_image
-        *) create_vms
+        *) create_servers
         *) destroy_vms.
     """
     __metaclass__ = abc.ABCMeta
@@ -158,7 +158,7 @@ class ProviderFactory(object):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def create_vms(self, image_uuid=None, type_id=None, amount=1):
+    def create_servers(self, image_uuid=None, type_id=None, amount=1):
         """Create VMs with chosen image.
         :param image_uuid: Indetificator of image
         :param type_id: Vm type identificator

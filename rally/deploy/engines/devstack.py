@@ -81,7 +81,7 @@ class DevstackEngine(engine.EngineFactory):
 
     @utils.log_deploy_wrapper(LOG.info, _("Deploy devstack"))
     def deploy(self):
-        self.servers = self._vm_provider.create_vms()
+        self.servers = self._vm_provider.create_servers()
         for server in self.servers:
             self.prepare_server(server)
             devstack_server = provider.Server(server.uuid, server.ip,

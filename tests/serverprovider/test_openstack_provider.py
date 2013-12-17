@@ -130,8 +130,8 @@ class OpenStackProviderTestCase(test.TestCase):
     @mock.patch(MOD_NAME + '.provider')
     @mock.patch('rally.benchmark.utils.get_from_manager')
     @mock.patch('time.sleep')
-    def test_openstack_provider_create_vms(self, mock_sleep, get, g, provider,
-                                           clients):
+    def test_openstack_provider_create_servers(self, mock_sleep, get, g,
+                                               provider, clients):
         get.return_value = lambda r: r
         self._init_mock_clients()
         clients.Clients = mock.MagicMock(return_value=self.clients)
@@ -141,7 +141,7 @@ class OpenStackProviderTestCase(test.TestCase):
         prov.nova.keypairs.create.return_value = mock.Mock(id='keypair_id',
                                                            name='keypair_name')
         self.instance.id = 'instance_id'
-        prov.create_vms()
+        prov.create_servers()
         self.assertEqual(['keypairs.create', 'servers.create'],
                          [call[0] for call in self.nova_client.mock_calls])
         prov.resources.create.assert_has_calls([

@@ -131,7 +131,7 @@ class OpenStackProvider(provider.ProviderFactory):
             userdata = open(userdata, 'r')
         return userdata
 
-    def create_vms(self):
+    def create_servers(self):
         """Create VMs with chosen image."""
 
         image_uuid = self.get_image_uuid()
