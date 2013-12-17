@@ -108,7 +108,7 @@ class ProviderFactory(object):
         *) upload_image
         *) destroy_image
         *) create_servers
-        *) destroy_vms.
+        *) destroy_servers.
     """
     __metaclass__ = abc.ABCMeta
 
@@ -168,6 +168,6 @@ class ProviderFactory(object):
         pass
 
     @abc.abstractmethod
-    def destroy_vms(self):
+    def destroy_servers(self):
         """Destroy already created vms."""
         pass

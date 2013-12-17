@@ -88,7 +88,7 @@ class VirshProvider(provider.ProviderFactory):
             self.config.get('template_password')
         )
 
-    def destroy_vms(self):
+    def destroy_servers(self):
         '''Destroy already created vms.'''
         for resource in self.resources.get_all():
             self.destroy_vm(resource['info']['name'])

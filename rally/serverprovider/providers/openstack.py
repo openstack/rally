@@ -177,7 +177,7 @@ class OpenStackProvider(provider.ProviderFactory):
         time.sleep(8)
         return servers
 
-    def destroy_vms(self):
+    def destroy_servers(self):
         for resource in self.resources.get_all(type=SERVER_TYPE):
             self.nova.servers.delete(resource['info']['id'])
             self.resources.delete(resource)

@@ -171,13 +171,13 @@ class OpenStackProviderTestCase(test.TestCase):
                          [mock.call.urlopen('http://example.net/img.qcow2')])
 
     @mock.patch(MOD_NAME + '.osclients')
-    def test_openstack_provider_destroy_vms(self, mock_osclients):
+    def test_openstack_provider_destroy_servers(self, mock_osclients):
         prov = OSProvider(mock.MagicMock(), self._get_valid_config())
         prov.resources.get_all.side_effect = [
             [{'info': {'id': '1'}}],
             [{'info': {'id': '2'}}],
         ]
-        prov.destroy_vms()
+        prov.destroy_servers()
         prov.resources.get_all.assert_has_calls([
             mock.call(type='server'),
             mock.call(type='keypair'),

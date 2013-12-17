@@ -105,7 +105,7 @@ class DevstackEngine(engine.EngineFactory):
         }
 
     def cleanup(self):
-        self._vm_provider.destroy_vms()
+        self._vm_provider.destroy_servers()
 
     @utils.log_deploy_wrapper(LOG.info, _("Configure devstack"))
     def configure_devstack(self, server):

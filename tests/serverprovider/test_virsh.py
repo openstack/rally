@@ -102,13 +102,13 @@ class VirshProviderTestCase(test.BaseTestCase):
         ])
 
     @mock.patch.object(virsh.VirshProvider, 'destroy_vm')
-    def test_destroy_vms(self, mock_destroy):
+    def test_destroy_servers(self, mock_destroy):
         self.provider.resources.get_all.return_value = [
             {'info': {'name': '1'}},
             {'info': {'name': '2'}},
             {'info': {'name': '3'}},
         ]
-        self.provider.destroy_vms()
+        self.provider.destroy_servers()
         mock_destroy.assert_has_calls([
             mock.call('1'),
             mock.call('2'),

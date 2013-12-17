@@ -53,5 +53,5 @@ class DummyProvider(provider.ProviderFactory):
                                                key=None))
         return credentials
 
-    def destroy_vms(self):
+    def destroy_servers(self):
         pass

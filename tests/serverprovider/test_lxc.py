@@ -182,8 +182,8 @@ class LxcProviderTestCase(test.BaseTestCase):
     @mock.patch(MOD_NAME + 'provider.ProviderFactory.get_provider')
     @mock.patch(MOD_NAME + 'provider.Server')
     @mock.patch(MOD_NAME + 'LxcContainer')
-    def test_destroy_vms(self, mock_lxc_container, mock_server,
-                         mock_get_provider):
+    def test_destroy_servers(self, mock_lxc_container, mock_server,
+                             mock_get_provider):
         mock_lxc_container.return_value = mock_container = mock.Mock()
         mock_get_provider.return_value = mock_provider = mock.Mock()
         resource = {
@@ -194,7 +194,7 @@ class LxcProviderTestCase(test.BaseTestCase):
         }
         self.provider.resources.get_all.return_value = [resource]
         mock_server.from_credentials.return_value = 'fakeserver1'
-        self.provider.destroy_vms()
+        self.provider.destroy_servers()
         mock_server.from_credentials.assert_called_once_with('fakeserver0')
         mock_lxc_container.assert_called_once_with('fakeserver1', 'fakeconfig')
         mock_container.assert_has_calls([
@@ -205,5 +205,5 @@ class LxcProviderTestCase(test.BaseTestCase):
         mock_get_provider.assert_called_once_with(self.config['host_provider'],
                                                   self.mock_deployment)
         mock_provider.assert_has_calls([
-            mock.call.destroy_vms(),
+            mock.call.destroy_servers(),
         ])

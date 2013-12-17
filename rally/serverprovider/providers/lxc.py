@@ -138,7 +138,7 @@ class LxcProvider(provider.ProviderFactory):
         return [c.server for c in containers]
 
     @utils.log_deploy_wrapper(LOG.info, _("Destroy host(s)"))
-    def destroy_vms(self):
+    def destroy_servers(self):
         for resource in self.resources.get_all():
             config = resource['info']['config']
             server = provider.Server.from_credentials(
@@ -150,4 +150,4 @@ class LxcProvider(provider.ProviderFactory):
 
         host_provider = provider.ProviderFactory.get_provider(
             self.config['host_provider'], self.deployment)
-        host_provider.destroy_vms()
+        host_provider.destroy_servers()
