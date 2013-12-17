@@ -84,8 +84,9 @@ class DevstackEngine(engine.EngineFactory):
         self.servers = self._vm_provider.create_servers()
         for server in self.servers:
             self.prepare_server(server)
-            devstack_server = provider.Server(server.uuid, server.ip,
-                                              DEVSTACK_USER, server.key)
+            credentials = server.get_credentials()
+            credentials['user'] = DEVSTACK_USER
+            devstack_server = provider.Server.from_credentials(credentials)
             self.configure_devstack(devstack_server)
             self.start_devstack(devstack_server)
 
