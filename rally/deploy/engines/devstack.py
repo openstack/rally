@@ -40,7 +40,7 @@ class DevstackEngine(engine.EngineFactory):
             },
             "provider": {
                 "name": "DummyProvider",
-                "credentials": ["root@10.2.0.8"]
+                "credentials": [{'user': 'root', 'host': '10.2.0.8'}]
             }
         }
     """

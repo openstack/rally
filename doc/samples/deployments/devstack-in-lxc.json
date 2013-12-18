@@ -11,7 +11,7 @@
         "ipv4_prefixlen": 16,
         "host_provider": {
             "name": "DummyProvider",
-            "credentials": ["root@10.2.250.103"]
+            "credentials": [{"user": "root", "host": "10.2.250.103"}]
         }
     }
 }

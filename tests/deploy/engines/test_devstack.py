@@ -26,7 +26,7 @@ SAMPLE_CONFIG = {
     'name': 'DevstackEngine',
     'provider': {
         'name': 'DummyProvider',
-        'credentials': ['root@example.com'],
+        'credentials': [{'user': 'root', 'host': 'example.com'}],
     },
     'localrc': {
         'ADMIN_PASSWORD': 'secret',

@@ -90,7 +90,7 @@ class LxcProvider(provider.ProviderFactory):
         },
         'host_provider': {
             'name': 'DummyProvider',
-            'credentials': ['root@host.net']
+            'credentials': [{'user': 'root', 'host': 'host.net'}]
         }
     }
 

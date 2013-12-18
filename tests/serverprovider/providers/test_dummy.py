@@ -27,7 +27,8 @@ class DummyProviderTestCase(test.TestCase):
     def setUp(self):
         super(DummyProviderTestCase, self).setUp()
         self.config = {'name': 'DummyProvider',
-                       'credentials': ['user@host1', 'user@host2']}
+                       'credentials': [{'user': 'user', 'host': 'host1'},
+                                       {'user': 'user', 'host': 'host2'}]}
 
     def test_create_servers(self):
         provider = serverprovider.ProviderFactory.get_provider(self.config,
@@ -42,6 +43,6 @@ class DummyProviderTestCase(test.TestCase):
                           dummy.DummyProvider, None, self.config)
 
     def test_invalid_credentials(self):
-        self.config['credentials'] = ['user host1', 'user host2']
+        self.config['credentials'] = ['user@host1', 'user@host2']
         self.assertRaises(jsonschema.ValidationError,
                           dummy.DummyProvider, None, self.config)

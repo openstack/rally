@@ -111,7 +111,8 @@ class LxcProviderTestCase(test.BaseTestCase):
             },
             'host_provider': {
                 'name': 'DummyProvider',
-                'credentials': ['root@host1.net', 'root@host2.net']}
+                'credentials': [{'user': 'root', 'host': 'host1.net'},
+                                {'user': 'root', 'host': 'host2.net'}]}
         }
         self.mock_deployment = mock.MagicMock()
         self.provider = lxc.provider.ProviderFactory.get_provider(

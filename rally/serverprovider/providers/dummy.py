@@ -20,18 +20,25 @@ from rally.serverprovider import provider
 class DummyProvider(provider.ProviderFactory):
     """Just return endpoints from own configuration."""
 
+    CREDENTIALS_SCHEMA = {
+        'type': 'object',
+        'properties': {
+            'host': {'type': 'string'},
+            'port': {'type': 'integer'},
+            'user': {'type': 'string'},
+            'key': {'type': 'string'},
+            'password': {'type': 'string'}
+        },
+        'required': ['host', 'user']
+    }
+
     CONFIG_SCHEMA = {
         'type': 'object',
         'properties': {
-            'name': {
-                'type': 'string'
-            },
+            'name': {'type': 'string'},
             'credentials': {
                 'type': 'array',
-                'items': {
-                    "type": "string",
-                    "pattern": "^.+@.+$"
-                },
+                'items': CREDENTIALS_SCHEMA
             },
         },
         'required': ['credentials']
@@ -42,11 +49,14 @@ class DummyProvider(provider.ProviderFactory):
         self.credentials = config['credentials']
 
     def create_servers(self):
-        credentials = []
-        for ep in self.credentials:
-            user, host = ep.split('@')
-            credentials.append(provider.Server(host, user))
-        return credentials
+        servers = []
+        for endpoint in self.credentials:
+            servers.append(provider.Server(ip=endpoint['host'],
+                                           user=endpoint['user'],
+                                           key=endpoint.get('key'),
+                                           password=endpoint.get('password'),
+                                           port=endpoint.get('port', 22)))
+        return servers
 
     def destroy_servers(self):
         pass
