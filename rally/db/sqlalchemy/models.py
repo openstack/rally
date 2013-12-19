@@ -47,6 +47,8 @@ class Deployment(BASE, RallyBase):
     id = sa.Column(sa.Integer, primary_key=True, autoincrement=True)
     uuid = sa.Column(sa.String(36), default=UUID, nullable=False)
     name = sa.Column(sa.String(255))
+    started_at = sa.Column(sa.DateTime, nullable=True)
+    completed_at = sa.Column(sa.DateTime, nullable=True)
     # XXX(akscram): Do we need to explicitly store a name of the
     #               deployment engine?
     #engine_name = sa.Column(sa.String(36))
