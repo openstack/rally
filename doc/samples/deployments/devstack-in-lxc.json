@@ -5,10 +5,11 @@
     },
     "provider": {
         "name": "LxcProvider",
-        "containers_per_host": 1,
+        "containers_per_host": 4,
+        "container_name_prefix": "rally-providertest-02-",
+        "start_lxc_network": "10.100.1.0/28",
+        "tunnel_to": ["10.5.0.1"],
         "distribution": "ubuntu",
-        "ipv4_start_address": "10.2.232.1",
-        "ipv4_prefixlen": 16,
         "host_provider": {
             "name": "DummyProvider",
             "credentials": [{"user": "root", "host": "10.2.250.103"}]

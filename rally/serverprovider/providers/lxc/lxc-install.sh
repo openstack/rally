@@ -3,14 +3,21 @@
 apt-get update
 apt-get install -yq btrfs-tools
 
+#configure networking
+[ grep lxctun /etc/iproute2/rt_tables ] || echo "16 lxctun" >> /etc/iproute2/rt_tables
+
+sysctl net.ipv4.conf.all.rp_filter=0
+sysctl net.ipv4.conf.default.rp_filter=0
+
+for iface in `ls /sys/class/net/ | grep -v "lo"` ; do
+    sysctl net.ipv4.conf."$iface".rp_filter=0 > /dev/null 2> /dev/null || true
+done
+
+
 # configure btrfs storage
-if [ -d "/var/lib/lxc" ]; then
-    echo "Directory exists. Assume btrfs is available."
-else
+if [ ! -d "/var/lib/lxc" ]; then
     mkdir /var/lib/lxc
-    if df -t btrfs /var/lib/lxc > /dev/null 2>&1; then
-        echo "Btrfs is already available."
-    else
+    if ! df -t btrfs /var/lib/lxc > /dev/null 2>&1; then
         echo "Creating btrfs volume."
         SIZE=`df -h /var | awk '/[0-9]%/{print $(NF-2)}'`
         truncate -s $SIZE /var/rally-btrfs-volume
@@ -21,36 +28,11 @@ else
 fi
 
 # install lxc
-DEBIAN_FRONTEND='noninteractive' apt-get install -yq lxc
-
-#configure lxc
-if [ -f "/etc/lxc/lxc.conf" ]; then
-    CONFIG="/etc/lxc/lxc.conf"
+if [ dpkg -s lxc > /dev/null 2>&1 ]; then
+ echo "Lxc already installed"
 else
-    CONFIG="/etc/lxc/default.conf"
+ DEBIAN_FRONTEND='noninteractive' apt-get install -yq lxc
+ service lxc stop
+ cat /tmp/.lxc_default >> /etc/default/lxc || true
+ service lxc start
 fi
-cat > $CONFIG <<EOF
-lxc.network.type=veth
-lxc.network.link=br0
-lxc.network.flags=up
-EOF
-
-# configure virtual network
-if /sbin/ip link show br0 2> /dev/null
-then
-    echo "br0 already exists"
-else
-    modprobe bridge
-    ip link add br0 type bridge
-    ip link set br0 up
-    ip=`ip addr list dev eth0 | grep "inet "| awk '{ print $2}'`
-    gw=`ip route | grep default | awk '{print $3}'`
-    (
-     ip addr del $ip dev eth0
-     ip addr add $ip dev br0
-     ip route add default via $gw
-     ip link set eth0 master br0
-    )
-fi
-
-
