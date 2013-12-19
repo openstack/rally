@@ -93,6 +93,17 @@ class TestEngineTestCase(test.TestCase):
                 ]
             }
         }
+        self.invalid_test_config_bad_param_for_periodic = {
+            'verify': ['sanity', 'smoke'],
+            'benchmark': {
+                'NovaServers.boot_and_delete_server': [
+                    {'args': {'flavor_id': 1, 'image_id': 'img'},
+                     'execution': 'periodic',
+                     'config': {'times': 10, 'active_users': 3,
+                                'tenants': 3, 'users_per_tenant': 2}}
+                ]
+            }
+        }
         self.valid_cloud_config = {
             'identity': {
                 'admin_name': 'admin',
@@ -133,6 +144,10 @@ class TestEngineTestCase(test.TestCase):
         self.assertRaises(exceptions.InvalidConfigException,
                           engine.TestEngine,
                           self.invalid_test_config_parameters_conflict,
+                          mock.MagicMock())
+        self.assertRaises(exceptions.InvalidConfigException,
+                          engine.TestEngine,
+                          self.invalid_test_config_bad_param_for_periodic,
                           mock.MagicMock())
 
     def test_bind(self):

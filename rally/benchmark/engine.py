@@ -114,11 +114,19 @@ class TestEngine(object):
                                 'benchmark scenario does not exist: %s') %
                               (task_uuid, scenario))
                 raise exceptions.NoSuchScenario(name=scenario)
+            # Check for conflicting config parameters
             for run in test_config['benchmark'][scenario]:
                 if 'times' in run['config'] and 'duration' in run['config']:
                     message = _("'times' and 'duration' cannot be set "
                                 "simultaneously for one continuous "
                                 "scenario run.")
+                    LOG.exception(_('Task %s: Error: %s') % (task_uuid,
+                                                             message))
+                    raise exceptions.InvalidConfigException(message=message)
+                if ((run.get('execution', 'continuous') == 'periodic' and
+                     'active_users' in run['config'])):
+                    message = _("'active_users' parameter cannot be set "
+                                "for periodic test runs.")
                     LOG.exception(_('Task %s: Error: %s') % (task_uuid,
                                                              message))
                     raise exceptions.InvalidConfigException(message=message)
