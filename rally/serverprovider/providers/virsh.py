@@ -30,8 +30,32 @@ class VirshProvider(provider.ProviderFactory):
             "connection": "alex@performance-01",  # ssh connection to vms host
             "template_name": "stack-01-devstack-template",  # vm image template
             "template_user": "ubuntu",  # vm user to launch devstack
+            "template_password": "password" # vm password to launch devstack
         },
     '''
+
+    CONFIG_SCHEMA = {
+        'type': 'object',
+        'properties': {
+            'name': {
+                'type': 'string'
+            },
+            'connection': {
+                'type': 'string',
+                'pattern': "^.+@.+$"
+            },
+            'template_name': {
+                'type': 'string'
+            },
+            'template_user': {
+                'type': 'string'
+            },
+            'template_password': {
+                'type': 'string'
+            }
+        },
+        'required': ['connection', 'template_name', 'template_user']
+    }
 
     def create_vms(self, image_uuid=None, type_id=None, amount=1):
         """Create VMs with chosen image.

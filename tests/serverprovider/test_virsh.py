@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import jsonschema
 import mock
 import netaddr
 
@@ -113,3 +114,13 @@ class VirshProviderTestCase(test.BaseTestCase):
             mock.call('3'),
         ])
         self.provider.resources.get_all.assert_called_once_with()
+
+    def test_invalid_config(self):
+        self.config['name'] = 42
+        self.assertRaises(jsonschema.ValidationError, virsh.VirshProvider,
+                          self.deployment, self.config)
+
+    def test_invalid_connection(self):
+        self.config['connection'] = 'user host'
+        self.assertRaises(jsonschema.ValidationError, virsh.VirshProvider,
+                          self.deployment, self.config)
