@@ -13,6 +13,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from datetime import datetime
+from rally import consts
 from rally import db
 
 
@@ -50,6 +52,14 @@ class Deployment(object):
 
     def update_endpoint(self, endpoint):
         self._update({'endpoint': endpoint})
+
+    def set_started(self):
+        self._update({'started_at': datetime.now(),
+                      'status': consts.DeployStatus.DEPLOY_STARTED})
+
+    def set_completed(self):
+        self._update({'completed_at': datetime.now(),
+                      'status': consts.DeployStatus.DEPLOY_FINISHED})
 
     def add_resource(self, provider_name, type=None, info=None):
         return db.resource_create({

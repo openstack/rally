@@ -151,3 +151,29 @@ class DeploymentTestCase(test.TestCase):
         resources = deploy.get_resources(provider_name='provider', type='some')
         self.assertEqual(len(resources), 1)
         self.assertEqual(resources[0]['id'], self.resource['id'])
+
+    @mock.patch('rally.objects.deploy.datetime')
+    @mock.patch('rally.objects.deploy.db.deployment_update')
+    def test_update_set_started(self, mock_update, mock_datetime):
+        mock_datetime.now = mock.Mock(return_value='fake_time')
+        mock_update.return_value = self.deployment
+        deploy = objects.Deployment(deployment=self.deployment)
+        deploy.set_started()
+        mock_update.assert_called_once_with(
+            self.deployment['uuid'],
+            {'started_at': 'fake_time',
+             'status': consts.DeployStatus.DEPLOY_STARTED}
+        )
+
+    @mock.patch('rally.objects.deploy.datetime')
+    @mock.patch('rally.objects.deploy.db.deployment_update')
+    def test_update_set_completed(self, mock_update, mock_datetime):
+        mock_datetime.now = mock.Mock(return_value='fake_time')
+        mock_update.return_value = self.deployment
+        deploy = objects.Deployment(deployment=self.deployment)
+        deploy.set_completed()
+        mock_update.assert_called_once_with(
+            self.deployment['uuid'],
+            {'completed_at': 'fake_time',
+             'status': consts.DeployStatus.DEPLOY_FINISHED}
+        )

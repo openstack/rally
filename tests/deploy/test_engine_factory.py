@@ -46,6 +46,12 @@ class FakeDeployment(object):
     def update_status(self, status):
         pass
 
+    def set_started(self):
+        pass
+
+    def set_completed(self):
+        pass
+
     def delete(self):
         pass
 
@@ -103,22 +109,21 @@ class EngineFactoryTestCase(test.TestCase):
         mock_update_status.assert_called_once_with(
             consts.DeployStatus.DEPLOY_FAILED)
 
-    @mock.patch.object(FakeDeployment, 'update_status')
-    def test_make_deploy(self, mock_update_status):
+    @mock.patch.object(FakeDeployment, 'set_completed')
+    @mock.patch.object(FakeDeployment, 'set_started')
+    def test_make_deploy(self, mock_set_started, mock_set_completed):
         deployment = make_fake_deployment()
         engine = FakeEngine(deployment)
         endpoint = engine.make_deploy()
         self.assertEqual(engine, endpoint)
         self.assertTrue(endpoint.deployed)
         self.assertFalse(endpoint.cleanuped)
-        mock_update_status.assert_has_calls([
-            mock.call(consts.DeployStatus.DEPLOY_STARTED),
-            mock.call(consts.DeployStatus.DEPLOY_FINISHED),
-        ])
+        mock_set_started.assert_called_once()
+        mock_set_completed.assert_called_once()
 
-    @mock.patch.object(FakeDeployment, 'update_status')
+    @mock.patch.object(FakeDeployment, 'set_started')
     @mock.patch.object(FakeEngine, 'deploy')
-    def test_make_deploy_failed(self, mock_deploy, mock_update_status):
+    def test_make_deploy_failed(self, mock_deploy, mock_set_started):
         class DeployFailed(Exception):
             pass
 
@@ -126,9 +131,7 @@ class EngineFactoryTestCase(test.TestCase):
         engine = FakeEngine(deployment)
         mock_deploy.side_effect = DeployFailed()
         self.assertRaises(DeployFailed, engine.make_deploy)
-        mock_update_status.assert_has_calls([
-            mock.call(consts.DeployStatus.DEPLOY_STARTED),
-        ])
+        mock_set_started.assert_called_once()
 
     @mock.patch.object(FakeDeployment, 'update_status')
     def test_make_cleanup(self, mock_update_status):

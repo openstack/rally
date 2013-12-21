@@ -97,9 +97,9 @@ class EngineFactory(object):
 
     @utils.log_deploy_wrapper(LOG.info, _("OpenStack cloud deployment."))
     def make_deploy(self):
-        self.deployment.update_status(consts.DeployStatus.DEPLOY_STARTED)
+        self.deployment.set_started()
         endpoint = self.deploy()
-        self.deployment.update_status(consts.DeployStatus.DEPLOY_FINISHED)
+        self.deployment.set_completed()
         return endpoint
 
     @utils.log_deploy_wrapper(LOG.info,
