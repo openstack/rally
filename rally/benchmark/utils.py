@@ -16,14 +16,10 @@
 import collections
 import multiprocessing
 from multiprocessing import pool as multiprocessing_pool
-import os
-import pytest
 import random
 import time
 import traceback
 import uuid
-
-import fuel_health.cleanup as fuel_cleanup
 
 from rally.benchmark import base
 from rally.benchmark import cleanup_utils
@@ -383,92 +379,3 @@ class ScenarioRunner(object):
         self._delete_temp_tenants_and_users()
 
         return results
-
-
-def _run_test(test_args, ostf_config, queue):
-
-    os.environ['CUSTOM_FUEL_CONFIG'] = ostf_config
-
-    with utils.StdOutCapture() as out:
-        status = pytest.main(test_args)
-
-    queue.put({'msg': out.getvalue(), 'status': status,
-               'proc_name': test_args[1]})
-
-
-def _run_cleanup(config):
-
-    os.environ['CUSTOM_FUEL_CONFIG'] = config
-    fuel_cleanup.cleanup()
-
-
-class Verifier(object):
-
-    def __init__(self, task, cloud_config_path):
-        self._cloud_config_path = os.path.abspath(cloud_config_path)
-        self.task = task
-        self._q = multiprocessing.Queue()
-
-    @staticmethod
-    def list_verification_tests():
-        verification_tests_dict = {
-            'sanity': ['--pyargs', 'fuel_health.tests.sanity'],
-            'smoke': ['--pyargs', 'fuel_health.tests.smoke', '-k',
-                      'not (test_007 or test_008 or test_009)'],
-            'no_compute_sanity': ['--pyargs', 'fuel_health.tests.sanity',
-                                  '-k', 'not infrastructure'],
-            'no_compute_smoke': ['--pyargs', 'fuel_health.tests.smoke',
-                                 '-k', 'user or flavor']
-        }
-        return verification_tests_dict
-
-    def run_all(self, tests):
-        """Launches all the given tests, trying to parameterize the tests
-        using the test configuration.
-
-        :param tests: Dictionary of form {'test_name': [test_args]}
-
-        :returns: List of dicts, each dict containing the results of all
-                  the run() method calls for the corresponding test
-        """
-        task_uuid = self.task['uuid']
-        res = []
-        for test_name in tests:
-            res.append(self.run(tests[test_name]))
-            LOG.debug(_('Task %s: Completed test `%s`.') %
-                      (task_uuid, test_name))
-        return res
-
-    def run(self, test_args):
-        """Launches a test (specified by pytest args).
-
-        :param test_args: Arguments to be passed to pytest, e.g.
-                          ['--pyargs', 'fuel_health.tests.sanity']
-
-        :returns: Dict containing 'status', 'msg' and 'proc_name' fields
-        """
-        task_uuid = self.task['uuid']
-        LOG.debug(_('Task %s: Running test: creating multiprocessing queue') %
-                  task_uuid)
-
-        test = multiprocessing.Process(target=_run_test,
-                                       args=(test_args,
-                                             self._cloud_config_path, self._q))
-        test.start()
-        test.join()
-        result = self._q.get()
-        if result['status'] and 'Timeout' in result['msg']:
-            LOG.debug(_('Task %s: Test %s timed out.') %
-                      (task_uuid, result['proc_name']))
-        else:
-            LOG.debug(_('Task %s: Process %s returned.') %
-                      (task_uuid, result['proc_name']))
-        self._cleanup()
-        return result
-
-    def _cleanup(self):
-        cleanup = multiprocessing.Process(target=_run_cleanup,
-                                          args=(self._cloud_config_path,))
-        cleanup.start()
-        cleanup.join()
-        return

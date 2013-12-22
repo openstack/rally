@@ -14,9 +14,8 @@
 #    under the License.
 
 """Tests for the Test engine."""
-import json
+
 import mock
-import os
 
 from rally.benchmark import engine
 from rally import consts
@@ -31,83 +30,59 @@ class TestEngineTestCase(test.TestCase):
         super(TestEngineTestCase, self).setUp()
 
         self.valid_test_config_continuous_times = {
-            'verify': ['sanity', 'smoke'],
-            'benchmark': {
-                'NovaServers.boot_and_delete_server': [
-                    {'args': {'flavor_id': 1, 'image_id': 'img'},
-                     'execution': 'continuous',
-                     'config': {'times': 10, 'active_users': 2,
-                                'tenants': 3, 'users_per_tenant': 2}}
-                ]
-            }
+            'NovaServers.boot_and_delete_server': [
+                {'args': {'flavor_id': 1, 'image_id': 'img'},
+                 'execution': 'continuous',
+                 'config': {'times': 10, 'active_users': 2,
+                            'tenants': 3, 'users_per_tenant': 2}}
+            ]
         }
         self.valid_test_config_continuous_duration = {
-            'verify': ['sanity', 'smoke'],
-            'benchmark': {
-                'NovaServers.boot_and_delete_server': [
-                    {'args': {'flavor_id': 1, 'image_id': 'img'},
-                     'execution': 'continuous',
-                     'config': {'duration': 4, 'active_users': 2,
-                                'tenants': 3, 'users_per_tenant': 2}}
-                ]
-            }
-        }
-        self.invalid_test_config_bad_test_name = {
-            'verify': ['sanity', 'some_not_existing_test'],
-            'benchmark': {}
-        }
-        self.invalid_test_config_bad_key = {
-            'verify': ['sanity', 'smoke'],
-            'benchmarck': {}
+            'NovaServers.boot_and_delete_server': [
+                {'args': {'flavor_id': 1, 'image_id': 'img'},
+                 'execution': 'continuous',
+                 'config': {'duration': 4, 'active_users': 2,
+                            'tenants': 3, 'users_per_tenant': 2}}
+            ]
         }
         self.invalid_test_config_bad_execution_type = {
-            'verify': ['sanity', 'smoke'],
-            'benchmark': {
-                'NovaServers.boot_and_delete_server': [
-                    {'args': {'flavor_id': 1, 'image_id': 'img'},
-                     'execution': 'contitnuous',
-                     'config': {'times': 10, 'active_users': 2,
-                                'tenants': 3, 'users_per_tenant': 2}}
-                ]
-            }
+            'NovaServers.boot_and_delete_server': [
+                {'args': {'flavor_id': 1, 'image_id': 'img'},
+                 'execution': 'contitnuous',
+                 'config': {'times': 10, 'active_users': 2,
+                            'tenants': 3, 'users_per_tenant': 2}}
+            ]
         }
         self.invalid_test_config_bad_config_parameter = {
-            'verify': ['sanity', 'smoke'],
-            'benchmark': {
-                'NovaServers.boot_and_delete_server': [
-                    {'args': {'flavor_id': 1, 'image_id': 'img'},
-                     'execution': 'continuous',
-                     'config': {'times': 10, 'activeusers': 2,
-                                'tenants': 3, 'users_per_tenant': 2}}
-                ]
-            }
+            'NovaServers.boot_and_delete_server': [
+                {'args': {'flavor_id': 1, 'image_id': 'img'},
+                 'execution': 'continuous',
+                 'config': {'times': 10, 'activeusers': 2,
+                            'tenants': 3, 'users_per_tenant': 2}}
+            ]
         }
         self.invalid_test_config_parameters_conflict = {
-            'verify': ['sanity', 'smoke'],
-            'benchmark': {
-                'NovaServers.boot_and_delete_server': [
-                    {'args': {'flavor_id': 1, 'image_id': 'img'},
-                     'execution': 'continuous',
-                     'config': {'times': 10, 'duration': 100,
-                                'tenants': 3, 'users_per_tenant': 2}}
-                ]
-            }
+            'NovaServers.boot_and_delete_server': [
+                {'args': {'flavor_id': 1, 'image_id': 'img'},
+                 'execution': 'continuous',
+                 'config': {'times': 10, 'duration': 100,
+                            'tenants': 3, 'users_per_tenant': 2}}
+            ]
         }
         self.invalid_test_config_bad_param_for_periodic = {
-            'verify': ['sanity', 'smoke'],
-            'benchmark': {
-                'NovaServers.boot_and_delete_server': [
-                    {'args': {'flavor_id': 1, 'image_id': 'img'},
-                     'execution': 'periodic',
-                     'config': {'times': 10, 'active_users': 3,
-                                'tenants': 3, 'users_per_tenant': 2}}
-                ]
-            }
+            'NovaServers.boot_and_delete_server': [
+                {'args': {'flavor_id': 1, 'image_id': 'img'},
+                 'execution': 'periodic',
+                 'config': {'times': 10, 'active_users': 3,
+                            'tenants': 3, 'users_per_tenant': 2}}
+            ]
         }
         self.valid_cloud_config = {
             'identity': {
-                'admin_name': 'admin',
-                'admin_password': 'admin'
+                'admin_username': 'admin',
+                'admin_password': 'admin',
+                "admin_tenant_name": 'admin',
+                "uri": 'http://127.0.0.1:5000/v2.0'
             },
             'compute': {
                 'controller_nodes': 'localhost'
@@ -125,14 +100,6 @@ class TestEngineTestCase(test.TestCase):
         except Exception as e:
             self.fail("Unexpected exception in test config" +
                       "verification: %s" % str(e))
-        self.assertRaises(exceptions.NoSuchVerificationTest,
-                          engine.TestEngine,
-                          self.invalid_test_config_bad_test_name,
-                          mock.MagicMock())
-        self.assertRaises(exceptions.InvalidConfigException,
-                          engine.TestEngine,
-                          self.invalid_test_config_bad_key,
-                          mock.MagicMock())
         self.assertRaises(exceptions.InvalidConfigException,
                           engine.TestEngine,
                           self.invalid_test_config_bad_execution_type,
@@ -154,56 +121,37 @@ class TestEngineTestCase(test.TestCase):
         tester = engine.TestEngine(self.valid_test_config_continuous_times,
                                    mock.MagicMock())
         with tester.bind(self.valid_cloud_config):
-            self.assertTrue(os.path.exists(tester.cloud_config_path))
-        self.assertFalse(os.path.exists(tester.cloud_config_path))
-
-    @mock.patch('rally.benchmark.utils.Verifier.run')
-    def test_verify(self, mock_run):
-        tester = engine.TestEngine(self.valid_test_config_continuous_times,
-                                   mock.MagicMock())
-        mock_run.return_value = self.run_success
-        with tester.bind(self.valid_cloud_config):
-            try:
-                tester.verify()
-            except Exception as e:
-                self.fail("Exception in TestEngine.verify: %s" % str(e))
+            self.assertEqual(tester.endpoints,
+                             self.valid_cloud_config['identity'])
 
     @mock.patch("rally.benchmark.utils.ScenarioRunner.run")
     @mock.patch("rally.benchmark.utils.osclients")
-    def test_benchmark(self, mock_osclients, mock_run):
+    def test_run(self, mock_osclients, mock_run):
         mock_osclients.Clients.return_value = fakes.FakeClients()
         tester = engine.TestEngine(self.valid_test_config_continuous_times,
                                    mock.MagicMock())
         with tester.bind(self.valid_cloud_config):
-            tester.benchmark()
+            tester.run()
 
     @mock.patch("rally.benchmark.utils.ScenarioRunner.run")
-    @mock.patch("rally.benchmark.utils.Verifier.run")
     @mock.patch("rally.benchmark.utils.osclients")
-    def test_task_status_basic_chain(self, mock_osclients, mock_run,
-                                     mock_scenario_run):
+    def test_task_status_basic_chain(self, mock_osclients, mock_scenario_run):
         fake_task = mock.MagicMock()
         tester = engine.TestEngine(self.valid_test_config_continuous_times,
                                    fake_task)
         mock_osclients.Clients.return_value = fakes.FakeClients()
-        mock_run.return_value = self.run_success
         mock_scenario_run.return_value = {}
         with tester.bind(self.valid_cloud_config):
-            tester.verify()
-            tester.benchmark()
+            tester.run()
 
         benchmark_name = 'NovaServers.boot_and_delete_server'
         benchmark_results = {
             'name': benchmark_name, 'pos': 0,
-            'kw': self.valid_test_config_continuous_times['benchmark']
-                                                         [benchmark_name][0],
+            'kw': self.valid_test_config_continuous_times[benchmark_name][0],
         }
 
         s = consts.TaskStatus
         expected = [
-            mock.call.update_status(s.TEST_TOOL_VERIFY_OPENSTACK),
-            mock.call.update_verification_log(json.dumps(
-                [self.run_success, self.run_success])),
             mock.call.update_status(s.TEST_TOOL_BENCHMARKING),
             mock.call.append_results(benchmark_results, {'raw': {}}),
             mock.call.update_status(s.FINISHED)
@@ -214,43 +162,24 @@ class TestEngineTestCase(test.TestCase):
         self.assertEqual(mock_calls, expected)
 
     @mock.patch("rally.benchmark.utils.ScenarioRunner.run")
-    @mock.patch("rally.benchmark.utils.Verifier.run")
     @mock.patch("rally.benchmark.utils.osclients")
-    def test_task_status_failed(self, mock_osclients, mock_run,
-                                mock_scenario_run):
+    def test_task_status_failed(self, mock_osclients, mock_scenario_run):
         fake_task = mock.MagicMock()
         tester = engine.TestEngine(self.valid_test_config_continuous_times,
                                    fake_task)
         mock_osclients.Clients.return_value = fakes.FakeClients()
-        mock_run.return_value = self.run_success
         mock_scenario_run.side_effect = exceptions.TestException()
         try:
             with tester.bind(self.valid_cloud_config):
-                tester.verify()
-                tester.benchmark()
+                tester.run()
         except exceptions.TestException:
             pass
 
         s = consts.TaskStatus
         expected = [
-            mock.call.update_status(s.TEST_TOOL_VERIFY_OPENSTACK),
-            mock.call.update_verification_log(json.dumps(
-                [self.run_success, self.run_success])),
             mock.call.update_status(s.TEST_TOOL_BENCHMARKING),
             mock.call.update_status(s.FAILED)
         ]
-        # NOTE(msdubov): Ignore task['uuid'] calls which are used for logging
-        mock_calls = filter(lambda call: '__getitem__' not in call[0],
-                            fake_task.mock_calls)
-        self.assertEqual(mock_calls, expected)
-
-    def test_task_status_invalid_config(self):
-        fake_task = mock.MagicMock()
-        try:
-            engine.TestEngine(self.invalid_test_config_bad_key, fake_task)
-        except exceptions.InvalidConfigException:
-            pass
-        expected = []
         # NOTE(msdubov): Ignore task['uuid'] calls which are used for logging
         mock_calls = filter(lambda call: '__getitem__' not in call[0],
                             fake_task.mock_calls)

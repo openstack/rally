@@ -68,8 +68,8 @@ def recreate_deploy(deploy_uuid):
 def start_task(deploy_uuid, config):
     """Start a task.
 
-    A task is performed in two stages: a verification of a deployment
-    and a benchmark.
+    Taks is a list of benchmarks that will be called one by one, results of
+    exectuion will be stored in DB.
 
     :param deploy_uuid: UUID of the deployment
     :param config: a dict with a task configuration
@@ -83,10 +83,7 @@ def start_task(deploy_uuid, config):
     endpoint = deployment['endpoint']
     with deployer:
         with tester.bind(endpoint):
-            # TODO(akscram): The verifications should be a part of
-            #                deployment.
-            tester.verify()
-            tester.benchmark()
+            tester.run()
 
 
 def abort_task(task_uuid):

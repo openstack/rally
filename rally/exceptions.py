@@ -94,10 +94,6 @@ class TestException(RallyException):
     msg_fmt = _("Test failed: %(test_message)s")
 
 
-class DeploymentVerificationException(TestException):
-    msg_fmt = _("Verification test failed: %(test_message)s")
-
-
 class NotFoundException(RallyException):
     msg_fmt = _("Not found.")
 
@@ -108,10 +104,6 @@ class NoSuchEngine(NotFoundException):
 
 class NoSuchVMProvider(NotFoundException):
     msg_fmt = _("There is no vm provider with name `%(vm_provider_name)s`.")
-
-
-class NoSuchVerificationTest(NotFoundException):
-    msg_fmt = _("No such verification test: `%(test_name)s`.")
 
 
 class NoSuchScenario(NotFoundException):

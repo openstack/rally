@@ -1,12 +1,11 @@
 {
-    "verify": [],
-    "benchmark": {
-        "NovaServers.boot_and_delete_server": [
-            {"args": {"flavor_id": 1,
-                      "image_id": "73257560-c59b-4275-a1ec-ab140e5b9979"},
-             "execution": "periodic",
-             "config": {"times": 10, "period": 2,
-                        "tenants": 3, "users_per_tenant": 2}}
-        ]
-    }
+    "NovaServers.boot_and_delete_server": [
+        {
+            "args": {"flavor_id": 1,
+                     "image_id": "73257560-c59b-4275-a1ec-ab140e5b9979"},
+            "execution": "periodic",
+            "config": {"times": 10, "period": 2, "tenants": 3,
+                       "users_per_tenant": 2}
+        }
+    ]
 }

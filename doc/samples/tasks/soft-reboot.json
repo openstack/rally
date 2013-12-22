@@ -1,11 +1,11 @@
 {
-    "verify": [],
-    "benchmark": {
-        "NovaServers.boot_and_bounce_server": [
-          {"args": {"flavor_id": 2, "image_id": "539ccae5-5982-4868-b176-23c41ff1195e",
-                    "actions": [{"soft_reboot": 4}]},
-           "execution": "continuous",
-           "config": {"times": 3, "active_users": 2}}
-        ]
-    }
+    "NovaServers.boot_and_bounce_server": [
+        {
+            "args": {"flavor_id": 2,
+                     "image_id": "539ccae5-5982-4868-b176-23c41ff1195e",
+                     "actions": [{"soft_reboot": 4}]},
+            "execution": "continuous",
+            "config": {"times": 3, "active_users": 2}
+        }
+    ]
 }

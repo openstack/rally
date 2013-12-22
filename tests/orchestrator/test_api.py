@@ -40,22 +40,19 @@ FAKE_DEPLOY_CONFIG = {
 
 
 FAKE_TASK_CONFIG = {
-    'verify': ['fake_test'],
-    'benchmark': {
-        'FakeScenario.fake': [
-            {
-                'args': {},
-                'execution': 'continuous',
-                'config': {
-                    'timeout': 10000,
-                    'times': 1,
-                    'active_users': 1,
-                    'tenants': 1,
-                    'users_per_tenant': 1,
-                }
-            },
-        ],
-    },
+    'FakeScenario.fake': [
+        {
+            'args': {},
+            'execution': 'continuous',
+            'config': {
+                'timeout': 10000,
+                'times': 1,
+                'active_users': 1,
+                'tenants': 1,
+                'users_per_tenant': 1,
+            }
+        }
+    ]
 }
 
 
@@ -87,25 +84,16 @@ class APITestCase(test.TestCase):
         }
 
     @mock.patch('rally.benchmark.engine.utils.ScenarioRunner')
-    @mock.patch('rally.benchmark.engine.utils.Verifier')
     @mock.patch('rally.objects.deploy.db.deployment_get')
     @mock.patch('rally.objects.task.db.task_result_create')
     @mock.patch('rally.objects.task.db.task_update')
     @mock.patch('rally.objects.task.db.task_create')
     def test_start_task(self, mock_task_create, mock_task_update,
                         mock_task_result_create, mock_deploy_get,
-                        mock_utils_verifier, mock_utils_runner):
+                        mock_utils_runner):
         mock_task_create.return_value = self.task
         mock_task_update.return_value = self.task
         mock_deploy_get.return_value = self.deployment
-
-        mock_utils_verifier.return_value = mock_verifier = mock.Mock()
-        mock_utils_verifier.list_verification_tests.return_value = {
-            'fake_test': mock.Mock(),
-        }
-        mock_verifier.run_all.return_value = [{
-            'status': 0,
-        }]
 
         mock_utils_runner.return_value = mock_runner = mock.Mock()
         mock_runner.run.return_value = ['fake_result']
@@ -117,10 +105,6 @@ class APITestCase(test.TestCase):
             'deployment_uuid': self.deploy_uuid,
         })
         mock_task_update.assert_has_calls([
-            mock.call(self.task_uuid,
-                      {'status': 'test_tool->verify_openstack'}),
-            mock.call(self.task_uuid,
-                      {'verification_log': '[{"status": 0}]'}),
             mock.call(self.task_uuid,
                       {'status': 'test_tool->benchmarking'})
         ])

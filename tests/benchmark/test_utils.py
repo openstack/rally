@@ -16,11 +16,7 @@
 """Tests for utils."""
 import mock
 import multiprocessing
-import os
-import tempfile
-import time
 
-from rally.benchmark import config
 from rally.benchmark import utils
 from rally import test
 from tests import fakes
@@ -435,66 +431,3 @@ class ScenarioTestCase(test.TestCase):
             for image in nova.images.list():
                 self.assertEqual("DELETED", image.status,
                                  "image not purged: %s" % (image))
-
-
-def test_dummy_1():
-    pass
-
-
-def test_dummy_2():
-    pass
-
-
-def test_dummy_timeout():
-    time.sleep(1.1)
-
-
-class VerifierTestCase(test.TestCase):
-
-    def setUp(self):
-        super(VerifierTestCase, self).setUp()
-        self.cloud_config_manager = config.CloudConfigManager()
-        self.cloud_config_fd, self.cloud_config_path = tempfile.mkstemp(
-                                                suffix='rallycfg', text=True)
-        with os.fdopen(self.cloud_config_fd, 'w') as f:
-            self.cloud_config_manager.write(f)
-
-    def tearDown(self):
-        if os.path.exists(self.cloud_config_path):
-            os.remove(self.cloud_config_path)
-        super(VerifierTestCase, self).tearDown()
-
-    def test_running_test(self):
-        verifier = utils.Verifier(mock.MagicMock(), self.cloud_config_path)
-        with mock.patch('rally.benchmark.utils.fuel_cleanup.cleanup'):
-            test = ['./tests/benchmark/test_utils.py', '-k', 'test_dummy_1']
-            result = verifier.run(test)
-            self.assertEqual(result['status'], 0)
-
-    def test_running_multiple_tests(self):
-        verifier = utils.Verifier(mock.MagicMock(), self.cloud_config_path)
-        tests_dict = {
-            'test1': ['./tests/benchmark/test_utils.py', '-k', 'test_dummy_1'],
-            'test2': ['./tests/benchmark/test_utils.py', '-k', 'test_dummy_2']
-        }
-        with mock.patch('rally.benchmark.utils.fuel_cleanup.cleanup'):
-            for result in verifier.run_all(tests_dict):
-                self.assertEqual(result['status'], 0)
-
-    def test_verifier_timeout(self):
-        verifier = utils.Verifier(mock.MagicMock(), self.cloud_config_path)
-        test = ['./tests/benchmark/test_utils.py', '-k',
-                'test_dummy_timeout', '--timeout', '1']
-        with mock.patch('rally.benchmark.utils.fuel_cleanup.cleanup'):
-            result = verifier.run(test)
-            self.assertTrue('Timeout' in result['msg'])
-            self.assertTrue(result['status'] != 0)
-
-    def test_verifier_no_timeout(self):
-        verifier = utils.Verifier(mock.MagicMock(), self.cloud_config_path)
-        test = ['./tests/benchmark/test_utils.py', '-k',
-                'test_dummy_timeout', '--timeout', '2']
-        with mock.patch('rally.benchmark.utils.fuel_cleanup.cleanup'):
-            result = verifier.run(test)
-            self.assertTrue('Timeout' not in result['msg'])
-            self.assertTrue(result['status'] == 0)

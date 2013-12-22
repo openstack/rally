@@ -8,13 +8,11 @@ oslo.config>=1.2.0
 paramiko>=1.8.0
 pbr>=0.5.21,<1.0
 PrettyTable>=0.6,<0.8
-psutil
-pytest
-pytest-timeout
+python-glanceclient>=0.9.0
+python-keystoneclient>=0.4.1
+python-novaclient>=2.15.0
+python-neutronclient>=2.3.0,<3
+python-cinderclient>=1.0.6
 SQLAlchemy>=0.7.8,<0.7.99
 sh
 six
-
--e git+https://github.com/simpleranchero/fuel-ostf-tests#egg=fuel-ostf-tests
-
-
