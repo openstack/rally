@@ -1,5 +1,3 @@
-# vim: tabstop=4 shiftwidth=4 softtabstop=4
-
 # Copyright 2011 OpenStack Foundation.
 # All Rights Reserved.
 #
@@ -25,7 +23,7 @@ import unicodedata
 
 import six
 
-from rally.openstack.common.gettextutils import _  # noqa
+from rally.openstack.common.gettextutils import _
 
 
 # Used for looking up extensions of text
@@ -101,7 +99,7 @@ def safe_decode(text, incoming=None, errors='strict'):
         values http://docs.python.org/2/library/codecs.html
     :returns: text or a unicode `incoming` encoded
                 representation of it.
-    :raises TypeError: If text is not an isntance of str
+    :raises TypeError: If text is not an instance of str
     """
     if not isinstance(text, six.string_types):
         raise TypeError("%s can't be decoded" % type(text))
@@ -144,7 +142,7 @@ def safe_encode(text, incoming=None,
         values http://docs.python.org/2/library/codecs.html
     :returns: text or a bytestring `encoding` encoded
                 representation of it.
-    :raises TypeError: If text is not an isntance of str
+    :raises TypeError: If text is not an instance of str
     """
     if not isinstance(text, six.string_types):
         raise TypeError("%s can't be encoded" % type(text))
@@ -154,11 +152,17 @@ def safe_encode(text, incoming=None,
                     sys.getdefaultencoding())
 
     if isinstance(text, six.text_type):
-        return text.encode(encoding, errors)
+        if six.PY3:
+            return text.encode(encoding, errors).decode(incoming)
+        else:
+            return text.encode(encoding, errors)
     elif text and encoding != incoming:
         # Decode text before encoding it with `encoding`
         text = safe_decode(text, incoming, errors)
-        return text.encode(encoding, errors)
+        if six.PY3:
+            return text.encode(encoding, errors).decode(incoming)
+        else:
+            return text.encode(encoding, errors)
 
     return text
 

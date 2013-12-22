@@ -1,5 +1,3 @@
-# vim: tabstop=4 shiftwidth=4 softtabstop=4
-
 # Copyright 2012 Red Hat, Inc.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -25,6 +23,8 @@ import sys
 import textwrap
 
 import prettytable
+import six
+from six import moves
 
 from rally.openstack.common.apiclient import exceptions
 from rally.openstack.common import strutils
@@ -141,9 +141,9 @@ def print_list(objs, fields, formatters=None, sortby_index=0,
     formatters = formatters or {}
     mixed_case_fields = mixed_case_fields or []
     if sortby_index is None:
-        sortby = None
+        kwargs = {}
     else:
-        sortby = fields[sortby_index]
+        kwargs = {'sortby': fields[sortby_index]}
     pt = prettytable.PrettyTable(fields, caching=False)
     pt.align = 'l'
 
@@ -161,7 +161,7 @@ def print_list(objs, fields, formatters=None, sortby_index=0,
                 row.append(data)
         pt.add_row(row)
 
-    print(strutils.safe_encode(pt.get_string(sortby=sortby)))
+    print(strutils.safe_encode(pt.get_string(**kwargs)))
 
 
 def print_dict(dct, dict_property="Property", wrap=0):
@@ -173,7 +173,7 @@ def print_dict(dct, dict_property="Property", wrap=0):
     """
     pt = prettytable.PrettyTable([dict_property, 'Value'], caching=False)
     pt.align = 'l'
-    for k, v in dct.iteritems():
+    for k, v in six.iteritems(dct):
         # convert dict to str to check length
         if isinstance(v, dict):
             v = str(v)
@@ -181,7 +181,7 @@ def print_dict(dct, dict_property="Property", wrap=0):
             v = textwrap.fill(str(v), wrap)
         # if value has a newline, add in multiple rows
         # e.g. fault with stacktrace
-        if v and isinstance(v, basestring) and r'\n' in v:
+        if v and isinstance(v, six.string_types) and r'\n' in v:
             lines = v.strip().split(r'\n')
             col1 = k
             for line in lines:
@@ -199,7 +199,7 @@ def get_password(max_password_prompts=3):
     if hasattr(sys.stdin, "isatty") and sys.stdin.isatty():
         # Check for Ctrl-D
         try:
-            for _ in xrange(max_password_prompts):
+            for _ in moves.range(max_password_prompts):
                 pw1 = getpass.getpass("OS Password: ")
                 if verify:
                     pw2 = getpass.getpass("Please verify: ")

@@ -1,5 +1,3 @@
-# vim: tabstop=4 shiftwidth=4 softtabstop=4
-
 # Copyright 2010 Jacob Kaplan-Moss
 # Copyright 2011 OpenStack Foundation
 # Copyright 2011 Piston Cloud Computing, Inc.
@@ -52,7 +50,7 @@ class HTTPClient(object):
       services (e.g., for compute and image clients);
     - reissue authentication request for expired tokens;
     - encode/decode JSON bodies;
-    - raise exeptions on HTTP errors;
+    - raise exceptions on HTTP errors;
     - pluggable authentication;
     - store authentication information in a keyring;
     - store time spent for requests;

@@ -1,5 +1,3 @@
-# vim: tabstop=4 shiftwidth=4 softtabstop=4
-
 # Copyright 2010 Jacob Kaplan-Moss
 # Copyright 2011 Nebula, Inc.
 # Copyright 2013 Alessio Ababilov
@@ -22,7 +20,10 @@
 Exception definitions.
 """
 
+import inspect
 import sys
+
+import six
 
 
 class ClientException(Exception):
@@ -387,20 +388,12 @@ class HttpVersionNotSupported(HttpServerError):
     message = "HTTP Version Not Supported"
 
 
-# In Python 2.4 Exception is old-style and thus doesn't have a __subclasses__()
-# so we can do this:
-#     _code_map = dict((c.http_status, c)
-#                      for c in HttpError.__subclasses__())
-_code_map = {}
-for obj in sys.modules[__name__].__dict__.values():
-    if isinstance(obj, type):
-        try:
-            http_status = obj.http_status
-        except AttributeError:
-            pass
-        else:
-            if http_status:
-                _code_map[http_status] = obj
+# _code_map contains all the classes that have http_status attribute.
+_code_map = dict(
+    (getattr(obj, 'http_status', None), obj)
+    for name, obj in six.iteritems(vars(sys.modules[__name__]))
+    if inspect.isclass(obj) and getattr(obj, 'http_status', False)
+)
 
 
 def from_response(response, method, url):

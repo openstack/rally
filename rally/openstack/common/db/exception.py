@@ -1,5 +1,3 @@
-# vim: tabstop=4 shiftwidth=4 softtabstop=4
-
 # Copyright 2010 United States Government as represented by the
 # Administrator of the National Aeronautics and Space Administration.
 # All Rights Reserved.
@@ -18,7 +16,7 @@
 
 """DB related custom exceptions."""
 
-from rally.openstack.common.gettextutils import _  # noqa
+from rally.openstack.common.gettextutils import _
 
 
 class DBError(Exception):
@@ -49,3 +47,8 @@ class DbMigrationError(DBError):
     """Wraps migration specific exception."""
     def __init__(self, message=None):
         super(DbMigrationError, self).__init__(str(message))
+
+
+class DBConnectionError(DBError):
+    """Wraps connection specific exception."""
+    pass
