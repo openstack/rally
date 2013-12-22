@@ -38,7 +38,8 @@ class VirshProviderTestCase(test.BaseTestCase):
 
     @mock.patch('rally.serverprovider.providers.virsh.netaddr.IPAddress')
     @mock.patch('rally.serverprovider.providers.virsh.subprocess')
-    def test_create_vm(self, mock_subp, mock_ipaddress):
+    @mock.patch('time.sleep')
+    def test_create_vm(self, mock_sleep, mock_subp, mock_ipaddress):
         mock_subp.check_output.return_value = '10.0.0.1'
         mock_ipaddress.return_value = '10.0.0.2'
         server = self.provider.create_vm('name')
