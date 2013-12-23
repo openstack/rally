@@ -14,5 +14,4 @@ python-novaclient>=2.15.0
 python-neutronclient>=2.3.0,<3
 python-cinderclient>=1.0.6
 SQLAlchemy>=0.7.8,<0.7.99
-sh
 six
