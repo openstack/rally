@@ -28,6 +28,7 @@ nosetests.xml
 cover
 .testrepository
 *.sqlite
+.venv
 
 # Translations
 *.mo
