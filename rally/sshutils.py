@@ -93,35 +93,34 @@ class SSH(object):
         self._get_ssh_connection()
         cmd = ' '.join(cmd)
         transport = self.client.get_transport()
-        channel = transport.open_session()
-        channel.fileno()
-        channel.exec_command(cmd)
-        channel.shutdown_write()
-        poll = select.poll()
-        poll.register(channel, select.POLLIN)
+        session = transport.open_session()
+        session.exec_command(cmd)
         start_time = time.time()
+
         while True:
-            ready = poll.poll(16)
-            if not any(ready):
-                if not self._is_timed_out(start_time):
-                    continue
-                raise exceptions.TimeoutException('SSH Timeout')
-            if not ready[0]:
-                continue
-            out_chunk = err_chunk = None
-            if channel.recv_ready():
-                out_chunk = channel.recv(4096)
+            errors = select.select([session], [], [], 4)[2]
+
+            if session.recv_ready():
+                data = session.recv(4096)
+                LOG.debug(data)
                 if get_stdout:
-                    yield (1, out_chunk)
-                LOG.debug("stdout: %s" % out_chunk)
-            if channel.recv_stderr_ready():
-                err_chunk = channel.recv_stderr(4096)
+                    yield (1, data)
+                continue
+
+            if session.recv_stderr_ready():
+                data = session.recv_stderr(4096)
+                LOG.debug(data)
                 if get_stderr:
-                    yield (2, err_chunk)
-                LOG.debug("stderr: %s" % err_chunk)
-            if channel.closed and not err_chunk and not out_chunk:
+                    yield (2, data)
+                continue
+
+            if errors or session.exit_status_ready():
                 break
-        exit_status = channel.recv_exit_status()
+
+            if self._is_timed_out(start_time):
+                raise exceptions.TimeoutException('SSH Timeout')
+
+        exit_status = session.recv_exit_status()
         if 0 != exit_status:
             raise exceptions.SSHError(
                 'SSHExecCommandFailed with exit_status %s'

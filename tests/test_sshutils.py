@@ -27,49 +27,49 @@ class SSHTestCase(test.TestCase):
         super(SSHTestCase, self).setUp()
         self.ssh = sshutils.SSH('example.net', 'root')
         self.channel = mock.Mock()
-        self.channel.fileno.return_value = 15
-        self.channel.recv.return_value = ''
-        self.channel.recv_stderr.return_value = ''
+        self.channel.recv.return_value = 'ok'
+        self.channel.recv_stderr.return_value = 'error'
         self.channel.recv_exit_status.return_value = 0
         self.transport = mock.Mock()
         self.transport.open_session = mock.MagicMock(return_value=self.channel)
-        self.poll = mock.Mock()
-        self.poll.poll.return_value = [(self.channel, 1)]
         self.policy = mock.Mock()
         self.client = mock.Mock()
         self.client.get_transport = mock.MagicMock(return_value=self.transport)
+
+        self.channel.exit_status_ready.return_value = True
+        self.channel.recv_ready.side_effect = [True, False, False]
+        self.channel.recv_stderr_ready.side_effect = [True, False, False]
 
     @mock.patch('rally.sshutils.paramiko')
     @mock.patch('rally.sshutils.select')
     def test_generator(self, st, pk):
         pk.SSHClient.return_value = self.client
-        st.poll.return_value = self.poll
-
-        self.channel.recv.side_effect = ['ok', '']
-        self.channel.recv_stderr.side_effect = ['error', '']
+        st.select.return_value = ([], [], [])
 
         chunks = list(self.ssh.execute_generator('ps ax'))
-        self.assertEqual([(1, 'ok'), (2, 'error'), (1, ''), (2, '')], chunks)
+        self.assertEqual([(1, 'ok'), (2, 'error')], chunks)
 
     @mock.patch('rally.sshutils.paramiko')
     @mock.patch('rally.sshutils.select')
     def test_execute(self, st, pk):
         pk.SSHClient.return_value = self.client
-        st.poll.return_value = self.poll
+        st.select.return_value = ([], [], [])
         stdout, stderr = self.ssh.execute('uname')
 
         self.assertEqual('', stdout)
         self.assertEqual('', stderr)
-        expected = [mock.call.fileno(),
-                    mock.call.exec_command('uname'),
-                    mock.call.shutdown_write(),
+        expected = [mock.call.exec_command('uname'),
                     mock.call.recv_ready(),
                     mock.call.recv(4096),
+                    mock.call.recv_ready(),
                     mock.call.recv_stderr_ready(),
                     mock.call.recv_stderr(4096),
+                    mock.call.recv_ready(),
+                    mock.call.recv_stderr_ready(),
+                    mock.call.exit_status_ready(),
                     mock.call.recv_exit_status()]
 
-        self.assertEqual(self.channel.mock_calls, expected)
+        self.assertEqual(expected, self.channel.mock_calls)
 
     @mock.patch('rally.sshutils.paramiko')
     def test_upload_file(self, pk):
