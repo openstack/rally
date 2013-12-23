@@ -29,10 +29,10 @@ class DummyProviderTestCase(test.TestCase):
         self.config = {'name': 'DummyProvider',
                        'credentials': ['user@host1', 'user@host2']}
 
-    def test_create_vms(self):
+    def test_create_servers(self):
         provider = serverprovider.ProviderFactory.get_provider(self.config,
                                                                None)
-        credentials = provider.create_vms()
+        credentials = provider.create_servers()
         self.assertEqual(['host1', 'host2'], [s.ip for s in credentials])
         self.assertEqual(['user', 'user'], [s.user for s in credentials])
 

@@ -26,7 +26,7 @@ ProviderFactory = serverprovider.ProviderFactory
 
 
 class ProviderMixIn(object):
-    def create_vms(self, image_uuid=None, amount=1):
+    def create_servers(self, image_uuid=None, amount=1):
         pass
 
     def destroy_vms(self):

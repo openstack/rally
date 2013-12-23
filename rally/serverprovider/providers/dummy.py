@@ -43,7 +43,7 @@ class DummyProvider(provider.ProviderFactory):
         super(DummyProvider, self).__init__(deployment, config)
         self.credentials = config['credentials']
 
-    def create_vms(self):
+    def create_servers(self):
         credentials = []
         for ep in self.credentials:
             user, host = ep.split('@')

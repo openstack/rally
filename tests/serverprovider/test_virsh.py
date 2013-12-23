@@ -90,10 +90,10 @@ class VirshProviderTestCase(test.BaseTestCase):
 
     @mock.patch('rally.serverprovider.providers.virsh.uuid')
     @mock.patch.object(virsh.VirshProvider, 'create_vm')
-    def test_create_vms(self, mock_create, mock_uuid):
+    def test_create_servers(self, mock_create, mock_uuid):
         mock_uuid.uuid4.side_effect = ['1', '2', '3']
         mock_create.side_effect = ['s1', 's2', 's3']
-        servers = self.provider.create_vms(amount=3)
+        servers = self.provider.create_servers(amount=3)
         self.assertEqual(servers, ['s1', 's2', 's3'])
         mock_create.assert_has_calls([
             mock.call('1'),

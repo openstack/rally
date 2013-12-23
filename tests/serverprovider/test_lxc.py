@@ -122,8 +122,8 @@ class LxcProviderTestCase(test.BaseTestCase):
     @mock.patch('rally.serverprovider.provider.Server')
     @mock.patch(MOD_NAME + 'LxcContainer')
     @mock.patch(MOD_NAME + 'provider.ProviderFactory.get_provider')
-    def test_create_vms(self, get_provider, mock_lxc_container, mock_server,
-                        mock_uuid):
+    def test_create_servers(self, get_provider, mock_lxc_container,
+                            mock_server, mock_uuid):
         def create_config(ip, name):
             conf = self.config['container_config'].copy()
             conf['ip'] = ip
@@ -141,10 +141,10 @@ class LxcProviderTestCase(test.BaseTestCase):
         s1 = mock.Mock()
         s2 = mock.Mock()
         provider = mock.Mock()
-        provider.create_vms = mock.Mock(return_value=[s1, s2])
+        provider.create_servers = mock.Mock(return_value=[s1, s2])
         get_provider.return_value = provider
 
-        self.provider.create_vms()
+        self.provider.create_servers()
 
         configs = [
             create_config('192.168.0.10/24', 'fakeuuid'),
