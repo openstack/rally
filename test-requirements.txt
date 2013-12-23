@@ -1,12 +1,12 @@
 # Install bounded pep8/pyflakes first, then let flake8 install
 pep8==1.4.5
-pyflakes==0.7.2
+pyflakes>=0.7.2,<0.7.4
 flake8==2.0
-hacking>=0.6,<0.8
+hacking>=0.8.0,<0.9
 
-coverage
+coverage>=3.6
 discover
 mock>=1.0
-python-subunit<=0.0.13
-testrepository>=0.0.13
-testtools>=0.9.22
+python-subunit
+testrepository>=0.0.17
+testtools>=0.9.32
