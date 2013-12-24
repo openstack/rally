@@ -29,10 +29,15 @@ class NovaServersTestCase(test.TestCase):
 
     @mock.patch("json.loads")
     @mock.patch("rally.benchmark.base.Scenario.clients")
-    @mock.patch("rally.sshutils.SSH.execute_script")
-    def _verify_boot_runcommand_delete_server(self, mock_ssh_execute_script,
+    @mock.patch("rally.sshutils.SSH.execute")
+    @mock.patch("rally.sshutils.SSH.wait")
+    @mock.patch("rally.sshutils.SSH._get_pkey")
+    @mock.patch("rally.benchmark.scenarios.nova.servers.open", create=True)
+    def _verify_boot_runcommand_delete_server(self, mock_open, mock__get_pkey,
+                                              mock_wait, mock_execute,
                                               mock_base_clients,
                                               mock_json_loads):
+        mock_open.return_value = "fake_script"
         fake_server = fakes.FakeServer()
         fake_server.addresses = dict(
             private=[dict(
@@ -40,12 +45,13 @@ class NovaServersTestCase(test.TestCase):
                 addr="1.2.3.4"
             )]
         )
+
         scenario = servers.NovaServers()
 
         scenario._boot_server = mock.MagicMock(return_value=fake_server)
         scenario._generate_random_name = mock.MagicMock(return_value="name")
         scenario._delete_server = mock.MagicMock()
-        mock_ssh_execute_script.return_value = ('stdout', 'stderr')
+        mock_execute.return_value = (0, 'stdout', 'stderr')
         mock_base_clients.return_value = dict(private='private-key-string')
 
         scenario.boot_runcommand_delete_server("img", 0, "script_path",
@@ -54,10 +60,8 @@ class NovaServersTestCase(test.TestCase):
         scenario._boot_server.assert_called_once_with("name", "img", 0,
                                                       fakearg="f",
                                                       key_name='rally_ssh_key')
-        mock_ssh_execute_script.assert_called_once_with(
-            script="script_path", interpreter="/bin/bash", get_stdout=True,
-            get_stderr=True)
-
+        mock_execute.assert_called_once_with("/bin/bash", stdin="fake_script")
+        mock_open.assert_called_once_with("script_path", "rb")
         mock_json_loads.assert_called_once_with('stdout')
         scenario._delete_server.assert_called_once_with(fake_server)
 

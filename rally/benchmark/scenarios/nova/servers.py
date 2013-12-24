@@ -20,7 +20,6 @@ import random
 from rally.benchmark.scenarios.cinder import utils as cinder_utils
 from rally.benchmark.scenarios.nova import utils
 from rally.benchmark.scenarios import utils as scenario_utils
-from rally.benchmark import utils as benchmark_utils
 from rally.benchmark import validation
 from rally import exceptions as rally_exceptions
 from rally.openstack.common.gettextutils import _  # noqa
@@ -102,43 +101,23 @@ class NovaServers(utils.NovaScenario,
             )
         server_ip = [ip for ip in server.addresses[network] if
                      ip['version'] == ip_version][0]['addr']
-        ssh = sshutils.SSH(ip=server_ip, port=port, user=username,
-                           key=self.clients('ssh_key_pair')['private'],
-                           key_type='string')
-
-        for retry in range(retries):
-            try:
-                LOG.debug(_('Execute script on server attempt '
-                            '%(retry)i/%(retries)i') % dict(retry=retry,
-                                                            retries=retries))
-                streams = list(ssh.execute_script(script=script,
-                                                  interpreter=interpreter,
-                                                  get_stdout=True,
-                                                  get_stderr=True))
-
-                #NOTE(hughsaunders): Decode JSON script output
-                streams[sshutils.SSH.STDOUT_INDEX]\
-                    = json.loads(streams[sshutils.SSH.STDOUT_INDEX])
-                break
-            except (rally_exceptions.SSHError,
-                    rally_exceptions.TimeoutException, IOError) as e:
-                LOG.debug(_('Error running script on instance via SSH. '
-                            '%(id)s/%(ip)s Attempt:%(retry)i, '
-                            'Error: %(error)s') % dict(
-                                id=server.id, ip=server_ip, retry=retry,
-                                error=benchmark_utils.format_exc(e)))
-                self.sleep_between(5, 5)
-            except ValueError:
-                LOG.error(_('Script %(script)s did not output valid JSON. ')
-                          % dict(script=script))
+        ssh = sshutils.SSH(username, server_ip, port=port,
+                           pkey=self.clients('ssh_key_pair')['private'])
+        ssh.wait()
+        code, out, err = ssh.execute(interpreter, stdin=open(script, 'rb'))
+        if code:
+            LOG.error(_('Error running script on instance via SSH. '
+                        'Error: %s') % err)
+        try:
+            out = json.loads(out)
+        except ValueError:
+            LOG.warning(_('Script %s did not output valid JSON. ') % script)
 
         self._delete_server(server)
         LOG.debug(_('Output streams from in-instance script execution: '
                     'stdout: %(stdout)s, stderr: $(stderr)s') % dict(
-                        stdout=str(streams[sshutils.SSH.STDOUT_INDEX]),
-                        stderr=str(streams[sshutils.SSH.STDERR_INDEX])))
-        return dict(data=streams[sshutils.SSH.STDOUT_INDEX],
-                    errors=streams[sshutils.SSH.STDERR_INDEX])
+                        stdout=out, stderr=err))
+        return {'data': out, 'errors': err}
 
     @validation.add_validator(validation.flavor_exists("flavor_id"))
     @validation.add_validator(validation.image_exists("image_id"))

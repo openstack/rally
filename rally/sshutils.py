@@ -13,160 +13,235 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import os
+
+"""High level ssh library.
+
+Usage examples:
+
+Execute command and get output:
+
+    ssh = sshclient.SSH('root', 'example.com', port=33)
+    status, stdout, stderr = ssh.execute('ps ax')
+    if status:
+        raise Exception('Command failed with non-zero status.')
+    print stdout.splitlines()
+
+Execute command with huge output:
+
+    class PseudoFile(object):
+        def write(chunk):
+            if 'error' in chunk:
+                email_admin(chunk)
+
+    ssh = sshclient.SSH('root', 'example.com')
+    ssh.run('tail -f /var/log/syslog', stdout=PseudoFile(), timeout=False)
+
+Execute local script on remote side:
+
+    ssh = sshclient.SSH('user', 'example.com')
+    status, out, err = ssh.execute('/bin/sh -s arg1 arg2',
+                                   stdin=open('~/myscript.sh', 'r'))
+
+Upload file:
+
+    ssh = sshclient.SSH('user', 'example.com')
+    ssh.run('cat > ~/upload/file.gz', stdin=open('/store/file.gz', 'rb'))
+
+Eventlet:
+
+    eventlet.monkey_patch(select=True, time=True)
+    or
+    eventlet.monkey_patch()
+    or
+    sshclient = eventlet.import_patched("opentstack.common.sshclient")
+
+"""
+
 import paramiko
-import random
 import select
 import socket
-import string
 import StringIO
 import time
 
-from rally import exceptions
 from rally.openstack.common.gettextutils import _
 from rally.openstack.common import log as logging
+
 
 LOG = logging.getLogger(__name__)
 
 
+class SSHError(Exception):
+    pass
+
+
+class SSHTimeout(SSHError):
+    pass
+
+
 class SSH(object):
-    """SSH common functions."""
-    STDOUT_INDEX = 0
-    STDERR_INDEX = 1
+    """Represent ssh connection."""
 
-    def __init__(self, ip, user, port=22, key=None, key_type="file",
-                 timeout=1800):
-        """Initialize SSH client with ip, username and the default values.
+    def __init__(self, user, host, port=22, pkey=None,
+                 key_filename=None, password=None):
+        """Initialize SSH client.
 
-        timeout - the timeout for execution of the command
-        key - path to private key file, or string containing actual key
-        key_type - "file" for key path, "string" for actual key
+        :param user: ssh username
+        :param host: hostname or ip address of remote ssh server
+        :param port: remote ssh port
+        :param pkey: RSA or DSS private key string or file object
+        :param key_filename: private key filename
+        :param password: password
+
         """
-        self.ip = ip
-        self.port = port
+
         self.user = user
-        self.timeout = timeout
-        self.client = None
-        self.key = key
-        self.key_type = key_type
-        if not self.key:
-            #Guess location of user's private key if no key is specified.
-            self.key = os.path.expanduser('~/.ssh/id_rsa')
+        self.host = host
+        self.port = port
+        self.pkey = self._get_pkey(pkey) if pkey else None
+        self.password = password
+        self.key_filename = key_filename
+        self._client = False
 
-    def _get_ssh_connection(self):
-        self.client = paramiko.SSHClient()
-        self.client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        connect_params = {
-            'hostname': self.ip,
-            'port': self.port,
-            'username': self.user
-        }
+    def _get_pkey(self, key):
+        if isinstance(key, basestring):
+            key = StringIO.StringIO(key)
+        for key_class in (paramiko.rsakey.RSAKey, paramiko.dsskey.DSSKey):
+            try:
+                return key_class.from_private_key(key)
+            except paramiko.SSHException:
+                pass
+        raise SSHError('Invalid pkey')
 
-        # NOTE(hughsaunders): Set correct paramiko parameter names for each
-        # method of supplying a key.
-        if self.key_type == 'file':
-            connect_params['key_filename'] = self.key
-        else:
-            connect_params['pkey'] = paramiko.RSAKey(
-                    file_obj=StringIO.StringIO(self.key))
+    def _get_client(self):
+        if self._client:
+            return self._client
+        try:
+            self._client = paramiko.SSHClient()
+            self._client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            self._client.connect(self.host, username=self.user,
+                                 port=self.port, pkey=self.pkey,
+                                 key_filename=self.key_filename,
+                                 password=self.password)
+            return self._client
+        except paramiko.SSHException as e:
+            message = _("Paramiko exception %(exception_type)s was raised "
+                        "during connect. Exception value is: %(exception)r")
+            raise SSHError(message % {'exception': e,
+                                      'exception_type': type(e)})
 
-        self.client.connect(**connect_params)
+    def close(self):
+        self._client.close()
+        self._client = False
 
-    def _is_timed_out(self, start_time, timeout=None):
-        timeout = timeout if timeout else self.timeout
-        return (time.time() - timeout) > start_time
+    def run(self, cmd, stdin=None, stdout=None, stderr=None,
+            raise_on_error=True, timeout=3600):
+        """Execute specified command on the server.
 
-    def execute(self, *cmd, **kwargs):
-        """Execute the specified command on the server.
-
-        Return tuple (stdout, stderr).
-
-        :param *cmd:       Command and arguments to be executed.
-        :param get_stdout: Collect stdout data. Boolean.
-        :param get_stderr: Collect stderr data. Boolean.
-
+        :param cmd:             Command to be executed.
+        :param stdin:           Open file or string to pass to stdin.
+        :param stdout:          Open file to connect to stdout.
+        :param stderr:          Open file to connect to stderr.
+        :param raise_on_error:  If False then exit code will be return. If True
+                                then exception will be raized if non-zero code.
+        :param timeout:         Timeout in seconds for command execution.
+                                Default 1 hour. No timeout if set to 0.
         """
-        get_stdout = kwargs.get("get_stdout", False)
-        get_stderr = kwargs.get("get_stderr", False)
-        stdout = ''
-        stderr = ''
-        for chunk in self.execute_generator(*cmd, get_stdout=get_stdout,
-                                            get_stderr=get_stderr):
-            if chunk[0] == 1:
-                stdout += chunk[1]
-            elif chunk[0] == 2:
-                stderr += chunk[1]
-        return (stdout, stderr)
 
-    def execute_generator(self, *cmd, **kwargs):
-        """Execute the specified command on the server.
+        client = self._get_client()
 
-        Return generator. Stdout and stderr data can be collected by chunks.
+        if isinstance(stdin, basestring):
+            stdin = StringIO.StringIO(stdin)
 
-        :param *cmd:       Command and arguments to be executed.
-        :param get_stdout: Collect stdout data. Boolean.
-        :param get_stderr: Collect stderr data. Boolean.
+        return self._run(client, cmd, stdin=stdin, stdout=stdout,
+                         stderr=stderr, raise_on_error=raise_on_error,
+                         timeout=timeout)
 
-        """
-        get_stdout = kwargs.get("get_stdout", True)
-        get_stderr = kwargs.get("get_stderr", True)
-        self._get_ssh_connection()
-        cmd = ' '.join(cmd)
-        transport = self.client.get_transport()
+    def _run(self, client, cmd, stdin=None, stdout=None, stderr=None,
+             raise_on_error=True, timeout=3600):
+
+        transport = client.get_transport()
         session = transport.open_session()
         session.exec_command(cmd)
         start_time = time.time()
 
+        data_to_send = ''
+        stderr_data = None
+
+        # If we have data to be sent to stdin then `select' should also
+        # check for stdin availability.
+        if stdin and not stdin.closed:
+            writes = [session]
+        else:
+            writes = []
+
         while True:
-            errors = select.select([session], [], [], 4)[2]
+            # Block until data can be read/write.
+            r, w, e = select.select([session], writes, [session], 1)
 
             if session.recv_ready():
                 data = session.recv(4096)
-                LOG.debug(data)
-                if get_stdout:
-                    yield (1, data)
+                LOG.debug(_('stdout: %r') % data)
+                if stdout is not None:
+                    stdout.write(data)
                 continue
 
             if session.recv_stderr_ready():
-                data = session.recv_stderr(4096)
-                LOG.debug(data)
-                if get_stderr:
-                    yield (2, data)
+                stderr_data = session.recv_stderr(4096)
+                LOG.debug(_('stderr: %r') % stderr_data)
+                if stderr is not None:
+                    stderr.write(stderr_data)
                 continue
 
-            if errors or session.exit_status_ready():
+            if session.send_ready():
+                if stdin is not None and not stdin.closed:
+                    if not data_to_send:
+                        data_to_send = stdin.read(4096)
+                        if not data_to_send:
+                            stdin.close()
+                            session.shutdown_write()
+                            writes = []
+                            continue
+                    sent_bytes = session.send(data_to_send)
+                    data_to_send = data_to_send[sent_bytes:]
+
+            if session.exit_status_ready():
                 break
 
-            if self._is_timed_out(start_time):
-                raise exceptions.TimeoutException('SSH Timeout')
+            if timeout and (time.time() - timeout) > start_time:
+                args = {'cmd': cmd, 'host': self.host}
+                raise SSHTimeout(_('Timeout executing command '
+                                   '"%(cmd)s" on host %(host)s') % args)
+            if e:
+                raise SSHError('Socket error.')
 
         exit_status = session.recv_exit_status()
-        if 0 != exit_status:
-            raise exceptions.SSHError(
-                'SSHExecCommandFailed with exit_status %s'
-                % exit_status)
-        self.client.close()
+        if 0 != exit_status and raise_on_error:
+            fmt = _('Command "%(cmd)s" failed with exit_status %(status)d.')
+            details = fmt % {'cmd': cmd, 'status': exit_status}
+            if stderr_data:
+                details += _(' Last stderr data: "%s".') % stderr_data
+            raise SSHError(details)
+        return exit_status
 
-    def upload(self, source, destination):
-        """Upload the specified file to the server."""
-        if destination.startswith('~'):
-            destination = '/home/' + self.user + destination[1:]
-        self._get_ssh_connection()
-        ftp = self.client.open_sftp()
-        ftp.put(os.path.expanduser(source), destination)
-        ftp.close()
+    def execute(self, cmd, stdin=None, timeout=3600):
+        """Execute the specified command on the server.
 
-    def execute_script(self, script, interpreter='/bin/sh',
-                       get_stdout=False, get_stderr=False):
-        """Execute the specified local script on the remote server."""
-        destination = '/tmp/' + ''.join(
-            random.choice(string.lowercase) for i in range(16))
+        :param cmd:     Command to be executed.
+        :param stdin:   Open file to be sent on process stdin.
+        :param timeout: Timeout for execution of the command.
 
-        self.upload(script, destination)
-        streams = self.execute('%s %s' % (interpreter, destination),
-                               get_stdout=get_stdout, get_stderr=get_stderr)
-        self.execute('rm %s' % destination)
-        return streams
+        Return tuple (exit_status, stdout, stderr)
+
+        """
+        stdout = StringIO.StringIO()
+        stderr = StringIO.StringIO()
+
+        exit_status = self.run(cmd, stderr=stderr,
+                               stdout=stdout, stdin=stdin,
+                               timeout=timeout, raise_on_error=False)
+        stdout.seek(0)
+        stderr.seek(0)
+        return (exit_status, stdout.read(), stderr.read())
 
     def wait(self, timeout=120, interval=1):
         """Wait for the host will be available via ssh."""
@@ -174,10 +249,8 @@ class SSH(object):
         while True:
             try:
                 return self.execute('uname')
-            except (socket.error, exceptions.SSHError) as e:
-                LOG.debug(
-                    _('Ssh is still unavailable. (Exception was: %s)') % e)
+            except (socket.error, SSHError) as e:
+                LOG.debug(_('Ssh is still unavailable: %r') % e)
                 time.sleep(interval)
-            if self._is_timed_out(start_time, timeout):
-                raise exceptions.TimeoutException(
-                    _('SSH Timeout waiting for "%s"') % self.ip)
+            if time.time() > (start_time + timeout):
+                raise SSHTimeout(_('Timeout waiting for "%s"') % self.host)

@@ -54,12 +54,16 @@ class DevstackEngineTestCase(test.BaseTestCase):
     def test_construct(self):
         self.assertEqual(self.engine.localrc['ADMIN_PASSWORD'], 'secret')
 
-    def test_prepare_server(self):
+    @mock.patch('rally.deploy.engines.devstack.open', create=True)
+    def test_prepare_server(self, m_open):
+        m_open.return_value = 'fake_file'
         server = mock.Mock()
         self.engine.prepare_server(server)
-        filename = server.ssh.execute_script.mock_calls[0][1][0]
+        server.ssh.run.assert_called_once_with('/bin/sh -e', stdin='fake_file')
+        filename = m_open.mock_calls[0][1][0]
         self.assertTrue(filename.endswith('rally/deploy/engines/'
                                           'devstack/install.sh'))
+        self.assertEqual([mock.call(filename, 'rb')], m_open.mock_calls)
 
     @mock.patch('rally.deploy.engines.devstack.open', create=True)
     @mock.patch('rally.serverprovider.provider.Server')
@@ -87,34 +91,26 @@ class DevstackEngineTestCase(test.BaseTestCase):
             'tenant_name': 'admin',
         })
 
-    @mock.patch('rally.deploy.engines.devstack.os')
-    @mock.patch('rally.deploy.engines.devstack.tempfile')
-    @mock.patch('rally.deploy.engines.devstack.open', create=True)
-    def test_configure_devstack(self, m_open, m_tmpf, m_os):
-        m_tmpf.mkstemp.return_value = (42, 'tmpnam')
-        fake_file = mock.Mock()
-        m_open.return_value = fake_file
+    @mock.patch('rally.deploy.engines.devstack.StringIO.StringIO')
+    def test_configure_devstack(self, m_sio):
+        m_sio.return_value = fake_localrc = mock.Mock()
         server = mock.Mock()
         self.engine.localrc = {'k1': 'v1', 'k2': 'v2'}
 
         self.engine.configure_devstack(server)
 
         calls = [
-            mock.call.ssh.execute('git', 'clone', DEVSTACK_REPO),
-            mock.call.ssh.upload('tmpnam', '~/devstack/localrc'),
+            mock.call.ssh.run('git clone https://github.com/'
+                              'openstack-dev/devstack.git'),
+            mock.call.ssh.run('cat > ~/devstack/localrc', stdin=fake_localrc)
         ]
         self.assertEqual(calls, server.mock_calls)
-        fake_file.asser_has_calls([
+        fake_localrc.asser_has_calls([
             mock.call.write('k1=v1\n'),
             mock.call.write('k2=v2\n'),
         ])
-        os_calls = [
-            mock.call.close(42),
-            mock.call.unlink('tmpnam'),
-        ]
-        self.assertEqual(os_calls, m_os.mock_calls)
 
     def test_start_devstack(self):
         server = mock.Mock()
         self.assertTrue(self.engine.start_devstack(server))
-        server.ssh.execute.assert_called_once_with('~/devstack/stack.sh')
+        server.ssh.run.assert_called_once_with('~/devstack/stack.sh')

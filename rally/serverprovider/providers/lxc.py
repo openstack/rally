@@ -16,7 +16,7 @@
 import netaddr
 import os
 import re
-import tempfile
+import StringIO
 import time
 
 from rally import exceptions
@@ -30,17 +30,15 @@ LOG = logging.getLogger(__name__)
 INET_ADDR_RE = re.compile(r' *inet ((\d+\.){3}\d+)\/\d+ .*')
 
 
-def _get_script_path(filename):
-    return os.path.abspath(os.path.join(os.path.dirname(__file__),
+def _get_script(filename):
+    path = os.path.abspath(os.path.join(os.path.dirname(__file__),
                            'lxc', filename))
+    return open(path, 'rb')
 
 
-def _write_script_from_template(template_filename, **kwargs):
-    template = open(_get_script_path(template_filename)).read()
-    new_file = tempfile.NamedTemporaryFile(delete=False)
-    new_file.write(template.format(**kwargs))
-    new_file.close()
-    return new_file.name
+def _get_script_from_template(template_filename, **kwargs):
+    template = _get_script(template_filename).read()
+    return StringIO.StringIO(template.format(**kwargs))
 
 
 class LxcHost(object):
@@ -85,39 +83,35 @@ class LxcHost(object):
                 'LXC_DHCP_RANGE': dhcp_range,
                 'LXC_DHCP_MAX': self.network.size - 3,
             }
-            config = tempfile.NamedTemporaryFile(delete=False)
+            config = StringIO.StringIO()
             for name, value in values.iteritems():
                 config.write('%(name)s="%(value)s"\n' % {'name': name,
                                                          'value': value})
-            config.close()
-            self.server.ssh.upload(config.name, '/tmp/.lxc_default')
-            os.unlink(config.name)
+            config.seek(0)
+            self.server.ssh.run('cat > /tmp/.lxc_default', stdin=config)
 
-        script = _get_script_path('lxc-install.sh')
-        self.server.ssh.execute_script(script)
+        self.server.ssh.run('/bin/sh', stdin=_get_script('lxc-install.sh'))
         self.create_local_tunnels()
         self.create_remote_tunnels()
 
     def create_local_tunnels(self):
         """Create tunel on lxc host side."""
         for tunnel_to in self.config['tunnel_to']:
-            script = _write_script_from_template('tunnel-local.sh',
-                                                 net=self.network,
-                                                 local=self.server.host,
-                                                 remote=tunnel_to)
-            self.server.ssh.execute_script(script)
-            os.unlink(script)
+            script = _get_script_from_template('tunnel-local.sh',
+                                               net=self.network,
+                                               local=self.server.host,
+                                               remote=tunnel_to)
+            self.server.ssh.run('/bin/sh -e', stdin=script)
 
     def create_remote_tunnels(self):
         """Create tunel on remote side."""
         for tunnel_to in self.config['tunnel_to']:
-            script = _write_script_from_template('tunnel-remote.sh',
-                                                 net=self.network,
-                                                 local=tunnel_to,
-                                                 remote=self.server.host)
+            script = _get_script_from_template('tunnel-remote.sh',
+                                               net=self.network,
+                                               local=tunnel_to,
+                                               remote=self.server.host)
             server = self._get_server_with_ip(tunnel_to)
-            server.ssh.execute_script(script)
-            os.unlink(script)
+            server.ssh.run('/bin/sh -e', stdin=script)
 
     def delete_tunnels(self):
         for tunnel_to in self.config['tunnel_to']:
@@ -130,7 +124,9 @@ class LxcHost(object):
 
         cmd = 'lxc-attach -n %s ip addr list dev eth0' % name
         for attempt in range(1, 16):
-            stdout = self.server.ssh.execute(cmd, get_stdout=True)[0]
+            code, stdout = self.server.ssh.execute(cmd)[:2]
+            if code:
+                continue
             for line in stdout.splitlines():
                 m = INET_ADDR_RE.match(line)
                 if m:
@@ -140,9 +136,10 @@ class LxcHost(object):
         raise exceptions.TimeoutException(msg)
 
     def create_container(self, name, distribution):
-        self.server.ssh.execute('lxc-create', '-B', self.backingstore,
-                                '-n', name,
-                                '-t', distribution)
+        args = {'backingstore': self.backingstore,
+                'name': name, 'distribution': distribution}
+        self.server.ssh.run('lxc-create -B %(backingstore)s -n %(name)s'
+                            ' -t %(distribution)s' % args)
         self.configure_container(name)
         self.containers.append(name)
 
@@ -152,28 +149,27 @@ class LxcHost(object):
         if self.backingstore == 'btrfs':
             cmd.append('--snapshot')
         cmd.extend(['-o', source, '-n', name])
-        self.server.ssh.execute(*cmd)
+        self.server.ssh.execute(' '.join(cmd))
         self.configure_container(name)
         self.containers.append(name)
 
     def configure_container(self, name):
         path = os.path.join(self.path, name, 'rootfs')
-        configure_script = _get_script_path('configure_container.sh')
-        self.server.ssh.upload(configure_script, '/tmp/.rally_cont_conf.sh')
-        self.server.ssh.execute('/bin/sh', '/tmp/.rally_cont_conf.sh', path)
+        conf_script = _get_script('configure_container.sh')
+        self.server.ssh.run('/bin/sh -e -s %s' % path, stdin=conf_script)
 
     def start_containers(self):
         for name in self.containers:
-            self.server.ssh.execute('lxc-start -d -n %s' % name)
+            self.server.ssh.run('lxc-start -d -n %s' % name)
 
     def stop_containers(self):
         for name in self.containers:
-            self.server.ssh.execute('lxc-stop -n %s' % name)
+            self.server.ssh.run('lxc-stop -n %s' % name)
 
     def destroy_containers(self):
         for name in self.containers:
-            self.server.ssh.execute('lxc-stop -n %s' % name)
-            self.server.ssh.execute('lxc-destroy -n %s' % name)
+            self.server.ssh.run('lxc-stop -n %s' % name)
+            self.server.ssh.run('lxc-destroy -n %s' % name)
 
     def get_server_object(self, name, wait=True):
         """Create Server object for container."""
@@ -257,6 +253,7 @@ class LxcProvider(provider.ProviderFactory):
             host.prepare()
             ip = str(network.ip).replace('.', '-') if network else '0'
             first_name = '%s-000-%s' % (name_prefix, ip)
+
             host.create_container(first_name, distribution)
             for i in range(1, self.config.get('containers_per_host', 1)):
                 name = '%s-%03d-%s' % (name_prefix, i, ip)
