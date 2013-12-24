@@ -192,6 +192,40 @@ class TaskCommands(object):
                 table.add_row(['n/a', 'n/a', 'n/a', 0, len(raw)])
             print(table)
 
+            #NOTE(hughsaunders): ssrs=scenario specific results
+            ssrs = []
+            for result in raw:
+                try:
+                    ssrs.append(result['scenario_output']['data'])
+                except (KeyError, TypeError):
+                    # No SSRs in this result
+                    pass
+            if ssrs:
+                sys.stdout.flush()
+                keys = set()
+                for ssr in ssrs:
+                    keys.update(ssr.keys())
+
+                ssr_table = prettytable.PrettyTable(
+                    ["Key", "max", "avg", "min"])
+                for key in keys:
+                    values = [float(ssr[key]) for ssr in ssrs if key in ssr]
+
+                    if values:
+                        row = [str(key),
+                               max(values),
+                               sum(values) / len(values),
+                               min(values)]
+                    else:
+                        row = [str(key)] + ['n/a'] * 3
+                    ssr_table.add_row(row)
+                print("\nScenario Specific Results\n")
+                print(ssr_table)
+
+                for result in raw:
+                    if result['scenario_output']['errors']:
+                        print(result['scenario_output']['errors'])
+
     @cliutils.args('--task-id', type=str, dest='task_id', help='uuid of task')
     @cliutils.args('--pretty', type=str, help=('pretty print (pprint) '
                                                'or json print (json)'))

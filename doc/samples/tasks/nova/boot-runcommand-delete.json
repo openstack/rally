@@ -1,0 +1,10 @@
+{
+  "NovaServers.boot_runcommand_delete_server": [
+    {"args": {"flavor_id": "your flavor id here",
+      "image_id": "your image id here",
+      "script": "doc/samples/support/instance_dd_test.sh",
+      "interpreter": "/bin/sh",
+      "username": "ubuntu"},
+      "config": {"times": 2, "active_users": 1}}
+  ]
+}

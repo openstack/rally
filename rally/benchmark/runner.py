@@ -51,14 +51,16 @@ def _run_scenario_loop(args):
     cls.idle_time = 0
 
     try:
+        scenario_output = None
         with rutils.Timer() as timer:
-            getattr(cls, method_name)(**kwargs)
+            scenario_output = getattr(cls, method_name)(**kwargs)
         error = None
     except Exception as e:
         error = utils.format_exc(e)
     finally:
         return {"time": timer.duration() - cls.idle_time,
-                "idle_time": cls.idle_time, "error": error}
+                "idle_time": cls.idle_time, "error": error,
+                "scenario_output": scenario_output}
 
 
 class ScenarioRunner(object):

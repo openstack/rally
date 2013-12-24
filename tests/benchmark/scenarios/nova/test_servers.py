@@ -70,6 +70,51 @@ class NovaServersTestCase(test.TestCase):
         mock_sleep.assert_called_once_with(10, 20)
         mock_delete.assert_called_once_with(fake_server)
 
+    @mock.patch("json.loads")
+    @mock.patch("rally.benchmark.base.Scenario.clients")
+    @mock.patch("rally.sshutils.SSH.execute_script")
+    @mock.patch(NOVA_SERVERS + ".sleep_between")
+    @mock.patch(NOVA_SERVERS + "._generate_random_name")
+    @mock.patch(NOVA_SERVERS + "._delete_server")
+    @mock.patch(NOVA_SERVERS + "._boot_server")
+    def _verify_boot_runcommand_delete_server(
+            self, mock_boot, mock_delete, mock_random_name, mock_sleep,
+            mock_ssh_execute_script, mock_base_clients, mock_json_loads):
+
+        fake_server = fakes.FakeServer()
+        fake_server.addresses = dict(
+            private=[dict(
+                version=4,
+                addr="1.2.3.4"
+            )]
+        )
+        mock_boot.return_value = fake_server
+        mock_random_name.return_value = "random_name"
+        mock_ssh_execute_script.return_value = ('stdout', 'stderr')
+        mock_base_clients.return_value = dict(private='private-key-string')
+
+        servers.NovaServers.boot_runcommand_delete_server(
+            "img", 0, "script_path", "/bin/bash", fakearg="f")
+
+        mock_boot.assert_called_once_with(
+            "random_name", "img", 0, fakearg="f", key_name='rally_ssh_key')
+        mock_ssh_execute_script.assert_called_once_with(
+                script="script_path",
+                interpreter="/bin/bash",
+                get_stdout=True,
+                get_stderr=True
+        )
+        mock_json_loads.assert_called_once_with('stdout')
+        mock_delete.assert_called_once_with(fake_server)
+
+        fake_server.addresses = {}
+        self.assertRaises(
+            ValueError,
+            servers.NovaServers.boot_runcommand_delete_server,
+            "img", 0, "script_path", "/bin/bash",
+            fakearg="f"
+        )
+
     @mock.patch(NOVA_SERVERS + "._generate_random_name")
     @mock.patch(NOVA_SERVERS + "._boot_server")
     @mock.patch("rally.benchmark.utils.osclients")
@@ -291,6 +336,9 @@ class NovaServersTestCase(test.TestCase):
 
     def test_boot_server_from_volume_and_delete(self):
         self._verify_boot_server_from_volume_and_delete()
+
+    def test_boot_runcommand_delete_server(self):
+        self._verify_boot_runcommand_delete_server()
 
     def test_boot_server_no_nics(self):
         self._verify_boot_server(nic=None, assert_nic=False)
