@@ -63,7 +63,7 @@ def _delete_volumes(cinder):
 
 def _delete_volume_types(cinder):
     for vol_type in cinder.volume_types.list():
-        cinder.volume_types.delete(vol_type.id)
+        vol_type.delete()
     utils._wait_for_empty_list(cinder.volume_types)
 
 

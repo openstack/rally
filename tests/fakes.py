@@ -108,12 +108,11 @@ class FakeManager(object):
         super(FakeManager, self).__init__()
         self.cache = {}
 
-    def get(self, resource):
-        uuid = getattr(resource, 'uuid', None) or resource
-        return self.cache.get(uuid, None)
+    def get(self, resource_uuid):
+        return self.cache.get(resource_uuid, None)
 
     def delete(self, resource):
-        cached = self.get(resource)
+        cached = self.get(resource.uuid)
         if cached is not None:
             del self.cache[cached.uuid]
 
@@ -134,11 +133,11 @@ class FakeServerManager(FakeManager):
         super(FakeServerManager, self).__init__()
         self.images = image_mgr or FakeImageManager()
 
-    def get(self, resource):
-        server = self.cache.get(resource.uuid, None)
+    def get(self, resource_uuid):
+        server = self.cache.get(resource_uuid, None)
         if server is not None:
             return server
-        raise exceptions.NotFound("Server %s not found" % (resource.name))
+        raise exceptions.NotFound("Server %s not found" % (resource_uuid))
 
     def _create(self, server_class=FakeServer, name=None):
         server = self._cache(server_class(self))
