@@ -38,8 +38,15 @@ class NovaScenario(base.Scenario):
 
         :returns: Created server object
         """
-        server = cls.clients("nova").servers.create(server_name, image_id,
-                                                    flavor_id, **kwargs)
+
+        if 'security_groups' not in kwargs:
+            kwargs['security_groups'] = ['rally_open']
+        else:
+            if 'rally_open' not in kwargs['security_groups']:
+                kwargs['security_groups'].append('rally_open')
+
+        server = cls.clients("nova").servers.create(
+            server_name, image_id, flavor_id, **kwargs)
         # NOTE(msdubov): It is reasonable to wait 5 secs before starting to
         #                check whether the server is ready => less API calls.
         time.sleep(5)

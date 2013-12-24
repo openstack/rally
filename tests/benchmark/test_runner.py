@@ -62,9 +62,10 @@ class ScenarioTestCase(test.TestCase):
             endpoints = srunner._create_temp_tenants_and_users(
                                                     tenants, users_per_tenant)
             self.assertEqual(len(endpoints), tenants * users_per_tenant)
-            endpoint_keys = set(["username", "password", "tenant_name", "uri"])
+            endpoint_keys = set(["username", "password", "tenant_name",
+                                 "uri"])
             for endpoint in endpoints:
-                self.assertEqual(set(endpoint.keys()), endpoint_keys)
+                self.assertTrue(endpoint_keys.issubset(endpoint.keys()))
 
     def test_run_scenario(self):
         with mock.patch("rally.benchmark.utils.osclients") as mock_osclients:
@@ -98,7 +99,10 @@ class ScenarioTestCase(test.TestCase):
     @mock.patch("rally.benchmark.utils.osclients")
     @mock.patch("multiprocessing.pool.IMapIterator.next")
     @mock.patch("rally.benchmark.runner.time.time")
-    def test_run_scenario_timeout(self, mock_time, mock_next, mock_osclients):
+    @mock.patch("rally.benchmark.utils._prepare_for_instance_ssh")
+    def test_run_scenario_timeout(self, mock_prepare_for_instance_ssh,
+                                  mock_time, mock_next, mock_osclients):
+
         mock_time.side_effect = [1, 2, 3, 10]
         mock_next.side_effect = multiprocessing.TimeoutError()
         mock_osclients.Clients.return_value = fakes.FakeClients()

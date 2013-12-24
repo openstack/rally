@@ -20,6 +20,7 @@ import random
 import select
 import socket
 import string
+from StringIO import StringIO
 import time
 
 from rally import exceptions
@@ -31,27 +32,46 @@ LOG = logging.getLogger(__name__)
 
 class SSH(object):
     """SSH common functions."""
+    STDOUT_INDEX = 0
+    STDERR_INDEX = 1
 
-    def __init__(self, ip, user, port=22, key=None, timeout=1800):
+    def __init__(self, ip, user, port=22, key=None, key_type="file",
+                 timeout=1800):
         """Initialize SSH client with ip, username and the default values.
 
         timeout - the timeout for execution of the command
+        key - path to private key file, or string containing actual key
+        key_type - "file" for key path, "string" for actual key
         """
         self.ip = ip
         self.port = port
         self.user = user
         self.timeout = timeout
         self.client = None
-        if key:
-            self.key = key
-        else:
+        self.key = key
+        self.key_type = key_type
+        if not self.key:
+            #Guess location of user's private key if no key is specified.
             self.key = os.path.expanduser('~/.ssh/id_rsa')
 
     def _get_ssh_connection(self):
         self.client = paramiko.SSHClient()
         self.client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        self.client.connect(self.ip, username=self.user,
-                            key_filename=self.key, port=self.port)
+        connect_params = {
+            'hostname': self.ip,
+            'port': self.port,
+            'username': self.user
+        }
+
+        # NOTE(hughsaunders): Set correct paramiko parameter names for each
+        # method of supplying a key.
+        if self.key_type == 'file':
+            connect_params['key_filename'] = self.key
+        else:
+            connect_params['pkey'] = paramiko.RSAKey(
+                    file_obj=StringIO(self.key))
+
+        self.client.connect(**connect_params)
 
     def _is_timed_out(self, start_time):
         return (time.time() - self.timeout) > start_time
@@ -136,14 +156,17 @@ class SSH(object):
         ftp.put(os.path.expanduser(source), destination)
         ftp.close()
 
-    def execute_script(self, script, enterpreter='/bin/sh'):
+    def execute_script(self, script, interpreter='/bin/sh',
+                       get_stdout=False, get_stderr=False):
         """Execute the specified local script on the remote server."""
         destination = '/tmp/' + ''.join(
             random.choice(string.lowercase) for i in range(16))
 
         self.upload(script, destination)
-        self.execute('%s %s' % (enterpreter, destination))
+        streams = self.execute('%s %s' % (interpreter, destination),
+                               get_stdout=get_stdout, get_stderr=get_stderr)
         self.execute('rm %s' % destination)
+        return streams
 
     def wait(self, timeout=120, interval=1):
         """Wait for the host will be available via ssh."""

@@ -16,6 +16,7 @@
 import jsonschema
 import mock
 import netaddr
+import os
 
 from rally.openstack.common.fixture import mockpatch
 from rally.openstack.common import test
@@ -43,15 +44,17 @@ class VirshProviderTestCase(test.BaseTestCase):
         mock_subp.check_output.return_value = '10.0.0.1'
         mock_ipaddress.return_value = '10.0.0.2'
         server = self.provider.create_vm('name')
+        script_path = '%(virsh_path)s/virsh/get_domain_ip.sh' % dict(
+                virsh_path=os.path.split(virsh.__file__)[0])
         mock_subp.assert_has_calls([
             mock.call.check_call('virt-clone --connect=qemu+ssh://user@host/'
                                  'system -o prefix -n name --auto-clone',
                                  shell=True),
             mock.call.check_call('virsh --connect=qemu+ssh://user@host/system '
                                  'start name', shell=True),
-            mock.call.check_call('scp -o StrictHostKeyChecking=no  rally/serve'
-                                 'rprovider/providers/virsh/get_domain_ip.sh u'
-                                 'ser@host:~/get_domain_ip.sh', shell=True),
+            mock.call.check_call('scp -o StrictHostKeyChecking=no  %s u'
+                                 'ser@host:~/get_domain_ip.sh' % script_path,
+                                 shell=True),
             mock.call.check_output('ssh -o StrictHostKeyChecking=no user@host '
                                    './get_domain_ip.sh name', shell=True),
         ])

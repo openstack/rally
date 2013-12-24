@@ -77,7 +77,7 @@ class SSHTestCase(test.TestCase):
         self.ssh.upload('/tmp/s', '/tmp/d')
 
         expected = [mock.call.set_missing_host_key_policy(self.policy),
-                    mock.call.connect('example.net', username='root',
+                    mock.call.connect(hostname='example.net', username='root',
                                       key_filename=os.path.expanduser(
                                           '~/.ssh/id_rsa'), port=22),
                     mock.call.open_sftp(),
@@ -94,8 +94,11 @@ class SSHTestCase(test.TestCase):
         self.ssh.execute_script('/bin/script')
 
         up.assert_called_once_with('/bin/script', '/tmp/aaaaaaaaaaaaaaaa')
-        ex.assert_has_calls([mock.call('/bin/sh /tmp/aaaaaaaaaaaaaaaa'),
-                             mock.call('rm /tmp/aaaaaaaaaaaaaaaa')])
+        ex.assert_has_calls([
+            mock.call('/bin/sh /tmp/aaaaaaaaaaaaaaaa',
+                      get_stderr=False, get_stdout=False),
+            mock.call('rm /tmp/aaaaaaaaaaaaaaaa')
+        ])
 
     @mock.patch('rally.sshutils.SSH.execute')
     def test_wait(self, ex):

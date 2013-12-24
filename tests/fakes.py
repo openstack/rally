@@ -79,7 +79,17 @@ class FakeKeypair(FakeResource):
 
 
 class FakeSecurityGroup(FakeResource):
-    pass
+
+    def __init__(self, manager=None):
+        super(FakeSecurityGroup, self).__init__(manager)
+        self.rules = []
+
+
+class FakeSecurityGroupRule(FakeResource):
+    def __init__(self, name, **kwargs):
+        super(FakeSecurityGroupRule, self).__init__(name)
+        for key, value in kwargs.items():
+            setattr(self, key, value)
 
 
 class FakeVolume(FakeResource):
@@ -126,6 +136,16 @@ class FakeManager(object):
             resources.append(self.cache[uuid])
         return resources
 
+    def find(self, **kwargs):
+        for resource in self.cache.values():
+            match = True
+            for key, value in kwargs.items():
+                if getattr(resource, key, None) != value:
+                    match = False
+                    break
+            if match:
+                return resource
+
 
 class FakeServerManager(FakeManager):
 
@@ -145,7 +165,7 @@ class FakeServerManager(FakeManager):
             server.name = name
         return server
 
-    def create(self, name, image_id, flavor_id):
+    def create(self, name, image_id, flavor_id, **kwargs):
         return self._create(name=name)
 
     def create_image(self, server, name):
@@ -161,7 +181,7 @@ class FakeServerManager(FakeManager):
 
 class FakeFailedServerManager(FakeServerManager):
 
-    def create(self, name, image_id, flavor_id):
+    def create(self, name, image_id, flavor_id, **kwargs):
         return self._create(FakeFailedServer, name)
 
 
@@ -198,7 +218,7 @@ class FakeNetworkManager(FakeManager):
 
 class FakeKeypairManager(FakeManager):
 
-    def create(self, name):
+    def create(self, name, public_key=None):
         kp = FakeKeypair(self)
         kp.name = name or kp.name
         return self._cache(kp)
@@ -206,10 +226,26 @@ class FakeKeypairManager(FakeManager):
 
 class FakeSecurityGroupManager(FakeManager):
 
-    def create(self, name):
+    def __init__(self):
+        super(FakeSecurityGroupManager, self).__init__()
+        self.create('default')
+
+    def create(self, name, description=""):
         sg = FakeSecurityGroup(self)
         sg.name = name or sg.name
+        sg.description = description
         return self._cache(sg)
+
+
+class FakeSecurityGroupRuleManager(FakeManager):
+
+    def __init__(self):
+        super(FakeSecurityGroupRuleManager, self).__init__()
+
+    def create(self, name, **kwargs):
+        sgr = FakeSecurityGroupRule(self, **kwargs)
+        sgr.name = name or sgr.name
+        return self._cache(sgr)
 
 
 class FakeUsersManager(FakeManager):
@@ -292,6 +328,7 @@ class FakeNovaClient(object):
         self.networks = FakeNetworkManager()
         self.keypairs = FakeKeypairManager()
         self.security_groups = FakeSecurityGroupManager()
+        self.security_group_rules = FakeSecurityGroupRuleManager()
 
 
 class FakeKeystoneClient(object):

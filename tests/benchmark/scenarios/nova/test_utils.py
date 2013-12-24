@@ -58,7 +58,7 @@ class NovaScenarioTestCase(test.TestCase):
         fc.get_nova_client = lambda: fake_nova
         fsm = fakes.FakeServerManager(fake_nova.images)
         fake_server = fsm.create("s1", "i1", 1)
-        fsm.create = lambda name, iid, fid: fake_server
+        fsm.create = lambda name, iid, fid, **kwargs: fake_server
         fake_nova.servers = fsm
         fake_image_id = fsm.create_image(fake_server, 'img')
         fake_image = fsm.images.get(fake_image_id)
