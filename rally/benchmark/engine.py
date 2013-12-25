@@ -17,7 +17,7 @@ import json
 import jsonschema
 
 from rally.benchmark import base
-from rally.benchmark import utils
+from rally.benchmark import runner
 from rally import consts
 from rally import exceptions
 from rally.openstack.common.gettextutils import _
@@ -128,13 +128,13 @@ class TestEngine(object):
                   corresponding benchmark test launches
         """
         self.task.update_status(consts.TaskStatus.TEST_TOOL_BENCHMARKING)
-        runer = utils.ScenarioRunner(self.task, self.endpoints)
+        scenario_runner = runner.ScenarioRunner(self.task, self.endpoints)
 
         results = {}
         for name in self.config:
             for n, kwargs in enumerate(self.config[name]):
                 key = {'name': name, 'pos': n, 'kw': kwargs}
-                result = runer.run(name, kwargs)
+                result = scenario_runner.run(name, kwargs)
                 self.task.append_results(key, {"raw": result})
                 results[json.dumps(key)] = result
         return results

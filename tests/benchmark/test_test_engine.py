@@ -124,7 +124,7 @@ class TestEngineTestCase(test.TestCase):
             self.assertEqual(tester.endpoints,
                              self.valid_cloud_config['identity'])
 
-    @mock.patch("rally.benchmark.utils.ScenarioRunner.run")
+    @mock.patch("rally.benchmark.runner.ScenarioRunner.run")
     @mock.patch("rally.benchmark.utils.osclients")
     def test_run(self, mock_osclients, mock_run):
         mock_osclients.Clients.return_value = fakes.FakeClients()
@@ -133,7 +133,7 @@ class TestEngineTestCase(test.TestCase):
         with tester.bind(self.valid_cloud_config):
             tester.run()
 
-    @mock.patch("rally.benchmark.utils.ScenarioRunner.run")
+    @mock.patch("rally.benchmark.runner.ScenarioRunner.run")
     @mock.patch("rally.benchmark.utils.osclients")
     def test_task_status_basic_chain(self, mock_osclients, mock_scenario_run):
         fake_task = mock.MagicMock()
@@ -161,7 +161,7 @@ class TestEngineTestCase(test.TestCase):
                             fake_task.mock_calls)
         self.assertEqual(mock_calls, expected)
 
-    @mock.patch("rally.benchmark.utils.ScenarioRunner.run")
+    @mock.patch("rally.benchmark.runner.ScenarioRunner.run")
     @mock.patch("rally.benchmark.utils.osclients")
     def test_task_status_failed(self, mock_osclients, mock_scenario_run):
         fake_task = mock.MagicMock()

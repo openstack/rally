@@ -66,7 +66,7 @@ class NovaScenarioTestCase(test.TestCase):
         temp_keys = ["username", "password", "tenant_name", "uri"]
         users_endpoints = [dict(zip(temp_keys, temp_keys))]
         utils.NovaScenario._clients = butils.\
-            _create_openstack_clients(users_endpoints, temp_keys)[0]
+            create_openstack_clients(users_endpoints, temp_keys)[0]
         utils.utils = mock_rally_utils
         utils.bench_utils.get_from_manager = lambda: get_from_mgr
 

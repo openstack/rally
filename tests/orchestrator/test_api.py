@@ -83,7 +83,7 @@ class APITestCase(test.TestCase):
             'endpoint': self.endpoint,
         }
 
-    @mock.patch('rally.benchmark.engine.utils.ScenarioRunner')
+    @mock.patch('rally.benchmark.engine.runner.ScenarioRunner')
     @mock.patch('rally.objects.deploy.db.deployment_get')
     @mock.patch('rally.objects.task.db.task_result_create')
     @mock.patch('rally.objects.task.db.task_update')
