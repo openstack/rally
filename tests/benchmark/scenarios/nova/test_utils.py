@@ -62,7 +62,7 @@ class NovaScenarioTestCase(test.TestCase):
         fake_nova.servers = fsm
         fake_image_id = fsm.create_image(fake_server, 'img')
         fake_image = fsm.images.get(fake_image_id)
-        fsm.create_image = lambda svr, name: fake_image
+        fsm.create_image = lambda svr, name: fake_image.id
         temp_keys = ["username", "password", "tenant_name", "uri"]
         users_endpoints = [dict(zip(temp_keys, temp_keys))]
         utils.NovaScenario._clients = butils.\

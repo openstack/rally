@@ -46,10 +46,12 @@ def is_none(obj):
     return obj is None
 
 
-def get_from_manager(error_statuses=["ERROR"]):
+def get_from_manager(error_statuses=None):
+    error_statuses = error_statuses or ["ERROR"]
+
     def _get_from_manager(resource):
         try:
-            resource = resource.manager.get(resource)
+            resource = resource.manager.get(resource.id)
         except Exception as e:
             if getattr(e, 'http_status', 400) == 404:
                 return None
@@ -57,6 +59,7 @@ def get_from_manager(error_statuses=["ERROR"]):
         if resource.status in error_statuses:
             raise rally_exceptions.GetResourceFailure(status=resource.status)
         return resource
+
     return _get_from_manager
 
 
@@ -66,8 +69,9 @@ def manager_list_size(sizes):
     return _list
 
 
-def _wait_for_list_statuses(mgr, statuses, list_query={},
+def _wait_for_list_statuses(mgr, statuses, list_query=None,
                             timeout=10, check_interval=1):
+    list_query = list_query or {}
 
     def _list_statuses(mgr):
         for resource in mgr.list(**list_query):
