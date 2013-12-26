@@ -21,7 +21,6 @@ import time
 import uuid
 
 from rally.benchmark import base
-from rally.benchmark import cleanup_utils
 from rally.benchmark import utils
 from rally.openstack.common.gettextutils import _
 from rally.openstack.common import log as logging
@@ -99,22 +98,22 @@ class ScenarioRunner(object):
 
     @classmethod
     def _delete_nova_resources(cls, nova):
-        cleanup_utils._delete_servers(nova)
-        cleanup_utils._delete_keypairs(nova)
-        cleanup_utils._delete_security_groups(nova)
-        cleanup_utils._delete_networks(nova)
+        utils.delete_servers(nova)
+        utils.delete_keypairs(nova)
+        utils.delete_security_groups(nova)
+        utils.delete_networks(nova)
 
     @classmethod
     def _delete_cinder_resources(cls, cinder):
-        cleanup_utils._delete_volume_transfers(cinder)
-        cleanup_utils._delete_volumes(cinder)
-        cleanup_utils._delete_volume_types(cinder)
-        cleanup_utils._delete_volume_snapshots(cinder)
-        cleanup_utils._delete_volume_backups(cinder)
+        utils.delete_volume_transfers(cinder)
+        utils.delete_volumes(cinder)
+        utils.delete_volume_types(cinder)
+        utils.delete_volume_snapshots(cinder)
+        utils.delete_volume_backups(cinder)
 
     @classmethod
     def _delete_glance_resources(cls, glance, project_uuid):
-        cleanup_utils._delete_images(glance, project_uuid)
+        utils.delete_images(glance, project_uuid)
 
     @classmethod
     def _cleanup_with_clients(cls, indexes):
