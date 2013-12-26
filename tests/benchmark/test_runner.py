@@ -241,10 +241,9 @@ class ScenarioTestCase(test.TestCase):
         expected = [mock.call(period * 60) for i in xrange(times - 1)]
         mock_sleep.has_calls(expected)
 
-    @mock.patch("rally.benchmark.utils.osclients")
     @mock.patch("rally.benchmark.runner.base")
     @mock.patch("rally.benchmark.utils.osclients")
-    def test_run_continuous(self, mock_osclients, mock_base, mock_clients):
+    def test_run_continuous(self, mock_osclients, mock_base):
         FakeScenario = mock.MagicMock()
         FakeScenario.init = mock.MagicMock(return_value={})
 
@@ -260,7 +259,7 @@ class ScenarioTestCase(test.TestCase):
 
         mock_base.Scenario.get_by_name = \
             mock.MagicMock(return_value=FakeScenario)
-        mock_clients.return_value = ["client"]
+        mock_osclients.return_value = ["client"]
         result = srunner._run_scenario(FakeScenario, "do_it", {"a": 1},
                                        "continuous", {"times": 2,
                                                       "active_users": 3,
@@ -276,10 +275,9 @@ class ScenarioTestCase(test.TestCase):
         srunner._run_scenario_continuously_for_duration.\
             assert_called_once_with(FakeScenario, "do_it", {"a": 1}, 2, 3, 1)
 
-    @mock.patch("rally.benchmark.utils.osclients")
     @mock.patch("rally.benchmark.runner.base")
     @mock.patch("rally.benchmark.utils.osclients")
-    def test_run_periodic(self, mock_osclients, mock_base, mock_clients):
+    def test_run_periodic(self, mock_osclients, mock_base):
         FakeScenario = mock.MagicMock()
         FakeScenario.init = mock.MagicMock(return_value={})
 
@@ -293,7 +291,7 @@ class ScenarioTestCase(test.TestCase):
 
         mock_base.Scenario.get_by_name = \
             mock.MagicMock(return_value=FakeScenario)
-        mock_clients.return_value = ["client"]
+        mock_osclients.return_value = ["client"]
         result = srunner._run_scenario(FakeScenario, "do_it", {"a": 1},
                                        "periodic", {"times": 2, "period": 3,
                                                     "timeout": 1})
