@@ -17,7 +17,7 @@ import os
 import tempfile
 
 from rally.deploy import engine
-from rally.openstack.common.gettextutils import _  # noqa
+from rally.openstack.common.gettextutils import _
 from rally.openstack.common import log as logging
 from rally.serverprovider import provider
 from rally import utils

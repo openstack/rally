@@ -25,7 +25,7 @@ import prettytable
 
 from rally.cmd import cliutils
 from rally import db
-from rally.openstack.common.gettextutils import _   # noqa
+from rally.openstack.common.gettextutils import _
 from rally.orchestrator import api
 from rally import processing
 

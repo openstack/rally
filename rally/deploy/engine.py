@@ -18,7 +18,7 @@ import jsonschema
 
 from rally import consts
 from rally import exceptions
-from rally.openstack.common.gettextutils import _  # noqa
+from rally.openstack.common.gettextutils import _
 from rally.openstack.common import log as logging
 from rally import utils
 

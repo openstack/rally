@@ -17,7 +17,7 @@
 from oslo.config import cfg
 import sys
 
-from rally.openstack.common.gettextutils import _  # noqa
+from rally.openstack.common.gettextutils import _
 from rally.openstack.common import log as logging
 
 LOG = logging.getLogger(__name__)

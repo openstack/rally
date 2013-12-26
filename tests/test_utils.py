@@ -23,7 +23,7 @@ import sys
 import time
 
 from rally import exceptions
-from rally.openstack.common.gettextutils import _   # noqa
+from rally.openstack.common.gettextutils import _
 from rally import test
 from rally import utils
 

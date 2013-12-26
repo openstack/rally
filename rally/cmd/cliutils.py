@@ -22,7 +22,7 @@ from oslo.config import cfg
 
 from rally.openstack.common.apiclient import exceptions
 from rally.openstack.common import cliutils
-from rally.openstack.common.gettextutils import _   # noqa
+from rally.openstack.common.gettextutils import _
 from rally.openstack.common import log as logging
 from rally import version
 
