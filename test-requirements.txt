@@ -7,7 +7,6 @@ hacking>=0.6,<0.8
 coverage
 discover
 mock>=1.0
-mox>=0.5.3
 python-subunit<=0.0.13
 testrepository>=0.0.13
 testtools>=0.9.22
