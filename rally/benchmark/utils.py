@@ -15,6 +15,8 @@
 
 import traceback
 
+from novaclient import exceptions as nova_exceptions
+
 from rally import exceptions as rally_exceptions
 from rally import osclients
 from rally import utils
@@ -111,3 +113,70 @@ def create_openstack_clients(users_endpoints, keys):
     ]
 
     return clients
+
+
+def delete_servers(nova):
+    for server in nova.servers.list():
+        server.delete()
+    _wait_for_empty_list(nova.servers, timeout=600, check_interval=3)
+
+
+def delete_keypairs(nova):
+    for keypair in nova.keypairs.list():
+        keypair.delete()
+    _wait_for_empty_list(nova.keypairs)
+
+
+def delete_security_groups(nova):
+    for group in nova.security_groups.list():
+        try:
+            group.delete()
+        except nova_exceptions.BadRequest as br:
+            #TODO(boden): find a way to determine default security group
+            if not br.message.startswith('Unable to delete system group'):
+                raise br
+    _wait_for_list_size(nova.security_groups, sizes=[0, 1])
+
+
+def delete_images(glance, project_uuid):
+    for image in glance.images.list(owner=project_uuid):
+        image.delete()
+    _wait_for_list_statuses(glance.images, statuses=["DELETED"],
+                            list_query={'owner': project_uuid},
+                            timeout=600, check_interval=3)
+
+
+def delete_networks(nova):
+    for network in nova.networks.list():
+        network.delete()
+    _wait_for_empty_list(nova.networks)
+
+
+def delete_volumes(cinder):
+    for vol in cinder.volumes.list():
+        vol.delete()
+    _wait_for_empty_list(cinder.volumes, timeout=120)
+
+
+def delete_volume_types(cinder):
+    for vol_type in cinder.volume_types.list():
+        vol_type.delete()
+    _wait_for_empty_list(cinder.volume_types)
+
+
+def delete_volume_transfers(cinder):
+    for transfer in cinder.transfers.list():
+        transfer.delete()
+    _wait_for_empty_list(cinder.transfers)
+
+
+def delete_volume_snapshots(cinder):
+    for snapshot in cinder.volume_snapshots.list():
+        snapshot.delete()
+    _wait_for_empty_list(cinder.volume_snapshots, timeout=240)
+
+
+def delete_volume_backups(cinder):
+    for backup in cinder.backups.list():
+        backup.delete()
+    _wait_for_empty_list(cinder.backups, timeout=240)
