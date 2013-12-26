@@ -19,7 +19,7 @@ import urllib2
 
 from rally.benchmark import utils as benchmark_utils
 from rally import exceptions
-from rally.openstack.common.gettextutils import _  # noqa
+from rally.openstack.common.gettextutils import _
 from rally.openstack.common import log as logging
 from rally import osclients
 from rally.serverprovider import provider

@@ -21,7 +21,6 @@ import sys
 
 from rally.cmd import cliutils
 from rally import db
-from rally.openstack.common.gettextutils import _   # noqa
 
 
 class DBCommands(object):
