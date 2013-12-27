@@ -52,11 +52,12 @@ def _run_scenario_loop(args):
     try:
         with rutils.Timer() as timer:
             getattr(cls, method_name)(**kwargs)
+        error = None
     except Exception as e:
+        error = utils.format_exc(e)
+    finally:
         return {"time": timer.duration() - cls.idle_time,
-                "idle_time": cls.idle_time, "error": utils.format_exc(e)}
-    return {"time": timer.duration() - cls.idle_time,
-            "idle_time": cls.idle_time, "error": None}
+                "idle_time": cls.idle_time, "error": error}
 
 
 class ScenarioRunner(object):
@@ -158,9 +159,8 @@ class ScenarioRunner(object):
             try:
                 result = iter_result.next(timeout)
             except multiprocessing.TimeoutError as e:
-                result = {"time": timeout, "error": utils.format_exc(e)}
-            except Exception as e:
-                result = {"time": None, "error": utils.format_exc(e)}
+                result = {"time": timeout, "idle_time": cls.idle_time,
+                          "error": utils.format_exc(e)}
             results.append(result)
 
         pool.close()
@@ -186,9 +186,8 @@ class ScenarioRunner(object):
             try:
                 result = iter_result.next(timeout)
             except multiprocessing.TimeoutError as e:
-                result = {"time": timeout, "error": utils.format_exc(e)}
-            except Exception as e:
-                result = {"time": None, "error": utils.format_exc(e)}
+                result = {"time": timeout, "idle_time": cls.idle_time,
+                          "error": utils.format_exc(e)}
             results_queue.append(result)
 
         results = list(results_queue)
@@ -216,7 +215,8 @@ class ScenarioRunner(object):
             try:
                 result = async_result.get()
             except multiprocessing.TimeoutError as e:
-                result = {"time": timeout, "error": utils.format_exc(e)}
+                result = {"time": timeout, "idle_time": cls.idle_time,
+                          "error": utils.format_exc(e)}
             results.append(result)
 
         return results

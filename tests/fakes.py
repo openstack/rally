@@ -379,6 +379,8 @@ class FakeClients(object):
 
 class FakeScenario(base.Scenario):
 
+    idle_time = 0
+
     @classmethod
     def class_init(cls, endpoints):
         pass
