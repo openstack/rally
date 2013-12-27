@@ -17,6 +17,7 @@ import collections
 import multiprocessing
 from multiprocessing import pool as multiprocessing_pool
 import random
+import sys
 import time
 import uuid
 
@@ -116,6 +117,11 @@ class ScenarioRunner(object):
     def _delete_glance_resources(cls, glance, project_uuid):
         utils.delete_images(glance, project_uuid)
 
+    def _delete_keystone_resources(self):
+        kclient = __admin_clients__["keystone"]
+        for resource in ["users", "tenants", "services", "roles"]:
+            utils.delete_keystone_resources(kclient, resource)
+
     @classmethod
     def _cleanup_with_clients(cls, indexes):
         for index in indexes:
@@ -137,6 +143,14 @@ class ScenarioRunner(object):
         for client_indicies in chunked_indexes:
             pool.apply_async(utils.async_cleanup, args=(ScenarioRunner,
                                                         client_indicies,))
+        try:
+            self._delete_keystone_resources()
+        except Exception as e:
+            LOG.debug(_("Not all resources were cleaned."),
+                      exc_info=sys.exc_info())
+            LOG.warning(_('Unable to fully cleanup keystone service: %s') %
+                        (e.message))
+
         pool.close()
         pool.join()
 
