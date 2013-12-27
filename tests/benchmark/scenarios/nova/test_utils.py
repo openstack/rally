@@ -18,14 +18,29 @@ import mock
 from rally.benchmark.scenarios.nova import utils
 from rally.benchmark import utils as butils
 from rally import exceptions as rally_exceptions
+from rally.openstack.common.fixture import mockpatch
 from tests import fakes
 from tests import test
+
+BM_UTILS = 'rally.benchmark.utils'
+NOVA_UTILS = "rally.benchmark.scenarios.nova.utils"
 
 
 class NovaScenarioTestCase(test.TestCase):
 
     def setUp(self):
         super(NovaScenarioTestCase, self).setUp()
+        self.server = mock.Mock()
+        self.server1 = mock.Mock()
+        self.image = mock.Mock()
+        self.res_is = mockpatch.Patch(BM_UTILS + ".resource_is")
+        self.get_fm = mockpatch.Patch(BM_UTILS + '.get_from_manager')
+        self.wait_for = mockpatch.Patch(NOVA_UTILS + ".utils.wait_for")
+        self.useFixture(self.wait_for)
+        self.useFixture(self.res_is)
+        self.useFixture(self.get_fm)
+        self.gfm = self.get_fm.mock
+        self.useFixture(mockpatch.Patch('time.sleep'))
 
     def test_generate_random_name(self):
         for length in [8, 16, 32, 64]:
@@ -34,22 +49,19 @@ class NovaScenarioTestCase(test.TestCase):
             self.assertTrue(name.isalpha())
 
     def test_failed_server_status(self):
+        self.get_fm.cleanUp()
         server_manager = fakes.FakeFailedServerManager()
         self.assertRaises(rally_exceptions.GetResourceFailure,
                           butils.get_from_manager(),
                           server_manager.create('fails', '1', '2'))
 
-    @mock.patch("rally.benchmark.scenarios.nova.utils.time.sleep")
     @mock.patch("rally.utils")
-    @mock.patch("rally.benchmark.utils.osclients")
-    @mock.patch("rally.benchmark.utils.resource_is")
-    def test_server_helper_methods(self, mock_ris, mock_osclients,
-                                   mock_rally_utils, mock_sleep):
-
+    @mock.patch(BM_UTILS + ".osclients")
+    def test_server_helper_methods(self, mock_osclients, mock_rally_utils):
         def _is_ready(resource):
             return resource.status == "ACTIVE"
 
-        mock_ris.return_value = _is_ready
+        self.res_is.mock.return_value = _is_ready
         get_from_mgr = butils.get_from_manager()
 
         fc = fakes.FakeClients()
@@ -91,3 +103,95 @@ class NovaScenarioTestCase(test.TestCase):
         ]
 
         self.assertEqual(expected, mock_rally_utils.mock_calls)
+
+    def test_server_reboot(self):
+        utils.NovaScenario._reboot_server(self.server)
+        self.server.reboot.assert_called_once_with(reboot_type='SOFT')
+        self.wait_for.mock.assert_called_once_with(self.server,
+                                                   update_resource=self.gfm(),
+                                                   is_ready=self.res_is.mock(),
+                                                   check_interval=3,
+                                                   timeout=600)
+        self.res_is.mock.assert_has_calls(mock.call('ACTIVE'))
+
+    def test_server_start(self):
+        utils.NovaScenario._start_server(self.server)
+        self.server.start.assert_called_once_with()
+        self.wait_for.mock.assert_called_once_with(self.server,
+                                                   update_resource=self.gfm(),
+                                                   is_ready=self.res_is.mock(),
+                                                   check_interval=2,
+                                                   timeout=600)
+        self.res_is.mock.assert_has_calls(mock.call('ACTIVE'))
+
+    def test_server_stop(self):
+        utils.NovaScenario._stop_server(self.server)
+        self.server.stop.assert_called_once_with()
+        self.wait_for.mock.assert_called_once_with(self.server,
+                                                   update_resource=self.gfm(),
+                                                   is_ready=self.res_is.mock(),
+                                                   check_interval=2,
+                                                   timeout=600)
+        self.res_is.mock.assert_has_calls(mock.call('SHUTOFF'))
+
+    def test_server_rescue(self):
+        utils.NovaScenario._rescue_server(self.server)
+        self.server.rescue.assert_called_once_with()
+        self.wait_for.mock.assert_called_once_with(self.server,
+                                                   update_resource=self.gfm(),
+                                                   is_ready=self.res_is.mock(),
+                                                   check_interval=3,
+                                                   timeout=600)
+        self.res_is.mock.assert_has_calls(mock.call('RESCUE'))
+
+    def test_server_unrescue(self):
+        utils.NovaScenario._unrescue_server(self.server)
+        self.server.unrescue.assert_called_once_with()
+        self.wait_for.mock.assert_called_once_with(self.server,
+                                                   update_resource=self.gfm(),
+                                                   is_ready=self.res_is.mock(),
+                                                   check_interval=3,
+                                                   timeout=600)
+        self.res_is.mock.assert_has_calls(mock.call('ACTIVE'))
+
+    @mock.patch(BM_UTILS + ".is_none")
+    @mock.patch(NOVA_UTILS + '.NovaScenario.clients')
+    def test_delete_all_servers(self, mock_clients, mock_isnone):
+        mock_clients("nova").servers.list.return_value = [self.server,
+                                                          self.server1]
+        utils.NovaScenario._delete_all_servers()
+        expected = [
+            mock.call(self.server, is_ready=mock_isnone,
+                      update_resource=self.gfm(),
+                      check_interval=3, timeout=600),
+            mock.call(self.server1, is_ready=mock_isnone,
+                      update_resource=self.gfm(),
+                      check_interval=3, timeout=600)
+        ]
+        self.assertEqual(expected, self.wait_for.mock.mock_calls)
+
+    def test_delete_image(self):
+        utils.NovaScenario._delete_image(self.image)
+        self.image.delete.assert_called_once_with()
+        self.wait_for.mock.assert_called_once_with(self.image,
+                                                   update_resource=self.gfm(),
+                                                   is_ready=self.res_is.mock(),
+                                                   check_interval=3,
+                                                   timeout=600)
+        self.res_is.mock.assert_has_calls(mock.call('DELETED'))
+
+    @mock.patch(NOVA_UTILS + '.NovaScenario.clients')
+    def test_boot_servers(self, mock_clients):
+        mock_clients("nova").servers.list.return_value = [self.server,
+                                                          self.server1]
+        utils.NovaScenario._boot_servers('prefix', 'image', 'flavor', 2)
+        expected = [
+            mock.call(self.server, is_ready=self.res_is.mock(),
+                      update_resource=self.gfm(),
+                      check_interval=3, timeout=600),
+            mock.call(self.server1, is_ready=self.res_is.mock(),
+                      update_resource=self.gfm(),
+                      check_interval=3, timeout=600)
+        ]
+        self.assertEqual(expected, self.wait_for.mock.mock_calls)
+        self.res_is.mock.assert_has_calls(mock.call('ACTIVE'))
