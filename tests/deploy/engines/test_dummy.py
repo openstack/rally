@@ -18,7 +18,7 @@
 import jsonschema
 
 from rally import deploy
-from rally.deploy.engines import dummy_engine
+from rally.deploy.engines import dummy
 from rally import test
 
 
@@ -41,28 +41,28 @@ class TestDummyDeployEngine(test.TestCase):
         super(TestDummyDeployEngine, self).setUp()
 
     def test_dummy_egnine_init(self):
-        dummy_engine.DummyEngine(self.deployment)
+        dummy.DummyEngine(self.deployment)
 
     def test_dummy_engine_deploy(self):
-        engine = dummy_engine.DummyEngine(self.deployment)
+        engine = dummy.DummyEngine(self.deployment)
         endpoint = engine.deploy()
         self.assertEqual(endpoint, self.deployment['config']['cloud_config'])
 
     def test_dummy_engine_cleanup(self):
-        dummy_engine.DummyEngine(self.deployment).cleanup()
+        dummy.DummyEngine(self.deployment).cleanup()
 
     def test_dummy_engine_is_in_factory(self):
         name = self.deployment['config']['name']
         engine = deploy.EngineFactory.get_engine(name,
                                                  self.deployment)
-        self.assertIsInstance(engine, dummy_engine.DummyEngine)
+        self.assertIsInstance(engine, dummy.DummyEngine)
 
     def test_init_invalid_config(self):
         self.deployment['config']['cloud_config']['identity'] = 42
         self.assertRaises(jsonschema.ValidationError,
-                          dummy_engine.DummyEngine, self.deployment)
+                          dummy.DummyEngine, self.deployment)
 
     def test_deploy(self):
-        engine = dummy_engine.DummyEngine(self.deployment)
+        engine = dummy.DummyEngine(self.deployment)
         self.assertEqual(self.deployment['config']['cloud_config'],
                          engine.deploy())
