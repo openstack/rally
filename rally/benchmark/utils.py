@@ -145,11 +145,11 @@ def _prepare_for_instance_ssh(clients):
         rally_open = nova_client.security_groups.find(name='rally_open')
 
         rules_to_add = [dict(ip_protocol='tcp',
-                             to_port=65536,
+                             to_port=65535,
                              from_port=1,
                              ip_range=dict(cidr='0.0.0.0/0')),
                         dict(ip_protocol='udp',
-                             to_port=65536,
+                             to_port=65535,
                              from_port=1,
                              ip_range=dict(cidr='0.0.0.0/0')),
                         dict(ip_protocol='icmp',
