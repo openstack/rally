@@ -86,6 +86,12 @@ def task_get_detailed(uuid):
                 first()
 
 
+def task_get_detailed_last():
+    return model_query(models.Task).\
+                options(sa.orm.joinedload('results')).\
+                order_by(models.Task.id.desc()).first()
+
+
 def task_create(values):
     task = models.Task()
     task.update(values)

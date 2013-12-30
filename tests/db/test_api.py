@@ -169,6 +169,18 @@ class TasksTestCase(test.DBTestCase):
         self.assertEqual(results[0]["key"], key)
         self.assertEqual(results[0]["data"], data)
 
+    def test_task_get_detailed_last(self):
+        task1 = self._create_task()
+        key = {'name': 'atata'}
+        data = {'a': 'b', 'c': 'd'}
+
+        db.task_result_create(task1['uuid'], key, data)
+        task1_full = db.task_get_detailed_last()
+        results = task1_full["results"]
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0]["key"], key)
+        self.assertEqual(results[0]["data"], data)
+
 
 class DeploymentTestCase(test.DBTestCase):
     def test_deployment_create(self):

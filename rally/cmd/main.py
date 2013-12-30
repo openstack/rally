@@ -138,13 +138,21 @@ class TaskCommands(object):
         print(_("Task %(task_id)s is %(status)s.")
               % {'task_id': task_id, 'status': task['status']})
 
-    @cliutils.args('--task-id', type=str, dest='task_id', help='uuid of task')
+    @cliutils.args(
+        '--task-id', type=str, dest='task_id',
+        help=('uuid of task, if --task-id is "last" results of most '
+              'recently created task will be displayed.'))
     def detailed(self, task_id):
         """Get detailed information about task
         :param task_id: Task uuid
         Prints detailed infomration of task.
         """
-        task = db.task_get_detailed(task_id)
+
+        if task_id == "last":
+            task = db.task_get_detailed_last()
+            task_id = task.uuid
+        else:
+            task = db.task_get_detailed(task_id)
 
         print()
         print("=" * 80)
