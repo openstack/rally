@@ -67,6 +67,11 @@ def task_get(uuid):
     return IMPL.task_get(uuid)
 
 
+def task_get_detailed_last():
+    """Returns the most recently created task."""
+    return IMPL.task_get_detailed_last()
+
+
 def task_get_detailed(uuid):
     """Returns task with results by uuid."""
     return IMPL.task_get_detailed(uuid)
