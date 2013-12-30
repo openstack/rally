@@ -24,7 +24,7 @@ from rally import utils
 
 
 def resource_is(status):
-    return lambda resource: resource.status == status
+    return lambda resource: resource.status.upper() == status.upper()
 
 
 def is_none(obj):
@@ -33,6 +33,7 @@ def is_none(obj):
 
 def get_from_manager(error_statuses=None):
     error_statuses = error_statuses or ["ERROR"]
+    error_statuses = map(lambda str: str.upper(), error_statuses)
 
     def _get_from_manager(resource):
         try:
@@ -41,7 +42,7 @@ def get_from_manager(error_statuses=None):
             if getattr(e, 'http_status', 400) == 404:
                 return None
             raise e
-        if resource.status in error_statuses:
+        if resource.status.upper() in error_statuses:
             raise rally_exceptions.GetResourceFailure(status=resource.status)
         return resource
 
