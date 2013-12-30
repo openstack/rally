@@ -117,17 +117,31 @@ class TestEngineTestCase(test.TestCase):
                           self.invalid_test_config_bad_param_for_periodic,
                           mock.MagicMock())
 
-    def test_bind(self):
+    @mock.patch("rally.benchmark.engine.osclients")
+    def test_bind(self, mock_osclients):
+        mock_osclients.Clients.return_value = fakes.FakeClients()
         tester = engine.TestEngine(self.valid_test_config_continuous_times,
                                    mock.MagicMock())
         with tester.bind(self.valid_cloud_config):
             self.assertEqual(tester.endpoints,
                              self.valid_cloud_config['identity'])
 
+    @mock.patch("rally.benchmark.engine.osclients")
+    def test_bind_user_not_admin(self, mock_osclients):
+        mock_osclients.Clients.return_value = fakes.FakeClients()
+        mock_osclients.Clients.return_value.get_keystone_client(). \
+            auth_ref['user']['roles'] = [{'name': 'notadmin'}]
+        tester = engine.TestEngine(self.valid_test_config_continuous_times,
+                                   mock.MagicMock())
+        self.assertRaises(exceptions.InvalidArgumentsException,
+                          tester.bind, self.valid_cloud_config)
+
     @mock.patch("rally.benchmark.runner.ScenarioRunner.run")
     @mock.patch("rally.benchmark.utils.osclients")
-    def test_run(self, mock_osclients, mock_run):
-        mock_osclients.Clients.return_value = fakes.FakeClients()
+    @mock.patch("rally.benchmark.engine.osclients")
+    def test_run(self, mock_osclients_engine, mock_osclients_utils, mock_run):
+        mock_osclients_engine.Clients.return_value = fakes.FakeClients()
+        mock_osclients_utils.Clients.return_value = fakes.FakeClients()
         tester = engine.TestEngine(self.valid_test_config_continuous_times,
                                    mock.MagicMock())
         with tester.bind(self.valid_cloud_config):
@@ -135,11 +149,14 @@ class TestEngineTestCase(test.TestCase):
 
     @mock.patch("rally.benchmark.runner.ScenarioRunner.run")
     @mock.patch("rally.benchmark.utils.osclients")
-    def test_task_status_basic_chain(self, mock_osclients, mock_scenario_run):
+    @mock.patch("rally.benchmark.engine.osclients")
+    def test_task_status_basic_chain(self, mock_osclients_engine,
+                                     mock_osclients_utils, mock_scenario_run):
         fake_task = mock.MagicMock()
         tester = engine.TestEngine(self.valid_test_config_continuous_times,
                                    fake_task)
-        mock_osclients.Clients.return_value = fakes.FakeClients()
+        mock_osclients_engine.Clients.return_value = fakes.FakeClients()
+        mock_osclients_utils.Clients.return_value = fakes.FakeClients()
         mock_scenario_run.return_value = {}
         with tester.bind(self.valid_cloud_config):
             tester.run()
@@ -163,11 +180,14 @@ class TestEngineTestCase(test.TestCase):
 
     @mock.patch("rally.benchmark.runner.ScenarioRunner.run")
     @mock.patch("rally.benchmark.utils.osclients")
-    def test_task_status_failed(self, mock_osclients, mock_scenario_run):
+    @mock.patch("rally.benchmark.engine.osclients")
+    def test_task_status_failed(self, mock_osclients_engine,
+                                mock_osclients_utils, mock_scenario_run):
         fake_task = mock.MagicMock()
         tester = engine.TestEngine(self.valid_test_config_continuous_times,
                                    fake_task)
-        mock_osclients.Clients.return_value = fakes.FakeClients()
+        mock_osclients_engine.Clients.return_value = fakes.FakeClients()
+        mock_osclients_utils.Clients.return_value = fakes.FakeClients()
         mock_scenario_run.side_effect = exceptions.TestException()
         try:
             with tester.bind(self.valid_cloud_config):

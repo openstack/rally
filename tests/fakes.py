@@ -112,6 +112,10 @@ class FakeVolumeBackup(FakeResource):
     pass
 
 
+class FakeRole(FakeResource):
+    pass
+
+
 class FakeManager(object):
 
     def __init__(self):
@@ -294,6 +298,14 @@ class FakeVolumeBackupManager(FakeManager):
         return self._cache(backup)
 
 
+class FakeRolesManager(FakeManager):
+
+    def roles_for_user(self, user, tenant):
+        role = FakeRole(self)
+        role.name = 'admin'
+        return [role, ]
+
+
 class FakeServiceCatalog(object):
     def get_endpoints(self):
         return {'image': [{'publicURL': 'http://fake.to'}]}
@@ -336,9 +348,13 @@ class FakeKeystoneClient(object):
     def __init__(self):
         self.tenants = FakeTenantsManager()
         self.users = FakeUsersManager()
+        self.roles = FakeRolesManager()
         self.project_id = 'abc123'
         self.auth_token = 'fake'
+        self.auth_user_id = uuid.uuid4()
+        self.auth_tenant_id = uuid.uuid4()
         self.service_catalog = FakeServiceCatalog()
+        self.auth_ref = {'user': {'roles': [{'name': 'admin'}]}}
 
     def authenticate(self):
         return True

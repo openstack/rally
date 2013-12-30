@@ -21,8 +21,8 @@ import uuid
 from rally.benchmark import base
 from rally import consts
 from rally.orchestrator import api
+from tests import fakes
 from tests import test
-
 
 FAKE_DEPLOY_CONFIG = {
     # TODO(akscram): A fake engine is more suitable for that.
@@ -83,6 +83,7 @@ class APITestCase(test.TestCase):
             'endpoint': self.endpoint,
         }
 
+    @mock.patch('rally.benchmark.engine.osclients')
     @mock.patch('rally.benchmark.engine.runner.ScenarioRunner')
     @mock.patch('rally.objects.deploy.db.deployment_get')
     @mock.patch('rally.objects.task.db.task_result_create')
@@ -90,13 +91,15 @@ class APITestCase(test.TestCase):
     @mock.patch('rally.objects.task.db.task_create')
     def test_start_task(self, mock_task_create, mock_task_update,
                         mock_task_result_create, mock_deploy_get,
-                        mock_utils_runner):
+                        mock_utils_runner, mock_osclients):
         mock_task_create.return_value = self.task
         mock_task_update.return_value = self.task
         mock_deploy_get.return_value = self.deployment
 
         mock_utils_runner.return_value = mock_runner = mock.Mock()
         mock_runner.run.return_value = ['fake_result']
+
+        mock_osclients.Clients.return_value = fakes.FakeClients()
 
         api.start_task(self.deploy_uuid, self.task_config)
 

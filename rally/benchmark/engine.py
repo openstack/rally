@@ -22,6 +22,7 @@ from rally import consts
 from rally import exceptions
 from rally.openstack.common.gettextutils import _
 from rally.openstack.common import log as logging
+from rally import osclients
 from rally import utils as rutils
 
 
@@ -141,9 +142,19 @@ class TestEngine(object):
 
     def bind(self, endpoints):
         self.endpoints = endpoints["identity"]
-        # TODO(boris-42): Check cloud endpoints:
-        #                 1) Try to access cloud via keystone client
-        #                 2) Ensure that you are admin
+        # Try to access cloud via keystone client
+        clients = osclients.Clients(username=self.endpoints["admin_username"],
+                                    password=self.endpoints["admin_password"],
+                                    tenant_name=
+                                    self.endpoints["admin_tenant_name"],
+                                    auth_url=self.endpoints["uri"])
+
+        # Ensure that user is admin
+        roles = clients.get_keystone_client().auth_ref['user']['roles']
+        if not any("admin" == role['name'] for role in roles):
+            message = _("user '%s' doesn't have "
+                        "'admin' role") % self.endpoints["admin_username"]
+            raise exceptions.InvalidArgumentsException(message=message)
         return self
 
     def __enter__(self):
