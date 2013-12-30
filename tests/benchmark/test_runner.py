@@ -361,9 +361,10 @@ class ScenarioTestCase(test.TestCase):
     @mock.patch("rally.benchmark.utils.create_openstack_clients")
     @mock.patch("rally.benchmark.runner.base")
     @mock.patch("rally.benchmark.utils.osclients")
+    @mock.patch("rally.benchmark.utils.delete_keystone_resources")
     @mock.patch("multiprocessing.Pool")
-    def test_generic_cleanup(self, mock_pool, mock_osclients,
-                             mock_base, mock_clients):
+    def test_generic_cleanup(self, mock_pool, mock_del_keystone_res,
+                             mock_osclients, mock_base, mock_clients):
         FakeScenario = mock.MagicMock()
         FakeScenario.init = mock.MagicMock(return_value={})
 
@@ -434,3 +435,8 @@ class ScenarioTestCase(test.TestCase):
             for image in nova.images.list():
                 self.assertEqual("DELETED", image.status,
                                  "image not purged: %s" % (image))
+
+        expected = [mock.call(clients[0]["keystone"], resource) for resource in
+                    ["users", "tenants", "services", "roles"]]
+
+        self.assertEqual(mock_del_keystone_res.mock_calls, expected)

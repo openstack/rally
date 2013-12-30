@@ -17,6 +17,7 @@ import traceback
 
 from novaclient import exceptions as nova_exceptions
 
+from rally.benchmark.scenarios.keystone import utils as kutils
 from rally import exceptions as rally_exceptions
 from rally import osclients
 from rally import utils
@@ -239,3 +240,9 @@ def delete_volume_backups(cinder):
     for backup in cinder.backups.list():
         backup.delete()
     _wait_for_empty_list(cinder.backups, timeout=240)
+
+
+def delete_keystone_resources(keystone, resource_name):
+    for resource in getattr(keystone, resource_name).list():
+        if kutils.is_temporary(resource):
+            resource.delete()
