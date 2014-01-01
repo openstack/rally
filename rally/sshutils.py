@@ -20,7 +20,7 @@ import random
 import select
 import socket
 import string
-from StringIO import StringIO
+import StringIO
 import time
 
 from rally import exceptions
@@ -69,7 +69,7 @@ class SSH(object):
             connect_params['key_filename'] = self.key
         else:
             connect_params['pkey'] = paramiko.RSAKey(
-                    file_obj=StringIO(self.key))
+                    file_obj=StringIO.StringIO(self.key))
 
         self.client.connect(**connect_params)
 
