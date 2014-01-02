@@ -81,14 +81,20 @@ class DeploymentCommands(object):
     @cliutils.args('--deploy-id', dest='deploy_id', type=str, required=True,
                    help='UUID of a deployment.')
     def config(self, deploy_id):
-        """Print on stdout a config of the deployment in JSON format."""
+        """Print on stdout a config of the deployment in JSON format.
+
+        :param deploy_id: a UUID of the deployment
+        """
         deploy = db.deployment_get(deploy_id)
         print(json.dumps(deploy['config']))
 
     @cliutils.args('--deploy-id', dest='deploy_id', type=str, required=True,
                    help='UUID of a deployment.')
     def endpoint(self, deploy_id):
-        """Print endpoint of the deployment."""
+        """Print endpoint of the deployment.
+
+        :param deploy_id: a UUID of the deployment
+        """
         attribute_map = [
             ('auth_url', 'uri'),
             ('user_name', 'admin_username'),
@@ -112,8 +118,8 @@ class TaskCommands(object):
     def start(self, deploy_id, task):
         """Run a benchmark task.
 
-        :param deploy_id: an UUID of a deployment
-        :param config: a file with json configration
+        :param deploy_id: a UUID of a deployment
+        :param task: a file with json configration
         """
         with open(task) as task_file:
             config_dict = json.load(task_file)
@@ -123,7 +129,7 @@ class TaskCommands(object):
     def abort(self, task_id):
         """Force abort task
 
-        :param task_uuid: Task uuid
+        :param task_id: Task uuid
         """
         api.abort_task(task_id)
 
@@ -131,7 +137,7 @@ class TaskCommands(object):
     def status(self, task_id):
         """Get status of task
 
-        :param task_uuid: Task uuid
+        :param task_id: Task uuid
         Returns current status of task
         """
         task = db.task_get(task_id)
@@ -144,6 +150,7 @@ class TaskCommands(object):
               'recently created task will be displayed.'))
     def detailed(self, task_id):
         """Get detailed information about task
+
         :param task_id: Task uuid
         Prints detailed infomration of task.
         """
@@ -181,9 +188,14 @@ class TaskCommands(object):
             print(table)
 
     @cliutils.args('--task-id', type=str, dest='task_id', help='uuid of task')
-    @cliutils.args('--pretty', type=str, help='uuid of task')
+    @cliutils.args('--pretty', type=str, help=('pretty print (pprint) '
+                                               'or json print (json)'))
     def results(self, task_id, pretty=False):
-        """Print raw results of task."""
+        """Print raw results of task.
+
+        :param task_id: Task uuid
+        :param pretty: Pretty print (pprint) or not (json)
+        """
         results = map(lambda x: {"key": x["key"], 'result': x['data']['raw']},
                       db.task_result_get_all_by_uuid(task_id))
         if not pretty or pretty == 'json':
@@ -210,7 +222,11 @@ class TaskCommands(object):
     @cliutils.args('--task-id', type=str, dest='task_id', help='uuid of task')
     @cliutils.args('--force', action='store_true', help='force delete')
     def delete(self, task_id, force):
-        """Delete a specific task and related results."""
+        """Delete a specific task and related results.
+
+        :param task_id: Task uuid
+        :param force: Force delete or not
+        """
         api.delete_task(task_id, force=force)
 
     @cliutils.args('--plot-type', type=str, help='plot type; available types: '

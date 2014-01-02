@@ -63,7 +63,12 @@ def db_drop():
 
 
 def task_get(uuid):
-    """Returns task by uuid."""
+    """Returns task by uuid.
+
+    :param uuid: UUID of the task.
+    :raises: :class:`rally.exceptions.TaskNotFound` if the task does not exist.
+    :returns: task dict with data on the task.
+    """
     return IMPL.task_get(uuid)
 
 
@@ -73,15 +78,19 @@ def task_get_detailed_last():
 
 
 def task_get_detailed(uuid):
-    """Returns task with results by uuid."""
+    """Returns task with results by uuid.
+
+    :param uuid: UUID of the task.
+    :returns: task dict with data on the task and its results.
+    """
     return IMPL.task_get_detailed(uuid)
 
 
 def task_create(values):
     """Create task record in DB.
 
-    :param values: dict with record values
-    Returns task UUID.
+    :param values: dict with record values.
+    :returns: task dict with data on the task.
     """
     return IMPL.task_create(values)
 
@@ -89,7 +98,10 @@ def task_create(values):
 def task_update(uuid, values):
     """Update task by values.
 
-    Returns new updated task dict
+    :param uuid: UUID of the task.
+    :param values: dict with record values.
+    :raises: :class:`rally.exceptions.TaskNotFound` if the task does not exist.
+    :returns: new updated task dict with data on the task.
     """
     return IMPL.task_update(uuid, values)
 
@@ -99,7 +111,6 @@ def task_list(status=None):
 
     :param status: Task status to filter the returned list on. If set to
                    None, all the tasks will be returned.
-
     :returns: A list of dicts with data on the tasks.
     """
     return IMPL.task_list(status=status)
@@ -113,7 +124,7 @@ def task_delete(uuid, status=None):
     statuses are equal otherwise an exception is raised.
 
     :param uuid: UUID of the task.
-    :raises: :class:`rally.exceptions.Task` if the task does not exist.
+    :raises: :class:`rally.exceptions.TaskNotFound` if the task does not exist.
     :raises: :class:`rally.exceptions.TaskInvalidStatus` if the status
              of the task does not equal to the status argument.
     """
@@ -123,22 +134,28 @@ def task_delete(uuid, status=None):
 def task_result_get_all_by_uuid(task_uuid):
     """Get list of task results.
 
-    :param task_uuid: string with UUID of Task instance
-    :returns: list instances of TaskResult
+    :param task_uuid: string with UUID of Task instance.
+    :returns: list instances of TaskResult.
     """
     return IMPL.task_result_get_all_by_uuid(task_uuid)
 
 
 def task_result_create(task_uuid, key, data):
-    """Append result record to task."""
+    """Append result record to task.
+
+    :param task_uuid: string with UUID of Task instance.
+    :param key: key expected to update in task result.
+    :param data: data expected to update in task result.
+    :returns: TaskResult instance appended.
+    """
     return IMPL.task_result_create(task_uuid, key, data)
 
 
 def deployment_create(values):
     """Create a deployment from the values dictionary.
 
-    :param uuid: UUID of the deployment
-    :returns: a dict with data on the deployment
+    :param values: dict with record values on the deployment.
+    :returns: a dict with data on the deployment.
     """
     return IMPL.deployment_create(values)
 
@@ -146,7 +163,11 @@ def deployment_create(values):
 def deployment_delete(uuid):
     """Delete a deployment by UUID.
 
-    :param uuid: UUID of the deployment
+    :param uuid: UUID of the deployment.
+    :raises: :class:`rally.exceptions.DeploymentNotFound` if the deployment
+             does not exist.
+    :raises: :class:`rally.exceptions.DeploymentIsBusy` if the resource is
+             not enough.
     """
     return IMPL.deployment_delete(uuid)
 
@@ -154,8 +175,10 @@ def deployment_delete(uuid):
 def deployment_get(uuid):
     """Get a deployment by UUID.
 
-    :param uuid: UUID of the deployment
-    :returns: a dict with data on the deployment
+    :param uuid: UUID of the deployment.
+    :raises: :class:`rally.exceptions.DeploymentNotFound` if the deployment
+             does not exist.
+    :returns: a dict with data on the deployment.
     """
     return IMPL.deployment_get(uuid)
 
@@ -163,9 +186,11 @@ def deployment_get(uuid):
 def deployment_update(uuid, values):
     """Update a deployment by values.
 
-    :param uuid: UUID of the deployment
-    :param values: dict with items to update
-    :returns: a dict with data on the deployment
+    :param uuid: UUID of the deployment.
+    :param values: dict with items to update.
+    :raises: :class:`rally.exceptions.DeploymentNotFound` if the deployment
+             does not exist.
+    :returns: a dict with data on the deployment.
     """
     return IMPL.deployment_update(uuid, values)
 
@@ -176,7 +201,7 @@ def deployment_list(status=None, parent_uuid=None):
     :param status: if None returns any deployments with any status.
     :param parent_uuid: filter by parent. If None, return only "root"
                         deployments.
-    :returns: a list of dicts with data on the deployments
+    :returns: a list of dicts with data on the deployments.
     """
     return IMPL.deployment_list(status=status, parent_uuid=parent_uuid)
 
@@ -184,8 +209,8 @@ def deployment_list(status=None, parent_uuid=None):
 def resource_create(values):
     """Create a resource from the values dictionary.
 
-    :param values: a dict with data on the resource
-    :returns: a dict with updated data on the resource
+    :param values: a dict with data on the resource.
+    :returns: a dict with updated data on the resource.
     """
     return IMPL.resource_create(values)
 
@@ -207,6 +232,8 @@ def resource_get_all(deployment_uuid, provider_name=None, type=None):
 def resource_delete(id):
     """Delete a resource.
 
-    :param id: ID of a resource
+    :param id: ID of a resource.
+    :raises: :class:`rally.exceptions.ResourceNotFound` if the resource
+             does not exist.
     """
     return IMPL.resource_delete(id)

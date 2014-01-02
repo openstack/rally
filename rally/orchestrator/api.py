@@ -68,8 +68,8 @@ def recreate_deploy(deploy_uuid):
 def start_task(deploy_uuid, config):
     """Start a task.
 
-    Taks is a list of benchmarks that will be called one by one, results of
-    exectuion will be stored in DB.
+    Task is a list of benchmarks that will be called one by one, results of
+    execution will be stored in DB.
 
     :param deploy_uuid: UUID of the deployment
     :param config: a dict with a task configuration
