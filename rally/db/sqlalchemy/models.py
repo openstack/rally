@@ -48,10 +48,10 @@ class Deployment(BASE, RallyBase):
     id = sa.Column(sa.Integer, primary_key=True, autoincrement=True)
     uuid = sa.Column(sa.String(36), default=UUID, nullable=False)
     parent_uuid = sa.Column(sa.String(36), sa.ForeignKey("deployments.uuid"),
-                            default=None, nullable=True)
+                            default=None)
     name = sa.Column(sa.String(255))
-    started_at = sa.Column(sa.DateTime, nullable=True)
-    completed_at = sa.Column(sa.DateTime, nullable=True)
+    started_at = sa.Column(sa.DateTime)
+    completed_at = sa.Column(sa.DateTime)
     # XXX(akscram): Do we need to explicitly store a name of the
     #               deployment engine?
     #engine_name = sa.Column(sa.String(36))
@@ -133,7 +133,7 @@ class Task(BASE, RallyBase):
                                name='enum_tasks_status'),
                        default=consts.TaskStatus.INIT, nullable=False)
     failed = sa.Column(sa.Boolean, default=False, nullable=False)
-    verification_log = sa.Column(sa.Text, default='', nullable=True)
+    verification_log = sa.Column(sa.Text, default='')
 
     deployment_uuid = sa.Column(
         sa.String(36),
