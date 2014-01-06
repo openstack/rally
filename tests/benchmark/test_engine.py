@@ -20,8 +20,8 @@ import mock
 from rally.benchmark import engine
 from rally import consts
 from rally import exceptions
-from rally import test
 from tests import fakes
+from tests import test
 
 
 class TestEngineTestCase(test.TestCase):

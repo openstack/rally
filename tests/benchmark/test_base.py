@@ -17,7 +17,7 @@ import mock
 
 from rally.benchmark import base
 from rally import exceptions
-from rally import test
+from tests import test
 
 
 class ScenarioTestCase(test.TestCase):

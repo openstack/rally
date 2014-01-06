@@ -19,7 +19,7 @@ import jsonschema
 
 from rally import deploy
 from rally.deploy.engines import dummy
-from rally import test
+from tests import test
 
 
 class TestDummyDeployEngine(test.TestCase):

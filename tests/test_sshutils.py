@@ -18,7 +18,7 @@ import os
 
 from rally import exceptions
 from rally import sshutils
-from rally import test
+from tests import test
 
 
 class SSHTestCase(test.TestCase):

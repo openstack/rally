@@ -16,8 +16,8 @@
 import mock
 
 from rally import osclients
-from rally import test
 from tests import fakes
+from tests import test
 
 
 class OSClientsTestCase(test.TestCase):

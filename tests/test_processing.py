@@ -17,7 +17,7 @@ import mock
 
 from rally import exceptions
 from rally import processing
-from rally import test
+from tests import test
 
 
 class ProcessingTestCase(test.TestCase):

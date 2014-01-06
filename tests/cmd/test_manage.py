@@ -17,7 +17,7 @@ import mock
 import sys
 
 from rally.cmd import manage
-from rally import test
+from tests import test
 
 
 class CmdManageTestCase(test.TestCase):

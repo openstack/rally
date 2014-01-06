@@ -21,7 +21,7 @@ import uuid
 from rally import consts
 from rally import deploy
 from rally import exceptions
-from rally import test
+from tests import test
 
 
 def make_fake_deployment(**kwargs):

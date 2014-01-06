@@ -21,7 +21,7 @@ import uuid
 from rally.benchmark import base
 from rally import consts
 from rally.orchestrator import api
-from rally import test
+from tests import test
 
 
 FAKE_DEPLOY_CONFIG = {

@@ -20,7 +20,7 @@ import mock
 
 from rally.openstack.common.fixture import mockpatch
 from rally.serverprovider.providers import openstack as provider
-from rally import test
+from tests import test
 
 
 MOD_NAME = 'rally.serverprovider.providers.openstack'

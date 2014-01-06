@@ -24,8 +24,8 @@ import time
 
 from rally import exceptions
 from rally.openstack.common.gettextutils import _
-from rally import test
 from rally import utils
+from tests import test
 
 
 class ImmutableMixinTestCase(test.TestCase):

@@ -20,7 +20,7 @@ import uuid
 from rally import consts
 from rally import db
 from rally import exceptions
-from rally import test
+from tests import test
 
 
 class TasksTestCase(test.DBTestCase):

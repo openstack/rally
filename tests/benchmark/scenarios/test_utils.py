@@ -18,7 +18,7 @@ import mock
 
 from jsonschema import exceptions as schema_exceptions
 from rally.benchmark.scenarios import utils
-from rally import test
+from tests import test
 
 
 def action_one(self, *args, **kwargs):

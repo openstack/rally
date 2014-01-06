@@ -18,8 +18,8 @@ import mock
 from rally.benchmark.scenarios.nova import utils
 from rally.benchmark import utils as butils
 from rally import exceptions as rally_exceptions
-from rally import test
 from tests import fakes
+from tests import test
 
 
 class NovaScenarioTestCase(test.TestCase):

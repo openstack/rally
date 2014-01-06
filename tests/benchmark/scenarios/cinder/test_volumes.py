@@ -16,7 +16,7 @@
 import mock
 
 from rally.benchmark.scenarios.cinder import volumes
-from rally import test
+from tests import test
 
 
 CINDER_VOLUMES = "rally.benchmark.scenarios.cinder.volumes.CinderVolumes"

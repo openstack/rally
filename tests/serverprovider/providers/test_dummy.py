@@ -17,7 +17,7 @@ import jsonschema
 
 from rally import serverprovider
 from rally.serverprovider.providers import dummy
-from rally import test
+from tests import test
 
 
 ProviderFactory = serverprovider.ProviderFactory

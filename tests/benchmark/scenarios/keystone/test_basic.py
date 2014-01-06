@@ -16,7 +16,7 @@
 import mock
 
 from rally.benchmark.scenarios.keystone import basic
-from rally import test
+from tests import test
 
 
 KEYSTONE_BASE = "rally.benchmark.scenarios.keystone."

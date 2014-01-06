@@ -18,8 +18,8 @@ import mock
 import multiprocessing
 
 from rally.benchmark import runner
-from rally import test
 from tests import fakes
+from tests import test
 
 
 class MockedPool(object):

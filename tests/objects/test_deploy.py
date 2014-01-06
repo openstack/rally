@@ -20,7 +20,7 @@ import uuid
 
 from rally import consts
 from rally import objects
-from rally import test
+from tests import test
 
 
 class DeploymentTestCase(test.TestCase):

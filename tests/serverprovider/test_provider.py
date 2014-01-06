@@ -19,7 +19,7 @@ import mock
 from rally import exceptions
 from rally import serverprovider
 from rally import sshutils
-from rally import test
+from tests import test
 
 
 ProviderFactory = serverprovider.ProviderFactory

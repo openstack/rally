@@ -16,7 +16,7 @@
 import mock
 
 from rally.benchmark.scenarios.keystone import utils
-from rally import test
+from tests import test
 
 from tests import fakes
 
