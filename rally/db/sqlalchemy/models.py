@@ -47,8 +47,11 @@ class Deployment(BASE, RallyBase):
 
     id = sa.Column(sa.Integer, primary_key=True, autoincrement=True)
     uuid = sa.Column(sa.String(36), default=UUID, nullable=False)
-    parent_uuid = sa.Column(sa.String(36), sa.ForeignKey("deployments.uuid"),
-                            default=None)
+    parent_uuid = sa.Column(
+        sa.String(36),
+        sa.ForeignKey(uuid, use_alter=True, name='fk_parent_uuid'),
+        default=None,
+    )
     name = sa.Column(sa.String(255))
     started_at = sa.Column(sa.DateTime)
     completed_at = sa.Column(sa.DateTime)
@@ -80,7 +83,7 @@ class Deployment(BASE, RallyBase):
 
     parent = sa.orm.relationship(
         "Deployment",
-        backref="subdeploys",
+        backref=sa.orm.backref("subdeploys"),
         remote_side=[uuid],
         foreign_keys=parent_uuid,
     )
