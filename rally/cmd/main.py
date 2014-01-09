@@ -179,12 +179,14 @@ class TaskCommands(object):
             times = map(lambda x: x['time'],
                         filter(lambda r: not r['error'], raw))
 
-            table = prettytable.PrettyTable(["max", "avg", "min", "ratio"])
+            table = prettytable.PrettyTable(["max (sec)", "avg (sec)",
+                                             "min (sec)", "success/total",
+                                             "total times"])
             if times:
                 table.add_row([max(times), sum(times) / len(times), min(times),
-                               float(len(times)) / len(raw)])
+                               float(len(times)) / len(raw), len(raw)])
             else:
-                table.add_row(['n/a', 'n/a', 'n/a', 0])
+                table.add_row(['n/a', 'n/a', 'n/a', 0, len(raw)])
             print(table)
 
     @cliutils.args('--task-id', type=str, dest='task_id', help='uuid of task')
