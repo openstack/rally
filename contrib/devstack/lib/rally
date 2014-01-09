@@ -1,0 +1,132 @@
+# lib/rally
+# Functions to control the configuration and operation of the **Rally**
+
+# Dependencies:
+#
+# - ``functions`` file
+# - ``DEST``, ``DATA_DIR``, ``STACK_USER`` must be defined
+
+# ``stack.sh`` calls the entry points in this order:
+#
+# - install_rally
+# - configure_rally
+# - create_rally_accounts
+# - init_rally
+
+# Save trace setting
+XTRACE=$(set +o | grep xtrace)
+set +o xtrace
+
+
+# Defaults
+# --------
+
+# Set up default repos
+RALLY_REPO=${RALLY_REPO:-${GIT_BASE}/stackforge/rally.git}
+RALLY_BRANCH=${RALLY_BRANCH:-master}
+
+# Set up default directories
+RALLY_DIR=$DEST/rally
+RALLY_CONF_DIR=${RALLY_CONF_DIR:-/etc/rally}
+RALLY_CONF_FILE=rally.conf
+
+# Debuge mode
+RALLY_DEBUG=${RALLY_DEBUG:-True}
+
+# Support entry points installation of console scripts
+if [[ -d $RALLY_DIR/bin ]]; then
+    RALLY_BIN_DIR=$NOVA_DIR/bin
+else
+    RALLY_BIN_DIR=$(get_python_exec_prefix)
+fi
+
+# Benchmark accounts
+BENCHMARK_TENANT=${BENCHMARK_TENANT:-benchmark}
+
+# Create deployment
+RALLY_ADD_DEPLOYMENT=${RALLY_ADD_DEPLOYMENT:-"True"}
+RALLY_ADD_DEPLOYMENT=$(trueorfalse True $RALLY_ADD_DEPLOYMENT)
+
+# Functions
+# ---------
+
+# Creates a configuration file for the current deployment
+# Uses the following variables:
+#
+# - ``ADMIN_PASSWORD``, ``KEYSTONE_SERVICE_PROTOCOL``,
+#   ``KEYSTONE_SERVICE_HOST``, ``KEYSTONE_SERVICE_PORT``,
+#   ``IDENTITY_API_VERSION`` - must be defined
+#
+# _create_deployment_config filename
+function _create_deployment_config() {
+    cat >$1 <<EOF
+{
+    "name": "DummyEngine",
+    "endpoint": {
+        "auth_url": "$KEYSTONE_SERVICE_PROTOCOL://$KEYSTONE_SERVICE_HOST:$KEYSTONE_SERVICE_PORT/v$IDENTITY_API_VERSION",
+        "username": "admin",
+        "password": "$ADMIN_PASSWORD",
+        "tenant_name": "benchmark"
+    }
+}
+EOF
+}
+
+# install_rally() - Collect source and prepare
+function install_rally() {
+    git_clone $RALLY_REPO $RALLY_DIR $RALLY_BRANCH
+    setup_develop $RALLY_DIR
+}
+
+# configure_rally() - Set config files, create data dirs, etc
+function configure_rally() {
+
+    if [[ ! -d $RALLY_CONF_DIR ]]; then
+        sudo mkdir -p $RALLY_CONF_DIR
+    fi
+    sudo chown $STACK_USER $RALLY_CONF_DIR
+
+    # Copy over rally configuration file and configure common parameters.
+    cp $RALLY_DIR/etc/rally/rally.conf.sample $RALLY_CONF_DIR/$RALLY_CONF_FILE
+
+    iniset $RALLY_CONF_DIR/$RALLY_CONF_FILE DEFAULT debug $RALLY_DEBUG
+
+    iniset $RALLY_CONF_DIR/$RALLY_CONF_FILE database connection `database_connection_url rally`
+
+    iniset $RALLY_CONF_DIR/$RALLY_CONF_FILE DEFAULT use_syslog $SYSLOG
+}
+
+# create_rally_accounts() - Sets up common required rally accounts
+create_rally_accounts() {
+    ADMIN_USER=$(keystone user-list | awk "/ admin / { print \$2 }")
+    ADMIN_ROLE=$(keystone role-list | awk "/ admin / { print \$2 }")
+
+    BENHCMARK_TENANT=$(keystone tenant-create \
+        --name benchmark \
+        | grep " id " | get_field 2)
+    keystone user-role-add \
+        --user-id $ADMIN_USER \
+        --role-id $ADMIN_ROLE \
+        --tenant-id $BENHCMARK_TENANT
+}
+
+# init_rally() - Initialize databases, etc.
+function init_rally() {
+    recreate_database rally utf8
+    # Recreate rally database
+    $RALLY_BIN_DIR/rally-manage --config-file $RALLY_CONF_DIR/$RALLY_CONF_FILE db recreate
+    # Add current DevStack deployment to Rally
+    if [ "$RALLY_ADD_DEPLOYMENT" = "True" ]; then
+        local tmpfile=$(mktemp)
+        _create_deployment_config $tmpfile
+        $RALLY_BIN_DIR/rally --config-file $RALLY_CONF_DIR/$RALLY_CONF_FILE deployment create --name devstack --filename $tmpfile
+    fi
+}
+
+# Restore xtrace
+$XTRACE
+
+# Tell emacs to use shell-script-mode
+## Local variables:
+## mode: shell-script
+## End:
