@@ -59,7 +59,7 @@ class VirshProviderTestCase(test.BaseTestCase):
                                    './get_domain_ip.sh name', shell=True),
         ])
         mock_ipaddress.assert_called_once_with('10.0.0.1')
-        self.assertEqual(server.ip, '10.0.0.2')
+        self.assertEqual(server.host, '10.0.0.2')
         self.assertEqual(server.user, 'user')
         self.assertEqual(server.key, None)
         self.assertEqual(server.password, 'password')
@@ -77,7 +77,7 @@ class VirshProviderTestCase(test.BaseTestCase):
             mock.call.check_output('ssh -o StrictHostKeyChecking=no user@host '
                                    './get_domain_ip.sh name', shell=True),
         ])
-        self.assertEqual(server.ip, 'None')
+        self.assertEqual(server.host, 'None')
 
     @mock.patch('rally.serverprovider.providers.virsh.subprocess')
     def test_destroy_vm(self, mock_subp):

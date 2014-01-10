@@ -34,7 +34,7 @@ class DummyProviderTestCase(test.TestCase):
         provider = serverprovider.ProviderFactory.get_provider(self.config,
                                                                None)
         credentials = provider.create_servers()
-        self.assertEqual(['host1', 'host2'], [s.ip for s in credentials])
+        self.assertEqual(['host1', 'host2'], [s.host for s in credentials])
         self.assertEqual(['user', 'user'], [s.user for s in credentials])
 
     def test_invalid_config(self):

@@ -92,15 +92,15 @@ class DevstackEngine(engine.EngineFactory):
 
         return {
             'identity': {
-                'url': 'http://%s/' % self.servers[0].ip,
-                'uri': 'http://%s:5000/v2.0/' % self.servers[0].ip,
+                'url': 'http://%s/' % self.servers[0].host,
+                'uri': 'http://%s:5000/v2.0/' % self.servers[0].host,
                 'admin_username': 'admin',
                 'admin_password': self.localrc['ADMIN_PASSWORD'],
                 'admin_tenant_name': 'admin',
             },
             'compute': {
-                'controller_nodes': self.servers[0].ip,
-                'compute_nodes': self.servers[0].ip,
+                'controller_nodes': self.servers[0].host,
+                'compute_nodes': self.servers[0].host,
                 'controller_node_ssh_user': self.servers[0].user,
             }
         }

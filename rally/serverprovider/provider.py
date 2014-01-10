@@ -26,18 +26,18 @@ class Server(utils.ImmutableMixin):
 
     Provider.create_servers should return list of instance of Server
     """
-    def __init__(self, ip, user, key=None, password=None, port=22):
-        self.ip = ip
+    def __init__(self, host, user, key=None, password=None, port=22):
+        self.host = host
         self.port = port
         self.user = user
         self.key = key
         self.password = password
-        self.ssh = sshutils.SSH(ip, user, port, key)
+        self.ssh = sshutils.SSH(host, user, port, key)
         super(Server, self).__init__()
 
     def get_credentials(self):
         return {
-            'ip': self.ip,
+            'host': self.host,
             'port': self.port,
             'user': self.user,
             'key': self.key,
@@ -46,7 +46,7 @@ class Server(utils.ImmutableMixin):
 
     @classmethod
     def from_credentials(cls, creds):
-        return cls(creds['ip'], creds['user'], key=creds['key'],
+        return cls(creds['host'], creds['user'], key=creds['key'],
                    port=creds['port'], password=creds['password'])
 
 

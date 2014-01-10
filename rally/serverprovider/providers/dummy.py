@@ -51,7 +51,7 @@ class DummyProvider(provider.ProviderFactory):
     def create_servers(self):
         servers = []
         for endpoint in self.credentials:
-            servers.append(provider.Server(ip=endpoint['host'],
+            servers.append(provider.Server(host=endpoint['host'],
                                            user=endpoint['user'],
                                            key=endpoint.get('key'),
                                            password=endpoint.get('password'),

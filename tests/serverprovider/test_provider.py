@@ -86,7 +86,7 @@ class ServerTestCase(test.TestCase):
     def setUp(self):
         super(ServerTestCase, self).setUp()
         self.vals = ['192.168.1.1', 'admin', 'some_key', 'pwd']
-        self.keys = ['ip', 'user', 'key', 'password']
+        self.keys = ['host', 'user', 'key', 'password']
 
     def test_init_server_dto(self):
         server = serverprovider.Server(*self.vals)

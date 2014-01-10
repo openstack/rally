@@ -165,7 +165,7 @@ class OpenStackProvider(provider.ProviderFactory):
         for os_server in os_servers:
             utils.wait_for(os_server, **kwargs)
 
-        servers = [provider.Server(ip=s.addresses.values()[0][0]['addr'],
+        servers = [provider.Server(host=s.addresses.values()[0][0]['addr'],
                                    user='root',
                                    key=public_key_path)
                    for s in os_servers]
