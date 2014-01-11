@@ -13,7 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import eventlet
 import os
 import paramiko
 import random
@@ -73,8 +72,9 @@ class SSH(object):
 
         self.client.connect(**connect_params)
 
-    def _is_timed_out(self, start_time):
-        return (time.time() - self.timeout) > start_time
+    def _is_timed_out(self, start_time, timeout=None):
+        timeout = timeout if timeout else self.timeout
+        return (time.time() - timeout) > start_time
 
     def execute(self, *cmd, **kwargs):
         """Execute the specified command on the server.
@@ -170,11 +170,14 @@ class SSH(object):
 
     def wait(self, timeout=120, interval=1):
         """Wait for the host will be available via ssh."""
-        with eventlet.timeout.Timeout(timeout, exceptions.TimeoutException):
-            while True:
-                try:
-                    return self.execute('uname')
-                except (socket.error, exceptions.SSHError) as e:
-                    LOG.debug(
-                        _('Ssh is still unavailable. (Exception was: %r)') % e)
-                    eventlet.sleep(interval)
+        start_time = time.time()
+        while True:
+            try:
+                return self.execute('uname')
+            except (socket.error, exceptions.SSHError) as e:
+                LOG.debug(
+                    _('Ssh is still unavailable. (Exception was: %s)') % e)
+                time.sleep(interval)
+            if self._is_timed_out(start_time, timeout):
+                raise exceptions.TimeoutException(
+                    _('SSH Timeout waiting for "%s"') % self.ip)

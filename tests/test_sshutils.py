@@ -104,8 +104,11 @@ class SSHTestCase(test.TestCase):
     def test_wait(self, ex):
         self.ssh.wait()
 
+    @mock.patch('rally.sshutils.time')
     @mock.patch('rally.sshutils.SSH.execute')
-    def test_wait_timeout(self, ex):
+    def test_wait_timeout(self, ex, mock_time):
+        mock_time.time.side_effect = [1, 10]
         ex.side_effect = exceptions.SSHError
         self.assertRaises(exceptions.TimeoutException,
                           self.ssh.wait, 1, 1)
+        mock_time.sleep.assert_called_once_with(1)
