@@ -67,7 +67,7 @@ class DevstackEngineTestCase(test.BaseTestCase):
         s2 = mock.Mock()
         from_credentials = mock.Mock(return_value=s2)
         m_server.from_credentials = from_credentials
-        server = mock.Mock(host='fakehost', user='fakeuser')
+        server = mock.Mock(host='fakehost')
         server.get_credentials.return_value = {}
         self.engine.configure_devstack = mock.Mock()
         self.engine.start_devstack = mock.Mock()
@@ -81,18 +81,10 @@ class DevstackEngineTestCase(test.BaseTestCase):
         self.engine.configure_devstack.assert_called_once_with(s2)
         self.engine.start_devstack.assert_called_once_with(s2)
         self.assertEqual(endpoint, {
-            'identity': {
-                'url': 'http://fakehost/',
-                'uri': 'http://fakehost:5000/v2.0/',
-                'admin_username': 'admin',
-                'admin_password': 'secret',
-                'admin_tenant_name': 'admin',
-            },
-            'compute': {
-                'controller_nodes': 'fakehost',
-                'compute_nodes': 'fakehost',
-                'controller_node_ssh_user': 'fakeuser',
-            }
+            'auth_url': 'http://fakehost:5000/v2.0/',
+            'username': 'admin',
+            'password': 'secret',
+            'tenant_name': 'admin',
         })
 
     @mock.patch('rally.deploy.engines.devstack.os')

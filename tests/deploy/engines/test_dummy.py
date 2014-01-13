@@ -27,14 +27,11 @@ class TestDummyDeployEngine(test.TestCase):
         self.deployment = {
             'config': {
                 'name': 'DummyEngine',
-                'cloud_config': {
-                    'identity': {
-                        'url': 'http://example.net/',
-                        'uri': 'http://example.net:5000/v2.0/',
-                        'admin_username': 'admin',
-                        'admin_password': 'myadminpass',
-                        'admin_tenant_name': 'demo',
-                    },
+                'endpoint': {
+                    'auth_url': 'http://example.net:5000/v2.0/',
+                    'username': 'admin',
+                    'password': 'myadminpass',
+                    'tenant_name': 'demo',
                 },
             },
         }
@@ -46,7 +43,7 @@ class TestDummyDeployEngine(test.TestCase):
     def test_dummy_engine_deploy(self):
         engine = dummy.DummyEngine(self.deployment)
         endpoint = engine.deploy()
-        self.assertEqual(endpoint, self.deployment['config']['cloud_config'])
+        self.assertEqual(endpoint, self.deployment['config']['endpoint'])
 
     def test_dummy_engine_cleanup(self):
         dummy.DummyEngine(self.deployment).cleanup()
@@ -58,11 +55,11 @@ class TestDummyDeployEngine(test.TestCase):
         self.assertIsInstance(engine, dummy.DummyEngine)
 
     def test_init_invalid_config(self):
-        self.deployment['config']['cloud_config']['identity'] = 42
+        self.deployment['config']['endpoint'] = 42
         self.assertRaises(jsonschema.ValidationError,
                           dummy.DummyEngine, self.deployment)
 
     def test_deploy(self):
         engine = dummy.DummyEngine(self.deployment)
-        self.assertEqual(self.deployment['config']['cloud_config'],
+        self.assertEqual(self.deployment['config']['endpoint'],
                          engine.deploy())

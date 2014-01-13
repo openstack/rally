@@ -63,13 +63,13 @@ def _run_scenario_loop(args):
 
 class ScenarioRunner(object):
     """Tool that gets and runs one Scenario."""
-    def __init__(self, task, cloud_config):
+    def __init__(self, task, endpoint):
         self.task = task
-        self.endpoints = cloud_config
+        self.endpoint = endpoint
 
         global __admin_clients__
-        keys = ["admin_username", "admin_password", "admin_tenant_name", "uri"]
-        __admin_clients__ = utils.create_openstack_clients([self.endpoints],
+        keys = ['username', 'password', 'tenant_name', 'auth_url']
+        __admin_clients__ = utils.create_openstack_clients([self.endpoint],
                                                            keys)[0]
         base.Scenario.register()
 
@@ -92,10 +92,13 @@ class ScenarioRunner(object):
                                                                   % username,
                                                                   tenant.id)
                 self.users.append(user)
-                user_credentials = {"username": username, "password": password,
-                                    "tenant_name": tenant.name,
-                                    "uri": self.endpoints["uri"]}
-                temporary_endpoints.append(user_credentials)
+                endpoint = {
+                    'auth_url': self.endpoint['auth_url'],
+                    'username': username,
+                    'password': password,
+                    'tenant_name': tenant.name,
+                }
+                temporary_endpoints.append(endpoint)
         return temporary_endpoints
 
     @classmethod
@@ -294,7 +297,7 @@ class ScenarioRunner(object):
         __scenario_context__ = cls.init(init_args)
 
         # NOTE(msdubov): Launch scenarios with non-admin openstack clients
-        keys = ["username", "password", "tenant_name", "uri"]
+        keys = ["username", "password", "tenant_name", "auth_url"]
         __openstack_clients__ = utils.create_openstack_clients(temp_users,
                                                                keys)
 

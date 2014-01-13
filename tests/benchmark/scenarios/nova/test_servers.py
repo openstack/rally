@@ -85,7 +85,7 @@ class NovaServersTestCase(test.TestCase):
         nova = fakes.FakeNovaClient()
         fc.get_nova_client = lambda: nova
 
-        temp_keys = ["username", "password", "tenant_name", "uri"]
+        temp_keys = ["username", "password", "tenant_name", "auth_url"]
         users_endpoints = [dict(zip(temp_keys, temp_keys))]
         servers.NovaServers._clients = butils.create_openstack_clients(
                                                 users_endpoints, temp_keys)[0]

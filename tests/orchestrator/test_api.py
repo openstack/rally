@@ -27,14 +27,11 @@ from tests import test
 FAKE_DEPLOY_CONFIG = {
     # TODO(akscram): A fake engine is more suitable for that.
     'name': 'DummyEngine',
-    'cloud_config': {
-        'identity': {
-            'url': 'http://example.net/',
-            'uri': 'http://example.net:5000/v2.0/',
-            'admin_username': 'admin',
-            'admin_password': 'myadminpass',
-            'admin_tenant_name': 'demo'
-        },
+    'endpoint': {
+        'auth_url': 'http://example.net:5000/v2.0/',
+        'username': 'admin',
+        'password': 'myadminpass',
+        'tenant_name': 'demo'
     },
 }
 
@@ -71,7 +68,7 @@ class APITestCase(test.TestCase):
         self.deploy_config = FAKE_DEPLOY_CONFIG
         self.task_config = FAKE_TASK_CONFIG
         self.deploy_uuid = str(uuid.uuid4())
-        self.endpoint = FAKE_DEPLOY_CONFIG['cloud_config']
+        self.endpoint = FAKE_DEPLOY_CONFIG['endpoint']
         self.task_uuid = str(uuid.uuid4())
         self.task = {
             'uuid': self.task_uuid,

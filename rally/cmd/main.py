@@ -95,17 +95,10 @@ class DeploymentCommands(object):
 
         :param deploy_id: a UUID of the deployment
         """
-        attribute_map = [
-            ('auth_url', 'uri'),
-            ('user_name', 'admin_username'),
-            ('password', 'admin_password'),
-            ('tenant_name', 'admin_tenant_name'),
-        ]
-        headers = [m[0] for m in attribute_map]
+        headers = ['auth_url', 'username', 'password', 'tenant_name']
         table = prettytable.PrettyTable(headers)
         endpoint = db.deployment_get(deploy_id)['endpoint']
-        identity = endpoint.get('identity', {})
-        table.add_row([identity.get(m[1], '') for m in attribute_map])
+        table.add_row([endpoint.get(m, '') for m in headers])
         print(table)
 
 

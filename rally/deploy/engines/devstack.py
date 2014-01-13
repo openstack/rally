@@ -91,18 +91,10 @@ class DevstackEngine(engine.EngineFactory):
             self.start_devstack(devstack_server)
 
         return {
-            'identity': {
-                'url': 'http://%s/' % self.servers[0].host,
-                'uri': 'http://%s:5000/v2.0/' % self.servers[0].host,
-                'admin_username': 'admin',
-                'admin_password': self.localrc['ADMIN_PASSWORD'],
-                'admin_tenant_name': 'admin',
-            },
-            'compute': {
-                'controller_nodes': self.servers[0].host,
-                'compute_nodes': self.servers[0].host,
-                'controller_node_ssh_user': self.servers[0].user,
-            }
+            'auth_url': 'http://%s:5000/v2.0/' % self.servers[0].host,
+            'username': 'admin',
+            'password': self.localrc['ADMIN_PASSWORD'],
+            'tenant_name': 'admin',
         }
 
     def cleanup(self):

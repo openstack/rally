@@ -72,8 +72,8 @@ class TestEngine(object):
             ...
             tester = TestEngine(config, task)
             # Deploying the cloud...
-            # cloud_endpoints - contains endpoints of deployed cloud
-            with tester.bind(cloud_endpoints):
+            # endpoint - is a dict with data on endpoint of deployed cloud
+            with tester.bind(endpoint):
                 tester.run()
     """
 
@@ -129,7 +129,7 @@ class TestEngine(object):
                   corresponding benchmark test launches
         """
         self.task.update_status(consts.TaskStatus.TEST_TOOL_BENCHMARKING)
-        scenario_runner = runner.ScenarioRunner(self.task, self.endpoints)
+        scenario_runner = runner.ScenarioRunner(self.task, self.endpoint)
 
         results = {}
         for name in self.config:
@@ -140,20 +140,19 @@ class TestEngine(object):
                 results[json.dumps(key)] = result
         return results
 
-    def bind(self, endpoints):
-        self.endpoints = endpoints["identity"]
+    def bind(self, endpoint):
+        self.endpoint = endpoint
         # Try to access cloud via keystone client
-        clients = osclients.Clients(username=self.endpoints["admin_username"],
-                                    password=self.endpoints["admin_password"],
-                                    tenant_name=
-                                    self.endpoints["admin_tenant_name"],
-                                    auth_url=self.endpoints["uri"])
+        clients = osclients.Clients(username=self.endpoint['username'],
+                                    password=self.endpoint['password'],
+                                    tenant_name=self.endpoint['tenant_name'],
+                                    auth_url=self.endpoint['auth_url'])
 
         # Ensure that user is admin
         roles = clients.get_keystone_client().auth_ref['user']['roles']
         if not any("admin" == role['name'] for role in roles):
             message = _("user '%s' doesn't have "
-                        "'admin' role") % self.endpoints["admin_username"]
+                        "'admin' role") % self.endpoint["username"]
             raise exceptions.InvalidArgumentsException(message=message)
         return self
 

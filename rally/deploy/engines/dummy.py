@@ -19,47 +19,40 @@ from rally.deploy import engine
 class DummyEngine(engine.EngineFactory):
     """DummyEngine doesn't deploy OpenStack it just use existing.
 
-       To use DummyEngine you should put in task deploy config `cloud_config`:
-       {'deploy': {'cloud_config': {/* here you should specify endpoints */}}}
+       To use DummyEngine you should put in a config endpoint key, e.g:
 
-       E.g.
-       cloud_config: {
-           'identity': {
-               'url': 'http://localhost/',
-               'admin_username': 'admin'
-               ....
-           }
-       }
+            {
+                "name": "DummyEngine",
+                "endpoint": {
+                    "auth_url": "http://localhost:5000/v2.0/",
+                    "username": "admin",
+                    "password": "password",
+                    "tenant_name": "demo"
+                }
+            }
+
     """
-
-    IDENTITY_SCHEMA = {
-        'type': 'object',
-        'properties': {
-            'uri': {'type': 'string'},
-            'admin_username': {'type': 'string'},
-            'admin_password': {'type': 'string'},
-            'admin_tenant_name': {'type': 'string'},
-        },
-        'required': ['uri', 'admin_username', 'admin_password',
-                     'admin_tenant_name'],
-    }
 
     CONFIG_SCHEMA = {
         'type': 'object',
         'properties': {
-            'cloud_config': {
+            'endpoint': {
                 'type': 'object',
                 'properties': {
-                    'identity': IDENTITY_SCHEMA,
+                    'auth_url': {'type': 'string'},
+                    'username': {'type': 'string'},
+                    'password': {'type': 'string'},
+                    'tenant_name': {'type': 'string'},
                 },
-                'required': ['identity'],
+                'required': ['auth_url', 'username', 'password',
+                             'tenant_name'],
             },
         },
-        'required': ['cloud_config'],
+        'required': ['endpoint'],
     }
 
     def deploy(self):
-        return self.deployment['config'].get('cloud_config', {})
+        return self.deployment['config'].get('endpoint', {})
 
     def cleanup(self):
         pass

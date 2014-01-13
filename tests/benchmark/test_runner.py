@@ -41,8 +41,7 @@ class ScenarioTestCase(test.TestCase):
 
     def setUp(self):
         super(ScenarioTestCase, self).setUp()
-        admin_keys = ["admin_username", "admin_password",
-                      "admin_tenant_name", "uri"]
+        admin_keys = ["username", "password", "tenant_name", "auth_url"]
         self.fake_kw = dict(zip(admin_keys, admin_keys))
 
     def test_init_calls_register(self):
@@ -63,7 +62,7 @@ class ScenarioTestCase(test.TestCase):
                                                     tenants, users_per_tenant)
             self.assertEqual(len(endpoints), tenants * users_per_tenant)
             endpoint_keys = set(["username", "password", "tenant_name",
-                                 "uri"])
+                                 "auth_url"])
             for endpoint in endpoints:
                 self.assertTrue(endpoint_keys.issubset(endpoint.keys()))
 

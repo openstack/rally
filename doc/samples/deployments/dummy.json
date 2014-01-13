@@ -1,12 +1,9 @@
 {
     "name": "DummyEngine",
-    "cloud_config": {
-        "identity": {
-            "url": "http://example.net/",
-            "uri": "http://example.net:5000/v2.0/",
-            "admin_username": "admin",
-            "admin_password": "myadminpass",
-            "admin_tenant_name": "demo"
-        }
+    "endpoint": {
+        "auth_url": "http://example.net:5000/v2.0/",
+        "username": "admin",
+        "password": "myadminpass",
+        "tenant_name": "demo"
     }
 }

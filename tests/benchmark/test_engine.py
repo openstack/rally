@@ -77,16 +77,11 @@ class TestEngineTestCase(test.TestCase):
                             'tenants': 3, 'users_per_tenant': 2}}
             ]
         }
-        self.valid_cloud_config = {
-            'identity': {
-                'admin_username': 'admin',
-                'admin_password': 'admin',
-                "admin_tenant_name": 'admin',
-                "uri": 'http://127.0.0.1:5000/v2.0'
-            },
-            'compute': {
-                'controller_nodes': 'localhost'
-            }
+        self.valid_endpoint = {
+            'auth_url': 'http://127.0.0.1:5000/v2.0',
+            'username': 'admin',
+            'password': 'admin',
+            'tenant_name': 'admin',
         }
 
         self.run_success = {'msg': 'msg', 'status': 0, 'proc_name': 'proc'}
@@ -122,9 +117,8 @@ class TestEngineTestCase(test.TestCase):
         mock_osclients.Clients.return_value = fakes.FakeClients()
         tester = engine.TestEngine(self.valid_test_config_continuous_times,
                                    mock.MagicMock())
-        with tester.bind(self.valid_cloud_config):
-            self.assertEqual(tester.endpoints,
-                             self.valid_cloud_config['identity'])
+        with tester.bind(self.valid_endpoint):
+            self.assertEqual(tester.endpoint, self.valid_endpoint)
 
     @mock.patch("rally.benchmark.engine.osclients")
     def test_bind_user_not_admin(self, mock_osclients):
@@ -134,7 +128,7 @@ class TestEngineTestCase(test.TestCase):
         tester = engine.TestEngine(self.valid_test_config_continuous_times,
                                    mock.MagicMock())
         self.assertRaises(exceptions.InvalidArgumentsException,
-                          tester.bind, self.valid_cloud_config)
+                          tester.bind, self.valid_endpoint)
 
     @mock.patch("rally.benchmark.runner.ScenarioRunner.run")
     @mock.patch("rally.benchmark.utils.osclients")
@@ -144,7 +138,7 @@ class TestEngineTestCase(test.TestCase):
         mock_osclients_utils.Clients.return_value = fakes.FakeClients()
         tester = engine.TestEngine(self.valid_test_config_continuous_times,
                                    mock.MagicMock())
-        with tester.bind(self.valid_cloud_config):
+        with tester.bind(self.valid_endpoint):
             tester.run()
 
     @mock.patch("rally.benchmark.runner.ScenarioRunner.run")
@@ -158,7 +152,7 @@ class TestEngineTestCase(test.TestCase):
         mock_osclients_engine.Clients.return_value = fakes.FakeClients()
         mock_osclients_utils.Clients.return_value = fakes.FakeClients()
         mock_scenario_run.return_value = {}
-        with tester.bind(self.valid_cloud_config):
+        with tester.bind(self.valid_endpoint):
             tester.run()
 
         benchmark_name = 'NovaServers.boot_and_delete_server'
@@ -190,7 +184,7 @@ class TestEngineTestCase(test.TestCase):
         mock_osclients_utils.Clients.return_value = fakes.FakeClients()
         mock_scenario_run.side_effect = exceptions.TestException()
         try:
-            with tester.bind(self.valid_cloud_config):
+            with tester.bind(self.valid_endpoint):
                 tester.run()
         except exceptions.TestException:
             pass
