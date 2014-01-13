@@ -155,7 +155,7 @@ def _prepare_for_instance_ssh(clients):
                              from_port=1,
                              ip_range=dict(cidr='0.0.0.0/0')),
                         dict(ip_protocol='icmp',
-                             to_port=255,
+                             to_port=-1,
                              from_port=-1,
                              ip_range=dict(cidr='0.0.0.0/0'))
                         ]
