@@ -60,3 +60,10 @@ class MutableDict(mutable.Mutable, dict):
 
         dict.__delitem__(self, key)
         self.changed()
+
+
+class MutableJSONEncodedDict(JSONEncodedDict):
+    """Represent a mutable structure as a json-encoded string."""
+
+
+MutableDict.associate_with(MutableJSONEncodedDict)
