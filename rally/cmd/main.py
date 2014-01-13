@@ -44,7 +44,8 @@ class DeploymentCommands(object):
         """
         with open(filename) as f:
             config = json.load(f)
-            api.create_deploy(config, name)
+            deployment = api.create_deploy(config, name)
+            self.list(deployment_list=[deployment])
 
     @cliutils.args('--deploy-id', dest='deploy_id', type=str, required=True,
                    help='UUID of a deployment.')
@@ -67,12 +68,13 @@ class DeploymentCommands(object):
         """
         api.destroy_deploy(deploy_id)
 
-    def list(self):
+    def list(self, deployment_list=None):
         """Print list of deployments."""
         headers = ['uuid', 'created_at', 'name', 'status']
         table = prettytable.PrettyTable(headers)
 
-        for t in db.deployment_list():
+        deployment_list = deployment_list or db.deployment_list()
+        for t in deployment_list:
             r = [str(t[column]) for column in headers]
             table.add_row(r)
 
