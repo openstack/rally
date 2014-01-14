@@ -16,6 +16,7 @@
 import jsonschema
 import random
 
+from rally.benchmark.scenarios.cinder import utils as cinder_utils
 from rally.benchmark.scenarios.nova import utils
 from rally.benchmark.scenarios import utils as scenario_utils
 from rally import exceptions as rally_exceptions
@@ -24,7 +25,8 @@ ACTION_BUILDER = scenario_utils.ActionBuilder(
         ['hard_reboot', 'soft_reboot', 'stop_start', 'rescue_unrescue'])
 
 
-class NovaServers(utils.NovaScenario):
+class NovaServers(utils.NovaScenario,
+                  cinder_utils.CinderScenario):
 
     @classmethod
     def boot_and_delete_server(cls, image_id, flavor_id,
@@ -33,6 +35,21 @@ class NovaServers(utils.NovaScenario):
         server_name = cls._generate_random_name(16)
 
         server = cls._boot_server(server_name, image_id, flavor_id, **kwargs)
+        cls.sleep_between(min_sleep, max_sleep)
+        cls._delete_server(server)
+
+    @classmethod
+    def boot_server_from_volume_and_delete(cls, image_id, flavor_id,
+                                           volume_size,
+                                           min_sleep=0, max_sleep=0, **kwargs):
+        """Tests booting from volume and then deleting an image and volume."""
+        server_name = cls._generate_random_name(16)
+
+        volume = cls._create_volume(volume_size, imageRef=image_id)
+        block_device_mapping = {'vda': '%s:::1' % volume.id}
+        server = cls._boot_server(server_name, image_id, flavor_id,
+                                  block_device_mapping=block_device_mapping,
+                                  **kwargs)
         cls.sleep_between(min_sleep, max_sleep)
         cls._delete_server(server)
 
@@ -77,6 +94,22 @@ class NovaServers(utils.NovaScenario):
                 random_nic = random.choice(nets)
                 kwargs['nics'] = [{'net-id': random_nic.id}]
         cls._boot_server(server_name, image_id, flavor_id, **kwargs)
+
+    @classmethod
+    def boot_server_from_volume(cls, image_id, flavor_id,
+                                volume_size, **kwargs):
+        """Test VM boot from volume - assumed clean-up is done elsewhere."""
+        server_name = cls._generate_random_name(16)
+        if 'nics' not in kwargs:
+            nets = cls.clients("nova").networks.list()
+            if nets:
+                random_nic = random.choice(nets)
+                kwargs['nics'] = [{'net-id': random_nic.id}]
+        volume = cls._create_volume(volume_size, imageRef=image_id)
+        block_device_mapping = {'vda': '%s:::1' % volume.id}
+        cls._boot_server(server_name, image_id, flavor_id,
+                         block_device_mapping=block_device_mapping,
+                         **kwargs)
 
     @classmethod
     def _stop_and_start_server(cls, server):

@@ -43,6 +43,33 @@ class NovaServersTestCase(test.TestCase):
         mock_sleep.assert_called_once_with(10, 20)
         mock_delete.assert_called_once_with(fake_server)
 
+    @mock.patch(NOVA_SERVERS + ".sleep_between")
+    @mock.patch(NOVA_SERVERS + "._generate_random_name")
+    @mock.patch(NOVA_SERVERS + "._delete_server")
+    @mock.patch(NOVA_SERVERS + "._boot_server")
+    @mock.patch(NOVA_SERVERS + "._create_volume")
+    def _verify_boot_server_from_volume_and_delete(self, mock_volume,
+                                                   mock_boot, mock_delete,
+                                                   mock_random_name,
+                                                   mock_sleep):
+        fake_server = object()
+        mock_boot.return_value = fake_server
+        mock_random_name.return_value = "random_name"
+        fake_volume = fakes.FakeVolumeManager().create()
+        fake_volume.id = "volume_id"
+        mock_volume.return_value = fake_volume
+        servers.NovaServers.boot_server_from_volume_and_delete("img", 0, 5,
+                                                               10, 20,
+                                                               fakearg="f")
+
+        mock_volume.assert_called_once_with(5, imageRef="img")
+        mock_boot.assert_called_once_with(
+            "random_name", "img", 0,
+            block_device_mapping={'vda': 'volume_id:::1'},
+            fakearg="f")
+        mock_sleep.assert_called_once_with(10, 20)
+        mock_delete.assert_called_once_with(fake_server)
+
     @mock.patch(NOVA_SERVERS + "._generate_random_name")
     @mock.patch(NOVA_SERVERS + "._boot_server")
     @mock.patch("rally.benchmark.utils.osclients")
@@ -76,6 +103,49 @@ class NovaServersTestCase(test.TestCase):
 
         mock_boot.assert_called_once_with("random_name", "img", 0,
                                           **expected_kwargs)
+
+    @mock.patch(NOVA_SERVERS + "._generate_random_name")
+    @mock.patch(NOVA_SERVERS + "._boot_server")
+    @mock.patch("rally.benchmark.utils.osclients")
+    @mock.patch("rally.benchmark.scenarios.nova.servers.random.choice")
+    @mock.patch(NOVA_SERVERS + "._create_volume")
+    def _verify_boot_server_from_volume(self, mock_volume, mock_choice,
+                                        mock_osclients, mock_boot,
+                                        mock_random_name, nic=None,
+                                        assert_nic=False):
+        assert_nic = nic or assert_nic
+        kwargs = {'fakearg': 'f'}
+        expected_kwargs = {'fakearg': 'f'}
+
+        fc = fakes.FakeClients()
+        mock_osclients.Clients.return_value = fc
+        nova = fakes.FakeNovaClient()
+        fc.get_nova_client = lambda: nova
+
+        temp_keys = ["username", "password", "tenant_name", "uri"]
+        users_endpoints = [dict(zip(temp_keys, temp_keys))]
+        servers.NovaServers._clients = butils.create_openstack_clients(
+                                                users_endpoints, temp_keys)[0]
+
+        mock_boot.return_value = object()
+        mock_random_name.return_value = "random_name"
+        if nic:
+            kwargs['nics'] = nic
+        if assert_nic:
+            nova.networks.create('net-1')
+            network = nova.networks.create('net-2')
+            mock_choice.return_value = network
+            expected_kwargs['nics'] = nic or [{'net-id': 'net-2'}]
+        fake_volume = fakes.FakeVolumeManager().create()
+        fake_volume.id = "volume_id"
+        mock_volume.return_value = fake_volume
+        servers.NovaServers.boot_server_from_volume("img", 0, 5, **kwargs)
+
+        mock_volume.assert_called_once_with(5, imageRef="img")
+        mock_boot.assert_called_once_with(
+            "random_name", "img", 0,
+            block_device_mapping={'vda': 'volume_id:::1'},
+            **expected_kwargs)
 
     @mock.patch(NOVA_SERVERS + "._generate_random_name")
     @mock.patch(NOVA_SERVERS + "._delete_server")
@@ -219,6 +289,9 @@ class NovaServersTestCase(test.TestCase):
     def test_boot_and_delete_server(self):
         self._verify_boot_and_delete_server()
 
+    def test_boot_server_from_volume_and_delete(self):
+        self._verify_boot_server_from_volume_and_delete()
+
     def test_boot_server_no_nics(self):
         self._verify_boot_server(nic=None, assert_nic=False)
 
@@ -228,6 +301,9 @@ class NovaServersTestCase(test.TestCase):
 
     def test_boot_server_random_nic(self):
         self._verify_boot_server(nic=None, assert_nic=True)
+
+    def test_boot_server_from_volume_random_nic(self):
+        self._verify_boot_server_from_volume(nic=None, assert_nic=True)
 
     @mock.patch(NOVA_SERVERS + "._generate_random_name")
     @mock.patch(NOVA_SERVERS + "._delete_image")
