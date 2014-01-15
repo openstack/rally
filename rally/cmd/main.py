@@ -243,6 +243,12 @@ class TaskCommands(object):
             print("Plot type '%s' not supported." % plot_type)
 
 
+def deprecated():
+    print("\n\n---\n\nopenstack-rally and openstack-rally-manage are "
+          "deprecated, please use rally and rally-manage\n\n---\n\n")
+    main()
+
+
 def main():
     categories = {
         'task': TaskCommands,
