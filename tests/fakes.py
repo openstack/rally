@@ -22,9 +22,9 @@ from rally import utils as rally_utils
 
 class FakeResource(object):
 
-    def __init__(self, manager=None, name=None):
+    def __init__(self, manager=None, name=None, status="ACTIVE"):
         self.name = name or uuid.uuid4()
-        self.status = "ACTIVE"
+        self.status = status
         self.manager = manager
         self.uuid = uuid.uuid4()
         self.id = self.uuid

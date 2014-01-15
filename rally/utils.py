@@ -158,6 +158,31 @@ def wait_for(resource, is_ready, update_resource=None, timeout=60,
     return resource
 
 
+def wait_for_delete(resource, update_resource=None, timeout=60,
+                    check_interval=1):
+    """Waits for the full deletion of resource.
+
+    :param update_resource: Function that should take the resource object
+                            and return an 'updated' resource, or raise
+                            exception rally.exceptions.GetResourceNotFound
+                            that means that resource is deleted.
+
+    :param timeout: Timeout in seconds after which a TimeoutException will be
+                    raised
+    :param check_interval: Interval in seconds between the two consecutive
+                           readiness checks
+    """
+    start = time.time()
+    while True:
+        try:
+            resource = update_resource(resource)
+        except exceptions.GetResourceNotFound:
+            break
+        time.sleep(check_interval)
+        if time.time() - start > timeout:
+            raise exceptions.TimeoutException()
+
+
 def log_task_wrapper(log, msg, **kw):
     """A logging wrapper for any method of a class.
 

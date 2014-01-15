@@ -71,6 +71,6 @@ class CinderScenario(base.Scenario):
         :param volume: volume object
         """
         volume.delete()
-        utils.wait_for(volume, is_ready=bench_utils.is_none,
-                       update_resource=bench_utils.get_from_manager(),
-                       timeout=600, check_interval=2)
+        utils.wait_for_delete(volume,
+                              update_resource=bench_utils.get_from_manager(),
+                              timeout=600, check_interval=2)

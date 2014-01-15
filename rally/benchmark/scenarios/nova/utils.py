@@ -155,9 +155,9 @@ class NovaScenario(base.Scenario):
         :param server: Server object
         """
         server.delete()
-        utils.wait_for(server, is_ready=bench_utils.is_none,
-                       update_resource=bench_utils.get_from_manager(),
-                       timeout=600, check_interval=3)
+        utils.wait_for_delete(server,
+                              update_resource=bench_utils.get_from_manager(),
+                              timeout=600, check_interval=3)
 
     @scenario_utils.atomic_action_timer('nova.delete_all_servers')
     def _delete_all_servers(self):
@@ -175,9 +175,9 @@ class NovaScenario(base.Scenario):
         :param image: Image object
         """
         image.delete()
-        utils.wait_for(image, is_ready=bench_utils.resource_is("DELETED"),
-                       update_resource=bench_utils.get_from_manager(),
-                       timeout=600, check_interval=3)
+        utils.wait_for_delete(image,
+                              update_resource=bench_utils.get_from_manager(),
+                              timeout=600, check_interval=3)
 
     @scenario_utils.atomic_action_timer('nova.create_image')
     def _create_image(self, server):

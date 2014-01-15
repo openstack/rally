@@ -37,6 +37,9 @@ class NovaScenarioTestCase(test.TestCase):
         self.res_is = mockpatch.Patch(BM_UTILS + ".resource_is")
         self.get_fm = mockpatch.Patch(BM_UTILS + '.get_from_manager')
         self.wait_for = mockpatch.Patch(NOVA_UTILS + ".utils.wait_for")
+        self.wait_for_delete = mockpatch.Patch(NOVA_UTILS +
+                                               ".utils.wait_for_delete")
+        self.useFixture(self.wait_for_delete)
         self.useFixture(self.wait_for)
         self.useFixture(self.res_is)
         self.useFixture(self.get_fm)
@@ -111,11 +114,10 @@ class NovaScenarioTestCase(test.TestCase):
         nova_scenario = utils.NovaScenario()
         nova_scenario._delete_server(self.server)
         self.server.delete.assert_called_once_with()
-        self.wait_for.mock.assert_called_once_with(self.server,
-                                                   is_ready=mock_isnone,
-                                                   update_resource=self.gfm(),
-                                                   check_interval=3,
-                                                   timeout=600)
+        self.wait_for_delete.mock.assert_called_once_with(
+                                        self.server,
+                                        update_resource=self.gfm(),
+                                        check_interval=3, timeout=600)
         self._test_atomic_action_timer(nova_scenario.atomic_actions_time(),
                                        'nova.delete_server')
 
@@ -192,14 +194,12 @@ class NovaScenarioTestCase(test.TestCase):
         nova_scenario = utils.NovaScenario()
         nova_scenario._delete_all_servers()
         expected = [
-            mock.call(self.server, is_ready=mock_isnone,
-                      update_resource=self.gfm(),
+            mock.call(self.server, update_resource=self.gfm(),
                       check_interval=3, timeout=600),
-            mock.call(self.server1, is_ready=mock_isnone,
-                      update_resource=self.gfm(),
+            mock.call(self.server1, update_resource=self.gfm(),
                       check_interval=3, timeout=600)
         ]
-        self.assertEqual(expected, self.wait_for.mock.mock_calls)
+        self.assertEqual(expected, self.wait_for_delete.mock.mock_calls)
         self._test_atomic_action_timer(nova_scenario.atomic_actions_time(),
                                        'nova.delete_all_servers')
 
@@ -207,12 +207,9 @@ class NovaScenarioTestCase(test.TestCase):
         nova_scenario = utils.NovaScenario()
         nova_scenario._delete_image(self.image)
         self.image.delete.assert_called_once_with()
-        self.wait_for.mock.assert_called_once_with(self.image,
-                                                   update_resource=self.gfm(),
-                                                   is_ready=self.res_is.mock(),
-                                                   check_interval=3,
-                                                   timeout=600)
-        self.res_is.mock.assert_has_calls(mock.call('DELETED'))
+        self.wait_for_delete.mock.assert_called_once_with(
+                                        self.image, update_resource=self.gfm(),
+                                        check_interval=3, timeout=600)
         self._test_atomic_action_timer(nova_scenario.atomic_actions_time(),
                                        'nova.delete_image')
 

@@ -39,11 +39,14 @@ def get_from_manager(error_statuses=None):
         try:
             resource = resource.manager.get(resource.id)
         except Exception as e:
-            if getattr(e, 'http_status', 400) == 404:
-                return None
-            raise e
-        if resource.status.upper() in error_statuses:
-            raise rally_exceptions.GetResourceFailure(status=resource.status)
+            if getattr(e, 'code', 400) == 404:
+                raise rally_exceptions.GetResourceNotFound(status="404")
+            raise rally_exceptions.GetResourceFailure(status=e)
+        status = resource.status.upper()
+        if status == "DELETED":
+            raise rally_exceptions.GetResourceNotFound(status="404")
+        if status in error_statuses:
+            raise rally_exceptions.GetResourceErrorStatus(status=status)
         return resource
 
     return _get_from_manager

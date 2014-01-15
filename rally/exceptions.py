@@ -136,8 +136,15 @@ class TimeoutException(RallyException):
 
 
 class GetResourceFailure(RallyException):
-    msg_fmt = _("Failed to get the resource due to invalid status:"
-                "`%(status)s`")
+    msg_fmt = _("Failed to get the resource: '`%(status)s`'")
+
+
+class GetResourceNotFound(GetResourceFailure):
+    msg_fmt = _("Resource not found: `%(status)s`")
+
+
+class GetResourceErrorStatus(GetResourceFailure):
+    msg_fmt = _("Resouce has invalid status: `%(status)s`")
 
 
 class SSHError(RallyException):
