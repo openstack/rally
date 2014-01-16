@@ -153,9 +153,9 @@ class TestEngineTestCase(test.TestCase):
     @mock.patch("rally.benchmark.runner.ScenarioRunner.run")
     @mock.patch("rally.benchmark.utils.osclients")
     @mock.patch("rally.benchmark.engine.osclients")
-    def test_run(self, mock_osclients_engine, mock_osclients_utils, mock_run):
-        mock_osclients_engine.Clients.return_value = fakes.FakeClients()
-        mock_osclients_utils.Clients.return_value = fakes.FakeClients()
+    def test_run(self, mock_engine_osclients, mock_utils_osclients, mock_run):
+        mock_engine_osclients.Clients.return_value = fakes.FakeClients()
+        mock_utils_osclients.Clients.return_value = fakes.FakeClients()
         tester = engine.TestEngine(self.valid_test_config_continuous_times,
                                    mock.MagicMock())
         with tester.bind(self.valid_endpoint):
@@ -164,13 +164,13 @@ class TestEngineTestCase(test.TestCase):
     @mock.patch("rally.benchmark.runner.ScenarioRunner.run")
     @mock.patch("rally.benchmark.utils.osclients")
     @mock.patch("rally.benchmark.engine.osclients")
-    def test_task_status_basic_chain(self, mock_osclients_engine,
-                                     mock_osclients_utils, mock_scenario_run):
+    def test_task_status_basic_chain(self, mock_engine_osclients,
+                                     mock_utils_osclients, mock_scenario_run):
         fake_task = mock.MagicMock()
         tester = engine.TestEngine(self.valid_test_config_continuous_times,
                                    fake_task)
-        mock_osclients_engine.Clients.return_value = fakes.FakeClients()
-        mock_osclients_utils.Clients.return_value = fakes.FakeClients()
+        mock_engine_osclients.Clients.return_value = fakes.FakeClients()
+        mock_utils_osclients.Clients.return_value = fakes.FakeClients()
         mock_scenario_run.return_value = {}
         with tester.bind(self.valid_endpoint):
             tester.run()
@@ -184,7 +184,8 @@ class TestEngineTestCase(test.TestCase):
         s = consts.TaskStatus
         expected = [
             mock.call.update_status(s.TEST_TOOL_BENCHMARKING),
-            mock.call.append_results(benchmark_results, {'raw': {}}),
+            mock.call.append_results(benchmark_results, {'raw': {},
+                                     'validation': {'is_valid': True}}),
             mock.call.update_status(s.FINISHED)
         ]
         # NOTE(msdubov): Ignore task['uuid'] calls which are used for logging
@@ -195,13 +196,51 @@ class TestEngineTestCase(test.TestCase):
     @mock.patch("rally.benchmark.runner.ScenarioRunner.run")
     @mock.patch("rally.benchmark.utils.osclients")
     @mock.patch("rally.benchmark.engine.osclients")
-    def test_task_status_failed(self, mock_osclients_engine,
-                                mock_osclients_utils, mock_scenario_run):
+    def test_task_status_basic_chain_validation_fails(self,
+                                                      mock_engine_osclients,
+                                                      mock_utils_osclients,
+                                                      mock_scenario_run):
         fake_task = mock.MagicMock()
         tester = engine.TestEngine(self.valid_test_config_continuous_times,
                                    fake_task)
-        mock_osclients_engine.Clients.return_value = fakes.FakeClients()
-        mock_osclients_utils.Clients.return_value = fakes.FakeClients()
+        mock_engine_osclients.Clients.return_value = fakes.FakeClients()
+        mock_utils_osclients.Clients.return_value = fakes.FakeClients()
+        validation_exc = exceptions.InvalidScenarioArgument()
+        mock_scenario_run.side_effect = validation_exc
+
+        with tester.bind(self.valid_endpoint):
+            tester.run()
+
+        benchmark_name = 'NovaServers.boot_and_delete_server'
+        benchmark_results = {
+            'name': benchmark_name, 'pos': 0,
+            'kw': self.valid_test_config_continuous_times[benchmark_name][0],
+        }
+
+        s = consts.TaskStatus
+        expected = [
+            mock.call.update_status(s.TEST_TOOL_BENCHMARKING),
+            mock.call.append_results(benchmark_results,
+                                     {'raw': [],
+                                      'validation': {'is_valid': False,
+                                      'exc_msg': validation_exc.message}}),
+            mock.call.update_status(s.FINISHED)
+        ]
+        # NOTE(msdubov): Ignore task['uuid'] calls which are used for logging
+        mock_calls = filter(lambda call: '__getitem__' not in call[0],
+                            fake_task.mock_calls)
+        self.assertEqual(mock_calls, expected)
+
+    @mock.patch("rally.benchmark.runner.ScenarioRunner.run")
+    @mock.patch("rally.benchmark.utils.osclients")
+    @mock.patch("rally.benchmark.engine.osclients")
+    def test_task_status_failed(self, mock_engine_osclients,
+                                mock_utils_osclients, mock_scenario_run):
+        fake_task = mock.MagicMock()
+        tester = engine.TestEngine(self.valid_test_config_continuous_times,
+                                   fake_task)
+        mock_engine_osclients.Clients.return_value = fakes.FakeClients()
+        mock_utils_osclients.Clients.return_value = fakes.FakeClients()
         mock_scenario_run.side_effect = exceptions.TestException()
         try:
             with tester.bind(self.valid_endpoint):

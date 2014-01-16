@@ -137,9 +137,21 @@ class TestEngine(object):
         for name in self.config:
             for n, kwargs in enumerate(self.config[name]):
                 key = {'name': name, 'pos': n, 'kw': kwargs}
-                result = scenario_runner.run(name, kwargs)
-                self.task.append_results(key, {"raw": result})
-                results[json.dumps(key)] = result
+                try:
+                    result = scenario_runner.run(name, kwargs)
+                    self.task.append_results(key, {"raw": result,
+                                                   "validation":
+                                                   {"is_valid": True}})
+                    results[json.dumps(key)] = result
+                except exceptions.InvalidScenarioArgument as e:
+                    self.task.append_results(key, {"raw": [],
+                                                   "validation":
+                                                   {"is_valid": False,
+                                                    "exc_msg": e.message}})
+                    LOG.error(_("Scenario (%(pos)s, %(name)s) input arguments "
+                                "validation error: %(msg)s") %
+                              {"pos": n, "name": name, "msg": e.message})
+
         return results
 
     def bind(self, endpoint):

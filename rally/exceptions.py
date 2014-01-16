@@ -164,3 +164,7 @@ class InvalidEndpointsException(InvalidArgumentsException):
 
 class HostUnreachableException(InvalidArgumentsException):
     msg_fmt = _("unable to establish connection to the remote host: %(url)s")
+
+
+class InvalidScenarioArgument(RallyException):
+    msg_fmt = _("Invalid scenario argument: '%(message)s'")

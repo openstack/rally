@@ -23,6 +23,7 @@ import uuid
 
 from rally.benchmark import base
 from rally.benchmark import utils
+from rally import exceptions
 from rally.openstack.common.gettextutils import _
 from rally.openstack.common import log as logging
 from rally import utils as rutils
@@ -293,6 +294,13 @@ class ScenarioRunner(object):
         # NOTE(msdubov): Call init() with admin openstack clients
         cls._clients = __admin_clients__
         __scenario_context__ = cls.init(init_args)
+
+        method = getattr(cls, method_name)
+        validators = getattr(method, "validators", [])
+        for validator in validators:
+            result = validator(clients=__admin_clients__, **args)
+            if not result.is_valid:
+                raise exceptions.InvalidScenarioArgument(message=result.msg)
 
         # NOTE(msdubov): Launch scenarios with non-admin openstack clients
         keys = ["username", "password", "tenant_name", "auth_url"]

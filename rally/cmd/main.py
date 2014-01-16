@@ -223,6 +223,11 @@ class TaskCommands(object):
             print("args values:")
             pprint.pprint(key["kw"])
 
+            if not result["data"]["validation"]["is_valid"]:
+                print("-" * 80)
+                print(result["data"]["validation"]["exc_msg"])
+                continue
+
             raw = result["data"]["raw"]
             times = map(lambda x: x['time'],
                         filter(lambda r: not r['error'], raw))

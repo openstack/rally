@@ -18,6 +18,8 @@ import mock
 import multiprocessing
 
 from rally.benchmark import runner
+from rally.benchmark import validation
+from rally import exceptions
 from tests import fakes
 from tests import test
 
@@ -304,12 +306,12 @@ class ScenarioTestCase(test.TestCase):
         srunner._run_scenario_periodically.assert_called_once_with(
                                     FakeScenario, "do_it", {"a": 1}, 2, 3, 1)
 
-    @mock.patch("rally.benchmark.utils.create_openstack_clients")
-    @mock.patch("rally.benchmark.runner.base")
-    @mock.patch("rally.benchmark.utils.osclients")
-    def test_run(self, mock_osclients, mock_base, mock_clients):
+    def _set_mocks_for_run(self, mock_osclients, mock_base, mock_clients,
+                           validators=None):
         FakeScenario = mock.MagicMock()
         FakeScenario.init = mock.MagicMock(return_value={})
+        if validators:
+            FakeScenario.do_it.validators = validators
 
         mock_osclients.Clients.return_value = fakes.FakeClients()
         srunner = runner.ScenarioRunner(mock.MagicMock(), self.fake_kw)
@@ -320,6 +322,16 @@ class ScenarioTestCase(test.TestCase):
 
         mock_base.Scenario.get_by_name = \
             mock.MagicMock(return_value=FakeScenario)
+        return FakeScenario, srunner
+
+    @mock.patch("rally.benchmark.utils.create_openstack_clients")
+    @mock.patch("rally.benchmark.runner.base")
+    @mock.patch("rally.benchmark.utils.osclients")
+    def test_run(self, mock_osclients, mock_base, mock_clients):
+        FakeScenario, srunner = self._set_mocks_for_run(mock_osclients,
+                                                        mock_base,
+                                                        mock_clients)
+
         result = srunner.run("FakeScenario.do_it", {})
         self.assertEqual(result, "result")
         srunner.run("FakeScenario.do_it",
@@ -357,7 +369,25 @@ class ScenarioTestCase(test.TestCase):
             mock.call.init({"arg": 1}),
             mock.call.init({"fake": "arg"}),
         ]
-        self.assertEqual(FakeScenario.mock_calls, expected)
+        # NOTE(olkonami): Ignore __iter__ calls in loop
+        mock_calls = filter(lambda call: '__iter__' not in call[0],
+                            FakeScenario.mock_calls)
+        self.assertEqual(mock_calls, expected)
+
+    @mock.patch("rally.benchmark.utils.create_openstack_clients")
+    @mock.patch("rally.benchmark.runner.base")
+    @mock.patch("rally.benchmark.utils.osclients")
+    def test_run_validation_failure(self, mock_osclients, mock_base,
+                                    mock_clients):
+        def evil_validator(**kwargs):
+            return validation.ValidationResult(is_valid=False)
+
+        FakeScenario, srunner = self._set_mocks_for_run(mock_osclients,
+                                                        mock_base,
+                                                        mock_clients,
+                                                        [evil_validator])
+        self.assertRaises(exceptions.InvalidScenarioArgument,
+                          srunner.run, "FakeScenario.do_it", {})
 
     @mock.patch("rally.benchmark.utils.create_openstack_clients")
     @mock.patch("rally.benchmark.runner.base")

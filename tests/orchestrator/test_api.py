@@ -134,6 +134,7 @@ class APITestCase(test.TestCase):
             },
             {
                 'raw': ['fake_result'],
+                'validation': {'is_valid': True},
             },
         )
 
