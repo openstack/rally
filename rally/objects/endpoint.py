@@ -1,4 +1,4 @@
-# Copyright 2013: Mirantis Inc.
+# Copyright 2014: Mirantis Inc.
 # All Rights Reserved.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -12,8 +12,16 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-"""Contains the Rally objects."""
 
-from rally.objects.deploy import Deployment  # noqa
-from rally.objects.endpoint import Endpoint  # noqa
-from rally.objects.task import Task  # noqa
+
+class Endpoint(object):
+
+    def __init__(self, auth_url, username, password, tenant_name):
+        self.auth_url = auth_url
+        self.username = username
+        self.password = password
+        self.tenant_name = tenant_name
+
+    def to_dict(self):
+        return {"auth_url": self.auth_url, "username": self.username,
+                "password": self.password, "tenant_name": self.tenant_name}

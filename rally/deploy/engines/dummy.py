@@ -14,6 +14,7 @@
 #    under the License.
 
 from rally.deploy import engine
+from rally import objects
 
 
 class DummyEngine(engine.EngineFactory):
@@ -52,7 +53,11 @@ class DummyEngine(engine.EngineFactory):
     }
 
     def deploy(self):
-        return self.deployment['config'].get('endpoint', {})
+        endpoint = self.deployment['config']['endpoint']
+        return objects.Endpoint(auth_url=endpoint['auth_url'],
+                                username=endpoint['username'],
+                                password=endpoint['password'],
+                                tenant_name=endpoint['tenant_name'])
 
     def cleanup(self):
         pass

@@ -17,6 +17,7 @@ import os
 import tempfile
 
 from rally.deploy import engine
+from rally import objects
 from rally.openstack.common.gettextutils import _
 from rally.openstack.common import log as logging
 from rally.serverprovider import provider
@@ -90,12 +91,11 @@ class DevstackEngine(engine.EngineFactory):
             self.configure_devstack(devstack_server)
             self.start_devstack(devstack_server)
 
-        return {
-            'auth_url': 'http://%s:5000/v2.0/' % self.servers[0].host,
-            'username': 'admin',
-            'password': self.localrc['ADMIN_PASSWORD'],
-            'tenant_name': 'admin',
-        }
+        return objects.Endpoint(auth_url='http://%s:5000/v2.0/' %
+                                         self.servers[0].host,
+                                username='admin',
+                                password=self.localrc['ADMIN_PASSWORD'],
+                                tenant_name='admin')
 
     def cleanup(self):
         self._vm_provider.destroy_servers()

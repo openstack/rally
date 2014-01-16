@@ -52,7 +52,7 @@ class Deployment(object):
         self._update({'config': config})
 
     def update_endpoint(self, endpoint):
-        self._update({'endpoint': endpoint})
+        self._update({'endpoint': endpoint.to_dict()})
 
     def set_started(self):
         self._update({'started_at': datetime.datetime.now(),
