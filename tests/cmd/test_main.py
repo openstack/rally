@@ -26,14 +26,22 @@ class TaskCommandsTestCase(test.BaseTestCase):
         super(TaskCommandsTestCase, self).setUp()
         self.task = main.TaskCommands()
 
+    @mock.patch('rally.cmd.main.TaskCommands.detailed')
+    @mock.patch('rally.orchestrator.api.create_task',
+                return_value=dict(uuid='fc1a9bbe-1ead-4740-92b5-0feecf421634',
+                                  created_at='2014-01-14 09:14:45.395822',
+                                  status='init',
+                                  failed=False))
     @mock.patch('rally.cmd.main.api.start_task')
     @mock.patch('rally.cmd.main.open',
                 mock.mock_open(read_data='{"some": "json"}'),
                 create=True)
-    def test_start(self, mock_api):
+    def test_start(self, mock_api, mock_create_task,
+                   mock_task_detailed):
         deploy_id = str(uuid.uuid4())
         self.task.start(deploy_id, 'path_to_config.json')
-        mock_api.assert_called_once_with(deploy_id, {'some': 'json'})
+        mock_api.assert_called_once_with(deploy_id, {u'some': u'json'},
+                                         task=mock_create_task.return_value)
 
     def test_abort(self):
         test_uuid = str(uuid.uuid4())

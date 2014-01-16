@@ -66,7 +66,18 @@ def recreate_deploy(deploy_uuid):
         deployment.update_endpoint(endpoint)
 
 
-def start_task(deploy_uuid, config):
+def create_task(deploy_uuid):
+    """Create a task without starting it.
+
+    Task is a list of benchmarks that will be called one by one, results of
+    execution will be stored in DB.
+
+    :param deploy_uuid: UUID of the deployment
+    """
+    return objects.Task(deployment_uuid=deploy_uuid)
+
+
+def start_task(deploy_uuid, config, task=None):
     """Start a task.
 
     Task is a list of benchmarks that will be called one by one, results of
@@ -76,8 +87,7 @@ def start_task(deploy_uuid, config):
     :param config: a dict with a task configuration
     """
     deployment = objects.Deployment.get(deploy_uuid)
-    task = objects.Task(deployment_uuid=deploy_uuid)
-
+    task = task or objects.Task(deployment_uuid=deploy_uuid)
     tester = engine.TestEngine(config, task)
     deployer = deploy.EngineFactory.get_engine(deployment['config']['name'],
                                                deployment)
