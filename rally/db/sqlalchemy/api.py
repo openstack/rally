@@ -121,6 +121,11 @@ def task_delete(uuid, status=None):
         query = base_query = model_query(models.Task).filter_by(uuid=uuid)
         if status is not None:
             query = base_query.filter_by(status=status)
+
+        model_query(models.TaskResult).\
+            filter_by(task_uuid=uuid).\
+            delete(synchronize_session=False)
+
         count = query.delete(synchronize_session=False)
         if not count:
             if status is not None:
@@ -130,10 +135,6 @@ def task_delete(uuid, status=None):
                                                        require=status,
                                                        actual=task.status)
             raise exceptions.TaskNotFound(uuid=uuid)
-
-        model_query(models.TaskResult).\
-            filter_by(task_uuid=uuid).\
-            delete(synchronize_session=False)
 
 
 def task_result_create(task_uuid, key, data):
