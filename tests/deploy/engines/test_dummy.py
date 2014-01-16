@@ -37,22 +37,8 @@ class TestDummyDeployEngine(test.TestCase):
         }
         super(TestDummyDeployEngine, self).setUp()
 
-    def test_dummy_egnine_init(self):
+    def test_init(self):
         dummy.DummyEngine(self.deployment)
-
-    def test_dummy_engine_deploy(self):
-        engine = dummy.DummyEngine(self.deployment)
-        endpoint = engine.deploy()
-        self.assertEqual(endpoint, self.deployment['config']['endpoint'])
-
-    def test_dummy_engine_cleanup(self):
-        dummy.DummyEngine(self.deployment).cleanup()
-
-    def test_dummy_engine_is_in_factory(self):
-        name = self.deployment['config']['name']
-        engine = deploy.EngineFactory.get_engine(name,
-                                                 self.deployment)
-        self.assertIsInstance(engine, dummy.DummyEngine)
 
     def test_init_invalid_config(self):
         self.deployment['config']['endpoint'] = 42
@@ -63,3 +49,12 @@ class TestDummyDeployEngine(test.TestCase):
         engine = dummy.DummyEngine(self.deployment)
         self.assertEqual(self.deployment['config']['endpoint'],
                          engine.deploy())
+
+    def test_cleanup(self):
+        dummy.DummyEngine(self.deployment).cleanup()
+
+    def test_is_in_factory(self):
+        name = self.deployment['config']['name']
+        engine = deploy.EngineFactory.get_engine(name,
+                                                 self.deployment)
+        self.assertIsInstance(engine, dummy.DummyEngine)
