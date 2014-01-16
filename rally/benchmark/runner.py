@@ -187,16 +187,20 @@ class ScenarioRunner(object):
     in the_run_scenario() method.
     """
 
-    def __init__(self, task, endpoint):
+    def __init__(self, task, endpoints):
         base.Scenario.register()
 
         self.task = task
-        self.endpoint = endpoint
+        self.endpoints = endpoints
+        # NOTE(msdubov): Passing predefined user endpoints hasn't been
+        #                implemented yet, so the scenario runner always gets
+        #                a single admin endpoint here.
+        self.admin_endpoint = endpoints[0]
 
         global __admin_clients__
         keys = ['username', 'password', 'tenant_name', 'auth_url']
-        __admin_clients__ = utils.create_openstack_clients([self.endpoint],
-                                                           keys)[0]
+        __admin_clients__ = utils.create_openstack_clients(
+                                                [self.admin_endpoint], keys)[0]
 
     @staticmethod
     def get_runner(task, endpoint, config):

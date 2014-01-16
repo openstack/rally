@@ -17,6 +17,7 @@ SQLAlchemy models for rally data.
 """
 import sqlalchemy as sa
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import types
 import uuid
 
 from rally import consts
@@ -68,9 +69,9 @@ class Deployment(BASE, RallyBase):
     # TODO(akscram): Actually a endpoint of a deployment can be
     #                represented by a set of parameters are auth_url,
     #                user, password and project.
-    endpoint = sa.Column(
-        sa_types.MutableJSONEncodedDict,
-        default={},
+    endpoints = sa.Column(
+        types.PickleType,
+        default=[],
         nullable=False,
     )
 

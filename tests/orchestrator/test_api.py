@@ -68,7 +68,10 @@ class APITestCase(test.TestCase):
         self.deploy_config = FAKE_DEPLOY_CONFIG
         self.task_config = FAKE_TASK_CONFIG
         self.deploy_uuid = str(uuid.uuid4())
-        self.endpoint = FAKE_DEPLOY_CONFIG['endpoint']
+        self.endpoints = [FAKE_DEPLOY_CONFIG['endpoint']]
+        # TODO(msdubov): Remove this as soon as DummyEngine requires permission
+        #                on input
+        self.endpoints[0]["permission"] = consts.EndpointPermission.ADMIN
         self.task_uuid = str(uuid.uuid4())
         self.task = {
             'uuid': self.task_uuid,
@@ -77,7 +80,7 @@ class APITestCase(test.TestCase):
             'uuid': self.deploy_uuid,
             'name': 'fake_name',
             'config': self.deploy_config,
-            'endpoint': self.endpoint,
+            'endpoints': self.endpoints,
         }
 
     @mock.patch('rally.objects.Task')
@@ -165,7 +168,7 @@ class APITestCase(test.TestCase):
             'config': self.deploy_config,
         })
         mock_update.assert_has_calls([
-            mock.call(self.deploy_uuid, {'endpoint': self.endpoint}),
+            mock.call(self.deploy_uuid, {'endpoints': self.endpoints})
         ])
 
     @mock.patch('rally.objects.deploy.db.deployment_delete')
@@ -186,5 +189,5 @@ class APITestCase(test.TestCase):
         api.recreate_deploy(self.deploy_uuid)
         mock_get.assert_called_once_with(self.deploy_uuid)
         mock_update.assert_has_calls([
-            mock.call(self.deploy_uuid, {'endpoint': self.endpoint}),
+            mock.call(self.deploy_uuid, {'endpoints': self.endpoints})
         ])

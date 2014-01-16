@@ -49,5 +49,11 @@ class _DeployStatus(utils.ImmutableMixin, utils.EnumMixin):
     CLEANUP_FAILED = 'cleanup->failed'
 
 
+class _EndpointPermission(utils.ImmutableMixin, utils.EnumMixin):
+    ADMIN = "admin"
+    USER = "user"
+
+
 TaskStatus = _TaskStatus()
 DeployStatus = _DeployStatus()
+EndpointPermission = _EndpointPermission()

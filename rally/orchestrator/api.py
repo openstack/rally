@@ -30,8 +30,8 @@ def create_deploy(config, name):
     deployer = deploy.EngineFactory.get_engine(deployment['config']['name'],
                                                deployment)
     with deployer:
-        endpoint = deployer.make_deploy()
-        deployment.update_endpoint(endpoint)
+        endpoints = deployer.make_deploy()
+        deployment.update_endpoints(endpoints)
         return deployment
 
 
@@ -62,8 +62,8 @@ def recreate_deploy(deploy_uuid):
                                                deployment)
     with deployer:
         deployer.make_cleanup()
-        endpoint = deployer.make_deploy()
-        deployment.update_endpoint(endpoint)
+        endpoints = deployer.make_deploy()
+        deployment.update_endpoints(endpoints)
 
 
 def create_task(deploy_uuid):
@@ -89,7 +89,7 @@ def start_task(deploy_uuid, config, task=None):
     deployment = objects.Deployment.get(deploy_uuid)
     task = task or objects.Task(deployment_uuid=deploy_uuid)
     tester = engine.TestEngine(config, task)
-    endpoint = deployment['endpoint']
+    endpoint = deployment['endpoints']
     try:
         with tester.bind(endpoint):
             tester.run()

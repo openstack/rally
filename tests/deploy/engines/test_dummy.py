@@ -17,6 +17,7 @@
 
 import jsonschema
 
+from rally import consts
 from rally import deploy
 from rally.deploy.engines import dummy
 from tests import test
@@ -47,9 +48,10 @@ class TestDummyDeployEngine(test.TestCase):
 
     def test_deploy(self):
         engine = dummy.DummyEngine(self.deployment)
-        endpoint = engine.deploy()
-        self.assertEqual(self.deployment['config']['endpoint'],
-                         endpoint.to_dict())
+        endpoints = engine.deploy()
+        admin_endpoint = self.deployment['config']['endpoint'].copy()
+        admin_endpoint['permission'] = consts.EndpointPermission.ADMIN
+        self.assertEqual(admin_endpoint, endpoints[0].to_dict())
 
     def test_cleanup(self):
         dummy.DummyEngine(self.deployment).cleanup()

@@ -17,6 +17,7 @@ import mock
 
 from rally.benchmark import runner
 from rally.benchmark.runners import continuous
+from rally import consts
 from tests import fakes
 from tests import test
 
@@ -26,7 +27,9 @@ class ContinuousScenarioRunnerTestCase(test.TestCase):
     def setUp(self):
         super(ContinuousScenarioRunnerTestCase, self).setUp()
         admin_keys = ["username", "password", "tenant_name", "auth_url"]
-        self.fake_kw = dict(zip(admin_keys, admin_keys))
+        endpoint_dicts = [dict(zip(admin_keys, admin_keys))]
+        endpoint_dicts[0]["permission"] = consts.EndpointPermission.ADMIN
+        self.fake_endpoints = endpoint_dicts
 
     @mock.patch("rally.benchmark.runners.continuous.multiprocessing")
     @mock.patch("rally.benchmark.utils.osclients")
@@ -34,7 +37,7 @@ class ContinuousScenarioRunnerTestCase(test.TestCase):
                                                  mock_multi):
         mock_osclients.Clients.return_value = fakes.FakeClients()
         srunner = continuous.ContinuousScenarioRunner(mock.MagicMock(),
-                                                      self.fake_kw)
+                                                      self.fake_endpoints)
         runner.__openstack_clients__ = ["client"]
         times = 3
         active_users = 4
@@ -64,7 +67,7 @@ class ContinuousScenarioRunnerTestCase(test.TestCase):
                                                     mock_multi, mock_generate):
         mock_osclients.Clients.return_value = fakes.FakeClients()
         srunner = continuous.ContinuousScenarioRunner(mock.MagicMock(),
-                                                      self.fake_kw)
+                                                      self.fake_endpoints)
         runner.__openstack_clients__ = ["client"]
         duration = 0
         active_users = 4
@@ -91,7 +94,7 @@ class ContinuousScenarioRunnerTestCase(test.TestCase):
         mock_osclients.Clients.return_value = fakes.FakeClients()
 
         srunner = runner.ScenarioRunner.get_runner(mock.MagicMock(),
-                                                   self.fake_kw,
+                                                   self.fake_endpoints,
                                                    {"execution": "continuous"})
         self.assertTrue(srunner is not None)
 

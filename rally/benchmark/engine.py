@@ -73,7 +73,7 @@ class TestEngine(object):
             tester = TestEngine(config, task)
             # Deploying the cloud...
             # endpoint - is a dict with data on endpoint of deployed cloud
-            with tester.bind(endpoint):
+            with tester.bind(endpoints):
                 tester.run()
     """
 
@@ -136,7 +136,7 @@ class TestEngine(object):
                 key = {'name': name, 'pos': n, 'kw': kwargs}
                 try:
                     scenario_runner = runner.ScenarioRunner.get_runner(
-                                            self.task, self.endpoint, kwargs)
+                                            self.task, self.endpoints, kwargs)
                     result = scenario_runner.run(name, kwargs)
                     self.task.append_results(key, {"raw": result,
                                                    "validation":
@@ -154,13 +154,17 @@ class TestEngine(object):
 
         return results
 
-    def bind(self, endpoint):
-        self.endpoint = endpoint
+    def bind(self, endpoints):
+        self.endpoints = endpoints
+        # NOTE(msdubov): Passing predefined user endpoints hasn't been
+        #                implemented yet, so the scenario runner always gets
+        #                a single admin endpoint here.
+        admin_endpoint = endpoints[0]
         # Try to access cloud via keystone client
-        clients = osclients.Clients(username=self.endpoint['username'],
-                                    password=self.endpoint['password'],
-                                    tenant_name=self.endpoint['tenant_name'],
-                                    auth_url=self.endpoint['auth_url'])
+        clients = osclients.Clients(username=admin_endpoint['username'],
+                                    password=admin_endpoint['password'],
+                                    tenant_name=admin_endpoint['tenant_name'],
+                                    auth_url=admin_endpoint['auth_url'])
         clients.get_verified_keystone_client()
         return self
 

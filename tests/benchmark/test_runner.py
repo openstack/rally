@@ -19,6 +19,7 @@ import multiprocessing
 from rally.benchmark import runner
 from rally.benchmark.runners import continuous
 from rally.benchmark import validation
+from rally import consts
 from rally import exceptions
 from tests import fakes
 from tests import test
@@ -29,13 +30,15 @@ class ScenarioRunnerTestCase(test.TestCase):
     def setUp(self):
         super(ScenarioRunnerTestCase, self).setUp()
         admin_keys = ["username", "password", "tenant_name", "auth_url"]
-        self.fake_kw = dict(zip(admin_keys, admin_keys))
+        endpoint_dicts = [dict(zip(admin_keys, admin_keys))]
+        endpoint_dicts[0]["permission"] = consts.EndpointPermission.ADMIN
+        self.fake_endpoints = endpoint_dicts
 
     @mock.patch("rally.benchmark.runner.base")
     @mock.patch("rally.benchmark.utils.osclients")
     def test_init_calls_register(self, mock_osclients, mock_base):
         mock_osclients.Clients.return_value = fakes.FakeClients()
-        runner.ScenarioRunner.get_runner(mock.MagicMock(), self.fake_kw,
+        runner.ScenarioRunner.get_runner(mock.MagicMock(), self.fake_endpoints,
                                          {"execution": "continuous"})
         self.assertEqual(mock_base.mock_calls, [mock.call.Scenario.register()])
 
@@ -44,7 +47,7 @@ class ScenarioRunnerTestCase(test.TestCase):
     def test_run_scenario(self, mock_osclients, mock_utils):
         mock_osclients.Clients.return_value = fakes.FakeClients()
         srunner = continuous.ContinuousScenarioRunner(mock.MagicMock(),
-                                                      self.fake_kw)
+                                                      self.fake_endpoints)
         runner.__openstack_clients__ = ["client"]
         active_users = 2
         times = 3
@@ -80,7 +83,7 @@ class ScenarioRunnerTestCase(test.TestCase):
         mock_next.side_effect = multiprocessing.TimeoutError()
         mock_osclients.Clients.return_value = fakes.FakeClients()
         srunner = runner.ScenarioRunner.get_runner(mock.MagicMock(),
-                                                   self.fake_kw,
+                                                   self.fake_endpoints,
                                                    {"execution": "continuous"})
         runner.__openstack_clients__ = ["client"]
         times = 4
@@ -114,7 +117,7 @@ class ScenarioRunnerTestCase(test.TestCase):
                                                 mock_utils):
         mock_osclients.Clients.return_value = fakes.FakeClients()
         srunner = continuous.ContinuousScenarioRunner(mock.MagicMock(),
-                                                      self.fake_kw)
+                                                      self.fake_endpoints)
         runner.__openstack_clients__ = ["client"]
         times = 1
         duration = 0.001
@@ -153,7 +156,7 @@ class ScenarioRunnerTestCase(test.TestCase):
 
         mock_osclients.Clients.return_value = fakes.FakeClients()
         srunner = runner.ScenarioRunner.get_runner(mock.MagicMock(),
-                                                   self.fake_kw,
+                                                   self.fake_endpoints,
                                                    {"execution": "continuous"})
         srunner._run_scenario = mock.MagicMock(return_value="result")
 

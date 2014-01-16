@@ -17,6 +17,7 @@ import jsonschema
 import mock
 import uuid
 
+from rally import consts
 from rally.deploy.engines import devstack
 from rally.openstack.common import test
 
@@ -78,17 +79,18 @@ class DevstackEngineTestCase(test.BaseTestCase):
         self.engine._vm_provider = mock.Mock()
         self.engine._vm_provider.create_servers.return_value = [server]
         with mock.patch.object(self.engine, 'prepare_server') as ps:
-            endpoint = self.engine.deploy()
+            endpoints = self.engine.deploy()
         ps.assert_called_once_with(server)
         self.assertEqual([mock.call.from_credentials({'user': 'rally'})],
                          m_server.mock_calls)
         self.engine.configure_devstack.assert_called_once_with(s2)
         self.engine.start_devstack.assert_called_once_with(s2)
-        self.assertEqual(endpoint.to_dict(), {
+        self.assertEqual(endpoints[0].to_dict(), {
             'auth_url': 'http://fakehost:5000/v2.0/',
             'username': 'admin',
             'password': 'secret',
             'tenant_name': 'admin',
+            'permission': consts.EndpointPermission.ADMIN
         })
 
     @mock.patch('rally.deploy.engines.devstack.StringIO.StringIO')

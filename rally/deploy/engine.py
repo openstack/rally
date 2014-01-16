@@ -42,8 +42,11 @@ class EngineFactory(object):
             # do something
 
         def deploy(self):
-            # Do deployment and return endpoint of openstack
-            return {}   # here should be endpoint
+            # Make deployment and return OpenStack endpoints.
+            # The endpoints may have either admin or ordinary users
+            # permissions (depending on how the deploy engine has been
+            # initialized).
+            return [endpoint_1, endpoint_2, ...]
 
         def cleanup(self):
             # Destroy OpenStack deployment and free resource
@@ -98,9 +101,9 @@ class EngineFactory(object):
     @utils.log_deploy_wrapper(LOG.info, _("OpenStack cloud deployment."))
     def make_deploy(self):
         self.deployment.set_started()
-        endpoint = self.deploy()
+        endpoints = self.deploy()
         self.deployment.set_completed()
-        return endpoint
+        return endpoints
 
     @utils.log_deploy_wrapper(LOG.info,
                               _("Destroy cloud and free allocated resources."))

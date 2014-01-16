@@ -139,8 +139,9 @@ class DeploymentCommands(object):
         """
         headers = ['auth_url', 'username', 'password', 'tenant_name']
         table = prettytable.PrettyTable(headers)
-        endpoint = db.deployment_get(deploy_id)['endpoint']
-        table.add_row([endpoint.get(m, '') for m in headers])
+        endpoints = db.deployment_get(deploy_id)['endpoints']
+        for endpoint in endpoints:
+            table.add_row([endpoint.get(m, '') for m in headers])
         print(table)
 
     @cliutils.args('--deploy-id', dest='deploy_id', type=str, required=False,
@@ -156,16 +157,19 @@ class DeploymentCommands(object):
         headers = ['services', 'type', 'status']
         table = prettytable.PrettyTable(headers)
         try:
-            endpoint = db.deployment_get(deploy_id)['endpoint']
-            clients = osclients.Clients(username=endpoint['username'],
-                                        password=endpoint['password'],
-                                        tenant_name=endpoint['tenant_name'],
-                                        auth_url=endpoint['auth_url'])
-            client = clients.get_verified_keystone_client()
-            print("keystone endpoints are valid and following services are "
-                  "available:")
-            for service in client.service_catalog.get_data():
-                table.add_row([service['name'], service['type'], 'Available'])
+            endpoints = db.deployment_get(deploy_id)['endpoints']
+            for endpoint in endpoints:
+                clients = osclients.Clients(
+                    username=endpoint['username'],
+                    password=endpoint['password'],
+                    tenant_name=endpoint['tenant_name'],
+                    auth_url=endpoint['auth_url'])
+                client = clients.get_verified_keystone_client()
+                print("keystone endpoints are valid and following "
+                      "services are available:")
+                for service in client.service_catalog.get_data():
+                    table.add_row([service['name'], service['type'],
+                                   'Available'])
         except exceptions.InvalidArgumentsException:
             table.add_row(['keystone', 'identity', 'Error'])
             print(_("Authentication Issues: %s.")

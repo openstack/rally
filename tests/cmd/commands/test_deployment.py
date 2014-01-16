@@ -113,7 +113,7 @@ class DeploymentCommandsTestCase(test.BaseTestCase):
     @mock.patch('rally.cmd.commands.deployment.db.deployment_get')
     def test_endpoint(self, mock_deployment):
         deploy_id = str(uuid.uuid4())
-        value = {'endpoint': {}}
+        value = {'endpoints': [{}]}
         mock_deployment.return_value = value
         self.deployment.endpoint(deploy_id)
         mock_deployment.assert_called_once_with(deploy_id)

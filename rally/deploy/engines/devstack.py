@@ -16,6 +16,7 @@
 import os
 import StringIO
 
+from rally import consts
 from rally.deploy import engine
 from rally import objects
 from rally.openstack.common.gettextutils import _
@@ -91,11 +92,12 @@ class DevstackEngine(engine.EngineFactory):
             self.configure_devstack(devstack_server)
             self.start_devstack(devstack_server)
 
-        return objects.Endpoint(auth_url='http://%s:5000/v2.0/' %
-                                         self.servers[0].host,
-                                username='admin',
-                                password=self.localrc['ADMIN_PASSWORD'],
-                                tenant_name='admin')
+        admin_endpoint = objects.Endpoint('http://%s:5000/v2.0/' %
+                                          self.servers[0].host, 'admin',
+                                          self.localrc['ADMIN_PASSWORD'],
+                                          'admin',
+                                          consts.EndpointPermission.ADMIN)
+        return [admin_endpoint]
 
     def cleanup(self):
         self._vm_provider.destroy_servers()

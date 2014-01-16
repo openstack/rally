@@ -77,12 +77,13 @@ class TestEngineTestCase(test.TestCase):
                             'tenants': 3, 'users_per_tenant': 2}}
             ]
         }
-        self.valid_endpoint = {
+        self.valid_endpoints = [{
             'auth_url': 'http://127.0.0.1:5000/v2.0',
             'username': 'admin',
             'password': 'admin',
             'tenant_name': 'admin',
-        }
+            'permission': consts.EndpointPermission.ADMIN
+        }]
 
         self.run_success = {'msg': 'msg', 'status': 0, 'proc_name': 'proc'}
 
@@ -117,8 +118,9 @@ class TestEngineTestCase(test.TestCase):
         mock_osclients.Clients.return_value = fakes.FakeClients()
         tester = engine.TestEngine(self.valid_test_config_continuous_times,
                                    mock.MagicMock())
-        with tester.bind(self.valid_endpoint):
-            self.assertEqual(tester.endpoint, self.valid_endpoint)
+        with tester.bind(self.valid_endpoints):
+            self.assertEqual(tester.endpoints,
+                             self.valid_endpoints)
 
     @mock.patch("rally.benchmark.runner.ScenarioRunner.run")
     @mock.patch("rally.benchmark.utils.osclients")
@@ -128,7 +130,7 @@ class TestEngineTestCase(test.TestCase):
         mock_utils_osclients.Clients.return_value = fakes.FakeClients()
         tester = engine.TestEngine(self.valid_test_config_continuous_times,
                                    mock.MagicMock())
-        with tester.bind(self.valid_endpoint):
+        with tester.bind(self.valid_endpoints):
             tester.run()
 
     @mock.patch("rally.benchmark.runner.ScenarioRunner.run")
@@ -142,7 +144,7 @@ class TestEngineTestCase(test.TestCase):
         mock_engine_osclients.Clients.return_value = fakes.FakeClients()
         mock_utils_osclients.Clients.return_value = fakes.FakeClients()
         mock_scenario_run.return_value = {}
-        with tester.bind(self.valid_endpoint):
+        with tester.bind(self.valid_endpoints):
             tester.run()
 
         benchmark_name = 'NovaServers.boot_and_delete_server'
@@ -178,7 +180,7 @@ class TestEngineTestCase(test.TestCase):
         validation_exc = exceptions.InvalidScenarioArgument()
         mock_scenario_run.side_effect = validation_exc
 
-        with tester.bind(self.valid_endpoint):
+        with tester.bind(self.valid_endpoints):
             tester.run()
 
         benchmark_name = 'NovaServers.boot_and_delete_server'
@@ -214,7 +216,7 @@ class TestEngineTestCase(test.TestCase):
         mock_utils_osclients.Clients.return_value = fakes.FakeClients()
         mock_scenario_run.side_effect = exceptions.TestException()
         try:
-            with tester.bind(self.valid_endpoint):
+            with tester.bind(self.valid_endpoints):
                 tester.run()
         except exceptions.TestException:
             pass

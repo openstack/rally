@@ -16,12 +16,14 @@
 
 class Endpoint(object):
 
-    def __init__(self, auth_url, username, password, tenant_name):
+    def __init__(self, auth_url, username, password, tenant_name, permission):
         self.auth_url = auth_url
         self.username = username
         self.password = password
         self.tenant_name = tenant_name
+        self.permission = permission
 
     def to_dict(self):
         return {"auth_url": self.auth_url, "username": self.username,
-                "password": self.password, "tenant_name": self.tenant_name}
+                "password": self.password, "tenant_name": self.tenant_name,
+                "permission": self.permission}

@@ -25,13 +25,14 @@ class UseCommands(object):
 
     def _update_openrc_deployment_file(self, deploy_id):
         openrc_path = os.path.expanduser('~/.rally/openrc-%s' % deploy_id)
-        endpoint = db.deployment_get(deploy_id)['endpoint']
+        endpoints = db.deployment_get(deploy_id)['endpoints']
+        # NOTE(msdubov): In case of multiple endpoints write the first one.
         with open(openrc_path, 'w+') as env_file:
             env_file.write('export OS_AUTH_URL=%(auth_url)s\n'
                            'export OS_USERNAME=%(username)s\n'
                            'export OS_PASSWORD=%(password)s\n'
                            'export OS_TENANT_NAME=%(tenant_name)s\n'
-                           % endpoint)
+                           % endpoints[0])
         expanded_path = os.path.expanduser('~/.rally/openrc')
         if os.path.exists(expanded_path):
             os.remove(expanded_path)

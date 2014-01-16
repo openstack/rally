@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from rally import consts
 from rally.deploy import engine
 from rally import objects
 
@@ -54,11 +55,13 @@ class DummyEngine(engine.EngineFactory):
     }
 
     def deploy(self):
-        endpoint = self.deployment['config']['endpoint']
-        return objects.Endpoint(auth_url=endpoint['auth_url'],
-                                username=endpoint['username'],
-                                password=endpoint['password'],
-                                tenant_name=endpoint['tenant_name'])
+        endpoint_dict = self.deployment['config']['endpoint']
+        admin_endpoint = objects.Endpoint(endpoint_dict['auth_url'],
+                                          endpoint_dict['username'],
+                                          endpoint_dict['password'],
+                                          endpoint_dict['tenant_name'],
+                                          consts.EndpointPermission.ADMIN)
+        return [admin_endpoint]
 
     def cleanup(self):
         pass

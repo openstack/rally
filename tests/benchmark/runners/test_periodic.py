@@ -17,6 +17,7 @@ import mock
 
 from rally.benchmark import runner
 from rally.benchmark.runners import periodic
+from rally import consts
 from tests import fakes
 from tests import test
 
@@ -26,7 +27,9 @@ class PeriodicScenarioRunnerTestCase(test.TestCase):
     def setUp(self):
         super(PeriodicScenarioRunnerTestCase, self).setUp()
         admin_keys = ["username", "password", "tenant_name", "auth_url"]
-        self.fake_kw = dict(zip(admin_keys, admin_keys))
+        endpoint_dicts = [dict(zip(admin_keys, admin_keys))]
+        endpoint_dicts[0]["permission"] = consts.EndpointPermission.ADMIN
+        self.fake_endpoints = endpoint_dicts
 
     @mock.patch("rally.benchmark.runner._run_scenario_loop")
     @mock.patch("rally.benchmark.runners.periodic.time.sleep")
@@ -35,7 +38,7 @@ class PeriodicScenarioRunnerTestCase(test.TestCase):
                           mock_run_scenario_loop):
         mock_osclients.Clients.return_value = fakes.FakeClients()
         srunner = periodic.PeriodicScenarioRunner(mock.MagicMock(),
-                                                  self.fake_kw)
+                                                  self.fake_endpoints)
         times = 3
         period = 4
         runner.__openstack_clients__ = ["client"]
@@ -58,6 +61,6 @@ class PeriodicScenarioRunnerTestCase(test.TestCase):
         mock_osclients.Clients.return_value = fakes.FakeClients()
 
         srunner = runner.ScenarioRunner.get_runner(mock.MagicMock(),
-                                                   self.fake_kw,
+                                                   self.fake_endpoints,
                                                    {"execution": "periodic"})
         self.assertTrue(srunner is not None)

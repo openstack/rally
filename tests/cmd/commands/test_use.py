@@ -34,11 +34,11 @@ class UseCommandsTestCase(test.BaseTestCase):
     def test_deployment(self, mock_env, mock_path, mock_deployment,
                         mock_symlink, mock_remove):
         deploy_id = str(uuid.uuid4())
-        endpoint = {'endpoint': {'auth_url': 'fake_auth_url',
-                                 'username': 'fake_username',
-                                 'password': 'fake_password',
-                                 'tenant_name': 'fake_tenant_name'}}
-        mock_deployment.return_value = endpoint
+        endpoints = {'endpoints': [{'auth_url': 'fake_auth_url',
+                                    'username': 'fake_username',
+                                    'password': 'fake_password',
+                                    'tenant_name': 'fake_tenant_name'}]}
+        mock_deployment.return_value = endpoints
         mock_path.return_value = True
         with mock.patch('rally.cmd.commands.use.open', mock.mock_open(),
                         create=True) as mock_file:
