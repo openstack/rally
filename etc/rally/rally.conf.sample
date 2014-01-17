@@ -122,6 +122,19 @@
 # Path to CA server cetrificate for SSL (string value)
 #https_cacert=
 
+[api]
+
+#
+# Options defined in rally.api
+#
+
+# The port for the Rally API server (integer value)
+#port=8877
+
+# The listen IP for the Rally API server (string value)
+#host=0.0.0.0
+
+
 [database]
 
 #
