@@ -32,6 +32,7 @@ def create_deploy(config, name):
     with deployer:
         endpoint = deployer.make_deploy()
         deployment.update_endpoint(endpoint)
+        return deployment
 
 
 def destroy_deploy(deploy_uuid):
