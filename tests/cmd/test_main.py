@@ -65,6 +65,16 @@ class TaskCommandsTestCase(test.BaseTestCase):
         self.task.detailed(test_uuid)
         mock_db.task_get_detailed.assert_called_once_with(test_uuid)
 
+    @mock.patch('rally.cmd.main.db')
+    def test_results(self, mock_db):
+        test_uuid = str(uuid.uuid4())
+        value = [
+            {'key': 'key', 'data': {'raw': 'raw'}}
+        ]
+        mock_db.task_result_get_all_by_uuid.return_value = value
+        self.task.results(test_uuid)
+        mock_db.task_result_get_all_by_uuid.assert_called_once_with(test_uuid)
+
     def test_list(self):
         db_response = [
             {'uuid': 'a', 'created_at': 'b', 'status': 'c', 'failed': True}
