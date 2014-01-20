@@ -25,6 +25,7 @@ import prettytable
 
 from rally.cmd import cliutils
 from rally import db
+from rally import exceptions
 from rally.openstack.common.gettextutils import _
 from rally.orchestrator import api
 from rally import processing
@@ -118,7 +119,10 @@ class TaskCommands(object):
         """
         with open(task) as task_file:
             config_dict = json.load(task_file)
-            api.start_task(deploy_id, config_dict)
+            try:
+                api.start_task(deploy_id, config_dict)
+            except exceptions.InvalidArgumentsException:
+                print(_("Reason: %s") % sys.exc_info()[1])
 
     @cliutils.args('--task-id', type=str, dest='task_id', help='UUID of task')
     def abort(self, task_id):

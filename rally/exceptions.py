@@ -151,3 +151,12 @@ class TaskInvalidStatus(RallyException):
 
 class ChecksumMismatch(RallyException):
     msg_fmt = _("Checksum mismatch for image: %(url)s")
+
+
+class InvalidAdminException(InvalidArgumentsException):
+    msg_fmt = _("user %(username)s doesn't have 'admin' role")
+
+
+class InvalidEndpointsException(InvalidArgumentsException):
+    msg_fmt = _("wrong keystone credentials specified in your endpoint"
+                " properties. (HTTP 401)")
