@@ -50,6 +50,21 @@ class TaskCommandsTestCase(test.BaseTestCase):
             self.task.status(test_uuid)
             mock_db.task_get.assert_called_once_with(test_uuid)
 
+    @mock.patch('rally.cmd.main.db')
+    def test_detailed(self, mock_db):
+        test_uuid = str(uuid.uuid4())
+        value = {'task_id': "task", "status": "status", "results": []}
+        mock_db.task_get_detailed = mock.MagicMock(return_value=value)
+        self.task.detailed(test_uuid)
+        mock_db.task_get_detailed.assert_called_once_with(test_uuid)
+
+    @mock.patch('rally.cmd.main.db')
+    def test_detailed_wrong_id(self, mock_db):
+        test_uuid = str(uuid.uuid4())
+        mock_db.task_get_detailed = mock.MagicMock(return_value=None)
+        self.task.detailed(test_uuid)
+        mock_db.task_get_detailed.assert_called_once_with(test_uuid)
+
     def test_list(self):
         db_response = [
             {'uuid': 'a', 'created_at': 'b', 'status': 'c', 'failed': True}

@@ -147,7 +147,7 @@ class TaskCommands(object):
         """Get detailed information about task
 
         :param task_id: Task uuid
-        Prints detailed infomration of task.
+        Prints detailed information of task.
         """
 
         if task_id == "last":
@@ -155,6 +155,10 @@ class TaskCommands(object):
             task_id = task.uuid
         else:
             task = db.task_get_detailed(task_id)
+
+        if task is None:
+            print("The task %s can not be found" % task_id)
+            return
 
         print()
         print("=" * 80)
