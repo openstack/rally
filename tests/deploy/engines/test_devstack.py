@@ -80,7 +80,7 @@ class DevstackEngineTestCase(test.BaseTestCase):
                          m_server.mock_calls)
         self.engine.configure_devstack.assert_called_once_with(s2)
         self.engine.start_devstack.assert_called_once_with(s2)
-        self.assertEqual(endpoint, {
+        self.assertEqual(endpoint.to_dict(), {
             'auth_url': 'http://fakehost:5000/v2.0/',
             'username': 'admin',
             'password': 'secret',

@@ -47,8 +47,9 @@ class TestDummyDeployEngine(test.TestCase):
 
     def test_deploy(self):
         engine = dummy.DummyEngine(self.deployment)
+        endpoint = engine.deploy()
         self.assertEqual(self.deployment['config']['endpoint'],
-                         engine.deploy())
+                         endpoint.to_dict())
 
     def test_cleanup(self):
         dummy.DummyEngine(self.deployment).cleanup()
