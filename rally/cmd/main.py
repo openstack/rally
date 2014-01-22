@@ -18,11 +18,11 @@
 from __future__ import print_function
 
 import json
+import os
 import pprint
+import prettytable
 import sys
 
-import os
-import prettytable
 
 from rally.cmd import cliutils
 from rally.cmd import envutils
@@ -36,20 +36,50 @@ from rally import processing
 
 class DeploymentCommands(object):
 
-    @cliutils.args('--filename', type=str, required=True,
-                   help='A path to the configuration file of the deployment.')
     @cliutils.args('--name', type=str, required=True,
                    help='A name of the deployment.')
-    def create(self, filename, name):
+    @cliutils.args('--fromenv', action='store_true',
+                   help='Read environment variables instead of config file')
+    @cliutils.args('--filename', type=str, required=False,
+                   help='A path to the configuration file of the '
+                   'deployment.')
+    def create(self, name, fromenv=False, filename=None):
         """Create a new deployment on the basis of configuration file.
 
+        :param fromenv: boolean, read environment instead of config file
         :param filename: a path to the configuration file
         :param name: a name of the deployment
         """
-        with open(filename) as f:
-            config = json.load(f)
-            deployment = api.create_deploy(config, name)
-            self.list(deployment_list=[deployment])
+
+        if fromenv:
+            required_env_vars = ["OS_USERNAME", "OS_PASSWORD", "OS_AUTH_URL",
+                                 "OS_TENANT_NAME"]
+
+            unavailable_vars = [v for v in required_env_vars
+                                if v not in os.environ]
+            if unavailable_vars:
+                print("The following environment variables are required but "
+                      "not set: %s" % ' '.join(unavailable_vars))
+                return
+
+            config = {
+                "name": "DummyEngine",
+                "endpoint": {
+                    "auth_url": os.environ['OS_AUTH_URL'],
+                    "username": os.environ['OS_USERNAME'],
+                    "password": os.environ['OS_PASSWORD'],
+                    "tenant_name": os.environ['OS_TENANT_NAME']
+                }
+            }
+        else:
+            if not filename:
+                print("Either --filename or --fromenv is required")
+                return
+            with open(filename) as f:
+                config = json.load(f)
+
+        deployment = api.create_deploy(config, name)
+        self.list(deployment_list=[deployment])
 
     @cliutils.args('--deploy-id', dest='deploy_id', type=str, required=False,
                    help='UUID of a deployment.')

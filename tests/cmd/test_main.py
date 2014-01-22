@@ -128,8 +128,28 @@ class DeploymentCommandsTestCase(test.BaseTestCase):
                 mock.mock_open(read_data='{"some": "json"}'),
                 create=True)
     def test_create(self, mock_create):
-        self.deployment.create('path_to_config.json', 'fake_deploy')
+        self.deployment.create('fake_deploy', False, 'path_to_config.json')
         mock_create.assert_called_once_with({'some': 'json'}, 'fake_deploy')
+
+    @mock.patch.dict(os.environ, {'OS_AUTH_URL': 'fake_auth_url',
+                                  'OS_USERNAME': 'fake_username',
+                                  'OS_PASSWORD': 'fake_password',
+                                  'OS_TENANT_NAME': 'fake_tenant_name'})
+    @mock.patch('rally.cmd.main.api.create_deploy')
+    def test_createfromenv(self, mock_create):
+        self.deployment.create('from_env', True)
+        mock_create.assert_called_once_with(
+            {
+                "name": "DummyEngine",
+                "endpoint": {
+                    "auth_url": 'fake_auth_url',
+                    "username": 'fake_username',
+                    "password": 'fake_password',
+                    "tenant_name": 'fake_tenant_name'
+                }
+            },
+            'from_env'
+        )
 
     @mock.patch('rally.cmd.main.api.recreate_deploy')
     def test_recreate(self, mock_recreate):
