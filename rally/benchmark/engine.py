@@ -16,6 +16,8 @@
 import json
 import jsonschema
 
+from keystoneclient.v2_0 import client as keystone
+
 from rally.benchmark import base
 from rally.benchmark import runner
 from rally import consts
@@ -148,12 +150,14 @@ class TestEngine(object):
                                     tenant_name=self.endpoint['tenant_name'],
                                     auth_url=self.endpoint['auth_url'])
 
-        # Ensure that user is admin
-        roles = clients.get_keystone_client().auth_ref['user']['roles']
-        if not any("admin" == role['name'] for role in roles):
-            message = _("user '%s' doesn't have "
-                        "'admin' role") % self.endpoint["username"]
-            raise exceptions.InvalidArgumentsException(message=message)
+        try:
+            # Ensure that user is admin
+            roles = clients.get_keystone_client().auth_ref['user']['roles']
+            if not any("admin" == role['name'] for role in roles):
+                raise exceptions.InvalidAdminException(
+                    username=self.endpoint["username"])
+        except keystone.exceptions.Unauthorized:
+            raise exceptions.InvalidEndpointsException()
         return self
 
     def __enter__(self):

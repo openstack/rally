@@ -114,10 +114,13 @@ class EngineFactory(object):
 
     def __exit__(self, exc_type, exc_value, exc_traceback):
         if exc_type is not None:
-            LOG.error(_("Deployment %(uuid)s: Error was occurred into context "
+            exc_info = None
+            if not issubclass(exc_type, exceptions.InvalidArgumentsException):
+                exc_info = (exc_type, exc_value, exc_traceback)
+            LOG.error(_("Deployment %(uuid)s: Error has occurred into context "
                         "of the deployment"),
                       {'uuid': self.deployment['uuid']},
-                      exc_info=(exc_type, exc_value, exc_traceback))
+                      exc_info=exc_info)
             status = self.deployment['status']
             if status in (consts.DeployStatus.DEPLOY_INIT,
                           consts.DeployStatus.DEPLOY_STARTED):

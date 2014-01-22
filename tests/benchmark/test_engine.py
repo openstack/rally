@@ -127,7 +127,16 @@ class TestEngineTestCase(test.TestCase):
             auth_ref['user']['roles'] = [{'name': 'notadmin'}]
         tester = engine.TestEngine(self.valid_test_config_continuous_times,
                                    mock.MagicMock())
-        self.assertRaises(exceptions.InvalidArgumentsException,
+        self.assertRaises(exceptions.InvalidAdminException,
+                          tester.bind, self.valid_endpoint)
+
+    @mock.patch("rally.cmd.main.api.engine.osclients.Clients"
+                ".get_keystone_client")
+    def test_bind_unauthorized_keystone(self, mock_osclients):
+        mock_osclients.side_effect = exceptions.InvalidEndpointsException
+        tester = engine.TestEngine(self.valid_test_config_continuous_times,
+                                   mock.MagicMock())
+        self.assertRaises(exceptions.InvalidEndpointsException,
                           tester.bind, self.valid_endpoint)
 
     @mock.patch("rally.benchmark.runner.ScenarioRunner.run")
