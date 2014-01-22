@@ -120,7 +120,10 @@ class TaskCommands(object):
         with open(task) as task_file:
             config_dict = json.load(task_file)
             try:
-                api.start_task(deploy_id, config_dict)
+                task = api.create_task(deploy_id)
+                self.list(task_list=[task])
+                api.start_task(deploy_id, config_dict, task=task)
+                self.detailed(task_id=task['uuid'])
             except exceptions.InvalidArgumentsException:
                 print(_("Reason: %s") % sys.exc_info()[1])
 
@@ -246,13 +249,15 @@ class TaskCommands(object):
         else:
             print(_("Wrong value for --pretty=%s") % pretty)
 
-    def list(self):
+    def list(self, task_list=None):
         """Print a list of all tasks."""
 
         headers = ['uuid', 'created_at', 'status', 'failed']
         table = prettytable.PrettyTable(headers)
 
-        for t in db.task_list():
+        task_list = task_list or db.task_list()
+
+        for t in task_list:
             r = [t['uuid'], str(t['created_at']), t['status'], t['failed']]
             table.add_row(r)
 
