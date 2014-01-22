@@ -160,3 +160,7 @@ class InvalidAdminException(InvalidArgumentsException):
 class InvalidEndpointsException(InvalidArgumentsException):
     msg_fmt = _("wrong keystone credentials specified in your endpoint"
                 " properties. (HTTP 401)")
+
+
+class HostUnreachableException(InvalidArgumentsException):
+    msg_fmt = _("unable to establish connection to the remote host: %(url)s")

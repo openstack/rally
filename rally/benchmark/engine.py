@@ -16,7 +16,7 @@
 import json
 import jsonschema
 
-from keystoneclient.v2_0 import client as keystone
+from keystoneclient import exceptions as keystone_exceptions
 
 from rally.benchmark import base
 from rally.benchmark import runner
@@ -156,8 +156,11 @@ class TestEngine(object):
             if not any("admin" == role['name'] for role in roles):
                 raise exceptions.InvalidAdminException(
                     username=self.endpoint["username"])
-        except keystone.exceptions.Unauthorized:
+        except keystone_exceptions.Unauthorized:
             raise exceptions.InvalidEndpointsException()
+        except keystone_exceptions.AuthorizationFailure:
+            raise exceptions.HostUnreachableException(
+                url=self.endpoint['auth_url'])
         return self
 
     def __enter__(self):

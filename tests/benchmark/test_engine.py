@@ -17,6 +17,8 @@
 
 import mock
 
+from keystoneclient import exceptions as keystone_exceptions
+
 from rally.benchmark import engine
 from rally import consts
 from rally import exceptions
@@ -133,10 +135,19 @@ class TestEngineTestCase(test.TestCase):
     @mock.patch("rally.cmd.main.api.engine.osclients.Clients"
                 ".get_keystone_client")
     def test_bind_unauthorized_keystone(self, mock_osclients):
-        mock_osclients.side_effect = exceptions.InvalidEndpointsException
+        mock_osclients.side_effect = keystone_exceptions.Unauthorized
         tester = engine.TestEngine(self.valid_test_config_continuous_times,
                                    mock.MagicMock())
         self.assertRaises(exceptions.InvalidEndpointsException,
+                          tester.bind, self.valid_endpoint)
+
+    @mock.patch("rally.cmd.main.api.engine.osclients.Clients"
+                ".get_keystone_client")
+    def test_bind_keystone_host_unreachable(self, mock_osclients):
+        mock_osclients.side_effect = keystone_exceptions.AuthorizationFailure
+        tester = engine.TestEngine(self.valid_test_config_continuous_times,
+                                   mock.MagicMock())
+        self.assertRaises(exceptions.HostUnreachableException,
                           tester.bind, self.valid_endpoint)
 
     @mock.patch("rally.benchmark.runner.ScenarioRunner.run")
