@@ -21,11 +21,14 @@ import json
 import pprint
 import sys
 
+import os
 import prettytable
 
 from rally.cmd import cliutils
+from rally.cmd import envutils
 from rally import db
 from rally import exceptions
+from rally import fileutils
 from rally.openstack.common.gettextutils import _
 from rally.orchestrator import api
 from rally import processing
@@ -48,18 +51,19 @@ class DeploymentCommands(object):
             deployment = api.create_deploy(config, name)
             self.list(deployment_list=[deployment])
 
-    @cliutils.args('--deploy-id', dest='deploy_id', type=str, required=True,
+    @cliutils.args('--deploy-id', dest='deploy_id', type=str, required=False,
                    help='UUID of a deployment.')
-    def recreate(self, deploy_id):
+    def recreate(self, deploy_id=None):
         """Destroy and create an existing deployment.
 
         :param deploy_id: a UUID of the deployment
         """
+        deploy_id = deploy_id or envutils.default_deployment_id()
         api.recreate_deploy(deploy_id)
 
-    @cliutils.args('--deploy-id', dest='deploy_id', type=str, required=True,
+    @cliutils.args('--deploy-id', dest='deploy_id', type=str, required=False,
                    help='UUID of a deployment.')
-    def destroy(self, deploy_id):
+    def destroy(self, deploy_id=None):
         """Destroy the deployment.
 
         Release resources that are allocated for the deployment. The
@@ -67,6 +71,7 @@ class DeploymentCommands(object):
 
         :param deploy_id: a UUID of the deployment
         """
+        deploy_id = deploy_id or envutils.default_deployment_id()
         api.destroy_deploy(deploy_id)
 
     def list(self, deployment_list=None):
@@ -81,23 +86,25 @@ class DeploymentCommands(object):
 
         print(table)
 
-    @cliutils.args('--deploy-id', dest='deploy_id', type=str, required=True,
+    @cliutils.args('--deploy-id', dest='deploy_id', type=str, required=False,
                    help='UUID of a deployment.')
-    def config(self, deploy_id):
+    def config(self, deploy_id=None):
         """Print on stdout a config of the deployment in JSON format.
 
         :param deploy_id: a UUID of the deployment
         """
+        deploy_id = deploy_id or envutils.default_deployment_id()
         deploy = db.deployment_get(deploy_id)
         print(json.dumps(deploy['config']))
 
-    @cliutils.args('--deploy-id', dest='deploy_id', type=str, required=True,
+    @cliutils.args('--deploy-id', dest='deploy_id', type=str, required=False,
                    help='UUID of a deployment.')
-    def endpoint(self, deploy_id):
+    def endpoint(self, deploy_id=None):
         """Print endpoint of the deployment.
 
         :param deploy_id: a UUID of the deployment
         """
+        deploy_id = deploy_id or envutils.default_deployment_id()
         headers = ['auth_url', 'username', 'password', 'tenant_name']
         table = prettytable.PrettyTable(headers)
         endpoint = db.deployment_get(deploy_id)['endpoint']
@@ -107,16 +114,17 @@ class DeploymentCommands(object):
 
 class TaskCommands(object):
 
-    @cliutils.args('--deploy-id', type=str, dest='deploy_id', required=True,
+    @cliutils.args('--deploy-id', type=str, dest='deploy_id', required=False,
                    help='UUID of the deployment')
     @cliutils.args('--task',
                    help='Path to the file with full configuration of task')
-    def start(self, deploy_id, task):
+    def start(self, task, deploy_id=None):
         """Run a benchmark task.
 
-        :param deploy_id: a UUID of a deployment
         :param task: a file with json configration
+        :param deploy_id: a UUID of a deployment
         """
+        deploy_id = deploy_id or envutils.default_deployment_id()
         with open(task) as task_file:
             config_dict = json.load(task_file)
             try:
@@ -285,6 +293,20 @@ class TaskCommands(object):
             print("Plot type '%s' not supported." % plot_type)
 
 
+class UseCommands(object):
+
+    def deployment(self, deploy_id):
+        """Set the RALLY_DEPLOYMENT env var to be used by all CLI commands
+
+        :param deploy_id: a UUID of a deployment
+        """
+        print('Using deployment : %s' % deploy_id)
+        if not os.path.exists(os.path.expanduser('~/.rally/')):
+            os.makedirs(os.path.expanduser('~/.rally/'))
+        expanded_path = os.path.expanduser('~/.rally/deployment')
+        fileutils.update_env_file(expanded_path, 'RALLY_DEPLOYMENT', deploy_id)
+
+
 def deprecated():
     print("\n\n---\n\nopenstack-rally and openstack-rally-manage are "
           "deprecated, please use rally and rally-manage\n\n---\n\n")
@@ -295,6 +317,7 @@ def main():
     categories = {
         'task': TaskCommands,
         'deployment': DeploymentCommands,
+        'use': UseCommands,
     }
     cliutils.run(sys.argv, categories)
 
