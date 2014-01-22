@@ -12,8 +12,8 @@ else
     exit 2
 fi
 
-useradd rally -m
-mkdir -m 700 /home/rally/.ssh
+useradd rally -m || echo "Warning: user rally is already exists" >&2
+mkdir -m 700 /home/rally/.ssh || true
 cp /root/.ssh/authorized_keys /home/rally/.ssh/
 chown -R rally /home/rally/.ssh
 cat >> /etc/sudoers <<EOF
@@ -21,8 +21,7 @@ rally ALL=(root) NOPASSWD:ALL
 Defaults:rally !requiretty
 EOF
 
-/sbin/iptables -F
+/sbin/iptables -F || echo "Warning: iptables not found" >&2
 echo "export PATH=$PATH:/sbin/" >> /home/rally/.bashrc
-chmod 440 /etc/sudoers.d/42_rally
 
 exit 0
