@@ -60,7 +60,7 @@ class Deployment(BASE, RallyBase):
     #engine_name = sa.Column(sa.String(36))
 
     config = sa.Column(
-        sa_types.MutableDict.as_mutable(sa_types.JSONEncodedDict),
+        sa_types.MutableJSONEncodedDict,
         default={},
         nullable=False,
     )
@@ -69,7 +69,7 @@ class Deployment(BASE, RallyBase):
     #                represented by a set of parameters are auth_url,
     #                user, password and project.
     endpoint = sa.Column(
-        sa_types.MutableDict.as_mutable(sa_types.JSONEncodedDict),
+        sa_types.MutableJSONEncodedDict,
         default={},
         nullable=False,
     )
@@ -105,7 +105,7 @@ class Resource(BASE, RallyBase):
     type = sa.Column(sa.String(255))
 
     info = sa.Column(
-        sa_types.MutableDict.as_mutable(sa_types.JSONEncodedDict),
+        sa_types.MutableJSONEncodedDict,
         default={},
         nullable=False,
     )
@@ -157,10 +157,8 @@ class TaskResult(BASE, RallyBase):
 
     id = sa.Column(sa.Integer, primary_key=True, autoincrement=True)
 
-    key = sa.Column(sa_types.MutableDict.as_mutable(sa_types.JSONEncodedDict),
-                    nullable=False)
-    data = sa.Column(sa_types.MutableDict.as_mutable(sa_types.JSONEncodedDict),
-                     nullable=False)
+    key = sa.Column(sa_types.MutableJSONEncodedDict, nullable=False)
+    data = sa.Column(sa_types.MutableJSONEncodedDict, nullable=False)
 
     task_uuid = sa.Column(sa.String(36), sa.ForeignKey('tasks.uuid'))
     task = sa.orm.relationship(Task,
