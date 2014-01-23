@@ -37,8 +37,8 @@ class KeystoneScenario(base.Scenario):
        most of them are creating/deleting resources.
     """
 
-    @classmethod
-    def _user_create(cls, name_length=10, password=None, email=None, **kwargs):
+    def _user_create(self, name_length=10, password=None, email=None,
+                     **kwargs):
         """Creates keystone user with random name.
 
         :param name_length: length of generated (ranodm) part of name
@@ -52,10 +52,9 @@ class KeystoneScenario(base.Scenario):
         #                 when we switch to v3.
         password = password or name
         email = email or (name + "@rally.me")
-        return cls.admin_clients("keystone").users.create(name, password,
-                                                          email, **kwargs)
+        return self.admin_clients("keystone").users.create(name, password,
+                                                           email, **kwargs)
 
-    @classmethod
-    def _resource_delete(cls, resource):
+    def _resource_delete(self, resource):
         """"Delete keystone resource."""
         resource.delete()

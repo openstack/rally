@@ -24,8 +24,7 @@ from rally import utils
 
 class NovaScenario(base.Scenario):
 
-    @classmethod
-    def _boot_server(cls, server_name, image_id, flavor_id, **kwargs):
+    def _boot_server(self, server_name, image_id, flavor_id, **kwargs):
         """Boots one server.
 
         Returns when the server is actually booted and is in the "Active"
@@ -45,8 +44,8 @@ class NovaScenario(base.Scenario):
             if 'rally_open' not in kwargs['security_groups']:
                 kwargs['security_groups'].append('rally_open')
 
-        server = cls.clients("nova").servers.create(
-            server_name, image_id, flavor_id, **kwargs)
+        server = self.clients("nova").servers.create(server_name, image_id,
+                                                     flavor_id, **kwargs)
         # NOTE(msdubov): It is reasonable to wait 5 secs before starting to
         #                check whether the server is ready => less API calls.
         time.sleep(5)
@@ -56,8 +55,7 @@ class NovaScenario(base.Scenario):
                                 timeout=600, check_interval=3)
         return server
 
-    @classmethod
-    def _reboot_server(cls, server, soft=True):
+    def _reboot_server(self, server, soft=True):
         """Reboots the given server using hard or soft reboot.
 
         A reboot will be issued on the given server upon which time
@@ -73,8 +71,7 @@ class NovaScenario(base.Scenario):
                        update_resource=bench_utils.get_from_manager(),
                        timeout=600, check_interval=3)
 
-    @classmethod
-    def _start_server(cls, server):
+    def _start_server(self, server):
         """Starts the given server.
 
         A start will be issued for the given server upon which time
@@ -87,8 +84,7 @@ class NovaScenario(base.Scenario):
                        update_resource=bench_utils.get_from_manager(),
                        timeout=600, check_interval=2)
 
-    @classmethod
-    def _stop_server(cls, server):
+    def _stop_server(self, server):
         """Stop the given server.
 
         Issues a stop on the given server and waits for the server
@@ -101,8 +97,7 @@ class NovaScenario(base.Scenario):
                        update_resource=bench_utils.get_from_manager(),
                        timeout=600, check_interval=2)
 
-    @classmethod
-    def _rescue_server(cls, server):
+    def _rescue_server(self, server):
         """Rescue the given server.
 
         Returns when the server is actually rescue and is in the "Rescue"
@@ -116,8 +111,7 @@ class NovaScenario(base.Scenario):
                        update_resource=bench_utils.get_from_manager(),
                        timeout=600, check_interval=3)
 
-    @classmethod
-    def _unrescue_server(cls, server):
+    def _unrescue_server(self, server):
         """Unrescue the given server.
 
         Returns when the server is unrescue and waits to become ACTIVE
@@ -130,8 +124,7 @@ class NovaScenario(base.Scenario):
                        update_resource=bench_utils.get_from_manager(),
                        timeout=600, check_interval=3)
 
-    @classmethod
-    def _suspend_server(cls, server):
+    def _suspend_server(self, server):
         """Suspends the given server.
 
         Returns when the server is actually suspended and is in the "Suspended"
@@ -145,8 +138,7 @@ class NovaScenario(base.Scenario):
                        update_resource=bench_utils.get_from_manager(),
                        timeout=600, check_interval=3)
 
-    @classmethod
-    def _delete_server(cls, server):
+    def _delete_server(self, server):
         """Deletes the given server.
 
         Returns when the server is actually deleted.
@@ -158,15 +150,13 @@ class NovaScenario(base.Scenario):
                        update_resource=bench_utils.get_from_manager(),
                        timeout=600, check_interval=3)
 
-    @classmethod
-    def _delete_all_servers(cls):
+    def _delete_all_servers(self):
         """Deletes all servers in current tenant."""
-        servers = cls.clients("nova").servers.list()
+        servers = self.clients("nova").servers.list()
         for server in servers:
-            cls._delete_server(server)
+            self._delete_server(server)
 
-    @classmethod
-    def _delete_image(cls, image):
+    def _delete_image(self, image):
         """Deletes the given image.
 
         Returns when the image is actually deleted.
@@ -178,8 +168,7 @@ class NovaScenario(base.Scenario):
                        update_resource=bench_utils.get_from_manager(),
                        timeout=600, check_interval=3)
 
-    @classmethod
-    def _create_image(cls, server):
+    def _create_image(self, server):
         """Creates an image of the given server
 
         Uses the server name to name the created image. Returns when the image
@@ -189,18 +178,17 @@ class NovaScenario(base.Scenario):
 
         :returns: Created image object
         """
-        image_uuid = cls.clients("nova").servers.create_image(server,
-                                                              server.name)
-        image = cls.clients("nova").images.get(image_uuid)
+        image_uuid = self.clients("nova").servers.create_image(server,
+                                                               server.name)
+        image = self.clients("nova").images.get(image_uuid)
         image = utils.wait_for(image,
                                is_ready=bench_utils.resource_is("ACTIVE"),
                                update_resource=bench_utils.get_from_manager(),
                                timeout=600, check_interval=3)
         return image
 
-    @classmethod
-    def _boot_servers(cls, name_prefix, image_id, flavor_id,
-                      requests, instances_per_request=1, **kwargs):
+    def _boot_servers(self, name_prefix, image_id, flavor_id,
+                      requests, instances_amount=1, **kwargs):
         """Boots multiple servers.
 
         Returns when all the servers are actually booted and are in the
@@ -211,22 +199,21 @@ class NovaScenario(base.Scenario):
         :param image_id: ID of the image to be used for server creation
         :param flavor_id: ID of the flavor to be used for server creation
         :param requests: Number of booting requests to perform
-        :param instances_per_request: Number of instances to boot
-                                      per each request
+        :param instances_amount: Number of instances to boot per each request
 
         :returns: List of created server objects
         """
         for i in range(requests):
-            cls.clients("nova").servers.create('%s_%d' % (name_prefix, i),
-                                               image_id, flavor_id,
-                                               min_count=instances_per_request,
-                                               max_count=instances_per_request,
-                                               **kwargs)
+            self.clients("nova").servers.create('%s_%d' % (name_prefix, i),
+                                                image_id, flavor_id,
+                                                min_count=instances_amount,
+                                                max_count=instances_amount,
+                                                **kwargs)
         # NOTE(msdubov): Nova python client returns only one server even when
         #                min_count > 1, so we have to rediscover all the
         #                created servers manyally.
         servers = filter(lambda server: server.name.startswith(name_prefix),
-                         cls.clients("nova").servers.list())
+                         self.clients("nova").servers.list())
         time.sleep(5)
         servers = [utils.wait_for(server,
                                   is_ready=bench_utils.resource_is("ACTIVE"),
@@ -236,6 +223,5 @@ class NovaScenario(base.Scenario):
                    for server in servers]
         return servers
 
-    @classmethod
-    def _generate_random_name(cls, length):
+    def _generate_random_name(self, length):
         return ''.join(random.choice(string.lowercase) for i in range(length))

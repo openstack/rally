@@ -37,8 +37,7 @@ def generate_volume_name(length=10):
 
 class CinderScenario(base.Scenario):
 
-    @classmethod
-    def _create_volume(cls, size, **kwargs):
+    def _create_volume(self, size, **kwargs):
         """create one volume.
 
         Returns when the volume is actually created and is in the "Available"
@@ -51,7 +50,7 @@ class CinderScenario(base.Scenario):
         """
         volumename = kwargs.get('display_name', generate_volume_name(10))
         kwargs['display_name'] = volumename
-        volume = cls.clients("cinder").volumes.create(size, **kwargs)
+        volume = self.clients("cinder").volumes.create(size, **kwargs)
         # NOTE(msdubov): It is reasonable to wait 5 secs before starting to
         #                check whether the volume is ready => less API calls.
         time.sleep(3)
@@ -61,8 +60,7 @@ class CinderScenario(base.Scenario):
                                 timeout=600, check_interval=3)
         return volume
 
-    @classmethod
-    def _delete_volume(cls, volume):
+    def _delete_volume(self, volume):
         """Delete the given volume.
 
         Returns when the volume is actually deleted.

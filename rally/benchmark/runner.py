@@ -42,24 +42,20 @@ def _run_scenario_loop(args):
 
     LOG.info("ITER: %s" % i)
 
-    # NOTE(msdubov): Each scenario run uses a random openstack client
-    #                from a predefined set to act from different users.
-    cls._clients = random.choice(__openstack_clients__)
-    cls._admin_clients = __admin_clients__
-    cls._context = __scenario_context__
-
-    cls.idle_time = 0
+    scenario = cls(context=__scenario_context__,
+                   admin_clients=__admin_clients__,
+                   clients=random.choice(__openstack_clients__))
 
     try:
         scenario_output = None
         with rutils.Timer() as timer:
-            scenario_output = getattr(cls, method_name)(**kwargs)
+            scenario_output = getattr(scenario, method_name)(**kwargs)
         error = None
     except Exception as e:
         error = utils.format_exc(e)
     finally:
-        return {"time": timer.duration() - cls.idle_time,
-                "idle_time": cls.idle_time, "error": error,
+        return {"time": timer.duration() - scenario.idle_time(),
+                "idle_time": scenario.idle_time(), "error": error,
                 "scenario_output": scenario_output}
 
 

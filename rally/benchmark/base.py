@@ -28,6 +28,12 @@ class Scenario(object):
     """
     registred = False
 
+    def __init__(self, context=None, admin_clients=None, clients=None):
+        self._context = context
+        self._admin_clients = admin_clients
+        self._clients = clients
+        self._idle_time = 0
+
     @staticmethod
     def register():
         if not Scenario.registred:
@@ -74,18 +80,16 @@ class Scenario(object):
     def cleanup(cls):
         """This method should free all allocated resources."""
 
-    @classmethod
-    def context(cls):
+    def context(self):
         """Returns the context of the current benchmark scenario.
 
         The context is the return value of the init() class.
 
         :returns: Dict
         """
-        return cls._context
+        return self._context
 
-    @classmethod
-    def clients(cls, client_type):
+    def clients(self, client_type):
         """Returns a python openstack client of the requested type.
 
         The client will be that for one of the temporary non-administrator
@@ -95,24 +99,22 @@ class Scenario(object):
 
         :returns: Python openstack client object
         """
-        return cls._clients[client_type]
+        return self._clients[client_type]
 
-    @classmethod
-    def admin_clients(cls, client_type):
+    def admin_clients(self, client_type):
         """Returns a python admin openstack client of the requested type.
 
         :param client_type: Client type ("nova"/"glance" etc.)
 
         :returns: Python openstack client object
         """
-        return cls._admin_clients[client_type]
+        return self._admin_clients[client_type]
 
-    @classmethod
-    def sleep_between(cls, min_sleep, max_sleep):
+    def sleep_between(self, min_sleep, max_sleep):
         """Performs a time.sleep() call for a random amount of seconds.
 
         The exact time is chosen uniformly randomly from the interval
-        [min_sleep; max_sleep). The method also updates the idle_time class
+        [min_sleep; max_sleep). The method also updates the idle_time
         variable to take into account the overall time spent on sleeping.
 
         :param min_sleep: Minimum sleep time in seconds (non-negative)
@@ -124,4 +126,8 @@ class Scenario(object):
 
         sleep_time = random.uniform(min_sleep, max_sleep)
         time.sleep(sleep_time)
-        cls.idle_time += sleep_time
+        self._idle_time += sleep_time
+
+    def idle_time(self):
+        """Returns duration of all sleep_between."""
+        return self._idle_time

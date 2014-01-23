@@ -395,22 +395,16 @@ class FakeClients(object):
 
 class FakeScenario(base.Scenario):
 
-    idle_time = 0
+    def idle_time(self):
+        return 0
 
-    @classmethod
-    def class_init(cls, endpoints):
+    def do_it(self, **kwargs):
         pass
 
-    @classmethod
-    def do_it(cls, **kwargs):
+    def too_long(self, **kwargs):
         pass
 
-    @classmethod
-    def too_long(cls, **kwargs):
-        pass
-
-    @classmethod
-    def something_went_wrong(cls, **kwargs):
+    def something_went_wrong(self, **kwargs):
         raise Exception("Something went wrong")
 
 

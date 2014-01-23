@@ -28,40 +28,37 @@ from rally import sshutils
 
 LOG = logging.getLogger(__name__)
 
-ACTION_BUILDER = scenario_utils.ActionBuilder(
-        ['hard_reboot', 'soft_reboot', 'stop_start', 'rescue_unrescue'])
-
 
 class NovaServers(utils.NovaScenario,
                   cinder_utils.CinderScenario):
 
-    @classmethod
-    def boot_and_delete_server(cls, image_id, flavor_id,
+    def __init__(self, *args, **kwargs):
+        super(NovaServers, self).__init__(*args, **kwargs)
+
+    def boot_and_delete_server(self, image_id, flavor_id,
                                min_sleep=0, max_sleep=0, **kwargs):
         """Tests booting and then deleting an image."""
-        server_name = cls._generate_random_name(16)
+        server_name = self._generate_random_name(16)
 
-        server = cls._boot_server(server_name, image_id, flavor_id, **kwargs)
-        cls.sleep_between(min_sleep, max_sleep)
-        cls._delete_server(server)
+        server = self._boot_server(server_name, image_id, flavor_id, **kwargs)
+        self.sleep_between(min_sleep, max_sleep)
+        self._delete_server(server)
 
-    @classmethod
-    def boot_server_from_volume_and_delete(cls, image_id, flavor_id,
+    def boot_server_from_volume_and_delete(self, image_id, flavor_id,
                                            volume_size,
                                            min_sleep=0, max_sleep=0, **kwargs):
         """Tests booting from volume and then deleting an image and volume."""
-        server_name = cls._generate_random_name(16)
+        server_name = self._generate_random_name(16)
 
-        volume = cls._create_volume(volume_size, imageRef=image_id)
+        volume = self._create_volume(volume_size, imageRef=image_id)
         block_device_mapping = {'vda': '%s:::1' % volume.id}
-        server = cls._boot_server(server_name, image_id, flavor_id,
-                                  block_device_mapping=block_device_mapping,
-                                  **kwargs)
-        cls.sleep_between(min_sleep, max_sleep)
-        cls._delete_server(server)
+        server = self._boot_server(server_name, image_id, flavor_id,
+                                   block_device_mapping=block_device_mapping,
+                                   **kwargs)
+        self.sleep_between(min_sleep, max_sleep)
+        self._delete_server(server)
 
-    @classmethod
-    def boot_runcommand_delete_server(cls, image_id, flavor_id,
+    def boot_runcommand_delete_server(self, image_id, flavor_id,
                                       script, interpreter, network='private',
                                       username='ubuntu', ip_version=4,
                                       retries=60, port=22, **kwargs):
@@ -81,10 +78,10 @@ class NovaServers(utils.NovaScenario,
 
         Example Script in doc/samples/support/instance_dd_test.sh
         """
-        server_name = cls._generate_random_name(16)
+        server_name = self._generate_random_name(16)
 
-        server = cls._boot_server(server_name, image_id, flavor_id,
-                                  key_name='rally_ssh_key', **kwargs)
+        server = self._boot_server(server_name, image_id, flavor_id,
+                                   key_name='rally_ssh_key', **kwargs)
 
         if network not in server.addresses:
             raise ValueError(
@@ -99,7 +96,7 @@ class NovaServers(utils.NovaScenario,
         server_ip = [ip for ip in server.addresses[network] if
                      ip['version'] == ip_version][0]['addr']
         ssh = sshutils.SSH(ip=server_ip, port=port, user=username,
-                           key=cls.clients('ssh_key_pair')['private'],
+                           key=self.clients('ssh_key_pair')['private'],
                            key_type='string')
 
         for retry in range(retries):
@@ -123,12 +120,12 @@ class NovaServers(utils.NovaScenario,
                             'Error: %(error)s') % dict(
                                 id=server.id, ip=server_ip, retry=retry,
                                 error=benchmark_utils.format_exc(e)))
-                cls.sleep_between(5, 5)
+                self.sleep_between(5, 5)
             except ValueError:
                 LOG.error(_('Script %(script)s did not output valid JSON. ')
                           % dict(script=script))
 
-        cls._delete_server(server)
+        self._delete_server(server)
         LOG.debug(_('Output streams from in-instance script execution: '
                     'stdout: %(stdout)s, stderr: $(stderr)s') % dict(
                         stdout=str(streams[sshutils.SSH.STDOUT_INDEX]),
@@ -136,66 +133,76 @@ class NovaServers(utils.NovaScenario,
         return dict(data=streams[sshutils.SSH.STDOUT_INDEX],
                     errors=streams[sshutils.SSH.STDERR_INDEX])
 
-    @classmethod
-    def boot_and_bounce_server(cls, image_id, flavor_id, **kwargs):
+    def boot_and_bounce_server(self, image_id, flavor_id, **kwargs):
         """Tests booting a server then performing stop/start or hard/soft
         reboot a number of times.
         """
+        action_builder = self._bind_actions()
         actions = kwargs.get('actions', [])
         try:
-            ACTION_BUILDER.validate(actions)
+            action_builder.validate(actions)
         except jsonschema.exceptions.ValidationError as error:
             raise rally_exceptions.InvalidConfigException(
                 "Invalid server actions configuration \'%(actions)s\' due to: "
                 "%(error)s" % {'actions': str(actions), 'error': str(error)})
-        server = cls._boot_server(cls._generate_random_name(16),
-                                  image_id, flavor_id, **kwargs)
-        for action in ACTION_BUILDER.build_actions(actions, server):
+        server = self._boot_server(self._generate_random_name(16),
+                                   image_id, flavor_id, **kwargs)
+        for action in action_builder.build_actions(actions, server):
             action()
-        cls._delete_server(server)
+        self._delete_server(server)
 
-    @classmethod
-    def snapshot_server(cls, image_id, flavor_id, **kwargs):
+    def snapshot_server(self, image_id, flavor_id, **kwargs):
         """Tests Nova instance snapshotting."""
-        server_name = cls._generate_random_name(16)
+        server_name = self._generate_random_name(16)
 
-        server = cls._boot_server(server_name, image_id, flavor_id, **kwargs)
-        image = cls._create_image(server)
-        cls._delete_server(server)
+        server = self._boot_server(server_name, image_id, flavor_id, **kwargs)
+        image = self._create_image(server)
+        self._delete_server(server)
 
-        server = cls._boot_server(server_name, image.id, flavor_id, **kwargs)
-        cls._delete_server(server)
-        cls._delete_image(image)
+        server = self._boot_server(server_name, image.id, flavor_id, **kwargs)
+        self._delete_server(server)
+        self._delete_image(image)
 
-    @classmethod
-    def boot_server(cls, image_id, flavor_id, **kwargs):
+    def boot_server(self, image_id, flavor_id, **kwargs):
         """Test VM boot - assumed clean-up is done elsewhere."""
-        server_name = cls._generate_random_name(16)
+        server_name = self._generate_random_name(16)
         if 'nics' not in kwargs:
-            nets = cls.clients("nova").networks.list()
+            nets = self.clients("nova").networks.list()
             if nets:
                 random_nic = random.choice(nets)
                 kwargs['nics'] = [{'net-id': random_nic.id}]
-        cls._boot_server(server_name, image_id, flavor_id, **kwargs)
+        self._boot_server(server_name, image_id, flavor_id, **kwargs)
 
-    @classmethod
-    def boot_server_from_volume(cls, image_id, flavor_id,
+    def boot_server_from_volume(self, image_id, flavor_id,
                                 volume_size, **kwargs):
         """Test VM boot from volume - assumed clean-up is done elsewhere."""
-        server_name = cls._generate_random_name(16)
+        server_name = self._generate_random_name(16)
         if 'nics' not in kwargs:
-            nets = cls.clients("nova").networks.list()
+            nets = self.clients("nova").networks.list()
             if nets:
                 random_nic = random.choice(nets)
                 kwargs['nics'] = [{'net-id': random_nic.id}]
-        volume = cls._create_volume(volume_size, imageRef=image_id)
+        volume = self._create_volume(volume_size, imageRef=image_id)
         block_device_mapping = {'vda': '%s:::1' % volume.id}
-        cls._boot_server(server_name, image_id, flavor_id,
-                         block_device_mapping=block_device_mapping,
-                         **kwargs)
+        self._boot_server(server_name, image_id, flavor_id,
+                          block_device_mapping=block_device_mapping,
+                          **kwargs)
 
-    @classmethod
-    def _stop_and_start_server(cls, server):
+    def _bind_actions(self):
+        actions = ['hard_reboot', 'soft_reboot', 'stop_start',
+                   'rescue_unrescue']
+        action_builder = scenario_utils.ActionBuilder(actions)
+        action_builder.bind_action('hard_reboot', self._reboot_server,
+                                   soft=False)
+        action_builder.bind_action('soft_reboot', self._reboot_server,
+                                   soft=True)
+        action_builder.bind_action('stop_start',
+                                   self._stop_and_start_server)
+        action_builder.bind_action('rescue_unrescue',
+                                   self._rescue_and_unrescue_server)
+        return action_builder
+
+    def _stop_and_start_server(self, server):
         """Stop and then start the given server.
 
         A stop will be issued on the given server upon which time
@@ -206,11 +213,10 @@ class NovaServers(utils.NovaScenario,
         :param server: The server to stop and then start.
 
         """
-        cls._stop_server(server)
-        cls._start_server(server)
+        self._stop_server(server)
+        self._start_server(server)
 
-    @classmethod
-    def _rescue_and_unrescue_server(cls, server):
+    def _rescue_and_unrescue_server(self, server):
         """Rescue and then unrescue the given server.
         A rescue will be issued on the given server upon which time
         this method will wait for the server to become 'RESCUE'.
@@ -221,15 +227,5 @@ class NovaServers(utils.NovaScenario,
         :param server: The server to rescue and then unrescue.
 
         """
-        cls._rescue_server(server)
-        cls._unrescue_server(server)
-
-
-ACTION_BUILDER.bind_action('hard_reboot',
-                           utils.NovaScenario._reboot_server, soft=False)
-ACTION_BUILDER.bind_action('soft_reboot',
-                           utils.NovaScenario._reboot_server, soft=True)
-ACTION_BUILDER.bind_action('stop_start',
-                           NovaServers._stop_and_start_server)
-ACTION_BUILDER.bind_action('rescue_unrescue',
-                           NovaServers._rescue_and_unrescue_server)
+        self._rescue_server(server)
+        self._unrescue_server(server)

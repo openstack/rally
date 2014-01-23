@@ -18,15 +18,21 @@ from rally.benchmark.scenarios.cinder import utils
 
 class CinderVolumes(utils.CinderScenario):
 
-    @classmethod
-    def create_and_delete_volume(cls, size,
-                                 min_sleep=0, max_sleep=0, **kwargs):
-        """Tests creating and then deleting a volume."""
+    def create_and_delete_volume(self, size, min_sleep=0, max_sleep=0,
+                                 **kwargs):
+        """Tests creating and then deleting a volume.
 
-        volume = cls._create_volume(size, **kwargs)
-        cls.sleep_between(min_sleep, max_sleep)
-        cls._delete_volume(volume)
+        Good for testing a maximal bandwith of cloud.
+        """
 
-    @classmethod
-    def create_volume(cls, size, **kwargs):
-        cls._create_volume(size, **kwargs)
+        volume = self._create_volume(size, **kwargs)
+        self.sleep_between(min_sleep, max_sleep)
+        self._delete_volume(volume)
+
+    def create_volume(self, size, **kwargs):
+        """Test creating volumes perfromance.
+
+        Good test to check how influence amount of active volumes on
+        performance of creating new.
+        """
+        self._create_volume(size, **kwargs)

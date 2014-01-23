@@ -24,19 +24,24 @@ CINDER_VOLUMES = "rally.benchmark.scenarios.cinder.volumes.CinderVolumes"
 
 class CinderServersTestCase(test.TestCase):
 
-    @mock.patch(CINDER_VOLUMES + ".sleep_between")
-    @mock.patch(CINDER_VOLUMES + "._delete_volume")
-    @mock.patch(CINDER_VOLUMES + "._create_volume")
-    def _verify_create_and_delete_volume(self, mock_create, mock_delete,
-                                         mock_sleep):
-        fake_volume = object()
-        mock_create.return_value = fake_volume
-        volumes.CinderVolumes.create_and_delete_volume(1, 10, 20,
-                                                       fakearg="f")
-
-        mock_create.assert_called_once_with(1, fakearg="f")
-        mock_sleep.assert_called_once_with(10, 20)
-        mock_delete.assert_called_once_with(fake_volume)
-
     def test_create_and_delete_volume(self):
-        self._verify_create_and_delete_volume()
+        fake_volume = mock.MagicMock()
+
+        scenario = volumes.CinderVolumes()
+        scenario._create_volume = mock.MagicMock(return_value=fake_volume)
+        scenario.sleep_between = mock.MagicMock()
+        scenario._delete_volume = mock.MagicMock()
+
+        scenario.create_and_delete_volume(1, 10, 20, fakearg="f")
+
+        scenario._create_volume.assert_called_once_with(1, fakearg="f")
+        scenario.sleep_between.assert_called_once_with(10, 20)
+        scenario._delete_volume.assert_called_once_with(fake_volume)
+
+    def test_create_volume(self):
+        fake_volume = mock.MagicMock()
+        scenario = volumes.CinderVolumes()
+        scenario._create_volume = mock.MagicMock(return_value=fake_volume)
+
+        scenario.create_volume(1, fakearg="f")
+        scenario._create_volume.assert_called_once_with(1, fakearg="f")

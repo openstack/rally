@@ -54,65 +54,47 @@ class ScenarioTestCase(test.TestCase):
     def test_cleanup(self):
         base.Scenario.cleanup()
 
-    def test_sleep_between(self):
-        base.Scenario.idle_time = 0
-        with mock.patch("rally.benchmark.base.random.uniform") as mock_uniform:
-            mock_uniform.return_value = 10
-            with mock.patch("rally.benchmark.base.time.sleep") as mock_sleep:
-                base.Scenario.sleep_between(5, 15)
-                base.Scenario.sleep_between(10, 10)
-        expected = [
-            mock.call(5, 15),
-            mock.call(10, 10),
-        ]
+    @mock.patch("rally.benchmark.base.time.sleep")
+    @mock.patch("rally.benchmark.base.random.uniform")
+    def test_sleep_between(self, mock_uniform, mock_sleep):
+        scenario = base.Scenario()
+
+        mock_uniform.return_value = 10
+        scenario.sleep_between(5, 15)
+        scenario.sleep_between(10, 10)
+
+        expected = [mock.call(5, 15), mock.call(10, 10)]
         self.assertEqual(mock_uniform.mock_calls, expected)
-        expected = [
-            mock.call(10),
-            mock.call(10)
-        ]
+        expected = [mock.call(10), mock.call(10)]
         self.assertEqual(mock_sleep.mock_calls, expected)
-        self.assertEqual(base.Scenario.idle_time, 20)
+
+        self.assertEqual(scenario.idle_time(), 20)
         self.assertRaises(exceptions.InvalidArgumentsException,
-                          base.Scenario.sleep_between, 15, 5)
+                          scenario.sleep_between, 15, 5)
         self.assertRaises(exceptions.InvalidArgumentsException,
-                          base.Scenario.sleep_between, -1, 0)
+                          scenario.sleep_between, -1, 0)
         self.assertRaises(exceptions.InvalidArgumentsException,
-                          base.Scenario.sleep_between, 0, -2)
+                          scenario.sleep_between, 0, -2)
 
     def test_context(self):
-
-        context = {"test": "context"}
-
-        class Scenario(base.Scenario):
-            @classmethod
-            def init(cls, config):
-                return context
-
-        Scenario._context = Scenario.init({})
-        self.assertEqual(context, Scenario.context())
+        context = mock.MagicMock()
+        scenario = base.Scenario(context=context)
+        self.assertEqual(context, scenario.context())
 
     def test_clients(self):
-
-        nova_client = object()
-        glance_client = object()
+        nova_client = mock.MagicMock()
+        glance_client = mock.MagicMock()
         clients = {"nova": nova_client, "glance": glance_client}
 
-        class Scenario(base.Scenario):
-            pass
-
-        Scenario._clients = clients
-        self.assertEqual(nova_client, Scenario.clients("nova"))
-        self.assertEqual(glance_client, Scenario.clients("glance"))
+        scenario = base.Scenario(clients=clients)
+        self.assertEqual(nova_client, scenario.clients("nova"))
+        self.assertEqual(glance_client, scenario.clients("glance"))
 
     def test_admin_clients(self):
-
-        nova_client = object()
-        glance_client = object()
+        nova_client = mock.MagicMock()
+        glance_client = mock.MagicMock()
         clients = {"nova": nova_client, "glance": glance_client}
 
-        class Scenario(base.Scenario):
-            pass
-
-        Scenario._admin_clients = clients
-        self.assertEqual(nova_client, Scenario.admin_clients("nova"))
-        self.assertEqual(glance_client, Scenario.admin_clients("glance"))
+        scenario = base.Scenario(admin_clients=clients)
+        self.assertEqual(nova_client, scenario.admin_clients("nova"))
+        self.assertEqual(glance_client, scenario.admin_clients("glance"))

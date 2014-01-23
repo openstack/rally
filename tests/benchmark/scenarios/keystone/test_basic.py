@@ -27,26 +27,29 @@ KEYSTONE_UTILS = KEYSTONE_BASE + "utils."
 class KeystoneBasicTestCase(test.TestCase):
 
     @mock.patch(KEYSTONE_UTILS + "generate_keystone_name")
-    @mock.patch(KEYSTONE_BASIC + "_user_create")
-    def test_create_user(self, mock_create, mock_gen_name):
+    def test_create_user(self, mock_gen_name):
+        scenario = basic.KeystoneBasic()
         mock_gen_name.return_value = "teeeest"
-        basic.KeystoneBasic.create_user(name_length=20, password="tttt",
-                                        **{"tenant_id": "id"})
-
-        mock_create.assert_called_once_with(name_length=20, password="tttt",
-                                            **{"tenant_id": "id"})
+        scenario._user_create = mock.MagicMock()
+        scenario.create_user(name_length=20, password="tttt",
+                             **{"tenant_id": "id"})
+        scenario._user_create.assert_called_once_with(name_length=20,
+                                                      password="tttt",
+                                                      **{"tenant_id": "id"})
 
     @mock.patch(KEYSTONE_UTILS + "generate_keystone_name")
-    @mock.patch(KEYSTONE_BASIC + "_resource_delete")
-    @mock.patch(KEYSTONE_BASIC + "_user_create")
-    def test_create_delete_user(self, mock_create, mock_delete, mock_gen_name):
-        create_result = {}
-        mock_create.return_value = create_result
+    def test_create_delete_user(self, mock_gen_name):
+        create_result = mock.MagicMock()
+
+        scenario = basic.KeystoneBasic()
+        scenario._user_create = mock.MagicMock(return_value=create_result)
+        scenario._resource_delete = mock.MagicMock()
         mock_gen_name.return_value = "teeeest"
 
-        basic.KeystoneBasic.create_delete_user(name_length=30, email="abcd",
-                                               **{"enabled": True})
+        scenario.create_delete_user(name_length=30, email="abcd",
+                                    **{"enabled": True})
 
-        mock_create.assert_called_once_with(name_length=30, email="abcd",
-                                            **{"enabled": True})
-        mock_delete.assert_called_once_with(create_result)
+        scenario._user_create.assert_called_once_with(name_length=30,
+                                                      email="abcd",
+                                                      **{"enabled": True})
+        scenario._resource_delete.assert_called_once_with(create_result)

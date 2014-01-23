@@ -18,11 +18,9 @@ from rally.benchmark.scenarios.keystone import utils as kutils
 
 class KeystoneBasic(kutils.KeystoneScenario):
 
-    @classmethod
-    def create_user(cls, name_length=10, **kwargs):
-        cls._user_create(name_length=name_length, **kwargs)
+    def create_user(self, name_length=10, **kwargs):
+        self._user_create(name_length=name_length, **kwargs)
 
-    @classmethod
-    def create_delete_user(cls, name_length=10, **kwargs):
-        user = cls._user_create(name_length=name_length, **kwargs)
-        cls._resource_delete(user)
+    def create_delete_user(self, name_length=10, **kwargs):
+        user = self._user_create(name_length=name_length, **kwargs)
+        self._resource_delete(user)

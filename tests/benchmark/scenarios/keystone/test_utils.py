@@ -47,21 +47,20 @@ class KeystoneUtilsTestCase(test.TestCase):
 
 class KeystoneScenarioTestCase(test.TestCase):
 
-    @mock.patch(UTILS + "KeystoneScenario.admin_clients")
     @mock.patch(UTILS + "generate_keystone_name")
-    def test_user_create(self, mock_gen_name, mock_admin_clients):
+    def test_user_create(self, mock_gen_name):
         name = "abc"
         mock_gen_name.return_value = name
 
         user = {}
         fake_keystone = fakes.FakeKeystoneClient()
         fake_keystone.users.create = mock.MagicMock(return_value=user)
-        mock_admin_clients.return_value = fake_keystone
+        scenario = utils.KeystoneScenario(
+                        admin_clients={"keystone": fake_keystone})
 
-        result = utils.KeystoneScenario._user_create()
+        result = scenario._user_create()
 
         self.assertEqual(user, result)
-        mock_admin_clients.assert_called_once_with("keystone")
         fake_keystone.users.create.assert_called_once_with(name, name,
                                                            name + "@rally.me")
 
@@ -69,5 +68,5 @@ class KeystoneScenarioTestCase(test.TestCase):
         resource = fakes.FakeResource()
         resource.delete = mock.MagicMock()
 
-        utils.KeystoneScenario._resource_delete(resource)
+        utils.KeystoneScenario()._resource_delete(resource)
         resource.delete.assert_called_once_with()
