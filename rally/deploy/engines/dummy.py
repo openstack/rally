@@ -37,6 +37,7 @@ class DummyEngine(engine.EngineFactory):
     CONFIG_SCHEMA = {
         'type': 'object',
         'properties': {
+            'name': {'type': 'string'},
             'endpoint': {
                 'type': 'object',
                 'properties': {
@@ -49,7 +50,7 @@ class DummyEngine(engine.EngineFactory):
                              'tenant_name'],
             },
         },
-        'required': ['endpoint'],
+        'required': ['name', 'endpoint'],
     }
 
     def deploy(self):
