@@ -12,13 +12,14 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+import decorator
 import os
 
 from rally import exceptions
 from rally import fileutils
 
 
-def default_deployment_id():
+def _default_deployment_id():
     try:
         deploy_id = os.environ['RALLY_DEPLOYMENT']
     except KeyError:
@@ -29,3 +30,12 @@ def default_deployment_id():
             raise exceptions.InvalidArgumentsException(
                 "deploy-id argument is missing")
     return deploy_id
+
+
+@decorator.decorator
+def deploy_id_default(f, *args, **kwargs):
+    deploy_id_arg_index = f.func_code.co_varnames.index("deploy_id")
+    args = list(args)
+    if args[deploy_id_arg_index] is None:
+        args[deploy_id_arg_index] = _default_deployment_id()
+    return f(*args, **kwargs)

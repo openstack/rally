@@ -90,16 +90,17 @@ class DeploymentCommands(object):
 
     @cliutils.args('--deploy-id', dest='deploy_id', type=str, required=False,
                    help='UUID of a deployment.')
+    @envutils.deploy_id_default
     def recreate(self, deploy_id=None):
         """Destroy and create an existing deployment.
 
         :param deploy_id: a UUID of the deployment
         """
-        deploy_id = deploy_id or envutils.default_deployment_id()
         api.recreate_deploy(deploy_id)
 
     @cliutils.args('--deploy-id', dest='deploy_id', type=str, required=False,
                    help='UUID of a deployment.')
+    @envutils.deploy_id_default
     def destroy(self, deploy_id=None):
         """Destroy the deployment.
 
@@ -108,7 +109,6 @@ class DeploymentCommands(object):
 
         :param deploy_id: a UUID of the deployment
         """
-        deploy_id = deploy_id or envutils.default_deployment_id()
         api.destroy_deploy(deploy_id)
 
     def list(self, deployment_list=None):
@@ -125,23 +125,23 @@ class DeploymentCommands(object):
 
     @cliutils.args('--deploy-id', dest='deploy_id', type=str, required=False,
                    help='UUID of a deployment.')
+    @envutils.deploy_id_default
     def config(self, deploy_id=None):
         """Print on stdout a config of the deployment in JSON format.
 
         :param deploy_id: a UUID of the deployment
         """
-        deploy_id = deploy_id or envutils.default_deployment_id()
         deploy = db.deployment_get(deploy_id)
         print(json.dumps(deploy['config']))
 
     @cliutils.args('--deploy-id', dest='deploy_id', type=str, required=False,
                    help='UUID of a deployment.')
+    @envutils.deploy_id_default
     def endpoint(self, deploy_id=None):
         """Print endpoint of the deployment.
 
         :param deploy_id: a UUID of the deployment
         """
-        deploy_id = deploy_id or envutils.default_deployment_id()
         headers = ['auth_url', 'username', 'password', 'tenant_name']
         table = prettytable.PrettyTable(headers)
         endpoint = db.deployment_get(deploy_id)['endpoint']
@@ -150,6 +150,7 @@ class DeploymentCommands(object):
 
     @cliutils.args('--deploy-id', dest='deploy_id', type=str, required=False,
                    help='UUID of a deployment.')
+    @envutils.deploy_id_default
     def check(self, deploy_id=None):
         """Check the deployment.
 
@@ -157,7 +158,6 @@ class DeploymentCommands(object):
 
         :param deploy_id: a UUID of the deployment
         """
-        deploy_id = deploy_id or envutils.default_deployment_id()
         headers = ['services', 'type', 'status']
         table = prettytable.PrettyTable(headers)
         try:
@@ -184,13 +184,13 @@ class TaskCommands(object):
                    help='UUID of the deployment')
     @cliutils.args('--task',
                    help='Path to the file with full configuration of task')
+    @envutils.deploy_id_default
     def start(self, task, deploy_id=None):
         """Run a benchmark task.
 
         :param task: a file with json configration
         :param deploy_id: a UUID of a deployment
         """
-        deploy_id = deploy_id or envutils.default_deployment_id()
         with open(task) as task_file:
             config_dict = json.load(task_file)
             try:
