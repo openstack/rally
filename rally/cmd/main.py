@@ -43,7 +43,9 @@ class DeploymentCommands(object):
     @cliutils.args('--filename', type=str, required=False,
                    help='A path to the configuration file of the '
                    'deployment.')
-    def create(self, name, fromenv=False, filename=None):
+    @cliutils.args('--use', action='store_true',
+                   help='Set new deployment as default for future operations')
+    def create(self, name, fromenv=False, filename=None, use=False):
         """Create a new deployment on the basis of configuration file.
 
         :param fromenv: boolean, read environment instead of config file
@@ -80,6 +82,8 @@ class DeploymentCommands(object):
 
         deployment = api.create_deploy(config, name)
         self.list(deployment_list=[deployment])
+        if use:
+            UseCommands().deployment(deployment['uuid'])
 
     @cliutils.args('--deploy-id', dest='deploy_id', type=str, required=False,
                    help='UUID of a deployment.')

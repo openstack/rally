@@ -151,6 +151,20 @@ class DeploymentCommandsTestCase(test.BaseTestCase):
             'from_env'
         )
 
+    @mock.patch('rally.cmd.main.DeploymentCommands.list')
+    @mock.patch('rally.cmd.main.UseCommands.deployment')
+    @mock.patch('rally.cmd.main.api.create_deploy',
+                return_value=dict(uuid='uuid'))
+    @mock.patch('rally.cmd.main.open',
+                mock.mock_open(read_data='{"uuid": "uuid"}'),
+                create=True)
+    def test_create_and_use(self, mock_create, mock_use_deployment,
+                            mock_list):
+        self.deployment.create('fake_deploy', False, 'path_to_config.json',
+                               True)
+        mock_create.assert_called_once_with({'uuid': 'uuid'}, 'fake_deploy')
+        mock_use_deployment.assert_called_once_with('uuid')
+
     @mock.patch('rally.cmd.main.api.recreate_deploy')
     def test_recreate(self, mock_recreate):
         deploy_id = str(uuid.uuid4())
