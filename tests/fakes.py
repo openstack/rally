@@ -374,6 +374,9 @@ class FakeClients(object):
         self.keystone = FakeKeystoneClient()
         return self.keystone
 
+    def get_verified_keystone_client(self):
+        return self.get_keystone_client()
+
     def get_nova_client(self):
         if self.nova is not None:
             return self.nova

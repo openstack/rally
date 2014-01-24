@@ -31,6 +31,7 @@ from rally import exceptions
 from rally import fileutils
 from rally.openstack.common.gettextutils import _
 from rally.orchestrator import api
+from rally import osclients
 from rally import processing
 
 
@@ -143,6 +144,35 @@ class DeploymentCommands(object):
         table = prettytable.PrettyTable(headers)
         endpoint = db.deployment_get(deploy_id)['endpoint']
         table.add_row([endpoint.get(m, '') for m in headers])
+        print(table)
+
+    @cliutils.args('--deploy-id', dest='deploy_id', type=str, required=False,
+                   help='UUID of a deployment.')
+    def check(self, deploy_id=None):
+        """Check the deployment.
+
+        Check keystone authentication and list all available services.
+
+        :param deploy_id: a UUID of the deployment
+        """
+        deploy_id = deploy_id or envutils.default_deployment_id()
+        headers = ['services', 'type', 'status']
+        table = prettytable.PrettyTable(headers)
+        try:
+            endpoint = db.deployment_get(deploy_id)['endpoint']
+            clients = osclients.Clients(username=endpoint['username'],
+                                        password=endpoint['password'],
+                                        tenant_name=endpoint['tenant_name'],
+                                        auth_url=endpoint['auth_url'])
+            client = clients.get_verified_keystone_client()
+            print("keystone endpoints are valid and following services are "
+                  "available:")
+            for service in client.service_catalog.get_data():
+                table.add_row([service['name'], service['type'], 'Available'])
+        except exceptions.InvalidArgumentsException:
+            table.add_row(['keystone', 'identity', 'Error'])
+            print(_("Authentication Issues: %s.")
+                  % sys.exc_info()[1])
         print(table)
 
 

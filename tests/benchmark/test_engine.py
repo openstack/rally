@@ -17,8 +17,6 @@
 
 import mock
 
-from keystoneclient import exceptions as keystone_exceptions
-
 from rally.benchmark import engine
 from rally import consts
 from rally import exceptions
@@ -121,34 +119,6 @@ class TestEngineTestCase(test.TestCase):
                                    mock.MagicMock())
         with tester.bind(self.valid_endpoint):
             self.assertEqual(tester.endpoint, self.valid_endpoint)
-
-    @mock.patch("rally.benchmark.engine.osclients")
-    def test_bind_user_not_admin(self, mock_osclients):
-        mock_osclients.Clients.return_value = fakes.FakeClients()
-        mock_osclients.Clients.return_value.get_keystone_client(). \
-            auth_ref['user']['roles'] = [{'name': 'notadmin'}]
-        tester = engine.TestEngine(self.valid_test_config_continuous_times,
-                                   mock.MagicMock())
-        self.assertRaises(exceptions.InvalidAdminException,
-                          tester.bind, self.valid_endpoint)
-
-    @mock.patch("rally.cmd.main.api.engine.osclients.Clients"
-                ".get_keystone_client")
-    def test_bind_unauthorized_keystone(self, mock_osclients):
-        mock_osclients.side_effect = keystone_exceptions.Unauthorized
-        tester = engine.TestEngine(self.valid_test_config_continuous_times,
-                                   mock.MagicMock())
-        self.assertRaises(exceptions.InvalidEndpointsException,
-                          tester.bind, self.valid_endpoint)
-
-    @mock.patch("rally.cmd.main.api.engine.osclients.Clients"
-                ".get_keystone_client")
-    def test_bind_keystone_host_unreachable(self, mock_osclients):
-        mock_osclients.side_effect = keystone_exceptions.AuthorizationFailure
-        tester = engine.TestEngine(self.valid_test_config_continuous_times,
-                                   mock.MagicMock())
-        self.assertRaises(exceptions.HostUnreachableException,
-                          tester.bind, self.valid_endpoint)
 
     @mock.patch("rally.benchmark.runner.ScenarioRunner.run")
     @mock.patch("rally.benchmark.utils.osclients")

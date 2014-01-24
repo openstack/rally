@@ -15,6 +15,9 @@
 
 import mock
 
+from keystoneclient import exceptions as keystone_exceptions
+
+from rally import exceptions
 from rally import osclients
 from tests import fakes
 from tests import test
@@ -46,6 +49,28 @@ class OSClientsTestCase(test.TestCase):
             kwargs = dict(self.kwargs.items() + endpoint.items())
             mock_keystone.Client.assert_called_once_with(**kwargs)
             self.assertEqual(self.clients.cache["keystone"], fake_keystone)
+
+    @mock.patch('rally.osclients.Clients.get_keystone_client')
+    def test_get_verified_keystone_client_user_not_admin(self, mock_keystone):
+        mock_keystone.return_value = fakes.FakeKeystoneClient()
+        mock_keystone.return_value.auth_ref['user']['roles'] = \
+            [{'name': 'notadmin'}]
+        self.assertRaises(exceptions.InvalidAdminException,
+                          self.clients.get_verified_keystone_client)
+
+    @mock.patch('rally.osclients.Clients.get_keystone_client')
+    def test_get_verified_keystone_client_unauthorized(self, mock_keystone):
+        mock_keystone.return_value = fakes.FakeKeystoneClient()
+        mock_keystone.side_effect = keystone_exceptions.Unauthorized
+        self.assertRaises(exceptions.InvalidEndpointsException,
+                          self.clients.get_verified_keystone_client)
+
+    @mock.patch('rally.osclients.Clients.get_keystone_client')
+    def test_get_verified_keystone_client_unreachable(self, mock_keystone):
+        mock_keystone.return_value = fakes.FakeKeystoneClient()
+        mock_keystone.side_effect = keystone_exceptions.AuthorizationFailure
+        self.assertRaises(exceptions.HostUnreachableException,
+                          self.clients.get_verified_keystone_client)
 
     def test_get_nova_client(self):
         with mock.patch('rally.osclients.nova') as mock_nova:

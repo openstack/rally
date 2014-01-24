@@ -17,8 +17,11 @@ import urlparse
 
 from cinderclient import client as cinder
 import glanceclient as glance
+from keystoneclient import exceptions as keystone_exceptions
 from keystoneclient.v2_0 import client as keystone
 from novaclient import client as nova
+
+from rally import exceptions
 
 
 class Clients(object):
@@ -40,6 +43,25 @@ class Clients(object):
         client.authenticate()
 
         self.cache["keystone"] = client
+        return client
+
+    def get_verified_keystone_client(self):
+        """Ensure keystone endpoints are valid and then authenticate
+
+        :returns: Keystone Client
+        """
+        try:
+            # Ensure that user is admin
+            client = self.get_keystone_client()
+            roles = client.auth_ref['user']['roles']
+            if not any('admin' == role['name'] for role in roles):
+                raise exceptions.InvalidAdminException(
+                    username=self.kw['username'])
+        except keystone_exceptions.Unauthorized:
+            raise exceptions.InvalidEndpointsException()
+        except keystone_exceptions.AuthorizationFailure:
+            raise exceptions.HostUnreachableException(
+                url=self.kw['auth_url'])
         return client
 
     def get_nova_client(self, version='2'):
