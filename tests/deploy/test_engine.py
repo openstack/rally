@@ -223,8 +223,7 @@ class EngineFactoryTestCase(test.TestCase):
         for e in engines:
             engine_inst = deploy.EngineFactory.get_engine(e.__name__,
                                                           deployment)
-            # TODO(boris-42): make it work through assertIsInstance
-            self.assertEqual(str(type(engine_inst)), str(e))
+            self.assertIsInstance(engine_inst, e)
 
     def test_get_available_engines(self):
         engines = set([e.__name__ for e in EngineFactoryTestCase.FAKE_ENGINES])

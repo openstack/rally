@@ -64,8 +64,7 @@ class ProviderTestCase(test.TestCase):
         for p in FAKE_PROVIDERS:
                 p_inst = ProviderFactory.get_provider({"name": p.__name__},
                                                       None)
-                # TODO(boris-42): make it work through assertIsInstance
-                self.assertEqual(str(type(p_inst)), str(p))
+                self.assertIsInstance(p_inst, p)
 
     def test_get_available_providers(self):
         providers = set([p.__name__ for p in FAKE_PROVIDERS])
