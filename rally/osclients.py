@@ -121,3 +121,7 @@ class Clients(object):
                     "scheme": url_obj.scheme, "hostname": url_obj.hostname,
                     "port": new_port, "path": url_obj.path}
         return new_url
+
+    def get_endpoint(self):
+        """Returns endpoint."""
+        return self.kw

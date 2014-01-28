@@ -1,0 +1,6 @@
+{
+    "Authenticate.keystone": [
+      { "execution": "continuous",
+       "config": {"times": 100, "active_users": 1, "tenants": 3, "users_per_tenant": 50}}
+    ]
+}

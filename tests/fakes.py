@@ -424,6 +424,9 @@ class FakeClients(object):
         self.cinder = FakeCinderClient()
         return self.cinder
 
+    def get_endpoint(self):
+        pass
+
 
 class FakeScenario(base.Scenario):
 

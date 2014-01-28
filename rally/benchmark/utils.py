@@ -109,7 +109,8 @@ def create_openstack_clients(users_endpoints, keys):
             ("nova", cl.get_nova_client()),
             ("keystone", cl.get_keystone_client()),
             ("glance", cl.get_glance_client()),
-            ("cinder", cl.get_cinder_client())
+            ("cinder", cl.get_cinder_client()),
+            ("endpoint", cl.get_endpoint())
         )) for cl in client_managers
     ]
 
