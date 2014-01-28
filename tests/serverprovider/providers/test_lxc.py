@@ -61,9 +61,9 @@ class LxcHostTestCase(test.BaseTestCase):
         self.host = lxc.LxcHost(self.server, sample_config)
 
     @mock.patch(MOD_NAME + 'provider.Server')
-    def test__get_server_with_ip(self, m_Server):
-        server = self.host._get_server_with_ip('4.4.4.4')
-        new_server = m_Server.from_credentials({'ip': '4.4.4.4'})
+    def test__get_updated_server(self, m_Server):
+        server = self.host._get_updated_server(host='4.4.4.4')
+        new_server = m_Server.from_credentials({'host': '4.4.4.4'})
         self.assertEqual(new_server, server)
 
     def test_backingstore_btrfs(self):
@@ -123,7 +123,7 @@ class LxcHostTestCase(test.BaseTestCase):
     def test_create_remote_tunnels(self, m_get_script):
         m_get_script.side_effect = ['s1', 's2']
         fake_server = mock.Mock()
-        self.host._get_server_with_ip = mock.Mock(return_value=fake_server)
+        self.host._get_updated_server = mock.Mock(return_value=fake_server)
         self.host.create_remote_tunnels()
         self.assertEqual([mock.call('/bin/sh -e', stdin='s1'),
                           mock.call('/bin/sh -e', stdin='s2')],
@@ -132,7 +132,7 @@ class LxcHostTestCase(test.BaseTestCase):
     def test_delete_tunnels(self):
         s1 = mock.Mock()
         s2 = mock.Mock()
-        self.host._get_server_with_ip = mock.Mock(side_effect=[s1, s2])
+        self.host._get_updated_server = mock.Mock(side_effect=[s1, s2])
 
         self.host.delete_tunnels()
         s1.ssh.execute.assert_called_once_with('ip tun del t10.1.1.0')
@@ -216,15 +216,17 @@ class LxcHostTestCase(test.BaseTestCase):
         ]
         self.assertEqual(calls, self.server.ssh.run.mock_calls)
 
-    @mock.patch(MOD_NAME + 'provider.Server.from_credentials')
-    def test_get_server_object(self, m_fc):
+    def test_get_server_object(self):
         fake_server = mock.Mock()
-        m_fc.return_value = fake_server
-        self.server.get_credentials = mock.Mock(return_value={})
         self.host.get_ip = mock.Mock(return_value='ip')
+        self.host.get_port = mock.Mock(return_value=42)
+        self.host._get_updated_server = mock.Mock(return_value=fake_server)
+
         so = self.host.get_server_object('c1', wait=False)
+
         self.assertEqual(fake_server, so)
-        m_fc.assert_called_once_with({'host': 'ip'})
+        self.host.get_port.assert_called_once_with('ip')
+        self.host._get_updated_server.assert_called_once_with(port=42)
         self.assertFalse(fake_server.ssh.wait.mock_calls)
         so = self.host.get_server_object('c1', wait=True)
         fake_server.ssh.wait.assert_called_once()
@@ -291,6 +293,7 @@ class LxcProviderTestCase(test.BaseTestCase):
             fake_sos.extend(fake_host_sos)
             fake_host = mock.Mock()
             fake_host.containers = ['c-%d-1' % i, 'c-%d-2' % i]
+            fake_host._port_cache = {1: i, 2: i}
             fake_host.config = {'netwrork': 'fake-%d' % i}
             fake_host.server.get_credentials.return_value = {'ip': 'f%d' % i}
             fake_host.get_server_objects.return_value = fake_host_sos
@@ -305,9 +308,11 @@ class LxcProviderTestCase(test.BaseTestCase):
 
         info1 = {'host': {'ip': 'f1'},
                  'config': {'netwrork': 'fake-1'},
+                 'forwarded_ports': [(1, 1), (2, 1)],
                  'container_names': ['c-1-1', 'c-1-2']}
         info2 = {'host': {'ip': 'f2'},
                  'config': {'netwrork': 'fake-2'},
+                 'forwarded_ports': [(1, 2), (2, 2)],
                  'container_names': ['c-2-1', 'c-2-2']}
         resource_calls = [
             mock.call.create(info1),
@@ -344,6 +349,7 @@ class LxcProviderTestCase(test.BaseTestCase):
     def test_destroy_servers(self, m_fc, m_lxchost):
         fake_resource = {'info': {'config': 'fake_config',
                                   'host': 'fake_credentials',
+                                  'forwarded_ports': [1, 2],
                                   'container_names': ['n1', 'n2']}}
         fake_resource['id'] = 'fake_res_id'
         fake_host = mock.Mock()
@@ -356,6 +362,7 @@ class LxcProviderTestCase(test.BaseTestCase):
 
         m_lxchost.assert_called_once_with('fake_server', 'fake_config')
         host_calls = [mock.call.destroy_containers(),
+                      mock.call.destroy_ports([1, 2]),
                       mock.call.delete_tunnels()]
         self.assertEqual(host_calls, fake_host.mock_calls)
         self.provider.resources.delete.assert_called_once_with('fake_res_id')

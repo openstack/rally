@@ -25,9 +25,12 @@ from rally.openstack.common import log as logging
 from rally.serverprovider import provider
 from rally import utils
 
-LOG = logging.getLogger(__name__)
 
+LOG = logging.getLogger(__name__)
 INET_ADDR_RE = re.compile(r' *inet ((\d+\.){3}\d+)\/\d+ .*')
+IPT_PORT_TEMPLATE = ('iptables -t nat -{action} PREROUTING -d {host_ip}'
+                     ' -p tcp --syn --dport {port}'
+                     ' -j DNAT --to-destination {ip}:22')
 
 
 def _get_script(filename):
@@ -54,9 +57,9 @@ class LxcHost(object):
         self.containers = []
         self.path = '/var/lib/lxc/'
 
-    def _get_server_with_ip(self, ip):
+    def _get_updated_server(self, **kwargs):
         credentials = self.server.get_credentials()
-        credentials['host'] = ip
+        credentials.update(kwargs)
         return provider.Server.from_credentials(credentials)
 
     @property
@@ -110,12 +113,12 @@ class LxcHost(object):
                                                net=self.network,
                                                local=tunnel_to,
                                                remote=self.server.host)
-            server = self._get_server_with_ip(tunnel_to)
+            server = self._get_updated_server(host=tunnel_to)
             server.ssh.run('/bin/sh -e', stdin=script)
 
     def delete_tunnels(self):
         for tunnel_to in self.config['tunnel_to']:
-            remote_server = self._get_server_with_ip(tunnel_to)
+            remote_server = self._get_updated_server(host=tunnel_to)
             remote_server.ssh.execute('ip tun del t%s' % self.network.ip)
             self.server.ssh.execute('ip tun del t%s' % tunnel_to)
 
@@ -134,6 +137,43 @@ class LxcHost(object):
             time.sleep(attempt)
         msg = _('Timeout waiting for ip address of container "%s"') % name
         raise exceptions.TimeoutException(msg)
+
+    def get_port(self, ip):
+        """Get forwarded ssh port for instance ip.
+
+        Ssh port forwarding is used for containers access from outside.
+        Any container is accessible by host's ip and forwarded port. E.g:
+
+         6.6.6.6:10023 -> 10.1.1.11:22
+         6.6.6.6:10024 -> 10.1.1.12:22
+         6.6.6.6:10025 -> 10.1.1.13:22
+
+        where 6.6.6.6 is host's ip.
+
+        Ip->port association is stored in self._port_cache to reduce number
+        of iptables calls.
+        """
+        if not hasattr(self, '_port_cache'):
+            self._port_cache = {}
+            port_re = re.compile(r'.+ tcp dpt:(\d+).*to:([\d\.]+)\:22')
+            cmd = "iptables -n -t nat -L PREROUTING"
+            code, out, err = self.server.ssh.execute(cmd)
+            for l in out:
+                m = port_re.match(l)
+                if m:
+                    self._port_cache[m.group(2)] = int(m.group(1))
+        port = self._port_cache.get(ip)
+
+        if port is None:
+            if self._port_cache:
+                port = max(self._port_cache.values()) + 1
+            else:
+                port = 1222
+        self._port_cache[ip] = port
+        cmd = IPT_PORT_TEMPLATE.format(host_ip=self.server.host, ip=ip,
+                                       port=port, action='I')
+        self.server.ssh.run(cmd)
+        return port
 
     def create_container(self, name, distribution):
         args = {'backingstore': self.backingstore,
@@ -166,6 +206,14 @@ class LxcHost(object):
         for name in self.containers:
             self.server.ssh.run('lxc-stop -n %s' % name)
 
+    def destroy_ports(self, ipports):
+        script = ""
+        for ip, port in ipports:
+            cmd = IPT_PORT_TEMPLATE.format(action='D', port=port, ip=ip,
+                                           host_ip=self.server.host)
+            script += cmd + '\n'
+        self.server.ssh.run('/bin/sh -e', stdin=script)
+
     def destroy_containers(self):
         for name in self.containers:
             self.server.ssh.run('lxc-stop -n %s' % name)
@@ -173,7 +221,8 @@ class LxcHost(object):
 
     def get_server_object(self, name, wait=True):
         """Create Server object for container."""
-        server = self._get_server_with_ip(self.get_ip(name))
+        ip = self.get_ip(name)
+        server = self._get_updated_server(port=self.get_port(ip))
         if wait:
             server.ssh.wait(timeout=300)
         return server
@@ -267,12 +316,11 @@ class LxcProvider(provider.ProviderFactory):
         servers = []
 
         for host in hosts:
-            containers = []
             for server in host.get_server_objects():
-                containers.append(server.get_credentials())
                 servers.append(server)
             info = {'host': host.server.get_credentials(),
                     'config': host.config,
+                    'forwarded_ports': host._port_cache.items(),
                     'container_names': host.containers}
             self.resources.create(info)
         return servers
@@ -284,5 +332,6 @@ class LxcProvider(provider.ProviderFactory):
             lxc_host = LxcHost(server, resource['info']['config'])
             lxc_host.containers = resource['info']['container_names']
             lxc_host.destroy_containers()
+            lxc_host.destroy_ports(resource['info']['forwarded_ports'])
             lxc_host.delete_tunnels()
             self.resources.delete(resource['id'])
