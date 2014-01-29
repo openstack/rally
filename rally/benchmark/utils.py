@@ -243,7 +243,31 @@ def delete_volume_backups(cinder):
     _wait_for_empty_list(cinder.backups, timeout=240)
 
 
-def delete_keystone_resources(keystone, resource_name):
+def delete_keystone_resources(keystone):
+    for resource in ["users", "tenants", "services", "roles"]:
+        _delete_single_keystone_resource_type(keystone, resource)
+
+
+def _delete_single_keystone_resource_type(keystone, resource_name):
     for resource in getattr(keystone, resource_name).list():
         if kutils.is_temporary(resource):
             resource.delete()
+
+
+def delete_nova_resources(nova):
+    delete_servers(nova)
+    delete_keypairs(nova)
+    delete_security_groups(nova)
+    delete_networks(nova)
+
+
+def delete_cinder_resources(cinder):
+    delete_volume_transfers(cinder)
+    delete_volumes(cinder)
+    delete_volume_types(cinder)
+    delete_volume_snapshots(cinder)
+    delete_volume_backups(cinder)
+
+
+def delete_glance_resources(glance, project_uuid):
+    delete_images(glance, project_uuid)
