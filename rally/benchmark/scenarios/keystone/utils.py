@@ -17,6 +17,7 @@ import random
 import string
 
 from rally.benchmark import base
+from rally.benchmark.scenarios import utils as scenario_utils
 
 # TODO(boris-42): Bind name to the uuid of benchmark.
 TEMP_TEMPLATE = "rally_k_"
@@ -37,6 +38,7 @@ class KeystoneScenario(base.Scenario):
        most of them are creating/deleting resources.
     """
 
+    @scenario_utils.atomic_action_timer('keystone.create_user')
     def _user_create(self, name_length=10, password=None, email=None,
                      **kwargs):
         """Creates keystone user with random name.
@@ -55,6 +57,7 @@ class KeystoneScenario(base.Scenario):
         return self.admin_clients("keystone").users.create(name, password,
                                                            email, **kwargs)
 
+    @scenario_utils.atomic_action_timer('keystone.delete_resource')
     def _resource_delete(self, resource):
         """"Delete keystone resource."""
         resource.delete()

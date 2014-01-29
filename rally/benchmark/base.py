@@ -33,6 +33,7 @@ class Scenario(object):
         self._admin_clients = admin_clients
         self._clients = clients
         self._idle_time = 0
+        self._atomic_actions_time = []
 
     @staticmethod
     def register():
@@ -131,3 +132,12 @@ class Scenario(object):
     def idle_time(self):
         """Returns duration of all sleep_between."""
         return self._idle_time
+
+    def _add_atomic_actions_time(self, name, duration):
+        """Adds the duration of an atomic action by its 'name'."""
+        self._atomic_actions_time.append(
+            {'action': name, 'duration': duration})
+
+    def atomic_actions_time(self):
+        """Returns the duration of each atomic action."""
+        return self._atomic_actions_time

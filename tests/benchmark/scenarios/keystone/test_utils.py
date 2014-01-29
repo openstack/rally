@@ -16,6 +16,7 @@
 import mock
 
 from rally.benchmark.scenarios.keystone import utils
+from tests.benchmark.scenarios import test_utils
 from tests import test
 
 from tests import fakes
@@ -47,6 +48,12 @@ class KeystoneUtilsTestCase(test.TestCase):
 
 class KeystoneScenarioTestCase(test.TestCase):
 
+    def _test_atomic_action_timer(self, atomic_actions_time, name):
+        action_duration = test_utils.get_atomic_action_timer_value_by_name(
+            atomic_actions_time, name)
+        self.assertIsNotNone(action_duration)
+        self.assertIsInstance(action_duration, float)
+
     @mock.patch(UTILS + "generate_keystone_name")
     def test_user_create(self, mock_gen_name):
         name = "abc"
@@ -63,10 +70,15 @@ class KeystoneScenarioTestCase(test.TestCase):
         self.assertEqual(user, result)
         fake_keystone.users.create.assert_called_once_with(name, name,
                                                            name + "@rally.me")
+        self._test_atomic_action_timer(scenario.atomic_actions_time(),
+                                       'keystone.create_user')
 
     def test_user_delete(self):
         resource = fakes.FakeResource()
         resource.delete = mock.MagicMock()
 
-        utils.KeystoneScenario()._resource_delete(resource)
+        scenario = utils.KeystoneScenario()
+        scenario._resource_delete(resource)
         resource.delete.assert_called_once_with()
+        self._test_atomic_action_timer(scenario.atomic_actions_time(),
+                                       'keystone.delete_resource')

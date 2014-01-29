@@ -18,6 +18,7 @@ import string
 import time
 
 from rally.benchmark import base
+from rally.benchmark.scenarios import utils as scenario_utils
 from rally.benchmark import utils as bench_utils
 from rally import utils
 
@@ -37,6 +38,7 @@ def generate_volume_name(length=10):
 
 class CinderScenario(base.Scenario):
 
+    @scenario_utils.atomic_action_timer('cinder.create_volume')
     def _create_volume(self, size, **kwargs):
         """create one volume.
 
@@ -60,6 +62,7 @@ class CinderScenario(base.Scenario):
                                 timeout=600, check_interval=3)
         return volume
 
+    @scenario_utils.atomic_action_timer('cinder.delete_volume')
     def _delete_volume(self, volume):
         """Delete the given volume.
 

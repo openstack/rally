@@ -57,7 +57,8 @@ def _run_scenario_loop(args):
     finally:
         return {"time": timer.duration() - scenario.idle_time(),
                 "idle_time": scenario.idle_time(), "error": error,
-                "scenario_output": scenario_output}
+                "scenario_output": scenario_output,
+                "atomic_actions_time": scenario.atomic_actions_time()}
 
 
 class ScenarioRunner(object):

@@ -14,7 +14,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import functools
 import jsonschema
+
+from rally import utils
 
 
 class ActionBuilder(object):
@@ -123,3 +126,18 @@ class ActionBuilder(object):
                                     binding['action'], times,
                                     *(binding['args'] + args), **dft_kwargs))
         return bound_actions
+
+
+def atomic_action_timer(name):
+    """Decorates methods of the Scenario class requiring a measure of execution
+     time. This provides duration in seconds of each atomic action.
+    """
+    def wrap(func):
+        @functools.wraps(func)
+        def func_atomic_actions(self, *args, **kwargs):
+            with utils.Timer() as timer:
+                f = func(self, *args, **kwargs)
+            self._add_atomic_actions_time(name, timer.duration())
+            return f
+        return func_atomic_actions
+    return wrap

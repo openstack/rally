@@ -85,7 +85,8 @@ class ScenarioTestCase(test.TestCase):
                                                  "active_users": active_users,
                                                  "timeout": 2})
                 expected = [{"time": 10, "idle_time": 0, "error": None,
-                             "scenario_output": None}
+                             "scenario_output": None,
+                             "atomic_actions_time": []}
                             for i in range(times)]
                 self.assertEqual(results, expected)
 
@@ -95,7 +96,8 @@ class ScenarioTestCase(test.TestCase):
                                                  "active_users": active_users,
                                                  "timeout": 2})
                 expected = [{"time": 10, "idle_time": 0, "error": None,
-                             "scenario_output": None}
+                             "scenario_output": None,
+                             "atomic_actions_time": []}
                             for i in range(active_users)]
                 self.assertEqual(results, expected)
 

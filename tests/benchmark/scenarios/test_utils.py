@@ -184,3 +184,10 @@ class ActionBuilderTestCase(test.TestCase):
         for i in range(3):
             mock_calls.append(mock.call('two', 'three', c=3, d=4))
         mock_action_two.assert_has_calls(mock_calls)
+
+
+def get_atomic_action_timer_value_by_name(atomic_actions_times, name):
+    for action_time in atomic_actions_times:
+        if action_time['action'] == name:
+            return action_time['duration']
+    return None

@@ -18,12 +18,14 @@ import string
 import time
 
 from rally.benchmark import base
+from rally.benchmark.scenarios import utils as scenario_utils
 from rally.benchmark import utils as bench_utils
 from rally import utils
 
 
 class NovaScenario(base.Scenario):
 
+    @scenario_utils.atomic_action_timer('nova.boot_server')
     def _boot_server(self, server_name, image_id, flavor_id, **kwargs):
         """Boots one server.
 
@@ -55,6 +57,7 @@ class NovaScenario(base.Scenario):
                                 timeout=600, check_interval=3)
         return server
 
+    @scenario_utils.atomic_action_timer('nova.reboot_server')
     def _reboot_server(self, server, soft=True):
         """Reboots the given server using hard or soft reboot.
 
@@ -71,6 +74,7 @@ class NovaScenario(base.Scenario):
                        update_resource=bench_utils.get_from_manager(),
                        timeout=600, check_interval=3)
 
+    @scenario_utils.atomic_action_timer('nova.start_server')
     def _start_server(self, server):
         """Starts the given server.
 
@@ -84,6 +88,7 @@ class NovaScenario(base.Scenario):
                        update_resource=bench_utils.get_from_manager(),
                        timeout=600, check_interval=2)
 
+    @scenario_utils.atomic_action_timer('nova.stop_server')
     def _stop_server(self, server):
         """Stop the given server.
 
@@ -97,6 +102,7 @@ class NovaScenario(base.Scenario):
                        update_resource=bench_utils.get_from_manager(),
                        timeout=600, check_interval=2)
 
+    @scenario_utils.atomic_action_timer('nova.rescue_server')
     def _rescue_server(self, server):
         """Rescue the given server.
 
@@ -111,6 +117,7 @@ class NovaScenario(base.Scenario):
                        update_resource=bench_utils.get_from_manager(),
                        timeout=600, check_interval=3)
 
+    @scenario_utils.atomic_action_timer('nova.unrescue_server')
     def _unrescue_server(self, server):
         """Unrescue the given server.
 
@@ -124,6 +131,7 @@ class NovaScenario(base.Scenario):
                        update_resource=bench_utils.get_from_manager(),
                        timeout=600, check_interval=3)
 
+    @scenario_utils.atomic_action_timer('nova.suspend_server')
     def _suspend_server(self, server):
         """Suspends the given server.
 
@@ -138,6 +146,7 @@ class NovaScenario(base.Scenario):
                        update_resource=bench_utils.get_from_manager(),
                        timeout=600, check_interval=3)
 
+    @scenario_utils.atomic_action_timer('nova.delete_server')
     def _delete_server(self, server):
         """Deletes the given server.
 
@@ -150,12 +159,14 @@ class NovaScenario(base.Scenario):
                        update_resource=bench_utils.get_from_manager(),
                        timeout=600, check_interval=3)
 
+    @scenario_utils.atomic_action_timer('nova.delete_all_servers')
     def _delete_all_servers(self):
         """Deletes all servers in current tenant."""
         servers = self.clients("nova").servers.list()
         for server in servers:
             self._delete_server(server)
 
+    @scenario_utils.atomic_action_timer('nova.delete_image')
     def _delete_image(self, image):
         """Deletes the given image.
 
@@ -168,6 +179,7 @@ class NovaScenario(base.Scenario):
                        update_resource=bench_utils.get_from_manager(),
                        timeout=600, check_interval=3)
 
+    @scenario_utils.atomic_action_timer('nova.create_image')
     def _create_image(self, server):
         """Creates an image of the given server
 
@@ -187,6 +199,7 @@ class NovaScenario(base.Scenario):
                                timeout=600, check_interval=3)
         return image
 
+    @scenario_utils.atomic_action_timer('nova.boot_servers')
     def _boot_servers(self, name_prefix, image_id, flavor_id,
                       requests, instances_amount=1, **kwargs):
         """Boots multiple servers.
