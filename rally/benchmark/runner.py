@@ -101,38 +101,14 @@ class ScenarioRunner(object):
         return temporary_endpoints
 
     @classmethod
-    def _delete_nova_resources(cls, nova):
-        utils.delete_servers(nova)
-        utils.delete_keypairs(nova)
-        utils.delete_security_groups(nova)
-        utils.delete_networks(nova)
-
-    @classmethod
-    def _delete_cinder_resources(cls, cinder):
-        utils.delete_volume_transfers(cinder)
-        utils.delete_volumes(cinder)
-        utils.delete_volume_types(cinder)
-        utils.delete_volume_snapshots(cinder)
-        utils.delete_volume_backups(cinder)
-
-    @classmethod
-    def _delete_glance_resources(cls, glance, project_uuid):
-        utils.delete_images(glance, project_uuid)
-
-    def _delete_keystone_resources(self):
-        kclient = __admin_clients__["keystone"]
-        for resource in ["users", "tenants", "services", "roles"]:
-            utils.delete_keystone_resources(kclient, resource)
-
-    @classmethod
     def _cleanup_with_clients(cls, indexes):
         for index in indexes:
             clients = __openstack_clients__[index]
             try:
-                cls._delete_nova_resources(clients["nova"])
-                cls._delete_glance_resources(clients["glance"],
-                                             clients["keystone"].project_id)
-                cls._delete_cinder_resources(clients["cinder"])
+                utils.delete_nova_resources(clients["nova"])
+                utils.delete_glance_resources(clients["glance"],
+                                              clients["keystone"].project_id)
+                utils.delete_cinder_resources(clients["cinder"])
             except Exception as e:
                 LOG.debug(_("Not all resources were cleaned."),
                           exc_info=sys.exc_info())
@@ -148,7 +124,7 @@ class ScenarioRunner(object):
             pool.apply_async(utils.async_cleanup, args=(ScenarioRunner,
                                                         client_indicies,))
         try:
-            self._delete_keystone_resources()
+            utils.delete_keystone_resources(__admin_clients__["keystone"])
         except Exception as e:
             LOG.debug(_("Not all resources were cleaned."),
                       exc_info=sys.exc_info())
