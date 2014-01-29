@@ -9,7 +9,7 @@ discover
 mock>=1.0
 python-subunit
 testrepository>=0.0.17
-testtools>=0.9.32
+testtools>=0.9.32,<0.9.35
 
 sphinx>=1.1.2,<1.2
 oslo.sphinx
