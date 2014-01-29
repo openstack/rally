@@ -31,6 +31,12 @@ class DBCommands(object):
         db.db_create()
 
 
+def deprecated():
+    print("\n\n---\n\nopenstack-rally and openstack-rally-manage are "
+          "deprecated, please use rally and rally-manage\n\n---\n\n")
+    main()
+
+
 def main():
     categories = {'db': DBCommands}
     cliutils.run(sys.argv, categories)
