@@ -13,7 +13,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from glanceclient import exc
+import mock
+
 from rally.benchmark import validation
+from tests import fakes
 from tests import test
 
 
@@ -30,3 +34,26 @@ class ValidationUtilsTestCase(test.TestCase):
         validators = getattr(test_function, "validators")
         self.assertEqual(len(validators), 1)
         self.assertEqual(validators[0], test_validator)
+
+    def test_image_exists(self):
+        fakegclient = fakes.FakeClients().get_glance_client()
+        fakegclient.images.get = mock.MagicMock()
+        validator = validation.image_exists("image_id")
+        test_img_id = "test_image_id"
+        result = validator(clients={"glance": fakegclient},
+                           image_id=test_img_id)
+        fakegclient.images.get.assert_called_once_with(image=test_img_id)
+        self.assertTrue(result.is_valid)
+        self.assertIsNone(result.msg)
+
+    def test_image_exists_fail(self):
+        fakegclient = fakes.FakeClients().get_glance_client()
+        fakegclient.images.get = mock.MagicMock()
+        fakegclient.images.get.side_effect = exc.HTTPNotFound
+        validator = validation.image_exists("image_id")
+        test_img_id = "test_image_id"
+        result = validator(clients={"glance": fakegclient},
+                           image_id=test_img_id)
+        fakegclient.images.get.assert_called_once_with(image=test_img_id)
+        self.assertFalse(result.is_valid)
+        self.assertIsNotNone(result.msg)

@@ -21,6 +21,7 @@ from rally.benchmark.scenarios.cinder import utils as cinder_utils
 from rally.benchmark.scenarios.nova import utils
 from rally.benchmark.scenarios import utils as scenario_utils
 from rally.benchmark import utils as benchmark_utils
+from rally.benchmark import validation
 from rally import exceptions as rally_exceptions
 from rally.openstack.common.gettextutils import _  # noqa
 from rally.openstack.common import log as logging
@@ -35,6 +36,7 @@ class NovaServers(utils.NovaScenario,
     def __init__(self, *args, **kwargs):
         super(NovaServers, self).__init__(*args, **kwargs)
 
+    @validation.add_validator(validation.image_exists("image_id"))
     def boot_and_delete_server(self, image_id, flavor_id,
                                min_sleep=0, max_sleep=0, **kwargs):
         """Tests booting and then deleting an image."""
@@ -44,6 +46,7 @@ class NovaServers(utils.NovaScenario,
         self.sleep_between(min_sleep, max_sleep)
         self._delete_server(server)
 
+    @validation.add_validator(validation.image_exists("image_id"))
     def boot_server_from_volume_and_delete(self, image_id, flavor_id,
                                            volume_size,
                                            min_sleep=0, max_sleep=0, **kwargs):
@@ -58,6 +61,7 @@ class NovaServers(utils.NovaScenario,
         self.sleep_between(min_sleep, max_sleep)
         self._delete_server(server)
 
+    @validation.add_validator(validation.image_exists("image_id"))
     def boot_runcommand_delete_server(self, image_id, flavor_id,
                                       script, interpreter, network='private',
                                       username='ubuntu', ip_version=4,
@@ -133,6 +137,7 @@ class NovaServers(utils.NovaScenario,
         return dict(data=streams[sshutils.SSH.STDOUT_INDEX],
                     errors=streams[sshutils.SSH.STDERR_INDEX])
 
+    @validation.add_validator(validation.image_exists("image_id"))
     def boot_and_bounce_server(self, image_id, flavor_id, **kwargs):
         """Tests booting a server then performing stop/start or hard/soft
         reboot a number of times.
@@ -151,6 +156,7 @@ class NovaServers(utils.NovaScenario,
             action()
         self._delete_server(server)
 
+    @validation.add_validator(validation.image_exists("image_id"))
     def snapshot_server(self, image_id, flavor_id, **kwargs):
         """Tests Nova instance snapshotting."""
         server_name = self._generate_random_name(16)
@@ -163,6 +169,7 @@ class NovaServers(utils.NovaScenario,
         self._delete_server(server)
         self._delete_image(image)
 
+    @validation.add_validator(validation.image_exists("image_id"))
     def boot_server(self, image_id, flavor_id, **kwargs):
         """Test VM boot - assumed clean-up is done elsewhere."""
         server_name = self._generate_random_name(16)
@@ -173,6 +180,7 @@ class NovaServers(utils.NovaScenario,
                 kwargs['nics'] = [{'net-id': random_nic.id}]
         self._boot_server(server_name, image_id, flavor_id, **kwargs)
 
+    @validation.add_validator(validation.image_exists("image_id"))
     def boot_server_from_volume(self, image_id, flavor_id,
                                 volume_size, **kwargs):
         """Test VM boot from volume - assumed clean-up is done elsewhere."""
