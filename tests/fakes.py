@@ -128,6 +128,7 @@ class FakeManager(object):
     def delete(self, resource):
         cached = self.get(resource.uuid)
         if cached is not None:
+            cached.status = "DELETED"
             del self.cache[cached.uuid]
 
     def _cache(self, resource):
@@ -194,11 +195,6 @@ class FakeImageManager(FakeManager):
     def create(self):
         return self._cache(FakeImage(self))
 
-    def delete(self, image):
-        cached = self.cache.get(image.uuid, None)
-        if cached is not None:
-            cached.status = "DELETED"
-
 
 class FakeFloatingIPsManager(FakeManager):
 
@@ -209,7 +205,7 @@ class FakeFloatingIPsManager(FakeManager):
 class FakeTenantsManager(FakeManager):
 
     def create(self, name):
-        return FakeTenant(self)
+        return self._cache(FakeTenant(self))
 
 
 class FakeNetworkManager(FakeManager):
@@ -255,7 +251,7 @@ class FakeSecurityGroupRuleManager(FakeManager):
 class FakeUsersManager(FakeManager):
 
     def create(self, username, password, email, tenant_id):
-        return FakeUser(self)
+        return self._cache(FakeUser(self))
 
 
 class FakeVolumeManager(FakeManager):
@@ -350,6 +346,7 @@ class FakeKeystoneClient(object):
         self.users = FakeUsersManager()
         self.roles = FakeRolesManager()
         self.project_id = 'abc123'
+        self.auth_url = 'http://example.com:5000/v2.0/'
         self.auth_token = 'fake'
         self.auth_user_id = uuid.uuid4()
         self.auth_tenant_id = uuid.uuid4()

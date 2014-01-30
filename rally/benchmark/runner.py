@@ -14,6 +14,7 @@
 #    under the License.
 
 import collections
+import functools
 import multiprocessing
 from multiprocessing import pool as multiprocessing_pool
 import random
@@ -33,9 +34,8 @@ LOG = logging.getLogger(__name__)
 
 
 # NOTE(msdubov): These objects are shared between multiple scenario processes.
-__openstack_clients__ = []
-__admin_clients__ = {}
-__scenario_context__ = {}
+__openstack_clients__ = {}
+__admin_clients__ = []
 
 
 def _run_scenario_loop(args):
@@ -43,7 +43,8 @@ def _run_scenario_loop(args):
 
     LOG.info("ITER: %s" % i)
 
-    scenario = cls(context=__scenario_context__,
+    # TODO(boris-42): remove context
+    scenario = cls(context={},
                    admin_clients=__admin_clients__,
                    clients=random.choice(__openstack_clients__))
 
@@ -61,9 +62,130 @@ def _run_scenario_loop(args):
                 "atomic_actions_time": scenario.atomic_actions_time()}
 
 
+class UserGenerator(object):
+    """Context class for generating temporary users/tenants for benchmarks."""
+
+    def __init__(self, admin_clients):
+        self.keystone_client = admin_clients["keystone"]
+
+    def _create_user(self, user_id, tenant_id):
+        pattern = "%(tenant_id)s_user_%(uid)d"
+        name = pattern % {"tenant_id": tenant_id, "uid": user_id}
+        email = "%s@email.me" % name
+        return self.keystone_client.users.create(name, "password",
+                                                 email, tenant_id)
+
+    def _create_tenant(self, run_id, i):
+        pattern = "temp_%(run_id)s_tenant_%(iter)i"
+        return self.keystone_client.tenants.create(pattern % {"run_id": run_id,
+                                                              "iter": i})
+
+    def create_users_and_tenants(self, tenants, users_per_tenant):
+        run_id = str(uuid.uuid4())
+        auth_url = self.keystone_client.auth_url
+        self.tenants = [self._create_tenant(run_id, i)
+                        for i in range(tenants)]
+
+        self.users = []
+        endpoints = []
+        for tenant in self.tenants:
+            for user_id in range(users_per_tenant):
+                user = self._create_user(user_id, tenant.id)
+                self.users.append(user)
+                endpoints.append({'auth_url': auth_url,
+                                  'username': user.name,
+                                  'password': "password",
+                                  'tenant_name': tenant.name})
+        return endpoints
+
+    def _delete_users_and_tenants(self):
+        for user in self.users:
+            try:
+                user.delete()
+            except Exception:
+                LOG.info("Failed to delete user: %s" % user.name)
+
+        for tenant in self.tenants:
+            try:
+                tenant.delete()
+            except Exception:
+                LOG.info("Failed to delete tenant: %s" % tenant.name)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, exc_traceback):
+        self._delete_users_and_tenants()
+
+        if exc_type:
+            LOG.debug(_("Failed to generate temporary users."),
+                      exc_info=(exc_type, exc_value, exc_traceback))
+        else:
+            LOG.debug(_("Completed deleting temporary users and tenants."))
+
+
+class ResourceCleaner(object):
+    """Context class for resource cleanup (both admin and non-admin)."""
+
+    def __init__(self, admin=None, users=None):
+        self.admin = admin
+        self.users = users
+
+    def _cleanup_users_resources(self):
+        if not self.users:
+            return
+
+        for user in self.users:
+            methods = [
+                functools.partial(utils.delete_nova_resources, user["nova"]),
+                functools.partial(utils.delete_glance_resources,
+                                  user["glance"], user["keystone"]),
+                functools.partial(utils.delete_cinder_resources,
+                                  user["cinder"])
+            ]
+
+            for method in methods:
+                try:
+                    method()
+                except Exception as e:
+                    LOG.debug(_("Not all resources were cleaned."),
+                              exc_info=sys.exc_info())
+                    LOG.warning(_('Unable to fully cleanup the cloud: \n%s') %
+                                (e.message))
+
+    def _cleanup_admin_resources(self):
+        if not self.admin:
+            return
+
+        try:
+            utils.delete_keystone_resources(self.admin["keystone"])
+        except Exception as e:
+            LOG.debug(_("Not all resources were cleaned."),
+                      exc_info=sys.exc_info())
+            LOG.warning(_('Unable to fully cleanup keystone service: %s') %
+                        (e.message))
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, exc_traceback):
+        self._cleanup_users_resources()
+        self._cleanup_admin_resources()
+
+        if exc_type:
+            LOG.debug(_("An error occurred while launching "
+                        "the benchmark scenario."),
+                      exc_info=(exc_type, exc_value, exc_traceback))
+        else:
+            LOG.debug(_("Completed resources cleanup."))
+
+
 class ScenarioRunner(object):
     """Tool that gets and runs one Scenario."""
+
     def __init__(self, task, endpoint):
+        base.Scenario.register()
+
         self.task = task
         self.endpoint = endpoint
 
@@ -71,75 +193,6 @@ class ScenarioRunner(object):
         keys = ['username', 'password', 'tenant_name', 'auth_url']
         __admin_clients__ = utils.create_openstack_clients([self.endpoint],
                                                            keys)[0]
-        base.Scenario.register()
-
-    def _create_temp_tenants_and_users(self, tenants, users_per_tenant):
-        run_id = str(uuid.uuid4())
-        self.tenants = [__admin_clients__["keystone"].tenants.create(
-                            "temp_%(rid)s_tenant_%(iter)i" % {"rid": run_id,
-                                                              "iter": i})
-                        for i in range(tenants)]
-        self.users = []
-        temporary_endpoints = []
-        for tenant in self.tenants:
-            for uid in range(users_per_tenant):
-                username = "%(tname)s_user_%(uid)d" % {"tname": tenant.name,
-                                                       "uid": uid}
-                password = "password"
-                user = __admin_clients__["keystone"].users.create(username,
-                                                                  password,
-                                                                  "%s@test.com"
-                                                                  % username,
-                                                                  tenant.id)
-                self.users.append(user)
-                endpoint = {
-                    'auth_url': self.endpoint['auth_url'],
-                    'username': username,
-                    'password': password,
-                    'tenant_name': tenant.name,
-                }
-                temporary_endpoints.append(endpoint)
-        return temporary_endpoints
-
-    @classmethod
-    def _cleanup_with_clients(cls, indexes):
-        for index in indexes:
-            clients = __openstack_clients__[index]
-            try:
-                utils.delete_nova_resources(clients["nova"])
-                utils.delete_glance_resources(clients["glance"],
-                                              clients["keystone"].project_id)
-                utils.delete_cinder_resources(clients["cinder"])
-            except Exception as e:
-                LOG.debug(_("Not all resources were cleaned."),
-                          exc_info=sys.exc_info())
-                LOG.warning(_('Unable to fully cleanup the cloud: %s') %
-                            (e.message))
-
-    def _cleanup_scenario(self, concurrent):
-        indexes = range(0, len(__openstack_clients__))
-        chunked_indexes = [indexes[i:i + concurrent]
-                           for i in range(0, len(indexes), concurrent)]
-        pool = multiprocessing.Pool(concurrent)
-        for client_indicies in chunked_indexes:
-            pool.apply_async(utils.async_cleanup, args=(ScenarioRunner,
-                                                        client_indicies,))
-        try:
-            utils.delete_keystone_resources(__admin_clients__["keystone"])
-        except Exception as e:
-            LOG.debug(_("Not all resources were cleaned."),
-                      exc_info=sys.exc_info())
-            LOG.warning(_('Unable to fully cleanup keystone service: %s') %
-                        (e.message))
-
-        pool.close()
-        pool.join()
-
-    def _delete_temp_tenants_and_users(self):
-        for user in self.users:
-            user.delete()
-        for tenant in self.tenants:
-            tenant.delete()
 
     def _run_scenario_continuously_for_times(self, cls, method, args,
                                              times, concurrent, timeout):
@@ -217,8 +270,9 @@ class ScenarioRunner(object):
         return results
 
     def _run_scenario(self, cls, method, args, execution_type, config):
+        # TODO(boris-42): This method should be replaced by OOP
 
-        timeout = config.get("timeout", 10000)
+        timeout = config.get("timeout", 600)
 
         if execution_type == "continuous":
 
@@ -252,26 +306,16 @@ class ScenarioRunner(object):
             return self._run_scenario_periodically(cls, method, args,
                                                    times, period, timeout)
 
-    def run(self, name, kwargs):
+    def _prepare_and_run_scenario(self, name, kwargs):
+
         cls_name, method_name = name.split(".")
         cls = base.Scenario.get_by_name(cls_name)
 
         args = kwargs.get('args', {})
-        init_args = kwargs.get('init', {})
         execution_type = kwargs.get('execution', 'continuous')
         config = kwargs.get('config', {})
-        tenants = config.get('tenants', 1)
-        users_per_tenant = config.get('users_per_tenant', 1)
 
-        temp_users = self._create_temp_tenants_and_users(tenants,
-                                                         users_per_tenant)
-
-        global __openstack_clients__, __scenario_context__
-
-        # NOTE(msdubov): Call init() with admin openstack clients
-        cls._clients = __admin_clients__
-        __scenario_context__ = cls.init(init_args)
-
+        # TODO(boris-42): Validation should in benchmark.engine not here
         method = getattr(cls, method_name)
         validators = getattr(method, "validators", [])
         for validator in validators:
@@ -279,15 +323,38 @@ class ScenarioRunner(object):
             if not result.is_valid:
                 raise exceptions.InvalidScenarioArgument(message=result.msg)
 
-        # NOTE(msdubov): Launch scenarios with non-admin openstack clients
-        keys = ["username", "password", "tenant_name", "auth_url"]
-        __openstack_clients__ = utils.create_openstack_clients(temp_users,
-                                                               keys)
+        # TODO(boris-42): Remove _run_scenario (and use subclasses)
+        return self._run_scenario(cls, method_name, args, execution_type,
+                                  config)
 
-        results = self._run_scenario(cls, method_name, args,
-                                     execution_type, config)
+    def _run_as_admin(self, name, kwargs):
+        global __openstack_clients__, __admin_clients__
+        config = kwargs.get('config', {})
 
-        self._cleanup_scenario(config.get("active_users", 1))
-        self._delete_temp_tenants_and_users()
+        with UserGenerator(__admin_clients__) as generator:
+            tenants = config.get("tenants", 1)
+            users_per_tenant = config.get("users_per_tenant", 1)
+            temp_users = generator.create_users_and_tenants(tenants,
+                                                            users_per_tenant)
+            keys = ["username", "password", "tenant_name", "auth_url"]
+            __openstack_clients__ = utils.create_openstack_clients(temp_users,
+                                                                   keys)
+            with ResourceCleaner(admin=__admin_clients__,
+                                 users=__openstack_clients__):
+                return self._prepare_and_run_scenario(name, kwargs)
+        __openstack_clients__ = {}
+        __admin_clients__ = []
 
-        return results
+    def _run_as_non_admin(self, name, kwargs):
+        global __openstack_clients__
+
+        # TODO(boris-42): Somehow setup clients from deployment/config
+        with ResourceCleaner(users=__openstack_clients__):
+            return self._prepare_and_run_scenario(name, kwargs)
+        __openstack_clients__ = {}
+
+    def run(self, name, kwargs):
+        if __admin_clients__:
+            return self._run_as_admin(name, kwargs)
+        else:
+            return self._run_as_non_admin(name, kwargs)

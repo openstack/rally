@@ -87,10 +87,6 @@ def false(resource):
     return False
 
 
-def async_cleanup(cls, indicies):
-    cls._cleanup_with_clients(indicies)
-
-
 def format_exc(exc):
     return [str(type(exc)), str(exc), traceback.format_exc()]
 

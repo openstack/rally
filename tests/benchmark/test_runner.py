@@ -24,82 +24,50 @@ from tests import fakes
 from tests import test
 
 
-class MockedPool(object):
-
-    def __init__(self, concurrent=1):
-        pass
-
-    def close(self):
-        pass
-
-    def join(self):
-        pass
-
-    def apply_async(self, func, args=()):
-        func(*args)
-
-
-class ScenarioTestCase(test.TestCase):
+class ScenarioRunnerTestCase(test.TestCase):
 
     def setUp(self):
-        super(ScenarioTestCase, self).setUp()
+        super(ScenarioRunnerTestCase, self).setUp()
         admin_keys = ["username", "password", "tenant_name", "auth_url"]
         self.fake_kw = dict(zip(admin_keys, admin_keys))
 
-    def test_init_calls_register(self):
-        with mock.patch("rally.benchmark.utils.osclients") as mock_osclients:
-            mock_osclients.Clients.return_value = fakes.FakeClients()
-            with mock.patch("rally.benchmark.runner.base") as mock_base:
-                runner.ScenarioRunner(mock.MagicMock(), self.fake_kw)
-            self.assertEqual(mock_base.mock_calls,
-                             [mock.call.Scenario.register()])
+    @mock.patch("rally.benchmark.runner.base")
+    @mock.patch("rally.benchmark.utils.osclients")
+    def test_init_calls_register(self, mock_osclients, mock_base):
+        mock_osclients.Clients.return_value = fakes.FakeClients()
+        runner.ScenarioRunner(mock.MagicMock(), self.fake_kw)
+        self.assertEqual(mock_base.mock_calls, [mock.call.Scenario.register()])
 
-    def test_create_temp_tenants_and_users(self):
-        with mock.patch("rally.benchmark.utils.osclients") as mock_osclients:
-            mock_osclients.Clients.return_value = fakes.FakeClients()
-            srunner = runner.ScenarioRunner(mock.MagicMock(), self.fake_kw)
-            tenants = 10
-            users_per_tenant = 5
-            endpoints = srunner._create_temp_tenants_and_users(
-                                                    tenants, users_per_tenant)
-            self.assertEqual(len(endpoints), tenants * users_per_tenant)
-            endpoint_keys = set(["username", "password", "tenant_name",
-                                 "auth_url"])
-            for endpoint in endpoints:
-                self.assertTrue(endpoint_keys.issubset(endpoint.keys()))
+    @mock.patch("rally.benchmark.runner.rutils")
+    @mock.patch("rally.benchmark.utils.osclients")
+    def test_run_scenario(self, mock_osclients, mock_utils):
+        mock_osclients.Clients.return_value = fakes.FakeClients()
+        srunner = runner.ScenarioRunner(mock.MagicMock(), self.fake_kw)
+        runner.__openstack_clients__ = ["client"]
+        active_users = 2
+        times = 3
+        duration = 0.01
 
-    def test_run_scenario(self):
-        with mock.patch("rally.benchmark.utils.osclients") as mock_osclients:
-            mock_osclients.Clients.return_value = fakes.FakeClients()
-            with mock.patch("rally.benchmark.runner.rutils") as mock_utils:
-                srunner = runner.ScenarioRunner(mock.MagicMock(), self.fake_kw)
-                runner.__openstack_clients__ = ["client"]
-                active_users = 2
-                times = 3
-                duration = 0.01
+        mock_utils.Timer = fakes.FakeTimer
+        results = srunner._run_scenario(fakes.FakeScenario, "do_it", {},
+                                        "continuous",
+                                        {"times": times,
+                                         "active_users": active_users,
+                                         "timeout": 2})
+        expected = [{"time": 10, "idle_time": 0, "error": None,
+                     "scenario_output": None, "atomic_actions_time": []}
+                    for i in range(times)]
+        self.assertEqual(results, expected)
 
-                mock_utils.Timer = fakes.FakeTimer
-                results = srunner._run_scenario(fakes.FakeScenario,
-                                                "do_it", {}, "continuous",
-                                                {"times": times,
-                                                 "active_users": active_users,
-                                                 "timeout": 2})
-                expected = [{"time": 10, "idle_time": 0, "error": None,
-                             "scenario_output": None,
-                             "atomic_actions_time": []}
-                            for i in range(times)]
-                self.assertEqual(results, expected)
-
-                results = srunner._run_scenario(fakes.FakeScenario,
-                                                "do_it", {}, "continuous",
-                                                {"duration": duration,
-                                                 "active_users": active_users,
-                                                 "timeout": 2})
-                expected = [{"time": 10, "idle_time": 0, "error": None,
-                             "scenario_output": None,
-                             "atomic_actions_time": []}
-                            for i in range(active_users)]
-                self.assertEqual(results, expected)
+        results = srunner._run_scenario(fakes.FakeScenario, "do_it", {},
+                                        "continuous",
+                                        {"duration": duration,
+                                         "active_users": active_users,
+                                         "timeout": 2})
+        expected = [{"time": 10, "idle_time": 0, "error": None,
+                     "scenario_output": None, "atomic_actions_time": []}
+                    for i in range(active_users)]
+        self.assertEqual(results, expected)
 
     @mock.patch("rally.benchmark.utils.osclients")
     @mock.patch("multiprocessing.pool.IMapIterator.next")
@@ -308,8 +276,7 @@ class ScenarioTestCase(test.TestCase):
         srunner._run_scenario_periodically.assert_called_once_with(
                                     FakeScenario, "do_it", {"a": 1}, 2, 3, 1)
 
-    def _set_mocks_for_run(self, mock_osclients, mock_base, mock_clients,
-                           validators=None):
+    def _set_mocks_for_run(self, mock_osclients, mock_base, validators=None):
         FakeScenario = mock.MagicMock()
         FakeScenario.init = mock.MagicMock(return_value={})
         if validators:
@@ -318,21 +285,16 @@ class ScenarioTestCase(test.TestCase):
         mock_osclients.Clients.return_value = fakes.FakeClients()
         srunner = runner.ScenarioRunner(mock.MagicMock(), self.fake_kw)
         srunner._run_scenario = mock.MagicMock(return_value="result")
-        srunner._create_temp_tenants_and_users = mock.MagicMock(
-                                                        return_value=[])
-        srunner._delete_temp_tenants_and_users = mock.MagicMock()
 
         mock_base.Scenario.get_by_name = \
             mock.MagicMock(return_value=FakeScenario)
         return FakeScenario, srunner
 
-    @mock.patch("rally.benchmark.utils.create_openstack_clients")
     @mock.patch("rally.benchmark.runner.base")
     @mock.patch("rally.benchmark.utils.osclients")
-    def test_run(self, mock_osclients, mock_base, mock_clients):
+    def test_run(self, mock_osclients, mock_base):
         FakeScenario, srunner = self._set_mocks_for_run(mock_osclients,
-                                                        mock_base,
-                                                        mock_clients)
+                                                        mock_base)
 
         result = srunner.run("FakeScenario.do_it", {})
         self.assertEqual(result, "result")
@@ -358,48 +320,48 @@ class ScenarioTestCase(test.TestCase):
         ]
         self.assertEqual(srunner._run_scenario.mock_calls, expected)
 
-        expected = [
-            mock.call(1, 1),
-            mock.call(5, 2),
-            mock.call(5, 2)
-        ]
-        self.assertEqual(srunner._create_temp_tenants_and_users.mock_calls,
-                         expected)
-
-        expected = [
-            mock.call.init({}),
-            mock.call.init({"arg": 1}),
-            mock.call.init({"fake": "arg"}),
-        ]
-        # NOTE(olkonami): Ignore __iter__ calls in loop
-        mock_calls = filter(lambda call: '__iter__' not in call[0],
-                            FakeScenario.mock_calls)
-        self.assertEqual(mock_calls, expected)
-
-    @mock.patch("rally.benchmark.utils.create_openstack_clients")
     @mock.patch("rally.benchmark.runner.base")
     @mock.patch("rally.benchmark.utils.osclients")
-    def test_run_validation_failure(self, mock_osclients, mock_base,
-                                    mock_clients):
+    def test_run_validation_failure(self, mock_osclients, mock_base):
         def evil_validator(**kwargs):
             return validation.ValidationResult(is_valid=False)
 
         FakeScenario, srunner = self._set_mocks_for_run(mock_osclients,
                                                         mock_base,
-                                                        mock_clients,
                                                         [evil_validator])
         self.assertRaises(exceptions.InvalidScenarioArgument,
                           srunner.run, "FakeScenario.do_it", {})
 
-    @mock.patch("rally.benchmark.utils.create_openstack_clients")
+
+class UserGeneratorTestCase(test.TestCase):
+
+    def test_create_and_delete_users_and_tenants(self):
+        admin_clients = {"keystone": fakes.FakeClients().get_keystone_client()}
+        created_users = []
+        created_tenants = []
+        with runner.UserGenerator(admin_clients) as generator:
+            tenants = 10
+            users_per_tenant = 5
+            endpoints = generator.create_users_and_tenants(tenants,
+                                                           users_per_tenant)
+            self.assertEqual(len(endpoints), tenants * users_per_tenant)
+            endpoint_keys = set(["username", "password", "tenant_name",
+                                 "auth_url"])
+            for endpoint in endpoints:
+                self.assertTrue(endpoint_keys.issubset(endpoint.keys()))
+            created_users = generator.users
+            created_tenants = generator.tenants
+        self.assertTrue(all(u.status == "DELETED" for u in created_users))
+        self.assertTrue(all(t.status == "DELETED" for t in created_tenants))
+
+
+class ResourceCleanerTestCase(test.TestCase):
+
     @mock.patch("rally.benchmark.runner.base")
     @mock.patch("rally.benchmark.utils.osclients")
     @mock.patch("rally.benchmark.utils._delete_single_keystone_resource_type")
-    @mock.patch("multiprocessing.Pool")
-    def test_generic_cleanup(self, mock_pool, mock_del_single_keystone_res,
-                             mock_osclients, mock_base, mock_clients):
-        FakeScenario = mock.MagicMock()
-        FakeScenario.init = mock.MagicMock(return_value={})
+    def test_cleanup_resources(self, mock_del_single_keystone_res,
+                               mock_osclients, mock_base):
 
         mock_cms = [fakes.FakeClients(), fakes.FakeClients(),
                     fakes.FakeClients()]
@@ -411,16 +373,6 @@ class ScenarioTestCase(test.TestCase):
                 ("cinder", cl.get_cinder_client())
             )) for cl in mock_cms
         ]
-        mock_clients.return_value = clients
-
-        srunner = runner.ScenarioRunner(mock.MagicMock(), self.fake_kw)
-        srunner._run_scenario = mock.MagicMock(return_value="result")
-        srunner._create_temp_tenants_and_users = mock.MagicMock(
-                                                        return_value=[])
-        srunner._delete_temp_tenants_and_users = mock.MagicMock()
-
-        mock_base.Scenario.get_by_name = \
-            mock.MagicMock(return_value=FakeScenario)
 
         for index in range(len(clients)):
             client = clients[index]
@@ -439,12 +391,8 @@ class ScenarioTestCase(test.TestCase):
                 cinder.volume_snapshots.create("snap-%s" % (uid))
                 cinder.backups.create("backup-%s" % (uid))
 
-        mock_pool.return_value = MockedPool()
-
-        srunner.run("FakeScenario.do_it",
-                    {"args": {"a": 1}, "init": {"arg": 1},
-                     "config": {"timeout": 1, "times": 2, "active_users": 3,
-                                "tenants": 5, "users_per_tenant": 2}})
+        with runner.ResourceCleaner(admin=clients[0], users=clients):
+            pass
 
         def _assert_purged(manager, resource_type):
             resources = manager.list()
@@ -472,5 +420,4 @@ class ScenarioTestCase(test.TestCase):
         expected = [mock.call(clients[0]["keystone"], resource) for
                     resource in ["users", "tenants", "services", "roles"]]
 
-        self.assertEqual(
-            mock_del_single_keystone_res.call_args_list, expected)
+        self.assertEqual(mock_del_single_keystone_res.call_args_list, expected)

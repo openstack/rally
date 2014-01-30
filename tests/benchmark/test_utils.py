@@ -39,12 +39,6 @@ class BenchmarkUtilsTestCase(test.TestCase):
     def test_false(self):
         self.assertFalse(utils.false(None))
 
-    def test_async_clenaup(self):
-        cls = mock.MagicMock()
-        indicies = {}
-        utils.async_cleanup(cls, indicies)
-        cls._cleanup_with_clients.assert_called_once_with(indicies)
-
     def test_infinite_run_args(self):
         args = ("a", "b", "c", "d", 123)
         for i, real_args in enumerate(utils.infinite_run_args(args)):
