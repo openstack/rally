@@ -14,7 +14,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from glanceclient import exc
+from glanceclient import exc as glance_exc
+from novaclient import exceptions as nova_exc
 
 from rally.openstack.common.gettextutils import _
 
@@ -36,7 +37,7 @@ def add_validator(validator):
 
 
 def image_exists(param_name):
-    """Returns validator for value of specified variable
+    """Returns validator for image_id
 
     :param param_name: defines which variable should be used
                        to get image id value.
@@ -47,7 +48,25 @@ def image_exists(param_name):
         try:
             glanceclient.images.get(image=image_id)
             return ValidationResult()
-        except exc.HTTPNotFound:
+        except glance_exc.HTTPNotFound:
             message = _("Image with id '%s' not found") % image_id
             return ValidationResult(False, message)
     return image_exists_validator
+
+
+def flavor_exists(param_name):
+    """Returns validator for flavor
+
+    :param param_name: defines which variable should be used
+                       to get flavor id value.
+    """
+    def flavor_exists_validator(**kwargs):
+        flavor_id = kwargs.get(param_name)
+        novaclient = kwargs["clients"]["nova"]
+        try:
+            novaclient.flavors.get(flavor=flavor_id)
+            return ValidationResult()
+        except nova_exc.NotFound:
+            message = _("Flavor with id '%s' not found") % flavor_id
+            return ValidationResult(False, message)
+    return flavor_exists_validator
