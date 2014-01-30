@@ -23,6 +23,7 @@ from rally.cmd import cliutils
 from rally.cmd.commands import deployment
 from rally.cmd.commands import task
 from rally.cmd.commands import use
+from rally.cmd.commands import verify
 
 
 def deprecated():
@@ -36,6 +37,7 @@ def main():
         'deployment': deployment.DeploymentCommands,
         'task': task.TaskCommands,
         'use': use.UseCommands,
+        'verify': verify.VerifyCommands
     }
     cliutils.run(sys.argv, categories)
 

@@ -21,8 +21,19 @@ from tests import test
 
 
 class CmdManageTestCase(test.TestCase):
+
+    @mock.patch('rally.cmd.manage.cliutils')
+    def test_main(self, cli_mock):
+        manage.main()
+        categories = {'db': manage.DBCommands,
+                      'tempest': manage.TempestCommands}
+        cli_mock.run.assert_called_once_with(sys.argv, categories)
+
+
+class DBCommandsTestCase(test.TestCase):
+
     def setUp(self):
-        super(CmdManageTestCase, self).setUp()
+        super(DBCommandsTestCase, self).setUp()
         self.db_commands = manage.DBCommands()
 
     @mock.patch('rally.cmd.manage.db')
@@ -31,8 +42,16 @@ class CmdManageTestCase(test.TestCase):
         calls = [mock.call.db_drop(), mock.call.db_create()]
         self.assertEqual(calls, mock_db.mock_calls)
 
-    @mock.patch('rally.cmd.manage.cliutils')
-    def test_main(self, cli_mock):
-        manage.main()
-        categories = {'db': manage.DBCommands}
-        cli_mock.run.assert_called_once_with(sys.argv, categories)
+
+class TempestCommandsTestCase(test.TestCase):
+
+    def setUp(self):
+        super(TempestCommandsTestCase, self).setUp()
+        self.tempest_commands = manage.TempestCommands()
+        self.tempest = mock.Mock()
+
+    @mock.patch('rally.verification.verifiers.tempest.tempest.Tempest')
+    def test_install(self, mock_tempest):
+        mock_tempest.return_value = self.tempest
+        self.tempest_commands.install()
+        self.tempest.install.assert_called_once_with()

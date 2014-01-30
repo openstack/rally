@@ -82,6 +82,7 @@ class APITestCase(test.TestCase):
             'config': self.deploy_config,
             'endpoints': self.endpoints,
         }
+        self.tempest = mock.Mock()
 
     @mock.patch('rally.objects.Task')
     def test_create_task(self, mock_task):
@@ -191,3 +192,24 @@ class APITestCase(test.TestCase):
         mock_update.assert_has_calls([
             mock.call(self.deploy_uuid, {'endpoints': self.endpoints})
         ])
+
+    @mock.patch('rally.verification.verifiers.tempest.tempest.Tempest')
+    @mock.patch('rally.objects.deploy.db.deployment_get')
+    def test_verify(self, mock_get, mock_tempest):
+        mock_tempest.return_value = self.tempest
+        self.tempest.is_installed.return_value = True
+        mock_get.return_value = self.deployment
+        api.verify(self.deploy_uuid, 'image_id', 'alt_image_id', 'flavor_id',
+                   'alt_flavor_id')
+
+        self.tempest.is_installed.assert_called_once_with()
+        mock_get.assert_called_once_with(self.deploy_uuid)
+        self.tempest.verify.assert_called_once_with(
+            image_ref='image_id',
+            image_ref_alt='alt_image_id',
+            flavor_ref='flavor_id',
+            flavor_ref_alt='alt_flavor_id',
+            username='admin',
+            password='myadminpass',
+            tenant_name='demo',
+            uri='http://example.net:5000/v2.0/')

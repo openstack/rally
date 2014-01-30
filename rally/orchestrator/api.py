@@ -16,8 +16,10 @@
 
 from rally.benchmark import engine
 from rally import consts
+from rally import db
 from rally import deploy
 from rally import objects
+from rally.verification.verifiers.tempest import tempest
 
 
 def create_deploy(config, name):
@@ -115,3 +117,31 @@ def delete_task(task_uuid, force=False):
     """
     status = None if force else consts.TaskStatus.FINISHED
     objects.Task.delete_by_uuid(task_uuid, status=status)
+
+
+def verify(deploy_id, image_id, alt_image_id, flavor_id, alt_flavor_id):
+    """Start verifying.
+
+    :param deploy_id: a UUID of a deployment.
+    :param image_id: Valid primary image reference to be used in tests.
+    :param alt_image_id: Valid secondary image reference to be used in tests.
+    :param flavor_id: Valid primary flavor to use in tests.
+    :param alt_flavor_id: Valid secondary flavor to be used in tests.
+    """
+    verifier = tempest.Tempest()
+    if not verifier.is_installed():
+        print("Tempest is not installed. "
+              "Please use 'rally-manage tempest install'")
+        return
+    print("Starting verification of deployment: %s" % deploy_id)
+
+    endpoints = db.deployment_get(deploy_id)['endpoints']
+    endpoint = endpoints[0]
+    verifier.verify(image_ref=image_id,
+                    image_ref_alt=alt_image_id,
+                    flavor_ref=flavor_id,
+                    flavor_ref_alt=alt_flavor_id,
+                    username=endpoint['username'],
+                    password=endpoint['password'],
+                    tenant_name=endpoint['tenant_name'],
+                    uri=endpoint['auth_url'])

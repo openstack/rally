@@ -21,6 +21,7 @@ import sys
 
 from rally.cmd import cliutils
 from rally import db
+from rally.verification.verifiers.tempest import tempest
 
 
 class DBCommands(object):
@@ -31,6 +32,15 @@ class DBCommands(object):
         db.db_create()
 
 
+class TempestCommands(object):
+    """Commands for Tempest management."""
+
+    def install(self):
+        """Install tempest."""
+        verifier = tempest.Tempest()
+        verifier.install()
+
+
 def deprecated():
     print("\n\n---\n\nopenstack-rally and openstack-rally-manage are "
           "deprecated, please use rally and rally-manage\n\n---\n\n")
@@ -38,7 +48,8 @@ def deprecated():
 
 
 def main():
-    categories = {'db': DBCommands}
+    categories = {'db': DBCommands,
+                  'tempest': TempestCommands}
     cliutils.run(sys.argv, categories)
 
 
