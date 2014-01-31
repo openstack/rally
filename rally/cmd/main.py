@@ -17,6 +17,7 @@
 
 from __future__ import print_function
 
+import collections
 import json
 import os
 import pprint
@@ -228,6 +229,24 @@ class TaskCommands(object):
         :param task_id: Task uuid
         Prints detailed information of task.
         """
+        def _print_atomic_actions_time(raw):
+            atime_merged = []
+            for r in raw:
+                if 'atomic_actions_time' in r:
+                    for a in r['atomic_actions_time']:
+                        atime_merged.append(a)
+
+            times_by_action = collections.defaultdict(list)
+            for at in atime_merged:
+                times_by_action[at['action']].append(at['duration'])
+            if times_by_action:
+                atomic_action_table = prettytable.PrettyTable(
+                    ['action', 'max (sec)', 'avg (sec)', 'min (sec)'])
+                for k, v in times_by_action.iteritems():
+                    atomic_action_table.add_row([k, max(v), sum(v) / len(v),
+                                                 min(v)])
+                print(atomic_action_table)
+                print()
 
         if task_id == "last":
             task = db.task_get_detailed_last()
@@ -258,10 +277,11 @@ class TaskCommands(object):
                 print(result["data"]["validation"]["exc_msg"])
                 continue
 
+            _print_atomic_actions_time(result["data"]["raw"])
+
             raw = result["data"]["raw"]
             times = map(lambda x: x['time'],
                         filter(lambda r: not r['error'], raw))
-
             table = prettytable.PrettyTable(["max (sec)", "avg (sec)",
                                              "min (sec)", "success/total",
                                              "total times"])
