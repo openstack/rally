@@ -15,6 +15,7 @@
 
 import uuid
 
+from glanceclient import exc
 from novaclient import exceptions
 from rally.benchmark import base
 from rally import utils as rally_utils
@@ -56,6 +57,14 @@ class FakeImage(FakeResource):
 
     def __init__(self, manager=None):
         super(FakeImage, self).__init__(manager)
+        self.id = "image-id-0"
+
+
+class FakeFailedImage(FakeResource):
+
+    def __init__(self, manager=None):
+        super(FakeFailedImage, self).__init__(manager)
+        self.status = "error"
 
 
 class FakeFloatingIP(FakeResource):
@@ -174,7 +183,7 @@ class FakeServerManager(FakeManager):
         return self._create(name=name)
 
     def create_image(self, server, name):
-        image = self.images.create()
+        image = self.images._create()
         return image.uuid
 
     def add_floating_ip(self, server, fip):
@@ -192,8 +201,29 @@ class FakeFailedServerManager(FakeServerManager):
 
 class FakeImageManager(FakeManager):
 
-    def create(self):
-        return self._cache(FakeImage(self))
+    def __init__(self):
+        super(FakeImageManager, self).__init__()
+
+    def get(self, resource_uuid):
+        image = self.cache.get(resource_uuid, None)
+        if image is not None:
+            return image
+        raise exc.HTTPNotFound("Image %s not found" % (resource_uuid))
+
+    def _create(self, image_class=FakeImage, name=None):
+        image = self._cache(image_class(self))
+        if name is not None:
+            image.name = name
+        return image
+
+    def create(self, name, copy_from, container_format, disk_format):
+        return self._create(name=name)
+
+
+class FakeFailedImageManager(FakeImageManager):
+
+    def create(self, name, copy_from, container_format, disk_format):
+        return self._create(FakeFailedImage, name)
 
 
 class FakeFloatingIPsManager(FakeManager):
@@ -309,9 +339,11 @@ class FakeServiceCatalog(object):
 
 class FakeGlanceClient(object):
 
-    def __init__(self, nova_client=None):
-        if nova_client:
-            self.images = nova_client.images
+    def __init__(self, failed_image_manager=False):
+        if failed_image_manager:
+            self.images = FakeFailedImageManager()
+        else:
+            self.images = FakeImageManager()
 
 
 class FakeCinderClient(object):
@@ -383,7 +415,7 @@ class FakeClients(object):
     def get_glance_client(self):
         if self.glance is not None:
             return self.glance
-        self.glance = FakeGlanceClient(self.get_nova_client())
+        self.glance = FakeGlanceClient()
         return self.glance
 
     def get_cinder_client(self):

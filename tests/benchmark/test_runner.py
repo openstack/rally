@@ -378,9 +378,10 @@ class ResourceCleanerTestCase(test.TestCase):
             client = clients[index]
             nova = client["nova"]
             cinder = client["cinder"]
+            glance = client["glance"]
             for count in range(3):
                 uid = index + count
-                img = nova.images.create()
+                img = glance.images._create()
                 nova.servers.create("svr-%s" % (uid), img.uuid, index)
                 nova.keypairs.create("keypair-%s" % (uid))
                 nova.security_groups.create("secgroup-%s" % (uid))
@@ -402,6 +403,7 @@ class ResourceCleanerTestCase(test.TestCase):
         for client in clients:
             nova = client["nova"]
             cinder = client["cinder"]
+            glance = client["glance"]
             _assert_purged(nova.servers, "servers")
             _assert_purged(nova.keypairs, "key pairs")
             _assert_purged(nova.security_groups, "security groups")
@@ -413,7 +415,7 @@ class ResourceCleanerTestCase(test.TestCase):
             _assert_purged(cinder.transfers, "volume transfers")
             _assert_purged(cinder.volume_snapshots, "volume snapshots")
 
-            for image in nova.images.list():
+            for image in glance.images.list():
                 self.assertEqual("DELETED", image.status,
                                  "image not purged: %s" % (image))
 

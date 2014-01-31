@@ -319,7 +319,7 @@ class NovaServersTestCase(test.TestCase):
 
     def test_snapshot_server(self):
         fake_server = object()
-        fake_image = fakes.FakeImageManager().create()
+        fake_image = fakes.FakeImageManager()._create()
         fake_image.id = "image_id"
 
         scenario = servers.NovaServers()
