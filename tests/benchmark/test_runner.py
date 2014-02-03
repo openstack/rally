@@ -13,7 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-"""Tests for utils."""
 import mock
 import multiprocessing
 
@@ -35,43 +34,44 @@ class ScenarioRunnerTestCase(test.TestCase):
     @mock.patch("rally.benchmark.utils.osclients")
     def test_init_calls_register(self, mock_osclients, mock_base):
         mock_osclients.Clients.return_value = fakes.FakeClients()
-        runner.ScenarioRunner(mock.MagicMock(), self.fake_kw)
+        runner.ScenarioRunner.get_runner(mock.MagicMock(), self.fake_kw,
+                                         {"execution": "continuous"})
         self.assertEqual(mock_base.mock_calls, [mock.call.Scenario.register()])
 
-    @mock.patch("rally.benchmark.runner.rutils")
     @mock.patch("rally.benchmark.utils.osclients")
-    def test_run_scenario(self, mock_osclients, mock_utils):
+    def test_run_scenario(self, mock_osclients):
         mock_osclients.Clients.return_value = fakes.FakeClients()
-        srunner = runner.ScenarioRunner(mock.MagicMock(), self.fake_kw)
+        srunner = runner.ScenarioRunner.get_runner(mock.MagicMock(),
+                                                   self.fake_kw,
+                                                   {"execution": "continuous"})
         runner.__openstack_clients__ = ["client"]
         active_users = 2
         times = 3
         duration = 0.01
 
-        mock_utils.Timer = fakes.FakeTimer
-        results = srunner._run_scenario(fakes.FakeScenario, "do_it", {},
-                                        "continuous",
-                                        {"times": times,
-                                         "active_users": active_users,
-                                         "timeout": 2})
-        expected = [{"time": 10, "idle_time": 0, "error": None,
-                     "scenario_output": None, "atomic_actions_time": []}
-                    for i in range(times)]
-        self.assertEqual(results, expected)
+        with mock.patch("rally.benchmark.runner.rutils") as mock_utils:
+            mock_utils.Timer = fakes.FakeTimer
+            results = srunner._run_scenario(fakes.FakeScenario, "do_it", {},
+                                            {"times": times,
+                                             "active_users": active_users,
+                                             "timeout": 2})
+            expected = [{"time": 10, "idle_time": 0, "error": None,
+                         "scenario_output": None, "atomic_actions_time": []}
+                        for i in range(times)]
+            self.assertEqual(results, expected)
 
-        results = srunner._run_scenario(fakes.FakeScenario, "do_it", {},
-                                        "continuous",
-                                        {"duration": duration,
-                                         "active_users": active_users,
-                                         "timeout": 2})
-        expected = [{"time": 10, "idle_time": 0, "error": None,
-                     "scenario_output": None, "atomic_actions_time": []}
-                    for i in range(active_users)]
-        self.assertEqual(results, expected)
+            results = srunner._run_scenario(fakes.FakeScenario, "do_it", {},
+                                            {"duration": duration,
+                                             "active_users": active_users,
+                                             "timeout": 2})
+            expected = [{"time": 10, "idle_time": 0, "error": None,
+                         "scenario_output": None, "atomic_actions_time": []}
+                        for i in range(active_users)]
+            self.assertEqual(results, expected)
 
     @mock.patch("rally.benchmark.utils.osclients")
     @mock.patch("multiprocessing.pool.IMapIterator.next")
-    @mock.patch("rally.benchmark.runner.time.time")
+    @mock.patch("rally.benchmark.runners.continuous.time.time")
     @mock.patch("rally.benchmark.utils._prepare_for_instance_ssh")
     def test_run_scenario_timeout(self, mock_prepare_for_instance_ssh,
                                   mock_time, mock_next, mock_osclients):
@@ -79,12 +79,14 @@ class ScenarioRunnerTestCase(test.TestCase):
         mock_time.side_effect = [1, 2, 3, 10]
         mock_next.side_effect = multiprocessing.TimeoutError()
         mock_osclients.Clients.return_value = fakes.FakeClients()
-        srunner = runner.ScenarioRunner(mock.MagicMock(), self.fake_kw)
+        srunner = runner.ScenarioRunner.get_runner(mock.MagicMock(),
+                                                   self.fake_kw,
+                                                   {"execution": "continuous"})
         runner.__openstack_clients__ = ["client"]
         times = 4
         active_users = 2
         results = srunner._run_scenario(fakes.FakeScenario,
-                                        "too_long", {}, "continuous",
+                                        "too_long", {},
                                         {"times": times,
                                          "active_users": active_users,
                                          "timeout": 0.01})
@@ -96,7 +98,7 @@ class ScenarioRunnerTestCase(test.TestCase):
 
         duration = 0.1
         results = srunner._run_scenario(fakes.FakeScenario,
-                                        "too_long", {}, "continuous",
+                                        "too_long", {},
                                         {"duration": duration,
                                          "active_users": active_users,
                                          "timeout": 0.01})
@@ -106,175 +108,43 @@ class ScenarioRunnerTestCase(test.TestCase):
             self.assertEqual(r['error'][0],
                              str(multiprocessing.TimeoutError))
 
-    @mock.patch("rally.benchmark.runner.rutils")
     @mock.patch("rally.benchmark.utils.osclients")
-    def test_run_scenario_exception_inside_test(self, mock_osclients,
-                                                mock_utils):
+    def test_run_scenario_exception_inside_test(self, mock_osclients):
         mock_osclients.Clients.return_value = fakes.FakeClients()
-        srunner = runner.ScenarioRunner(mock.MagicMock(), self.fake_kw)
+        srunner = runner.ScenarioRunner.get_runner(
+                mock.MagicMock(), self.fake_kw, {"execution": "continuous"})
         runner.__openstack_clients__ = ["client"]
         times = 1
         duration = 0.001
         active_users = 2
 
-        mock_utils.Timer = fakes.FakeTimer
-        results = srunner._run_scenario(fakes.FakeScenario,
-                                        "something_went_wrong", {},
-                                        "continuous",
-                                        {"times": times, "timeout": 1,
-                                         "active_users": active_users})
-        self.assertEqual(len(results), times)
-        for r in results:
-            self.assertEqual(r['time'], 10)
-            self.assertEqual(r['error'][:2],
-                             [str(Exception), "Something went wrong"])
+        # NOTE(msdubov): Should mock rutils here because we need them in
+        #                ScenarioRunner.get_runner()
+        with mock.patch("rally.benchmark.runner.rutils") as mock_utils:
+            mock_utils.Timer = fakes.FakeTimer
+            results = srunner._run_scenario(fakes.FakeScenario,
+                                            "something_went_wrong", {},
+                                            {"times": times, "timeout": 1,
+                                             "active_users": active_users})
+            self.assertEqual(len(results), times)
+            for r in results:
+                self.assertEqual(r['time'], 10)
+                self.assertEqual(r['error'][:2],
+                                 [str(Exception), "Something went wrong"])
 
-        results = srunner._run_scenario(fakes.FakeScenario,
-                                        "something_went_wrong", {},
-                                        "continuous",
-                                        {"duration": duration, "timeout": 1,
-                                         "active_users": active_users})
-        self.assertEqual(len(results), active_users)
-        for r in results:
-            self.assertEqual(r['time'], 10)
-            self.assertEqual(r['error'][:2],
-                             [str(Exception), "Something went wrong"])
+            results = srunner._run_scenario(fakes.FakeScenario,
+                                            "something_went_wrong", {},
+                                            {"duration": duration,
+                                             "timeout": 1,
+                                             "active_users": active_users})
+            self.assertEqual(len(results), active_users)
+            for r in results:
+                self.assertEqual(r['time'], 10)
+                self.assertEqual(r['error'][:2],
+                                 [str(Exception), "Something went wrong"])
 
     def test_run_scenario_exception_outside_test(self):
         pass
-
-    @mock.patch("rally.benchmark.runner.multiprocessing")
-    @mock.patch("rally.benchmark.utils.osclients")
-    def test_run_scenario_continuously_for_times(self, mock_osclients,
-                                                 mock_multi):
-        mock_osclients.Clients.return_value = fakes.FakeClients()
-        srunner = runner.ScenarioRunner(mock.MagicMock(), self.fake_kw)
-        runner.__openstack_clients__ = ["client"]
-        times = 3
-        active_users = 4
-        timeout = 5
-        mock_multi.Pool = mock.MagicMock()
-        srunner._run_scenario_continuously_for_times(fakes.FakeScenario,
-                                                     "do_it", {},
-                                                     times, active_users,
-                                                     timeout)
-        expect = [
-            mock.call(active_users),
-            mock.call().imap(
-                runner._run_scenario_loop,
-                [(i, fakes.FakeScenario, "do_it", {})
-                    for i in xrange(times)]
-            )
-        ]
-        expect.extend([mock.call().imap().next(timeout) for i in range(times)])
-        expect.extend([
-            mock.call().close(),
-            mock.call().join()
-        ])
-        self.assertEqual(mock_multi.Pool.mock_calls, expect)
-
-    @mock.patch("rally.benchmark.utils.infinite_run_args")
-    @mock.patch("rally.benchmark.runner.multiprocessing")
-    @mock.patch("rally.benchmark.utils.osclients")
-    def test_run_scenario_continuously_for_duration(self, mock_osclients,
-                                                    mock_multi, mock_generate):
-        mock_osclients.Clients.return_value = fakes.FakeClients()
-        srunner = runner.ScenarioRunner(mock.MagicMock(), self.fake_kw)
-        runner.__openstack_clients__ = ["client"]
-        duration = 0
-        active_users = 4
-        timeout = 5
-        mock_multi.Pool = mock.MagicMock()
-        mock_generate.return_value = {}
-        srunner._run_scenario_continuously_for_duration(fakes.FakeScenario,
-                                                        "do_it", {}, duration,
-                                                        active_users, timeout)
-        expect = [
-            mock.call(active_users),
-            mock.call().imap(runner._run_scenario_loop, {}),
-            mock.call().terminate(),
-            mock.call().join()
-        ]
-        self.assertEqual(mock_multi.Pool.mock_calls, expect)
-
-    @mock.patch("rally.benchmark.runner._run_scenario_loop")
-    @mock.patch("rally.benchmark.runner.time.sleep")
-    @mock.patch("rally.benchmark.utils.osclients")
-    def test_run_scenario_periodically(self, mock_osclients,
-                                       mock_sleep, mock_run_scenario_loop):
-        mock_osclients.Clients.return_value = fakes.FakeClients()
-        srunner = runner.ScenarioRunner(mock.MagicMock(), self.fake_kw)
-        runner.__openstack_clients__ = ["client"]
-        times = 3
-        period = 4
-        timeout = 5
-        srunner._run_scenario_periodically(fakes.FakeScenario, "do_it", {},
-                                           times, period, timeout)
-
-        expected = [mock.call((i, fakes.FakeScenario, "do_it", {}))
-                    for i in xrange(times)]
-        self.assertEqual(mock_run_scenario_loop.mock_calls, expected)
-
-        expected = [mock.call(period * 60) for i in xrange(times - 1)]
-        mock_sleep.has_calls(expected)
-
-    @mock.patch("rally.benchmark.runner.base")
-    @mock.patch("rally.benchmark.utils.osclients")
-    def test_run_continuous(self, mock_osclients, mock_base):
-        FakeScenario = mock.MagicMock()
-        FakeScenario.init = mock.MagicMock(return_value={})
-
-        mock_osclients.Clients.return_value = fakes.FakeClients()
-        srunner = runner.ScenarioRunner(mock.MagicMock(), self.fake_kw)
-        srunner._run_scenario_continuously_for_times = \
-            mock.MagicMock(return_value="result")
-        srunner._run_scenario_continuously_for_duration = \
-            mock.MagicMock(return_value="result")
-        srunner._create_temp_tenants_and_users = mock.MagicMock(
-                                                            return_value=[])
-        srunner._delete_temp_tenants_and_users = mock.MagicMock()
-
-        mock_base.Scenario.get_by_name = \
-            mock.MagicMock(return_value=FakeScenario)
-        mock_osclients.return_value = ["client"]
-        result = srunner._run_scenario(FakeScenario, "do_it", {"a": 1},
-                                       "continuous", {"times": 2,
-                                                      "active_users": 3,
-                                                      "timeout": 1})
-        self.assertEqual(result, "result")
-        srunner._run_scenario_continuously_for_times.assert_called_once_with(
-                                    FakeScenario, "do_it", {"a": 1}, 2, 3, 1)
-        result = srunner._run_scenario(FakeScenario, "do_it", {"a": 1},
-                                       "continuous", {"duration": 2,
-                                                      "active_users": 3,
-                                                      "timeout": 1})
-        self.assertEqual(result, "result")
-        srunner._run_scenario_continuously_for_duration.\
-            assert_called_once_with(FakeScenario, "do_it", {"a": 1}, 2, 3, 1)
-
-    @mock.patch("rally.benchmark.runner.base")
-    @mock.patch("rally.benchmark.utils.osclients")
-    def test_run_periodic(self, mock_osclients, mock_base):
-        FakeScenario = mock.MagicMock()
-        FakeScenario.init = mock.MagicMock(return_value={})
-
-        mock_osclients.Clients.return_value = fakes.FakeClients()
-        srunner = runner.ScenarioRunner(mock.MagicMock(), self.fake_kw)
-        srunner._run_scenario_periodically = mock.MagicMock(
-                                                        return_value="result")
-        srunner._create_temp_tenants_and_users = mock.MagicMock(
-                                                            return_value=[])
-        srunner._delete_temp_tenants_and_users = mock.MagicMock()
-
-        mock_base.Scenario.get_by_name = \
-            mock.MagicMock(return_value=FakeScenario)
-        mock_osclients.return_value = ["client"]
-        result = srunner._run_scenario(FakeScenario, "do_it", {"a": 1},
-                                       "periodic", {"times": 2, "period": 3,
-                                                    "timeout": 1})
-        self.assertEqual(result, "result")
-        srunner._run_scenario_periodically.assert_called_once_with(
-                                    FakeScenario, "do_it", {"a": 1}, 2, 3, 1)
 
     def _set_mocks_for_run(self, mock_osclients, mock_base, validators=None):
         FakeScenario = mock.MagicMock()
@@ -283,7 +153,9 @@ class ScenarioRunnerTestCase(test.TestCase):
             FakeScenario.do_it.validators = validators
 
         mock_osclients.Clients.return_value = fakes.FakeClients()
-        srunner = runner.ScenarioRunner(mock.MagicMock(), self.fake_kw)
+        srunner = runner.ScenarioRunner.get_runner(mock.MagicMock(),
+                                                   self.fake_kw,
+                                                   {"execution": "continuous"})
         srunner._run_scenario = mock.MagicMock(return_value="result")
 
         mock_base.Scenario.get_by_name = \
@@ -310,11 +182,11 @@ class ScenarioRunnerTestCase(test.TestCase):
                                 "users_per_tenant": 2}})
 
         expected = [
-            mock.call(FakeScenario, "do_it", {}, "continuous", {}),
-            mock.call(FakeScenario, "do_it", {"a": 1}, "continuous",
+            mock.call(FakeScenario, "do_it", {}, {}),
+            mock.call(FakeScenario, "do_it", {"a": 1},
                       {"timeout": 1, "times": 2, "active_users": 3,
                        "tenants": 5, "users_per_tenant": 2}),
-            mock.call(FakeScenario, "do_it", {"a": 1}, "continuous",
+            mock.call(FakeScenario, "do_it", {"a": 1},
                       {"timeout": 1, "duration": 40, "active_users": 3,
                        "tenants": 5, "users_per_tenant": 2})
         ]
