@@ -153,7 +153,7 @@ class ScenarioRunner(object):
             try:
                 result = iter_result.next(timeout)
             except multiprocessing.TimeoutError as e:
-                result = {"time": timeout, "idle_time": cls.idle_time,
+                result = {"time": timeout, "idle_time": 0,
                           "error": utils.format_exc(e)}
             results.append(result)
 
@@ -180,7 +180,7 @@ class ScenarioRunner(object):
             try:
                 result = iter_result.next(timeout)
             except multiprocessing.TimeoutError as e:
-                result = {"time": timeout, "idle_time": cls.idle_time,
+                result = {"time": timeout, "idle_time": 0,
                           "error": utils.format_exc(e)}
             results_queue.append(result)
 
@@ -209,7 +209,7 @@ class ScenarioRunner(object):
             try:
                 result = async_result.get()
             except multiprocessing.TimeoutError as e:
-                result = {"time": timeout, "idle_time": cls.idle_time,
+                result = {"time": timeout, "idle_time": 0,
                           "error": utils.format_exc(e)}
             results.append(result)
 
