@@ -1,5 +1,7 @@
 #!/bin/sh
 
+DEVSTACK_REPO=$1
+
 if command -v apt-get
     then
         apt-get update
@@ -24,4 +26,12 @@ EOF
 /sbin/iptables -F || echo "Warning: iptables not found" >&2
 echo "export PATH=$PATH:/sbin/" >> /home/rally/.bashrc
 
-exit 0
+cd /home/rally
+
+if [ -d devstack ]; then
+    cd devstack
+    su rally -c "git pull"
+else
+    su rally -c "git clone $DEVSTACK_REPO"
+fi
+

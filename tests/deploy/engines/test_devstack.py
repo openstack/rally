@@ -70,52 +70,35 @@ class DevstackEngineTestCase(test.BaseTestCase):
                                           'devstack/install.sh'))
         self.assertEqual([mock.call(filename, 'rb')], m_open.mock_calls)
 
-    @mock.patch('rally.deploy.engines.devstack.open', create=True)
+    @mock.patch('rally.deploy.engines.devstack.get_updated_server')
+    @mock.patch('rally.deploy.engines.devstack.get_script')
     @mock.patch('rally.serverprovider.provider.Server')
-    def test_deploy(self, m_server, m_open):
-        s2 = mock.Mock()
-        from_credentials = mock.Mock(return_value=s2)
-        m_server.from_credentials = from_credentials
-        server = mock.Mock(host='fakehost')
-        server.get_credentials.return_value = {}
-        self.engine.configure_devstack = mock.Mock()
-        self.engine.start_devstack = mock.Mock()
+    @mock.patch('rally.deploy.engines.devstack.objects.Endpoint')
+    def test_deploy(self, m_endpoint, m_server, m_gs, m_gus):
+        server = mock.Mock()
+        server.host = 'host'
+        m_endpoint.return_value = 'fake_endpoint'
+        m_gus.return_value = ds_server = mock.Mock()
+        m_gs.return_value = 'fake_script'
+        server.get_credentials.return_value = 'fake_credentials'
         self.engine._vm_provider = mock.Mock()
         self.engine._vm_provider.create_servers.return_value = [server]
-        with mock.patch.object(self.engine, 'prepare_server') as ps:
+        with mock.patch.object(self.engine, 'deployment') as m_d:
             endpoints = self.engine.deploy()
-        ps.assert_called_once_with(server)
-        self.assertEqual([mock.call.from_credentials({'user': 'rally'})],
-                         m_server.mock_calls)
-        self.engine.configure_devstack.assert_called_once_with(s2)
-        self.engine.start_devstack.assert_called_once_with(s2)
-        self.assertEqual(endpoints[0].to_dict(), {
-            'auth_url': 'http://fakehost:5000/v2.0/',
-            'username': 'admin',
-            'password': 'secret',
-            'tenant_name': 'admin'
-        })
-
-    @mock.patch('rally.deploy.engines.devstack.StringIO.StringIO')
-    def test_configure_devstack(self, m_sio):
-        m_sio.return_value = fake_localrc = mock.Mock()
-        server = mock.Mock()
-        self.engine.localrc = {'k1': 'v1', 'k2': 'v2'}
-
-        self.engine.configure_devstack(server)
-
-        calls = [
-            mock.call.ssh.run('git clone https://github.com/'
-                              'openstack-dev/devstack.git'),
-            mock.call.ssh.run('cat > ~/devstack/localrc', stdin=fake_localrc)
+        self.assertEqual(['fake_endpoint'], endpoints)
+        m_endpoint.assert_called_once_with('http://host:5000/v2.0/', 'admin',
+                                           'secret', 'admin', 'admin')
+        m_d.add_resource.assert_called_once_with(
+                                    info='fake_credentials',
+                                    provider_name='DevstackEngine',
+                                    type='credentials')
+        server.ssh.run.assert_called_once_with(
+            '/bin/sh -e -s https://github.com/openstack-dev/devstack.git',
+            stdin='fake_script')
+        ds_calls = [
+            mock.call.ssh.run('cat > ~/devstack/localrc', stdin=mock.ANY),
+            mock.call.ssh.run('~/devstack/stack.sh')
         ]
-        self.assertEqual(calls, server.mock_calls)
-        fake_localrc.asser_has_calls([
-            mock.call.write('k1=v1\n'),
-            mock.call.write('k2=v2\n'),
-        ])
-
-    def test_start_devstack(self):
-        server = mock.Mock()
-        self.assertTrue(self.engine.start_devstack(server))
-        server.ssh.run.assert_called_once_with('~/devstack/stack.sh')
+        self.assertEqual(ds_calls, ds_server.mock_calls)
+        localrc = ds_server.mock_calls[0][2]['stdin']
+        self.assertIn('ADMIN_PASSWORD=secret', localrc)

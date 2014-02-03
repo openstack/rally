@@ -14,7 +14,6 @@
 #    under the License.
 
 import os
-import StringIO
 
 from rally import consts
 from rally.deploy import engine
@@ -28,6 +27,17 @@ from rally import utils
 LOG = logging.getLogger(__name__)
 DEVSTACK_REPO = 'https://github.com/openstack-dev/devstack.git'
 DEVSTACK_USER = 'rally'
+
+
+def get_script(name):
+    return open(os.path.join(os.path.abspath(
+        os.path.dirname(__file__)), 'devstack', name), 'rb')
+
+
+def get_updated_server(server, **kwargs):
+    credentials = server.get_credentials()
+    credentials.update(kwargs)
+    return provider.Server.from_credentials(credentials)
 
 
 class DevstackEngine(engine.EngineFactory):
@@ -86,13 +96,20 @@ class DevstackEngine(engine.EngineFactory):
     @utils.log_deploy_wrapper(LOG.info, _("Deploy devstack"))
     def deploy(self):
         self.servers = self._vm_provider.create_servers()
+        devstack_repo = self.config.get('devstack_repo', DEVSTACK_REPO)
+        localrc = ''
+        for k, v in self.localrc.iteritems():
+            localrc += '%s=%s\n' % (k, v)
+
         for server in self.servers:
-            self.prepare_server(server)
-            credentials = server.get_credentials()
-            credentials['user'] = DEVSTACK_USER
-            devstack_server = provider.Server.from_credentials(credentials)
-            self.configure_devstack(devstack_server)
-            self.start_devstack(devstack_server)
+            self.deployment.add_resource(provider_name='DevstackEngine',
+                                         type='credentials',
+                                         info=server.get_credentials())
+            server.ssh.run('/bin/sh -e -s %s' % devstack_repo,
+                           stdin=get_script('install.sh'))
+            devstack_server = get_updated_server(server, user=DEVSTACK_USER)
+            devstack_server.ssh.run("cat > ~/devstack/localrc", stdin=localrc)
+            devstack_server.ssh.run('~/devstack/stack.sh')
 
         admin_endpoint = objects.Endpoint('http://%s:5000/v2.0/' %
                                           self.servers[0].host, 'admin',
@@ -102,20 +119,9 @@ class DevstackEngine(engine.EngineFactory):
         return [admin_endpoint]
 
     def cleanup(self):
+        for resource in self.deployment.get_resources(type='credentials'):
+            server = provider.Server.from_credentials(resource.info)
+            devstack_server = get_updated_server(server, user=DEVSTACK_USER)
+            devstack_server.ssh.run('~/devstack/unstack.sh')
+            self.deployment.delete_resource(resource.id)
         self._vm_provider.destroy_servers()
-
-    @utils.log_deploy_wrapper(LOG.info, _("Configure devstack"))
-    def configure_devstack(self, server):
-        devstack_repo = self.config.get('devstack_repo', DEVSTACK_REPO)
-        server.ssh.run('git clone %s' % devstack_repo)
-        localrc = StringIO.StringIO()
-        for k, v in self.localrc.iteritems():
-            localrc.write('%s=%s\n' % (k, v))
-        localrc.seek(0)
-        server.ssh.run("cat > ~/devstack/localrc", stdin=localrc)
-        return True
-
-    @utils.log_deploy_wrapper(LOG.info, _("Run devstack"))
-    def start_devstack(self, server):
-        server.ssh.run('~/devstack/stack.sh')
-        return True
