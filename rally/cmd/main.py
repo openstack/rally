@@ -364,6 +364,24 @@ class TaskCommands(object):
 
 class UseCommands(object):
 
+    def _update_openrc_deployment_file(self, deploy_id):
+        openrc_path = os.path.expanduser('~/.rally/openrc-%s' % deploy_id)
+        endpoint = db.deployment_get(deploy_id)['endpoint']
+        with open(openrc_path, 'w+') as env_file:
+            env_file.write('export OS_AUTH_URL=%(auth_url)s\n'
+                           'export OS_USERNAME=%(username)s\n'
+                           'export OS_PASSWORD=%(password)s\n'
+                           'export OS_TENANT_NAME=%(tenant_name)s\n'
+                           % endpoint)
+        expanded_path = os.path.expanduser('~/.rally/openrc')
+        if os.path.exists(expanded_path):
+            os.remove(expanded_path)
+        os.symlink(openrc_path, expanded_path)
+
+    def _update_rally_deployment_file(self, deploy_id):
+        expanded_path = os.path.expanduser('~/.rally/deployment')
+        fileutils.update_env_file(expanded_path, 'RALLY_DEPLOYMENT', deploy_id)
+
     def deployment(self, deploy_id):
         """Set the RALLY_DEPLOYMENT env var to be used by all CLI commands
 
@@ -372,8 +390,8 @@ class UseCommands(object):
         print('Using deployment : %s' % deploy_id)
         if not os.path.exists(os.path.expanduser('~/.rally/')):
             os.makedirs(os.path.expanduser('~/.rally/'))
-        expanded_path = os.path.expanduser('~/.rally/deployment')
-        fileutils.update_env_file(expanded_path, 'RALLY_DEPLOYMENT', deploy_id)
+        self._update_rally_deployment_file(deploy_id)
+        self._update_openrc_deployment_file(deploy_id)
 
 
 def deprecated():

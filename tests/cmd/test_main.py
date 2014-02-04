@@ -223,12 +223,33 @@ class UseCommandsTestCase(test.BaseTestCase):
         super(UseCommandsTestCase, self).setUp()
         self.use = main.UseCommands()
 
+    @mock.patch('os.remove')
+    @mock.patch('os.symlink')
+    @mock.patch('rally.cmd.main.db.deployment_get')
     @mock.patch('os.path.exists')
     @mock.patch('rally.cmd.main.fileutils.update_env_file')
-    def test_deployment(self, mock_file, mock_path):
+    def test_deployment(self, mock_env, mock_path, mock_deployment,
+                        mock_symlink, mock_remove):
         deploy_id = str(uuid.uuid4())
+        endpoint = {'endpoint': {'auth_url': 'fake_auth_url',
+                                 'username': 'fake_username',
+                                 'password': 'fake_password',
+                                 'tenant_name': 'fake_tenant_name'}}
+        mock_deployment.return_value = endpoint
         mock_path.return_value = True
-        self.use.deployment(deploy_id)
-        mock_path.assert_called_once_with(os.path.expanduser('~/.rally/'))
-        mock_file.assert_called_once_with(os.path.expanduser(
-            '~/.rally/deployment'), 'RALLY_DEPLOYMENT', deploy_id)
+        with mock.patch('rally.cmd.main.open', mock.mock_open(),
+                        create=True) as mock_file:
+            self.use.deployment(deploy_id)
+            self.assertEqual(2, mock_path.call_count)
+            mock_env.assert_called_once_with(os.path.expanduser(
+                '~/.rally/deployment'), 'RALLY_DEPLOYMENT', deploy_id)
+            mock_file.return_value.write.assert_called_once_with(
+                'export OS_AUTH_URL=fake_auth_url\n'
+                'export OS_USERNAME=fake_username\n'
+                'export OS_PASSWORD=fake_password\n'
+                'export OS_TENANT_NAME=fake_tenant_name\n')
+            mock_symlink.assert_called_once_with(
+                os.path.expanduser('~/.rally/openrc-%s' % deploy_id),
+                os.path.expanduser('~/.rally/openrc'))
+            mock_remove.assert_called_once_with(os.path.expanduser(
+                '~/.rally/openrc'))
