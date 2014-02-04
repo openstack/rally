@@ -172,3 +172,45 @@
 # If set, use this value for pool_timeout with sqlalchemy
 # (integer value)
 #pool_timeout=<None>
+
+[benchmark]
+# These values set how long rally will wait before polling a resource when
+# waiting for a status change.
+#nova_server_boot_prepoll_delay=1
+#nova_server_delete_prepoll_delay=2
+#nova_server_reboot_prepoll_delay=2
+#nova_server_rescue_prepoll_delay=2
+#nova_server_unrescue_prepoll_delay=2
+#nova_server_suspend_prepoll_delay=2
+
+# These values set how long rally will wait for a resource to change status
+#nova_server_start_timeout=300
+#nova_server_stop_timeout=300
+#nova_server_boot_timeout=300
+#nova_server_delete_timeout=300
+#nova_server_reboot_timeout=300
+#nova_server_rescue_timeout=300
+#nova_server_unrescue_timeout=300
+#nova_server_suspend_timeout=300
+#nova_server_image_create_timeout=300
+#nova_server_image_delete_timeout=300
+
+# These values set how frequently rally will poll a resource when waiting for
+# a status change.
+#nova_server_start_poll_interval=1
+#nova_server_stop_poll_interval=2
+#nova_server_boot_poll_interval=1
+#nova_server_delete_poll_interval=2
+#nova_server_reboot_poll_interval=2
+#nova_server_rescue_poll_interval=2
+#nova_server_unrescue_poll_interval=2
+#nova_server_suspend_poll_interval=2
+#nova_server_image_create_poll_interval=2
+#nova_server_image_delete_poll_interval=2
+
+# Cinder options follow the same format as nova options above.
+#cinder_volume_create_prepoll_delay=2
+#cinder_volume_create_timeout=300
+#cinder_volume_create_poll_interval=2
+#cinder_volume_delete_timeout=300
+#cinder_volume_delete_poll_interval=2
