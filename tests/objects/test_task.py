@@ -127,5 +127,5 @@ class TaskTestCase(test.TestCase):
         task.set_failed()
         mock_update.assert_called_once_with(
             self.task['uuid'],
-            {'failed': True},
+            {'failed': True, 'status': 'failed'},
         )

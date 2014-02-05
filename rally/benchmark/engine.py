@@ -167,6 +167,6 @@ class TestEngine(object):
 
     def __exit__(self, exc_type, exc_value, exc_traceback):
         if exc_type is not None:
-            self.task.update_status(consts.TaskStatus.FAILED)
+            self.task.set_failed()
         else:
             self.task.update_status(consts.TaskStatus.FINISHED)

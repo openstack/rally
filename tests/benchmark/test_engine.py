@@ -221,7 +221,7 @@ class TestEngineTestCase(test.TestCase):
         s = consts.TaskStatus
         expected = [
             mock.call.update_status(s.TEST_TOOL_BENCHMARKING),
-            mock.call.update_status(s.FAILED)
+            mock.call.set_failed(),
         ]
         # NOTE(msdubov): Ignore task['uuid'] calls which are used for logging
         mock_calls = filter(lambda call: '__getitem__' not in call[0],
