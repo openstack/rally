@@ -194,6 +194,7 @@ class TestEngineTestCase(test.TestCase):
                                      {'raw': [],
                                       'validation': {'is_valid': False,
                                       'exc_msg': validation_exc.message}}),
+            mock.call.set_failed(),
             mock.call.update_status(s.FINISHED)
         ]
         # NOTE(msdubov): Ignore task['uuid'] calls which are used for logging

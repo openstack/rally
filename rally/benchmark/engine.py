@@ -146,6 +146,7 @@ class TestEngine(object):
                                                    "validation":
                                                    {"is_valid": False,
                                                     "exc_msg": e.message}})
+                    self.task.set_failed()
                     LOG.error(_("Scenario (%(pos)s, %(name)s) input arguments "
                                 "validation error: %(msg)s") %
                               {"pos": n, "name": name, "msg": e.message})
