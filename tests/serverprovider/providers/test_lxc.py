@@ -27,29 +27,25 @@ MOD_NAME = 'rally.serverprovider.providers.lxc.'
 
 class HelperFunctionsTestCase(test.BaseTestCase):
 
-    def test__get_script_path(self):
-        full_path = lxc._get_script_path('script.sh')
-        self.assertTrue(full_path.endswith('rally/serverprovider/'
-                                           'providers/lxc/script.sh'))
+    @mock.patch(MOD_NAME + 'open', create=True, return_value='fake_script')
+    def test__get_script(self, m_open):
+        script = lxc._get_script('script.sh')
+        self.assertEqual('fake_script', script)
+        path = m_open.mock_calls[0][1][0]
+        mode = m_open.mock_calls[0][1][1]
+        self.assertTrue(path.endswith('rally/serverprovider/providers'
+                                      '/lxc/script.sh'))
+        self.assertEqual('rb', mode)
 
-    @mock.patch(MOD_NAME + '_get_script_path', return_value='fake_path')
-    @mock.patch(MOD_NAME + 'tempfile')
-    @mock.patch(MOD_NAME + 'open', create=True)
-    def test__write_script_from_template(self, m_open, m_tempfile, m_gsp):
-        fake_tempfile = mock.Mock()
-        m_tempfile.NamedTemporaryFile.return_value = fake_tempfile
-        fake_file = mock.Mock()
-        fake_data = mock.Mock()
-        fake_data.format.return_value = 'fake_formatted_data'
-        fake_file.read.return_value = fake_data
-        m_open.return_value = fake_file
-        retval = lxc._write_script_from_template('script', key='value')
-        m_gsp.assert_called_once_with('script')
-        m_open.assert_called_once_with('fake_path')
-        m_tempfile.NamedTemporaryFile.assert_called_once_with(delete=False)
-        fake_data.format.assert_called_once_with(key='value')
-        fake_tempfile.write.assert_called_once_with('fake_formatted_data')
-        self.assertEqual(fake_tempfile.name, retval)
+    @mock.patch(MOD_NAME + '_get_script', return_value='fake_script')
+    @mock.patch(MOD_NAME + 'StringIO.StringIO')
+    def test__get_script_from_template(self, m_sio, m_gs):
+        m_gs.return_value = fake_script = mock.Mock()
+        fake_script.read.return_value = 'fake_data {k1} {k2}'
+        m_sio.return_value = 'fake_formatted_script'
+        script = lxc._get_script_from_template('fake_tpl', k1='v1', k2='v2')
+        self.assertEqual('fake_formatted_script', script)
+        m_sio.assert_called_once_with('fake_data v1 v2')
 
 
 class LxcHostTestCase(test.BaseTestCase):
@@ -81,14 +77,12 @@ class LxcHostTestCase(test.BaseTestCase):
         self.server.ssh.execute.side_effect = exceptions.SSHError()
         self.assertEqual('dir', self.host.backingstore)
 
-    @mock.patch(MOD_NAME + '_get_script_path', return_value='fake_sp')
-    @mock.patch(MOD_NAME + 'os.unlink')
-    @mock.patch(MOD_NAME + 'tempfile')
-    def test_prepare(self, m_tempfile, m_unlink, m_gsp):
+    @mock.patch(MOD_NAME + 'StringIO.StringIO')
+    @mock.patch(MOD_NAME + '_get_script', return_value='fake_script')
+    def test_prepare(self, m_gs, m_sio):
+        m_sio.return_value = fake_conf = mock.Mock()
         self.host.create_local_tunnels = mock.Mock()
         self.host.create_remote_tunnels = mock.Mock()
-        fake_tempfile = mock.Mock()
-        m_tempfile.NamedTemporaryFile.return_value = fake_tempfile
 
         self.host.prepare()
 
@@ -102,49 +96,38 @@ class LxcHostTestCase(test.BaseTestCase):
             mock.call('USE_LXC_BRIDGE="true"\n')
         ]
         for call in write_calls:
-            fake_tempfile.write.assert_has_calls(call)
-        self.server.ssh.upload.assert_called_once_with(fake_tempfile.name,
-                                                       '/tmp/.lxc_default')
-        self.server.ssh.execute_script.assert_called_once_with('fake_sp')
-        m_unlink.assert_called_once_with(fake_tempfile.name)
+            fake_conf.write.assert_has_calls(call)
+        ssh_calls = [mock.call.run('cat > /tmp/.lxc_default', stdin=fake_conf),
+                     mock.call.run('/bin/sh', stdin='fake_script')]
+        self.assertEqual(ssh_calls, self.server.ssh.mock_calls)
         self.host.create_local_tunnels.assert_called_once()
         self.host.create_remote_tunnels.assert_called_once()
 
     @mock.patch(MOD_NAME + 'os.unlink')
-    @mock.patch(MOD_NAME + '_write_script_from_template')
-    def test_create_local_tunnels(self, m_ws, m_unlink):
-        m_ws.side_effect = ['1', '2']
+    @mock.patch(MOD_NAME + '_get_script_from_template')
+    def test_create_local_tunnels(self, m_gs, m_unlink):
+        m_gs.side_effect = ['s1', 's2']
         self.host.create_local_tunnels()
-        ws_calls = [
+        gs_calls = [
             mock.call('tunnel-local.sh', local='fake_server_ip',
                       net=netaddr.IPNetwork('10.1.1.0/24'), remote='1.1.1.1'),
             mock.call('tunnel-local.sh', local='fake_server_ip',
                       net=netaddr.IPNetwork('10.1.1.0/24'), remote='2.2.2.2'),
         ]
-        self.assertEqual(ws_calls, m_ws.mock_calls)
-        self.assertEqual([mock.call('1'), mock.call('2')],
-                         self.server.ssh.execute_script.mock_calls)
+        self.assertEqual(gs_calls, m_gs.mock_calls)
+        self.assertEqual([mock.call('/bin/sh -e', stdin='s1'),
+                          mock.call('/bin/sh -e', stdin='s2')],
+                         self.server.ssh.run.mock_calls)
 
-    @mock.patch(MOD_NAME + 'os.unlink')
-    @mock.patch(MOD_NAME + '_write_script_from_template')
-    def test_create_remote_tunnels(self, m_ws, m_unlink):
-        m_ws.side_effect = ['1', '2']
+    @mock.patch(MOD_NAME + '_get_script_from_template')
+    def test_create_remote_tunnels(self, m_get_script):
+        m_get_script.side_effect = ['s1', 's2']
         fake_server = mock.Mock()
         self.host._get_server_with_ip = mock.Mock(return_value=fake_server)
-
         self.host.create_remote_tunnels()
-
-        ws_calls = [
-            mock.call('tunnel-remote.sh', local='1.1.1.1',
-                      net=netaddr.IPNetwork('10.1.1.0/24'),
-                      remote='fake_server_ip'),
-            mock.call('tunnel-remote.sh', local='2.2.2.2',
-                      net=netaddr.IPNetwork('10.1.1.0/24'),
-                      remote='fake_server_ip'),
-        ]
-        self.assertEqual(ws_calls, m_ws.mock_calls)
-        self.assertEqual([mock.call('1'), mock.call('2')],
-                         fake_server.ssh.execute_script.mock_calls)
+        self.assertEqual([mock.call('/bin/sh -e', stdin='s1'),
+                          mock.call('/bin/sh -e', stdin='s2')],
+                         fake_server.ssh.run.mock_calls)
 
     def test_delete_tunnels(self):
         s1 = mock.Mock()
@@ -162,64 +145,58 @@ class LxcHostTestCase(test.BaseTestCase):
     def test_get_ip(self, m_sleep):
         s1 = 'link/ether fe:54:00:d3:f5:98 brd ff:ff:ff:ff:ff:ff'
         s2 = s1 + '\n   inet 10.20.0.1/24 scope global br1'
-        self.host.server.ssh.execute.side_effect = [(s1, ''), (s2, '')]
+        self.host.server.ssh.execute.side_effect = [(0, s1, ''), (0, s2, '')]
         ip = self.host.get_ip('name')
         self.assertEqual('10.20.0.1', ip)
-        self.assertEqual([mock.call('lxc-attach -n name ip addr list dev eth0',
-                                    get_stdout=True)] * 2,
+        self.assertEqual([mock.call('lxc-attach -n name ip'
+                                    ' addr list dev eth0')] * 2,
                          self.host.server.ssh.execute.mock_calls)
 
     def test_create_container(self):
         self.host.configure_container = mock.Mock()
         self.host._backingstore = 'btrfs'
         self.host.create_container('name', 'dist')
-        self.server.ssh.execute.assert_called_once_with(
-            'lxc-create', '-B', 'btrfs', '-n', 'name', '-t', 'dist')
+        self.server.ssh.run.assert_called_once_with(
+            'lxc-create -B btrfs -n name -t dist')
         self.assertEqual(['name'], self.host.containers)
         self.host.configure_container.assert_called_once_with('name')
 
         #check with no btrfs
         self.host._backingstore = 'dir'
         self.host.create_container('name', 'dist')
-        self.assertEqual(mock.call('lxc-create', '-B', 'dir', '-n',
-                                   'name', '-t', 'dist'),
-                         self.server.ssh.execute.mock_calls[1])
+        self.assertEqual(mock.call('lxc-create -B dir -n name -t dist'),
+                         self.server.ssh.run.mock_calls[1])
 
     def test_create_clone(self):
         self.host._backingstore = 'btrfs'
         self.host.configure_container = mock.Mock()
         self.host.create_clone('name', 'src')
-        self.server.ssh.execute.assert_called_once_with('lxc-clone',
-                                                        '--snapshot',
-                                                        '-o', 'src',
-                                                        '-n', 'name')
+        self.server.ssh.execute.assert_called_once_with('lxc-clone --snapshot'
+                                                        ' -o src -n name')
         self.assertEqual(['name'], self.host.containers)
 
         #check with no btrfs
         self.host._backingstore = 'dir'
         self.host.create_clone('name', 'src')
-        self.assertEqual(mock.call('lxc-clone', '-o', 'src', '-n', 'name'),
+        self.assertEqual(mock.call('lxc-clone -o src -n name'),
                          self.server.ssh.execute.mock_calls[1])
 
     @mock.patch(MOD_NAME + 'os.path.join')
-    @mock.patch(MOD_NAME + '_get_script_path')
-    def test_configure_container(self, m_gsp, m_join):
-        m_gsp.return_value = 'fake_script'
+    @mock.patch(MOD_NAME + '_get_script')
+    def test_configure_container(self, m_gs, m_join):
+        m_gs.return_value = 'fake_script'
         m_join.return_value = 'fake_path'
+        self.server.ssh.execute.return_value = 0, '', ''
         self.host.configure_container('name')
-        calls = [
-            mock.call.upload('fake_script', '/tmp/.rally_cont_conf.sh'),
-            mock.call.execute('/bin/sh', '/tmp/.rally_cont_conf.sh',
-                              'fake_path'),
-        ]
-        self.assertEqual(calls, self.server.ssh.mock_calls)
+        self.server.ssh.run.assert_called_once_with(
+            '/bin/sh -e -s fake_path', stdin='fake_script')
 
     def test_start_containers(self):
         self.host.containers = ['c1', 'c2']
         self.host.start_containers()
         calls = [mock.call('lxc-start -d -n c1'),
                  mock.call('lxc-start -d -n c2')]
-        self.assertEqual(calls, self.server.ssh.execute.mock_calls)
+        self.assertEqual(calls, self.server.ssh.run.mock_calls)
 
     def test_stop_containers(self):
         self.host.containers = ['c1', 'c2']
@@ -228,7 +205,7 @@ class LxcHostTestCase(test.BaseTestCase):
             mock.call('lxc-stop -n c1'),
             mock.call('lxc-stop -n c2'),
         ]
-        self.assertEqual(calls, self.server.ssh.execute.mock_calls)
+        self.assertEqual(calls, self.server.ssh.run.mock_calls)
 
     def test_destroy_containers(self):
         self.host.containers = ['c1', 'c2']
@@ -237,7 +214,7 @@ class LxcHostTestCase(test.BaseTestCase):
             mock.call('lxc-stop -n c1'), mock.call('lxc-destroy -n c1'),
             mock.call('lxc-stop -n c2'), mock.call('lxc-destroy -n c2'),
         ]
-        self.assertEqual(calls, self.server.ssh.execute.mock_calls)
+        self.assertEqual(calls, self.server.ssh.run.mock_calls)
 
     @mock.patch(MOD_NAME + 'provider.Server.from_credentials')
     def test_get_server_object(self, m_fc):

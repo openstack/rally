@@ -14,7 +14,7 @@
 #    under the License.
 
 import os
-import tempfile
+import StringIO
 
 from rally.deploy import engine
 from rally import objects
@@ -78,7 +78,7 @@ class DevstackEngine(engine.EngineFactory):
     def prepare_server(self, server):
         script_path = os.path.abspath(os.path.join(os.path.dirname(__file__),
                                                    'devstack', 'install.sh'))
-        server.ssh.execute_script(script_path)
+        server.ssh.run('/bin/sh -e', stdin=open(script_path, 'rb'))
 
     @utils.log_deploy_wrapper(LOG.info, _("Deploy devstack"))
     def deploy(self):
@@ -103,18 +103,15 @@ class DevstackEngine(engine.EngineFactory):
     @utils.log_deploy_wrapper(LOG.info, _("Configure devstack"))
     def configure_devstack(self, server):
         devstack_repo = self.config.get('devstack_repo', DEVSTACK_REPO)
-        server.ssh.execute('git', 'clone', devstack_repo)
-        fd, config_path = tempfile.mkstemp()
-        config_file = open(config_path, "w")
+        server.ssh.run('git clone %s' % devstack_repo)
+        localrc = StringIO.StringIO()
         for k, v in self.localrc.iteritems():
-            config_file.write('%s=%s\n' % (k, v))
-        config_file.close()
-        os.close(fd)
-        server.ssh.upload(config_path, "~/devstack/localrc")
-        os.unlink(config_path)
+            localrc.write('%s=%s\n' % (k, v))
+        localrc.seek(0)
+        server.ssh.run("cat > ~/devstack/localrc", stdin=localrc)
         return True
 
     @utils.log_deploy_wrapper(LOG.info, _("Run devstack"))
     def start_devstack(self, server):
-        server.ssh.execute('~/devstack/stack.sh')
+        server.ssh.run('~/devstack/stack.sh')
         return True

@@ -16,6 +16,7 @@
 import abc
 import jsonschema
 
+
 from rally import exceptions
 from rally import sshutils
 from rally import utils
@@ -32,7 +33,8 @@ class Server(utils.ImmutableMixin):
         self.user = user
         self.key = key
         self.password = password
-        self.ssh = sshutils.SSH(host, user, port, key)
+        self.ssh = sshutils.SSH(user, host, key_filename=key, port=port,
+                                password=password)
         super(Server, self).__init__()
 
     def get_credentials(self):
