@@ -92,7 +92,12 @@ class OpenStackProvider(provider.ProviderFactory):
         clients = osclients.Clients(config['user'], config['password'],
                                     config['tenant'], config['auth_url'])
         self.nova = clients.get_nova_client()
-        self.glance = clients.get_glance_client()
+        try:
+            self.glance = clients.get_glance_client()
+        except KeyError:
+            self.glance = None
+            LOG.warning(_('Glance endpoint not available in service catalog'
+                          ', only existing images can be used'))
 
     def get_image_uuid(self):
         """Get image uuid. Download image if necessary."""
@@ -100,6 +105,15 @@ class OpenStackProvider(provider.ProviderFactory):
         image_uuid = self.config['image'].get('uuid', None)
         if image_uuid:
             return image_uuid
+        else:
+            if not self.glance:
+                raise exceptions.InvalidConfigException(
+                    'If glance is not available in the service catalog'
+                    ' obtained by the openstack server provider, then'
+                    ' images cannot be uploaded so the uuid of an'
+                    ' existing image must be specified in the'
+                    ' deployment config.'
+                )
 
         for image in self.glance.images.list():
             if image.checksum == self.config['image']['checksum']:
