@@ -69,7 +69,11 @@ class TaskCommandsTestCase(test.BaseTestCase):
     @mock.patch('rally.cmd.main.db')
     def test_detailed(self, mock_db):
         test_uuid = str(uuid.uuid4())
-        value = {'task_id': "task", "status": "status", "results": []}
+        value = {'task_id': "task",
+                 "status": "status",
+                 "results": [],
+                 "failed": False
+                 }
         mock_db.task_get_detailed = mock.MagicMock(return_value=value)
         self.task.detailed(test_uuid)
         mock_db.task_get_detailed.assert_called_once_with(test_uuid)

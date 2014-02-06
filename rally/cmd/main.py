@@ -261,8 +261,11 @@ class TaskCommands(object):
 
         print()
         print("=" * 80)
-        print(_("Task %(task_id)s is %(status)s.")
-              % {'task_id': task_id, 'status': task['status']})
+        print(_("Task %(task_id)s is %(status)s. Failed: %(failed)s")
+              % {'task_id': task_id,
+                 'status': task['status'],
+                 'failed': task['failed']
+                 })
 
         for result in task["results"]:
             key = result["key"]
