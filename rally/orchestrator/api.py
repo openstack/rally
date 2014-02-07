@@ -89,12 +89,13 @@ def start_task(deploy_uuid, config, task=None):
     deployment = objects.Deployment.get(deploy_uuid)
     task = task or objects.Task(deployment_uuid=deploy_uuid)
     tester = engine.TestEngine(config, task)
-    deployer = deploy.EngineFactory.get_engine(deployment['config']['name'],
-                                               deployment)
     endpoint = deployment['endpoint']
-    with deployer:
+    try:
         with tester.bind(endpoint):
             tester.run()
+    except Exception:
+        deployment.update_status(consts.DeployStatus.DEPLOY_INCONSISTENT)
+        raise
 
 
 def abort_task(task_uuid):
