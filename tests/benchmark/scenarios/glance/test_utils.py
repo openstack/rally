@@ -18,6 +18,7 @@ from rally.benchmark.scenarios.glance import utils
 from rally.benchmark import utils as butils
 from rally import exceptions as rally_exceptions
 from rally.openstack.common.fixture import mockpatch
+from tests.benchmark.scenarios import test_utils
 from tests import fakes
 from tests import test
 
@@ -56,13 +57,20 @@ class GlanceScenarioTestCase(test.TestCase):
                           butils.get_from_manager(),
                           image_manager.create('fails', 'url', 'cf', 'df'))
 
+    def _test_atomic_action_timer(self, atomic_actions_time, name):
+        action_duration = test_utils.get_atomic_action_timer_value_by_name(
+            atomic_actions_time, name)
+        self.assertIsNotNone(action_duration)
+        self.assertIsInstance(action_duration, float)
+
     @mock.patch(GLANCE_UTILS + '.GlanceScenario.clients')
     def test__create_image(self, mock_clients):
         mock_clients("glance").images.create.return_value = self.image
-        return_image = utils.GlanceScenario()._create_image('image_name',
-                                                            'image_url',
-                                                            'container_format',
-                                                            'disk_format')
+        scenario = utils.GlanceScenario()
+        return_image = scenario._create_image('image_name',
+                                              'image_url',
+                                              'container_format',
+                                              'disk_format')
         self.wait_for.mock.assert_called_once_with(self.image,
                                                    update_resource=self.gfm(),
                                                    is_ready=self.res_is.mock(),
@@ -70,12 +78,17 @@ class GlanceScenarioTestCase(test.TestCase):
                                                    timeout=120)
         self.res_is.mock.assert_has_calls(mock.call('active'))
         self.assertEqual(self.wait_for.mock(), return_image)
+        self._test_atomic_action_timer(scenario.atomic_actions_time(),
+                                       'glance.create_image')
 
     def test__delete_image(self):
-        utils.GlanceScenario()._delete_image(self.image)
+        scenario = utils.GlanceScenario()
+        scenario._delete_image(self.image)
         self.image.delete.assert_called_once_with()
         self.wait_for_delete.\
             mock.assert_called_once_with(self.image,
                                          update_resource=self.gfm(),
                                          check_interval=3,
                                          timeout=120)
+        self._test_atomic_action_timer(scenario.atomic_actions_time(),
+                                       'glance.delete_image')

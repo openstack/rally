@@ -18,12 +18,14 @@ import string
 import time
 
 from rally.benchmark import base
+from rally.benchmark.scenarios import utils as scenario_utils
 from rally.benchmark import utils as bench_utils
 from rally import utils
 
 
 class GlanceScenario(base.Scenario):
 
+    @scenario_utils.atomic_action_timer('glance.create_image')
     def _create_image(self, image_name, container_format,
                       image_url, disk_format, **kwargs):
         """Create a new image.
@@ -51,6 +53,7 @@ class GlanceScenario(base.Scenario):
                                timeout=120, check_interval=3)
         return image
 
+    @scenario_utils.atomic_action_timer('glance.delete_image')
     def _delete_image(self, image):
         """Deletes the given image.
 
