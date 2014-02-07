@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from oslo.config import cfg
 import random
 import string
 import time
@@ -24,6 +25,32 @@ from rally import utils
 
 # TODO(boris-42): Bind name to the uuid of benchmark.
 TEMP_TEMPLATE = "rally_c_"
+
+
+cinder_benchmark_opts = [
+    cfg.FloatOpt('cinder_volume_create_prepoll_delay',
+                 default=2,
+                 help='Time to sleep after creating a resource before'
+                      ' polling for it status'),
+    cfg.FloatOpt('cinder_volume_create_timeout',
+                 default=600,
+                 help='Time to wait for cinder volume to be created.'),
+    cfg.FloatOpt('cinder_volume_create_poll_interval',
+                 default=2,
+                 help='Interval between checks when waiting for volume'
+                      ' creation.'),
+    cfg.FloatOpt('cinder_volume_delete_timeout',
+                 default=600,
+                 help='Time to wait for cinder volume to be deleted.'),
+    cfg.FloatOpt('cinder_volume_delete_poll_interval',
+                 default=2,
+                 help='Interval between checks when waiting for volume'
+                      ' deletion.')
+]
+
+CONF = cfg.CONF
+benchmark_group = cfg.OptGroup(name='benchmark', title='benchmark options')
+CONF.register_opts(cinder_benchmark_opts, group=benchmark_group)
 
 
 def is_temporary(resource):
@@ -55,11 +82,14 @@ class CinderScenario(base.Scenario):
         volume = self.clients("cinder").volumes.create(size, **kwargs)
         # NOTE(msdubov): It is reasonable to wait 5 secs before starting to
         #                check whether the volume is ready => less API calls.
-        time.sleep(3)
-        volume = utils.wait_for(volume,
-                                is_ready=bench_utils.resource_is("available"),
-                                update_resource=bench_utils.get_from_manager(),
-                                timeout=600, check_interval=3)
+        time.sleep(CONF.benchmark.cinder_volume_create_prepoll_delay)
+        volume = utils.wait_for(
+            volume,
+            is_ready=bench_utils.resource_is("available"),
+            update_resource=bench_utils.get_from_manager(),
+            timeout=CONF.benchmark.cinder_volume_create_timeout,
+            check_interval=CONF.benchmark.cinder_volume_create_poll_interval
+        )
         return volume
 
     @scenario_utils.atomic_action_timer('cinder.delete_volume')
@@ -71,6 +101,9 @@ class CinderScenario(base.Scenario):
         :param volume: volume object
         """
         volume.delete()
-        utils.wait_for_delete(volume,
-                              update_resource=bench_utils.get_from_manager(),
-                              timeout=600, check_interval=2)
+        utils.wait_for_delete(
+            volume,
+            update_resource=bench_utils.get_from_manager(),
+            timeout=CONF.benchmark.cinder_volume_delete_timeout,
+            check_interval=CONF.benchmark.cinder_volume_delete_poll_interval
+        )

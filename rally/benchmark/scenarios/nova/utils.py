@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from oslo.config import cfg
 import random
 import string
 import time
@@ -21,6 +22,46 @@ from rally.benchmark import base
 from rally.benchmark.scenarios import utils as scenario_utils
 from rally.benchmark import utils as bench_utils
 from rally import utils
+
+nova_benchmark_opts = []
+option_names_and_defaults = [
+    # action, prepoll delay, timeout, poll interval
+    ('start', 0, 300, 1),
+    ('stop', 0, 300, 2),
+    ('boot', 1, 300, 1),
+    ('delete', 2, 300, 2),
+    ('reboot', 2, 300, 2),
+    ('rescue', 2, 300, 2),
+    ('unrescue', 2, 300, 2),
+    ('suspend', 2, 300, 2),
+    ('image_create', 0, 300, 2),
+    ('image_delete', 0, 300, 2)
+]
+
+for action, prepoll, timeout, poll in option_names_and_defaults:
+    nova_benchmark_opts.extend([
+        cfg.FloatOpt(
+            "nova_server_%s_prepoll_delay" % action,
+            default=prepoll,
+            help='Time to sleep after %s before polling for status' % action
+        ),
+        cfg.FloatOpt(
+            "nova_server_%s_timeout" % action,
+            default=timeout,
+            help='Server %s timeout' % action
+        ),
+        cfg.FloatOpt(
+            "nova_server_%s_poll_interval" % action,
+            default=poll,
+            help='Server %s poll interval' % action
+        )
+    ])
+
+CONF = cfg.CONF
+benchmark_group = cfg.OptGroup(name='benchmark',
+                               title='benchmark options')
+CONF.register_group(benchmark_group)
+CONF.register_opts(nova_benchmark_opts, group=benchmark_group)
 
 
 class NovaScenario(base.Scenario):
@@ -48,13 +89,14 @@ class NovaScenario(base.Scenario):
 
         server = self.clients("nova").servers.create(server_name, image_id,
                                                      flavor_id, **kwargs)
-        # NOTE(msdubov): It is reasonable to wait 5 secs before starting to
-        #                check whether the server is ready => less API calls.
-        time.sleep(5)
-        server = utils.wait_for(server,
-                                is_ready=bench_utils.resource_is("ACTIVE"),
-                                update_resource=bench_utils.get_from_manager(),
-                                timeout=600, check_interval=3)
+        time.sleep(CONF.benchmark.nova_server_boot_prepoll_delay)
+        server = utils.wait_for(
+            server,
+            is_ready=bench_utils.resource_is("ACTIVE"),
+            update_resource=bench_utils.get_from_manager(),
+            timeout=CONF.benchmark.nova_server_boot_timeout,
+            check_interval=CONF.benchmark.nova_server_boot_poll_interval
+        )
         return server
 
     @scenario_utils.atomic_action_timer('nova.reboot_server')
@@ -69,10 +111,13 @@ class NovaScenario(base.Scenario):
         soft reboot is done (default).
         """
         server.reboot(reboot_type=("SOFT" if soft else "HARD"))
-        time.sleep(5)
-        utils.wait_for(server, is_ready=bench_utils.resource_is("ACTIVE"),
-                       update_resource=bench_utils.get_from_manager(),
-                       timeout=600, check_interval=3)
+        time.sleep(CONF.benchmark.nova_server_reboot_prepoll_delay)
+        utils.wait_for(
+            server, is_ready=bench_utils.resource_is("ACTIVE"),
+            update_resource=bench_utils.get_from_manager(),
+            timeout=CONF.benchmark.nova_server_reboot_timeout,
+            check_interval=CONF.benchmark.nova_server_reboot_poll_interval
+        )
 
     @scenario_utils.atomic_action_timer('nova.start_server')
     def _start_server(self, server):
@@ -84,9 +129,12 @@ class NovaScenario(base.Scenario):
         :param server: The server to start and wait to become ACTIVE.
         """
         server.start()
-        utils.wait_for(server, is_ready=bench_utils.resource_is("ACTIVE"),
-                       update_resource=bench_utils.get_from_manager(),
-                       timeout=600, check_interval=2)
+        utils.wait_for(
+            server, is_ready=bench_utils.resource_is("ACTIVE"),
+            update_resource=bench_utils.get_from_manager(),
+            timeout=CONF.benchmark.nova_server_start_timeout,
+            check_interval=CONF.benchmark.nova_server_start_poll_interval
+        )
 
     @scenario_utils.atomic_action_timer('nova.stop_server')
     def _stop_server(self, server):
@@ -98,9 +146,12 @@ class NovaScenario(base.Scenario):
         :param server: The server to stop.
         """
         server.stop()
-        utils.wait_for(server, is_ready=bench_utils.resource_is("SHUTOFF"),
-                       update_resource=bench_utils.get_from_manager(),
-                       timeout=600, check_interval=2)
+        utils.wait_for(
+            server, is_ready=bench_utils.resource_is("SHUTOFF"),
+            update_resource=bench_utils.get_from_manager(),
+            timeout=CONF.benchmark.nova_server_stop_timeout,
+            check_interval=CONF.benchmark.nova_server_stop_poll_interval
+        )
 
     @scenario_utils.atomic_action_timer('nova.rescue_server')
     def _rescue_server(self, server):
@@ -112,10 +163,13 @@ class NovaScenario(base.Scenario):
         :param server: Server object
         """
         server.rescue()
-        time.sleep(2)
-        utils.wait_for(server, is_ready=bench_utils.resource_is("RESCUE"),
-                       update_resource=bench_utils.get_from_manager(),
-                       timeout=600, check_interval=3)
+        time.sleep(CONF.benchmark.nova_server_rescue_prepoll_delay)
+        utils.wait_for(
+            server, is_ready=bench_utils.resource_is("RESCUE"),
+            update_resource=bench_utils.get_from_manager(),
+            timeout=CONF.benchmark.nova_server_rescue_timeout,
+            check_interval=CONF.benchmark.nova_server_rescue_poll_interval
+        )
 
     @scenario_utils.atomic_action_timer('nova.unrescue_server')
     def _unrescue_server(self, server):
@@ -126,10 +180,13 @@ class NovaScenario(base.Scenario):
         :param server: Server object
         """
         server.unrescue()
-        time.sleep(2)
-        utils.wait_for(server, is_ready=bench_utils.resource_is("ACTIVE"),
-                       update_resource=bench_utils.get_from_manager(),
-                       timeout=600, check_interval=3)
+        time.sleep(CONF.benchmark.nova_server_unrescue_prepoll_delay)
+        utils.wait_for(
+            server, is_ready=bench_utils.resource_is("ACTIVE"),
+            update_resource=bench_utils.get_from_manager(),
+            timeout=CONF.benchmark.nova_server_unrescue_timeout,
+            check_interval=CONF.benchmark.nova_server_unrescue_poll_interval
+        )
 
     @scenario_utils.atomic_action_timer('nova.suspend_server')
     def _suspend_server(self, server):
@@ -141,10 +198,13 @@ class NovaScenario(base.Scenario):
         :param server: Server object
         """
         server.suspend()
-        time.sleep(2)
-        utils.wait_for(server, is_ready=bench_utils.resource_is("SUSPENDED"),
-                       update_resource=bench_utils.get_from_manager(),
-                       timeout=600, check_interval=3)
+        time.sleep(CONF.benchmark.nova_server_suspend_prepoll_delay)
+        utils.wait_for(
+            server, is_ready=bench_utils.resource_is("SUSPENDED"),
+            update_resource=bench_utils.get_from_manager(),
+            timeout=CONF.benchmark.nova_server_suspend_timeout,
+            check_interval=CONF.benchmark.nova_server_suspend_poll_interval
+        )
 
     @scenario_utils.atomic_action_timer('nova.delete_server')
     def _delete_server(self, server):
@@ -155,9 +215,12 @@ class NovaScenario(base.Scenario):
         :param server: Server object
         """
         server.delete()
-        utils.wait_for_delete(server,
-                              update_resource=bench_utils.get_from_manager(),
-                              timeout=600, check_interval=3)
+        utils.wait_for_delete(
+            server,
+            update_resource=bench_utils.get_from_manager(),
+            timeout=CONF.benchmark.nova_server_delete_timeout,
+            check_interval=CONF.benchmark.nova_server_delete_poll_interval
+        )
 
     @scenario_utils.atomic_action_timer('nova.delete_all_servers')
     def _delete_all_servers(self):
@@ -175,9 +238,13 @@ class NovaScenario(base.Scenario):
         :param image: Image object
         """
         image.delete()
-        utils.wait_for_delete(image,
-                              update_resource=bench_utils.get_from_manager(),
-                              timeout=600, check_interval=3)
+        utils.wait_for_delete(
+            image,
+            update_resource=bench_utils.get_from_manager(),
+            timeout=CONF.benchmark.nova_server_image_delete_timeout,
+            check_interval=
+                CONF.benchmark.nova_server_image_delete_poll_interval
+        )
 
     @scenario_utils.atomic_action_timer('nova.create_image')
     def _create_image(self, server):
@@ -193,10 +260,14 @@ class NovaScenario(base.Scenario):
         image_uuid = self.clients("nova").servers.create_image(server,
                                                                server.name)
         image = self.clients("nova").images.get(image_uuid)
-        image = utils.wait_for(image,
-                               is_ready=bench_utils.resource_is("ACTIVE"),
-                               update_resource=bench_utils.get_from_manager(),
-                               timeout=600, check_interval=3)
+        image = utils.wait_for(
+            image,
+            is_ready=bench_utils.resource_is("ACTIVE"),
+            update_resource=bench_utils.get_from_manager(),
+            timeout=CONF.benchmark.nova_server_image_create_timeout,
+            check_interval=
+                CONF.benchmark.nova_server_image_create_poll_interval
+        )
         return image
 
     @scenario_utils.atomic_action_timer('nova.boot_servers')
@@ -227,13 +298,15 @@ class NovaScenario(base.Scenario):
         #                created servers manyally.
         servers = filter(lambda server: server.name.startswith(name_prefix),
                          self.clients("nova").servers.list())
-        time.sleep(5)
-        servers = [utils.wait_for(server,
-                                  is_ready=bench_utils.resource_is("ACTIVE"),
-                                  update_resource=bench_utils.
-                                  get_from_manager(),
-                                  timeout=600, check_interval=3)
-                   for server in servers]
+        time.sleep(CONF.benchmark.nova_server_boot_prepoll_delay)
+        servers = [utils.wait_for(
+            server,
+            is_ready=bench_utils.resource_is("ACTIVE"),
+            update_resource=bench_utils.
+            get_from_manager(),
+            timeout=CONF.benchmark.nova_server_boot_timeout,
+            check_interval=CONF.benchmark.nova_server_boot_poll_interval
+        ) for server in servers]
         return servers
 
     def _generate_random_name(self, length):
