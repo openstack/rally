@@ -22,7 +22,7 @@ class CinderVolumes(utils.CinderScenario):
                                  **kwargs):
         """Tests creating and then deleting a volume.
 
-        Good for testing a maximal bandwith of cloud.
+        Good for testing a maximal bandwidth of cloud.
         """
 
         volume = self._create_volume(size, **kwargs)

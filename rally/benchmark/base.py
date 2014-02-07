@@ -71,7 +71,7 @@ class Scenario(object):
     @classmethod
     def init(cls, config):
         """This method will be called with test config. It purpose is to
-            prepare test enviorment. E.g. if you would like to test
+            prepare test environment. E.g. if you would like to test
             performance of assing of FloatingIps here you will create 200k
             FloatinigIps anre retun information about it to
         """

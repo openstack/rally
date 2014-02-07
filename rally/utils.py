@@ -188,7 +188,7 @@ def log_task_wrapper(log, msg, **kw):
 
     Class instances that use this decorator should have self.task attribute.
     The wrapper produces logs messages both before and after the method
-    excecution, in the following format:
+    execution, in the following format:
 
     "Task <Task UUID> | Starting:  <Logging message>"
     [Method execution...]
@@ -218,7 +218,7 @@ def log_deploy_wrapper(log, msg, **kw):
 
     Class instances that use this decorator should have self.deployment
     attribute. The wrapper produces logs messages both before and after
-    the method excecution, in the following format:
+    the method execution, in the following format:
 
     "Deployment <Deployment UUID> | Starting:  <Logging message>"
     [Method execution...]

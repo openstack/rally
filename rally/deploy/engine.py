@@ -46,7 +46,7 @@ class EngineFactory(object):
             return {}   # here should be endpoint
 
         def cleanup(self):
-            # Destory OpenStack deployment and free resource
+            # Destroy OpenStack deployment and free resource
 
     An instance of this class used as a context manager on any unsafe
     operations to a deployment. Any unhandled exceptions bring a status

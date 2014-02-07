@@ -19,7 +19,7 @@ The Deployment Layer
 ====================
 
 Represents a set of deployment engines. An each deployment engine provide some
-kind of technique of installation of OpenStack. Alse there is an abstract base
+kind of technique of installation of OpenStack. Also there is an abstract base
 class of deployment engine.
 
 The :mod:`rally.deploy.engine` Module

@@ -1,4 +1,4 @@
-'''Normal module that can be imported sucessfuly.
+'''Normal module that can be imported successfully.
 '''
 
 
