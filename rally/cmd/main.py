@@ -45,8 +45,9 @@ class DeploymentCommands(object):
     @cliutils.args('--filename', type=str, required=False,
                    help='A path to the configuration file of the '
                    'deployment.')
-    @cliutils.args('--use', action='store_true',
-                   help='Set new deployment as default for future operations')
+    @cliutils.args('--no-use', action='store_false', dest='use',
+                   help='Don\'t set new deployment as default for'
+                        ' future operations')
     def create(self, name, fromenv=False, filename=None, use=False):
         """Create a new deployment on the basis of configuration file.
 
