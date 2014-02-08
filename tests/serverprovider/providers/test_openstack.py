@@ -21,8 +21,8 @@ import mock
 from rally import exceptions
 from rally.openstack.common.fixture import mockpatch
 from rally.serverprovider.providers import openstack as provider
+from tests import fakes
 from tests import test
-
 
 MOD_NAME = 'rally.serverprovider.providers.openstack'
 OSProvider = provider.OpenStackProvider
@@ -130,8 +130,7 @@ class OpenStackProviderTestCase(test.TestCase):
                               mock.MagicMock(), cfg)
 
     def test_openstack_provider_init_with_invalid_conf_flavor_(self):
-        cfg = self._get_valid_config()
-        cfg["user"] = 1111
+        cfg = self._get_valid_config()["user"] = 1111
         with mock.patch("rally.serverprovider.providers.openstack.osclients"):
             self.assertRaises(jsonschema.ValidationError, OSProvider,
                               mock.MagicMock(), cfg)
@@ -219,17 +218,24 @@ class OpenStackProviderTestCase(test.TestCase):
     def test_openstack_provider_destroy_servers(self, mock_osclients):
         prov = OSProvider(mock.MagicMock(), self._get_valid_config())
         prov.resources.get_all.side_effect = [
-            [{'info': {'id': '1'}}],
-            [{'info': {'id': '2'}}],
+            [fakes.FakeResource(
+                id=1,
+                items={'info': {'id': '35FC0503-FED6-419F-B6EE-B704198CE642'}}
+            )],
+            [fakes.FakeResource(
+                id=2,
+                items={'info': {'id': 'keypair_name'}}
+            )],
         ]
         prov.destroy_servers()
         prov.resources.get_all.assert_has_calls([
             mock.call(type='server'),
             mock.call(type='keypair'),
         ])
-        prov.nova.servers.delete.assert_called_once_with('1')
-        prov.nova.keypairs.delete.assert_called_once_with('2')
+        prov.nova.servers.delete.assert_called_once_with(
+                '35FC0503-FED6-419F-B6EE-B704198CE642')
+        prov.nova.keypairs.delete.assert_called_once_with('keypair_name')
         prov.resources.delete.assert_has_calls([
-            mock.call({'info': {'id': '1'}}),
-            mock.call({'info': {'id': '2'}}),
+            mock.call(1),
+            mock.call(2),
         ])

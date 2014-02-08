@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import novaclient.exceptions
 import os
 import time
 import urllib2
@@ -205,8 +206,42 @@ class OpenStackProvider(provider.ProviderFactory):
 
     def destroy_servers(self):
         for resource in self.resources.get_all(type=SERVER_TYPE):
-            self.nova.servers.delete(resource['info']['id'])
-            self.resources.delete(resource)
+            try:
+                self.nova.servers.delete(resource['info']['id'])
+            except novaclient.exceptions.NotFound:
+                LOG.warning(
+                    "Nova Instance: %(id)s not found,"
+                    " so not deleting." % dict(id=resource['info']['id'])
+                )
+            try:
+                self.resources.delete(resource.id)
+            except exceptions.ResourceNotFound:
+                LOG.warning(
+                    'Instance resource record not found in DB, not removing.'
+                    ' Deployment: %(deploy_id)s Instance ID:%(id)s'
+                    ' Instance Nova UUID:%(uuid)s' %
+                    dict(deploy_id=resource.deployment_uuid,
+                         id=resource.id,
+                         uuid=resource['info']['id']
+                         )
+                )
         for resource in self.resources.get_all(type=KEYPAIR_TYPE):
-            self.nova.keypairs.delete(resource['info']['id'])
-            self.resources.delete(resource)
+            try:
+                self.nova.keypairs.delete(resource['info']['id'])
+            except novaclient.exceptions.NotFound:
+                LOG.warning(
+                    "Nova keypair: %(id)s not found,"
+                    " so not deleting." % dict(id=resource['info']['id'])
+                )
+            try:
+                self.resources.delete(resource.id)
+            except exceptions.ResourceNotFound:
+                LOG.warning(
+                    'Keypair resource record not found in DB, not removing.'
+                    ' Deployment: %(deploy_id)s Keypair ID:%(id)s'
+                    ' Keypair Name:%(name)s' %
+                    dict(deploy_id=resource.deployment_uuid,
+                         id=resource.id,
+                         name=resource['info']['id']
+                         )
+                )

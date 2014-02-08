@@ -23,18 +23,24 @@ from rally import utils as rally_utils
 
 class FakeResource(object):
 
-    def __init__(self, manager=None, name=None, status="ACTIVE"):
+    def __init__(self, manager=None, name=None, status="ACTIVE", items=None,
+                 deployment_uuid=None, id=None):
         self.name = name or uuid.uuid4()
         self.status = status
         self.manager = manager
         self.uuid = uuid.uuid4()
-        self.id = self.uuid
+        self.id = id or self.uuid
+        self.items = items or {}
+        self.deployment_uuid = deployment_uuid or uuid.uuid4()
 
     def __getattr__(self, name):
         # NOTE(msdubov): e.g. server.delete() -> manager.delete(server)
         def manager_func(*args, **kwargs):
             getattr(self.manager, name)(self, *args, **kwargs)
         return manager_func
+
+    def __getitem__(self, key):
+        return self.items[key]
 
 
 class FakeServer(FakeResource):
