@@ -77,11 +77,8 @@ class LxcHost(object):
     @property
     def backingstore(self):
         if not hasattr(self, '_backingstore'):
-            try:
-                self.server.ssh.execute('df -t btrfs %s' % self.path)
-                self._backingstore = 'btrfs'
-            except exceptions.SSHError:
-                self._backingstore = 'dir'
+            code = self.server.ssh.execute('df -t btrfs %s' % self.path)[0]
+            self._backingstore = '' if code else 'btrfs'
         return self._backingstore
 
     def prepare(self):
@@ -116,7 +113,7 @@ class LxcHost(object):
                                                net=self.network,
                                                local=self.server.host,
                                                remote=tunnel_to)
-            self.server.ssh.run('/bin/sh -e', stdin=script)
+            self.server.ssh.run('/bin/sh', stdin=script)
 
     def create_remote_tunnels(self):
         """Create tunel on remote side."""
@@ -126,7 +123,7 @@ class LxcHost(object):
                                                local=tunnel_to,
                                                remote=self.server.host)
             server = self._get_updated_server(host=tunnel_to)
-            server.ssh.run('/bin/sh -e', stdin=script)
+            server.ssh.run('/bin/sh', stdin=script)
 
     def delete_tunnels(self):
         for tunnel_to in self.config['tunnel_to']:
@@ -136,7 +133,6 @@ class LxcHost(object):
 
     def get_ip(self, name):
         """Get container's ip by name."""
-
         cmd = 'lxc-attach -n %s ip addr list dev eth0' % name
         for attempt in range(1, 16):
             code, stdout = self.server.ssh.execute(cmd)[:2]
@@ -187,11 +183,17 @@ class LxcHost(object):
         self.server.ssh.run(cmd)
         return port
 
-    def create_container(self, name, distribution):
-        args = {'backingstore': self.backingstore,
-                'name': name, 'distribution': distribution}
-        self.server.ssh.run('lxc-create -B %(backingstore)s -n %(name)s'
-                            ' -t %(distribution)s' % args)
+    def create_container(self, name, distribution, release=None):
+        cmd = ['lxc-create']
+        if self.backingstore == 'btrfs':
+            cmd += ['-B', 'btrfs']
+        cmd += ['-n', name, '-t', distribution]
+        if release:
+            if distribution == 'ubuntu':
+                cmd += ['--', '-r', release]
+            elif distribution == 'debian':
+                cmd = ['SUITE=%s' % release] + cmd
+        self.server.ssh.run(' '.join(cmd))
         self.configure_container(name)
         self.containers.append(name)
 
@@ -273,6 +275,7 @@ class LxcProvider(provider.ProviderFactory):
         'properties': {
             'name': {'type': 'string'},
             'distribution': {'type': 'string'},
+            'release': {'type': 'string'},
             'start_lxc_network': {'type': 'string',
                                   'pattern': '^(\d+\.){3}\d+\/\d+$'},
             'containers_per_host': {'type': 'integer'},
@@ -313,6 +316,7 @@ class LxcProvider(provider.ProviderFactory):
         else:
             network = None
         distribution = self.config.get('distribution', 'ubuntu')
+        release = self.config.get('release', None)
 
         for server in host_provider.create_servers():
             config = {'tunnel_to': self.config.get('tunnel_to', []),
@@ -324,7 +328,7 @@ class LxcProvider(provider.ProviderFactory):
             ip = str(network.ip).replace('.', '-') if network else '0'
             first_name = '%s-000-%s' % (name_prefix, ip)
 
-            host.create_container(first_name, distribution)
+            host.create_container(first_name, distribution, release)
             for i in range(1, self.config.get('containers_per_host', 1)):
                 name = '%s-%03d-%s' % (name_prefix, i, ip)
                 host.create_clone(name, first_name)

@@ -21,9 +21,10 @@ if [ ! -d "/var/lib/lxc" ]; then
         echo "Creating btrfs volume."
         SIZE=`df -h /var | awk '/[0-9]%/{print $(NF-2)}'`
         truncate -s $SIZE /var/rally-btrfs-volume
-        losetup /dev/loop0 /var/rally-btrfs-volume
-        mkfs.btrfs /dev/loop0
-        mount /dev/loop0 /var/lib/lxc
+        LOOPDEV=`losetup -f`
+        losetup $LOOPDEV /var/rally-btrfs-volume
+        mkfs.btrfs $LOOPDEV
+        mount $LOOPDEV /var/lib/lxc
     fi
 fi
 
@@ -34,5 +35,6 @@ else
  DEBIAN_FRONTEND='noninteractive' apt-get install -yq lxc
  service lxc stop
  cat /tmp/.lxc_default >> /etc/default/lxc || true
+ rm /tmp/.lxc_default || true
  service lxc start
 fi

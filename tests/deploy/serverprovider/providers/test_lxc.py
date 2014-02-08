@@ -68,6 +68,7 @@ class LxcHostTestCase(test.BaseTestCase):
         self.assertEqual(new_server, server)
 
     def test_backingstore_btrfs(self):
+        self.server.ssh.execute.return_value = [0, '', '']
         self.assertEqual('btrfs', self.host.backingstore)
         self.assertEqual('btrfs', self.host.backingstore)
         # second call will return cached value
@@ -75,8 +76,8 @@ class LxcHostTestCase(test.BaseTestCase):
                          self.server.mock_calls)
 
     def test_backingstore_none(self):
-        self.server.ssh.execute.side_effect = exceptions.SSHError()
-        self.assertEqual('dir', self.host.backingstore)
+        self.server.ssh.execute.return_value = [-1, '', '']
+        self.assertEqual('', self.host.backingstore)
 
     @mock.patch(MOD_NAME + 'StringIO.StringIO')
     @mock.patch(MOD_NAME + '_get_script', return_value='fake_script')
@@ -116,8 +117,8 @@ class LxcHostTestCase(test.BaseTestCase):
                       net=netaddr.IPNetwork('10.1.1.0/24'), remote='2.2.2.2'),
         ]
         self.assertEqual(gs_calls, m_gs.mock_calls)
-        self.assertEqual([mock.call('/bin/sh -e', stdin='s1'),
-                          mock.call('/bin/sh -e', stdin='s2')],
+        self.assertEqual([mock.call('/bin/sh', stdin='s1'),
+                          mock.call('/bin/sh', stdin='s2')],
                          self.server.ssh.run.mock_calls)
 
     @mock.patch(MOD_NAME + '_get_script_from_template')
@@ -126,8 +127,8 @@ class LxcHostTestCase(test.BaseTestCase):
         fake_server = mock.Mock()
         self.host._get_updated_server = mock.Mock(return_value=fake_server)
         self.host.create_remote_tunnels()
-        self.assertEqual([mock.call('/bin/sh -e', stdin='s1'),
-                          mock.call('/bin/sh -e', stdin='s2')],
+        self.assertEqual([mock.call('/bin/sh', stdin='s1'),
+                          mock.call('/bin/sh', stdin='s2')],
                          fake_server.ssh.run.mock_calls)
 
     def test_delete_tunnels(self):
@@ -163,10 +164,17 @@ class LxcHostTestCase(test.BaseTestCase):
         self.host.configure_container.assert_called_once_with('name')
 
         #check with no btrfs
-        self.host._backingstore = 'dir'
+        self.host._backingstore = ''
         self.host.create_container('name', 'dist')
-        self.assertEqual(mock.call('lxc-create -B dir -n name -t dist'),
+        self.assertEqual(mock.call('lxc-create -n name -t dist'),
                          self.server.ssh.run.mock_calls[1])
+
+        #check release
+        self.host.create_container('name', 'ubuntu', 'raring')
+        self.host.create_container('name', 'debian', 'woody')
+        expected = [mock.call('lxc-create -n name -t ubuntu -- -r raring'),
+                    mock.call('SUITE=woody lxc-create -n name -t debian')]
+        self.assertEqual(expected, self.server.ssh.run.mock_calls[2:])
 
     def test_create_clone(self):
         self.host._backingstore = 'btrfs'
@@ -177,7 +185,7 @@ class LxcHostTestCase(test.BaseTestCase):
         self.assertEqual(['name'], self.host.containers)
 
         #check with no btrfs
-        self.host._backingstore = 'dir'
+        self.host._backingstore = ''
         self.host.create_clone('name', 'src')
         self.assertEqual(mock.call('lxc-clone -o src -n name'),
                          self.server.ssh.execute.mock_calls[1])
@@ -325,7 +333,7 @@ class LxcProviderTestCase(test.BaseTestCase):
 
         host1_calls = [
             call.prepare(),
-            call.create_container('rally-lxc-000-10-1-1-0', 'ubuntu'),
+            call.create_container('rally-lxc-000-10-1-1-0', 'ubuntu', None),
             call.create_clone('rally-lxc-001-10-1-1-0',
                               'rally-lxc-000-10-1-1-0'),
             call.start_containers(),
@@ -334,7 +342,7 @@ class LxcProviderTestCase(test.BaseTestCase):
         ]
         host2_calls = [
             call.prepare(),
-            call.create_container('rally-lxc-000-10-1-1-8', 'ubuntu'),
+            call.create_container('rally-lxc-000-10-1-1-8', 'ubuntu', None),
             call.create_clone('rally-lxc-001-10-1-1-8',
                               'rally-lxc-000-10-1-1-8'),
             call.start_containers(),
