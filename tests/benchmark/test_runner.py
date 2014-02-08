@@ -106,39 +106,39 @@ class ScenarioRunnerTestCase(test.TestCase):
             self.assertEqual(r['error'][0],
                              str(multiprocessing.TimeoutError))
 
-    def test_run_scenario_exception_inside_test(self):
-        with mock.patch("rally.benchmark.utils.osclients") as mock_osclients:
-            mock_osclients.Clients.return_value = fakes.FakeClients()
-            srunner = runner.ScenarioRunner(mock.MagicMock(), self.fake_kw)
-            runner.__openstack_clients__ = ["client"]
-            times = 1
-            duration = 0.01
-            active_users = 2
-            with mock.patch("rally.benchmark.runner.rutils") as mock_utils:
-                mock_utils.Timer = fakes.FakeTimer
-                results = srunner._run_scenario(fakes.FakeScenario,
-                                                "something_went_wrong", {},
-                                                "continuous",
-                                                {"times": times,
-                                                 "active_users": active_users,
-                                                 "timeout": 1})
-                self.assertEqual(len(results), times)
-                for r in results:
-                    self.assertEqual(r['time'], 10)
-                    self.assertEqual(r['error'][:2],
-                                     [str(Exception), "Something went wrong"])
+    @mock.patch("rally.benchmark.runner.rutils")
+    @mock.patch("rally.benchmark.utils.osclients")
+    def test_run_scenario_exception_inside_test(self, mock_osclients,
+                                                mock_utils):
+        mock_osclients.Clients.return_value = fakes.FakeClients()
+        srunner = runner.ScenarioRunner(mock.MagicMock(), self.fake_kw)
+        runner.__openstack_clients__ = ["client"]
+        times = 1
+        duration = 0.001
+        active_users = 2
 
-                results = srunner._run_scenario(fakes.FakeScenario,
-                                                "something_went_wrong", {},
-                                                "continuous",
-                                                {"duration": duration,
-                                                 "active_users": active_users,
-                                                 "timeout": 1})
-                self.assertEqual(len(results), active_users)
-                for r in results:
-                    self.assertEqual(r['time'], 10)
-                    self.assertEqual(r['error'][:2],
-                                     [str(Exception), "Something went wrong"])
+        mock_utils.Timer = fakes.FakeTimer
+        results = srunner._run_scenario(fakes.FakeScenario,
+                                        "something_went_wrong", {},
+                                        "continuous",
+                                        {"times": times, "timeout": 1,
+                                         "active_users": active_users})
+        self.assertEqual(len(results), times)
+        for r in results:
+            self.assertEqual(r['time'], 10)
+            self.assertEqual(r['error'][:2],
+                             [str(Exception), "Something went wrong"])
+
+        results = srunner._run_scenario(fakes.FakeScenario,
+                                        "something_went_wrong", {},
+                                        "continuous",
+                                        {"duration": duration, "timeout": 1,
+                                         "active_users": active_users})
+        self.assertEqual(len(results), active_users)
+        for r in results:
+            self.assertEqual(r['time'], 10)
+            self.assertEqual(r['error'][:2],
+                             [str(Exception), "Something went wrong"])
 
     def test_run_scenario_exception_outside_test(self):
         pass
