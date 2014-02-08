@@ -18,6 +18,7 @@
 import jsonschema
 import mock
 
+from rally import exceptions
 from rally.openstack.common.fixture import mockpatch
 from rally.serverprovider.providers import openstack as provider
 from tests import test
@@ -99,6 +100,13 @@ class OpenStackProviderTestCase(test.TestCase):
         self.assertEqual('nova', os_provider.nova)
         self.assertEqual('glance', os_provider.glance)
 
+    @mock.patch('rally.osclients.Clients.get_glance_client')
+    def test_openstack_provider_init_no_glance(self, mock_get_glance_client):
+        mock_get_glance_client.side_effect = KeyError('image')
+        cfg = self._get_valid_config()
+        provider = OSProvider(mock.MagicMock(), cfg)
+        self.assertEqual(provider.glance, None)
+
     def test_openstack_provider_init_with_invalid_conf_no_user(self):
         cfg = self._get_valid_config()
         cfg.pop("user")
@@ -169,6 +177,23 @@ class OpenStackProviderTestCase(test.TestCase):
         self.assertEqual(image_uuid, 'fake-uuid')
         self.assertEqual(u.mock_calls,
                          [mock.call.urlopen('http://example.net/img.qcow2')])
+
+    @mock.patch(MOD_NAME + '.osclients')
+    def test_openstack_provider_get_image_no_glance_exception(
+            self, mock_osclients):
+        prov = OSProvider(mock.MagicMock(), self._get_valid_config())
+        prov.glance = None
+        self.assertRaises(exceptions.InvalidConfigException,
+                          prov.get_image_uuid)
+
+    @mock.patch(MOD_NAME + '.osclients')
+    def test_openstack_provider_get_image_from_uuid_no_glance(
+            self, mock_osclients):
+        conf = self._get_valid_config()
+        conf['image']['uuid'] = "EC7A1DB7-C5BD-49A2-8066-613809CB22F5"
+        prov = OSProvider(mock.MagicMock(), conf)
+        prov.glance = True
+        self.assertEqual(conf['image']['uuid'], prov.get_image_uuid())
 
     @mock.patch(MOD_NAME + '.osclients')
     def test_openstack_provider_destroy_servers(self, mock_osclients):
