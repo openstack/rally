@@ -123,9 +123,10 @@ class SSH(object):
                                  key_filename=self.key_filename,
                                  password=self.password)
             return self._client
-        except paramiko.SSHException as e:
-            message = _("Paramiko exception %(exception_type)s was raised "
+        except Exception as e:
+            message = _("Exception %(exception_type)s was raised "
                         "during connect. Exception value is: %(exception)r")
+            self._client = False
             raise SSHError(message % {'exception': e,
                                       'exception_type': type(e)})
 
