@@ -110,6 +110,8 @@
 # syslog facility to receive log lines (string value)
 #syslog_log_facility=LOG_USER
 
+#HTTP timeout for any of OpenStack service in seconds
+#openstack_client_http_timeout=30.0
 
 [database]
 

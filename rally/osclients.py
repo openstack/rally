@@ -20,8 +20,16 @@ import glanceclient as glance
 from keystoneclient import exceptions as keystone_exceptions
 from keystoneclient.v2_0 import client as keystone
 from novaclient import client as nova
+from oslo.config import cfg
 
 from rally import exceptions
+
+
+CONF = cfg.CONF
+CONF.register_opts([
+    cfg.FloatOpt("openstack_client_http_timeout", default=30.0,
+                 help="HTTP timeout for any of OpenStack service in seconds")
+])
 
 
 class Clients(object):
@@ -37,7 +45,8 @@ class Clients(object):
         if "keystone" in self.cache:
             return self.cache["keystone"]
 
-        new_kw = {"endpoint": self._change_port(self.kw["auth_url"], "35357")}
+        new_kw = {"endpoint": self._change_port(self.kw["auth_url"], "35357"),
+                  "timeout": CONF.openstack_client_http_timeout}
         kw = dict(self.kw.items() + new_kw.items())
         client = keystone.Client(**kw)
         client.authenticate()
@@ -74,7 +83,8 @@ class Clients(object):
                              self.kw['password'],
                              self.kw['tenant_name'],
                              auth_url=self.kw['auth_url'],
-                             service_type='compute')
+                             service_type='compute',
+                             timeout=CONF.openstack_client_http_timeout)
 
         self.cache["nova"] = client
         return client
@@ -88,7 +98,8 @@ class Clients(object):
         endpoint = kc.service_catalog.get_endpoints()['image'][0]
         client = glance.Client(version,
                                endpoint=endpoint['publicURL'],
-                               token=kc.auth_token)
+                               token=kc.auth_token,
+                               timeout=CONF.openstack_client_http_timeout)
 
         self.cache["glance"] = client
         return client
@@ -103,7 +114,8 @@ class Clients(object):
                                self.kw['password'],
                                self.kw['tenant_name'],
                                auth_url=self.kw['auth_url'],
-                               service_type='volume')
+                               service_type='volume',
+                               timeout=CONF.openstack_client_http_timeout)
 
         self.cache["cinder"] = client
         return client
