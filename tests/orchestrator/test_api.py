@@ -87,7 +87,7 @@ class APITestCase(test.TestCase):
         mock_task.assert_called_once_with(deployment_uuid=deployment_uuid)
 
     @mock.patch('rally.benchmark.engine.osclients')
-    @mock.patch('rally.benchmark.engine.runner.ScenarioRunner')
+    @mock.patch('rally.benchmark.engine.runner.ScenarioRunner.get_runner')
     @mock.patch('rally.objects.deploy.db.deployment_get')
     @mock.patch('rally.objects.task.db.task_result_create')
     @mock.patch('rally.objects.task.db.task_update')

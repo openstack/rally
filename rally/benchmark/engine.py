@@ -129,13 +129,14 @@ class TestEngine(object):
                   corresponding benchmark test launches
         """
         self.task.update_status(consts.TaskStatus.TEST_TOOL_BENCHMARKING)
-        scenario_runner = runner.ScenarioRunner(self.task, self.endpoint)
 
         results = {}
         for name in self.config:
             for n, kwargs in enumerate(self.config[name]):
                 key = {'name': name, 'pos': n, 'kw': kwargs}
                 try:
+                    scenario_runner = runner.ScenarioRunner.get_runner(
+                                            self.task, self.endpoint, kwargs)
                     result = scenario_runner.run(name, kwargs)
                     self.task.append_results(key, {"raw": result,
                                                    "validation":
