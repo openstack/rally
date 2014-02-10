@@ -114,6 +114,14 @@ class OpenStackProviderTestCase(test.TestCase):
             self.assertRaises(jsonschema.ValidationError, OSProvider,
                               mock.MagicMock(), cfg)
 
+    def test_openstack_provider_init_with_invalid_conf_no_url(self):
+        cfg = self._get_valid_config()
+        del cfg['image']['url']
+        del cfg['image']['checksum']
+        with mock.patch("rally.serverprovider.providers.openstack.osclients"):
+            self.assertRaises(jsonschema.ValidationError, OSProvider,
+                              mock.MagicMock(), cfg)
+
     def test_openstack_provider_init_with_invalid_conf_extra_key(self):
         cfg = self._get_valid_config()
         cfg["aaaaa"] = "bbbbb"
@@ -130,6 +138,18 @@ class OpenStackProviderTestCase(test.TestCase):
 
     def test_openstack_provider_with_valid_config(self):
         cfg = self._get_valid_config()
+        with mock.patch("rally.serverprovider.providers.openstack.osclients"):
+            OSProvider(mock.MagicMock(), cfg)
+
+    def test_openstack_provider_with_valid_config_uuid(self):
+        cfg = self._get_valid_config()
+        cfg['image'] = dict(uuid="289D7A51-1A0C-43C4-800D-706EA8A3CDF3")
+        with mock.patch("rally.serverprovider.providers.openstack.osclients"):
+            OSProvider(mock.MagicMock(), cfg)
+
+    def test_openstack_provider_with_valid_config_checksum(self):
+        cfg = self._get_valid_config()
+        cfg['image'] = dict(checksum="checksum")
         with mock.patch("rally.serverprovider.providers.openstack.osclients"):
             OSProvider(mock.MagicMock(), cfg)
 
