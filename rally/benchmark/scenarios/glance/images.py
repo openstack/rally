@@ -16,6 +16,7 @@
 
 from rally.benchmark.scenarios.glance import utils
 from rally.benchmark.scenarios.nova import utils as nova_utils
+from rally.benchmark import validation
 
 
 class GlanceImages(utils.GlanceScenario, nova_utils.NovaScenario):
@@ -31,6 +32,7 @@ class GlanceImages(utils.GlanceScenario, nova_utils.NovaScenario):
                                    **kwargs)
         self._delete_image(image)
 
+    @validation.add_validator(validation.flavor_exists("flavor_id"))
     def create_image_and_boot_instances(self, container_format,
                                         image_url, disk_format,
                                         flavor_id, number_instances,
