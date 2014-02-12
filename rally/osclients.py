@@ -17,6 +17,7 @@ import urlparse
 
 from cinderclient import client as cinder
 import glanceclient as glance
+import heatclient as heat
 from keystoneclient import exceptions as keystone_exceptions
 from keystoneclient.v2_0 import client as keystone
 from novaclient import client as nova
@@ -102,6 +103,22 @@ class Clients(object):
                                timeout=CONF.openstack_client_http_timeout)
 
         self.cache["glance"] = client
+        return client
+
+    def get_heat_client(self, version='1'):
+        """Returns heat client."""
+        if "heat" in self.cache:
+            return self.cache["heat"]
+
+        kc = self.get_keystone_client()
+        endpoint = kc.service_catalog.get_endpoints()['orchestration'][0]
+
+        client = heat.Client(version,
+                             endpoint=endpoint['publicURL'],
+                             token=kc.auth_token,
+                             timeout=CONF.openstack_client_http_timeout)
+
+        self.cache["heat"] = client
         return client
 
     def get_cinder_client(self, version='1'):
