@@ -79,7 +79,20 @@ class OpenStackProvider(provider.ProviderFactory):
                     'uuid': {'type': 'string'},
                 },
                 'additionalProperties': False,
-                'required': ['name', 'format', 'url', 'checksum'],
+                'anyOf': [
+                    {
+                        'title': 'Create Image',
+                        'required': ['name', 'format', 'url', 'checksum'],
+                    },
+                    {
+                        'title': 'Existing image from checksum',
+                        'required': ['checksum']
+                    },
+                    {
+                        'title': 'Existing image from uuid',
+                        'required': ['uuid']
+                    }
+                ]
             },
         },
         'additionalProperties': False,
