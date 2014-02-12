@@ -47,7 +47,8 @@ class OSClientsTestCase(test.TestCase):
             client = self.clients.get_keystone_client()
             self.assertEqual(client, fake_keystone)
             endpoint = {"endpoint": "http://auth_url:35357",
-                        "timeout": cfg.CONF.openstack_client_http_timeout}
+                        "timeout": cfg.CONF.openstack_client_http_timeout,
+                        "insecure": False, "cacert": None}
             kwargs = dict(self.kwargs.items() + endpoint.items())
             mock_keystone.Client.assert_called_once_with(**kwargs)
             self.assertEqual(self.clients.cache["keystone"], fake_keystone)
@@ -84,7 +85,8 @@ class OSClientsTestCase(test.TestCase):
             mock_nova.Client.assert_called_once_with(
                     "2", *self.args[:3], auth_url=self.args[-1],
                     service_type="compute",
-                    timeout=cfg.CONF.openstack_client_http_timeout)
+                    timeout=cfg.CONF.openstack_client_http_timeout,
+                    insecure=False, cacert=None)
             self.assertEqual(self.clients.cache["nova"], fake_nova)
 
     def test_get_glance_client(self):
@@ -100,7 +102,8 @@ class OSClientsTestCase(test.TestCase):
 
             kw = {"endpoint": endpoint["publicURL"],
                   "token": kc.auth_token,
-                  "timeout": cfg.CONF.openstack_client_http_timeout}
+                  "timeout": cfg.CONF.openstack_client_http_timeout,
+                  "insecure": False, "cacert": None}
             mock_glance.Client.assert_called_once_with("1", **kw)
             self.assertEqual(self.clients.cache["glance"], fake_glance)
 
@@ -114,5 +117,6 @@ class OSClientsTestCase(test.TestCase):
             mock_cinder.Client.assert_called_once_with(
                 "1", *self.args[:3], auth_url=self.args[-1],
                 service_type="volume",
-                timeout=cfg.CONF.openstack_client_http_timeout)
+                timeout=cfg.CONF.openstack_client_http_timeout,
+                insecure=False, cacert=None)
             self.assertEqual(self.clients.cache["cinder"], fake_cinder)

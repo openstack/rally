@@ -110,8 +110,17 @@
 # syslog facility to receive log lines (string value)
 #syslog_log_facility=LOG_USER
 
-#HTTP timeout for any of OpenStack service in seconds
+# HTTP timeout for any of OpenStack service in seconds
 #openstack_client_http_timeout=30.0
+
+# Use SSL for all OpenStack API interfaces (boolean value)
+# Explicitly allows to perform "insecure" SSL (https) requests
+# The server's certificate will not be verified against any certificate
+# authorities. This option should be used with caution.
+#https_insecure=false
+
+# Path to CA server cetrificate for SSL (string value)
+#https_cacert=
 
 [database]
 
