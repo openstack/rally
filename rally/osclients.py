@@ -17,7 +17,7 @@ import urlparse
 
 from cinderclient import client as cinder
 import glanceclient as glance
-import heatclient as heat
+from heatclient import client as heat
 from keystoneclient import exceptions as keystone_exceptions
 from keystoneclient.v2_0 import client as keystone
 from novaclient import client as nova
@@ -29,7 +29,11 @@ from rally import exceptions
 CONF = cfg.CONF
 CONF.register_opts([
     cfg.FloatOpt("openstack_client_http_timeout", default=30.0,
-                 help="HTTP timeout for any of OpenStack service in seconds")
+                 help="HTTP timeout for any of OpenStack service in seconds"),
+    cfg.BoolOpt("https_insecure", default=False,
+                help="Use SSL for all OpenStack API interfaces"),
+    cfg.StrOpt("https_cacert", default=None,
+               help="Path to CA server cetrificate for SSL")
 ])
 
 
@@ -47,7 +51,8 @@ class Clients(object):
             return self.cache["keystone"]
 
         new_kw = {"endpoint": self._change_port(self.kw["auth_url"], "35357"),
-                  "timeout": CONF.openstack_client_http_timeout}
+                  "timeout": CONF.openstack_client_http_timeout,
+                  "insecure": CONF.https_insecure, "cacert": CONF.https_cacert}
         kw = dict(self.kw.items() + new_kw.items())
         client = keystone.Client(**kw)
         client.authenticate()
@@ -85,7 +90,9 @@ class Clients(object):
                              self.kw['tenant_name'],
                              auth_url=self.kw['auth_url'],
                              service_type='compute',
-                             timeout=CONF.openstack_client_http_timeout)
+                             timeout=CONF.openstack_client_http_timeout,
+                             insecure=CONF.https_insecure,
+                             cacert=CONF.https_cacert)
 
         self.cache["nova"] = client
         return client
@@ -100,7 +107,9 @@ class Clients(object):
         client = glance.Client(version,
                                endpoint=endpoint['publicURL'],
                                token=kc.auth_token,
-                               timeout=CONF.openstack_client_http_timeout)
+                               timeout=CONF.openstack_client_http_timeout,
+                               insecure=CONF.https_insecure,
+                               cacert=CONF.https_cacert)
 
         self.cache["glance"] = client
         return client
@@ -116,7 +125,9 @@ class Clients(object):
         client = heat.Client(version,
                              endpoint=endpoint['publicURL'],
                              token=kc.auth_token,
-                             timeout=CONF.openstack_client_http_timeout)
+                             timeout=CONF.openstack_client_http_timeout,
+                             insecure=CONF.https_insecure,
+                             cacert=CONF.https_cacert)
 
         self.cache["heat"] = client
         return client
@@ -132,7 +143,9 @@ class Clients(object):
                                self.kw['tenant_name'],
                                auth_url=self.kw['auth_url'],
                                service_type='volume',
-                               timeout=CONF.openstack_client_http_timeout)
+                               timeout=CONF.openstack_client_http_timeout,
+                               insecure=CONF.https_insecure,
+                               cacert=CONF.https_cacert)
 
         self.cache["cinder"] = client
         return client
