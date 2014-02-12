@@ -203,6 +203,7 @@ class SSH(object):
                             writes = []
                             continue
                     sent_bytes = session.send(data_to_send)
+                    LOG.debug('sent: %s' % data_to_send[:sent_bytes])
                     data_to_send = data_to_send[sent_bytes:]
 
             if session.exit_status_ready():

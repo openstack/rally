@@ -48,6 +48,17 @@ class LxcHost(object):
     """Represent lxc enabled host."""
 
     def __init__(self, server, config):
+        """Initialize LxcHost object.
+
+        :param server:  Server object
+        :param config:  dictionary with following key/values:
+            network         ipv4 network for containers
+            lxc_bridge      bridge interface name (default lxcbr0)
+            tunnel_to       ip address for make tunnel to
+            forward_ssh     use ssh port forwarding (do not use for
+                            controller nodes)
+
+        """
         self.config = config
         if 'network' in config:
             self.network = netaddr.IPNetwork(config['network'])
@@ -56,6 +67,7 @@ class LxcHost(object):
         self.server = server
         self.containers = []
         self.path = '/var/lib/lxc/'
+        self._port_cache = {}
 
     def _get_updated_server(self, **kwargs):
         credentials = self.server.get_credentials()
@@ -153,7 +165,7 @@ class LxcHost(object):
         Ip->port association is stored in self._port_cache to reduce number
         of iptables calls.
         """
-        if not hasattr(self, '_port_cache'):
+        if not self._port_cache:
             self._port_cache = {}
             port_re = re.compile(r'.+ tcp dpt:(\d+).*to:([\d\.]+)\:22')
             cmd = "iptables -n -t nat -L PREROUTING"
@@ -222,7 +234,10 @@ class LxcHost(object):
     def get_server_object(self, name, wait=True):
         """Create Server object for container."""
         ip = self.get_ip(name)
-        server = self._get_updated_server(port=self.get_port(ip))
+        if self.config.get('forward_ssh', False):
+            server = self._get_updated_server(port=self.get_port(ip))
+        else:
+            server = self._get_updated_server(host=ip)
         if wait:
             server.ssh.wait(timeout=300)
         return server
@@ -243,6 +258,7 @@ class LxcProvider(provider.ProviderFactory):
         "start_lxc_network": "10.1.1.0/24",
         "containers_per_host": 32,
         "tunnel_to": ["10.10.10.10"],
+        "forward_ssh": false,
         "container_name_prefix": "rally-multinode-02",
         "host_provider": {
             "name": "DummyProvider",
@@ -260,6 +276,7 @@ class LxcProvider(provider.ProviderFactory):
             'start_lxc_network': {'type': 'string',
                                   'pattern': '^(\d+\.){3}\d+\/\d+$'},
             'containers_per_host': {'type': 'integer'},
+            'forward_ssh': {'type': 'boolean'},
             'tunnel_to': {'type': 'array',
                           'elements': {'type': 'string',
                                        'pattern': '^(\d+\.){3}\d+$'}},
@@ -295,7 +312,8 @@ class LxcProvider(provider.ProviderFactory):
         distribution = self.config.get('distribution', 'ubuntu')
 
         for server in host_provider.create_servers():
-            config = {'tunnel_to': self.config.get('tunnel_to', [])}
+            config = {'tunnel_to': self.config.get('tunnel_to', []),
+                      'forward_ssh': self.config.get('forward_ssh', False)}
             if network:
                 config['network'] = str(network)
             host = LxcHost(server, config)

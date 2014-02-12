@@ -54,6 +54,7 @@ class LxcHostTestCase(test.BaseTestCase):
         super(LxcHostTestCase, self).setUp()
 
         sample_config = {'network': '10.1.1.0/24',
+                         'forward_ssh': True,
                          'tunnel_to': ['1.1.1.1', '2.2.2.2']}
         self.server = mock.Mock()
         self.server.host = 'fake_server_ip'
