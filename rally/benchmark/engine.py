@@ -62,23 +62,23 @@ CONFIG_SCHEMA = {
 }
 
 
-class TestEngine(object):
-    """The test engine class, an instance of which is initialized by the
+class BenchmarkEngine(object):
+    """The Benchmark engine class, an instance of which is initialized by the
     Orchestrator with the benchmarks configuration and then is used to execute
     all specified benchmark scnearios.
     .. note::
 
         Typical usage:
             ...
-            tester = TestEngine(config, task)
+            benchmark_engine = BenchmarkEngine(config, task)
             # Deploying the cloud...
             # endpoint - is a dict with data on endpoint of deployed cloud
-            with tester.bind(endpoints):
-                tester.run()
+            with benchmark_engine.bind(endpoints):
+                benchmark_engine.run()
     """
 
     def __init__(self, config, task):
-        """TestEngine constructor.
+        """BenchmarkEngine constructor.
         :param config: The configuration with specified benchmark scenarios
         :param task: The current task which is being performed
         """
@@ -123,7 +123,7 @@ class TestEngine(object):
 
     def run(self):
         """Runs the benchmarks according to the test configuration
-        the test engine was initialized with.
+        the benchmark engine was initialized with.
 
         :returns: List of dicts, each dict containing the results of all the
                   corresponding benchmark test launches

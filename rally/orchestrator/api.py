@@ -88,11 +88,11 @@ def start_task(deploy_uuid, config, task=None):
     """
     deployment = objects.Deployment.get(deploy_uuid)
     task = task or objects.Task(deployment_uuid=deploy_uuid)
-    tester = engine.TestEngine(config, task)
+    benchmark_engine = engine.BenchmarkEngine(config, task)
     endpoint = deployment['endpoints']
     try:
-        with tester.bind(endpoint):
-            tester.run()
+        with benchmark_engine.bind(endpoint):
+            benchmark_engine.run()
     except Exception:
         deployment.update_status(consts.DeployStatus.DEPLOY_INCONSISTENT)
         raise

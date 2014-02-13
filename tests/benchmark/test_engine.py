@@ -24,10 +24,10 @@ from tests import fakes
 from tests import test
 
 
-class TestEngineTestCase(test.TestCase):
+class BenchmarkEngineTestCase(test.TestCase):
 
     def setUp(self):
-        super(TestEngineTestCase, self).setUp()
+        super(BenchmarkEngineTestCase, self).setUp()
 
         self.valid_test_config_continuous_times = {
             'NovaServers.boot_and_delete_server': [
@@ -89,37 +89,37 @@ class TestEngineTestCase(test.TestCase):
 
     def test_verify_test_config(self):
         try:
-            engine.TestEngine(self.valid_test_config_continuous_times,
-                              mock.MagicMock())
-            engine.TestEngine(self.valid_test_config_continuous_duration,
-                              mock.MagicMock())
+            engine.BenchmarkEngine(self.valid_test_config_continuous_times,
+                                   mock.MagicMock())
+            engine.BenchmarkEngine(self.valid_test_config_continuous_duration,
+                                   mock.MagicMock())
         except Exception as e:
             self.fail("Unexpected exception in test config" +
                       "verification: %s" % str(e))
         self.assertRaises(exceptions.InvalidConfigException,
-                          engine.TestEngine,
+                          engine.BenchmarkEngine,
                           self.invalid_test_config_bad_execution_type,
                           mock.MagicMock())
         self.assertRaises(exceptions.InvalidConfigException,
-                          engine.TestEngine,
+                          engine.BenchmarkEngine,
                           self.invalid_test_config_bad_config_parameter,
                           mock.MagicMock())
         self.assertRaises(exceptions.InvalidConfigException,
-                          engine.TestEngine,
+                          engine.BenchmarkEngine,
                           self.invalid_test_config_parameters_conflict,
                           mock.MagicMock())
         self.assertRaises(exceptions.InvalidConfigException,
-                          engine.TestEngine,
+                          engine.BenchmarkEngine,
                           self.invalid_test_config_bad_param_for_periodic,
                           mock.MagicMock())
 
     @mock.patch("rally.benchmark.engine.osclients")
     def test_bind(self, mock_osclients):
         mock_osclients.Clients.return_value = fakes.FakeClients()
-        tester = engine.TestEngine(self.valid_test_config_continuous_times,
-                                   mock.MagicMock())
-        with tester.bind(self.valid_endpoints):
-            self.assertEqual(tester.endpoints,
+        benchmark_engine = engine.BenchmarkEngine(
+            self.valid_test_config_continuous_times, mock.MagicMock())
+        with benchmark_engine.bind(self.valid_endpoints):
+            self.assertEqual(benchmark_engine.endpoints,
                              self.valid_endpoints)
 
     @mock.patch("rally.benchmark.runner.ScenarioRunner.run")
@@ -128,10 +128,10 @@ class TestEngineTestCase(test.TestCase):
     def test_run(self, mock_engine_osclients, mock_utils_osclients, mock_run):
         mock_engine_osclients.Clients.return_value = fakes.FakeClients()
         mock_utils_osclients.Clients.return_value = fakes.FakeClients()
-        tester = engine.TestEngine(self.valid_test_config_continuous_times,
-                                   mock.MagicMock())
-        with tester.bind(self.valid_endpoints):
-            tester.run()
+        benchmark_engine = engine.BenchmarkEngine(
+            self.valid_test_config_continuous_times, mock.MagicMock())
+        with benchmark_engine.bind(self.valid_endpoints):
+            benchmark_engine.run()
 
     @mock.patch("rally.benchmark.runner.ScenarioRunner.run")
     @mock.patch("rally.benchmark.utils.osclients")
@@ -139,13 +139,13 @@ class TestEngineTestCase(test.TestCase):
     def test_task_status_basic_chain(self, mock_engine_osclients,
                                      mock_utils_osclients, mock_scenario_run):
         fake_task = mock.MagicMock()
-        tester = engine.TestEngine(self.valid_test_config_continuous_times,
-                                   fake_task)
+        benchmark_engine = engine.BenchmarkEngine(
+            self.valid_test_config_continuous_times, fake_task)
         mock_engine_osclients.Clients.return_value = fakes.FakeClients()
         mock_utils_osclients.Clients.return_value = fakes.FakeClients()
         mock_scenario_run.return_value = {}
-        with tester.bind(self.valid_endpoints):
-            tester.run()
+        with benchmark_engine.bind(self.valid_endpoints):
+            benchmark_engine.run()
 
         benchmark_name = 'NovaServers.boot_and_delete_server'
         benchmark_results = {
@@ -173,15 +173,15 @@ class TestEngineTestCase(test.TestCase):
                                                       mock_utils_osclients,
                                                       mock_scenario_run):
         fake_task = mock.MagicMock()
-        tester = engine.TestEngine(self.valid_test_config_continuous_times,
-                                   fake_task)
+        benchmark_engine = engine.BenchmarkEngine(
+            self.valid_test_config_continuous_times, fake_task)
         mock_engine_osclients.Clients.return_value = fakes.FakeClients()
         mock_utils_osclients.Clients.return_value = fakes.FakeClients()
         validation_exc = exceptions.InvalidScenarioArgument()
         mock_scenario_run.side_effect = validation_exc
 
-        with tester.bind(self.valid_endpoints):
-            tester.run()
+        with benchmark_engine.bind(self.valid_endpoints):
+            benchmark_engine.run()
 
         benchmark_name = 'NovaServers.boot_and_delete_server'
         benchmark_results = {
@@ -210,14 +210,14 @@ class TestEngineTestCase(test.TestCase):
     def test_task_status_failed(self, mock_engine_osclients,
                                 mock_utils_osclients, mock_scenario_run):
         fake_task = mock.MagicMock()
-        tester = engine.TestEngine(self.valid_test_config_continuous_times,
-                                   fake_task)
+        benchmark_engine = engine.BenchmarkEngine(
+            self.valid_test_config_continuous_times, fake_task)
         mock_engine_osclients.Clients.return_value = fakes.FakeClients()
         mock_utils_osclients.Clients.return_value = fakes.FakeClients()
         mock_scenario_run.side_effect = exceptions.TestException()
         try:
-            with tester.bind(self.valid_endpoints):
-                tester.run()
+            with benchmark_engine.bind(self.valid_endpoints):
+                benchmark_engine.run()
         except exceptions.TestException:
             pass
 
