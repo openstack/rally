@@ -19,6 +19,7 @@ from __future__ import print_function
 
 import collections
 import json
+import math
 import pprint
 import prettytable
 import sys
@@ -96,10 +97,19 @@ class TaskCommands(object):
                 times_by_action[at['action']].append(at['duration'])
             if times_by_action:
                 atomic_action_table = prettytable.PrettyTable(
-                    ['action', 'max (sec)', 'avg (sec)', 'min (sec)'])
+                                                            ['action',
+                                                             'max (sec)',
+                                                             'avg (sec)',
+                                                             'min (sec)',
+                                                             '90 percentile',
+                                                             '95 percentile'])
                 for k, v in times_by_action.iteritems():
-                    atomic_action_table.add_row([k, max(v), sum(v) / len(v),
-                                                 min(v)])
+                    atomic_action_table.add_row([k,
+                                                max(v),
+                                                sum(v) / len(v),
+                                                min(v),
+                                                percentile(v, 0.90),
+                                                percentile(v, 0.95)])
                 print(atomic_action_table)
                 print()
 
@@ -140,14 +150,23 @@ class TaskCommands(object):
             raw = result["data"]["raw"]
             times = map(lambda x: x['time'],
                         filter(lambda r: not r['error'], raw))
-            table = prettytable.PrettyTable(["max (sec)", "avg (sec)",
-                                             "min (sec)", "success/total",
+            table = prettytable.PrettyTable(["max (sec)",
+                                             "avg (sec)",
+                                             "min (sec)",
+                                             "90 pecentile",
+                                             "95 percentile",
+                                             "success/total",
                                              "total times"])
             if times:
-                table.add_row([max(times), sum(times) / len(times), min(times),
-                               float(len(times)) / len(raw), len(raw)])
+                table.add_row([max(times),
+                               sum(times) / len(times),
+                               min(times),
+                               percentile(times, 0.90),
+                               percentile(times, 0.95),
+                               float(len(times)) / len(raw),
+                               len(raw)])
             else:
-                table.add_row(['n/a', 'n/a', 'n/a', 0, len(raw)])
+                table.add_row(['n/a', 'n/a', 'n/a', 'n/a', 'n/a', 0, len(raw)])
             print(table)
 
             #NOTE(hughsaunders): ssrs=scenario specific results
@@ -164,8 +183,12 @@ class TaskCommands(object):
                 for ssr in ssrs:
                     keys.update(ssr.keys())
 
-                ssr_table = prettytable.PrettyTable(
-                    ["Key", "max", "avg", "min"])
+                ssr_table = prettytable.PrettyTable(["Key",
+                                                     "max",
+                                                     "avg",
+                                                     "min",
+                                                     "90 pecentile",
+                                                     "95 pecentile"])
                 for key in keys:
                     values = [float(ssr[key]) for ssr in ssrs if key in ssr]
 
@@ -173,9 +196,11 @@ class TaskCommands(object):
                         row = [str(key),
                                max(values),
                                sum(values) / len(values),
-                               min(values)]
+                               min(values),
+                               percentile(values, 0.90),
+                               percentile(values, 0.95)]
                     else:
-                        row = [str(key)] + ['n/a'] * 3
+                        row = [str(key)] + ['n/a'] * 5
                     ssr_table.add_row(row)
                 print("\nScenario Specific Results\n")
                 print(ssr_table)
@@ -238,3 +263,24 @@ class TaskCommands(object):
             processing.PLOTS[plot_type](task_id, aggregated_field)
         else:
             print("Plot type '%s' not supported." % plot_type)
+
+
+def percentile(N, percent):
+    """Find the percentile of a list of values.
+
+    @parameter N - is a list of values.
+    @parameter percent - a float value from 0.0 to 1.0.
+
+    @return - the percentile of the values
+    """
+    if not N:
+        return None
+    N.sort()
+    k = (len(N) - 1) * percent
+    f = math.floor(k)
+    c = math.ceil(k)
+    if f == c:
+        return N[int(k)]
+    d0 = N[int(f)] * (c - k)
+    d1 = N[int(c)] * (k - f)
+    return (d0 + d1)

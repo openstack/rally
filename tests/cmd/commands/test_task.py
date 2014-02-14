@@ -119,3 +119,8 @@ class TaskCommandsTestCase(test.BaseTestCase):
         with mock.patch("rally.cmd.commands.task.processing.PLOTS", new=PLOTS):
             self.task.plot("aggregated", "concurrent", test_uuid)
         mock_plot.assert_called_once_with(test_uuid, "concurrent")
+
+    def test_percentile(self):
+        l = range(1, 101)
+        result = task.percentile(l, 0.1)
+        self.assertTrue(result == 10.9)
