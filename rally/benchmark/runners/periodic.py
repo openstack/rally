@@ -48,7 +48,7 @@ class PeriodicScenarioRunner(runner.ScenarioRunner):
 
         for i in range(times):
             thread = multiprocessing_pool.ThreadPool(processes=1)
-            async_result = thread.apply_async(runner._run_scenario_loop,
+            async_result = thread.apply_async(runner._run_scenario_once,
                                               ((i, cls, method_name, args),))
             async_results.append(async_result)
 

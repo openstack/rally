@@ -31,11 +31,11 @@ class PeriodicScenarioRunnerTestCase(test.TestCase):
         endpoint_dicts[0]["permission"] = consts.EndpointPermission.ADMIN
         self.fake_endpoints = endpoint_dicts
 
-    @mock.patch("rally.benchmark.runner._run_scenario_loop")
+    @mock.patch("rally.benchmark.runner._run_scenario_once")
     @mock.patch("rally.benchmark.runners.periodic.time.sleep")
     @mock.patch("rally.benchmark.utils.osclients")
     def test_run_scenario(self, mock_osclients, mock_sleep,
-                          mock_run_scenario_loop):
+                          mock_run_scenario_once):
         mock_osclients.Clients.return_value = fakes.FakeClients()
         srunner = periodic.PeriodicScenarioRunner(mock.MagicMock(),
                                                   self.fake_endpoints)
@@ -47,7 +47,7 @@ class PeriodicScenarioRunnerTestCase(test.TestCase):
 
         expected = [mock.call((i, fakes.FakeScenario, "do_it", {}))
                     for i in xrange(times)]
-        self.assertEqual(mock_run_scenario_loop.mock_calls, expected)
+        self.assertEqual(mock_run_scenario_once.mock_calls, expected)
 
         expected = [mock.call(period * 60) for i in xrange(times - 1)]
         mock_sleep.has_calls(expected)

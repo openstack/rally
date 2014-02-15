@@ -35,7 +35,7 @@ __openstack_clients__ = {}
 __admin_clients__ = []
 
 
-def _run_scenario_loop(args):
+def _run_scenario_once(args):
     i, cls, method_name, kwargs = args
 
     LOG.info("ITER: %s" % i)

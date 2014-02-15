@@ -49,7 +49,7 @@ class ContinuousScenarioRunnerTestCase(test.TestCase):
                                                      times, active_users,
                                                      timeout)
         mock_multi.Pool.assert_called_once_with(active_users)
-        expected_pool_calls = [mock.call.imap(runner._run_scenario_loop,
+        expected_pool_calls = [mock.call.imap(runner._run_scenario_once,
                                [(i, fakes.FakeScenario, "do_it", {})
                                 for i in xrange(times)])]
         expected_pool_calls.extend([mock.call.imap().next(timeout)
@@ -79,7 +79,7 @@ class ContinuousScenarioRunnerTestCase(test.TestCase):
                                                         active_users, timeout)
         expect = [
             mock.call(active_users),
-            mock.call().imap(runner._run_scenario_loop, {}),
+            mock.call().imap(runner._run_scenario_once, {}),
             mock.call().terminate(),
             mock.call().join()
         ]
