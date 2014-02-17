@@ -299,10 +299,13 @@ class LxcProvider(provider.ProviderFactory):
             message = _("Network size is not enough for %d hosts.")
             raise exceptions.InvalidConfigException(message % num_containers)
 
+    def get_host_provider(self):
+        return provider.ProviderFactory.get_provider(
+            self.config['host_provider'], self.deployment)
+
     @utils.log_deploy_wrapper(LOG.info, _("Create containers on host"))
     def create_servers(self):
-        host_provider = provider.ProviderFactory.get_provider(
-            self.config['host_provider'], self.deployment)
+        host_provider = self.get_host_provider()
         name_prefix = self.config['container_name_prefix']
         hosts = []
         if 'start_lxc_network' in self.config:
@@ -353,3 +356,5 @@ class LxcProvider(provider.ProviderFactory):
             lxc_host.destroy_ports(resource['info']['forwarded_ports'])
             lxc_host.delete_tunnels()
             self.resources.delete(resource['id'])
+        host_provider = self.get_host_provider()
+        host_provider.destroy_servers()
