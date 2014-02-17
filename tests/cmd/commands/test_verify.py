@@ -60,4 +60,4 @@ class VerifyCommandsTestCase(test.BaseTestCase):
         mock_get.assert_called_once_with(deploy_id)
         mock_verify.assert_called_once_with(deploy_id, self.image1.id,
                                             self.image2.id, self.flavor2.id,
-                                            self.flavor1.id)
+                                            self.flavor1.id, 'smoke', None)

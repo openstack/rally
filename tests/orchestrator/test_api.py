@@ -200,7 +200,7 @@ class APITestCase(test.TestCase):
         self.tempest.is_installed.return_value = True
         mock_get.return_value = self.deployment
         api.verify(self.deploy_uuid, 'image_id', 'alt_image_id', 'flavor_id',
-                   'alt_flavor_id')
+                   'alt_flavor_id', 'smoke', None)
 
         self.tempest.is_installed.assert_called_once_with()
         mock_get.assert_called_once_with(self.deploy_uuid)
@@ -212,4 +212,6 @@ class APITestCase(test.TestCase):
             username='admin',
             password='myadminpass',
             tenant_name='demo',
-            uri='http://example.net:5000/v2.0/')
+            uri='http://example.net:5000/v2.0/',
+            set_name='smoke',
+            regex=None)

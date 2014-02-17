@@ -56,15 +56,23 @@ class Tempest(object):
                  tempest_path])
             print('Tempest has been successfully installed!')
 
-    def _run(self, config_path):
+    def _run(self, config_path, set_name, regex):
         tempest_path = self._define_path()
         run_script = '%srun_tempest.sh' % tempest_path
-        #Run only smoke tests
+        if set_name == 'full':
+            set_path = ''
+        elif set_name == 'smoke':
+            set_path = '-s'
+        else:
+            set_path = 'tempest.api.%s' % set_name
+        regex = regex if regex else ''
         try:
             subprocess.check_call(
-                ['/usr/bin/env', 'bash', run_script, '-C', config_path, '-s'])
+                ['/usr/bin/env', 'bash', run_script, '-C', config_path,
+                 set_path, regex])
         except subprocess.CalledProcessError:
-            print('Tests have been finished with error. Check log for details')
+            print('Test set %s has been finished with error. '
+                  'Check log for details' % set_name)
         finally:
             shutil.rmtree(self.lock_path)
             os.unlink(config_path)
@@ -74,4 +82,4 @@ class Tempest(object):
     def verify(self, **kwargs):
         conf = self._generate_config(**kwargs)
         config_path = self._write_config(conf)
-        self._run(config_path)
+        self._run(config_path, kwargs['set_name'], kwargs['regex'])

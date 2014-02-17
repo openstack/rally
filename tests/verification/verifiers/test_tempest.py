@@ -37,7 +37,9 @@ class TempestTestCase(test.TestCase):
                           'username': 'fake_username',
                           'tenant_name': 'fake_tenant_name',
                           'uri': 'fake_uri',
-                          'lock_path': self.verifier.lock_path}
+                          'lock_path': self.verifier.lock_path,
+                          'set_name': 'smoke',
+                          'regex': None}
         self.tempest_dir = 'rally/verification/verifiers/tempest/'
 
     def test__generate_config(self):
@@ -102,12 +104,12 @@ class TempestTestCase(test.TestCase):
     def test__run(self, mock_path, mock_sp, mock_unlink, mock_rmtree):
         mock_path.return_value = 'fake_tempest_path/'
 
-        self.verifier._run('fake_conf_path')
+        self.verifier._run('fake_conf_path', 'smoke', None)
 
         mock_unlink.assert_called_once_with('fake_conf_path')
         mock_sp.check_call.assert_called_once_with(
             ['/usr/bin/env', 'bash', 'fake_tempest_path/run_tempest.sh', '-C',
-             'fake_conf_path', '-s'])
+             'fake_conf_path', '-s', ''])
 
     @mock.patch('rally.verification.verifiers.tempest.tempest.Tempest._run')
     @mock.patch(TEMPEST_PATH + '.Tempest._write_config')
@@ -116,8 +118,8 @@ class TempestTestCase(test.TestCase):
         mock_gen.return_value = 'fake_conf'
         mock_write.return_value = 'fake_conf_path'
 
-        self.verifier.verify(kwargs='fake_kwargs')
+        self.verifier.verify(**self.conf_args)
 
-        mock_gen.assert_called_once_with(kwargs='fake_kwargs')
+        mock_gen.assert_called_once_with(**self.conf_args)
         mock_write.assert_called_once_with('fake_conf')
-        mock_run.assert_called_once_with('fake_conf_path')
+        mock_run.assert_called_once_with('fake_conf_path', 'smoke', None)

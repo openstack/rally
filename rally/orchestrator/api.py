@@ -119,7 +119,8 @@ def delete_task(task_uuid, force=False):
     objects.Task.delete_by_uuid(task_uuid, status=status)
 
 
-def verify(deploy_id, image_id, alt_image_id, flavor_id, alt_flavor_id):
+def verify(deploy_id, image_id, alt_image_id, flavor_id, alt_flavor_id,
+           set_name, regex):
     """Start verifying.
 
     :param deploy_id: a UUID of a deployment.
@@ -127,6 +128,7 @@ def verify(deploy_id, image_id, alt_image_id, flavor_id, alt_flavor_id):
     :param alt_image_id: Valid secondary image reference to be used in tests.
     :param flavor_id: Valid primary flavor to use in tests.
     :param alt_flavor_id: Valid secondary flavor to be used in tests.
+    :param set_name: Valid name of tempest test set.
     """
     verifier = tempest.Tempest()
     if not verifier.is_installed():
@@ -144,4 +146,6 @@ def verify(deploy_id, image_id, alt_image_id, flavor_id, alt_flavor_id):
                     username=endpoint['username'],
                     password=endpoint['password'],
                     tenant_name=endpoint['tenant_name'],
-                    uri=endpoint['auth_url'])
+                    uri=endpoint['auth_url'],
+                    set_name=set_name,
+                    regex=regex)

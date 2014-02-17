@@ -23,16 +23,44 @@ from rally.orchestrator import api
 from rally import osclients
 
 
+TEMPEST_TEST_SETS = ('full',
+                     'smoke',
+                     'baremetal',
+                     'compute',
+                     'data_processing',
+                     'identity',
+                     'image',
+                     'network',
+                     'object_storage',
+                     'orchestration',
+                     'telemetry',
+                     'volume')
+
+
 class VerifyCommands(object):
 
     @cliutils.args('--deploy-id', dest='deploy_id', type=str, required=False,
                    help='UUID of a deployment.')
+    @cliutils.args('--set', dest='set_name', type=str, required=False,
+                   help='Name of tempest test set. '
+                        'Available sets: %s' % ', '.join(TEMPEST_TEST_SETS))
+    @cliutils.args('--regex', dest='regex', type=str, required=False,
+                   help='Regular expression of test.')
     @envutils.deploy_id_default
-    def start(self, deploy_id=None):
+    def start(self, deploy_id=None, set_name='smoke', regex=None):
         """Start running tempest tests against a live cloud cluster.
 
         :param deploy_id: a UUID of a deployment
+        :param set_name: Name of tempest test set
+        :param regex: Regular expression of test
         """
+        if regex:
+            set_name = 'full'
+        if set_name not in TEMPEST_TEST_SETS:
+            print('Sorry, but there are no desired tempest test set. '
+                  'Please choose from: %s' % ', '.join(TEMPEST_TEST_SETS))
+            return
+
         endpoints = db.deployment_get(deploy_id)['endpoints']
         endpoint_dict = endpoints[0]
         clients = osclients.Clients(endpoint.Endpoint(**endpoint_dict))
@@ -69,4 +97,5 @@ class VerifyCommands(object):
 
         #TODO(miarmak): Add getting network and router id's from neutronclient
 
-        api.verify(deploy_id, image_id, alt_image_id, flavor_id, alt_flavor_id)
+        api.verify(deploy_id, image_id, alt_image_id, flavor_id, alt_flavor_id,
+                   set_name, regex)
