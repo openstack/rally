@@ -27,6 +27,7 @@ from rally.cmd.commands import use as _use
 from rally.cmd import envutils
 from rally import db
 from rally import exceptions
+from rally.openstack.common.gettextutils import _
 from rally.orchestrator import api
 from rally import osclients
 
