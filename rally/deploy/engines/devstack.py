@@ -72,9 +72,6 @@ class DevstackEngine(engine.EngineFactory):
 
     def __init__(self, deployment):
         super(DevstackEngine, self).__init__(deployment)
-        self._vms = []
-        self._vm_provider = provider.ProviderFactory.get_provider(
-            self.config['provider'], deployment)
         self.localrc = {
             'DATABASE_PASSWORD': 'rally',
             'RABBIT_PASSWORD': 'rally',
@@ -97,7 +94,7 @@ class DevstackEngine(engine.EngineFactory):
 
     @utils.log_deploy_wrapper(LOG.info, _("Deploy devstack"))
     def deploy(self):
-        self.servers = self._vm_provider.create_servers()
+        self.servers = self.get_provider().create_servers()
         devstack_repo = self.config.get('devstack_repo', DEVSTACK_REPO)
         devstack_branch = self.config.get('devstack_branch', DEVSTACK_BRANCH)
         localrc = ''
@@ -127,4 +124,3 @@ class DevstackEngine(engine.EngineFactory):
             devstack_server = get_updated_server(server, user=DEVSTACK_USER)
             devstack_server.ssh.run('~/devstack/unstack.sh')
             self.deployment.delete_resource(resource.id)
-        self._vm_provider.destroy_servers()

@@ -20,6 +20,7 @@ from rally import consts
 from rally import exceptions
 from rally.openstack.common.gettextutils import _
 from rally.openstack.common import log as logging
+from rally.serverprovider import provider
 from rally import utils
 
 
@@ -72,6 +73,11 @@ class EngineFactory(object):
         if hasattr(self, 'CONFIG_SCHEMA'):
             jsonschema.validate(self.config, self.CONFIG_SCHEMA)
 
+    def get_provider(self):
+        if 'provider' in self.config:
+            return provider.ProviderFactory.get_provider(
+                self.config['provider'], self.deployment)
+
     @staticmethod
     def get_engine(name, deployment):
         """Returns instance of a deploy engine with corresponding name."""
@@ -110,6 +116,9 @@ class EngineFactory(object):
     def make_cleanup(self):
         self.deployment.update_status(consts.DeployStatus.CLEANUP_STARTED)
         self.cleanup()
+        provider = self.get_provider()
+        if provider:
+            provider.destroy_servers()
         self.deployment.update_status(consts.DeployStatus.CLEANUP_FINISHED)
 
     def __enter__(self):

@@ -70,19 +70,20 @@ class DevstackEngineTestCase(test.BaseTestCase):
                                           'devstack/install.sh'))
         self.assertEqual([mock.call(filename, 'rb')], m_open.mock_calls)
 
+    @mock.patch('rally.deploy.engine.EngineFactory.get_provider')
     @mock.patch('rally.deploy.engines.devstack.get_updated_server')
     @mock.patch('rally.deploy.engines.devstack.get_script')
     @mock.patch('rally.serverprovider.provider.Server')
     @mock.patch('rally.deploy.engines.devstack.objects.Endpoint')
-    def test_deploy(self, m_endpoint, m_server, m_gs, m_gus):
+    def test_deploy(self, m_endpoint, m_server, m_gs, m_gus, m_gp):
+        m_gp.return_value = fake_provider = mock.Mock()
         server = mock.Mock()
         server.host = 'host'
         m_endpoint.return_value = 'fake_endpoint'
         m_gus.return_value = ds_server = mock.Mock()
         m_gs.return_value = 'fake_script'
         server.get_credentials.return_value = 'fake_credentials'
-        self.engine._vm_provider = mock.Mock()
-        self.engine._vm_provider.create_servers.return_value = [server]
+        fake_provider.create_servers.return_value = [server]
         with mock.patch.object(self.engine, 'deployment') as m_d:
             endpoints = self.engine.deploy()
         self.assertEqual(['fake_endpoint'], endpoints)
