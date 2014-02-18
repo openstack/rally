@@ -98,27 +98,23 @@ def infinite_run_args(args):
         i += 1
 
 
-def create_openstack_clients(users_endpoints, keys):
-    # NOTE(msdubov): Creating here separate openstack clients for each of
-    #                the temporary users involved in benchmarking.
-    client_managers = [osclients.Clients(*[credentials[k] for k in keys])
-                       for credentials in users_endpoints]
+def create_openstack_clients(endpoint):
 
-    clients = [
-        dict((
-            ("nova", cl.get_nova_client()),
-            ("keystone", cl.get_keystone_client()),
-            ("glance", cl.get_glance_client()),
-            ("cinder", cl.get_cinder_client()),
-            ("endpoint", cl.get_endpoint())
-        )) for cl in client_managers
-    ]
+    client_manager = osclients.Clients(endpoint)
+
+    clients = {
+        "nova": client_manager.get_nova_client(),
+        "keystone": client_manager.get_keystone_client(),
+        "glance": client_manager.get_glance_client(),
+        "cinder": client_manager.get_cinder_client(),
+        "endpoint": client_manager.endpoint
+    }
 
     _prepare_for_instance_ssh(clients)
     return clients
 
 
-def _prepare_for_instance_ssh(clients):
+def _prepare_for_instance_ssh(client_dict):
     """Generate and store SSH keys, allow access to port 22.
 
     In order to run tests on instances it is necessary to have SSH access.
@@ -129,51 +125,50 @@ def _prepare_for_instance_ssh(clients):
     A security group rule is created to allow access to instances on port 22.
     """
 
-    for client_dict in clients:
-        nova_client = client_dict['nova']
+    nova_client = client_dict['nova']
 
-        if ('rally_ssh_key' not in
-                [k.name for k in nova_client.keypairs.list()]):
-            keypair = nova_client.keypairs.create('rally_ssh_key')
-            client_dict['ssh_key_pair'] = dict(private=keypair.private_key,
-                                               public=keypair.public_key)
+    if ('rally_ssh_key' not in
+            [k.name for k in nova_client.keypairs.list()]):
+        keypair = nova_client.keypairs.create('rally_ssh_key')
+        client_dict['ssh_key_pair'] = dict(private=keypair.private_key,
+                                           public=keypair.public_key)
 
-        if 'rally_open' not in [sg.name for sg in
-                                nova_client.security_groups.list()]:
-            rally_open = nova_client.security_groups.create(
-                'rally_open',
-                'Allow all access to VMs for benchmarking'
-            )
-        rally_open = nova_client.security_groups.find(name='rally_open')
+    if 'rally_open' not in [sg.name for sg in
+                            nova_client.security_groups.list()]:
+        rally_open = nova_client.security_groups.create(
+            'rally_open',
+            'Allow all access to VMs for benchmarking'
+        )
+    rally_open = nova_client.security_groups.find(name='rally_open')
 
-        rules_to_add = [dict(ip_protocol='tcp',
-                             to_port=65535,
-                             from_port=1,
-                             ip_range=dict(cidr='0.0.0.0/0')),
-                        dict(ip_protocol='udp',
-                             to_port=65535,
-                             from_port=1,
-                             ip_range=dict(cidr='0.0.0.0/0')),
-                        dict(ip_protocol='icmp',
-                             to_port=-1,
-                             from_port=-1,
-                             ip_range=dict(cidr='0.0.0.0/0'))
-                        ]
+    rules_to_add = [dict(ip_protocol='tcp',
+                         to_port=65535,
+                         from_port=1,
+                         ip_range=dict(cidr='0.0.0.0/0')),
+                    dict(ip_protocol='udp',
+                         to_port=65535,
+                         from_port=1,
+                         ip_range=dict(cidr='0.0.0.0/0')),
+                    dict(ip_protocol='icmp',
+                         to_port=-1,
+                         from_port=-1,
+                         ip_range=dict(cidr='0.0.0.0/0'))
+                    ]
 
-        def rule_match(criteria, existing_rule):
-            return all(existing_rule[key] == value
-                       for key, value in criteria.iteritems())
+    def rule_match(criteria, existing_rule):
+        return all(existing_rule[key] == value
+                   for key, value in criteria.iteritems())
 
-        for new_rule in rules_to_add:
-            if not any(rule_match(new_rule, existing_rule) for existing_rule
-                       in rally_open.rules):
-                nova_client.security_group_rules.create(
-                            rally_open.id,
-                            from_port=new_rule['from_port'],
-                            to_port=new_rule['to_port'],
-                            ip_protocol=new_rule['ip_protocol'],
-                            cidr=new_rule['ip_range']['cidr'])
-    return clients
+    for new_rule in rules_to_add:
+        if not any(rule_match(new_rule, existing_rule) for existing_rule
+                   in rally_open.rules):
+            nova_client.security_group_rules.create(
+                        rally_open.id,
+                        from_port=new_rule['from_port'],
+                        to_port=new_rule['to_port'],
+                        ip_protocol=new_rule['ip_protocol'],
+                        cidr=new_rule['ip_range']['cidr'])
+    return client_dict
 
 
 def delete_servers(nova):

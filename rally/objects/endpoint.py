@@ -13,17 +13,22 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from rally import consts
+
 
 class Endpoint(object):
 
-    def __init__(self, auth_url, username, password, tenant_name, permission):
+    def __init__(self, auth_url, username, password, tenant_name,
+                 permission=consts.EndpointPermission.USER):
         self.auth_url = auth_url
         self.username = username
         self.password = password
         self.tenant_name = tenant_name
         self.permission = permission
 
-    def to_dict(self):
-        return {"auth_url": self.auth_url, "username": self.username,
-                "password": self.password, "tenant_name": self.tenant_name,
-                "permission": self.permission}
+    def to_dict(self, include_permission=False):
+        dct = {"auth_url": self.auth_url, "username": self.username,
+               "password": self.password, "tenant_name": self.tenant_name}
+        if include_permission:
+            dct["permission"] = self.permission
+        return dct

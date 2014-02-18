@@ -219,10 +219,6 @@ class UserGeneratorTestCase(test.TestCase):
             endpoints = generator.create_users_and_tenants(tenants,
                                                            users_per_tenant)
             self.assertEqual(len(endpoints), tenants * users_per_tenant)
-            endpoint_keys = set(["username", "password", "tenant_name",
-                                 "auth_url"])
-            for endpoint in endpoints:
-                self.assertTrue(endpoint_keys.issubset(endpoint.keys()))
             created_users = generator.users
             created_tenants = generator.tenants
         self.assertTrue(all(u.status == "DELETED" for u in created_users))
@@ -240,13 +236,13 @@ class ResourceCleanerTestCase(test.TestCase):
         mock_cms = [fakes.FakeClients(), fakes.FakeClients(),
                     fakes.FakeClients()]
         clients = [
-            dict((
-                ("nova", cl.get_nova_client()),
-                ("keystone", cl.get_keystone_client()),
-                ("glance", cl.get_glance_client()),
-                ("cinder", cl.get_cinder_client()),
-                ("endpoint", cl.get_endpoint())
-            )) for cl in mock_cms
+            {
+                "nova": cl.get_nova_client(),
+                "keystone": cl.get_keystone_client(),
+                "glance": cl.get_glance_client(),
+                "cinder": cl.get_cinder_client(),
+                "endpoint": cl.endpoint
+            } for cl in mock_cms
         ]
 
         for index in range(len(clients)):

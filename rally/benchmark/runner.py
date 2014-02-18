@@ -23,7 +23,9 @@ from oslo.config import cfg
 
 from rally.benchmark import base
 from rally.benchmark import utils
+from rally import consts
 from rally import exceptions
+from rally.objects import endpoint
 from rally.openstack.common.gettextutils import _
 from rally.openstack.common import log as logging
 from rally import utils as rutils
@@ -97,10 +99,9 @@ class UserGenerator(object):
             for user_id in range(users_per_tenant):
                 user = self._create_user(user_id, tenant.id)
                 self.users.append(user)
-                endpoints.append({'auth_url': auth_url,
-                                  'username': user.name,
-                                  'password': "password",
-                                  'tenant_name': tenant.name})
+                endpoints.append(endpoint.Endpoint(
+                    auth_url, user.name, "password", tenant.name,
+                    consts.EndpointPermission.USER))
         return endpoints
 
     def _delete_users_and_tenants(self):
@@ -206,9 +207,7 @@ class ScenarioRunner(object):
         self.admin_endpoint = endpoints[0]
 
         global __admin_clients__
-        keys = ['username', 'password', 'tenant_name', 'auth_url']
-        __admin_clients__ = utils.create_openstack_clients(
-                                                [self.admin_endpoint], keys)[0]
+        __admin_clients__ = utils.create_openstack_clients(self.admin_endpoint)
 
     @staticmethod
     def get_runner(task, endpoint, config):
@@ -260,9 +259,8 @@ class ScenarioRunner(object):
             users_per_tenant = config.get("users_per_tenant", 1)
             temp_users = generator.create_users_and_tenants(tenants,
                                                             users_per_tenant)
-            keys = ["username", "password", "tenant_name", "auth_url"]
-            __openstack_clients__ = utils.create_openstack_clients(temp_users,
-                                                                   keys)
+            __openstack_clients__ = [utils.create_openstack_clients(temp_user)
+                                     for temp_user in temp_users]
             with ResourceCleaner(admin=__admin_clients__,
                                  users=__openstack_clients__):
                 return self._prepare_and_run_scenario(name, kwargs)

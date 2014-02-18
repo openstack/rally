@@ -21,11 +21,6 @@ class Authenticate(base.Scenario):
     types of clients like Keystone.
     """
     def keystone(self, **kwargs):
-        keystone_cl = self.clients("endpoint")
-        cl_username = keystone_cl["username"]
-        cl_password = keystone_cl["password"]
-        cl_tenant = keystone_cl["tenant_name"]
-        cl_auth_url = keystone_cl["auth_url"]
-        cl = osclients.Clients(cl_username, cl_password, cl_tenant,
-                               cl_auth_url)
+        keystone_endpoint = self.clients("endpoint")
+        cl = osclients.Clients(keystone_endpoint)
         cl.get_keystone_client()

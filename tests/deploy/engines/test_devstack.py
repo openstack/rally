@@ -17,7 +17,6 @@ import jsonschema
 import mock
 import uuid
 
-from rally import consts
 from rally.deploy.engines import devstack
 from rally.openstack.common import test
 
@@ -89,8 +88,7 @@ class DevstackEngineTestCase(test.BaseTestCase):
             'auth_url': 'http://fakehost:5000/v2.0/',
             'username': 'admin',
             'password': 'secret',
-            'tenant_name': 'admin',
-            'permission': consts.EndpointPermission.ADMIN
+            'tenant_name': 'admin'
         })
 
     @mock.patch('rally.deploy.engines.devstack.StringIO.StringIO')

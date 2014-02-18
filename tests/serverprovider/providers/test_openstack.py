@@ -93,10 +93,6 @@ class OpenStackProviderTestCase(test.TestCase):
         with mock.patch(mod + "osclients") as os_cli:
             os_cli.Clients = mock.MagicMock(return_value=FakeOSClients())
             os_provider = OSProvider(mock.MagicMock(), cfg)
-        expected_calls = [
-            mock.call.Clients(cfg['user'], cfg['password'],
-                              cfg['tenant'], cfg['auth_url'])]
-        self.assertEqual(expected_calls, os_cli.mock_calls)
         self.assertEqual('nova', os_provider.nova)
         self.assertEqual('glance', os_provider.glance)
 

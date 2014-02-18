@@ -21,7 +21,7 @@ class EndpointTestCase(test.TestCase):
 
     def test_endpoint(self):
         endpoint = objects.Endpoint("url", "user", "pwd", "tenant", "admin")
-        self.assertEqual(endpoint.to_dict(),
+        self.assertEqual(endpoint.to_dict(include_permission=True),
                          {"auth_url": "url", "username": "user",
                           "password": "pwd", "tenant_name": "tenant",
                           "permission": "admin"})

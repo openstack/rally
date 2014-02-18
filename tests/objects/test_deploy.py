@@ -124,7 +124,7 @@ class DeploymentTestCase(test.TestCase):
         deploy.update_endpoints(endpoints)
         mock_update.assert_called_once_with(
             self.deployment["uuid"],
-            {"endpoints": [endpoints[0].to_dict()]})
+            {"endpoints": [endpoints[0].to_dict(include_permission=True)]})
 
     @mock.patch('rally.objects.deploy.db.resource_create')
     def test_add_resource(self, mock_create):

@@ -52,7 +52,8 @@ class Deployment(object):
         self._update({'config': config})
 
     def update_endpoints(self, endpoints):
-        self._update({'endpoints': [e.to_dict() for e in endpoints]})
+        self._update({'endpoints': [e.to_dict(include_permission=True)
+                                    for e in endpoints]})
 
     def set_started(self):
         self._update({'started_at': datetime.datetime.now(),

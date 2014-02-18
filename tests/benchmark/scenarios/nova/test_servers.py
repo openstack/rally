@@ -18,6 +18,7 @@ import mock
 from rally.benchmark.scenarios.nova import servers
 from rally.benchmark import utils as butils
 from rally import exceptions as rally_exceptions
+from rally.objects import endpoint
 from tests import fakes
 from tests import test
 
@@ -251,10 +252,8 @@ class NovaServersTestCase(test.TestCase):
         nova = fakes.FakeNovaClient()
         fc.get_nova_client = lambda: nova
 
-        temp_keys = ["username", "password", "tenant_name", "auth_url"]
-        users_endpoints = [dict(zip(temp_keys, temp_keys))]
-        clients = butils.create_openstack_clients(users_endpoints,
-                                                  temp_keys)[0]
+        user_endpoint = endpoint.Endpoint("url", "user", "password", "tenant")
+        clients = butils.create_openstack_clients(user_endpoint)
         scenario = servers.NovaServers(clients=clients)
 
         scenario._boot_server = mock.MagicMock(return_value=fake_server)

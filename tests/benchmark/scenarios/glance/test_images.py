@@ -18,6 +18,7 @@ import mock
 from rally.benchmark.scenarios.glance import images
 from rally.benchmark.scenarios.nova import servers
 from rally.benchmark import utils as butils
+from rally.objects import endpoint
 from tests import fakes
 from tests import test
 
@@ -59,10 +60,8 @@ class GlanceImagesTestCase(test.TestCase):
         fc.get_glance_client = lambda: fake_glance
         fake_nova = fakes.FakeNovaClient()
         fc.get_nova_client = lambda: fake_nova
-        temp_keys = ["username", "password", "tenant_name", "uri"]
-        users_endpoints = [dict(zip(temp_keys, temp_keys))]
-        nova_scenario._clients = butils.create_openstack_clients(
-            users_endpoints, temp_keys)[0]
+        user_endpoint = endpoint.Endpoint("url", "user", "password", "tenant")
+        nova_scenario._clients = butils.create_openstack_clients(user_endpoint)
         fake_image = fakes.FakeImage()
         fake_servers = [object() for i in range(5)]
         mock_create_image.return_value = fake_image

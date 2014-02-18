@@ -119,8 +119,9 @@ class BenchmarkEngineTestCase(test.TestCase):
         benchmark_engine = engine.BenchmarkEngine(
             self.valid_test_config_continuous_times, mock.MagicMock())
         with benchmark_engine.bind(self.valid_endpoints):
-            self.assertEqual(benchmark_engine.endpoints,
-                             self.valid_endpoints)
+            endpoint_dicts = [endpoint.to_dict(include_permission=True)
+                              for endpoint in benchmark_engine.endpoints]
+            self.assertEqual(endpoint_dicts, self.valid_endpoints)
 
     @mock.patch("rally.benchmark.runner.ScenarioRunner.run")
     @mock.patch("rally.benchmark.utils.osclients")

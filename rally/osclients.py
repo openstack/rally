@@ -40,9 +40,8 @@ CONF.register_opts([
 class Clients(object):
     """This class simplify and unify work with openstack python clients."""
 
-    def __init__(self, username, password, tenant_name, auth_url):
-        self.kw = {'username': username, 'password': password,
-                   'tenant_name': tenant_name, 'auth_url': auth_url}
+    def __init__(self, endpoint):
+        self.endpoint = endpoint
         self.cache = {}
 
     def get_keystone_client(self):
@@ -50,10 +49,12 @@ class Clients(object):
         if "keystone" in self.cache:
             return self.cache["keystone"]
 
-        new_kw = {"endpoint": self._change_port(self.kw["auth_url"], "35357"),
-                  "timeout": CONF.openstack_client_http_timeout,
-                  "insecure": CONF.https_insecure, "cacert": CONF.https_cacert}
-        kw = dict(self.kw.items() + new_kw.items())
+        new_kw = {
+            "endpoint": self._change_port(self.endpoint.auth_url, "35357"),
+            "timeout": CONF.openstack_client_http_timeout,
+            "insecure": CONF.https_insecure, "cacert": CONF.https_cacert
+        }
+        kw = dict(self.endpoint.to_dict().items() + new_kw.items())
         client = keystone.Client(**kw)
         client.authenticate()
 
@@ -71,12 +72,12 @@ class Clients(object):
             roles = client.auth_ref['user']['roles']
             if not any('admin' == role['name'] for role in roles):
                 raise exceptions.InvalidAdminException(
-                    username=self.kw['username'])
+                    username=self.endpoint.username)
         except keystone_exceptions.Unauthorized:
             raise exceptions.InvalidEndpointsException()
         except keystone_exceptions.AuthorizationFailure:
             raise exceptions.HostUnreachableException(
-                url=self.kw['auth_url'])
+                url=self.endpoint.auth_url)
         return client
 
     def get_nova_client(self, version='2'):
@@ -85,10 +86,10 @@ class Clients(object):
             return self.cache["nova"]
 
         client = nova.Client(version,
-                             self.kw['username'],
-                             self.kw['password'],
-                             self.kw['tenant_name'],
-                             auth_url=self.kw['auth_url'],
+                             self.endpoint.username,
+                             self.endpoint.password,
+                             self.endpoint.tenant_name,
+                             auth_url=self.endpoint.auth_url,
                              service_type='compute',
                              timeout=CONF.openstack_client_http_timeout,
                              insecure=CONF.https_insecure,
@@ -138,10 +139,10 @@ class Clients(object):
             return self.cache["cinder"]
 
         client = cinder.Client(version,
-                               self.kw['username'],
-                               self.kw['password'],
-                               self.kw['tenant_name'],
-                               auth_url=self.kw['auth_url'],
+                               self.endpoint.username,
+                               self.endpoint.password,
+                               self.endpoint.tenant_name,
+                               auth_url=self.endpoint.auth_url,
                                service_type='volume',
                                timeout=CONF.openstack_client_http_timeout,
                                insecure=CONF.https_insecure,
@@ -163,7 +164,3 @@ class Clients(object):
                     "scheme": url_obj.scheme, "hostname": url_obj.hostname,
                     "port": new_port, "path": url_obj.path}
         return new_url
-
-    def get_endpoint(self):
-        """Returns endpoint."""
-        return self.kw

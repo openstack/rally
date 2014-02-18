@@ -27,6 +27,7 @@ from rally.cmd.commands import use as _use
 from rally.cmd import envutils
 from rally import db
 from rally import exceptions
+from rally.objects import endpoint
 from rally.openstack.common.gettextutils import _
 from rally.orchestrator import api
 from rally import osclients
@@ -141,8 +142,8 @@ class DeploymentCommands(object):
         headers = ['auth_url', 'username', 'password', 'tenant_name']
         table = prettytable.PrettyTable(headers)
         endpoints = db.deployment_get(deploy_id)['endpoints']
-        for endpoint in endpoints:
-            table.add_row([endpoint.get(m, '') for m in headers])
+        for ep in endpoints:
+            table.add_row([ep.get(m, '') for m in headers])
         print(table)
 
     @cliutils.args('--deploy-id', dest='deploy_id', type=str, required=False,
@@ -159,12 +160,8 @@ class DeploymentCommands(object):
         table = prettytable.PrettyTable(headers)
         try:
             endpoints = db.deployment_get(deploy_id)['endpoints']
-            for endpoint in endpoints:
-                clients = osclients.Clients(
-                    username=endpoint['username'],
-                    password=endpoint['password'],
-                    tenant_name=endpoint['tenant_name'],
-                    auth_url=endpoint['auth_url'])
+            for endpoint_dict in endpoints:
+                clients = osclients.Clients(endpoint.Endpoint(**endpoint_dict))
                 client = clients.get_verified_keystone_client()
                 print("keystone endpoints are valid and following "
                       "services are available:")

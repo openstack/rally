@@ -20,6 +20,7 @@ from rally.benchmark import base
 from rally.benchmark import runner
 from rally import consts
 from rally import exceptions
+from rally.objects import endpoint
 from rally.openstack.common.gettextutils import _
 from rally.openstack.common import log as logging
 from rally import osclients
@@ -155,16 +156,15 @@ class BenchmarkEngine(object):
         return results
 
     def bind(self, endpoints):
-        self.endpoints = endpoints
+        self.endpoints = [endpoint.Endpoint(**endpoint_dict)
+                          for endpoint_dict in endpoints]
         # NOTE(msdubov): Passing predefined user endpoints hasn't been
         #                implemented yet, so the scenario runner always gets
         #                a single admin endpoint here.
-        admin_endpoint = endpoints[0]
+        admin_endpoint = self.endpoints[0]
+        admin_endpoint.permission = consts.EndpointPermission.ADMIN
         # Try to access cloud via keystone client
-        clients = osclients.Clients(username=admin_endpoint['username'],
-                                    password=admin_endpoint['password'],
-                                    tenant_name=admin_endpoint['tenant_name'],
-                                    auth_url=admin_endpoint['auth_url'])
+        clients = osclients.Clients(admin_endpoint)
         clients.get_verified_keystone_client()
         return self
 

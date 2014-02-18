@@ -20,6 +20,7 @@ import urllib2
 
 from rally.benchmark import utils as benchmark_utils
 from rally import exceptions
+from rally.objects import endpoint
 from rally.openstack.common.gettextutils import _
 from rally.openstack.common import log as logging
 from rally import osclients
@@ -103,8 +104,9 @@ class OpenStackProvider(provider.ProviderFactory):
 
     def __init__(self, deployment, config):
         super(OpenStackProvider, self).__init__(deployment, config)
-        clients = osclients.Clients(config['user'], config['password'],
-                                    config['tenant'], config['auth_url'])
+        user_endpoint = endpoint.Endpoint(config['auth_url'], config['user'],
+                                          config['password'], config['tenant'])
+        clients = osclients.Clients(user_endpoint)
         self.nova = clients.get_nova_client()
         try:
             self.glance = clients.get_glance_client()

@@ -402,6 +402,7 @@ class FakeClients(object):
         self.glance = None
         self.keystone = None
         self.cinder = None
+        self.endpoint = None
 
     def get_keystone_client(self):
         if self.keystone is not None:
@@ -429,9 +430,6 @@ class FakeClients(object):
             return self.cinder
         self.cinder = FakeCinderClient()
         return self.cinder
-
-    def get_endpoint(self):
-        pass
 
 
 class FakeScenario(base.Scenario):

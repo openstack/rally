@@ -18,6 +18,7 @@
 from rally.cmd import cliutils
 from rally.cmd import envutils
 from rally import db
+from rally.objects import endpoint
 from rally.orchestrator import api
 from rally import osclients
 
@@ -33,11 +34,8 @@ class VerifyCommands(object):
         :param deploy_id: a UUID of a deployment
         """
         endpoints = db.deployment_get(deploy_id)['endpoints']
-        endpoint = endpoints[0]
-        clients = osclients.Clients(endpoint['username'],
-                                    endpoint['password'],
-                                    endpoint['tenant_name'],
-                                    endpoint['auth_url'])
+        endpoint_dict = endpoints[0]
+        clients = osclients.Clients(endpoint.Endpoint(**endpoint_dict))
         glance = clients.get_glance_client()
 
         image_list = []

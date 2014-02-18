@@ -19,6 +19,7 @@ from keystoneclient import exceptions as keystone_exceptions
 from oslo.config import cfg
 
 from rally import exceptions
+from rally.objects import endpoint
 from rally import osclients
 from tests import fakes
 from tests import test
@@ -26,18 +27,11 @@ from tests import test
 
 class OSClientsTestCase(test.TestCase):
 
-    def _get_auth_params(self):
-        args = ["user", "pass", "tenant", "http://auth_url"]
-        keys = ["username", "password", "tenant_name", "auth_url"]
-        return (args, dict(zip(keys, args)))
-
     def setUp(self):
         super(OSClientsTestCase, self).setUp()
-        self.args, self.kwargs = self._get_auth_params()
-        self.clients = osclients.Clients(*self.args)
-
-    def test_init(self):
-        self.assertEqual(self.kwargs, self.clients.kw)
+        self.endpoint = endpoint.Endpoint("http://auth_url", "use", "pass",
+                                          "tenant")
+        self.clients = osclients.Clients(self.endpoint)
 
     def test_get_keystone_client(self):
         with mock.patch("rally.osclients.keystone") as mock_keystone:
@@ -49,7 +43,7 @@ class OSClientsTestCase(test.TestCase):
             endpoint = {"endpoint": "http://auth_url:35357",
                         "timeout": cfg.CONF.openstack_client_http_timeout,
                         "insecure": False, "cacert": None}
-            kwargs = dict(self.kwargs.items() + endpoint.items())
+            kwargs = dict(self.endpoint.to_dict().items() + endpoint.items())
             mock_keystone.Client.assert_called_once_with(**kwargs)
             self.assertEqual(self.clients.cache["keystone"], fake_keystone)
 
@@ -83,10 +77,11 @@ class OSClientsTestCase(test.TestCase):
             client = self.clients.get_nova_client()
             self.assertEqual(client, fake_nova)
             mock_nova.Client.assert_called_once_with(
-                    "2", *self.args[:3], auth_url=self.args[-1],
-                    service_type="compute",
-                    timeout=cfg.CONF.openstack_client_http_timeout,
-                    insecure=False, cacert=None)
+                "2", self.endpoint.username, self.endpoint.password,
+                self.endpoint.tenant_name, auth_url=self.endpoint.auth_url,
+                service_type="compute",
+                timeout=cfg.CONF.openstack_client_http_timeout,
+                insecure=False, cacert=None)
             self.assertEqual(self.clients.cache["nova"], fake_nova)
 
     def test_get_glance_client(self):
@@ -115,7 +110,8 @@ class OSClientsTestCase(test.TestCase):
             client = self.clients.get_cinder_client()
             self.assertEqual(client, fake_cinder)
             mock_cinder.Client.assert_called_once_with(
-                "1", *self.args[:3], auth_url=self.args[-1],
+                "1", self.endpoint.username, self.endpoint.password,
+                self.endpoint.tenant_name, auth_url=self.endpoint.auth_url,
                 service_type="volume",
                 timeout=cfg.CONF.openstack_client_http_timeout,
                 insecure=False, cacert=None)
