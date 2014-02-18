@@ -14,6 +14,7 @@
 #    under the License.
 
 import mock
+import os
 
 from rally.verification.verifiers.tempest import tempest
 from tests import test
@@ -55,7 +56,9 @@ class TempestTestCase(test.TestCase):
 
     def test__define_path(self):
         tempest_path = self.verifier._define_path()
-        self.assertEqual(tempest_path, self.tempest_dir + 'openstack-tempest/')
+        self.assertEqual(os.path.abspath(tempest_path),
+                         os.path.abspath(self.tempest_dir +
+                                         'openstack-tempest/'))
 
     @mock.patch('tempfile.mkstemp')
     @mock.patch('rally.verification.verifiers.tempest.tempest.os')
