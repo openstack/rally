@@ -395,6 +395,13 @@ class FakeKeystoneClient(object):
         return True
 
 
+class FakeCeilometerClient(object):
+
+    def __init__(self):
+        #TODO(marcoemorais): Fake Manager subclasses to retrieve metrics.
+        pass
+
+
 class FakeClients(object):
 
     def __init__(self):

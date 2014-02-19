@@ -15,6 +15,7 @@
 
 import urlparse
 
+from ceilometerclient import client as ceilometer
 from cinderclient import client as cinder
 import glanceclient as glance
 from heatclient import client as heat
@@ -151,6 +152,23 @@ class Clients(object):
         self.cache["cinder"] = client
         return client
 
+    def get_ceilometer_client(self, version='1'):
+        """Returns ceilometer client."""
+        if "ceilometer" in self.cache:
+            return self.cache["ceilometer"]
+
+        client = ceilometer.Client(version,
+                                   username=self.endpoint.username,
+                                   password=self.endpoint.password,
+                                   tenant_name=self.endpoint.tenant_name,
+                                   endpoint=self.endpoint.auth_url,
+                                   timeout=CONF.openstack_client_http_timeout,
+                                   insecure=CONF.https_insecure,
+                                   cacert=CONF.https_cacert)
+
+        self.cache["ceilometer"] = client
+        return client
+
     def _change_port(self, url, new_port):
         """Change the port of a given url.
 
@@ -161,6 +179,6 @@ class Clients(object):
         """
         url_obj = urlparse.urlparse(url)
         new_url = "%(scheme)s://%(hostname)s:%(port)s%(path)s" % {
-                    "scheme": url_obj.scheme, "hostname": url_obj.hostname,
-                    "port": new_port, "path": url_obj.path}
+                  "scheme": url_obj.scheme, "hostname": url_obj.hostname,
+                  "port": new_port, "path": url_obj.path}
         return new_url
