@@ -19,7 +19,6 @@ import os
 import StringIO
 import sys
 import time
-import traceback
 
 from rally import exceptions
 from rally.openstack.common.gettextutils import _
@@ -78,7 +77,6 @@ class Timer(object):
     def __exit__(self, type, value, tb):
         self.finish = time.time()
         if type:
-            tb = traceback.print_exception(type, value, tb)
             self.error = (type, value, tb)
 
     def duration(self):

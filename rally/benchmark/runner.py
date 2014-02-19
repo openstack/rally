@@ -19,6 +19,8 @@ import random
 import sys
 import uuid
 
+from oslo.config import cfg
+
 from rally.benchmark import base
 from rally.benchmark import utils
 from rally import exceptions
@@ -38,7 +40,7 @@ __admin_clients__ = []
 def _run_scenario_once(args):
     i, cls, method_name, kwargs = args
 
-    LOG.info("ITER: %s" % i)
+    LOG.info("ITER: %s START" % i)
 
     # TODO(boris-42): remove context
     scenario = cls(context={},
@@ -52,9 +54,15 @@ def _run_scenario_once(args):
         error = None
     except Exception as e:
         error = utils.format_exc(e)
+        if cfg.CONF.debug:
+            LOG.exception(e)
     finally:
+        status = "Error %s: %s" % tuple(error[0:2]) if error else "OK"
+        LOG.info("ITER: %(i)s END: %(status)s" % {"i": i, "status": status})
+
         return {"time": timer.duration() - scenario.idle_time(),
-                "idle_time": scenario.idle_time(), "error": error,
+                "idle_time": scenario.idle_time(),
+                "error": error,
                 "scenario_output": scenario_output,
                 "atomic_actions_time": scenario.atomic_actions_time()}
 
