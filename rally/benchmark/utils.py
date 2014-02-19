@@ -99,7 +99,6 @@ def infinite_run_args(args):
 
 
 def create_openstack_clients(endpoint):
-
     client_manager = osclients.Clients(endpoint)
 
     clients = {
@@ -107,14 +106,15 @@ def create_openstack_clients(endpoint):
         "keystone": client_manager.get_keystone_client(),
         "glance": client_manager.get_glance_client(),
         "cinder": client_manager.get_cinder_client(),
-        "endpoint": client_manager.endpoint
+        "endpoint": client_manager.endpoint,
+        # NOTE(boris-42): seems like it should be refactored
+        "ssh_key_pair": getattr(endpoint, "keypair", {})
     }
 
-    _prepare_for_instance_ssh(clients)
     return clients
 
 
-def _prepare_for_instance_ssh(client_dict):
+def _prepare_for_instance_ssh(users_endpoint):
     """Generate and store SSH keys, allow access to port 22.
 
     In order to run tests on instances it is necessary to have SSH access.
@@ -124,36 +124,43 @@ def _prepare_for_instance_ssh(client_dict):
 
     A security group rule is created to allow access to instances on port 22.
     """
+    nova_client = create_openstack_clients(users_endpoint)['nova']
 
-    nova_client = client_dict['nova']
-
-    if ('rally_ssh_key' not in
-            [k.name for k in nova_client.keypairs.list()]):
+    # NOTE(boris-42): private key is used in
+    #                 NovaServers.boot_runcommand_delete_server
+    #                 So seems like potential bu in case of adding support of
+    #                 precreated users
+    keypair = None
+    if 'rally_ssh_key' not in [k.name for k in nova_client.keypairs.list()]:
         keypair = nova_client.keypairs.create('rally_ssh_key')
-        client_dict['ssh_key_pair'] = dict(private=keypair.private_key,
-                                           public=keypair.public_key)
 
     if 'rally_open' not in [sg.name for sg in
                             nova_client.security_groups.list()]:
         rally_open = nova_client.security_groups.create(
-            'rally_open',
-            'Allow all access to VMs for benchmarking'
-        )
+            'rally_open', 'Allow all access to VMs for benchmarking')
+
     rally_open = nova_client.security_groups.find(name='rally_open')
 
-    rules_to_add = [dict(ip_protocol='tcp',
-                         to_port=65535,
-                         from_port=1,
-                         ip_range=dict(cidr='0.0.0.0/0')),
-                    dict(ip_protocol='udp',
-                         to_port=65535,
-                         from_port=1,
-                         ip_range=dict(cidr='0.0.0.0/0')),
-                    dict(ip_protocol='icmp',
-                         to_port=-1,
-                         from_port=-1,
-                         ip_range=dict(cidr='0.0.0.0/0'))
-                    ]
+    rules_to_add = [
+        {
+            "ip_protocol": "tcp",
+            "to_port": 65535,
+            "from_port": 1,
+            "ip_range": {"cidr": "0.0.0.0/0"}
+        },
+        {
+            "ip_protocol": "udp",
+            "to_port": 65535,
+            "from_port": 1,
+            "ip_range": {"cidr": "0.0.0.0/0"}
+        },
+        {
+            "ip_protocol": "icmp",
+            "to_port": 1,
+            "from_port": -1,
+            "ip_range": {"cidr": "0.0.0.0/0"}
+        }
+    ]
 
     def rule_match(criteria, existing_rule):
         return all(existing_rule[key] == value
@@ -168,7 +175,9 @@ def _prepare_for_instance_ssh(client_dict):
                         to_port=new_rule['to_port'],
                         ip_protocol=new_rule['ip_protocol'],
                         cidr=new_rule['ip_range']['cidr'])
-    return client_dict
+
+    return ({"private": keypair.private_key, "public": keypair.public_key}
+            if keypair else None)
 
 
 def delete_servers(nova):

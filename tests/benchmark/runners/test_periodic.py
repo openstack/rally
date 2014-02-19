@@ -41,11 +41,12 @@ class PeriodicScenarioRunnerTestCase(test.TestCase):
                                                   self.fake_endpoints)
         times = 3
         period = 4
-        runner.__openstack_clients__ = ["client"]
+        srunner.temp_users = ["client"]
         srunner._run_scenario(fakes.FakeScenario, "do_it", {},
                               {"times": times, "period": period, "timeout": 5})
 
-        expected = [mock.call((i, fakes.FakeScenario, "do_it", {}))
+        expected = [mock.call((i, fakes.FakeScenario, "do_it",
+                               self.fake_endpoints[0], "client", {}))
                     for i in xrange(times)]
         self.assertEqual(mock_run_scenario_once.mock_calls, expected)
 

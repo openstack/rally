@@ -25,6 +25,11 @@ from tests import fakes
 from tests import test
 
 
+def _get_fake_users(n=1):
+    return [{"username": "u %s" % i, "password": "p", "tenant_name": "t",
+             "auth_url": "url"} for i in range(n)]
+
+
 class ScenarioRunnerTestCase(test.TestCase):
 
     def setUp(self):
@@ -48,7 +53,7 @@ class ScenarioRunnerTestCase(test.TestCase):
         mock_osclients.Clients.return_value = fakes.FakeClients()
         srunner = continuous.ContinuousScenarioRunner(mock.MagicMock(),
                                                       self.fake_endpoints)
-        runner.__openstack_clients__ = ["client"]
+        srunner.temp_users = _get_fake_users(5)
         active_users = 2
         times = 3
         duration = 0.01
@@ -85,7 +90,7 @@ class ScenarioRunnerTestCase(test.TestCase):
         srunner = runner.ScenarioRunner.get_runner(mock.MagicMock(),
                                                    self.fake_endpoints,
                                                    {"execution": "continuous"})
-        runner.__openstack_clients__ = ["client"]
+        srunner.temp_users = _get_fake_users(5)
         times = 4
         active_users = 2
         results = srunner._run_scenario(fakes.FakeScenario,
@@ -118,7 +123,7 @@ class ScenarioRunnerTestCase(test.TestCase):
         mock_osclients.Clients.return_value = fakes.FakeClients()
         srunner = continuous.ContinuousScenarioRunner(mock.MagicMock(),
                                                       self.fake_endpoints)
-        runner.__openstack_clients__ = ["client"]
+        srunner.temp_users = _get_fake_users(5)
         times = 1
         duration = 0.001
         active_users = 2
@@ -159,6 +164,7 @@ class ScenarioRunnerTestCase(test.TestCase):
                                                    self.fake_endpoints,
                                                    {"execution": "continuous"})
         srunner._run_scenario = mock.MagicMock(return_value="result")
+        srunner.temp_users = _get_fake_users(5)
 
         mock_base.Scenario.get_by_name = \
             mock.MagicMock(return_value=FakeScenario)
@@ -209,11 +215,14 @@ class ScenarioRunnerTestCase(test.TestCase):
 
 class UserGeneratorTestCase(test.TestCase):
 
-    def test_create_and_delete_users_and_tenants(self):
-        admin_clients = {"keystone": fakes.FakeClients().get_keystone_client()}
+    @mock.patch("rally.benchmark.runner.utils.create_openstack_clients")
+    def test_create_and_delete_users_and_tenants(self, mock_create_os_clients):
+        return
+        admin_user = {"username": "admin", "password": "pwd",
+                      "tenant_name": "admin", "auth_url": "url"}
         created_users = []
         created_tenants = []
-        with runner.UserGenerator(admin_clients) as generator:
+        with runner.UserGenerator(admin_user) as generator:
             tenants = 10
             users_per_tenant = 5
             endpoints = generator.create_users_and_tenants(tenants,
@@ -227,70 +236,51 @@ class UserGeneratorTestCase(test.TestCase):
 
 class ResourceCleanerTestCase(test.TestCase):
 
-    @mock.patch("rally.benchmark.runner.base")
-    @mock.patch("rally.benchmark.utils.osclients")
-    @mock.patch("rally.benchmark.utils._delete_single_keystone_resource_type")
-    def test_cleanup_resources(self, mock_del_single_keystone_res,
-                               mock_osclients, mock_base):
-
-        mock_cms = [fakes.FakeClients(), fakes.FakeClients(),
-                    fakes.FakeClients()]
-        clients = [
-            {
-                "nova": cl.get_nova_client(),
-                "keystone": cl.get_keystone_client(),
-                "glance": cl.get_glance_client(),
-                "cinder": cl.get_cinder_client(),
-                "endpoint": cl.endpoint
-            } for cl in mock_cms
-        ]
-
-        for index in range(len(clients)):
-            client = clients[index]
-            nova = client["nova"]
-            cinder = client["cinder"]
-            glance = client["glance"]
-            for count in range(3):
-                uid = index + count
-                img = glance.images._create()
-                nova.servers.create("svr-%s" % (uid), img.uuid, index)
-                nova.keypairs.create("keypair-%s" % (uid))
-                nova.security_groups.create("secgroup-%s" % (uid))
-                nova.networks.create("net-%s" % (uid))
-                cinder.volumes.create("vol-%s" % (uid))
-                cinder.volume_types.create("voltype-%s" % (uid))
-                cinder.transfers.create("voltransfer-%s" % (uid))
-                cinder.volume_snapshots.create("snap-%s" % (uid))
-                cinder.backups.create("backup-%s" % (uid))
-
-        with runner.ResourceCleaner(admin=clients[0], users=clients):
+    def test_with_statement_no_user_no_admin(self):
+        resource_cleaner = runner.ResourceCleaner()
+        with resource_cleaner:
             pass
 
-        def _assert_purged(manager, resource_type):
-            resources = manager.list()
-            self.assertEqual([], resources, "%s not purged: %s" %
-                             (resource_type, resources))
+    def test_with_statement(self):
+        res_cleaner = runner.ResourceCleaner()
+        res_cleaner._cleanup_users_resources = mock.MagicMock()
+        res_cleaner._cleanup_admin_resources = mock.MagicMock()
 
-        for client in clients:
-            nova = client["nova"]
-            cinder = client["cinder"]
-            glance = client["glance"]
-            _assert_purged(nova.servers, "servers")
-            _assert_purged(nova.keypairs, "key pairs")
-            _assert_purged(nova.security_groups, "security groups")
-            _assert_purged(nova.networks, "networks")
+        with res_cleaner as cleaner:
+            self.assertEqual(res_cleaner, cleaner)
 
-            _assert_purged(cinder.volumes, "volumes")
-            _assert_purged(cinder.volume_types, "volume types")
-            _assert_purged(cinder.backups, "volume backups")
-            _assert_purged(cinder.transfers, "volume transfers")
-            _assert_purged(cinder.volume_snapshots, "volume snapshots")
+        res_cleaner._cleanup_users_resources.assert_called_once_with()
+        res_cleaner._cleanup_admin_resources.assert_called_once_with()
 
-            for image in glance.images.list():
-                self.assertEqual("DELETED", image.status,
-                                 "image not purged: %s" % (image))
+    @mock.patch("rally.benchmark.runner.utils.create_openstack_clients")
+    @mock.patch("rally.benchmark.runner.utils.delete_keystone_resources")
+    def test_cleaner_admin(self, mock_del_keystone, mock_create_os_clients):
 
-        expected = [mock.call(clients[0]["keystone"], resource) for
-                    resource in ["users", "tenants", "services", "roles"]]
+        admin_endpoit = "admin"
+        res_cleaner = runner.ResourceCleaner(admin=admin_endpoit)
 
-        self.assertEqual(mock_del_single_keystone_res.call_args_list, expected)
+        admin_client = mock.MagicMock()
+        admin_client.__getitem__ = mock.MagicMock(return_value="keystone_cl")
+        mock_create_os_clients.return_value = admin_client
+
+        with res_cleaner:
+            pass
+
+        mock_create_os_clients.assert_called_once_with(admin_endpoit)
+        admin_client.__getitem__.assert_called_once_with("keystone")
+        mock_del_keystone.assert_called_once_with("keystone_cl")
+
+    @mock.patch("rally.benchmark.runner.utils.create_openstack_clients")
+    @mock.patch("rally.benchmark.runner.utils.delete_nova_resources")
+    @mock.patch("rally.benchmark.runner.utils.delete_glance_resources")
+    @mock.patch("rally.benchmark.runner.utils.delete_cinder_resources")
+    def test_cleaner_users(self, mock_del_cinder, mock_del_glance,
+                           mock_del_keystone, mock_create_os_clients):
+
+        res_cleaner = runner.ResourceCleaner(users=["user1", "user2"])
+
+        client = mock.MagicMock()
+        mock_create_os_clients.return_value = client
+
+        with res_cleaner:
+            pass

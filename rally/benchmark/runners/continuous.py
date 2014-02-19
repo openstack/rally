@@ -13,12 +13,18 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+
 import collections
 import multiprocessing
+import random
 import time
 
 from rally.benchmark import runner
 from rally.benchmark import utils
+
+from rally.openstack.common import log as logging
+
+LOG = logging.getLogger(__name__)
 
 
 class ContinuousScenarioRunner(runner.ScenarioRunner):
@@ -38,7 +44,9 @@ class ContinuousScenarioRunner(runner.ScenarioRunner):
 
     def _run_scenario_continuously_for_times(self, cls, method, args,
                                              times, concurrent, timeout):
-        test_args = [(i, cls, method, args) for i in range(times)]
+        test_args = [(i, cls, method, self.admin_user,
+                      random.choice(self.temp_users), args)
+                     for i in range(times)]
 
         pool = multiprocessing.Pool(concurrent)
         iter_result = pool.imap(runner._run_scenario_once, test_args)
@@ -61,7 +69,9 @@ class ContinuousScenarioRunner(runner.ScenarioRunner):
     def _run_scenario_continuously_for_duration(self, cls, method, args,
                                                 duration, concurrent, timeout):
         pool = multiprocessing.Pool(concurrent)
-        run_args = utils.infinite_run_args((cls, method, args))
+        run_args = utils.infinite_run_args((cls, method, self.admin_user,
+                                            random.choice(self.temp_users),
+                                            args))
         iter_result = pool.imap(runner._run_scenario_once, run_args)
 
         start = time.time()

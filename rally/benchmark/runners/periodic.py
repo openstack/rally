@@ -15,6 +15,7 @@
 
 import multiprocessing
 from multiprocessing import pool as multiprocessing_pool
+import random
 import time
 
 from rally.benchmark import runner
@@ -48,8 +49,10 @@ class PeriodicScenarioRunner(runner.ScenarioRunner):
 
         for i in range(times):
             thread = multiprocessing_pool.ThreadPool(processes=1)
+            scenario_args = ((i, cls, method_name, self.admin_user,
+                             random.choice(self.temp_users), args),)
             async_result = thread.apply_async(runner._run_scenario_once,
-                                              ((i, cls, method_name, args),))
+                                              scenario_args)
             async_results.append(async_result)
 
             if i != times - 1:

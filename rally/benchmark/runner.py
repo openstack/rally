@@ -15,7 +15,6 @@
 
 import abc
 import functools
-import random
 import sys
 import uuid
 
@@ -34,20 +33,15 @@ from rally import utils as rutils
 LOG = logging.getLogger(__name__)
 
 
-# NOTE(msdubov): These objects are shared between multiple scenario processes.
-__openstack_clients__ = {}
-__admin_clients__ = []
-
-
 def _run_scenario_once(args):
-    i, cls, method_name, kwargs = args
+    i, cls, method_name, admin, user, kwargs = args
 
     LOG.info("ITER: %s START" % i)
 
     # TODO(boris-42): remove context
     scenario = cls(context={},
-                   admin_clients=__admin_clients__,
-                   clients=random.choice(__openstack_clients__))
+                   admin_clients=utils.create_openstack_clients(admin),
+                   clients=utils.create_openstack_clients(user))
 
     try:
         scenario_output = None
@@ -73,7 +67,9 @@ class UserGenerator(object):
     """Context class for generating temporary users/tenants for benchmarks."""
 
     def __init__(self, admin_clients):
-        self.keystone_client = admin_clients["keystone"]
+        self.users = []
+        self.keystone_client = \
+            utils.create_openstack_clients(admin_clients)["keystone"]
 
     def _create_user(self, user_id, tenant_id):
         pattern = "%(tenant_id)s_user_%(uid)d"
@@ -141,7 +137,7 @@ class ResourceCleaner(object):
         if not self.users:
             return
 
-        for user in self.users:
+        for user in map(utils.create_openstack_clients, self.users):
             methods = [
                 functools.partial(utils.delete_nova_resources, user["nova"]),
                 functools.partial(utils.delete_glance_resources,
@@ -164,7 +160,8 @@ class ResourceCleaner(object):
             return
 
         try:
-            utils.delete_keystone_resources(self.admin["keystone"])
+            admin = utils.create_openstack_clients(self.admin)
+            utils.delete_keystone_resources(admin["keystone"])
         except Exception as e:
             LOG.debug(_("Not all resources were cleaned."),
                       exc_info=sys.exc_info())
@@ -204,10 +201,8 @@ class ScenarioRunner(object):
         # NOTE(msdubov): Passing predefined user endpoints hasn't been
         #                implemented yet, so the scenario runner always gets
         #                a single admin endpoint here.
-        self.admin_endpoint = endpoints[0]
-
-        global __admin_clients__
-        __admin_clients__ = utils.create_openstack_clients(self.admin_endpoint)
+        self.admin_user = endpoints[0]
+        self.temp_users = []
 
     @staticmethod
     def get_runner(task, endpoint, config):
@@ -244,39 +239,39 @@ class ScenarioRunner(object):
         method = getattr(cls, method_name)
         validators = getattr(method, "validators", [])
         for validator in validators:
-            result = validator(clients=__admin_clients__, **args)
+            admin_client = utils.create_openstack_clients(self.admin_user)
+            result = validator(clients=admin_client, **args)
             if not result.is_valid:
                 raise exceptions.InvalidScenarioArgument(message=result.msg)
+
+        for temp_user in self.temp_users:
+            # TODO(boris-42): Only way that I found to pass keypair value
+            #                 to the scenario. I think that this thing should
+            #                 be refactored in future
+            temp_user.keypair = utils._prepare_for_instance_ssh(temp_user)
 
         return self._run_scenario(cls, method_name, args, config)
 
     def _run_as_admin(self, name, kwargs):
-        global __openstack_clients__, __admin_clients__
         config = kwargs.get('config', {})
 
-        with UserGenerator(__admin_clients__) as generator:
+        with UserGenerator(self.admin_user) as generator:
             tenants = config.get("tenants", 1)
             users_per_tenant = config.get("users_per_tenant", 1)
-            temp_users = generator.create_users_and_tenants(tenants,
-                                                            users_per_tenant)
-            __openstack_clients__ = [utils.create_openstack_clients(temp_user)
-                                     for temp_user in temp_users]
-            with ResourceCleaner(admin=__admin_clients__,
-                                 users=__openstack_clients__):
+            self.temp_users = generator.create_users_and_tenants(
+                                                    tenants, users_per_tenant)
+
+            with ResourceCleaner(admin=self.admin_user,
+                                 users=self.temp_users):
                 return self._prepare_and_run_scenario(name, kwargs)
-        __openstack_clients__ = {}
-        __admin_clients__ = []
 
     def _run_as_non_admin(self, name, kwargs):
-        global __openstack_clients__
-
         # TODO(boris-42): Somehow setup clients from deployment/config
-        with ResourceCleaner(users=__openstack_clients__):
+        with ResourceCleaner(users=self.temp_users):
             return self._prepare_and_run_scenario(name, kwargs)
-        __openstack_clients__ = {}
 
     def run(self, name, kwargs):
-        if __admin_clients__:
+        if self.admin_user:
             return self._run_as_admin(name, kwargs)
         else:
             return self._run_as_non_admin(name, kwargs)
