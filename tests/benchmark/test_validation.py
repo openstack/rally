@@ -18,6 +18,7 @@ import mock
 from novaclient import exceptions as nova_exc
 
 from rally.benchmark import validation
+from rally import consts
 from tests import fakes
 from tests import test
 
@@ -28,13 +29,16 @@ class ValidationUtilsTestCase(test.TestCase):
         def test_validator():
             pass
 
-        @validation.add_validator(test_validator)
+        @validation.add_validator(test_validator,
+                                  consts.EndpointPermission.ADMIN)
         def test_function():
             pass
 
         validators = getattr(test_function, "validators")
         self.assertEqual(len(validators), 1)
         self.assertEqual(validators[0], test_validator)
+        self.assertEqual(validators[0].permission,
+                         consts.EndpointPermission.ADMIN)
 
     def test_image_exists(self):
         fakegclient = fakes.FakeClients().get_glance_client()

@@ -17,6 +17,7 @@
 from glanceclient import exc as glance_exc
 from novaclient import exceptions as nova_exc
 
+from rally import consts
 from rally.openstack.common.gettextutils import _
 
 
@@ -27,10 +28,11 @@ class ValidationResult(object):
         self.msg = msg
 
 
-def add_validator(validator):
+def add_validator(validator, permission=consts.EndpointPermission.USER):
     def wrapper(func):
         if not getattr(func, 'validators', None):
             func.validators = []
+        validator.permission = permission
         func.validators.append(validator)
         return func
     return wrapper
