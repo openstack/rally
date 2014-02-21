@@ -2,14 +2,23 @@
 Rally
 =====
 
-Introduction
-------------
+What is Rally
+=============
 
 Rally is a Benchmark-as-a-Service project for OpenStack.
 
 Rally is intended to provide the community with a benchmarking tool that is capable of performing **specific**, **complicated** and **reproducible** test cases on **real deployment** scenarios.
 
-In the OpenStack ecosystem there are currently several tools that are helpful in carrying out the benchmarking process for an OpenStack deployment. To name a few, there are *DevStack* and *FUEL*, which are intended for deploying and managing OpenStack clouds, the *Tempest* testing framework which validates OpenStack APIs, some tracing facilities like *Tomograph* with *Zipkin*. The challenge, however, is to compile all these tools together on a reproducible basis. That can be a rather difficult task since the number of compute nodes in a practical deployment can easily be large and also because one may be willing to use many different deployment strategies that pursue different goals (e.g., while benchmarking the Nova Scheduler, one usually does not care of virtualization details, but is more concerned with the infrastructure topologies; while in other specific cases it may be the virtualization technology that matters). What Rally aims to do is Compile many already existing benchmarking facilities into one project, making it flexible to user requirements and ensuring the reproducibility of test results.
+If you are here, you are probably familiar with OpenStack and know that it's really huge ecosystem of cooperative services. When something fails, performs slowly or doesn't scale it's really hard to answer on questions "why", "what" and "where"? Another reason why you could be here is that you would like to build an OpenStack CI/CD system that will allow you to improve SLA, performance and stability of OpenStack continuously.
+
+The OpenStack QA team mostly works on CI/CD that ensures that new patches don't break specific single node installation of OpenStack. On the other hand it's clear that such CI/CD is only an indication and does not cover all cases (e.g. if cloud works well on single node installation it doesn't mean that it will work good as well on 1k servers installation under high load).. Rally aims to fix this and help us to get answer on question "How OpenStack works at scale". To make it possible we are going to automate and unify all steps that are required for benchmarking OpenStack at scale: multi node OS deployment, verification, benchmarking & profiling.
+
+
+**Rally** can visualized with the help of following diagram
+
+.. image:: https://wiki.openstack.org/w/images/e/ee/Rally-Actions.png
+   :width: 700px
+   :alt: Rally Architecture
 
 
 Architecture
@@ -32,6 +41,29 @@ Rally is split into 4 main components:
 4. **Orchestrator**, which is the central component of the system. It uses the Deployment Engine, to run control and compute nodes, in addition to launching an OpenStack distribution. After that, it calls the Benchmarking Tool to start the benchmarking process.
 
 
+Use Cases
+---------
+
+Before diving deep in Rally architecture let's take a look at 3 major high level Rally Use Cases:
+
+.. image:: https://wiki.openstack.org/w/images/6/6e/Rally-UseCases.png
+   :width: 700px
+   :alt: Rally Use Cases
+
+
+Typical cases where Rally aims to help are:
+
+- Automate measuring & profiling focused on how new code changes affect OS performance.
+- Using Rally profiler to detect scaling & performance issues.
+- Investigate how different deployments affect OS performance:
+	- Find the set of good OpenStack deployment architectures,
+	- Create deployment specifications for different loads (amount of controllers, swift nodes, etc.).
+- Automate search for hardware best suited for particular OpenStack cloud.
+- Automate production cloud specification generation:
+	- Determine terminal loads for basic cloud operations: VM start & stop, Block Device create/destroy & various OpenStack API methods.
+	- Check performance of basic cloud operations in case of different loads.
+
+
 Links
 ----------------------
 
@@ -46,3 +78,9 @@ Launchpad page:
 Code is hosted on github:
 
     https://github.com/stackforge/rally
+
+Rally/HowTo:
+
+    https://wiki.openstack.org/wiki/Rally
+
+
