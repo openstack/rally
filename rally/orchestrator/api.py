@@ -14,6 +14,8 @@
 #    under the License.
 
 
+import re
+
 from rally.benchmark import engine
 from rally import consts
 from rally import db
@@ -147,5 +149,6 @@ def verify(deploy_id, image_id, alt_image_id, flavor_id, alt_flavor_id,
                     password=endpoint['password'],
                     tenant_name=endpoint['tenant_name'],
                     uri=endpoint['auth_url'],
+                    uri_v3=re.sub('/v2.0', '/v3', endpoint['auth_url']),
                     set_name=set_name,
                     regex=regex)
