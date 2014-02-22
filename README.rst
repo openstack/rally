@@ -24,22 +24,12 @@ The OpenStack QA team mostly works on CI/CD that ensures that new patches don't 
 Architecture
 ------------
 
-Rally is split into 4 main components:
+Rally consists of 4 main components: 
 
-1. **Deployment Engine**, which is responsible for processing and deploying VM images (using DevStack or FUEL according to user’s preferences). The engine can do one of the following:
-
-    + deploy an Operating System (OS) on already existing VMs;
-    + starting VMs from a VM image with pre-installed OS and OpenStack;
-    + delpoying multiple VMs inside each OpenStack compute node based on a VM image.
-2. **VM Provider**, which interacts with cloud provider-specific interfaces to load and destroy VM images;
-3. **Benchmarking Tool**, which carries out the benchmarking process in several stages:
-
-    + runs *Tempest* tests, reduced to 5-minute length (to save the usually expensive computing time);
-    + runs the user-defined test scenarios (using the Rally testing framework);
-    + collects all the test results and processes the by *Zipkin* tracer;
-    + puts together a benchmarking report and stores it on the machine Rally was lauched on.
-4. **Orchestrator**, which is the central component of the system. It uses the Deployment Engine, to run control and compute nodes, in addition to launching an OpenStack distribution. After that, it calls the Benchmarking Tool to start the benchmarking process.
-
+1. **Server Provider** - which provides servers (virtual servers), with ssh access, in one L3 network.
+2. **Deploy Engine** - that deploy OpenStack cloud on servers that are presented by **Server Provider**
+3. **Verification** - run tempest (or specific set of tests) against cloud, collect results & present in human readable form.
+4. **Benchmark engine** - allows to write parameterized benchmark scenarios & run them against cloud.
 
 Use Cases
 ---------
@@ -82,5 +72,3 @@ Code is hosted on github:
 Rally/HowTo:
 
     https://wiki.openstack.org/wiki/Rally
-
-
