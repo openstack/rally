@@ -21,6 +21,7 @@ import sys
 
 from rally.cmd import cliutils
 from rally.cmd.commands import deployment
+from rally.cmd.commands import show
 from rally.cmd.commands import task
 from rally.cmd.commands import use
 from rally.cmd.commands import verify
@@ -35,6 +36,7 @@ def deprecated():
 def main():
     categories = {
         'deployment': deployment.DeploymentCommands,
+        'show': show.ShowCommands,
         'task': task.TaskCommands,
         'use': use.UseCommands,
         'verify': verify.VerifyCommands
