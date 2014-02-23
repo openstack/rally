@@ -20,10 +20,13 @@ from __future__ import print_function
 import collections
 import json
 import math
+import os
 import pprint
 import prettytable
 import sys
+import webbrowser
 
+from rally.benchmark.processing import plot
 from rally.cmd import cliutils
 from rally.cmd import envutils
 from rally import db
@@ -242,6 +245,22 @@ class TaskCommands(object):
             table.add_row(r)
 
         print(table)
+
+    @cliutils.args('--task-id', type=str, dest='task_id', help='uuid of task')
+    @cliutils.args('--out', type=str, dest='out', required=False,
+                   help='Path to output file.')
+    @cliutils.args('--open', dest='open_it', action='store_true',
+                   help='Open it in browser.')
+    def plot2html(self, task_id, out=None, open_it=False):
+        results = map(lambda x: {"key": x["key"], 'result': x['data']['raw']},
+                      db.task_result_get_all_by_uuid(task_id))
+
+        output_file = out or ("%s.html" % task_id)
+        with open(output_file, "w+") as f:
+            f.write(plot.plot(results))
+
+        if open_it:
+            webbrowser.open_new_tab("file://" + os.path.realpath(output_file))
 
     @cliutils.args('--task-id', type=str, dest='task_id', help='uuid of task')
     @cliutils.args('--force', action='store_true', help='force delete')
