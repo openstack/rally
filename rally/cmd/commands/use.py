@@ -47,7 +47,7 @@ class UseCommands(object):
 
         :param deploy_id: a UUID of a deployment
         """
-        print('Using deployment : %s' % deploy_id)
+        print('Using deployment: %s' % deploy_id)
         if not os.path.exists(os.path.expanduser('~/.rally/')):
             os.makedirs(os.path.expanduser('~/.rally/'))
         self._update_rally_deployment_file(deploy_id)
