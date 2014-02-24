@@ -15,6 +15,7 @@
 
 import abc
 import functools
+import itertools
 import sys
 import uuid
 
@@ -137,7 +138,7 @@ class ResourceCleaner(object):
         if not self.users:
             return
 
-        for user in map(utils.create_openstack_clients, self.users):
+        for user in itertools.imap(utils.create_openstack_clients, self.users):
             methods = [
                 functools.partial(utils.delete_nova_resources, user["nova"]),
                 functools.partial(utils.delete_glance_resources,
