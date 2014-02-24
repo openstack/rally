@@ -116,3 +116,21 @@ class OSClientsTestCase(test.TestCase):
                 timeout=cfg.CONF.openstack_client_http_timeout,
                 insecure=False, cacert=None)
             self.assertEqual(self.clients.cache["cinder"], fake_cinder)
+
+    def test_get_ceilometer_client(self):
+        with mock.patch("rally.osclients.ceilometer") as mock_ceilometer:
+            fake_ceilometer = fakes.FakeCeilometerClient()
+            mock_ceilometer.Client = mock.MagicMock(
+                return_value=fake_ceilometer)
+            self.assertTrue("ceilometer" not in self.clients.cache)
+            client = self.clients.get_ceilometer_client()
+            self.assertEqual(client, fake_ceilometer)
+            kw = {"username": self.endpoint.username,
+                  "password": self.endpoint.password,
+                  "tenant_name": self.endpoint.tenant_name,
+                  "endpoint": self.endpoint.auth_url,
+                  "timeout": cfg.CONF.openstack_client_http_timeout,
+                  "insecure": False, "cacert": None}
+            mock_ceilometer.Client.assert_called_once_with("1", **kw)
+            self.assertEqual(self.clients.cache["ceilometer"],
+                             fake_ceilometer)
