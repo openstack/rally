@@ -213,5 +213,6 @@ class APITestCase(test.TestCase):
             password='myadminpass',
             tenant_name='demo',
             uri='http://example.net:5000/v2.0/',
+            uri_v3='http://example.net:5000/v3/',
             set_name='smoke',
             regex=None)

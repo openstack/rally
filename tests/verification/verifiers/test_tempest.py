@@ -37,6 +37,7 @@ class TempestTestCase(test.TestCase):
                           'username': 'fake_username',
                           'tenant_name': 'fake_tenant_name',
                           'uri': 'fake_uri',
+                          'uri_v3': 'fake_uri',
                           'lock_path': self.verifier.lock_path,
                           'set_name': 'smoke',
                           'regex': None}
@@ -51,7 +52,9 @@ class TempestTestCase(test.TestCase):
             password=self.conf_args['password'],
             username=self.conf_args['username'],
             tenant_name=self.conf_args['tenant_name'],
-            uri=self.conf_args['uri'])
+            uri=self.conf_args['uri'],
+            uri_v3=self.conf_args['uri_v3'],
+            regex=None)
 
         with open(self.tempest_dir + 'config.ini') as config_file:
             self.assertEqual(test_config, config_file.read() % self.conf_args)

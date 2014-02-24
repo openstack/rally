@@ -14,10 +14,13 @@
 #    under the License.
 
 
+import logging
 import os
 import shutil
 import subprocess
 import tempfile
+
+LOG = logging.getLogger(__name__)
 
 
 class Tempest(object):
@@ -82,4 +85,5 @@ class Tempest(object):
     def verify(self, **kwargs):
         conf = self._generate_config(**kwargs)
         config_path = self._write_config(conf)
+        LOG.debug("Temporary tempest config file: %s " % config_path)
         self._run(config_path, kwargs['set_name'], kwargs['regex'])
