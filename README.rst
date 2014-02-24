@@ -9,12 +9,12 @@ Rally is a Benchmark-as-a-Service project for OpenStack.
 
 Rally is intended to provide the community with a benchmarking tool that is capable of performing **specific**, **complicated** and **reproducible** test cases on **real deployment** scenarios.
 
-If you are here, you are probably familiar with OpenStack and know that it's really huge ecosystem of cooperative services. When something fails, performs slowly or doesn't scale it's really hard to answer on questions "why", "what" and "where"? Another reason why you could be here is that you would like to build an OpenStack CI/CD system that will allow you to improve SLA, performance and stability of OpenStack continuously.
+If you are here, you are probably familiar with OpenStack and you also know that it's a really huge ecosystem of cooperative services. When something fails, performs slowly or doesn't scale, it's really hard to answer different questions on "what", "why" and "where" has happened. Another reason why you could be here is that you would like to build an OpenStack CI/CD system that will allow you to improve SLA, performance and stability of OpenStack continuously.
 
-The OpenStack QA team mostly works on CI/CD that ensures that new patches don't break specific single node installation of OpenStack. On the other hand it's clear that such CI/CD is only an indication and does not cover all cases (e.g. if cloud works well on single node installation it doesn't mean that it will work good as well on 1k servers installation under high load).. Rally aims to fix this and help us to get answer on question "How OpenStack works at scale". To make it possible we are going to automate and unify all steps that are required for benchmarking OpenStack at scale: multi node OS deployment, verification, benchmarking & profiling.
+The OpenStack QA team mostly works on CI/CD that ensures that new patches don't break some specific single node installation of OpenStack. On the other hand it's clear that such CI/CD is only an indication and does not cover all cases (e.g. if a cloud works well on a single node installation it doesn't mean that it will continue to do so on a 1k servers installation under high load as well). Rally aims to fix this and help us to answer the question "How does OpenStack work at scale?". To make it possible, we are going to automate and unify all steps that are required for benchmarking OpenStack at scale: multi-node OS deployment, verification, benchmarking & profiling.
 
 
-**Rally** can visualized with the help of following diagram
+**Rally** workflow can be visualized by the following diagram:
 
 .. image:: https://wiki.openstack.org/w/images/e/ee/Rally-Actions.png
    :width: 700px
@@ -24,17 +24,17 @@ The OpenStack QA team mostly works on CI/CD that ensures that new patches don't 
 Architecture
 ------------
 
-Rally consists of 4 main components: 
+In terms of software architecture, Rally is built of 4 main components:
 
-1. **Server Provider** - which provides servers (virtual servers), with ssh access, in one L3 network.
-2. **Deploy Engine** - that deploy OpenStack cloud on servers that are presented by **Server Provider**
-3. **Verification** - run tempest (or specific set of tests) against cloud, collect results & present in human readable form.
-4. **Benchmark engine** - allows to write parameterized benchmark scenarios & run them against cloud.
+1. **Server Providers** - provide servers (virtual servers), with ssh access, in one L3 network.
+2. **Deploy Engines** - deploy OpenStack cloud on servers that are presented by **Server Providers**
+3. **Verification** - component that runs tempest (or another pecific set of tests) against a deployed cloud, collects results & presents them in human readable form.
+4. **Benchmark engine** - allows to write parameterized benchmark scenarios & run them against the cloud.
 
 Use Cases
 ---------
 
-Before diving deep in Rally architecture let's take a look at 3 major high level Rally Use Cases:
+There are 3 major high level Rally Use Cases:
 
 .. image:: https://wiki.openstack.org/w/images/6/6e/Rally-UseCases.png
    :width: 700px
@@ -43,14 +43,14 @@ Before diving deep in Rally architecture let's take a look at 3 major high level
 
 Typical cases where Rally aims to help are:
 
-- Automate measuring & profiling focused on how new code changes affect OS performance.
-- Using Rally profiler to detect scaling & performance issues.
-- Investigate how different deployments affect OS performance:
-	- Find the set of good OpenStack deployment architectures,
-	- Create deployment specifications for different loads (amount of controllers, swift nodes, etc.).
-- Automate search for hardware best suited for particular OpenStack cloud.
-- Automate production cloud specification generation:
-	- Determine terminal loads for basic cloud operations: VM start & stop, Block Device create/destroy & various OpenStack API methods.
+- Automate measuring & profiling focused on how new code changes affect the OS performance;
+- Using Rally profiler to detect scaling & performance issues;
+- Investigate how different deployments affect the OS performance:
+	- Find the set of suitable OpenStack deployment architectures;
+	- Create deployment specifications for different loads (amount of controllers, swift nodes, etc.);
+- Automate the search for hardware best suited for particular OpenStack cloud;
+- Automate the production cloud specification generation:
+	- Determine terminal loads for basic cloud operations: VM start & stop, Block Device create/destroy & various OpenStack API methods;
 	- Check performance of basic cloud operations in case of different loads.
 
 
@@ -61,6 +61,10 @@ Wiki page:
 
     https://wiki.openstack.org/wiki/Rally
 
+Rally/HowTo:
+
+    https://wiki.openstack.org/wiki/Rally/HowTo
+
 Launchpad page:
 
     https://launchpad.net/rally
@@ -69,6 +73,6 @@ Code is hosted on github:
 
     https://github.com/stackforge/rally
 
-Rally/HowTo:
+Trello board:
 
-    https://wiki.openstack.org/wiki/Rally
+    https://trello.com/b/DoD8aeZy/rally
