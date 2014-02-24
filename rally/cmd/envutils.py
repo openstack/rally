@@ -23,7 +23,7 @@ def _default_deployment_id():
     try:
         deploy_id = os.environ['RALLY_DEPLOYMENT']
     except KeyError:
-        fileutils.load_env_file(os.path.expanduser('~/.rally/deployment'))
+        fileutils.load_env_file(os.path.expanduser('~/.rally/globals'))
         try:
             deploy_id = os.environ['RALLY_DEPLOYMENT']
         except KeyError:

@@ -38,17 +38,20 @@ class UseCommands(object):
             os.remove(expanded_path)
         os.symlink(openrc_path, expanded_path)
 
-    def _update_rally_deployment_file(self, deploy_id):
-        expanded_path = os.path.expanduser('~/.rally/deployment')
-        fileutils.update_env_file(expanded_path, 'RALLY_DEPLOYMENT', deploy_id)
+    def _update_attribute_in_global_file(self, attribute, value):
+        expanded_path = os.path.expanduser('~/.rally/globals')
+        fileutils.update_env_file(expanded_path, attribute, '%s\n' % value)
+
+    def _ensure_rally_configuration_dir_exists(self):
+        if not os.path.exists(os.path.expanduser('~/.rally/')):
+            os.makedirs(os.path.expanduser('~/.rally/'))
 
     def deployment(self, deploy_id):
         """Set the RALLY_DEPLOYMENT env var to be used by all CLI commands
 
         :param deploy_id: a UUID of a deployment
         """
-        print('Using deployment: %s' % deploy_id)
-        if not os.path.exists(os.path.expanduser('~/.rally/')):
-            os.makedirs(os.path.expanduser('~/.rally/'))
-        self._update_rally_deployment_file(deploy_id)
+        print('Using deployment : %s' % deploy_id)
+        self._ensure_rally_configuration_dir_exists()
+        self._update_attribute_in_global_file('RALLY_DEPLOYMENT', deploy_id)
         self._update_openrc_deployment_file(deploy_id)

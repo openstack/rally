@@ -47,7 +47,7 @@ class UseCommandsTestCase(test.BaseTestCase):
             self.use.deployment(deploy_id)
             self.assertEqual(2, mock_path.call_count)
             mock_env.assert_called_once_with(os.path.expanduser(
-                '~/.rally/deployment'), 'RALLY_DEPLOYMENT', deploy_id)
+                '~/.rally/globals'), 'RALLY_DEPLOYMENT', '%s\n' % deploy_id)
             mock_file.return_value.write.assert_called_once_with(
                 'export OS_AUTH_URL=fake_auth_url\n'
                 'export OS_USERNAME=fake_username\n'

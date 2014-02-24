@@ -35,4 +35,4 @@ class EnvUtilsTestCase(test.BaseTestCase):
         self.assertRaises(exceptions.InvalidArgumentsException,
                           envutils._default_deployment_id)
         mock_file.assert_called_once_with(os.path.expanduser(
-            '~/.rally/deployment'))
+            '~/.rally/globals'))
