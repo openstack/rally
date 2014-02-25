@@ -20,6 +20,8 @@ import uuid
 from rally.cmd.commands import use
 from rally.openstack.common import test
 
+from rally import exceptions
+
 
 class UseCommandsTestCase(test.BaseTestCase):
     def setUp(self):
@@ -56,3 +58,12 @@ class UseCommandsTestCase(test.BaseTestCase):
                 os.path.expanduser('~/.rally/openrc'))
             mock_remove.assert_called_once_with(os.path.expanduser(
                 '~/.rally/openrc'))
+
+    @mock.patch('rally.cmd.commands.use.db.deployment_get')
+    def test_deployment_not_found(self, mock_deployment):
+        deploy_id = str(uuid.uuid4())
+        mock_deployment.side_effect = exceptions.DeploymentNotFound(
+            uuid=deploy_id)
+        self.assertRaises(exceptions.DeploymentNotFound,
+                          self.use.deployment,
+                          deploy_id)
