@@ -22,6 +22,8 @@ import os
 import prettytable
 import sys
 
+import yaml
+
 from rally.cmd import cliutils
 from rally.cmd.commands import use as _use
 from rally.cmd import envutils
@@ -77,8 +79,8 @@ class DeploymentCommands(object):
             if not filename:
                 print("Either --filename or --fromenv is required")
                 return
-            with open(filename) as f:
-                config = json.load(f)
+            with open(filename, 'rb') as deploy_file:
+                config = yaml.safe_load(deploy_file.read())
 
         deployment = api.create_deploy(config, name)
         self.list(deployment_list=[deployment])

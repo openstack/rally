@@ -26,6 +26,8 @@ import prettytable
 import sys
 import webbrowser
 
+import yaml
+
 from rally.benchmark.processing import plot
 from rally.cmd import cliutils
 from rally.cmd import envutils
@@ -46,11 +48,11 @@ class TaskCommands(object):
     def start(self, task, deploy_id=None):
         """Run a benchmark task.
 
-        :param task: a file with json configration
+        :param task: a file with yaml/json configration
         :param deploy_id: a UUID of a deployment
         """
-        with open(task) as task_file:
-            config_dict = json.load(task_file)
+        with open(task, 'rb') as task_file:
+            config_dict = yaml.safe_load(task_file.read())
             try:
                 task = api.create_task(deploy_id)
                 self.list(task_list=[task])
