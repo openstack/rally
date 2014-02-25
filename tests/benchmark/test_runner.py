@@ -216,8 +216,19 @@ class ScenarioRunnerTestCase(test.TestCase):
 class UserGeneratorTestCase(test.TestCase):
 
     @mock.patch("rally.benchmark.runner.utils.create_openstack_clients")
+    def test_with_statement(self, mock_create_os_clients):
+        admin_endpoint = "admin"
+        with runner.UserGenerator(admin_endpoint):
+            pass
+
+    @mock.patch("rally.benchmark.runner.utils.create_openstack_clients")
     def test_create_and_delete_users_and_tenants(self, mock_create_os_clients):
-        return
+        fc = fakes.FakeClients()
+        # TODO(msdubov): This indicates that osclients.Clients should be
+        #                perhaps refactored to support dictionary-like access.
+        mock_create_os_clients.return_value = {
+            "keystone": fc.get_keystone_client()
+        }
         admin_user = {"username": "admin", "password": "pwd",
                       "tenant_name": "admin", "auth_url": "url"}
         created_users = []
@@ -256,8 +267,8 @@ class ResourceCleanerTestCase(test.TestCase):
     @mock.patch("rally.benchmark.runner.utils.delete_keystone_resources")
     def test_cleaner_admin(self, mock_del_keystone, mock_create_os_clients):
 
-        admin_endpoit = "admin"
-        res_cleaner = runner.ResourceCleaner(admin=admin_endpoit)
+        admin_endpoint = "admin"
+        res_cleaner = runner.ResourceCleaner(admin=admin_endpoint)
 
         admin_client = mock.MagicMock()
         admin_client.__getitem__ = mock.MagicMock(return_value="keystone_cl")
@@ -266,7 +277,7 @@ class ResourceCleanerTestCase(test.TestCase):
         with res_cleaner:
             pass
 
-        mock_create_os_clients.assert_called_once_with(admin_endpoit)
+        mock_create_os_clients.assert_called_once_with(admin_endpoint)
         admin_client.__getitem__.assert_called_once_with("keystone")
         mock_del_keystone.assert_called_once_with("keystone_cl")
 
@@ -275,12 +286,30 @@ class ResourceCleanerTestCase(test.TestCase):
     @mock.patch("rally.benchmark.runner.utils.delete_glance_resources")
     @mock.patch("rally.benchmark.runner.utils.delete_cinder_resources")
     def test_cleaner_users(self, mock_del_cinder, mock_del_glance,
-                           mock_del_keystone, mock_create_os_clients):
+                           mock_del_nova, mock_create_os_clients):
 
-        res_cleaner = runner.ResourceCleaner(users=["user1", "user2"])
+        users = ["user1", "user2"]
+        res_cleaner = runner.ResourceCleaner(users=users)
 
         client = mock.MagicMock()
+        client.__getitem__ = mock.MagicMock(side_effect=lambda cl: cl + "_cl")
         mock_create_os_clients.return_value = client
 
         with res_cleaner:
             pass
+
+        os_clients = ["nova", "glance", "keystone", "cinder"]
+        expected = [mock.call("user1"), mock.call("user2")]
+        mock_calls = filter(lambda call: '__getitem__' not in call[0],
+                            mock_create_os_clients.mock_calls)
+        self.assertEqual(mock_calls, expected)
+
+        expected = [mock.call(c) for c in os_clients] * len(users)
+        self.assertEqual(client.__getitem__.mock_calls, expected)
+
+        expected = [mock.call("nova_cl")] * len(users)
+        self.assertEqual(mock_del_nova.mock_calls, expected)
+        expected = [mock.call("glance_cl", "keystone_cl")] * len(users)
+        self.assertEqual(mock_del_glance.mock_calls, expected)
+        expected = [mock.call("cinder_cl")] * len(users)
+        self.assertEqual(mock_del_cinder.mock_calls, expected)
