@@ -30,15 +30,6 @@ class BenchmarkUtilsTestCase(test.TestCase):
         self.assertTrue(is_active(fakes.FakeResource(status="aCtIvE")))
         self.assertFalse(is_active(fakes.FakeResource(status="ERROR")))
 
-    def test_is_none(self):
-        self.assertTrue(utils.is_none(None))
-        self.assertFalse(utils.is_none(0))
-        self.assertFalse(utils.is_none(""))
-        self.assertFalse(utils.is_none("afafa"))
-
-    def test_false(self):
-        self.assertFalse(utils.false(None))
-
     def test_infinite_run_args(self):
         args = ("a", "b", "c", "d", 123)
         for i, real_args in enumerate(utils.infinite_run_args(args)):

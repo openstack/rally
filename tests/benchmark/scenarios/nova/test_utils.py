@@ -118,8 +118,7 @@ class NovaScenarioTestCase(test.TestCase):
         self._test_atomic_action_timer(nova_scenario.atomic_actions_time(),
                                        'nova.create_image')
 
-    @mock.patch(BM_UTILS + ".is_none")
-    def test__delete_server(self, mock_isnone):
+    def test__delete_server(self):
         nova_scenario = utils.NovaScenario()
         nova_scenario._delete_server(self.server)
         self.server.delete.assert_called_once_with()
@@ -207,9 +206,8 @@ class NovaScenarioTestCase(test.TestCase):
         self._test_atomic_action_timer(nova_scenario.atomic_actions_time(),
                                        'nova.unrescue_server')
 
-    @mock.patch(BM_UTILS + ".is_none")
     @mock.patch(NOVA_UTILS + '.NovaScenario.clients')
-    def test__delete_all_servers(self, mock_clients, mock_isnone):
+    def test__delete_all_servers(self, mock_clients):
         mock_clients("nova").servers.list.return_value = [self.server,
                                                           self.server1]
         nova_scenario = utils.NovaScenario()

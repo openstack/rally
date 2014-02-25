@@ -27,10 +27,6 @@ def resource_is(status):
     return lambda resource: resource.status.upper() == status.upper()
 
 
-def is_none(obj):
-    return obj is None
-
-
 def get_from_manager(error_statuses=None):
     error_statuses = error_statuses or ["ERROR"]
     error_statuses = map(lambda str: str.upper(), error_statuses)
@@ -81,10 +77,6 @@ def _wait_for_list_size(mgr, sizes=[0], timeout=10, check_interval=1):
     utils.wait_for(mgr, is_ready=manager_list_size(sizes),
                    update_resource=None, timeout=timeout,
                    check_interval=check_interval)
-
-
-def false(resource):
-    return False
 
 
 def format_exc(exc):
