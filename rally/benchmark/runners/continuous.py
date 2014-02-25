@@ -45,7 +45,7 @@ class ContinuousScenarioRunner(runner.ScenarioRunner):
     def _run_scenario_continuously_for_times(self, cls, method, args,
                                              times, concurrent, timeout):
         test_args = [(i, cls, method, self.admin_user,
-                      random.choice(self.temp_users), args)
+                      random.choice(self.users), args)
                      for i in range(times)]
 
         pool = multiprocessing.Pool(concurrent)
@@ -70,7 +70,7 @@ class ContinuousScenarioRunner(runner.ScenarioRunner):
                                                 duration, concurrent, timeout):
         pool = multiprocessing.Pool(concurrent)
         run_args = utils.infinite_run_args((cls, method, self.admin_user,
-                                            random.choice(self.temp_users),
+                                            random.choice(self.users),
                                             args))
         iter_result = pool.imap(runner._run_scenario_once, run_args)
 

@@ -50,7 +50,7 @@ class PeriodicScenarioRunner(runner.ScenarioRunner):
         for i in range(times):
             thread = multiprocessing_pool.ThreadPool(processes=1)
             scenario_args = ((i, cls, method_name, self.admin_user,
-                             random.choice(self.temp_users), args),)
+                             random.choice(self.users), args),)
             async_result = thread.apply_async(runner._run_scenario_once,
                                               scenario_args)
             async_results.append(async_result)

@@ -18,6 +18,7 @@ import jsonschema
 
 from rally.benchmark import base
 from rally.benchmark import runner
+from rally.benchmark import utils
 from rally import consts
 from rally import exceptions
 from rally.objects import endpoint
@@ -87,7 +88,8 @@ class BenchmarkEngine(object):
         self.task = task
         self._validate_config()
 
-    @rutils.log_task_wrapper(LOG.info, _("Benchmark configs validation."))
+    @rutils.log_task_wrapper(LOG.info,
+                             _("Benchmark config format validation."))
     def _validate_config(self):
         task_uuid = self.task['uuid']
         # Perform schema validation
@@ -122,6 +124,48 @@ class BenchmarkEngine(object):
                                                              message))
                     raise exceptions.InvalidConfigException(message=message)
 
+    @rutils.log_task_wrapper(LOG.info,
+                             _("Benchmark config parameters validation."))
+    def _validate_scenario_args(self, name, kwargs):
+        cls_name, method_name = name.split(".")
+        cls = base.Scenario.get_by_name(cls_name)
+
+        method = getattr(cls, method_name)
+        validators = getattr(method, "validators", [])
+
+        args = kwargs.get("args", {})
+
+        # NOTE(msdubov): Some scenarios may require validation from admin,
+        #                while others use ordinary clients.
+        admin_validators = [v for v in validators
+                            if v.permission == consts.EndpointPermission.ADMIN]
+        user_validators = [v for v in validators
+                           if v.permission == consts.EndpointPermission.USER]
+
+        def validate(validators, clients):
+            for validator in validators:
+                result = validator(clients=clients, **args)
+                if not result.is_valid:
+                    raise exceptions.InvalidScenarioArgument(
+                                                            message=result.msg)
+
+        # NOTE(msdubov): In case of generated users (= admin mode) - validate
+        #                first the admin validators, then the user ones
+        #                (with one temporarily created user).
+        if self.admin_endpoint:
+            admin_client = utils.create_openstack_clients(self.admin_endpoint)
+            validate(admin_validators, admin_client)
+            with runner.UserGenerator(self.admin_endpoint) as generator:
+                temp_user = generator.create_users_and_tenants(1, 1)[0]
+                user_client = utils.create_openstack_clients(temp_user)
+                validate(user_validators, user_client)
+        # NOTE(msdubov): In case of pre-created users - validate
+        #                for all of them.
+        else:
+            for user in self.users:
+                user_client = utils.create_openstack_clients(user)
+                validate(user_validators, user_client)
+
     def run(self):
         """Runs the benchmarks according to the test configuration
         the benchmark engine was initialized with.
@@ -136,6 +180,7 @@ class BenchmarkEngine(object):
             for n, kwargs in enumerate(self.config[name]):
                 key = {'name': name, 'pos': n, 'kw': kwargs}
                 try:
+                    self._validate_scenario_args(name, kwargs)
                     scenario_runner = runner.ScenarioRunner.get_runner(
                                             self.task, self.endpoints, kwargs)
                     result = scenario_runner.run(name, kwargs)
@@ -161,10 +206,10 @@ class BenchmarkEngine(object):
         # NOTE(msdubov): Passing predefined user endpoints hasn't been
         #                implemented yet, so the scenario runner always gets
         #                a single admin endpoint here.
-        admin_endpoint = self.endpoints[0]
-        admin_endpoint.permission = consts.EndpointPermission.ADMIN
+        self.admin_endpoint = self.endpoints[0]
+        self.admin_endpoint.permission = consts.EndpointPermission.ADMIN
         # Try to access cloud via keystone client
-        clients = osclients.Clients(admin_endpoint)
+        clients = osclients.Clients(self.admin_endpoint)
         clients.get_verified_keystone_client()
         return self
 

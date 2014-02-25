@@ -28,13 +28,23 @@ class ValidationResult(object):
         self.msg = msg
 
 
-def add_validator(validator, permission=consts.EndpointPermission.USER):
+def add_validator(validator):
     def wrapper(func):
         if not getattr(func, 'validators', None):
             func.validators = []
-        validator.permission = permission
+        # NOTE(msdubov): Call validators in user-mode by default
+        #                (if not specified by @requires_permission(...)).
+        if not hasattr(validator, 'permission'):
+            validator.permission = consts.EndpointPermission.USER
         func.validators.append(validator)
         return func
+    return wrapper
+
+
+def requires_permission(permission):
+    def wrapper(validator):
+        validator.permission = permission
+        return validator
     return wrapper
 
 

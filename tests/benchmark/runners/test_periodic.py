@@ -41,7 +41,7 @@ class PeriodicScenarioRunnerTestCase(test.TestCase):
                                                   self.fake_endpoints)
         times = 3
         period = 4
-        srunner.temp_users = ["client"]
+        srunner.users = ["client"]
         srunner._run_scenario(fakes.FakeScenario, "do_it", {},
                               {"times": times, "period": period, "timeout": 5})
 
