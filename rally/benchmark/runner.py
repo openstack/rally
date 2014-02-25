@@ -67,10 +67,11 @@ def _run_scenario_once(args):
 class UserGenerator(object):
     """Context class for generating temporary users/tenants for benchmarks."""
 
-    def __init__(self, admin_clients):
+    def __init__(self, admin_endpoints):
         self.users = []
+        self.tenants = []
         self.keystone_client = \
-            utils.create_openstack_clients(admin_clients)["keystone"]
+            utils.create_openstack_clients(admin_endpoints)["keystone"]
 
     def _create_user(self, user_id, tenant_id):
         pattern = "%(tenant_id)s_user_%(uid)d"
@@ -89,7 +90,6 @@ class UserGenerator(object):
         auth_url = self.keystone_client.auth_url
         self.tenants = [self._create_tenant(run_id, i)
                         for i in range(tenants)]
-
         self.users = []
         endpoints = []
         for tenant in self.tenants:
