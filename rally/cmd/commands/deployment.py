@@ -113,14 +113,19 @@ class DeploymentCommands(object):
     def list(self, deployment_list=None):
         """Print list of deployments."""
         headers = ['uuid', 'created_at', 'name', 'status']
-        table = prettytable.PrettyTable(headers)
-
         deployment_list = deployment_list or db.deployment_list()
-        for t in deployment_list:
-            r = [str(t[column]) for column in headers]
-            table.add_row(r)
+        if deployment_list:
+            table = prettytable.PrettyTable(headers)
 
-        print(table)
+            for t in deployment_list:
+                r = [str(t[column]) for column in headers]
+                table.add_row(r)
+
+            print(table)
+        else:
+            print(_("There are no deployments. "
+                    "To create a new deployment, use:"
+                    "\nrally deployment create"))
 
     @cliutils.args('--deploy-id', dest='deploy_id', type=str, required=False,
                    help='UUID of a deployment.')
