@@ -236,17 +236,19 @@ class TaskCommands(object):
 
     def list(self, task_list=None):
         """Print a list of all tasks."""
-
         headers = ['uuid', 'created_at', 'status', 'failed']
-        table = prettytable.PrettyTable(headers)
-
         task_list = task_list or db.task_list()
+        if task_list:
+            table = prettytable.PrettyTable(headers)
 
-        for t in task_list:
-            r = [t['uuid'], str(t['created_at']), t['status'], t['failed']]
-            table.add_row(r)
+            for t in task_list:
+                r = [t['uuid'], str(t['created_at']), t['status'], t['failed']]
+                table.add_row(r)
 
-        print(table)
+            print(table)
+        else:
+            print(_("There are no tasks. To run a new task, use:"
+                    "\nrally task start"))
 
     @cliutils.args('--task-id', type=str, dest='task_id', help='uuid of task')
     @cliutils.args('--out', type=str, dest='out', required=False,
