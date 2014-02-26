@@ -92,3 +92,58 @@ class BenchmarkUtilsTestCase(test.TestCase):
         manager.get = mock.MagicMock(side_effect=HTTPException)
         self.assertRaises(exceptions.GetResourceFailure,
                           get_from_manager, resource)
+
+    @mock.patch('rally.benchmark.utils.create_openstack_clients')
+    def test_prep_ssh_sec_group(self, mock_create_os_clients):
+        fake_nova = fakes.FakeNovaClient()
+        self.assertEqual(len(fake_nova.security_groups.list()), 1)
+        mock_create_os_clients.return_value = {'nova': fake_nova}
+
+        utils._prepare_for_instance_ssh('endpoint')
+
+        self.assertEqual(len(fake_nova.security_groups.list()), 2)
+        self.assertTrue(
+            'rally_open' in
+                [sg.name for sg in fake_nova.security_groups.list()]
+        )
+
+        # run prep again, check that another security group is not created
+        utils._prepare_for_instance_ssh('endpoint')
+        self.assertEqual(len(fake_nova.security_groups.list()), 2)
+
+    @mock.patch('rally.benchmark.utils.create_openstack_clients')
+    def test_prep_ssh_sec_group_rules(self, mock_create_os_clients):
+        fake_nova = fakes.FakeNovaClient()
+
+        #NOTE(hughsaunders) Default security group is precreated
+        self.assertEqual(len(fake_nova.security_groups.list()), 1)
+        mock_create_os_clients.return_value = {'nova': fake_nova}
+
+        utils._prepare_for_instance_ssh('endpoint')
+
+        self.assertEqual(len(fake_nova.security_groups.list()), 2)
+        rally_open = fake_nova.security_groups.find('rally_open')
+        self.assertEqual(len(rally_open.rules), 3)
+
+        # run prep again, check that extra rules are not created
+        utils._prepare_for_instance_ssh('endpoint')
+        rally_open = fake_nova.security_groups.find('rally_open')
+        self.assertEqual(len(rally_open.rules), 3)
+
+    @mock.patch('rally.benchmark.utils.create_openstack_clients')
+    def test_prep_ssh_keypairs(self, mock_create_os_clients):
+        fake_nova = fakes.FakeNovaClient()
+        self.assertEqual(len(fake_nova.keypairs.list()), 0)
+        mock_create_os_clients.return_value = {'nova': fake_nova}
+
+        utils._prepare_for_instance_ssh('endpoint')
+
+        self.assertEqual(len(fake_nova.keypairs.list()), 1)
+        self.assertTrue(
+            'rally_ssh_key' in
+                [sg.name for sg in fake_nova.keypairs.list()]
+        )
+
+        # run prep again, check that another keypair is not created
+        utils._prepare_for_instance_ssh('endpoint')
+        self.assertEqual(len(fake_nova.keypairs.list()), 1)

@@ -95,15 +95,22 @@ class FakeKeypair(FakeResource):
 
 class FakeSecurityGroup(FakeResource):
 
-    def __init__(self, manager=None):
+    def __init__(self, manager=None, rule_manager=None):
         super(FakeSecurityGroup, self).__init__(manager)
-        self.rules = []
+        self.manager = manager
+        self.rule_manager = rule_manager
+
+    @property
+    def rules(self):
+        return [rule for rule in self.rule_manager.list()
+                if rule.parent_group_id == self.id]
 
 
 class FakeSecurityGroupRule(FakeResource):
     def __init__(self, name, **kwargs):
         super(FakeSecurityGroupRule, self).__init__(name)
         for key, value in kwargs.items():
+            self.items[key] = value
             setattr(self, key, value)
 
 
@@ -261,26 +268,39 @@ class FakeKeypairManager(FakeManager):
 
 
 class FakeSecurityGroupManager(FakeManager):
-
-    def __init__(self):
+    def __init__(self, rule_manager=None):
         super(FakeSecurityGroupManager, self).__init__()
+        self.rule_manager = rule_manager
         self.create('default')
 
     def create(self, name, description=""):
-        sg = FakeSecurityGroup(self)
+        sg = FakeSecurityGroup(
+            manager=self,
+            rule_manager=self.rule_manager)
         sg.name = name or sg.name
         sg.description = description
         return self._cache(sg)
 
+    def find(self, name, **kwargs):
+        kwargs['name'] = name
+        for resource in self.cache.values():
+            match = True
+            for key, value in kwargs.items():
+                if getattr(resource, key, None) != value:
+                    match = False
+                    break
+            if match:
+                return resource
+        raise exceptions.NotFound('Security Group not found')
+
 
 class FakeSecurityGroupRuleManager(FakeManager):
-
     def __init__(self):
         super(FakeSecurityGroupRuleManager, self).__init__()
 
-    def create(self, name, **kwargs):
+    def create(self, parent_group_id, **kwargs):
+        kwargs['parent_group_id'] = parent_group_id
         sgr = FakeSecurityGroupRule(self, **kwargs)
-        sgr.name = name or sgr.name
         return self._cache(sgr)
 
 
@@ -373,8 +393,9 @@ class FakeNovaClient(object):
         self.floating_ips = FakeFloatingIPsManager()
         self.networks = FakeNetworkManager()
         self.keypairs = FakeKeypairManager()
-        self.security_groups = FakeSecurityGroupManager()
         self.security_group_rules = FakeSecurityGroupRuleManager()
+        self.security_groups = FakeSecurityGroupManager(
+            rule_manager=self.security_group_rules)
 
 
 class FakeKeystoneClient(object):
