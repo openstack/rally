@@ -12,7 +12,6 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-
 import traceback
 
 from novaclient import exceptions as nova_exceptions
@@ -138,19 +137,19 @@ def _prepare_for_instance_ssh(users_endpoint):
             "ip_protocol": "tcp",
             "to_port": 65535,
             "from_port": 1,
-            "ip_range": {"cidr": "0.0.0.0/0"}
+            "cidr": "0.0.0.0/0"
         },
         {
             "ip_protocol": "udp",
             "to_port": 65535,
             "from_port": 1,
-            "ip_range": {"cidr": "0.0.0.0/0"}
+            "cidr": "0.0.0.0/0"
         },
         {
             "ip_protocol": "icmp",
             "to_port": 1,
             "from_port": -1,
-            "ip_range": {"cidr": "0.0.0.0/0"}
+            "cidr": "0.0.0.0/0"
         }
     ]
 
@@ -166,7 +165,7 @@ def _prepare_for_instance_ssh(users_endpoint):
                         from_port=new_rule['from_port'],
                         to_port=new_rule['to_port'],
                         ip_protocol=new_rule['ip_protocol'],
-                        cidr=new_rule['ip_range']['cidr'])
+                        cidr=new_rule['cidr'])
 
     return ({"private": keypair.private_key, "public": keypair.public_key}
             if keypair else None)
