@@ -67,3 +67,19 @@ class UseCommandsTestCase(test.BaseTestCase):
         self.assertRaises(exceptions.DeploymentNotFound,
                           self.use.deployment,
                           deploy_id)
+
+    @mock.patch('rally.cmd.commands.use.fileutils._rewrite_env_file')
+    @mock.patch('rally.cmd.commands.use.db.task_get')
+    def test_task(self, mock_task, mock_file):
+        task_id = str(uuid.uuid4())
+        mock_task.return_value = True
+        self.use.task(task_id)
+        mock_file.assert_called_once_with(
+            os.path.expanduser('~/.rally/globals'),
+            ['RALLY_TASK=%s\n' % task_id])
+
+    @mock.patch('rally.cmd.commands.use.db.task_get')
+    def test_task_not_found(self, mock_task):
+        task_id = str(uuid.uuid4())
+        mock_task.side_effect = exceptions.TaskNotFound(uuid=task_id)
+        self.assertRaises(exceptions.TaskNotFound, self.use.task, task_id)
