@@ -17,6 +17,7 @@
 
 import os
 
+from rally.cmd import cliutils
 from rally import db
 from rally import fileutils
 
@@ -46,6 +47,8 @@ class UseCommands(object):
         if not os.path.exists(os.path.expanduser('~/.rally/')):
             os.makedirs(os.path.expanduser('~/.rally/'))
 
+    @cliutils.args('--deploy-id', type=str, dest='deploy_id', required=False,
+                   help='UUID of the deployment')
     def deployment(self, deploy_id):
         """Set the RALLY_DEPLOYMENT env var to be used by all CLI commands
 
