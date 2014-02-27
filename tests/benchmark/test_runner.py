@@ -125,7 +125,7 @@ class ScenarioRunnerTestCase(test.TestCase):
                                                       self.fake_endpoints)
         srunner.temp_users = _get_fake_users(5)
         times = 1
-        duration = 0.001
+        duration = 1
         active_users = 2
 
         mock_utils.Timer = fakes.FakeTimer
