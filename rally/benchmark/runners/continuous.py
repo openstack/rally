@@ -87,7 +87,7 @@ class ContinuousScenarioRunner(base.ScenarioRunner):
                           "error": utils.format_exc(e)}
             results_queue.append(result)
 
-            if time.time() - start > duration * 60:
+            if time.time() - start > duration:
                 break
 
         results = list(results_queue)
