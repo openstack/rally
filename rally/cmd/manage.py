@@ -20,6 +20,7 @@ from __future__ import print_function
 import sys
 
 from rally.cmd import cliutils
+from rally.cmd import envutils
 from rally import db
 from rally.verification.verifiers.tempest import tempest
 
@@ -35,9 +36,12 @@ class DBCommands(object):
 class TempestCommands(object):
     """Commands for Tempest management."""
 
-    def install(self):
+    @cliutils.args('--deploy-id', type=str, dest='deploy_id', required=False,
+                   help='UUID of the deployment')
+    @envutils.deploy_id_default
+    def install(self, deploy_id=None):
         """Install tempest."""
-        verifier = tempest.Tempest()
+        verifier = tempest.Tempest(deploy_id)
         verifier.install()
 
 

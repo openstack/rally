@@ -55,6 +55,8 @@ def destroy_deploy(deploy_uuid):
         deployer.make_cleanup()
         deployment.delete()
 
+    tempest.Tempest(deploy_uuid).uninstall()
+
 
 def recreate_deploy(deploy_uuid):
     """Performs a clean up and then start to deploy.
@@ -133,9 +135,9 @@ def verify(deploy_id, image_id, alt_image_id, flavor_id, alt_flavor_id,
     :param alt_flavor_id: Valid secondary flavor to be used in tests.
     :param set_name: Valid name of tempest test set.
     """
-    verifier = tempest.Tempest()
+    verifier = tempest.Tempest(deploy_id)
     if not verifier.is_installed():
-        print("Tempest is not installed. "
+        print("Tempest is not installed for specified deployment. "
               "Please use 'rally-manage tempest install'")
         return
     print("Starting verification of deployment: %s" % deploy_id)
