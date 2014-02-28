@@ -109,6 +109,9 @@ class FakeSecurityGroup(FakeResource):
 class FakeSecurityGroupRule(FakeResource):
     def __init__(self, name, **kwargs):
         super(FakeSecurityGroupRule, self).__init__(name)
+        if 'cidr' in kwargs:
+            kwargs['ip_range'] = {'cidr': kwargs['cidr']}
+            del kwargs['cidr']
         for key, value in kwargs.items():
             self.items[key] = value
             setattr(self, key, value)
