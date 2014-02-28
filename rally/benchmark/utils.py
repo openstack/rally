@@ -219,12 +219,6 @@ def delete_volumes(cinder):
     _wait_for_empty_list(cinder.volumes, timeout=120)
 
 
-def delete_volume_types(cinder):
-    for vol_type in cinder.volume_types.list():
-        vol_type.delete()
-    _wait_for_empty_list(cinder.volume_types)
-
-
 def delete_volume_transfers(cinder):
     for transfer in cinder.transfers.list():
         transfer.delete()
@@ -264,7 +258,6 @@ def delete_nova_resources(nova):
 def delete_cinder_resources(cinder):
     delete_volume_transfers(cinder)
     delete_volumes(cinder)
-    delete_volume_types(cinder)
     delete_volume_snapshots(cinder)
     delete_volume_backups(cinder)
 
