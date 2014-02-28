@@ -18,9 +18,7 @@ import multiprocessing
 
 from rally.benchmark import runner
 from rally.benchmark.runners import continuous
-from rally.benchmark import validation
 from rally import consts
-from rally import exceptions
 from tests import fakes
 from tests import test
 
@@ -53,7 +51,7 @@ class ScenarioRunnerTestCase(test.TestCase):
         mock_osclients.Clients.return_value = fakes.FakeClients()
         srunner = continuous.ContinuousScenarioRunner(mock.MagicMock(),
                                                       self.fake_endpoints)
-        srunner.temp_users = _get_fake_users(5)
+        srunner.users = _get_fake_users(5)
         active_users = 2
         times = 3
         duration = 0.01
@@ -90,7 +88,7 @@ class ScenarioRunnerTestCase(test.TestCase):
         srunner = runner.ScenarioRunner.get_runner(mock.MagicMock(),
                                                    self.fake_endpoints,
                                                    {"execution": "continuous"})
-        srunner.temp_users = _get_fake_users(5)
+        srunner.users = _get_fake_users(5)
         times = 4
         active_users = 2
         results = srunner._run_scenario(fakes.FakeScenario,
@@ -123,7 +121,7 @@ class ScenarioRunnerTestCase(test.TestCase):
         mock_osclients.Clients.return_value = fakes.FakeClients()
         srunner = continuous.ContinuousScenarioRunner(mock.MagicMock(),
                                                       self.fake_endpoints)
-        srunner.temp_users = _get_fake_users(5)
+        srunner.users = _get_fake_users(5)
         times = 1
         duration = 1
         active_users = 2
@@ -153,28 +151,21 @@ class ScenarioRunnerTestCase(test.TestCase):
     def test_run_scenario_exception_outside_test(self):
         pass
 
-    def _set_mocks_for_run(self, mock_osclients, mock_base, validators=None):
+    @mock.patch("rally.benchmark.runner.base")
+    @mock.patch("rally.benchmark.utils.osclients")
+    def test_run(self, mock_osclients, mock_base):
         FakeScenario = mock.MagicMock()
         FakeScenario.init = mock.MagicMock(return_value={})
-        if validators:
-            FakeScenario.do_it.validators = validators
 
         mock_osclients.Clients.return_value = fakes.FakeClients()
         srunner = runner.ScenarioRunner.get_runner(mock.MagicMock(),
                                                    self.fake_endpoints,
                                                    {"execution": "continuous"})
         srunner._run_scenario = mock.MagicMock(return_value="result")
-        srunner.temp_users = _get_fake_users(5)
+        srunner.users = _get_fake_users(5)
 
         mock_base.Scenario.get_by_name = \
             mock.MagicMock(return_value=FakeScenario)
-        return FakeScenario, srunner
-
-    @mock.patch("rally.benchmark.runner.base")
-    @mock.patch("rally.benchmark.utils.osclients")
-    def test_run(self, mock_osclients, mock_base):
-        FakeScenario, srunner = self._set_mocks_for_run(mock_osclients,
-                                                        mock_base)
 
         result = srunner.run("FakeScenario.do_it", {})
         self.assertEqual(result, "result")
@@ -199,18 +190,6 @@ class ScenarioRunnerTestCase(test.TestCase):
                        "tenants": 5, "users_per_tenant": 2})
         ]
         self.assertEqual(srunner._run_scenario.mock_calls, expected)
-
-    @mock.patch("rally.benchmark.runner.base")
-    @mock.patch("rally.benchmark.utils.osclients")
-    def test_run_validation_failure(self, mock_osclients, mock_base):
-        def evil_validator(**kwargs):
-            return validation.ValidationResult(is_valid=False)
-
-        FakeScenario, srunner = self._set_mocks_for_run(mock_osclients,
-                                                        mock_base,
-                                                        [evil_validator])
-        self.assertRaises(exceptions.InvalidScenarioArgument,
-                          srunner.run, "FakeScenario.do_it", {})
 
 
 class UserGeneratorTestCase(test.TestCase):

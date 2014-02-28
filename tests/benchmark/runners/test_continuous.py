@@ -38,7 +38,7 @@ class ContinuousScenarioRunnerTestCase(test.TestCase):
         mock_osclients.Clients.return_value = fakes.FakeClients()
         srunner = continuous.ContinuousScenarioRunner(mock.MagicMock(),
                                                       self.fake_endpoints)
-        srunner.temp_users = ["client"]
+        srunner.users = ["client"]
         times = 3
         active_users = 4
         timeout = 5
@@ -75,7 +75,7 @@ class ContinuousScenarioRunnerTestCase(test.TestCase):
         mock_osclients.Clients.return_value = fakes.FakeClients()
         srunner = continuous.ContinuousScenarioRunner(mock.MagicMock(),
                                                       self.fake_endpoints)
-        srunner.temp_users = ["client"]
+        srunner.users = ["client"]
         duration = 0
         active_users = 4
         timeout = 5
@@ -103,7 +103,7 @@ class ContinuousScenarioRunnerTestCase(test.TestCase):
         srunner = runner.ScenarioRunner.get_runner(mock.MagicMock(),
                                                    self.fake_endpoints,
                                                    {"execution": "continuous"})
-        srunner.temp_users = ["user"]
+        srunner.users = ["user"]
         self.assertTrue(srunner is not None)
 
         srunner._run_scenario_continuously_for_times = \

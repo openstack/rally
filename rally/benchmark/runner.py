@@ -24,7 +24,6 @@ from oslo.config import cfg
 from rally.benchmark import base
 from rally.benchmark import utils
 from rally import consts
-from rally import exceptions
 from rally.objects import endpoint
 from rally.openstack.common.gettextutils import _
 from rally.openstack.common import log as logging
@@ -203,7 +202,7 @@ class ScenarioRunner(object):
         #                implemented yet, so the scenario runner always gets
         #                a single admin endpoint here.
         self.admin_user = endpoints[0]
-        self.temp_users = []
+        self.users = []
 
     @staticmethod
     def get_runner(task, endpoint, config):
@@ -236,20 +235,11 @@ class ScenarioRunner(object):
         args = kwargs.get('args', {})
         config = kwargs.get('config', {})
 
-        # TODO(boris-42): Validation should in benchmark.engine not here
-        method = getattr(cls, method_name)
-        validators = getattr(method, "validators", [])
-        for validator in validators:
-            admin_client = utils.create_openstack_clients(self.admin_user)
-            result = validator(clients=admin_client, **args)
-            if not result.is_valid:
-                raise exceptions.InvalidScenarioArgument(message=result.msg)
-
-        for temp_user in self.temp_users:
+        for user in self.users:
             # TODO(boris-42): Only way that I found to pass keypair value
             #                 to the scenario. I think that this thing should
             #                 be refactored in future
-            temp_user.keypair = utils._prepare_for_instance_ssh(temp_user)
+            user.keypair = utils._prepare_for_instance_ssh(user)
 
         return self._run_scenario(cls, method_name, args, config)
 
@@ -259,16 +249,16 @@ class ScenarioRunner(object):
         with UserGenerator(self.admin_user) as generator:
             tenants = config.get("tenants", 1)
             users_per_tenant = config.get("users_per_tenant", 1)
-            self.temp_users = generator.create_users_and_tenants(
-                                                    tenants, users_per_tenant)
+            self.users = generator.create_users_and_tenants(tenants,
+                                                            users_per_tenant)
 
             with ResourceCleaner(admin=self.admin_user,
-                                 users=self.temp_users):
+                                 users=self.users):
                 return self._prepare_and_run_scenario(name, kwargs)
 
     def _run_as_non_admin(self, name, kwargs):
         # TODO(boris-42): Somehow setup clients from deployment/config
-        with ResourceCleaner(users=self.temp_users):
+        with ResourceCleaner(users=self.users):
             return self._prepare_and_run_scenario(name, kwargs)
 
     def run(self, name, kwargs):

@@ -63,6 +63,7 @@ class FakeScenario(base.Scenario):
 #                only database operations and actually no more. Each
 #                case in this test should to mock everything external.
 class APITestCase(test.TestCase):
+
     def setUp(self):
         super(APITestCase, self).setUp()
         self.deploy_config = FAKE_DEPLOY_CONFIG
@@ -90,6 +91,8 @@ class APITestCase(test.TestCase):
         api.create_task(deployment_uuid)
         mock_task.assert_called_once_with(deployment_uuid=deployment_uuid)
 
+    @mock.patch("rally.benchmark.engine.BenchmarkEngine."
+                "_validate_scenario_args")
     @mock.patch('rally.benchmark.engine.osclients')
     @mock.patch('rally.benchmark.engine.runner.ScenarioRunner.get_runner')
     @mock.patch('rally.objects.deploy.db.deployment_get')
@@ -98,7 +101,8 @@ class APITestCase(test.TestCase):
     @mock.patch('rally.objects.task.db.task_create')
     def test_start_task(self, mock_task_create, mock_task_update,
                         mock_task_result_create, mock_deploy_get,
-                        mock_utils_runner, mock_osclients):
+                        mock_utils_runner, mock_osclients,
+                        mock_validate_scenario_args):
         mock_task_create.return_value = self.task
         mock_task_update.return_value = self.task
         mock_deploy_get.return_value = self.deployment
