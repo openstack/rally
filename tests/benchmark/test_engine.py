@@ -115,7 +115,7 @@ class BenchmarkEngineTestCase(test.TestCase):
                           mock.MagicMock())
 
     @mock.patch("rally.benchmark.base.Scenario.get_by_name")
-    @mock.patch("rally.benchmark.runner.UserGenerator."
+    @mock.patch("rally.benchmark.context.users.UserGenerator."
                 "create_users_and_tenants")
     @mock.patch("rally.benchmark.utils.create_openstack_clients")
     @mock.patch("rally.benchmark.engine.BenchmarkEngine._validate_config")
@@ -148,7 +148,7 @@ class BenchmarkEngineTestCase(test.TestCase):
         mock_create_os_clients.assert_has_calls(expected, any_order=True)
 
     @mock.patch("rally.benchmark.base.Scenario.get_by_name")
-    @mock.patch("rally.benchmark.runner.UserGenerator."
+    @mock.patch("rally.benchmark.context.users.UserGenerator."
                 "create_users_and_tenants")
     @mock.patch("rally.benchmark.utils.create_openstack_clients")
     @mock.patch("rally.benchmark.engine.BenchmarkEngine._validate_config")

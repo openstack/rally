@@ -17,6 +17,7 @@ import json
 import jsonschema
 
 from rally.benchmark import base
+from rally.benchmark.context import users as users_ctx
 from rally.benchmark import runner
 from rally.benchmark import utils
 from rally import consts
@@ -155,7 +156,7 @@ class BenchmarkEngine(object):
         if self.admin_endpoint:
             admin_client = utils.create_openstack_clients(self.admin_endpoint)
             validate(admin_validators, admin_client)
-            with runner.UserGenerator(self.admin_endpoint) as generator:
+            with users_ctx.UserGenerator(self.admin_endpoint) as generator:
                 temp_user = generator.create_users_and_tenants(1, 1)[0]
                 user_client = utils.create_openstack_clients(temp_user)
                 validate(user_validators, user_client)
