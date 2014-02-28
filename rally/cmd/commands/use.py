@@ -58,3 +58,16 @@ class UseCommands(object):
         self._ensure_rally_configuration_dir_exists()
         self._update_attribute_in_global_file('RALLY_DEPLOYMENT', deploy_id)
         self._update_openrc_deployment_file(deploy_id)
+
+    def task(self, task_id):
+        """Set the RALLY_TASK env var so the user does not need to specify a
+        task UUID in the command requiring this parameter.
+        If the task uuid specified in parameter by the user does not exist,
+        a TaskNotFound will be raised by task_get().
+
+        :param task_id: a UUID of a task
+        """
+        print('Using task: %s' % task_id)
+        self._ensure_rally_configuration_dir_exists()
+        db.task_get(task_id)
+        self._update_attribute_in_global_file('RALLY_TASK', task_id)
