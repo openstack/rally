@@ -76,7 +76,8 @@ class ScenarioRunnerTestCase(test.TestCase):
         self.assertEqual(results, expected)
 
     @mock.patch("rally.benchmark.utils.osclients")
-    @mock.patch("multiprocessing.pool.IMapIterator.next")
+    @mock.patch("rally.benchmark.runners.continuous.multiprocessing."
+                "pool.IMapIterator.next")
     @mock.patch("rally.benchmark.runners.continuous.time.time")
     @mock.patch("rally.benchmark.utils._prepare_for_instance_ssh")
     def test_run_scenario_timeout(self, mock_prepare_for_instance_ssh,
