@@ -116,17 +116,16 @@ class ScenarioRunnerTestCase(test.TestCase):
 
     @mock.patch("rally.benchmark.runner.rutils")
     @mock.patch("rally.benchmark.utils.osclients")
-    def test_run_scenario_exception_inside_test(self, mock_osclients,
-                                                mock_utils):
+    def test_run_scenario_times_exception_inside_test(self, mock_osclients,
+                                                      mock_utils):
         mock_osclients.Clients.return_value = fakes.FakeClients()
+        mock_utils.Timer = fakes.FakeTimer
         srunner = continuous.ContinuousScenarioRunner(mock.MagicMock(),
                                                       self.fake_endpoints)
         srunner.users = _get_fake_users(5)
         times = 1
-        duration = 1
         active_users = 2
 
-        mock_utils.Timer = fakes.FakeTimer
         results = srunner._run_scenario(fakes.FakeScenario,
                                         "something_went_wrong", {},
                                         {"times": times, "timeout": 1,
@@ -137,12 +136,21 @@ class ScenarioRunnerTestCase(test.TestCase):
             self.assertEqual(r['error'][:2],
                              [str(Exception), "Something went wrong"])
 
+    @mock.patch("rally.benchmark.runner.rutils")
+    @mock.patch("rally.benchmark.utils.osclients")
+    def test_run_scenario_duration_exception_inside_test(self, mock_osclients,
+                                                         mock_utils):
+        mock_osclients.Clients.return_value = fakes.FakeClients()
+        mock_utils.Timer = fakes.FakeTimer
+        srunner = continuous.ContinuousScenarioRunner(mock.MagicMock(),
+                                                      self.fake_endpoints)
+        srunner.users = _get_fake_users(5)
+        active_users = 2
         results = srunner._run_scenario(fakes.FakeScenario,
                                         "something_went_wrong", {},
-                                        {"duration": duration,
+                                        {"duration": 0,
                                          "timeout": 1,
                                          "active_users": active_users})
-        self.assertEqual(len(results), active_users)
         for r in results:
             self.assertEqual(r['time'], 10)
             self.assertEqual(r['error'][:2],

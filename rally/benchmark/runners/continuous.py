@@ -79,16 +79,15 @@ class ContinuousScenarioRunner(runner.ScenarioRunner):
         results_queue = collections.deque([], maxlen=concurrent)
 
         while True:
-
-            if time.time() - start > duration * 60:
-                break
-
             try:
                 result = iter_result.next(timeout)
             except multiprocessing.TimeoutError as e:
                 result = {"time": timeout, "idle_time": 0,
                           "error": utils.format_exc(e)}
             results_queue.append(result)
+
+            if time.time() - start > duration * 60:
+                break
 
         results = list(results_queue)
 
