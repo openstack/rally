@@ -19,7 +19,7 @@ import multiprocessing
 import random
 import time
 
-from rally.benchmark import runner
+from rally.benchmark.runners import base
 from rally.benchmark import utils
 
 from rally.openstack.common import log as logging
@@ -27,7 +27,7 @@ from rally.openstack.common import log as logging
 LOG = logging.getLogger(__name__)
 
 
-class ContinuousScenarioRunner(runner.ScenarioRunner):
+class ContinuousScenarioRunner(base.ScenarioRunner):
     """Scenario runner that launches benchmark scenarios continuously.
 
     "Continuously" means here that each iteration of the scenario being
@@ -49,7 +49,7 @@ class ContinuousScenarioRunner(runner.ScenarioRunner):
                      for i in range(times)]
 
         pool = multiprocessing.Pool(concurrent)
-        iter_result = pool.imap(runner._run_scenario_once, test_args)
+        iter_result = pool.imap(base._run_scenario_once, test_args)
 
         results = []
 
@@ -72,7 +72,7 @@ class ContinuousScenarioRunner(runner.ScenarioRunner):
         run_args = utils.infinite_run_args((cls, method, self.admin_user,
                                             random.choice(self.users),
                                             args))
-        iter_result = pool.imap(runner._run_scenario_once, run_args)
+        iter_result = pool.imap(base._run_scenario_once, run_args)
 
         start = time.time()
 

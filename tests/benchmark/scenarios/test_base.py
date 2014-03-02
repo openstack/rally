@@ -15,19 +15,18 @@
 
 import mock
 
-from rally.benchmark import base
+from rally.benchmark.scenarios import base
 from rally import exceptions
 from tests import test
 
 
 class ScenarioTestCase(test.TestCase):
 
-    def test_register(self):
+    @mock.patch("rally.benchmark.scenarios.base.utils")
+    def test_register(self, mock_utils):
         base.Scenario.registred = False
-        with mock.patch("rally.benchmark.base.utils") as mock_utils:
-            base.Scenario.register()
-            base.Scenario.register()
-
+        base.Scenario.register()
+        base.Scenario.register()
         expected = [
             mock.call.import_modules_from_package("rally.benchmark.scenarios")
         ]
@@ -54,8 +53,8 @@ class ScenarioTestCase(test.TestCase):
     def test_cleanup(self):
         base.Scenario.cleanup()
 
-    @mock.patch("rally.benchmark.base.time.sleep")
-    @mock.patch("rally.benchmark.base.random.uniform")
+    @mock.patch("rally.benchmark.scenarios.base.time.sleep")
+    @mock.patch("rally.benchmark.scenarios.base.random.uniform")
     def test_sleep_between(self, mock_uniform, mock_sleep):
         scenario = base.Scenario()
 

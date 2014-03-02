@@ -114,7 +114,7 @@ class BenchmarkEngineTestCase(test.TestCase):
                           self.invalid_test_config_bad_param_for_periodic,
                           mock.MagicMock())
 
-    @mock.patch("rally.benchmark.base.Scenario.get_by_name")
+    @mock.patch("rally.benchmark.scenarios.base.Scenario.get_by_name")
     @mock.patch("rally.benchmark.context.users.UserGenerator."
                 "create_users_and_tenants")
     @mock.patch("rally.benchmark.utils.create_openstack_clients")
@@ -147,7 +147,7 @@ class BenchmarkEngineTestCase(test.TestCase):
         expected = [mock.call("admin"), mock.call("user")]
         mock_create_os_clients.assert_has_calls(expected, any_order=True)
 
-    @mock.patch("rally.benchmark.base.Scenario.get_by_name")
+    @mock.patch("rally.benchmark.scenarios.base.Scenario.get_by_name")
     @mock.patch("rally.benchmark.context.users.UserGenerator."
                 "create_users_and_tenants")
     @mock.patch("rally.benchmark.utils.create_openstack_clients")
@@ -197,7 +197,7 @@ class BenchmarkEngineTestCase(test.TestCase):
 
     @mock.patch("rally.benchmark.engine.BenchmarkEngine."
                 "_validate_scenario_args")
-    @mock.patch("rally.benchmark.runner.ScenarioRunner.run")
+    @mock.patch("rally.benchmark.runners.base.ScenarioRunner.run")
     @mock.patch("rally.benchmark.utils.osclients")
     @mock.patch("rally.benchmark.engine.osclients")
     def test_run(self, mock_engine_osclients, mock_utils_osclients, mock_run,
@@ -211,7 +211,7 @@ class BenchmarkEngineTestCase(test.TestCase):
 
     @mock.patch("rally.benchmark.engine.BenchmarkEngine."
                 "_validate_scenario_args")
-    @mock.patch("rally.benchmark.runner.ScenarioRunner.run")
+    @mock.patch("rally.benchmark.runners.base.ScenarioRunner.run")
     @mock.patch("rally.benchmark.utils.osclients")
     @mock.patch("rally.benchmark.engine.osclients")
     def test_task_status_basic_chain(self, mock_engine_osclients,
@@ -246,7 +246,7 @@ class BenchmarkEngineTestCase(test.TestCase):
 
     @mock.patch("rally.benchmark.engine.BenchmarkEngine."
                 "_validate_scenario_args")
-    @mock.patch("rally.benchmark.runner.ScenarioRunner.run")
+    @mock.patch("rally.benchmark.runners.base.ScenarioRunner.run")
     @mock.patch("rally.benchmark.utils.osclients")
     @mock.patch("rally.benchmark.engine.osclients")
     def test_task_status_basic_chain_validation_fails(self,
@@ -288,7 +288,7 @@ class BenchmarkEngineTestCase(test.TestCase):
 
     @mock.patch("rally.benchmark.engine.BenchmarkEngine."
                 "_validate_scenario_args")
-    @mock.patch("rally.benchmark.runner.ScenarioRunner.run")
+    @mock.patch("rally.benchmark.runners.base.ScenarioRunner.run")
     @mock.patch("rally.benchmark.utils.osclients")
     @mock.patch("rally.benchmark.engine.osclients")
     def test_task_status_failed(self, mock_engine_osclients,

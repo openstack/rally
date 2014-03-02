@@ -15,7 +15,7 @@
 
 import mock
 
-from rally.benchmark import runner
+from rally.benchmark.runners import base
 from rally.benchmark.runners import continuous
 from rally import consts
 from tests import fakes
@@ -52,7 +52,7 @@ class ContinuousScenarioRunnerTestCase(test.TestCase):
 
         expected_pool_calls = [
             mock.call.imap(
-                runner._run_scenario_once,
+                base._run_scenario_once,
                 [(i, fakes.FakeScenario, "do_it", self.fake_endpoints[0],
                  "client", {}) for i in xrange(times)]
             )
@@ -86,13 +86,13 @@ class ContinuousScenarioRunnerTestCase(test.TestCase):
                                                         active_users, timeout)
         expect = [
             mock.call(active_users),
-            mock.call().imap(runner._run_scenario_once, {}),
+            mock.call().imap(base._run_scenario_once, {}),
             mock.call().terminate(),
             mock.call().join()
         ]
         self.assertEqual(mock_multi.Pool.mock_calls, expect)
 
-    @mock.patch("rally.benchmark.runner.base")
+    @mock.patch("rally.benchmark.runners.base.base")
     @mock.patch("rally.benchmark.utils.osclients")
     def test_get_and_run_continuous_runner(self, mock_osclients, mock_base):
         FakeScenario = mock.MagicMock()
@@ -100,29 +100,28 @@ class ContinuousScenarioRunnerTestCase(test.TestCase):
 
         mock_osclients.Clients.return_value = fakes.FakeClients()
 
-        srunner = runner.ScenarioRunner.get_runner(mock.MagicMock(),
-                                                   self.fake_endpoints,
-                                                   {"execution": "continuous"})
-        srunner.users = ["user"]
-        self.assertTrue(srunner is not None)
+        runner = base.ScenarioRunner.get_runner(mock.MagicMock(),
+                                                self.fake_endpoints,
+                                                {"execution": "continuous"})
+        runner.users = ["user"]
 
-        srunner._run_scenario_continuously_for_times = \
+        runner._run_scenario_continuously_for_times = \
             mock.MagicMock(return_value="times")
-        srunner._run_scenario_continuously_for_duration = \
+        runner._run_scenario_continuously_for_duration = \
             mock.MagicMock(return_value="duration")
 
         mock_base.Scenario.get_by_name = \
             mock.MagicMock(return_value=FakeScenario)
         mock_osclients.return_value = ["client"]
-        result = srunner._run_scenario(FakeScenario, "do_it", {"a": 1},
-                                       {"times": 2, "active_users": 3,
-                                        "timeout": 1})
+        result = runner._run_scenario(FakeScenario, "do_it", {"a": 1},
+                                      {"times": 2, "active_users": 3,
+                                       "timeout": 1})
         self.assertEqual(result, "times")
-        srunner._run_scenario_continuously_for_times.assert_called_once_with(
+        runner._run_scenario_continuously_for_times.assert_called_once_with(
                                     FakeScenario, "do_it", {"a": 1}, 2, 3, 1)
-        result = srunner._run_scenario(FakeScenario, "do_it", {"a": 1},
-                                       {"duration": 2, "active_users": 3,
-                                        "timeout": 1})
+        result = runner._run_scenario(FakeScenario, "do_it", {"a": 1},
+                                      {"duration": 2, "active_users": 3,
+                                       "timeout": 1})
         self.assertEqual(result, "duration")
-        srunner._run_scenario_continuously_for_duration.\
+        runner._run_scenario_continuously_for_duration.\
             assert_called_once_with(FakeScenario, "do_it", {"a": 1}, 2, 3, 1)

@@ -1,4 +1,5 @@
-# Copyright 2014 Red Hat, Inc. <http://www.redhat.com>
+# Copyright 2014: Mirantis Inc.
+# All Rights Reserved.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
@@ -12,15 +13,15 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from rally.benchmark.scenarios import base
-from rally import osclients
 
+class Context(object):
+    """We will use this class in future as a factory for context classes.
 
-class Authenticate(base.Scenario):
-    """This class should contain authentication mechanism for different
-    types of clients like Keystone.
+        It will cover:
+            1) Auto discovering
+            2) Validation of input args
+            3) Common logging
+
+        Actually the same functionionallity as
+        runners.base.ScenarioRunner and scenarios.base.Scenario
     """
-    def keystone(self, **kwargs):
-        keystone_endpoint = self.clients("endpoint")
-        cl = osclients.Clients(keystone_endpoint)
-        cl.get_keystone_client()

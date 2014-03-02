@@ -15,7 +15,7 @@
 
 import mock
 
-from rally.benchmark import runner
+from rally.benchmark.runners import base
 from rally.benchmark.runners import periodic
 from rally import consts
 from tests import fakes
@@ -31,19 +31,19 @@ class PeriodicScenarioRunnerTestCase(test.TestCase):
         endpoint_dicts[0]["permission"] = consts.EndpointPermission.ADMIN
         self.fake_endpoints = endpoint_dicts
 
-    @mock.patch("rally.benchmark.runner._run_scenario_once")
+    @mock.patch("rally.benchmark.runners.base._run_scenario_once")
     @mock.patch("rally.benchmark.runners.periodic.time.sleep")
     @mock.patch("rally.benchmark.utils.osclients")
     def test_run_scenario(self, mock_osclients, mock_sleep,
                           mock_run_scenario_once):
         mock_osclients.Clients.return_value = fakes.FakeClients()
-        srunner = periodic.PeriodicScenarioRunner(mock.MagicMock(),
-                                                  self.fake_endpoints)
+        runner = periodic.PeriodicScenarioRunner(mock.MagicMock(),
+                                                 self.fake_endpoints)
         times = 3
         period = 4
-        srunner.users = ["client"]
-        srunner._run_scenario(fakes.FakeScenario, "do_it", {},
-                              {"times": times, "period": period, "timeout": 5})
+        runner.users = ["client"]
+        runner._run_scenario(fakes.FakeScenario, "do_it", {},
+                             {"times": times, "period": period, "timeout": 5})
 
         expected = [mock.call((i, fakes.FakeScenario, "do_it",
                                self.fake_endpoints[0], "client", {}))
@@ -53,7 +53,7 @@ class PeriodicScenarioRunnerTestCase(test.TestCase):
         expected = [mock.call(period * 60) for i in xrange(times - 1)]
         mock_sleep.has_calls(expected)
 
-    @mock.patch("rally.benchmark.runner.base")
+    @mock.patch("rally.benchmark.runners.base.base")
     @mock.patch("rally.benchmark.utils.osclients")
     def test_get_periodic_runner(self, mock_osclients, mock_base):
         FakeScenario = mock.MagicMock()
@@ -61,7 +61,7 @@ class PeriodicScenarioRunnerTestCase(test.TestCase):
 
         mock_osclients.Clients.return_value = fakes.FakeClients()
 
-        srunner = runner.ScenarioRunner.get_runner(mock.MagicMock(),
-                                                   self.fake_endpoints,
-                                                   {"execution": "periodic"})
-        self.assertTrue(srunner is not None)
+        runner = base.ScenarioRunner.get_runner(mock.MagicMock(),
+                                                self.fake_endpoints,
+                                                {"execution": "periodic"})
+        self.assertTrue(runner is not None)

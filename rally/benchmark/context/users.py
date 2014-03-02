@@ -15,6 +15,7 @@
 
 import uuid
 
+from rally.benchmark.context import base
 from rally.benchmark import utils
 from rally import consts
 from rally.objects import endpoint
@@ -25,7 +26,7 @@ from rally.openstack.common import log as logging
 LOG = logging.getLogger(__name__)
 
 
-class UserGenerator(object):
+class UserGenerator(base.Context):
     """Context class for generating temporary users/tenants for benchmarks."""
 
     def __init__(self, admin_endpoints):

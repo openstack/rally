@@ -16,7 +16,7 @@
 import random
 import string
 
-from rally.benchmark import base
+from rally.benchmark.scenarios import base
 from rally.benchmark.scenarios import utils as scenario_utils
 
 # TODO(boris-42): Bind name to the uuid of benchmark.

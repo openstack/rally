@@ -18,7 +18,7 @@ import random
 import string
 import time
 
-from rally.benchmark import base
+from rally.benchmark.scenarios import base
 from rally.benchmark.scenarios import utils as scenario_utils
 from rally.benchmark import utils as bench_utils
 from rally import utils

@@ -17,7 +17,7 @@ import uuid
 
 from glanceclient import exc
 from novaclient import exceptions
-from rally.benchmark import base
+from rally.benchmark.scenarios import base
 from rally import utils as rally_utils
 
 

@@ -17,6 +17,7 @@ import functools
 import itertools
 import sys
 
+from rally.benchmark.context import base
 from rally.benchmark import utils
 from rally.openstack.common.gettextutils import _
 from rally.openstack.common import log as logging
@@ -25,7 +26,7 @@ from rally.openstack.common import log as logging
 LOG = logging.getLogger(__name__)
 
 
-class ResourceCleaner(object):
+class ResourceCleaner(base.Context):
     """Context class for resource cleanup (both admin and non-admin)."""
 
     def __init__(self, admin=None, users=None):

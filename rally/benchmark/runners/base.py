@@ -18,9 +18,9 @@ import abc
 
 from oslo.config import cfg
 
-from rally.benchmark import base
 from rally.benchmark.context import cleaner as cleaner_ctx
 from rally.benchmark.context import users as users_ctx
+from rally.benchmark.scenarios import base
 from rally.benchmark import utils
 from rally.openstack.common import log as logging
 from rally import utils as rutils

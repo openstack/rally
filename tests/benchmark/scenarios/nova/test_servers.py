@@ -29,7 +29,7 @@ NOVA_SERVERS = "rally.benchmark.scenarios.nova.servers.NovaServers"
 class NovaServersTestCase(test.TestCase):
 
     @mock.patch("json.loads")
-    @mock.patch("rally.benchmark.base.Scenario.clients")
+    @mock.patch("rally.benchmark.scenarios.base.Scenario.clients")
     @mock.patch("rally.sshutils.SSH.execute")
     @mock.patch("rally.sshutils.SSH.wait")
     @mock.patch("rally.sshutils.SSH._get_pkey")

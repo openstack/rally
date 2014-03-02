@@ -16,9 +16,9 @@
 import json
 import jsonschema
 
-from rally.benchmark import base
 from rally.benchmark.context import users as users_ctx
-from rally.benchmark import runner
+from rally.benchmark.runners import base as base_runner
+from rally.benchmark.scenarios import base as base_scenario
 from rally.benchmark import utils
 from rally import consts
 from rally import exceptions
@@ -101,7 +101,8 @@ class BenchmarkEngine(object):
             raise exceptions.InvalidConfigException(message=e.message)
 
         # Check for benchmark scenario names
-        available_scenarios = set(base.Scenario.list_benchmark_scenarios())
+        available_scenarios = \
+            set(base_scenario.Scenario.list_benchmark_scenarios())
         for scenario in self.config:
             if scenario not in available_scenarios:
                 LOG.exception(_('Task %s: Error: the specified '
@@ -129,7 +130,7 @@ class BenchmarkEngine(object):
                              _("Benchmark config parameters validation."))
     def _validate_scenario_args(self, name, kwargs):
         cls_name, method_name = name.split(".")
-        cls = base.Scenario.get_by_name(cls_name)
+        cls = base_scenario.Scenario.get_by_name(cls_name)
 
         method = getattr(cls, method_name)
         validators = getattr(method, "validators", [])
@@ -182,7 +183,7 @@ class BenchmarkEngine(object):
                 key = {'name': name, 'pos': n, 'kw': kwargs}
                 try:
                     self._validate_scenario_args(name, kwargs)
-                    scenario_runner = runner.ScenarioRunner.get_runner(
+                    scenario_runner = base_runner.ScenarioRunner.get_runner(
                                             self.task, self.endpoints, kwargs)
                     result = scenario_runner.run(name, kwargs)
                     self.task.append_results(key, {"raw": result,

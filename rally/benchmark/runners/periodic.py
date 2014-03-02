@@ -18,11 +18,11 @@ from multiprocessing import pool as multiprocessing_pool
 import random
 import time
 
-from rally.benchmark import runner
+from rally.benchmark.runners import base
 from rally.benchmark import utils
 
 
-class PeriodicScenarioRunner(runner.ScenarioRunner):
+class PeriodicScenarioRunner(base.ScenarioRunner):
     """Scenario runner that launches benchmark scenarios periodically.
 
     "Periodically" means that the scenario method is executed with intervals
@@ -51,7 +51,7 @@ class PeriodicScenarioRunner(runner.ScenarioRunner):
             thread = multiprocessing_pool.ThreadPool(processes=1)
             scenario_args = ((i, cls, method_name, self.admin_user,
                              random.choice(self.users), args),)
-            async_result = thread.apply_async(runner._run_scenario_once,
+            async_result = thread.apply_async(base._run_scenario_once,
                                               scenario_args)
             async_results.append(async_result)
 

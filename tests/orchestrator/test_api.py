@@ -18,7 +18,7 @@
 import mock
 import uuid
 
-from rally.benchmark import base
+from rally.benchmark.scenarios import base
 from rally import consts
 from rally.orchestrator import api
 from tests import fakes
@@ -94,7 +94,7 @@ class APITestCase(test.TestCase):
     @mock.patch("rally.benchmark.engine.BenchmarkEngine."
                 "_validate_scenario_args")
     @mock.patch('rally.benchmark.engine.osclients')
-    @mock.patch('rally.benchmark.engine.runner.ScenarioRunner.get_runner')
+    @mock.patch('rally.benchmark.engine.base_runner.ScenarioRunner.get_runner')
     @mock.patch('rally.objects.deploy.db.deployment_get')
     @mock.patch('rally.objects.task.db.task_result_create')
     @mock.patch('rally.objects.task.db.task_update')
