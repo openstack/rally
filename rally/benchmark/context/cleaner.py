@@ -21,6 +21,7 @@ from rally.benchmark.context import base
 from rally.benchmark import utils
 from rally.openstack.common.gettextutils import _
 from rally.openstack.common import log as logging
+from rally import utils as rutils
 
 
 LOG = logging.getLogger(__name__)
@@ -29,10 +30,25 @@ LOG = logging.getLogger(__name__)
 class ResourceCleaner(base.Context):
     """Context class for resource cleanup (both admin and non-admin)."""
 
-    def __init__(self, admin=None, users=None):
-        self.admin = admin
-        self.users = users
+    __name__ = "cleaner"
 
+    CONFIG_SCHEMA = {
+        "type": "object",
+        "$schema": "http://json-schema.org/draft-03/schema",
+        "properties": {},
+        "additionalProperties": False
+    }
+
+    def __init__(self, context):
+        super(ResourceCleaner, self).__init__(context)
+        self.admin = None
+        self.users = None
+        if "admin" in context and context["admin"]:
+            self.admin = context["admin"]["endpoint"]
+        if "users" in context and context["users"]:
+            self.users = [u["endpoint"] for u in context["users"]]
+
+    @rutils.log_task_wrapper(LOG.info, _("Cleanup users resources."))
     def _cleanup_users_resources(self):
         if not self.users:
             return
@@ -55,6 +71,7 @@ class ResourceCleaner(base.Context):
                     LOG.warning(_('Unable to fully cleanup the cloud: \n%s') %
                                 (e.message))
 
+    @rutils.log_task_wrapper(LOG.info, _("Cleanup admin resources."))
     def _cleanup_admin_resources(self):
         if not self.admin:
             return
@@ -68,16 +85,11 @@ class ResourceCleaner(base.Context):
             LOG.warning(_('Unable to fully cleanup keystone service: %s') %
                         (e.message))
 
-    def __enter__(self):
-        return self
+    def setup(self):
+        pass
 
-    def __exit__(self, exc_type, exc_value, exc_traceback):
-        self._cleanup_users_resources()
-        self._cleanup_admin_resources()
-
-        if exc_type:
-            LOG.debug(_("An error occurred while launching "
-                        "the benchmark scenario."),
-                      exc_info=(exc_type, exc_value, exc_traceback))
-        else:
-            LOG.debug(_("Completed resources cleanup."))
+    def cleanup(self):
+        if self.users:
+            self._cleanup_users_resources()
+        if self.admin:
+            self._cleanup_admin_resources()

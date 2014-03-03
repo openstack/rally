@@ -19,6 +19,7 @@ import abc
 from oslo.config import cfg
 
 from rally.benchmark.context import cleaner as cleaner_ctx
+from rally.benchmark.context import secgroup as secgroup_ctx
 from rally.benchmark.context import users as users_ctx
 from rally.benchmark.scenarios import base
 from rally.benchmark import utils
@@ -35,9 +36,10 @@ def _run_scenario_once(args):
     LOG.info("ITER: %s START" % i)
 
     # TODO(boris-42): remove context
-    scenario = cls(context={},
-                   admin_clients=utils.create_openstack_clients(admin),
-                   clients=utils.create_openstack_clients(user))
+    scenario = cls(
+            context={},
+            admin_clients=utils.create_openstack_clients(admin["endpoint"]),
+            clients=utils.create_openstack_clients(user["endpoint"]))
 
     try:
         scenario_output = None
@@ -90,11 +92,13 @@ class ScenarioRunner(object):
                 return new_runner
 
     @abc.abstractmethod
-    def _run_scenario(self, cls, method_name, args, config):
+    def _run_scenario(self, cls, method_name, context, args, config):
         """Runs the specified benchmark scenario with given arguments.
 
         :param cls: The Scenario class where the scenario is implemented
         :param method_name: Name of the method that implements the scenario
+        :param context: Benchmark context that contains users, admin & other
+                        information, that was created before benchmark started.
         :param args: Arguments to call the scenario method with
         :param config: Configuration dictionary that contains strategy-specific
                        parameters like the number of times to run the scenario
@@ -103,39 +107,43 @@ class ScenarioRunner(object):
                   where each result is a dictionary
         """
 
-    def _prepare_and_run_scenario(self, name, kwargs):
-
+    def _prepare_and_run_scenario(self, context, name, kwargs):
         cls_name, method_name = name.split(".")
         cls = base.Scenario.get_by_name(cls_name)
 
         args = kwargs.get('args', {})
         config = kwargs.get('config', {})
 
-        for user in self.users:
-            # TODO(boris-42): Only way that I found to pass keypair value
-            #                 to the scenario. I think that this thing should
-            #                 be refactored in future
-            user.keypair = utils._prepare_for_instance_ssh(user)
-
-        return self._run_scenario(cls, method_name, args, config)
+        with secgroup_ctx.AllowSSH(context) as allow_ssh:
+            allow_ssh.setup()
+            return self._run_scenario(cls, method_name, context, args, config)
 
     def _run_as_admin(self, name, kwargs):
         config = kwargs.get('config', {})
 
-        with users_ctx.UserGenerator(self.admin_user) as generator:
-            tenants = config.get("tenants", 1)
-            users_per_tenant = config.get("users_per_tenant", 1)
-            self.users = generator.create_users_and_tenants(tenants,
-                                                            users_per_tenant)
+        context = {
+            "task": self.task,
+            "admin": {"endpoint": self.admin_user},
+            "config": {
+                "users": {
+                    "tenants": config.get("tenants", 1),
+                    "users_per_tenant": config.get("users_per_tenant", 1)
+                }
+            }
+        }
 
-            with cleaner_ctx.ResourceCleaner(admin=self.admin_user,
-                                             users=self.users):
-                return self._prepare_and_run_scenario(name, kwargs)
+        with users_ctx.UserGenerator(context) as generator:
+            generator.setup()
+            with cleaner_ctx.ResourceCleaner(context) as cleaner:
+                cleaner.setup()
+                return self._prepare_and_run_scenario(context, name, kwargs)
 
     def _run_as_non_admin(self, name, kwargs):
-        # TODO(boris-42): Somehow setup clients from deployment/config
-        with cleaner_ctx.ResourceCleaner(users=self.users):
-            return self._prepare_and_run_scenario(name, kwargs)
+        # TODO(boris-42): It makes sense to use UserGenerator here as well
+        #                 take a look at comment in UserGenerator.__init__()
+        context = {}
+        with cleaner_ctx.ResourceCleaner(context):
+            return self._prepare_and_run_scenario(context, name, kwargs)
 
     def run(self, name, kwargs):
         if self.admin_user:

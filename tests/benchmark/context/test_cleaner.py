@@ -17,6 +17,7 @@ import mock
 
 from rally.benchmark.context import cleaner as cleaner_ctx
 
+from tests import fakes
 from tests import test
 
 
@@ -26,12 +27,19 @@ BASE = "rally.benchmark.context.cleaner"
 class ResourceCleanerTestCase(test.TestCase):
 
     def test_with_statement_no_user_no_admin(self):
-        resource_cleaner = cleaner_ctx.ResourceCleaner()
+        context = {
+            "task": mock.MagicMock(),
+            "admin": None,
+            "users": [],
+            "tenants": []
+        }
+        resource_cleaner = cleaner_ctx.ResourceCleaner(context)
         with resource_cleaner:
-            pass
+            resource_cleaner.setup()
 
     def test_with_statement(self):
-        res_cleaner = cleaner_ctx.ResourceCleaner()
+        fake_user_ctx = fakes.FakeUserContext({}).context
+        res_cleaner = cleaner_ctx.ResourceCleaner(fake_user_ctx)
 
         res_cleaner._cleanup_users_resources = mock.MagicMock()
         res_cleaner._cleanup_admin_resources = mock.MagicMock()
@@ -45,18 +53,21 @@ class ResourceCleanerTestCase(test.TestCase):
     @mock.patch("%s.utils.create_openstack_clients" % BASE)
     @mock.patch("%s.utils.delete_keystone_resources" % BASE)
     def test_cleaner_admin(self, mock_del_keystone, mock_create_os_clients):
-
-        admin_endpoint = "admin"
-        res_cleaner = cleaner_ctx.ResourceCleaner(admin=admin_endpoint)
+        context = {
+            "task": mock.MagicMock(),
+            "admin": {"endpoint": mock.MagicMock()},
+        }
+        res_cleaner = cleaner_ctx.ResourceCleaner(context)
 
         admin_client = mock.MagicMock()
         admin_client.__getitem__ = mock.MagicMock(return_value="keystone_cl")
         mock_create_os_clients.return_value = admin_client
 
         with res_cleaner:
-            pass
+            res_cleaner.setup()
 
-        mock_create_os_clients.assert_called_once_with(admin_endpoint)
+        mock_create_os_clients.assert_called_once_with(
+            context["admin"]["endpoint"])
         admin_client.__getitem__.assert_called_once_with("keystone")
         mock_del_keystone.assert_called_once_with("keystone_cl")
 
@@ -67,28 +78,33 @@ class ResourceCleanerTestCase(test.TestCase):
     def test_cleaner_users(self, mock_del_cinder, mock_del_glance,
                            mock_del_nova, mock_create_os_clients):
 
-        users = ["user1", "user2"]
-        res_cleaner = cleaner_ctx.ResourceCleaner(users=users)
+        context = {
+            "task": mock.MagicMock(),
+            "users": [{"endpoint": mock.MagicMock()},
+                      {"endpoint": mock.MagicMock()}],
+            "tenants": [mock.MagicMock()]
+        }
+        res_cleaner = cleaner_ctx.ResourceCleaner(context)
 
         client = mock.MagicMock()
         client.__getitem__ = mock.MagicMock(side_effect=lambda cl: cl + "_cl")
         mock_create_os_clients.return_value = client
 
         with res_cleaner:
-            pass
+            res_cleaner.setup()
+
+        expected = [mock.call(context["users"][0]["endpoint"]),
+                    mock.call(context["users"][1]["endpoint"])]
+        mock_create_os_clients.assert_has_calls(expected, any_order=True)
 
         os_clients = ["nova", "glance", "keystone", "cinder"]
-        expected = [mock.call("user1"), mock.call("user2")]
-        mock_calls = filter(lambda call: '__getitem__' not in call[0],
-                            mock_create_os_clients.mock_calls)
-        self.assertEqual(mock_calls, expected)
-
-        expected = [mock.call(c) for c in os_clients] * len(users)
+        expected = [mock.call(c) for c in os_clients] * len(context["users"])
         self.assertEqual(client.__getitem__.mock_calls, expected)
 
-        expected = [mock.call("nova_cl")] * len(users)
+        expected = [mock.call("nova_cl")] * len(context["users"])
         self.assertEqual(mock_del_nova.mock_calls, expected)
-        expected = [mock.call("glance_cl", "keystone_cl")] * len(users)
+        expected = [mock.call("glance_cl",
+                              "keystone_cl")] * len(context["users"])
         self.assertEqual(mock_del_glance.mock_calls, expected)
-        expected = [mock.call("cinder_cl")] * len(users)
+        expected = [mock.call("cinder_cl")] * len(context["users"])
         self.assertEqual(mock_del_cinder.mock_calls, expected)

@@ -16,11 +16,10 @@
 import uuid
 
 from rally.benchmark.context import base
-from rally.benchmark import utils
 from rally import consts
 from rally.objects import endpoint
-from rally.openstack.common.gettextutils import _
 from rally.openstack.common import log as logging
+from rally import osclients
 
 
 LOG = logging.getLogger(__name__)
@@ -29,11 +28,38 @@ LOG = logging.getLogger(__name__)
 class UserGenerator(base.Context):
     """Context class for generating temporary users/tenants for benchmarks."""
 
-    def __init__(self, admin_endpoints):
-        self.users = []
-        self.tenants = []
-        self.keystone_client = \
-            utils.create_openstack_clients(admin_endpoints)["keystone"]
+    __name__ = "users"
+
+    CONFIG_SCHEMA = {
+        "type": "object",
+        "$schema": "http://json-schema.org/draft-03/schema",
+        "properties": {
+            "tenants": {
+                "type": "integer",
+                "minimum": 1
+            },
+            "users_per_tenant": {
+                "type": "integer",
+                "minimum": 1
+            }
+        },
+        "additionalProperties": False
+    }
+
+    def __init__(self, context):
+        super(UserGenerator, self).__init__(context)
+        self.config.setdefault("tenants", 1)
+        self.config.setdefault("users_per_tenant", 1)
+
+        self.context["users"] = []
+        self.context["tenants"] = []
+        # NOTE(boris-42): I think this is the best place for adding logic when
+        #                 we are using pre created users or temporary. So we
+        #                 should rename this class s/UserGenerator/UserContext/
+        #                 and change a bit logic of populating lists of users
+        #                 and tenants
+        clients = osclients.Clients(context["admin"]["endpoint"])
+        self.keystone_client = clients.get_keystone_client()
 
     def _create_user(self, user_id, tenant_id):
         pattern = "%(tenant_id)s_user_%(uid)d"
@@ -47,43 +73,40 @@ class UserGenerator(base.Context):
         return self.keystone_client.tenants.create(pattern % {"run_id": run_id,
                                                               "iter": i})
 
-    def create_users_and_tenants(self, tenants, users_per_tenant):
+    def create_users_and_tenants(self):
         run_id = str(uuid.uuid4())
         auth_url = self.keystone_client.auth_url
-        self.tenants = [self._create_tenant(run_id, i)
-                        for i in range(tenants)]
-        self.users = []
-        endpoints = []
-        for tenant in self.tenants:
-            for user_id in range(users_per_tenant):
-                user = self._create_user(user_id, tenant.id)
-                self.users.append(user)
-                endpoints.append(endpoint.Endpoint(
-                    auth_url, user.name, "password", tenant.name,
-                    consts.EndpointPermission.USER))
-        return endpoints
+
+        self.context["tenants"] = []
+        for i in range(self.config["tenants"]):
+            tenant = self._create_tenant(run_id, i)
+            self.context["tenants"].append({"id": tenant.id,
+                                            "name": tenant.name})
+
+        for tenant in self.context["tenants"]:
+            for user_id in range(self.config["users_per_tenant"]):
+                user = self._create_user(user_id, tenant["id"])
+                epoint = endpoint.Endpoint(auth_url, user.name, "password",
+                                           tenant["name"],
+                                           consts.EndpointPermission.USER)
+                self.context["users"].append({"id": user.id,
+                                              "endpoint": epoint})
 
     def _delete_users_and_tenants(self):
-        for user in self.users:
+        for user in self.context["users"]:
             try:
-                user.delete()
+                self.keystone_client.users.delete(user["id"])
             except Exception:
-                LOG.info("Failed to delete user: %s" % user.name)
+                LOG.info("Failed to delete user: %s" % user["id"])
 
-        for tenant in self.tenants:
+        for tenant in self.context["tenants"]:
             try:
-                tenant.delete()
+                self.keystone_client.tenants.delete(tenant["id"])
             except Exception:
-                LOG.info("Failed to delete tenant: %s" % tenant.name)
+                LOG.info("Failed to delete tenant: %s" % tenant["name"])
 
-    def __enter__(self):
-        return self
+    def setup(self):
+        self.create_users_and_tenants()
 
-    def __exit__(self, exc_type, exc_value, exc_traceback):
+    def cleanup(self):
         self._delete_users_and_tenants()
-
-        if exc_type:
-            LOG.debug(_("Failed to generate temporary users."),
-                      exc_info=(exc_type, exc_value, exc_traceback))
-        else:
-            LOG.debug(_("Completed deleting temporary users and tenants."))

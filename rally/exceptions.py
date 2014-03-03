@@ -110,6 +110,10 @@ class NoSuchScenario(NotFoundException):
     msg_fmt = _("There is no benchmark scenario with name `%(name)s`.")
 
 
+class NoSuchContext(NotFoundException):
+    msg_fmt = _("There is no benchmark context with name `%(name)s`.")
+
+
 class NoSuchConfigField(NotFoundException):
     msg_fmt = _("There is no field in the task config with name `%(name)s`.")
 

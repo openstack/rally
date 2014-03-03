@@ -39,7 +39,7 @@ class PeriodicScenarioRunner(base.ScenarioRunner):
 
     __execution_type__ = "periodic"
 
-    def _run_scenario(self, cls, method_name, args, config):
+    def _run_scenario(self, cls, method_name, context, args, config):
 
         times = config["times"]
         period = config["period"]
@@ -49,8 +49,8 @@ class PeriodicScenarioRunner(base.ScenarioRunner):
 
         for i in range(times):
             thread = multiprocessing_pool.ThreadPool(processes=1)
-            scenario_args = ((i, cls, method_name, self.admin_user,
-                             random.choice(self.users), args),)
+            scenario_args = ((i, cls, method_name, context["admin"],
+                             random.choice(context["users"]), args),)
             async_result = thread.apply_async(base._run_scenario_once,
                                               scenario_args)
             async_results.append(async_result)

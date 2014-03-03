@@ -13,6 +13,13 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import abc
+
+import jsonschema
+
+from rally import exceptions
+from rally import utils
+
 
 class Context(object):
     """We will use this class in future as a factory for context classes.
@@ -25,3 +32,39 @@ class Context(object):
         Actually the same functionionallity as
         runners.base.ScenarioRunner and scenarios.base.Scenario
     """
+
+    __metaclass__ = abc.ABCMeta
+    __name__ = "basecontext"
+
+    CONFIG_SCHEMA = {}
+
+    def __init__(self, context):
+        self.config = context.get("config", {}).get(self.__name__, {})
+        self.context = context
+        self.task = context["task"]
+
+    @staticmethod
+    def validate(cls, context):
+        jsonschema.validate(context, cls.CONFIG_SCHEMA)
+
+    @staticmethod
+    def get_by_name(name):
+        """Returns Context class by name."""
+        for context in utils.itersubclasses(Context):
+            if name == context.__name__:
+                return context
+        raise exceptions.NoSuchContext(name=name)
+
+    @abc.abstractmethod
+    def setup(self):
+        """This method sets context of benchmark."""
+
+    @abc.abstractmethod
+    def cleanup(self):
+        """This method cleans context of benchmark."""
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, exc_traceback):
+        self.cleanup()

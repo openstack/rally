@@ -115,13 +115,12 @@ class BenchmarkEngineTestCase(test.TestCase):
                           mock.MagicMock())
 
     @mock.patch("rally.benchmark.scenarios.base.Scenario.get_by_name")
-    @mock.patch("rally.benchmark.context.users.UserGenerator."
-                "create_users_and_tenants")
+    @mock.patch("rally.benchmark.engine.users_ctx")
     @mock.patch("rally.benchmark.utils.create_openstack_clients")
     @mock.patch("rally.benchmark.engine.BenchmarkEngine._validate_config")
     def test__validate_scenario_args(self, mock_validate_config,
                                      mock_create_os_clients,
-                                     mock_create_users_and_tenants,
+                                     mock_user_ctxt,
                                      mock_scenario_get_by_name):
 
         @validation.requires_permission(consts.EndpointPermission.ADMIN)
@@ -136,7 +135,7 @@ class BenchmarkEngineTestCase(test.TestCase):
         FakeScenario.do_it.validators = [validator_admin, validator_user]
         mock_scenario_get_by_name.return_value = FakeScenario
 
-        mock_create_users_and_tenants.return_value = ["user"]
+        mock_user_ctxt.UserGenerator = fakes.FakeUserContext
 
         benchmark_engine = engine.BenchmarkEngine(mock.MagicMock(),
                                                   mock.MagicMock())
@@ -144,17 +143,17 @@ class BenchmarkEngineTestCase(test.TestCase):
 
         benchmark_engine._validate_scenario_args("FakeScenario.do_it", {})
 
-        expected = [mock.call("admin"), mock.call("user")]
+        expected = [mock.call("admin"),
+                    mock.call(fakes.FakeUserContext.user["endpoint"])]
         mock_create_os_clients.assert_has_calls(expected, any_order=True)
 
     @mock.patch("rally.benchmark.scenarios.base.Scenario.get_by_name")
-    @mock.patch("rally.benchmark.context.users.UserGenerator."
-                "create_users_and_tenants")
-    @mock.patch("rally.benchmark.utils.create_openstack_clients")
+    @mock.patch("rally.benchmark.engine.users_ctx")
+    @mock.patch("rally.benchmark.engine.osclients.Clients")
     @mock.patch("rally.benchmark.engine.BenchmarkEngine._validate_config")
     def test__validate_scenario_args_failure(self, mock_validate_config,
                                              mock_create_os_clients,
-                                             mock_create_users_and_tenants,
+                                             mock_user_ctxt,
                                              mock_scenario_get_by_name):
 
         @validation.requires_permission(consts.EndpointPermission.ADMIN)
@@ -173,13 +172,13 @@ class BenchmarkEngineTestCase(test.TestCase):
                           benchmark_engine._validate_scenario_args,
                           "FakeScenario.do_it", {})
 
+        mock_user_ctxt.UserGenerator = fakes.FakeUserContext
+
         @validation.requires_permission(consts.EndpointPermission.USER)
         def evil_validator_user(**kwargs):
             return validation.ValidationResult(is_valid=False)
 
         FakeScenario.do_it.validators = [evil_validator_user]
-
-        mock_create_users_and_tenants.return_value = ["user"]
 
         self.assertRaises(exceptions.InvalidScenarioArgument,
                           benchmark_engine._validate_scenario_args,

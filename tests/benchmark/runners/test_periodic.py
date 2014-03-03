@@ -42,11 +42,14 @@ class PeriodicScenarioRunnerTestCase(test.TestCase):
         times = 3
         period = 4
         runner.users = ["client"]
-        runner._run_scenario(fakes.FakeScenario, "do_it", {},
+
+        runner._run_scenario(fakes.FakeScenario, "do_it",
+                             fakes.FakeUserContext({}).context, {},
                              {"times": times, "period": period, "timeout": 5})
 
         expected = [mock.call((i, fakes.FakeScenario, "do_it",
-                               self.fake_endpoints[0], "client", {}))
+                               fakes.FakeUserContext.admin,
+                               fakes.FakeUserContext.user, {}))
                     for i in xrange(times)]
         self.assertEqual(mock_run_scenario_once.mock_calls, expected)
 

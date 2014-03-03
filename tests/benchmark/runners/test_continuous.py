@@ -44,8 +44,9 @@ class ContinuousScenarioRunnerTestCase(test.TestCase):
         timeout = 5
         fake_pool = mock.Mock()
         mock_multi.Pool.return_value = fake_pool
+        fake_context = fakes.FakeUserContext({}).context
         srunner._run_scenario_continuously_for_times(fakes.FakeScenario,
-                                                     "do_it", {},
+                                                     "do_it", fake_context, {},
                                                      times, active_users,
                                                      timeout)
         mock_multi.Pool.assert_called_once_with(active_users)
@@ -53,8 +54,8 @@ class ContinuousScenarioRunnerTestCase(test.TestCase):
         expected_pool_calls = [
             mock.call.imap(
                 base._run_scenario_once,
-                [(i, fakes.FakeScenario, "do_it", self.fake_endpoints[0],
-                 "client", {}) for i in xrange(times)]
+                [(i, fakes.FakeScenario, "do_it", fakes.FakeUserContext.admin,
+                 fakes.FakeUserContext.user, {}) for i in xrange(times)]
             )
         ]
         expected_pool_calls.extend([mock.call.imap().next(timeout)
@@ -103,25 +104,46 @@ class ContinuousScenarioRunnerTestCase(test.TestCase):
         runner = base.ScenarioRunner.get_runner(mock.MagicMock(),
                                                 self.fake_endpoints,
                                                 {"execution": "continuous"})
-        runner.users = ["user"]
 
         runner._run_scenario_continuously_for_times = \
             mock.MagicMock(return_value="times")
+
+        mock_base.Scenario.get_by_name = \
+            mock.MagicMock(return_value=FakeScenario)
+        mock_osclients.return_value = ["client"]
+        fakecontext = fakes.FakeUserContext({}).context
+        result = runner._run_scenario(FakeScenario, "do_it", fakecontext,
+                                      {"a": 1},
+                                      {"times": 2, "active_users": 3,
+                                       "timeout": 1})
+        self.assertEqual(result, "times")
+        runner._run_scenario_continuously_for_times.assert_called_once_with(
+                                    FakeScenario, "do_it", fakecontext,
+                                    {"a": 1}, 2, 3, 1)
+
+    @mock.patch("rally.benchmark.runners.base.base")
+    @mock.patch("rally.benchmark.utils.osclients")
+    def test_get_and_run_continuos_runner_for_duration(self, mock_osclients,
+                                                       mock_base):
+        FakeScenario = mock.MagicMock()
+        FakeScenario.init = mock.MagicMock(return_value={})
+        mock_osclients.Clients.return_value = fakes.FakeClients()
+
+        runner = base.ScenarioRunner.get_runner(mock.MagicMock(),
+                                                self.fake_endpoints,
+                                                {"execution": "continuous"})
         runner._run_scenario_continuously_for_duration = \
             mock.MagicMock(return_value="duration")
 
         mock_base.Scenario.get_by_name = \
             mock.MagicMock(return_value=FakeScenario)
-        mock_osclients.return_value = ["client"]
-        result = runner._run_scenario(FakeScenario, "do_it", {"a": 1},
-                                      {"times": 2, "active_users": 3,
-                                       "timeout": 1})
-        self.assertEqual(result, "times")
-        runner._run_scenario_continuously_for_times.assert_called_once_with(
-                                    FakeScenario, "do_it", {"a": 1}, 2, 3, 1)
-        result = runner._run_scenario(FakeScenario, "do_it", {"a": 1},
+
+        fakecontext = fakes.FakeUserContext({}).context
+        result = runner._run_scenario(FakeScenario, "do_it", fakecontext,
+                                      {"a": 1},
                                       {"duration": 2, "active_users": 3,
                                        "timeout": 1})
         self.assertEqual(result, "duration")
         runner._run_scenario_continuously_for_duration.\
-            assert_called_once_with(FakeScenario, "do_it", {"a": 1}, 2, 3, 1)
+            assert_called_once_with(FakeScenario, "do_it", fakecontext,
+                                    {"a": 1}, 2, 3, 1)

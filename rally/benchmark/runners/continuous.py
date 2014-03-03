@@ -42,10 +42,10 @@ class ContinuousScenarioRunner(base.ScenarioRunner):
 
     __execution_type__ = "continuous"
 
-    def _run_scenario_continuously_for_times(self, cls, method, args,
+    def _run_scenario_continuously_for_times(self, cls, method, context, args,
                                              times, concurrent, timeout):
-        test_args = [(i, cls, method, self.admin_user,
-                      random.choice(self.users), args)
+        test_args = [(i, cls, method, context["admin"],
+                      random.choice(context["users"]), args)
                      for i in range(times)]
 
         pool = multiprocessing.Pool(concurrent)
@@ -66,11 +66,12 @@ class ContinuousScenarioRunner(base.ScenarioRunner):
 
         return results
 
-    def _run_scenario_continuously_for_duration(self, cls, method, args,
-                                                duration, concurrent, timeout):
+    def _run_scenario_continuously_for_duration(self, cls, method, context,
+                                                args, duration, concurrent,
+                                                timeout):
         pool = multiprocessing.Pool(concurrent)
-        run_args = utils.infinite_run_args((cls, method, self.admin_user,
-                                            random.choice(self.users),
+        run_args = utils.infinite_run_args((cls, method, context["admin"],
+                                            random.choice(context["users"]),
                                             args))
         iter_result = pool.imap(base._run_scenario_once, run_args)
 
@@ -96,7 +97,7 @@ class ContinuousScenarioRunner(base.ScenarioRunner):
 
         return results
 
-    def _run_scenario(self, cls, method_name, args, config):
+    def _run_scenario(self, cls, method_name, context, args, config):
 
         timeout = config.get("timeout", 600)
         concurrent = config.get("active_users", 1)
@@ -110,10 +111,10 @@ class ContinuousScenarioRunner(base.ScenarioRunner):
         if "times" in config:
             times = config["times"]
             return self._run_scenario_continuously_for_times(
-                            cls, method_name, args, times, concurrent, timeout)
+                cls, method_name, context, args, times, concurrent, timeout)
         # Continiously run a scenario as many times as needed
         # to fill up the given period of time.
         elif "duration" in config:
             duration = config["duration"]
             return self._run_scenario_continuously_for_duration(
-                        cls, method_name, args, duration, concurrent, timeout)
+                cls, method_name, context, args, duration, concurrent, timeout)

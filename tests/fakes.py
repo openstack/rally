@@ -13,11 +13,14 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import mock
 import uuid
 
 from glanceclient import exc
 from novaclient import exceptions
+from rally.benchmark.context import base as base_ctx
 from rally.benchmark.scenarios import base
+from rally.objects import endpoint
 from rally import utils as rally_utils
 
 
@@ -494,3 +497,33 @@ class FakeTimer(rally_utils.Timer):
 
     def duration(self):
         return 10
+
+
+class FakeContext(base_ctx.Context):
+
+    def setup(self):
+        pass
+
+    def cleanup(self):
+        pass
+
+
+class FakeUserContext(FakeContext):
+
+    admin = {
+        "id": "adminuuid",
+        "endpoint": endpoint.Endpoint("aurl", "aname", "apwd", "atenant")
+    }
+    user = {
+        "id": "uuid",
+        "endpoint": endpoint.Endpoint("url", "name", "pwd", "tenant")
+    }
+    tenant = {"id": "uuid", "nema": "tenant"}
+
+    def __init__(self, context):
+        context.setdefault("task", mock.MagicMock())
+        super(FakeUserContext, self).__init__(context)
+
+        context.setdefault("admin", FakeUserContext.admin)
+        context.setdefault("users", [FakeUserContext.user])
+        context.setdefault("tenants", [FakeUserContext.tenant])

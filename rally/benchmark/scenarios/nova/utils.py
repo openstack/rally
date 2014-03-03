@@ -18,6 +18,7 @@ import random
 import string
 import time
 
+from rally.benchmark.context import secgroup
 from rally.benchmark.scenarios import base
 from rally.benchmark.scenarios import utils as scenario_utils
 from rally.benchmark import utils as bench_utils
@@ -82,10 +83,10 @@ class NovaScenario(base.Scenario):
         """
 
         if 'security_groups' not in kwargs:
-            kwargs['security_groups'] = ['rally_open']
+            kwargs['security_groups'] = [secgroup.SSH_GROUP_NAME]
         else:
-            if 'rally_open' not in kwargs['security_groups']:
-                kwargs['security_groups'].append('rally_open')
+            if secgroup.SSH_GROUP_NAME not in kwargs['security_groups']:
+                kwargs['security_groups'].append(secgroup.SSH_GROUP_NAME)
 
         server = self.clients("nova").servers.create(server_name, image_id,
                                                      flavor_id, **kwargs)

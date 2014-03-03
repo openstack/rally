@@ -16,8 +16,6 @@
 import logging
 import traceback
 
-from novaclient import exceptions as nova_exceptions
-
 from rally.benchmark.scenarios.keystone import utils as kutils
 from rally import exceptions as rally_exceptions
 from rally import osclients
@@ -103,77 +101,9 @@ def create_openstack_clients(endpoint):
         "glance": client_manager.get_glance_client(),
         "cinder": client_manager.get_cinder_client(),
         "endpoint": client_manager.endpoint,
-        # NOTE(boris-42): seems like it should be refactored
-        "ssh_key_pair": getattr(endpoint, "keypair", {})
     }
 
     return clients
-
-
-def _prepare_for_instance_ssh(users_endpoint):
-    """Generate and store SSH keys, allow access to port 22.
-
-    In order to run tests on instances it is necessary to have SSH access.
-    This function generates an SSH key pair per user which is stored in the
-    clients dictionary. The public key is also submitted to nova via the
-    novaclient.
-
-    A security group rule is created to allow access to instances on port 22.
-    """
-    nova_client = create_openstack_clients(users_endpoint)['nova']
-
-    # NOTE(boris-42): private key is used in
-    #                 NovaServers.boot_runcommand_delete_server
-    #                 So seems like potential bu in case of adding support of
-    #                 precreated users
-    keypair = None
-    if 'rally_ssh_key' not in [k.name for k in nova_client.keypairs.list()]:
-        keypair = nova_client.keypairs.create('rally_ssh_key')
-
-    if 'rally_open' not in [sg.name for sg in
-                            nova_client.security_groups.list()]:
-        rally_open = nova_client.security_groups.create(
-            'rally_open', 'Allow all access to VMs for benchmarking')
-
-    rally_open = nova_client.security_groups.find(name='rally_open')
-
-    rules_to_add = [
-        {
-            "ip_protocol": "tcp",
-            "to_port": 65535,
-            "from_port": 1,
-            "ip_range": {"cidr": "0.0.0.0/0"}
-        },
-        {
-            "ip_protocol": "udp",
-            "to_port": 65535,
-            "from_port": 1,
-            "ip_range": {"cidr": "0.0.0.0/0"}
-        },
-        {
-            "ip_protocol": "icmp",
-            "to_port": 1,
-            "from_port": -1,
-            "ip_range": {"cidr": "0.0.0.0/0"}
-        }
-    ]
-
-    def rule_match(criteria, existing_rule):
-        return all(existing_rule[key] == value
-                   for key, value in criteria.iteritems())
-
-    for new_rule in rules_to_add:
-        if not any(rule_match(new_rule, existing_rule) for existing_rule
-                   in rally_open.rules):
-            nova_client.security_group_rules.create(
-                        rally_open.id,
-                        from_port=new_rule['from_port'],
-                        to_port=new_rule['to_port'],
-                        ip_protocol=new_rule['ip_protocol'],
-                        cidr=new_rule['ip_range']['cidr'])
-
-    return ({"private": keypair.private_key, "public": keypair.public_key}
-            if keypair else None)
 
 
 def delete_servers(nova):
@@ -186,17 +116,6 @@ def delete_keypairs(nova):
     for keypair in nova.keypairs.list():
         keypair.delete()
     _wait_for_empty_list(nova.keypairs)
-
-
-def delete_security_groups(nova):
-    for group in nova.security_groups.list():
-        try:
-            group.delete()
-        except nova_exceptions.BadRequest as br:
-            #TODO(boden): find a way to determine default security group
-            if not br.message.startswith('Unable to delete system group'):
-                raise br
-    _wait_for_list_size(nova.security_groups, sizes=[0, 1])
 
 
 def delete_images(glance, project_uuid):
@@ -251,7 +170,6 @@ def _delete_single_keystone_resource_type(keystone, resource_name):
 def delete_nova_resources(nova):
     delete_servers(nova)
     delete_keypairs(nova)
-    delete_security_groups(nova)
     delete_networks(nova)
 
 
