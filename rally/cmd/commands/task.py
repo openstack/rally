@@ -35,7 +35,6 @@ from rally import db
 from rally import exceptions
 from rally.openstack.common.gettextutils import _
 from rally.orchestrator import api
-from rally import processing
 
 
 class TaskCommands(object):
@@ -275,17 +274,6 @@ class TaskCommands(object):
         :param force: Force delete or not
         """
         api.delete_task(task_id, force=force)
-
-    @cliutils.args('--plot-type', type=str, help='plot type; available types: '
-                   ', '.join(processing.PLOTS.keys()))
-    @cliutils.args('--field-name', type=str, help='field from the task config '
-                   'to aggregate the data on: concurrent/times/...')
-    @cliutils.args('--task-id', type=str, help='uuid of task')
-    def plot(self, plot_type, aggregated_field, task_id):
-        if plot_type in processing.PLOTS:
-            processing.PLOTS[plot_type](task_id, aggregated_field)
-        else:
-            print("Plot type '%s' not supported." % plot_type)
 
 
 def percentile(N, percent):
