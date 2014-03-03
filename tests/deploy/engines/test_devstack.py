@@ -58,8 +58,13 @@ class DevstackEngineTestCase(test.BaseTestCase):
     def test_prepare_server(self, m_open):
         m_open.return_value = 'fake_file'
         server = mock.Mock()
+        server.password = 'secret'
         self.engine.prepare_server(server)
-        server.ssh.run.assert_called_once_with('/bin/sh -e', stdin='fake_file')
+        calls = [
+            mock.call('/bin/sh -e', stdin='fake_file'),
+            mock.call('chpasswd', stdin='rally:secret'),
+        ]
+        self.assertEqual(calls, server.ssh.run.mock_calls)
         filename = m_open.mock_calls[0][1][0]
         self.assertTrue(filename.endswith('rally/deploy/engines/'
                                           'devstack/install.sh'))

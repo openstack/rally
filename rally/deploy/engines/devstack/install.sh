@@ -14,8 +14,8 @@ fi
 
 useradd rally -m || echo "Warning: user rally is already exists" >&2
 mkdir -m 700 /home/rally/.ssh || true
-cp /root/.ssh/authorized_keys /home/rally/.ssh/
-chown -R rally /home/rally/.ssh
+cp /root/.ssh/authorized_keys /home/rally/.ssh/ || true
+chown -R rally /home/rally/.ssh || true
 cat >> /etc/sudoers <<EOF
 rally ALL=(root) NOPASSWD:ALL
 Defaults:rally !requiretty

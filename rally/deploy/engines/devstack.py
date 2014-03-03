@@ -80,6 +80,8 @@ class DevstackEngine(engine.EngineFactory):
         script_path = os.path.abspath(os.path.join(os.path.dirname(__file__),
                                                    'devstack', 'install.sh'))
         server.ssh.run('/bin/sh -e', stdin=open(script_path, 'rb'))
+        if server.password:
+            server.ssh.run('chpasswd', stdin='rally:%s' % server.password)
 
     @utils.log_deploy_wrapper(LOG.info, _("Deploy devstack"))
     def deploy(self):
