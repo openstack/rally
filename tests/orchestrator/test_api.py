@@ -88,8 +88,10 @@ class APITestCase(test.TestCase):
     @mock.patch('rally.objects.Task')
     def test_create_task(self, mock_task):
         deployment_uuid = uuid.uuid4()
-        api.create_task(deployment_uuid)
-        mock_task.assert_called_once_with(deployment_uuid=deployment_uuid)
+        tag = "a"
+        api.create_task(deployment_uuid, tag)
+        mock_task.assert_called_once_with(deployment_uuid=deployment_uuid,
+                                          tag=tag)
 
     @mock.patch("rally.benchmark.engine.BenchmarkEngine."
                 "_validate_scenario_args")

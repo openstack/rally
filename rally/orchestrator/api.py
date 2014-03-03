@@ -70,15 +70,16 @@ def recreate_deploy(deploy_uuid):
         deployment.update_endpoints(endpoints)
 
 
-def create_task(deploy_uuid):
+def create_task(deploy_uuid, tag):
     """Create a task without starting it.
 
     Task is a list of benchmarks that will be called one by one, results of
     execution will be stored in DB.
 
     :param deploy_uuid: UUID of the deployment
+    :param tag: tag for this task
     """
-    return objects.Task(deployment_uuid=deploy_uuid)
+    return objects.Task(deployment_uuid=deploy_uuid, tag=tag)
 
 
 def start_task(deploy_uuid, config, task=None):
