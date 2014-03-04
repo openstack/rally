@@ -89,6 +89,10 @@ class FakeNetwork(FakeResource):
     pass
 
 
+class FakeFlavor(FakeResource):
+    pass
+
+
 class FakeKeypair(FakeResource):
     pass
 
@@ -262,6 +266,13 @@ class FakeNetworkManager(FakeManager):
         return self._cache(net)
 
 
+class FakeFlavorManager(FakeManager):
+
+    def create(self):
+        flv = FakeFlavor(self)
+        return self._cache(flv)
+
+
 class FakeKeypairManager(FakeManager):
 
     def create(self, name, public_key=None):
@@ -395,6 +406,7 @@ class FakeNovaClient(object):
             self.servers = FakeServerManager(self.images)
         self.floating_ips = FakeFloatingIPsManager()
         self.networks = FakeNetworkManager()
+        self.flavors = FakeFlavorManager()
         self.keypairs = FakeKeypairManager()
         self.security_group_rules = FakeSecurityGroupRuleManager()
         self.security_groups = FakeSecurityGroupManager(
