@@ -138,6 +138,7 @@ class Task(BASE, RallyBase):
                        default=consts.TaskStatus.INIT, nullable=False)
     failed = sa.Column(sa.Boolean, default=False, nullable=False)
     verification_log = sa.Column(sa.Text, default='')
+    tag = sa.Column(sa.String(64), default='')
 
     deployment_uuid = sa.Column(
         sa.String(36),

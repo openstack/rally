@@ -43,17 +43,20 @@ class TaskCommands(object):
                    help='UUID of the deployment')
     @cliutils.args('--task',
                    help='Path to the file with full configuration of task')
+    @cliutils.args('--tag',
+                   help='Tag for this task')
     @envutils.deploy_id_default
-    def start(self, task, deploy_id=None):
+    def start(self, task, deploy_id=None, tag=None):
         """Run a benchmark task.
 
         :param task: a file with yaml/json configration
         :param deploy_id: a UUID of a deployment
+        :param tag: optional tag for this task
         """
         with open(task, 'rb') as task_file:
             config_dict = yaml.safe_load(task_file.read())
             try:
-                task = api.create_task(deploy_id)
+                task = api.create_task(deploy_id, tag)
                 self.list(task_list=[task])
                 api.start_task(deploy_id, config_dict, task=task)
                 self.detailed(task_id=task['uuid'])
@@ -235,13 +238,17 @@ class TaskCommands(object):
 
     def list(self, task_list=None):
         """Print a list of all tasks."""
-        headers = ['uuid', 'created_at', 'status', 'failed']
+        headers = ['uuid', 'created_at', 'status', 'failed', 'tag']
         task_list = task_list or db.task_list()
         if task_list:
             table = prettytable.PrettyTable(headers)
 
             for t in task_list:
-                r = [t['uuid'], str(t['created_at']), t['status'], t['failed']]
+                r = [t['uuid'],
+                     str(t['created_at']),
+                     t['status'],
+                     t['failed'],
+                     t['tag']]
                 table.add_row(r)
 
             print(table)

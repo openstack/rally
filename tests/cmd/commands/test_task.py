@@ -32,7 +32,8 @@ class TaskCommandsTestCase(test.BaseTestCase):
                 return_value=dict(uuid='fc1a9bbe-1ead-4740-92b5-0feecf421634',
                                   created_at='2014-01-14 09:14:45.395822',
                                   status='init',
-                                  failed=False))
+                                  failed=False,
+                                  tag=None))
     @mock.patch('rally.cmd.commands.task.api.start_task')
     @mock.patch('rally.cmd.commands.task.open',
                 mock.mock_open(read_data='{"some": "json"}'),
@@ -96,7 +97,11 @@ class TaskCommandsTestCase(test.BaseTestCase):
 
     def test_list(self):
         db_response = [
-            {'uuid': 'a', 'created_at': 'b', 'status': 'c', 'failed': True}
+                {'uuid': 'a',
+                 'created_at': 'b',
+                 'status': 'c',
+                 'failed': True,
+                 'tag': 'd'}
         ]
         with mock.patch("rally.cmd.commands.task.db") as mock_db:
             mock_db.task_list = mock.MagicMock(return_value=db_response)
