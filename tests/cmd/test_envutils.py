@@ -18,10 +18,10 @@ import os
 
 from rally.cmd import envutils
 from rally import exceptions
-from rally.openstack.common import test
+from tests import test
 
 
-class EnvUtilsTestCase(test.BaseTestCase):
+class EnvUtilsTestCase(test.TestCase):
 
     @mock.patch.dict(os.environ, values={'RALLY_DEPLOYMENT': 'my_deploy_id'},
                      clear=True)
