@@ -26,6 +26,7 @@ from rally import utils
 
 LOG = logging.getLogger(__name__)
 DEVSTACK_REPO = 'https://github.com/openstack-dev/devstack.git'
+DEVSTACK_BRANCH = 'master'
 DEVSTACK_USER = 'rally'
 
 
@@ -64,6 +65,7 @@ class DevstackEngine(engine.EngineFactory):
             'provider': {'type': 'object'},
             'localrc': {'type': 'object'},
             'devstack_repo': {'type': 'string'},
+            'devstack_branch': {'type': 'string'},
         },
         'required': ['name', 'provider']
     }
@@ -97,6 +99,7 @@ class DevstackEngine(engine.EngineFactory):
     def deploy(self):
         self.servers = self._vm_provider.create_servers()
         devstack_repo = self.config.get('devstack_repo', DEVSTACK_REPO)
+        devstack_branch = self.config.get('devstack_branch', DEVSTACK_BRANCH)
         localrc = ''
         for k, v in self.localrc.iteritems():
             localrc += '%s=%s\n' % (k, v)
@@ -105,8 +108,8 @@ class DevstackEngine(engine.EngineFactory):
             self.deployment.add_resource(provider_name='DevstackEngine',
                                          type='credentials',
                                          info=server.get_credentials())
-            server.ssh.run('/bin/sh -e -s %s' % devstack_repo,
-                           stdin=get_script('install.sh'))
+            cmd = '/bin/sh -e -s %s %s' % (devstack_repo, devstack_branch)
+            server.ssh.run(cmd, stdin=get_script('install.sh'))
             devstack_server = get_updated_server(server, user=DEVSTACK_USER)
             devstack_server.ssh.run("cat > ~/devstack/localrc", stdin=localrc)
             devstack_server.ssh.run('~/devstack/stack.sh')

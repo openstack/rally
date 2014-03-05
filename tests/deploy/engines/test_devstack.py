@@ -92,9 +92,9 @@ class DevstackEngineTestCase(test.BaseTestCase):
                                     info='fake_credentials',
                                     provider_name='DevstackEngine',
                                     type='credentials')
-        server.ssh.run.assert_called_once_with(
-            '/bin/sh -e -s https://github.com/openstack-dev/devstack.git',
-            stdin='fake_script')
+        repo = 'https://github.com/openstack-dev/devstack.git'
+        cmd = '/bin/sh -e -s %s master' % repo
+        server.ssh.run.assert_called_once_with(cmd, stdin='fake_script')
         ds_calls = [
             mock.call.ssh.run('cat > ~/devstack/localrc', stdin=mock.ANY),
             mock.call.ssh.run('~/devstack/stack.sh')

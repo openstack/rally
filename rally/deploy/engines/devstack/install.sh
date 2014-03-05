@@ -1,6 +1,7 @@
 #!/bin/sh
 
 DEVSTACK_REPO=$1
+DEVSTACK_BRANCH=$2
 
 if command -v apt-get
     then
@@ -32,6 +33,6 @@ if [ -d devstack ]; then
     cd devstack
     su rally -c "git pull"
 else
-    su rally -c "git clone $DEVSTACK_REPO"
+    su rally -c "git clone -b $DEVSTACK_BRANCH $DEVSTACK_REPO"
 fi
 
