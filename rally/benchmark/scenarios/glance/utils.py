@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from oslo.config import cfg
 import random
 import string
 import time
@@ -21,6 +22,33 @@ from rally.benchmark.scenarios import base
 from rally.benchmark.scenarios import utils as scenario_utils
 from rally.benchmark import utils as bench_utils
 from rally import utils
+
+
+glance_benchmark_opts = [
+    cfg.FloatOpt('glance_image_create_prepoll_delay',
+                 default=2,
+                 help='Time to sleep after creating a resource before '
+                      'polling for it status'),
+    cfg.FloatOpt('glance_image_create_timeout',
+                 default=120,
+                 help='Time to wait for glance image to be created.'),
+    cfg.FloatOpt('glance_image_create_poll_interval',
+                 default=1,
+                 help='Interval between checks when waiting for image '
+                      'creation.'),
+    cfg.FloatOpt('glance_image_delete_timeout',
+                 default=120,
+                 help='Time to wait for glance image to be deleted.'),
+    cfg.FloatOpt('glance_image_delete_poll_interval',
+                 default=1,
+                 help='Interval between checks when waiting for image '
+                      'deletion.')
+]
+
+
+CONF = cfg.CONF
+benchmark_group = cfg.OptGroup(name='benchmark', title='benchmark options')
+CONF.register_opts(glance_benchmark_opts, group=benchmark_group)
 
 
 class GlanceScenario(base.Scenario):
@@ -46,11 +74,13 @@ class GlanceScenario(base.Scenario):
                                         container_format=container_format,
                                         disk_format=disk_format,
                                         **kwargs)
-        time.sleep(5)
-        image = utils.wait_for(image,
-                               is_ready=bench_utils.resource_is("active"),
-                               update_resource=bench_utils.get_from_manager(),
-                               timeout=120, check_interval=3)
+        time.sleep(CONF.benchmark.glance_image_create_prepoll_delay)
+        image = utils.wait_for(
+            image,
+            is_ready=bench_utils.resource_is("active"),
+            update_resource=bench_utils.get_from_manager(),
+            timeout=CONF.benchmark.glance_image_create_timeout,
+            check_interval=CONF.benchmark.glance_image_create_poll_interval)
         return image
 
     @scenario_utils.atomic_action_timer('glance.delete_image')
@@ -62,9 +92,11 @@ class GlanceScenario(base.Scenario):
         :param image: Image object
         """
         image.delete()
-        utils.wait_for_delete(image,
-                              update_resource=bench_utils.get_from_manager(),
-                              timeout=120, check_interval=3)
+        utils.wait_for_delete(
+            image,
+            update_resource=bench_utils.get_from_manager(),
+            timeout=CONF.benchmark.glance_image_delete_timeout,
+            check_interval=CONF.benchmark.glance_image_delete_poll_interval)
 
     def _generate_random_name(self, length):
         name = ''.join(random.choice(string.lowercase) for i in range(length))
