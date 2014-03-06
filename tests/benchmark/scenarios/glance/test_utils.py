@@ -64,7 +64,7 @@ class GlanceScenarioTestCase(test.TestCase):
         self.assertIsInstance(action_duration, float)
 
     @mock.patch(GLANCE_UTILS + '.GlanceScenario.clients')
-    def test__create_image(self, mock_clients):
+    def test_create_image(self, mock_clients):
         mock_clients("glance").images.create.return_value = self.image
         scenario = utils.GlanceScenario()
         return_image = scenario._create_image('image_name',
@@ -74,21 +74,21 @@ class GlanceScenarioTestCase(test.TestCase):
         self.wait_for.mock.assert_called_once_with(self.image,
                                                    update_resource=self.gfm(),
                                                    is_ready=self.res_is.mock(),
-                                                   check_interval=3,
+                                                   check_interval=1,
                                                    timeout=120)
         self.res_is.mock.assert_has_calls(mock.call('active'))
         self.assertEqual(self.wait_for.mock(), return_image)
         self._test_atomic_action_timer(scenario.atomic_actions_time(),
                                        'glance.create_image')
 
-    def test__delete_image(self):
+    def test_delete_image(self):
         scenario = utils.GlanceScenario()
         scenario._delete_image(self.image)
         self.image.delete.assert_called_once_with()
         self.wait_for_delete.\
             mock.assert_called_once_with(self.image,
                                          update_resource=self.gfm(),
-                                         check_interval=3,
+                                         check_interval=1,
                                          timeout=120)
         self._test_atomic_action_timer(scenario.atomic_actions_time(),
                                        'glance.delete_image')

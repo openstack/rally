@@ -37,3 +37,4 @@ cover
 .mr.developer.cfg
 .project
 .pydevproject
+*.swp
