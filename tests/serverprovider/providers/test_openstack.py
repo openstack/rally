@@ -86,13 +86,11 @@ class OpenStackProviderTestCase(test.TestCase):
         self.clients.get_nova_client = mock.MagicMock(
                                 return_value=self.nova_client)
 
-    def test_openstack_provider_init(self):
+    @mock.patch("rally.serverprovider.providers.openstack.osclients")
+    def test_openstack_provider_init(self, os_cli):
         cfg = self._get_valid_config()
-
-        mod = "rally.serverprovider.providers.openstack."
-        with mock.patch(mod + "osclients") as os_cli:
-            os_cli.Clients = mock.MagicMock(return_value=FakeOSClients())
-            os_provider = OSProvider(mock.MagicMock(), cfg)
+        os_cli.Clients = mock.MagicMock(return_value=FakeOSClients())
+        os_provider = OSProvider(mock.MagicMock(), cfg)
         self.assertEqual('nova', os_provider.nova)
         self.assertEqual('glance', os_provider.glance)
 
@@ -103,50 +101,56 @@ class OpenStackProviderTestCase(test.TestCase):
         provider = OSProvider(mock.MagicMock(), cfg)
         self.assertEqual(provider.glance, None)
 
-    def test_openstack_provider_init_with_invalid_conf_no_user(self):
+    @mock.patch("rally.serverprovider.providers.openstack.osclients")
+    def test_openstack_provider_init_with_invalid_conf_no_user(self,
+                                                               mock_osclient):
         cfg = self._get_valid_config()
         cfg.pop("user")
-        with mock.patch("rally.serverprovider.providers.openstack.osclients"):
-            self.assertRaises(jsonschema.ValidationError, OSProvider,
-                              mock.MagicMock(), cfg)
+        self.assertRaises(jsonschema.ValidationError, OSProvider,
+                          mock.MagicMock(), cfg)
 
-    def test_openstack_provider_init_with_invalid_conf_no_url(self):
+    @mock.patch("rally.serverprovider.providers.openstack.osclients")
+    def test_openstack_provider_init_with_invalid_conf_no_url(self,
+                                                              mock_osclient):
         cfg = self._get_valid_config()
         del cfg['image']['url']
         del cfg['image']['checksum']
-        with mock.patch("rally.serverprovider.providers.openstack.osclients"):
-            self.assertRaises(jsonschema.ValidationError, OSProvider,
-                              mock.MagicMock(), cfg)
+        self.assertRaises(jsonschema.ValidationError, OSProvider,
+                          mock.MagicMock(), cfg)
 
-    def test_openstack_provider_init_with_invalid_conf_extra_key(self):
+    @mock.patch("rally.serverprovider.providers.openstack.osclients")
+    def test_openstack_provider_init_with_invalid_conf_extra_key(self,
+                                                                 mock_osclnt):
         cfg = self._get_valid_config()
         cfg["aaaaa"] = "bbbbb"
-        with mock.patch("rally.serverprovider.providers.openstack.osclients"):
-            self.assertRaises(jsonschema.ValidationError, OSProvider,
-                              mock.MagicMock(), cfg)
+        self.assertRaises(jsonschema.ValidationError, OSProvider,
+                          mock.MagicMock(), cfg)
 
-    def test_openstack_provider_init_with_invalid_conf_flavor_(self):
+    @mock.patch("rally.serverprovider.providers.openstack.osclients")
+    def test_openstack_provider_init_with_invalid_conf_flavor_(self,
+                                                               mock_osclient):
         cfg = self._get_valid_config()["user"] = 1111
-        with mock.patch("rally.serverprovider.providers.openstack.osclients"):
-            self.assertRaises(jsonschema.ValidationError, OSProvider,
-                              mock.MagicMock(), cfg)
+        self.assertRaises(jsonschema.ValidationError, OSProvider,
+                          mock.MagicMock(), cfg)
 
-    def test_openstack_provider_with_valid_config(self):
+    @mock.patch("rally.serverprovider.providers.openstack.osclients")
+    def test_openstack_provider_with_valid_config(self,
+                                                  mock_osclient):
         cfg = self._get_valid_config()
-        with mock.patch("rally.serverprovider.providers.openstack.osclients"):
-            OSProvider(mock.MagicMock(), cfg)
+        OSProvider(mock.MagicMock(), cfg)
 
-    def test_openstack_provider_with_valid_config_uuid(self):
+    @mock.patch("rally.serverprovider.providers.openstack.osclients")
+    def test_openstack_provider_with_valid_config_uuid(self, mock_osclient):
         cfg = self._get_valid_config()
         cfg['image'] = dict(uuid="289D7A51-1A0C-43C4-800D-706EA8A3CDF3")
-        with mock.patch("rally.serverprovider.providers.openstack.osclients"):
-            OSProvider(mock.MagicMock(), cfg)
+        OSProvider(mock.MagicMock(), cfg)
 
-    def test_openstack_provider_with_valid_config_checksum(self):
+    @mock.patch("rally.serverprovider.providers.openstack.osclients")
+    def test_openstack_provider_with_valid_config_checksum(self,
+                                                           mock_osclient):
         cfg = self._get_valid_config()
         cfg['image'] = dict(checksum="checksum")
-        with mock.patch("rally.serverprovider.providers.openstack.osclients"):
-            OSProvider(mock.MagicMock(), cfg)
+        OSProvider(mock.MagicMock(), cfg)
 
     @mock.patch(MOD_NAME + '.osclients')
     @mock.patch(MOD_NAME + '.open', create=True)
@@ -229,7 +233,7 @@ class OpenStackProviderTestCase(test.TestCase):
             mock.call(type='keypair'),
         ])
         prov.nova.servers.delete.assert_called_once_with(
-                '35FC0503-FED6-419F-B6EE-B704198CE642')
+            '35FC0503-FED6-419F-B6EE-B704198CE642')
         prov.nova.keypairs.delete.assert_called_once_with('keypair_name')
         prov.resources.delete.assert_has_calls([
             mock.call(1),
