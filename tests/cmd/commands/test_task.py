@@ -51,12 +51,12 @@ class TaskCommandsTestCase(test.BaseTestCase):
         self.assertRaises(exceptions.InvalidArgumentsException,
                           self.task.start, 'path_to_config.json', None)
 
-    def test_abort(self):
+    @mock.patch("rally.cmd.commands.task.api")
+    def test_abort(self, mock_api):
         test_uuid = str(uuid.uuid4())
-        with mock.patch("rally.cmd.commands.task.api") as mock_api:
-            mock_api.abort_task = mock.MagicMock()
-            self.task.abort(test_uuid)
-            task.api.abort_task.assert_called_once_with(test_uuid)
+        mock_api.abort_task = mock.MagicMock()
+        self.task.abort(test_uuid)
+        task.api.abort_task.assert_called_once_with(test_uuid)
 
     def test_status(self):
         test_uuid = str(uuid.uuid4())
@@ -95,7 +95,8 @@ class TaskCommandsTestCase(test.BaseTestCase):
         self.task.results(test_uuid)
         mock_db.task_result_get_all_by_uuid.assert_called_once_with(test_uuid)
 
-    def test_list(self):
+    @mock.patch("rally.cmd.commands.task.db")
+    def test_list(self, mock_db):
         db_response = [
                 {'uuid': 'a',
                  'created_at': 'b',
@@ -103,10 +104,9 @@ class TaskCommandsTestCase(test.BaseTestCase):
                  'failed': True,
                  'tag': 'd'}
         ]
-        with mock.patch("rally.cmd.commands.task.db") as mock_db:
-            mock_db.task_list = mock.MagicMock(return_value=db_response)
-            self.task.list()
-            mock_db.task_list.assert_called_once_with()
+        mock_db.task_list = mock.MagicMock(return_value=db_response)
+        self.task.list()
+        mock_db.task_list.assert_called_once_with()
 
     def test_delete(self):
         task_uuid = str(uuid.uuid4())
