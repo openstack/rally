@@ -23,21 +23,13 @@ LOG = logging.getLogger(__name__)
 SSH_GROUP_NAME = "rally_ssh_open"
 
 
-def _prepare_for_instance_ssh(endpoint):
-    """Generate and store SSH keys, allows all access tcp/udp/icmp access.
+def _prepare_open_secgroup(endpoint):
+    """Generate secgroup allowing all tcp/udp/icmp access.
 
     In order to run tests on instances it is necessary to have SSH access.
-    This function generates an SSH key pair per user which is stored in the
-    clients dictionary. The public key is also submitted to nova via the
-    novaclient.
-
-    A security group rule is created to allow access to instances on port 22.
+    This function generates a secgroup which allows all tcp/udp/icmp access
     """
     nova = osclients.Clients(endpoint).get_nova_client()
-
-    keypair = None
-    if 'rally_ssh_key' not in [k.name for k in nova.keypairs.list()]:
-        keypair = nova.keypairs.create('rally_ssh_key')
 
     if SSH_GROUP_NAME not in [sg.name for sg in nova.security_groups.list()]:
         descr = "Allow ssh access to VMs created by Rally for benchmarking"
@@ -80,11 +72,7 @@ def _prepare_for_instance_ssh(endpoint):
                         ip_protocol=new_rule['ip_protocol'],
                         cidr=new_rule['ip_range']['cidr'])
 
-    if keypair:
-        keypair = {"private": keypair.private_key,
-                   "public": keypair.public_key}
-
-    return (rally_open, keypair)
+    return rally_open
 
 
 class AllowSSH(base.Context):
@@ -95,14 +83,18 @@ class AllowSSH(base.Context):
         self.secgroup = []
 
     def setup(self):
-        for user in self.context["users"]:
-            secgroup, keypair = _prepare_for_instance_ssh(user["endpoint"])
-            user["keypair"] = keypair
-            self.secgroup.append(secgroup)
+        used_tenants = []
+        for user in self.context['users']:
+            endpoint = user['endpoint']
+            tenant = endpoint.tenant_name
+            if tenant not in used_tenants:
+                secgroup = _prepare_open_secgroup(endpoint)
+                self.secgroup.append(secgroup)
+                used_tenants.append(tenant)
 
     def cleanup(self):
         for secgroup in self.secgroup:
             try:
                 secgroup.delete()
             except Exception:
-                LOG.warrning("Unable to delete secgroup: %s" % secgroup.id)
+                LOG.warning("Unable to delete secgroup: %s" % secgroup.id)
