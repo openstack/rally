@@ -105,6 +105,7 @@ class TaskCommands(object):
             if times_by_action:
                 atomic_action_table = prettytable.PrettyTable(
                                                             ['action',
+                                                             'count',
                                                              'max (sec)',
                                                              'avg (sec)',
                                                              'min (sec)',
@@ -112,6 +113,7 @@ class TaskCommands(object):
                                                              '95 percentile'])
                 for k, v in times_by_action.iteritems():
                     atomic_action_table.add_row([k,
+                                                len(v),
                                                 max(v),
                                                 sum(v) / len(v),
                                                 min(v),
