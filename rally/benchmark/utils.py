@@ -14,12 +14,12 @@
 #    under the License.
 
 import logging
+import time
 import traceback
 
 from rally.benchmark.scenarios.keystone import utils as kutils
 from rally import exceptions as rally_exceptions
 from rally import osclients
-from rally import utils
 
 
 LOG = logging.getLogger(__name__)
@@ -56,6 +56,39 @@ def manager_list_size(sizes):
     return _list
 
 
+def wait_for(resource, is_ready, update_resource=None, timeout=60,
+             check_interval=1):
+    """Waits for the given resource to come into the desired state.
+
+    Uses the readiness check function passed as a parameter and (optionally)
+    a function that updates the resource being waited for.
+
+    :param is_ready: A predicate that should take the resource object and
+                     return True iff it is ready to be returned
+    :param update_resource: Function that should take the resource object
+                          and return an 'updated' resource. If set to
+                          None, no result updating is performed
+    :param timeout: Timeout in seconds after which a TimeoutException will be
+                    raised
+    :param check_interval: Interval in seconds between the two consecutive
+                           readiness checks
+
+    :returns: The "ready" resource object
+    """
+
+    start = time.time()
+    while True:
+        # NOTE(boden): mitigate 1st iteration waits by updating immediately
+        if update_resource:
+            resource = update_resource(resource)
+        if is_ready(resource):
+            break
+        time.sleep(check_interval)
+        if time.time() - start > timeout:
+            raise rally_exceptions.TimeoutException()
+    return resource
+
+
 def _wait_for_list_statuses(mgr, statuses, list_query=None,
                             timeout=10, check_interval=1):
     list_query = list_query or {}
@@ -66,8 +99,8 @@ def _wait_for_list_statuses(mgr, statuses, list_query=None,
                 return False
         return True
 
-    utils.wait_for(mgr, is_ready=_list_statuses, update_resource=None,
-                   timeout=timeout, check_interval=check_interval)
+    wait_for(mgr, is_ready=_list_statuses, update_resource=None,
+             timeout=timeout, check_interval=check_interval)
 
 
 def _wait_for_empty_list(mgr, timeout=10, check_interval=1):
@@ -76,9 +109,33 @@ def _wait_for_empty_list(mgr, timeout=10, check_interval=1):
 
 
 def _wait_for_list_size(mgr, sizes=[0], timeout=10, check_interval=1):
-    utils.wait_for(mgr, is_ready=manager_list_size(sizes),
-                   update_resource=None, timeout=timeout,
-                   check_interval=check_interval)
+    wait_for(mgr, is_ready=manager_list_size(sizes), update_resource=None,
+             timeout=timeout, check_interval=check_interval)
+
+
+def wait_for_delete(resource, update_resource=None, timeout=60,
+                    check_interval=1):
+    """Waits for the full deletion of resource.
+
+    :param update_resource: Function that should take the resource object
+                            and return an 'updated' resource, or raise
+                            exception rally.exceptions.GetResourceNotFound
+                            that means that resource is deleted.
+
+    :param timeout: Timeout in seconds after which a TimeoutException will be
+                    raised
+    :param check_interval: Interval in seconds between the two consecutive
+                           readiness checks
+    """
+    start = time.time()
+    while True:
+        try:
+            resource = update_resource(resource)
+        except rally_exceptions.GetResourceNotFound:
+            break
+        time.sleep(check_interval)
+        if time.time() - start > timeout:
+            raise rally_exceptions.TimeoutException()
 
 
 def format_exc(exc):

@@ -38,9 +38,9 @@ class NovaScenarioTestCase(test.TestCase):
         self.image = mock.Mock()
         self.res_is = mockpatch.Patch(BM_UTILS + ".resource_is")
         self.get_fm = mockpatch.Patch(BM_UTILS + '.get_from_manager')
-        self.wait_for = mockpatch.Patch(NOVA_UTILS + ".utils.wait_for")
+        self.wait_for = mockpatch.Patch(NOVA_UTILS + ".bench_utils.wait_for")
         self.wait_for_delete = mockpatch.Patch(NOVA_UTILS +
-                                               ".utils.wait_for_delete")
+                                               ".bench_utils.wait_for_delete")
         self.useFixture(self.wait_for_delete)
         self.useFixture(self.wait_for)
         self.useFixture(self.res_is)

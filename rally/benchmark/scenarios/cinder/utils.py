@@ -21,7 +21,6 @@ import time
 from rally.benchmark.scenarios import base
 from rally.benchmark.scenarios import utils as scenario_utils
 from rally.benchmark import utils as bench_utils
-from rally import utils
 
 # TODO(boris-42): Bind name to the uuid of benchmark.
 TEMP_TEMPLATE = "rally_c_"
@@ -83,7 +82,7 @@ class CinderScenario(base.Scenario):
         # NOTE(msdubov): It is reasonable to wait 5 secs before starting to
         #                check whether the volume is ready => less API calls.
         time.sleep(CONF.benchmark.cinder_volume_create_prepoll_delay)
-        volume = utils.wait_for(
+        volume = bench_utils.wait_for(
             volume,
             is_ready=bench_utils.resource_is("available"),
             update_resource=bench_utils.get_from_manager(),
@@ -101,7 +100,7 @@ class CinderScenario(base.Scenario):
         :param volume: volume object
         """
         volume.delete()
-        utils.wait_for_delete(
+        bench_utils.wait_for_delete(
             volume,
             update_resource=bench_utils.get_from_manager(),
             timeout=CONF.benchmark.cinder_volume_delete_timeout,

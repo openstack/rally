@@ -22,7 +22,6 @@ from rally.benchmark.context import secgroup
 from rally.benchmark.scenarios import base
 from rally.benchmark.scenarios import utils as scenario_utils
 from rally.benchmark import utils as bench_utils
-from rally import utils
 
 nova_benchmark_opts = []
 option_names_and_defaults = [
@@ -91,7 +90,7 @@ class NovaScenario(base.Scenario):
         server = self.clients("nova").servers.create(server_name, image_id,
                                                      flavor_id, **kwargs)
         time.sleep(CONF.benchmark.nova_server_boot_prepoll_delay)
-        server = utils.wait_for(
+        server = bench_utils.wait_for(
             server,
             is_ready=bench_utils.resource_is("ACTIVE"),
             update_resource=bench_utils.get_from_manager(),
@@ -113,7 +112,7 @@ class NovaScenario(base.Scenario):
         """
         server.reboot(reboot_type=("SOFT" if soft else "HARD"))
         time.sleep(CONF.benchmark.nova_server_reboot_prepoll_delay)
-        utils.wait_for(
+        bench_utils.wait_for(
             server, is_ready=bench_utils.resource_is("ACTIVE"),
             update_resource=bench_utils.get_from_manager(),
             timeout=CONF.benchmark.nova_server_reboot_timeout,
@@ -130,7 +129,7 @@ class NovaScenario(base.Scenario):
         :param server: The server to start and wait to become ACTIVE.
         """
         server.start()
-        utils.wait_for(
+        bench_utils.wait_for(
             server, is_ready=bench_utils.resource_is("ACTIVE"),
             update_resource=bench_utils.get_from_manager(),
             timeout=CONF.benchmark.nova_server_start_timeout,
@@ -147,7 +146,7 @@ class NovaScenario(base.Scenario):
         :param server: The server to stop.
         """
         server.stop()
-        utils.wait_for(
+        bench_utils.wait_for(
             server, is_ready=bench_utils.resource_is("SHUTOFF"),
             update_resource=bench_utils.get_from_manager(),
             timeout=CONF.benchmark.nova_server_stop_timeout,
@@ -165,7 +164,7 @@ class NovaScenario(base.Scenario):
         """
         server.rescue()
         time.sleep(CONF.benchmark.nova_server_rescue_prepoll_delay)
-        utils.wait_for(
+        bench_utils.wait_for(
             server, is_ready=bench_utils.resource_is("RESCUE"),
             update_resource=bench_utils.get_from_manager(),
             timeout=CONF.benchmark.nova_server_rescue_timeout,
@@ -182,7 +181,7 @@ class NovaScenario(base.Scenario):
         """
         server.unrescue()
         time.sleep(CONF.benchmark.nova_server_unrescue_prepoll_delay)
-        utils.wait_for(
+        bench_utils.wait_for(
             server, is_ready=bench_utils.resource_is("ACTIVE"),
             update_resource=bench_utils.get_from_manager(),
             timeout=CONF.benchmark.nova_server_unrescue_timeout,
@@ -200,7 +199,7 @@ class NovaScenario(base.Scenario):
         """
         server.suspend()
         time.sleep(CONF.benchmark.nova_server_suspend_prepoll_delay)
-        utils.wait_for(
+        bench_utils.wait_for(
             server, is_ready=bench_utils.resource_is("SUSPENDED"),
             update_resource=bench_utils.get_from_manager(),
             timeout=CONF.benchmark.nova_server_suspend_timeout,
@@ -216,7 +215,7 @@ class NovaScenario(base.Scenario):
         :param server: Server object
         """
         server.delete()
-        utils.wait_for_delete(
+        bench_utils.wait_for_delete(
             server,
             update_resource=bench_utils.get_from_manager(),
             timeout=CONF.benchmark.nova_server_delete_timeout,
@@ -239,7 +238,7 @@ class NovaScenario(base.Scenario):
         :param image: Image object
         """
         image.delete()
-        utils.wait_for_delete(
+        bench_utils.wait_for_delete(
             image,
             update_resource=bench_utils.get_from_manager(),
             timeout=CONF.benchmark.nova_server_image_delete_timeout,
@@ -261,7 +260,7 @@ class NovaScenario(base.Scenario):
         image_uuid = self.clients("nova").servers.create_image(server,
                                                                server.name)
         image = self.clients("nova").images.get(image_uuid)
-        image = utils.wait_for(
+        image = bench_utils.wait_for(
             image,
             is_ready=bench_utils.resource_is("ACTIVE"),
             update_resource=bench_utils.get_from_manager(),
@@ -300,7 +299,7 @@ class NovaScenario(base.Scenario):
         servers = filter(lambda server: server.name.startswith(name_prefix),
                          self.clients("nova").servers.list())
         time.sleep(CONF.benchmark.nova_server_boot_prepoll_delay)
-        servers = [utils.wait_for(
+        servers = [bench_utils.wait_for(
             server,
             is_ready=bench_utils.resource_is("ACTIVE"),
             update_resource=bench_utils.

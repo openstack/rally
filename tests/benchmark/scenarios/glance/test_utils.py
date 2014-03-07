@@ -34,9 +34,9 @@ class GlanceScenarioTestCase(test.TestCase):
         self.image1 = mock.Mock()
         self.res_is = mockpatch.Patch(BM_UTILS + ".resource_is")
         self.get_fm = mockpatch.Patch(BM_UTILS + '.get_from_manager')
-        self.wait_for = mockpatch.Patch(GLANCE_UTILS + ".utils.wait_for")
+        self.wait_for = mockpatch.Patch(GLANCE_UTILS + ".bench_utils.wait_for")
         self.wait_for_delete = mockpatch.Patch(
-            GLANCE_UTILS + ".utils.wait_for_delete")
+            GLANCE_UTILS + ".bench_utils.wait_for_delete")
         self.useFixture(self.wait_for)
         self.useFixture(self.wait_for_delete)
         self.useFixture(self.res_is)

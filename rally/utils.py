@@ -123,64 +123,6 @@ def import_modules_from_package(package):
             try_append_module(module_name, sys.modules)
 
 
-def wait_for(resource, is_ready, update_resource=None, timeout=60,
-             check_interval=1):
-    """Waits for the given resource to come into the desired state.
-
-    Uses the readiness check function passed as a parameter and (optionally)
-    a function that updates the resource being waited for.
-
-    :param is_ready: A predicate that should take the resource object and
-                     return True iff it is ready to be returned
-    :param update_resource: Function that should take the resource object
-                          and return an 'updated' resource. If set to
-                          None, no result updating is performed
-    :param timeout: Timeout in seconds after which a TimeoutException will be
-                    raised
-    :param check_interval: Interval in seconds between the two consecutive
-                           readiness checks
-
-    :returns: The "ready" resource object
-    """
-
-    start = time.time()
-    while True:
-        # NOTE(boden): mitigate 1st iteration waits by updating immediately
-        if update_resource:
-            resource = update_resource(resource)
-        if is_ready(resource):
-            break
-        time.sleep(check_interval)
-        if time.time() - start > timeout:
-            raise exceptions.TimeoutException()
-    return resource
-
-
-def wait_for_delete(resource, update_resource=None, timeout=60,
-                    check_interval=1):
-    """Waits for the full deletion of resource.
-
-    :param update_resource: Function that should take the resource object
-                            and return an 'updated' resource, or raise
-                            exception rally.exceptions.GetResourceNotFound
-                            that means that resource is deleted.
-
-    :param timeout: Timeout in seconds after which a TimeoutException will be
-                    raised
-    :param check_interval: Interval in seconds between the two consecutive
-                           readiness checks
-    """
-    start = time.time()
-    while True:
-        try:
-            resource = update_resource(resource)
-        except exceptions.GetResourceNotFound:
-            break
-        time.sleep(check_interval)
-        if time.time() - start > timeout:
-            raise exceptions.TimeoutException()
-
-
 def log_task_wrapper(log, msg, **kw):
     """A logging wrapper for any method of a class.
 

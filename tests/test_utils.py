@@ -17,7 +17,6 @@
 
 from __future__ import print_function
 
-import datetime
 import mock
 import sys
 import time
@@ -142,35 +141,6 @@ class ImportModulesTestCase(test.TestCase):
         utils.import_modules_from_package('tests.fixtures.import.package')
         self.assertTrue('tests.fixtures.import.package.a' in sys.modules)
         self.assertTrue('tests.fixtures.import.package.b' in sys.modules)
-
-
-class WaitForTestCase(test.TestCase):
-
-    def test_wait_for(self):
-
-        def get_fake_checker_delayed(**delay):
-            deadline = datetime.datetime.now() + datetime.timedelta(**delay)
-            return lambda obj: datetime.datetime.now() > deadline
-
-        def fake_checker_false(obj):
-            return False
-
-        def fake_updater(obj):
-            return obj
-
-        resource = object()
-        fake_checker_delayed = get_fake_checker_delayed(seconds=0.3)
-
-        loaded_resource = utils.wait_for(resource, fake_checker_delayed,
-                                         fake_updater, 1, 0.2)
-        self.assertEqual(loaded_resource, resource)
-
-        loaded_resource = utils.wait_for(resource, fake_checker_delayed,
-                                         None, 1, 0.2)
-        self.assertEqual(loaded_resource, resource)
-
-        self.assertRaises(exceptions.TimeoutException, utils.wait_for,
-                          object(), fake_checker_false, fake_updater, 0.3, 0.1)
 
 
 class LogTestCase(test.TestCase):

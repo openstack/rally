@@ -25,7 +25,6 @@ from rally.openstack.common.gettextutils import _
 from rally.openstack.common import log as logging
 from rally import osclients
 from rally.serverprovider import provider
-from rally import utils
 
 
 LOG = logging.getLogger(__name__)
@@ -193,7 +192,7 @@ class OpenStackProvider(provider.ProviderFactory):
         }
 
         for os_server in os_servers:
-            utils.wait_for(os_server, **kwargs)
+            benchmark_utils.wait_for(os_server, **kwargs)
 
         servers = [provider.Server(host=s.addresses.values()[0][0]['addr'],
                                    user='root',

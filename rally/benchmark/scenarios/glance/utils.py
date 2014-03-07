@@ -21,7 +21,6 @@ import time
 from rally.benchmark.scenarios import base
 from rally.benchmark.scenarios import utils as scenario_utils
 from rally.benchmark import utils as bench_utils
-from rally import utils
 
 
 glance_benchmark_opts = [
@@ -75,7 +74,7 @@ class GlanceScenario(base.Scenario):
                                         disk_format=disk_format,
                                         **kwargs)
         time.sleep(CONF.benchmark.glance_image_create_prepoll_delay)
-        image = utils.wait_for(
+        image = bench_utils.wait_for(
             image,
             is_ready=bench_utils.resource_is("active"),
             update_resource=bench_utils.get_from_manager(),
@@ -92,7 +91,7 @@ class GlanceScenario(base.Scenario):
         :param image: Image object
         """
         image.delete()
-        utils.wait_for_delete(
+        bench_utils.wait_for_delete(
             image,
             update_resource=bench_utils.get_from_manager(),
             timeout=CONF.benchmark.glance_image_delete_timeout,
