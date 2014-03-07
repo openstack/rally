@@ -126,12 +126,6 @@ def delete_images(glance, project_uuid):
                             timeout=600, check_interval=3)
 
 
-def delete_networks(nova):
-    for network in nova.networks.list():
-        network.delete()
-    _wait_for_empty_list(nova.networks)
-
-
 def delete_volumes(cinder):
     for vol in cinder.volumes.list():
         vol.delete()
@@ -170,7 +164,6 @@ def _delete_single_keystone_resource_type(keystone, resource_name):
 def delete_nova_resources(nova):
     delete_servers(nova)
     delete_keypairs(nova)
-    delete_networks(nova)
 
 
 def delete_cinder_resources(cinder):

@@ -68,7 +68,7 @@ class ResourceCleaner(base.Context):
                 except Exception as e:
                     LOG.debug(_("Not all resources were cleaned."),
                               exc_info=sys.exc_info())
-                    LOG.warning(_('Unable to fully cleanup the cloud: \n%s') %
+                    LOG.warning(_('Unable to fully cleanup the cloud: %s') %
                                 (e.message))
 
     @rutils.log_task_wrapper(LOG.info, _("Cleanup admin resources."))
