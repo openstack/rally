@@ -45,7 +45,7 @@ class TaskCommandsTestCase(test.BaseTestCase):
         mock_api.assert_called_once_with(deploy_id, {u'some': u'json'},
                                          task=mock_create_task.return_value)
 
-    @mock.patch('rally.cmd.commands.task.envutils._default_deployment_id')
+    @mock.patch('rally.cmd.commands.task.envutils.default_deployment_id')
     def test_start_no_deploy_id(self, mock_default):
         mock_default.side_effect = exceptions.InvalidArgumentsException
         self.assertRaises(exceptions.InvalidArgumentsException,

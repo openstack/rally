@@ -112,13 +112,15 @@ class DeploymentCommands(object):
 
     def list(self, deployment_list=None):
         """Print list of deployments."""
-        headers = ['uuid', 'created_at', 'name', 'status']
+        headers = ['uuid', 'created_at', 'name', 'status', 'active']
+        current_deploy_id = envutils.default_deployment_id()
         deployment_list = deployment_list or db.deployment_list()
         if deployment_list:
             table = prettytable.PrettyTable(headers)
 
             for t in deployment_list:
-                r = [str(t[column]) for column in headers]
+                r = [str(t[column]) for column in headers[:-1]]
+                r.append("" if t["uuid"] != current_deploy_id else "*")
                 table.add_row(r)
 
             print(table)

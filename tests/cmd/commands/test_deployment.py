@@ -27,6 +27,7 @@ class DeploymentCommandsTestCase(test.BaseTestCase):
         super(DeploymentCommandsTestCase, self).setUp()
         self.deployment = deployment.DeploymentCommands()
 
+    @mock.patch.dict(os.environ, {'RALLY_DEPLOYMENT': 'my_deploy_id'})
     @mock.patch('rally.cmd.commands.deployment.api.create_deploy')
     @mock.patch('rally.cmd.commands.deployment.open',
                 mock.mock_open(read_data='{"some": "json"}'),
@@ -38,7 +39,8 @@ class DeploymentCommandsTestCase(test.BaseTestCase):
     @mock.patch.dict(os.environ, {'OS_AUTH_URL': 'fake_auth_url',
                                   'OS_USERNAME': 'fake_username',
                                   'OS_PASSWORD': 'fake_password',
-                                  'OS_TENANT_NAME': 'fake_tenant_name'})
+                                  'OS_TENANT_NAME': 'fake_tenant_name',
+                                  'RALLY_DEPLOYMENT': 'fake_deployment_id'})
     @mock.patch('rally.cmd.commands.deployment.api.create_deploy')
     def test_createfromenv(self, mock_create):
         self.deployment.create('from_env', True)
@@ -76,7 +78,7 @@ class DeploymentCommandsTestCase(test.BaseTestCase):
         mock_recreate.assert_called_once_with(deploy_id)
 
     @mock.patch('rally.cmd.commands.deployment.envutils.'
-                '_default_deployment_id')
+                'default_deployment_id')
     def test_recreate_no_deploy_id(self, mock_default):
         mock_default.side_effect = exceptions.InvalidArgumentsException
         self.assertRaises(exceptions.InvalidArgumentsException,
@@ -89,7 +91,7 @@ class DeploymentCommandsTestCase(test.BaseTestCase):
         mock_destroy.assert_called_once_with(deploy_id)
 
     @mock.patch('rally.cmd.commands.deployment.envutils.'
-                '_default_deployment_id')
+                'default_deployment_id')
     def test_destroy_no_deploy_id(self, mock_default):
         mock_default.side_effect = exceptions.InvalidArgumentsException
         self.assertRaises(exceptions.InvalidArgumentsException,
@@ -104,7 +106,7 @@ class DeploymentCommandsTestCase(test.BaseTestCase):
         mock_deployment.assert_called_once_with(deploy_id)
 
     @mock.patch('rally.cmd.commands.deployment.envutils.'
-                '_default_deployment_id')
+                'default_deployment_id')
     def test_config_no_deploy_id(self, mock_default):
         mock_default.side_effect = exceptions.InvalidArgumentsException
         self.assertRaises(exceptions.InvalidArgumentsException,
@@ -119,7 +121,7 @@ class DeploymentCommandsTestCase(test.BaseTestCase):
         mock_deployment.assert_called_once_with(deploy_id)
 
     @mock.patch('rally.cmd.commands.deployment.envutils.'
-                '_default_deployment_id')
+                'default_deployment_id')
     def test_deploy_no_deploy_id(self, mock_default):
         mock_default.side_effect = exceptions.InvalidArgumentsException
         self.assertRaises(exceptions.InvalidArgumentsException,

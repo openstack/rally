@@ -19,7 +19,7 @@ from rally import exceptions
 from rally import fileutils
 
 
-def _default_deployment_id():
+def default_deployment_id():
     try:
         deploy_id = os.environ['RALLY_DEPLOYMENT']
     except KeyError:
@@ -37,5 +37,5 @@ def deploy_id_default(f, *args, **kwargs):
     deploy_id_arg_index = f.func_code.co_varnames.index("deploy_id")
     args = list(args)
     if args[deploy_id_arg_index] is None:
-        args[deploy_id_arg_index] = _default_deployment_id()
+        args[deploy_id_arg_index] = default_deployment_id()
     return f(*args, **kwargs)
