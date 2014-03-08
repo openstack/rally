@@ -106,9 +106,9 @@ class OpenStackProvider(provider.ProviderFactory):
         user_endpoint = endpoint.Endpoint(config['auth_url'], config['user'],
                                           config['password'], config['tenant'])
         clients = osclients.Clients(user_endpoint)
-        self.nova = clients.get_nova_client()
+        self.nova = clients.nova()
         try:
-            self.glance = clients.get_glance_client()
+            self.glance = clients.glance()
         except KeyError:
             self.glance = None
             LOG.warning(_('Glance endpoint not available in service catalog'

@@ -33,12 +33,12 @@ class OSClientsTestCase(test.TestCase):
                                           "tenant")
         self.clients = osclients.Clients(self.endpoint)
 
-    def test_get_keystone_client(self):
+    def test_keystone(self):
         with mock.patch("rally.osclients.keystone") as mock_keystone:
             fake_keystone = fakes.FakeKeystoneClient()
             mock_keystone.Client = mock.MagicMock(return_value=fake_keystone)
             self.assertTrue("keystone" not in self.clients.cache)
-            client = self.clients.get_keystone_client()
+            client = self.clients.keystone()
             self.assertEqual(client, fake_keystone)
             endpoint = {"endpoint": "http://auth_url:35357",
                         "timeout": cfg.CONF.openstack_client_http_timeout,
@@ -47,34 +47,34 @@ class OSClientsTestCase(test.TestCase):
             mock_keystone.Client.assert_called_once_with(**kwargs)
             self.assertEqual(self.clients.cache["keystone"], fake_keystone)
 
-    @mock.patch("rally.osclients.Clients.get_keystone_client")
-    def test_get_verified_keystone_client_user_not_admin(self, mock_keystone):
+    @mock.patch("rally.osclients.Clients.keystone")
+    def test_verified_keystone_user_not_admin(self, mock_keystone):
         mock_keystone.return_value = fakes.FakeKeystoneClient()
         mock_keystone.return_value.auth_ref["user"]["roles"] = \
             [{"name": "notadmin"}]
         self.assertRaises(exceptions.InvalidAdminException,
-                          self.clients.get_verified_keystone_client)
+                          self.clients.verified_keystone)
 
-    @mock.patch("rally.osclients.Clients.get_keystone_client")
-    def test_get_verified_keystone_client_unauthorized(self, mock_keystone):
+    @mock.patch("rally.osclients.Clients.keystone")
+    def test_verified_keystone_unauthorized(self, mock_keystone):
         mock_keystone.return_value = fakes.FakeKeystoneClient()
         mock_keystone.side_effect = keystone_exceptions.Unauthorized
         self.assertRaises(exceptions.InvalidEndpointsException,
-                          self.clients.get_verified_keystone_client)
+                          self.clients.verified_keystone)
 
-    @mock.patch("rally.osclients.Clients.get_keystone_client")
-    def test_get_verified_keystone_client_unreachable(self, mock_keystone):
+    @mock.patch("rally.osclients.Clients.keystone")
+    def test_verified_keystone_unreachable(self, mock_keystone):
         mock_keystone.return_value = fakes.FakeKeystoneClient()
         mock_keystone.side_effect = keystone_exceptions.AuthorizationFailure
         self.assertRaises(exceptions.HostUnreachableException,
-                          self.clients.get_verified_keystone_client)
+                          self.clients.verified_keystone)
 
-    def test_get_nova_client(self):
+    def test_nova(self):
         with mock.patch("rally.osclients.nova") as mock_nova:
             fake_nova = fakes.FakeNovaClient()
             mock_nova.Client = mock.MagicMock(return_value=fake_nova)
             self.assertTrue("nova" not in self.clients.cache)
-            client = self.clients.get_nova_client()
+            client = self.clients.nova()
             self.assertEqual(client, fake_nova)
             mock_nova.Client.assert_called_once_with(
                 "2", self.endpoint.username, self.endpoint.password,
@@ -84,14 +84,14 @@ class OSClientsTestCase(test.TestCase):
                 insecure=False, cacert=None)
             self.assertEqual(self.clients.cache["nova"], fake_nova)
 
-    def test_get_glance_client(self):
+    def test_glance(self):
         with mock.patch("rally.osclients.glance") as mock_glance:
             fake_glance = fakes.FakeGlanceClient()
             mock_glance.Client = mock.MagicMock(return_value=fake_glance)
             kc = fakes.FakeKeystoneClient()
-            self.clients.get_keystone_client = mock.MagicMock(return_value=kc)
+            self.clients.keystone = mock.MagicMock(return_value=kc)
             self.assertTrue("glance" not in self.clients.cache)
-            client = self.clients.get_glance_client()
+            client = self.clients.glance()
             self.assertEqual(client, fake_glance)
             endpoint = kc.service_catalog.get_endpoints()["image"][0]
 
@@ -102,12 +102,12 @@ class OSClientsTestCase(test.TestCase):
             mock_glance.Client.assert_called_once_with("1", **kw)
             self.assertEqual(self.clients.cache["glance"], fake_glance)
 
-    def test_get_cinder_client(self):
+    def test_cinder(self):
         with mock.patch("rally.osclients.cinder") as mock_cinder:
             fake_cinder = fakes.FakeCinderClient()
             mock_cinder.Client = mock.MagicMock(return_value=fake_cinder)
             self.assertTrue("cinder" not in self.clients.cache)
-            client = self.clients.get_cinder_client()
+            client = self.clients.cinder()
             self.assertEqual(client, fake_cinder)
             mock_cinder.Client.assert_called_once_with(
                 "1", self.endpoint.username, self.endpoint.password,
@@ -117,13 +117,13 @@ class OSClientsTestCase(test.TestCase):
                 insecure=False, cacert=None)
             self.assertEqual(self.clients.cache["cinder"], fake_cinder)
 
-    def test_get_ceilometer_client(self):
+    def test_ceilometer(self):
         with mock.patch("rally.osclients.ceilometer") as mock_ceilometer:
             fake_ceilometer = fakes.FakeCeilometerClient()
             mock_ceilometer.Client = mock.MagicMock(
                 return_value=fake_ceilometer)
             self.assertTrue("ceilometer" not in self.clients.cache)
-            client = self.clients.get_ceilometer_client()
+            client = self.clients.ceilometer()
             self.assertEqual(client, fake_ceilometer)
             kw = {"username": self.endpoint.username,
                   "password": self.endpoint.password,

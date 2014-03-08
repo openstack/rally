@@ -16,9 +16,9 @@
 import mock
 
 from rally.benchmark.scenarios.nova import servers
-from rally.benchmark import utils as butils
 from rally import exceptions as rally_exceptions
 from rally.objects import endpoint
+from rally import osclients
 from tests import fakes
 from tests import test
 
@@ -242,7 +242,6 @@ class NovaServersTestCase(test.TestCase):
         scenario.sleep_between.assert_called_once_with(10, 20)
         scenario._delete_server.assert_called_once_with(fake_server)
 
-    @mock.patch("rally.benchmark.utils.osclients")
     def _prepare_boot(self, mock_osclients, mock_choice=None, nic=None,
                       assert_nic=False):
         fake_server = mock.MagicMock()
@@ -250,10 +249,10 @@ class NovaServersTestCase(test.TestCase):
         fc = fakes.FakeClients()
         mock_osclients.Clients.return_value = fc
         nova = fakes.FakeNovaClient()
-        fc.get_nova_client = lambda: nova
+        fc.nova = lambda: nova
 
         user_endpoint = endpoint.Endpoint("url", "user", "password", "tenant")
-        clients = butils.create_openstack_clients(user_endpoint)
+        clients = osclients.Clients(user_endpoint)
         scenario = servers.NovaServers(clients=clients)
 
         scenario._boot_server = mock.MagicMock(return_value=fake_server)
@@ -276,9 +275,11 @@ class NovaServersTestCase(test.TestCase):
         return scenario, kwargs, expected_kwargs
 
     @mock.patch("rally.benchmark.scenarios.nova.servers.random.choice")
-    def _verify_boot_server(self, mock_choice, nic=None, assert_nic=False):
+    def _verify_boot_server(self, mock_choice, mock_osclients, nic=None,
+                            assert_nic=False):
         scenario, kwargs, expected_kwargs = \
-            self._prepare_boot(mock_choice=mock_choice,
+            self._prepare_boot(mock_osclients=mock_osclients,
+                               mock_choice=mock_choice,
                                nic=nic, assert_nic=assert_nic)
 
         scenario.boot_server("img", 0, **kwargs)
@@ -288,21 +289,34 @@ class NovaServersTestCase(test.TestCase):
     def test_boot_runcommand_delete_server(self):
         self._verify_boot_runcommand_delete_server()
 
-    def test_boot_server_no_nics(self):
-        self._verify_boot_server(nic=None, assert_nic=False)
+    @mock.patch("rally.benchmark.scenarios.nova.servers.NovaServers.clients")
+    @mock.patch("rally.benchmark.runners.base.osclients")
+    def test_boot_server_no_nics(self, mock_osclients, mock_nova_clients):
+        mock_nova_clients.return_value = fakes.FakeNovaClient()
+        self._verify_boot_server(mock_osclients=mock_osclients,
+                                 nic=None, assert_nic=False)
 
-    def test_boot_server_with_nic(self):
-        self._verify_boot_server(nic=[{'net-id': 'net-1'}],
+    @mock.patch("rally.benchmark.runners.base.osclients")
+    def test_boot_server_with_nic(self, mock_osclients):
+        self._verify_boot_server(mock_osclients=mock_osclients,
+                                 nic=[{'net-id': 'net-1'}], assert_nic=True)
+
+    @mock.patch("rally.benchmark.scenarios.nova.servers.NovaServers.clients")
+    @mock.patch("rally.benchmark.runners.base.osclients")
+    def test_boot_server_random_nic(self, mock_osclients, mock_nova_clients):
+        self._verify_boot_server(mock_osclients=mock_osclients, nic=None,
                                  assert_nic=True)
 
-    def test_boot_server_random_nic(self):
-        self._verify_boot_server(nic=None, assert_nic=True)
-
+    @mock.patch("rally.benchmark.scenarios.nova.servers.NovaServers.clients")
+    @mock.patch("rally.benchmark.runners.base.osclients")
     @mock.patch("rally.benchmark.scenarios.nova.servers.random.choice")
-    def test_boot_server_from_volume_random_nic(self, mock_choice):
+    def test_boot_server_from_volume_random_nic(self, mock_choice,
+                                                mock_osclients,
+                                                mock_nova_clients):
         scenario, kwargs, expected_kwargs = \
-            self._prepare_boot(mock_choice=mock_choice, nic=None,
-                               assert_nic=True)
+            self._prepare_boot(mock_osclients=mock_osclients,
+                               mock_choice=mock_choice,
+                               nic=None, assert_nic=True)
 
         fake_volume = fakes.FakeVolumeManager().create()
         fake_volume.id = "volume_id"

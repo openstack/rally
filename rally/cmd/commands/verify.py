@@ -64,7 +64,7 @@ class VerifyCommands(object):
         endpoints = db.deployment_get(deploy_id)['endpoints']
         endpoint_dict = endpoints[0]
         clients = osclients.Clients(endpoint.Endpoint(**endpoint_dict))
-        glance = clients.get_glance_client()
+        glance = clients.glance()
 
         image_list = []
         for image in glance.images.list():
@@ -81,7 +81,7 @@ class VerifyCommands(object):
             print('Sorry, but there are no desired images or only one')
             return
 
-        nova = clients.get_nova_client()
+        nova = clients.nova()
         flavor_list = []
         for fl in sorted(nova.flavors.list(), key=lambda flavor: flavor.ram):
             flavor_list.append(fl)

@@ -14,13 +14,13 @@
 #    under the License.
 
 import functools
-import itertools
 import sys
 
 from rally.benchmark.context import base
 from rally.benchmark import utils
 from rally.openstack.common.gettextutils import _
 from rally.openstack.common import log as logging
+from rally import osclients
 from rally import utils as rutils
 
 
@@ -53,13 +53,14 @@ class ResourceCleaner(base.Context):
         if not self.users:
             return
 
-        for user in itertools.imap(utils.create_openstack_clients, self.users):
+        for user in self.users:
+            clients = osclients.Clients(user)
             methods = [
-                functools.partial(utils.delete_nova_resources, user["nova"]),
+                functools.partial(utils.delete_nova_resources, clients.nova()),
                 functools.partial(utils.delete_glance_resources,
-                                  user["glance"], user["keystone"]),
+                                  clients.glance(), clients.keystone()),
                 functools.partial(utils.delete_cinder_resources,
-                                  user["cinder"])
+                                  clients.cinder())
             ]
 
             for method in methods:
@@ -77,8 +78,8 @@ class ResourceCleaner(base.Context):
             return
 
         try:
-            admin = utils.create_openstack_clients(self.admin)
-            utils.delete_keystone_resources(admin["keystone"])
+            admin = osclients.Clients(self.admin)
+            utils.delete_keystone_resources(admin.keystone())
         except Exception as e:
             LOG.debug(_("Not all resources were cleaned."),
                       exc_info=sys.exc_info())

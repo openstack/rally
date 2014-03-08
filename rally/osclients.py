@@ -45,11 +45,27 @@ class Clients(object):
         self.endpoint = endpoint
         self.cache = {}
 
-    def get_keystone_client(self):
-        """Return keystone client."""
-        if "keystone" in self.cache:
-            return self.cache["keystone"]
+    def clear(self):
+        """Remove all cached client handles."""
+        self.cache = {}
 
+    def memoize(name):
+        """Cache client handles."""
+        def decorate(func):
+            def wrapper(self, *args, **kwargs):
+                key = '{0}{1}{2}'.format(func.__name__,
+                      str(args) if args else '',
+                      str(kwargs) if kwargs else '')
+                if key in self.cache:
+                    return self.cache[key]
+                self.cache[key] = func(self, *args, **kwargs)
+                return self.cache[key]
+            return wrapper
+        return decorate
+
+    @memoize('keystone')
+    def keystone(self):
+        """Return keystone client."""
         new_kw = {
             "endpoint": self._change_port(self.endpoint.auth_url, "35357"),
             "timeout": CONF.openstack_client_http_timeout,
@@ -58,18 +74,16 @@ class Clients(object):
         kw = dict(self.endpoint.to_dict().items() + new_kw.items())
         client = keystone.Client(**kw)
         client.authenticate()
-
-        self.cache["keystone"] = client
         return client
 
-    def get_verified_keystone_client(self):
+    def verified_keystone(self):
         """Ensure keystone endpoints are valid and then authenticate
 
         :returns: Keystone Client
         """
         try:
             # Ensure that user is admin
-            client = self.get_keystone_client()
+            client = self.keystone()
             roles = client.auth_ref['user']['roles']
             if not any('admin' == role['name'] for role in roles):
                 raise exceptions.InvalidAdminException(
@@ -81,11 +95,9 @@ class Clients(object):
                 url=self.endpoint.auth_url)
         return client
 
-    def get_nova_client(self, version='2'):
+    @memoize('nova')
+    def nova(self, version='2'):
         """Returns nova client."""
-        if "nova" in self.cache:
-            return self.cache["nova"]
-
         client = nova.Client(version,
                              self.endpoint.username,
                              self.endpoint.password,
@@ -95,16 +107,12 @@ class Clients(object):
                              timeout=CONF.openstack_client_http_timeout,
                              insecure=CONF.https_insecure,
                              cacert=CONF.https_cacert)
-
-        self.cache["nova"] = client
         return client
 
-    def get_glance_client(self, version='1'):
+    @memoize('glance')
+    def glance(self, version='1'):
         """Returns glance client."""
-        if "glance" in self.cache:
-            return self.cache["glance"]
-
-        kc = self.get_keystone_client()
+        kc = self.keystone()
         endpoint = kc.service_catalog.get_endpoints()['image'][0]
         client = glance.Client(version,
                                endpoint=endpoint['publicURL'],
@@ -112,16 +120,12 @@ class Clients(object):
                                timeout=CONF.openstack_client_http_timeout,
                                insecure=CONF.https_insecure,
                                cacert=CONF.https_cacert)
-
-        self.cache["glance"] = client
         return client
 
-    def get_heat_client(self, version='1'):
+    @memoize('heat')
+    def heat(self, version='1'):
         """Returns heat client."""
-        if "heat" in self.cache:
-            return self.cache["heat"]
-
-        kc = self.get_keystone_client()
+        kc = self.keystone()
         endpoint = kc.service_catalog.get_endpoints()['orchestration'][0]
 
         client = heat.Client(version,
@@ -130,15 +134,11 @@ class Clients(object):
                              timeout=CONF.openstack_client_http_timeout,
                              insecure=CONF.https_insecure,
                              cacert=CONF.https_cacert)
-
-        self.cache["heat"] = client
         return client
 
-    def get_cinder_client(self, version='1'):
+    @memoize('cinder')
+    def cinder(self, version='1'):
         """Returns cinder client."""
-        if "cinder" in self.cache:
-            return self.cache["cinder"]
-
         client = cinder.Client(version,
                                self.endpoint.username,
                                self.endpoint.password,
@@ -148,15 +148,11 @@ class Clients(object):
                                timeout=CONF.openstack_client_http_timeout,
                                insecure=CONF.https_insecure,
                                cacert=CONF.https_cacert)
-
-        self.cache["cinder"] = client
         return client
 
-    def get_ceilometer_client(self, version='1'):
+    @memoize('ceilometer')
+    def ceilometer(self, version='1'):
         """Returns ceilometer client."""
-        if "ceilometer" in self.cache:
-            return self.cache["ceilometer"]
-
         client = ceilometer.Client(version,
                                    username=self.endpoint.username,
                                    password=self.endpoint.password,
@@ -165,8 +161,6 @@ class Clients(object):
                                    timeout=CONF.openstack_client_http_timeout,
                                    insecure=CONF.https_insecure,
                                    cacert=CONF.https_cacert)
-
-        self.cache["ceilometer"] = client
         return client
 
     def _change_port(self, url, new_port):

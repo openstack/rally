@@ -58,24 +58,24 @@ class UserGenerator(base.Context):
         #                 should rename this class s/UserGenerator/UserContext/
         #                 and change a bit logic of populating lists of users
         #                 and tenants
-        clients = osclients.Clients(context["admin"]["endpoint"])
-        self.keystone_client = clients.get_keystone_client()
+        self.clients = osclients.Clients(context["admin"]["endpoint"])
 
     def _create_user(self, user_id, tenant_id):
         pattern = "%(tenant_id)s_user_%(uid)d"
         name = pattern % {"tenant_id": tenant_id, "uid": user_id}
         email = "%s@email.me" % name
-        return self.keystone_client.users.create(name, "password",
-                                                 email, tenant_id)
+        return self.clients.keystone().users.create(name, "password",
+                                                    email, tenant_id)
 
     def _create_tenant(self, run_id, i):
         pattern = "temp_%(run_id)s_tenant_%(iter)i"
-        return self.keystone_client.tenants.create(pattern % {"run_id": run_id,
-                                                              "iter": i})
+        return self.clients.keystone().tenants.create(pattern %
+                                                      {"run_id": run_id,
+                                                       "iter": i})
 
     def create_users_and_tenants(self):
         run_id = str(uuid.uuid4())
-        auth_url = self.keystone_client.auth_url
+        auth_url = self.clients.keystone().auth_url
 
         self.context["tenants"] = []
         for i in range(self.config["tenants"]):
@@ -95,13 +95,13 @@ class UserGenerator(base.Context):
     def _delete_users_and_tenants(self):
         for user in self.context["users"]:
             try:
-                self.keystone_client.users.delete(user["id"])
+                self.clients.keystone().users.delete(user["id"])
             except Exception:
                 LOG.info("Failed to delete user: %s" % user["id"])
 
         for tenant in self.context["tenants"]:
             try:
-                self.keystone_client.tenants.delete(tenant["id"])
+                self.clients.keystone().tenants.delete(tenant["id"])
             except Exception:
                 LOG.info("Failed to delete tenant: %s" % tenant["name"])
 

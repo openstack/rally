@@ -56,7 +56,7 @@ def image_exists(param_name):
     """
     def image_exists_validator(**kwargs):
         image_id = kwargs.get(param_name)
-        glanceclient = kwargs["clients"]["glance"]
+        glanceclient = kwargs["clients"].glance()
         try:
             glanceclient.images.get(image=image_id)
             return ValidationResult()
@@ -74,7 +74,7 @@ def flavor_exists(param_name):
     """
     def flavor_exists_validator(**kwargs):
         flavor_id = kwargs.get(param_name)
-        novaclient = kwargs["clients"]["nova"]
+        novaclient = kwargs["clients"].nova()
         try:
             novaclient.flavors.get(flavor=flavor_id)
             return ValidationResult()

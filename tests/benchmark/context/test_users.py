@@ -16,7 +16,6 @@
 import mock
 
 from rally.benchmark.context import users
-from tests import fakes
 from tests import test
 
 
@@ -31,15 +30,10 @@ class UserGeneratorTestCase(test.TestCase):
         with users.UserGenerator(context) as generator:
             generator.setup()
 
-    @mock.patch("rally.benchmark.context.users.osclients")
-    def test_create_and_delete_users_and_tenants(self, mock_osclients):
-        fc = fakes.FakeClients()
-        # TODO(msdubov): This indicates that osclients.Clients should be
-        #                perhaps refactored to support dictionary-like access.
-        keystoneclient = mock.MagicMock()
-        fc.get_keystone_client = mock.MagicMock(return_value=keystoneclient)
-        mock_osclients.Clients.return_value = fc
-
+    @mock.patch("rally.benchmark.context.users.osclients.Clients.keystone")
+    @mock.patch("rally.benchmark.context.users.osclients.Clients")
+    def test_create_and_delete_users_and_tenants(self, mock_osclients,
+                                                 mock_keystone):
         tenants = 10
         users_per_tenant = 5
         context = {
@@ -59,12 +53,14 @@ class UserGeneratorTestCase(test.TestCase):
                              tenants * users_per_tenant)
             self.assertEqual(len(generator.context["tenants"]),
                              tenants)
+            mock_osclients.reset_mock()
 
-            keystoneclient.reset_mock()
-
-        expected_calls = map(lambda u: mock.call.users.delete(u["id"]),
+        expected_calls = map(lambda u:
+                             mock.call().keystone().users.delete(u["id"]),
                              generator.context["users"])
-        expected_calls.extend(map(lambda t: mock.call.tenants.delete(t["id"]),
+        expected_calls.extend(map(lambda t:
+                                  mock.call().keystone().tenants.delete(
+                                  t["id"]),
                                   generator.context["tenants"]))
 
-        keystoneclient.assert_has_calls(expected_calls)
+        mock_osclients.assert_has_calls(expected_calls, any_order=True)

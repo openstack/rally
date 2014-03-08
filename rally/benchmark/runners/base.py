@@ -24,6 +24,7 @@ from rally.benchmark.context import users as users_ctx
 from rally.benchmark.scenarios import base
 from rally.benchmark import utils
 from rally.openstack.common import log as logging
+from rally import osclients
 from rally import utils as rutils
 
 
@@ -38,8 +39,8 @@ def _run_scenario_once(args):
     # TODO(boris-42): remove context
     scenario = cls(
             context={},
-            admin_clients=utils.create_openstack_clients(admin["endpoint"]),
-            clients=utils.create_openstack_clients(user["endpoint"]))
+            admin_clients=osclients.Clients(admin["endpoint"]),
+            clients=osclients.Clients(user["endpoint"]))
 
     try:
         scenario_output = None

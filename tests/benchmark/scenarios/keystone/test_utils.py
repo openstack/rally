@@ -62,8 +62,9 @@ class KeystoneScenarioTestCase(test.TestCase):
         user = {}
         fake_keystone = fakes.FakeKeystoneClient()
         fake_keystone.users.create = mock.MagicMock(return_value=user)
-        scenario = utils.KeystoneScenario(
-                        admin_clients={"keystone": fake_keystone})
+        fake_clients = fakes.FakeClients()
+        fake_clients._keystone = fake_keystone
+        scenario = utils.KeystoneScenario(admin_clients=fake_clients)
 
         result = scenario._user_create()
 

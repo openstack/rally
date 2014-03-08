@@ -29,7 +29,7 @@ def _prepare_open_secgroup(endpoint):
     In order to run tests on instances it is necessary to have SSH access.
     This function generates a secgroup which allows all tcp/udp/icmp access
     """
-    nova = osclients.Clients(endpoint).get_nova_client()
+    nova = osclients.Clients(endpoint).nova()
 
     if SSH_GROUP_NAME not in [sg.name for sg in nova.security_groups.list()]:
         descr = "Allow ssh access to VMs created by Rally for benchmarking"

@@ -100,7 +100,7 @@ class Scenario(object):
 
         :returns: Python openstack client object
         """
-        return self._clients[client_type]
+        return getattr(self._clients, client_type)()
 
     def admin_clients(self, client_type):
         """Returns a python admin openstack client of the requested type.
@@ -109,7 +109,7 @@ class Scenario(object):
 
         :returns: Python openstack client object
         """
-        return self._admin_clients[client_type]
+        return getattr(self._admin_clients, client_type)()
 
     def sleep_between(self, min_sleep, max_sleep):
         """Performs a time.sleep() call for a random amount of seconds.

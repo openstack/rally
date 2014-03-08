@@ -19,7 +19,6 @@ import traceback
 
 from rally.benchmark.scenarios.keystone import utils as kutils
 from rally import exceptions as rally_exceptions
-from rally import osclients
 
 
 LOG = logging.getLogger(__name__)
@@ -147,20 +146,6 @@ def infinite_run_args(args):
     while True:
         yield (i,) + args
         i += 1
-
-
-def create_openstack_clients(endpoint):
-    client_manager = osclients.Clients(endpoint)
-
-    clients = {
-        "nova": client_manager.get_nova_client(),
-        "keystone": client_manager.get_keystone_client(),
-        "glance": client_manager.get_glance_client(),
-        "cinder": client_manager.get_cinder_client(),
-        "endpoint": client_manager.endpoint,
-    }
-
-    return clients
 
 
 def delete_servers(nova):

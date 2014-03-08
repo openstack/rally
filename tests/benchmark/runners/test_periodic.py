@@ -33,7 +33,7 @@ class PeriodicScenarioRunnerTestCase(test.TestCase):
 
     @mock.patch("rally.benchmark.runners.base._run_scenario_once")
     @mock.patch("rally.benchmark.runners.periodic.time.sleep")
-    @mock.patch("rally.benchmark.utils.osclients")
+    @mock.patch("rally.benchmark.runners.base.osclients")
     def test_run_scenario(self, mock_osclients, mock_sleep,
                           mock_run_scenario_once):
         mock_osclients.Clients.return_value = fakes.FakeClients()
@@ -57,7 +57,7 @@ class PeriodicScenarioRunnerTestCase(test.TestCase):
         mock_sleep.has_calls(expected)
 
     @mock.patch("rally.benchmark.runners.base.base")
-    @mock.patch("rally.benchmark.utils.osclients")
+    @mock.patch("rally.benchmark.runners.base.osclients")
     def test_get_periodic_runner(self, mock_osclients, mock_base):
         FakeScenario = mock.MagicMock()
         FakeScenario.init = mock.MagicMock(return_value={})

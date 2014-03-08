@@ -44,7 +44,7 @@ class ShowCommands(object):
             endpoints = db.deployment_get(deploy_id)['endpoints']
             for endpoint_dict in endpoints:
                 clients = osclients.Clients(endpoint.Endpoint(**endpoint_dict))
-                glance_client = clients.get_glance_client()
+                glance_client = clients.glance()
                 for image in glance_client.images.list():
                     table.add_row([image.id, image.name, image.size])
         except exceptions.InvalidArgumentsException:
@@ -65,7 +65,7 @@ class ShowCommands(object):
             endpoints = db.deployment_get(deploy_id)['endpoints']
             for endpoint_dict in endpoints:
                 clients = osclients.Clients(endpoint.Endpoint(**endpoint_dict))
-                nova_client = clients.get_nova_client()
+                nova_client = clients.nova()
                 for flavor in nova_client.flavors.list():
                     table.add_row([flavor.id, flavor.name, flavor.vcpus,
                                    flavor.ram, flavor.swap, flavor.disk])
@@ -83,7 +83,7 @@ class ShowCommands(object):
             endpoints = db.deployment_get(deploy_id)['endpoints']
             for endpoint_dict in endpoints:
                 clients = osclients.Clients(endpoint.Endpoint(**endpoint_dict))
-            nova_client = clients.get_nova_client()
+            nova_client = clients.nova()
             for network in nova_client.networks.list():
                 table.add_row([network.id, network.label, network.cidr])
         except exceptions.InvalidArgumentsException:
@@ -100,7 +100,7 @@ class ShowCommands(object):
             endpoints = db.deployment_get(deploy_id)['endpoints']
             for endpoint_dict in endpoints:
                 clients = osclients.Clients(endpoint.Endpoint(**endpoint_dict))
-                nova_client = clients.get_nova_client()
+                nova_client = clients.nova()
                 for secgroup in nova_client.security_groups.list():
                     table.add_row([secgroup.id, secgroup.name,
                                    secgroup.description])
@@ -118,7 +118,7 @@ class ShowCommands(object):
             endpoints = db.deployment_get(deploy_id)['endpoints']
             for endpoint_dict in endpoints:
                 clients = osclients.Clients(endpoint.Endpoint(**endpoint_dict))
-                nova_client = clients.get_nova_client()
+                nova_client = clients.nova()
                 for keypair in nova_client.keypairs.list():
                     table.add_row([keypair.name, keypair.fingerprint])
         except exceptions.InvalidArgumentsException:

@@ -17,8 +17,8 @@ import mock
 
 from rally.benchmark.scenarios.glance import images
 from rally.benchmark.scenarios.nova import servers
-from rally.benchmark import utils as butils
 from rally.objects import endpoint
+from rally import osclients
 from tests import fakes
 from tests import test
 
@@ -46,7 +46,7 @@ class GlanceImagesTestCase(test.TestCase):
     @mock.patch(GLANCE_IMAGES + "._generate_random_name")
     @mock.patch(GLANCE_IMAGES + "._boot_servers")
     @mock.patch(GLANCE_IMAGES + "._create_image")
-    @mock.patch("rally.benchmark.utils.osclients")
+    @mock.patch("rally.benchmark.runners.base.osclients")
     def test_create_image_and_boot_instances(self,
                                              mock_osclients,
                                              mock_create_image,
@@ -57,11 +57,11 @@ class GlanceImagesTestCase(test.TestCase):
         fc = fakes.FakeClients()
         mock_osclients.Clients.return_value = fc
         fake_glance = fakes.FakeGlanceClient()
-        fc.get_glance_client = lambda: fake_glance
+        fc.glance = lambda: fake_glance
         fake_nova = fakes.FakeNovaClient()
-        fc.get_nova_client = lambda: fake_nova
+        fc.nova = lambda: fake_nova
         user_endpoint = endpoint.Endpoint("url", "user", "password", "tenant")
-        nova_scenario._clients = butils.create_openstack_clients(user_endpoint)
+        nova_scenario._clients = osclients.Clients(user_endpoint)
         fake_image = fakes.FakeImage()
         fake_servers = [object() for i in range(5)]
         mock_create_image.return_value = fake_image

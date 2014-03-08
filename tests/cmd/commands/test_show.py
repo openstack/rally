@@ -31,10 +31,11 @@ class ShowCommandsTestCase(test.TestCase):
                               'tenant_name': 'fake_tenant_name',
                               'auth_url': 'http://fake.auth.url'}
         self.fake_deploy_id = str(uuid.uuid4)
-        self.fake_glance_client = fakes.FakeClients().get_glance_client()
-        self.fake_nova_client = fakes.FakeClients().get_nova_client()
+        self.fake_clients = fakes.FakeClients()
+        self.fake_glance_client = fakes.FakeGlanceClient()
+        self.fake_nova_client = fakes.FakeNovaClient()
 
-    @mock.patch('rally.cmd.commands.show.osclients.Clients.get_glance_client')
+    @mock.patch('rally.cmd.commands.show.osclients.Clients.glance')
     @mock.patch('rally.cmd.commands.show.prettytable.PrettyTable.add_row')
     @mock.patch('rally.cmd.commands.show.db.deployment_get')
     def test_images(self, mock_deployment_get, mock_add_row, mock_get_glance):
@@ -50,7 +51,7 @@ class ShowCommandsTestCase(test.TestCase):
                                               fake_image.name,
                                               fake_image.size])
 
-    @mock.patch('rally.cmd.commands.show.osclients.Clients.get_nova_client')
+    @mock.patch('rally.cmd.commands.show.osclients.Clients.nova')
     @mock.patch('rally.cmd.commands.show.prettytable.PrettyTable.add_row')
     @mock.patch('rally.cmd.commands.show.db.deployment_get')
     def test_flavors(self, mock_deployment_get, mock_add_row, mock_get_nova):
@@ -70,7 +71,7 @@ class ShowCommandsTestCase(test.TestCase):
                                               fake_flavor.swap,
                                               fake_flavor.disk])
 
-    @mock.patch('rally.cmd.commands.show.osclients.Clients.get_nova_client')
+    @mock.patch('rally.cmd.commands.show.osclients.Clients.nova')
     @mock.patch('rally.cmd.commands.show.prettytable.PrettyTable.add_row')
     @mock.patch('rally.cmd.commands.show.db.deployment_get')
     def test_networks(self, mock_deployment_get, mock_add_row, mock_get_nova):
@@ -87,7 +88,7 @@ class ShowCommandsTestCase(test.TestCase):
                                               fake_network.label,
                                               fake_network.cidr])
 
-    @mock.patch('rally.cmd.commands.show.osclients.Clients.get_nova_client')
+    @mock.patch('rally.cmd.commands.show.osclients.Clients.nova')
     @mock.patch('rally.cmd.commands.show.prettytable.PrettyTable.add_row')
     @mock.patch('rally.cmd.commands.show.db.deployment_get')
     def test_secgroups(self, mock_deployment_get, mock_add_row, mock_get_nova):
@@ -102,7 +103,7 @@ class ShowCommandsTestCase(test.TestCase):
                                               fake_secgroup.name,
                                               fake_secgroup.description])
 
-    @mock.patch('rally.cmd.commands.show.osclients.Clients.get_nova_client')
+    @mock.patch('rally.cmd.commands.show.osclients.Clients.nova')
     @mock.patch('rally.cmd.commands.show.prettytable.PrettyTable.add_row')
     @mock.patch('rally.cmd.commands.show.db.deployment_get')
     def test_keypairs(self, mock_deployment_get, mock_add_row, mock_get_nova):

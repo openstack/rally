@@ -38,10 +38,6 @@ class BenchmarkUtilsTestCase(test.TestCase):
             if i == 10:
                 break
 
-    def test_create_openstack_clients(self):
-        #TODO(boris-42): Implement this method
-        pass
-
     def test_manager_list_sizes(self):
         manager = fakes.FakeManager()
 

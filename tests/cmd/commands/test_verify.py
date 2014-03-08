@@ -50,9 +50,9 @@ class VerifyCommandsTestCase(test.BaseTestCase):
     def test_start(self, mock_verify, mock_clients, mock_get):
         deploy_id = str(uuid.uuid4())
         mock_get.return_value = self.endpoint
-        mock_clients().get_glance_client().images.list.return_value = [
+        mock_clients().glance().images.list.return_value = [
             self.image1, self.image2]
-        mock_clients().get_nova_client().flavors.list.return_value = [
+        mock_clients().nova().flavors.list.return_value = [
             self.flavor1, self.flavor2]
 
         self.verify.start(deploy_id)

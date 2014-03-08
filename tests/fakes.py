@@ -444,38 +444,38 @@ class FakeCeilometerClient(object):
 class FakeClients(object):
 
     def __init__(self):
-        self.nova = None
-        self.glance = None
-        self.keystone = None
-        self.cinder = None
-        self.endpoint = None
+        self._nova = None
+        self._glance = None
+        self._keystone = None
+        self._cinder = None
+        self._endpoint = None
 
-    def get_keystone_client(self):
-        if self.keystone is not None:
-            return self.keystone
-        self.keystone = FakeKeystoneClient()
-        return self.keystone
+    def keystone(self):
+        if self._keystone is not None:
+            return self._keystone
+        self._keystone = FakeKeystoneClient()
+        return self._keystone
 
-    def get_verified_keystone_client(self):
-        return self.get_keystone_client()
+    def verified_keystone(self):
+        return self.keystone()
 
-    def get_nova_client(self):
-        if self.nova is not None:
-            return self.nova
-        self.nova = FakeNovaClient()
-        return self.nova
+    def nova(self):
+        if self._nova is not None:
+            return self._nova
+        self._nova = FakeNovaClient()
+        return self._nova
 
-    def get_glance_client(self):
-        if self.glance is not None:
-            return self.glance
-        self.glance = FakeGlanceClient()
-        return self.glance
+    def glance(self):
+        if self._glance is not None:
+            return self._glance
+        self._glance = FakeGlanceClient()
+        return self._glance
 
-    def get_cinder_client(self):
-        if self.cinder is not None:
-            return self.cinder
-        self.cinder = FakeCinderClient()
-        return self.cinder
+    def cinder(self):
+        if self._cinder is not None:
+            return self._cinder
+        self._cinder = FakeCinderClient()
+        return self._cinder
 
 
 class FakeScenario(base.Scenario):

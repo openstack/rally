@@ -36,47 +36,55 @@ class ValidationUtilsTestCase(test.TestCase):
         self.assertEqual(len(validators), 1)
         self.assertEqual(validators[0], test_validator)
 
-    def test_image_exists(self):
-        fakegclient = fakes.FakeClients().get_glance_client()
+    @mock.patch("rally.osclients.Clients")
+    def test_image_exists(self, mock_osclients):
+        fakegclient = fakes.FakeGlanceClient()
         fakegclient.images.get = mock.MagicMock()
+        mock_osclients.glance.return_value = fakegclient
         validator = validation.image_exists("image_id")
         test_img_id = "test_image_id"
-        result = validator(clients={"glance": fakegclient},
+        result = validator(clients=mock_osclients,
                            image_id=test_img_id)
         fakegclient.images.get.assert_called_once_with(image=test_img_id)
         self.assertTrue(result.is_valid)
         self.assertIsNone(result.msg)
 
-    def test_image_exists_fail(self):
-        fakegclient = fakes.FakeClients().get_glance_client()
+    @mock.patch("rally.osclients.Clients")
+    def test_image_exists_fail(self, mock_osclients):
+        fakegclient = fakes.FakeGlanceClient()
         fakegclient.images.get = mock.MagicMock()
         fakegclient.images.get.side_effect = glance_exc.HTTPNotFound
+        mock_osclients.glance.return_value = fakegclient
         validator = validation.image_exists("image_id")
         test_img_id = "test_image_id"
-        result = validator(clients={"glance": fakegclient},
+        result = validator(clients=mock_osclients,
                            image_id=test_img_id)
         fakegclient.images.get.assert_called_once_with(image=test_img_id)
         self.assertFalse(result.is_valid)
         self.assertIsNotNone(result.msg)
 
-    def test_flavor_exists(self):
-        fakenclient = fakes.FakeClients().get_nova_client()
+    @mock.patch("rally.osclients.Clients")
+    def test_flavor_exists(self, mock_osclients):
+        fakenclient = fakes.FakeNovaClient()
         fakenclient.flavors = mock.MagicMock()
+        mock_osclients.nova.return_value = fakenclient
         validator = validation.flavor_exists("flavor_id")
         test_flavor_id = 1
-        result = validator(clients={"nova": fakenclient},
+        result = validator(clients=mock_osclients,
                            flavor_id=test_flavor_id)
         fakenclient.flavors.get.assert_called_once_with(flavor=test_flavor_id)
         self.assertTrue(result.is_valid)
         self.assertIsNone(result.msg)
 
-    def test_flavor_exists_fail(self):
-        fakenclient = fakes.FakeClients().get_nova_client()
+    @mock.patch("rally.osclients.Clients")
+    def test_flavor_exists_fail(self, mock_osclients):
+        fakenclient = fakes.FakeNovaClient()
         fakenclient.flavors = mock.MagicMock()
         fakenclient.flavors.get.side_effect = nova_exc.NotFound(code=404)
+        mock_osclients.nova.return_value = fakenclient
         validator = validation.flavor_exists("flavor_id")
         test_flavor_id = 101
-        result = validator(clients={"nova": fakenclient},
+        result = validator(clients=mock_osclients,
                            flavor_id=test_flavor_id)
         fakenclient.flavors.get.assert_called_once_with(flavor=test_flavor_id)
         self.assertFalse(result.is_valid)

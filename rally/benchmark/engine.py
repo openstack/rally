@@ -19,7 +19,6 @@ import jsonschema
 from rally.benchmark.context import users as users_ctx
 from rally.benchmark.runners import base as base_runner
 from rally.benchmark.scenarios import base as base_scenario
-from rally.benchmark import utils
 from rally import consts
 from rally import exceptions
 from rally.objects import endpoint
@@ -155,7 +154,7 @@ class BenchmarkEngine(object):
         #                first the admin validators, then the user ones
         #                (with one temporarily created user).
         if self.admin_endpoint:
-            admin_client = utils.create_openstack_clients(self.admin_endpoint)
+            admin_client = osclients.Clients(self.admin_endpoint)
             validate(admin_validators, admin_client)
             context = {
                 "task": self.task,
@@ -165,13 +164,13 @@ class BenchmarkEngine(object):
                 # TODO(boris-42): refactor this peace
                 generator.setup()
                 user = context["users"][0]
-                user_client = utils.create_openstack_clients(user["endpoint"])
+                user_client = osclients.Clients(user["endpoint"])
                 validate(user_validators, user_client)
         # NOTE(msdubov): In case of pre-created users - validate
         #                for all of them.
         else:
             for user in self.users:
-                user_client = utils.create_openstack_clients(user)
+                user_client = osclients.Clients(user)
                 validate(user_validators, user_client)
 
     def run(self):
@@ -218,7 +217,7 @@ class BenchmarkEngine(object):
         self.admin_endpoint.permission = consts.EndpointPermission.ADMIN
         # Try to access cloud via keystone client
         clients = osclients.Clients(self.admin_endpoint)
-        clients.get_verified_keystone_client()
+        clients.verified_keystone()
         return self
 
     def __enter__(self):

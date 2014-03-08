@@ -30,10 +30,10 @@ OSProvider = provider.OpenStackProvider
 
 class FakeOSClients(object):
 
-    def get_nova_client(self):
+    def nova(self):
         return "nova"
 
-    def get_glance_client(self):
+    def glance(self):
         return "glance"
 
 
@@ -73,8 +73,7 @@ class OpenStackProviderTestCase(test.TestCase):
         self.glance_client = mock.Mock(return_value=self.image)
         self.glance_client.images.create = mock.Mock(return_value=self.image)
         self.glance_client.images.list = mock.Mock(return_value=[self.image])
-        self.clients.get_glance_client = mock.Mock(
-                                return_value=self.glance_client)
+        self.clients.glance = mock.Mock(return_value=self.glance_client)
 
         self.instance = mock.MagicMock()
         self.instance.status = "ACTIVE"
@@ -83,7 +82,7 @@ class OpenStackProviderTestCase(test.TestCase):
         self.nova_client.servers.create = mock.MagicMock(
                                 return_value=self.instance)
 
-        self.clients.get_nova_client = mock.MagicMock(
+        self.clients.nova = mock.MagicMock(
                                 return_value=self.nova_client)
 
     @mock.patch("rally.serverprovider.providers.openstack.osclients")
@@ -94,9 +93,9 @@ class OpenStackProviderTestCase(test.TestCase):
         self.assertEqual('nova', os_provider.nova)
         self.assertEqual('glance', os_provider.glance)
 
-    @mock.patch('rally.osclients.Clients.get_glance_client')
-    def test_openstack_provider_init_no_glance(self, mock_get_glance_client):
-        mock_get_glance_client.side_effect = KeyError('image')
+    @mock.patch('rally.osclients.Clients.glance')
+    def test_openstack_provider_init_no_glance(self, mock_glance):
+        mock_glance.side_effect = KeyError('image')
         cfg = self._get_valid_config()
         provider = OSProvider(mock.MagicMock(), cfg)
         self.assertEqual(provider.glance, None)

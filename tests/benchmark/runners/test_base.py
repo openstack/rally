@@ -33,7 +33,7 @@ class ScenarioRunnerTestCase(test.TestCase):
         self.fake_endpoints = endpoint_dicts
 
     @mock.patch("rally.benchmark.runners.base.base")
-    @mock.patch("rally.benchmark.utils.osclients")
+    @mock.patch("rally.benchmark.runners.base.osclients")
     def test_init_calls_register(self, mock_osclients, mock_base):
         mock_osclients.Clients.return_value = fakes.FakeClients()
         base.ScenarioRunner.get_runner(mock.MagicMock(), self.fake_endpoints,
@@ -41,7 +41,7 @@ class ScenarioRunnerTestCase(test.TestCase):
         self.assertEqual(mock_base.mock_calls, [mock.call.Scenario.register()])
 
     @mock.patch("rally.benchmark.runners.base.rutils")
-    @mock.patch("rally.benchmark.utils.osclients")
+    @mock.patch("rally.benchmark.runners.base.osclients")
     def test_run_scenario(self, mock_osclients, mock_utils):
         mock_osclients.Clients.return_value = fakes.FakeClients()
         srunner = continuous.ContinuousScenarioRunner(mock.MagicMock(),
@@ -71,7 +71,7 @@ class ScenarioRunnerTestCase(test.TestCase):
                     for i in range(active_users)]
         self.assertEqual(results, expected)
 
-    @mock.patch("rally.benchmark.utils.osclients")
+    @mock.patch("rally.benchmark.runners.base.osclients")
     @mock.patch("rally.benchmark.runners.continuous.multiprocessing."
                 "pool.IMapIterator.next")
     @mock.patch("rally.benchmark.runners.continuous.time.time")
@@ -113,7 +113,7 @@ class ScenarioRunnerTestCase(test.TestCase):
                              str(multiprocessing.TimeoutError))
 
     @mock.patch("rally.benchmark.runners.base.rutils")
-    @mock.patch("rally.benchmark.utils.osclients")
+    @mock.patch("rally.benchmark.runners.base.osclients")
     def test_run_scenario_times_exception_inside_test(self, mock_osclients,
                                                       mock_utils):
         mock_osclients.Clients.return_value = fakes.FakeClients()
@@ -135,7 +135,7 @@ class ScenarioRunnerTestCase(test.TestCase):
                              [str(Exception), "Something went wrong"])
 
     @mock.patch("rally.benchmark.runners.base.rutils")
-    @mock.patch("rally.benchmark.utils.osclients")
+    @mock.patch("rally.benchmark.runners.base.osclients")
     def test_run_scenario_duration_exception_inside_test(self, mock_osclients,
                                                          mock_utils):
         mock_osclients.Clients.return_value = fakes.FakeClients()

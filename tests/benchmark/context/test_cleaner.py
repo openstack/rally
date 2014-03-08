@@ -50,33 +50,30 @@ class ResourceCleanerTestCase(test.TestCase):
         res_cleaner._cleanup_users_resources.assert_called_once_with()
         res_cleaner._cleanup_admin_resources.assert_called_once_with()
 
-    @mock.patch("%s.utils.create_openstack_clients" % BASE)
+    @mock.patch("%s.osclients.Clients" % BASE)
     @mock.patch("%s.utils.delete_keystone_resources" % BASE)
-    def test_cleaner_admin(self, mock_del_keystone, mock_create_os_clients):
+    def test_cleaner_admin(self, mock_del_keystone, mock_clients):
         context = {
             "task": mock.MagicMock(),
             "admin": {"endpoint": mock.MagicMock()},
         }
         res_cleaner = cleaner_ctx.ResourceCleaner(context)
 
-        admin_client = mock.MagicMock()
-        admin_client.__getitem__ = mock.MagicMock(return_value="keystone_cl")
-        mock_create_os_clients.return_value = admin_client
+        mock_clients.return_value.keystone.return_value = 'keystone'
 
         with res_cleaner:
             res_cleaner.setup()
 
-        mock_create_os_clients.assert_called_once_with(
-            context["admin"]["endpoint"])
-        admin_client.__getitem__.assert_called_once_with("keystone")
-        mock_del_keystone.assert_called_once_with("keystone_cl")
+        mock_clients.assert_called_once_with(context["admin"]["endpoint"])
+        mock_clients.return_value.keystone.assert_called_once_with()
+        mock_del_keystone.assert_called_once_with('keystone')
 
-    @mock.patch("%s.utils.create_openstack_clients" % BASE)
+    @mock.patch("%s.osclients.Clients" % BASE)
     @mock.patch("%s.utils.delete_nova_resources" % BASE)
     @mock.patch("%s.utils.delete_glance_resources" % BASE)
     @mock.patch("%s.utils.delete_cinder_resources" % BASE)
     def test_cleaner_users(self, mock_del_cinder, mock_del_glance,
-                           mock_del_nova, mock_create_os_clients):
+                           mock_del_nova, mock_clients):
 
         context = {
             "task": mock.MagicMock(),
@@ -86,25 +83,13 @@ class ResourceCleanerTestCase(test.TestCase):
         }
         res_cleaner = cleaner_ctx.ResourceCleaner(context)
 
-        client = mock.MagicMock()
-        client.__getitem__ = mock.MagicMock(side_effect=lambda cl: cl + "_cl")
-        mock_create_os_clients.return_value = client
-
         with res_cleaner:
             res_cleaner.setup()
 
         expected = [mock.call(context["users"][0]["endpoint"]),
                     mock.call(context["users"][1]["endpoint"])]
-        mock_create_os_clients.assert_has_calls(expected, any_order=True)
+        mock_clients.assert_has_calls(expected, any_order=True)
 
-        os_clients = ["nova", "glance", "keystone", "cinder"]
-        expected = [mock.call(c) for c in os_clients] * len(context["users"])
-        self.assertEqual(client.__getitem__.mock_calls, expected)
-
-        expected = [mock.call("nova_cl")] * len(context["users"])
-        self.assertEqual(mock_del_nova.mock_calls, expected)
-        expected = [mock.call("glance_cl",
-                              "keystone_cl")] * len(context["users"])
-        self.assertEqual(mock_del_glance.mock_calls, expected)
-        expected = [mock.call("cinder_cl")] * len(context["users"])
-        self.assertEqual(mock_del_cinder.mock_calls, expected)
+        self.assertEqual(mock_del_nova.call_count, 2)
+        self.assertEqual(mock_del_glance.call_count, 2)
+        self.assertEqual(mock_del_cinder.call_count, 2)

@@ -27,7 +27,7 @@ class SecGroupContextTestCase(test.TestCase):
         fake_nova = fakes.FakeNovaClient()
         self.assertEqual(len(fake_nova.security_groups.list()), 1)
         mock_cl = mock.MagicMock()
-        mock_cl.get_nova_client.return_value = fake_nova
+        mock_cl.nova.return_value = fake_nova
         mock_osclients.return_value = mock_cl
 
         secgroup._prepare_open_secgroup('endpoint')
@@ -49,7 +49,7 @@ class SecGroupContextTestCase(test.TestCase):
         #NOTE(hughsaunders) Default security group is precreated
         self.assertEqual(len(fake_nova.security_groups.list()), 1)
         mock_cl = mock.MagicMock()
-        mock_cl.get_nova_client.return_value = fake_nova
+        mock_cl.nova.return_value = fake_nova
         mock_osclients.return_value = mock_cl
 
         secgroup._prepare_open_secgroup('endpoint')

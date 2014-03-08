@@ -32,7 +32,7 @@ class ContinuousScenarioRunnerTestCase(test.TestCase):
         self.fake_endpoints = endpoint_dicts
 
     @mock.patch("rally.benchmark.runners.continuous.multiprocessing")
-    @mock.patch("rally.benchmark.utils.osclients")
+    @mock.patch("rally.benchmark.runners.base.osclients")
     def test_run_scenario_continuously_for_times(self, mock_osclients,
                                                  mock_multi):
         mock_osclients.Clients.return_value = fakes.FakeClients()
@@ -68,7 +68,7 @@ class ContinuousScenarioRunnerTestCase(test.TestCase):
 
     @mock.patch("rally.benchmark.utils.infinite_run_args")
     @mock.patch("rally.benchmark.runners.continuous.multiprocessing")
-    @mock.patch("rally.benchmark.utils.osclients")
+    @mock.patch("rally.benchmark.runners.base.osclients")
     def test_run_scenario_continuously_for_duration(self, mock_osclients,
                                                     mock_multi, mock_generate):
         self.skipTest("This test produce a lot of races so we should fix it "
@@ -94,7 +94,7 @@ class ContinuousScenarioRunnerTestCase(test.TestCase):
         self.assertEqual(mock_multi.Pool.mock_calls, expect)
 
     @mock.patch("rally.benchmark.runners.base.base")
-    @mock.patch("rally.benchmark.utils.osclients")
+    @mock.patch("rally.benchmark.runners.base.osclients")
     def test_get_and_run_continuous_runner(self, mock_osclients, mock_base):
         FakeScenario = mock.MagicMock()
         FakeScenario.init = mock.MagicMock(return_value={})
@@ -122,7 +122,7 @@ class ContinuousScenarioRunnerTestCase(test.TestCase):
                                     {"a": 1}, 2, 3, 1)
 
     @mock.patch("rally.benchmark.runners.base.base")
-    @mock.patch("rally.benchmark.utils.osclients")
+    @mock.patch("rally.benchmark.runners.base.osclients")
     def test_get_and_run_continuos_runner_for_duration(self, mock_osclients,
                                                        mock_base):
         FakeScenario = mock.MagicMock()

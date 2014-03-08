@@ -17,6 +17,7 @@ import mock
 
 from rally.benchmark.scenarios import base
 from rally import exceptions
+from tests import fakes
 from tests import test
 
 
@@ -81,19 +82,15 @@ class ScenarioTestCase(test.TestCase):
         self.assertEqual(context, scenario.context())
 
     def test_clients(self):
-        nova_client = mock.MagicMock()
-        glance_client = mock.MagicMock()
-        clients = {"nova": nova_client, "glance": glance_client}
+        clients = fakes.FakeClients()
 
         scenario = base.Scenario(clients=clients)
-        self.assertEqual(nova_client, scenario.clients("nova"))
-        self.assertEqual(glance_client, scenario.clients("glance"))
+        self.assertEqual(clients.nova(), scenario.clients("nova"))
+        self.assertEqual(clients.glance(), scenario.clients("glance"))
 
     def test_admin_clients(self):
-        nova_client = mock.MagicMock()
-        glance_client = mock.MagicMock()
-        clients = {"nova": nova_client, "glance": glance_client}
+        clients = fakes.FakeClients()
 
         scenario = base.Scenario(admin_clients=clients)
-        self.assertEqual(nova_client, scenario.admin_clients("nova"))
-        self.assertEqual(glance_client, scenario.admin_clients("glance"))
+        self.assertEqual(clients.nova(), scenario.admin_clients("nova"))
+        self.assertEqual(clients.glance(), scenario.admin_clients("glance"))
