@@ -187,7 +187,6 @@ class TaskCommands(object):
                     # No SSRs in this result
                     pass
             if ssrs:
-                sys.stdout.flush()
                 keys = set()
                 for ssr in ssrs:
                     keys.update(ssr.keys())
