@@ -16,17 +16,18 @@
 """ Rally command: use """
 
 import os
+import sys
 
 from rally.cmd import cliutils
 from rally import db
+from rally import exceptions
 from rally import fileutils
 
 
 class UseCommands(object):
 
-    def _update_openrc_deployment_file(self, deploy_id):
+    def _update_openrc_deployment_file(self, deploy_id, endpoints):
         openrc_path = os.path.expanduser('~/.rally/openrc-%s' % deploy_id)
-        endpoints = db.deployment_get(deploy_id)['endpoints']
         # NOTE(msdubov): In case of multiple endpoints write the first one.
         with open(openrc_path, 'w+') as env_file:
             env_file.write('export OS_AUTH_URL=%(auth_url)s\n'
@@ -54,10 +55,17 @@ class UseCommands(object):
 
         :param deploy_id: a UUID of a deployment
         """
-        print('Using deployment : %s' % deploy_id)
-        self._ensure_rally_configuration_dir_exists()
-        self._update_attribute_in_global_file('RALLY_DEPLOYMENT', deploy_id)
-        self._update_openrc_deployment_file(deploy_id)
+        print('Using deployment: %s' % deploy_id)
+        try:
+            deploy = db.deployment_get(deploy_id)
+            self._ensure_rally_configuration_dir_exists()
+            self._update_attribute_in_global_file('RALLY_DEPLOYMENT',
+                                                  deploy_id)
+            self._update_openrc_deployment_file(deploy_id,
+                                                deploy['endpoints'])
+        except exceptions.DeploymentNotFound:
+            print('Deployment %s is not found.' % deploy_id)
+            sys.exit(1)
 
     def task(self, task_id):
         """Set the RALLY_TASK env var so the user does not need to specify a

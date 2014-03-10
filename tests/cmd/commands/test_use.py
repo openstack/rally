@@ -64,9 +64,7 @@ class UseCommandsTestCase(test.BaseTestCase):
         deploy_id = str(uuid.uuid4())
         mock_deployment.side_effect = exceptions.DeploymentNotFound(
             uuid=deploy_id)
-        self.assertRaises(exceptions.DeploymentNotFound,
-                          self.use.deployment,
-                          deploy_id)
+        self.assertRaises(SystemExit, self.use.deployment, deploy_id)
 
     @mock.patch('rally.cmd.commands.use.fileutils._rewrite_env_file')
     @mock.patch('rally.cmd.commands.use.db.task_get')
