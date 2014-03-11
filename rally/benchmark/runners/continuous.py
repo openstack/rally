@@ -42,6 +42,33 @@ class ContinuousScenarioRunner(base.ScenarioRunner):
 
     __execution_type__ = "continuous"
 
+    CONFIG_SCHEMA = {
+        "type": "object",
+        "$schema": "http://json-schema.org/draft-03/schema",
+        "properties": {
+            "type": {
+                "type": "string"
+            },
+            "active_users": {
+                "type": "number",
+                "minimum": 1
+            },
+            "times": {
+                "type": "number",
+                "minimum": 1
+            },
+            "duration": {
+                "type": "float",
+                "minimum": 1.0
+            },
+            "timeout": {
+                "type": "number",
+                "minimum": 1
+            }
+        },
+        "additionalProperties": False
+    }
+
     def _run_scenario_continuously_for_times(self, cls, method, context, args,
                                              times, concurrent, timeout):
         test_args = [(i, cls, method, context["admin"],

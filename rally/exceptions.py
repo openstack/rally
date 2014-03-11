@@ -87,7 +87,26 @@ class InvalidArgumentsException(RallyException):
 
 
 class InvalidConfigException(RallyException):
+    msg_fmt = _("This config has invalid schema: `%(message)s`")
+
+
+class InvalidTaskException(InvalidConfigException):
     msg_fmt = _("This config is invalid: `%(message)s`")
+
+
+class InvalidTaskConfigException(InvalidTaskException):
+    msg_fmt = _("This config has invalid schema: `%(message)s`")
+
+
+class NotFoundScenarios(InvalidTaskException):
+    msg_fmt = _("There are no benchmark scenarios with names: `%(names)s`.")
+
+
+class InvalidBenchmarkConfig(InvalidTaskException):
+    msg_fmt = _("Task config is invalid.\n"
+                "\tBenchmark %(name)s has wrong configuration of args at"
+                " position %(pos)s: %(args)s"
+                "\n\tReason: %(reason)s")
 
 
 class TestException(RallyException):
@@ -108,6 +127,10 @@ class NoSuchVMProvider(NotFoundException):
 
 class NoSuchScenario(NotFoundException):
     msg_fmt = _("There is no benchmark scenario with name `%(name)s`.")
+
+
+class NoSuchRunner(NotFoundException):
+    msg_fmt = _("There is no benchmark runner with type `%(type)s`.")
 
 
 class NoSuchContext(NotFoundException):

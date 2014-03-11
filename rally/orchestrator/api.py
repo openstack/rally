@@ -20,6 +20,7 @@ from rally.benchmark import engine
 from rally import consts
 from rally import db
 from rally import deploy
+from rally import exceptions
 from rally import objects
 from rally.verification.verifiers.tempest import tempest
 
@@ -97,9 +98,15 @@ def start_task(deploy_uuid, config, task=None):
     task = task or objects.Task(deployment_uuid=deploy_uuid)
     benchmark_engine = engine.BenchmarkEngine(config, task)
     endpoint = deployment['endpoints']
+
     try:
-        with benchmark_engine.bind(endpoint):
-            benchmark_engine.run()
+        benchmark_engine.bind(endpoint)
+        benchmark_engine.validate()
+        benchmark_engine.run()
+    except exceptions.InvalidTaskException:
+        # NOTE(boris-42): We don't log anything, because it's normal situation
+        #                 that user put wrong config.
+        pass
     except Exception:
         deployment.update_status(consts.DeployStatus.DEPLOY_INCONSISTENT)
         raise

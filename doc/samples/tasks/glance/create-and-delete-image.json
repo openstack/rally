@@ -1,11 +1,22 @@
 {
-
     "GlanceImages.create_and_delete_image": [
-        {"args": {"image_url": "http://download.cirros-cloud.net/0.3.1/cirros-0.3.1-x86_64-disk.img",
-                  "container_format": "bare",
-                  "disk_format": "qcow2"},
-         "execution": "continuous",
-         "config": {"times": 1, "active_users": 1,
-                    "tenants": 1, "users_per_tenant": 1}}
+        {
+            "args": {
+                "image_url": "http://download.cirros-cloud.net/0.3.1/cirros-0.3.1-x86_64-disk.img",
+                "container_format": "bare",
+                "disk_format": "qcow2"
+            },
+            "runner": {
+                "type": "continuous",
+                "times": 10,
+                "active_users": 2
+            },
+            "context": {
+                "users": {
+                    "tenants": 2,
+                    "users_per_tenant": 3
+                }
+            }
+        }
     ]
 }

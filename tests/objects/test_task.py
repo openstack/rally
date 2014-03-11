@@ -15,6 +15,7 @@
 
 """Tests for db.task layer."""
 
+import json
 import mock
 import uuid
 
@@ -107,10 +108,10 @@ class TaskTestCase(test.TestCase):
     def test_update_verification_log(self, mock_update):
         mock_update.return_value = self.task
         task = objects.Task(task=self.task)
-        task.update_verification_log('fake')
+        task.update_verification_log({"a": "fake"})
         mock_update.assert_called_once_with(
             self.task['uuid'],
-            {'verification_log': 'fake'},
+            {'verification_log': json.dumps({"a": "fake"})}
         )
 
     @mock.patch('rally.objects.task.db.task_result_create')
@@ -127,5 +128,5 @@ class TaskTestCase(test.TestCase):
         task.set_failed()
         mock_update.assert_called_once_with(
             self.task['uuid'],
-            {'failed': True, 'status': 'failed'},
+            {'failed': True, 'status': 'failed', 'verification_log': '""'},
         )

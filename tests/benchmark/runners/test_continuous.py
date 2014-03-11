@@ -103,7 +103,7 @@ class ContinuousScenarioRunnerTestCase(test.TestCase):
 
         runner = base.ScenarioRunner.get_runner(mock.MagicMock(),
                                                 self.fake_endpoints,
-                                                {"execution": "continuous"})
+                                                "continuous")
 
         runner._run_scenario_continuously_for_times = \
             mock.MagicMock(return_value="times")
@@ -131,7 +131,7 @@ class ContinuousScenarioRunnerTestCase(test.TestCase):
 
         runner = base.ScenarioRunner.get_runner(mock.MagicMock(),
                                                 self.fake_endpoints,
-                                                {"execution": "continuous"})
+                                                "continuous")
         runner._run_scenario_continuously_for_duration = \
             mock.MagicMock(return_value="duration")
 

@@ -25,8 +25,9 @@ import pprint
 import prettytable
 import sys
 import webbrowser
-
 import yaml
+
+from oslo.config import cfg
 
 from rally.benchmark.processing import plot
 from rally.cmd import cliutils
@@ -57,11 +58,14 @@ class TaskCommands(object):
             config_dict = yaml.safe_load(task_file.read())
             try:
                 task = api.create_task(deploy_id, tag)
-                self.list(task_list=[task])
+                print("=" * 80)
+                print(_("Task %(tag)s %(uuid)s is started")
+                      % {"uuid": task["uuid"], "tag": task["tag"]})
+                print("-" * 80)
                 api.start_task(deploy_id, config_dict, task=task)
                 self.detailed(task_id=task['uuid'])
-            except exceptions.InvalidArgumentsException:
-                print(_("Reason: %s") % sys.exc_info()[1])
+            except exceptions.InvalidConfigException:
+                sys.exit(1)
 
     @cliutils.args('--task-id', type=str, dest='task_id', help='UUID of task')
     def abort(self, task_id):
@@ -169,11 +173,22 @@ class TaskCommands(object):
 
         print()
         print("=" * 80)
-        print(_("Task %(task_id)s is %(status)s. Failed: %(failed)s")
-              % {'task_id': task_id,
-                 'status': task['status'],
-                 'failed': task['failed']
-                 })
+        print(_("Task %(task_id)s is %(status)s.")
+              % {"task_id": task_id, "status": task["status"]})
+
+        if task["failed"]:
+            print("-" * 80)
+            verification = yaml.safe_load(task["verification_log"])
+
+            if not cfg.CONF.debug:
+                print(verification[0])
+                print(verification[1])
+                print()
+                print(_("For more details run:\nrally -vd task detailed %s")
+                      % task["uuid"])
+            else:
+                print(yaml.safe_load(verification[2]))
+            return
 
         for result in task["results"]:
             key = result["key"]
@@ -183,11 +198,6 @@ class TaskCommands(object):
             print("args position %s" % key["pos"])
             print("args values:")
             pprint.pprint(key["kw"])
-
-            if not result["data"]["validation"]["is_valid"]:
-                print("-" * 80)
-                print(result["data"]["validation"]["exc_msg"])
-                continue
 
             _print_atomic_actions_time(result["data"]["raw"])
 
@@ -251,6 +261,14 @@ class TaskCommands(object):
                 for result in raw:
                     if result['scenario_output']['errors']:
                         print(result['scenario_output']['errors'])
+
+        print()
+        print("HINTS:")
+        print(_("* To plot HTML graphics with this data, run:"))
+        print("\trally task plot2html %s --out output.html" % task["uuid"])
+        print()
+        print(_("* To get raw JSON output of task results, run:"))
+        print("\trally task results %s\n" % task["uuid"])
 
     @cliutils.args('--task-id', type=str, dest='task_id', help='uuid of task')
     @cliutils.args('--pretty', type=str, help=('pretty print (pprint) '

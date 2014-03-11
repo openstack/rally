@@ -39,6 +39,27 @@ class PeriodicScenarioRunner(base.ScenarioRunner):
 
     __execution_type__ = "periodic"
 
+    CONFIG_SCHEMA = {
+        "type": "object",
+        "$schema": "http://json-schema.org/draft-03/schema",
+        "properties": {
+            "type": "string",
+            "times": {
+                "type": "number",
+                "minimum": 1
+            },
+            "period": {
+                "type": "float",
+                "minimum": "0.000001"
+            },
+            "timeout": {
+                "type": "number",
+                "minimum": 1
+            }
+        },
+        "additionalProperties": False
+    }
+
     def _run_scenario(self, cls, method_name, context, args, config):
 
         times = config["times"]

@@ -1,7 +1,14 @@
 {
     "KeystoneBasic.create_delete_user": [
-      {"args": {"name_length": 10},
-        "execution": "continuous",
-       "config": {"times": 100, "active_users": 10}}
+        {
+            "args": {
+                "name_length": 10
+            },
+            "runner": {
+                "type": "continuous",
+                "times": 100,
+                "active_users": 10
+            }
+        }
     ]
 }

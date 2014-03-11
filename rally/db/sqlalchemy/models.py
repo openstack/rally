@@ -126,16 +126,17 @@ class Resource(BASE, RallyBase):
 
 class Task(BASE, RallyBase):
     """Represents a Benchamrk task."""
-    __tablename__ = 'tasks'
+    __tablename__ = "tasks"
     __table_args__ = (
-        sa.Index('task_uuid', 'uuid', unique=True),
+        sa.Index("task_uuid", "uuid", unique=True),
     )
 
     id = sa.Column(sa.Integer, primary_key=True, autoincrement=True)
     uuid = sa.Column(sa.String(36), default=UUID, nullable=False)
     status = sa.Column(sa.Enum(*list(consts.TaskStatus),
-                               name='enum_tasks_status'),
-                       default=consts.TaskStatus.INIT, nullable=False)
+                       name="enum_tasks_status"),
+                       default=consts.TaskStatus.INIT,
+                       nullable=False)
     failed = sa.Column(sa.Boolean, default=False, nullable=False)
     verification_log = sa.Column(sa.Text, default='')
     tag = sa.Column(sa.String(64), default='')
@@ -147,7 +148,7 @@ class Task(BASE, RallyBase):
     )
     deployment = sa.orm.relationship(
         Deployment,
-        backref=sa.orm.backref('tasks'),
+        backref=sa.orm.backref("tasks"),
         foreign_keys=deployment_uuid,
         primaryjoin=(deployment_uuid == Deployment.uuid),
     )

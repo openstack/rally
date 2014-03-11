@@ -16,4 +16,5 @@
 from rally import utils as rutils
 
 
+rutils.import_modules_from_package('rally.benchmark.context')
 rutils.import_modules_from_package('rally.benchmark.runners')

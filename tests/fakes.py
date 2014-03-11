@@ -486,6 +486,29 @@ class FakeClients(object):
         return self._cinder
 
 
+class FakeRunner(object):
+
+    CONFIG_SCHEMA = {
+        "type": "object",
+        "$schema": "http://json-schema.org/draft-04/schema#",
+        "properties": {
+            "type": {
+                "type": "string",
+                "enum": ["fake"]
+            },
+
+            "a": {
+                "type": "string"
+            },
+
+            "b": {
+                "type": "number"
+            }
+        },
+        "required": ["type", "a"]
+    }
+
+
 class FakeScenario(base.Scenario):
 
     def idle_time(self):
@@ -508,6 +531,19 @@ class FakeTimer(rally_utils.Timer):
 
 
 class FakeContext(base_ctx.Context):
+
+    __ctx_name__ = "fake"
+
+    CONFIG_SCHEMA = {
+        "type": "object",
+        "$schema": "http://json-schema.org/draft-04/schema#",
+        "properties": {
+            "test": {
+                "type": "integer"
+            },
+        },
+        "additionalProperties": False
+    }
 
     def setup(self):
         pass

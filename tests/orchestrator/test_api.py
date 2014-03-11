@@ -40,13 +40,17 @@ FAKE_TASK_CONFIG = {
     'FakeScenario.fake': [
         {
             'args': {},
-            'execution': 'continuous',
-            'config': {
+            'runner': {
+                'type': 'continuous',
                 'timeout': 10000,
-                'times': 1,
-                'active_users': 1,
-                'tenants': 1,
-                'users_per_tenant': 1,
+                'times': 3,
+                'active_users': 2,
+            },
+            'context': {
+                'users': {
+                    'tenants': 5,
+                    'users_per_tenant': 6,
+                }
             }
         }
     ]
@@ -93,8 +97,12 @@ class APITestCase(test.TestCase):
         mock_task.assert_called_once_with(deployment_uuid=deployment_uuid,
                                           tag=tag)
 
-    @mock.patch("rally.benchmark.engine.BenchmarkEngine."
-                "_validate_scenario_args")
+    @mock.patch("rally.benchmark.engine.BenchmarkEngine"
+                "._validate_config_semantic")
+    @mock.patch("rally.benchmark.engine.BenchmarkEngine"
+                "._validate_config_syntax")
+    @mock.patch("rally.benchmark.engine.BenchmarkEngine"
+                "._validate_config_scenarios_name")
     @mock.patch('rally.benchmark.engine.osclients')
     @mock.patch('rally.benchmark.engine.base_runner.ScenarioRunner.get_runner')
     @mock.patch('rally.objects.deploy.db.deployment_get')
@@ -104,7 +112,8 @@ class APITestCase(test.TestCase):
     def test_start_task(self, mock_task_create, mock_task_update,
                         mock_task_result_create, mock_deploy_get,
                         mock_utils_runner, mock_osclients,
-                        mock_validate_scenario_args):
+                        mock_validate_names, mock_validate_syntax,
+                        mock_validate_semantic):
         mock_task_create.return_value = self.task
         mock_task_update.return_value = self.task
         mock_deploy_get.return_value = self.deployment
@@ -121,8 +130,9 @@ class APITestCase(test.TestCase):
             'deployment_uuid': self.deploy_uuid,
         })
         mock_task_update.assert_has_calls([
-            mock.call(self.task_uuid,
-                      {'status': 'test_tool->benchmarking'})
+            mock.call(self.task_uuid, {'status': consts.TaskStatus.VERIFYING}),
+            mock.call(self.task_uuid, {'status': consts.TaskStatus.RUNNING}),
+            mock.call(self.task_uuid, {'status': consts.TaskStatus.FINISHED})
         ])
         # NOTE(akscram): It looks really awful, but checks degradation.
         mock_task_result_create.assert_called_once_with(
@@ -130,22 +140,25 @@ class APITestCase(test.TestCase):
             {
                 'kw': {
                     'args': {},
-                    'execution': 'continuous',
-                    'config': {
+                    'runner': {
+                        'type': 'continuous',
                         'timeout': 10000,
-                        'times': 1,
-                        'active_users': 1,
-                        'tenants': 1,
-                        'users_per_tenant': 1,
+                        'times': 3,
+                        'active_users': 2,
+                    },
+                    'context': {
+                        'users': {
+                            'tenants': 5,
+                            'users_per_tenant': 6,
+                        }
                     }
                 },
                 'name': 'FakeScenario.fake',
                 'pos': 0,
             },
             {
-                'raw': ['fake_result'],
-                'validation': {'is_valid': True},
-            },
+                'raw': ['fake_result']
+            }
         )
 
     def test_abort_task(self):

@@ -17,14 +17,15 @@ import itertools
 import random
 import time
 
+from rally import consts
 from rally import exceptions
 from rally import utils
 
 
 class Scenario(object):
     """This is base class for any benchmark scenario.
-       You should create subclass of this class. And you test scnerios will
-       be autodiscoverd and you will be able to specify it in test config.
+       You should create subclass of this class. And you test scenarios will
+       be auto discoverable and you will be able to specify it in test config.
     """
     registred = False
 
@@ -67,6 +68,38 @@ class Scenario(object):
         benchmark_scenarios_flattened = list(itertools.chain.from_iterable(
                                                         benchmark_scenarios))
         return benchmark_scenarios_flattened
+
+    @staticmethod
+    def _validate_helper(validators, clients, args):
+        for validator in validators:
+            result = validator(clients=clients, **args)
+            if not result.is_valid:
+                raise exceptions.InvalidScenarioArgument(message=result.msg)
+
+    @staticmethod
+    def validate(name, args, admin=None, users=None):
+        """Semantic check of benchmark arguments."""
+        cls_name, method_name = name.split(".", 1)
+        cls = Scenario.get_by_name(cls_name)
+
+        method = getattr(cls, method_name)
+        validators = getattr(method, "validators", [])
+
+        if not validators:
+            return
+
+        admin_validators = [v for v in validators
+                            if v.permission == consts.EndpointPermission.ADMIN]
+        user_validators = [v for v in validators
+                           if v.permission == consts.EndpointPermission.USER]
+
+        # NOTE(boris-42): Potential bug, what if we don't have "admin" client
+        #                 and scenario have "admin" validators.
+        if admin:
+            Scenario._validate_helper(admin_validators, admin, args)
+        if users:
+            for user in users:
+                Scenario._validate_helper(user_validators, user, args)
 
     def context(self):
         """Returns the context of the current benchmark scenario.

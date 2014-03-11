@@ -31,28 +31,30 @@ class Context(object):
             2) Validation of input args
             3) Common logging
 
-        Actually the same functionionallity as
+        Actually the same functionality as
         runners.base.ScenarioRunner and scenarios.base.Scenario
     """
 
-    __name__ = "basecontext"
+    __ctx_name__ = "base"
 
     CONFIG_SCHEMA = {}
 
     def __init__(self, context):
-        self.config = context.get("config", {}).get(self.__name__, {})
+        self.config = context.get("config", {}).get(self.__ctx_name__, {})
         self.context = context
         self.task = context["task"]
 
     @staticmethod
-    def validate(cls, context):
-        jsonschema.validate(context, cls.CONFIG_SCHEMA)
+    def validate(context):
+        for name, config in context.iteritems():
+            ctx = Context.get_by_name(name)
+            jsonschema.validate(config, ctx.CONFIG_SCHEMA)
 
     @staticmethod
     def get_by_name(name):
         """Returns Context class by name."""
         for context in utils.itersubclasses(Context):
-            if name == context.__name__:
+            if name == context.__ctx_name__:
                 return context
         raise exceptions.NoSuchContext(name=name)
 

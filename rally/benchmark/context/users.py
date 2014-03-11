@@ -28,7 +28,7 @@ LOG = logging.getLogger(__name__)
 class UserGenerator(base.Context):
     """Context class for generating temporary users/tenants for benchmarks."""
 
-    __name__ = "users"
+    __ctx_name__ = "users"
 
     CONFIG_SCHEMA = {
         "type": "object",

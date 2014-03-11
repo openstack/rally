@@ -76,7 +76,7 @@ def _prepare_open_secgroup(endpoint):
 
 
 class AllowSSH(base.Context):
-    __name__ = "allow_ssh"
+    __ctx_name__ = "allow_ssh"
 
     def __init__(self, context):
         super(AllowSSH, self).__init__(context)

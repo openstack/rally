@@ -1,6 +1,17 @@
 {
     "Authenticate.keystone": [
-      { "execution": "continuous",
-       "config": {"times": 100, "active_users": 1, "tenants": 3, "users_per_tenant": 50}}
+        {
+            "runner": {
+                "type": "continuous",
+                "times": 100,
+                "active_users": 5
+            },
+            "context": {
+                "users": {
+                    "tenants": 3,
+                    "users_per_tenant": 50
+                }
+            }
+        }
     ]
 }

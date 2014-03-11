@@ -15,10 +15,10 @@
 
 """Tests for the Test engine."""
 
+import jsonschema
 import mock
 
 from rally.benchmark import engine
-from rally.benchmark import validation
 from rally import consts
 from rally import exceptions
 from tests import fakes
@@ -27,290 +27,249 @@ from tests import test
 
 class BenchmarkEngineTestCase(test.TestCase):
 
-    def setUp(self):
-        super(BenchmarkEngineTestCase, self).setUp()
+    def test_init(self):
+        config = mock.MagicMock()
+        task = mock.MagicMock()
+        eng = engine.BenchmarkEngine(config, task)
+        self.assertEqual(eng.config, config)
+        self.assertEqual(eng.task, task)
 
-        self.valid_test_config_continuous_times = {
-            'NovaServers.boot_and_delete_server': [
-                {'args': {'flavor_id': 1, 'image_id': 'img'},
-                 'execution': 'continuous',
-                 'config': {'times': 10, 'active_users': 2,
-                            'tenants': 3, 'users_per_tenant': 2}}
-            ]
-        }
-        self.valid_test_config_continuous_duration = {
-            'NovaServers.boot_and_delete_server': [
-                {'args': {'flavor_id': 1, 'image_id': 'img'},
-                 'execution': 'continuous',
-                 'config': {'duration': 4, 'active_users': 2,
-                            'tenants': 3, 'users_per_tenant': 2}}
-            ]
-        }
-        self.invalid_test_config_bad_execution_type = {
-            'NovaServers.boot_and_delete_server': [
-                {'args': {'flavor_id': 1, 'image_id': 'img'},
-                 'execution': 'contitnuous',
-                 'config': {'times': 10, 'active_users': 2,
-                            'tenants': 3, 'users_per_tenant': 2}}
-            ]
-        }
-        self.invalid_test_config_bad_config_parameter = {
-            'NovaServers.boot_and_delete_server': [
-                {'args': {'flavor_id': 1, 'image_id': 'img'},
-                 'execution': 'continuous',
-                 'config': {'times': 10, 'activeusers': 2,
-                            'tenants': 3, 'users_per_tenant': 2}}
-            ]
-        }
-        self.invalid_test_config_parameters_conflict = {
-            'NovaServers.boot_and_delete_server': [
-                {'args': {'flavor_id': 1, 'image_id': 'img'},
-                 'execution': 'continuous',
-                 'config': {'times': 10, 'duration': 100,
-                            'tenants': 3, 'users_per_tenant': 2}}
-            ]
-        }
-        self.invalid_test_config_bad_param_for_periodic = {
-            'NovaServers.boot_and_delete_server': [
-                {'args': {'flavor_id': 1, 'image_id': 'img'},
-                 'execution': 'periodic',
-                 'config': {'times': 10, 'active_users': 3,
-                            'tenants': 3, 'users_per_tenant': 2}}
-            ]
-        }
-        self.valid_endpoints = [{
-            'auth_url': 'http://127.0.0.1:5000/v2.0',
-            'username': 'admin',
-            'password': 'admin',
-            'tenant_name': 'admin',
-            'permission': consts.EndpointPermission.ADMIN
-        }]
+    @mock.patch("rally.benchmark.engine.jsonschema.validate")
+    def test_validate(self, mock_json_validate):
+        config = mock.MagicMock()
+        eng = engine.BenchmarkEngine(config, mock.MagicMock())
+        mock_validate = mock.MagicMock()
 
-        self.run_success = {'msg': 'msg', 'status': 0, 'proc_name': 'proc'}
+        eng._validate_config_scenarios_name = mock_validate.names
+        eng._validate_config_syntax = mock_validate.syntax
+        eng._validate_config_semantic = mock_validate.semantic
 
-    def test__validate_config(self):
-        try:
-            engine.BenchmarkEngine(self.valid_test_config_continuous_times,
-                                   mock.MagicMock())
-            engine.BenchmarkEngine(self.valid_test_config_continuous_duration,
-                                   mock.MagicMock())
-        except Exception as e:
-            self.fail("Unexpected exception in test config" +
-                      "verification: %s" % str(e))
-        self.assertRaises(exceptions.InvalidConfigException,
-                          engine.BenchmarkEngine,
-                          self.invalid_test_config_bad_execution_type,
-                          mock.MagicMock())
-        self.assertRaises(exceptions.InvalidConfigException,
-                          engine.BenchmarkEngine,
-                          self.invalid_test_config_bad_config_parameter,
-                          mock.MagicMock())
-        self.assertRaises(exceptions.InvalidConfigException,
-                          engine.BenchmarkEngine,
-                          self.invalid_test_config_parameters_conflict,
-                          mock.MagicMock())
-        self.assertRaises(exceptions.InvalidConfigException,
-                          engine.BenchmarkEngine,
-                          self.invalid_test_config_bad_param_for_periodic,
-                          mock.MagicMock())
+        eng.validate()
 
-    @mock.patch("rally.benchmark.scenarios.base.Scenario.get_by_name")
-    @mock.patch("rally.benchmark.engine.users_ctx")
+        expected_calls = [
+            mock.call.names(config),
+            mock.call.syntax(config),
+            mock.call.semantic(config)
+        ]
+        mock_validate.assert_has_calls(expected_calls)
+
+    def test_validate__wrong_schema(self):
+        config = {
+            "wrong": True
+        }
+        task = mock.MagicMock()
+        eng = engine.BenchmarkEngine(config, task)
+        self.assertRaises(exceptions.InvalidTaskException,
+                          eng.validate)
+        task.set_failed.assert_called_once()
+
+    @mock.patch("rally.benchmark.engine.jsonschema.validate")
+    def test_validate__wrong_scenarios_name(self, mova_validate):
+        task = mock.MagicMock()
+        eng = engine.BenchmarkEngine(mock.MagicMock(), task)
+        eng._validate_config_scenarios_name = \
+            mock.MagicMock(side_effect=exceptions.NotFoundScenarios)
+
+        self.assertRaises(exceptions.InvalidTaskException, eng.validate)
+        task.set_failed.assert_called_once()
+
+    @mock.patch("rally.benchmark.engine.jsonschema.validate")
+    def test_validate__wrong_syntax(self, mova_validate):
+        task = mock.MagicMock()
+        eng = engine.BenchmarkEngine(mock.MagicMock(), task)
+        eng._validate_config_scenarios_name = mock.MagicMock()
+        eng._validate_config_syntax = \
+            mock.MagicMock(side_effect=exceptions.InvalidBenchmarkConfig)
+
+        self.assertRaises(exceptions.InvalidTaskException, eng.validate)
+        task.set_failed.assert_called_once()
+
+    @mock.patch("rally.benchmark.engine.jsonschema.validate")
+    def test_validate__wrong_semantic(self, mova_validate):
+        task = mock.MagicMock()
+        eng = engine.BenchmarkEngine(mock.MagicMock(), task)
+        eng._validate_config_scenarios_name = mock.MagicMock()
+        eng._validate_config_syntax = mock.MagicMock()
+        eng._validate_config_semantic = \
+            mock.MagicMock(side_effect=exceptions.InvalidBenchmarkConfig)
+
+        self.assertRaises(exceptions.InvalidTaskException, eng.validate)
+        task.set_failed.assert_called_once()
+
+    @mock.patch("rally.benchmark.engine.base_scenario.Scenario")
+    def test__validate_config_scenarios_name(self, mock_scenario):
+        config = {
+            "a": [],
+            "b": []
+        }
+        mock_scenario.list_benchmark_scenarios.return_value = ["e", "b", "a"]
+        eng = engine.BenchmarkEngine(config, mock.MagicMock())
+        eng._validate_config_scenarios_name(config)
+
+    @mock.patch("rally.benchmark.engine.base_scenario.Scenario")
+    def test__validate_config_scenarios_name_non_exsisting(self,
+                                                           mock_scenario):
+        config = {
+            "exist": [],
+            "nonexist1": [],
+            "nonexist2": []
+        }
+        mock_scenario.list_benchmark_scenarios.return_value = ["exist", "aaa"]
+        eng = engine.BenchmarkEngine(config, mock.MagicMock())
+
+        self.assertRaises(exceptions.NotFoundScenarios,
+                          eng._validate_config_scenarios_name, config)
+
+    @mock.patch("rally.benchmark.engine.base_runner.ScenarioRunner.validate")
+    @mock.patch("rally.benchmark.engine.base_ctx.Context.validate")
+    def test__validate_config_syntax(self, mock_context, mock_runner):
+        config = {"sca": [{"context": "a"}], "scb": [{"runner": "b"}]}
+        eng = engine.BenchmarkEngine(mock.MagicMock(), mock.MagicMock())
+        eng._validate_config_syntax(config)
+        mock_runner.assert_has_calls([mock.call({}), mock.call("b")])
+        mock_context.assert_has_calls([mock.call("a"), mock.call({})])
+
+    @mock.patch("rally.benchmark.engine.base_runner.ScenarioRunner")
+    @mock.patch("rally.benchmark.engine.base_ctx.Context.validate")
+    def test__validate_config_syntax__wrong_runner(self, mock_context,
+                                                   mock_runner):
+        config = {"sca": [{"context": "a"}], "scb": [{"runner": "b"}]}
+        eng = engine.BenchmarkEngine(mock.MagicMock(), mock.MagicMock())
+
+        mock_runner.validate = mock.MagicMock(
+                side_effect=jsonschema.ValidationError("a"))
+        self.assertRaises(exceptions.InvalidBenchmarkConfig,
+                          eng._validate_config_syntax, config)
+
+    @mock.patch("rally.benchmark.engine.base_runner.ScenarioRunner.validate")
+    @mock.patch("rally.benchmark.engine.base_ctx.Context")
+    def test__validate_config_syntax__wrong_context(self, mock_context,
+                                                    mock_runner):
+        config = {"sca": [{"context": "a"}], "scb": [{"runner": "b"}]}
+        eng = engine.BenchmarkEngine(mock.MagicMock(), mock.MagicMock())
+
+        mock_context.validate = mock.MagicMock(
+                side_effect=jsonschema.ValidationError("a"))
+        self.assertRaises(exceptions.InvalidBenchmarkConfig,
+                          eng._validate_config_syntax, config)
+
+    @mock.patch("rally.benchmark.engine.base_scenario.Scenario.validate")
+    def test__validate_config_semantic_helper(self, mock_validate):
+        eng = engine.BenchmarkEngine(mock.MagicMock(), mock.MagicMock())
+        eng._validate_config_sematic_helper("admin", "user", "name", "pos",
+                                            {"args": "args"})
+        mock_validate.assert_called_once_with("name", "args", admin="admin",
+                                              users=["user"])
+
+    @mock.patch("rally.benchmark.engine.base_scenario.Scenario.validate")
+    def test__validate_config_semanitc_helper_invalid_arg(self, mock_validate):
+        mock_validate.side_effect = exceptions.InvalidScenarioArgument()
+        eng = engine.BenchmarkEngine(mock.MagicMock(), mock.MagicMock())
+
+        self.assertRaises(exceptions.InvalidBenchmarkConfig,
+                          eng._validate_config_sematic_helper, "a", "u", "n",
+                          "p", {})
+
     @mock.patch("rally.benchmark.engine.osclients.Clients")
-    @mock.patch("rally.benchmark.engine.BenchmarkEngine._validate_config")
-    def test__validate_scenario_args(self, mock_validate_config,
-                                     mock_clients,
-                                     mock_user_ctxt,
-                                     mock_scenario_get_by_name):
+    @mock.patch("rally.benchmark.engine.users_ctx")
+    @mock.patch("rally.benchmark.engine.BenchmarkEngine"
+                "._validate_config_sematic_helper")
+    def test__validate_config_sematic(self, mock_helper, mock_userctx,
+                                      mock_osclients):
+        mock_userctx.UserGenerator = fakes.FakeUserContext
+        mock_osclients.return_value = mock.MagicMock()
+        config = {
+            "a": [mock.MagicMock(), mock.MagicMock()],
+            "b": [mock.MagicMock()]
+        }
 
-        @validation.requires_permission(consts.EndpointPermission.ADMIN)
-        def validator_admin(**kwargs):
-            return validation.ValidationResult()
+        eng = engine.BenchmarkEngine(config, mock.MagicMock())
+        eng.admin_endpoint = "admin"
 
-        @validation.requires_permission(consts.EndpointPermission.USER)
-        def validator_user(**kwargs):
-            return validation.ValidationResult()
+        eng._validate_config_semantic(config)
 
-        FakeScenario = mock.MagicMock()
-        FakeScenario.do_it.validators = [validator_admin, validator_user]
-        mock_scenario_get_by_name.return_value = FakeScenario
+        expected_calls = [
+            mock.call("admin"),
+            mock.call(fakes.FakeUserContext.user["endpoint"])
+        ]
+        mock_osclients.assert_has_calls(expected_calls)
 
-        mock_user_ctxt.UserGenerator = fakes.FakeUserContext
+        admin = user = mock_osclients.return_value
+        expected_calls = [
+            mock.call(admin, user, "a", 0, config["a"][0]),
+            mock.call(admin, user, "a", 1, config["a"][1]),
+            mock.call(admin, user, "b", 0, config["b"][0])
+        ]
+        mock_helper.assert_has_calls(expected_calls)
 
+    def test_run__update_status(self):
+        task = mock.MagicMock()
+        eng = engine.BenchmarkEngine([], task)
+        results = eng.run()
+        self.assertEqual(results, {})
+        task.update_status.assert_has_calls([
+            mock.call(consts.TaskStatus.RUNNING),
+            mock.call(consts.TaskStatus.FINISHED)
+        ])
+
+    @mock.patch("rally.benchmark.engine.endpoint.Endpoint")
+    @mock.patch("rally.benchmark.engine.osclients")
+    @mock.patch("rally.benchmark.engine.base_runner.ScenarioRunner")
+    def test_run__config_has_args(self, mock_endpoint, mock_osclients,
+                                  mock_runner):
+        config = {
+            "a.args": [{"args": {"a": "a", "b": 1}}],
+            "b.args": [{"args": {"a": 1}}]
+        }
+        task = mock.MagicMock()
+        eng = engine.BenchmarkEngine(config, task).bind([{}])
+        eng.run()
+
+    @mock.patch("rally.benchmark.engine.endpoint.Endpoint")
+    @mock.patch("rally.benchmark.engine.osclients")
+    @mock.patch("rally.benchmark.engine.base_runner.ScenarioRunner")
+    def test_run__config_has_runner(self, mock_endpoint, mock_osclients,
+                                    mock_runner):
+        config = {
+            "a.args": [{"runner": {"type": "a", "b": 1}}],
+            "b.args": [{"runner": {"a": 1}}]
+        }
+        task = mock.MagicMock()
+        eng = engine.BenchmarkEngine(config, task).bind([{}])
+        eng.run()
+
+    @mock.patch("rally.benchmark.engine.endpoint.Endpoint")
+    @mock.patch("rally.benchmark.engine.osclients")
+    @mock.patch("rally.benchmark.engine.base_runner.ScenarioRunner")
+    def test_run__config_has_context(self, mock_endpoint, mock_osclients,
+                                     mock_runner):
+        config = {
+            "a.args": [{"context": {"context_a": {"a": 1}}}],
+            "b.args": [{"context": {"context_b": {"b": 2}}}]
+        }
+        task = mock.MagicMock()
+        eng = engine.BenchmarkEngine(config, task).bind([{}])
+        eng.run()
+
+    @mock.patch("rally.benchmark.engine.osclients")
+    @mock.patch("rally.benchmark.engine.endpoint.Endpoint")
+    def test_bind(self, mock_endpoint, mock_osclients):
+        mock_endpoint.return_value = mock.MagicMock()
         benchmark_engine = engine.BenchmarkEngine(mock.MagicMock(),
                                                   mock.MagicMock())
-        benchmark_engine.admin_endpoint = "admin"
-
-        benchmark_engine._validate_scenario_args("FakeScenario.do_it", {})
-
-        expected = [mock.call("admin"),
-                    mock.call(fakes.FakeUserContext.user["endpoint"])]
-        mock_clients.assert_has_calls(expected, any_order=True)
-
-    @mock.patch("rally.benchmark.scenarios.base.Scenario.get_by_name")
-    @mock.patch("rally.benchmark.engine.users_ctx")
-    @mock.patch("rally.benchmark.engine.osclients.Clients")
-    @mock.patch("rally.benchmark.engine.BenchmarkEngine._validate_config")
-    def test__validate_scenario_args_failure(self, mock_validate_config,
-                                             mock_create_os_clients,
-                                             mock_user_ctxt,
-                                             mock_scenario_get_by_name):
-
-        @validation.requires_permission(consts.EndpointPermission.ADMIN)
-        def evil_validator_admin(**kwargs):
-            return validation.ValidationResult(is_valid=False)
-
-        FakeScenario = mock.MagicMock()
-        FakeScenario.do_it.validators = [evil_validator_admin]
-        mock_scenario_get_by_name.return_value = FakeScenario
-
-        benchmark_engine = engine.BenchmarkEngine(mock.MagicMock(),
-                                                  mock.MagicMock())
-        benchmark_engine.admin_endpoint = "admin"
-
-        self.assertRaises(exceptions.InvalidScenarioArgument,
-                          benchmark_engine._validate_scenario_args,
-                          "FakeScenario.do_it", {})
-
-        mock_user_ctxt.UserGenerator = fakes.FakeUserContext
-
-        @validation.requires_permission(consts.EndpointPermission.USER)
-        def evil_validator_user(**kwargs):
-            return validation.ValidationResult(is_valid=False)
-
-        FakeScenario.do_it.validators = [evil_validator_user]
-
-        self.assertRaises(exceptions.InvalidScenarioArgument,
-                          benchmark_engine._validate_scenario_args,
-                          "FakeScenario.do_it", {})
-
-    @mock.patch("rally.benchmark.engine.osclients")
-    def test_bind(self, mock_osclients):
-        mock_osclients.Clients.return_value = fakes.FakeClients()
-        benchmark_engine = engine.BenchmarkEngine(
-            self.valid_test_config_continuous_times, mock.MagicMock())
-        with benchmark_engine.bind(self.valid_endpoints):
-            endpoint_dicts = [endpoint.to_dict(include_permission=True)
-                              for endpoint in benchmark_engine.endpoints]
-            self.assertEqual(endpoint_dicts, self.valid_endpoints)
-
-    @mock.patch("rally.benchmark.engine.BenchmarkEngine."
-                "_validate_scenario_args")
-    @mock.patch("rally.benchmark.runners.base.ScenarioRunner.run")
-    @mock.patch("rally.benchmark.runners.base.osclients")
-    @mock.patch("rally.benchmark.engine.osclients")
-    def test_run(self, mock_engine_osclients, mock_utils_osclients, mock_run,
-                 mock_validate_scenario_args):
-        mock_engine_osclients.Clients.return_value = fakes.FakeClients()
-        mock_utils_osclients.Clients.return_value = fakes.FakeClients()
-        benchmark_engine = engine.BenchmarkEngine(
-            self.valid_test_config_continuous_times, mock.MagicMock())
-        with benchmark_engine.bind(self.valid_endpoints):
-            benchmark_engine.run()
-
-    @mock.patch("rally.benchmark.engine.BenchmarkEngine."
-                "_validate_scenario_args")
-    @mock.patch("rally.benchmark.runners.base.ScenarioRunner.run")
-    @mock.patch("rally.benchmark.runners.base.osclients")
-    @mock.patch("rally.benchmark.engine.osclients")
-    def test_task_status_basic_chain(self, mock_engine_osclients,
-                                     mock_utils_osclients, mock_scenario_run,
-                                     mock_validate_scenario_args):
-        fake_task = mock.MagicMock()
-        benchmark_engine = engine.BenchmarkEngine(
-            self.valid_test_config_continuous_times, fake_task)
-        mock_engine_osclients.Clients.return_value = fakes.FakeClients()
-        mock_utils_osclients.Clients.return_value = fakes.FakeClients()
-        mock_scenario_run.return_value = {}
-        with benchmark_engine.bind(self.valid_endpoints):
-            benchmark_engine.run()
-
-        benchmark_name = 'NovaServers.boot_and_delete_server'
-        benchmark_results = {
-            'name': benchmark_name, 'pos': 0,
-            'kw': self.valid_test_config_continuous_times[benchmark_name][0],
+        endpoint = {
+            "auth_url": "http://valid.com",
+            "username": "user",
+            "password": "pwd",
+            "tenant_name": "tenant"
         }
 
-        s = consts.TaskStatus
-        expected = [
-            mock.call.update_status(s.TEST_TOOL_BENCHMARKING),
-            mock.call.append_results(benchmark_results, {'raw': {},
-                                     'validation': {'is_valid': True}}),
-            mock.call.update_status(s.FINISHED)
+        binded_benchmark_engine = benchmark_engine.bind([endpoint])
+        self.assertEqual([mock_endpoint.return_value],
+                         benchmark_engine.endpoints)
+        self.assertEqual(benchmark_engine, binded_benchmark_engine)
+        expected_calls = [
+            mock.call.Clients(mock_endpoint.return_value),
+            mock.call.Clients().verified_keystone()
         ]
-        # NOTE(msdubov): Ignore task['uuid'] calls which are used for logging
-        mock_calls = filter(lambda call: '__getitem__' not in call[0],
-                            fake_task.mock_calls)
-        self.assertEqual(mock_calls, expected)
-
-    @mock.patch("rally.benchmark.engine.BenchmarkEngine."
-                "_validate_scenario_args")
-    @mock.patch("rally.benchmark.runners.base.ScenarioRunner.run")
-    @mock.patch("rally.benchmark.runners.base.osclients")
-    @mock.patch("rally.benchmark.engine.osclients")
-    def test_task_status_basic_chain_validation_fails(self,
-                                                      mock_engine_osclients,
-                                                      mock_utils_osclients,
-                                                      mock_scenario_run,
-                                                      mock_validate_sc_args):
-        fake_task = mock.MagicMock()
-        benchmark_engine = engine.BenchmarkEngine(
-            self.valid_test_config_continuous_times, fake_task)
-        mock_engine_osclients.Clients.return_value = fakes.FakeClients()
-        mock_utils_osclients.Clients.return_value = fakes.FakeClients()
-        validation_exc = exceptions.InvalidScenarioArgument()
-        mock_validate_sc_args.side_effect = validation_exc
-
-        with benchmark_engine.bind(self.valid_endpoints):
-            benchmark_engine.run()
-
-        benchmark_name = 'NovaServers.boot_and_delete_server'
-        benchmark_results = {
-            'name': benchmark_name, 'pos': 0,
-            'kw': self.valid_test_config_continuous_times[benchmark_name][0],
-        }
-
-        s = consts.TaskStatus
-        expected = [
-            mock.call.update_status(s.TEST_TOOL_BENCHMARKING),
-            mock.call.append_results(benchmark_results,
-                                     {'raw': [],
-                                      'validation': {'is_valid': False,
-                                      'exc_msg': validation_exc.message}}),
-            mock.call.set_failed(),
-            mock.call.update_status(s.FINISHED)
-        ]
-        # NOTE(msdubov): Ignore task['uuid'] calls which are used for logging
-        mock_calls = filter(lambda call: '__getitem__' not in call[0],
-                            fake_task.mock_calls)
-        self.assertEqual(mock_calls, expected)
-
-    @mock.patch("rally.benchmark.engine.BenchmarkEngine."
-                "_validate_scenario_args")
-    @mock.patch("rally.benchmark.runners.base.ScenarioRunner.run")
-    @mock.patch("rally.benchmark.runners.base.osclients")
-    @mock.patch("rally.benchmark.engine.osclients")
-    def test_task_status_failed(self, mock_engine_osclients,
-                                mock_utils_osclients, mock_scenario_run,
-                                mock_validate_scenario_args):
-        fake_task = mock.MagicMock()
-        benchmark_engine = engine.BenchmarkEngine(
-            self.valid_test_config_continuous_times, fake_task)
-        mock_engine_osclients.Clients.return_value = fakes.FakeClients()
-        mock_utils_osclients.Clients.return_value = fakes.FakeClients()
-        mock_scenario_run.side_effect = exceptions.TestException()
-        try:
-            with benchmark_engine.bind(self.valid_endpoints):
-                benchmark_engine.run()
-        except exceptions.TestException:
-            pass
-
-        s = consts.TaskStatus
-        expected = [
-            mock.call.update_status(s.TEST_TOOL_BENCHMARKING),
-            mock.call.set_failed(),
-        ]
-        # NOTE(msdubov): Ignore task['uuid'] calls which are used for logging
-        mock_calls = filter(lambda call: '__getitem__' not in call[0],
-                            fake_task.mock_calls)
-        self.assertEqual(mock_calls, expected)
+        mock_osclients.assert_has_calls(expected_calls)

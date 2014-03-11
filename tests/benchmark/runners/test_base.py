@@ -37,8 +37,27 @@ class ScenarioRunnerTestCase(test.TestCase):
     def test_init_calls_register(self, mock_osclients, mock_base):
         mock_osclients.Clients.return_value = fakes.FakeClients()
         base.ScenarioRunner.get_runner(mock.MagicMock(), self.fake_endpoints,
-                                       {"execution": "continuous"})
+                                       "continuous")
         self.assertEqual(mock_base.mock_calls, [mock.call.Scenario.register()])
+
+    @mock.patch("rally.benchmark.runners.base.jsonschema.validate")
+    @mock.patch("rally.benchmark.runners.base.ScenarioRunner._get_cls")
+    def test_validate(self, mock_get_cls, mock_validate):
+        mock_get_cls.return_value = fakes.FakeRunner
+
+        config = {"type": "fake", "a": 10}
+        base.ScenarioRunner.validate(config)
+        mock_get_cls.assert_called_once_with("fake")
+        mock_validate.assert_called_once_with(config,
+                                              fakes.FakeRunner.CONFIG_SCHEMA)
+
+    @mock.patch("rally.benchmark.runners.base.jsonschema.validate")
+    def test_validate_default_runner(self, mock_validate):
+        config = {"a": 10}
+        base.ScenarioRunner.validate(config)
+        mock_validate.assert_called_once_with(
+                config,
+                continuous.ContinuousScenarioRunner.CONFIG_SCHEMA)
 
     @mock.patch("rally.benchmark.runners.base.rutils")
     @mock.patch("rally.benchmark.runners.base.osclients")
@@ -84,7 +103,7 @@ class ScenarioRunnerTestCase(test.TestCase):
         mock_osclients.Clients.return_value = fakes.FakeClients()
         runner = base.ScenarioRunner.get_runner(mock.MagicMock(),
                                                 self.fake_endpoints,
-                                                {"execution": "continuous"})
+                                                "continuous")
         times = 4
         active_users = 2
         results = runner._run_scenario(fakes.FakeScenario,

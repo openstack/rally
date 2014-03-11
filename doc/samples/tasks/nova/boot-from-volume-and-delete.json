@@ -1,9 +1,10 @@
 {
-    "NovaServers.boot_and_delete_server": [
+    "NovaServers.boot_server_from_volume_and_delete": [
         {
             "args": {
                 "flavor_id": 1,
-                "image_id": "73257560-c59b-4275-a1ec-ab140e5b9979"
+                "image_id": "73257560-c59b-4275-a1ec-ab140e5b9979",
+                "volume_size": 10
             },
             "runner": {
                 "type": "continuous",

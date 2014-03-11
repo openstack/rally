@@ -1,0 +1,13 @@
+---
+  CinderVolumes.create_and_delete_volume:
+    -
+      args:
+        size: 1
+      runner:
+        type: "continuous"
+        times: 3
+        active_users: 2
+      context:
+        users:
+          tenants: 2
+          users_per_tenant: 2

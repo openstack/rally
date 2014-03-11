@@ -15,7 +15,7 @@
 
 import abc
 
-
+import jsonschema
 from oslo.config import cfg
 
 from rally.benchmark.context import cleaner as cleaner_ctx
@@ -24,6 +24,7 @@ from rally.benchmark.context import secgroup as secgroup_ctx
 from rally.benchmark.context import users as users_ctx
 from rally.benchmark.scenarios import base
 from rally.benchmark import utils
+from rally import exceptions
 from rally.openstack.common import log as logging
 from rally import osclients
 from rally import utils as rutils
@@ -73,6 +74,8 @@ class ScenarioRunner(object):
     in the_run_scenario() method.
     """
 
+    CONFIG_SCHEMA = {}
+
     def __init__(self, task, endpoints):
         base.Scenario.register()
 
@@ -85,13 +88,22 @@ class ScenarioRunner(object):
         self.users = []
 
     @staticmethod
-    def get_runner(task, endpoint, config):
-        """Returns instance of a scenario runner for execution type."""
-        execution_type = config.get('execution', 'continuous')
+    def _get_cls(runner_type):
         for runner in rutils.itersubclasses(ScenarioRunner):
-            if execution_type == runner.__execution_type__:
-                new_runner = runner(task, endpoint)
-                return new_runner
+            if runner_type == runner.__execution_type__:
+                return runner
+        raise exceptions.NoSuchRunner(type=runner_type)
+
+    @staticmethod
+    def get_runner(task, endpoint, runner_type):
+        """Returns instance of a scenario runner for execution type."""
+        return ScenarioRunner._get_cls(runner_type)(task, endpoint)
+
+    @staticmethod
+    def validate(config):
+        """Validates runner's part of task config."""
+        runner = ScenarioRunner._get_cls(config.get("type", "continuous"))
+        jsonschema.validate(config, runner.CONFIG_SCHEMA)
 
     @abc.abstractmethod
     def _run_scenario(self, cls, method_name, context, args, config):
@@ -110,11 +122,11 @@ class ScenarioRunner(object):
         """
 
     def _prepare_and_run_scenario(self, context, name, kwargs):
-        cls_name, method_name = name.split(".")
+        cls_name, method_name = name.split(".", 1)
         cls = base.Scenario.get_by_name(cls_name)
 
         args = kwargs.get('args', {})
-        config = kwargs.get('config', {})
+        config = kwargs.get('runner', {})
 
         with secgroup_ctx.AllowSSH(context) as allow_ssh:
             allow_ssh.setup()
@@ -125,17 +137,10 @@ class ScenarioRunner(object):
                                           args, config)
 
     def _run_as_admin(self, name, kwargs):
-        config = kwargs.get('config', {})
-
         context = {
             "task": self.task,
             "admin": {"endpoint": self.admin_user},
-            "config": {
-                "users": {
-                    "tenants": config.get("tenants", 1),
-                    "users_per_tenant": config.get("users_per_tenant", 1)
-                }
-            }
+            "config": kwargs.get("context", {})
         }
 
         with users_ctx.UserGenerator(context) as generator:

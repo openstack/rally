@@ -1,10 +1,24 @@
 {
-  "NovaServers.boot_runcommand_delete_server": [
-    {"args": {"flavor_id": "your flavor id here",
-      "image_id": "your image id here",
-      "script": "doc/samples/support/instance_dd_test.sh",
-      "interpreter": "/bin/sh",
-      "username": "ubuntu"},
-      "config": {"times": 2, "active_users": 1}}
-  ]
+    "NovaServers.boot_runcommand_delete_server": [
+        {
+            "args": {
+                "flavor_id": "1",
+                "image_id": "73257560-c59b-4275-a1ec-ab140e5b9979",
+                "script": "doc/samples/support/instance_dd_test.sh",
+                "interpreter": "/bin/sh",
+                "username": "ubuntu"
+            },
+            "runner": {
+                "type": "continuous",
+                "times": 10,
+                "active_users": 2
+            },
+            "context": {
+                "users": {
+                    "tenants": 3,
+                    "users_per_tenant": 2
+                }
+            }
+        }
+    ]
 }

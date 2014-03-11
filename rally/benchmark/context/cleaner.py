@@ -30,7 +30,7 @@ LOG = logging.getLogger(__name__)
 class ResourceCleaner(base.Context):
     """Context class for resource cleanup (both admin and non-admin)."""
 
-    __name__ = "cleaner"
+    __ctx_name__ = "cleaner"
 
     CONFIG_SCHEMA = {
         "type": "object",

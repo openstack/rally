@@ -15,7 +15,9 @@
 
 import json
 import jsonschema
+import traceback
 
+from rally.benchmark.context import base as base_ctx
 from rally.benchmark.context import users as users_ctx
 from rally.benchmark.runners import base as base_runner
 from rally.benchmark.scenarios import base as base_scenario
@@ -33,28 +35,25 @@ LOG = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = {
     "type": "object",
-    "$schema": "http://json-schema.org/draft-03/schema",
+    "$schema": "http://json-schema.org/draft-04/schema#",
     "patternProperties": {
         ".*": {
             "type": "array",
             "items": {
                 "type": "object",
                 "properties": {
-                    "args": {"type": "object"},
-                    "init": {"type": "object"},
-                    "execution": {"enum": ["continuous", "periodic"]},
-                    "config": {
+                    "args": {
+                        "type": "object"
+                    },
+                    "runner": {
                         "type": "object",
                         "properties": {
-                            "times": {"type": "integer"},
-                            "duration": {"type": "number"},
-                            "active_users": {"type": "integer"},
-                            "period": {"type": "number"},
-                            "tenants": {"type": "integer"},
-                            "users_per_tenant": {"type": "integer"},
-                            "timeout": {"type": "number"}
+                            "type": {"type": "string"}
                         },
-                        "additionalProperties": False
+                        "required": ["type"]
+                    },
+                    "context": {
+                        "type": "object"
                     }
                 },
                 "additionalProperties": False
@@ -67,7 +66,7 @@ CONFIG_SCHEMA = {
 class BenchmarkEngine(object):
     """The Benchmark engine class, an instance of which is initialized by the
     Orchestrator with the benchmarks configuration and then is used to execute
-    all specified benchmark scnearios.
+    all specified benchmark scenarios.
     .. note::
 
         Typical usage:
@@ -86,93 +85,72 @@ class BenchmarkEngine(object):
         """
         self.config = config
         self.task = task
-        self._validate_config()
 
     @rutils.log_task_wrapper(LOG.info,
-                             _("Benchmark config format validation."))
-    def _validate_config(self):
-        task_uuid = self.task['uuid']
-        # Perform schema validation
+                             _("Task validation of scenarios names."))
+    def _validate_config_scenarios_name(self, config):
+        available = set(base_scenario.Scenario.list_benchmark_scenarios())
+        specified = set(config.iterkeys())
+
+        if not specified.issubset(available):
+            names = ", ".join(specified - available)
+            raise exceptions.NotFoundScenarios(names=names)
+
+    @rutils.log_task_wrapper(LOG.info, _("Task validation of syntax."))
+    def _validate_config_syntax(self, config):
+        for scenario, values in config.iteritems():
+            for pos, kw in enumerate(values):
+                try:
+                    base_runner.ScenarioRunner.validate(kw.get("runner", {}))
+                    base_ctx.Context.validate(kw.get("context", {}))
+                except (exceptions.RallyException,
+                        jsonschema.ValidationError) as e:
+                    raise exceptions.InvalidBenchmarkConfig(name=scenario,
+                                                            pos=pos, args=kw,
+                                                            reason=e.message)
+
+    def _validate_config_sematic_helper(self, admin, user, name, pos, kwargs):
+        args = {} if not kwargs else kwargs.get("args", {})
+        try:
+            base_scenario.Scenario.validate(name, args, admin=admin,
+                                            users=[user])
+        except exceptions.InvalidScenarioArgument as e:
+            kw = {"name": name, "pos": pos, "args": args, "reason": e.message}
+            raise exceptions.InvalidBenchmarkConfig(**kw)
+
+    @rutils.log_task_wrapper(LOG.info, _("Task validation of semantic."))
+    def _validate_config_semantic(self, config):
+        # NOTE(boris-42): In future we will have more complex context, because
+        #                 we will have pre-created users mode as well.
+        context = {
+            "task": self.task,
+            "admin": {"endpoint": self.admin_endpoint}
+        }
+        with users_ctx.UserGenerator(context) as ctx:
+            ctx.setup()
+            admin = osclients.Clients(self.admin_endpoint)
+            user = osclients.Clients(context["users"][0]["endpoint"])
+
+            for name, values in config.iteritems():
+                for pos, kwargs in enumerate(values):
+                    self._validate_config_sematic_helper(admin, user, name,
+                                                         pos, kwargs)
+
+    @rutils.log_task_wrapper(LOG.info, _("Task validation."))
+    def validate(self):
+        """Perform full task configuration validation."""
+        self.task.update_status(consts.TaskStatus.VERIFYING)
         try:
             jsonschema.validate(self.config, CONFIG_SCHEMA)
-        except jsonschema.ValidationError as e:
-            LOG.exception(_('Task %s: Error: %s') % (task_uuid, e.message))
-            raise exceptions.InvalidConfigException(message=e.message)
+            self._validate_config_scenarios_name(self.config)
+            self._validate_config_syntax(self.config)
+            self._validate_config_semantic(self.config)
+        except Exception as e:
+            log = [str(type(e)), str(e), json.dumps(traceback.format_exc())]
+            self.task.set_failed(log=log)
+            raise exceptions.InvalidTaskException(message=str(e))
 
-        # Check for benchmark scenario names
-        available_scenarios = \
-            set(base_scenario.Scenario.list_benchmark_scenarios())
-        for scenario in self.config:
-            if scenario not in available_scenarios:
-                LOG.exception(_('Task %s: Error: the specified '
-                                'benchmark scenario does not exist: %s') %
-                              (task_uuid, scenario))
-                raise exceptions.NoSuchScenario(name=scenario)
-            # Check for conflicting config parameters
-            for run in self.config[scenario]:
-                if 'times' in run['config'] and 'duration' in run['config']:
-                    message = _("'times' and 'duration' cannot be set "
-                                "simultaneously for one continuous "
-                                "scenario run.")
-                    LOG.exception(_('Task %s: Error: %s') % (task_uuid,
-                                                             message))
-                    raise exceptions.InvalidConfigException(message=message)
-                if ((run.get('execution', 'continuous') == 'periodic' and
-                     'active_users' in run['config'])):
-                    message = _("'active_users' parameter cannot be set "
-                                "for periodic test runs.")
-                    LOG.exception(_('Task %s: Error: %s') % (task_uuid,
-                                                             message))
-                    raise exceptions.InvalidConfigException(message=message)
-
-    @rutils.log_task_wrapper(LOG.info,
-                             _("Benchmark config parameters validation."))
-    def _validate_scenario_args(self, name, kwargs):
-        cls_name, method_name = name.split(".")
-        cls = base_scenario.Scenario.get_by_name(cls_name)
-
-        method = getattr(cls, method_name)
-        validators = getattr(method, "validators", [])
-
-        args = kwargs.get("args", {})
-
-        # NOTE(msdubov): Some scenarios may require validation from admin,
-        #                while others use ordinary clients.
-        admin_validators = [v for v in validators
-                            if v.permission == consts.EndpointPermission.ADMIN]
-        user_validators = [v for v in validators
-                           if v.permission == consts.EndpointPermission.USER]
-
-        def validate(validators, clients):
-            for validator in validators:
-                result = validator(clients=clients, **args)
-                if not result.is_valid:
-                    raise exceptions.InvalidScenarioArgument(
-                                                            message=result.msg)
-
-        # NOTE(msdubov): In case of generated users (= admin mode) - validate
-        #                first the admin validators, then the user ones
-        #                (with one temporarily created user).
-        if self.admin_endpoint:
-            admin_client = osclients.Clients(self.admin_endpoint)
-            validate(admin_validators, admin_client)
-            context = {
-                "task": self.task,
-                "admin": {"endpoint": self.admin_endpoint}
-            }
-            with users_ctx.UserGenerator(context) as generator:
-                # TODO(boris-42): refactor this peace
-                generator.setup()
-                user = context["users"][0]
-                user_client = osclients.Clients(user["endpoint"])
-                validate(user_validators, user_client)
-        # NOTE(msdubov): In case of pre-created users - validate
-        #                for all of them.
-        else:
-            for user in self.users:
-                user_client = osclients.Clients(user)
-                validate(user_validators, user_client)
-
+    @rutils.log_task_wrapper(LOG.info, _("Benchmarking."))
     def run(self):
         """Runs the benchmarks according to the test configuration
         the benchmark engine was initialized with.
@@ -180,33 +158,21 @@ class BenchmarkEngine(object):
         :returns: List of dicts, each dict containing the results of all the
                   corresponding benchmark test launches
         """
-        self.task.update_status(consts.TaskStatus.TEST_TOOL_BENCHMARKING)
-
+        self.task.update_status(consts.TaskStatus.RUNNING)
         results = {}
         for name in self.config:
             for n, kwargs in enumerate(self.config[name]):
                 key = {'name': name, 'pos': n, 'kw': kwargs}
-                try:
-                    self._validate_scenario_args(name, kwargs)
-                    scenario_runner = base_runner.ScenarioRunner.get_runner(
-                                            self.task, self.endpoints, kwargs)
-                    result = scenario_runner.run(name, kwargs)
-                    self.task.append_results(key, {"raw": result,
-                                                   "validation":
-                                                   {"is_valid": True}})
-                    results[json.dumps(key)] = result
-                except exceptions.InvalidScenarioArgument as e:
-                    self.task.append_results(key, {"raw": [],
-                                                   "validation":
-                                                   {"is_valid": False,
-                                                    "exc_msg": e.message}})
-                    self.task.set_failed()
-                    LOG.error(_("Scenario (%(pos)s, %(name)s) input arguments "
-                                "validation error: %(msg)s") %
-                              {"pos": n, "name": name, "msg": e.message})
-
+                runner = kwargs.get("runner", {}).get("type", "continuous")
+                scenario_runner = base_runner.ScenarioRunner.get_runner(
+                                        self.task, self.endpoints, runner)
+                result = scenario_runner.run(name, kwargs)
+                self.task.append_results(key, {"raw": result})
+                results[json.dumps(key)] = result
+        self.task.update_status(consts.TaskStatus.FINISHED)
         return results
 
+    @rutils.log_task_wrapper(LOG.info, _("Check cloud."))
     def bind(self, endpoints):
         self.endpoints = [endpoint.Endpoint(**endpoint_dict)
                           for endpoint_dict in endpoints]
@@ -219,12 +185,3 @@ class BenchmarkEngine(object):
         clients = osclients.Clients(self.admin_endpoint)
         clients.verified_keystone()
         return self
-
-    def __enter__(self):
-        pass
-
-    def __exit__(self, exc_type, exc_value, exc_traceback):
-        if exc_type is not None:
-            self.task.set_failed()
-        else:
-            self.task.update_status(consts.TaskStatus.FINISHED)

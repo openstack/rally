@@ -1,5 +1,5 @@
 {
-    "NovaServers.boot_and_delete_server": [
+    "NovaServers.boot_server": [
         {
             "args": {
                 "flavor_id": 1,

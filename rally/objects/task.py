@@ -13,6 +13,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import json
+
 from rally import consts
 from rally import db
 
@@ -44,10 +46,12 @@ class Task(object):
         self._update({'status': status})
 
     def update_verification_log(self, log):
-        self._update({'verification_log': log})
+        self._update({'verification_log': json.dumps(log)})
 
-    def set_failed(self):
-        self._update({'failed': True, 'status': consts.TaskStatus.FAILED})
+    def set_failed(self, log=""):
+        self._update({'failed': True,
+                      'status': consts.TaskStatus.FAILED,
+                      'verification_log': json.dumps(log)})
 
     def append_results(self, key, value):
         db.task_result_create(self.task['uuid'], key, value)

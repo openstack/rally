@@ -66,5 +66,5 @@ class PeriodicScenarioRunnerTestCase(test.TestCase):
 
         runner = base.ScenarioRunner.get_runner(mock.MagicMock(),
                                                 self.fake_endpoints,
-                                                {"execution": "periodic"})
+                                                "periodic")
         self.assertTrue(runner is not None)

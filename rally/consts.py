@@ -25,15 +25,13 @@ from rally import utils
 
 
 class _TaskStatus(utils.ImmutableMixin, utils.EnumMixin):
-    INIT = 'init'
-    CLEANUP = 'cleanup'
-    FINISHED = 'finished'
-    FAILED = 'failed'
-
-    TEST_TOOL_PATCHING_OPENSTACK = 'test_tool->patching_openstack'
-    TEST_TOOL_VERIFY_OPENSTACK = 'test_tool->verify_openstack'
-    TEST_TOOL_BENCHMARKING = 'test_tool->benchmarking'
-    TEST_TOOL_PROCESSING_RESULTS = 'test_tool->result_processing'
+    INIT = "init"
+    VERIFYING = "verifying"
+    SETTING_UP = "setting up"
+    RUNNING = "running"
+    CLEANING_UP = "cleaning up"
+    FINISHED = "finished"
+    FAILED = "failed"
 
 
 class _DeployStatus(utils.ImmutableMixin, utils.EnumMixin):
