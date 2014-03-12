@@ -171,7 +171,7 @@ class DeploymentCommands(object):
             endpoints = db.deployment_get(deploy_id)['endpoints']
             for endpoint_dict in endpoints:
                 clients = osclients.Clients(endpoint.Endpoint(**endpoint_dict))
-                client = clients.verfied_keystone()
+                client = clients.verified_keystone()
                 print("keystone endpoints are valid and following "
                       "services are available:")
                 for service in client.service_catalog.get_data():
