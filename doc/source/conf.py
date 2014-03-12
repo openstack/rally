@@ -40,7 +40,7 @@ extensions = [
     'sphinx.ext.coverage',
     'sphinx.ext.ifconfig',
     'sphinx.ext.viewcode',
-    'oslo.sphinx',
+    'oslosphinx',
 ]
 todo_include_todos = True
 
