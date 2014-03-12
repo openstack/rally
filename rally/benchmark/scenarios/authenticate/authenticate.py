@@ -13,7 +13,6 @@
 #    under the License.
 
 from rally.benchmark.scenarios import base
-from rally import osclients
 
 
 class Authenticate(base.Scenario):
@@ -21,6 +20,4 @@ class Authenticate(base.Scenario):
     types of clients like Keystone.
     """
     def keystone(self, **kwargs):
-        keystone_endpoint = self.clients("endpoint")
-        cl = osclients.Clients(keystone_endpoint)
-        cl.get_keystone_client()
+        self.clients("keystone")
