@@ -48,7 +48,7 @@ class ScenarioRunnerTestCase(test.TestCase):
                                                       self.fake_endpoints)
         active_users = 2
         times = 3
-        duration = 0.01
+        duration = 0.1
 
         mock_utils.Timer = fakes.FakeTimer
         results = srunner._run_scenario(fakes.FakeScenario, "do_it",
@@ -99,7 +99,7 @@ class ScenarioRunnerTestCase(test.TestCase):
             self.assertEqual(r['error'][0],
                              str(multiprocessing.TimeoutError))
 
-        duration = 0.1
+        duration = 4
         results = runner._run_scenario(fakes.FakeScenario,
                                        "too_long",
                                        fakes.FakeUserContext({}).context, {},

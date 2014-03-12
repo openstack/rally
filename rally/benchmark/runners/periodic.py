@@ -56,7 +56,7 @@ class PeriodicScenarioRunner(base.ScenarioRunner):
             async_results.append(async_result)
 
             if i != times - 1:
-                time.sleep(period * 60)
+                time.sleep(period)
 
         results = []
         for async_result in async_results:

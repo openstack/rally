@@ -53,7 +53,7 @@ class PeriodicScenarioRunnerTestCase(test.TestCase):
                     for i in xrange(times)]
         self.assertEqual(mock_run_scenario_once.mock_calls, expected)
 
-        expected = [mock.call(period * 60) for i in xrange(times - 1)]
+        expected = [mock.call(period) for i in xrange(times - 1)]
         mock_sleep.has_calls(expected)
 
     @mock.patch("rally.benchmark.runners.base.base")
