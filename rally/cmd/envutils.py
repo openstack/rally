@@ -15,20 +15,14 @@
 import decorator
 import os
 
-from rally import exceptions
 from rally import fileutils
 
 
 def default_deployment_id():
-    try:
-        deploy_id = os.environ['RALLY_DEPLOYMENT']
-    except KeyError:
+    deploy_id = os.environ.get('RALLY_DEPLOYMENT')
+    if not deploy_id:
         fileutils.load_env_file(os.path.expanduser('~/.rally/globals'))
-        try:
-            deploy_id = os.environ['RALLY_DEPLOYMENT']
-        except KeyError:
-            raise exceptions.InvalidArgumentsException(
-                "deploy-id argument is missing")
+    deploy_id = os.environ.get('RALLY_DEPLOYMENT')
     return deploy_id
 
 
