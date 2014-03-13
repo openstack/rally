@@ -18,8 +18,9 @@ import logging
 import time
 import traceback
 
+from novaclient.v1_1 import servers
 from rally.benchmark.scenarios.keystone import utils as kutils
-from rally import exceptions as rally_exceptions
+from rally import exceptions
 
 
 LOG = logging.getLogger(__name__)
@@ -34,18 +35,36 @@ def get_from_manager(error_statuses=None):
     error_statuses = map(lambda str: str.upper(), error_statuses)
 
     def _get_from_manager(resource):
+        # catch client side errors
         try:
-            resource = resource.manager.get(resource.id)
+            res = resource.manager.get(resource.id)
         except Exception as e:
             if getattr(e, 'code', 400) == 404:
-                raise rally_exceptions.GetResourceNotFound(status="404")
-            raise rally_exceptions.GetResourceFailure(status=e)
-        status = resource.status.upper()
+                raise exceptions.GetResourceNotFound(resource=resource)
+            raise exceptions.GetResourceFailure(resource=resource, err=e)
+
+        # catch client side errors caused by server side
+        if not hasattr(res, 'status') or not hasattr(res, 'name'):
+            # In many test cases, nova 'get-server' api maybe return an
+            # incomplete response which doesn't have some common key-value
+            # like 'status' or 'name'. Fortunately, it just happened in
+            # pre 'BUILD' state. So an easy solution is to pass this update
+            # cycle and request api in next one.
+            return res
+
+        # catch abnormal status, such as "no valid host" for servers
+        status = res.status.upper()
         if status == "DELETED":
-            raise rally_exceptions.GetResourceNotFound(status="404")
+            raise exceptions.GetResourceNotFound(resource=res)
         if status in error_statuses:
-            raise rally_exceptions.GetResourceErrorStatus(status=status)
-        return resource
+            if isinstance(res.manager, servers.ServerManager):
+                msg = res.fault['message']
+            else:
+                msg = ''
+            raise exceptions.GetResourceErrorStatus(resource=res,
+                                                    status=status, fault=msg)
+
+        return res
 
     return _get_from_manager
 
@@ -85,7 +104,7 @@ def wait_for(resource, is_ready, update_resource=None, timeout=60,
             break
         time.sleep(check_interval)
         if time.time() - start > timeout:
-            raise rally_exceptions.TimeoutException()
+            raise exceptions.TimeoutException()
     return resource
 
 
@@ -131,11 +150,11 @@ def wait_for_delete(resource, update_resource=None, timeout=60,
     while True:
         try:
             resource = update_resource(resource)
-        except rally_exceptions.GetResourceNotFound:
+        except exceptions.GetResourceNotFound:
             break
         time.sleep(check_interval)
         if time.time() - start > timeout:
-            raise rally_exceptions.TimeoutException()
+            raise exceptions.TimeoutException()
 
 
 def format_exc(exc):
