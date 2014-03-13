@@ -86,13 +86,42 @@ class TaskCommands(object):
         '--task-id', type=str, dest='task_id',
         help=('uuid of task, if --task-id is "last" results of most '
               'recently created task will be displayed.'))
-    def detailed(self, task_id):
+    @cliutils.args('--no-aggregation', dest='no_aggregation',
+                   action='store_true',
+                   help='do not aggregate atomic operation results')
+    def detailed(self, task_id, no_aggregation=False):
         """Get detailed information about task
 
         :param task_id: Task uuid
+        :param no_aggregation: do not aggregate atomic operations
         Prints detailed information of task.
         """
-        def _print_atomic_actions_time(raw):
+        def _print_atomic_actions_time_no_aggregation(raw):
+            headers = ['iteration', "full duration"]
+            for i in range(0, len(raw)):
+                if raw[i]['atomic_actions_time']:
+                    for (c, a) in enumerate(raw[i]['atomic_actions_time'], 1):
+                        action = str(c) + "-" + a['action']
+                        headers.append(action)
+                    break
+            atomic_action_table = prettytable.PrettyTable(headers)
+            for (c, r) in enumerate(raw, 1):
+                dlist = [c]
+                d = []
+                if r['atomic_actions_time']:
+                    for l in r['atomic_actions_time']:
+                        d.append(l['duration'])
+                    dlist.append(sum(d))
+                    dlist = dlist + d
+                    atomic_action_table.add_row(dlist)
+                else:
+                    atomic_action_table.add_row(dlist +
+                                                ["N/A" for i in
+                                                range(1, len(headers))])
+            print(atomic_action_table)
+            print()
+
+        def _print_atomic_actions_time_aggregation(raw):
             atime_merged = []
             for r in raw:
                 if 'atomic_actions_time' in r:
@@ -104,13 +133,13 @@ class TaskCommands(object):
                 times_by_action[at['action']].append(at['duration'])
             if times_by_action:
                 atomic_action_table = prettytable.PrettyTable(
-                                                            ['action',
-                                                             'count',
-                                                             'max (sec)',
-                                                             'avg (sec)',
-                                                             'min (sec)',
-                                                             '90 percentile',
-                                                             '95 percentile'])
+                                                        ['action',
+                                                         'count',
+                                                         'max (sec)',
+                                                         'avg (sec)',
+                                                         'min (sec)',
+                                                         '90 percentile',
+                                                         '95 percentile'])
                 for k, v in times_by_action.iteritems():
                     atomic_action_table.add_row([k,
                                                 len(v),
@@ -121,6 +150,12 @@ class TaskCommands(object):
                                                 percentile(v, 0.95)])
                 print(atomic_action_table)
                 print()
+
+        def _print_atomic_actions_time(raw):
+            if no_aggregation:
+                _print_atomic_actions_time_no_aggregation(raw)
+            else:
+                _print_atomic_actions_time_aggregation(raw)
 
         if task_id == "last":
             task = db.task_get_detailed_last()
