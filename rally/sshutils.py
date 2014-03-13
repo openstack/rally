@@ -105,12 +105,13 @@ class SSH(object):
     def _get_pkey(self, key):
         if isinstance(key, basestring):
             key = StringIO.StringIO(key)
+        errors = []
         for key_class in (paramiko.rsakey.RSAKey, paramiko.dsskey.DSSKey):
             try:
                 return key_class.from_private_key(key)
-            except paramiko.SSHException:
-                pass
-        raise SSHError('Invalid pkey')
+            except paramiko.SSHException as e:
+                errors.append(e)
+        raise SSHError('Invalid pkey: %s' % (errors))
 
     def _get_client(self):
         if self._client:
