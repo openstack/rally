@@ -60,10 +60,6 @@ class OpenStackProviderTestCase(test.TestCase):
             'flavor_id': '22'}
 
     def _init_mock_clients(self):
-
-        def g():
-            raise Exception('ooke')
-
         self.clients = mock.MagicMock()
 
         self.image = mock.MagicMock()
@@ -82,8 +78,7 @@ class OpenStackProviderTestCase(test.TestCase):
         self.nova_client.servers.create = mock.MagicMock(
                                 return_value=self.instance)
 
-        self.clients.nova = mock.MagicMock(
-                                return_value=self.nova_client)
+        self.clients.nova = mock.MagicMock(return_value=self.nova_client)
 
     @mock.patch("rally.deploy.serverprovider.providers.openstack.osclients")
     def test_openstack_provider_init(self, os_cli):
@@ -94,7 +89,7 @@ class OpenStackProviderTestCase(test.TestCase):
         self.assertEqual('glance', os_provider.glance)
 
     @mock.patch('rally.osclients.Clients.glance')
-    def test_openstack_provider_init_no_glance(self, mock_glance):
+    def test_init_no_glance(self, mock_glance):
         mock_glance.side_effect = KeyError('image')
         cfg = self._get_valid_config()
         provider = OSProvider(mock.MagicMock(), cfg)
@@ -151,33 +146,38 @@ class OpenStackProviderTestCase(test.TestCase):
         cfg['image'] = dict(checksum="checksum")
         OSProvider(mock.MagicMock(), cfg)
 
-    @mock.patch(MOD_NAME + '.osclients')
-    @mock.patch(MOD_NAME + '.open', create=True)
-    @mock.patch(MOD_NAME + '.provider')
-    @mock.patch('rally.benchmark.utils.get_from_manager')
     @mock.patch('time.sleep')
-    def test_openstack_provider_create_servers(self, mock_sleep, get, g,
-                                               provider, clients):
-        get.return_value = lambda r: r
-        self._init_mock_clients()
-        clients.Clients = mock.MagicMock(return_value=self.clients)
-        provider.Server = mock.MagicMock()
-        prov = OSProvider(mock.MagicMock(), self._get_valid_config())
-        prov.get_image_uuid = mock.Mock()
-        prov.nova.keypairs.create.return_value = mock.Mock(id='keypair_id',
-                                                           name='keypair_name')
-        self.instance.id = 'instance_id'
-        prov.create_servers()
-        self.assertEqual(['keypairs.create', 'servers.create'],
-                         [call[0] for call in self.nova_client.mock_calls])
-        prov.resources.create.assert_has_calls([
-            mock.call({'id': 'keypair_id'}, type='keypair'),
-            mock.call({'id': 'instance_id'}, type='server'),
-        ])
+    @mock.patch(MOD_NAME + '.provider.Server')
+    @mock.patch(MOD_NAME + '.osclients')
+    @mock.patch(MOD_NAME + '.benchmark_utils')
+    def test_create_servers(self, bmutils, oscl, m_Server, m_sleep):
+        fake_keypair = mock.Mock()
+        fake_keypair.name = 'fake_key_name'
+        provider = OSProvider(mock.Mock(), self._get_valid_config())
+        provider.nova = mock.Mock()
+        provider.get_image_uuid = mock.Mock(return_value='fake_image_uuid')
+        provider.get_userdata = mock.Mock(return_value='fake_userdata')
+        provider.get_nics = mock.Mock(return_value='fake_nics')
+        provider.create_keypair = mock.Mock(return_value=(fake_keypair,
+                                                          'fake_path'))
+        m_Server.return_value = fake_server = mock.Mock()
+        provider.nova.servers.create.return_value = fake_instance = mock.Mock()
+        fake_instance.addresses.values = mock.Mock(
+            return_value=[[{'addr': '1.2.3.4'}]])
+
+        servers = provider.create_servers()
+
+        m_Server.assert_called_once_with(host='1.2.3.4', user='root',
+                                         key='fake_path')
+        self.assertEqual([fake_server], servers)
+        fake_server.ssh.wait.assert_called_once()
+        provider.nova.servers.create.assert_called_once_with(
+            'rally-dep-1-0', 'fake_image_uuid', '22', userdata='fake_userdata',
+            nics='fake_nics', key_name='fake_key_name')
 
     @mock.patch(MOD_NAME + '.osclients')
     @mock.patch(MOD_NAME + '.urllib2')
-    def test_openstack_provider_get_image_found_by_checksum(self, u, oscl):
+    def test_get_image_found_by_checksum(self, u, oscl):
         self._init_mock_clients()
         oscl.Clients = mock.MagicMock(return_value=self.clients)
         prov = OSProvider(mock.MagicMock(), self._get_valid_config())
@@ -186,7 +186,7 @@ class OpenStackProviderTestCase(test.TestCase):
 
     @mock.patch(MOD_NAME + '.osclients')
     @mock.patch(MOD_NAME + '.urllib2')
-    def test_openstack_provider_get_image_download(self, u, oscl):
+    def test_get_image_download(self, u, oscl):
         self._init_mock_clients()
         self.glance_client.images.list = mock.Mock(return_value=[])
         oscl.Clients = mock.MagicMock(return_value=self.clients)
@@ -197,7 +197,7 @@ class OpenStackProviderTestCase(test.TestCase):
                          [mock.call.urlopen('http://example.net/img.qcow2')])
 
     @mock.patch(MOD_NAME + '.osclients')
-    def test_openstack_provider_get_image_no_glance_exception(
+    def test_get_image_no_glance_exception(
             self, mock_osclients):
         prov = OSProvider(mock.MagicMock(), self._get_valid_config())
         prov.glance = None
@@ -205,8 +205,7 @@ class OpenStackProviderTestCase(test.TestCase):
                           prov.get_image_uuid)
 
     @mock.patch(MOD_NAME + '.osclients')
-    def test_openstack_provider_get_image_from_uuid_no_glance(
-            self, mock_osclients):
+    def test_get_image_from_uuid_no_glance(self, mock_osclients):
         conf = self._get_valid_config()
         conf['image']['uuid'] = "EC7A1DB7-C5BD-49A2-8066-613809CB22F5"
         prov = OSProvider(mock.MagicMock(), conf)
@@ -214,7 +213,7 @@ class OpenStackProviderTestCase(test.TestCase):
         self.assertEqual(conf['image']['uuid'], prov.get_image_uuid())
 
     @mock.patch(MOD_NAME + '.osclients')
-    def test_openstack_provider_destroy_servers(self, mock_osclients):
+    def test_destroy_servers(self, mock_osclients):
         prov = OSProvider(mock.MagicMock(), self._get_valid_config())
         prov.resources.get_all.side_effect = [
             [fakes.FakeResource(
