@@ -16,11 +16,13 @@
 import abc
 
 import jsonschema
+import six
 
 from rally import exceptions
 from rally import utils
 
 
+@six.add_metaclass(abc.ABCMeta)
 class Context(object):
     """We will use this class in future as a factory for context classes.
 
@@ -33,7 +35,6 @@ class Context(object):
         runners.base.ScenarioRunner and scenarios.base.Scenario
     """
 
-    __metaclass__ = abc.ABCMeta
     __name__ = "basecontext"
 
     CONFIG_SCHEMA = {}
