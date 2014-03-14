@@ -27,7 +27,7 @@ class TempestTestCase(test.TestCase):
 
     def setUp(self):
         super(TempestTestCase, self).setUp()
-        self.verifier = tempest.Tempest()
+        self.verifier = tempest.Tempest('fake_deploy_id')
         self.verifier.lock_path = 'fake_lock_path'
         self.conf_args = {'flavor_ref_alt': 'fake_flavor_ref_alt',
                           'flavor_ref': 'fake_flavor_ref',
@@ -59,12 +59,6 @@ class TempestTestCase(test.TestCase):
         with open(self.tempest_dir + 'config.ini') as config_file:
             self.assertEqual(test_config, config_file.read() % self.conf_args)
 
-    def test__define_path(self):
-        tempest_path = self.verifier._define_path()
-        self.assertEqual(os.path.abspath(tempest_path),
-                         os.path.abspath(self.tempest_dir +
-                                         'openstack-tempest/'))
-
     @mock.patch('tempfile.mkstemp')
     @mock.patch('rally.verification.verifiers.tempest.tempest.os')
     def test__write_config(self, mock_os, mock_tempfile):
@@ -84,35 +78,50 @@ class TempestTestCase(test.TestCase):
 
         result = self.verifier.is_installed()
 
-        mock_exists.assert_called_once_with(self.verifier._define_path())
+        mock_exists.assert_called_once_with(self.verifier.tempest_path)
         self.assertTrue(result)
 
-    @mock.patch(TEMPEST_PATH + '.Tempest._define_path')
     @mock.patch('rally.verification.verifiers.tempest.tempest.subprocess')
-    @mock.patch('os.path.exists')
-    def test_install(self, mock_exists, mock_sp, mock_path):
-        mock_path.return_value = 'fake_tempest_path/'
-        mock_exists.return_value = False
-
-        self.verifier.install()
-
+    def test__clone(self, mock_sp):
+        self.verifier._clone()
         mock_sp.call.assert_called_once_with(
             ['git', 'clone', 'git://github.com/openstack/tempest',
-             'fake_tempest_path/'])
+             tempest.Tempest.tempest_base_path])
+
+    @mock.patch('rally.verification.verifiers.tempest.tempest.subprocess')
+    @mock.patch('os.path.exists')
+    @mock.patch('shutil.copytree')
+    def test_install(self, mock_copytree, mock_exists, mock_sp):
+        mock_exists.side_effect = (True, False)
+        # simulate tempest is clonned but is not installed for current deploy
+
+        self.verifier.install()
+        mock_copytree.assert_called_once_with(
+            tempest.Tempest.tempest_base_path,
+            self.verifier.tempest_path)
+        mock_sp.Popen.assert_called_once_with(
+            'git checkout master; git remote update; git pull',
+            cwd=os.path.join(self.verifier.tempest_path, 'tempest'),
+            shell=True)
+
+    @mock.patch('rally.verification.verifiers.tempest.tempest.shutil')
+    @mock.patch('os.path.exists')
+    def test_uninstall(self, mock_exists, mock_shutil):
+        mock_exists.return_value = True
+        self.verifier.uninstall()
+        mock_shutil.rmtree.assert_called_once_with(self.verifier.tempest_path)
 
     @mock.patch('shutil.rmtree')
     @mock.patch('os.unlink')
     @mock.patch(TEMPEST_PATH + '.subprocess')
-    @mock.patch(TEMPEST_PATH + '.Tempest._define_path')
-    def test__run(self, mock_path, mock_sp, mock_unlink, mock_rmtree):
-        mock_path.return_value = 'fake_tempest_path/'
-
+    def test__run(self, mock_sp, mock_unlink, mock_rmtree):
         self.verifier._run('fake_conf_path', 'smoke', None)
 
         mock_unlink.assert_called_once_with('fake_conf_path')
         mock_sp.check_call.assert_called_once_with(
-            ['/usr/bin/env', 'bash', 'fake_tempest_path/run_tempest.sh', '-C',
-             'fake_conf_path', '-s', ''])
+            ['/usr/bin/env', 'bash', os.path.join(self.verifier.tempest_path,
+                                                  'run_tempest.sh'),
+             '-C', 'fake_conf_path', '-s', ''])
 
     @mock.patch('rally.verification.verifiers.tempest.tempest.Tempest._run')
     @mock.patch(TEMPEST_PATH + '.Tempest._write_config')

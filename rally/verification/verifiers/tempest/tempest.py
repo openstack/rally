@@ -25,19 +25,19 @@ LOG = logging.getLogger(__name__)
 
 class Tempest(object):
 
-    def __init__(self):
+    tempest_base_path = os.path.join(os.path.expanduser("~"),
+                                     '.rally/tempest/')
+
+    def __init__(self, deploy_id):
         self.lock_path = tempfile.mkdtemp()
+        self.tempest_path = os.path.join(os.path.expanduser("~"),
+                                         '.rally', deploy_id)
 
     def _generate_config(self, **kwargs):
         kwargs['lock_path'] = self.lock_path
-        with open('rally/verification/verifiers/tempest/config.ini') as conf:
+        with open(os.path.join(os.path.dirname(__file__),
+                               'config.ini')) as conf:
             return conf.read() % kwargs
-
-    @staticmethod
-    def _define_path():
-        dir_path = os.path.dirname(os.path.dirname(__file__))
-        tempest_path = os.path.join(dir_path, 'tempest/openstack-tempest/')
-        return tempest_path
 
     @staticmethod
     def _write_config(conf):
@@ -47,21 +47,32 @@ class Tempest(object):
         return config_path
 
     def is_installed(self):
-        return os.path.exists(self._define_path())
+        return os.path.exists(self.tempest_path)
+
+    @staticmethod
+    def _clone():
+        subprocess.call(['git', 'clone', 'git://github.com/openstack/tempest',
+                        Tempest.tempest_base_path])
 
     def install(self):
-        tempest_path = self._define_path()
-        if os.path.exists(tempest_path):
+        if not os.path.exists(Tempest.tempest_base_path):
+            Tempest._clone()
+        if os.path.exists(self.tempest_path):
             print('Tempest is already installed')
         else:
-            subprocess.call(
-                ['git', 'clone', 'git://github.com/openstack/tempest',
-                 tempest_path])
+            shutil.copytree(Tempest.tempest_base_path, self.tempest_path)
+            subprocess.Popen('git checkout master; git remote update; '
+                             'git pull', shell=True,
+                             cwd=os.path.join(self.tempest_path,
+                                              'tempest')).communicate()
             print('Tempest has been successfully installed!')
 
+    def uninstall(self):
+        if os.path.exists(self.tempest_path):
+            shutil.rmtree(self.tempest_path)
+
     def _run(self, config_path, set_name, regex):
-        tempest_path = self._define_path()
-        run_script = '%srun_tempest.sh' % tempest_path
+        run_script = os.path.join(self.tempest_path, 'run_tempest.sh')
         if set_name == 'full':
             set_path = ''
         elif set_name == 'smoke':
