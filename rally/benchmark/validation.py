@@ -82,3 +82,51 @@ def flavor_exists(param_name):
             message = _("Flavor with id '%s' not found") % flavor_id
             return ValidationResult(False, message)
     return flavor_exists_validator
+
+
+def image_valid_on_flavor(flavor_name, image_name):
+    """Returns validator for image could be used for current flavor
+
+    :param flavor_name: defines which variable should be used
+                       to get flavor id value.
+    :param image_name: defines which variable should be used
+                       to get image id value.
+
+    """
+    def image_valid_on_flavor_validator(**kwargs):
+        flavor_id = kwargs.get(flavor_name)
+        novaclient = kwargs["clients"].nova()
+
+        try:
+            flavor = novaclient.flavors.get(flavor=flavor_id)
+        except nova_exc.NotFound:
+            message = _("Flavor with id '%s' not found") % flavor_id
+            return ValidationResult(False, message)
+
+        image_id = kwargs.get(image_name)
+        glanceclient = kwargs["clients"].glance()
+
+        try:
+            image = glanceclient.images.get(image=image_id)
+        except glance_exc.HTTPNotFound:
+            message = _("Image with id '%s' not found") % image_id
+            return ValidationResult(False, message)
+
+        if flavor.ram < (image.min_ram or 0):
+            message = _("The memory size for flavor '%s' is too small "
+                        "for requested image '%s'") % (flavor_id, image_id)
+            return ValidationResult(False, message)
+
+        if flavor.disk:
+            if (image.size or 0) > flavor.disk * (1024 ** 3):
+                message = _("The disk size for flavor '%s' is too small "
+                            "for requested image '%s'") % (flavor_id, image_id)
+                return ValidationResult(False, message)
+
+            if (image.min_disk or 0) > flavor.disk:
+                message = _("The disk size for flavor '%s' is too small "
+                            "for requested image '%s'") % (flavor_id, image_id)
+                return ValidationResult(False, message)
+
+        return ValidationResult()
+    return image_valid_on_flavor_validator

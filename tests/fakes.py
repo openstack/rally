@@ -64,9 +64,13 @@ class FakeFailedServer(FakeResource):
 
 class FakeImage(FakeResource):
 
-    def __init__(self, manager=None):
+    def __init__(self, manager=None, id="image-id-0",
+                 min_ram=0, size=0, min_disk=0):
         super(FakeImage, self).__init__(manager)
-        self.id = "image-id-0"
+        self.id = id
+        self.min_ram = min_ram
+        self.size = size
+        self.min_disk = min_disk
 
 
 class FakeFailedImage(FakeResource):
@@ -93,7 +97,11 @@ class FakeNetwork(FakeResource):
 
 
 class FakeFlavor(FakeResource):
-    pass
+
+    def __init__(self, manager=None, ram=0, disk=0):
+        super(FakeFlavor, self).__init__(manager)
+        self.ram = ram
+        self.disk = disk
 
 
 class FakeKeypair(FakeResource):
