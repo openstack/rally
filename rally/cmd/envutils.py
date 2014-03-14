@@ -12,24 +12,27 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+
 import decorator
 import os
 
 from rally import fileutils
 
 
-def default_deployment_id():
-    deploy_id = os.environ.get('RALLY_DEPLOYMENT')
-    if not deploy_id:
+def get_global(global_key):
+    if global_key not in os.environ:
         fileutils.load_env_file(os.path.expanduser('~/.rally/globals'))
-    deploy_id = os.environ.get('RALLY_DEPLOYMENT')
-    return deploy_id
+    return os.environ.get(global_key)
 
 
-@decorator.decorator
-def deploy_id_default(f, *args, **kwargs):
-    deploy_id_arg_index = f.func_code.co_varnames.index("deploy_id")
-    args = list(args)
-    if args[deploy_id_arg_index] is None:
-        args[deploy_id_arg_index] = default_deployment_id()
-    return f(*args, **kwargs)
+def default_from_global(arg_name, env_name):
+    def default_from_global(f, *args, **kwargs):
+        id_arg_index = f.func_code.co_varnames.index(arg_name)
+        args = list(args)
+        if args[id_arg_index] is None:
+            args[id_arg_index] = get_global(env_name)
+        return f(*args, **kwargs)
+    return decorator.decorator(default_from_global)
+
+
+with_default_deploy_id = default_from_global('deploy_id', 'RALLY_DEPLOYMENT')

@@ -89,7 +89,7 @@ class DeploymentCommands(object):
 
     @cliutils.args('--deploy-id', dest='deploy_id', type=str, required=False,
                    help='UUID of a deployment.')
-    @envutils.deploy_id_default
+    @envutils.with_default_deploy_id
     def recreate(self, deploy_id=None):
         """Destroy and create an existing deployment.
 
@@ -99,7 +99,7 @@ class DeploymentCommands(object):
 
     @cliutils.args('--deploy-id', dest='deploy_id', type=str, required=False,
                    help='UUID of a deployment.')
-    @envutils.deploy_id_default
+    @envutils.with_default_deploy_id
     def destroy(self, deploy_id=None):
         """Destroy the deployment.
 
@@ -113,7 +113,7 @@ class DeploymentCommands(object):
     def list(self, deployment_list=None):
         """Print list of deployments."""
         headers = ['uuid', 'created_at', 'name', 'status', 'active']
-        current_deploy_id = envutils.default_deployment_id()
+        current_deploy_id = envutils.get_global('RALLY_DEPLOYMENT')
         deployment_list = deployment_list or db.deployment_list()
         if deployment_list:
             table = prettytable.PrettyTable(headers)
@@ -131,7 +131,7 @@ class DeploymentCommands(object):
 
     @cliutils.args('--deploy-id', dest='deploy_id', type=str, required=False,
                    help='UUID of a deployment.')
-    @envutils.deploy_id_default
+    @envutils.with_default_deploy_id
     def config(self, deploy_id=None):
         """Print on stdout a config of the deployment in JSON format.
 
@@ -142,7 +142,7 @@ class DeploymentCommands(object):
 
     @cliutils.args('--deploy-id', dest='deploy_id', type=str, required=False,
                    help='UUID of a deployment.')
-    @envutils.deploy_id_default
+    @envutils.with_default_deploy_id
     def endpoint(self, deploy_id=None):
         """Print endpoint of the deployment.
 
@@ -157,7 +157,7 @@ class DeploymentCommands(object):
 
     @cliutils.args('--deploy-id', dest='deploy_id', type=str, required=False,
                    help='UUID of a deployment.')
-    @envutils.deploy_id_default
+    @envutils.with_default_deploy_id
     def check(self, deploy_id=None):
         """Check the deployment.
 

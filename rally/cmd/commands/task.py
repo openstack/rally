@@ -46,7 +46,7 @@ class TaskCommands(object):
                    help='Path to the file with full configuration of task')
     @cliutils.args('--tag',
                    help='Tag for this task')
-    @envutils.deploy_id_default
+    @envutils.with_default_deploy_id
     def start(self, task, deploy_id=None, tag=None):
         """Run a benchmark task.
 

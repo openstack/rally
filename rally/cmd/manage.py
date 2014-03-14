@@ -38,7 +38,7 @@ class TempestCommands(object):
 
     @cliutils.args('--deploy-id', type=str, dest='deploy_id', required=False,
                    help='UUID of the deployment')
-    @envutils.deploy_id_default
+    @envutils.with_default_deploy_id
     def install(self, deploy_id=None):
         """Install tempest."""
         verifier = tempest.Tempest(deploy_id)

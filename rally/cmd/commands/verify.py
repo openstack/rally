@@ -46,7 +46,7 @@ class VerifyCommands(object):
                         'Available sets: %s' % ', '.join(TEMPEST_TEST_SETS))
     @cliutils.args('--regex', dest='regex', type=str, required=False,
                    help='Regular expression of test.')
-    @envutils.deploy_id_default
+    @envutils.with_default_deploy_id
     def start(self, deploy_id=None, set_name='smoke', regex=None):
         """Start running tempest tests against a live cloud cluster.
 

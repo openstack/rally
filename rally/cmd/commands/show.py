@@ -32,7 +32,7 @@ class ShowCommands(object):
 
     @cliutils.args('--deploy-id', dest='deploy_id', type=str, required=False,
                    help='the UUID of a deployment')
-    @envutils.deploy_id_default
+    @envutils.with_default_deploy_id
     def images(self, deploy_id=None):
         """Show the images that are available in a deployment.
 
@@ -53,7 +53,7 @@ class ShowCommands(object):
 
     @cliutils.args('--deploy-id', dest='deploy_id', type=str, required=False,
                    help='the UUID of a deployment')
-    @envutils.deploy_id_default
+    @envutils.with_default_deploy_id
     def flavors(self, deploy_id=None):
         """Show the flavors that are available in a deployment.
 
@@ -75,7 +75,7 @@ class ShowCommands(object):
 
     @cliutils.args('--deploy-id', dest='deploy_id', type=str, required=False,
                    help='the UUID of a deployment')
-    @envutils.deploy_id_default
+    @envutils.with_default_deploy_id
     def networks(self, deploy_id=None):
         headers = ['ID', 'Label', 'CIDR']
         table = prettytable.PrettyTable(headers)
@@ -92,7 +92,7 @@ class ShowCommands(object):
 
     @cliutils.args('--deploy-id', dest='deploy_id', type=str, required=False,
                    help='the UUID of a deployment')
-    @envutils.deploy_id_default
+    @envutils.with_default_deploy_id
     def secgroups(self, deploy_id=None):
         headers = ['ID', 'Name', 'Description']
         table = prettytable.PrettyTable(headers)
@@ -110,7 +110,7 @@ class ShowCommands(object):
 
     @cliutils.args('--deploy-id', dest='deploy_id', type=str, required=False,
                    help='the UUID of a deployment')
-    @envutils.deploy_id_default
+    @envutils.with_default_deploy_id
     def keypairs(self, deploy_id=None):
         headers = ['Name', 'Fingerprint']
         table = prettytable.PrettyTable(headers)
