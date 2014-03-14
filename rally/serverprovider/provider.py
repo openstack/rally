@@ -14,8 +14,9 @@
 #    under the License.
 
 import abc
-import jsonschema
 
+import jsonschema
+import six
 
 from rally import exceptions
 from rally import sshutils
@@ -101,6 +102,7 @@ class ResourceManager(object):
         self.deployment.delete_resource(resource_id)
 
 
+@six.add_metaclass(abc.ABCMeta)
 class ProviderFactory(object):
     """ProviderFactory should be base class for all providers.
 
@@ -113,7 +115,6 @@ class ProviderFactory(object):
         *) create_servers
         *) destroy_servers.
     """
-    __metaclass__ = abc.ABCMeta
 
     def __init__(self, deployment, config):
         self.deployment = deployment

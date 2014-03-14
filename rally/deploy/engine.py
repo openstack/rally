@@ -14,7 +14,9 @@
 #    under the License.
 
 import abc
+
 import jsonschema
+import six
 
 from rally import consts
 from rally import exceptions
@@ -27,6 +29,7 @@ from rally import utils
 LOG = logging.getLogger(__name__)
 
 
+@six.add_metaclass(abc.ABCMeta)
 class EngineFactory(object):
     """Base class of all deployment engines.
 
@@ -60,8 +63,6 @@ class EngineFactory(object):
         # deploy is an instance of the A engine
         # perform all usage operations on your cloud
     """
-    __metaclass__ = abc.ABCMeta
-
     def __init__(self, deployment):
         self.deployment = deployment
         self.config = deployment['config']
