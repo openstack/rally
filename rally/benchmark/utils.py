@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import itertools
 import logging
 import time
 import traceback
@@ -142,10 +143,8 @@ def format_exc(exc):
 
 
 def infinite_run_args(args):
-    i = 0
-    while True:
+    for i in itertools.count():
         yield (i,) + args
-        i += 1
 
 
 def delete_servers(nova):
