@@ -19,6 +19,7 @@ import abc
 from oslo.config import cfg
 
 from rally.benchmark.context import cleaner as cleaner_ctx
+from rally.benchmark.context import keypair as keypair_ctx
 from rally.benchmark.context import secgroup as secgroup_ctx
 from rally.benchmark.context import users as users_ctx
 from rally.benchmark.scenarios import base
@@ -117,7 +118,11 @@ class ScenarioRunner(object):
 
         with secgroup_ctx.AllowSSH(context) as allow_ssh:
             allow_ssh.setup()
-            return self._run_scenario(cls, method_name, context, args, config)
+            with keypair_ctx.Keypair(context) as keypair:
+                keypair.setup()
+                LOG.debug("Context: %s" % context)
+                return self._run_scenario(cls, method_name, context,
+                                          args, config)
 
     def _run_as_admin(self, name, kwargs):
         config = kwargs.get('config', {})
