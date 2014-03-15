@@ -80,6 +80,7 @@ class OSClientsTestCase(test.TestCase):
                 "2", self.endpoint.username, self.endpoint.password,
                 self.endpoint.tenant_name, auth_url=self.endpoint.auth_url,
                 service_type="compute",
+                http_log_debug=False,
                 timeout=cfg.CONF.openstack_client_http_timeout,
                 insecure=False, cacert=None)
             self.assertEqual(self.clients.cache["nova"], fake_nova)
@@ -113,6 +114,7 @@ class OSClientsTestCase(test.TestCase):
                 "1", self.endpoint.username, self.endpoint.password,
                 self.endpoint.tenant_name, auth_url=self.endpoint.auth_url,
                 service_type="volume",
+                http_log_debug=False,
                 timeout=cfg.CONF.openstack_client_http_timeout,
                 insecure=False, cacert=None)
             self.assertEqual(self.clients.cache["cinder"], fake_cinder)

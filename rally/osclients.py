@@ -104,6 +104,7 @@ class Clients(object):
                              self.endpoint.tenant_name,
                              auth_url=self.endpoint.auth_url,
                              service_type='compute',
+                             http_log_debug=CONF.debug,
                              timeout=CONF.openstack_client_http_timeout,
                              insecure=CONF.https_insecure,
                              cacert=CONF.https_cacert)
@@ -145,6 +146,7 @@ class Clients(object):
                                self.endpoint.tenant_name,
                                auth_url=self.endpoint.auth_url,
                                service_type='volume',
+                               http_log_debug=CONF.debug,
                                timeout=CONF.openstack_client_http_timeout,
                                insecure=CONF.https_insecure,
                                cacert=CONF.https_cacert)
