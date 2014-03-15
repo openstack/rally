@@ -97,6 +97,45 @@ class DeploymentCommandsTestCase(test.BaseTestCase):
         self.assertRaises(exceptions.InvalidArgumentsException,
                           self.deployment.destroy, None)
 
+    @mock.patch('rally.cmd.commands.deployment.envutils.default_deployment_id')
+    @mock.patch('rally.cmd.commands.show.prettytable.PrettyTable.add_row')
+    @mock.patch('rally.cmd.commands.deployment.db.deployment_list')
+    def test_list_different_deploy_id(self, mock_deployments,
+                                      mock_add_row, mock_default):
+        current_deploy_id = str(uuid.uuid4())
+        mock_default.return_value = current_deploy_id
+        fake_deployment_list = [{'uuid': str(uuid.uuid4()),
+                                 'created_at': '03-12-2014',
+                                 'name': 'dep1',
+                                 'status': 'deploy->started',
+                                 'active': 'False'}]
+        mock_deployments.return_value = fake_deployment_list
+        prettytable_row = [str(fake_deployment_list[0][column]) for column in
+                           ['uuid', 'created_at', 'name', 'status']]
+        prettytable_row.append('')
+        self.deployment.list()
+        mock_add_row.assert_called_once_with(prettytable_row)
+
+    @mock.patch('rally.cmd.commands.deployment.envutils.default_deployment_id')
+    @mock.patch('rally.cmd.commands.show.prettytable.PrettyTable.add_row')
+    @mock.patch('rally.cmd.commands.deployment.db.deployment_list')
+    def test_list_current_deploy_id(self, mock_deployments,
+                                    mock_add_row,
+                                    mock_default):
+        current_deploy_id = str(uuid.uuid4())
+        mock_default.return_value = current_deploy_id
+        fake_deployment_list = [{'uuid': current_deploy_id,
+                                 'created_at': '13-12-2014',
+                                 'name': 'dep2',
+                                 'status': 'deploy->finished',
+                                 'active': 'True'}]
+        mock_deployments.return_value = fake_deployment_list
+        prettytable_row = [str(fake_deployment_list[0][column]) for column in
+                           ['uuid', 'created_at', 'name', 'status']]
+        prettytable_row.append('*')
+        self.deployment.list()
+        mock_add_row.assert_called_once_with(prettytable_row)
+
     @mock.patch('rally.cmd.commands.deployment.db.deployment_get')
     def test_config(self, mock_deployment):
         deploy_id = str(uuid.uuid4())
