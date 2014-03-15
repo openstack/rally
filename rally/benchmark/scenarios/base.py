@@ -68,19 +68,6 @@ class Scenario(object):
                                                         benchmark_scenarios))
         return benchmark_scenarios_flattened
 
-    @classmethod
-    def init(cls, config):
-        """This method will be called with test config. It purpose is to
-            prepare test environment. E.g. if you would like to test
-            performance of assing of FloatingIps here you will create 200k
-            FloatinigIps anre retun information about it to
-        """
-        return {}
-
-    @classmethod
-    def cleanup(cls):
-        """This method should free all allocated resources."""
-
     def context(self):
         """Returns the context of the current benchmark scenario.
 

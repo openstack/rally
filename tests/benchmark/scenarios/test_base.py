@@ -48,12 +48,6 @@ class ScenarioTestCase(test.TestCase):
         self.assertRaises(exceptions.NoSuchScenario,
                           base.Scenario.get_by_name, "non existing scenario")
 
-    def test_init(self):
-        self.assertEqual({}, base.Scenario.init(None))
-
-    def test_cleanup(self):
-        base.Scenario.cleanup()
-
     @mock.patch("rally.benchmark.scenarios.base.time.sleep")
     @mock.patch("rally.benchmark.scenarios.base.random.uniform")
     def test_sleep_between(self, mock_uniform, mock_sleep):
