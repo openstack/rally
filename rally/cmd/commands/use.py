@@ -63,6 +63,12 @@ class UseCommands(object):
                                                   deploy_id)
             self._update_openrc_deployment_file(deploy_id,
                                                 deploy['endpoints'])
+            print ('Updating openrc file: ~/.rally/openrc\n'
+                   'OpenStack RC file lists the required login credentials '
+                   'environment variables for the OpenStack command-line '
+                   'clients. Source the file (source ~/.rally/openrc) to make '
+                   'the login credentials available for the standard OpenStack'
+                   ' python clients.')
         except exceptions.DeploymentNotFound:
             print('Deployment %s is not found.' % deploy_id)
             sys.exit(1)
