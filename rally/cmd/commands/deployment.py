@@ -25,7 +25,7 @@ import sys
 import yaml
 
 from rally.cmd import cliutils
-from rally.cmd.commands import use as _use
+from rally.cmd.commands import use
 from rally.cmd import envutils
 from rally import db
 from rally import exceptions
@@ -44,10 +44,10 @@ class DeploymentCommands(object):
     @cliutils.args('--filename', type=str, required=False,
                    help='A path to the configuration file of the '
                    'deployment.')
-    @cliutils.args('--no-use', action='store_false', dest='use',
+    @cliutils.args('--no-use', action='store_false', dest='do_use',
                    help='Don\'t set new deployment as default for'
                         ' future operations')
-    def create(self, name, fromenv=False, filename=None, use=False):
+    def create(self, name, fromenv=False, filename=None, do_use=False):
         """Create a new deployment on the basis of configuration file.
 
         :param fromenv: boolean, read environment instead of config file
@@ -84,8 +84,8 @@ class DeploymentCommands(object):
 
         deployment = api.create_deploy(config, name)
         self.list(deployment_list=[deployment])
-        if use:
-            _use.UseCommands().deployment(deployment['uuid'])
+        if do_use:
+            use.UseCommands().deployment(deployment['uuid'])
 
     @cliutils.args('--deploy-id', dest='deploy_id', type=str, required=False,
                    help='UUID of a deployment.')
