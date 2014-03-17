@@ -16,13 +16,18 @@
 import decorator
 import os
 
+from rally import exceptions
 from rally import fileutils
 
 
-def get_global(global_key):
+def get_global(global_key, do_raise=False):
     if global_key not in os.environ:
         fileutils.load_env_file(os.path.expanduser('~/.rally/globals'))
-    return os.environ.get(global_key)
+    value = os.environ.get(global_key)
+    if not value and do_raise:
+        raise exceptions.InvalidArgumentsException('%s env is missing'
+                                                   % global_key)
+    return value
 
 
 def default_from_global(arg_name, env_name):
@@ -30,7 +35,7 @@ def default_from_global(arg_name, env_name):
         id_arg_index = f.func_code.co_varnames.index(arg_name)
         args = list(args)
         if args[id_arg_index] is None:
-            args[id_arg_index] = get_global(env_name)
+            args[id_arg_index] = get_global(env_name, do_raise=True)
         return f(*args, **kwargs)
     return decorator.decorator(default_from_global)
 
