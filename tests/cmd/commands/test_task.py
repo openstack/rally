@@ -58,6 +58,12 @@ class TaskCommandsTestCase(test.BaseTestCase):
         self.task.abort(test_uuid)
         task.api.abort_task.assert_called_once_with(test_uuid)
 
+    @mock.patch('rally.cmd.commands.task.envutils.get_global')
+    def test_abort_no_task_id(self, mock_default):
+        mock_default.side_effect = exceptions.InvalidArgumentsException
+        self.assertRaises(exceptions.InvalidArgumentsException,
+                          self.task.abort, None)
+
     def test_status(self):
         test_uuid = str(uuid.uuid4())
         value = {'task_id': "task", "status": "status"}
@@ -65,6 +71,12 @@ class TaskCommandsTestCase(test.BaseTestCase):
             mock_db.task_get = mock.MagicMock(return_value=value)
             self.task.status(test_uuid)
             mock_db.task_get.assert_called_once_with(test_uuid)
+
+    @mock.patch('rally.cmd.commands.task.envutils.get_global')
+    def test_status_no_task_id(self, mock_default):
+        mock_default.side_effect = exceptions.InvalidArgumentsException
+        self.assertRaises(exceptions.InvalidArgumentsException,
+                          self.task.status, None)
 
     @mock.patch('rally.cmd.commands.task.db')
     def test_detailed(self, mock_db):
@@ -79,6 +91,12 @@ class TaskCommandsTestCase(test.BaseTestCase):
         mock_db.task_get_detailed = mock.MagicMock(return_value=value)
         self.task.detailed(test_uuid)
         mock_db.task_get_detailed.assert_called_once_with(test_uuid)
+
+    @mock.patch('rally.cmd.commands.task.envutils.get_global')
+    def test_detailed_no_task_id(self, mock_default):
+        mock_default.side_effect = exceptions.InvalidArgumentsException
+        self.assertRaises(exceptions.InvalidArgumentsException,
+                          self.task.detailed, None)
 
     @mock.patch('rally.cmd.commands.task.db')
     def test_detailed_wrong_id(self, mock_db):
@@ -97,8 +115,13 @@ class TaskCommandsTestCase(test.BaseTestCase):
         self.task.results(test_uuid)
         mock_db.task_result_get_all_by_uuid.assert_called_once_with(test_uuid)
 
+    @mock.patch('rally.cmd.commands.task.envutils.get_global')
     @mock.patch("rally.cmd.commands.task.db")
-    def test_list(self, mock_db):
+    def test_list(self, mock_db, mock_default):
+        mock_default.side_effect = exceptions.InvalidArgumentsException
+        self.assertRaises(exceptions.InvalidArgumentsException,
+                          self.task.results, None)
+
         db_response = [
                 {'uuid': 'a',
                  'created_at': 'b',
@@ -115,7 +138,7 @@ class TaskCommandsTestCase(test.BaseTestCase):
         force = False
         with mock.patch("rally.cmd.commands.task.api") as mock_api:
             mock_api.delete_task = mock.Mock()
-            self.task.delete(task_uuid, force)
+            self.task.delete(force, task_uuid)
             mock_api.delete_task.assert_called_once_with(task_uuid,
                                                          force=force)
 

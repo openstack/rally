@@ -31,6 +31,7 @@ from oslo.config import cfg
 
 from rally.benchmark.processing import plot
 from rally.cmd import cliutils
+from rally.cmd.commands import use
 from rally.cmd import envutils
 from rally import db
 from rally import exceptions
@@ -46,8 +47,10 @@ class TaskCommands(object):
                    help='Path to the file with full configuration of task')
     @cliutils.args('--tag',
                    help='Tag for this task')
+    @cliutils.args('--no-use', action='store_false', dest='do_use',
+                   help='Don\'t set new task as default for future operations')
     @envutils.with_default_deploy_id
-    def start(self, task, deploy_id=None, tag=None):
+    def start(self, task, deploy_id=None, tag=None, do_use=False):
         """Run a benchmark task.
 
         :param task: a file with yaml/json configration
@@ -64,11 +67,14 @@ class TaskCommands(object):
                 print("-" * 80)
                 api.start_task(deploy_id, config_dict, task=task)
                 self.detailed(task_id=task['uuid'])
+                if do_use:
+                    use.UseCommands().task(task['uuid'])
             except exceptions.InvalidConfigException:
                 sys.exit(1)
 
     @cliutils.args('--task-id', type=str, dest='task_id', help='UUID of task')
-    def abort(self, task_id):
+    @envutils.with_default_task_id
+    def abort(self, task_id=None):
         """Force abort task
 
         :param task_id: Task uuid
@@ -76,7 +82,8 @@ class TaskCommands(object):
         api.abort_task(task_id)
 
     @cliutils.args('--task-id', type=str, dest='task_id', help='UUID of task')
-    def status(self, task_id):
+    @envutils.with_default_task_id
+    def status(self, task_id=None):
         """Get status of task
 
         :param task_id: Task uuid
@@ -93,7 +100,8 @@ class TaskCommands(object):
     @cliutils.args('--no-aggregation', dest='no_aggregation',
                    action='store_true',
                    help='do not aggregate atomic operation results')
-    def detailed(self, task_id, no_aggregation=False):
+    @envutils.with_default_task_id
+    def detailed(self, task_id=None, no_aggregation=False):
         """Get detailed information about task
 
         :param task_id: Task uuid
@@ -273,7 +281,8 @@ class TaskCommands(object):
     @cliutils.args('--task-id', type=str, dest='task_id', help='uuid of task')
     @cliutils.args('--pretty', type=str, help=('pretty print (pprint) '
                                                'or json print (json)'))
-    def results(self, task_id, pretty=False):
+    @envutils.with_default_task_id
+    def results(self, task_id=None, pretty=False):
         """Print raw results of task.
 
         :param task_id: Task uuid
@@ -315,7 +324,8 @@ class TaskCommands(object):
                    help='Path to output file.')
     @cliutils.args('--open', dest='open_it', action='store_true',
                    help='Open it in browser.')
-    def plot2html(self, task_id, out=None, open_it=False):
+    @envutils.with_default_task_id
+    def plot2html(self, task_id=None, out=None, open_it=False):
         results = map(lambda x: {"key": x["key"], 'result': x['data']['raw']},
                       db.task_result_get_all_by_uuid(task_id))
 
@@ -326,9 +336,10 @@ class TaskCommands(object):
         if open_it:
             webbrowser.open_new_tab("file://" + os.path.realpath(output_file))
 
-    @cliutils.args('--task-id', type=str, dest='task_id', help='uuid of task')
     @cliutils.args('--force', action='store_true', help='force delete')
-    def delete(self, task_id, force):
+    @cliutils.args('--task-id', type=str, dest='task_id', help='uuid of task')
+    @envutils.with_default_task_id
+    def delete(self, force, task_id=None):
         """Delete a specific task and related results.
 
         :param task_id: Task uuid

@@ -41,3 +41,4 @@ def default_from_global(arg_name, env_name):
 
 
 with_default_deploy_id = default_from_global('deploy_id', 'RALLY_DEPLOYMENT')
+with_default_task_id = default_from_global('task_id', 'RALLY_TASK')

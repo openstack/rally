@@ -43,3 +43,23 @@ class EnvUtilsTestCase(test.TestCase):
         self.assertEqual(None, envutils.get_global('RALLY_DEPLOYMENT'))
         mock_file.assert_called_once_with(os.path.expanduser(
             '~/.rally/globals'))
+
+    @mock.patch.dict(os.environ, values={'RALLY_TASK': 'my_task_id'},
+                     clear=True)
+    def test_get_task_id_in_env(self):
+        self.assertEqual('my_task_id', envutils.get_global('RALLY_TASK'))
+
+    @mock.patch.dict(os.environ, values={}, clear=True)
+    @mock.patch('rally.cmd.envutils.fileutils.load_env_file')
+    def test_get_task_id_with_exception(self, mock_file):
+        self.assertRaises(exceptions.InvalidArgumentsException,
+                          envutils.get_global, 'RALLY_TASK', True)
+        mock_file.assert_called_once_with(os.path.expanduser(
+            '~/.rally/globals'))
+
+    @mock.patch.dict(os.environ, values={}, clear=True)
+    @mock.patch('rally.cmd.envutils.fileutils.load_env_file')
+    def test_get_task_id_with_none(self, mock_file):
+        self.assertEqual(None, envutils.get_global('RALLY_TASK'))
+        mock_file.assert_called_once_with(os.path.expanduser(
+            '~/.rally/globals'))
