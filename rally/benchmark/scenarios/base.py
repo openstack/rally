@@ -27,20 +27,12 @@ class Scenario(object):
        You should create subclass of this class. And you test scenarios will
        be auto discoverable and you will be able to specify it in test config.
     """
-    registred = False
-
     def __init__(self, context=None, admin_clients=None, clients=None):
         self._context = context
         self._admin_clients = admin_clients
         self._clients = clients
         self._idle_time = 0
         self._atomic_actions_time = []
-
-    @staticmethod
-    def register():
-        if not Scenario.registred:
-            utils.import_modules_from_package("rally.benchmark.scenarios")
-            Scenario.registred = True
 
     @staticmethod
     def get_by_name(name):
@@ -59,7 +51,6 @@ class Scenario(object):
 
         :returns: List of strings
         """
-        utils.import_modules_from_package("rally.benchmark.scenarios")
         benchmark_scenarios = [
             ["%s.%s" % (scenario.__name__, method)
              for method in dir(scenario) if not method.startswith("_")]

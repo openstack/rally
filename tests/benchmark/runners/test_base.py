@@ -32,14 +32,6 @@ class ScenarioRunnerTestCase(test.TestCase):
         endpoint_dicts[0]["permission"] = consts.EndpointPermission.ADMIN
         self.fake_endpoints = endpoint_dicts
 
-    @mock.patch("rally.benchmark.runners.base.base")
-    @mock.patch("rally.benchmark.runners.base.osclients")
-    def test_init_calls_register(self, mock_osclients, mock_base):
-        mock_osclients.Clients.return_value = fakes.FakeClients()
-        base.ScenarioRunner.get_runner(mock.MagicMock(), self.fake_endpoints,
-                                       "continuous")
-        self.assertEqual(mock_base.mock_calls, [mock.call.Scenario.register()])
-
     @mock.patch("rally.benchmark.runners.base.jsonschema.validate")
     @mock.patch("rally.benchmark.runners.base.ScenarioRunner._get_cls")
     def test_validate(self, mock_get_cls, mock_validate):

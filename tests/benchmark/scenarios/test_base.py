@@ -25,16 +25,6 @@ from tests import test
 
 class ScenarioTestCase(test.TestCase):
 
-    @mock.patch("rally.benchmark.scenarios.base.utils")
-    def test_register(self, mock_utils):
-        base.Scenario.registred = False
-        base.Scenario.register()
-        base.Scenario.register()
-        expected = [
-            mock.call.import_modules_from_package("rally.benchmark.scenarios")
-        ]
-        self.assertEqual(mock_utils.mock_calls, expected)
-
     def test_get_by_name(self):
 
         class Scenario1(base.Scenario):

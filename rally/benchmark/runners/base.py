@@ -77,8 +77,6 @@ class ScenarioRunner(object):
     CONFIG_SCHEMA = {}
 
     def __init__(self, task, endpoints):
-        base.Scenario.register()
-
         self.task = task
         self.endpoints = endpoints
         # NOTE(msdubov): Passing predefined user endpoints hasn't been
