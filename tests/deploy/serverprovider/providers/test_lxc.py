@@ -17,12 +17,12 @@ import jsonschema
 import mock
 import netaddr
 
+from rally.deploy.serverprovider.providers import lxc
 from rally import exceptions
 from rally.openstack.common import test
-from rally.serverprovider.providers import lxc
 
 
-MOD_NAME = 'rally.serverprovider.providers.lxc.'
+MOD_NAME = 'rally.deploy.serverprovider.providers.lxc.'
 
 
 class HelperFunctionsTestCase(test.BaseTestCase):
@@ -33,7 +33,7 @@ class HelperFunctionsTestCase(test.BaseTestCase):
         self.assertEqual('fake_script', script)
         path = m_open.mock_calls[0][1][0]
         mode = m_open.mock_calls[0][1][1]
-        self.assertTrue(path.endswith('rally/serverprovider/providers'
+        self.assertTrue(path.endswith('rally/deploy/serverprovider/providers'
                                       '/lxc/script.sh'))
         self.assertEqual('rb', mode)
 

@@ -15,8 +15,8 @@
 
 import jsonschema
 
-from rally import serverprovider
-from rally.serverprovider.providers import dummy
+from rally.deploy import serverprovider
+from rally.deploy.serverprovider.providers import dummy
 from tests import test
 
 

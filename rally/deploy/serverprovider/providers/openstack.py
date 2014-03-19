@@ -19,12 +19,12 @@ import time
 import urllib2
 
 from rally.benchmark import utils as benchmark_utils
+from rally.deploy.serverprovider import provider
 from rally import exceptions
 from rally.objects import endpoint
 from rally.openstack.common.gettextutils import _
 from rally.openstack.common import log as logging
 from rally import osclients
-from rally.serverprovider import provider
 
 
 LOG = logging.getLogger(__name__)

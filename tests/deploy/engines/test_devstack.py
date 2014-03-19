@@ -73,7 +73,7 @@ class DevstackEngineTestCase(test.BaseTestCase):
     @mock.patch('rally.deploy.engine.EngineFactory.get_provider')
     @mock.patch('rally.deploy.engines.devstack.get_updated_server')
     @mock.patch('rally.deploy.engines.devstack.get_script')
-    @mock.patch('rally.serverprovider.provider.Server')
+    @mock.patch('rally.deploy.serverprovider.provider.Server')
     @mock.patch('rally.deploy.engines.devstack.objects.Endpoint')
     def test_deploy(self, m_endpoint, m_server, m_gs, m_gus, m_gp):
         m_gp.return_value = fake_provider = mock.Mock()

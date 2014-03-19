@@ -20,10 +20,10 @@ The Server Provider Layer
 
 Represents a pluggable mechanism of providers of servers for deployments.
 
-The :mod:`rally.serverprovider.provider` Module
+The :mod:`rally.deploy.serverprovider.provider` Module
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. automodule:: rally.serverprovider.provider
+.. automodule:: rally.deploy.serverprovider.provider
     :members:
     :undoc-members:
     :show-inheritance:
@@ -31,10 +31,10 @@ The :mod:`rally.serverprovider.provider` Module
 The Dummy Server Provider
 -------------------------
 
-The :mod:`rally.serverprovider.providers.dummy` Module
+The :mod:`rally.deploy.serverprovider.providers.dummy` Module
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. automodule:: rally.serverprovider.providers.dummy
+.. automodule:: rally.deploy.serverprovider.providers.dummy
     :members:
     :undoc-members:
     :show-inheritance:
@@ -42,10 +42,10 @@ The :mod:`rally.serverprovider.providers.dummy` Module
 The OpenStack Server Provider
 -----------------------------
 
-The :mod:`rally.serverprovider.providers.openstack` Module
+The :mod:`rally.deploy.serverprovider.providers.openstack` Module
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. automodule:: rally.serverprovider.providers.openstack
+.. automodule:: rally.deploy.serverprovider.providers.openstack
     :members:
     :undoc-members:
     :show-inheritance:
@@ -53,10 +53,10 @@ The :mod:`rally.serverprovider.providers.openstack` Module
 The LXC Server Provider
 -----------------------
 
-The :mod:`rally.serverprovider.providers.lxc` Module
+The :mod:`rally.deploy.serverprovider.providers.lxc` Module
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. automodule:: rally.serverprovider.providers.lxc
+.. automodule:: rally.deploy.serverprovider.providers.lxc
     :members:
     :undoc-members:
     :show-inheritance:
@@ -64,10 +64,10 @@ The :mod:`rally.serverprovider.providers.lxc` Module
 The Virsh Server Provider
 -------------------------
 
-The :mod:`rally.serverprovider.providers.virsh` Module
+The :mod:`rally.deploy.serverprovider.providers.virsh` Module
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. automodule:: rally.serverprovider.providers.virsh
+.. automodule:: rally.deploy.serverprovider.providers.virsh
     :members:
     :undoc-members:
     :show-inheritance:
