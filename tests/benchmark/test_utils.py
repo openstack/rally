@@ -66,6 +66,14 @@ class BenchmarkUtilsTestCase(test.TestCase):
         self.assertRaises(exceptions.GetResourceFailure,
                           get_from_manager, resource)
 
+    def test_get_from_manager_in_deleted_state(self):
+        get_from_manager = utils.get_from_manager()
+        manager = fakes.FakeManager()
+        resource = fakes.FakeResource(manager=manager, status="DELETED")
+        manager._cache(resource)
+        self.assertRaises(exceptions.GetResourceNotFound,
+                          get_from_manager, resource)
+
     def test_get_from_manager_not_found(self):
         get_from_manager = utils.get_from_manager()
         manager = mock.MagicMock()

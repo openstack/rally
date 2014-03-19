@@ -54,14 +54,12 @@ class RallyException(Exception):
         if not message:
             try:
                 message = self.msg_fmt % kwargs
-
-            except Exception:
+            except KeyError:
                 exc_info = sys.exc_info()
                 # kwargs doesn't match a variable in the message
                 # log the issue and the kwargs
-                LOG.exception(_('Exception in string format operation'))
-                for name, value in kwargs.iteritems():
-                    LOG.error("%s: %s" % (name, value))
+                msg = "kwargs don't match in string format operation: %s"
+                LOG.debug(msg % kwargs, exc_info=exc_info)
 
                 if CONF.fatal_exception_format_errors:
                     raise exc_info[0], exc_info[1], exc_info[2]
@@ -163,15 +161,15 @@ class TimeoutException(RallyException):
 
 
 class GetResourceFailure(RallyException):
-    msg_fmt = _("Failed to get the resource: '`%(status)s`'")
+    msg_fmt = _("Failed to get the resource %(resource)s: %(err)s")
 
 
 class GetResourceNotFound(GetResourceFailure):
-    msg_fmt = _("Resource not found: `%(status)s`")
+    msg_fmt = _("Resource %(resource)s is not found.")
 
 
 class GetResourceErrorStatus(GetResourceFailure):
-    msg_fmt = _("Resouce has invalid status: `%(status)s`")
+    msg_fmt = _("Resouce %(resource)s has %(status)s status: %(fault)s")
 
 
 class SSHError(RallyException):
