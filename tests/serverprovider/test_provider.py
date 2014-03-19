@@ -74,12 +74,6 @@ class ProviderTestCase(test.TestCase):
     def test_vm_prvoider_factory_is_abstract(self):
         self.assertRaises(TypeError, ProviderFactory)
 
-    def test_image_methods_raise_not_implemented(self):
-        provider = FAKE_PROVIDERS[0](None, None)
-        self.assertRaises(NotImplementedError,
-                          provider.upload_image, None, None, None)
-        self.assertRaises(NotImplementedError, provider.destroy_image, None)
-
 
 class ServerTestCase(test.TestCase):
     def setUp(self):
@@ -99,15 +93,6 @@ class ServerTestCase(test.TestCase):
         server_two = serverprovider.Server.from_credentials(creds)
         for k in self.keys:
             self.assertEqual(getattr(server_one, k), getattr(server_two, k))
-
-
-class ImageDTOTestCase(test.TestCase):
-    def test_init_image_dto(self):
-        vals = ['uuid', 'qcow2', 'bare']
-        keys = ['uuid', 'image_format', 'container_format']
-        server = serverprovider.ImageDTO(*vals)
-        for k, v in dict(zip(keys, vals)).iteritems():
-            self.assertEqual(getattr(server, k), v)
 
 
 class ResourceManagerTestCase(test.TestCase):

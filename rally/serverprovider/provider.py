@@ -53,17 +53,6 @@ class Server(utils.ImmutableMixin):
                    port=creds['port'], password=creds['password'])
 
 
-class ImageDTO(utils.ImmutableMixin):
-    """Represent information about created image.
-    ProviderFactory.upload_image should return instance of this class.
-    """
-    def __init__(self, uuid, image_format, container_format):
-        self.uuid = uuid
-        self.image_format = image_format
-        self.container_format = container_format
-        super(ImageDTO, self).__init__()
-
-
 class ResourceManager(object):
     """Supervise resources of a deployment.
 
@@ -142,24 +131,6 @@ class ProviderFactory(object):
     def get_available_providers():
         """Returns list of names of available engines."""
         return [e.__name__ for e in utils.itersubclasses(ProviderFactory)]
-
-    # TODO(akscram): Unused method.
-    def upload_image(self, file_path, disk_format, container_format):
-        """Upload image that could be used in creating new vms.
-        :file_path: Path to the file with image
-        :disk_format: qcow, qcow2, iso and so on..
-        :container_format: bare, ovf, aki and so on..
-            For more details about formats take a look at:
-            http://docs.openstack.org/developer/glance/formats.html
-
-        :returns: ImageDTO instance
-        """
-        raise NotImplementedError()
-
-    # TODO(akscram): Unused method.
-    def destroy_image(self, image_uuid):
-        """Destroy image by image indentificator."""
-        raise NotImplementedError()
 
     @abc.abstractmethod
     def create_servers(self, image_uuid=None, type_id=None, amount=1):
