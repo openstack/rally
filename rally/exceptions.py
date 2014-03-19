@@ -88,6 +88,11 @@ class InvalidConfigException(RallyException):
     msg_fmt = _("This config has invalid schema: `%(message)s`")
 
 
+class InvalidRunnerResult(RallyException):
+    msg_fmt = _("Type of result of `%(name)s` runner should be"
+                " `base.ScenarioRunnerResult`. Got: `%(results_type)s`")
+
+
 class InvalidTaskException(InvalidConfigException):
     msg_fmt = _("This config is invalid: `%(message)s`")
 

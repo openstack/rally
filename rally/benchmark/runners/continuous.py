@@ -137,11 +137,13 @@ class ContinuousScenarioRunner(base.ScenarioRunner):
         # amount of times.
         if "times" in config:
             times = config["times"]
-            return self._run_scenario_continuously_for_times(
+            results = self._run_scenario_continuously_for_times(
                 cls, method_name, context, args, times, concurrent, timeout)
         # Continiously run a scenario as many times as needed
         # to fill up the given period of time.
         elif "duration" in config:
             duration = config["duration"]
-            return self._run_scenario_continuously_for_duration(
+            results = self._run_scenario_continuously_for_duration(
                 cls, method_name, context, args, duration, concurrent, timeout)
+
+        return base.ScenarioRunnerResult(results)

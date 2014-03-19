@@ -122,7 +122,7 @@ class ContinuousScenarioRunnerTestCase(test.TestCase):
                                                 "continuous")
 
         runner._run_scenario_continuously_for_times = \
-            mock.MagicMock(return_value="times")
+            mock.MagicMock(return_value=[{"time": 1}])
 
         mock_base.Scenario.get_by_name = \
             mock.MagicMock(return_value=FakeScenario)
@@ -132,7 +132,7 @@ class ContinuousScenarioRunnerTestCase(test.TestCase):
                                       {"a": 1},
                                       {"times": 2, "active_users": 3,
                                        "timeout": 1})
-        self.assertEqual(result, "times")
+        self.assertEqual(result, [{"time": 1}])
         runner._run_scenario_continuously_for_times.assert_called_once_with(
                                     FakeScenario, "do_it", fakecontext,
                                     {"a": 1}, 2, 3, 1)
@@ -149,7 +149,7 @@ class ContinuousScenarioRunnerTestCase(test.TestCase):
                                                 self.fake_endpoints,
                                                 "continuous")
         runner._run_scenario_continuously_for_duration = \
-            mock.MagicMock(return_value="duration")
+            mock.MagicMock(return_value=[{"time": 1}])
 
         mock_base.Scenario.get_by_name = \
             mock.MagicMock(return_value=FakeScenario)
@@ -159,7 +159,7 @@ class ContinuousScenarioRunnerTestCase(test.TestCase):
                                       {"a": 1},
                                       {"duration": 2, "active_users": 3,
                                        "timeout": 1})
-        self.assertEqual(result, "duration")
+        self.assertEqual(result, [{"time": 1}])
         runner._run_scenario_continuously_for_duration.\
             assert_called_once_with(FakeScenario, "do_it", fakecontext,
                                     {"a": 1}, 2, 3, 1)

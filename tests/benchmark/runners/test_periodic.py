@@ -52,6 +52,7 @@ class PeriodicScenarioRunnerTestCase(test.TestCase):
     def test_run_scenario(self, mock_osclients, mock_sleep,
                           mock_run_scenario_once):
         mock_osclients.Clients.return_value = fakes.FakeClients()
+        mock_run_scenario_once.return_value = {}
         runner = periodic.PeriodicScenarioRunner(mock.MagicMock(),
                                                  self.fake_endpoints)
         times = 3

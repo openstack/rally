@@ -45,9 +45,10 @@ def _run_scenario_once(args):
             clients=osclients.Clients(user["endpoint"]))
 
     try:
-        scenario_output = None
+        scenario_output = {}
         with rutils.Timer() as timer:
-            scenario_output = getattr(scenario, method_name)(**kwargs)
+            scenario_output = getattr(scenario,
+                                      method_name)(**kwargs) or {}
         error = None
     except Exception as e:
         error = utils.format_exc(e)
@@ -62,6 +63,60 @@ def _run_scenario_once(args):
                 "error": error,
                 "scenario_output": scenario_output,
                 "atomic_actions_time": scenario.atomic_actions_time()}
+
+
+class ScenarioRunnerResult(list):
+    """Class for all scenario runners' result.
+
+    """
+
+    RESULT_SCHEMA = {
+        "type": "array",
+        "$schema": "http://json-schema.org/draft-03/schema",
+        "items": {
+            "type": "object",
+            "properties": {
+                "time": {
+                    "type": "number"
+                },
+                "idle_time": {
+                    "type": "number"
+                },
+                "scenario_output": {
+                    "type": "object",
+                    "properties": {
+                        "data": {
+                            "type": "object",
+                            "patternProperties": {
+                                ".*": {"type": "number"}
+                            }
+                        },
+                        "error": {
+                            "type": "string"
+                        },
+                    },
+                    "additionalProperties": False
+                },
+                "atomic_actions_time": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "action": {"type": "string"},
+                            "duration": {"type": "number"}
+                        },
+                        "additionalProperties": False
+                    }
+                },
+                "error": {},
+            },
+            "additionalProperties": False
+        }
+    }
+
+    def __init__(self, result_list):
+        super(ScenarioRunnerResult, self).__init__(result_list)
+        jsonschema.validate(result_list, self.RESULT_SCHEMA)
 
 
 class ScenarioRunner(object):
@@ -156,6 +211,14 @@ class ScenarioRunner(object):
 
     def run(self, name, kwargs):
         if self.admin_user:
-            return self._run_as_admin(name, kwargs)
+            results = self._run_as_admin(name, kwargs)
         else:
-            return self._run_as_non_admin(name, kwargs)
+            results = self._run_as_non_admin(name, kwargs)
+
+        if not isinstance(results, ScenarioRunnerResult):
+            name = self.__execution_type__
+            results_type = type(results)
+            raise exceptions.InvalidRunnerResult(name=name,
+                                                 results_type=results_type)
+
+        return results

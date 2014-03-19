@@ -13,14 +13,50 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import jsonschema
 import mock
 import multiprocessing
 
 from rally.benchmark.runners import base
 from rally.benchmark.runners import continuous
 from rally import consts
+from rally import exceptions
 from tests import fakes
 from tests import test
+
+
+class ScenarioRunnerResultTestCase(test.TestCase):
+
+    def test_validate(self):
+        config = [
+            {
+                "time": 1.0,
+                "idle_time": 1.0,
+                "scenario_output": {
+                    "data": {"test": 1.0},
+                    "error": "test error string 1"
+                },
+                "atomic_actions_time": [{"action": "test1", "duration": 1.0}],
+                "error": "test1"
+            },
+            {
+                "time": 2.0,
+                "idle_time": 2.0,
+                "scenario_output": {
+                    "data": {"test": 2.0},
+                    "error": "test error string 2"
+                },
+                "atomic_actions_time": [{"action": "test2", "duration": 2.0}],
+                "error": "test2"
+            }
+        ]
+
+        self.assertEqual(config, base.ScenarioRunnerResult(config))
+
+    def test_validate_failed(self):
+        config = [{"a": 10}]
+        self.assertRaises(jsonschema.ValidationError,
+                          base.ScenarioRunnerResult, config)
 
 
 class ScenarioRunnerTestCase(test.TestCase):
@@ -68,7 +104,7 @@ class ScenarioRunnerTestCase(test.TestCase):
                                          "active_users": active_users,
                                          "timeout": 2})
         expected = [{"time": 10, "idle_time": 0, "error": None,
-                     "scenario_output": None, "atomic_actions_time": []}
+                     "scenario_output": {}, "atomic_actions_time": []}
                     for i in range(times)]
         self.assertEqual(results, expected)
 
@@ -78,7 +114,7 @@ class ScenarioRunnerTestCase(test.TestCase):
                                          "active_users": active_users,
                                          "timeout": 2})
         expected = [{"time": 10, "idle_time": 0, "error": None,
-                     "scenario_output": None, "atomic_actions_time": []}
+                     "scenario_output": {}, "atomic_actions_time": []}
                     for i in range(active_users)]
         self.assertEqual(results, expected)
 
@@ -164,3 +200,10 @@ class ScenarioRunnerTestCase(test.TestCase):
             self.assertEqual(r['time'], 10)
             self.assertEqual(r['error'][:2],
                              [str(Exception), "Something went wrong"])
+
+    @mock.patch("rally.benchmark.runners.base.ScenarioRunner._run_as_admin")
+    def test_run_scenario_runner_results_exception(self, mock_run_method):
+        runner = continuous.ContinuousScenarioRunner(mock.MagicMock(),
+                                                     self.fake_endpoints)
+        self.assertRaises(exceptions.InvalidRunnerResult,
+                          runner.run, mock.MagicMock(), mock.MagicMock())

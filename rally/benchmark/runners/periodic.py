@@ -90,4 +90,4 @@ class PeriodicScenarioRunner(base.ScenarioRunner):
                           "error": utils.format_exc(e)}
             results.append(result)
 
-        return results
+        return base.ScenarioRunnerResult(results)
