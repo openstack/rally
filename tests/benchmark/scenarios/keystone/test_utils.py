@@ -102,3 +102,23 @@ class KeystoneScenarioTestCase(test.TestCase):
         fake_keystone.tenants.create.assert_called_once_with(name)
         self._test_atomic_action_timer(scenario.atomic_actions_time(),
                                        'keystone.create_tenant')
+
+    @mock.patch(UTILS + "generate_keystone_name")
+    def test_tenant_create_with_users(self, mock_gen_name):
+        name = "abc"
+        mock_gen_name.return_value = name
+
+        tenant = mock.MagicMock()
+        fake_keystone = fakes.FakeKeystoneClient()
+        fake_keystone.users.create = mock.MagicMock()
+        fake_clients = fakes.FakeClients()
+        fake_clients._keystone = fake_keystone
+        scenario = utils.KeystoneScenario(admin_clients=fake_clients)
+
+        scenario._users_create(tenant, 10, 1)
+
+        fake_keystone.users.create.assert_called_once_with(name, name,
+                                                           name + "@rally.me",
+                                                           tenant_id=tenant.id)
+        self._test_atomic_action_timer(scenario.atomic_actions_time(),
+                                       'keystone.create_users')
