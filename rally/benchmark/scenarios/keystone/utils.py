@@ -43,7 +43,7 @@ class KeystoneScenario(base.Scenario):
                      **kwargs):
         """Creates keystone user with random name.
 
-        :param name_length: length of generated (ranodm) part of name
+        :param name_length: length of generated (random) part of name
         :param **kwargs: Other optional parameters to create users like
                         "tenant_id", "enabled".
         :return: keystone user instance
@@ -61,3 +61,14 @@ class KeystoneScenario(base.Scenario):
     def _resource_delete(self, resource):
         """"Delete keystone resource."""
         resource.delete()
+
+    @scenario_utils.atomic_action_timer('keystone.create_tenant')
+    def _tenant_create(self, name_length=10, **kwargs):
+        """Creates keystone tenant with random name.
+
+        :param name_length: length of generated (random) part of name
+        :param **kwargs: Other optional parameters
+        :return: keystone tenant instance
+        """
+        name = generate_keystone_name(length=name_length)
+        return self.admin_clients("keystone").tenants.create(name, **kwargs)

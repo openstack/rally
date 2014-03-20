@@ -83,3 +83,22 @@ class KeystoneScenarioTestCase(test.TestCase):
         resource.delete.assert_called_once_with()
         self._test_atomic_action_timer(scenario.atomic_actions_time(),
                                        'keystone.delete_resource')
+
+    @mock.patch(UTILS + "generate_keystone_name")
+    def test_tenant_create(self, mock_gen_name):
+        name = "abc"
+        mock_gen_name.return_value = name
+
+        tenant = {}
+        fake_keystone = fakes.FakeKeystoneClient()
+        fake_keystone.tenants.create = mock.MagicMock(return_value=tenant)
+        fake_clients = fakes.FakeClients()
+        fake_clients._keystone = fake_keystone
+        scenario = utils.KeystoneScenario(admin_clients=fake_clients)
+
+        result = scenario._tenant_create()
+
+        self.assertEqual(tenant, result)
+        fake_keystone.tenants.create.assert_called_once_with(name)
+        self._test_atomic_action_timer(scenario.atomic_actions_time(),
+                                       'keystone.create_tenant')

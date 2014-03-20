@@ -24,3 +24,6 @@ class KeystoneBasic(kutils.KeystoneScenario):
     def create_delete_user(self, name_length=10, **kwargs):
         user = self._user_create(name_length=name_length, **kwargs)
         self._resource_delete(user)
+
+    def create_tenant(self, name_length=10, **kwargs):
+        self._tenant_create(name_length=name_length, **kwargs)

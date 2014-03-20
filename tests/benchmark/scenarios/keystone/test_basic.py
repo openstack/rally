@@ -53,3 +53,12 @@ class KeystoneBasicTestCase(test.TestCase):
                                                       email="abcd",
                                                       **{"enabled": True})
         scenario._resource_delete.assert_called_once_with(create_result)
+
+    @mock.patch(KEYSTONE_UTILS + "generate_keystone_name")
+    def test_create_tenant(self, mock_gen_name):
+        scenario = basic.KeystoneBasic()
+        mock_gen_name.return_value = "teeeest"
+        scenario._tenant_create = mock.MagicMock()
+        scenario.create_tenant(name_length=20, **{"enabled": True})
+        scenario._tenant_create.assert_called_once_with(name_length=20,
+                                                        **{"enabled": True})

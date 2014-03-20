@@ -1,0 +1,14 @@
+{
+    "KeystoneBasic.create_tenant": [
+        {
+            "args": {
+                "name_length": 10
+            },
+            "runner":{
+                "type": "continuous",
+                "times": 100,
+                "active_users": 10
+            }
+        }
+    ]
+}
