@@ -59,18 +59,18 @@ class TempestTestCase(test.TestCase):
         with open(self.tempest_dir + 'config.ini') as config_file:
             self.assertEqual(test_config, config_file.read() % self.conf_args)
 
-    @mock.patch('tempfile.mkstemp')
-    @mock.patch('rally.verification.verifiers.tempest.tempest.os')
-    def test__write_config(self, mock_os, mock_tempfile):
+    @mock.patch('__builtin__.open')
+    def test__write_config(self, mock_open):
         conf = mock.Mock()
-        mock_tempfile.return_value = ['fake_fd', 'fake_path']
-        os_calls = [mock.call.write('fake_fd', conf),
-                    mock.call.close('fake_fd')]
-
-        conf_path = self.verifier._write_config(conf)
-
-        self.assertEqual(os_calls, mock_os.mock_calls)
-        self.assertEqual('fake_path', conf_path)
+        mock_file = mock.MagicMock()
+        mock_open.return_value = mock_file
+        fake_conf_path = os.path.join(self.verifier.tempest_path,
+                                      'tempest.conf')
+        returned_conf_path = self.verifier._write_config(conf)
+        mock_open.assert_called_once_with(fake_conf_path, 'w+')
+        mock_file.write.assert_called_once_whith(conf)
+        mock_file.close.assert_called_once()
+        self.assertEqual(fake_conf_path, returned_conf_path)
 
     @mock.patch('os.path.exists')
     def test_is_installed(self, mock_exists):
@@ -112,12 +112,10 @@ class TempestTestCase(test.TestCase):
         mock_shutil.rmtree.assert_called_once_with(self.verifier.tempest_path)
 
     @mock.patch('shutil.rmtree')
-    @mock.patch('os.unlink')
     @mock.patch(TEMPEST_PATH + '.subprocess')
-    def test__run(self, mock_sp, mock_unlink, mock_rmtree):
+    def test__run(self, mock_sp, mock_rmtree):
         self.verifier._run('fake_conf_path', 'smoke', None)
 
-        mock_unlink.assert_called_once_with('fake_conf_path')
         mock_sp.check_call.assert_called_once_with(
             ['/usr/bin/env', 'bash', os.path.join(self.verifier.tempest_path,
                                                   'run_tempest.sh'),
