@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import jsonschema
 import mock
 
 from rally.benchmark.runners import base
@@ -30,6 +31,20 @@ class PeriodicScenarioRunnerTestCase(test.TestCase):
         endpoint_dicts = [dict(zip(admin_keys, admin_keys))]
         endpoint_dicts[0]["permission"] = consts.EndpointPermission.ADMIN
         self.fake_endpoints = endpoint_dicts
+
+    def test_validate(self):
+        config = {
+            "type": "periodic",
+            "times": 1,
+            "period": 0.000001,
+            "timeout": 1
+        }
+        periodic.PeriodicScenarioRunner.validate(config)
+
+    def test_validate_failed(self):
+        config = {"type": "periodic", "a": 10}
+        self.assertRaises(jsonschema.ValidationError,
+                          periodic.PeriodicScenarioRunner.validate, config)
 
     @mock.patch("rally.benchmark.runners.base._run_scenario_once")
     @mock.patch("rally.benchmark.runners.periodic.time.sleep")
