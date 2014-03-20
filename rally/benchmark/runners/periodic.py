@@ -43,14 +43,16 @@ class PeriodicScenarioRunner(base.ScenarioRunner):
         "type": "object",
         "$schema": "http://json-schema.org/draft-03/schema",
         "properties": {
-            "type": "string",
+            "type": {
+                "type": "string"
+            },
             "times": {
-                "type": "number",
+                "type": "integer",
                 "minimum": 1
             },
             "period": {
-                "type": "float",
-                "minimum": "0.000001"
+                "type": "number",
+                "minimum": 0.000001
             },
             "timeout": {
                 "type": "number",

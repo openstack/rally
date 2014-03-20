@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import jsonschema
 import mock
 
 from rally.benchmark.runners import base
@@ -30,6 +31,21 @@ class ContinuousScenarioRunnerTestCase(test.TestCase):
         endpoint_dicts = [dict(zip(admin_keys, admin_keys))]
         endpoint_dicts[0]["permission"] = consts.EndpointPermission.ADMIN
         self.fake_endpoints = endpoint_dicts
+
+    def test_validate(self):
+        config = {
+            "type": "continuous",
+            "active_users": 1,
+            "times": 1,
+            "duration": 1.0,
+            "timeout": 1
+        }
+        continuous.ContinuousScenarioRunner.validate(config)
+
+    def test_validate_failed(self):
+        config = {"type": "continuous", "a": 10}
+        self.assertRaises(jsonschema.ValidationError,
+                          continuous.ContinuousScenarioRunner.validate, config)
 
     @mock.patch("rally.benchmark.runners.continuous.multiprocessing")
     @mock.patch("rally.benchmark.runners.base.osclients")

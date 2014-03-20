@@ -50,15 +50,15 @@ class ContinuousScenarioRunner(base.ScenarioRunner):
                 "type": "string"
             },
             "active_users": {
-                "type": "number",
+                "type": "integer",
                 "minimum": 1
             },
             "times": {
-                "type": "number",
+                "type": "integer",
                 "minimum": 1
             },
             "duration": {
-                "type": "float",
+                "type": "number",
                 "minimum": 1.0
             },
             "timeout": {
