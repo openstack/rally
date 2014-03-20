@@ -19,7 +19,7 @@ import subprocess
 import time
 import uuid
 
-from rally.serverprovider import provider
+from rally.deploy.serverprovider import provider
 
 
 class VirshProvider(provider.ProviderFactory):

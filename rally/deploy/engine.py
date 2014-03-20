@@ -19,10 +19,10 @@ import jsonschema
 import six
 
 from rally import consts
+from rally.deploy.serverprovider import provider
 from rally import exceptions
 from rally.openstack.common.gettextutils import _
 from rally.openstack.common import log as logging
-from rally.serverprovider import provider
 from rally import utils
 
 

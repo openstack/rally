@@ -14,7 +14,7 @@
 #    under the License.
 
 
-from rally.serverprovider import provider
+from rally.deploy.serverprovider import provider
 
 
 class DummyProvider(provider.ProviderFactory):

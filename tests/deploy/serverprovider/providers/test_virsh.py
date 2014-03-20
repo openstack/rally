@@ -18,9 +18,9 @@ import mock
 import netaddr
 import os
 
+from rally.deploy.serverprovider.providers import virsh
 from rally.openstack.common.fixture import mockpatch
 from rally.openstack.common import test
-from rally.serverprovider.providers import virsh
 
 
 class VirshProviderTestCase(test.BaseTestCase):
@@ -37,8 +37,9 @@ class VirshProviderTestCase(test.BaseTestCase):
         self.provider = virsh.VirshProvider(self.deployment, self.config)
         self.useFixture(mockpatch.PatchObject(self.provider, 'resources'))
 
-    @mock.patch('rally.serverprovider.providers.virsh.netaddr.IPAddress')
-    @mock.patch('rally.serverprovider.providers.virsh.subprocess')
+    @mock.patch(
+        'rally.deploy.serverprovider.providers.virsh.netaddr.IPAddress')
+    @mock.patch('rally.deploy.serverprovider.providers.virsh.subprocess')
     @mock.patch('time.sleep')
     def test_create_vm(self, mock_sleep, mock_subp, mock_ipaddress):
         mock_subp.check_output.return_value = '10.0.0.1'
@@ -67,8 +68,9 @@ class VirshProviderTestCase(test.BaseTestCase):
             'name': 'name',
         })
 
-    @mock.patch('rally.serverprovider.providers.virsh.netaddr.IPAddress')
-    @mock.patch('rally.serverprovider.providers.virsh.subprocess')
+    @mock.patch(
+        'rally.deploy.serverprovider.providers.virsh.netaddr.IPAddress')
+    @mock.patch('rally.deploy.serverprovider.providers.virsh.subprocess')
     @mock.patch('time.sleep')
     def test_create_vm_ip_failed(self, mock_sleep, mock_subp, mock_ipaddress):
         mock_ipaddress.side_effect = netaddr.core.AddrFormatError
@@ -79,7 +81,7 @@ class VirshProviderTestCase(test.BaseTestCase):
         ])
         self.assertEqual(server.host, 'None')
 
-    @mock.patch('rally.serverprovider.providers.virsh.subprocess')
+    @mock.patch('rally.deploy.serverprovider.providers.virsh.subprocess')
     def test_destroy_vm(self, mock_subp):
         self.provider.destroy_vm('uuid')
         mock_subp.assert_has_calls([
@@ -90,7 +92,7 @@ class VirshProviderTestCase(test.BaseTestCase):
                                  shell=True),
         ])
 
-    @mock.patch('rally.serverprovider.providers.virsh.uuid')
+    @mock.patch('rally.deploy.serverprovider.providers.virsh.uuid')
     @mock.patch.object(virsh.VirshProvider, 'create_vm')
     def test_create_servers(self, mock_create, mock_uuid):
         mock_uuid.uuid4.side_effect = ['1', '2', '3']

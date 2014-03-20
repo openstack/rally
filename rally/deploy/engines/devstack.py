@@ -17,10 +17,10 @@ import os
 
 from rally import consts
 from rally.deploy import engine
+from rally.deploy.serverprovider import provider
 from rally import objects
 from rally.openstack.common.gettextutils import _
 from rally.openstack.common import log as logging
-from rally.serverprovider import provider
 from rally import utils
 
 
