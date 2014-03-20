@@ -145,7 +145,7 @@ class ImportModulesTestCase(test.TestCase):
 
 class LogTestCase(test.TestCase):
 
-    def test_log_method(self):
+    def test_log_task_wrapper(self):
         mock_log = mock.MagicMock()
         msg = "test %(a)s %(b)s"
 
@@ -161,9 +161,9 @@ class LogTestCase(test.TestCase):
         t = TaskLog()
         self.assertEqual(t.some_method.__name__, "some_method")
         self.assertEqual(t.some_method(2, 2), 4)
-        params = {'msg': msg % {'a': 10, 'b': 20}, 'task': t.task['uuid']}
+        params = {'msg': msg % {'a': 10, 'b': 20}, 'uuid': t.task['uuid']}
         expected = [
-            mock.call(_("Task %(task)s | Starting:  %(msg)s") % params),
-            mock.call(_("Task %(task)s | Completed: %(msg)s") % params)
+            mock.call(_("Task %(uuid)s | Starting:  %(msg)s") % params),
+            mock.call(_("Task %(uuid)s | Completed: %(msg)s") % params)
         ]
         self.assertEqual(mock_log.mock_calls, expected)
