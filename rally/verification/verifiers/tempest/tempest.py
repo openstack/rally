@@ -26,12 +26,13 @@ LOG = logging.getLogger(__name__)
 class Tempest(object):
 
     tempest_base_path = os.path.join(os.path.expanduser("~"),
-                                     '.rally/tempest/')
+                                     '.rally/tempest/base')
 
     def __init__(self, deploy_id):
         self.lock_path = tempfile.mkdtemp()
         self.tempest_path = os.path.join(os.path.expanduser("~"),
-                                         '.rally', deploy_id)
+                                         '.rally/tempest',
+                                         'for-deployment-%s' % deploy_id)
 
     def _generate_config(self, **kwargs):
         kwargs['lock_path'] = self.lock_path
@@ -39,11 +40,11 @@ class Tempest(object):
                                'config.ini')) as conf:
             return conf.read() % kwargs
 
-    @staticmethod
-    def _write_config(conf):
-        fd, config_path = tempfile.mkstemp()
-        os.write(fd, conf)
-        os.close(fd)
+    def _write_config(self, conf):
+        config_path = os.path.join(self.tempest_path, 'tempest.conf')
+        if not os.path.isfile(config_path):
+            with open(config_path, 'w+') as f:
+                f.write(conf)
         return config_path
 
     def is_installed(self):
@@ -89,7 +90,6 @@ class Tempest(object):
                   'Check log for details' % set_name)
         finally:
             shutil.rmtree(self.lock_path)
-            os.unlink(config_path)
 
         #TODO(miarmak) Change log_file and parse it
 
