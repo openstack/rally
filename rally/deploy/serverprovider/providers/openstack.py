@@ -65,6 +65,7 @@ class OpenStackProvider(provider.ProviderFactory):
             'deployment_name': {'type': 'string'},
             'amount': {'type': 'integer'},
             'user': {'type': 'string'},
+            'nics': {'type': 'array'},
             'password': {'type': 'string'},
             'tenant': {'type': 'string'},
             'auth_url': {'type': 'string'},
@@ -160,27 +161,40 @@ class OpenStackProvider(provider.ProviderFactory):
             userdata = open(userdata, 'r')
         return userdata
 
+    def create_keypair(self):
+        public_key_path = self.config.get(
+            'ssh_public_key_file', os.path.expanduser('~/.ssh/id_rsa.pub'))
+        public_key = open(public_key_path, 'r').read().strip()
+        key_name = self.config['deployment_name'] + '-key'
+        try:
+            key = self.nova.keypairs.find(name=key_name)
+            self.nova.keypairs.delete(key.id)
+        except novaclient.exceptions.NotFound:
+            pass
+        keypair = self.nova.keypairs.create(key_name, public_key)
+        self.resources.create({'id': keypair.id}, type=KEYPAIR_TYPE)
+        return keypair, public_key_path
+
+    def get_nics(self):
+        return self.config.get("nics", None)
+
     def create_servers(self):
         """Create VMs with chosen image."""
 
         image_uuid = self.get_image_uuid()
         userdata = self.get_userdata()
         flavor = self.config['flavor_id']
+        nics = self.get_nics()
 
-        public_key_path = self.config.get(
-            'ssh_public_key_file', os.path.expanduser('~/.ssh/id_rsa.pub'))
-        public_key = open(public_key_path, 'r').read().strip()
-        key_name = self.config['deployment_name'] + '-key'
-        keypair = self.nova.keypairs.create(key_name, public_key)
-        self.resources.create({'id': keypair.id}, type=KEYPAIR_TYPE)
+        keypair, public_key_path = self.create_keypair()
 
         os_servers = []
         for i in range(self.config.get('amount', 1)):
             name = "%s-%d" % (self.config['deployment_name'], i)
             server = self.nova.servers.create(name, image_uuid, flavor,
+                                              nics=nics,
                                               key_name=keypair.name,
                                               userdata=userdata)
-
             os_servers.append(server)
             self.resources.create({'id': server.id}, type=SERVER_TYPE)
 
@@ -193,7 +207,6 @@ class OpenStackProvider(provider.ProviderFactory):
 
         for os_server in os_servers:
             benchmark_utils.wait_for(os_server, **kwargs)
-
         servers = [provider.Server(host=s.addresses.values()[0][0]['addr'],
                                    user='root',
                                    key=public_key_path)
