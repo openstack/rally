@@ -87,7 +87,7 @@ class DeploymentCommands(object):
         if do_use:
             use.UseCommands().deployment(deployment['uuid'])
 
-    @cliutils.args('--deploy-id', dest='deploy_id', type=str, required=False,
+    @cliutils.args('--uuid', dest='deploy_id', type=str, required=False,
                    help='UUID of a deployment.')
     @envutils.with_default_deploy_id
     def recreate(self, deploy_id=None):
@@ -97,7 +97,7 @@ class DeploymentCommands(object):
         """
         api.recreate_deploy(deploy_id)
 
-    @cliutils.args('--deploy-id', dest='deploy_id', type=str, required=False,
+    @cliutils.args('--uuid', dest='deploy_id', type=str, required=False,
                    help='UUID of a deployment.')
     @envutils.with_default_deploy_id
     def destroy(self, deploy_id=None):
@@ -129,7 +129,7 @@ class DeploymentCommands(object):
                     "To create a new deployment, use:"
                     "\nrally deployment create"))
 
-    @cliutils.args('--deploy-id', dest='deploy_id', type=str, required=False,
+    @cliutils.args('--uuid', dest='deploy_id', type=str, required=False,
                    help='UUID of a deployment.')
     @envutils.with_default_deploy_id
     def config(self, deploy_id=None):
@@ -140,7 +140,7 @@ class DeploymentCommands(object):
         deploy = db.deployment_get(deploy_id)
         print(json.dumps(deploy['config']))
 
-    @cliutils.args('--deploy-id', dest='deploy_id', type=str, required=False,
+    @cliutils.args('--uuid', dest='deploy_id', type=str, required=False,
                    help='UUID of a deployment.')
     @envutils.with_default_deploy_id
     def endpoint(self, deploy_id=None):
@@ -155,7 +155,7 @@ class DeploymentCommands(object):
             table.add_row([ep.get(m, '') for m in headers])
         print(table)
 
-    @cliutils.args('--deploy-id', dest='deploy_id', type=str, required=False,
+    @cliutils.args('--uuid', dest='deploy_id', type=str, required=False,
                    help='UUID of a deployment.')
     @envutils.with_default_deploy_id
     def check(self, deploy_id=None):
