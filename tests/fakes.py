@@ -575,3 +575,5 @@ class FakeUserContext(FakeContext):
         context.setdefault("admin", FakeUserContext.admin)
         context.setdefault("users", [FakeUserContext.user])
         context.setdefault("tenants", [FakeUserContext.tenant])
+        context.setdefault("scenario_name",
+                           'NovaServers.boot_server_from_volume_and_delete')

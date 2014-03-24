@@ -206,4 +206,5 @@ class ScenarioRunnerTestCase(test.TestCase):
         runner = continuous.ContinuousScenarioRunner(mock.MagicMock(),
                                                      self.fake_endpoints)
         self.assertRaises(exceptions.InvalidRunnerResult,
-                          runner.run, mock.MagicMock(), mock.MagicMock())
+                          runner.run, "NovaServers.boot_server_from_volume_"
+                                      "and_delete", mock.MagicMock())

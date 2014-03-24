@@ -31,7 +31,8 @@ class ResourceCleanerTestCase(test.TestCase):
             "task": mock.MagicMock(),
             "admin": None,
             "users": [],
-            "tenants": []
+            "tenants": [],
+            "scenario_name": "NovaServers.boot_server_from_volume_and_delete"
         }
         resource_cleaner = cleaner_ctx.ResourceCleaner(context)
         with resource_cleaner:
@@ -55,6 +56,7 @@ class ResourceCleanerTestCase(test.TestCase):
     def test_cleaner_admin(self, mock_del_keystone, mock_clients):
         context = {
             "task": mock.MagicMock(),
+            "scenario_name": 'NovaServers.boot_server_from_volume_and_delete',
             "admin": {"endpoint": mock.MagicMock()},
         }
         res_cleaner = cleaner_ctx.ResourceCleaner(context)
@@ -74,11 +76,11 @@ class ResourceCleanerTestCase(test.TestCase):
     @mock.patch("%s.utils.delete_cinder_resources" % BASE)
     def test_cleaner_users(self, mock_del_cinder, mock_del_glance,
                            mock_del_nova, mock_clients):
-
         context = {
             "task": mock.MagicMock(),
             "users": [{"endpoint": mock.MagicMock()},
                       {"endpoint": mock.MagicMock()}],
+            "scenario_name": "NovaServers.boot_server_from_volume_and_delete",
             "tenants": [mock.MagicMock()]
         }
         res_cleaner = cleaner_ctx.ResourceCleaner(context)

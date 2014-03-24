@@ -17,6 +17,7 @@ import functools
 import sys
 
 from rally.benchmark.context import base
+from rally.benchmark.scenarios import base as scenario_base
 from rally.benchmark import utils
 from rally.openstack.common.gettextutils import _
 from rally.openstack.common import log as logging
@@ -50,22 +51,34 @@ class ResourceCleaner(base.Context):
 
     @rutils.log_task_wrapper(LOG.info, _("Cleanup users resources."))
     def _cleanup_users_resources(self):
+        def _init_services_to_cleanup(cleanup_methods):
+            scenario_name = self.context.get('scenario_name')
+            if scenario_name:
+                cls_name, method_name = scenario_name.split(".", 1)
+                scenario = scenario_base.Scenario.get_by_name(cls_name)()
+                scenario_method = getattr(scenario, method_name)
+                if hasattr(scenario_method, "cleanup_services"):
+                    return getattr(scenario_method, "cleanup_services")
+            return cleanup_methods.keys()
+
         if not self.users:
             return
 
         for user in self.users:
             clients = osclients.Clients(user)
-            methods = [
-                functools.partial(utils.delete_nova_resources, clients.nova()),
-                functools.partial(utils.delete_glance_resources,
-                                  clients.glance(), clients.keystone()),
-                functools.partial(utils.delete_cinder_resources,
-                                  clients.cinder())
-            ]
+            cleanup_methods = {
+                "nova": functools.partial(utils.delete_nova_resources,
+                                          clients.nova()),
+                "glance": functools.partial(utils.delete_glance_resources,
+                                            clients.glance(),
+                                            clients.keystone()),
+                "cinder": functools.partial(utils.delete_cinder_resources,
+                                            clients.cinder())
+            }
 
-            for method in methods:
+            for service in _init_services_to_cleanup(cleanup_methods):
                 try:
-                    method()
+                    cleanup_methods[service]()
                 except Exception as e:
                     LOG.debug(_("Not all resources were cleaned."),
                               exc_info=sys.exc_info())
@@ -94,3 +107,17 @@ class ResourceCleaner(base.Context):
             self._cleanup_users_resources()
         if self.admin:
             self._cleanup_admin_resources()
+
+
+def cleanup(services):
+    """Decorates scenario methods requiring a cleanup of resources.
+
+    If a scenario method is not decorated by @cleanup all the resources
+    (nova, glance and cinder) will be cleaned.
+
+    :param services: list of services which will be cleaned.
+    """
+    def wrap(func):
+        func.cleanup_services = services
+        return func
+    return wrap

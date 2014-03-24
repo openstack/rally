@@ -193,6 +193,7 @@ class ScenarioRunner(object):
         context = {
             "task": self.task,
             "admin": {"endpoint": self.admin_user},
+            "scenario_name": name,
             "config": kwargs.get("context", {})
         }
 
@@ -205,7 +206,7 @@ class ScenarioRunner(object):
     def _run_as_non_admin(self, name, kwargs):
         # TODO(boris-42): It makes sense to use UserGenerator here as well
         #                 take a look at comment in UserGenerator.__init__()
-        context = {}
+        context = {"scenario_name": name}
         with cleaner_ctx.ResourceCleaner(context):
             return self._prepare_and_run_scenario(context, name, kwargs)
 
