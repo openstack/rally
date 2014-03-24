@@ -36,6 +36,26 @@ class NovaServers(utils.NovaScenario,
         super(NovaServers, self).__init__(*args, **kwargs)
 
     @valid.add_validator(valid.image_valid_on_flavor("flavor_id", "image_id"))
+    def boot_and_list_server(self, image_id, flavor_id,
+                             detailed=True, **kwargs):
+        """Tests booting an image and then listing servers.
+
+           This scenario is a very useful tool to measure
+           the "nova list" command performance.
+
+           If you have only 1 user in your context, you will
+           add 1 server on every iteration. So you will have more
+           and more servers and will be able to measure the
+           performance of the "nova list" command depending on
+           the number of servers owned by users.
+        """
+
+        server_name = self._generate_random_name(16)
+
+        self._boot_server(server_name, image_id, flavor_id, **kwargs)
+        self._list_servers(detailed)
+
+    @valid.add_validator(valid.image_valid_on_flavor("flavor_id", "image_id"))
     def boot_and_delete_server(self, image_id, flavor_id,
                                min_sleep=0, max_sleep=0, **kwargs):
         """Tests booting and then deleting an image."""

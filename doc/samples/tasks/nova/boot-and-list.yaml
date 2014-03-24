@@ -1,0 +1,16 @@
+---
+  NovaServers.boot_and_list_server:
+    -
+      args:
+        flavor_id: 1
+        image_id: "ccc8fe37-9289-437b-a88c-fc4678656c75"
+        detailed: True
+      runner:
+        type: "continuous"
+        times: 1
+        active_users: 1
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+

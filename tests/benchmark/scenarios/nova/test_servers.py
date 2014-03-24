@@ -219,6 +219,18 @@ class NovaServersTestCase(test.TestCase):
         scenario.sleep_between.assert_called_once_with(10, 20)
         scenario._delete_server.assert_called_once_with(fake_server)
 
+    def test_boot_and_list_server(self):
+        scenario = servers.NovaServers()
+        scenario._generate_random_name = mock.MagicMock(return_value="name")
+        scenario._boot_server = mock.MagicMock()
+        scenario._list_servers = mock.MagicMock()
+
+        scenario.boot_and_list_server("img", 0, fakearg="fakearg")
+
+        scenario._boot_server.assert_called_once_with("name", "img", 0,
+                                                      fakearg="fakearg")
+        scenario._list_servers.assert_called_once()
+
     def test_boot_server_from_volume_and_delete(self):
         fake_server = object()
         scenario = servers.NovaServers()

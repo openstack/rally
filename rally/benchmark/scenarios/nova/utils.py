@@ -66,6 +66,12 @@ CONF.register_opts(nova_benchmark_opts, group=benchmark_group)
 
 class NovaScenario(base.Scenario):
 
+    @scenario_utils.atomic_action_timer('nova.list_servers')
+    def _list_servers(self, detailed=True):
+        """Returns user servers list."""
+
+        return self.clients("nova").servers.list(detailed)
+
     @scenario_utils.atomic_action_timer('nova.boot_server')
     def _boot_server(self, server_name, image_id, flavor_id, **kwargs):
         """Boots one server.

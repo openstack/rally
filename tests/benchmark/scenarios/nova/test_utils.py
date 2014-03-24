@@ -68,6 +68,16 @@ class NovaScenarioTestCase(test.TestCase):
                           server_manager.create('fails', '1', '2'))
 
     @mock.patch(NOVA_UTILS + '.NovaScenario.clients')
+    def test__list_servers(self, mock_clients):
+        servers_list = []
+        mock_clients("nova").servers.list.return_value = servers_list
+        nova_scenario = utils.NovaScenario()
+        return_servers_list = nova_scenario._list_servers(True)
+        self.assertEqual(servers_list, return_servers_list)
+        self._test_atomic_action_timer(nova_scenario.atomic_actions_time(),
+                                       'nova.list_servers')
+
+    @mock.patch(NOVA_UTILS + '.NovaScenario.clients')
     def test__boot_server(self, mock_clients):
         mock_clients("nova").servers.create.return_value = self.server
         nova_scenario = utils.NovaScenario()
