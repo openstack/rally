@@ -224,14 +224,20 @@ class APITestCase(test.TestCase):
         self.tempest.is_installed.assert_called_once_with()
         mock_get.assert_called_once_with(self.deploy_uuid)
         self.tempest.verify.assert_called_once_with(
-            image_ref='image_id',
-            image_ref_alt='alt_image_id',
-            flavor_ref='flavor_id',
-            flavor_ref_alt='alt_flavor_id',
-            username='admin',
-            password='myadminpass',
-            tenant_name='demo',
-            uri='http://example.net:5000/v2.0/',
-            uri_v3='http://example.net:5000/v3/',
-            set_name='smoke',
-            regex=None)
+            set_name='smoke', regex=None,
+            options=(
+                ('compute', [
+                    ('flavor_ref', 'flavor_id'),
+                    ('flavor_ref_alt', 'alt_flavor_id'),
+                    ('image_ref', 'image_id'),
+                    ('image_ref_alt', 'alt_image_id')]),
+                ('compute-admin', [('password', 'myadminpass')]),
+                ('identity', [
+                    ('username', 'admin'),
+                    ('password', 'myadminpass'),
+                    ('tenant_name', 'demo'),
+                    ('admin_username', 'admin'),
+                    ('admin_password', 'myadminpass'),
+                    ('admin_tenant_name', 'demo'),
+                    ('uri', 'http://example.net:5000/v2.0/'),
+                    ('uri_v3', 'http://example.net:5000/v3/')])))

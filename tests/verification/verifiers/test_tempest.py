@@ -16,8 +16,11 @@
 import mock
 import os
 
+import six
+
 from rally.verification.verifiers.tempest import tempest
 from tests import test
+from tests.verification.verifiers import fakes
 
 
 TEMPEST_PATH = 'rally.verification.verifiers.tempest.tempest'
@@ -29,48 +32,53 @@ class TempestTestCase(test.TestCase):
         super(TempestTestCase, self).setUp()
         self.verifier = tempest.Tempest('fake_deploy_id')
         self.verifier.lock_path = 'fake_lock_path'
-        self.conf_args = {'flavor_ref_alt': 'fake_flavor_ref_alt',
-                          'flavor_ref': 'fake_flavor_ref',
-                          'image_ref_alt': 'fake_image_ref_alt',
-                          'image_ref': 'fake_image_ref',
-                          'password': 'fake_password',
-                          'username': 'fake_username',
-                          'tenant_name': 'fake_tenant_name',
-                          'uri': 'fake_uri',
-                          'uri_v3': 'fake_uri',
-                          'lock_path': self.verifier.lock_path,
-                          'set_name': 'smoke',
-                          'regex': None}
-        self.tempest_dir = 'rally/verification/verifiers/tempest/'
+        self.conf_opts = (
+            ('compute', [
+                ('flavor_ref_alt', 'fake_flavor_ref_alt'),
+                ('flavor_ref', 'fake_flavor_ref'),
+                ('image_ref_alt', 'fake_image_ref_alt'),
+                ('image_ref', 'fake_image_ref')]),
+            ('compute-admin', [('password', 'fake_password')]),
+            ('identity', [
+                ('username', 'fake_username'),
+                ('password', 'fake_password'),
+                ('tenant_name', 'fake_tenant_name'),
+                ('admin_username', 'fake_username'),
+                ('admin_password', 'fake_password'),
+                ('admin_tenant_name', 'fake_tenant_name'),
+                ('uri', 'fake_uri'),
+                ('uri_v3', 'fake_uri')]))
+        self.set_name = 'smoke'
+        self.regex = None
 
     def test__generate_config(self):
-        test_config = self.verifier._generate_config(
-            flavor_ref_alt=self.conf_args['flavor_ref_alt'],
-            flavor_ref=self.conf_args['flavor_ref'],
-            image_ref_alt=self.conf_args['image_ref_alt'],
-            image_ref=self.conf_args['image_ref'],
-            password=self.conf_args['password'],
-            username=self.conf_args['username'],
-            tenant_name=self.conf_args['tenant_name'],
-            uri=self.conf_args['uri'],
-            uri_v3=self.conf_args['uri_v3'],
-            regex=None)
+        test_config = self.verifier._generate_config(self.conf_opts)
 
-        with open(self.tempest_dir + 'config.ini') as config_file:
-            self.assertEqual(test_config, config_file.read() % self.conf_args)
+        self.assertEqual(len(fakes.FAKE_CONFIG) - 1,
+                         len(test_config.sections()))
+        for section, values in six.iteritems(fakes.FAKE_CONFIG):
+            if section != 'DEFAULT':
+                # NOTE(andreykurilin): Method `items` from ConfigParser return
+                # a list of (name, value) pairs for each option in the given
+                # section with options from DEFAULT section, so we need to
+                # extend  FAKE_CONFIG for correct comparison.
 
-    @mock.patch('__builtin__.open')
+                values.extend(fakes.FAKE_CONFIG['DEFAULT'])
+
+            self.assertEqual(set(values),
+                             set(test_config.items(section)))
+
+    @mock.patch('six.moves.builtins.open')
     def test__write_config(self, mock_open):
         conf = mock.Mock()
         mock_file = mock.MagicMock()
         mock_open.return_value = mock_file
         fake_conf_path = os.path.join(self.verifier.tempest_path,
                                       'tempest.conf')
-        returned_conf_path = self.verifier._write_config(conf)
+        self.verifier._write_config(conf, fake_conf_path)
         mock_open.assert_called_once_with(fake_conf_path, 'w+')
-        mock_file.write.assert_called_once_whith(conf)
+        mock_file.write.assert_called_once_whith(conf, fake_conf_path)
         mock_file.close.assert_called_once()
-        self.assertEqual(fake_conf_path, returned_conf_path)
 
     @mock.patch('os.path.exists')
     def test_is_installed(self, mock_exists):
@@ -126,10 +134,11 @@ class TempestTestCase(test.TestCase):
     @mock.patch(TEMPEST_PATH + '.Tempest._generate_config')
     def test_verify(self, mock_gen, mock_write, mock_run):
         mock_gen.return_value = 'fake_conf'
-        mock_write.return_value = 'fake_conf_path'
+        conf_path = os.path.join(self.verifier.tempest_path, 'tempest.conf')
 
-        self.verifier.verify(**self.conf_args)
+        self.verifier.verify(set_name=self.set_name, regex=None,
+                             options=self.conf_opts)
 
-        mock_gen.assert_called_once_with(**self.conf_args)
-        mock_write.assert_called_once_with('fake_conf')
-        mock_run.assert_called_once_with('fake_conf_path', 'smoke', None)
+        mock_gen.assert_called_once_with(self.conf_opts)
+        mock_write.assert_called_once_with('fake_conf', conf_path)
+        mock_run.assert_called_once_with(conf_path, 'smoke', None)
