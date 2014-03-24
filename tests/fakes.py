@@ -24,17 +24,21 @@ from rally.objects import endpoint
 from rally import utils as rally_utils
 
 
+def generate_uuid():
+    return str(uuid.uuid4())
+
+
 class FakeResource(object):
 
     def __init__(self, manager=None, name=None, status="ACTIVE", items=None,
                  deployment_uuid=None, id=None):
-        self.name = name or uuid.uuid4()
+        self.name = name or generate_uuid()
         self.status = status
         self.manager = manager
-        self.uuid = uuid.uuid4()
+        self.uuid = generate_uuid()
         self.id = id or self.uuid
         self.items = items or {}
-        self.deployment_uuid = deployment_uuid or uuid.uuid4()
+        self.deployment_uuid = deployment_uuid or generate_uuid()
 
     def __getattr__(self, name):
         # NOTE(msdubov): e.g. server.delete() -> manager.delete(server)
@@ -165,8 +169,8 @@ class FakeManager(object):
     def get(self, resource_uuid):
         return self.cache.get(resource_uuid, None)
 
-    def delete(self, resource):
-        cached = self.get(resource.uuid)
+    def delete(self, resource_uuid):
+        cached = self.get(resource_uuid)
         if cached is not None:
             cached.status = "DELETED"
             del self.cache[cached.uuid]
@@ -433,8 +437,8 @@ class FakeKeystoneClient(object):
         self.project_id = 'abc123'
         self.auth_url = 'http://example.com:5000/v2.0/'
         self.auth_token = 'fake'
-        self.auth_user_id = uuid.uuid4()
-        self.auth_tenant_id = uuid.uuid4()
+        self.auth_user_id = generate_uuid()
+        self.auth_tenant_id = generate_uuid()
         self.service_catalog = FakeServiceCatalog()
         self.auth_ref = {'user': {'roles': [{'name': 'admin'}]}}
 

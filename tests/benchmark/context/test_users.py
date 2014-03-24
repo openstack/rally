@@ -13,54 +13,79 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import itertools
 import mock
+import uuid
 
 from rally.benchmark.context import users
+from rally.benchmark import utils
+from tests import fakes
 from tests import test
 
 
+run_concurrent = lambda dummy, f, args: itertools.imap(f, args)
+
+
+@mock.patch.object(utils, "run_concurrent", run_concurrent)
 class UserGeneratorTestCase(test.TestCase):
 
-    @mock.patch("rally.benchmark.context.users.osclients")
-    def test_with_statement(self, mock_create_osclients):
-        context = {
-            "admin": {"endpoint": mock.MagicMock()},
-            "task": mock.MagicMock()
-        }
-        with users.UserGenerator(context) as generator:
-            generator.setup()
+    tenants_num = 10
+    users_per_tenant = 5
+    users_num = tenants_num * users_per_tenant
+    concurrent = 10
 
-    @mock.patch("rally.benchmark.context.users.osclients.Clients.keystone")
-    @mock.patch("rally.benchmark.context.users.osclients.Clients")
-    def test_create_and_delete_users_and_tenants(self, mock_osclients,
-                                                 mock_keystone):
-        tenants = 10
-        users_per_tenant = 5
-        context = {
+    @property
+    def context(self):
+        return {
             "config": {
                 "users": {
-                    "tenants": tenants,
-                    "users_per_tenant": users_per_tenant
+                    "tenants": self.tenants_num,
+                    "users_per_tenant": self.users_per_tenant,
+                    "concurrent": self.concurrent,
                 }
             },
             "admin": {"endpoint": mock.MagicMock()},
             "task": mock.MagicMock()
         }
 
-        with users.UserGenerator(context) as generator:
+    @mock.patch("rally.benchmark.context.users.osclients")
+    def test_create_tenant_users(self, mock_osclients):
+        users_num = 5
+        args = (mock.MagicMock(), users_num, str(uuid.uuid4()), 1)
+
+        result = users.UserGenerator._create_tenant_users(args)
+
+        self.assertEqual(len(result), 2)
+        tenant, users_ = result
+        self.assertIn("id", tenant)
+        self.assertIn("name", tenant)
+        self.assertEqual(len(users_), users_num)
+        for user in users_:
+            self.assertIn("id", user)
+            self.assertIn("endpoint", user)
+
+    @mock.patch("rally.benchmark.context.users.osclients")
+    def test_setup_and_cleanup(self, mock_osclients):
+        fc = fakes.FakeClients()
+        mock_osclients.Clients.return_value = fc
+
+        with users.UserGenerator(self.context) as generator:
+
+            # Setup (must be called obviously)
+            self.assertEqual(len(fc.keystone().users.list()), 0)
+            self.assertEqual(len(fc.keystone().tenants.list()), 0)
+
             generator.setup()
+
             self.assertEqual(len(generator.context["users"]),
-                             tenants * users_per_tenant)
+                             self.users_num)
+            self.assertEqual(len(fc.keystone().users.list()),
+                             self.users_num)
             self.assertEqual(len(generator.context["tenants"]),
-                             tenants)
-            mock_osclients.reset_mock()
+                             self.tenants_num)
+            self.assertEqual(len(fc.keystone().tenants.list()),
+                             self.tenants_num)
 
-        expected_calls = map(lambda u:
-                             mock.call().keystone().users.delete(u["id"]),
-                             generator.context["users"])
-        expected_calls.extend(map(lambda t:
-                                  mock.call().keystone().tenants.delete(
-                                  t["id"]),
-                                  generator.context["tenants"]))
-
-        mock_osclients.assert_has_calls(expected_calls, any_order=True)
+        # Cleanup (called by content manager)
+        self.assertEqual(len(fc.keystone().users.list()), 0)
+        self.assertEqual(len(fc.keystone().tenants.list()), 0)
