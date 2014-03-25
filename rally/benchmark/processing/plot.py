@@ -19,12 +19,25 @@ import os
 
 import mako.template
 
+from rally.benchmark.processing.charts import histogram as histo
+
 
 def _process_main_time(result):
+
     pie = filter(lambda t: not t["error"], result["result"])
     stacked_area = map(
         lambda t: {"idle_time": 0, "time": 0} if t["error"] else t,
         result["result"])
+    histogram_data = filter(None, map(
+        lambda t: t["time"] if not t["error"] else None,
+        result["result"]))
+
+    histograms = []
+    hvariety = histo.hvariety(histogram_data)
+    for i in range(len(hvariety)):
+        histograms.append(histo.Histogram(histogram_data,
+                                          hvariety[i]['number_of_bins'],
+                                          hvariety[i]['method']))
 
     return {
         "pie": [
@@ -43,7 +56,15 @@ def _process_main_time(result):
                 "values": [[i + 1, v["idle_time"]]
                            for i, v in enumerate(stacked_area)]
             }
-        ]
+        ],
+        "histogram": [
+            {
+                "key": "task",
+                "method": histogram.method,
+                "values": [{"x": x, "y": y}
+                           for x, y in zip(histogram.x_axis, histogram.y_axis)]
+            } for histogram in histograms
+        ],
     }
 
 
@@ -80,8 +101,10 @@ def _process_atomic_time(result):
     #                 anything in pie. In case of non error we should put just
     #                 $atomic_actions_time.duration (without order)
     pie = []
+    histogram_data = []
     if stacked_area:
         pie = copy.deepcopy(stacked_area)
+        histogram_data = copy.deepcopy(stacked_area)
         for i, data in enumerate(result["result"]):
             # in case of error put (order, 0.0) to all actions of stacked area
             if data["error"]:
@@ -93,8 +116,29 @@ def _process_atomic_time(result):
             for j, action in enumerate(data["atomic_actions_time"]):
                 pie[j]["values"].append(action["duration"])
                 stacked_area[j]["values"].append([i + 1, action["duration"]])
+                histogram_data[j]["values"].append(action["duration"])
 
+    histograms = [[] for atomic_action in range(len(histogram_data))]
+    for i, atomic_action in enumerate(histogram_data):
+        hvariety = histo.hvariety(atomic_action['values'])
+        for v in range(len(hvariety)):
+            histograms[i].append(histo.Histogram(atomic_action['values'],
+                                                 hvariety[v]['number_of_bins'],
+                                                 hvariety[v]['method'],
+                                                 atomic_action['key']))
+    #print(histograms)
     return {
+        "histogram": [[
+            {
+                "key": action.key,
+                "disabled": i,
+                "method": action.method,
+                "values": [{"x": x, "y": y}
+                           for x, y in zip(action.x_axis, action.y_axis)]
+            }
+                for action in atomic_action_list]
+            for i, atomic_action_list in enumerate(histograms)
+        ],
         "iter": stacked_area,
         "pie": map(lambda x: {"key": x["key"], "value": avg(x["values"])}, pie)
     }

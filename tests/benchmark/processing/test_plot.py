@@ -107,6 +107,29 @@ class PlotTestCase(test.TestCase):
                     "key": "idle_duration",
                     "values": [[1, 2], [2, 0], [3, 3]]
                 }
+            ],
+            "histogram": [
+                {
+                    "key": "task",
+                    "method": "Square Root Choice",
+                    "values": [{"x": 1, "y": 1}, {"x": 1, "y": 0}]
+                },
+                {
+                    "key": "task",
+                    "method": "Sturges Formula",
+                    "values": [{"x": 1, "y": 1}, {"x": 1, "y": 0}]
+                },
+                {
+                    "key": "task",
+                    "method": "Rice Rule",
+                    "values": [{"x": 1, "y": 1}, {"x": 1, "y": 0},
+                               {"x": 1, "y": 0}]
+                },
+                {
+                    "key": "task",
+                    "method": "One Half",
+                    "values": [{"x": 2, "y": 2}]
+                }
             ]
         })
 
@@ -140,6 +163,62 @@ class PlotTestCase(test.TestCase):
         output = plot._process_atomic_time(result)
 
         self.assertEqual(output, {
+            "histogram": [
+                [
+                    {
+                        "key": "action1",
+                        "disabled": 0,
+                        "method": "Square Root Choice",
+                        "values": [{"x": 2, "y": 1}, {"x": 3, "y": 1}]
+                    },
+                    {
+                        "key": "action1",
+                        "disabled": 0,
+                        "method": "Sturges Formula",
+                        "values": [{"x": 2, "y": 1}, {"x": 3, "y": 1}]
+                    },
+                    {
+                        "key": "action1",
+                        "disabled": 0,
+                        "method": "Rice Rule",
+                        "values": [{"x": 1, "y": 1}, {"x": 1, "y": 0},
+                                   {"x": 1, "y": 0}]
+                    },
+                    {
+                        "key": "action1",
+                        "disabled": 0,
+                        "method": "One Half",
+                        "values": [{"x": 3, "y": 2}]
+                    },
+                ],
+                [
+                    {
+                        "key": "action2",
+                        "disabled": 1,
+                        "method": "Square Root Choice",
+                        "values": [{"x": 3, "y": 1}, {"x": 4, "y": 1}]
+                    },
+                    {
+                        "key": "action2",
+                        "disabled": 1,
+                        "method": "Sturges Formula",
+                        "values": [{"x": 3, "y": 1}, {"x": 4, "y": 1}]
+                    },
+                    {
+                        "key": "action2",
+                        "disabled": 1,
+                        "method": "Rice Rule",
+                        "values": [{"x": 2, "y": 1}, {"x": 2, "y": 0},
+                                   {"x": 2, "y": 0}]
+                    },
+                    {
+                        "key": "action2",
+                        "disabled": 1,
+                        "method": "One Half",
+                        "values": [{"x": 4, "y": 2}]
+                    }
+                ]
+            ],
             "pie": [
                 {"key": "action1", "value": 2.0},
                 {"key": "action2", "value": 3.0}
