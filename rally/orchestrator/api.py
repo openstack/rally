@@ -151,14 +151,20 @@ def verify(deploy_id, image_id, alt_image_id, flavor_id, alt_flavor_id,
 
     endpoints = db.deployment_get(deploy_id)['endpoints']
     endpoint = endpoints[0]
-    verifier.verify(image_ref=image_id,
-                    image_ref_alt=alt_image_id,
-                    flavor_ref=flavor_id,
-                    flavor_ref_alt=alt_flavor_id,
-                    username=endpoint['username'],
-                    password=endpoint['password'],
-                    tenant_name=endpoint['tenant_name'],
-                    uri=endpoint['auth_url'],
-                    uri_v3=re.sub('/v2.0', '/v3', endpoint['auth_url']),
-                    set_name=set_name,
-                    regex=regex)
+    conf_opts = (('compute', [('flavor_ref', flavor_id),
+                              ('flavor_ref_alt', alt_flavor_id),
+                              ('image_ref', image_id),
+                              ('image_ref_alt', alt_image_id)]),
+                 ('compute-admin', [('password', endpoint['password'])]),
+                 ('identity', [
+                     ('username', endpoint['username']),
+                     ('password', endpoint['password']),
+                     ('tenant_name', endpoint['tenant_name']),
+                     ('admin_username', endpoint['username']),
+                     ('admin_password', endpoint['password']),
+                     ('admin_tenant_name', endpoint['tenant_name']),
+                     ('uri', endpoint['auth_url']),
+                     ('uri_v3', re.sub('/v2.0', '/v3', endpoint['auth_url']))])
+                 )
+
+    verifier.verify(set_name=set_name, regex=regex, options=conf_opts)

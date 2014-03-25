@@ -20,6 +20,8 @@ import shutil
 import subprocess
 import tempfile
 
+from six.moves import configparser
+
 LOG = logging.getLogger(__name__)
 
 
@@ -34,18 +36,21 @@ class Tempest(object):
                                          '.rally/tempest',
                                          'for-deployment-%s' % deploy_id)
 
-    def _generate_config(self, **kwargs):
-        kwargs['lock_path'] = self.lock_path
-        with open(os.path.join(os.path.dirname(__file__),
-                               'config.ini')) as conf:
-            return conf.read() % kwargs
+    def _generate_config(self, options):
+        conf = configparser.ConfigParser()
+        conf.optionxform = str
+        conf.read(os.path.join(os.path.dirname(__file__), 'config.ini'))
+        for section, values in options:
+            if section not in conf.sections() and section != 'DEFAULT':
+                conf.add_section(section)
+            for key, value in values:
+                conf.set(section, key, value)
+        conf.set('DEFAULT', 'lock_path', self.lock_path)
+        return conf
 
-    def _write_config(self, conf):
-        config_path = os.path.join(self.tempest_path, 'tempest.conf')
-        if not os.path.isfile(config_path):
-            with open(config_path, 'w+') as f:
-                f.write(conf)
-        return config_path
+    def _write_config(self, conf, config_path):
+        with open(config_path, 'w+') as f:
+            conf.write(f)
 
     def is_installed(self):
         return os.path.exists(self.tempest_path)
@@ -93,8 +98,10 @@ class Tempest(object):
 
         #TODO(miarmak) Change log_file and parse it
 
-    def verify(self, **kwargs):
-        conf = self._generate_config(**kwargs)
-        config_path = self._write_config(conf)
-        LOG.debug("Temporary tempest config file: %s " % config_path)
-        self._run(config_path, kwargs['set_name'], kwargs['regex'])
+    def verify(self, set_name, regex, options):
+        config_path = os.path.join(self.tempest_path, 'tempest.conf')
+        if not os.path.isfile(config_path):
+            conf = self._generate_config(options)
+            self._write_config(conf, config_path)
+        LOG.debug("Tempest config file: %s " % config_path)
+        self._run(config_path, set_name, regex)
