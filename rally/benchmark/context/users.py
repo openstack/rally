@@ -96,14 +96,18 @@ class UserGenerator(base.Context):
         for user in self.context["users"]:
             try:
                 self.clients.keystone().users.delete(user["id"])
-            except Exception:
-                LOG.info("Failed to delete user: %s" % user["id"])
+            except Exception as ex:
+                LOG.warning("Failed to delete user: %(user_id)s. "
+                            "Exception: %(ex)s" %
+                            {"user_id": user["id"], "ex": ex})
 
         for tenant in self.context["tenants"]:
             try:
                 self.clients.keystone().tenants.delete(tenant["id"])
-            except Exception:
-                LOG.info("Failed to delete tenant: %s" % tenant["name"])
+            except Exception as ex:
+                LOG.warning("Failed to delete tenant: %(tenant_id)s. "
+                            "Exception: %(ex)s" %
+                            {"tenant_id": tenant["id"], "ex": ex})
 
     def setup(self):
         self.create_users_and_tenants()

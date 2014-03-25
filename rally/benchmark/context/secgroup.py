@@ -96,5 +96,7 @@ class AllowSSH(base.Context):
         for secgroup in self.secgroup:
             try:
                 secgroup.delete()
-            except Exception:
-                LOG.warning("Unable to delete secgroup: %s" % secgroup.id)
+            except Exception as ex:
+                LOG.warning("Unable to delete secgroup: %(group_id)s. "
+                            "Exception: %(ex)s" %
+                            {"group_id": secgroup.id, "ex": ex})
