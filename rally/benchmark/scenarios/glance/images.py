@@ -23,7 +23,7 @@ class GlanceImages(utils.GlanceScenario, nova_utils.NovaScenario):
 
     @base.scenario
     def create_and_list_image(self, container_format,
-                              image_url, disk_format, **kwargs):
+                              image_location, disk_format, **kwargs):
         """Test adding an image and then listing all images.
 
         This scenario is a very useful tool to measure
@@ -39,19 +39,19 @@ class GlanceImages(utils.GlanceScenario, nova_utils.NovaScenario):
         image_name = self._generate_random_name(16)
         self._create_image(image_name,
                            container_format,
-                           image_url,
+                           image_location,
                            disk_format,
                            **kwargs)
         self._list_images()
 
     @base.scenario
     def create_and_delete_image(self, container_format,
-                                image_url, disk_format, **kwargs):
+                                image_location, disk_format, **kwargs):
         """Test adds and then deletes image."""
         image_name = self._generate_random_name(16)
         image = self._create_image(image_name,
                                    container_format,
-                                   image_url,
+                                   image_location,
                                    disk_format,
                                    **kwargs)
         self._delete_image(image)
@@ -59,14 +59,14 @@ class GlanceImages(utils.GlanceScenario, nova_utils.NovaScenario):
     @validation.add_validator(validation.flavor_exists("flavor_id"))
     @base.scenario
     def create_image_and_boot_instances(self, container_format,
-                                        image_url, disk_format,
+                                        image_location, disk_format,
                                         flavor_id, number_instances,
                                         **kwargs):
         """Test adds image, boots instance from it and then deletes them."""
         image_name = self._generate_random_name(16)
         image = self._create_image(image_name,
                                    container_format,
-                                   image_url,
+                                   image_location,
                                    disk_format,
                                    **kwargs)
         image_id = image.id

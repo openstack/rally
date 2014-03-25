@@ -78,7 +78,7 @@ class GlanceScenarioTestCase(test.TestCase):
         mock_clients("glance").images.create.return_value = self.image
         scenario = utils.GlanceScenario()
         return_image = scenario._create_image('image_name',
-                                              'image_url',
+                                              'image_location',
                                               'container_format',
                                               'disk_format')
         self.wait_for.mock.assert_called_once_with(self.image,
