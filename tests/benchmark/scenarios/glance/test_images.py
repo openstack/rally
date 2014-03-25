@@ -28,6 +28,19 @@ GLANCE_IMAGES = "rally.benchmark.scenarios.glance.images.GlanceImages"
 class GlanceImagesTestCase(test.TestCase):
 
     @mock.patch(GLANCE_IMAGES + "._generate_random_name")
+    @mock.patch(GLANCE_IMAGES + "._list_images")
+    @mock.patch(GLANCE_IMAGES + "._create_image")
+    def test_create_and_list_image(self, mock_create, mock_list,
+                                   mock_random_name):
+        glance_scenario = images.GlanceImages()
+        mock_random_name.return_value = "test-rally-image"
+        glance_scenario.create_and_list_image("cf", "url", "df",
+                                              fakearg="f")
+        mock_create.assert_called_once_with("test-rally-image", "cf",
+                                            "url", "df", fakearg="f")
+        mock_list.assert_called_once()
+
+    @mock.patch(GLANCE_IMAGES + "._generate_random_name")
     @mock.patch(GLANCE_IMAGES + "._delete_image")
     @mock.patch(GLANCE_IMAGES + "._create_image")
     def test_create_and_delete_image(self, mock_create, mock_delete,
