@@ -24,6 +24,14 @@ CINDER_VOLUMES = "rally.benchmark.scenarios.cinder.volumes.CinderVolumes"
 
 class CinderServersTestCase(test.TestCase):
 
+    def test_create_and_list_volume(self):
+        scenario = volumes.CinderVolumes()
+        scenario._create_volume = mock.MagicMock()
+        scenario._list_volumes = mock.MagicMock()
+        scenario.create_and_list_volume(1, True, fakearg="f")
+        scenario._create_volume.assert_called_once_with(1, fakearg="f")
+        scenario._list_volumes.assert_called_once_with(True)
+
     def test_create_and_delete_volume(self):
         fake_volume = mock.MagicMock()
 

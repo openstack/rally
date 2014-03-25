@@ -18,6 +18,22 @@ from rally.benchmark.scenarios.cinder import utils
 
 class CinderVolumes(utils.CinderScenario):
 
+    def create_and_list_volume(self, size, detailed=True, **kwargs):
+        """Tests creating a volume and listing volumes.
+
+           This scenario is a very useful tool to measure
+           the "cinder volume-list" command performance.
+
+           If you have only 1 user in your context, you will
+           add 1 volume on every iteration. So you will have more
+           and more volumes and will be able to measure the
+           performance of the "cinder volume-list" command depending on
+           the number of images owned by users.
+        """
+
+        self._create_volume(size, **kwargs)
+        self._list_volumes(detailed)
+
     def create_and_delete_volume(self, size, min_sleep=0, max_sleep=0,
                                  **kwargs):
         """Tests creating and then deleting a volume.

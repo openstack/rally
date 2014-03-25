@@ -64,6 +64,12 @@ def generate_volume_name(length=10):
 
 class CinderScenario(base.Scenario):
 
+    @scenario_utils.atomic_action_timer('cinder.list_volumes')
+    def _list_volumes(self, detailed=True):
+        """Returns user volumes list."""
+
+        return self.clients("cinder").volumes.list(detailed)
+
     @scenario_utils.atomic_action_timer('cinder.create_volume')
     def _create_volume(self, size, **kwargs):
         """create one volume.
