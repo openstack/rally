@@ -17,6 +17,7 @@ import mock
 import os
 
 from rally.cmd import envutils
+from rally import exceptions
 from tests import test
 
 
@@ -31,6 +32,14 @@ class EnvUtilsTestCase(test.TestCase):
     @mock.patch.dict(os.environ, values={}, clear=True)
     @mock.patch('rally.cmd.envutils.fileutils.load_env_file')
     def test_get_deployment_id_with_exception(self, mock_file):
+        self.assertRaises(exceptions.InvalidArgumentsException,
+                          envutils.get_global, 'RALLY_DEPLOYMENT', True)
+        mock_file.assert_called_once_with(os.path.expanduser(
+            '~/.rally/globals'))
+
+    @mock.patch.dict(os.environ, values={}, clear=True)
+    @mock.patch('rally.cmd.envutils.fileutils.load_env_file')
+    def test_get_deployment_id_with_none(self, mock_file):
         self.assertEqual(None, envutils.get_global('RALLY_DEPLOYMENT'))
         mock_file.assert_called_once_with(os.path.expanduser(
             '~/.rally/globals'))
