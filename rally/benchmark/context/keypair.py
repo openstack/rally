@@ -24,7 +24,7 @@ LOG = logging.getLogger(__name__)
 
 
 class Keypair(base.Context):
-    __name__ = "keypair"
+    __ctx_name__ = "keypair"
     KEYPAIR_NAME = "rally_ssh_key"
 
     def _get_nova_client(self, endpoint):
