@@ -74,6 +74,8 @@ class UseCommands(object):
             print('Deployment %s is not found.' % deploy_id)
             sys.exit(1)
 
+    @cliutils.args('--uuid', type=str, dest='task_id', required=False,
+                   help='UUID of the task')
     def task(self, task_id):
         """Set the RALLY_TASK env var so the user does not need to specify a
         task UUID in the command requiring this parameter.
