@@ -14,7 +14,7 @@
           -
             rescue_unrescue: 1
       runner:
-        type: "continuous"
+        type: "constant"
         times: 10
         active_users: 2
       context:

@@ -17,7 +17,7 @@ import jsonschema
 import mock
 
 from rally.benchmark.runners import base
-from rally.benchmark.runners import continuous
+from rally.benchmark.runners import constant
 from rally.benchmark.scenarios import base as base_scenario
 from rally import consts
 from rally import exceptions
@@ -201,13 +201,13 @@ class ScenarioRunnerTestCase(test.TestCase):
         base.ScenarioRunner.validate(config)
         mock_validate.assert_called_once_with(
                 config,
-                continuous.ContinuousScenarioRunner.CONFIG_SCHEMA)
+                constant.ConstantScenarioRunner.CONFIG_SCHEMA)
 
     @mock.patch("rally.benchmark.runners.base.base_ctx.ContextManager")
     def test_run(self, mock_ctx_manager):
-        runner = continuous.ContinuousScenarioRunner(mock.MagicMock(),
-                                                     self.fake_endpoints,
-                                                     mock.MagicMock())
+        runner = constant.ConstantScenarioRunner(mock.MagicMock(),
+                                                 self.fake_endpoints,
+                                                 mock.MagicMock())
         mock_ctx_manager.run.return_value = base.ScenarioRunnerResult([])
         scenario_name = "NovaServers.boot_server_from_volume_and_delete"
         result = runner.run(scenario_name, {"some_ctx": 2}, [1, 2, 3])
@@ -231,11 +231,11 @@ class ScenarioRunnerTestCase(test.TestCase):
         mock_ctx_manager.run.assert_called_once_with(*expected)
 
     @mock.patch("rally.benchmark.runners.base.base_ctx.ContextManager")
-    def test_run__scenario_runner_results_exception(self, mock_ctx_manager):
-        runner = continuous.ContinuousScenarioRunner(mock.MagicMock(),
-                                                     self.fake_endpoints,
-                                                     mock.MagicMock())
+    def test_run_scenario_runner_results_exception(self, mock_ctx_manager):
+        srunner_cls = constant.ConstantForDurationScenarioRunner
+        srunner = srunner_cls(mock.MagicMock(), self.fake_endpoints,
+                              mock.MagicMock())
         self.assertRaises(exceptions.InvalidRunnerResult,
-                          runner.run,
+                          srunner.run,
                           "NovaServers.boot_server_from_volume_and_delete",
                           mock.MagicMock(), {})

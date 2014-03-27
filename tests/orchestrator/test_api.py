@@ -42,7 +42,7 @@ FAKE_TASK_CONFIG = {
         {
             'args': {},
             'runner': {
-                'type': 'continuous',
+                'type': 'constant',
                 'timeout': 10000,
                 'times': 3,
                 'active_users': 2,
@@ -142,7 +142,7 @@ class APITestCase(test.TestCase):
                 'kw': {
                     'args': {},
                     'runner': {
-                        'type': 'continuous',
+                        'type': 'constant',
                         'timeout': 10000,
                         'times': 3,
                         'active_users': 2,

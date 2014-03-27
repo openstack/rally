@@ -2,7 +2,7 @@
   Authenticate.keystone:
     -
       runner:
-        type: "continuous"
+        type: "constant"
         times: 100
         active_users: 5
       context:

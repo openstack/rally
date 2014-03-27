@@ -6,7 +6,7 @@
         container_format: "bare"
         disk_format: "qcow2"
       runner:
-        type: "continuous"
+        type: "constant"
         times: 10
         active_users: 2
       context:

@@ -169,7 +169,7 @@ class ScenarioRunner(object):
     @staticmethod
     def validate(config):
         """Validates runner's part of task config."""
-        runner = ScenarioRunner._get_cls(config.get("type", "continuous"))
+        runner = ScenarioRunner._get_cls(config.get("type", "constant"))
         jsonschema.validate(config, runner.CONFIG_SCHEMA)
 
     @abc.abstractmethod

@@ -6,7 +6,7 @@
                 "image_id": "73257560-c59b-4275-a1ec-ab140e5b9979"
             },
             "runner": {
-                "type": "continuous",
+                "type": "constant",
                 "times": 10,
                 "active_users": 2
             },

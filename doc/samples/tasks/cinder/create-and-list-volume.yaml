@@ -5,7 +5,7 @@
         size: 1
         detailed: True
       runner:
-        type: "continuous"
+        type: "constant"
         times: 3
         active_users: 1
       context:

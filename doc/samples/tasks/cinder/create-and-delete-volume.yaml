@@ -4,7 +4,7 @@
       args:
         size: 1
       runner:
-        type: "continuous"
+        type: "constant"
         times: 3
         active_users: 2
       context:

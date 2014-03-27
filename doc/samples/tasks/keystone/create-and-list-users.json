@@ -5,7 +5,7 @@
                 "name_length": 10
             },
             "runner": {
-                "type": "continuous",
+                "type": "constant",
                 "times": 100,
                 "active_users": 10
             },

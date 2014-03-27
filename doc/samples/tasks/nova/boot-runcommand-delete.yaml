@@ -8,7 +8,7 @@
         interpreter: "/bin/sh"
         username: "ubuntu"
       runner:
-        type: "continuous"
+        type: "constant"
         times: 10
         active_users: 2
       context:

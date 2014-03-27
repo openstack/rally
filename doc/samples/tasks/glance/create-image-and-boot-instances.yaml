@@ -8,7 +8,7 @@
         flavor_id: 42
         number_instances: 2
       runner:
-        type: "continuous"
+        type: "constant"
         times: 10
         active_users: 2
       context:

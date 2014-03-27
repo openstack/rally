@@ -7,7 +7,7 @@
                 "volume_size": 10
             },
             "runner": {
-                "type": "continuous",
+                "type": "constant",
                 "times": 10,
                 "active_users": 2
             },

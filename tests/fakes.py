@@ -14,6 +14,7 @@
 #    under the License.
 
 import mock
+import multiprocessing
 import uuid
 
 from glanceclient import exc
@@ -537,6 +538,9 @@ class FakeScenario(base.Scenario):
 
     def something_went_wrong(self, **kwargs):
         raise Exception("Something went wrong")
+
+    def raise_timeout(self, **kwargs):
+        raise multiprocessing.TimeoutError()
 
 
 class FakeTimer(rally_utils.Timer):

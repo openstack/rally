@@ -7,7 +7,7 @@
                 "detailed" : True
             },
             "runner": {
-                "type": "continuous",
+                "type": "constant",
                 "times": 1,
                 "active_users": 1
             },
