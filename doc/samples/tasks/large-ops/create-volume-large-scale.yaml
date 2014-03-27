@@ -1,0 +1,16 @@
+---
+  CinderVolumes.create_volume:
+    -
+      args:
+        size: 1
+      runner:
+        type: "continuous"
+        times: 30
+        active_users: 5
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+        quotas:
+            cinder:
+                volumes: -1

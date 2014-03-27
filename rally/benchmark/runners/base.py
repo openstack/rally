@@ -21,6 +21,7 @@ from oslo.config import cfg
 
 from rally.benchmark.context import cleaner as cleaner_ctx
 from rally.benchmark.context import keypair as keypair_ctx
+from rally.benchmark.context import quotas as quotas_ctx
 from rally.benchmark.context import secgroup as secgroup_ctx
 from rally.benchmark.context import users as users_ctx
 from rally.benchmark.scenarios import base
@@ -211,9 +212,12 @@ class ScenarioRunner(object):
 
         with users_ctx.UserGenerator(context) as generator:
             generator.setup()
-            with cleaner_ctx.ResourceCleaner(context) as cleaner:
-                cleaner.setup()
-                return self._prepare_and_run_scenario(context, name, kwargs)
+            with quotas_ctx.Quotas(context) as quotas:
+                quotas.setup()
+                with cleaner_ctx.ResourceCleaner(context) as cleaner:
+                    cleaner.setup()
+                    return self._prepare_and_run_scenario(context,
+                                                          name, kwargs)
 
     def _run_as_non_admin(self, name, kwargs):
         # TODO(boris-42): It makes sense to use UserGenerator here as well
