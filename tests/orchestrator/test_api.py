@@ -26,7 +26,7 @@ from tests import test
 
 FAKE_DEPLOY_CONFIG = {
     # TODO(akscram): A fake engine is more suitable for that.
-    'name': 'DummyEngine',
+    'name': 'ExistingCloud',
     'endpoint': {
         'auth_url': 'http://example.net:5000/v2.0/',
         'username': 'admin',
@@ -74,8 +74,8 @@ class APITestCase(test.TestCase):
         self.task_config = FAKE_TASK_CONFIG
         self.deploy_uuid = str(uuid.uuid4())
         self.endpoints = [FAKE_DEPLOY_CONFIG['endpoint']]
-        # TODO(msdubov): Remove this as soon as DummyEngine requires permission
-        #                on input
+        # TODO(msdubov): Remove this as soon as ExistingCloud requires
+        #                permission on input
         self.endpoints[0]["permission"] = consts.EndpointPermission.ADMIN
         self.task_uuid = str(uuid.uuid4())
         self.task = {

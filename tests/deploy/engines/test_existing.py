@@ -13,20 +13,20 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-"""Test dummy deploy engines."""
+"""Test ExistingCloud."""
 
 import jsonschema
 
 from rally import deploy
-from rally.deploy.engines import dummy
+from rally.deploy.engines import existing
 from tests import test
 
 
-class TestDummyDeployEngine(test.TestCase):
+class TestExistingCloud(test.TestCase):
     def setUp(self):
         self.deployment = {
             'config': {
-                'name': 'DummyEngine',
+                'name': 'ExistingCloud',
                 'endpoint': {
                     'auth_url': 'http://example.net:5000/v2.0/',
                     'username': 'admin',
@@ -35,27 +35,27 @@ class TestDummyDeployEngine(test.TestCase):
                 },
             },
         }
-        super(TestDummyDeployEngine, self).setUp()
+        super(TestExistingCloud, self).setUp()
 
     def test_init(self):
-        dummy.DummyEngine(self.deployment)
+        existing.ExistingCloud(self.deployment)
 
     def test_init_invalid_config(self):
         self.deployment['config']['endpoint'] = 42
         self.assertRaises(jsonschema.ValidationError,
-                          dummy.DummyEngine, self.deployment)
+                          existing.ExistingCloud, self.deployment)
 
     def test_deploy(self):
-        engine = dummy.DummyEngine(self.deployment)
+        engine = existing.ExistingCloud(self.deployment)
         endpoints = engine.deploy()
         admin_endpoint = self.deployment['config']['endpoint'].copy()
         self.assertEqual(admin_endpoint, endpoints[0].to_dict())
 
     def test_cleanup(self):
-        dummy.DummyEngine(self.deployment).cleanup()
+        existing.ExistingCloud(self.deployment).cleanup()
 
     def test_is_in_factory(self):
         name = self.deployment['config']['name']
         engine = deploy.EngineFactory.get_engine(name,
                                                  self.deployment)
-        self.assertIsInstance(engine, dummy.DummyEngine)
+        self.assertIsInstance(engine, existing.ExistingCloud)

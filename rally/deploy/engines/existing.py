@@ -18,13 +18,13 @@ from rally.deploy import engine
 from rally import objects
 
 
-class DummyEngine(engine.EngineFactory):
-    """DummyEngine doesn't deploy OpenStack it just use existing.
+class ExistingCloud(engine.EngineFactory):
+    """ExistingCloud doesn't deploy OpenStack it just use existing.
 
-       To use DummyEngine you should put in a config endpoint key, e.g:
+       To use ExistingCloud you should put in a config endpoint key, e.g:
 
             {
-                "name": "DummyEngine",
+                "name": "ExistingCloud",
                 "endpoint": {
                     "auth_url": "http://localhost:5000/v2.0/",
                     "username": "admin",
