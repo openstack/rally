@@ -46,7 +46,7 @@ class DeploymentCommandsTestCase(test.BaseTestCase):
         self.deployment.create('from_env', True)
         mock_create.assert_called_once_with(
             {
-                "name": "DummyEngine",
+                "name": "ExistingCloud",
                 "endpoint": {
                     "auth_url": 'fake_auth_url',
                     "username": 'fake_username',

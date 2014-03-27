@@ -67,7 +67,7 @@ class DeploymentCommands(object):
                 return
 
             config = {
-                "name": "DummyEngine",
+                "name": "ExistingCloud",
                 "endpoint": {
                     "auth_url": os.environ['OS_AUTH_URL'],
                     "username": os.environ['OS_USERNAME'],
