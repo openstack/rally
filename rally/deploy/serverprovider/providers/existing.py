@@ -17,7 +17,7 @@
 from rally.deploy.serverprovider import provider
 
 
-class DummyProvider(provider.ProviderFactory):
+class ExistingServers(provider.ProviderFactory):
     """Just return endpoints from own configuration."""
 
     CREDENTIALS_SCHEMA = {
@@ -45,7 +45,7 @@ class DummyProvider(provider.ProviderFactory):
     }
 
     def __init__(self, deployment, config):
-        super(DummyProvider, self).__init__(deployment, config)
+        super(ExistingServers, self).__init__(deployment, config)
         self.credentials = config['credentials']
 
     def create_servers(self):

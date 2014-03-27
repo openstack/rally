@@ -254,7 +254,7 @@ class LxcProviderTestCase(test.BaseTestCase):
             'tunnel_to': ['10.10.10.10', '20.20.20.20'],
             'container_name_prefix': 'rally-lxc',
             'host_provider': {
-                'name': 'DummyProvider',
+                'name': 'ExistingServers',
                 'credentials': [{'user': 'root', 'host': 'host1.net'},
                                 {'user': 'root', 'host': 'host2.net'}]}
         }

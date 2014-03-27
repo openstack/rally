@@ -11,7 +11,7 @@
         "tunnel_to": ["10.5.0.1"],
         "distribution": "ubuntu",
         "host_provider": {
-            "name": "DummyProvider",
+            "name": "ExistingServers",
             "credentials": [{"user": "root", "host": "10.2.250.103"}]
         }
     }

@@ -24,7 +24,7 @@ from rally.openstack.common import test
 SAMPLE_CONFIG = {
     'name': 'DevstackEngine',
     'provider': {
-        'name': 'DummyProvider',
+        'name': 'ExistingServers',
         'credentials': [{'user': 'root', 'host': 'example.com'}],
     },
     'localrc': {

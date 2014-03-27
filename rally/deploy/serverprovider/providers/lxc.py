@@ -261,7 +261,7 @@ class LxcProvider(provider.ProviderFactory):
         "forward_ssh": false,
         "container_name_prefix": "rally-multinode-02",
         "host_provider": {
-            "name": "DummyProvider",
+            "name": "ExistingServers",
             "credentials": [{"user": "root", "host": "host.net"}]
         }
     }

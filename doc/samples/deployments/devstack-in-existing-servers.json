@@ -1,7 +1,7 @@
 {
     "name": "DevstackEngine",
     "provider": {
-        "name": "DummyProvider",
+        "name": "ExistingServers",
         "credentials": [{"user": "root", "host": "10.2.0.8"}]
     }
 }

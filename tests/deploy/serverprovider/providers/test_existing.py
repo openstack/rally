@@ -16,17 +16,17 @@
 import jsonschema
 
 from rally.deploy import serverprovider
-from rally.deploy.serverprovider.providers import dummy
+from rally.deploy.serverprovider.providers import existing
 from tests import test
 
 
 ProviderFactory = serverprovider.ProviderFactory
 
 
-class DummyProviderTestCase(test.TestCase):
+class ExistingServersTestCase(test.TestCase):
     def setUp(self):
-        super(DummyProviderTestCase, self).setUp()
-        self.config = {'name': 'DummyProvider',
+        super(ExistingServersTestCase, self).setUp()
+        self.config = {'name': 'ExistingServers',
                        'credentials': [{'user': 'user', 'host': 'host1'},
                                        {'user': 'user', 'host': 'host2'}]}
 
@@ -40,9 +40,9 @@ class DummyProviderTestCase(test.TestCase):
     def test_invalid_config(self):
         self.config['name'] = 42
         self.assertRaises(jsonschema.ValidationError,
-                          dummy.DummyProvider, None, self.config)
+                          existing.ExistingServers, None, self.config)
 
     def test_invalid_credentials(self):
         self.config['credentials'] = ['user@host1', 'user@host2']
         self.assertRaises(jsonschema.ValidationError,
-                          dummy.DummyProvider, None, self.config)
+                          existing.ExistingServers, None, self.config)
