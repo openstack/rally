@@ -35,6 +35,9 @@ class Tempest(object):
         self.tempest_path = os.path.join(os.path.expanduser("~"),
                                          '.rally/tempest',
                                          'for-deployment-%s' % deploy_id)
+        self.config_file = os.path.join(self.tempest_path, 'tempest.conf')
+        self._venv_wrapper = os.path.join(self.tempest_path,
+                                          'tools/with_venv.sh')
 
     def _generate_config(self, options):
         conf = configparser.ConfigParser()
@@ -48,9 +51,32 @@ class Tempest(object):
         conf.set('DEFAULT', 'lock_path', self.lock_path)
         return conf
 
-    def _write_config(self, conf, config_path):
-        with open(config_path, 'w+') as f:
+    def _write_config(self, conf):
+        with open(self.config_file, 'w+') as f:
             conf.write(f)
+
+    def _generate_env(self):
+        env = os.environ.copy()
+        env['TEMPEST_CONFIG_DIR'] = self.tempest_path
+        env['TEMPEST_CONFIG'] = os.path.basename(self.config_file)
+        env['OS_TEST_PATH'] = os.path.join(self.tempest_path,
+                                           'tempest/test_discover')
+        LOG.debug('Generated environ: %s' % env)
+        return env
+
+    def _check_venv_existence(self):
+        if not os.path.isdir(os.path.join(self.tempest_path, '.venv')):
+            LOG.info('No virtual environment found...Install the virtualenv.')
+            LOG.debug('Virtual environment directory: %s' %
+                      os.path.join(self.tempest_path, '.venv'))
+            subprocess.call('python ./tools/install_venv.py', shell=True,
+                            cwd=self.tempest_path)
+
+    def _check_testr_initialization(self):
+        if not os.path.isdir(os.path.join(self.tempest_path,
+                                          '.testrepository')):
+            subprocess.call('%s testr init' % self._venv_wrapper, shell=True,
+                            cwd=self.tempest_path)
 
     def is_installed(self):
         return os.path.exists(self.tempest_path)
@@ -77,19 +103,27 @@ class Tempest(object):
         if os.path.exists(self.tempest_path):
             shutil.rmtree(self.tempest_path)
 
-    def _run(self, config_path, set_name, regex):
-        run_script = os.path.join(self.tempest_path, 'run_tempest.sh')
+    def _run(self, set_name, regex):
         if set_name == 'full':
             set_path = ''
         elif set_name == 'smoke':
-            set_path = '-s'
+            set_path = 'smoke'
         else:
             set_path = 'tempest.api.%s' % set_name
         regex = regex if regex else ''
+
+        testr_runner = '%(venv)s testr run --parallel --subunit ' \
+                       '%(set_path)s %(regex)s | %(venv)s subunit-2to1 ' \
+                       '| %(venv)s %(tempest_path)s/tools/colorizer.py' % {
+                           'venv': self._venv_wrapper,
+                           'set_path': set_path,
+                           'regex': regex,
+                           'tempest_path': self.tempest_path}
         try:
-            subprocess.check_call(
-                ['/usr/bin/env', 'bash', run_script, '-C', config_path,
-                 set_path, regex])
+            LOG.debug('testr started by the command: %s' % testr_runner)
+            subprocess.check_call(testr_runner,
+                                  cwd=self.tempest_path,
+                                  env=self._generate_env(), shell=True)
         except subprocess.CalledProcessError:
             print('Test set %s has been finished with error. '
                   'Check log for details' % set_name)
@@ -99,9 +133,11 @@ class Tempest(object):
         #TODO(miarmak) Change log_file and parse it
 
     def verify(self, set_name, regex, options):
-        config_path = os.path.join(self.tempest_path, 'tempest.conf')
-        if not os.path.isfile(config_path):
+        if not os.path.isfile(self.config_file):
             conf = self._generate_config(options)
-            self._write_config(conf, config_path)
-        LOG.debug("Tempest config file: %s " % config_path)
-        self._run(config_path, set_name, regex)
+            self._write_config(conf)
+        LOG.debug("Tempest config file: %s " % self.config_file)
+        self._check_venv_existence()
+        self._check_testr_initialization()
+
+        self._run(set_name, regex)
