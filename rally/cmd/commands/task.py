@@ -72,7 +72,7 @@ class TaskCommands(object):
             except exceptions.InvalidConfigException:
                 sys.exit(1)
 
-    @cliutils.args('--task-id', type=str, dest='task_id', help='UUID of task')
+    @cliutils.args('--uuid', type=str, dest='task_id', help='UUID of task')
     @envutils.with_default_task_id
     def abort(self, task_id=None):
         """Force abort task
@@ -81,7 +81,7 @@ class TaskCommands(object):
         """
         api.abort_task(task_id)
 
-    @cliutils.args('--task-id', type=str, dest='task_id', help='UUID of task')
+    @cliutils.args('--uuid', type=str, dest='task_id', help='UUID of task')
     @envutils.with_default_task_id
     def status(self, task_id=None):
         """Get status of task
@@ -94,8 +94,8 @@ class TaskCommands(object):
               % {'task_id': task_id, 'status': task['status']})
 
     @cliutils.args(
-        '--task-id', type=str, dest='task_id',
-        help=('uuid of task, if --task-id is "last" results of most '
+        '--uuid', type=str, dest='task_id',
+        help=('uuid of task, if --uuid is "last" results of most '
               'recently created task will be displayed.'))
     @cliutils.args('--no-aggregation', dest='no_aggregation',
                    action='store_true',
@@ -278,7 +278,7 @@ class TaskCommands(object):
         print(_("* To get raw JSON output of task results, run:"))
         print("\trally task results %s\n" % task["uuid"])
 
-    @cliutils.args('--task-id', type=str, dest='task_id', help='uuid of task')
+    @cliutils.args('--uuid', type=str, dest='task_id', help='uuid of task')
     @cliutils.args('--pretty', type=str, help=('pretty print (pprint) '
                                                'or json print (json)'))
     @envutils.with_default_task_id
@@ -319,7 +319,7 @@ class TaskCommands(object):
             print(_("There are no tasks. To run a new task, use:"
                     "\nrally task start"))
 
-    @cliutils.args('--task-id', type=str, dest='task_id', help='uuid of task')
+    @cliutils.args('--uuid', type=str, dest='task_id', help='uuid of task')
     @cliutils.args('--out', type=str, dest='out', required=False,
                    help='Path to output file.')
     @cliutils.args('--open', dest='open_it', action='store_true',
@@ -337,7 +337,7 @@ class TaskCommands(object):
             webbrowser.open_new_tab("file://" + os.path.realpath(output_file))
 
     @cliutils.args('--force', action='store_true', help='force delete')
-    @cliutils.args('--task-id', type=str, dest='task_id', help='uuid of task')
+    @cliutils.args('--uuid', type=str, dest='task_id', help='uuid of task')
     @envutils.with_default_task_id
     def delete(self, force, task_id=None):
         """Delete a specific task and related results.
