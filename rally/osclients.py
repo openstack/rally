@@ -38,6 +38,10 @@ CONF.register_opts([
 ])
 
 
+# NOTE(boris-42): super dirty hack to fix nova python client 2.17 thread safe
+nova._adapter_pool = lambda x: nova.adapters.HTTPAdapter()
+
+
 class Clients(object):
     """This class simplify and unify work with openstack python clients."""
 

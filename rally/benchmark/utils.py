@@ -43,15 +43,6 @@ def get_from_manager(error_statuses=None):
                 raise exceptions.GetResourceNotFound(resource=resource)
             raise exceptions.GetResourceFailure(resource=resource, err=e)
 
-        # catch client side errors caused by server side
-        if not hasattr(res, 'status') or not hasattr(res, 'name'):
-            # In many test cases, nova 'get-server' api maybe return an
-            # incomplete response which doesn't have some common key-value
-            # like 'status' or 'name'. Fortunately, it just happened in
-            # pre 'BUILD' state. So an easy solution is to pass this update
-            # cycle and request api in next one.
-            return res
-
         # catch abnormal status, such as "no valid host" for servers
         status = res.status.upper()
         if status == "DELETED":
