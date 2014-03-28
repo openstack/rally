@@ -15,6 +15,7 @@
 
 import itertools
 import logging
+import multiprocessing
 import time
 import traceback
 
@@ -155,6 +156,23 @@ def format_exc(exc):
 def infinite_run_args(args):
     for i in itertools.count():
         yield (i,) + args
+
+
+def run_concurrent(concurrent, fn, fn_args):
+    """Run given function using pool of threads.
+
+    :param concurrent: number of threads in the pool
+    :param fn: function to be called in the pool
+    :param fn_args: list of arguments for function fn() in the pool
+    :returns: iterator from Pool.imap()
+    """
+
+    pool = multiprocessing.pool.ThreadPool(concurrent)
+    iterator = pool.imap(fn, fn_args)
+    pool.close()
+    pool.join()
+
+    return iterator
 
 
 def delete_servers(nova):
