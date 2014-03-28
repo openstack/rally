@@ -13,7 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-
 import re
 
 from rally.benchmark import engine
@@ -22,7 +21,10 @@ from rally import db
 from rally import deploy
 from rally import exceptions
 from rally import objects
+from rally.openstack.common import log as logging
 from rally.verification.verifiers.tempest import tempest
+
+LOG = logging.getLogger(__name__)
 
 
 def create_deploy(config, name):
@@ -142,12 +144,13 @@ def verify(deploy_id, image_id, alt_image_id, flavor_id, alt_flavor_id,
     :param alt_flavor_id: Valid secondary flavor to be used in tests.
     :param set_name: Valid name of tempest test set.
     """
-    verifier = tempest.Tempest(deploy_id)
+    verification = objects.Verification(deployment_uuid=deploy_id)
+    verifier = tempest.Tempest(deploy_id, verification)
     if not verifier.is_installed():
         print("Tempest is not installed for specified deployment. "
               "Please use 'rally-manage tempest install'")
         return
-    print("Starting verification of deployment: %s" % deploy_id)
+    LOG.info("Starting verification of deployment: %s" % deploy_id)
 
     endpoints = db.deployment_get(deploy_id)['endpoints']
     endpoint = endpoints[0]
@@ -167,4 +170,5 @@ def verify(deploy_id, image_id, alt_image_id, flavor_id, alt_flavor_id,
                      ('uri_v3', re.sub('/v2.0', '/v3', endpoint['auth_url']))])
                  )
 
+    verification.set_running()
     verifier.verify(set_name=set_name, regex=regex, options=conf_opts)

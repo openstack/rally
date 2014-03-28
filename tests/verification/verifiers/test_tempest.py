@@ -31,6 +31,9 @@ class TempestTestCase(test.TestCase):
     def setUp(self):
         super(TempestTestCase, self).setUp()
         self.verifier = tempest.Tempest('fake_deploy_id')
+
+        self.verifier.verification = mock.MagicMock()
+
         self.verifier.lock_path = 'fake_lock_path'
         self.conf_opts = (
             ('compute', [
@@ -86,28 +89,30 @@ class TempestTestCase(test.TestCase):
 
         result = self.verifier.is_installed()
 
-        mock_exists.assert_called_once_with(self.verifier.tempest_path)
+        mock_exists.assert_called_once_with(
+            os.path.join(self.verifier.tempest_path, '.venv'))
         self.assertTrue(result)
 
     @mock.patch('rally.verification.verifiers.tempest.tempest.subprocess')
     def test__clone(self, mock_sp):
         self.verifier._clone()
-        mock_sp.call.assert_called_once_with(
+        mock_sp.check_call.assert_called_once_with(
             ['git', 'clone', 'git://github.com/openstack/tempest',
              tempest.Tempest.tempest_base_path])
 
-    @mock.patch('rally.verification.verifiers.tempest.tempest.subprocess')
+    @mock.patch(TEMPEST_PATH + '.Tempest._install_venv')
+    @mock.patch(TEMPEST_PATH + '.subprocess')
     @mock.patch('os.path.exists')
     @mock.patch('shutil.copytree')
-    def test_install(self, mock_copytree, mock_exists, mock_sp):
-        mock_exists.side_effect = (True, False)
+    def test_install(self, mock_copytree, mock_exists, mock_sp, mock_venv):
+        mock_exists.side_effect = (False, True, False)
         # simulate tempest is clonned but is not installed for current deploy
 
         self.verifier.install()
         mock_copytree.assert_called_once_with(
             tempest.Tempest.tempest_base_path,
             self.verifier.tempest_path)
-        mock_sp.Popen.assert_called_once_with(
+        mock_sp.check_call.assert_called_once_with(
             'git checkout master; git remote update; git pull',
             cwd=os.path.join(self.verifier.tempest_path, 'tempest'),
             shell=True)
@@ -123,31 +128,42 @@ class TempestTestCase(test.TestCase):
     @mock.patch('shutil.rmtree')
     @mock.patch(TEMPEST_PATH + '.subprocess')
     def test__run(self, mock_sp, mock_rmtree, mock_env):
-        self.verifier._run('smoke', None)
-        fake_call = '%(venv)s testr run --parallel --subunit smoke  | ' \
-                    '%(venv)s subunit-2to1 ' \
-                    '| %(venv)s %(tempest_path)s/tools/colorizer.py' % {
-                        'venv': self.verifier._venv_wrapper,
-                        'tempest_path': self.verifier.tempest_path}
+        self.verifier._run('smoke')
+        fake_call = (
+            '%(venv)s testr run --parallel --subunit smoke '
+            '| %(venv)s subunit2junitxml --forward '
+            '--output-to=%(tempest_path)s/testr_log.xml '
+            '| %(venv)s subunit-2to1 '
+            '| %(venv)s %(tempest_path)s/tools/colorizer.py' % {
+                'venv': self.verifier._venv_wrapper,
+                'tempest_path': self.verifier.tempest_path})
         mock_sp.check_call.assert_called_once_with(
             fake_call, env=mock_env(), cwd=self.verifier.tempest_path,
             shell=True)
 
-    @mock.patch(TEMPEST_PATH + '.Tempest._check_venv_existence')
+    @mock.patch(TEMPEST_PATH + '.Tempest._save_results')
+    @mock.patch(TEMPEST_PATH + '.Tempest._prepare_and_run')
+    def test_verify(self, mock_run, mock_save_results):
+        self.verifier.verify(set_name=self.set_name, regex=None,
+                             options=self.conf_opts)
+
+        mock_run.assert_called_once_with('smoke', None, self.conf_opts)
+
     @mock.patch(TEMPEST_PATH + '.Tempest._check_testr_initialization')
     @mock.patch(TEMPEST_PATH + '.Tempest._run')
     @mock.patch(TEMPEST_PATH + '.Tempest._write_config')
     @mock.patch(TEMPEST_PATH + '.Tempest._generate_config')
-    def test_verify(self, mock_gen, mock_write, mock_run, mock_check_testr,
-                    mock_check_venv):
+    def test__prepare_and_run(self, mock_gen, mock_write, mock_run,
+                              mock_check_testr):
         mock_gen.return_value = 'fake_conf'
 
-        self.verifier.verify(set_name=self.set_name, regex=None,
-                             options=self.conf_opts)
+        self.verifier._prepare_and_run(set_name=self.set_name,
+                                       regex=None,
+                                       options=self.conf_opts)
 
         mock_gen.assert_called_once_with(self.conf_opts)
         mock_write.assert_called_once_with('fake_conf')
-        mock_run.assert_called_once_with('smoke', None)
+        mock_run.assert_called_once_with('smoke')
 
     @mock.patch('os.environ')
     def test__generate_env(self, mock_env):
@@ -162,26 +178,27 @@ class TempestTestCase(test.TestCase):
 
     @mock.patch('os.path.isdir')
     @mock.patch(TEMPEST_PATH + '.subprocess')
-    def test__check_venv_existence_when_venv_exists(self, mock_sp, mock_isdir):
+    def test__venv_install_when_venv_exists(self, mock_sp, mock_isdir):
         mock_isdir.return_value = True
-        self.verifier._check_venv_existence()
+        self.verifier._install_venv()
 
         mock_isdir.assert_called_once_with(
             os.path.join(self.verifier.tempest_path, '.venv'))
         self.assertEqual(0, mock_sp.call_count)
 
     @mock.patch('os.path.isdir')
-    @mock.patch(TEMPEST_PATH + '.subprocess.call')
-    def test__check_venv_existence_when_venv_not_exist(self, mock_sp,
-                                                       mock_isdir):
+    @mock.patch(TEMPEST_PATH + '.subprocess')
+    def test__venv_install_when_venv_not_exist(self, mock_sp, mock_isdir):
         mock_isdir.return_value = False
-        self.verifier._check_venv_existence()
+        self.verifier._install_venv()
 
         mock_isdir.assert_called_once_with(
             os.path.join(self.verifier.tempest_path, '.venv'))
-        mock_sp.assert_called_once_with('python ./tools/install_venv.py',
-                                        shell=True,
-                                        cwd=self.verifier.tempest_path)
+        mock_sp.check_call.assert_has_calls([
+            mock.call('python ./tools/install_venv.py', shell=True,
+                      cwd=self.verifier.tempest_path),
+            mock.call('%s pip install junitxml' % self.verifier._venv_wrapper,
+                      shell=True, cwd=self.verifier.tempest_path)])
 
     @mock.patch('os.path.isdir')
     @mock.patch(TEMPEST_PATH + '.subprocess')
@@ -206,3 +223,26 @@ class TempestTestCase(test.TestCase):
         mock_sp.assert_called_once_with(
             '%s testr init' % self.verifier._venv_wrapper, shell=True,
             cwd=self.verifier.tempest_path)
+
+    @mock.patch('xml.dom.minidom')
+    @mock.patch('os.path.isfile')
+    def test__save_results_without_log_file(self, mock_isfile, mock_minidom):
+        mock_isfile.return_value = False
+
+        self.verifier._save_results()
+
+        mock_isfile.assert_called_once_with(self.verifier.log_file)
+        self.assertEqual(0, mock_minidom.call_count)
+
+    @mock.patch('os.path.isfile')
+    def test__save_results_with_log_file(self, mock_isfile):
+        mock_isfile.return_value = True
+        self.verifier.log_file = os.path.join(os.path.dirname(__file__),
+                                              'fake_log.xml')
+
+        self.verifier._save_results()
+        mock_isfile.assert_called_once_with(self.verifier.log_file)
+        fake_test_case = fakes.get_fake_test_case()
+        self.verifier.verification.finish_verification.assert_called_once_with(
+            total=fake_test_case['total'],
+            test_cases=fake_test_case['test_cases'])

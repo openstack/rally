@@ -246,3 +246,73 @@ def resource_delete(id):
              does not exist.
     """
     return IMPL.resource_delete(id)
+
+
+def verification_create(deployment_uuid):
+    """Create Verification record in DB.
+
+    :param deployment_uuid: UUID of the deployment.
+    :returns: a dict with verification data.
+    """
+    return IMPL.verification_create(deployment_uuid)
+
+
+def verification_get(verification_uuid):
+    """Returns verification by UUID.
+
+    :param id: UUID of the verification.
+    :raises: :class:`rally.exceptions.NotFoundException` if verification
+             does not exist.
+    :returns: a dict with verification data.
+    """
+    return IMPL.verification_get(verification_uuid)
+
+
+def verification_delete(verification_uuid):
+    """Delete verification.
+
+    :param verification_uuid: UUID of the verification.
+    :raises: :class:`rally.exceptions.NotFoundException` if verification
+             does not exist.
+    """
+    return IMPL.verification_delete(verification_uuid)
+
+
+def verification_update(uuid, values):
+    """Update verification by values.
+
+    :param uuid: UUID of the verification.
+    :param values: dict with record values.
+    :raises: :class:`rally.exceptions.NotFoundException` if verification
+             does not exist.
+    :returns: new updated task dict with data on the task.
+    """
+    return IMPL.verification_update(uuid, values)
+
+
+def verification_list(status=None):
+    """Get a list of verifications.
+
+    :param status: Verification status to filter the returned list on.
+    :returns: A list of dicts with data on the verifications.
+    """
+    return IMPL.verification_list(status=status)
+
+
+def verification_result_get(verification_uuid):
+    """Get dict of verification results.
+
+    :param verification_uuid: string with UUID of Verification instance.
+    :returns: dict instance of VerificationResult.
+    """
+    return IMPL.verification_result_get(verification_uuid)
+
+
+def verification_result_create(verification_uuid, values):
+    """Append result record to verification.
+
+    :param verification_uuid: string with UUID of Verification instance.
+    :param values: dict with record values.
+    :returns: TaskResult instance appended.
+    """
+    return IMPL.verification_result_create(verification_uuid, values)
