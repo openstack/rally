@@ -13,17 +13,21 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from rally.benchmark.scenarios import base
 from rally.benchmark.scenarios.keystone import utils as kutils
 
 
 class KeystoneBasic(kutils.KeystoneScenario):
 
+    @base.scenario
     def create_user(self, name_length=10, **kwargs):
         self._user_create(name_length=name_length, **kwargs)
 
+    @base.scenario
     def create_delete_user(self, name_length=10, **kwargs):
         user = self._user_create(name_length=name_length, **kwargs)
         self._resource_delete(user)
 
+    @base.scenario
     def create_tenant(self, name_length=10, **kwargs):
         self._tenant_create(name_length=name_length, **kwargs)
