@@ -22,6 +22,14 @@ from rally import exceptions
 from rally import utils
 
 
+def scenario(f):
+    """This method is used as decorator for the methods of benchmark scenarios
+       and it adds extra field is_scenario = True to the methods
+    """
+    f.is_scenario = True
+    return f
+
+
 class Scenario(object):
     """This is base class for any benchmark scenario.
        You should create subclass of this class. And you test scenarios will
@@ -53,7 +61,8 @@ class Scenario(object):
         """
         benchmark_scenarios = [
             ["%s.%s" % (scenario.__name__, method)
-             for method in dir(scenario) if not method.startswith("_")]
+             for method in dir(scenario) if getattr(
+                 getattr(scenario, method), "is_scenario", False)]
             for scenario in utils.itersubclasses(Scenario)
         ]
         benchmark_scenarios_flattened = list(itertools.chain.from_iterable(

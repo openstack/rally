@@ -13,7 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-
+from rally.benchmark.scenarios import base
 from rally.benchmark.scenarios.glance import utils
 from rally.benchmark.scenarios.nova import utils as nova_utils
 from rally.benchmark import validation
@@ -21,6 +21,7 @@ from rally.benchmark import validation
 
 class GlanceImages(utils.GlanceScenario, nova_utils.NovaScenario):
 
+    @base.scenario
     def create_and_delete_image(self, container_format,
                                 image_url, disk_format, **kwargs):
         """Test adds and then deletes image."""
@@ -33,6 +34,7 @@ class GlanceImages(utils.GlanceScenario, nova_utils.NovaScenario):
         self._delete_image(image)
 
     @validation.add_validator(validation.flavor_exists("flavor_id"))
+    @base.scenario
     def create_image_and_boot_instances(self, container_format,
                                         image_url, disk_format,
                                         flavor_id, number_instances,

@@ -19,6 +19,7 @@ import traceback
 
 import yaml
 
+from rally.benchmark.scenarios import base
 from rally.benchmark import engine
 from tests import test
 
@@ -51,6 +52,6 @@ class TaskSampleTestCase(test.TestCase):
 
         # TODO(boris-42): We should refactor scenarios framework add "_" to
         #                 all non-benchmark methods.. Then this test will pass.
-        #missing = set(base.Scenario.list_benchmark_scenarios()) - scenarios
-        #self.assertEqual(missing, [],
-        #                 "These scenarios don't have samples: %s" % missing)
+        missing = set(base.Scenario.list_benchmark_scenarios()) - scenarios
+        self.assertEqual(missing, set([]),
+                         "These scenarios don't have samples: %s" % missing)

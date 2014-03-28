@@ -19,5 +19,7 @@ class Authenticate(base.Scenario):
     """This class should contain authentication mechanism for different
     types of clients like Keystone.
     """
+
+    @base.scenario
     def keystone(self, **kwargs):
         self.clients("keystone")
