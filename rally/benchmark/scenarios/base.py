@@ -102,12 +102,7 @@ class Scenario(object):
                 Scenario._validate_helper(user_validators, user, args)
 
     def context(self):
-        """Returns the context of the current benchmark scenario.
-
-        The context is the return value of the init() class.
-
-        :returns: Dict
-        """
+        """Returns the context of the current benchmark scenario."""
         return self._context
 
     def clients(self, client_type):
@@ -118,7 +113,7 @@ class Scenario(object):
 
         :param client_type: Client type ("nova"/"glance" etc.)
 
-        :returns: Python openstack client object
+        :returns: Standard python OpenStack client instance
         """
         return getattr(self._clients, client_type)()
 

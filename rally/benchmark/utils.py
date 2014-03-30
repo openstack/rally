@@ -153,9 +153,9 @@ def format_exc(exc):
     return [str(type(exc)), str(exc), traceback.format_exc()]
 
 
-def infinite_run_args(args):
+def infinite_run_args_generator(args_func):
     for i in itertools.count():
-        yield (i,) + args
+        yield args_func(i)
 
 
 def run_concurrent(concurrent, fn, fn_args):

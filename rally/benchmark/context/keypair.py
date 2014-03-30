@@ -49,7 +49,7 @@ class Keypair(base.Context):
 
     def setup(self):
         for user in self.context["users"]:
-            keypair = self._generate_keypair(user['endpoint'])
+            keypair = self._generate_keypair(user["endpoint"])
             user["keypair"] = keypair
 
     def cleanup(self):

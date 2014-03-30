@@ -521,6 +521,9 @@ class FakeScenario(base.Scenario):
     def do_it(self, **kwargs):
         pass
 
+    def with_output(self, **kwargs):
+        return {"data": {"a": 1}, "error": None}
+
     def too_long(self, **kwargs):
         pass
 

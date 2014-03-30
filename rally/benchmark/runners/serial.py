@@ -13,9 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-
-import random
-
 from rally.benchmark.runners import base
 
 
@@ -55,8 +52,8 @@ class SerialScenarioRunner(base.ScenarioRunner):
         results = []
 
         for i in range(times):
-            run_args = (i, cls, method_name, context['admin'],
-                        random.choice(context['users']), args)
+            run_args = (i, cls, method_name,
+                        base._get_scenario_context(context), args)
             result = base._run_scenario_once(run_args)
             results.append(result)
 

@@ -34,7 +34,7 @@ class SerialScenarioRunnerTestCase(test.TestCase):
     @mock.patch("rally.benchmark.runners.base._run_scenario_once")
     def test_run_scenario(self, mock_run_once):
         times = 5
-        result = {"time": 10, "idle_time": 0, "error": None,
+        result = {"time": 10, "idle_time": 0, "error": [],
                   "scenario_output": {}, "atomic_actions_time": []}
         mock_run_once.return_value = result
         expected_results = [result for i in range(times)]

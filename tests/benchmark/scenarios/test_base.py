@@ -122,27 +122,38 @@ class ScenarioTestCase(test.TestCase):
             mock.call(validators, "u2", args)
         ])
 
-    @mock.patch("rally.benchmark.scenarios.base.time.sleep")
-    @mock.patch("rally.benchmark.scenarios.base.random.uniform")
-    def test_sleep_between(self, mock_uniform, mock_sleep):
+    def test_sleep_between_invalid_args(self):
         scenario = base.Scenario()
-
-        mock_uniform.return_value = 10
-        scenario.sleep_between(5, 15)
-        scenario.sleep_between(10, 10)
-
-        expected = [mock.call(5, 15), mock.call(10, 10)]
-        self.assertEqual(mock_uniform.mock_calls, expected)
-        expected = [mock.call(10), mock.call(10)]
-        self.assertEqual(mock_sleep.mock_calls, expected)
-
-        self.assertEqual(scenario.idle_time(), 20)
         self.assertRaises(exceptions.InvalidArgumentsException,
                           scenario.sleep_between, 15, 5)
+
         self.assertRaises(exceptions.InvalidArgumentsException,
                           scenario.sleep_between, -1, 0)
+
         self.assertRaises(exceptions.InvalidArgumentsException,
                           scenario.sleep_between, 0, -2)
+
+    def test_sleep_between(self):
+        scenario = base.Scenario()
+        scenario.sleep_between(0.001, 0.002)
+        self.assertTrue(0.001 <= scenario.idle_time() <= 0.002)
+
+    def test_sleep_beetween_multi(self):
+        scenario = base.Scenario()
+        scenario.sleep_between(0.001, 0.001)
+        scenario.sleep_between(0.004, 0.004)
+        self.assertEqual(scenario.idle_time(), 0.005)
+
+    @mock.patch("rally.benchmark.scenarios.base.time.sleep")
+    @mock.patch("rally.benchmark.scenarios.base.random.uniform")
+    def test_sleep_between_internal(self, mock_uniform, mock_sleep):
+        scenario = base.Scenario()
+
+        mock_uniform.return_value = 1.5
+        scenario.sleep_between(1, 2)
+
+        mock_sleep.assert_called_once_with(mock_uniform.return_value)
+        self.assertEqual(scenario.idle_time(), mock_uniform.return_value)
 
     def test_context(self):
         context = mock.MagicMock()

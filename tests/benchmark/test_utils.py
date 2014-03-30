@@ -31,11 +31,11 @@ class BenchmarkUtilsTestCase(test.TestCase):
         self.assertTrue(is_active(fakes.FakeResource(status="aCtIvE")))
         self.assertFalse(is_active(fakes.FakeResource(status="ERROR")))
 
-    def test_infinite_run_args(self):
-        args = ("a", "b", "c", "d", 123)
-        for i, real_args in enumerate(utils.infinite_run_args(args)):
-            self.assertEqual((i,) + args, real_args)
-            if i == 10:
+    def test_infinite_run_args_generator(self):
+        args = lambda x: (x, "a", "b", 123)
+        for i, real_args in enumerate(utils.infinite_run_args_generator(args)):
+            self.assertEqual((i, "a", "b", 123), real_args)
+            if i > 5:
                 break
 
     def test_manager_list_sizes(self):

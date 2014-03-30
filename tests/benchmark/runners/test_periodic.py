@@ -46,31 +46,65 @@ class PeriodicScenarioRunnerTestCase(test.TestCase):
         self.assertRaises(jsonschema.ValidationError,
                           periodic.PeriodicScenarioRunner.validate, config)
 
-    @mock.patch("rally.benchmark.runners.base._run_scenario_once")
-    @mock.patch("rally.benchmark.runners.periodic.time.sleep")
-    @mock.patch("rally.benchmark.runners.base.osclients")
-    def test_run_scenario(self, mock_osclients, mock_sleep,
-                          mock_run_scenario_once):
-        mock_osclients.Clients.return_value = fakes.FakeClients()
-        mock_run_scenario_once.return_value = {}
-        runner = periodic.PeriodicScenarioRunner(mock.MagicMock(),
-                                                 self.fake_endpoints)
+    def test_run_scenario(self):
+        context = fakes.FakeUserContext({}).context
+        runner = periodic.PeriodicScenarioRunner(
+                        None, [context["admin"]["endpoint"]])
         times = 3
-        period = 4
-        runner.users = ["client"]
+        period = 0
 
-        runner._run_scenario(fakes.FakeScenario, "do_it",
-                             fakes.FakeUserContext({}).context, {},
+        result = runner._run_scenario(fakes.FakeScenario, "do_it", context, {},
+                                      {"times": times, "period": period,
+                                       "timeout": 5})
+        self.assertEqual(len(result), times)
+        self.assertIsNotNone(base.ScenarioRunnerResult(result))
+
+    def test_run_scenario_exception(self):
+        context = fakes.FakeUserContext({}).context
+        runner = periodic.PeriodicScenarioRunner(
+                        None, [context["admin"]["endpoint"]])
+        times = 4
+        period = 0
+
+        result = runner._run_scenario(fakes.FakeScenario,
+                                      "something_went_wrong", context, {},
+                                      {"times": times, "period": period,
+                                       "timeout": 5})
+        self.assertEqual(len(result), times)
+        self.assertIsNotNone(base.ScenarioRunnerResult(result))
+
+    @mock.patch("rally.benchmark.runners.periodic.base.ScenarioRunnerResult")
+    @mock.patch("rally.benchmark.runners.periodic.multiprocessing_pool")
+    @mock.patch("rally.benchmark.runners.periodic.time.sleep")
+    def test_run_scenario_internal_logic(self, mock_time, mock_pool,
+                                         mock_result):
+        context = fakes.FakeUserContext({}).context
+        runner = periodic.PeriodicScenarioRunner(
+                        None, [context["admin"]["endpoint"]])
+        times = 4
+        period = 0
+
+        mock_pool_inst = mock.MagicMock()
+        mock_pool.ThreadPool.return_value = mock_pool_inst
+
+        runner._run_scenario(fakes.FakeScenario, "do_it", context, {},
                              {"times": times, "period": period, "timeout": 5})
 
-        expected = [mock.call((i, fakes.FakeScenario, "do_it",
-                               fakes.FakeUserContext.admin,
-                               fakes.FakeUserContext.user, {}))
-                    for i in xrange(times)]
-        self.assertEqual(mock_run_scenario_once.mock_calls, expected)
+        exptected_pool_inst_call = []
+        for i in range(times):
+            args = (
+                base._run_scenario_once,
+                ((i, fakes.FakeScenario, "do_it",
+                  base._get_scenario_context(context), {}),)
+            )
+            exptected_pool_inst_call.append(mock.call.apply_async(*args))
 
-        expected = [mock.call(period) for i in xrange(times - 1)]
-        mock_sleep.has_calls(expected)
+        for i in range(times):
+            exptected_pool_inst_call.append(mock.call.apply_async().get())
+
+        mock_pool.assert_has_calls([mock.call.ThreadPool(processes=1)])
+        mock_pool_inst.assert_has_calls(exptected_pool_inst_call)
+        mock_time.assert_has_calls([])
 
     @mock.patch("rally.benchmark.runners.base.base")
     @mock.patch("rally.benchmark.runners.base.osclients")
