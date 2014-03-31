@@ -16,7 +16,6 @@
 
 import collections
 import multiprocessing
-import random
 import time
 
 from rally.benchmark.runners import base
@@ -69,18 +68,21 @@ class ContinuousScenarioRunner(base.ScenarioRunner):
         "additionalProperties": False
     }
 
+    @staticmethod
+    def _iter_scenario_args(cls, method, ctx, args, times):
+        for i in xrange(times):
+            yield (i, cls, method, base._get_scenario_context(ctx), args)
+
     def _run_scenario_continuously_for_times(self, cls, method, context, args,
                                              times, concurrent, timeout):
-        test_args = [(i, cls, method, context["admin"],
-                      random.choice(context["users"]), args)
-                     for i in range(times)]
 
         pool = multiprocessing.Pool(concurrent)
-        iter_result = pool.imap(base._run_scenario_once, test_args)
-
+        iter_result = pool.imap(base._run_scenario_once,
+                                self._iter_scenario_args(cls, method, context,
+                                                         args, times))
         results = []
 
-        for i in range(len(test_args)):
+        for i in range(times):
             try:
                 result = iter_result.next(timeout)
             except multiprocessing.TimeoutError as e:
@@ -97,15 +99,15 @@ class ContinuousScenarioRunner(base.ScenarioRunner):
                                                 args, duration, concurrent,
                                                 timeout):
         pool = multiprocessing.Pool(concurrent)
-        run_args = utils.infinite_run_args((cls, method, context["admin"],
-                                            random.choice(context["users"]),
-                                            args))
+
+        def _scenario_args(i):
+            return (i, cls, method, base._get_scenario_context(context), args)
+
+        run_args = utils.infinite_run_args_generator(_scenario_args)
         iter_result = pool.imap(base._run_scenario_once, run_args)
 
-        start = time.time()
-
         results_queue = collections.deque([], maxlen=concurrent)
-
+        start = time.time()
         while True:
             try:
                 result = iter_result.next(timeout)

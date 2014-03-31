@@ -123,24 +123,24 @@ class NovaServers(utils.NovaScenario,
                 )
             )
         server_ip = [ip for ip in server.addresses[network] if
-                     ip['version'] == ip_version][0]['addr']
+                     ip["version"] == ip_version][0]["addr"]
         ssh = sshutils.SSH(username, server_ip, port=port,
-                           pkey=self.clients('ssh_key_pair')['private'])
+                           pkey=self.context()["user"]["keypair"]["private"])
         ssh.wait()
-        code, out, err = ssh.execute(interpreter, stdin=open(script, 'rb'))
+        code, out, err = ssh.execute(interpreter, stdin=open(script, "rb"))
         if code:
-            LOG.error(_('Error running script on instance via SSH. '
-                        'Error: %s') % err)
+            LOG.error(_("Error running script on instance via SSH. "
+                        "Error: %s") % err)
         try:
             out = json.loads(out)
         except ValueError:
-            LOG.warning(_('Script %s did not output valid JSON. ') % script)
+            LOG.warning(_("Script %s did not output valid JSON.") % script)
 
         self._delete_server(server)
-        LOG.debug(_('Output streams from in-instance script execution: '
-                    'stdout: %(stdout)s, stderr: $(stderr)s') % dict(
+        LOG.debug(_("Output streams from in-instance script execution: "
+                    "stdout: %(stdout)s, stderr: $(stderr)s") % dict(
                         stdout=out, stderr=err))
-        return {'data': out, 'errors': err}
+        return {"data": out, "errors": err}
 
     @valid.add_validator(valid.image_valid_on_flavor("flavor_id", "image_id"))
     @base.scenario

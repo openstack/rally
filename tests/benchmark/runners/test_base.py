@@ -15,7 +15,6 @@
 
 import jsonschema
 import mock
-import multiprocessing
 
 from rally.benchmark.runners import base
 from rally.benchmark.runners import continuous
@@ -23,6 +22,101 @@ from rally import consts
 from rally import exceptions
 from tests import fakes
 from tests import test
+
+
+class ScenarioHelpersTestCase(test.TestCase):
+
+    @mock.patch("rally.benchmark.runners.base.random")
+    def test_get_scenario_context(self, mock_random):
+        mock_random.choice = lambda x: x[1]
+
+        context = {
+            "admin": mock.MagicMock(),
+            "users": [mock.MagicMock(), mock.MagicMock(), mock.MagicMock()],
+            "some_random_key": {
+                "nested": mock.MagicMock(),
+                "one_more": 10
+            }
+        }
+        expected_context = {
+            "admin": context["admin"],
+            "user": context["users"][1],
+            "some_random_key": context["some_random_key"]
+        }
+
+        self.assertEqual(expected_context, base._get_scenario_context(context))
+
+    @mock.patch("rally.benchmark.runners.base.osclients")
+    def test_run_scenario_once_internal_logic(self, mock_clients):
+        mock_clients.Clients.return_value = "cl"
+
+        context = base._get_scenario_context(fakes.FakeUserContext({}).context)
+        scenario_cls = mock.MagicMock()
+        args = (2, scenario_cls, "test", context, {})
+        base._run_scenario_once(args)
+
+        expected_calls = [
+            mock.call(context=context, admin_clients="cl", clients="cl"),
+            mock.call().test(),
+            mock.call().idle_time(),
+            mock.call().idle_time(),
+            mock.call().atomic_actions_time()
+        ]
+        scenario_cls.assert_has_calls(expected_calls, any_order=True)
+
+    @mock.patch("rally.benchmark.runners.base.rutils")
+    @mock.patch("rally.benchmark.runners.base.osclients")
+    def test_run_scenario_once_without_scenario_output(self, mock_clients,
+                                                       mock_rutils):
+        mock_rutils.Timer = fakes.FakeTimer
+        context = base._get_scenario_context(fakes.FakeUserContext({}).context)
+        args = (1, fakes.FakeScenario, "do_it", context, {})
+        result = base._run_scenario_once(args)
+
+        expected_reuslt = {
+            "time": fakes.FakeTimer().duration(),
+            "idle_time": 0,
+            "error": [],
+            "scenario_output": {},
+            "atomic_actions_time": []
+        }
+        self.assertEqual(expected_reuslt, result)
+
+    @mock.patch("rally.benchmark.runners.base.rutils")
+    @mock.patch("rally.benchmark.runners.base.osclients")
+    def test_run_scenario_once_with_scenario_output(self, mock_clients,
+                                                    mock_rutils):
+        mock_rutils.Timer = fakes.FakeTimer
+        context = base._get_scenario_context(fakes.FakeUserContext({}).context)
+        args = (1, fakes.FakeScenario, "with_output", context, {})
+        result = base._run_scenario_once(args)
+
+        expected_reuslt = {
+            "time": fakes.FakeTimer().duration(),
+            "idle_time": 0,
+            "error": [],
+            "scenario_output": fakes.FakeScenario().with_output(),
+            "atomic_actions_time": []
+        }
+        self.assertEqual(expected_reuslt, result)
+
+    @mock.patch("rally.benchmark.runners.base.rutils")
+    @mock.patch("rally.benchmark.runners.base.osclients")
+    def test_run_scenario_once_exception(self, mock_clients, mock_rutils):
+        mock_rutils.Timer = fakes.FakeTimer
+        context = base._get_scenario_context(fakes.FakeUserContext({}).context)
+        args = (1, fakes.FakeScenario, "something_went_wrong", context, {})
+        result = base._run_scenario_once(args)
+        expected_error = result.pop("error")
+        expected_reuslt = {
+            "time": fakes.FakeTimer().duration(),
+            "idle_time": 0,
+            "scenario_output": {},
+            "atomic_actions_time": []
+        }
+        self.assertEqual(expected_reuslt, result)
+        self.assertEqual(expected_error[:2],
+                         [str(Exception), "Something went wrong"])
 
 
 class ScenarioRunnerResultTestCase(test.TestCase):
@@ -34,20 +128,20 @@ class ScenarioRunnerResultTestCase(test.TestCase):
                 "idle_time": 1.0,
                 "scenario_output": {
                     "data": {"test": 1.0},
-                    "error": "test error string 1"
+                    "errors": "test error string 1"
                 },
                 "atomic_actions_time": [{"action": "test1", "duration": 1.0}],
-                "error": "test1"
+                "error": []
             },
             {
                 "time": 2.0,
                 "idle_time": 2.0,
                 "scenario_output": {
                     "data": {"test": 2.0},
-                    "error": "test error string 2"
+                    "errors": "test error string 2"
                 },
                 "atomic_actions_time": [{"action": "test2", "duration": 2.0}],
-                "error": "test2"
+                "error": ["a", "b", "c"]
             }
         ]
 
@@ -79,6 +173,25 @@ class ScenarioRunnerTestCase(test.TestCase):
         mock_validate.assert_called_once_with(config,
                                               fakes.FakeRunner.CONFIG_SCHEMA)
 
+    def test_get_runner(self):
+
+        class NewRunner(base.ScenarioRunner):
+            __execution_type__ = "new_runner"
+
+        task = mock.MagicMock()
+        endpoints = [mock.MagicMock(), mock.MagicMock()]
+        runner = base.ScenarioRunner.get_runner(task, endpoints, "new_runner")
+
+        self.assertEqual(runner.task, task)
+        self.assertEqual(runner.endpoints, endpoints)
+        self.assertEqual(runner.admin_user, endpoints[0])
+        self.assertIsInstance(runner, NewRunner)
+
+    def test_get_runner_no_such(self):
+        self.assertRaises(exceptions.NoSuchRunner,
+                          base.ScenarioRunner.get_runner,
+                          None, None, "NoSuchRunner")
+
     @mock.patch("rally.benchmark.runners.base.jsonschema.validate")
     def test_validate_default_runner(self, mock_validate):
         config = {"a": 10}
@@ -86,120 +199,6 @@ class ScenarioRunnerTestCase(test.TestCase):
         mock_validate.assert_called_once_with(
                 config,
                 continuous.ContinuousScenarioRunner.CONFIG_SCHEMA)
-
-    @mock.patch("rally.benchmark.runners.base.rutils")
-    @mock.patch("rally.benchmark.runners.base.osclients")
-    def test_run_scenario(self, mock_osclients, mock_utils):
-        mock_osclients.Clients.return_value = fakes.FakeClients()
-        srunner = continuous.ContinuousScenarioRunner(mock.MagicMock(),
-                                                      self.fake_endpoints)
-        active_users = 2
-        times = 3
-        duration = 0.1
-
-        mock_utils.Timer = fakes.FakeTimer
-        results = srunner._run_scenario(fakes.FakeScenario, "do_it",
-                                        fakes.FakeUserContext({}).context, {},
-                                        {"times": times,
-                                         "active_users": active_users,
-                                         "timeout": 2})
-        expected = [{"time": 10, "idle_time": 0, "error": None,
-                     "scenario_output": {}, "atomic_actions_time": []}
-                    for i in range(times)]
-        self.assertEqual(results, expected)
-
-        results = srunner._run_scenario(fakes.FakeScenario, "do_it",
-                                        fakes.FakeUserContext({}).context, {},
-                                        {"duration": duration,
-                                         "active_users": active_users,
-                                         "timeout": 2})
-        expected = [{"time": 10, "idle_time": 0, "error": None,
-                     "scenario_output": {}, "atomic_actions_time": []}
-                    for i in range(active_users)]
-        self.assertEqual(results, expected)
-
-    @mock.patch("rally.benchmark.runners.base.osclients")
-    @mock.patch("rally.benchmark.runners.continuous.multiprocessing."
-                "pool.IMapIterator.next")
-    @mock.patch("rally.benchmark.runners.continuous.time.time")
-    @mock.patch("rally.benchmark.context.secgroup._prepare_open_secgroup")
-    def test_run_scenario_timeout(self, mock_prepare_for_instance_ssh,
-                                  mock_time, mock_next, mock_osclients):
-
-        mock_time.side_effect = [1, 2, 3, 10]
-        mock_next.side_effect = multiprocessing.TimeoutError()
-        mock_osclients.Clients.return_value = fakes.FakeClients()
-        runner = base.ScenarioRunner.get_runner(mock.MagicMock(),
-                                                self.fake_endpoints,
-                                                "continuous")
-        times = 4
-        active_users = 2
-        results = runner._run_scenario(fakes.FakeScenario,
-                                       "too_long",
-                                       fakes.FakeUserContext({}).context, {},
-                                       {"times": times,
-                                        "active_users": active_users,
-                                        "timeout": 0.01})
-        self.assertEqual(len(results), times)
-        for r in results:
-            self.assertEqual(r['time'], 0.01)
-            self.assertEqual(r['error'][0],
-                             str(multiprocessing.TimeoutError))
-
-        duration = 4
-        results = runner._run_scenario(fakes.FakeScenario,
-                                       "too_long",
-                                       fakes.FakeUserContext({}).context, {},
-                                       {"duration": duration,
-                                        "active_users": active_users,
-                                        "timeout": 0.01})
-        self.assertEqual(len(results), active_users)
-        for r in results:
-            self.assertEqual(r['time'], 0.01)
-            self.assertEqual(r['error'][0],
-                             str(multiprocessing.TimeoutError))
-
-    @mock.patch("rally.benchmark.runners.base.rutils")
-    @mock.patch("rally.benchmark.runners.base.osclients")
-    def test_run_scenario_times_exception_inside_test(self, mock_osclients,
-                                                      mock_utils):
-        mock_osclients.Clients.return_value = fakes.FakeClients()
-        mock_utils.Timer = fakes.FakeTimer
-        srunner = continuous.ContinuousScenarioRunner(mock.MagicMock(),
-                                                      self.fake_endpoints)
-        times = 1
-        active_users = 2
-
-        results = srunner._run_scenario(fakes.FakeScenario,
-                                        "something_went_wrong",
-                                        fakes.FakeUserContext({}).context, {},
-                                        {"times": times, "timeout": 1,
-                                         "active_users": active_users})
-        self.assertEqual(len(results), times)
-        for r in results:
-            self.assertEqual(r['time'], 10)
-            self.assertEqual(r['error'][:2],
-                             [str(Exception), "Something went wrong"])
-
-    @mock.patch("rally.benchmark.runners.base.rutils")
-    @mock.patch("rally.benchmark.runners.base.osclients")
-    def test_run_scenario_duration_exception_inside_test(self, mock_osclients,
-                                                         mock_utils):
-        mock_osclients.Clients.return_value = fakes.FakeClients()
-        mock_utils.Timer = fakes.FakeTimer
-        runner = continuous.ContinuousScenarioRunner(mock.MagicMock(),
-                                                     self.fake_endpoints)
-        active_users = 2
-        results = runner._run_scenario(fakes.FakeScenario,
-                                       "something_went_wrong",
-                                       fakes.FakeUserContext({}).context, {},
-                                       {"duration": 0,
-                                        "timeout": 1,
-                                        "active_users": active_users})
-        for r in results:
-            self.assertEqual(r['time'], 10)
-            self.assertEqual(r['error'][:2],
-                             [str(Exception), "Something went wrong"])
 
     @mock.patch("rally.benchmark.runners.base.ScenarioRunner._run_as_admin")
     def test_run_scenario_runner_results_exception(self, mock_run_method):

@@ -74,7 +74,7 @@ class PlotTestCase(test.TestCase):
         result = {
             "result": [
                 {
-                    "error": None,
+                    "error": [],
                     "time": 1,
                     "idle_time": 2
                 },
@@ -84,7 +84,7 @@ class PlotTestCase(test.TestCase):
                     "idle_time": 1
                 },
                 {
-                    "error": None,
+                    "error": [],
                     "time": 2,
                     "idle_time": 3
                 }
@@ -114,21 +114,21 @@ class PlotTestCase(test.TestCase):
         result = {
             "result": [
                 {
-                    "error": None,
+                    "error": [],
                     "atomic_actions_time": [
                         {"action": "action1", "duration": 1},
                         {"action": "action2", "duration": 2}
                     ]
                 },
                 {
-                    "error": True,
+                    "error": ["some", "error", "occurred"],
                     "atomic_actions_time": [
                         {"action": "action1", "duration": 1},
                         {"action": "action2", "duration": 2}
                     ]
                 },
                 {
-                    "error": None,
+                    "error": [],
                     "atomic_actions_time": [
                         {"action": "action1", "duration": 3},
                         {"action": "action2", "duration": 4}

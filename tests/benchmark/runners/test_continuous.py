@@ -18,19 +18,11 @@ import mock
 
 from rally.benchmark.runners import base
 from rally.benchmark.runners import continuous
-from rally import consts
 from tests import fakes
 from tests import test
 
 
 class ContinuousScenarioRunnerTestCase(test.TestCase):
-
-    def setUp(self):
-        super(ContinuousScenarioRunnerTestCase, self).setUp()
-        admin_keys = ["username", "password", "tenant_name", "auth_url"]
-        endpoint_dicts = [dict(zip(admin_keys, admin_keys))]
-        endpoint_dicts[0]["permission"] = consts.EndpointPermission.ADMIN
-        self.fake_endpoints = endpoint_dicts
 
     def test_validate(self):
         config = {
@@ -47,119 +39,43 @@ class ContinuousScenarioRunnerTestCase(test.TestCase):
         self.assertRaises(jsonschema.ValidationError,
                           continuous.ContinuousScenarioRunner.validate, config)
 
-    @mock.patch("rally.benchmark.runners.continuous.multiprocessing")
-    @mock.patch("rally.benchmark.runners.base.osclients")
-    def test_run_scenario_continuously_for_times(self, mock_osclients,
-                                                 mock_multi):
-        mock_osclients.Clients.return_value = fakes.FakeClients()
-        srunner = continuous.ContinuousScenarioRunner(mock.MagicMock(),
-                                                      self.fake_endpoints)
-        srunner.users = ["client"]
-        times = 3
-        active_users = 4
-        timeout = 5
-        fake_pool = mock.Mock()
-        mock_multi.Pool.return_value = fake_pool
-        fake_context = fakes.FakeUserContext({}).context
-        srunner._run_scenario_continuously_for_times(fakes.FakeScenario,
-                                                     "do_it", fake_context, {},
-                                                     times, active_users,
-                                                     timeout)
-        mock_multi.Pool.assert_called_once_with(active_users)
+    def test_run_scenario_continuously_for_times(self):
+        context = fakes.FakeUserContext({"task": None}).context
+        runner = continuous.ContinuousScenarioRunner(
+                        None, [context["admin"]["endpoint"]])
+        times = 4
+        concurrent = 2
+        timeout = 2
 
-        expected_pool_calls = [
-            mock.call.imap(
-                base._run_scenario_once,
-                [(i, fakes.FakeScenario, "do_it", fakes.FakeUserContext.admin,
-                 fakes.FakeUserContext.user, {}) for i in xrange(times)]
-            )
-        ]
-        expected_pool_calls.extend([mock.call.imap().next(timeout)
-                                    for i in range(times)])
-        expected_pool_calls.extend([
-            mock.call.close(),
-            mock.call.join()
-        ])
-        self.assertEqual(fake_pool.mock_calls, expected_pool_calls)
+        result = runner._run_scenario_continuously_for_times(
+                            fakes.FakeScenario, "do_it", context, {},
+                            times, concurrent, timeout)
+        self.assertEqual(len(result), times)
+        self.assertIsNotNone(base.ScenarioRunnerResult(result))
 
-    @mock.patch("rally.benchmark.utils.infinite_run_args")
-    @mock.patch("rally.benchmark.runners.continuous.multiprocessing")
-    @mock.patch("rally.benchmark.runners.base.osclients")
-    def test_run_scenario_continuously_for_duration(self, mock_osclients,
-                                                    mock_multi, mock_generate):
+    def test_run_scenario_continuously_for_times_exception(self):
+        context = fakes.FakeUserContext({"task": None}).context
+        runner = continuous.ContinuousScenarioRunner(
+                        None, [context["admin"]["endpoint"]])
+        times = 4
+        concurrent = 2
+        timeout = 2
+
+        result = runner._run_scenario_continuously_for_times(
+                            fakes.FakeScenario, "something_went_wrong",
+                            context, {}, times, concurrent, timeout)
+        self.assertEqual(len(result), times)
+        self.assertIsNotNone(base.ScenarioRunnerResult(result))
+
+    @mock.patch("rally.benchmark.runners.continuous.base._run_scenario_once")
+    def test_run_scenario_continuously_for_duration(self, mock_run_once):
         self.skipTest("This test produce a lot of races so we should fix it "
                       "before running inside in gates")
-        mock_osclients.Clients.return_value = fakes.FakeClients()
-        srunner = continuous.ContinuousScenarioRunner(mock.MagicMock(),
-                                                      self.fake_endpoints)
-        srunner.users = ["client"]
+        runner = continuous.ContinuousScenarioRunner(mock.MagicMock(),
+                                                     [mock.MagicMock()])
         duration = 0
         active_users = 4
         timeout = 5
-        mock_multi.Pool.return_value = mock.MagicMock()
-        mock_generate.return_value = {}
-        srunner._run_scenario_continuously_for_duration(fakes.FakeScenario,
-                                                        "do_it", {}, duration,
-                                                        active_users, timeout)
-        expect = [
-            mock.call(active_users),
-            mock.call().imap(base._run_scenario_once, {}),
-            mock.call().terminate(),
-            mock.call().join()
-        ]
-        self.assertEqual(mock_multi.Pool.mock_calls, expect)
-
-    @mock.patch("rally.benchmark.runners.base.base")
-    @mock.patch("rally.benchmark.runners.base.osclients")
-    def test_get_and_run_continuous_runner(self, mock_osclients, mock_base):
-        FakeScenario = mock.MagicMock()
-        FakeScenario.init = mock.MagicMock(return_value={})
-
-        mock_osclients.Clients.return_value = fakes.FakeClients()
-
-        runner = base.ScenarioRunner.get_runner(mock.MagicMock(),
-                                                self.fake_endpoints,
-                                                "continuous")
-
-        runner._run_scenario_continuously_for_times = \
-            mock.MagicMock(return_value=[{"time": 1}])
-
-        mock_base.Scenario.get_by_name = \
-            mock.MagicMock(return_value=FakeScenario)
-        mock_osclients.return_value = ["client"]
-        fakecontext = fakes.FakeUserContext({}).context
-        result = runner._run_scenario(FakeScenario, "do_it", fakecontext,
-                                      {"a": 1},
-                                      {"times": 2, "active_users": 3,
-                                       "timeout": 1})
-        self.assertEqual(result, [{"time": 1}])
-        runner._run_scenario_continuously_for_times.assert_called_once_with(
-                                    FakeScenario, "do_it", fakecontext,
-                                    {"a": 1}, 2, 3, 1)
-
-    @mock.patch("rally.benchmark.runners.base.base")
-    @mock.patch("rally.benchmark.runners.base.osclients")
-    def test_get_and_run_continuos_runner_for_duration(self, mock_osclients,
-                                                       mock_base):
-        FakeScenario = mock.MagicMock()
-        FakeScenario.init = mock.MagicMock(return_value={})
-        mock_osclients.Clients.return_value = fakes.FakeClients()
-
-        runner = base.ScenarioRunner.get_runner(mock.MagicMock(),
-                                                self.fake_endpoints,
-                                                "continuous")
-        runner._run_scenario_continuously_for_duration = \
-            mock.MagicMock(return_value=[{"time": 1}])
-
-        mock_base.Scenario.get_by_name = \
-            mock.MagicMock(return_value=FakeScenario)
-
-        fakecontext = fakes.FakeUserContext({}).context
-        result = runner._run_scenario(FakeScenario, "do_it", fakecontext,
-                                      {"a": 1},
-                                      {"duration": 2, "active_users": 3,
-                                       "timeout": 1})
-        self.assertEqual(result, [{"time": 1}])
-        runner._run_scenario_continuously_for_duration.\
-            assert_called_once_with(FakeScenario, "do_it", fakecontext,
-                                    {"a": 1}, 2, 3, 1)
+        runner._run_scenario_continuously_for_duration(fakes.FakeScenario,
+                                                       "do_it", {}, duration,
+                                                       active_users, timeout)

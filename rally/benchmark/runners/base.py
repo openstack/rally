@@ -14,6 +14,7 @@
 #    under the License.
 
 import abc
+import random
 
 import jsonschema
 from oslo.config import cfg
@@ -33,23 +34,32 @@ from rally import utils as rutils
 LOG = logging.getLogger(__name__)
 
 
+def _get_scenario_context(context):
+    scenario_ctx = {}
+    for key, value in context.iteritems():
+        if key != "users":
+            scenario_ctx[key] = value
+        else:
+            scenario_ctx["user"] = random.choice(value)
+    return scenario_ctx
+
+
 def _run_scenario_once(args):
-    i, cls, method_name, admin, user, kwargs = args
+    i, cls, method_name, context, kwargs = args
 
     LOG.info("ITER: %s START" % i)
 
-    # TODO(boris-42): remove context
     scenario = cls(
-            context={},
-            admin_clients=osclients.Clients(admin["endpoint"]),
-            clients=osclients.Clients(user["endpoint"]))
+            context=context,
+            admin_clients=osclients.Clients(context["admin"]["endpoint"]),
+            clients=osclients.Clients(context["user"]["endpoint"]))
 
+    error = []
+    scenario_output = {}
     try:
-        scenario_output = {}
         with rutils.Timer() as timer:
             scenario_output = getattr(scenario,
                                       method_name)(**kwargs) or {}
-        error = None
     except Exception as e:
         error = utils.format_exc(e)
         if cfg.CONF.debug:
@@ -66,9 +76,7 @@ def _run_scenario_once(args):
 
 
 class ScenarioRunnerResult(list):
-    """Class for all scenario runners' result.
-
-    """
+    """Class for all scenario runners' result."""
 
     RESULT_SCHEMA = {
         "type": "array",
@@ -91,7 +99,7 @@ class ScenarioRunnerResult(list):
                                 ".*": {"type": "number"}
                             }
                         },
-                        "error": {
+                        "errors": {
                             "type": "string"
                         },
                     },
@@ -108,7 +116,12 @@ class ScenarioRunnerResult(list):
                         "additionalProperties": False
                     }
                 },
-                "error": {},
+                "error": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
             },
             "additionalProperties": False
         }
@@ -138,7 +151,6 @@ class ScenarioRunner(object):
         #                implemented yet, so the scenario runner always gets
         #                a single admin endpoint here.
         self.admin_user = endpoints[0]
-        self.users = []
 
     @staticmethod
     def _get_cls(runner_type):
