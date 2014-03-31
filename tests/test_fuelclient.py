@@ -13,7 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from rally import fuelclient
+from rally.deploy.fuel import fuelclient
 from tests import test
 
 import copy
@@ -152,7 +152,7 @@ class FuelClusterTestCase(test.TestCase):
                            'key': 'new_val',
                            'key2': 'val2'}]})
 
-    @mock.patch('rally.fuelclient.time.sleep')
+    @mock.patch('rally.deploy.fuel.fuelclient.time.sleep')
     def test_deploy(self, m_sleep):
         call1 = {'progress': 50}
         call2 = {'progress': 100}
@@ -188,7 +188,7 @@ class FuelClusterTestCase(test.TestCase):
             'clusters/42/network_configuration/nova_network', {'key': 'val'})
         self.cluster.verify_network.assert_called_once_with({'key': 'val'})
 
-    @mock.patch('rally.fuelclient.time.sleep')
+    @mock.patch('rally.deploy.fuel.fuelclient.time.sleep')
     def test_verify_network(self, m_sleep):
         call1 = {'progress': 50}
         call2 = {'progress': 100, 'message': ''}
@@ -205,7 +205,7 @@ class FuelClusterTestCase(test.TestCase):
         self.assertEqual([mock.call(42), mock.call(42)],
                          self.client.get_task.mock_calls)
 
-    @mock.patch('rally.fuelclient.time.sleep')
+    @mock.patch('rally.deploy.fuel.fuelclient.time.sleep')
     def test_verify_network_fail(self, m_sleep):
         self.client.put.return_value = {'id': 42}
         self.client.get_task.return_value = {'progress': 100,
@@ -243,7 +243,7 @@ class FuelClientTestCase(test.TestCase):
         super(FuelClientTestCase, self).setUp()
         self.client = fuelclient.FuelClient('http://10.20.0.2:8000/api/v1/')
 
-    @mock.patch('rally.fuelclient.requests')
+    @mock.patch('rally.deploy.fuel.fuelclient.requests')
     def test__request_non_json(self, fake_req):
         reply = mock.Mock()
         reply.status_code = 200
@@ -255,7 +255,7 @@ class FuelClientTestCase(test.TestCase):
 
         self.assertEqual(retval, reply)
 
-    @mock.patch('rally.fuelclient.requests')
+    @mock.patch('rally.deploy.fuel.fuelclient.requests')
     def test__request_non_2xx(self, fake_req):
         reply = mock.Mock()
         reply.status_code = 300
@@ -266,7 +266,7 @@ class FuelClientTestCase(test.TestCase):
                           self.client._request, 'method', 'url',
                           data={'key': 'value'})
 
-    @mock.patch('rally.fuelclient.requests')
+    @mock.patch('rally.deploy.fuel.fuelclient.requests')
     def test__request(self, fake_req):
         reply = mock.Mock()
         reply.status_code = 202
