@@ -109,28 +109,38 @@ class BenchmarkUtilsTestCase(test.TestCase):
 
 class WaitForTestCase(test.TestCase):
 
-    def test_wait_for(self):
+    def setUp(self):
+        super(WaitForTestCase, self).setUp()
+        self.resource = object()
+        self.load_secs = 0.01
+        self.fake_checker_delayed = self.get_fake_checker_delayed(
+                                                        seconds=self.load_secs)
 
-        def get_fake_checker_delayed(**delay):
-            deadline = datetime.datetime.now() + datetime.timedelta(**delay)
-            return lambda obj: datetime.datetime.now() > deadline
+    def get_fake_checker_delayed(self, **delay):
+        deadline = datetime.datetime.now() + datetime.timedelta(**delay)
+        return lambda obj: datetime.datetime.now() > deadline
 
-        def fake_checker_false(obj):
-            return False
+    def fake_checker_false(self, obj):
+        return False
 
-        def fake_updater(obj):
-            return obj
+    def fake_updater(self, obj):
+        return obj
 
-        resource = object()
-        fake_checker_delayed = get_fake_checker_delayed(seconds=0.3)
+    def test_wait_for_with_updater(self):
+        loaded_resource = utils.wait_for(self.resource,
+                                         self.fake_checker_delayed,
+                                         self.fake_updater,
+                                         1, self.load_secs / 3)
+        self.assertEqual(loaded_resource, self.resource)
 
-        loaded_resource = utils.wait_for(resource, fake_checker_delayed,
-                                         fake_updater, 1, 0.2)
-        self.assertEqual(loaded_resource, resource)
+    def test_wait_for_no_updater(self):
+        loaded_resource = utils.wait_for(self.resource,
+                                         self.fake_checker_delayed,
+                                         None, 1, self.load_secs / 3)
+        self.assertEqual(loaded_resource, self.resource)
 
-        loaded_resource = utils.wait_for(resource, fake_checker_delayed,
-                                         None, 1, 0.2)
-        self.assertEqual(loaded_resource, resource)
-
+    def test_wait_for_timeout_failure(self):
         self.assertRaises(exceptions.TimeoutException, utils.wait_for,
-                          object(), fake_checker_false, fake_updater, 0.3, 0.1)
+                          self.resource, self.fake_checker_false,
+                          self.fake_updater, self.load_secs,
+                          self.load_secs / 3)
