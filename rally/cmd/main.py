@@ -41,7 +41,7 @@ def main():
         'use': use.UseCommands,
         'verify': verify.VerifyCommands
     }
-    cliutils.run(sys.argv, categories)
+    return cliutils.run(sys.argv, categories)
 
 
 if __name__ == '__main__':

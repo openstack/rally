@@ -59,7 +59,7 @@ class VerifyCommands(object):
         if set_name not in TEMPEST_TEST_SETS:
             print('Sorry, but there are no desired tempest test set. '
                   'Please choose from: %s' % ', '.join(TEMPEST_TEST_SETS))
-            return
+            return(1)
 
         endpoints = db.deployment_get(deploy_id)['endpoints']
         endpoint_dict = endpoints[0]
@@ -79,7 +79,7 @@ class VerifyCommands(object):
             alt_image_id = image_list[1].id
         except IndexError:
             print('Sorry, but there are no desired images or only one')
-            return
+            return(1)
 
         nova = clients.nova()
         flavor_list = []
@@ -93,7 +93,7 @@ class VerifyCommands(object):
             alt_flavor_id = flavor_list[1].id
         except IndexError:
             print('Sorry, but there are no desired flavors or only one')
-            return
+            return(1)
 
         #TODO(miarmak): Add getting network and router id's from neutronclient
 

@@ -49,6 +49,7 @@ class ShowCommands(object):
                     table.add_row([image.id, image.name, image.size])
         except exceptions.InvalidArgumentsException:
             print(_("Authentication Issues: %s") % sys.exc_info()[1])
+            return(1)
         print(table)
 
     @cliutils.args('--deploy-id', dest='deploy_id', type=str, required=False,
@@ -71,6 +72,7 @@ class ShowCommands(object):
                                    flavor.ram, flavor.swap, flavor.disk])
         except exceptions.InvalidArgumentsException:
             print(_("Authentication Issues: %s") % sys.exc_info()[1])
+            return(1)
         print(table)
 
     @cliutils.args('--deploy-id', dest='deploy_id', type=str, required=False,
@@ -88,6 +90,7 @@ class ShowCommands(object):
                 table.add_row([network.id, network.label, network.cidr])
         except exceptions.InvalidArgumentsException:
             print(_("Authentication Issues: %s") % sys.exc_info()[1])
+            return(1)
         print(table)
 
     @cliutils.args('--deploy-id', dest='deploy_id', type=str, required=False,
@@ -106,6 +109,7 @@ class ShowCommands(object):
                                    secgroup.description])
         except exceptions.InvalidArgumentsException:
             print(_("Authentication Issues: %s") % sys.exc_info()[1])
+            return(1)
         print(table)
 
     @cliutils.args('--deploy-id', dest='deploy_id', type=str, required=False,
@@ -123,4 +127,5 @@ class ShowCommands(object):
                     table.add_row([keypair.name, keypair.fingerprint])
         except exceptions.InvalidArgumentsException:
             print(_("Authentication Issues: %s") % sys.exc_info()[1])
+            return(1)
         print(table)

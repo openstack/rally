@@ -64,7 +64,7 @@ class DeploymentCommands(object):
             if unavailable_vars:
                 print("The following environment variables are required but "
                       "not set: %s" % ' '.join(unavailable_vars))
-                return
+                return(1)
 
             config = {
                 "name": "ExistingCloud",
@@ -78,7 +78,7 @@ class DeploymentCommands(object):
         else:
             if not filename:
                 print("Either --filename or --fromenv is required")
-                return
+                return(1)
             with open(filename, 'rb') as deploy_file:
                 config = yaml.safe_load(deploy_file.read())
 
@@ -181,4 +181,5 @@ class DeploymentCommands(object):
             table.add_row(['keystone', 'identity', 'Error'])
             print(_("Authentication Issues: %s.")
                   % sys.exc_info()[1])
+            return(1)
         print(table)
