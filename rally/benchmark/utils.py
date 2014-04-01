@@ -27,6 +27,19 @@ from rally import exceptions
 LOG = logging.getLogger(__name__)
 
 
+def chunks(data, step):
+    """Split collection into chunks.
+
+    :param data: collection to split, only list or tuple are allowed
+    :param step: int chunk size
+    :returns: list of collection chunks
+
+    >>> chunks([1,2,3,4,5,6,7,8,9,10], 3)
+    [[1, 2, 3], [4, 5, 6], [7, 8, 9], [10]]
+    """
+    return [data[x:x + step] for x in xrange(0, len(data), step)]
+
+
 def resource_is(status):
     return lambda resource: resource.status.upper() == status.upper()
 

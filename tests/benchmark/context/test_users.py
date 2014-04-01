@@ -23,7 +23,7 @@ from tests import fakes
 from tests import test
 
 
-run_concurrent = lambda dummy, f, args: itertools.imap(f, args)
+run_concurrent = lambda dummy, f, args: list(itertools.imap(f, args))
 
 
 @mock.patch.object(utils, "run_concurrent", run_concurrent)
@@ -63,6 +63,26 @@ class UserGeneratorTestCase(test.TestCase):
         for user in users_:
             self.assertIn("id", user)
             self.assertIn("endpoint", user)
+
+    @mock.patch("rally.benchmark.context.users.osclients")
+    def test_delete_tenants(self, mock_osclients):
+        tenant1 = mock.MagicMock()
+        tenant2 = mock.MagicMock()
+        args = (mock.MagicMock(), [tenant1, tenant2])
+        users.UserGenerator._delete_tenants(args)
+        mock_osclients.Clients().keystone()\
+            .tenants.delete.assert_has_calls([mock.call(tenant1["id"]),
+                                              mock.call(tenant2["id"])])
+
+    @mock.patch("rally.benchmark.context.users.osclients")
+    def test_delete_users(self, mock_osclients):
+        user1 = mock.MagicMock()
+        user2 = mock.MagicMock()
+        args = (mock.MagicMock(), [user1, user2])
+        users.UserGenerator._delete_users(args)
+        mock_osclients.Clients().keystone()\
+            .users.delete.assert_has_calls([mock.call(user1["id"]),
+                                            mock.call(user2["id"])])
 
     @mock.patch("rally.benchmark.context.users.osclients")
     def test_setup_and_cleanup(self, mock_osclients):

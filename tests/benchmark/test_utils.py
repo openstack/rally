@@ -25,6 +25,14 @@ from rally import exceptions
 
 class BenchmarkUtilsTestCase(test.TestCase):
 
+    def test_chunks(self):
+        data = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+
+        self.assertEqual(utils.chunks(data, 3),
+                         [[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12]])
+        self.assertEqual(utils.chunks(data, 5),
+                         [[1, 2, 3, 4, 5], [6, 7, 8, 9, 10], [11, 12]])
+
     def test_resource_is(self):
         is_active = utils.resource_is("ACTIVE")
         self.assertTrue(is_active(fakes.FakeResource(status="active")))

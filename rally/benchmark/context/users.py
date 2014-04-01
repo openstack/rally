@@ -111,6 +111,40 @@ class UserGenerator(base.Context):
 
         return ({"id": tenant.id, "name": tenant.name}, users)
 
+    @classmethod
+    def _delete_tenants(cls, args):
+        """Delete given tenants.
+
+        :param args: tuple arguments, for Pool.imap()
+        """
+        admin_endpoint, tenants = args
+        client = osclients.Clients(admin_endpoint).keystone()
+
+        for tenant in tenants:
+            try:
+                client.tenants.delete(tenant["id"])
+            except Exception as ex:
+                LOG.warning("Failed to delete tenant: %(tenant_id)s. "
+                            "Exception: %(ex)s" %
+                            {"tenant_id": tenant["id"], "ex": ex})
+
+    @classmethod
+    def _delete_users(cls, args):
+        """Delete given users.
+
+        :param args: tuple arguments, for Pool.imap()
+        """
+        admin_endpoint, users = args
+        client = osclients.Clients(admin_endpoint).keystone()
+
+        for user in users:
+            try:
+                client.users.delete(user["id"])
+            except Exception as ex:
+                LOG.warning("Failed to delete user: %(user_id)s. "
+                            "Exception: %(ex)s" %
+                            {"user_id": user["id"], "ex": ex})
+
     def setup(self):
         """Create tenants and users, using pool of threads."""
 
@@ -130,27 +164,24 @@ class UserGenerator(base.Context):
             self.context["tenants"].append(tenant)
             self.context["users"] += users
 
-    # TODO(amaretskiy): re-implement this method using pool of threads
     def cleanup(self):
-        """Delete tenants and users."""
+        """Delete tenants and users, using pool of threads."""
 
-        self.clients = osclients.Clients(self.context["admin"]["endpoint"])
+        concurrent = self.config["concurrent"]
 
-        for user in self.context["users"]:
-            try:
-                self.clients.keystone().users.delete(user["id"])
-            except Exception as ex:
-                LOG.warning("Failed to delete user: %(user_id)s. "
-                            "Exception: %(ex)s" %
-                            {"user_id": user["id"], "ex": ex})
+        # Delete users
+        users_chunks = utils.chunks(self.context["users"], concurrent)
+        utils.run_concurrent(
+            concurrent,
+            self._delete_users,
+            [(self.endpoint, users) for users in users_chunks])
 
-        for tenant in self.context["tenants"]:
-            try:
-                self.clients.keystone().tenants.delete(tenant["id"])
-            except Exception as ex:
-                LOG.warning("Failed to delete tenant: %(tenant_id)s. "
-                            "Exception: %(ex)s" %
-                            {"tenant_id": tenant["id"], "ex": ex})
+        # Delete tenants
+        tenants_chunks = utils.chunks(self.context["tenants"], concurrent)
+        utils.run_concurrent(
+            concurrent,
+            self._delete_tenants,
+            [(self.endpoint, tenants) for tenants in tenants_chunks])
 
         # NOTE(amaretskiy): Consider that after cleanup() is complete, this has
         #                   actually deleted (all or some of) users and tenants
