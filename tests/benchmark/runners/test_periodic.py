@@ -100,7 +100,8 @@ class PeriodicScenarioRunnerTestCase(test.TestCase):
             exptected_pool_inst_call.append(mock.call.apply_async(*args))
 
         for i in range(times):
-            exptected_pool_inst_call.append(mock.call.apply_async().get())
+            call = mock.call.apply_async().get(timeout=5)
+            exptected_pool_inst_call.append(call)
 
         mock_pool.assert_has_calls([mock.call.ThreadPool(processes=1)])
         mock_pool_inst.assert_has_calls(exptected_pool_inst_call)
