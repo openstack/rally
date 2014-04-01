@@ -71,7 +71,7 @@ init_variables() {
 
 install_rhel_based_system_requirements() {
   local install_rally_dependencies='curl'
-  local cryptography_dependencies='gcc libffi-devel python-devel openssl-devel'
+  local cryptography_dependencies='gcc libffi-devel python-devel openssl-devel gmp-devel'
   yum -y install ${install_rally_dependencies} ${cryptography_dependencies}
 }
 
