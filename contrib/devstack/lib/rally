@@ -123,6 +123,13 @@ function init_rally() {
     fi
 }
 
+# Run all benchmarks from samples dir to ensure it all works.
+function run_all_benchmarks() {
+    for CONF in $DEST/rally/doc/samples/tasks/*/*.yaml; do
+        rally task start --task $CONF
+    done
+}
+
 # Restore xtrace
 $XTRACE
 
