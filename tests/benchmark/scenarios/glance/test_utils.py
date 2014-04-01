@@ -64,6 +64,16 @@ class GlanceScenarioTestCase(test.TestCase):
         self.assertIsInstance(action_duration, float)
 
     @mock.patch(GLANCE_UTILS + '.GlanceScenario.clients')
+    def test_list_images(self, mock_clients):
+        images_list = []
+        mock_clients("glance").images.list.return_value = images_list
+        scenario = utils.GlanceScenario()
+        return_images_list = scenario._list_images()
+        self.assertEqual(images_list, return_images_list)
+        self._test_atomic_action_timer(scenario.atomic_actions_time(),
+                                       'glance.list_images')
+
+    @mock.patch(GLANCE_UTILS + '.GlanceScenario.clients')
     def test_create_image(self, mock_clients):
         mock_clients("glance").images.create.return_value = self.image
         scenario = utils.GlanceScenario()

@@ -52,6 +52,12 @@ CONF.register_opts(glance_benchmark_opts, group=benchmark_group)
 
 class GlanceScenario(base.Scenario):
 
+    @scenario_utils.atomic_action_timer('glance.list_images')
+    def _list_images(self):
+        """Returns user images list."""
+
+        return list(self.clients("glance").images.list())
+
     @scenario_utils.atomic_action_timer('glance.create_image')
     def _create_image(self, image_name, container_format,
                       image_url, disk_format, **kwargs):
