@@ -70,12 +70,16 @@ class ResourceCleanerTestCase(test.TestCase):
         mock_clients.return_value.keystone.assert_called_once_with()
         mock_del_keystone.assert_called_once_with('keystone')
 
+    @mock.patch("rally.benchmark.scenarios.nova.servers.NovaServers."
+                "boot_server_from_volume_and_delete")
     @mock.patch("%s.osclients.Clients" % BASE)
     @mock.patch("%s.utils.delete_nova_resources" % BASE)
     @mock.patch("%s.utils.delete_glance_resources" % BASE)
     @mock.patch("%s.utils.delete_cinder_resources" % BASE)
-    def test_cleaner_users(self, mock_del_cinder, mock_del_glance,
-                           mock_del_nova, mock_clients):
+    def test_cleaner_users_all_services(self, mock_del_cinder,
+                                        mock_del_glance, mock_del_nova,
+                                        mock_clients, mock_scenario_method):
+        del mock_scenario_method.cleanup_services
         context = {
             "task": mock.MagicMock(),
             "users": [{"endpoint": mock.MagicMock()},
@@ -94,4 +98,31 @@ class ResourceCleanerTestCase(test.TestCase):
 
         self.assertEqual(mock_del_nova.call_count, 2)
         self.assertEqual(mock_del_glance.call_count, 2)
+        self.assertEqual(mock_del_cinder.call_count, 2)
+
+    @mock.patch("%s.osclients.Clients" % BASE)
+    @mock.patch("%s.utils.delete_nova_resources" % BASE)
+    @mock.patch("%s.utils.delete_glance_resources" % BASE)
+    @mock.patch("%s.utils.delete_cinder_resources" % BASE)
+    def test_cleaner_users_by_service(self, mock_del_cinder, mock_del_glance,
+                                      mock_del_nova, mock_clients):
+
+        context = {
+            "task": mock.MagicMock(),
+            "users": [{"endpoint": mock.MagicMock()},
+                      {"endpoint": mock.MagicMock()}],
+            "scenario_name": 'NovaServers.boot_server_from_volume_and_delete',
+            "tenants": [mock.MagicMock()]
+        }
+        res_cleaner = cleaner_ctx.ResourceCleaner(context)
+
+        with res_cleaner:
+            res_cleaner.setup()
+
+        expected = [mock.call(context["users"][0]["endpoint"]),
+                    mock.call(context["users"][1]["endpoint"])]
+        mock_clients.assert_has_calls(expected, any_order=True)
+
+        self.assertEqual(mock_del_nova.call_count, 2)
+        self.assertEqual(mock_del_glance.call_count, 0)
         self.assertEqual(mock_del_cinder.call_count, 2)

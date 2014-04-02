@@ -12,6 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from rally.benchmark.context import cleaner as context_cleaner
 from rally.benchmark.scenarios import base
 
 
@@ -21,5 +22,6 @@ class Authenticate(base.Scenario):
     """
 
     @base.scenario
+    @context_cleaner.cleanup([])
     def keystone(self, **kwargs):
         self.clients("keystone")

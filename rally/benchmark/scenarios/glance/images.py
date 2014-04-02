@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from rally.benchmark.context import cleaner as context_cleaner
 from rally.benchmark.scenarios import base
 from rally.benchmark.scenarios.glance import utils
 from rally.benchmark.scenarios.nova import utils as nova_utils
@@ -22,6 +23,7 @@ from rally.benchmark import validation
 class GlanceImages(utils.GlanceScenario, nova_utils.NovaScenario):
 
     @base.scenario
+    @context_cleaner.cleanup(['glance'])
     def create_and_list_image(self, container_format,
                               image_location, disk_format, **kwargs):
         """Test adding an image and then listing all images.
@@ -45,6 +47,7 @@ class GlanceImages(utils.GlanceScenario, nova_utils.NovaScenario):
         self._list_images()
 
     @base.scenario
+    @context_cleaner.cleanup(['glance'])
     def create_and_delete_image(self, container_format,
                                 image_location, disk_format, **kwargs):
         """Test adds and then deletes image."""
@@ -56,6 +59,7 @@ class GlanceImages(utils.GlanceScenario, nova_utils.NovaScenario):
                                    **kwargs)
         self._delete_image(image)
 
+    @context_cleaner.cleanup(['glance', 'nova'])
     @validation.add_validator(validation.flavor_exists("flavor_id"))
     @base.scenario
     def create_image_and_boot_instances(self, container_format,

@@ -17,6 +17,7 @@ import json
 import jsonschema
 import random
 
+from rally.benchmark.context import cleaner as context_cleaner
 from rally.benchmark.scenarios import base
 from rally.benchmark.scenarios.cinder import utils as cinder_utils
 from rally.benchmark.scenarios.nova import utils
@@ -37,6 +38,7 @@ class NovaServers(utils.NovaScenario,
     def __init__(self, *args, **kwargs):
         super(NovaServers, self).__init__(*args, **kwargs)
 
+    @context_cleaner.cleanup(['nova'])
     @valid.add_validator(valid.image_valid_on_flavor("flavor_id", "image_id"))
     @base.scenario
     def boot_and_list_server(self, image_id, flavor_id,
@@ -58,6 +60,7 @@ class NovaServers(utils.NovaScenario,
         self._boot_server(server_name, image_id, flavor_id, **kwargs)
         self._list_servers(detailed)
 
+    @context_cleaner.cleanup(['nova'])
     @valid.add_validator(valid.image_valid_on_flavor("flavor_id", "image_id"))
     @base.scenario
     def boot_and_delete_server(self, image_id, flavor_id,
@@ -69,6 +72,7 @@ class NovaServers(utils.NovaScenario,
         self.sleep_between(min_sleep, max_sleep)
         self._delete_server(server)
 
+    @context_cleaner.cleanup(['nova', 'cinder'])
     @valid.add_validator(valid.image_valid_on_flavor("flavor_id", "image_id"))
     @base.scenario
     def boot_server_from_volume_and_delete(self, image_id, flavor_id,
@@ -85,6 +89,7 @@ class NovaServers(utils.NovaScenario,
         self.sleep_between(min_sleep, max_sleep)
         self._delete_server(server)
 
+    @context_cleaner.cleanup(['nova'])
     @valid.add_validator(valid.image_valid_on_flavor("flavor_id", "image_id"))
     @base.scenario
     def boot_runcommand_delete_server(self, image_id, flavor_id,
@@ -142,6 +147,7 @@ class NovaServers(utils.NovaScenario,
                         stdout=out, stderr=err))
         return {"data": out, "errors": err}
 
+    @context_cleaner.cleanup(['nova'])
     @valid.add_validator(valid.image_valid_on_flavor("flavor_id", "image_id"))
     @base.scenario
     def boot_and_bounce_server(self, image_id, flavor_id, **kwargs):
@@ -162,6 +168,7 @@ class NovaServers(utils.NovaScenario,
             action()
         self._delete_server(server)
 
+    @context_cleaner.cleanup(['nova', 'glance'])
     @valid.add_validator(valid.image_valid_on_flavor("flavor_id", "image_id"))
     @base.scenario
     def snapshot_server(self, image_id, flavor_id, **kwargs):
@@ -176,6 +183,7 @@ class NovaServers(utils.NovaScenario,
         self._delete_server(server)
         self._delete_image(image)
 
+    @context_cleaner.cleanup(['nova'])
     @valid.add_validator(valid.image_valid_on_flavor("flavor_id", "image_id"))
     @base.scenario
     def boot_server(self, image_id, flavor_id, **kwargs):
@@ -188,6 +196,7 @@ class NovaServers(utils.NovaScenario,
                 kwargs['nics'] = [{'net-id': random_nic.id}]
         self._boot_server(server_name, image_id, flavor_id, **kwargs)
 
+    @context_cleaner.cleanup(['nova', 'cinder'])
     @valid.add_validator(valid.image_valid_on_flavor("flavor_id", "image_id"))
     @base.scenario
     def boot_server_from_volume(self, image_id, flavor_id,
