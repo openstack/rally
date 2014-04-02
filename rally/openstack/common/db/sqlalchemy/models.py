@@ -26,18 +26,16 @@ from sqlalchemy import Column, Integer
 from sqlalchemy import DateTime
 from sqlalchemy.orm import object_mapper
 
-from rally.openstack.common.db.sqlalchemy import session as sa
 from rally.openstack.common import timeutils
 
 
-class ModelBase(object):
+class ModelBase(six.Iterator):
     """Base class for models."""
     __table_initialized__ = False
 
-    def save(self, session=None):
+    def save(self, session):
         """Save this object."""
-        if not session:
-            session = sa.get_session()
+
         # NOTE(boris-42): This part of code should be look like:
         #                       session.add(self)
         #                       session.flush()
@@ -80,9 +78,13 @@ class ModelBase(object):
         self._i = iter(columns)
         return self
 
-    def next(self):
+    # In Python 3, __next__() has replaced next().
+    def __next__(self):
         n = six.advance_iterator(self._i)
         return n, getattr(self, n)
+
+    def next(self):
+        return self.__next__()
 
     def update(self, values):
         """Make the model object behave like a dict."""
@@ -102,15 +104,15 @@ class ModelBase(object):
 
 
 class TimestampMixin(object):
-    created_at = Column(DateTime, default=timeutils.utcnow)
-    updated_at = Column(DateTime, onupdate=timeutils.utcnow)
+    created_at = Column(DateTime, default=lambda: timeutils.utcnow())
+    updated_at = Column(DateTime, onupdate=lambda: timeutils.utcnow())
 
 
 class SoftDeleteMixin(object):
     deleted_at = Column(DateTime)
     deleted = Column(Integer, default=0)
 
-    def soft_delete(self, session=None):
+    def soft_delete(self, session):
         """Mark this object as deleted."""
         self.deleted = self.id
         self.deleted_at = timeutils.utcnow()

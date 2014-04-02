@@ -23,7 +23,6 @@ import uuid
 from rally import consts
 from rally.db.sqlalchemy import types as sa_types
 from rally.openstack.common.db.sqlalchemy import models
-from rally.openstack.common.db.sqlalchemy import session
 
 
 BASE = declarative_base()
@@ -36,6 +35,14 @@ def UUID():
 class RallyBase(models.TimestampMixin,
                 models.ModelBase):
     metadata = None
+
+    def save(self, session=None):
+        from rally.db.sqlalchemy import api as sa_api
+
+        if session is None:
+            session = sa_api.get_session()
+
+        super(RallyBase, self).save(session=session)
 
 
 class Deployment(BASE, RallyBase):
@@ -171,11 +178,15 @@ class TaskResult(BASE, RallyBase):
 
 
 def create_db():
-    BASE.metadata.create_all(session.get_engine())
+    from rally.db.sqlalchemy import api as sa_api
+
+    BASE.metadata.create_all(sa_api.get_engine())
 
 
 def drop_db():
-    engine = session.get_engine()
+    from rally.db.sqlalchemy import api as sa_api
+
+    engine = sa_api.get_engine()
     OLD_BASE = declarative_base()
     OLD_BASE.metadata.reflect(bind=engine)
     OLD_BASE.metadata.drop_all(engine, checkfirst=True)

@@ -18,11 +18,41 @@ SQLAlchemy implementation for DB.API
 
 import sys
 
+from oslo.config import cfg
 import sqlalchemy as sa
 
 from rally.db.sqlalchemy import models
 from rally import exceptions
 from rally.openstack.common.db.sqlalchemy import session as db_session
+
+
+CONF = cfg.CONF
+
+CONF.import_opt('connection',
+                'rally.openstack.common.db.options',
+                group='database')
+
+_FACADE = None
+
+
+def _create_facade_lazily():
+    global _FACADE
+
+    if _FACADE is None:
+        _FACADE = db_session.EngineFacade.from_config(
+            CONF.database.connection, CONF)
+
+    return _FACADE
+
+
+def get_engine():
+    facade = _create_facade_lazily()
+    return facade.get_engine()
+
+
+def get_session(**kwargs):
+    facade = _create_facade_lazily()
+    return facade.get_session(**kwargs)
 
 
 def get_backend():
@@ -31,7 +61,9 @@ def get_backend():
 
 
 def db_cleanup():
-    db_session.cleanup()
+    global _FACADE
+
+    _FACADE = None
 
 
 def db_create():
@@ -54,7 +86,7 @@ def model_query(model, session=None):
     :raises: :class:`Exception` when the model is not a sublcass of
              :class:`rally.db.sqlalchemy.models.RallyBase`.
     """
-    session = session or db_session.get_session()
+    session = session or get_session()
     query = session.query(model)
 
     def issubclassof_rally_base(obj):
@@ -100,7 +132,7 @@ def task_create(values):
 
 
 def task_update(uuid, values):
-    session = db_session.get_session()
+    session = get_session()
     values.pop('uuid', None)
     with session.begin():
         task = _task_get(uuid, session=session)
@@ -116,7 +148,7 @@ def task_list(status=None):
 
 
 def task_delete(uuid, status=None):
-    session = db_session.get_session()
+    session = get_session()
     with session.begin():
         query = base_query = model_query(models.Task).filter_by(uuid=uuid)
         if status is not None:
@@ -167,7 +199,7 @@ def deployment_create(values):
 
 
 def deployment_delete(uuid):
-    session = db_session.get_session()
+    session = get_session()
     with session.begin():
         count = model_query(models.Resource, session=session).\
                 filter_by(deployment_uuid=uuid).\
@@ -187,7 +219,7 @@ def deployment_get(uuid):
 
 
 def deployment_update(uuid, values):
-    session = db_session.get_session()
+    session = get_session()
     values.pop('uuid', None)
     with session.begin():
         deploy = _deployment_get(uuid, session=session)
