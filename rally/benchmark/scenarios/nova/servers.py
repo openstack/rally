@@ -40,7 +40,7 @@ class NovaServers(utils.NovaScenario,
 
     @context_cleaner.cleanup(['nova'])
     @valid.add_validator(valid.image_valid_on_flavor("flavor_id", "image_id"))
-    @base.scenario
+    @base.scenario()
     def boot_and_list_server(self, image_id, flavor_id,
                              detailed=True, **kwargs):
         """Tests booting an image and then listing servers.
@@ -62,7 +62,7 @@ class NovaServers(utils.NovaScenario,
 
     @context_cleaner.cleanup(['nova'])
     @valid.add_validator(valid.image_valid_on_flavor("flavor_id", "image_id"))
-    @base.scenario
+    @base.scenario()
     def boot_and_delete_server(self, image_id, flavor_id,
                                min_sleep=0, max_sleep=0, **kwargs):
         """Tests booting and then deleting an image."""
@@ -74,7 +74,7 @@ class NovaServers(utils.NovaScenario,
 
     @context_cleaner.cleanup(['nova', 'cinder'])
     @valid.add_validator(valid.image_valid_on_flavor("flavor_id", "image_id"))
-    @base.scenario
+    @base.scenario()
     def boot_server_from_volume_and_delete(self, image_id, flavor_id,
                                            volume_size,
                                            min_sleep=0, max_sleep=0, **kwargs):
@@ -91,7 +91,7 @@ class NovaServers(utils.NovaScenario,
 
     @context_cleaner.cleanup(['nova'])
     @valid.add_validator(valid.image_valid_on_flavor("flavor_id", "image_id"))
-    @base.scenario
+    @base.scenario()
     def boot_runcommand_delete_server(self, image_id, flavor_id,
                                       script, interpreter, network='private',
                                       username='ubuntu', ip_version=4,
@@ -149,7 +149,7 @@ class NovaServers(utils.NovaScenario,
 
     @context_cleaner.cleanup(['nova'])
     @valid.add_validator(valid.image_valid_on_flavor("flavor_id", "image_id"))
-    @base.scenario
+    @base.scenario()
     def boot_and_bounce_server(self, image_id, flavor_id, **kwargs):
         """Tests booting a server then performing stop/start or hard/soft
         reboot a number of times.
@@ -170,7 +170,7 @@ class NovaServers(utils.NovaScenario,
 
     @context_cleaner.cleanup(['nova', 'glance'])
     @valid.add_validator(valid.image_valid_on_flavor("flavor_id", "image_id"))
-    @base.scenario
+    @base.scenario()
     def snapshot_server(self, image_id, flavor_id, **kwargs):
         """Tests Nova instance snapshotting."""
         server_name = self._generate_random_name(16)
@@ -185,7 +185,7 @@ class NovaServers(utils.NovaScenario,
 
     @context_cleaner.cleanup(['nova'])
     @valid.add_validator(valid.image_valid_on_flavor("flavor_id", "image_id"))
-    @base.scenario
+    @base.scenario()
     def boot_server(self, image_id, flavor_id, **kwargs):
         """Test VM boot - assumed clean-up is done elsewhere."""
         server_name = self._generate_random_name(16)
@@ -198,7 +198,7 @@ class NovaServers(utils.NovaScenario,
 
     @context_cleaner.cleanup(['nova', 'cinder'])
     @valid.add_validator(valid.image_valid_on_flavor("flavor_id", "image_id"))
-    @base.scenario
+    @base.scenario()
     def boot_server_from_volume(self, image_id, flavor_id,
                                 volume_size, **kwargs):
         """Test VM boot from volume - assumed clean-up is done elsewhere."""
