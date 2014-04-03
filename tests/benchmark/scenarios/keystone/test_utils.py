@@ -115,7 +115,7 @@ class KeystoneScenarioTestCase(test.TestCase):
         fake_clients._keystone = fake_keystone
         scenario = utils.KeystoneScenario(admin_clients=fake_clients)
 
-        scenario._users_create(tenant, 10, 1)
+        scenario._users_create(tenant, users_per_tenant=1, name_length=10)
 
         fake_keystone.users.create.assert_called_once_with(name, name,
                                                            name + "@rally.me",

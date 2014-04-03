@@ -74,11 +74,11 @@ class KeystoneScenario(base.Scenario):
         return self.admin_clients("keystone").tenants.create(name, **kwargs)
 
     @scenario_utils.atomic_action_timer('keystone.create_users')
-    def _users_create(self, tenant, name_length=10, users_per_tenant=10):
+    def _users_create(self, tenant, users_per_tenant, name_length=10):
         """Adds users to a tenant.
 
-        :param name_length: length of generated (random) part of name for user
         :param users_per_tenant: number of users in per tenant
+        :param name_length: length of generated (random) part of name for user
         """
         for i in range(users_per_tenant):
             name = generate_keystone_name(length=name_length)

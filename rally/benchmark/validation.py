@@ -130,3 +130,18 @@ def image_valid_on_flavor(flavor_name, image_name):
 
         return ValidationResult()
     return image_valid_on_flavor_validator
+
+
+def required_parameters(params):
+    """Returns validator for required parameters
+
+    :param params: list of required parameters
+    """
+    def required_parameters_validator(**kwargs):
+        missing = set(params) - set(kwargs)
+        if missing:
+            message = _("%s parameters are not defined in "
+                        "the benchmark config file") % ", ".join(missing)
+            return ValidationResult(False, message)
+        return ValidationResult()
+    return required_parameters_validator
