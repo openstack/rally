@@ -110,7 +110,8 @@ class UserGenerator(base.Context):
                                        "%s@email.me" % username, tenant.id)
             user_endpoint = endpoint.Endpoint(client.auth_url, user.name,
                                               "password", tenant.name,
-                                              consts.EndpointPermission.USER)
+                                              consts.EndpointPermission.USER,
+                                              client.region_name)
             users.append({"id": user.id, "endpoint": user_endpoint})
 
         return ({"id": tenant.id, "name": tenant.name}, users)

@@ -78,6 +78,7 @@ class OSClientsTestCase(test.TestCase):
             mock_nova.Client.assert_called_once_with(
                 "2", self.endpoint.username, self.endpoint.password,
                 self.endpoint.tenant_name, auth_url=self.endpoint.auth_url,
+                region_name=self.endpoint.region_name,
                 service_type="compute",
                 http_log_debug=False,
                 timeout=cfg.CONF.openstack_client_http_timeout,
@@ -117,7 +118,8 @@ class OSClientsTestCase(test.TestCase):
             kw = {"endpoint": endpoint["publicURL"],
                   "token": kc.auth_token,
                   "timeout": cfg.CONF.openstack_client_http_timeout,
-                  "insecure": False, "cacert": None}
+                  "insecure": False, "cacert": None,
+                  "region_name": None}
             mock_glance.Client.assert_called_once_with("1", **kw)
             self.assertEqual(self.clients.cache["glance"], fake_glance)
 
@@ -131,6 +133,7 @@ class OSClientsTestCase(test.TestCase):
             mock_cinder.Client.assert_called_once_with(
                 "1", self.endpoint.username, self.endpoint.password,
                 self.endpoint.tenant_name, auth_url=self.endpoint.auth_url,
+                region_name=self.endpoint.region_name,
                 service_type="volume",
                 http_log_debug=False,
                 timeout=cfg.CONF.openstack_client_http_timeout,
@@ -148,6 +151,7 @@ class OSClientsTestCase(test.TestCase):
             kw = {"username": self.endpoint.username,
                   "password": self.endpoint.password,
                   "tenant_name": self.endpoint.tenant_name,
+                  "region_name": self.endpoint.region_name,
                   "endpoint": self.endpoint.auth_url,
                   "timeout": cfg.CONF.openstack_client_http_timeout,
                   "insecure": False, "cacert": None}

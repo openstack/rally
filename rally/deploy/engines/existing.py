@@ -29,7 +29,8 @@ class ExistingCloud(engine.EngineFactory):
                     "auth_url": "http://localhost:5000/v2.0/",
                     "username": "admin",
                     "password": "password",
-                    "tenant_name": "demo"
+                    "tenant_name": "demo",
+                    "region_name": "RegionOne"
                 }
             }
 
@@ -46,6 +47,7 @@ class ExistingCloud(engine.EngineFactory):
                     'username': {'type': 'string'},
                     'password': {'type': 'string'},
                     'tenant_name': {'type': 'string'},
+                    'region_name': {'type': 'string'},
                 },
                 'required': ['auth_url', 'username', 'password',
                              'tenant_name'],
@@ -60,7 +62,8 @@ class ExistingCloud(engine.EngineFactory):
                                           endpoint_dict['username'],
                                           endpoint_dict['password'],
                                           endpoint_dict['tenant_name'],
-                                          consts.EndpointPermission.ADMIN)
+                                          consts.EndpointPermission.ADMIN,
+                                          endpoint_dict.get('region_name'))
         return [admin_endpoint]
 
     def cleanup(self):

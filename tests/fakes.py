@@ -440,6 +440,7 @@ class FakeKeystoneClient(object):
         self.auth_user_id = generate_uuid()
         self.auth_tenant_id = generate_uuid()
         self.service_catalog = FakeServiceCatalog()
+        self.region_name = 'RegionOne'
         self.auth_ref = {'user': {'roles': [{'name': 'admin'}]}}
 
     def authenticate(self):

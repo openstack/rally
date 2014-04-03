@@ -24,4 +24,4 @@ class EndpointTestCase(test.TestCase):
         self.assertEqual(endpoint.to_dict(include_permission=True),
                          {"auth_url": "url", "username": "user",
                           "password": "pwd", "tenant_name": "tenant",
-                          "permission": "admin"})
+                          "region_name": None, "permission": "admin"})

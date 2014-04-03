@@ -19,16 +19,19 @@ from rally import consts
 class Endpoint(object):
 
     def __init__(self, auth_url, username, password, tenant_name,
-                 permission=consts.EndpointPermission.USER):
+                 permission=consts.EndpointPermission.USER,
+                 region_name=None):
         self.auth_url = auth_url
         self.username = username
         self.password = password
         self.tenant_name = tenant_name
         self.permission = permission
+        self.region_name = region_name
 
     def to_dict(self, include_permission=False):
         dct = {"auth_url": self.auth_url, "username": self.username,
-               "password": self.password, "tenant_name": self.tenant_name}
+               "password": self.password, "tenant_name": self.tenant_name,
+               "region_name": self.region_name}
         if include_permission:
             dct["permission"] = self.permission
         return dct

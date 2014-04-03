@@ -105,6 +105,7 @@ class Clients(object):
                              self.endpoint.password,
                              self.endpoint.tenant_name,
                              auth_url=self.endpoint.auth_url,
+                             region_name=self.endpoint.region_name,
                              service_type='compute',
                              http_log_debug=CONF.debug,
                              timeout=CONF.openstack_client_http_timeout,
@@ -133,6 +134,7 @@ class Clients(object):
         client = glance.Client(version,
                                endpoint=endpoint['publicURL'],
                                token=kc.auth_token,
+                               region_name=self.endpoint.region_name,
                                timeout=CONF.openstack_client_http_timeout,
                                insecure=CONF.https_insecure,
                                cacert=CONF.https_cacert)
@@ -147,6 +149,7 @@ class Clients(object):
         client = heat.Client(version,
                              endpoint=endpoint['publicURL'],
                              token=kc.auth_token,
+                             region_name=self.endpoint.region_name,
                              timeout=CONF.openstack_client_http_timeout,
                              insecure=CONF.https_insecure,
                              cacert=CONF.https_cacert)
@@ -160,6 +163,7 @@ class Clients(object):
                                self.endpoint.password,
                                self.endpoint.tenant_name,
                                auth_url=self.endpoint.auth_url,
+                               region_name=self.endpoint.region_name,
                                service_type='volume',
                                http_log_debug=CONF.debug,
                                timeout=CONF.openstack_client_http_timeout,
@@ -175,6 +179,7 @@ class Clients(object):
                                    password=self.endpoint.password,
                                    tenant_name=self.endpoint.tenant_name,
                                    endpoint=self.endpoint.auth_url,
+                                   region_name=self.endpoint.region_name,
                                    timeout=CONF.openstack_client_http_timeout,
                                    insecure=CONF.https_insecure,
                                    cacert=CONF.https_cacert)

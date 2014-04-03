@@ -39,7 +39,8 @@ class UseCommandsTestCase(test.BaseTestCase):
         endpoints = {'endpoints': [{'auth_url': 'fake_auth_url',
                                     'username': 'fake_username',
                                     'password': 'fake_password',
-                                    'tenant_name': 'fake_tenant_name'}]}
+                                    'tenant_name': 'fake_tenant_name',
+                                    'region_name': None}]}
         mock_deployment.return_value = endpoints
         mock_path.return_value = True
         with mock.patch('rally.cmd.commands.use.open', mock.mock_open(),

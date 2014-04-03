@@ -32,6 +32,7 @@ class TestExistingCloud(test.TestCase):
                     'username': 'admin',
                     'password': 'myadminpass',
                     'tenant_name': 'demo',
+                    'region_name': 'RegionOne',
                 },
             },
         }

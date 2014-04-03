@@ -75,6 +75,9 @@ class DeploymentCommands(object):
                     "tenant_name": os.environ['OS_TENANT_NAME']
                 }
             }
+            region_name = os.environ.get('OS_REGION_NAME')
+            if region_name and region_name != 'None':
+                config['endpoint']['region_name'] = region_name
         else:
             if not filename:
                 print("Either --filename or --fromenv is required")
@@ -148,7 +151,8 @@ class DeploymentCommands(object):
 
         :param deploy_id: a UUID of the deployment
         """
-        headers = ['auth_url', 'username', 'password', 'tenant_name']
+        headers = ['auth_url', 'username', 'password', 'tenant_name',
+                   'region_name']
         table = prettytable.PrettyTable(headers)
         endpoints = db.deployment_get(deploy_id)['endpoints']
         for ep in endpoints:

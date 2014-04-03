@@ -166,6 +166,7 @@ def verify(deploy_id, image_id, alt_image_id, flavor_id, alt_flavor_id,
                      ('admin_username', endpoint['username']),
                      ('admin_password', endpoint['password']),
                      ('admin_tenant_name', endpoint['tenant_name']),
+                     ('region_name', endpoint['region_name']),
                      ('uri', endpoint['auth_url']),
                      ('uri_v3', re.sub('/v2.0', '/v3', endpoint['auth_url']))])
                  )

@@ -31,7 +31,8 @@ FAKE_DEPLOY_CONFIG = {
         'auth_url': 'http://example.net:5000/v2.0/',
         'username': 'admin',
         'password': 'myadminpass',
-        'tenant_name': 'demo'
+        'tenant_name': 'demo',
+        'region_name': 'RegionOne'
     },
 }
 
@@ -240,5 +241,6 @@ class APITestCase(test.TestCase):
                     ('admin_username', 'admin'),
                     ('admin_password', 'myadminpass'),
                     ('admin_tenant_name', 'demo'),
+                    ('region_name', 'RegionOne'),
                     ('uri', 'http://example.net:5000/v2.0/'),
                     ('uri_v3', 'http://example.net:5000/v3/')])))
