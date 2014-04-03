@@ -34,3 +34,11 @@ class KeystoneBasic(kutils.KeystoneScenario):
     @context_cleaner.cleanup([])
     def create_tenant(self, name_length=10, **kwargs):
         self._tenant_create(name_length=name_length, **kwargs)
+
+    @base.scenario
+    @context_cleaner.cleanup([])
+    def create_tenant_with_users(self, name_length=10,
+                                 users_per_tenant=10, **kwargs):
+        tenant = self._tenant_create(name_length=name_length, **kwargs)
+        self._users_create(tenant, name_length=name_length,
+                           users_per_tenant=users_per_tenant, **kwargs)

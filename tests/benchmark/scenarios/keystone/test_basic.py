@@ -18,7 +18,6 @@ import mock
 from rally.benchmark.scenarios.keystone import basic
 from tests import test
 
-
 KEYSTONE_BASE = "rally.benchmark.scenarios.keystone."
 KEYSTONE_BASIC = KEYSTONE_BASE + "basic.KeystoneBasic."
 KEYSTONE_UTILS = KEYSTONE_BASE + "utils."
@@ -60,3 +59,18 @@ class KeystoneBasicTestCase(test.TestCase):
         scenario.create_tenant(name_length=20, enabled=True)
         scenario._tenant_create.assert_called_once_with(name_length=20,
                                                         enabled=True)
+
+    @mock.patch(KEYSTONE_UTILS + "generate_keystone_name")
+    def test_create_tenant_with_users(self, mock_gen_name):
+        scenario = basic.KeystoneBasic()
+        mock_gen_name.return_value = "teeeest"
+        scenario._tenant_create = mock.MagicMock()
+        tenant = scenario.create_tenant(name_length=20, enabled=True)
+        scenario._tenant_create.assert_called_once_with(name_length=20,
+                                                        enabled=True)
+        scenario._users_create = mock.MagicMock()
+        scenario._users_create(tenant, name_length=20, users_per_tenant=1,
+                               enabled=True)
+        scenario._users_create.assert_called_once_with(tenant, name_length=20,
+                                                       users_per_tenant=1,
+                                                       enabled=True)
