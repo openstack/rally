@@ -13,8 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import urlparse
-
 from ceilometerclient import client as ceilometer
 from cinderclient import client as cinder
 import glanceclient as glance
@@ -72,7 +70,6 @@ class Clients(object):
     def keystone(self):
         """Return keystone client."""
         new_kw = {
-            "endpoint": self._change_port(self.endpoint.auth_url, "35357"),
             "timeout": CONF.openstack_client_http_timeout,
             "insecure": CONF.https_insecure, "cacert": CONF.https_cacert
         }
@@ -182,17 +179,3 @@ class Clients(object):
                                    insecure=CONF.https_insecure,
                                    cacert=CONF.https_cacert)
         return client
-
-    def _change_port(self, url, new_port):
-        """Change the port of a given url.
-
-        :param url: URL string
-        :param new_port: The new port
-
-        :returns: URL string
-        """
-        url_obj = urlparse.urlparse(url)
-        new_url = "%(scheme)s://%(hostname)s:%(port)s%(path)s" % {
-                  "scheme": url_obj.scheme, "hostname": url_obj.hostname,
-                  "port": new_port, "path": url_obj.path}
-        return new_url
