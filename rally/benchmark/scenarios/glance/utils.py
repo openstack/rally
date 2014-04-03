@@ -26,21 +26,21 @@ from rally.benchmark import utils as bench_utils
 
 glance_benchmark_opts = [
     cfg.FloatOpt('glance_image_create_prepoll_delay',
-                 default=2,
+                 default=2.0,
                  help='Time to sleep after creating a resource before '
                       'polling for it status'),
     cfg.FloatOpt('glance_image_create_timeout',
-                 default=120,
+                 default=120.0,
                  help='Time to wait for glance image to be created.'),
     cfg.FloatOpt('glance_image_create_poll_interval',
-                 default=1,
+                 default=1.0,
                  help='Interval between checks when waiting for image '
                       'creation.'),
     cfg.FloatOpt('glance_image_delete_timeout',
-                 default=120,
+                 default=120.0,
                  help='Time to wait for glance image to be deleted.'),
     cfg.FloatOpt('glance_image_delete_poll_interval',
-                 default=1,
+                 default=1.0,
                  help='Interval between checks when waiting for image '
                       'deletion.')
 ]

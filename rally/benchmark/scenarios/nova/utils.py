@@ -42,17 +42,17 @@ for action, prepoll, timeout, poll in option_names_and_defaults:
     nova_benchmark_opts.extend([
         cfg.FloatOpt(
             "nova_server_%s_prepoll_delay" % action,
-            default=prepoll,
+            default=float(prepoll),
             help='Time to sleep after %s before polling for status' % action
         ),
         cfg.FloatOpt(
             "nova_server_%s_timeout" % action,
-            default=timeout,
+            default=float(timeout),
             help='Server %s timeout' % action
         ),
         cfg.FloatOpt(
             "nova_server_%s_poll_interval" % action,
-            default=poll,
+            default=float(poll),
             help='Server %s poll interval' % action
         )
     ])
