@@ -84,12 +84,12 @@ class NovaQuotas(object):
     def __init__(self, client):
         self.client = client
 
-    def update(self, endpoint, **kwargs):
-        self.client.quotas.update(endpoint, **kwargs)
+    def update(self, tenant_id, **kwargs):
+        self.client.quotas.update(tenant_id, **kwargs)
 
-    def delete(self, endpoint):
+    def delete(self, tenant_id):
         # Reset quotas to defaults and tag database objects as deleted
-        self.client.quotas.delete(endpoint)
+        self.client.quotas.delete(tenant_id)
 
 
 class CinderQuotas(object):
@@ -117,13 +117,63 @@ class CinderQuotas(object):
     def __init__(self, client):
         self.client = client
 
-    def update(self, endpoint, **kwargs):
-        self.client.quotas.update(endpoint, **kwargs)
+    def update(self, tenant_id, **kwargs):
+        self.client.quotas.update(tenant_id, **kwargs)
 
-    def delete(self, endpoint):
+    def delete(self, tenant_id):
         # Currently, no method to delete quotas available in cinder client:
         # Will be added with https://review.openstack.org/#/c/74841/
         pass
+
+
+class NeutronQuotas(object):
+    """Management of Neutron quotas."""
+
+    QUOTAS_SCHEMA = {
+        "type": "object",
+        "additionalProperties": False,
+        "properties": {
+            "network": {
+                "type": "integer",
+                "minimum": -1
+            },
+            "subnet": {
+                "type": "integer",
+                "minimum": -1
+            },
+            "port": {
+                "type": "integer",
+                "minimum": -1
+            },
+            "router": {
+                "type": "integer",
+                "minimum": -1
+            },
+            "floatingip": {
+                "type": "integer",
+                "minimum": -1
+            },
+            "security-group": {
+                "type": "integer",
+                "minimum": -1
+            },
+            "security-group-rule": {
+                "type": "integer",
+                "minimum": -1
+            }
+        }
+    }
+
+    def __init__(self, client):
+        self.client = client
+
+    def update(self, tenant_id, **kwargs):
+        body = {"quota": kwargs}
+        self.client.update_quota(tenant_id, body=body)
+
+    def delete(self, tenant_id):
+        # Reset quotas to defaults and tag database objects as deleted
+        self.client.delete_quota(tenant_id)
 
 
 class Quotas(base.Context):
@@ -140,6 +190,7 @@ class Quotas(base.Context):
         "properties": {
             "nova": NovaQuotas.QUOTAS_SCHEMA,
             "cinder": CinderQuotas.QUOTAS_SCHEMA,
+            "neutron": NeutronQuotas.QUOTAS_SCHEMA
         }
     }
 
@@ -148,6 +199,7 @@ class Quotas(base.Context):
         self.clients = osclients.Clients(context["admin"]["endpoint"])
         self.nova_quotas = NovaQuotas(self.clients.nova())
         self.cinder_quotas = CinderQuotas(self.clients.cinder())
+        self.neutron_quotas = NeutronQuotas(self.clients.neutron())
 
     @utils.log_task_wrapper(LOG.info, _("Enter context: `quotas`"))
     def setup(self):
@@ -160,9 +212,14 @@ class Quotas(base.Context):
                 self.cinder_quotas.update(tenant["id"],
                                           **self.config["cinder"])
 
+            if "neutron" in self.config and len(self.config["neutron"]) > 0:
+                self.neutron_quotas.update(tenant["id"],
+                                           **self.config["neutron"])
+
     @utils.log_task_wrapper(LOG.info, _("Exit context: `quotas`"))
     def cleanup(self):
         for tenant in self.context["tenants"]:
             # Always cleanup quotas before deleting a tenant
             self.nova_quotas.delete(tenant["id"])
             self.cinder_quotas.delete(tenant["id"])
+            self.neutron_quotas.delete(tenant["id"])
