@@ -1,12 +1,12 @@
 {
-    "NovaServers.boot_runcommand_delete_server": [
+    "VMTasks.boot_runcommand_delete": [
         {
             "args": {
-                "flavor_id": "1",
-                "image_id": "73257560-c59b-4275-a1ec-ab140e5b9979",
+                "flavor_id": "100",
+                "image_id": "8ec0b1bc-bb9c-4176-9d06-e23016091a51",
                 "script": "doc/samples/support/instance_dd_test.sh",
                 "interpreter": "/bin/sh",
-                "username": "ubuntu"
+                "username": "cirros"
             },
             "runner": {
                 "type": "constant",

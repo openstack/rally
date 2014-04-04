@@ -13,7 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import json
 import jsonschema
 import random
 
@@ -25,7 +24,6 @@ from rally.benchmark import validation as valid
 from rally import exceptions as rally_exceptions
 from rally.openstack.common.gettextutils import _  # noqa
 from rally.openstack.common import log as logging
-from rally import sshutils
 
 
 LOG = logging.getLogger(__name__)
@@ -84,64 +82,6 @@ class NovaServers(utils.NovaScenario,
                                    **kwargs)
         self.sleep_between(min_sleep, max_sleep)
         self._delete_server(server)
-
-    @valid.add_validator(valid.image_valid_on_flavor("flavor_id", "image_id"))
-    @base.scenario(context={"cleanup": ["nova"],
-                            "keypair": {}, "allow_ssh": {}})
-    def boot_runcommand_delete_server(self, image_id, flavor_id,
-                                      script, interpreter, network='private',
-                                      username='ubuntu', ip_version=4,
-                                      retries=60, port=22, **kwargs):
-        """Boot server, run a script that outputs JSON, delete server.
-
-        Parameters:
-        script: script to run on the server, must output JSON mapping metric
-                names to values. See sample script below.
-        network: Network to choose address to connect to instance from
-        username: User to SSH to instance as
-        ip_version: Version of ip protocol to use for connection
-
-        returns: Dictionary containing two keys, data and errors. Data is JSON
-                 data output by the script. Errors is raw data from the
-                 script's standard error stream.
-
-
-        Example Script in doc/samples/support/instance_dd_test.sh
-        """
-        server_name = self._generate_random_name(16)
-
-        server = self._boot_server(server_name, image_id, flavor_id,
-                                   key_name='rally_ssh_key', **kwargs)
-
-        if network not in server.addresses:
-            raise ValueError(
-                "Can't find cloud network %(network)s, so cannot boot "
-                "instance for Rally scenario boot-runcommand-delete. "
-                "Available networks: %(networks)s" % (
-                    dict(network=network,
-                         networks=server.addresses.keys()
-                         )
-                )
-            )
-        server_ip = [ip for ip in server.addresses[network] if
-                     ip["version"] == ip_version][0]["addr"]
-        ssh = sshutils.SSH(username, server_ip, port=port,
-                           pkey=self.context()["user"]["keypair"]["private"])
-        ssh.wait()
-        code, out, err = ssh.execute(interpreter, stdin=open(script, "rb"))
-        if code:
-            LOG.error(_("Error running script on instance via SSH. "
-                        "Error: %s") % err)
-        try:
-            out = json.loads(out)
-        except ValueError:
-            LOG.warning(_("Script %s did not output valid JSON.") % script)
-
-        self._delete_server(server)
-        LOG.debug(_("Output streams from in-instance script execution: "
-                    "stdout: %(stdout)s, stderr: $(stderr)s") % dict(
-                        stdout=out, stderr=err))
-        return {"data": out, "errors": err}
 
     @valid.add_validator(valid.image_valid_on_flavor("flavor_id", "image_id"))
     @base.scenario(context={"cleanup": ["nova"]})
