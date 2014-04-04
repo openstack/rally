@@ -22,7 +22,7 @@ from rally.benchmark import validation
 
 class GlanceImages(utils.GlanceScenario, nova_utils.NovaScenario):
 
-    @base.scenario
+    @base.scenario()
     @context_cleaner.cleanup(['glance'])
     def create_and_list_image(self, container_format,
                               image_location, disk_format, **kwargs):
@@ -46,7 +46,7 @@ class GlanceImages(utils.GlanceScenario, nova_utils.NovaScenario):
                            **kwargs)
         self._list_images()
 
-    @base.scenario
+    @base.scenario()
     @context_cleaner.cleanup(['glance'])
     def create_and_delete_image(self, container_format,
                                 image_location, disk_format, **kwargs):
@@ -61,7 +61,7 @@ class GlanceImages(utils.GlanceScenario, nova_utils.NovaScenario):
 
     @context_cleaner.cleanup(['glance', 'nova'])
     @validation.add_validator(validation.flavor_exists("flavor_id"))
-    @base.scenario
+    @base.scenario()
     def create_image_and_boot_instances(self, container_format,
                                         image_location, disk_format,
                                         flavor_id, number_instances,

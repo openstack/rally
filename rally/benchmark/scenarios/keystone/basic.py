@@ -20,22 +20,22 @@ from rally.benchmark.scenarios.keystone import utils as kutils
 
 class KeystoneBasic(kutils.KeystoneScenario):
 
-    @base.scenario
+    @base.scenario(admin_only=True)
     def create_user(self, name_length=10, **kwargs):
         self._user_create(name_length=name_length, **kwargs)
 
-    @base.scenario
+    @base.scenario(admin_only=True)
     @context_cleaner.cleanup([])
     def create_delete_user(self, name_length=10, **kwargs):
         user = self._user_create(name_length=name_length, **kwargs)
         self._resource_delete(user)
 
-    @base.scenario
+    @base.scenario(admin_only=True)
     @context_cleaner.cleanup([])
     def create_tenant(self, name_length=10, **kwargs):
         self._tenant_create(name_length=name_length, **kwargs)
 
-    @base.scenario
+    @base.scenario(admin_only=True)
     @context_cleaner.cleanup([])
     def create_tenant_with_users(self, name_length=10,
                                  users_per_tenant=10, **kwargs):

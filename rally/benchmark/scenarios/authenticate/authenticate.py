@@ -21,7 +21,7 @@ class Authenticate(base.Scenario):
     types of clients like Keystone.
     """
 
-    @base.scenario
+    @base.scenario()
     @context_cleaner.cleanup([])
     def keystone(self, **kwargs):
         self.clients("keystone")
