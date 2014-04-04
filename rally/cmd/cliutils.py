@@ -22,12 +22,19 @@ from oslo.config import cfg
 
 from rally.openstack.common.apiclient import exceptions
 from rally.openstack.common import cliutils
+from rally.openstack.common.db import options as db_options
 from rally.openstack.common.gettextutils import _
 from rally.openstack.common import log as logging
 from rally import version
 
 CONF = cfg.CONF
 LOG = logging.getLogger(__name__)
+
+# NOTE(hughsaunders): Added as default value is no longer stored in
+# openstack.common.db.options, referenced in run() below.
+# See: * https://review.openstack.org/84768
+#      * https://bugs.launchpad.net/rally/+bug/1302570
+_DEFAULT_SQL_CONNECTION = 'sqlite:////tmp/rally.sqlite'
 
 
 def args(*args, **kwargs):
@@ -86,6 +93,8 @@ def _add_command_parsers(categories, subparsers):
 
 
 def run(argv, categories):
+    db_options.set_defaults(sql_connection=_DEFAULT_SQL_CONNECTION,
+                            sqlite_db='rally.sqlite')
     parser = lambda subparsers: _add_command_parsers(categories, subparsers)
     category_opt = cfg.SubCommandOpt('category',
                                      title='Command categories',
