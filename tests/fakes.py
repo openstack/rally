@@ -453,6 +453,13 @@ class FakeCeilometerClient(object):
         pass
 
 
+class FakeNeutronClient(object):
+
+    def __init__(self):
+        #TODO(bsemp): Fake Manager subclasses to manage networks.
+        pass
+
+
 class FakeClients(object):
 
     def __init__(self):

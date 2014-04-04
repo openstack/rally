@@ -21,6 +21,7 @@ import glanceclient as glance
 from heatclient import client as heat
 from keystoneclient import exceptions as keystone_exceptions
 from keystoneclient.v2_0 import client as keystone
+from neutronclient.neutron import client as neutron
 from novaclient import client as nova
 from oslo.config import cfg
 
@@ -112,6 +113,19 @@ class Clients(object):
                              timeout=CONF.openstack_client_http_timeout,
                              insecure=CONF.https_insecure,
                              cacert=CONF.https_cacert)
+        return client
+
+    @memoize('neutron')
+    def neutron(self, version='2.0'):
+        """Returns neutron client."""
+        client = neutron.Client(version,
+                                username=self.endpoint.username,
+                                password=self.endpoint.password,
+                                tenant_name=self.endpoint.tenant_name,
+                                auth_url=self.endpoint.auth_url,
+                                timeout=CONF.openstack_client_http_timeout,
+                                insecure=CONF.https_insecure,
+                                cacert=CONF.https_cacert)
         return client
 
     @memoize('glance')

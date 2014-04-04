@@ -85,6 +85,25 @@ class OSClientsTestCase(test.TestCase):
                 insecure=False, cacert=None)
             self.assertEqual(self.clients.cache["nova"], fake_nova)
 
+    @mock.patch("rally.osclients.neutron")
+    def test_neutron(self, mock_neutron):
+        fake_neutron = fakes.FakeNeutronClient()
+        mock_neutron.Client = mock.MagicMock(return_value=fake_neutron)
+        self.assertTrue("neutron" not in self.clients.cache)
+        client = self.clients.neutron()
+        self.assertEqual(client, fake_neutron)
+        kw = {
+            "username": self.endpoint.username,
+            "password": self.endpoint.password,
+            "tenant_name": self.endpoint.tenant_name,
+            "auth_url": self.endpoint.auth_url,
+            "timeout": cfg.CONF.openstack_client_http_timeout,
+            "insecure": cfg.CONF.https_insecure,
+            "cacert": cfg.CONF.https_cacert
+        }
+        mock_neutron.Client.assert_called_once_with("2.0", **kw)
+        self.assertEqual(self.clients.cache["neutron"], fake_neutron)
+
     def test_glance(self):
         with mock.patch("rally.osclients.glance") as mock_glance:
             fake_glance = fakes.FakeGlanceClient()
