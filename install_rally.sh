@@ -57,7 +57,6 @@ init_variables() {
   PIP_SECURE_LOCATION="https://raw.github.com/pypa/pip/master/contrib/get-pip.py"
   TMP="`dirname \"$0\"`"
   TMP="`( cd \"${TMP}\" && pwd )`"
-  RALLY_GIT=${TMP%/*}
 
   if [ "${scope}" = "system" ]; then
     RALLY_DATABASE_DIR="/var/lib/rally/database"
@@ -127,13 +126,13 @@ install_rally_requirements() {
 }
 
 install_rally() {
-  cd ${RALLY_GIT}
+  cd ${TMP}
   python setup.py install
 }
 
 configure_rally() {
   mkdir -p ${RALLY_DATABASE_DIR} ${RALLY_CONFIGURATION_DIR}
-  cp ${RALLY_GIT}/etc/rally/rally.conf.sample ${RALLY_CONFIGURATION_DIR}/rally.conf
+  cp ${TMP}/etc/rally/rally.conf.sample ${RALLY_CONFIGURATION_DIR}/rally.conf
   sed -i "/#connection=<None>/a connection=sqlite:////${RALLY_DATABASE_DIR}/rally.sqlite" ${RALLY_CONFIGURATION_DIR}/rally.conf
 
   rally-manage db recreate
