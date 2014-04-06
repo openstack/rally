@@ -14,7 +14,9 @@
 #    under the License.
 
 import mock
+import traceback
 
+from rally.benchmark.context import base as base_ctx
 from rally.benchmark.scenarios import base
 from rally.benchmark import validation
 from rally import consts
@@ -173,3 +175,17 @@ class ScenarioTestCase(test.TestCase):
         scenario = base.Scenario(admin_clients=clients)
         self.assertEqual(clients.nova(), scenario.admin_clients("nova"))
         self.assertEqual(clients.glance(), scenario.admin_clients("glance"))
+
+    def test_scenario_context_are_valid(self):
+        scenarios = base.Scenario.list_benchmark_scenarios()
+
+        for scenario in scenarios:
+            cls_name, method_name = scenario.split(".", 1)
+            cls = base.Scenario.get_by_name(cls_name)
+            context = getattr(cls, method_name).context
+            try:
+                base_ctx.ContextManager.validate(context)
+            except Exception:
+                print(traceback.format_exc())
+                self.assertTrue(False,
+                                "Scenario `%s` has wrong context" % scenario)

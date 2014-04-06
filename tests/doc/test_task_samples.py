@@ -43,7 +43,7 @@ class TaskSampleTestCase(test.TestCase):
                         eng = engine.BenchmarkEngine(task_config,
                                                      mock.MagicMock())
                         eng.validate()
-                    except Exception :
+                    except Exception:
                         print(traceback.format_exc())
                         self.assertTrue(False,
                                         "Wrong task config %s" % full_path)

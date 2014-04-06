@@ -18,7 +18,6 @@ import random
 import string
 import time
 
-from rally.benchmark.context import secgroup
 from rally.benchmark.scenarios import base
 from rally.benchmark.scenarios import utils as scenario_utils
 from rally.benchmark import utils as bench_utils
@@ -86,12 +85,12 @@ class NovaScenario(base.Scenario):
 
         :returns: Created server object
         """
-
-        if 'security_groups' not in kwargs:
-            kwargs['security_groups'] = [secgroup.SSH_GROUP_NAME]
-        else:
-            if secgroup.SSH_GROUP_NAME not in kwargs['security_groups']:
-                kwargs['security_groups'].append(secgroup.SSH_GROUP_NAME)
+        allow_ssh_secgroup = self.context().get("allow_ssh")
+        if allow_ssh_secgroup:
+            if 'security_groups' not in kwargs:
+                kwargs['security_groups'] = [allow_ssh_secgroup]
+            elif allow_ssh_secgroup not in kwargs['security_groups']:
+                kwargs['security_groups'].append(allow_ssh_secgroup)
 
         server = self.clients("nova").servers.create(server_name, image_id,
                                                      flavor_id, **kwargs)

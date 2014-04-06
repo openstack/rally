@@ -22,7 +22,7 @@ from rally import exceptions
 from rally import utils
 
 
-def scenario(admin_only=False):
+def scenario(admin_only=False, context=None):
     """This method is used as decorator for the methods of benchmark scenarios
        and it adds following extra fields to the methods.
        'is_scenario' is set to True
@@ -31,6 +31,7 @@ def scenario(admin_only=False):
     def wrapper(func):
         func.is_scenario = True
         func.admin_only = admin_only
+        func.context = context or {}
         return func
     return wrapper
 

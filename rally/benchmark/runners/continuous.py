@@ -126,25 +126,25 @@ class ContinuousScenarioRunner(base.ScenarioRunner):
 
         return results
 
-    def _run_scenario(self, cls, method_name, context, args, config):
+    def _run_scenario(self, cls, method_name, context, args):
 
-        timeout = config.get("timeout", 600)
-        concurrent = config.get("active_users", 1)
+        timeout = self.config.get("timeout", 600)
+        concurrent = self.config.get("active_users", 1)
 
         # NOTE(msdubov): If not specified, perform single scenario run.
-        if "duration" not in config and "times" not in config:
-            config["times"] = 1
+        if "duration" not in self.config and "times" not in self.config:
+            self.config["times"] = 1
 
         # Continiously run a benchmark scenario the specified
         # amount of times.
-        if "times" in config:
-            times = config["times"]
+        if "times" in self.config:
+            times = self.config["times"]
             results = self._run_scenario_continuously_for_times(
                 cls, method_name, context, args, times, concurrent, timeout)
         # Continiously run a scenario as many times as needed
         # to fill up the given period of time.
-        elif "duration" in config:
-            duration = config["duration"]
+        elif "duration" in self.config:
+            duration = self.config["duration"]
             results = self._run_scenario_continuously_for_duration(
                 cls, method_name, context, args, duration, concurrent, timeout)
 

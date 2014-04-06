@@ -24,18 +24,20 @@ from rally import utils
 
 @six.add_metaclass(abc.ABCMeta)
 class Context(object):
-    """We will use this class in future as a factory for context classes.
+    """This class is a factory for context classes.
 
-        It will cover:
-            1) Auto discovering
-            2) Validation of input args
-            3) Common logging
+        Every context class should be a subclass of this method and implement
+        2 abstract methods: setup() and cleanup()
 
-        Actually the same functionality as
-        runners.base.ScenarioRunner and scenarios.base.Scenario
+        It covers:
+            1) proper setting up of context config
+            2) Auto discovering & get by name
+            3) Validation by CONFIG_SCHEMA
+            4) Order of context creation
     """
-
     __ctx_name__ = "base"
+    __ctx_order__ = 0
+    __ctx_hidden__ = True
 
     CONFIG_SCHEMA = {}
 
@@ -44,11 +46,11 @@ class Context(object):
         self.context = context
         self.task = context["task"]
 
-    @staticmethod
-    def validate(context):
-        for name, config in context.iteritems():
-            ctx = Context.get_by_name(name)
-            jsonschema.validate(config, ctx.CONFIG_SCHEMA)
+    @classmethod
+    def validate(cls, config, non_hidden=False):
+        if non_hidden and cls.__ctx_hidden__:
+            raise exceptions.NoSuchContext(name=cls.__ctx_name__)
+        jsonschema.validate(config, cls.CONFIG_SCHEMA)
 
     @staticmethod
     def get_by_name(name):
@@ -71,3 +73,45 @@ class Context(object):
 
     def __exit__(self, exc_type, exc_value, exc_traceback):
         self.cleanup()
+
+
+class ContextManager(object):
+    """Creates context environment and runs method inside it."""
+
+    @staticmethod
+    def run(context, func, *args, **kwargs):
+        ctxlst = [Context.get_by_name(name) for name in context["config"]]
+        ctxlst = map(lambda ctx: ctx(context),
+                     sorted(ctxlst, key=lambda x: x.__ctx_order__))
+
+        return ContextManager._magic(ctxlst, func, *args, **kwargs)
+
+    @staticmethod
+    def validate(context, non_hidden=False):
+        for name, config in context.iteritems():
+            Context.get_by_name(name).validate(config, non_hidden=non_hidden)
+
+    @staticmethod
+    def _magic(ctxlst, func, *args, **kwargs):
+        """Some kind of contextlib.nested but with black jack & recursion.
+
+        This method uses recursion to build nested "with" from list of context
+        objects. As it's actually a combination of dark and voodoo magic I
+        called it "_magic". Please don't repeat at home.
+
+        :param ctxlst: list of instances of subclasses of Context
+        :param func: function that will be called inside this context
+        :param args: args that will be passed to function `func`
+        :param kwargs: kwargs that will be passed to function `func`
+        :returns: result of function call
+        """
+        if not ctxlst:
+            return func(*args, **kwargs)
+
+        with ctxlst[0]:
+            # TODO(boris-42): call of setup could be moved inside __enter__
+            #                 but it should be in try-except, and in except
+            #                 we should call by hand __exit__
+            ctxlst[0].setup()
+            tmp = ContextManager._magic(ctxlst[1:], func, *args, **kwargs)
+            return tmp

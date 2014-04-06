@@ -18,6 +18,7 @@ import mock
 
 from rally.benchmark.runners import base
 from rally.benchmark.runners import continuous
+from rally.benchmark.scenarios import base as base_scenario
 from rally import consts
 from rally import exceptions
 from tests import fakes
@@ -180,17 +181,19 @@ class ScenarioRunnerTestCase(test.TestCase):
 
         task = mock.MagicMock()
         endpoints = [mock.MagicMock(), mock.MagicMock()]
-        runner = base.ScenarioRunner.get_runner(task, endpoints, "new_runner")
+        config = {"type": "new_runner", "a": 123}
+        runner = base.ScenarioRunner.get_runner(task, endpoints, config)
 
         self.assertEqual(runner.task, task)
         self.assertEqual(runner.endpoints, endpoints)
         self.assertEqual(runner.admin_user, endpoints[0])
+        self.assertEqual(runner.config, config)
         self.assertIsInstance(runner, NewRunner)
 
     def test_get_runner_no_such(self):
         self.assertRaises(exceptions.NoSuchRunner,
                           base.ScenarioRunner.get_runner,
-                          None, None, "NoSuchRunner")
+                          None, None, {"type": "NoSuchRunner"})
 
     @mock.patch("rally.benchmark.runners.base.jsonschema.validate")
     def test_validate_default_runner(self, mock_validate):
@@ -200,10 +203,39 @@ class ScenarioRunnerTestCase(test.TestCase):
                 config,
                 continuous.ContinuousScenarioRunner.CONFIG_SCHEMA)
 
-    @mock.patch("rally.benchmark.runners.base.ScenarioRunner._run_as_admin")
-    def test_run_scenario_runner_results_exception(self, mock_run_method):
+    @mock.patch("rally.benchmark.runners.base.base_ctx.ContextManager")
+    def test_run(self, mock_ctx_manager):
         runner = continuous.ContinuousScenarioRunner(mock.MagicMock(),
-                                                     self.fake_endpoints)
+                                                     self.fake_endpoints,
+                                                     mock.MagicMock())
+        mock_ctx_manager.run.return_value = base.ScenarioRunnerResult([])
+        scenario_name = "NovaServers.boot_server_from_volume_and_delete"
+        result = runner.run(scenario_name, {"some_ctx": 2}, [1, 2, 3])
+
+        self.assertEqual(result, mock_ctx_manager.run.return_value)
+
+        cls_name, method_name = scenario_name.split(".", 1)
+        cls = base_scenario.Scenario.get_by_name(cls_name)
+
+        context_obj = {
+            "task": runner.task,
+            "admin": {"endpoint": runner.admin_user},
+            "scenario_name": scenario_name,
+            "config": {
+                "cleanup": ["nova", "cinder"], "some_ctx": 2, "users": {}
+            }
+        }
+
+        expected = [context_obj, runner._run_scenario, cls, method_name,
+                    context_obj, [1, 2, 3]]
+        mock_ctx_manager.run.assert_called_once_with(*expected)
+
+    @mock.patch("rally.benchmark.runners.base.base_ctx.ContextManager")
+    def test_run__scenario_runner_results_exception(self, mock_ctx_manager):
+        runner = continuous.ContinuousScenarioRunner(mock.MagicMock(),
+                                                     self.fake_endpoints,
+                                                     mock.MagicMock())
         self.assertRaises(exceptions.InvalidRunnerResult,
-                          runner.run, "NovaServers.boot_server_from_volume_"
-                                      "and_delete", mock.MagicMock())
+                          runner.run,
+                          "NovaServers.boot_server_from_volume_and_delete",
+                          mock.MagicMock(), {})

@@ -48,29 +48,24 @@ class PeriodicScenarioRunnerTestCase(test.TestCase):
 
     def test_run_scenario(self):
         context = fakes.FakeUserContext({}).context
+        config = {"times": 3, "period": 0, "timeout": 5}
         runner = periodic.PeriodicScenarioRunner(
-                        None, [context["admin"]["endpoint"]])
-        times = 3
-        period = 0
+                        None, [context["admin"]["endpoint"]], config)
 
-        result = runner._run_scenario(fakes.FakeScenario, "do_it", context, {},
-                                      {"times": times, "period": period,
-                                       "timeout": 5})
-        self.assertEqual(len(result), times)
+        result = runner._run_scenario(fakes.FakeScenario, "do_it", context, {})
+        self.assertEqual(len(result), config["times"])
         self.assertIsNotNone(base.ScenarioRunnerResult(result))
 
     def test_run_scenario_exception(self):
         context = fakes.FakeUserContext({}).context
+
+        config = {"times": 4, "period": 0}
         runner = periodic.PeriodicScenarioRunner(
-                        None, [context["admin"]["endpoint"]])
-        times = 4
-        period = 0
+                        None, [context["admin"]["endpoint"]], config)
 
         result = runner._run_scenario(fakes.FakeScenario,
-                                      "something_went_wrong", context, {},
-                                      {"times": times, "period": period,
-                                       "timeout": 5})
-        self.assertEqual(len(result), times)
+                                      "something_went_wrong", context, {})
+        self.assertEqual(len(result), config["times"])
         self.assertIsNotNone(base.ScenarioRunnerResult(result))
 
     @mock.patch("rally.benchmark.runners.periodic.base.ScenarioRunnerResult")
@@ -79,19 +74,17 @@ class PeriodicScenarioRunnerTestCase(test.TestCase):
     def test_run_scenario_internal_logic(self, mock_time, mock_pool,
                                          mock_result):
         context = fakes.FakeUserContext({}).context
+        config = {"times": 4, "period": 0, "timeout": 5}
         runner = periodic.PeriodicScenarioRunner(
-                        None, [context["admin"]["endpoint"]])
-        times = 4
-        period = 0
+                        None, [context["admin"]["endpoint"]], config)
 
         mock_pool_inst = mock.MagicMock()
         mock_pool.ThreadPool.return_value = mock_pool_inst
 
-        runner._run_scenario(fakes.FakeScenario, "do_it", context, {},
-                             {"times": times, "period": period, "timeout": 5})
+        runner._run_scenario(fakes.FakeScenario, "do_it", context, {})
 
         exptected_pool_inst_call = []
-        for i in range(times):
+        for i in range(config["times"]):
             args = (
                 base._run_scenario_once,
                 ((i, fakes.FakeScenario, "do_it",
@@ -99,7 +92,7 @@ class PeriodicScenarioRunnerTestCase(test.TestCase):
             )
             exptected_pool_inst_call.append(mock.call.apply_async(*args))
 
-        for i in range(times):
+        for i in range(config["times"]):
             call = mock.call.apply_async().get(timeout=5)
             exptected_pool_inst_call.append(call)
 
@@ -117,5 +110,5 @@ class PeriodicScenarioRunnerTestCase(test.TestCase):
 
         runner = base.ScenarioRunner.get_runner(mock.MagicMock(),
                                                 self.fake_endpoints,
-                                                "periodic")
+                                                {"type": "periodic"})
         self.assertTrue(runner is not None)

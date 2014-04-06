@@ -45,9 +45,8 @@ class SerialScenarioRunner(base.ScenarioRunner):
         "additionalProperties": True
     }
 
-    def _run_scenario(self, cls, method_name, context, args, config):
-
-        times = config.get('times', 1)
+    def _run_scenario(self, cls, method_name, context, args):
+        times = self.config.get('times', 1)
 
         results = []
 

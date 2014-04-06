@@ -97,7 +97,7 @@ class QuotasTestCase(test.TestCase):
                 {"endpoint": mock.MagicMock(), "id": mock.MagicMock()}
             ],
             "admin": {"endpoint": mock.MagicMock()},
-            "task": {}
+            "task": mock.MagicMock()
         }
 
     def test_quotas_schemas(self):
@@ -128,7 +128,7 @@ class QuotasTestCase(test.TestCase):
                 # Test invalid values
                 ctx["config"]["quotas"][service][key] = self.unlimited - 1
                 try:
-                    quotas.Quotas.validate(ctx["config"])
+                    quotas.Quotas.validate(ctx["config"]["quotas"])
                 except jsonschema.ValidationError:
                     pass
                 else:
@@ -137,7 +137,7 @@ class QuotasTestCase(test.TestCase):
 
                 ctx["config"]["quotas"][service][key] = 2.5
                 try:
-                    quotas.Quotas.validate(ctx["config"])
+                    quotas.Quotas.validate(ctx["config"]["quotas"])
                 except jsonschema.ValidationError:
                     pass
                 else:
@@ -146,7 +146,7 @@ class QuotasTestCase(test.TestCase):
 
                 ctx["config"]["quotas"][service][key] = "-1"
                 try:
-                    quotas.Quotas.validate(ctx["config"])
+                    quotas.Quotas.validate(ctx["config"]["quotas"])
                 except jsonschema.ValidationError:
                     pass
                 else:
@@ -157,20 +157,20 @@ class QuotasTestCase(test.TestCase):
                 ctx["config"]["quotas"][service][key] = \
                     random.randint(0, 1000000)
                 try:
-                    quotas.Quotas.validate(ctx["config"])
+                    quotas.Quotas.validate(ctx["config"]["quotas"])
                 except jsonschema.ValidationError:
                     self.fail("Positive integers are valid quota values")
 
                 ctx["config"]["quotas"][service][key] = self.unlimited
                 try:
-                    quotas.Quotas.validate(ctx["config"])
+                    quotas.Quotas.validate(ctx["config"]["quotas"])
                 except jsonschema.ValidationError:
                     self.fail("%d is a valid quota value" % self.unlimited)
 
             # Test additional keys are refused
             ctx["config"]["quotas"][service]["additional"] = self.unlimited
             try:
-                quotas.Quotas.validate(ctx["config"])
+                quotas.Quotas.validate(ctx["config"]["quotas"])
             except jsonschema.ValidationError:
                 pass
             else:
@@ -180,7 +180,7 @@ class QuotasTestCase(test.TestCase):
             # Test valid keys are optional
             ctx["config"]["quotas"][service] = {}
             try:
-                quotas.Quotas.validate(ctx["config"])
+                quotas.Quotas.validate(ctx["config"]["quotas"])
             except jsonschema.ValidationError:
                 self.fail("Valid quota keys are optional")
 

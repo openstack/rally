@@ -32,7 +32,6 @@ class ResourceCleanerTestCase(test.TestCase):
             "admin": None,
             "users": [],
             "tenants": [],
-            "scenario_name": "NovaServers.boot_server_from_volume_and_delete"
         }
         resource_cleaner = cleaner_ctx.ResourceCleaner(context)
         with resource_cleaner:
@@ -40,6 +39,7 @@ class ResourceCleanerTestCase(test.TestCase):
 
     def test_with_statement(self):
         fake_user_ctx = fakes.FakeUserContext({}).context
+        fake_user_ctx["config"] = {"cleanup": ["nova"]}
         res_cleaner = cleaner_ctx.ResourceCleaner(fake_user_ctx)
 
         res_cleaner._cleanup_users_resources = mock.MagicMock()
@@ -56,7 +56,7 @@ class ResourceCleanerTestCase(test.TestCase):
     def test_cleaner_admin(self, mock_del_keystone, mock_clients):
         context = {
             "task": mock.MagicMock(),
-            "scenario_name": 'NovaServers.boot_server_from_volume_and_delete',
+            "config": {"cleanup": ["cinder", "nova"]},
             "admin": {"endpoint": mock.MagicMock()},
         }
         res_cleaner = cleaner_ctx.ResourceCleaner(context)
@@ -70,21 +70,18 @@ class ResourceCleanerTestCase(test.TestCase):
         mock_clients.return_value.keystone.assert_called_once_with()
         mock_del_keystone.assert_called_once_with('keystone')
 
-    @mock.patch("rally.benchmark.scenarios.nova.servers.NovaServers."
-                "boot_server_from_volume_and_delete")
     @mock.patch("%s.osclients.Clients" % BASE)
     @mock.patch("%s.utils.delete_nova_resources" % BASE)
     @mock.patch("%s.utils.delete_glance_resources" % BASE)
     @mock.patch("%s.utils.delete_cinder_resources" % BASE)
     def test_cleaner_users_all_services(self, mock_del_cinder,
                                         mock_del_glance, mock_del_nova,
-                                        mock_clients, mock_scenario_method):
-        del mock_scenario_method.cleanup_services
+                                        mock_clients):
         context = {
             "task": mock.MagicMock(),
             "users": [{"endpoint": mock.MagicMock()},
                       {"endpoint": mock.MagicMock()}],
-            "scenario_name": "NovaServers.boot_server_from_volume_and_delete",
+            "config": {"cleanup": ["cinder", "nova", "glance"]},
             "tenants": [mock.MagicMock()]
         }
         res_cleaner = cleaner_ctx.ResourceCleaner(context)
@@ -100,18 +97,31 @@ class ResourceCleanerTestCase(test.TestCase):
         self.assertEqual(mock_del_glance.call_count, 2)
         self.assertEqual(mock_del_cinder.call_count, 2)
 
+    @mock.patch("%s.ResourceCleaner._cleanup_users_resources" % BASE)
+    def test_cleaner_users_default_behavior(self, mock_cleanup):
+        context = {
+            "task": mock.MagicMock(),
+            "users": [{"endpoint": mock.MagicMock()},
+                      {"endpoint": mock.MagicMock()}],
+        }
+        res_cleaner = cleaner_ctx.ResourceCleaner(context)
+
+        with res_cleaner:
+            res_cleaner.setup()
+
+        self.assertEqual(mock_cleanup.call_count, 0)
+
     @mock.patch("%s.osclients.Clients" % BASE)
     @mock.patch("%s.utils.delete_nova_resources" % BASE)
     @mock.patch("%s.utils.delete_glance_resources" % BASE)
     @mock.patch("%s.utils.delete_cinder_resources" % BASE)
     def test_cleaner_users_by_service(self, mock_del_cinder, mock_del_glance,
                                       mock_del_nova, mock_clients):
-
         context = {
             "task": mock.MagicMock(),
             "users": [{"endpoint": mock.MagicMock()},
                       {"endpoint": mock.MagicMock()}],
-            "scenario_name": 'NovaServers.boot_server_from_volume_and_delete',
+            "config": {"cleanup": ["cinder", "nova"]},
             "tenants": [mock.MagicMock()]
         }
         res_cleaner = cleaner_ctx.ResourceCleaner(context)

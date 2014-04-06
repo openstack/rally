@@ -41,8 +41,9 @@ class ContinuousScenarioRunnerTestCase(test.TestCase):
 
     def test_run_scenario_continuously_for_times(self):
         context = fakes.FakeUserContext({"task": None}).context
+
         runner = continuous.ContinuousScenarioRunner(
-                        None, [context["admin"]["endpoint"]])
+                        None, [context["admin"]["endpoint"]], {})
         times = 4
         concurrent = 2
         timeout = 2
@@ -56,7 +57,7 @@ class ContinuousScenarioRunnerTestCase(test.TestCase):
     def test_run_scenario_continuously_for_times_exception(self):
         context = fakes.FakeUserContext({"task": None}).context
         runner = continuous.ContinuousScenarioRunner(
-                        None, [context["admin"]["endpoint"]])
+                        None, [context["admin"]["endpoint"]], {})
         times = 4
         concurrent = 2
         timeout = 2
@@ -72,7 +73,7 @@ class ContinuousScenarioRunnerTestCase(test.TestCase):
         self.skipTest("This test produce a lot of races so we should fix it "
                       "before running inside in gates")
         runner = continuous.ContinuousScenarioRunner(mock.MagicMock(),
-                                                     [mock.MagicMock()])
+                                                     [mock.MagicMock()], {})
         duration = 0
         active_users = 4
         timeout = 5

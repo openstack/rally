@@ -102,7 +102,8 @@ class BenchmarkEngine(object):
             for pos, kw in enumerate(values):
                 try:
                     base_runner.ScenarioRunner.validate(kw.get("runner", {}))
-                    base_ctx.Context.validate(kw.get("context", {}))
+                    base_ctx.ContextManager.validate(kw.get("context", {}),
+                                                     non_hidden=True)
                 except (exceptions.RallyException,
                         jsonschema.ValidationError) as e:
                     raise exceptions.InvalidBenchmarkConfig(name=scenario,
@@ -150,6 +151,12 @@ class BenchmarkEngine(object):
             self.task.set_failed(log=log)
             raise exceptions.InvalidTaskException(message=str(e))
 
+    def _get_runner(self, config):
+        runner = config.get("runner", {})
+        runner.setdefault("type", "continuous")
+        return base_runner.ScenarioRunner.get_runner(self.task, self.endpoints,
+                                                     runner)
+
     @rutils.log_task_wrapper(LOG.info, _("Benchmarking."))
     def run(self):
         """Runs the benchmarks according to the test configuration
@@ -161,12 +168,11 @@ class BenchmarkEngine(object):
         self.task.update_status(consts.TaskStatus.RUNNING)
         results = {}
         for name in self.config:
-            for n, kwargs in enumerate(self.config[name]):
-                key = {'name': name, 'pos': n, 'kw': kwargs}
-                runner = kwargs.get("runner", {}).get("type", "continuous")
-                scenario_runner = base_runner.ScenarioRunner.get_runner(
-                                        self.task, self.endpoints, runner)
-                result = scenario_runner.run(name, kwargs)
+            for n, kw in enumerate(self.config[name]):
+                key = {'name': name, 'pos': n, 'kw': kw}
+                runner = self._get_runner(kw)
+                result = runner.run(name, kw.get("context", {}),
+                                    kw.get("args", {}))
                 self.task.append_results(key, {"raw": result})
                 results[json.dumps(key)] = result
         self.task.update_status(consts.TaskStatus.FINISHED)

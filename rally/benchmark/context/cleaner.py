@@ -17,7 +17,6 @@ import functools
 import sys
 
 from rally.benchmark.context import base
-from rally.benchmark.scenarios import base as scenario_base
 from rally.benchmark import utils
 from rally.openstack.common.gettextutils import _
 from rally.openstack.common import log as logging
@@ -31,19 +30,24 @@ LOG = logging.getLogger(__name__)
 class ResourceCleaner(base.Context):
     """Context class for resource cleanup (both admin and non-admin)."""
 
-    __ctx_name__ = "cleaner"
+    __ctx_name__ = "cleanup"
+    __ctx_order__ = 200
+    __ctx_hidden__ = True
 
     CONFIG_SCHEMA = {
-        "type": "object",
-        "$schema": "http://json-schema.org/draft-03/schema",
-        "properties": {},
-        "additionalProperties": False
+        "type": "array",
+        "$schema": "http://json-schema.org/draft-04/schema",
+        "items": {
+            "type": "string",
+            "enum": ["nova", "glance", "cinder"]
+        },
+        "uniqueItems": True
     }
 
     def __init__(self, context):
         super(ResourceCleaner, self).__init__(context)
-        self.admin = None
-        self.users = None
+        self.admin = []
+        self.users = []
         if "admin" in context and context["admin"]:
             self.admin = context["admin"]["endpoint"]
         if "users" in context and context["users"]:
@@ -51,19 +55,6 @@ class ResourceCleaner(base.Context):
 
     @rutils.log_task_wrapper(LOG.info, _("Cleanup users resources."))
     def _cleanup_users_resources(self):
-        def _init_services_to_cleanup(cleanup_methods):
-            scenario_name = self.context.get('scenario_name')
-            if scenario_name:
-                cls_name, method_name = scenario_name.split(".", 1)
-                scenario = scenario_base.Scenario.get_by_name(cls_name)()
-                scenario_method = getattr(scenario, method_name)
-                if hasattr(scenario_method, "cleanup_services"):
-                    return getattr(scenario_method, "cleanup_services")
-            return cleanup_methods.keys()
-
-        if not self.users:
-            return
-
         for user in self.users:
             clients = osclients.Clients(user)
             cleanup_methods = {
@@ -76,7 +67,7 @@ class ResourceCleaner(base.Context):
                                             clients.cinder())
             }
 
-            for service in _init_services_to_cleanup(cleanup_methods):
+            for service in self.config:
                 try:
                     cleanup_methods[service]()
                 except Exception as e:
@@ -87,9 +78,6 @@ class ResourceCleaner(base.Context):
 
     @rutils.log_task_wrapper(LOG.info, _("Cleanup admin resources."))
     def _cleanup_admin_resources(self):
-        if not self.admin:
-            return
-
         try:
             admin = osclients.Clients(self.admin)
             utils.delete_keystone_resources(admin.keystone())
@@ -99,11 +87,13 @@ class ResourceCleaner(base.Context):
             LOG.warning(_('Unable to fully cleanup keystone service: %s') %
                         (e.message))
 
+    @rutils.log_task_wrapper(LOG.info, _("Enter context: `cleanup`"))
     def setup(self):
         pass
 
+    @rutils.log_task_wrapper(LOG.info, _("Exit context: `cleanup`"))
     def cleanup(self):
-        if self.users:
+        if self.users and self.config:
             self._cleanup_users_resources()
         if self.admin:
             self._cleanup_admin_resources()

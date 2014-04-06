@@ -80,7 +80,7 @@ class NovaScenarioTestCase(test.TestCase):
     @mock.patch(NOVA_UTILS + '.NovaScenario.clients')
     def test__boot_server(self, mock_clients):
         mock_clients("nova").servers.create.return_value = self.server
-        nova_scenario = utils.NovaScenario()
+        nova_scenario = utils.NovaScenario(context={})
         return_server = nova_scenario._boot_server('server_name', 'image_id',
                                                    'flavor_id')
         self.wait_for.mock.assert_called_once_with(

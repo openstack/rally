@@ -20,8 +20,10 @@ from rally.benchmark.context import base
 from rally.benchmark import utils
 from rally import consts
 from rally.objects import endpoint
+from rally.openstack.common.gettextutils import _
 from rally.openstack.common import log as logging
 from rally import osclients
+from rally import utils as rutils
 
 
 LOG = logging.getLogger(__name__)
@@ -43,6 +45,8 @@ class UserGenerator(base.Context):
     """Context class for generating temporary users/tenants for benchmarks."""
 
     __ctx_name__ = "users"
+    __ctx_order__ = 100
+    __ctx_hidden__ = False
 
     CONFIG_SCHEMA = {
         "type": "object",
@@ -145,6 +149,7 @@ class UserGenerator(base.Context):
                             "Exception: %(ex)s" %
                             {"user_id": user["id"], "ex": ex})
 
+    @rutils.log_task_wrapper(LOG.info, _("Enter context: `users`"))
     def setup(self):
         """Create tenants and users, using pool of threads."""
 
@@ -164,6 +169,7 @@ class UserGenerator(base.Context):
             self.context["tenants"].append(tenant)
             self.context["users"] += users
 
+    @rutils.log_task_wrapper(LOG.info, _("Exit context: `users`"))
     def cleanup(self):
         """Delete tenants and users, using pool of threads."""
 
@@ -182,11 +188,3 @@ class UserGenerator(base.Context):
             concurrent,
             self._delete_tenants,
             [(self.endpoint, tenants) for tenants in tenants_chunks])
-
-        # NOTE(amaretskiy): Consider that after cleanup() is complete, this has
-        #                   actually deleted (all or some of) users and tenants
-        #                   in openstack, but we *STILL HAVE*
-        #                   self.context["users"] and self.context["tenants"].
-        #                   Should we ignore that, or just reset these lists
-        #                   after cleanup() is done, or actually synchronize
-        #                   for all successfully deleted objects?

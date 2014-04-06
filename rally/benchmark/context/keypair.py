@@ -16,8 +16,10 @@
 import novaclient.exceptions
 
 from rally.benchmark.context import base
+from rally.openstack.common.gettextutils import _
 from rally.openstack.common import log as logging
 from rally import osclients
+from rally import utils
 
 
 LOG = logging.getLogger(__name__)
@@ -25,6 +27,9 @@ LOG = logging.getLogger(__name__)
 
 class Keypair(base.Context):
     __ctx_name__ = "keypair"
+    __ctx_order__ = 300
+    __ctx_hidden__ = True
+
     KEYPAIR_NAME = "rally_ssh_key"
 
     def _get_nova_client(self, endpoint):
@@ -47,11 +52,13 @@ class Keypair(base.Context):
         return {"private": keypair.private_key,
                 "public": keypair.public_key}
 
+    @utils.log_task_wrapper(LOG.info, _("Enter context: `keypair`"))
     def setup(self):
         for user in self.context["users"]:
             keypair = self._generate_keypair(user["endpoint"])
             user["keypair"] = keypair
 
+    @utils.log_task_wrapper(LOG.info, _("Exit context: `keypair`"))
     def cleanup(self):
         for user in self.context["users"]:
             endpoint = user['endpoint']

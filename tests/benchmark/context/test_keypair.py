@@ -26,15 +26,16 @@ class KeyPairContextTestCase(test.TestCase):
     def setUp(self):
         super(KeyPairContextTestCase, self).setUp()
         self.users = 2
+        task = mock.MagicMock()
         self.ctx_with_keys = {
             "users": [
                 {"keypair": "key", "endpoint": "endpoint"},
             ] * self.users,
-            "task": {}
+            "task": task
         }
         self.ctx_without_keys = {
-                "users": [{'endpoint': 'endpoint'}] * self.users,
-            "task": {}
+            "users": [{'endpoint': 'endpoint'}] * self.users,
+            "task": task
         }
 
     @mock.patch("%s.keypair.Keypair._generate_keypair" % CTX)

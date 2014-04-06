@@ -14,7 +14,13 @@
 #    under the License.
 
 from rally.benchmark.context import base
+from rally.openstack.common.gettextutils import _
+from rally.openstack.common import log as logging
 from rally import osclients
+from rally import utils
+
+
+LOG = logging.getLogger(__name__)
 
 
 class NovaQuotas(object):
@@ -124,6 +130,8 @@ class Quotas(base.Context):
     """Context class for updating benchmarks' tenants quotas."""
 
     __ctx_name__ = "quotas"
+    __ctx_order__ = 210
+    __ctx_hidden__ = False
 
     CONFIG_SCHEMA = {
         "type": "object",
@@ -141,6 +149,7 @@ class Quotas(base.Context):
         self.nova_quotas = NovaQuotas(self.clients.nova())
         self.cinder_quotas = CinderQuotas(self.clients.cinder())
 
+    @utils.log_task_wrapper(LOG.info, _("Enter context: `quotas`"))
     def setup(self):
         for tenant in self.context["tenants"]:
             if "nova" in self.config and len(self.config["nova"]) > 0:
@@ -151,6 +160,7 @@ class Quotas(base.Context):
                 self.cinder_quotas.update(tenant["id"],
                                           **self.config["cinder"])
 
+    @utils.log_task_wrapper(LOG.info, _("Exit context: `quotas`"))
     def cleanup(self):
         for tenant in self.context["tenants"]:
             # Always cleanup quotas before deleting a tenant

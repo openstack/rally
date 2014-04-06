@@ -49,24 +49,11 @@ class BaseContextTestCase(test.TestCase):
         self.assertEqual(ctx.context, context)
 
     def test_validate__context(self):
-        context = {
-            "fake": {"test": 2}
-        }
-        base.Context.validate(context)
+        fakes.FakeContext.validate({"test": 2})
 
     def test_validate__wrong_context(self):
-        context = {
-            "fake": {"nonexisting": 2}
-        }
         self.assertRaises(jsonschema.ValidationError,
-                          base.Context.validate, context)
-
-    def test_validate__non_existing_context(self):
-        config = {
-            "nonexisting": {"nonexisting": 2}
-        }
-        self.assertRaises(exceptions.NoSuchContext,
-                          base.Context.validate, config)
+                          fakes.FakeContext.validate, {"nonexisting": 2})
 
     @mock.patch("rally.benchmark.context.base.utils.itersubclasses")
     def test_get_by_name(self, mock_itersubclasses):
@@ -84,6 +71,10 @@ class BaseContextTestCase(test.TestCase):
         mock_itersubclasses.return_value = []
         self.assertRaises(exceptions.NoSuchContext,
                           base.Context.get_by_name, "nonexisting")
+
+    def test_get_by_name_hidder(self):
+        self.assertRaises(exceptions.NoSuchContext,
+                          base.Context.validate, {}, non_hidden=True)
 
     def test_setup_is_abstract(self):
 
@@ -114,3 +105,87 @@ class BaseContextTestCase(test.TestCase):
             self.assertEqual(ctx, entered_ctx)
 
         ctx.cleanup.assert_called_once_with()
+
+
+class ContextManagerTestCase(test.TestCase):
+
+    @mock.patch("rally.benchmark.context.base.ContextManager._magic")
+    @mock.patch("rally.benchmark.context.base.Context.get_by_name")
+    def test_run(self, mock_get, mock_magic):
+        context = {
+            "config": {
+                "a": mock.MagicMock(),
+                "b": mock.MagicMock()
+            }
+        }
+
+        cc = mock.MagicMock()
+        cc.__ctx_order__ = 10
+        mock_get.return_value = cc
+
+        mock_magic.return_value = 5
+
+        result = base.ContextManager.run(context, lambda x, y: x + y, 1, 2)
+        self.assertEqual(result, 5)
+
+        mock_get.assert_has_calls([
+            mock.call("a"),
+            mock.call("b"),
+            mock.call()(context),
+            mock.call()(context)
+        ])
+
+    @mock.patch("rally.benchmark.context.base.Context.get_by_name")
+    def test_validate(self, mock_get):
+        config = {
+            "ctx1": mock.MagicMock(),
+            "ctx2": mock.MagicMock()
+        }
+
+        base.ContextManager.validate(config)
+        mock_get.assert_has_calls([
+            mock.call("ctx1"),
+            mock.call().validate(config["ctx1"], non_hidden=False),
+            mock.call("ctx2"),
+            mock.call().validate(config["ctx2"], non_hidden=False)
+        ])
+
+    @mock.patch("rally.benchmark.context.base.Context.get_by_name")
+    def test_validate_non_hidden(self, mock_get):
+        config = {
+            "ctx1": mock.MagicMock(),
+            "ctx2": mock.MagicMock()
+        }
+
+        base.ContextManager.validate(config, non_hidden=True)
+        mock_get.assert_has_calls([
+            mock.call("ctx1"),
+            mock.call().validate(config["ctx1"], non_hidden=True),
+            mock.call("ctx2"),
+            mock.call().validate(config["ctx2"], non_hidden=True)
+        ])
+
+    def test_validate__non_existing_context(self):
+        config = {
+            "nonexisting": {"nonexisting": 2}
+        }
+        self.assertRaises(exceptions.NoSuchContext,
+                          base.ContextManager.validate, config)
+
+    def test__magic(self):
+        func = lambda x, y: x + y
+
+        result = base.ContextManager._magic([], func, 2, 3)
+        self.assertEqual(result, 5)
+
+    def test__magic_with_ctx(self):
+        ctx = [mock.MagicMock(), mock.MagicMock()]
+        func = lambda x, y: x + y
+
+        result = base.ContextManager._magic(ctx, func, 2, 3)
+        self.assertEqual(result, 5)
+
+        expected = [mock.call.__enter__(), mock.call.setup(),
+                    mock.call.__exit__(None, None, None)]
+        for c in ctx:
+            ctx[0].assert_has_calls(expected)

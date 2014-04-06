@@ -14,8 +14,10 @@
 #    under the License.
 
 from rally.benchmark.context import base
+from rally.openstack.common.gettextutils import _
 from rally.openstack.common import log as logging
 from rally import osclients
+from rally import utils
 
 
 LOG = logging.getLogger(__name__)
@@ -77,11 +79,15 @@ def _prepare_open_secgroup(endpoint):
 
 class AllowSSH(base.Context):
     __ctx_name__ = "allow_ssh"
+    __ctx_order__ = 301
+    __ctx_hidden__ = True
 
     def __init__(self, context):
         super(AllowSSH, self).__init__(context)
+        self.context["allow_ssh"] = SSH_GROUP_NAME
         self.secgroup = []
 
+    @utils.log_task_wrapper(LOG.info, _("Exit context: `allow_ssh`"))
     def setup(self):
         used_tenants = []
         for user in self.context['users']:
@@ -92,6 +98,7 @@ class AllowSSH(base.Context):
                 self.secgroup.append(secgroup)
                 used_tenants.append(tenant)
 
+    @utils.log_task_wrapper(LOG.info, _("Exit context: `allow_ssh`"))
     def cleanup(self):
         for secgroup in self.secgroup:
             try:

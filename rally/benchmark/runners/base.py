@@ -19,11 +19,7 @@ import random
 import jsonschema
 from oslo.config import cfg
 
-from rally.benchmark.context import cleaner as cleaner_ctx
-from rally.benchmark.context import keypair as keypair_ctx
-from rally.benchmark.context import quotas as quotas_ctx
-from rally.benchmark.context import secgroup as secgroup_ctx
-from rally.benchmark.context import users as users_ctx
+from rally.benchmark.context import base as base_ctx
 from rally.benchmark.scenarios import base
 from rally.benchmark import utils
 from rally import exceptions
@@ -145,13 +141,14 @@ class ScenarioRunner(object):
 
     CONFIG_SCHEMA = {}
 
-    def __init__(self, task, endpoints):
+    def __init__(self, task, endpoints, config):
         self.task = task
         self.endpoints = endpoints
         # NOTE(msdubov): Passing predefined user endpoints hasn't been
         #                implemented yet, so the scenario runner always gets
         #                a single admin endpoint here.
         self.admin_user = endpoints[0]
+        self.config = config
 
     @staticmethod
     def _get_cls(runner_type):
@@ -161,9 +158,9 @@ class ScenarioRunner(object):
         raise exceptions.NoSuchRunner(type=runner_type)
 
     @staticmethod
-    def get_runner(task, endpoint, runner_type):
+    def get_runner(task, endpoint, config):
         """Returns instance of a scenario runner for execution type."""
-        return ScenarioRunner._get_cls(runner_type)(task, endpoint)
+        return ScenarioRunner._get_cls(config["type"])(task, endpoint, config)
 
     @staticmethod
     def validate(config):
@@ -172,7 +169,7 @@ class ScenarioRunner(object):
         jsonschema.validate(config, runner.CONFIG_SCHEMA)
 
     @abc.abstractmethod
-    def _run_scenario(self, cls, method_name, context, args, config):
+    def _run_scenario(self, cls, method_name, context, args):
         """Runs the specified benchmark scenario with given arguments.
 
         :param cls: The Scenario class where the scenario is implemented
@@ -180,57 +177,33 @@ class ScenarioRunner(object):
         :param context: Benchmark context that contains users, admin & other
                         information, that was created before benchmark started.
         :param args: Arguments to call the scenario method with
-        :param config: Configuration dictionary that contains strategy-specific
-                       parameters like the number of times to run the scenario
 
         :returns: List of results fore each single scenario iteration,
                   where each result is a dictionary
         """
 
-    def _prepare_and_run_scenario(self, context, name, kwargs):
+    def run(self, name, context, args):
         cls_name, method_name = name.split(".", 1)
         cls = base.Scenario.get_by_name(cls_name)
 
-        args = kwargs.get('args', {})
-        config = kwargs.get('runner', {})
+        scenario_context = getattr(cls, method_name).context
+        # TODO(boris-42): We should keep default behavior for `users` context
+        #                 as a part of work on pre-created users this should be
+        #                 removed.
+        scenario_context.setdefault("users", {})
+        # merge scenario context and task context configuration
+        scenario_context.update(context)
 
-        with secgroup_ctx.AllowSSH(context) as allow_ssh:
-            allow_ssh.setup()
-            with keypair_ctx.Keypair(context) as keypair:
-                keypair.setup()
-                LOG.debug("Context: %s" % context)
-                return self._run_scenario(cls, method_name, context,
-                                          args, config)
-
-    def _run_as_admin(self, name, kwargs):
-        context = {
+        context_obj = {
             "task": self.task,
             "admin": {"endpoint": self.admin_user},
             "scenario_name": name,
-            "config": kwargs.get("context", {})
+            "config": scenario_context
         }
 
-        with users_ctx.UserGenerator(context) as generator:
-            generator.setup()
-            with quotas_ctx.Quotas(context) as quotas:
-                quotas.setup()
-                with cleaner_ctx.ResourceCleaner(context) as cleaner:
-                    cleaner.setup()
-                    return self._prepare_and_run_scenario(context,
-                                                          name, kwargs)
-
-    def _run_as_non_admin(self, name, kwargs):
-        # TODO(boris-42): It makes sense to use UserGenerator here as well
-        #                 take a look at comment in UserGenerator.__init__()
-        context = {"scenario_name": name}
-        with cleaner_ctx.ResourceCleaner(context):
-            return self._prepare_and_run_scenario(context, name, kwargs)
-
-    def run(self, name, kwargs):
-        if self.admin_user:
-            results = self._run_as_admin(name, kwargs)
-        else:
-            results = self._run_as_non_admin(name, kwargs)
+        results = base_ctx.ContextManager.run(context_obj, self._run_scenario,
+                                              cls, method_name, context_obj,
+                                              args)
 
         if not isinstance(results, ScenarioRunnerResult):
             name = self.__execution_type__

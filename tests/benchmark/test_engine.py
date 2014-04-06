@@ -121,16 +121,17 @@ class BenchmarkEngineTestCase(test.TestCase):
                           eng._validate_config_scenarios_name, config)
 
     @mock.patch("rally.benchmark.engine.base_runner.ScenarioRunner.validate")
-    @mock.patch("rally.benchmark.engine.base_ctx.Context.validate")
+    @mock.patch("rally.benchmark.engine.base_ctx.ContextManager.validate")
     def test__validate_config_syntax(self, mock_context, mock_runner):
         config = {"sca": [{"context": "a"}], "scb": [{"runner": "b"}]}
         eng = engine.BenchmarkEngine(mock.MagicMock(), mock.MagicMock())
         eng._validate_config_syntax(config)
         mock_runner.assert_has_calls([mock.call({}), mock.call("b")])
-        mock_context.assert_has_calls([mock.call("a"), mock.call({})])
+        mock_context.assert_has_calls([mock.call("a", non_hidden=True),
+                                       mock.call({}, non_hidden=True)])
 
     @mock.patch("rally.benchmark.engine.base_runner.ScenarioRunner")
-    @mock.patch("rally.benchmark.engine.base_ctx.Context.validate")
+    @mock.patch("rally.benchmark.engine.base_ctx.ContextManager.validate")
     def test__validate_config_syntax__wrong_runner(self, mock_context,
                                                    mock_runner):
         config = {"sca": [{"context": "a"}], "scb": [{"runner": "b"}]}
@@ -142,7 +143,7 @@ class BenchmarkEngineTestCase(test.TestCase):
                           eng._validate_config_syntax, config)
 
     @mock.patch("rally.benchmark.engine.base_runner.ScenarioRunner.validate")
-    @mock.patch("rally.benchmark.engine.base_ctx.Context")
+    @mock.patch("rally.benchmark.engine.base_ctx.ContextManager")
     def test__validate_config_syntax__wrong_context(self, mock_context,
                                                     mock_runner):
         config = {"sca": [{"context": "a"}], "scb": [{"runner": "b"}]}

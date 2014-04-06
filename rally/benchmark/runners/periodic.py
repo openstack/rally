@@ -61,11 +61,11 @@ class PeriodicScenarioRunner(base.ScenarioRunner):
         "additionalProperties": False
     }
 
-    def _run_scenario(self, cls, method_name, context, args, config):
+    def _run_scenario(self, cls, method_name, context, args):
 
-        times = config["times"]
-        period = config["period"]
-        timeout = config.get("timeout", 600)
+        times = self.config["times"]
+        period = self.config["period"]
+        timeout = self.config.get("timeout", 600)
 
         async_results = []
 
