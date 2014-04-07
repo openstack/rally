@@ -18,7 +18,7 @@
 
 RALLY_BASE=/opt/stack/new/rally
 DEVSTACK_BASE=/opt/stack/new/devstack
-cp $RALLY_BASE/contrib/devstack/* $DEVSTACK_BASE/
+cp -r $RALLY_BASE/contrib/devstack/* $DEVSTACK_BASE/
 
 export ENABLED_SERVICES=rally
 export RUN_EXERCISES=rally

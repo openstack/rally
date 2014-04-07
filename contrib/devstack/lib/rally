@@ -123,10 +123,17 @@ function init_rally() {
     fi
 }
 
-# Run all benchmarks from samples dir to ensure it all works.
+# Run benchmarks from samples dir
 function run_all_benchmarks() {
     for CONF in $DEST/rally/doc/samples/tasks/*/*.yaml; do
-        rally task start --task $CONF
+        case "$CONF" in
+            *large-ops*)
+                echo "Skipping large-ops benchmarks."
+                ;;
+            *)
+                rally task start --task $CONF
+                ;;
+        esac
     done
 }
 
