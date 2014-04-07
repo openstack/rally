@@ -6,7 +6,7 @@ jsonschema>=2.0.0,<3.0.0
 netaddr>=0.7.6
 oslo.config>=1.2.0
 paramiko>=1.9.0
-pbr>=0.6,<1.0
+pbr>=0.6,!=0.7,<1.0
 pecan>=0.4.5
 PrettyTable>=0.7,<0.8
 PyYAML>=3.1.0
