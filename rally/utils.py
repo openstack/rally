@@ -159,3 +159,7 @@ def log_task_wrapper(log, msg, **kw):
 
 def log_deploy_wrapper(log, msg, **kw):
     return _log_wrapper('deployment', log, msg, **kw)
+
+
+def log_verification_wrapper(log, msg, **kw):
+    return _log_wrapper('verification', log, msg, **kw)

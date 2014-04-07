@@ -80,3 +80,31 @@ FAKE_CONFIG = {
         ('default_network', '10.0.0.0/24'),
         ('api_version', '2.0')]
 }
+
+
+def get_fake_test_case():
+    return {
+        'total': {
+            'failures': 1,
+            'tests': 2,
+            'errors': 0,
+            'time': 1.412},
+        'test_cases': {
+            'fake.failed.TestCase.with_StringException[gate,negative]': {
+                'name':
+                    'fake.failed.TestCase.with_StringException[gate,negative]',
+                'failure': {
+                    'type': 'testtools.testresult.real._StringException',
+                    'log':
+                        ('_StringException: Empty attachments:\nOops...There '
+                         'was supposed to be fake traceback, but it is not.\n')
+                },
+                'time': 0.706,
+                'status': 'FAIL'},
+            'fake.successful.TestCase.fake_test[gate,negative]': {
+                'name': 'fake.successful.TestCase.fake_test[gate,negative]',
+                'time': 0.706,
+                'status': 'OK'
+            }
+        }
+    }

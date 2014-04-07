@@ -1,0 +1,13 @@
+<testsuite errors="0" failures="2" name="" tests="2" time="1.412">
+<testcase classname="fake.failed.TestCase" name="with_StringException[gate,negative]" time="0.706">
+<failure type="testtools.testresult.real._StringException">_StringException: Empty attachments:
+Oops...There was supposed to be fake traceback, but it is not.
+</failure>
+</testcase>
+<testcase classname="fake.successful.TestCase" name="fake_test[gate,negative]" time="0.706" />
+<testcase classname="" name="process-returncode" time="0.000">
+<failure type="testtools.testresult.real._StringException">_StringException: Binary content:
+traceback (test/plain; charset="utf8")
+</failure>
+</testcase>
+</testsuite>

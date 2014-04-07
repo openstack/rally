@@ -391,3 +391,22 @@ class ResourceTestCase(test.DBTestCase):
                                         type='two')
         self.assertEqual(len(resources), 1)
         self.assertEqual(res_two['id'], resources[0]['id'])
+
+
+class VerificationTestCase(test.DBTestCase):
+    def setUp(self):
+        super(VerificationTestCase, self).setUp()
+        self.deploy = db.deployment_create({})
+
+    def _create_verification(self):
+        deployment_uuid = self.deploy['uuid']
+        return db.verification_create(deployment_uuid)
+
+    def test_creation_of_verification(self):
+        verification = self._create_verification()
+        db_verification = db.verification_get(verification['uuid'])
+
+        self.assertEqual(verification['tests'], db_verification['tests'])
+        self.assertEqual(verification['time'], db_verification['time'])
+        self.assertEqual(verification['errors'], db_verification['errors'])
+        self.assertEqual(verification['failures'], db_verification['failures'])

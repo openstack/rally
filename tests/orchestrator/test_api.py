@@ -212,9 +212,10 @@ class APITestCase(test.TestCase):
             mock.call(self.deploy_uuid, {'endpoints': self.endpoints})
         ])
 
+    @mock.patch('rally.orchestrator.api.objects.Verification')
     @mock.patch('rally.verification.verifiers.tempest.tempest.Tempest')
     @mock.patch('rally.objects.deploy.db.deployment_get')
-    def test_verify(self, mock_get, mock_tempest):
+    def test_verify(self, mock_get, mock_tempest, mock_verification):
         mock_tempest.return_value = self.tempest
         self.tempest.is_installed.return_value = True
         mock_get.return_value = self.deployment

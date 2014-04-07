@@ -257,3 +257,61 @@ def resource_delete(id):
                 delete(synchronize_session=False)
     if not count:
         raise exceptions.ResourceNotFound(id=id)
+
+
+def verification_create(deployment_uuid):
+    verification = models.Verification()
+    verification.update({"deployment_uuid": deployment_uuid})
+    verification.save()
+    return verification
+
+
+def verification_get(verification_uuid, session=None):
+    verification = model_query(models.Verification, session=session).\
+        filter_by(uuid=verification_uuid).first()
+    if not verification:
+        raise exceptions.NotFoundException(
+            "Can't find any verification with following UUID '%s'." %
+            verification_uuid)
+    return verification
+
+
+def verification_update(verification_uuid, values):
+    session = get_session()
+    with session.begin():
+        verification = verification_get(verification_uuid, session=session)
+        verification.update(values)
+    return verification
+
+
+def verification_list(status=None):
+    query = model_query(models.Verification)
+    if status is not None:
+        query = query.filter_by(status=status)
+    return query.all()
+
+
+def verification_delete(verification_uuid):
+    count = model_query(models.Verification).filter_by(id=verification_uuid).\
+        delete(synchronize_session=False)
+    if not count:
+        raise exceptions.NotFoundException(
+            "Can't find any verification with following UUID '%s'." %
+            verification_uuid)
+
+
+def verification_result_create(verification_uuid, data):
+    result = models.VerificationResult()
+    result.update({"verification_uuid": verification_uuid,
+                   "data": data})
+    result.save()
+    return result
+
+
+def verification_result_get(verification_uuid):
+    result = model_query(models.VerificationResult).\
+        filter_by(verification_uuid=verification_uuid).first()
+    if not result:
+        raise exceptions.NotFoundException(
+            "No results for following UUID '%s'." % verification_uuid)
+    return result

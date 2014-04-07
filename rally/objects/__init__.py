@@ -17,3 +17,4 @@
 from rally.objects.deploy import Deployment  # noqa
 from rally.objects.endpoint import Endpoint  # noqa
 from rally.objects.task import Task  # noqa
+from rally.objects.verification import Verification  # noqa
