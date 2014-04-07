@@ -61,3 +61,13 @@ class VerifyCommandsTestCase(test.BaseTestCase):
         mock_verify.assert_called_once_with(deploy_id, self.image1.id,
                                             self.image2.id, self.flavor2.id,
                                             self.flavor1.id, 'smoke', None)
+
+    @mock.patch('rally.cmd.commands.verify.db')
+    def test_results(self, mock_db):
+        test_uuid = str(uuid.uuid4())
+        value = {'data': {'errors': '0', 'tests': 2,
+                          'test_cases': [
+                              {'name': 'test1'}, {'name': 'test2'}]}}
+        mock_db.verification_result_get.return_value = value
+        self.verify.results(test_uuid)
+        mock_db.verification_result_get.assert_called_once_with(test_uuid)

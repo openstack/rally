@@ -15,10 +15,18 @@
 
 """ Rally command: verify """
 
+import json
+import pprint
+
+import six
+
 from rally.cmd import cliutils
 from rally.cmd import envutils
 from rally import db
-from rally.objects import endpoint
+from rally import exceptions
+from rally import objects
+from rally.openstack.common import cliutils as common_cliutils
+from rally.openstack.common.gettextutils import _
 from rally.orchestrator import api
 from rally import osclients
 
@@ -63,7 +71,7 @@ class VerifyCommands(object):
 
         endpoints = db.deployment_get(deploy_id)['endpoints']
         endpoint_dict = endpoints[0]
-        clients = osclients.Clients(endpoint.Endpoint(**endpoint_dict))
+        clients = osclients.Clients(objects.Endpoint(**endpoint_dict))
         glance = clients.glance()
 
         image_list = []
@@ -99,3 +107,99 @@ class VerifyCommands(object):
 
         api.verify(deploy_id, image_id, alt_image_id, flavor_id, alt_flavor_id,
                    set_name, regex)
+
+    def list(self):
+        """Print a result list of verifications."""
+        fields = ['UUID', 'Deployment UUID', 'Set name', 'Tests', 'Failures',
+                  'Created at', 'Status']
+        verifications = db.verification_list()
+        if verifications:
+            common_cliutils.print_list(verifications, fields, sortby_index=6)
+        else:
+            print(_("There are no results from verifier. To run a verifier, "
+                    "use:\nrally verify start"))
+
+    @cliutils.args('--uuid', type=str, dest='verification_uuid',
+                   help='UUID of the verification')
+    @cliutils.args('--pretty', type=str, help=('pretty print (pprint) '
+                                               'or json print (json)'))
+    def results(self, verification_uuid, pretty=False):
+        """Print raw results of verification.
+
+        :param verification_uuid: Verification UUID
+        :param pretty: Pretty print (pprint) or not (json)
+        """
+        try:
+            results = db.verification_result_get(verification_uuid)['data']
+        except exceptions.NotFoundException as e:
+            print(e.message)
+            return 1
+
+        if not pretty or pretty == 'json':
+            print(json.dumps(results))
+        elif pretty == 'pprint':
+            print()
+            pprint.pprint(results)
+            print()
+        else:
+            print(_("Wrong value for --pretty=%s") % pretty)
+
+    @cliutils.args('--uuid', dest='verification_uuid', type=str,
+                   required=False,
+                   help='UUID of a verification')
+    @cliutils.args('--sort-by', dest='sort_by', type=str, required=False,
+                   help='Tests can be sorted by "name" or "duration"')
+    @cliutils.args('--detailed', dest='detailed', action='store_true',
+                   required=False, help='Prints traceback of failed tests')
+    def show(self, verification_uuid, sort_by='name', detailed=False):
+        try:
+            sortby_index = ('name', 'duration').index(sort_by)
+        except ValueError:
+            print("Sorry, but verification results can't be sorted "
+                  "by '%s'." % sort_by)
+            return 1
+
+        try:
+            verification = db.verification_get(verification_uuid)
+            tests = db.verification_result_get(verification_uuid)
+        except exceptions.NotFoundException as e:
+            print(e.message)
+            return 1
+
+        print ("Total results of verification:\n")
+        total_fields = ['UUID', 'Deployment UUID', 'Set name', 'Tests',
+                        'Failures', 'Created at', 'Status']
+        common_cliutils.print_list([verification], fields=total_fields)
+
+        print ("\nTests:\n")
+        fields = ['name', 'time', 'status']
+
+        values = map(objects.Verification,
+                     six.itervalues(tests.data['test_cases']))
+        common_cliutils.print_list(values, fields, sortby_index=sortby_index)
+
+        if detailed:
+            for test in six.itervalues(tests.data['test_cases']):
+                if test['status'] == 'FAIL':
+                    formatted_test = (
+                        '====================================================='
+                        '=================\n'
+                        'FAIL: %(name)s\n'
+                        'Time: %(time)s\n'
+                        'Type: %(type)s\n'
+                        '-----------------------------------------------------'
+                        '-----------------\n'
+                        '%(log)s\n'
+                    ) % {
+                        'name': test['name'], 'time': test['time'],
+                        'type': test['failure']['type'],
+                        'log': test['failure']['log']}
+                    print (formatted_test)
+
+    @cliutils.args('--uuid', dest='verification_uuid', type=str,
+                   required=False,
+                   help='UUID of a verification')
+    @cliutils.args('--sort-by', dest='sort_by', type=str, required=False,
+                   help='Tests can be sorted by "name" or "duration"')
+    def detailed(self, verification_uuid, sort_by='name'):
+        self.show(verification_uuid, sort_by, True)
