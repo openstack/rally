@@ -16,5 +16,5 @@
 #    under the License.
 
 
-sudo tools/install_rally.sh
+sudo ./install_rally.sh
 rally deployment list
