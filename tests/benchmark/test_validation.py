@@ -124,10 +124,11 @@ class ValidationUtilsTestCase(test.TestCase):
         fakegclient = fakes.FakeGlanceClient()
         fakegclient.images.get = mock.MagicMock()
         mock_osclients.glance.return_value = fakegclient
-        validator = validation.image_exists("image_id")
+        validator = validation.image_exists("image")
         test_img_id = "test_image_id"
+        resource = {"id": test_img_id}
         result = validator(clients=mock_osclients,
-                           image_id=test_img_id)
+                           image=resource)
         fakegclient.images.get.assert_called_once_with(image=test_img_id)
         self.assertTrue(result.is_valid)
         self.assertIsNone(result.msg)
@@ -138,10 +139,11 @@ class ValidationUtilsTestCase(test.TestCase):
         fakegclient.images.get = mock.MagicMock()
         fakegclient.images.get.side_effect = glance_exc.HTTPNotFound
         mock_osclients.glance.return_value = fakegclient
-        validator = validation.image_exists("image_id")
+        validator = validation.image_exists("image")
         test_img_id = "test_image_id"
+        resource = {"id": test_img_id}
         result = validator(clients=mock_osclients,
-                           image_id=test_img_id)
+                           image=resource)
         fakegclient.images.get.assert_called_once_with(image=test_img_id)
         self.assertFalse(result.is_valid)
         self.assertIsNotNone(result.msg)
@@ -151,10 +153,11 @@ class ValidationUtilsTestCase(test.TestCase):
         fakenclient = fakes.FakeNovaClient()
         fakenclient.flavors = mock.MagicMock()
         mock_osclients.nova.return_value = fakenclient
-        validator = validation.flavor_exists("flavor_id")
+        validator = validation.flavor_exists("flavor")
         test_flavor_id = 1
+        resource = {"id": test_flavor_id}
         result = validator(clients=mock_osclients,
-                           flavor_id=test_flavor_id)
+                           flavor=resource)
         fakenclient.flavors.get.assert_called_once_with(flavor=test_flavor_id)
         self.assertTrue(result.is_valid)
         self.assertIsNone(result.msg)
@@ -165,10 +168,11 @@ class ValidationUtilsTestCase(test.TestCase):
         fakenclient.flavors = mock.MagicMock()
         fakenclient.flavors.get.side_effect = nova_exc.NotFound(code=404)
         mock_osclients.nova.return_value = fakenclient
-        validator = validation.flavor_exists("flavor_id")
+        validator = validation.flavor_exists("flavor")
         test_flavor_id = 101
+        resource = {"id": test_flavor_id}
         result = validator(clients=mock_osclients,
-                           flavor_id=test_flavor_id)
+                           flavor=resource)
         fakenclient.flavors.get.assert_called_once_with(flavor=test_flavor_id)
         self.assertFalse(result.is_valid)
         self.assertIsNotNone(result.msg)
@@ -190,11 +194,11 @@ class ValidationUtilsTestCase(test.TestCase):
         fakenclient.flavors.get = mock.MagicMock(return_value=flavor)
         mock_osclients.nova.return_value = fakenclient
 
-        validator = validation.image_valid_on_flavor("flavor_id", "image_id")
+        validator = validation.image_valid_on_flavor("flavor", "image")
 
         result = validator(clients=mock_osclients,
-                           flavor_id=flavor.id,
-                           image_id=image.id)
+                           flavor={"id": flavor.id},
+                           image={"id": image.id})
 
         fakenclient.flavors.get.assert_called_once_with(flavor=flavor.id)
         fakegclient.images.get.assert_called_once_with(image=image.id)
@@ -219,11 +223,11 @@ class ValidationUtilsTestCase(test.TestCase):
         fakenclient.flavors.get = mock.MagicMock(return_value=flavor)
         mock_osclients.nova.return_value = fakenclient
 
-        validator = validation.image_valid_on_flavor("flavor_id", "image_id")
+        validator = validation.image_valid_on_flavor("flavor", "image")
 
         result = validator(clients=mock_osclients,
-                           flavor_id=flavor.id,
-                           image_id=image.id)
+                           flavor={"id": flavor.id},
+                           image={"id": image.id})
 
         fakenclient.flavors.get.assert_called_once_with(flavor=flavor.id)
         fakegclient.images.get.assert_called_once_with(image=image.id)
@@ -243,13 +247,13 @@ class ValidationUtilsTestCase(test.TestCase):
         fakenclient.flavors.get = mock.MagicMock(return_value=flavor)
         mock_osclients.nova.return_value = fakenclient
 
-        validator = validation.image_valid_on_flavor("flavor_id", "image_id")
+        validator = validation.image_valid_on_flavor("flavor", "image")
 
         test_img_id = "test_image_id"
 
         result = validator(clients=mock_osclients,
-                           flavor_id=flavor.id,
-                           image_id=test_img_id)
+                           flavor={"id": flavor.id},
+                           image={"id": test_img_id})
 
         fakenclient.flavors.get.assert_called_once_with(flavor=flavor.id)
         fakegclient.images.get.assert_called_once_with(image=test_img_id)
@@ -266,14 +270,14 @@ class ValidationUtilsTestCase(test.TestCase):
         fakenclient.flavors.get.side_effect = nova_exc.NotFound(code=404)
         mock_osclients.nova.return_value = fakenclient
 
-        validator = validation.image_valid_on_flavor("flavor_id", "image_id")
+        validator = validation.image_valid_on_flavor("flavor", "image")
 
         test_img_id = "test_image_id"
         test_flavor_id = 101
 
         result = validator(clients=mock_osclients,
-                           flavor_id=test_flavor_id,
-                           image_id=test_img_id)
+                           flavor={"id": test_flavor_id},
+                           image={"id": test_img_id})
 
         fakenclient.flavors.get.assert_called_once_with(flavor=test_flavor_id)
 

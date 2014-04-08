@@ -19,6 +19,7 @@ import os
 from glanceclient import exc as glance_exc
 from novaclient import exceptions as nova_exc
 
+from rally.benchmark import types as types
 from rally import consts
 from rally.openstack.common.gettextutils import _
 from rally.verification.verifiers.tempest import tempest
@@ -144,10 +145,12 @@ def image_exists(param_name):
                        to get image id value.
     """
     def image_exists_validator(**kwargs):
-        image_id = kwargs.get(param_name)
-        glanceclient = kwargs["clients"].glance()
+        clients = kwargs.get('clients')
+        image_id = types.ImageResourceType.transform(clients=clients,
+                                                     resource_config=
+                                                     kwargs.get(param_name))
         try:
-            glanceclient.images.get(image=image_id)
+            clients.glance().images.get(image=image_id)
             return ValidationResult()
         except glance_exc.HTTPNotFound:
             message = _("Image with id '%s' not found") % image_id
@@ -162,10 +165,12 @@ def flavor_exists(param_name):
                        to get flavor id value.
     """
     def flavor_exists_validator(**kwargs):
-        flavor_id = kwargs.get(param_name)
-        novaclient = kwargs["clients"].nova()
+        clients = kwargs.get('clients')
+        flavor_id = types.FlavorResourceType.transform(clients=clients,
+                                                       resource_config=
+                                                       kwargs.get(param_name))
         try:
-            novaclient.flavors.get(flavor=flavor_id)
+            clients.nova().flavors.get(flavor=flavor_id)
             return ValidationResult()
         except nova_exc.NotFound:
             message = _("Flavor with id '%s' not found") % flavor_id
@@ -183,20 +188,22 @@ def image_valid_on_flavor(flavor_name, image_name):
 
     """
     def image_valid_on_flavor_validator(**kwargs):
-        flavor_id = kwargs.get(flavor_name)
-        novaclient = kwargs["clients"].nova()
+        clients = kwargs.get('clients')
 
+        flavor_id = types.FlavorResourceType.transform(clients=clients,
+                                                       resource_config=
+                                                       kwargs.get(flavor_name))
         try:
-            flavor = novaclient.flavors.get(flavor=flavor_id)
+            flavor = clients.nova().flavors.get(flavor=flavor_id)
         except nova_exc.NotFound:
             message = _("Flavor with id '%s' not found") % flavor_id
             return ValidationResult(False, message)
 
-        image_id = kwargs.get(image_name)
-        glanceclient = kwargs["clients"].glance()
-
+        image_id = types.ImageResourceType.transform(clients=clients,
+                                                     resource_config=
+                                                     kwargs.get(image_name))
         try:
-            image = glanceclient.images.get(image=image_id)
+            image = clients.glance().images.get(image=image_id)
         except glance_exc.HTTPNotFound:
             message = _("Image with id '%s' not found") % image_id
             return ValidationResult(False, message)
@@ -216,7 +223,6 @@ def image_valid_on_flavor(flavor_name, image_name):
                 message = _("The disk size for flavor '%s' is too small "
                             "for requested image '%s'") % (flavor_id, image_id)
                 return ValidationResult(False, message)
-
         return ValidationResult()
     return image_valid_on_flavor_validator
 

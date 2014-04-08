@@ -18,6 +18,7 @@ import json
 from rally.benchmark.scenarios import base
 from rally.benchmark.scenarios.nova import utils as nova_utils
 from rally.benchmark.scenarios.vm import utils as vm_utils
+from rally.benchmark import types as types
 from rally.benchmark import validation as valid
 from rally.openstack.common.gettextutils import _  # noqa
 from rally.openstack.common import log as logging
@@ -31,13 +32,15 @@ class VMTasks(nova_utils.NovaScenario, vm_utils.VMScenario):
     def __init__(self, *args, **kwargs):
         super(VMTasks, self).__init__(*args, **kwargs)
 
-    @valid.add_validator(valid.image_valid_on_flavor("flavor_id", "image_id"))
+    @types.set(image=types.ImageResourceType,
+               flavor=types.FlavorResourceType)
+    @valid.add_validator(valid.image_valid_on_flavor("flavor", "image"))
     @valid.add_validator(valid.file_exists("script"))
     @valid.add_validator(valid.number("port", minval=1, maxval=65535,
                                       nullable=True, integer_only=True))
     @base.scenario(context={"cleanup": ["nova"],
                    "keypair": {}, "allow_ssh": {}})
-    def boot_runcommand_delete(self, image_id, flavor_id,
+    def boot_runcommand_delete(self, image, flavor,
                                script, interpreter, network='private',
                                username='ubuntu', ip_version=4,
                                port=22, **kwargs):
@@ -59,7 +62,7 @@ class VMTasks(nova_utils.NovaScenario, vm_utils.VMScenario):
         """
         server = self._boot_server(
             self._generate_random_name("rally_novaserver_"),
-            image_id, flavor_id, key_name='rally_ssh_key', **kwargs)
+            image, flavor, key_name='rally_ssh_key', **kwargs)
 
         code, out, err = self.run_command(server, username, network, port,
                                           ip_version, interpreter, script)

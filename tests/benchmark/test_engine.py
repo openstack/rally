@@ -158,8 +158,8 @@ class BenchmarkEngineTestCase(test.TestCase):
     def test__validate_config_semantic_helper(self, mock_validate):
         task = mock.MagicMock()
         eng = engine.BenchmarkEngine(mock.MagicMock(), mock.MagicMock())
-        eng._validate_config_sematic_helper("admin", "user", "name", "pos",
-                                            task, {"args": "args"})
+        eng._validate_config_semantic_helper("admin", "user", "name", "pos",
+                                             task, {"args": "args"})
         mock_validate.assert_called_once_with(
             "name", "args", admin="admin", users=["user"],
             task=task)
@@ -170,15 +170,15 @@ class BenchmarkEngineTestCase(test.TestCase):
         eng = engine.BenchmarkEngine(mock.MagicMock(), mock.MagicMock())
 
         self.assertRaises(exceptions.InvalidBenchmarkConfig,
-                          eng._validate_config_sematic_helper, "a", "u", "n",
+                          eng._validate_config_semantic_helper, "a", "u", "n",
                           "p", mock.MagicMock(), {})
 
     @mock.patch("rally.benchmark.engine.osclients.Clients")
     @mock.patch("rally.benchmark.engine.users_ctx")
     @mock.patch("rally.benchmark.engine.BenchmarkEngine"
-                "._validate_config_sematic_helper")
-    def test__validate_config_sematic(self, mock_helper, mock_userctx,
-                                      mock_osclients):
+                "._validate_config_semantic_helper")
+    def test__validate_config_semantic(self, mock_helper, mock_userctx,
+                                       mock_osclients):
         mock_userctx.UserGenerator = fakes.FakeUserContext
         mock_osclients.return_value = mock.MagicMock()
         config = {

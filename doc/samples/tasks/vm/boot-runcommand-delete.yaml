@@ -2,8 +2,10 @@
   VMTasks.boot_runcommand_delete:
     -
       args:
-        flavor_id: "1"
-        image_id: "231bdb41-f959-4496-a272-3ef9f6d9f790"
+        flavor:
+            name: "m1.nano"
+        image:
+            name: "cirros-0.3.1-x86_64-uec"
         script: "doc/samples/support/instance_dd_test.sh"
         interpreter: "/bin/sh"
         username: "ubuntu"

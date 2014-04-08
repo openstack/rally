@@ -2,8 +2,12 @@
     "VMTasks.boot_runcommand_delete": [
         {
             "args": {
-                "flavor_id": "100",
-                "image_id": "8ec0b1bc-bb9c-4176-9d06-e23016091a51",
+                "flavor": {
+                    "name": "m1.nano"
+                },
+                "image": {
+                    "name": "cirros-0.3.1-x86_64-uec"
+                },
                 "script": "doc/samples/support/instance_dd_test.sh",
                 "interpreter": "/bin/sh",
                 "username": "cirros"

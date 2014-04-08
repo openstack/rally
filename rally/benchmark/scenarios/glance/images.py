@@ -16,6 +16,7 @@
 from rally.benchmark.scenarios import base
 from rally.benchmark.scenarios.glance import utils
 from rally.benchmark.scenarios.nova import utils as nova_utils
+from rally.benchmark import types as types
 from rally.benchmark import validation
 
 
@@ -57,11 +58,12 @@ class GlanceImages(utils.GlanceScenario, nova_utils.NovaScenario):
                                    **kwargs)
         self._delete_image(image)
 
-    @validation.add_validator(validation.flavor_exists("flavor_id"))
+    @types.set(flavor=types.FlavorResourceType)
+    @validation.add_validator(validation.flavor_exists("flavor"))
     @base.scenario(context={"cleanup": ["glance", "nova"]})
     def create_image_and_boot_instances(self, container_format,
                                         image_location, disk_format,
-                                        flavor_id, number_instances,
+                                        flavor, number_instances,
                                         **kwargs):
         """Test adds image, boots instance from it and then deletes them."""
         image_name = self._generate_random_name()
@@ -73,4 +75,4 @@ class GlanceImages(utils.GlanceScenario, nova_utils.NovaScenario):
         image_id = image.id
         server_name = self._generate_random_name(prefix="rally_novaserver_")
         self._boot_servers(server_name, image_id,
-                           flavor_id, number_instances, **kwargs)
+                           flavor, number_instances, **kwargs)

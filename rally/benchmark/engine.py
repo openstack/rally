@@ -113,8 +113,8 @@ class BenchmarkEngine(object):
                         reason=six.text_type(e)
                     )
 
-    def _validate_config_sematic_helper(self, admin, user, name, pos,
-                                        task, kwargs):
+    def _validate_config_semantic_helper(self, admin, user, name, pos,
+                                         task, kwargs):
         args = {} if not kwargs else kwargs.get("args", {})
         try:
             base_scenario.Scenario.validate(name, args, admin=admin,
@@ -139,9 +139,9 @@ class BenchmarkEngine(object):
 
             for name, values in config.iteritems():
                 for pos, kwargs in enumerate(values):
-                    self._validate_config_sematic_helper(admin, user, name,
-                                                         pos, self.task,
-                                                         kwargs)
+                    self._validate_config_semantic_helper(admin, user, name,
+                                                          pos, self.task,
+                                                          kwargs)
 
     @rutils.log_task_wrapper(LOG.info, _("Task validation."))
     def validate(self):

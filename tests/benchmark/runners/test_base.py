@@ -204,14 +204,16 @@ class ScenarioRunnerTestCase(test.TestCase):
                 config,
                 serial.SerialScenarioRunner.CONFIG_SCHEMA)
 
+    @mock.patch("rally.benchmark.runners.base.osclients")
     @mock.patch("rally.benchmark.runners.base.base_ctx.ContextManager")
-    def test_run(self, mock_ctx_manager):
+    def test_run(self, mock_ctx_manager, mock_osclients):
         runner = constant.ConstantScenarioRunner(mock.MagicMock(),
                                                  self.fake_endpoints,
                                                  mock.MagicMock())
         mock_ctx_manager.run.return_value = base.ScenarioRunnerResult([])
         scenario_name = "NovaServers.boot_server_from_volume_and_delete"
-        result = runner.run(scenario_name, {"some_ctx": 2}, [1, 2, 3])
+        config_kwargs = {"image": {"id": 1}, "flavor": {"id": 1}}
+        result = runner.run(scenario_name, {"some_ctx": 2}, config_kwargs)
 
         self.assertEqual(result, mock_ctx_manager.run.return_value)
 
@@ -228,7 +230,7 @@ class ScenarioRunnerTestCase(test.TestCase):
         }
 
         expected = [context_obj, runner._run_scenario, cls, method_name,
-                    context_obj, [1, 2, 3]]
+                    context_obj, config_kwargs]
         mock_ctx_manager.run.assert_called_once_with(*expected)
 
     @mock.patch("rally.benchmark.runners.base.base_ctx.ContextManager")

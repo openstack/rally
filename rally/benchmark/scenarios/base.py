@@ -20,6 +20,7 @@ import time
 
 from rally import consts
 from rally import exceptions
+from rally import osclients
 from rally import utils
 
 
@@ -137,6 +138,22 @@ class Scenario(object):
             cls = Scenario.get_by_name(cls_name)
         method = getattr(cls, method_name)
         return getattr(method, attr_name, default)
+
+    @classmethod
+    def preprocess(cls, method_name, context, args):
+        """Run preprocessor on scenario arguments."""
+        preprocessors = Scenario.meta(cls, method_name=method_name,
+                                      attr_name="preprocessors", default={})
+        clients = osclients.Clients(context["admin"]["endpoint"])
+
+        for src, preprocessor in preprocessors.items():
+            resource_config = args.get(src)
+            if resource_config:
+                args[src] = preprocessor.transform(
+                                clients=clients,
+                                resource_config=resource_config)
+
+        return args
 
     def context(self):
         """Returns the context of the current benchmark scenario."""

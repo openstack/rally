@@ -207,6 +207,7 @@ class ScenarioRunner(object):
             "config": scenario_context
         }
 
+        args = cls.preprocess(method_name, context_obj, args)
         results = base_ctx.ContextManager.run(context_obj, self._run_scenario,
                                               cls, method_name, context_obj,
                                               args)

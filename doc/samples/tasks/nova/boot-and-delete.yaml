@@ -2,8 +2,10 @@
   NovaServers.boot_and_delete_server:
     -
       args:
-        flavor_id: 1
-        image_id: "73257560-c59b-4275-a1ec-ab140e5b9979"
+        flavor:
+            name: "m1.nano"
+        image:
+            name: "cirros-0.3.1-x86_64-uec"
       runner:
         type: "constant"
         times: 10

@@ -2,8 +2,10 @@
   NovaServers.boot_and_bounce_server:
     -
       args:
-        flavor_id: 1
-        image_id: "3fa4482f-677a-4488-adaf-c48befac5e5a"
+        flavor:
+            name: "m1.nano"
+        image:
+            name: "cirros-0.3.1-x86_64-uec"
         actions:
           -
             hard_reboot: 1
