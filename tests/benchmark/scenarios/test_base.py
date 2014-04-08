@@ -124,6 +124,54 @@ class ScenarioTestCase(test.TestCase):
             mock.call(validators, "u2", args)
         ])
 
+    def test_meta_string_returns_non_empty_list(self):
+
+        class MyFakeScenario(fakes.FakeScenario):
+            pass
+
+        attr_name = 'preprocessors'
+        preprocessors = [mock.MagicMock(), mock.MagicMock()]
+        MyFakeScenario.do_it.__dict__[attr_name] = preprocessors
+
+        scenario = MyFakeScenario()
+        self.assertEqual(scenario.meta(cls="MyFakeScenario.do_it",
+                                       attr_name=attr_name), preprocessors)
+
+    def test_meta_class_returns_non_empty_list(self):
+
+        class MyFakeScenario(fakes.FakeScenario):
+            pass
+
+        attr_name = 'preprocessors'
+        preprocessors = [mock.MagicMock(), mock.MagicMock()]
+        MyFakeScenario.do_it.__dict__[attr_name] = preprocessors
+
+        scenario = MyFakeScenario()
+        self.assertEqual(scenario.meta(cls=MyFakeScenario, method_name="do_it",
+                                       attr_name=attr_name), preprocessors)
+
+    def test_meta_string_returns_empty_list(self):
+
+        class MyFakeScenario(fakes.FakeScenario):
+            pass
+
+        empty_list = []
+        scenario = MyFakeScenario()
+        self.assertEqual(scenario.meta(cls="MyFakeScenario.do_it",
+                                       attr_name="foo", default=empty_list),
+                         empty_list)
+
+    def test_meta_class_returns_empty_list(self):
+
+        class MyFakeScenario(fakes.FakeScenario):
+            pass
+
+        empty_list = []
+        scenario = MyFakeScenario()
+        self.assertEqual(scenario.meta(cls=MyFakeScenario, method_name="do_it",
+                                       attr_name="foo", default=empty_list),
+                         empty_list)
+
     def test_sleep_between_invalid_args(self):
         scenario = base.Scenario()
         self.assertRaises(exceptions.InvalidArgumentsException,

@@ -67,8 +67,9 @@ class Scenario(object):
         """
         benchmark_scenarios = [
             ["%s.%s" % (scenario.__name__, method)
-             for method in dir(scenario) if getattr(
-                 getattr(scenario, method), "is_scenario", False)]
+             for method in dir(scenario)
+                if Scenario.meta(scenario, method_name=method,
+                                 attr_name="is_scenario", default=False)]
             for scenario in utils.itersubclasses(Scenario)
         ]
         benchmark_scenarios_flattened = list(itertools.chain.from_iterable(
@@ -85,11 +86,7 @@ class Scenario(object):
     @staticmethod
     def validate(name, args, admin=None, users=None):
         """Semantic check of benchmark arguments."""
-        cls_name, method_name = name.split(".", 1)
-        cls = Scenario.get_by_name(cls_name)
-
-        method = getattr(cls, method_name)
-        validators = getattr(method, "validators", [])
+        validators = Scenario.meta(name, "validators", default=[])
 
         if not validators:
             return
@@ -106,6 +103,23 @@ class Scenario(object):
         if users:
             for user in users:
                 Scenario._validate_helper(user_validators, user, args)
+
+    @staticmethod
+    def meta(cls, attr_name, method_name=None, default=None):
+        """Extract the named meta information out of the scenario name.
+
+        :param cls: Scenario (sub)class or string of form 'class.method'
+        :param attr_name: Name of method attribute holding meta information.
+        :param method_name: Name of method queried for meta information.
+        :param default: Value returned if no meta information is attached.
+
+        :returns: Meta value bound to method attribute or default.
+        """
+        if isinstance(cls, str):
+            cls_name, method_name = cls.split(".", 1)
+            cls = Scenario.get_by_name(cls_name)
+        method = getattr(cls, method_name)
+        return getattr(method, attr_name, default)
 
     def context(self):
         """Returns the context of the current benchmark scenario."""
