@@ -137,7 +137,7 @@ def atomic_action_timer(name):
         def func_atomic_actions(self, *args, **kwargs):
             with utils.Timer() as timer:
                 f = func(self, *args, **kwargs)
-            self._add_atomic_actions_time(name, timer.duration())
+            self._add_atomic_actions(name, timer.duration())
             return f
         return func_atomic_actions
     return wrap

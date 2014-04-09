@@ -69,11 +69,11 @@ def _run_scenario_once(args):
                  {"task": context["task"]["uuid"], "iteration": iteration,
                   "status": status})
 
-        return {"time": timer.duration() - scenario.idle_time(),
-                "idle_time": scenario.idle_time(),
+        return {"duration": timer.duration() - scenario.idle_duration(),
+                "idle_duration": scenario.idle_duration(),
                 "error": error,
                 "scenario_output": scenario_output,
-                "atomic_actions_time": scenario.atomic_actions_time()}
+                "atomic_actions": scenario.atomic_actions()}
 
 
 class ScenarioRunnerResult(list):
@@ -85,10 +85,10 @@ class ScenarioRunnerResult(list):
         "items": {
             "type": "object",
             "properties": {
-                "time": {
+                "duration": {
                     "type": "number"
                 },
-                "idle_time": {
+                "idle_duration": {
                     "type": "number"
                 },
                 "scenario_output": {
@@ -106,7 +106,7 @@ class ScenarioRunnerResult(list):
                     },
                     "additionalProperties": False
                 },
-                "atomic_actions_time": {
+                "atomic_actions": {
                     "type": "array",
                     "items": {
                         "type": "object",

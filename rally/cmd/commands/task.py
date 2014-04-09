@@ -108,11 +108,11 @@ class TaskCommands(object):
         :param no_aggregation: do not aggregate atomic operations
         Prints detailed information of task.
         """
-        def _print_atomic_actions_time_no_aggregation(raw):
+        def _print_atomic_actions_no_aggregation(raw):
             headers = ['iteration', "full duration"]
             for i in range(0, len(raw)):
-                if raw[i]['atomic_actions_time']:
-                    for (c, a) in enumerate(raw[i]['atomic_actions_time'], 1):
+                if raw[i]['atomic_actions']:
+                    for (c, a) in enumerate(raw[i]['atomic_actions'], 1):
                         action = str(c) + "-" + a['action']
                         headers.append(action)
                     break
@@ -120,8 +120,8 @@ class TaskCommands(object):
             for (c, r) in enumerate(raw, 1):
                 dlist = [c]
                 d = []
-                if r['atomic_actions_time']:
-                    for l in r['atomic_actions_time']:
+                if r['atomic_actions']:
+                    for l in r['atomic_actions']:
                         d.append(l['duration'])
                     dlist.append(sum(d))
                     dlist = dlist + d
@@ -133,17 +133,17 @@ class TaskCommands(object):
             print(atomic_action_table)
             print()
 
-        def _print_atomic_actions_time_aggregation(raw):
-            atime_merged = []
+        def _print_atomic_actions_aggregation(raw):
+            aduration_merged = []
             for r in raw:
-                if 'atomic_actions_time' in r:
-                    for a in r['atomic_actions_time']:
-                        atime_merged.append(a)
+                if 'atomic_actions' in r:
+                    for a in r['atomic_actions']:
+                        aduration_merged.append(a)
 
-            times_by_action = collections.defaultdict(list)
-            for at in atime_merged:
-                times_by_action[at['action']].append(at['duration'])
-            if times_by_action:
+            durations_by_action = collections.defaultdict(list)
+            for at in aduration_merged:
+                durations_by_action[at['action']].append(at['duration'])
+            if durations_by_action:
                 atomic_action_table = prettytable.PrettyTable(
                                                         ['action',
                                                          'count',
@@ -152,7 +152,7 @@ class TaskCommands(object):
                                                          'min (sec)',
                                                          '90 percentile',
                                                          '95 percentile'])
-                for k, v in times_by_action.iteritems():
+                for k, v in durations_by_action.iteritems():
                     atomic_action_table.add_row([k,
                                                 len(v),
                                                 max(v),
@@ -163,11 +163,11 @@ class TaskCommands(object):
                 print(atomic_action_table)
                 print()
 
-        def _print_atomic_actions_time(raw):
+        def _print_atomic_actions(raw):
             if no_aggregation:
-                _print_atomic_actions_time_no_aggregation(raw)
+                _print_atomic_actions_no_aggregation(raw)
             else:
-                _print_atomic_actions_time_aggregation(raw)
+                _print_atomic_actions_aggregation(raw)
 
         if task_id == "last":
             task = db.task_get_detailed_last()
@@ -207,11 +207,11 @@ class TaskCommands(object):
             print("args values:")
             pprint.pprint(key["kw"])
 
-            _print_atomic_actions_time(result["data"]["raw"])
+            _print_atomic_actions(result["data"]["raw"])
 
             raw = result["data"]["raw"]
-            times = map(lambda x: x['time'],
-                        filter(lambda r: not r['error'], raw))
+            durations = map(lambda x: x['duration'],
+                            filter(lambda r: not r['error'], raw))
             table = prettytable.PrettyTable(["max (sec)",
                                              "avg (sec)",
                                              "min (sec)",
@@ -219,13 +219,13 @@ class TaskCommands(object):
                                              "95 percentile",
                                              "success/total",
                                              "total times"])
-            if times:
-                table.add_row([max(times),
-                               sum(times) / len(times),
-                               min(times),
-                               percentile(times, 0.90),
-                               percentile(times, 0.95),
-                               float(len(times)) / len(raw),
+            if durations:
+                table.add_row([max(durations),
+                               sum(durations) / len(durations),
+                               min(durations),
+                               percentile(durations, 0.90),
+                               percentile(durations, 0.95),
+                               float(len(durations)) / len(raw),
                                len(raw)])
             else:
                 table.add_row(['n/a', 'n/a', 'n/a', 'n/a', 'n/a', 0, len(raw)])

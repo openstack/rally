@@ -22,14 +22,14 @@ import mako.template
 from rally.benchmark.processing.charts import histogram as histo
 
 
-def _process_main_time(result):
+def _process_main_duration(result):
 
     pie = filter(lambda t: not t["error"], result["result"])
     stacked_area = map(
-        lambda t: {"idle_time": 0, "time": 0} if t["error"] else t,
+        lambda t: {"idle_duration": 0, "duration": 0} if t["error"] else t,
         result["result"])
     histogram_data = filter(None, map(
-        lambda t: t["time"] if not t["error"] else None,
+        lambda t: t["duration"] if not t["error"] else None,
         result["result"]))
 
     histograms = []
@@ -48,12 +48,12 @@ def _process_main_time(result):
         "iter": [
             {
                 "key": "duration",
-                "values": [[i + 1, v["time"]]
+                "values": [[i + 1, v["duration"]]
                            for i, v in enumerate(stacked_area)]
             },
             {
                 "key": "idle_duration",
-                "values": [[i + 1, v["idle_time"]]
+                "values": [[i + 1, v["idle_duration"]]
                            for i, v in enumerate(stacked_area)]
             }
         ],
@@ -68,7 +68,7 @@ def _process_main_time(result):
     }
 
 
-def _process_atomic_time(result):
+def _process_atomic(result):
 
     def avg(lst, key=None):
         lst = lst if not key else map(lambda x: x[key], lst)
@@ -76,30 +76,30 @@ def _process_atomic_time(result):
 
     # NOTE(boris-42): In our result["result"] we have next structure:
     #                 {"error": NoneOrDict,
-    #                  "atomic_actions_time": [
+    #                  "atomic_actions": [
     #                       {"action": String, "duration": Float},
     #                       ...
     #                   ]}
     #                 Our goal is to get next structure:
-    #                 [{"key": $atomic_actions_time.action,
-    #                   "values": [[order, $atomic_actions_time.duration
+    #                 [{"key": $atomic_actions.action,
+    #                   "values": [[order, $atomic_actions.duration
     #                              if not $error else 0], ...}]
     #
-    #                 Order of actions in "atomic_action_time" is similiar for
+    #                 Order of actions in "atomic_action" is similiar for
     #                 all iteration. So we should take first non "error"
     #                 iteration. And get in atomitc_iter list:
     #                 [{"key": "action", "values":[]}]
     stacked_area = []
     for r in result["result"]:
         if not r["error"]:
-            for action in r["atomic_actions_time"]:
+            for action in r["atomic_actions"]:
                 stacked_area.append({"key": action["action"], "values": []})
             break
 
     # NOTE(boris-42): pie is similiar to stacked_area, only difference is in
     #                 structure of values. In case of $error we shouldn't put
     #                 anything in pie. In case of non error we should put just
-    #                 $atomic_actions_time.duration (without order)
+    #                 $atomic_actions.duration (without order)
     pie = []
     histogram_data = []
     if stacked_area:
@@ -113,7 +113,7 @@ def _process_atomic_time(result):
                 continue
 
             # in case of non error put real durations to pie and stacked area
-            for j, action in enumerate(data["atomic_actions_time"]):
+            for j, action in enumerate(data["atomic_actions"]):
                 pie[j]["values"].append(action["duration"])
                 stacked_area[j]["values"].append([i + 1, action["duration"]])
                 histogram_data[j]["values"].append(action["duration"])
@@ -151,8 +151,8 @@ def _process_results(results):
         output.append({
             "name": "%s (task #%d)" % (info["name"], info["pos"]),
             "config": info["kw"],
-            "time": _process_main_time(result),
-            "atomic": _process_atomic_time(result)
+            "duration": _process_main_duration(result),
+            "atomic": _process_atomic(result)
         })
     return output
 

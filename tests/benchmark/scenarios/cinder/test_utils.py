@@ -24,9 +24,9 @@ CINDER_UTILS = "rally.benchmark.scenarios.cinder.utils"
 
 class CinderScenarioTestCase(test.TestCase):
 
-    def _test_atomic_action_timer(self, atomic_actions_time, name):
+    def _test_atomic_action_timer(self, atomic_actions, name):
         action_duration = test_utils.get_atomic_action_timer_value_by_name(
-            atomic_actions_time, name)
+            atomic_actions, name)
         self.assertIsNotNone(action_duration)
         self.assertIsInstance(action_duration, float)
 
@@ -37,5 +37,5 @@ class CinderScenarioTestCase(test.TestCase):
         scenario = utils.CinderScenario()
         return_volumes_list = scenario._list_volumes()
         self.assertEqual(volumes_list, return_volumes_list)
-        self._test_atomic_action_timer(scenario.atomic_actions_time(),
+        self._test_atomic_action_timer(scenario.atomic_actions(),
                                        'cinder.list_volumes')

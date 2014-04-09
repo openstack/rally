@@ -49,16 +49,16 @@ class PlotTestCase(test.TestCase):
         mock_open.assert_called_once_with("%s/src/index.mako"
                                           % mock_dirname.return_value)
 
-    @mock.patch("rally.benchmark.processing.plot._process_atomic_time")
-    @mock.patch("rally.benchmark.processing.plot._process_main_time")
-    def test__process_results(self, mock_main_time, mock_atomic_time):
+    @mock.patch("rally.benchmark.processing.plot._process_atomic")
+    @mock.patch("rally.benchmark.processing.plot._process_main_duration")
+    def test__process_results(self, mock_main_duration, mock_atomic):
         results = [
             {"key": {"name": "n1", "pos": 1, "kw": "config1"}},
             {"key": {"name": "n2", "pos": 2, "kw": "config2"}}
         ]
 
-        mock_main_time.return_value = "main_time"
-        mock_atomic_time.return_value = "main_atomic"
+        mock_main_duration.return_value = "main_duration"
+        mock_atomic.return_value = "main_atomic"
 
         output = plot._process_results(results)
 
@@ -66,8 +66,8 @@ class PlotTestCase(test.TestCase):
             self.assertEqual(output[i], {
                 "name": "%s (task #%d)" % (r["key"]["name"], r["key"]["pos"]),
                 "config": r["key"]["kw"],
-                "time": mock_main_time.return_value,
-                "atomic": mock_atomic_time.return_value
+                "duration": mock_main_duration.return_value,
+                "atomic": mock_atomic.return_value
             })
 
     def test__process_main_time(self):
@@ -75,23 +75,23 @@ class PlotTestCase(test.TestCase):
             "result": [
                 {
                     "error": [],
-                    "time": 1,
-                    "idle_time": 2
+                    "duration": 1,
+                    "idle_duration": 2
                 },
                 {
                     "error": True,
-                    "time": 1,
-                    "idle_time": 1
+                    "duration": 1,
+                    "idle_duration": 1
                 },
                 {
                     "error": [],
-                    "time": 2,
-                    "idle_time": 3
+                    "duration": 2,
+                    "idle_duration": 3
                 }
             ]
         }
 
-        output = plot._process_main_time(result)
+        output = plot._process_main_duration(result)
 
         self.assertEqual(output, {
             "pie": [
@@ -138,21 +138,21 @@ class PlotTestCase(test.TestCase):
             "result": [
                 {
                     "error": [],
-                    "atomic_actions_time": [
+                    "atomic_actions": [
                         {"action": "action1", "duration": 1},
                         {"action": "action2", "duration": 2}
                     ]
                 },
                 {
                     "error": ["some", "error", "occurred"],
-                    "atomic_actions_time": [
+                    "atomic_actions": [
                         {"action": "action1", "duration": 1},
                         {"action": "action2", "duration": 2}
                     ]
                 },
                 {
                     "error": [],
-                    "atomic_actions_time": [
+                    "atomic_actions": [
                         {"action": "action1", "duration": 3},
                         {"action": "action2", "duration": 4}
                     ]
@@ -160,7 +160,7 @@ class PlotTestCase(test.TestCase):
             ]
         }
 
-        output = plot._process_atomic_time(result)
+        output = plot._process_atomic(result)
 
         self.assertEqual(output, {
             "histogram": [

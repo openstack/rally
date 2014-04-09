@@ -141,21 +141,21 @@
                         .end()
 
                 // Find
-                var total_histogram_select = $("#results > .results > .total_time > .histogram_select");
+                var total_histogram_select = $("#results > .results > .total_duration > .histogram_select");
                 var atomic_histogram_select = $("#results > .results > .atomic > .histogram_select");
                 // Populate
-                for (var i = 0; i < d.time.histogram.length; i++) {
+                for (var i = 0; i < d.duration.histogram.length; i++) {
                     var option = document.createElement('option');
-                    option.text = d.time.histogram[i].method;
+                    option.text = d.duration.histogram[i].method;
                     total_histogram_select.get(0).add(option);
                     atomic_histogram_select.get(0).add(option.cloneNode(true));
                 }
                 // Bind onchange event
                 total_histogram_select.change(function(){
                     var i = total_histogram_select.get(0).selectedIndex;
-                    $("#results > .results > .total_time > .histogram").empty();
-                    draw_histogram("#results .total_time .histogram", function(){
-                        return [d["time"]["histogram"][i]];
+                    $("#results > .results > .total_duration > .histogram").empty();
+                    draw_histogram("#results .total_duration .histogram", function(){
+                        return [d["duration"]["histogram"][i]];
                     });
                 });
                 atomic_histogram_select.change(function(){
@@ -170,16 +170,16 @@
                     });
                 });
 
-                draw_stacked("#results .total_time .stackedarea", function(){
-                    return d["time"]["iter"]
+                draw_stacked("#results .total_duration .stackedarea", function(){
+                    return d["duration"]["iter"]
                 })
 
-                draw_pie("#results .total_time .pie", function(){
-                    return d["time"]["pie"]
+                draw_pie("#results .total_duration .pie", function(){
+                    return d["duration"]["pie"]
                 })
 
-                draw_histogram("#results .total_time .histogram", function(){
-                    return [d["time"]["histogram"][0]];
+                draw_histogram("#results .total_duration .histogram", function(){
+                    return [d["duration"]["histogram"][0]];
                 })
 
                 draw_pie("#results .atomic .pie", function(){
@@ -223,7 +223,7 @@
                 <h2>Benchmark Scenario Configuration</h2>
                 <div class="config"></div>
                 <h2>Charts for the Total Duration</h2>
-                <div class="total_time">
+                <div class="total_duration">
                     <svg class="stackedarea"></svg>
                     <svg class="pie"></svg>
                     <svg class="histogram"></svg>

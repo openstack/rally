@@ -45,8 +45,8 @@ class Scenario(object):
         self._context = context
         self._admin_clients = admin_clients
         self._clients = clients
-        self._idle_time = 0
-        self._atomic_actions_time = []
+        self._idle_duration = 0
+        self._atomic_actions = []
 
     @staticmethod
     def get_by_name(name):
@@ -150,7 +150,7 @@ class Scenario(object):
         """Performs a time.sleep() call for a random amount of seconds.
 
         The exact time is chosen uniformly randomly from the interval
-        [min_sleep; max_sleep). The method also updates the idle_time
+        [min_sleep; max_sleep). The method also updates the idle_duration
         variable to take into account the overall time spent on sleeping.
 
         :param min_sleep: Minimum sleep time in seconds (non-negative)
@@ -162,17 +162,17 @@ class Scenario(object):
 
         sleep_time = random.uniform(min_sleep, max_sleep)
         time.sleep(sleep_time)
-        self._idle_time += sleep_time
+        self._idle_duration += sleep_time
 
-    def idle_time(self):
+    def idle_duration(self):
         """Returns duration of all sleep_between."""
-        return self._idle_time
+        return self._idle_duration
 
-    def _add_atomic_actions_time(self, name, duration):
+    def _add_atomic_actions(self, name, duration):
         """Adds the duration of an atomic action by its 'name'."""
-        self._atomic_actions_time.append(
+        self._atomic_actions.append(
             {'action': name, 'duration': duration})
 
-    def atomic_actions_time(self):
-        """Returns the duration of each atomic action."""
-        return self._atomic_actions_time
+    def atomic_actions(self):
+        """Returns the content of each atomic action."""
+        return self._atomic_actions

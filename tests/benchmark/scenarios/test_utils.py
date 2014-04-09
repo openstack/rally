@@ -186,8 +186,8 @@ class ActionBuilderTestCase(test.TestCase):
         mock_action_two.assert_has_calls(mock_calls)
 
 
-def get_atomic_action_timer_value_by_name(atomic_actions_times, name):
-    for action_time in atomic_actions_times:
-        if action_time['action'] == name:
-            return action_time['duration']
+def get_atomic_action_timer_value_by_name(atomic_actions, name):
+    for action in atomic_actions:
+        if action['action'] == name:
+            return action['duration']
     return None

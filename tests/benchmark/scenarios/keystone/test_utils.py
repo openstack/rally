@@ -48,9 +48,9 @@ class KeystoneUtilsTestCase(test.TestCase):
 
 class KeystoneScenarioTestCase(test.TestCase):
 
-    def _test_atomic_action_timer(self, atomic_actions_time, name):
+    def _test_atomic_action_timer(self, atomic_actions, name):
         action_duration = test_utils.get_atomic_action_timer_value_by_name(
-            atomic_actions_time, name)
+            atomic_actions, name)
         self.assertIsNotNone(action_duration)
         self.assertIsInstance(action_duration, float)
 
@@ -71,7 +71,7 @@ class KeystoneScenarioTestCase(test.TestCase):
         self.assertEqual(user, result)
         fake_keystone.users.create.assert_called_once_with(name, name,
                                                            name + "@rally.me")
-        self._test_atomic_action_timer(scenario.atomic_actions_time(),
+        self._test_atomic_action_timer(scenario.atomic_actions(),
                                        'keystone.create_user')
 
     def test_user_delete(self):
@@ -81,7 +81,7 @@ class KeystoneScenarioTestCase(test.TestCase):
         scenario = utils.KeystoneScenario()
         scenario._resource_delete(resource)
         resource.delete.assert_called_once_with()
-        self._test_atomic_action_timer(scenario.atomic_actions_time(),
+        self._test_atomic_action_timer(scenario.atomic_actions(),
                                        'keystone.delete_resource')
 
     @mock.patch(UTILS + "generate_keystone_name")
@@ -100,7 +100,7 @@ class KeystoneScenarioTestCase(test.TestCase):
 
         self.assertEqual(tenant, result)
         fake_keystone.tenants.create.assert_called_once_with(name)
-        self._test_atomic_action_timer(scenario.atomic_actions_time(),
+        self._test_atomic_action_timer(scenario.atomic_actions(),
                                        'keystone.create_tenant')
 
     @mock.patch(UTILS + "generate_keystone_name")
@@ -120,7 +120,7 @@ class KeystoneScenarioTestCase(test.TestCase):
         fake_keystone.users.create.assert_called_once_with(name, name,
                                                            name + "@rally.me",
                                                            tenant_id=tenant.id)
-        self._test_atomic_action_timer(scenario.atomic_actions_time(),
+        self._test_atomic_action_timer(scenario.atomic_actions(),
                                        'keystone.create_users')
 
     def test_list_users(self):
@@ -131,7 +131,7 @@ class KeystoneScenarioTestCase(test.TestCase):
         scenario = utils.KeystoneScenario(admin_clients=fake_clients)
         scenario._list_users()
         fake_keystone.users.list.assert_called_once()
-        self._test_atomic_action_timer(scenario.atomic_actions_time(),
+        self._test_atomic_action_timer(scenario.atomic_actions(),
                                        'keystone.list_users')
 
     def test_list_tenants(self):
@@ -142,5 +142,5 @@ class KeystoneScenarioTestCase(test.TestCase):
         scenario = utils.KeystoneScenario(admin_clients=fake_clients)
         scenario._list_tenants()
         fake_keystone.tenants.list.assert_called_once()
-        self._test_atomic_action_timer(scenario.atomic_actions_time(),
+        self._test_atomic_action_timer(scenario.atomic_actions(),
                                        'keystone.list_tenants')

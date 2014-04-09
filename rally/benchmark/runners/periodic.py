@@ -86,7 +86,7 @@ class PeriodicScenarioRunner(base.ScenarioRunner):
             try:
                 result = async_result.get(timeout=timeout)
             except multiprocessing.TimeoutError as e:
-                result = {"time": timeout, "idle_time": 0,
+                result = {"duration": timeout, "idle_duration": 0,
                           "error": utils.format_exc(e)}
             results.append(result)
 

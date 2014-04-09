@@ -59,9 +59,9 @@ class ScenarioHelpersTestCase(test.TestCase):
         expected_calls = [
             mock.call(context=context, admin_clients="cl", clients="cl"),
             mock.call().test(),
-            mock.call().idle_time(),
-            mock.call().idle_time(),
-            mock.call().atomic_actions_time()
+            mock.call().idle_duration(),
+            mock.call().idle_duration(),
+            mock.call().atomic_actions()
         ]
         scenario_cls.assert_has_calls(expected_calls, any_order=True)
 
@@ -75,11 +75,11 @@ class ScenarioHelpersTestCase(test.TestCase):
         result = base._run_scenario_once(args)
 
         expected_reuslt = {
-            "time": fakes.FakeTimer().duration(),
-            "idle_time": 0,
+            "duration": fakes.FakeTimer().duration(),
+            "idle_duration": 0,
             "error": [],
             "scenario_output": {},
-            "atomic_actions_time": []
+            "atomic_actions": []
         }
         self.assertEqual(expected_reuslt, result)
 
@@ -93,11 +93,11 @@ class ScenarioHelpersTestCase(test.TestCase):
         result = base._run_scenario_once(args)
 
         expected_reuslt = {
-            "time": fakes.FakeTimer().duration(),
-            "idle_time": 0,
+            "duration": fakes.FakeTimer().duration(),
+            "idle_duration": 0,
             "error": [],
             "scenario_output": fakes.FakeScenario().with_output(),
-            "atomic_actions_time": []
+            "atomic_actions": []
         }
         self.assertEqual(expected_reuslt, result)
 
@@ -110,10 +110,10 @@ class ScenarioHelpersTestCase(test.TestCase):
         result = base._run_scenario_once(args)
         expected_error = result.pop("error")
         expected_reuslt = {
-            "time": fakes.FakeTimer().duration(),
-            "idle_time": 0,
+            "duration": fakes.FakeTimer().duration(),
+            "idle_duration": 0,
             "scenario_output": {},
-            "atomic_actions_time": []
+            "atomic_actions": []
         }
         self.assertEqual(expected_reuslt, result)
         self.assertEqual(expected_error[:2],
@@ -125,23 +125,23 @@ class ScenarioRunnerResultTestCase(test.TestCase):
     def test_validate(self):
         config = [
             {
-                "time": 1.0,
-                "idle_time": 1.0,
+                "duration": 1.0,
+                "idle_duration": 1.0,
                 "scenario_output": {
                     "data": {"test": 1.0},
                     "errors": "test error string 1"
                 },
-                "atomic_actions_time": [{"action": "test1", "duration": 1.0}],
+                "atomic_actions": [{"action": "test1", "duration": 1.0}],
                 "error": []
             },
             {
-                "time": 2.0,
-                "idle_time": 2.0,
+                "duration": 2.0,
+                "idle_duration": 2.0,
                 "scenario_output": {
                     "data": {"test": 2.0},
                     "errors": "test error string 2"
                 },
-                "atomic_actions_time": [{"action": "test2", "duration": 2.0}],
+                "atomic_actions": [{"action": "test2", "duration": 2.0}],
                 "error": ["a", "b", "c"]
             }
         ]

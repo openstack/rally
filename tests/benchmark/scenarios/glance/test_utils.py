@@ -57,9 +57,9 @@ class GlanceScenarioTestCase(test.TestCase):
                           butils.get_from_manager(),
                           image_manager.create('fails', 'url', 'cf', 'df'))
 
-    def _test_atomic_action_timer(self, atomic_actions_time, name):
+    def _test_atomic_action_timer(self, atomic_actions, name):
         action_duration = test_utils.get_atomic_action_timer_value_by_name(
-            atomic_actions_time, name)
+            atomic_actions, name)
         self.assertIsNotNone(action_duration)
         self.assertIsInstance(action_duration, float)
 
@@ -70,7 +70,7 @@ class GlanceScenarioTestCase(test.TestCase):
         scenario = utils.GlanceScenario()
         return_images_list = scenario._list_images()
         self.assertEqual(images_list, return_images_list)
-        self._test_atomic_action_timer(scenario.atomic_actions_time(),
+        self._test_atomic_action_timer(scenario.atomic_actions(),
                                        'glance.list_images')
 
     @mock.patch(GLANCE_UTILS + '.GlanceScenario.clients')
@@ -88,7 +88,7 @@ class GlanceScenarioTestCase(test.TestCase):
                                                    timeout=120)
         self.res_is.mock.assert_has_calls(mock.call('active'))
         self.assertEqual(self.wait_for.mock(), return_image)
-        self._test_atomic_action_timer(scenario.atomic_actions_time(),
+        self._test_atomic_action_timer(scenario.atomic_actions(),
                                        'glance.create_image')
 
     def test_delete_image(self):
@@ -100,5 +100,5 @@ class GlanceScenarioTestCase(test.TestCase):
                                          update_resource=self.gfm(),
                                          check_interval=1,
                                          timeout=120)
-        self._test_atomic_action_timer(scenario.atomic_actions_time(),
+        self._test_atomic_action_timer(scenario.atomic_actions(),
                                        'glance.delete_image')
