@@ -1,0 +1,14 @@
+{
+    "KeystoneBasic.create_and_list_tenants": [
+        {
+            "args": {
+                "name_length": 10
+            },
+            "runner": {
+                "type": "continuous",
+                "times": 10,
+                "active_users": 1
+            },
+        }
+    ]
+}

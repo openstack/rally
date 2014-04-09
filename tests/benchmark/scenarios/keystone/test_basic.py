@@ -64,13 +64,37 @@ class KeystoneBasicTestCase(test.TestCase):
     def test_create_tenant_with_users(self, mock_gen_name):
         scenario = basic.KeystoneBasic()
         mock_gen_name.return_value = "teeeest"
-        scenario._tenant_create = mock.MagicMock()
-        tenant = scenario.create_tenant(name_length=20, enabled=True)
+        fake_tenant = mock.MagicMock()
+        scenario._tenant_create = mock.MagicMock(return_value=fake_tenant)
+        scenario._users_create = mock.MagicMock()
+        scenario.create_tenant_with_users(users_per_tenant=1, name_length=20,
+                                          enabled=True)
         scenario._tenant_create.assert_called_once_with(name_length=20,
                                                         enabled=True)
-        scenario._users_create = mock.MagicMock()
-        scenario._users_create(tenant, name_length=20, users_per_tenant=1,
-                               enabled=True)
-        scenario._users_create.assert_called_once_with(tenant, name_length=20,
+        scenario._users_create.assert_called_once_with(fake_tenant,
                                                        users_per_tenant=1,
-                                                       enabled=True)
+                                                       name_length=20)
+
+    @mock.patch(KEYSTONE_UTILS + "generate_keystone_name")
+    def test_create_and_list_users(self, mock_gen_name):
+        scenario = basic.KeystoneBasic()
+        mock_gen_name.return_value = "teeeest"
+        scenario._user_create = mock.MagicMock()
+        scenario._list_users = mock.MagicMock()
+        scenario.create_and_list_users(name_length=20, password="tttt",
+                                       tenant_id="id")
+        scenario._user_create.assert_called_once_with(name_length=20,
+                                                      password="tttt",
+                                                      tenant_id="id")
+        scenario._list_users.assert_called_once_with()
+
+    @mock.patch(KEYSTONE_UTILS + "generate_keystone_name")
+    def test_create_and_list_tenants(self, mock_gen_name):
+        scenario = basic.KeystoneBasic()
+        mock_gen_name.return_value = "teeeest"
+        scenario._tenant_create = mock.MagicMock()
+        scenario._list_tenants = mock.MagicMock()
+        scenario.create_and_list_tenants(name_length=20, enabled=True)
+        scenario._tenant_create.assert_called_once_with(name_length=20,
+                                                        enabled=True)
+        scenario._list_tenants.assert_called_with()
