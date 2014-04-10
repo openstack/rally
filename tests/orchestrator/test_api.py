@@ -215,32 +215,11 @@ class APITestCase(test.TestCase):
 
     @mock.patch('rally.orchestrator.api.objects.Verification')
     @mock.patch('rally.verification.verifiers.tempest.tempest.Tempest')
-    @mock.patch('rally.objects.deploy.db.deployment_get')
-    def test_verify(self, mock_get, mock_tempest, mock_verification):
+    def test_verify(self, mock_tempest, mock_verification):
         mock_tempest.return_value = self.tempest
         self.tempest.is_installed.return_value = True
-        mock_get.return_value = self.deployment
-        api.verify(self.deploy_uuid, 'image_id', 'alt_image_id', 'flavor_id',
-                   'alt_flavor_id', 'smoke', None)
+        api.verify(self.deploy_uuid, 'smoke', None)
 
         self.tempest.is_installed.assert_called_once_with()
-        mock_get.assert_called_once_with(self.deploy_uuid)
-        self.tempest.verify.assert_called_once_with(
-            set_name='smoke', regex=None,
-            options=(
-                ('compute', [
-                    ('flavor_ref', 'flavor_id'),
-                    ('flavor_ref_alt', 'alt_flavor_id'),
-                    ('image_ref', 'image_id'),
-                    ('image_ref_alt', 'alt_image_id')]),
-                ('compute-admin', [('password', 'myadminpass')]),
-                ('identity', [
-                    ('username', 'admin'),
-                    ('password', 'myadminpass'),
-                    ('tenant_name', 'demo'),
-                    ('admin_username', 'admin'),
-                    ('admin_password', 'myadminpass'),
-                    ('admin_tenant_name', 'demo'),
-                    ('region_name', 'RegionOne'),
-                    ('uri', 'http://example.net:5000/v2.0/'),
-                    ('uri_v3', 'http://example.net:5000/v3/')])))
+        self.tempest.verify.assert_called_once_with(set_name='smoke',
+                                                    regex=None)

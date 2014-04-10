@@ -383,6 +383,19 @@
 #db_max_retries=20
 
 
+[image]
+
+#
+# Options defined in rally.verification.verifiers.tempest.config
+#
+
+# Version of cirros image
+#cirros_version=0.3.2
+
+# Cirros image name
+#cirros_image=cirros-0.3.2-x86_64-disk.img
+
+
 [users_context]
 
 #

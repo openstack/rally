@@ -18,10 +18,9 @@ import logging
 import os
 import shutil
 import subprocess
-import tempfile
 from xml.dom import minidom as md
 
-from six.moves import configparser
+from rally.verification.verifiers.tempest import config
 
 from rally.openstack.common.gettextutils import _
 from rally import utils
@@ -35,7 +34,7 @@ class Tempest(object):
                                      '.rally/tempest/base')
 
     def __init__(self, deploy_id, verification=None):
-        self.lock_path = tempfile.mkdtemp()
+        self.deploy_id = deploy_id
         self.tempest_path = os.path.join(os.path.expanduser("~"),
                                          '.rally/tempest',
                                          'for-deployment-%s' % deploy_id)
@@ -44,18 +43,6 @@ class Tempest(object):
         self._venv_wrapper = os.path.join(self.tempest_path,
                                           'tools/with_venv.sh')
         self.verification = verification
-
-    def _generate_config(self, options):
-        conf = configparser.ConfigParser()
-        conf.optionxform = str
-        conf.read(os.path.join(os.path.dirname(__file__), 'config.ini'))
-        for section, values in options:
-            if section not in conf.sections() and section != 'DEFAULT':
-                conf.add_section(section)
-            for key, value in values:
-                conf.set(section, key, value)
-        conf.set('DEFAULT', 'lock_path', self.lock_path)
-        return conf
 
     def _write_config(self, conf):
         with open(self.config_file, 'w+') as f:
@@ -86,10 +73,10 @@ class Tempest(object):
 
     @utils.log_verification_wrapper(LOG.info,
                                     _('Check existence of configuration file'))
-    def _check_config_existence(self, options):
+    def _check_config_existence(self):
         LOG.debug("Tempest config file: %s " % self.config_file)
         if not os.path.isfile(self.config_file):
-            conf = self._generate_config(options)
+            conf = config.TempestConf(self.deploy_id).generate()
             self._write_config(conf)
 
     @utils.log_verification_wrapper(
@@ -139,8 +126,8 @@ class Tempest(object):
             shutil.rmtree(self.tempest_path)
 
     @utils.log_verification_wrapper(LOG.info, _('Run verification.'))
-    def _prepare_and_run(self, set_name, regex, options):
-        self._check_config_existence(options)
+    def _prepare_and_run(self, set_name, regex):
+        self._check_config_existence()
         self._check_testr_initialization()
 
         if set_name == 'full':
@@ -176,8 +163,6 @@ class Tempest(object):
         except subprocess.CalledProcessError:
             print('Test set %s has been finished with error. '
                   'Check log for details' % testr_arg)
-        finally:
-            shutil.rmtree(self.lock_path)
 
     @utils.log_verification_wrapper(
         LOG.info, _('Saving verification results.'))
@@ -212,11 +197,12 @@ class Tempest(object):
                     else:
                         test['status'] = 'OK'
                     test_cases[test['name']] = test
-            self.verification.finish_verification(total=total,
-                                                  test_cases=test_cases)
+            if self.verification:
+                self.verification.finish_verification(total=total,
+                                                      test_cases=test_cases)
         else:
             LOG.error('XML-log file not found.')
 
-    def verify(self, set_name, regex, options):
-        self._prepare_and_run(set_name, regex, options)
+    def verify(self, set_name, regex):
+        self._prepare_and_run(set_name, regex)
         self._save_results()

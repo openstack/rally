@@ -13,11 +13,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import re
-
 from rally.benchmark import engine
 from rally import consts
-from rally import db
 from rally import deploy
 from rally import exceptions
 from rally import objects
@@ -133,43 +130,21 @@ def delete_task(task_uuid, force=False):
     objects.Task.delete_by_uuid(task_uuid, status=status)
 
 
-def verify(deploy_id, image_id, alt_image_id, flavor_id, alt_flavor_id,
-           set_name, regex):
+def verify(deploy_id, set_name, regex):
     """Start verifying.
 
     :param deploy_id: a UUID of a deployment.
-    :param image_id: Valid primary image reference to be used in tests.
-    :param alt_image_id: Valid secondary image reference to be used in tests.
-    :param flavor_id: Valid primary flavor to use in tests.
-    :param alt_flavor_id: Valid secondary flavor to be used in tests.
     :param set_name: Valid name of tempest test set.
+    :param regex: Regular expression of test
     """
+
     verification = objects.Verification(deployment_uuid=deploy_id)
-    verifier = tempest.Tempest(deploy_id, verification)
+    verifier = tempest.Tempest(deploy_id, verification=verification)
     if not verifier.is_installed():
         print("Tempest is not installed for specified deployment. "
               "Please use 'rally-manage tempest install'")
         return
     LOG.info("Starting verification of deployment: %s" % deploy_id)
 
-    endpoints = db.deployment_get(deploy_id)['endpoints']
-    endpoint = endpoints[0]
-    conf_opts = (('compute', [('flavor_ref', flavor_id),
-                              ('flavor_ref_alt', alt_flavor_id),
-                              ('image_ref', image_id),
-                              ('image_ref_alt', alt_image_id)]),
-                 ('compute-admin', [('password', endpoint['password'])]),
-                 ('identity', [
-                     ('username', endpoint['username']),
-                     ('password', endpoint['password']),
-                     ('tenant_name', endpoint['tenant_name']),
-                     ('admin_username', endpoint['username']),
-                     ('admin_password', endpoint['password']),
-                     ('admin_tenant_name', endpoint['tenant_name']),
-                     ('region_name', endpoint['region_name']),
-                     ('uri', endpoint['auth_url']),
-                     ('uri_v3', re.sub('/v2.0', '/v3', endpoint['auth_url']))])
-                 )
-
     verification.set_running()
-    verifier.verify(set_name=set_name, regex=regex, options=conf_opts)
+    verifier.verify(set_name=set_name, regex=regex)

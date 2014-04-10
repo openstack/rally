@@ -205,3 +205,7 @@ class HostUnreachableException(InvalidArgumentsException):
 
 class InvalidScenarioArgument(RallyException):
     msg_fmt = _("Invalid scenario argument: '%(message)s'")
+
+
+class TempestConfigCreationFailure(RallyException):
+    msg_fmt = _("Unable create tempest.conf: '%(message)s'")

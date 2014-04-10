@@ -28,7 +28,6 @@ from rally import objects
 from rally.openstack.common import cliutils as common_cliutils
 from rally.openstack.common.gettextutils import _
 from rally.orchestrator import api
-from rally import osclients
 
 
 TEMPEST_TEST_SETS = ('full',
@@ -69,44 +68,7 @@ class VerifyCommands(object):
                   'Please choose from: %s' % ', '.join(TEMPEST_TEST_SETS))
             return(1)
 
-        endpoints = db.deployment_get(deploy_id)['endpoints']
-        endpoint_dict = endpoints[0]
-        clients = osclients.Clients(objects.Endpoint(**endpoint_dict))
-        glance = clients.glance()
-
-        image_list = []
-        for image in glance.images.list():
-            if 'cirros' in image.name:
-                image_list.append(image)
-
-        #TODO(miarmak): Add ability to upload new images if there are no
-        #necessary images in the cloud (cirros)
-
-        try:
-            image_id = image_list[0].id
-            alt_image_id = image_list[1].id
-        except IndexError:
-            print('Sorry, but there are no desired images or only one')
-            return(1)
-
-        nova = clients.nova()
-        flavor_list = []
-        for fl in sorted(nova.flavors.list(), key=lambda flavor: flavor.ram):
-            flavor_list.append(fl)
-
-        #TODO(miarmak): Add ability to create new flavors if they are missing
-
-        try:
-            flavor_id = flavor_list[0].id
-            alt_flavor_id = flavor_list[1].id
-        except IndexError:
-            print('Sorry, but there are no desired flavors or only one')
-            return(1)
-
-        #TODO(miarmak): Add getting network and router id's from neutronclient
-
-        api.verify(deploy_id, image_id, alt_image_id, flavor_id, alt_flavor_id,
-                   set_name, regex)
+        api.verify(deploy_id, set_name, regex)
 
     def list(self):
         """Print a result list of verifications."""

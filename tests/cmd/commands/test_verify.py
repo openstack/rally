@@ -44,30 +44,29 @@ class VerifyCommandsTestCase(test.BaseTestCase):
         self.flavor1.ram = 128
         self.flavor2.ram = 64
 
-    @mock.patch('rally.objects.deploy.db.deployment_get')
     @mock.patch('rally.osclients.Clients')
     @mock.patch('rally.orchestrator.api.verify')
-    def test_start(self, mock_verify, mock_clients, mock_get):
+    def test_start(self, mock_verify, mock_clients):
         deploy_id = str(uuid.uuid4())
-        mock_get.return_value = self.endpoint
         mock_clients().glance().images.list.return_value = [
             self.image1, self.image2]
         mock_clients().nova().flavors.list.return_value = [
             self.flavor1, self.flavor2]
 
         self.verify.start(deploy_id)
+        default_set_name = 'smoke'
+        default_regex = None
 
-        mock_get.assert_called_once_with(deploy_id)
-        mock_verify.assert_called_once_with(deploy_id, self.image1.id,
-                                            self.image2.id, self.flavor2.id,
-                                            self.flavor1.id, 'smoke', None)
+        mock_verify.assert_called_once_with(deploy_id,
+                                            default_set_name, default_regex)
 
-    @mock.patch('rally.cmd.commands.verify.db')
-    def test_results(self, mock_db):
-        test_uuid = str(uuid.uuid4())
-        value = {'data': {'errors': '0', 'tests': 2,
-                          'test_cases': [
-                              {'name': 'test1'}, {'name': 'test2'}]}}
-        mock_db.verification_result_get.return_value = value
-        self.verify.results(test_uuid)
-        mock_db.verification_result_get.assert_called_once_with(test_uuid)
+    @mock.patch('rally.orchestrator.api.verify')
+    def test_start_with_wrong_set_name(self, mock_verify):
+        deploy_id = str(uuid.uuid4())
+
+        wrong_set_name = 'unexpected_value'
+
+        self.verify.start(deploy_id, wrong_set_name)
+
+        self.assertNotIn(wrong_set_name, verify.TEMPEST_TEST_SETS)
+        self.assertFalse(mock_verify.called)
