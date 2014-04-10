@@ -13,8 +13,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from glanceclient import exc as glance_exc
 import mock
+import os
+
+from glanceclient import exc as glance_exc
 from novaclient import exceptions as nova_exc
 
 from rally.benchmark import validation
@@ -35,6 +37,83 @@ class ValidationUtilsTestCase(test.TestCase):
         validators = getattr(test_function, "validators")
         self.assertEqual(len(validators), 1)
         self.assertEqual(validators[0], test_validator)
+
+    def test_number_invalid(self):
+        validator = validation.number('param', 0, 10, none_ok=False)
+
+        result = validator(param=-1)
+        self.assertFalse(result.is_valid)
+
+        result = validator(param=11)
+        self.assertFalse(result.is_valid)
+
+        result = validator(param="not an int")
+        self.assertFalse(result.is_valid)
+
+        result = validator(param=None)
+        self.assertFalse(result.is_valid)
+
+        result = validator()
+        self.assertFalse(result.is_valid)
+
+        result = validator(param=-0.1)
+        self.assertFalse(result.is_valid)
+
+    def test_number_integer_only(self):
+        validator = validation.number('param', 0, 10, none_ok=False,
+                                      integer_only=True)
+        result = validator(param="5.0")
+        self.assertFalse(result.is_valid)
+
+        validator = validation.number('param', 0, 10, none_ok=False,
+                                      integer_only=False)
+        result = validator(param="5.0")
+        self.assertTrue(result.is_valid)
+
+    def test_number_valid(self):
+        validator = validation.number('param', 0, 10, none_ok=False)
+
+        result = validator(param=0)
+        self.assertTrue(result.is_valid)
+
+        result = validator(param=10)
+        self.assertTrue(result.is_valid)
+
+        result = validator(param=10.0)
+        self.assertTrue(result.is_valid)
+
+        result = validator(param=5.6)
+        self.assertTrue(result.is_valid)
+
+    def test_number_noneok(self):
+        validator = validation.number('param', 0, 10, none_ok=True)
+
+        result = validator(param=None)
+        self.assertTrue(result.is_valid)
+
+        result = validator()
+        self.assertTrue(result.is_valid)
+
+        result = validator(param=-1)
+        self.assertFalse(result.is_valid)
+
+        result = validator(param=0)
+        self.assertTrue(result.is_valid)
+
+    @mock.patch("os.access")
+    def test_file_exists(self, mock_access):
+        validator = validation.file_exists('param')
+        result = validator(param='/tmp/foo')
+        mock_access.assert_called_once_with('/tmp/foo', os.R_OK)
+        self.assertTrue(result.is_valid)
+
+    @mock.patch("os.access")
+    def test_file_exists_negative(self, mock_access):
+        validator = validation.file_exists('param')
+        mock_access.return_value = False
+        result = validator(param='/tmp/bah')
+        mock_access.assert_called_with('/tmp/bah', os.R_OK)
+        self.assertFalse(result.is_valid)
 
     @mock.patch("rally.osclients.Clients")
     def test_image_exists(self, mock_osclients):
