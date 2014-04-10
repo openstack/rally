@@ -14,6 +14,7 @@
 #    under the License.
 
 import abc
+import copy
 import random
 
 import jsonschema
@@ -186,7 +187,7 @@ class ScenarioRunner(object):
         cls_name, method_name = name.split(".", 1)
         cls = base.Scenario.get_by_name(cls_name)
 
-        scenario_context = getattr(cls, method_name).context
+        scenario_context = copy.deepcopy(getattr(cls, method_name).context)
         # TODO(boris-42): We should keep default behavior for `users` context
         #                 as a part of work on pre-created users this should be
         #                 removed.
