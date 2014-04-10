@@ -71,7 +71,8 @@ class TempestTestCase(test.TestCase):
             self.assertEqual(set(values),
                              set(test_config.items(section)))
 
-    @mock.patch('six.moves.builtins.open')
+    @mock.patch("rally.verification.verifiers.tempest.tempest.open",
+                create=True)
     def test__write_config(self, mock_open):
         conf = mock.Mock()
         mock_file = mock.MagicMock()
@@ -80,8 +81,9 @@ class TempestTestCase(test.TestCase):
                                       'tempest.conf')
         self.verifier._write_config(conf)
         mock_open.assert_called_once_with(fake_conf_path, 'w+')
-        mock_file.write.assert_called_once_whith(conf, fake_conf_path)
-        mock_file.close.assert_called_once()
+        self.assertEqual([mock.call.__enter__(),
+                          mock.call.__exit__(None, None, None)],
+                         mock_file.mock_calls)
 
     @mock.patch('os.path.exists')
     def test_is_installed(self, mock_exists):

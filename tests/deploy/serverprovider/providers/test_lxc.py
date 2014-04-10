@@ -101,8 +101,8 @@ class LxcHostTestCase(test.BaseTestCase):
         ssh_calls = [mock.call.run('cat > /tmp/.lxc_default', stdin=fake_conf),
                      mock.call.run('/bin/sh', stdin='fake_script')]
         self.assertEqual(ssh_calls, self.server.ssh.mock_calls)
-        self.host.create_local_tunnels.assert_called_once()
-        self.host.create_remote_tunnels.assert_called_once()
+        self.host.create_local_tunnels.assert_called_once_with()
+        self.host.create_remote_tunnels.assert_called_once_with()
 
     @mock.patch(MOD_NAME + 'os.unlink')
     @mock.patch(MOD_NAME + '_get_script_from_template')
@@ -230,7 +230,7 @@ class LxcHostTestCase(test.BaseTestCase):
         self.host._get_updated_server.assert_called_once_with(port=42)
         self.assertFalse(fake_server.ssh.wait.mock_calls)
         so = self.host.get_server_object('c1', wait=True)
-        fake_server.ssh.wait.assert_called_once()
+        fake_server.ssh.wait.assert_called_once_with(timeout=300)
 
     @mock.patch(MOD_NAME + 'LxcHost.get_server_object')
     def test_get_server_objects(self, m_gso):

@@ -61,7 +61,7 @@ class BenchmarkEngineTestCase(test.TestCase):
         eng = engine.BenchmarkEngine(config, task)
         self.assertRaises(exceptions.InvalidTaskException,
                           eng.validate)
-        task.set_failed.assert_called_once()
+        self.assertTrue(task.set_failed.called)
 
     @mock.patch("rally.benchmark.engine.jsonschema.validate")
     def test_validate__wrong_scenarios_name(self, mova_validate):
@@ -71,7 +71,7 @@ class BenchmarkEngineTestCase(test.TestCase):
             mock.MagicMock(side_effect=exceptions.NotFoundScenarios)
 
         self.assertRaises(exceptions.InvalidTaskException, eng.validate)
-        task.set_failed.assert_called_once()
+        self.assertTrue(task.set_failed.called)
 
     @mock.patch("rally.benchmark.engine.jsonschema.validate")
     def test_validate__wrong_syntax(self, mova_validate):
@@ -82,7 +82,7 @@ class BenchmarkEngineTestCase(test.TestCase):
             mock.MagicMock(side_effect=exceptions.InvalidBenchmarkConfig)
 
         self.assertRaises(exceptions.InvalidTaskException, eng.validate)
-        task.set_failed.assert_called_once()
+        self.assertTrue(task.set_failed.called)
 
     @mock.patch("rally.benchmark.engine.jsonschema.validate")
     def test_validate__wrong_semantic(self, mova_validate):
@@ -94,7 +94,7 @@ class BenchmarkEngineTestCase(test.TestCase):
             mock.MagicMock(side_effect=exceptions.InvalidBenchmarkConfig)
 
         self.assertRaises(exceptions.InvalidTaskException, eng.validate)
-        task.set_failed.assert_called_once()
+        self.assertTrue(task.set_failed.called)
 
     @mock.patch("rally.benchmark.engine.base_scenario.Scenario")
     def test__validate_config_scenarios_name(self, mock_scenario):

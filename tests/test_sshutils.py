@@ -111,7 +111,7 @@ class SSHTestCase(test.TestCase):
     def test_close(self):
         with mock.patch.object(self.ssh, '_client') as m_client:
             self.ssh.close()
-        m_client.close.assert_called_once()
+        m_client.close.assert_called_once_with()
         self.assertFalse(self.ssh._client)
 
     @mock.patch('rally.sshutils.StringIO')
@@ -254,11 +254,3 @@ class SSHRunTestCase(test.TestCase):
         m_select.select.return_value = ([], [], [])
         self.fake_session.exit_status_ready.return_value = False
         self.assertRaises(sshutils.SSHTimeout, self.ssh.run, 'cmd')
-
-    @mock.patch('rally.sshutils.select')
-    def test__run_client_closed_on_error(self, m_select):
-        m_select.select.return_value = ([], [], [])
-        self.fake_session.recv_ready.return_value = True
-        self.fake_session.recv.side_effect = IOError
-        self.assertRaises(IOError, self.ssh._run, self.fake_client, 'cmd')
-        self.fake_client.close.assert_called_once()

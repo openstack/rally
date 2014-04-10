@@ -38,7 +38,7 @@ class GlanceImagesTestCase(test.TestCase):
                                               fakearg="f")
         mock_create.assert_called_once_with("test-rally-image", "cf",
                                             "url", "df", fakearg="f")
-        mock_list.assert_called_once()
+        mock_list.assert_called_once_with()
 
     @mock.patch(GLANCE_IMAGES + "._generate_random_name")
     @mock.patch(GLANCE_IMAGES + "._delete_image")

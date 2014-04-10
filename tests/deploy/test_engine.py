@@ -118,8 +118,8 @@ class EngineFactoryTestCase(test.TestCase):
         self.assertEqual(engine, endpoint)
         self.assertTrue(endpoint.deployed)
         self.assertFalse(endpoint.cleanuped)
-        mock_set_started.assert_called_once()
-        mock_set_completed.assert_called_once()
+        mock_set_started.assert_called_once_with()
+        mock_set_completed.assert_called_once_with()
 
     @mock.patch.object(FakeDeployment, 'set_started')
     @mock.patch.object(FakeEngine, 'deploy')
@@ -131,7 +131,7 @@ class EngineFactoryTestCase(test.TestCase):
         engine = FakeEngine(deployment)
         mock_deploy.side_effect = DeployFailed()
         self.assertRaises(DeployFailed, engine.make_deploy)
-        mock_set_started.assert_called_once()
+        mock_set_started.assert_called_once_with()
 
     @mock.patch.object(FakeDeployment, 'update_status')
     def test_make_cleanup(self, mock_update_status):

@@ -170,7 +170,7 @@ class OpenStackProviderTestCase(test.TestCase):
         m_Server.assert_called_once_with(host='1.2.3.4', user='root',
                                          key='fake_path')
         self.assertEqual([fake_server], servers)
-        fake_server.ssh.wait.assert_called_once()
+        fake_server.ssh.wait.assert_called_once_with(interval=5, timeout=120)
         provider.nova.servers.create.assert_called_once_with(
             'rally-dep-1-0', 'fake_image_uuid', '22', userdata='fake_userdata',
             nics='fake_nics', key_name='fake_key_name')

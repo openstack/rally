@@ -184,7 +184,7 @@ class NovaServersTestCase(test.TestCase):
 
         scenario._boot_server.assert_called_once_with("name", "img", 0,
                                                       fakearg="fakearg")
-        scenario._list_servers.assert_called_once()
+        scenario._list_servers.assert_called_once_with(True)
 
     def test_boot_server_from_volume_and_delete(self):
         fake_server = object()
