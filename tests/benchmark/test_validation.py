@@ -24,6 +24,9 @@ from tests import fakes
 from tests import test
 
 
+TEMPEST = 'rally.verification.verifiers.tempest.tempest'
+
+
 class ValidationUtilsTestCase(test.TestCase):
 
     def test_add_validator(self):
@@ -275,3 +278,34 @@ class ValidationUtilsTestCase(test.TestCase):
 
         self.assertFalse(result.is_valid)
         self.assertEqual(result.msg, "Flavor with id '101' not found")
+
+    @mock.patch(TEMPEST + '.Tempest.is_configured')
+    @mock.patch(TEMPEST + '.Tempest.is_installed')
+    @mock.patch(TEMPEST + '.subprocess')
+    def test_tempest_test_name_not_valid(self, mock_sp, mock_install,
+                                         mock_config):
+        mock_sp.Popen().communicate.return_value = (
+            'tempest.api.fake_test1[gate]\ntempest.api.fate_test2\n',)
+        mock_install.return_value = True
+        mock_config.return_value = True
+
+        validator = validation.tempest_tests_exists()
+        result = validator(test_name='no_valid_test_name',
+                           task=mock.MagicMock())
+        self.assertFalse(result.is_valid)
+        self.assertEqual("One or more tests not found: "
+                         "'tempest.api.no_valid_test_name'", result.msg)
+
+    @mock.patch(TEMPEST + '.Tempest.is_configured')
+    @mock.patch(TEMPEST + '.Tempest.is_installed')
+    @mock.patch(TEMPEST + '.subprocess')
+    def test_tempest_test_name(self, mock_sp, mock_install, mock_config):
+        mock_sp.Popen().communicate.return_value = (
+            'tempest.api.fake_test1[gate]\ntempest.api.fate_test2\n',)
+        mock_install.return_value = True
+        mock_config.return_value = True
+
+        validator = validation.tempest_tests_exists()
+        result = validator(test_name='fake_test1', task=mock.MagicMock())
+
+        self.assertTrue(result.is_valid)

@@ -156,11 +156,13 @@ class BenchmarkEngineTestCase(test.TestCase):
 
     @mock.patch("rally.benchmark.engine.base_scenario.Scenario.validate")
     def test__validate_config_semantic_helper(self, mock_validate):
+        task = mock.MagicMock()
         eng = engine.BenchmarkEngine(mock.MagicMock(), mock.MagicMock())
         eng._validate_config_sematic_helper("admin", "user", "name", "pos",
-                                            {"args": "args"})
-        mock_validate.assert_called_once_with("name", "args", admin="admin",
-                                              users=["user"])
+                                            task, {"args": "args"})
+        mock_validate.assert_called_once_with(
+            "name", "args", admin="admin", users=["user"],
+            task=task)
 
     @mock.patch("rally.benchmark.engine.base_scenario.Scenario.validate")
     def test__validate_config_semanitc_helper_invalid_arg(self, mock_validate):
@@ -169,7 +171,7 @@ class BenchmarkEngineTestCase(test.TestCase):
 
         self.assertRaises(exceptions.InvalidBenchmarkConfig,
                           eng._validate_config_sematic_helper, "a", "u", "n",
-                          "p", {})
+                          "p", mock.MagicMock(), {})
 
     @mock.patch("rally.benchmark.engine.osclients.Clients")
     @mock.patch("rally.benchmark.engine.users_ctx")
@@ -184,7 +186,9 @@ class BenchmarkEngineTestCase(test.TestCase):
             "b": [mock.MagicMock()]
         }
 
-        eng = engine.BenchmarkEngine(config, mock.MagicMock())
+        fake_task = mock.MagicMock()
+        eng = engine.BenchmarkEngine(config, fake_task)
+
         eng.admin_endpoint = "admin"
 
         eng._validate_config_semantic(config)
@@ -197,9 +201,9 @@ class BenchmarkEngineTestCase(test.TestCase):
 
         admin = user = mock_osclients.return_value
         expected_calls = [
-            mock.call(admin, user, "a", 0, config["a"][0]),
-            mock.call(admin, user, "a", 1, config["a"][1]),
-            mock.call(admin, user, "b", 0, config["b"][0])
+            mock.call(admin, user, "a", 0, fake_task, config["a"][0]),
+            mock.call(admin, user, "a", 1, fake_task, config["a"][1]),
+            mock.call(admin, user, "b", 0, fake_task, config["b"][0])
         ]
         mock_helper.assert_has_calls(expected_calls)
 

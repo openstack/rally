@@ -49,9 +49,10 @@ class ScenarioTestCase(test.TestCase):
         ]
         clients = mock.MagicMock()
         args = {"a": 1, "b": 2}
-        base.Scenario._validate_helper(validators, clients, args)
+        task = mock.MagicMock()
+        base.Scenario._validate_helper(validators, clients, args, task)
         for validator in validators:
-            validator.assert_called_with(clients=clients, **args)
+            validator.assert_called_with(clients=clients, task=task, **args)
 
     def test__validate_helper__no_valid(self):
         validators = [
@@ -64,7 +65,7 @@ class ScenarioTestCase(test.TestCase):
         args = {"a": 1, "b": 2}
         self.assertRaises(exceptions.InvalidScenarioArgument,
                           base.Scenario._validate_helper,
-                          validators, clients, args)
+                          validators, clients, args, 'fake_uuid')
 
     @mock.patch("rally.benchmark.scenarios.base.Scenario.get_by_name")
     def test_validate__no_validators(self, mock_base_get_by_name):
@@ -96,9 +97,12 @@ class ScenarioTestCase(test.TestCase):
             validator.permission = consts.EndpointPermission.ADMIN
 
         FakeScenario.do_it.validators = validators
+        task = mock.MagicMock()
         args = {"a": 1, "b": 2}
-        base.Scenario.validate("FakeScenario.do_it", args, admin="admin")
-        mock_validate_helper.assert_called_once_with(validators, "admin", args)
+        base.Scenario.validate("FakeScenario.do_it", args, admin="admin",
+                               task=task)
+        mock_validate_helper.assert_called_once_with(validators, "admin", args,
+                                                     task)
 
     @mock.patch("rally.benchmark.scenarios.base.Scenario._validate_helper")
     @mock.patch("rally.benchmark.scenarios.base.Scenario.get_by_name")
@@ -120,8 +124,8 @@ class ScenarioTestCase(test.TestCase):
         base.Scenario.validate("FakeScenario.do_it", args, users=["u1", "u2"])
 
         mock_validate_helper.assert_has_calls([
-            mock.call(validators, "u1", args),
-            mock.call(validators, "u2", args)
+            mock.call(validators, "u1", args, None),
+            mock.call(validators, "u2", args, None)
         ])
 
     def test_meta_string_returns_non_empty_list(self):

@@ -21,6 +21,7 @@ from novaclient import exceptions as nova_exc
 
 from rally import consts
 from rally.openstack.common.gettextutils import _
+from rally.verification.verifiers.tempest import tempest
 
 
 class ValidationResult(object):
@@ -218,6 +219,37 @@ def image_valid_on_flavor(flavor_name, image_name):
 
         return ValidationResult()
     return image_valid_on_flavor_validator
+
+
+def tempest_tests_exists():
+    """Returns validator for tempest test."""
+    def tempest_test_exists_validator(**kwargs):
+        verifier = tempest.Tempest(kwargs['task'].task.deployment_uuid)
+        if not verifier.is_installed():
+            verifier.install()
+        if not verifier.is_configured():
+            verifier.generate_config_file()
+
+        allowed_tests = verifier.discover_tests()
+
+        if 'test_name' in kwargs:
+            tests = [kwargs['test_name']]
+        else:
+            tests = kwargs['test_names']
+
+        for test in tests:
+            if not test.startswith('tempest.api.'):
+                tests[tests.index(test)] = 'tempest.api.' + test
+
+        wrong_tests = set(tests) - set(allowed_tests)
+
+        if not wrong_tests:
+            return ValidationResult()
+        else:
+            message = (_("One or more tests not found: '%s'") %
+                       "', '".join(wrong_tests))
+            return ValidationResult(False, message)
+    return tempest_test_exists_validator
 
 
 def required_parameters(params):

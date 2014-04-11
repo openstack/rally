@@ -209,3 +209,11 @@ class InvalidScenarioArgument(RallyException):
 
 class TempestConfigCreationFailure(RallyException):
     msg_fmt = _("Unable create tempest.conf: '%(message)s'")
+
+
+class TempestSetupFailure(RallyException):
+    msg_fmt = _("Unable to setup tempest: '%(message)s'")
+
+
+class BenchmarkSetupFailure(RallyException):
+    msg_fmt = _("Unable to setup benchmark: '%(message)s'")
