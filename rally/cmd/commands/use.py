@@ -16,7 +16,6 @@
 """ Rally command: use """
 
 import os
-import sys
 
 from rally.cmd import cliutils
 from rally import db
@@ -58,14 +57,34 @@ class UseCommands(object):
 
     @cliutils.args('--uuid', type=str, dest='deploy_id', required=False,
                    help='UUID of the deployment')
-    def deployment(self, deploy_id):
+    @cliutils.args('--name', type=str, dest='name', required=False,
+                   help='Name of the deployment')
+    def deployment(self, deploy_id=None, name=None):
         """Set the RALLY_DEPLOYMENT env var to be used by all CLI commands
 
         :param deploy_id: a UUID of a deployment
         """
-        print('Using deployment: %s' % deploy_id)
+        if not (name or deploy_id):
+            print('You should specify --name or --uuid of deployment')
+            return 1
+
+        deploy = None
+
+        if name:
+            deployments = db.deployment_list(name=name)
+            if len(deployments) > 1:
+                print("Multiple deployments found by name: `%s`" % name)
+                return 1
+            elif not deployments:
+                print("There is no `%s` deployment" % name)
+                return 1
+            else:
+                deploy = deployments[0]
+                deploy_id = deploy["uuid"]
+
         try:
-            deploy = db.deployment_get(deploy_id)
+            deploy = deploy or db.deployment_get(deploy_id)
+            print('Using deployment: %s' % deploy_id)
             self._ensure_rally_configuration_dir_exists()
             self._update_attribute_in_global_file('RALLY_DEPLOYMENT',
                                                   deploy_id)
@@ -80,7 +99,7 @@ class UseCommands(object):
                    'glance image-list')
         except exceptions.DeploymentNotFound:
             print('Deployment %s is not found.' % deploy_id)
-            sys.exit(1)
+            return 1
 
     @cliutils.args('--uuid', type=str, dest='task_id', required=False,
                    help='UUID of the task')

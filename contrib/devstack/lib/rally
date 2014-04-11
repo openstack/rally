@@ -123,20 +123,6 @@ function init_rally() {
     fi
 }
 
-# Run benchmarks from samples dir
-function run_all_benchmarks() {
-    for CONF in $DEST/rally/doc/samples/tasks/*/*.yaml; do
-        case "$CONF" in
-            *large-ops*)
-                echo "Skipping large-ops benchmarks."
-                ;;
-            *)
-                rally task start --task $CONF
-                ;;
-        esac
-    done
-}
-
 # Restore xtrace
 $XTRACE
 

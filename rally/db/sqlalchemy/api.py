@@ -22,6 +22,7 @@ import sqlalchemy as sa
 from rally.db.sqlalchemy import models
 from rally import exceptions
 from rally.openstack.common.db.sqlalchemy import session as db_session
+from rally.openstack.common.gettextutils import _
 
 
 CONF = cfg.CONF
@@ -209,10 +210,13 @@ class Connection(object):
             deploy.update(values)
         return deploy
 
-    def deployment_list(self, status=None, parent_uuid=None):
+    def deployment_list(self, status=None, parent_uuid=None, name=None):
         query = self.model_query(models.Deployment).\
                         filter_by(parent_uuid=parent_uuid)
-        if status is not None:
+
+        if name:
+            query = query.filter_by(name=name)
+        if status:
             query = query.filter_by(status=status)
         return query.all()
 

@@ -18,9 +18,12 @@ import os
 import uuid
 
 from rally.cmd.commands import use
+from rally.cmd import envutils
 from rally.openstack.common import test
 
 from rally import exceptions
+
+MOD = 'rally.cmd.commands.use.'
 
 
 class UseCommandsTestCase(test.BaseTestCase):
@@ -28,11 +31,31 @@ class UseCommandsTestCase(test.BaseTestCase):
         super(UseCommandsTestCase, self).setUp()
         self.use = use.UseCommands()
 
+    def test_deployment_use_no_args(self):
+        status = self.use.deployment()
+        self.assertEqual(1, status)
+
+    @mock.patch(MOD + 'UseCommands._update_openrc_deployment_file')
+    @mock.patch(MOD + 'UseCommands._update_attribute_in_global_file')
+    @mock.patch(MOD + 'UseCommands._ensure_rally_configuration_dir_exists')
+    @mock.patch(MOD + 'db')
+    def test_deployment_use_by_name(self, m_db, m_ercde, m_uaigf, m_uodf):
+        fake_deployment = {'uuid': 'fake_uuid',
+                           'endpoints': 'fake_endpoints'}
+        m_db.deployment_list.return_value = [fake_deployment]
+        m_db.deployment_get.return_value = fake_deployment
+        status = self.use.deployment(name='fake_name')
+        self.assertIsNone(status)
+        m_db.deployment_list.assert_called_once_with(name='fake_name')
+        m_ercde.assert_called_once_with()
+        m_uaigf.assert_called_once_with(envutils.ENV_DEPLOYMENT, 'fake_uuid')
+        m_uodf.assert_called_once_with('fake_uuid', 'fake_endpoints')
+
     @mock.patch('os.remove')
     @mock.patch('os.symlink')
-    @mock.patch('rally.cmd.commands.use.db.deployment_get')
+    @mock.patch(MOD + 'db.deployment_get')
     @mock.patch('os.path.exists')
-    @mock.patch('rally.cmd.commands.use.fileutils.update_env_file')
+    @mock.patch(MOD + 'fileutils.update_env_file')
     def test_deployment(self, mock_env, mock_path, mock_deployment,
                         mock_symlink, mock_remove):
         deploy_id = str(uuid.uuid4())
@@ -60,15 +83,15 @@ class UseCommandsTestCase(test.BaseTestCase):
             mock_remove.assert_called_once_with(os.path.expanduser(
                 '~/.rally/openrc'))
 
-    @mock.patch('rally.cmd.commands.use.db.deployment_get')
+    @mock.patch(MOD + 'db.deployment_get')
     def test_deployment_not_found(self, mock_deployment):
         deploy_id = str(uuid.uuid4())
         mock_deployment.side_effect = exceptions.DeploymentNotFound(
             uuid=deploy_id)
-        self.assertRaises(SystemExit, self.use.deployment, deploy_id)
+        self.assertEqual(1, self.use.deployment(deploy_id))
 
-    @mock.patch('rally.cmd.commands.use.fileutils._rewrite_env_file')
-    @mock.patch('rally.cmd.commands.use.db.task_get')
+    @mock.patch(MOD + 'fileutils._rewrite_env_file')
+    @mock.patch(MOD + 'db.task_get')
     def test_task(self, mock_task, mock_file):
         task_id = str(uuid.uuid4())
         mock_task.return_value = True
@@ -77,7 +100,7 @@ class UseCommandsTestCase(test.BaseTestCase):
             os.path.expanduser('~/.rally/globals'),
             ['RALLY_TASK=%s\n' % task_id])
 
-    @mock.patch('rally.cmd.commands.use.db.task_get')
+    @mock.patch(MOD + 'db.task_get')
     def test_task_not_found(self, mock_task):
         task_id = str(uuid.uuid4())
         mock_task.side_effect = exceptions.TaskNotFound(uuid=task_id)
