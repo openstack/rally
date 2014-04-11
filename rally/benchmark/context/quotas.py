@@ -185,7 +185,7 @@ class Quotas(base.Context):
 
     CONFIG_SCHEMA = {
         "type": "object",
-        "$schema": "http://json-schema.org/draft-03/schema",
+        "$schema": utils.JSON_SCHEMA,
         "additionalProperties": False,
         "properties": {
             "nova": NovaQuotas.QUOTAS_SCHEMA,

@@ -19,6 +19,7 @@ import time
 
 from rally.benchmark.runners import base
 from rally.benchmark import utils
+from rally import utils as rutils
 
 
 class PeriodicScenarioRunner(base.ScenarioRunner):
@@ -40,7 +41,7 @@ class PeriodicScenarioRunner(base.ScenarioRunner):
 
     CONFIG_SCHEMA = {
         "type": "object",
-        "$schema": "http://json-schema.org/draft-03/schema",
+        "$schema": rutils.JSON_SCHEMA,
         "properties": {
             "type": {
                 "type": "string"

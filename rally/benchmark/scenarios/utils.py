@@ -39,7 +39,7 @@ class ActionBuilder(object):
 
     SCHEMA_TEMPLATE = {
         "type": "array",
-        "$schema": "http://json-schema.org/draft-03/schema",
+        "$schema": utils.JSON_SCHEMA,
         "items": {
             "type": "object",
             "properties": {},

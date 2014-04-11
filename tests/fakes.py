@@ -501,7 +501,7 @@ class FakeRunner(object):
 
     CONFIG_SCHEMA = {
         "type": "object",
-        "$schema": "http://json-schema.org/draft-04/schema#",
+        "$schema": rally_utils.JSON_SCHEMA,
         "properties": {
             "type": {
                 "type": "string",
@@ -550,7 +550,7 @@ class FakeContext(base_ctx.Context):
 
     CONFIG_SCHEMA = {
         "type": "object",
-        "$schema": "http://json-schema.org/draft-04/schema#",
+        "$schema": rally_utils.JSON_SCHEMA,
         "properties": {
             "test": {
                 "type": "integer"

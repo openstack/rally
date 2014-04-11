@@ -36,7 +36,7 @@ class ResourceCleaner(base.Context):
 
     CONFIG_SCHEMA = {
         "type": "array",
-        "$schema": "http://json-schema.org/draft-04/schema",
+        "$schema": rutils.JSON_SCHEMA,
         "items": {
             "type": "string",
             "enum": ["nova", "glance", "cinder"]

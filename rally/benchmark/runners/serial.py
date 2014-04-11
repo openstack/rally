@@ -14,6 +14,7 @@
 #    under the License.
 
 from rally.benchmark.runners import base
+from rally import utils
 
 
 class SerialScenarioRunner(base.ScenarioRunner):
@@ -32,7 +33,7 @@ class SerialScenarioRunner(base.ScenarioRunner):
     # between parallel and serial runners by modifying only *type* property
     CONFIG_SCHEMA = {
         "type": "object",
-        "$schema": "http://json-schema.org/draft-03/schema",
+        "$schema": utils.JSON_SCHEMA,
         "properties": {
             "type": {
                 "type": "string"

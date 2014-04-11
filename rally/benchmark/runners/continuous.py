@@ -20,6 +20,7 @@ import time
 
 from rally.benchmark.runners import base
 from rally.benchmark import utils
+from rally import utils as rutils
 
 from rally.openstack.common import log as logging
 
@@ -43,7 +44,7 @@ class ContinuousScenarioRunner(base.ScenarioRunner):
 
     CONFIG_SCHEMA = {
         "type": "object",
-        "$schema": "http://json-schema.org/draft-03/schema",
+        "$schema": rutils.JSON_SCHEMA,
         "properties": {
             "type": {
                 "type": "string"

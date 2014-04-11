@@ -81,7 +81,7 @@ class ScenarioRunnerResult(list):
 
     RESULT_SCHEMA = {
         "type": "array",
-        "$schema": "http://json-schema.org/draft-03/schema",
+        "$schema": rutils.JSON_SCHEMA,
         "items": {
             "type": "object",
             "properties": {

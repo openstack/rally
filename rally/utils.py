@@ -25,6 +25,9 @@ from rally.openstack.common.gettextutils import _
 from rally.openstack.common import importutils
 
 
+JSON_SCHEMA = 'http://json-schema.org/draft-04/schema'
+
+
 class ImmutableMixin(object):
     _inited = False
 

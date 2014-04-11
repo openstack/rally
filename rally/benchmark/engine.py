@@ -35,7 +35,7 @@ LOG = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = {
     "type": "object",
-    "$schema": "http://json-schema.org/draft-04/schema#",
+    "$schema": rutils.JSON_SCHEMA,
     "patternProperties": {
         ".*": {
             "type": "array",
