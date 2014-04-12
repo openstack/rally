@@ -43,7 +43,7 @@ class TaskCommands(object):
 
     @cliutils.args('--deploy-id', type=str, dest='deploy_id', required=False,
                    help='UUID of the deployment')
-    @cliutils.args('--task',
+    @cliutils.args('--task', '--filename',
                    help='Path to the file with full configuration of task')
     @cliutils.args('--tag',
                    help='Tag for this task')
@@ -129,7 +129,7 @@ class TaskCommands(object):
                 else:
                     atomic_action_table.add_row(dlist +
                                                 ["N/A" for i in
-                                                range(1, len(headers))])
+                                                 range(1, len(headers))])
             print(atomic_action_table)
             print()
 
@@ -231,7 +231,7 @@ class TaskCommands(object):
                 table.add_row(['n/a', 'n/a', 'n/a', 'n/a', 'n/a', 0, len(raw)])
             print(table)
 
-            #NOTE(hughsaunders): ssrs=scenario specific results
+            # NOTE(hughsaunders): ssrs=scenario specific results
             ssrs = []
             for result in raw:
                 try:
