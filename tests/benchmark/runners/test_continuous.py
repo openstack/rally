@@ -40,7 +40,7 @@ class ContinuousScenarioRunnerTestCase(test.TestCase):
                           continuous.ContinuousScenarioRunner.validate, config)
 
     def test_run_scenario_continuously_for_times(self):
-        context = fakes.FakeUserContext({"task": None}).context
+        context = fakes.FakeUserContext({"task": {"uuid": "uuid"}}).context
 
         runner = continuous.ContinuousScenarioRunner(
                         None, [context["admin"]["endpoint"]], {})
@@ -55,7 +55,7 @@ class ContinuousScenarioRunnerTestCase(test.TestCase):
         self.assertIsNotNone(base.ScenarioRunnerResult(result))
 
     def test_run_scenario_continuously_for_times_exception(self):
-        context = fakes.FakeUserContext({"task": None}).context
+        context = fakes.FakeUserContext({"task": {"uuid": "uuid"}}).context
         runner = continuous.ContinuousScenarioRunner(
                         None, [context["admin"]["endpoint"]], {})
         times = 4

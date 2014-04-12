@@ -43,9 +43,10 @@ def _get_scenario_context(context):
 
 
 def _run_scenario_once(args):
-    i, cls, method_name, context, kwargs = args
+    iteration, cls, method_name, context, kwargs = args
 
-    LOG.info("ITER: %s START" % i)
+    LOG.info("Task %(task)s | ITER: %(iteration)s START" %
+             {"task": context["task"]["uuid"], "iteration": iteration})
 
     scenario = cls(
             context=context,
@@ -64,7 +65,9 @@ def _run_scenario_once(args):
             LOG.exception(e)
     finally:
         status = "Error %s: %s" % tuple(error[0:2]) if error else "OK"
-        LOG.info("ITER: %(i)s END: %(status)s" % {"i": i, "status": status})
+        LOG.info("Task %(task)s | ITER: %(iteration)s END: %(status)s" %
+                 {"task": context["task"]["uuid"], "iteration": iteration,
+                  "status": status})
 
         return {"time": timer.duration() - scenario.idle_time(),
                 "idle_time": scenario.idle_time(),
