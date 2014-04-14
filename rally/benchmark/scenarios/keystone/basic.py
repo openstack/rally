@@ -38,5 +38,15 @@ class KeystoneBasic(kutils.KeystoneScenario):
     def create_tenant_with_users(self, users_per_tenant, name_length=10,
                                  **kwargs):
         tenant = self._tenant_create(name_length=name_length, **kwargs)
-        self._users_create(tenant, users_per_tenant, name_length=name_length,
-                           **kwargs)
+        self._users_create(tenant, users_per_tenant=users_per_tenant,
+                           name_length=name_length)
+
+    @base.scenario(admin_only=True, context={"cleanup": []})
+    def create_and_list_users(self, name_length=10, **kwargs):
+        self._user_create(name_length=name_length, **kwargs)
+        self._list_users()
+
+    @base.scenario(admin_only=True, context={"cleanup": []})
+    def create_and_list_tenants(self, name_length=10, **kwargs):
+        self._tenant_create(name_length=name_length, **kwargs)
+        self._list_tenants()

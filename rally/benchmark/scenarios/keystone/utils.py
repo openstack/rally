@@ -86,3 +86,13 @@ class KeystoneScenario(base.Scenario):
             email = (name + "@rally.me")
             self.admin_clients("keystone").users.create(name, password, email,
                                                         tenant_id=tenant.id)
+
+    @scenario_utils.atomic_action_timer('keystone.list_users')
+    def _list_users(self):
+        """list users."""
+        return self.admin_clients("keystone").users.list()
+
+    @scenario_utils.atomic_action_timer('keystone.list_tenants')
+    def _list_tenants(self):
+        """list tenants."""
+        return self.admin_clients("keystone").tenants.list()

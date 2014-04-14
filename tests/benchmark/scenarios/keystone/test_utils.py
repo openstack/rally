@@ -122,3 +122,25 @@ class KeystoneScenarioTestCase(test.TestCase):
                                                            tenant_id=tenant.id)
         self._test_atomic_action_timer(scenario.atomic_actions_time(),
                                        'keystone.create_users')
+
+    def test_list_users(self):
+        fake_keystone = fakes.FakeKeystoneClient()
+        fake_keystone.users.list = mock.MagicMock()
+        fake_clients = fakes.FakeClients()
+        fake_clients._keystone = fake_keystone
+        scenario = utils.KeystoneScenario(admin_clients=fake_clients)
+        scenario._list_users()
+        fake_keystone.users.list.assert_called_once()
+        self._test_atomic_action_timer(scenario.atomic_actions_time(),
+                                       'keystone.list_users')
+
+    def test_list_tenants(self):
+        fake_keystone = fakes.FakeKeystoneClient()
+        fake_keystone.tenants.list = mock.MagicMock()
+        fake_clients = fakes.FakeClients()
+        fake_clients._keystone = fake_keystone
+        scenario = utils.KeystoneScenario(admin_clients=fake_clients)
+        scenario._list_tenants()
+        fake_keystone.tenants.list.assert_called_once()
+        self._test_atomic_action_timer(scenario.atomic_actions_time(),
+                                       'keystone.list_tenants')
