@@ -257,3 +257,9 @@ def delete_cinder_resources(cinder):
 
 def delete_glance_resources(glance, project_uuid):
     delete_images(glance, project_uuid)
+
+
+def delete_quotas(admin_clients, project_uuid):
+    # TODO(yingjun): We need to add the cinder part for deleting
+    #                quotas when the new cinderclient released.
+    admin_clients.nova().quotas.delete(project_uuid)

@@ -1,0 +1,13 @@
+---
+  Quotas.cinder_update:
+    -
+      args:
+        max_quota: 1024
+      runner:
+        type: "constant"
+        times: 10
+        concurrency: 2
+      context:
+        users:
+          tenants: 3
+          users_per_tenant: 2

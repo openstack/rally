@@ -116,6 +116,10 @@ class FakeKeypair(FakeResource):
     pass
 
 
+class FakeQuotas(FakeResource):
+    pass
+
+
 class FakeSecurityGroup(FakeResource):
 
     def __init__(self, manager=None, rule_manager=None):
@@ -300,6 +304,16 @@ class FakeKeypairManager(FakeManager):
         return self._cache(kp)
 
 
+class FakeNovaQuotasManager(FakeManager):
+
+    def update(self, tenant_id, **kwargs):
+        fq = FakeQuotas(self)
+        return self._cache(fq)
+
+    def delete(self, tenant_id):
+        pass
+
+
 class FakeSecurityGroupManager(FakeManager):
     def __init__(self, rule_manager=None):
         super(FakeSecurityGroupManager, self).__init__()
@@ -436,6 +450,7 @@ class FakeNovaClient(object):
         self.security_group_rules = FakeSecurityGroupRuleManager()
         self.security_groups = FakeSecurityGroupManager(
             rule_manager=self.security_group_rules)
+        self.quotas = FakeNovaQuotasManager()
 
 
 class FakeKeystoneClient(object):
