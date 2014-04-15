@@ -14,6 +14,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import os
+
 from glanceclient import exc as glance_exc
 from novaclient import exceptions as nova_exc
 
@@ -46,6 +48,92 @@ def requires_permission(permission):
         validator.permission = permission
         return validator
     return wrapper
+
+
+def number(param_name=None, minval=None, maxval=None, none_ok=False,
+           integer_only=False):
+    """Number Validator
+
+    Ensure a parameter is within the range [minval, maxval]. This is a
+    closed interval so the end points are included.
+
+    :param param_name: Name of parameter to validate
+    :param minval: Lower endpoint of valid interval
+    :param maxval: Upper endpoint of valid interval
+    :param none_ok: Allow parameter not specified, or paramater=None
+    :param integer_only: Only accept integers
+    """
+
+    def number_validator(**kwargs):
+
+        num_func = float
+        if integer_only:
+            num_func = int
+
+        val = kwargs.get(param_name, None)
+
+        # None may be valid if the scenario sets a sensible default.
+        if none_ok and val is None:
+            return ValidationResult()
+
+        try:
+            number = num_func(val)
+            if minval is not None and number < minval:
+                return ValidationResult(
+                    False,
+                    "%(name)s is %(val)s which is less than the minimum "
+                    "(%(min)s)" % {'name': param_name,
+                                   'val': number,
+                                   'min': minval
+                                   })
+            if maxval is not None and number > maxval:
+                return ValidationResult(
+                    False,
+                    "%(name)s is %(val)s which is greater than the maximum "
+                    "(%(max)s)" % {'name': param_name,
+                                   'val': number,
+                                   'max': maxval
+                                   })
+            return ValidationResult()
+        except (ValueError, TypeError):
+            return ValidationResult(
+                False,
+                "%(name)s is %(val)s which is not a valid %(type)s"
+                % {"name": param_name,
+                   "val": val,
+                   "type": num_func.__name__
+                   })
+    return number_validator
+
+
+def file_exists(param_name, mode=os.R_OK):
+    """File Validator
+
+    Ensure a file exists and can be accessed with the specifie mode.
+
+    :param param_name: Name of parameter to validate
+    :param mode: Access mode to test for. This should be one of:
+        * os.F_OK (file exists)
+        * os.R_OK (file is readable)
+        * os.W_OK (file is writable)
+        * os.X_OK (file is executable)
+
+        If multiple modes are rquired they can be added, eg:
+            mode=os.R_OK+os.W_OK
+    """
+
+    def file_exists_validator(**kwargs):
+        file_name = kwargs.get(param_name)
+        if os.access(file_name, mode):
+            return ValidationResult()
+        else:
+            return ValidationResult(
+                False, "Could not open %(file_name)s with mode %(mode)s "
+                "for paramater %(param_name)s" % {'file_name': file_name,
+                                                  'mode': mode,
+                                                  'param_name': param_name
+                                                  })
+    return file_exists_validator
 
 
 def image_exists(param_name):
