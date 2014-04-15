@@ -58,7 +58,7 @@ class ResourceCleaner(base.Context):
                                           clients.nova()),
                 "glance": functools.partial(utils.delete_glance_resources,
                                             clients.glance(),
-                                            clients.keystone()),
+                                            clients.keystone().tenant_id),
                 "cinder": functools.partial(utils.delete_cinder_resources,
                                             clients.cinder())
             }
