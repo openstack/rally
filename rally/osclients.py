@@ -17,6 +17,7 @@ from ceilometerclient import client as ceilometer
 from cinderclient import client as cinder
 import glanceclient as glance
 from heatclient import client as heat
+from ironicclient import client as ironic
 from keystoneclient import exceptions as keystone_exceptions
 from keystoneclient.v2_0 import client as keystone
 from neutronclient.neutron import client as neutron
@@ -184,4 +185,17 @@ class Clients(object):
                                    timeout=CONF.openstack_client_http_timeout,
                                    insecure=CONF.https_insecure,
                                    cacert=CONF.https_cacert)
+        return client
+
+    @memoize('ironic')
+    def ironic(self, version='1.0'):
+        """Returns Ironic client."""
+        client = ironic.Client(version,
+                               username=self.endpoint.username,
+                               password=self.endpoint.password,
+                               tenant_name=self.endpoint.tenant_name,
+                               auth_url=self.endpoint.auth_url,
+                               timeout=CONF.openstack_client_http_timeout,
+                               insecure=CONF.https_insecure,
+                               cacert=CONF.https_cacert)
         return client

@@ -159,3 +159,22 @@ class OSClientsTestCase(test.TestCase):
             mock_ceilometer.Client.assert_called_once_with("1", **kw)
             self.assertEqual(self.clients.cache["ceilometer"],
                              fake_ceilometer)
+
+    @mock.patch("rally.osclients.ironic")
+    def test_ironic(self, mock_ironic):
+        fake_ironic = fakes.FakeIronicClient()
+        mock_ironic.Client = mock.MagicMock(return_value=fake_ironic)
+        self.assertTrue("ironic" not in self.clients.cache)
+        client = self.clients.ironic()
+        self.assertEqual(client, fake_ironic)
+        kw = {
+            "username": self.endpoint.username,
+            "password": self.endpoint.password,
+            "tenant_name": self.endpoint.tenant_name,
+            "auth_url": self.endpoint.auth_url,
+            "timeout": cfg.CONF.openstack_client_http_timeout,
+            "insecure": cfg.CONF.https_insecure,
+            "cacert": cfg.CONF.https_cacert
+        }
+        mock_ironic.Client.assert_called_once_with("1.0", **kw)
+        self.assertEqual(self.clients.cache["ironic"], fake_ironic)

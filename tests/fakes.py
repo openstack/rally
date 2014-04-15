@@ -486,6 +486,13 @@ class FakeNeutronClient(object):
         pass
 
 
+class FakeIronicClient(object):
+
+    def __init__(self):
+        # TODO(romcheg):Fake Manager subclasses to manage BM nodes.
+        pass
+
+
 class FakeClients(object):
 
     def __init__(self):
