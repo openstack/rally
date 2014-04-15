@@ -48,10 +48,6 @@ class ResourceCleaner(base.Context):
         super(ResourceCleaner, self).__init__(context)
         self.admin = []
         self.users = []
-        if "admin" in context and context["admin"]:
-            self.admin = context["admin"]["endpoint"]
-        if "users" in context and context["users"]:
-            self.users = [u["endpoint"] for u in context["users"]]
 
     @rutils.log_task_wrapper(LOG.info, _("Cleanup users resources."))
     def _cleanup_users_resources(self):
@@ -89,7 +85,10 @@ class ResourceCleaner(base.Context):
 
     @rutils.log_task_wrapper(LOG.info, _("Enter context: `cleanup`"))
     def setup(self):
-        pass
+        if "admin" in self.context and self.context["admin"]:
+            self.admin = self.context["admin"]["endpoint"]
+        if "users" in self.context and self.context["users"]:
+            self.users = [u["endpoint"] for u in self.context["users"]]
 
     @rutils.log_task_wrapper(LOG.info, _("Exit context: `cleanup`"))
     def cleanup(self):

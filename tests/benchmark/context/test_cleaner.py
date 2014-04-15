@@ -41,6 +41,7 @@ class ResourceCleanerTestCase(test.TestCase):
         fake_user_ctx = fakes.FakeUserContext({}).context
         fake_user_ctx["config"] = {"cleanup": ["nova"]}
         res_cleaner = cleaner_ctx.ResourceCleaner(fake_user_ctx)
+        res_cleaner.setup()
 
         res_cleaner._cleanup_users_resources = mock.MagicMock()
         res_cleaner._cleanup_admin_resources = mock.MagicMock()
