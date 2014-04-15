@@ -40,6 +40,7 @@ class DeploymentCommandsTestCase(test.BaseTestCase):
                                   'OS_USERNAME': 'fake_username',
                                   'OS_PASSWORD': 'fake_password',
                                   'OS_TENANT_NAME': 'fake_tenant_name',
+                                  'OS_REGION_NAME': 'fake_region_name',
                                   'RALLY_DEPLOYMENT': 'fake_deployment_id'})
     @mock.patch('rally.cmd.commands.deployment.api.create_deploy')
     def test_createfromenv(self, mock_create):
@@ -51,7 +52,8 @@ class DeploymentCommandsTestCase(test.BaseTestCase):
                     "auth_url": 'fake_auth_url',
                     "username": 'fake_username',
                     "password": 'fake_password',
-                    "tenant_name": 'fake_tenant_name'
+                    "tenant_name": 'fake_tenant_name',
+                    "region_name": 'fake_region_name'
                 }
             },
             'from_env'
