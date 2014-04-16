@@ -76,7 +76,8 @@ class VerifyCommands(object):
                   'Created at', 'Status']
         verifications = db.verification_list()
         if verifications:
-            common_cliutils.print_list(verifications, fields, sortby_index=6)
+            common_cliutils.print_list(verifications, fields,
+                                       sortby_index=fields.index('Created at'))
         else:
             print(_("There are no results from verifier. To run a verifier, "
                     "use:\nrally verify start"))
