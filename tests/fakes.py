@@ -385,6 +385,12 @@ class FakeVolumeBackupManager(FakeManager):
 
 class FakeRolesManager(FakeManager):
 
+    def create(self, role_id, name):
+        role = FakeRole(self)
+        role.name = name
+        role.id = role_id
+        return self._cache(role)
+
     def roles_for_user(self, user, tenant):
         role = FakeRole(self)
         role.name = 'admin'
