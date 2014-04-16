@@ -35,6 +35,7 @@ class NovaScenarioTestCase(test.TestCase):
         super(NovaScenarioTestCase, self).setUp()
         self.server = mock.Mock()
         self.server1 = mock.Mock()
+        self.floating_ip = mock.Mock()
         self.image = mock.Mock()
         self.res_is = mockpatch.Patch(BM_UTILS + ".resource_is")
         self.get_fm = mockpatch.Patch(BM_UTILS + '.get_from_manager')
@@ -270,3 +271,98 @@ class NovaScenarioTestCase(test.TestCase):
         self.res_is.mock.assert_has_calls(mock.call('ACTIVE'))
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        'nova.boot_servers')
+
+    @mock.patch(NOVA_UTILS + '.NovaScenario.clients')
+    def test__list_floating_ip_pools(self, mock_clients):
+        pools_list = []
+        mock_clients("nova").floating_ip_pools.list.return_value = pools_list
+        nova_scenario = utils.NovaScenario()
+        return_pools_list = nova_scenario._list_floating_ip_pools()
+        self.assertEqual(pools_list, return_pools_list)
+        self._test_atomic_action_timer(nova_scenario.atomic_actions(),
+                                       'nova.list_floating_ip_pools')
+
+    @mock.patch(NOVA_UTILS + '.NovaScenario.clients')
+    def test__list_floating_ips(self, mock_clients):
+        floating_ips_list = []
+        mock_clients("nova").floating_ips.list.return_value = floating_ips_list
+        nova_scenario = utils.NovaScenario()
+        return_floating_ips_list = nova_scenario._list_floating_ips()
+        self.assertEqual(floating_ips_list, return_floating_ips_list)
+        self._test_atomic_action_timer(nova_scenario.atomic_actions(),
+                                       'nova.list_floating_ips')
+
+    @mock.patch(NOVA_UTILS + '.NovaScenario.clients')
+    def test__create_floating_ip(self, mock_clients):
+        mock_clients("nova").floating_ips.create.return_value = \
+            self.floating_ip
+        nova_scenario = utils.NovaScenario()
+        return_floating_ip = nova_scenario._create_floating_ip("public")
+        self.assertEqual(self.floating_ip, return_floating_ip)
+        self._test_atomic_action_timer(nova_scenario.atomic_actions(),
+                                       'nova.create_floating_ip')
+
+    @mock.patch(NOVA_UTILS + '.NovaScenario.clients')
+    def test__delete_floating_ip(self, mock_clients):
+        nova_scenario = utils.NovaScenario()
+        nova_scenario._delete_floating_ip(self.floating_ip)
+        mock_clients("nova").floating_ips.delete.assert_called_once_with(
+            self.floating_ip)
+        self._test_atomic_action_timer(nova_scenario.atomic_actions(),
+                                       'nova.delete_floating_ip')
+
+    def test__associate_floating_ip(self):
+        nova_scenario = utils.NovaScenario()
+        nova_scenario._associate_floating_ip(self.server, self.floating_ip)
+        self.server.add_floating_ip.assert_called_once_with(self.floating_ip,
+                                                            fixed_address=None)
+        self._test_atomic_action_timer(nova_scenario.atomic_actions(),
+                                       'nova.associate_floating_ip')
+
+    def test__dissociate_floating_ip(self):
+        nova_scenario = utils.NovaScenario()
+        nova_scenario._dissociate_floating_ip(self.server, self.floating_ip)
+        self.server.remove_floating_ip.assert_called_once_with(
+            self.floating_ip)
+        self._test_atomic_action_timer(nova_scenario.atomic_actions(),
+                                       'nova.dissociate_floating_ip')
+
+    def test__check_ip_address(self):
+        nova_scenario = utils.NovaScenario()
+        fake_server = fakes.FakeServerManager().create("test_server",
+                                                       "image_id_01",
+                                                       "flavor_id_01")
+        fake_server.addresses = {
+            "private": [
+                {"version": 4, "addr": "1.2.3.4"},
+            ]}
+        floating_ip = fakes.FakeFloatingIP()
+        floating_ip.ip = "10.20.30.40"
+
+        # Also test function check_ip_address accept a string as attr
+        self.assertFalse(
+            nova_scenario.check_ip_address(floating_ip.ip)(fake_server))
+        self.assertTrue(
+            nova_scenario.check_ip_address(floating_ip.ip, must_exist=False)
+            (fake_server))
+
+        fake_server.addresses["private"].append(
+            {"version": 4, "addr": floating_ip.ip}
+        )
+        # Also test function check_ip_address accept an object with attr ip
+        self.assertTrue(
+            nova_scenario.check_ip_address(floating_ip)
+            (fake_server))
+        self.assertFalse(
+            nova_scenario.check_ip_address(floating_ip, must_exist=False)
+            (fake_server))
+
+    @mock.patch(NOVA_UTILS + '.NovaScenario.clients')
+    def test__list_networks(self, mock_clients):
+        network_list = []
+        mock_clients("nova").networks.list.return_value = network_list
+        nova_scenario = utils.NovaScenario()
+        return_network_list = nova_scenario._list_networks()
+        self.assertEqual(network_list, return_network_list)
+        self._test_atomic_action_timer(nova_scenario.atomic_actions(),
+                                       'nova.list_networks')

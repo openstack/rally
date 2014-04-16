@@ -134,6 +134,10 @@ class FakeFloatingIP(FakeResource):
     pass
 
 
+class FakeFloatingIPPool(FakeResource):
+    pass
+
+
 class FakeTenant(FakeResource):
 
     def __init__(self, manager, name):
@@ -335,6 +339,12 @@ class FakeFloatingIPsManager(FakeManager):
 
     def create(self):
         return FakeFloatingIP(self)
+
+
+class FakeFloatingIPPoolsManager(FakeManager):
+
+    def create(self):
+        return FakeFloatingIPPool(self)
 
 
 class FakeTenantsManager(FakeManager):
@@ -565,6 +575,7 @@ class FakeNovaClient(object):
         else:
             self.servers = FakeServerManager(self.images)
         self.floating_ips = FakeFloatingIPsManager()
+        self.floating_ip_pools = FakeFloatingIPPoolsManager()
         self.networks = FakeNetworkManager()
         self.flavors = FakeFlavorManager()
         self.keypairs = FakeKeypairManager()

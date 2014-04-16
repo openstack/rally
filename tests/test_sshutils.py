@@ -104,7 +104,7 @@ class SSHTestCase(test.TestCase):
             mock.call.set_missing_host_key_policy('autoadd'),
             mock.call.connect('example.net', username='admin',
                               port=22, pkey='key', key_filename=None,
-                              password=None),
+                              password=None, timeout=1),
         ]
         self.assertEqual(client_calls, client.mock_calls)
 

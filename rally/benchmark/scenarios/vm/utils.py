@@ -14,8 +14,11 @@
 #    under the License.
 
 
+import subprocess
+
 from rally.benchmark.scenarios import base
 from rally.benchmark.scenarios import utils as scenario_utils
+from rally.benchmark import utils as bench_utils
 from rally import sshutils
 
 
@@ -29,12 +32,19 @@ class VMScenario(base.Scenario):
         """
         return ssh.execute(interpreter, stdin=open(script, "rb"))
 
-    @scenario_utils.atomic_action_timer('vm.wait_for_network')
-    def wait_for_network(self, ssh):
+    @scenario_utils.atomic_action_timer('vm.wait_for_ssh')
+    def wait_for_ssh(self, ssh):
         ssh.wait()
 
-    def run_command(self, server, username, network, port, ip_version,
-                    interpreter, script):
+    @scenario_utils.atomic_action_timer('vm.wait_for_ping')
+    def wait_for_ping(self, server_ip):
+        bench_utils.wait_for(
+            server_ip,
+            is_ready=self.ping_ip_address,
+            timeout=120
+        )
+
+    def run_command(self, server_ip, port, username, interpreter, script):
         """Run command via SSH on server.
 
         Create SSH connection for server, wait for server to become
@@ -42,21 +52,38 @@ class VMScenario(base.Scenario):
         and sshd being available). Then call __run_command to actually
         execute the command.
         """
-
-        if network not in server.addresses:
-            raise ValueError(
-                "Can't find cloud network %(network)s, so cannot boot "
-                "instance for Rally scenario boot-runcommand-delete. "
-                "Available networks: %(networks)s" % (
-                    dict(network=network,
-                         networks=server.addresses.keys()
-                         )
-                )
-            )
-        server_ip = [ip for ip in server.addresses[network] if
-                     ip["version"] == ip_version][0]["addr"]
+        self.wait_for_ping(server_ip)
         ssh = sshutils.SSH(username, server_ip, port=port,
                            pkey=self.context()["user"]["keypair"]["private"])
 
-        self.wait_for_network(ssh)
+        self.wait_for_ssh(ssh)
         return self.run_action(ssh, interpreter, script)
+
+    @staticmethod
+    def check_network(server, network):
+        """Check if a server is attached to the specified network.
+
+        :param server: The server object to consider
+        :param network: The name of the network to search for.
+
+        :raises: `ValueError` if server is not attached to network.
+        """
+        if network not in server.addresses:
+            raise ValueError(
+                "Server %(server_name)s is not attached to"
+                " network %(network)s. "
+                "Attached networks are: %(networks)s" % {
+                    "server_name": server.name,
+                    "network": network,
+                    "networks": server.addresses.keys()
+                }
+            )
+
+    @staticmethod
+    def ping_ip_address(host, should_succeed=True):
+        cmd = ['ping', '-c1', '-w1', host]
+        proc = subprocess.Popen(cmd,
+                                stdout=subprocess.PIPE,
+                                stderr=subprocess.PIPE)
+        proc.wait()
+        return (proc.returncode == 0) == should_succeed

@@ -20,11 +20,7 @@ from rally.benchmark.scenarios.nova import utils as nova_utils
 from rally.benchmark.scenarios.vm import utils as vm_utils
 from rally.benchmark import types as types
 from rally.benchmark import validation
-from rally.openstack.common.gettextutils import _  # noqa
-from rally.openstack.common import log as logging
-
-
-LOG = logging.getLogger(__name__)
+from rally import exceptions
 
 
 class VMTasks(nova_utils.NovaScenario, vm_utils.VMScenario):
@@ -38,44 +34,100 @@ class VMTasks(nova_utils.NovaScenario, vm_utils.VMScenario):
     @validation.add(validation.file_exists("script"))
     @validation.add(validation.number("port", minval=1, maxval=65535,
                                       nullable=True, integer_only=True))
+    @validation.add(validation.external_network_exists("floating_network",
+                                                       "use_floatingip"))
     @base.scenario(context={"cleanup": ["nova"],
                    "keypair": {}, "allow_ssh": {}})
     def boot_runcommand_delete(self, image, flavor,
-                               script, interpreter, network='private',
-                               username='ubuntu', ip_version=4,
-                               port=22, **kwargs):
+                               script, interpreter, username,
+                               fixed_network="private",
+                               floating_network="public",
+                               ip_version=4, port=22,
+                               use_floatingip=True, **kwargs):
         """Boot server, run a script that outputs JSON, delete server.
 
-        Parameters:
-        script: script to run on the server, must output JSON mapping metric
-                names to values. See sample script below.
-        network: Network to choose address to connect to instance from
-        username: User to SSH to instance as
-        ip_version: Version of ip protocol to use for connection
+        :param script: script to run on the server, must output JSON mapping
+                metric names to values. See sample script below.
+        :param interpreter: The shell interpreter to use when running script
+        :param username: User to SSH to instance as
+        :param fixed_network: Network where instance is part of
+        :param floating_network: External network used to get floating ip from
+        :param ip_version: Version of ip protocol to use for connection
+        :param port: Port to use for SSH connection
+        :param use_floatingip: Whether to associate a floating ip for
+                connection
 
-        returns: Dictionary containing two keys, data and errors. Data is JSON
+        :returns: Dictionary containing two keys, data and errors. Data is JSON
                  data output by the script. Errors is raw data from the
                  script's standard error stream.
 
 
         Example Script in doc/samples/support/instance_dd_test.sh
         """
-        server = self._boot_server(
-            self._generate_random_name("rally_novaserver_"),
-            image, flavor, key_name='rally_ssh_key', **kwargs)
-
-        code, out, err = self.run_command(server, username, network, port,
-                                          ip_version, interpreter, script)
-        if code:
-            LOG.error(_("Error running script on instance via SSH. "
-                        "Error: %s") % err)
+        server = None
+        floating_ip = None
         try:
-            out = json.loads(out)
-        except ValueError:
-            LOG.warning(_("Script %s did not output valid JSON.") % script)
+            server = self._boot_server(
+                self._generate_random_name("rally_novaserver_"),
+                image, flavor, key_name='rally_ssh_key', **kwargs)
 
-        self._delete_server(server)
-        LOG.debug("Output streams from in-instance script execution: "
-                  "stdout: %(stdout)s, stderr: $(stderr)s" % dict(
-                      stdout=out, stderr=err))
+            self.check_network(server, fixed_network)
+
+            fixed_ip = [ip for ip in server.addresses[fixed_network] if
+                        ip["version"] == ip_version][0]["addr"]
+
+            if use_floatingip:
+                floating_ip = self._create_floating_ip(floating_network)
+                self._associate_floating_ip(server, floating_ip)
+                server_ip = floating_ip.ip
+            else:
+                server_ip = fixed_ip
+
+            code, out, err = self.run_command(server_ip, port,
+                                              username, interpreter, script)
+
+            if code:
+                raise exceptions.ScriptError(
+                    "Error running script %(script)s."
+                    "Error %(code)s: %(error)s" % {
+                        "script": script,
+                        "code": code,
+                        "error": err
+                    })
+
+            try:
+                out = json.loads(out)
+            except ValueError as e:
+                raise exceptions.ScriptError(
+                    "Script %(script)s did not output valid JSON: %(error)s" %
+                    {
+                        "script": script,
+                        "error": str(e)
+                    }
+                )
+
+        # Always try to free resources
+        finally:
+            if use_floatingip:
+                self._release_server_floating_ip(server, floating_ip)
+            if server:
+                self._delete_server(server)
+
         return {"data": out, "errors": err}
+
+    def _release_server_floating_ip(self, server, floating_ip):
+        """Release a floating ip associated to a server.
+
+        This method check that the given floating ip is associated with the
+        specified server and tries to dissociate it.
+        Once dissociated, release the floating ip to reintegrate
+        it to the pool of available ips.
+
+        :param server: The server to dissociate the floating ip from
+        :param floating_ip: The floating ip to release
+        """
+        if floating_ip and server:
+            if self.check_ip_address(floating_ip)(server):
+                self._dissociate_floating_ip(server, floating_ip)
+        if floating_ip:
+            self._delete_floating_ip(floating_ip)
