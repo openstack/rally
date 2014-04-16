@@ -138,7 +138,7 @@ class TaskCommandsTestCase(test.BaseTestCase):
         force = False
         with mock.patch("rally.cmd.commands.task.api") as mock_api:
             mock_api.delete_task = mock.Mock()
-            self.task.delete(force, task_uuid)
+            self.task.delete(task_uuid, force=force)
             mock_api.delete_task.assert_called_once_with(task_uuid,
                                                          force=force)
 

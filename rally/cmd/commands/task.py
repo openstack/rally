@@ -339,7 +339,7 @@ class TaskCommands(object):
     @cliutils.args('--force', action='store_true', help='force delete')
     @cliutils.args('--uuid', type=str, dest='task_id', help='uuid of task')
     @envutils.with_default_task_id
-    def delete(self, force, task_id=None):
+    def delete(self, task_id=None, force=False):
         """Delete a specific task and related results.
 
         :param task_id: Task uuid
