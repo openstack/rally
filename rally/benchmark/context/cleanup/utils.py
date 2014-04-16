@@ -32,6 +32,10 @@ def delete_glance_resources(glance, project_uuid):
     delete_images(glance, project_uuid)
 
 
+def delete_heat_resources(heat):
+    delete_stacks(heat)
+
+
 def delete_keystone_resources(keystone):
     for resource in ["users", "tenants", "services", "roles"]:
         _delete_single_keystone_resource_type(keystone, resource)
@@ -55,6 +59,13 @@ def delete_quotas(admin_clients, project_uuid):
     # TODO(yingjun): We need to add the cinder part for deleting
     #                quotas when the new cinderclient released.
     admin_clients.nova().quotas.delete(project_uuid)
+
+
+def delete_stacks(heat):
+    for stack in heat.stacks.list():
+        stack.delete()
+    _wait_for_list_statuses(heat.stacks, statuses=["DELETE_COMPLETE"],
+                            timeout=600, check_interval=3)
 
 
 def delete_volumes(cinder):
@@ -144,7 +155,8 @@ def _wait_for_list_statuses(mgr, statuses, list_query=None,
 
     def _list_statuses(mgr):
         for resource in mgr.list(**list_query):
-            if resource.status not in statuses:
+            status = bench_utils.get_status(resource)
+            if status not in statuses:
                 return False
         return True
 

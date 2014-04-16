@@ -43,6 +43,14 @@ def resource_is(status):
     return lambda resource: resource.status.upper() == status.upper()
 
 
+def get_status(resource):
+    # workaround for heat resources - using stack_status instead of status
+    if ((hasattr(resource, "stack_status") and
+         isinstance(resource.stack_status, basestring))):
+        return resource.stack_status.upper()
+    return resource.status.upper()
+
+
 def get_from_manager(error_statuses=None):
     error_statuses = error_statuses or ["ERROR"]
     error_statuses = map(lambda str: str.upper(), error_statuses)
@@ -57,8 +65,9 @@ def get_from_manager(error_statuses=None):
             raise exceptions.GetResourceFailure(resource=resource, err=e)
 
         # catch abnormal status, such as "no valid host" for servers
-        status = res.status.upper()
-        if status == "DELETED":
+        status = get_status(res)
+
+        if status in ("DELETED", "DELETE_COMPLETE"):
             raise exceptions.GetResourceNotFound(resource=res)
         if status in error_statuses:
             if isinstance(res.manager, servers.ServerManager):

@@ -207,3 +207,25 @@
         type: "constant"
         times: 10
         concurrency: 10
+
+  HeatStacks.create_and_list_stack:
+    -
+      runner:
+        type: "constant"
+        times: 10
+        concurrency: 1
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+
+  HeatStacks.create_and_delete_stack:
+    -
+      runner:
+        type: "constant"
+        times: 10
+        concurrency: 2
+      context:
+        users:
+          tenants: 2
+          users_per_tenant: 3
