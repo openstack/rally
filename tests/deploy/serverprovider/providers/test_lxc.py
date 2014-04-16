@@ -359,7 +359,9 @@ class LxcProviderTestCase(test.BaseTestCase):
         self.provider.resources = mock.Mock()
         self.provider.resources.get_all.return_value = [fake_resource]
 
-        self.provider.destroy_servers()
+        with mock.patch.object(self.provider, 'get_host_provider') as ghp:
+            ghp.return_value = fake_host_provider = mock.Mock()
+            self.provider.destroy_servers()
 
         m_lxchost.assert_called_once_with('fake_server', 'fake_config')
         host_calls = [mock.call.destroy_containers(),
@@ -367,3 +369,4 @@ class LxcProviderTestCase(test.BaseTestCase):
                       mock.call.delete_tunnels()]
         self.assertEqual(host_calls, fake_host.mock_calls)
         self.provider.resources.delete.assert_called_once_with('fake_res_id')
+        fake_host_provider.destroy_servers.assert_called_once_with()
