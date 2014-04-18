@@ -19,6 +19,23 @@ import os
 from rally import exceptions
 from rally import fileutils
 
+ENV_DEPLOYMENT = 'RALLY_DEPLOYMENT'
+ENV_TASK = 'RALLY_TASK'
+ENVVARS = [ENV_DEPLOYMENT, ENV_TASK]
+
+
+def clear_global(global_key):
+    path = os.path.expanduser('~/.rally/globals')
+    if os.path.exists(path):
+        fileutils.update_env_file(path, global_key, '\n')
+    if global_key in os.environ:
+        os.environ.pop(global_key)
+
+
+def clear_env():
+    for envvar in ENVVARS:
+        clear_global(envvar)
+
 
 def get_global(global_key, do_raise=False):
     if global_key not in os.environ:
@@ -39,6 +56,5 @@ def default_from_global(arg_name, env_name):
         return f(*args, **kwargs)
     return decorator.decorator(default_from_global)
 
-
-with_default_deploy_id = default_from_global('deploy_id', 'RALLY_DEPLOYMENT')
-with_default_task_id = default_from_global('task_id', 'RALLY_TASK')
+with_default_deploy_id = default_from_global('deploy_id', ENV_DEPLOYMENT)
+with_default_task_id = default_from_global('task_id', ENV_TASK)

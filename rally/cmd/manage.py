@@ -31,6 +31,7 @@ class DBCommands(object):
     def recreate(self):
         db.db_drop()
         db.db_create()
+        envutils.clear_env()
 
 
 class TempestCommands(object):
