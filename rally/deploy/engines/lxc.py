@@ -42,7 +42,7 @@ class LxcEngine(engine.EngineFactory):
     {
         "type": "LxcEngine",
         "provider": {
-            "name": "DummyProvider",
+            "type": "DummyProvider",
             "credentials": [{"user": "root", "host": "example.net"}]
         },
         "distribution": "ubuntu",
@@ -71,7 +71,7 @@ class LxcEngine(engine.EngineFactory):
                                        'pattern': '^(\d+\.){3}\d+$'}},
             'container_name': {'type': 'string'},
             'provider': {'type': 'object',
-                         'properties': {'name': {'type': 'string'}}},
+                         'properties': {'type': {'type': 'string'}}},
         },
         'required': ['type', 'containers_per_host', 'container_name',
                      'provider']
@@ -95,7 +95,7 @@ class LxcEngine(engine.EngineFactory):
         # filter out all keys where value is None
         credentials = dict(filter(lambda x: x[1] is not None, items))
         engine_config = self.config['engine'].copy()
-        engine_config['provider'] = {'name': 'DummyProvider',
+        engine_config['provider'] = {'type': 'DummyProvider',
                                      'credentials': [credentials]}
         deployment = objects.Deployment(config=engine_config,
                                         parent_uuid=self.deployment['uuid'])

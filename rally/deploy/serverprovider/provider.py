@@ -121,7 +121,7 @@ class ProviderFactory(object):
     @staticmethod
     def get_provider(config, deployment):
         """Returns instance of vm provider by name."""
-        name = config['name']
+        name = config['type']
         for provider in utils.itersubclasses(ProviderFactory):
             if name == provider.__name__:
                 return provider(deployment, config)

@@ -1,7 +1,7 @@
 {
     "type": "MultihostEngine",
     "controller": {
-        "name": "DevstackEngine",
+        "type": "DevstackEngine",
         "localrc": {
             "MULTI_HOST": "1",
             "VIRT_DRIVER": "fake",
@@ -10,24 +10,24 @@
             "SCREEN_LOGDIR": "$DEST/logs/screen"
         },
         "provider": {
-            "name": "LxcProvider",
+            "type": "LxcProvider",
             "containers_per_host": 1,
             "container_name_prefix": "controller",
             "distribution": "ubuntu",
             "host_provider": {
-                "name": "DummyProvider",
+                "type": "DummyProvider",
                 "credentials": [{"user": "root", "host": "localhost"}]
             }
         }
     },
     "nodes": [
         {
-            "name": "LxcEngine",
+            "type": "LxcEngine",
             "distribution": "ubuntu",
             "container_name": "devstack-compute",
             "nodes_per_server": 64,
             "provider": {
-                "name": "DummyProvider",
+                "type": "DummyProvider",
                 "credentials": [{"user": "root", "host": "localhost"}]
             },
             "engine": {

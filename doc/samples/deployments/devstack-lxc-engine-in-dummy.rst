@@ -28,7 +28,7 @@ Please note: VIRT_DRIVER=fake on controller node is mandatory.
 This node should be deployed in lxc container, so we use the LxcProvider::
 
     "provider": {
-        "name": "LxcProvider",
+        "type": "LxcProvider",
         "containers_per_host": 1,
         "container_name_prefix": "controller",
         "distribution": "ubuntu",
@@ -54,7 +54,7 @@ compute instance via the devstack engine, then makes N clones using lxc-clone.
     "container_name": "devstack-compute",
     "nodes_per_server": 64,
     "provider": {
-        "name": "DummyProvider",
+        "type": "DummyProvider",
         "credentials": [{"user": "root", "host": "localhost"}]
     },
     "engine": {
@@ -97,7 +97,7 @@ Here is an example of a complete configuration file, assembled from the snippets
     {
         "type": "MultihostEngine",
         "controller": {
-            "name": "DevstackEngine",
+            "type": "DevstackEngine",
             "localrc": {
                 "MULTI_HOST": "1",
                 "VIRT_DRIVER": "fake",
@@ -106,24 +106,24 @@ Here is an example of a complete configuration file, assembled from the snippets
                 "SCREEN_LOGDIR": "$DEST/logs/screen"
             },
             "provider": {
-                "name": "LxcProvider",
+                "type": "LxcProvider",
                 "containers_per_host": 1,
                 "container_name_prefix": "controller",
                 "distribution": "ubuntu",
                 "host_provider": {
-                    "name": "DummyProvider",
+                    "type": "DummyProvider",
                     "credentials": [{"user": "root", "host": "localhost"}]
                 }
             }
         },
         "nodes": [
             {
-                "name": "LxcEngine",
+                "type": "LxcEngine",
                 "distribution": "ubuntu",
                 "container_name": "devstack-compute",
                 "nodes_per_server": 64,
                 "provider": {
-                    "name": "DummyProvider",
+                    "type": "DummyProvider",
                     "credentials": [{"user": "root", "host": "localhost"}]
                 },
                 "engine": {

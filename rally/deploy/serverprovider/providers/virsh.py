@@ -26,7 +26,7 @@ class VirshProvider(provider.ProviderFactory):
     '''Creates VMs from prebuilt templates.
     config example:
         "vm_provider": {
-            "name": "VirshProvider",
+            "type": "VirshProvider",
             "connection": "alex@performance-01",  # ssh connection to vms host
             "template_name": "stack-01-devstack-template",  # vm image template
             "template_user": "ubuntu",  # vm user to launch devstack
@@ -37,7 +37,7 @@ class VirshProvider(provider.ProviderFactory):
     CONFIG_SCHEMA = {
         'type': 'object',
         'properties': {
-            'name': {
+            'type': {
                 'type': 'string'
             },
             'connection': {

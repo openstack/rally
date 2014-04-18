@@ -58,11 +58,11 @@ class ProviderTestCase(test.TestCase):
     def test_get_provider_not_found(self):
         self.assertRaises(exceptions.NoSuchVMProvider,
                           ProviderFactory.get_provider,
-                          {"name": "fail"}, None)
+                          {"type": "fail"}, None)
 
     def test_get_provider(self):
         for p in FAKE_PROVIDERS:
-                p_inst = ProviderFactory.get_provider({"name": p.__name__},
+                p_inst = ProviderFactory.get_provider({"type": p.__name__},
                                                       None)
                 self.assertIsInstance(p_inst, p)
 

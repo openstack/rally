@@ -4,7 +4,7 @@
         "VIRT_DRIVER": "fake"
     },
     "provider": {
-        "name": "LxcProvider",
+        "type": "LxcProvider",
         "containers_per_host": 4,
         "container_name_prefix": "rally-providertest-02-",
         "start_lxc_network": "10.100.1.0/28",
@@ -12,7 +12,7 @@
         "distribution": "ubuntu",
         "release": "raring",
         "host_provider": {
-            "name": "ExistingServers",
+            "type": "ExistingServers",
             "credentials": [{"user": "root", "host": "10.2.250.103"}]
         }
     }

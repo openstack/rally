@@ -29,18 +29,18 @@ class TestMultihostEngine(test.TestCase):
     def setUp(self):
         super(TestMultihostEngine, self).setUp()
         self.config = {
-            "name": "MultihostEngine",
+            "type": "MultihostEngine",
             "controller": {
-                "name": "DummyEngine",
+                "type": "DummyEngine",
                 "endpoint": {'auth_url': 'http://h1.net'}
             },
             "nodes": [
                 {
-                    "name": "DummyEngine",
+                    "type": "DummyEngine",
                     "endpoint": {'auth_url': 'endpoint1'},
                 },
                 {
-                    "name": "DummyEngine",
+                    "type": "DummyEngine",
                     "endpoint": {'auth_url': 'endpoint2',
                                  'cnt': '{controller_ip}'}
                 }

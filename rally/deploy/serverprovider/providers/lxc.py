@@ -255,7 +255,7 @@ class LxcProvider(provider.ProviderFactory):
 
     Sample configuration:
     {
-        "name": "LxcProvider",
+        "type": "LxcProvider",
         "distribution": "ubuntu",
         "start_lxc_network": "10.1.1.0/24",
         "containers_per_host": 32,
@@ -263,7 +263,7 @@ class LxcProvider(provider.ProviderFactory):
         "forward_ssh": false,
         "container_name_prefix": "rally-multinode-02",
         "host_provider": {
-            "name": "ExistingServers",
+            "type": "ExistingServers",
             "credentials": [{"user": "root", "host": "host.net"}]
         }
     }
@@ -273,7 +273,7 @@ class LxcProvider(provider.ProviderFactory):
     CONFIG_SCHEMA = {
         'type': 'object',
         'properties': {
-            'name': {'type': 'string'},
+            'type': {'type': 'string'},
             'distribution': {'type': 'string'},
             'release': {'type': 'string'},
             'start_lxc_network': {'type': 'string',
@@ -285,9 +285,9 @@ class LxcProvider(provider.ProviderFactory):
                                        'pattern': '^(\d+\.){3}\d+$'}},
             'container_name_prefix': {'type': 'string'},
             'host_provider': {'type': 'object',
-                              'properties': {'name': {'type': 'string'}}},
+                              'properties': {'type': {'type': 'string'}}},
         },
-        'required': ['name', 'containers_per_host',
+        'required': ['type', 'containers_per_host',
                      'container_name_prefix', 'host_provider'],
 
     }

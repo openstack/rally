@@ -35,7 +35,7 @@ class ExistingServers(provider.ProviderFactory):
     CONFIG_SCHEMA = {
         'type': 'object',
         'properties': {
-            'name': {'type': 'string'},
+            'type': {'type': 'string'},
             'credentials': {
                 'type': 'array',
                 'items': CREDENTIALS_SCHEMA

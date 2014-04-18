@@ -40,7 +40,7 @@ class LxcEngineTestCase(test.TestCase):
                 },
             },
             'provider': {
-                'name': 'DummyProvider',
+                'type': 'DummyProvider',
                 'credentials': [{'user': 'root', 'host': 'host1.net'},
                                 {'user': 'root', 'host': 'host2.net'}]
             }
@@ -78,7 +78,7 @@ class LxcEngineTestCase(test.TestCase):
             'FakeEngine', fake_deployment)
         engine_config = self.config['engine'].copy()
         engine_config['provider'] = {'credentials': [fake_credentials],
-                                     'name': 'DummyProvider'}
+                                     'type': 'DummyProvider'}
         m_objects.Deployment.assert_called_once_with(
             config=engine_config, parent_uuid='test-deployment-uuid')
 

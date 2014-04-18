@@ -40,7 +40,7 @@ class OpenStackProvider(provider.ProviderFactory):
     Sample configuration:
 
     {
-        "name": "OpenStackProvider",
+        "type": "OpenStackProvider",
         "amount": 42
         "user": "admin",
         "tenant": "admin",
@@ -61,7 +61,7 @@ class OpenStackProvider(provider.ProviderFactory):
     CONFIG_SCHEMA = {
         'type': 'object',
         'properties': {
-            'name': {'type': 'string'},
+            'type': {'type': 'string'},
             'deployment_name': {'type': 'string'},
             'amount': {'type': 'integer'},
             'user': {'type': 'string'},

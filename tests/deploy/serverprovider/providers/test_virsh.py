@@ -28,7 +28,7 @@ class VirshProviderTestCase(test.BaseTestCase):
         super(VirshProviderTestCase, self).setUp()
         self.deployment = mock.Mock()
         self.config = {
-            'name': 'VirshProvider',
+            'type': 'VirshProvider',
             'connection': 'user@host',
             'template_name': 'prefix',
             'template_user': 'user',
@@ -121,7 +121,7 @@ class VirshProviderTestCase(test.BaseTestCase):
         self.provider.resources.get_all.assert_called_once_with()
 
     def test_invalid_config(self):
-        self.config['name'] = 42
+        self.config['type'] = 42
         self.assertRaises(jsonschema.ValidationError, virsh.VirshProvider,
                           self.deployment, self.config)
 

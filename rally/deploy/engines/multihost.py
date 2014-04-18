@@ -30,9 +30,9 @@ class MultihostEngine(engine.EngineFactory):
     {
         "type": "MultihostEngine",
         "controller": {
-            "name": "DevstackEngine",
+            "type": "DevstackEngine",
             "provider": {
-                "name": "DummyProvider"
+                "type": "DummyProvider"
             }
         },
         "nodes": [
@@ -64,7 +64,7 @@ class MultihostEngine(engine.EngineFactory):
     def _deploy_node(self, config):
         deployment = objects.Deployment(config=config,
                                         parent_uuid=self.deployment['uuid'])
-        deployer = engine.EngineFactory.get_engine(config['name'], deployment)
+        deployer = engine.EngineFactory.get_engine(config['type'], deployment)
         with deployer:
             endpoints = deployer.make_deploy()
         return deployer, endpoints

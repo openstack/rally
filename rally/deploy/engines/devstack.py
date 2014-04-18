@@ -52,7 +52,7 @@ class DevstackEngine(engine.EngineFactory):
                 "ADMIN_PASSWORD": "secret"
             },
             "provider": {
-                "name": "ExistingServers",
+                "type": "ExistingServers",
                 "credentials": [{'user': 'root', 'host': '10.2.0.8'}]
             }
         }

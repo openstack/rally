@@ -255,7 +255,7 @@ class LxcProviderTestCase(test.BaseTestCase):
     def setUp(self):
         super(LxcProviderTestCase, self).setUp()
         self.config = {
-            'name': 'LxcProvider',
+            'type': 'LxcProvider',
             'distribution': 'ubuntu',
             'start_lxc_network': '10.1.1.0/29',
             'containers_per_host': 2,
