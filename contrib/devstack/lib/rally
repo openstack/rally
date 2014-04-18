@@ -61,7 +61,7 @@ RALLY_ADD_DEPLOYMENT=$(trueorfalse True $RALLY_ADD_DEPLOYMENT)
 function _create_deployment_config() {
     cat >$1 <<EOF
 {
-    "name": "ExistingCloud",
+    "type": "ExistingCloud",
     "endpoint": {
         "auth_url": "$KEYSTONE_SERVICE_PROTOCOL://$KEYSTONE_SERVICE_HOST:$KEYSTONE_SERVICE_PORT/v$IDENTITY_API_VERSION",
         "username": "admin",
