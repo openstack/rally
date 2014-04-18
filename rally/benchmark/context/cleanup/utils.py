@@ -98,6 +98,16 @@ def delete_keypairs(nova):
     _wait_for_empty_list(nova.keypairs)
 
 
+def delete_neutron_networks(neutron, project_uuid):
+    for network in neutron.list_networks()['networks']:
+        if network['tenant_id'] == project_uuid:
+            neutron.delete_network(network['id'])
+
+
+def delete_neutron_resources(neutron, project_uuid):
+    delete_neutron_networks(neutron, project_uuid)
+
+
 def _wait_for_empty_list(mgr, timeout=10, check_interval=1):
     _wait_for_list_size(mgr, sizes=[0], timeout=timeout,
                         check_interval=check_interval)
