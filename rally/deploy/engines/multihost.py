@@ -36,9 +36,9 @@ class MultihostEngine(engine.EngineFactory):
             }
         },
         "nodes": [
-            {"name": "Engine1", "config": "Config1"},
-            {"name": "Engine2", "config": "Config2"},
-            {"name": "Engine3", "config": "Config3"},
+            {"type": "Engine1", "config": "Config1"},
+            {"type": "Engine2", "config": "Config2"},
+            {"type": "Engine3", "config": "Config3"},
         ]
     }
 
@@ -49,7 +49,7 @@ class MultihostEngine(engine.EngineFactory):
     ...
     "nodes": [
         {
-            "name": "DevstackEngine",
+            "type": "DevstackEngine",
             "localrc": {
                 "GLANCE_HOSTPORT": "{controller_ip}:9292",
     ...
