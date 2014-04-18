@@ -24,7 +24,7 @@ class ExistingCloud(engine.EngineFactory):
        To use ExistingCloud you should put in a config endpoint key, e.g:
 
             {
-                "name": "ExistingCloud",
+                "type": "ExistingCloud",
                 "endpoint": {
                     "auth_url": "http://localhost:5000/v2.0/",
                     "username": "admin",
@@ -39,7 +39,7 @@ class ExistingCloud(engine.EngineFactory):
     CONFIG_SCHEMA = {
         'type': 'object',
         'properties': {
-            'name': {'type': 'string'},
+            'type': {'type': 'string'},
             'endpoint': {
                 'type': 'object',
                 'properties': {
@@ -53,7 +53,7 @@ class ExistingCloud(engine.EngineFactory):
                              'tenant_name'],
             },
         },
-        'required': ['name', 'endpoint'],
+        'required': ['type', 'endpoint'],
     }
 
     def deploy(self):

@@ -1,5 +1,5 @@
 {
-    "name": "DevstackEngine",
+    "type": "DevstackEngine",
     "provider": {
         "name": "OpenStackProvider",
         "deployment_name": "Rally sample deployment",

@@ -67,7 +67,7 @@ class DeploymentCommands(object):
                 return(1)
 
             config = {
-                "name": "ExistingCloud",
+                "type": "ExistingCloud",
                 "endpoint": {
                     "auth_url": os.environ['OS_AUTH_URL'],
                     "username": os.environ['OS_USERNAME'],

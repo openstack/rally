@@ -1,5 +1,5 @@
 {
-    "name": "DevstackEngine",
+    "type": "DevstackEngine",
     "localrc": {
         "VIRT_DRIVER": "fake"
     },

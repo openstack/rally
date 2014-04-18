@@ -1,5 +1,5 @@
 {
-    "name": "MultihostEngine",
+    "type": "MultihostEngine",
     "controller": {
         "name": "DevstackEngine",
         "localrc": {

@@ -22,7 +22,7 @@ from rally.openstack.common import test
 
 
 SAMPLE_CONFIG = {
-    'name': 'DevstackEngine',
+    'type': 'DevstackEngine',
     'provider': {
         'name': 'ExistingServers',
         'credentials': [{'user': 'root', 'host': 'example.com'}],
@@ -47,7 +47,7 @@ class DevstackEngineTestCase(test.BaseTestCase):
 
     def test_invalid_config(self):
         self.deployment = SAMPLE_CONFIG.copy()
-        self.deployment['config'] = {'name': 42}
+        self.deployment['config'] = {'type': 42}
         self.assertRaises(jsonschema.ValidationError,
                           devstack.DevstackEngine, self.deployment)
 

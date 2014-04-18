@@ -27,7 +27,7 @@ class LxcEngineTestCase(test.TestCase):
     def setUp(self):
         super(LxcEngineTestCase, self).setUp()
         self.config = {
-            'name': 'LxcEngine',
+            'type': 'LxcEngine',
             'container_name': 'rally',
             'containers_per_host': 2,
             'tunnel_to': ['1.1.1.1', '2.2.2.2'],
