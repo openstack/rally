@@ -13,7 +13,7 @@ Controller
 ----------
 ::
 
-    "name": "DevstackEngine",
+    "type": "DevstackEngine",
     "localrc": {
         "MULTI_HOST": "1",
         "VIRT_DRIVER": "fake",
@@ -49,7 +49,7 @@ compute instance via the devstack engine, then makes N clones using lxc-clone.
 
 ::
 
-    "name": "LxcEngine",
+    "type": "LxcEngine",
     "distribution": "ubuntu",
     "container_name": "devstack-compute",
     "nodes_per_server": 64,
@@ -82,7 +82,7 @@ MultihostEngine
 The MultihostEngine configuration contains sections for configuring the controller and compute
 nodes, for example::
 
-    "name": "MultihostEngine",
+    "type": "MultihostEngine",
     "controller": {
         // CONTROLLER CONFIGURATION HERE
     }
@@ -95,7 +95,7 @@ nodes, for example::
 Here is an example of a complete configuration file, assembled from the snippets above::
 
     {
-        "name": "MultihostEngine",
+        "type": "MultihostEngine",
         "controller": {
             "name": "DevstackEngine",
             "localrc": {
@@ -203,7 +203,7 @@ are only connected to isolated virtual networks within each node. For communicat
 lxc containers ipip tunneling is used. In this example we need to connect all the lxc-containers
 to controller node. So, we add the option "tunnel_to": ["192.168.1.13"]::
 
-    "name": "LxcEngine",
+    "type": "LxcEngine",
     "distribution": "ubuntu",
     "container_name": "devstack-compute",
     "nodes_per_server": 64,

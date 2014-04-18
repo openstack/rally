@@ -1,5 +1,5 @@
 {
-    "name": "ExistingCloud",
+    "type": "ExistingCloud",
     "endpoint": {
         "auth_url": "http://example.net:5000/v2.0/",
         "username": "admin",

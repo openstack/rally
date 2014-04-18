@@ -40,7 +40,7 @@ class LxcEngine(engine.EngineFactory):
     Sample configuration:
 
     {
-        "name": "LxcEngine",
+        "type": "LxcEngine",
         "provider": {
             "name": "DummyProvider",
             "credentials": [{"user": "root", "host": "example.net"}]
@@ -60,7 +60,7 @@ class LxcEngine(engine.EngineFactory):
     CONFIG_SCHEMA = {
         'type': 'object',
         'properties': {
-            'name': {'type': 'string'},
+            'type': {'type': 'string'},
             'distribution': {'type': 'string'},
             'release': {'type': 'string'},
             'start_lxc_network': {'type': 'string',
@@ -73,7 +73,7 @@ class LxcEngine(engine.EngineFactory):
             'provider': {'type': 'object',
                          'properties': {'name': {'type': 'string'}}},
         },
-        'required': ['name', 'containers_per_host', 'container_name',
+        'required': ['type', 'containers_per_host', 'container_name',
                      'provider']
     }
 

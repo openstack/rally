@@ -46,7 +46,7 @@ class DevstackEngine(engine.EngineFactory):
 
     Sample of a configuration:
         {
-            "name": "DevstackEngine",
+            "type": "DevstackEngine",
             "devstack_repo": "git://example.com/devstack/",
             "localrc": {
                 "ADMIN_PASSWORD": "secret"
@@ -61,13 +61,13 @@ class DevstackEngine(engine.EngineFactory):
     CONFIG_SCHEMA = {
         'type': 'object',
         'properties': {
-            'name': {'type': 'string'},
+            'type': {'type': 'string'},
             'provider': {'type': 'object'},
             'localrc': {'type': 'object'},
             'devstack_repo': {'type': 'string'},
             'devstack_branch': {'type': 'string'},
         },
-        'required': ['name', 'provider']
+        'required': ['type', 'provider']
     }
 
     def __init__(self, deployment):

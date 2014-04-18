@@ -28,10 +28,10 @@ class MultihostEngine(engine.EngineFactory):
     Sample configuration:
 
     {
-        "name": "MultihostEngine",
+        "type": "MultihostEngine",
         "controller": {
             "name": "DevstackEngine",
-            "provier": {
+            "provider": {
                 "name": "DummyProvider"
             }
         },

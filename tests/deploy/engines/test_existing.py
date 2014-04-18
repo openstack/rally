@@ -26,7 +26,7 @@ class TestExistingCloud(test.TestCase):
     def setUp(self):
         self.deployment = {
             'config': {
-                'name': 'ExistingCloud',
+                'type': 'ExistingCloud',
                 'endpoint': {
                     'auth_url': 'http://example.net:5000/v2.0/',
                     'username': 'admin',
@@ -56,7 +56,7 @@ class TestExistingCloud(test.TestCase):
         existing.ExistingCloud(self.deployment).cleanup()
 
     def test_is_in_factory(self):
-        name = self.deployment['config']['name']
+        name = self.deployment['config']['type']
         engine = deploy.EngineFactory.get_engine(name,
                                                  self.deployment)
         self.assertIsInstance(engine, existing.ExistingCloud)

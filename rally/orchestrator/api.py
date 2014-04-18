@@ -31,7 +31,7 @@ def create_deploy(config, name):
     :param name: a str represents a name of the deployment
     """
     deployment = objects.Deployment(name=name, config=config)
-    deployer = deploy.EngineFactory.get_engine(deployment['config']['name'],
+    deployer = deploy.EngineFactory.get_engine(deployment['config']['type'],
                                                deployment)
     with deployer:
         endpoints = deployer.make_deploy()
@@ -49,7 +49,7 @@ def destroy_deploy(deploy_uuid):
     # TODO(akscram): Check that the deployment have got a status that
     #                is equal to "*->finised" or "deploy->inconsistent".
     deployment = objects.Deployment.get(deploy_uuid)
-    deployer = deploy.EngineFactory.get_engine(deployment['config']['name'],
+    deployer = deploy.EngineFactory.get_engine(deployment['config']['type'],
                                                deployment)
     with deployer:
         deployer.make_cleanup()
@@ -64,7 +64,7 @@ def recreate_deploy(deploy_uuid):
     :param deploy_uuid: UUID of the deployment
     """
     deployment = objects.Deployment.get(deploy_uuid)
-    deployer = deploy.EngineFactory.get_engine(deployment['config']['name'],
+    deployer = deploy.EngineFactory.get_engine(deployment['config']['type'],
                                                deployment)
     with deployer:
         deployer.make_cleanup()

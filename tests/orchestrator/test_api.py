@@ -26,7 +26,7 @@ from tests import test
 
 FAKE_DEPLOY_CONFIG = {
     # TODO(akscram): A fake engine is more suitable for that.
-    'name': 'ExistingCloud',
+    'type': 'ExistingCloud',
     'endpoint': {
         'auth_url': 'http://example.net:5000/v2.0/',
         'username': 'admin',
