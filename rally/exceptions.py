@@ -217,3 +217,7 @@ class TempestSetupFailure(RallyException):
 
 class BenchmarkSetupFailure(RallyException):
     msg_fmt = _("Unable to setup benchmark: '%(message)s'")
+
+
+class DummyScenarioException(RallyException):
+    msg_fmt = _("Dummy scenario expected exception: '%(message)s'")
