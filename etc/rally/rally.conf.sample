@@ -404,6 +404,6 @@
 
 # How many concurrent threads use for serving users context
 # (integer value)
-#concurrent=1
+#concurrent=30
 
 

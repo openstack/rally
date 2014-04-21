@@ -90,7 +90,10 @@ class FakeFloatingIP(FakeResource):
 
 
 class FakeTenant(FakeResource):
-    pass
+
+    def __init__(self, manager, name):
+        super(FakeTenant, self).__init__(manager)
+        self.name = name
 
 
 class FakeUser(FakeResource):
@@ -166,6 +169,7 @@ class FakeManager(object):
     def __init__(self):
         super(FakeManager, self).__init__()
         self.cache = {}
+        self.resources_order = []
 
     def get(self, resource_uuid):
         return self.cache.get(resource_uuid, None)
@@ -174,17 +178,16 @@ class FakeManager(object):
         cached = self.get(resource_uuid)
         if cached is not None:
             cached.status = "DELETED"
-            del self.cache[cached.uuid]
+            del self.cache[resource_uuid]
+            self.resources_order.remove(resource_uuid)
 
     def _cache(self, resource):
+        self.resources_order.append(resource.uuid)
         self.cache[resource.uuid] = resource
         return resource
 
     def list(self, **kwargs):
-        resources = []
-        for uuid in self.cache.keys():
-            resources.append(self.cache[uuid])
-        return resources
+        return [self.cache[key] for key in self.resources_order]
 
     def find(self, **kwargs):
         for resource in self.cache.values():
@@ -271,7 +274,7 @@ class FakeFloatingIPsManager(FakeManager):
 class FakeTenantsManager(FakeManager):
 
     def create(self, name):
-        return self._cache(FakeTenant(self))
+        return self._cache(FakeTenant(self, name))
 
 
 class FakeNetworkManager(FakeManager):

@@ -13,8 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import uuid
-
 from oslo.config import cfg
 from rally.benchmark.context import base
 from rally.benchmark import utils
@@ -29,10 +27,10 @@ from rally import utils as rutils
 LOG = logging.getLogger(__name__)
 
 context_opts = [
-    cfg.IntOpt('concurrent',
-               default=1,
-               help='How many concurrent threads use for'
-                    ' serving users context'),
+    cfg.IntOpt("concurrent",
+               default=30,
+               help="How many concurrent threads use for serving users "
+                    "context")
 ]
 
 CONF = cfg.CONF
@@ -67,8 +65,8 @@ class UserGenerator(base.Context):
         },
         "additionalProperties": False
     }
-    PATTERN_TENANT = "temp_%(run_id)s_tenant_%(iter)i"
-    PATTERN_USER = "%(tenant_id)s_user_%(uid)d"
+    PATTERN_TENANT = "ctx_rally_%(task_id)s_tenant_%(iter)i"
+    PATTERN_USER = "ctx_rally_%(tenant_id)s_user_%(uid)d"
 
     def __init__(self, context):
         super(UserGenerator, self).__init__(context)
@@ -94,12 +92,12 @@ class UserGenerator(base.Context):
         :returns: tuple (dict tenant, list users)
         """
 
-        admin_endpoint, users_num, run_id, i = args
+        admin_endpoint, users_num, task_id, i = args
         users = []
 
         client = osclients.Clients(admin_endpoint).keystone()
         tenant = client.tenants.create(
-            cls.PATTERN_TENANT % {"run_id": run_id, "iter": i})
+            cls.PATTERN_TENANT % {"task_id": task_id, "iter": i})
 
         LOG.debug("Creating %d users for tenant %s" % (users_num, tenant.id))
 
@@ -112,7 +110,9 @@ class UserGenerator(base.Context):
                                               "password", tenant.name,
                                               consts.EndpointPermission.USER,
                                               client.region_name)
-            users.append({"id": user.id, "endpoint": user_endpoint})
+            users.append({"id": user.id,
+                          "endpoint": user_endpoint,
+                          "tenant_id": tenant.id})
 
         return ({"id": tenant.id, "name": tenant.name}, users)
 
@@ -155,9 +155,8 @@ class UserGenerator(base.Context):
         """Create tenants and users, using pool of threads."""
 
         users_num = self.config["users_per_tenant"]
-        run_id = str(uuid.uuid4())
 
-        args = [(self.endpoint, users_num, run_id, i)
+        args = [(self.endpoint, users_num, self.task["uuid"], i)
                 for i in range(self.config["tenants"])]
 
         LOG.debug("Creating %d users using %s threads" % (
