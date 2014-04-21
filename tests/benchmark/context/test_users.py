@@ -89,19 +89,17 @@ class UserGeneratorTestCase(test.TestCase):
         fc = fakes.FakeClients()
         mock_osclients.Clients.return_value = fc
 
-        with users.UserGenerator(self.context) as generator:
-
-            # Setup (must be called obviously)
+        with users.UserGenerator(self.context) as ctx:
             self.assertEqual(len(fc.keystone().users.list()), 0)
             self.assertEqual(len(fc.keystone().tenants.list()), 0)
 
-            generator.setup()
+            ctx.setup()
 
-            self.assertEqual(len(generator.context["users"]),
+            self.assertEqual(len(ctx.context["users"]),
                              self.users_num)
             self.assertEqual(len(fc.keystone().users.list()),
                              self.users_num)
-            self.assertEqual(len(generator.context["tenants"]),
+            self.assertEqual(len(ctx.context["tenants"]),
                              self.tenants_num)
             self.assertEqual(len(fc.keystone().tenants.list()),
                              self.tenants_num)
@@ -109,3 +107,50 @@ class UserGeneratorTestCase(test.TestCase):
         # Cleanup (called by content manager)
         self.assertEqual(len(fc.keystone().users.list()), 0)
         self.assertEqual(len(fc.keystone().tenants.list()), 0)
+
+    @mock.patch("rally.benchmark.context.users.osclients")
+    def test_users_and_tenants_in_context(self, mock_osclients):
+        fc = fakes.FakeClients()
+        mock_osclients.Clients.return_value = fc
+
+        task = {"uuid": "abcdef"}
+
+        config = {
+            "config": {
+                "users": {
+                    "tenants": 2,
+                    "users_per_tenant": 2,
+                    "concurrent": 1
+                }
+            },
+            "admin": {"endpoint": mock.MagicMock()},
+            "task": task
+        }
+
+        with users.UserGenerator(config) as ctx:
+            ctx.setup()
+
+            tenants = []
+            for i, t in enumerate(fc.keystone().tenants.list()):
+                pattern = users.UserGenerator.PATTERN_TENANT
+                tenants.append({
+                    "id": t.id,
+                    "name": pattern % {"task_id": task["uuid"], "iter": i}
+                })
+
+            self.assertEqual(ctx.context["tenants"], tenants)
+
+            for user in ctx.context["users"]:
+                self.assertEqual(set(["id", "endpoint", "tenant_id"]),
+                                 set(user.keys()))
+
+            tenants_ids = []
+            for t in tenants:
+                tenants_ids.extend([t["id"], t["id"]])
+
+            users_ids = [user.id for user in fc.keystone().users.list()]
+
+            for (user, tenant_id, user_id) in zip(ctx.context["users"],
+                                                  tenants_ids, users_ids):
+                self.assertEqual(user["id"], user_id)
+                self.assertEqual(user["tenant_id"], tenant_id)
