@@ -26,10 +26,10 @@ class ConstantScenarioRunnerTestCase(test.TestCase):
     def setUp(self):
         super(ConstantScenarioRunnerTestCase, self).setUp()
         times = 4
-        active_users = 2
+        concurrency = 2
         timeout = 2
         type = "constant"
-        self.config = {"times": times, "active_users": active_users,
+        self.config = {"times": times, "concurrency": concurrency,
                        "timeout": timeout, "type": type}
         self.context = fakes.FakeUserContext({"task":
                                              {"uuid": "uuid"}}).context
@@ -80,10 +80,10 @@ class ConstantForDurationScenarioRunnerTeestCase(test.TestCase):
     def setUp(self):
         super(ConstantForDurationScenarioRunnerTeestCase, self).setUp()
         duration = 0
-        active_users = 2
+        concurrency = 2
         timeout = 2
         type = "constant_for_duration"
-        self.config = {"duration": duration, "active_users": active_users,
+        self.config = {"duration": duration, "concurrency": concurrency,
                        "timeout": timeout, "type": type}
         self.context = fakes.FakeUserContext({"task":
                                              {"uuid": "uuid"}}).context

@@ -7,7 +7,7 @@
             "runner": {
                 "type": "constant",
                 "times": 100,
-                "active_users": 10
+                "concurrency": 10
             }
         }
     ]

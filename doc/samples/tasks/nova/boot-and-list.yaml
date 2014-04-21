@@ -8,7 +8,7 @@
       runner:
         type: "constant"
         times: 1
-        active_users: 1
+        concurrency: 1
       context:
         users:
           tenants: 1

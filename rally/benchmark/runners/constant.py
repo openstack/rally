@@ -34,7 +34,7 @@ class ConstantScenarioRunner(base.ScenarioRunner):
     executing each scenario iteration without pausing between iterations
     up to the number of times specified in the scenario config.
 
-    The active_users parameter of the scenario config controls the
+    The concurrency parameter of the scenario config controls the
     number of concurrent scenarios which execute during a single
     iteration in order to simulate the activities of multiple users
     placing load on the cloud under test.
@@ -49,7 +49,7 @@ class ConstantScenarioRunner(base.ScenarioRunner):
             "type": {
                 "type": "string"
             },
-            "active_users": {
+            "concurrency": {
                 "type": "integer",
                 "minimum": 1
             },
@@ -74,11 +74,11 @@ class ConstantScenarioRunner(base.ScenarioRunner):
     def _run_scenario(self, cls, method, context, args):
 
         timeout = self.config.get("timeout", 600)
-        active_users = self.config.get("active_users", 1)
+        concurrency = self.config.get("concurrency", 1)
         # NOTE(msdubov): If not specified, perform single scenario run.
         times = self.config.get("times", 1)
 
-        pool = multiprocessing.Pool(active_users)
+        pool = multiprocessing.Pool(concurrency)
         iter_result = pool.imap(base._run_scenario_once,
                                 self._iter_scenario_args(cls, method, context,
                                                          args, times))
@@ -106,7 +106,7 @@ class ConstantForDurationScenarioRunner(base.ScenarioRunner):
     executing each scenario iteration without pausing between iterations
     until a specified interval of time has elapsed.
 
-    The active_users parameter of the scenario config controls the
+    The concurrency parameter of the scenario config controls the
     number of concurrent scenarios which execute during a single
     iteration in order to simulate the activities of multiple users
     placing load on the cloud under test.
@@ -121,7 +121,7 @@ class ConstantForDurationScenarioRunner(base.ScenarioRunner):
             "type": {
                 "type": "string"
             },
-            "active_users": {
+            "concurrency": {
                 "type": "integer",
                 "minimum": 1
             },
@@ -147,16 +147,16 @@ class ConstantForDurationScenarioRunner(base.ScenarioRunner):
     def _run_scenario(self, cls, method, context, args):
 
         timeout = self.config.get("timeout", 600)
-        active_users = self.config.get("active_users", 1)
+        concurrency = self.config.get("concurrency", 1)
         duration = self.config.get("duration")
 
-        pool = multiprocessing.Pool(active_users)
+        pool = multiprocessing.Pool(concurrency)
 
         run_args = utils.infinite_run_args_generator(
                     self._iter_scenario_args(cls, method, context, args))
         iter_result = pool.imap(base._run_scenario_once, run_args)
 
-        results_queue = collections.deque([], maxlen=active_users)
+        results_queue = collections.deque([], maxlen=concurrency)
         start = time.time()
         while True:
             try:

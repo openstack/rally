@@ -45,7 +45,7 @@ FAKE_TASK_CONFIG = {
                 'type': 'constant',
                 'timeout': 10000,
                 'times': 3,
-                'active_users': 2,
+                'concurrency': 2,
             },
             'context': {
                 'users': {
@@ -145,7 +145,7 @@ class APITestCase(test.TestCase):
                         'type': 'constant',
                         'timeout': 10000,
                         'times': 3,
-                        'active_users': 2,
+                        'concurrency': 2,
                     },
                     'context': {
                         'users': {
