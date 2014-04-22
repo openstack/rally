@@ -167,3 +167,57 @@ class LogTestCase(test.TestCase):
             mock.call(_("Task %(uuid)s | Completed: %(msg)s") % params)
         ]
         self.assertEqual(mock_log.mock_calls, expected)
+
+
+class LoadExtraModulesTestCase(test.TestCase):
+
+    @mock.patch("rally.utils.imp.load_module")
+    @mock.patch("rally.utils.imp.find_module")
+    @mock.patch("rally.utils.os.path.exists")
+    @mock.patch("rally.utils.os.path.isfile")
+    @mock.patch("rally.utils.os.listdir")
+    def test_load_plugins_successfull(self, mock_listdir, mock_isfile,
+                                      mock_exists, mock_find_module,
+                                      mock_load_module):
+        mock_listdir.return_value = ["plugin1.py", "plugin2.py",
+                                     "somethingnotpythonmodule",
+                                     "somestrangedir.py"]
+        mock_exists.return_value = True
+
+        # check we don't try to load something that is not file
+        def isfile_side_effect(*args):
+            return args[0] != "/somewhere/somestrangedir.py"
+        mock_isfile.side_effect = isfile_side_effect
+
+        mock_find_module.return_value = (mock.MagicMock(), None, None)
+        test_path = "/somewhere"
+        utils.load_plugins(test_path)
+        expected = [
+            mock.call("plugin1", ["/somewhere"]),
+            mock.call("plugin2", ["/somewhere"])
+        ]
+        self.assertEqual(mock_find_module.mock_calls, expected)
+        self.assertEqual(len(mock_load_module.mock_calls), 2)
+
+    @mock.patch("rally.utils.os")
+    def test_load_plugins_from_nonexisting_and_empty_dir(self, mock_os):
+        # test no fails for nonexisting directory
+        mock_os.path.exists.return_value = False
+        utils.load_plugins("/somewhere")
+        # test no fails for empty directory
+        mock_os.path.exists.return_value = True
+        mock_os.listdir.return_value = []
+        utils.load_plugins("/somewhere")
+
+    @mock.patch("rally.utils.imp.load_module")
+    @mock.patch("rally.utils.imp.find_module")
+    @mock.patch("rally.utils.os.path")
+    @mock.patch("rally.utils.os.listdir")
+    def test_load_plugins_fails(self, mock_oslistdir, mock_ospath,
+                                mock_load_module, mock_find_module):
+        mock_ospath.exists.return_value = True
+        mock_oslistdir.return_value = ["somebrokenplugin.py", ]
+        mock_load_module.side_effect = Exception()
+        # test no fails if module is broken
+        # TODO(olkonami): check exception is handled correct
+        utils.load_plugins("/somwhere")
