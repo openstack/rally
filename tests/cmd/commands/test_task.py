@@ -151,8 +151,3 @@ class TaskCommandsTestCase(test.TestCase):
         expected_calls = [mock.call(task_uuid, force=force) for task_uuid
                           in task_uuids]
         self.assertTrue(mock_api.delete_task.mock_calls == expected_calls)
-
-    def test_percentile(self):
-        l = range(1, 101)
-        result = task.percentile(l, 0.1)
-        self.assertTrue(result == 10.9)
