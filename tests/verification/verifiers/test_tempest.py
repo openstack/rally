@@ -59,7 +59,7 @@ class TempestTestCase(test.TestCase):
     def test__clone(self, mock_sp):
         self.verifier._clone()
         mock_sp.check_call.assert_called_once_with(
-            ['git', 'clone', 'git://github.com/openstack/tempest',
+            ['git', 'clone', 'https://github.com/openstack/tempest',
              tempest.Tempest.tempest_base_path])
 
     @mock.patch(TEMPEST_PATH + '.tempest.Tempest._initialize_testr')

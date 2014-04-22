@@ -47,7 +47,7 @@ class DevstackEngine(engine.EngineFactory):
     Sample of a configuration:
         {
             "type": "DevstackEngine",
-            "devstack_repo": "git://example.com/devstack/",
+            "devstack_repo": "https://example.com/devstack/",
             "localrc": {
                 "ADMIN_PASSWORD": "secret"
             },
