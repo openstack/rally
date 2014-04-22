@@ -53,6 +53,14 @@ class _EndpointPermission(utils.ImmutableMixin, utils.EnumMixin):
     USER = "user"
 
 
+class _RunnerType(utils.ImmutableMixin, utils.EnumMixin):
+    SERIAL = "serial"
+    CONSTANT = "constant"
+    CONSTANT_FOR_DURATION = "constant_for_duration"
+    PERIODIC = "periodic"
+
+
 TaskStatus = _TaskStatus()
 DeployStatus = _DeployStatus()
 EndpointPermission = _EndpointPermission()
+RunnerType = _RunnerType()

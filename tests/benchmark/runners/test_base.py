@@ -18,6 +18,7 @@ import mock
 
 from rally.benchmark.runners import base
 from rally.benchmark.runners import constant
+from rally.benchmark.runners import serial
 from rally.benchmark.scenarios import base as base_scenario
 from rally import consts
 from rally import exceptions
@@ -201,7 +202,7 @@ class ScenarioRunnerTestCase(test.TestCase):
         base.ScenarioRunner.validate(config)
         mock_validate.assert_called_once_with(
                 config,
-                constant.ConstantScenarioRunner.CONFIG_SCHEMA)
+                serial.SerialScenarioRunner.CONFIG_SCHEMA)
 
     @mock.patch("rally.benchmark.runners.base.base_ctx.ContextManager")
     def test_run(self, mock_ctx_manager):

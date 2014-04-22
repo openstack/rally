@@ -23,6 +23,7 @@ from oslo.config import cfg
 from rally.benchmark.context import base as base_ctx
 from rally.benchmark.scenarios import base
 from rally.benchmark import utils
+from rally import consts
 from rally import exceptions
 from rally.openstack.common import log as logging
 from rally import osclients
@@ -169,7 +170,8 @@ class ScenarioRunner(object):
     @staticmethod
     def validate(config):
         """Validates runner's part of task config."""
-        runner = ScenarioRunner._get_cls(config.get("type", "constant"))
+        runner = ScenarioRunner._get_cls(config.get("type",
+                                                    consts.RunnerType.SERIAL))
         jsonschema.validate(config, runner.CONFIG_SCHEMA)
 
     @abc.abstractmethod

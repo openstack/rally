@@ -14,6 +14,7 @@
 #    under the License.
 
 from rally.benchmark.runners import base
+from rally import consts
 from rally import utils
 
 
@@ -27,7 +28,7 @@ class SerialScenarioRunner(base.ScenarioRunner):
     from the same command that you use to start Rally.
     """
 
-    __execution_type__ = "serial"
+    __execution_type__ = consts.RunnerType.SERIAL
 
     # NOTE(mmorais): additionalProperties is set True to allow switching
     # between parallel and serial runners by modifying only *type* property

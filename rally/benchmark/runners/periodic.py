@@ -19,6 +19,7 @@ import time
 
 from rally.benchmark.runners import base
 from rally.benchmark import utils
+from rally import consts
 from rally import utils as rutils
 
 
@@ -37,7 +38,7 @@ class PeriodicScenarioRunner(base.ScenarioRunner):
     a certain cloud can handle.
     """
 
-    __execution_type__ = "periodic"
+    __execution_type__ = consts.RunnerType.PERIODIC
 
     CONFIG_SCHEMA = {
         "type": "object",

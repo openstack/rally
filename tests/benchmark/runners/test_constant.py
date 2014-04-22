@@ -17,6 +17,7 @@ import jsonschema
 
 from rally.benchmark.runners import base
 from rally.benchmark.runners import constant
+from rally import consts
 from tests import fakes
 from tests import test
 
@@ -28,7 +29,7 @@ class ConstantScenarioRunnerTestCase(test.TestCase):
         times = 4
         concurrency = 2
         timeout = 2
-        type = "constant"
+        type = consts.RunnerType.CONSTANT
         self.config = {"times": times, "concurrency": concurrency,
                        "timeout": timeout, "type": type}
         self.context = fakes.FakeUserContext({"task":
@@ -39,7 +40,7 @@ class ConstantScenarioRunnerTestCase(test.TestCase):
         constant.ConstantScenarioRunner.validate(self.config)
 
     def test_validate_failed(self):
-        self.config["type"] = "constant_for_duration"
+        self.config["type"] = consts.RunnerType.CONSTANT_FOR_DURATION
         self.assertRaises(jsonschema.ValidationError,
                           constant.ConstantScenarioRunner.validate,
                           self.config)
@@ -82,7 +83,7 @@ class ConstantForDurationScenarioRunnerTeestCase(test.TestCase):
         duration = 0
         concurrency = 2
         timeout = 2
-        type = "constant_for_duration"
+        type = consts.RunnerType.CONSTANT_FOR_DURATION
         self.config = {"duration": duration, "concurrency": concurrency,
                        "timeout": timeout, "type": type}
         self.context = fakes.FakeUserContext({"task":
@@ -93,7 +94,7 @@ class ConstantForDurationScenarioRunnerTeestCase(test.TestCase):
         constant.ConstantForDurationScenarioRunner.validate(self.config)
 
     def test_validate_failed(self):
-        self.config["type"] = "constant"
+        self.config["type"] = consts.RunnerType.CONSTANT
         self.assertRaises(jsonschema.ValidationError, constant.
                           ConstantForDurationScenarioRunner.validate,
                           self.config)

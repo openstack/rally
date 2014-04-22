@@ -20,9 +20,10 @@ import time
 
 from rally.benchmark.runners import base
 from rally.benchmark import utils
+from rally import consts
+from rally.openstack.common import log as logging
 from rally import utils as rutils
 
-from rally.openstack.common import log as logging
 
 LOG = logging.getLogger(__name__)
 
@@ -40,7 +41,7 @@ class ConstantScenarioRunner(base.ScenarioRunner):
     placing load on the cloud under test.
     """
 
-    __execution_type__ = "constant"
+    __execution_type__ = consts.RunnerType.CONSTANT
 
     CONFIG_SCHEMA = {
         "type": "object",
@@ -112,7 +113,7 @@ class ConstantForDurationScenarioRunner(base.ScenarioRunner):
     placing load on the cloud under test.
     """
 
-    __execution_type__ = "constant_for_duration"
+    __execution_type__ = consts.RunnerType.CONSTANT_FOR_DURATION
 
     CONFIG_SCHEMA = {
         "type": "object",

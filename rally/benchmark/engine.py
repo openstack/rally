@@ -155,7 +155,7 @@ class BenchmarkEngine(object):
 
     def _get_runner(self, config):
         runner = config.get("runner", {})
-        runner.setdefault("type", "continuous")
+        runner.setdefault("type", consts.RunnerType.SERIAL)
         return base_runner.ScenarioRunner.get_runner(self.task, self.endpoints,
                                                      runner)
 

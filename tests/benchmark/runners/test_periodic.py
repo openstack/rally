@@ -34,7 +34,7 @@ class PeriodicScenarioRunnerTestCase(test.TestCase):
 
     def test_validate(self):
         config = {
-            "type": "periodic",
+            "type": consts.RunnerType.PERIODIC,
             "times": 1,
             "period": 0.000001,
             "timeout": 1
@@ -42,7 +42,8 @@ class PeriodicScenarioRunnerTestCase(test.TestCase):
         periodic.PeriodicScenarioRunner.validate(config)
 
     def test_validate_failed(self):
-        config = {"type": "periodic", "a": 10}
+        config = {"type": consts.RunnerType.PERIODIC,
+                  "a": 10}
         self.assertRaises(jsonschema.ValidationError,
                           periodic.PeriodicScenarioRunner.validate, config)
 
@@ -110,5 +111,6 @@ class PeriodicScenarioRunnerTestCase(test.TestCase):
 
         runner = base.ScenarioRunner.get_runner(mock.MagicMock(),
                                                 self.fake_endpoints,
-                                                {"type": "periodic"})
+                                                {"type":
+                                                 consts.RunnerType.PERIODIC})
         self.assertTrue(runner is not None)
