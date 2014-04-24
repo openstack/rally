@@ -269,14 +269,15 @@ class DeploymentTestCase(test.DBTestCase):
         self.assertEqual(sorted([deploy_one['uuid'], deploy_two['uuid']]),
                          sorted([deploy['uuid'] for deploy in deploys]))
 
-    def test_deployment_list_with_status(self):
+    def test_deployment_list_with_status_and_name(self):
         deploy_one = db.deployment_create({})
         deploy_two = db.deployment_create({
             'config': {},
             'status': consts.DeployStatus.DEPLOY_FAILED,
         })
+        deploy_three = db.deployment_create({'name': 'deployment_name'})
         deploys = db.deployment_list(status=consts.DeployStatus.DEPLOY_INIT)
-        self.assertEqual(len(deploys), 1)
+        self.assertEqual(len(deploys), 2)
         self.assertEqual(deploys[0]['uuid'], deploy_one['uuid'])
         deploys = db.deployment_list(status=consts.DeployStatus.DEPLOY_FAILED)
         self.assertEqual(len(deploys), 1)
@@ -284,6 +285,9 @@ class DeploymentTestCase(test.DBTestCase):
         deploys = db.deployment_list(
             status=consts.DeployStatus.DEPLOY_FINISHED)
         self.assertEqual(len(deploys), 0)
+        deploys = db.deployment_list(name='deployment_name')
+        self.assertEqual(deploys[0]['uuid'], deploy_three['uuid'])
+        self.assertEqual(len(deploys), 1)
 
     def test_deployment_list_parent(self):
         deploy = db.deployment_create({})

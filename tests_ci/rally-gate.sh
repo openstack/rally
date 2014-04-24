@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/sh -ex
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
 # not use this file except in compliance with the License. You may obtain
@@ -12,13 +12,14 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-# This script is executed inside pre_test_hook function in desvstack gate.
+# This script is executed by post_test_hook function in desvstack gate.
 
-# Install rally devstack integration
+PROJECT=`echo $ZUUL_PROJECT | cut -d \/ -f 2`
+SCENARIO=$BASE/new/$PROJECT/rally-scenarios/${RALLY_SCENARIO}.yaml
 
-RALLY_BASE=/opt/stack/new/rally
-DEVSTACK_BASE=/opt/stack/new/devstack
-cp -r $RALLY_BASE/contrib/devstack/* $DEVSTACK_BASE/
-
-export ENABLED_SERVICES=rally
-export RUN_EXERCISES=rally
+rally use deployment --name devstack
+rally -dv task start --task $SCENARIO
+mkdir rally-plot
+rally task plot2html --out rally-plot/results.html
+gzip -9 rally-plot/results.html
+env
