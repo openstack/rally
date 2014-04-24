@@ -13,11 +13,11 @@
 #    under the License.
 
 import mock
+from oslotest import mockpatch
 
 from rally.benchmark.scenarios.glance import utils
 from rally.benchmark import utils as butils
 from rally import exceptions as rally_exceptions
-from rally.openstack.common.fixture import mockpatch
 from tests.benchmark.scenarios import test_utils
 from tests import fakes
 from tests import test

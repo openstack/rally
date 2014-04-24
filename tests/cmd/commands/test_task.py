@@ -18,10 +18,10 @@ import uuid
 
 from rally.cmd.commands import task
 from rally import exceptions
-from rally.openstack.common import test
+from tests import test
 
 
-class TaskCommandsTestCase(test.BaseTestCase):
+class TaskCommandsTestCase(test.TestCase):
 
     def setUp(self):
         super(TaskCommandsTestCase, self).setUp()

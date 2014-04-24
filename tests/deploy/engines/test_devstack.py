@@ -18,7 +18,7 @@ import mock
 import uuid
 
 from rally.deploy.engines import devstack
-from rally.openstack.common import test
+from tests import test
 
 
 SAMPLE_CONFIG = {
@@ -35,7 +35,7 @@ SAMPLE_CONFIG = {
 DEVSTACK_REPO = 'https://github.com/openstack-dev/devstack.git'
 
 
-class DevstackEngineTestCase(test.BaseTestCase):
+class DevstackEngineTestCase(test.TestCase):
 
     def setUp(self):
         super(DevstackEngineTestCase, self).setUp()

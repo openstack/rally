@@ -19,14 +19,13 @@ import uuid
 
 from rally.cmd.commands import use
 from rally.cmd import envutils
-from rally.openstack.common import test
-
 from rally import exceptions
+from tests import test
 
 MOD = 'rally.cmd.commands.use.'
 
 
-class UseCommandsTestCase(test.BaseTestCase):
+class UseCommandsTestCase(test.TestCase):
     def setUp(self):
         super(UseCommandsTestCase, self).setUp()
         self.use = use.UseCommands()

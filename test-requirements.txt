@@ -9,3 +9,4 @@ testtools>=0.9.34
 
 sphinx>=1.1.2,<1.2
 oslosphinx
+oslotest

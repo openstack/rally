@@ -14,16 +14,17 @@
 #    under the License.
 
 import jsonschema
-import mock
 import netaddr
 import os
 
+import mock
+from oslotest import mockpatch
+
 from rally.deploy.serverprovider.providers import virsh
-from rally.openstack.common.fixture import mockpatch
-from rally.openstack.common import test
+from tests import test
 
 
-class VirshProviderTestCase(test.BaseTestCase):
+class VirshProviderTestCase(test.TestCase):
     def setUp(self):
         super(VirshProviderTestCase, self).setUp()
         self.deployment = mock.Mock()

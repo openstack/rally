@@ -13,15 +13,14 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-
 import mock
 import uuid
 
 from rally.cmd.commands import verify
-from rally.openstack.common import test
+from tests import test
 
 
-class VerifyCommandsTestCase(test.BaseTestCase):
+class VerifyCommandsTestCase(test.TestCase):
     def setUp(self):
         super(VerifyCommandsTestCase, self).setUp()
         self.verify = verify.VerifyCommands()

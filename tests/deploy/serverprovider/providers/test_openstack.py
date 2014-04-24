@@ -16,11 +16,12 @@
 """Tests for OpenStack VM provider."""
 
 import jsonschema
+
 import mock
+from oslotest import mockpatch
 
 from rally.deploy.serverprovider.providers import openstack as provider
 from rally import exceptions
-from rally.openstack.common.fixture import mockpatch
 from tests import fakes
 from tests import test
 

@@ -27,7 +27,7 @@ import sqlalchemy.exc
 
 from rally.openstack.common.db.sqlalchemy import utils
 from rally.openstack.common.gettextutils import _LE
-from rally.openstack.common import test
+from tests import test
 
 LOG = logging.getLogger(__name__)
 
@@ -68,7 +68,7 @@ def _set_db_lock(lock_path=None, lock_prefix=None):
     return decorator
 
 
-class BaseMigrationTestCase(test.BaseTestCase):
+class BaseMigrationTestCase(test.TestCase):
     """Base class fort testing of migration utils."""
 
     def __init__(self, *args, **kwargs):
