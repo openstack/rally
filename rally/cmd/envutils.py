@@ -18,10 +18,13 @@ import os
 
 from rally import exceptions
 from rally import fileutils
+from rally.openstack.common.gettextutils import _
 
 ENV_DEPLOYMENT = 'RALLY_DEPLOYMENT'
 ENV_TASK = 'RALLY_TASK'
 ENVVARS = [ENV_DEPLOYMENT, ENV_TASK]
+
+MSG_MISSING_ARG = _("Missing argument: --%(arg_name)s")
 
 
 def clear_global(global_key):
@@ -47,14 +50,20 @@ def get_global(global_key, do_raise=False):
     return value
 
 
-def default_from_global(arg_name, env_name):
+def default_from_global(arg_name, env_name,
+                        cli_arg_name):
     def default_from_global(f, *args, **kwargs):
         id_arg_index = f.func_code.co_varnames.index(arg_name)
         args = list(args)
         if args[id_arg_index] is None:
-            args[id_arg_index] = get_global(env_name, do_raise=True)
+            args[id_arg_index] = get_global(env_name)
+            if not args[id_arg_index]:
+                print(MSG_MISSING_ARG % {"arg_name": cli_arg_name})
+                return(1)
         return f(*args, **kwargs)
     return decorator.decorator(default_from_global)
 
-with_default_deploy_id = default_from_global('deploy_id', ENV_DEPLOYMENT)
-with_default_task_id = default_from_global('task_id', ENV_TASK)
+with_default_deploy_id = default_from_global('deploy_id', ENV_DEPLOYMENT,
+                                             "uuid")
+with_default_task_id = default_from_global('task_id', ENV_TASK,
+                                           "uuid")

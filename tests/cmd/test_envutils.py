@@ -15,6 +15,7 @@
 
 import mock
 import os
+import StringIO
 
 from rally.cmd import envutils
 from rally import exceptions
@@ -22,6 +23,20 @@ from tests import test
 
 
 class EnvUtilsTestCase(test.TestCase):
+
+    def test_default_from_global(self):
+
+        @envutils.default_from_global("test_arg_name",
+                                      "test_env_name",
+                                      "test_missing_arg")
+        def test_function(test_arg_name=None):
+            pass
+
+        with mock.patch("sys.stdout",
+                        new_callable=StringIO.StringIO) as mock_stdout:
+            test_function()
+            self.assertEqual(mock_stdout.getvalue(),
+                             "Missing argument: --test_missing_arg\n")
 
     @mock.patch.dict(os.environ,
                      values={envutils.ENV_DEPLOYMENT: 'my_deploy_id'},
