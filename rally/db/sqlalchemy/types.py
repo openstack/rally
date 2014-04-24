@@ -15,8 +15,27 @@
 
 import json
 
+from sqlalchemy.dialects import mysql as mysql_types
 from sqlalchemy.ext import mutable
 from sqlalchemy import types as sa_types
+
+
+class BigText(sa_types.TypeDecorator):
+    """An SQLAlchemy type that uses bigger text type in mysql.
+
+       MySql can store only 64kb in Text type, and for example in psql or
+       sqlite we are able to store more then 1GB. In some cases, like storing
+       results of task 64kb is not enough. So this type uses for MySql
+       LONGTEXT that allows us to store 4GiB.
+    """
+
+    impl = sa_types.Text
+
+    def load_dialect_impl(self, dialect):
+        if dialect.name == 'mysql':
+            return dialect.type_descriptor(mysql_types.LONGTEXT)
+        else:
+            return dialect.type_descriptor(sa_types.Text)
 
 
 class JSONEncodedDict(sa_types.TypeDecorator):
@@ -33,6 +52,11 @@ class JSONEncodedDict(sa_types.TypeDecorator):
         if value is not None:
             value = json.loads(value)
         return value
+
+
+class BigJSONEncodedDict(JSONEncodedDict):
+    "Represents an immutable structure as a json-encoded string."
+    impl = BigText
 
 
 class MutableDict(mutable.Mutable, dict):
@@ -66,4 +90,9 @@ class MutableJSONEncodedDict(JSONEncodedDict):
     """Represent a mutable structure as a json-encoded string."""
 
 
+class BigMutableJSONEncodedDict(BigJSONEncodedDict):
+    """Represent a big mutable structure as a json-encoded string."""
+
+
 MutableDict.associate_with(MutableJSONEncodedDict)
+MutableDict.associate_with(BigMutableJSONEncodedDict)

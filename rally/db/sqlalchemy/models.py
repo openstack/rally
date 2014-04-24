@@ -168,7 +168,7 @@ class TaskResult(BASE, RallyBase):
     id = sa.Column(sa.Integer, primary_key=True, autoincrement=True)
 
     key = sa.Column(sa_types.MutableJSONEncodedDict, nullable=False)
-    data = sa.Column(sa_types.MutableJSONEncodedDict, nullable=False)
+    data = sa.Column(sa_types.BigMutableJSONEncodedDict, nullable=False)
 
     task_uuid = sa.Column(sa.String(36), sa.ForeignKey('tasks.uuid'))
     task = sa.orm.relationship(Task,
