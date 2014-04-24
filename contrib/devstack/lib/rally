@@ -30,8 +30,8 @@ RALLY_DIR=$DEST/rally
 RALLY_CONF_DIR=${RALLY_CONF_DIR:-/etc/rally}
 RALLY_CONF_FILE=rally.conf
 
-# Debuge mode
-RALLY_DEBUG=${RALLY_DEBUG:-True}
+# Debug mode
+RALLY_DEBUG=${RALLY_DEBUG:-False}
 
 # Support entry points installation of console scripts
 if [[ -d $RALLY_DIR/bin ]]; then

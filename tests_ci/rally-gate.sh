@@ -18,7 +18,7 @@ PROJECT=`echo $ZUUL_PROJECT | cut -d \/ -f 2`
 SCENARIO=$BASE/new/$PROJECT/rally-scenarios/${RALLY_SCENARIO}.yaml
 
 rally use deployment --name devstack
-rally -dv task start --task $SCENARIO
+rally -v task start --task $SCENARIO
 mkdir rally-plot
 rally task plot2html --out rally-plot/results.html
 gzip -9 rally-plot/results.html
