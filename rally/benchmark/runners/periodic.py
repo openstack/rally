@@ -14,7 +14,6 @@
 #    under the License.
 
 import multiprocessing
-from multiprocessing import pool as multiprocessing_pool
 import time
 
 from rally.benchmark.runners import base
@@ -71,13 +70,17 @@ class PeriodicScenarioRunner(base.ScenarioRunner):
 
         async_results = []
 
+        pools = []
         for i in range(times):
-            pool = multiprocessing_pool.ThreadPool(processes=1)
+            pool = multiprocessing.Pool(1)
             scenario_args = ((i, cls, method_name,
                               base._get_scenario_context(context), args),)
             async_result = pool.apply_async(base._run_scenario_once,
                                             scenario_args)
             async_results.append(async_result)
+
+            pool.close()
+            pools.append(pool)
 
             if i < times - 1:
                 time.sleep(period)
@@ -90,5 +93,8 @@ class PeriodicScenarioRunner(base.ScenarioRunner):
                 result = {"duration": timeout, "idle_duration": 0,
                           "error": utils.format_exc(e)}
             results.append(result)
+
+        for pool in pools:
+            pool.join()
 
         return base.ScenarioRunnerResult(results)
