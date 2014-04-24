@@ -146,17 +146,24 @@ def infinite_run_args_generator(args_func):
         yield args_func(i)
 
 
-def run_concurrent(concurrent, fn, fn_args):
+def run_concurrent_helper(args):
+    cls, method, fn_args = args
+    return getattr(cls, method)(fn_args)
+
+
+def run_concurrent(concurrent, cls, fn, fn_args):
     """Run given function using pool of threads.
 
     :param concurrent: number of threads in the pool
-    :param fn: function to be called in the pool
+    :param cls: class to be called in the pool
+    :param fn: class method to be called in the pool
     :param fn_args: list of arguments for function fn() in the pool
     :returns: iterator from Pool.imap()
     """
 
-    pool = multiprocessing.pool.ThreadPool(concurrent)
-    iterator = pool.imap(fn, fn_args)
+    pool = multiprocessing.Pool(concurrent)
+    iterator = pool.imap(run_concurrent_helper,
+                         [(cls, fn, args) for args in fn_args])
     pool.close()
     pool.join()
 

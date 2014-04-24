@@ -164,7 +164,8 @@ class UserGenerator(base.Context):
 
         for tenant, users in utils.run_concurrent(
                 self.config["concurrent"],
-                self._create_tenant_users,
+                UserGenerator,
+                "_create_tenant_users",
                 args):
             self.context["tenants"].append(tenant)
             self.context["users"] += users
@@ -179,12 +180,14 @@ class UserGenerator(base.Context):
         users_chunks = utils.chunks(self.context["users"], concurrent)
         utils.run_concurrent(
             concurrent,
-            self._delete_users,
+            UserGenerator,
+            "_delete_users",
             [(self.endpoint, users) for users in users_chunks])
 
         # Delete tenants
         tenants_chunks = utils.chunks(self.context["tenants"], concurrent)
         utils.run_concurrent(
             concurrent,
-            self._delete_tenants,
+            UserGenerator,
+            "_delete_tenants",
             [(self.endpoint, tenants) for tenants in tenants_chunks])

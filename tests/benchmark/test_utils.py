@@ -106,6 +106,12 @@ class BenchmarkUtilsTestCase(test.TestCase):
         self.assertRaises(exceptions.GetResourceFailure,
                           get_from_manager, resource)
 
+    def test_run_concurrent_helper(self):
+        cls = mock.MagicMock()
+        args = (cls, "test", {})
+        result = utils.run_concurrent_helper(args)
+        self.assertEqual(cls.test(), result)
+
 
 class WaitForTestCase(test.TestCase):
 

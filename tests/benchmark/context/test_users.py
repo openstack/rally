@@ -23,7 +23,8 @@ from tests import fakes
 from tests import test
 
 
-run_concurrent = lambda dummy, f, args: list(itertools.imap(f, args))
+run_concurrent = lambda dummy, cls, f, args: \
+        list(itertools.imap(getattr(cls, f), args))
 
 
 @mock.patch.object(utils, "run_concurrent", run_concurrent)
