@@ -21,7 +21,6 @@ import json
 import os
 import pprint
 import prettytable
-import sys
 import webbrowser
 import yaml
 
@@ -71,7 +70,7 @@ class TaskCommands(object):
                 if do_use:
                     use.UseCommands().task(task['uuid'])
             except exceptions.InvalidConfigException:
-                sys.exit(1)
+                return(1)
 
     @cliutils.args('--uuid', type=str, dest='task_id', help='UUID of task')
     @envutils.with_default_task_id
@@ -168,7 +167,7 @@ class TaskCommands(object):
 
         if task is None:
             print("The task %s can not be found" % task_id)
-            return
+            return(1)
 
         print()
         print("=" * 80)
@@ -294,14 +293,20 @@ class TaskCommands(object):
         """
         results = map(lambda x: {"key": x["key"], 'result': x['data']['raw']},
                       db.task_result_get_all_by_uuid(task_id))
-        if not pretty or pretty == 'json':
-            print(json.dumps(results))
-        elif pretty == 'pprint':
-            print()
-            pprint.pprint(results)
-            print()
+
+        if results:
+            if not pretty or pretty == 'json':
+                print(json.dumps(results))
+            elif pretty == 'pprint':
+                print()
+                pprint.pprint(results)
+                print()
+            else:
+                print(_("Wrong value for --pretty=%s") % pretty)
+                return(1)
         else:
-            print(_("Wrong value for --pretty=%s") % pretty)
+            print(_("The task %s can not be found") % task_id)
+            return(1)
 
     def list(self, task_list=None):
         """Print a list of all tasks."""

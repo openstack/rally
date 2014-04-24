@@ -115,6 +115,14 @@ class TaskCommandsTestCase(test.TestCase):
         self.task.results(test_uuid)
         mock_db.task_result_get_all_by_uuid.assert_called_once_with(test_uuid)
 
+    @mock.patch('rally.cmd.commands.task.db')
+    def test_invalid_results(self, mock_db):
+        test_uuid = str(uuid.uuid4())
+        mock_db.task_result_get_all_by_uuid.return_value = []
+        return_value = self.task.results(test_uuid)
+        mock_db.task_result_get_all_by_uuid.assert_called_once_with(test_uuid)
+        self.assertEqual(1, return_value)
+
     @mock.patch('rally.cmd.commands.task.envutils.get_global')
     @mock.patch("rally.cmd.commands.task.db")
     def test_list(self, mock_db, mock_default):
