@@ -19,13 +19,13 @@ import netaddr
 
 from rally.deploy.serverprovider.providers import lxc
 from rally import exceptions
-from rally.openstack.common import test
+from tests import test
 
 
 MOD_NAME = 'rally.deploy.serverprovider.providers.lxc.'
 
 
-class HelperFunctionsTestCase(test.BaseTestCase):
+class HelperFunctionsTestCase(test.TestCase):
 
     @mock.patch(MOD_NAME + 'open', create=True, return_value='fake_script')
     def test__get_script(self, m_open):
@@ -48,7 +48,7 @@ class HelperFunctionsTestCase(test.BaseTestCase):
         m_sio.assert_called_once_with('fake_data v1 v2')
 
 
-class LxcHostTestCase(test.BaseTestCase):
+class LxcHostTestCase(test.TestCase):
 
     def setUp(self):
         super(LxcHostTestCase, self).setUp()
@@ -250,7 +250,7 @@ class LxcHostTestCase(test.BaseTestCase):
                          m_gso.mock_calls)
 
 
-class LxcProviderTestCase(test.BaseTestCase):
+class LxcProviderTestCase(test.TestCase):
 
     def setUp(self):
         super(LxcProviderTestCase, self).setUp()

@@ -13,10 +13,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from oslotest import base
 
 from rally import db
 from rally.openstack.common.fixture import config
-from rally.openstack.common import test
 
 
 class DatabaseFixture(config.Config):
@@ -29,7 +29,7 @@ class DatabaseFixture(config.Config):
         db.db_create()
 
 
-class TestCase(test.BaseTestCase):
+class TestCase(base.BaseTestCase):
     """Test case base class for all unit tests."""
     pass
 

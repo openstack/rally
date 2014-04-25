@@ -19,10 +19,10 @@ import uuid
 
 from rally.cmd.commands import deployment
 from rally import exceptions
-from rally.openstack.common import test
+from tests import test
 
 
-class DeploymentCommandsTestCase(test.BaseTestCase):
+class DeploymentCommandsTestCase(test.TestCase):
     def setUp(self):
         super(DeploymentCommandsTestCase, self).setUp()
         self.deployment = deployment.DeploymentCommands()

@@ -23,7 +23,7 @@ import six
 from rally.openstack.common.db.sqlalchemy import session
 from rally.openstack.common.db.sqlalchemy import utils
 from rally.openstack.common.fixture import lockutils
-from rally.openstack.common import test
+from tests import test
 
 
 class DbFixture(fixtures.Fixture):
@@ -51,7 +51,7 @@ class DbFixture(fixtures.Fixture):
         self.addCleanup(self.test.engine.dispose)
 
 
-class DbTestCase(test.BaseTestCase):
+class DbTestCase(test.TestCase):
     """Base class for testing of DB code.
 
     Using `DbFixture`. Intended to be the main database test case to use all
