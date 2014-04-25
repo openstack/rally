@@ -142,6 +142,16 @@ class TaskCommandsTestCase(test.BaseTestCase):
             mock_api.delete_task.assert_called_once_with(task_uuid,
                                                          force=force)
 
+    @mock.patch("rally.cmd.commands.task.api")
+    def test_delete_multiple_uuid(self, mock_api):
+        task_uuids = [str(uuid.uuid4()) for _ in range(5)]
+        force = False
+        self.task.delete(task_uuids, force=force)
+        self.assertTrue(mock_api.delete_task.call_count == len(task_uuids))
+        expected_calls = [mock.call(task_uuid, force=force) for task_uuid
+                          in task_uuids]
+        self.assertTrue(mock_api.delete_task.mock_calls == expected_calls)
+
     def test_percentile(self):
         l = range(1, 101)
         result = task.percentile(l, 0.1)

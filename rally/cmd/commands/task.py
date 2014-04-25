@@ -337,15 +337,21 @@ class TaskCommands(object):
             webbrowser.open_new_tab("file://" + os.path.realpath(output_file))
 
     @cliutils.args('--force', action='store_true', help='force delete')
-    @cliutils.args('--uuid', type=str, dest='task_id', help='uuid of task')
+    @cliutils.args('--uuid', type=str, dest='task_id', nargs="*",
+                   metavar="TASK_ID",
+                   help='uuid of task or a list of task uuids')
     @envutils.with_default_task_id
     def delete(self, task_id=None, force=False):
         """Delete a specific task and related results.
 
-        :param task_id: Task uuid
+        :param task_id: Task uuid or a list of task uuids
         :param force: Force delete or not
         """
-        api.delete_task(task_id, force=force)
+        if isinstance(task_id, list):
+            for tid in task_id:
+                api.delete_task(tid, force=force)
+        else:
+            api.delete_task(task_id, force=force)
 
 
 def percentile(N, percent):
