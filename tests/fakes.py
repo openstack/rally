@@ -53,9 +53,6 @@ class FakeResource(object):
 
 class FakeServer(FakeResource):
 
-    def __init__(self, manager=None):
-        super(FakeServer, self).__init__(manager)
-
     def suspend(self):
         self.status = "SUSPENDED"
 
@@ -63,26 +60,24 @@ class FakeServer(FakeResource):
 class FakeFailedServer(FakeResource):
 
     def __init__(self, manager=None):
-        super(FakeFailedServer, self).__init__(manager)
-        self.status = "ERROR"
+        super(FakeFailedServer, self).__init__(manager, status="ERROR")
 
 
 class FakeImage(FakeResource):
 
-    def __init__(self, manager=None, id="image-id-0",
-                 min_ram=0, size=0, min_disk=0):
-        super(FakeImage, self).__init__(manager)
-        self.id = id
+    def __init__(self, manager=None, id="image-id-0", min_ram=0,
+                 size=0, min_disk=0, name=None):
+        super(FakeImage, self).__init__(manager, id=id, name=name)
         self.min_ram = min_ram
         self.size = size
         self.min_disk = min_disk
+        self.update = mock.MagicMock()
 
 
 class FakeFailedImage(FakeResource):
 
     def __init__(self, manager=None):
-        super(FakeFailedImage, self).__init__(manager)
-        self.status = "error"
+        super(FakeFailedImage, self).__init__(manager, status="error")
 
 
 class FakeFloatingIP(FakeResource):
@@ -92,8 +87,7 @@ class FakeFloatingIP(FakeResource):
 class FakeTenant(FakeResource):
 
     def __init__(self, manager, name):
-        super(FakeTenant, self).__init__(manager)
-        self.name = name
+        super(FakeTenant, self).__init__(manager, name=name)
 
 
 class FakeUser(FakeResource):
@@ -106,8 +100,8 @@ class FakeNetwork(FakeResource):
 
 class FakeFlavor(FakeResource):
 
-    def __init__(self, manager=None, ram=0, disk=0):
-        super(FakeFlavor, self).__init__(manager)
+    def __init__(self, id="flavor-id-0", manager=None, ram=0, disk=0):
+        super(FakeFlavor, self).__init__(manager, id=id)
         self.ram = ram
         self.disk = disk
 
@@ -124,7 +118,6 @@ class FakeSecurityGroup(FakeResource):
 
     def __init__(self, manager=None, rule_manager=None):
         super(FakeSecurityGroup, self).__init__(manager)
-        self.manager = manager
         self.rule_manager = rule_manager
 
     @property

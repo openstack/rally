@@ -111,8 +111,8 @@ class TempestConf(object):
     def _set_compute_images(self):
         glanceclient = self.clients.glance()
         image_list = [img for img in glanceclient.images.list()
-                      if img.status == 'active' and img.name is not None
-                      and 'cirros' in img.name]
+                      if img.status.lower() == 'active' and
+                      img.name is not None and 'cirros' in img.name]
         # Upload new images if there are no
         # necessary images in the cloud (cirros)
         while len(image_list) < 2:
@@ -124,9 +124,10 @@ class TempestConf(object):
                                                    container_format='bare')
                 image.update(data=open(self.img_path, 'rb'))
                 image_list.append(image)
-            except Exception:
+            except Exception as e:
                 msg = _('There are no desired images (cirros) or only one and '
-                        'new image could not be created')
+                        'new image could not be created.\n'
+                        'Reason: %s') % e.message
                 raise exceptions.TempestConfigCreationFailure(message=msg)
         self.conf.set('compute', 'image_ref', image_list[0].id)
         self.conf.set('compute', 'image_ref_alt', image_list[1].id)
@@ -142,9 +143,10 @@ class TempestConf(object):
             try:
                 flv = novaclient.flavors.create("m1.tiny_%s" % now, 512, 1, 1)
                 flavor_list.append(flv)
-            except Exception:
+            except Exception as e:
                 msg = _('There are no desired flavors or only one and '
-                        'new flavor could not be created')
+                        'new flavor could not be created.\n'
+                        'Reason: %s') % e.message
                 raise exceptions.TempestConfigCreationFailure(message=msg)
         self.conf.set('compute', 'flavor_ref', flavor_list[0].id)
         self.conf.set('compute', 'flavor_ref_alt', flavor_list[1].id)
@@ -199,12 +201,14 @@ class TempestConf(object):
                     'cinder', 'nova', 'glance']
         for service in services:
             self.conf.set('service_available', service,
-                          service in self.available_services)
+                          str(service in self.available_services))
         horizon_url = ('http://' +
                        urlparse.urlparse(self.endpoint['auth_url']).hostname)
         answer_code = urllib2.urlopen(horizon_url).getcode()
+        # convert boolean to string because ConfigParser fails
+        # on attempt to get option with boolean value
         self.conf.set('service_available', 'horizon',
-                      answer_code == httplib.OK)
+                      str(answer_code == httplib.OK))
 
     def generate(self):
         self._set_default()
