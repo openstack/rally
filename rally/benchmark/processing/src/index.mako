@@ -103,9 +103,9 @@
             nv.addGraph(function() {
                 var chart = nv.models.multiBarChart()
                     .margin({left: 75})
-                    .reduceXTicks(false)
+                    .reduceXTicks(true)
                     .showControls(false)
-                    .groupSpacing(0);
+                    .groupSpacing(0.05);
 
                 chart.legend
                     .radioButtonMode(true)
