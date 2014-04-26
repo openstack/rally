@@ -109,7 +109,7 @@ install_system_requirements() {
 
   hash pip 2> /dev/null
   if [ $? -ne 0 ]; then
-    curl -o ${GETPIPPY_FILE} ${PIP_SECURE_LOCATION}
+    curl -L -o ${GETPIPPY_FILE} ${PIP_SECURE_LOCATION}
     python ${GETPIPPY_FILE}
   fi
 }
