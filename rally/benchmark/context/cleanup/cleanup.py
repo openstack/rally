@@ -17,7 +17,7 @@ import functools
 import sys
 
 from rally.benchmark.context import base
-from rally.benchmark import utils
+from rally.benchmark.context.cleanup import utils
 from rally.openstack.common.gettextutils import _
 from rally.openstack.common import log as logging
 from rally import osclients
@@ -100,17 +100,3 @@ class ResourceCleaner(base.Context):
             self._cleanup_users_resources()
         if self.admin:
             self._cleanup_admin_resources()
-
-
-def cleanup(services):
-    """Decorates scenario methods requiring a cleanup of resources.
-
-    If a scenario method is not decorated by @cleanup all the resources
-    (nova, glance and cinder) will be cleaned.
-
-    :param services: list of services which will be cleaned.
-    """
-    def wrap(func):
-        func.cleanup_services = services
-        return func
-    return wrap

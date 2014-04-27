@@ -15,7 +15,6 @@
 
 import json
 
-from rally.benchmark.context import cleaner as context_cleaner
 from rally.benchmark.scenarios import base
 from rally.benchmark.scenarios.nova import utils as nova_utils
 from rally.benchmark.scenarios.vm import utils as vm_utils
@@ -32,7 +31,6 @@ class VMTasks(nova_utils.NovaScenario, vm_utils.VMScenario):
     def __init__(self, *args, **kwargs):
         super(VMTasks, self).__init__(*args, **kwargs)
 
-    @context_cleaner.cleanup(['nova'])
     @valid.add_validator(valid.image_valid_on_flavor("flavor_id", "image_id"))
     @valid.add_validator(valid.file_exists("script"))
     @valid.add_validator(valid.number("port", minval=1, maxval=65535,
