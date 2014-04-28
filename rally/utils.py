@@ -86,6 +86,11 @@ class Timer(object):
         return self.finish - self.start
 
 
+class Struct(object):
+    def __init__(self, **entries):
+        self.__dict__.update(entries)
+
+
 def itersubclasses(cls, _seen=None):
     """Generator over all subclasses of a given class in depth first order."""
 

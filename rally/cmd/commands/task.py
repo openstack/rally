@@ -17,7 +17,6 @@
 
 from __future__ import print_function
 
-import collections
 import json
 import os
 import pprint
@@ -35,8 +34,10 @@ from rally.cmd.commands import use
 from rally.cmd import envutils
 from rally import db
 from rally import exceptions
+from rally.openstack.common import cliutils as common_cliutils
 from rally.openstack.common.gettextutils import _
 from rally.orchestrator import api
+from rally import utils as rutils
 
 
 class TaskCommands(object):
@@ -97,18 +98,18 @@ class TaskCommands(object):
         '--uuid', type=str, dest='task_id',
         help=('uuid of task, if --uuid is "last" results of most '
               'recently created task will be displayed.'))
-    @cliutils.args('--no-aggregation', dest='no_aggregation',
+    @cliutils.args('--iterations-data', dest='iterations_data',
                    action='store_true',
-                   help='do not aggregate atomic operation results')
+                   help='print detailed results for each iteration')
     @envutils.with_default_task_id
-    def detailed(self, task_id=None, no_aggregation=False):
+    def detailed(self, task_id=None, iterations_data=False):
         """Get detailed information about task
 
         :param task_id: Task uuid
-        :param no_aggregation: do not aggregate atomic operations
+        :param iterations_data: print detailed results for each iteration
         Prints detailed information of task.
         """
-        def _print_atomic_actions_no_aggregation(raw):
+        def _print_iterations_data(raw):
             headers = ['iteration', "full duration"]
             for i in range(0, len(raw)):
                 if raw[i]['atomic_actions']:
@@ -133,41 +134,31 @@ class TaskCommands(object):
             print(atomic_action_table)
             print()
 
-        def _print_atomic_actions_aggregation(raw):
-            aduration_merged = []
+        def _get_atomic_action_durations(raw):
+            atomic_actions_names = []
             for r in raw:
                 if 'atomic_actions' in r:
                     for a in r['atomic_actions']:
-                        aduration_merged.append(a)
+                        atomic_actions_names.append(a["action"])
+                    break
+            result = {}
+            for atomic_action in atomic_actions_names:
+                result[atomic_action] = utils.get_durations(
+                    raw,
+                    lambda r: next(a["duration"] for a in r["atomic_actions"]
+                                   if a["action"] == atomic_action),
+                    lambda r: any((a["action"] == atomic_action)
+                                  for a in r["atomic_actions"]))
+            return result
 
-            durations_by_action = collections.defaultdict(list)
-            for at in aduration_merged:
-                durations_by_action[at['action']].append(at['duration'])
-            if durations_by_action:
-                atomic_action_table = prettytable.PrettyTable(
-                                                        ['action',
-                                                         'count',
-                                                         'max (sec)',
-                                                         'avg (sec)',
-                                                         'min (sec)',
-                                                         '90 percentile',
-                                                         '95 percentile'])
-                for k, v in durations_by_action.iteritems():
-                    atomic_action_table.add_row([k,
-                                                len(v),
-                                                max(v),
-                                                utils.mean(v),
-                                                min(v),
-                                                utils.percentile(v, 0.90),
-                                                utils.percentile(v, 0.95)])
-                print(atomic_action_table)
-                print()
-
-        def _print_atomic_actions(raw):
-            if no_aggregation:
-                _print_atomic_actions_no_aggregation(raw)
-            else:
-                _print_atomic_actions_aggregation(raw)
+        def _pretty_float_formatter(field):
+            def _formatter(obj):
+                value = getattr(obj, field)
+                if value:
+                    return "%.3f" % value
+                else:
+                    return "n/a"
+            return _formatter
 
         if task_id == "last":
             task = db.task_get_detailed_last()
@@ -207,29 +198,42 @@ class TaskCommands(object):
             print("args values:")
             pprint.pprint(key["kw"])
 
-            _print_atomic_actions(result["data"]["raw"])
-
             raw = result["data"]["raw"]
-            durations = utils.get_durations(raw, lambda x: x['duration'],
-                                            lambda r: not r['error'])
-            table = prettytable.PrettyTable(["max (sec)",
-                                             "avg (sec)",
-                                             "min (sec)",
-                                             "90 pecentile",
-                                             "95 percentile",
-                                             "success/total",
-                                             "total times"])
-            if durations:
-                table.add_row([max(durations),
-                               utils.mean(durations),
-                               min(durations),
-                               utils.percentile(durations, 0.90),
-                               utils.percentile(durations, 0.95),
-                               float(len(durations)) / len(raw),
-                               len(raw)])
-            else:
-                table.add_row(['n/a', 'n/a', 'n/a', 'n/a', 'n/a', 0, len(raw)])
-            print(table)
+            table_cols = ["action", "min (sec)", "avg (sec)", "max (sec)",
+                          "90 percentile", "95 percentile", "success",
+                          "count"]
+            float_cols = ["min (sec)", "avg (sec)", "max (sec)",
+                          "90 percentile", "95 percentile"]
+            formatters = dict(zip(float_cols,
+                                  [_pretty_float_formatter(col)
+                                   for col in float_cols]))
+            table_rows = []
+
+            action_durations = _get_atomic_action_durations(raw)
+            actions_list = action_durations.keys()
+            action_durations["total"] = utils.get_durations(
+                        raw, lambda x: x["duration"], lambda r: not r["error"])
+            actions_list.append("total")
+            for action in actions_list:
+                durations = action_durations[action]
+                if durations:
+                    data = [action,
+                            min(durations),
+                            utils.mean(durations),
+                            max(durations),
+                            utils.percentile(durations, 0.90),
+                            utils.percentile(durations, 0.95),
+                            "%.1f%%" % (len(durations) * 100.0 / len(raw)),
+                            len(raw)]
+                else:
+                    data = [action, None, None, None, None, None, 0, len(raw)]
+                table_rows.append(rutils.Struct(**dict(zip(table_cols, data))))
+
+            common_cliutils.print_list(table_rows, fields=table_cols,
+                                       formatters=formatters)
+
+            if iterations_data:
+                _print_iterations_data(raw)
 
             # NOTE(hughsaunders): ssrs=scenario specific results
             ssrs = []
