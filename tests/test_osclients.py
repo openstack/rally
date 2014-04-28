@@ -97,6 +97,7 @@ class OSClientsTestCase(test.TestCase):
             "password": self.endpoint.password,
             "tenant_name": self.endpoint.tenant_name,
             "auth_url": self.endpoint.auth_url,
+            "region_name": self.endpoint.region_name,
             "timeout": cfg.CONF.openstack_client_http_timeout,
             "insecure": cfg.CONF.https_insecure,
             "cacert": cfg.CONF.https_cacert
