@@ -15,13 +15,13 @@
 
 import mock
 
-from rally.benchmark.context import cleaner as cleaner_ctx
+from rally.benchmark.context.cleanup import cleanup as cleanup_ctx
 
 from tests import fakes
 from tests import test
 
 
-BASE = "rally.benchmark.context.cleaner"
+BASE = "rally.benchmark.context.cleanup.cleanup"
 
 
 class ResourceCleanerTestCase(test.TestCase):
@@ -33,14 +33,14 @@ class ResourceCleanerTestCase(test.TestCase):
             "users": [],
             "tenants": [],
         }
-        resource_cleaner = cleaner_ctx.ResourceCleaner(context)
+        resource_cleaner = cleanup_ctx.ResourceCleaner(context)
         with resource_cleaner:
             resource_cleaner.setup()
 
     def test_with_statement(self):
         fake_user_ctx = fakes.FakeUserContext({}).context
         fake_user_ctx["config"] = {"cleanup": ["nova"]}
-        res_cleaner = cleaner_ctx.ResourceCleaner(fake_user_ctx)
+        res_cleaner = cleanup_ctx.ResourceCleaner(fake_user_ctx)
         res_cleaner.setup()
 
         res_cleaner._cleanup_users_resources = mock.MagicMock()
@@ -60,7 +60,7 @@ class ResourceCleanerTestCase(test.TestCase):
             "config": {"cleanup": ["cinder", "nova"]},
             "admin": {"endpoint": mock.MagicMock()},
         }
-        res_cleaner = cleaner_ctx.ResourceCleaner(context)
+        res_cleaner = cleanup_ctx.ResourceCleaner(context)
 
         mock_clients.return_value.keystone.return_value = 'keystone'
 
@@ -85,7 +85,7 @@ class ResourceCleanerTestCase(test.TestCase):
             "config": {"cleanup": ["cinder", "nova", "glance"]},
             "tenants": [mock.MagicMock()]
         }
-        res_cleaner = cleaner_ctx.ResourceCleaner(context)
+        res_cleaner = cleanup_ctx.ResourceCleaner(context)
 
         with res_cleaner:
             res_cleaner.setup()
@@ -105,7 +105,7 @@ class ResourceCleanerTestCase(test.TestCase):
             "users": [{"endpoint": mock.MagicMock()},
                       {"endpoint": mock.MagicMock()}],
         }
-        res_cleaner = cleaner_ctx.ResourceCleaner(context)
+        res_cleaner = cleanup_ctx.ResourceCleaner(context)
 
         with res_cleaner:
             res_cleaner.setup()
@@ -125,7 +125,7 @@ class ResourceCleanerTestCase(test.TestCase):
             "config": {"cleanup": ["cinder", "nova"]},
             "tenants": [mock.MagicMock()]
         }
-        res_cleaner = cleaner_ctx.ResourceCleaner(context)
+        res_cleaner = cleanup_ctx.ResourceCleaner(context)
 
         with res_cleaner:
             res_cleaner.setup()

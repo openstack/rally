@@ -114,7 +114,7 @@ class WaitForTestCase(test.TestCase):
         self.resource = object()
         self.load_secs = 0.01
         self.fake_checker_delayed = self.get_fake_checker_delayed(
-                                                        seconds=self.load_secs)
+            seconds=self.load_secs)
 
     def get_fake_checker_delayed(self, **delay):
         deadline = datetime.datetime.now() + datetime.timedelta(**delay)
