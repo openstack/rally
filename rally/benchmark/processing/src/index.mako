@@ -208,7 +208,7 @@
 </head>
     <body>
         <div id="task_choser">
-            Select benchmark scenario:
+            <h2>Select benchmark scenario:</h2>
             <select>
             % for i, name in enumerate(tasks):
                 <option value=${i}>${name}</option>
