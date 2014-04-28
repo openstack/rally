@@ -20,6 +20,7 @@ import os
 import subprocess
 
 import lockfile
+from oslotest import base as test_base
 from six import moves
 from six.moves.urllib import parse
 import sqlalchemy
@@ -27,7 +28,6 @@ import sqlalchemy.exc
 
 from rally.openstack.common.db.sqlalchemy import utils
 from rally.openstack.common.gettextutils import _LE
-from tests import test
 
 LOG = logging.getLogger(__name__)
 
@@ -68,7 +68,7 @@ def _set_db_lock(lock_path=None, lock_prefix=None):
     return decorator
 
 
-class BaseMigrationTestCase(test.TestCase):
+class BaseMigrationTestCase(test_base.BaseTestCase):
     """Base class fort testing of migration utils."""
 
     def __init__(self, *args, **kwargs):
