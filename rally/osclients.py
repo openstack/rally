@@ -57,8 +57,8 @@ class Clients(object):
         def decorate(func):
             def wrapper(self, *args, **kwargs):
                 key = '{0}{1}{2}'.format(func.__name__,
-                      str(args) if args else '',
-                      str(kwargs) if kwargs else '')
+                                         str(args) if args else '',
+                                         str(kwargs) if kwargs else '')
                 if key in self.cache:
                     return self.cache[key]
                 self.cache[key] = func(self, *args, **kwargs)
@@ -121,6 +121,7 @@ class Clients(object):
                                 password=self.endpoint.password,
                                 tenant_name=self.endpoint.tenant_name,
                                 auth_url=self.endpoint.auth_url,
+                                region_name=self.endpoint.region_name,
                                 timeout=CONF.openstack_client_http_timeout,
                                 insecure=CONF.https_insecure,
                                 cacert=CONF.https_cacert)
