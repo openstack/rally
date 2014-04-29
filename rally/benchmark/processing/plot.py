@@ -20,6 +20,7 @@ import os
 import mako.template
 
 from rally.benchmark.processing.charts import histogram as histo
+from rally.benchmark.processing import utils
 
 
 def _process_main_duration(result):
@@ -72,7 +73,7 @@ def _process_atomic(result):
 
     def avg(lst, key=None):
         lst = lst if not key else map(lambda x: x[key], lst)
-        return sum(lst) / float(len(lst))
+        return utils.mean(lst)
 
     # NOTE(boris-42): In our result["result"] we have next structure:
     #                 {"error": NoneOrDict,

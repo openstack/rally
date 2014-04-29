@@ -19,7 +19,6 @@ from __future__ import print_function
 
 import collections
 import json
-import math
 import os
 import pprint
 import prettytable
@@ -30,6 +29,7 @@ import yaml
 from oslo.config import cfg
 
 from rally.benchmark.processing import plot
+from rally.benchmark.processing import utils
 from rally.cmd import cliutils
 from rally.cmd.commands import use
 from rally.cmd import envutils
@@ -156,10 +156,10 @@ class TaskCommands(object):
                     atomic_action_table.add_row([k,
                                                 len(v),
                                                 max(v),
-                                                sum(v) / len(v),
+                                                utils.mean(v),
                                                 min(v),
-                                                percentile(v, 0.90),
-                                                percentile(v, 0.95)])
+                                                utils.percentile(v, 0.90),
+                                                utils.percentile(v, 0.95)])
                 print(atomic_action_table)
                 print()
 
@@ -210,8 +210,8 @@ class TaskCommands(object):
             _print_atomic_actions(result["data"]["raw"])
 
             raw = result["data"]["raw"]
-            durations = map(lambda x: x['duration'],
-                            filter(lambda r: not r['error'], raw))
+            durations = utils.get_durations(raw, lambda x: x['duration'],
+                                            lambda r: not r['error'])
             table = prettytable.PrettyTable(["max (sec)",
                                              "avg (sec)",
                                              "min (sec)",
@@ -221,10 +221,10 @@ class TaskCommands(object):
                                              "total times"])
             if durations:
                 table.add_row([max(durations),
-                               sum(durations) / len(durations),
+                               utils.mean(durations),
                                min(durations),
-                               percentile(durations, 0.90),
-                               percentile(durations, 0.95),
+                               utils.percentile(durations, 0.90),
+                               utils.percentile(durations, 0.95),
                                float(len(durations)) / len(raw),
                                len(raw)])
             else:
@@ -256,10 +256,10 @@ class TaskCommands(object):
                     if values:
                         row = [str(key),
                                max(values),
-                               sum(values) / len(values),
+                               utils.mean(values),
                                min(values),
-                               percentile(values, 0.90),
-                               percentile(values, 0.95)]
+                               utils.percentile(values, 0.90),
+                               utils.percentile(values, 0.95)]
                     else:
                         row = [str(key)] + ['n/a'] * 5
                     ssr_table.add_row(row)
@@ -352,24 +352,3 @@ class TaskCommands(object):
                 api.delete_task(tid, force=force)
         else:
             api.delete_task(task_id, force=force)
-
-
-def percentile(N, percent):
-    """Find the percentile of a list of values.
-
-    @parameter N - is a list of values.
-    @parameter percent - a float value from 0.0 to 1.0.
-
-    @return - the percentile of the values
-    """
-    if not N:
-        return None
-    N.sort()
-    k = (len(N) - 1) * percent
-    f = math.floor(k)
-    c = math.ceil(k)
-    if f == c:
-        return N[int(k)]
-    d0 = N[int(f)] * (c - k)
-    d1 = N[int(c)] * (k - f)
-    return (d0 + d1)
