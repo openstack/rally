@@ -20,18 +20,22 @@ class Endpoint(object):
 
     def __init__(self, auth_url, username, password, tenant_name,
                  permission=consts.EndpointPermission.USER,
-                 region_name=None):
+                 region_name=None, use_public_urls=False, admin_port=35357):
         self.auth_url = auth_url
         self.username = username
         self.password = password
         self.tenant_name = tenant_name
         self.permission = permission
         self.region_name = region_name
+        self.use_public_urls = use_public_urls
+        self.admin_port = admin_port
 
     def to_dict(self, include_permission=False):
         dct = {"auth_url": self.auth_url, "username": self.username,
                "password": self.password, "tenant_name": self.tenant_name,
-               "region_name": self.region_name}
+               "region_name": self.region_name,
+               "use_public_urls": self.use_public_urls,
+               "admin_port": self.admin_port}
         if include_permission:
             dct["permission"] = self.permission
         return dct

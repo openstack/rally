@@ -152,7 +152,7 @@ class DeploymentCommands(object):
         :param deploy_id: a UUID of the deployment
         """
         headers = ['auth_url', 'username', 'password', 'tenant_name',
-                   'region_name']
+                   'region_name', 'use_public_urls', 'admin_port']
         table = prettytable.PrettyTable(headers)
         endpoints = db.deployment_get(deploy_id)['endpoints']
         for ep in endpoints:
