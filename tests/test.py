@@ -13,6 +13,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import mock
+
 from oslotest import base
 
 from rally import db
@@ -31,7 +33,10 @@ class DatabaseFixture(config.Config):
 
 class TestCase(base.BaseTestCase):
     """Test case base class for all unit tests."""
-    pass
+
+    def setUp(self):
+        super(TestCase, self).setUp()
+        self.addCleanup(mock.patch.stopall)
 
 
 class DBTestCase(TestCase):
