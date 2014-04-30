@@ -241,3 +241,56 @@ class ScenarioTestCase(test.TestCase):
                 print(traceback.format_exc())
                 self.assertTrue(False,
                                 "Scenario `%s` has wrong context" % scenario)
+
+    def test_RESOURCE_NAME_PREFIX(self):
+        self.assertTrue(isinstance(base.Scenario.RESOURCE_NAME_PREFIX,
+                                   basestring))
+
+    def test_RESOURCE_NAME_LENGTH(self):
+        self.assertTrue(isinstance(base.Scenario.RESOURCE_NAME_LENGTH, int))
+        self.assertTrue(base.Scenario.RESOURCE_NAME_LENGTH > 4)
+
+    @mock.patch(
+        "rally.benchmark.scenarios.base.Scenario.RESOURCE_NAME_PREFIX",
+        "prefix_")
+    def test_generate_random_name(self):
+        set_by_length = lambda lst: set(map(len, lst))
+        len_by_prefix = lambda lst, prefix:\
+            len(filter(bool, map(lambda i: i.startswith(prefix), lst)))
+        range_num = 50
+
+        # Defaults
+        result = [base.Scenario._generate_random_name()
+                  for i in range(range_num)]
+        self.assertEqual(len(result), len(set(result)))
+        self.assertEqual(
+            set_by_length(result),
+            set([(len(
+                base.Scenario.RESOURCE_NAME_PREFIX) +
+                base.Scenario.RESOURCE_NAME_LENGTH)]))
+        self.assertEqual(
+            len_by_prefix(result, base.Scenario.RESOURCE_NAME_PREFIX),
+            range_num)
+
+        # Custom prefix
+        prefix = "another_prefix_"
+        result = [base.Scenario._generate_random_name(prefix)
+                  for i in range(range_num)]
+        self.assertEqual(len(result), len(set(result)))
+        self.assertEqual(
+            set_by_length(result),
+            set([len(prefix) + base.Scenario.RESOURCE_NAME_LENGTH]))
+        self.assertEqual(
+            len_by_prefix(result, prefix), range_num)
+
+        # Custom length
+        name_length = 12
+        result = [base.Scenario._generate_random_name(length=name_length)
+                  for i in range(range_num)]
+        self.assertEqual(len(result), len(set(result)))
+        self.assertEqual(
+            set_by_length(result),
+            set([len(base.Scenario.RESOURCE_NAME_PREFIX) + name_length]))
+        self.assertEqual(
+            len_by_prefix(result, base.Scenario.RESOURCE_NAME_PREFIX),
+            range_num)

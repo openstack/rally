@@ -1,6 +1,9 @@
 {
     "NeutronNetworks.create_and_list_networks": [
         {
+            "args": {
+                "network_data": {}
+            },
             "runner": {
                 "type": "constant",
                 "times": 100,

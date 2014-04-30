@@ -14,6 +14,7 @@
 #    under the License.
 
 import mock
+import netaddr
 
 from rally.benchmark.scenarios.neutron import utils
 from tests.benchmark.scenarios import test_utils
@@ -36,31 +37,33 @@ class NeutronScenarioTestCase(test.TestCase):
         self.assertIsNotNone(action_duration)
         self.assertIsInstance(action_duration, float)
 
-    @mock.patch(NEUTRON_UTILS + "random.choice")
-    def test_generate_neutron_name(self, mock_random_choice):
-        mock_random_choice.return_value = "a"
-
-        for length in [10, 20]:
-            result = utils.NeutronScenario()._generate_neutron_name(length)
-            self.assertEqual(result, utils.TEMP_TEMPLATE + "a" * length)
-
+    @mock.patch(NEUTRON_UTILS + 'NeutronScenario._generate_random_name')
     @mock.patch(NEUTRON_UTILS + 'NeutronScenario.clients')
-    def test_create_network(self, mock_clients):
-        mock_clients("neutron").create_network.return_value = self.network
-        args = {"network_name": "test_network_name",
-                "arg1": "test_args1",
-                "arg2": "test_args2"}
-        expected_create_network_args = {"network": {
-                                            "name": "test_network_name",
-                                            "arg1": "test_args1",
-                                            "arg2": "test_args2"}}
+    def test_create_network(self, mock_clients, mock_random_name):
         neutron_scenario = utils.NeutronScenario()
-        return_network = neutron_scenario._create_network(**args)
+        explicit_name = "explicit_name"
+        random_name = "random_name"
+        mock_random_name.return_value = random_name
+        mock_clients("neutron").create_network.return_value = self.network
+
+        # Network name is specified
+        network_data = {"name": explicit_name, "admin_state_up": False}
+        expected_network_data = {"network": network_data}
+        network = neutron_scenario._create_network(network_data)
         mock_clients("neutron").create_network.assert_called_once_with(
-            expected_create_network_args)
-        self.assertEqual(self.network, return_network)
+            expected_network_data)
+        self.assertEqual(self.network, network)
         self._test_atomic_action_timer(neutron_scenario.atomic_actions(),
                                        'neutron.create_network')
+
+        mock_clients("neutron").create_network.reset_mock()
+
+        # Network name is random generated
+        network_data = {"admin_state_up": False}
+        expected_network_data["network"]["name"] = random_name
+        network = neutron_scenario._create_network(network_data)
+        mock_clients("neutron").create_network.assert_called_once_with(
+            expected_network_data)
 
     @mock.patch(NEUTRON_UTILS + 'NeutronScenario.clients')
     def test_list_networks(self, mock_clients):
@@ -72,3 +75,83 @@ class NeutronScenarioTestCase(test.TestCase):
         self.assertEqual(networks_list, return_networks_list)
         self._test_atomic_action_timer(neutron_scenario.atomic_actions(),
                                        'neutron.list_networks')
+
+    @mock.patch(NEUTRON_UTILS + "NeutronScenario._generate_subnet_cidr")
+    @mock.patch(NEUTRON_UTILS + "NeutronScenario.clients")
+    def test_create_subnet(self, mock_clients, mock_cidr):
+        network_id = "fake-id"
+        subnet_cidr = "192.168.0.0/24"
+        mock_cidr.return_value = subnet_cidr
+        scenario = utils.NeutronScenario()
+
+        network = {"network": {"id": network_id}}
+        expected_subnet_data = {
+            "subnet": {
+                "network_id": network_id,
+                "cidr": subnet_cidr,
+                "ip_version": scenario.SUBNET_IP_VERSION
+            }
+        }
+
+        # No extra options
+        subnet_data = {"network_id": network_id}
+        scenario._create_subnet(network, subnet_data)
+        mock_clients("neutron")\
+            .create_subnet.assert_called_once_with(expected_subnet_data)
+        self._test_atomic_action_timer(scenario.atomic_actions(),
+                                       "neutron.create_subnet")
+
+        mock_clients("neutron").create_subnet.reset_mock()
+
+        # Extra options are specified
+        extras = {"cidr": "192.168.16.0/24", "allocation_pools": []}
+        subnet_data.update(extras)
+        expected_subnet_data["subnet"].update(extras)
+        scenario._create_subnet(network, subnet_data)
+        mock_clients("neutron")\
+            .create_subnet.assert_called_once_with(expected_subnet_data)
+
+    @mock.patch(NEUTRON_UTILS + "NeutronScenario.clients")
+    def test_list_subnets(self, mock_clients):
+        subnets = [{"name": "fake1"}, {"name": "fake2"}]
+        mock_clients("neutron")\
+            .list_subnets.return_value = {"subnets": subnets}
+        scenario = utils.NeutronScenario()
+        result = scenario._list_subnets()
+        self.assertEqual(subnets, result)
+        self._test_atomic_action_timer(scenario.atomic_actions(),
+                                       "neutron.list_subnets")
+
+    def test_SUBNET_IP_VERSION(self):
+        "Curent NeutronScenario implementation supports only IPv4"
+        self.assertEqual(utils.NeutronScenario.SUBNET_IP_VERSION, 4)
+
+    def test_SUBNET_CIDR_PATTERN(self):
+        netaddr.IPNetwork(utils.NeutronScenario.SUBNET_CIDR_PATTERN % 0)
+        self.assertRaises(netaddr.core.AddrFormatError,
+                          netaddr.IPNetwork,
+                          utils.NeutronScenario.SUBNET_CIDR_PATTERN % 256)
+
+    def test_generate_subnet_cidr(self):
+        scenario = utils.NeutronScenario()
+        network1_id = "fake1"
+        network2_id = "fake2"
+
+        cidrs1 = map(scenario._generate_subnet_cidr, [network1_id] * 256)
+
+        self.assertRaises(ValueError,
+                          scenario._generate_subnet_cidr,
+                          network1_id)
+
+        cidrs2 = map(scenario._generate_subnet_cidr, [network2_id] * 256)
+
+        self.assertRaises(ValueError,
+                          scenario._generate_subnet_cidr,
+                          network2_id)
+
+        # All CIDRs must differ
+        self.assertEqual(len(cidrs1), len(set(cidrs1)))
+        self.assertEqual(len(cidrs2), len(set(cidrs2)))
+
+        # All CIDRs must be valid
+        map(netaddr.IPNetwork, cidrs1 + cidrs2)

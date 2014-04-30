@@ -13,14 +13,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import random
-import string
-
 from rally.benchmark.scenarios import base
 from rally.benchmark.scenarios import utils as scenario_utils
-
-
-TEMP_TEMPLATE = "rally_n_"
 
 
 class NeutronScenario(base.Scenario):
@@ -28,27 +22,64 @@ class NeutronScenario(base.Scenario):
        most of them are creating/deleting resources.
     """
 
-    def _generate_neutron_name(self, length=10):
-        """Generate random name for neutron resources."""
+    RESOURCE_NAME_PREFIX = "net_"
+    SUBNET_IP_VERSION = 4
+    SUBNET_CIDR_PATTERN = "192.168.%d.0/24"
 
-        rand_part = ''.join(random.choice(
-                            string.lowercase) for i in range(length))
-        return TEMP_TEMPLATE + rand_part
+    _subnet_cidrs = {}
+
+    @classmethod
+    def _generate_subnet_cidr(cls, network_id):
+        """Generates next subnet CIDR for given network,
+           without IP overlapping.
+        """
+        if network_id in cls._subnet_cidrs:
+            cidr_no = cls._subnet_cidrs[network_id]
+            if cidr_no > 255:
+                # NOTE(amaretskiy): consider whether max number of
+                #                   255 subnets per network is enough.
+                raise ValueError(
+                    "can not generate more than 255 subnets CIDRs "
+                    "per one network due to IP pattern limitation")
+        else:
+            cidr_no = 0
+
+        cls._subnet_cidrs[network_id] = cidr_no + 1
+        return cls.SUBNET_CIDR_PATTERN % cidr_no
 
     @scenario_utils.atomic_action_timer('neutron.create_network')
-    def _create_network(self, network_name, **kwargs):
-        """Creates neutron network with random name.
+    def _create_network(self, network_data):
+        """Creates neutron network.
 
-        :param network_name: the name of network
-        :param **kwargs: Other optional parameters to create networks like
-                        "tenant_id", "shared".
-        :return: neutron network instance
+        :param network_data: options for API v2.0 networks POST request
+        :returns: neutron network dict
         """
-
-        kwargs.setdefault("name", network_name)
-        return self.clients("neutron").create_network({"network": kwargs})
+        network_data.setdefault("name", self._generate_random_name())
+        return self.clients("neutron").create_network({
+                "network": network_data})
 
     @scenario_utils.atomic_action_timer('neutron.list_networks')
     def _list_networks(self):
         """Returns user networks list."""
         return self.clients("neutron").list_networks()['networks']
+
+    @scenario_utils.atomic_action_timer('neutron.create_subnet')
+    def _create_subnet(self, network, subnet_data):
+        """Creates neutron subnet.
+
+        :param network: neutron network dict
+        :param subnet_data: options for API v2.0 subnets POST request
+        :returns: neutron subnet dict
+        """
+        network_id = network["network"]["id"]
+        subnet_data["network_id"] = network_id
+        subnet_data.setdefault("cidr",
+                               self._generate_subnet_cidr(network_id))
+        subnet_data.setdefault("ip_version", self.SUBNET_IP_VERSION)
+
+        return self.clients("neutron").create_subnet({"subnet": subnet_data})
+
+    @scenario_utils.atomic_action_timer('neutron.list_subnets')
+    def _list_subnets(self):
+        """Returns user subnetworks list."""
+        return self.clients("neutron").list_subnets()["subnets"]
