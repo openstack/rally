@@ -73,7 +73,7 @@ class LxcEngineTestCase(test.TestCase):
             mock.call.get_server_object('name'),
             mock.call.stop_containers()]
         self.assertEqual(host_calls, fake_host.mock_calls)
-        fake_engine.deploy.assert_called_once()
+        fake_engine.deploy.assert_called_once_with()
         m_engine.EngineFactory.get_engine.assert_called_once_with(
             'FakeEngine', fake_deployment)
         engine_config = self.config['engine'].copy()
@@ -190,4 +190,4 @@ class LxcEngineTestCase(test.TestCase):
         for res in fake_resources:
             m_deployment.assert_has_calls(mock.call.delete_resource(res.id))
 
-        fake_provider.destroy_servers.assert_called_once()
+        fake_provider.destroy_servers.assert_called_once_with()

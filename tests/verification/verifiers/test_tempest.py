@@ -13,8 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-
-import json
 import mock
 import os
 
@@ -44,8 +42,8 @@ class TempestTestCase(test.TestCase):
         mock_open.return_value = mock_file
         self.verifier._write_config(conf)
         mock_open.assert_called_once_with(self.verifier.config_file, 'w+')
-        mock_file.write.assert_called_once_whith(conf)
-        mock_file.close.assert_called_once()
+        conf.write.assert_called_once_with(mock_file.__enter__())
+        mock_file.__exit__.assert_called_once_with(None, None, None)
 
     @mock.patch('os.path.exists')
     def test_is_installed(self, mock_exists):
@@ -95,7 +93,7 @@ class TempestTestCase(test.TestCase):
     def test_run(self, mock_sp, mock_env):
         self.verifier.run('tempest.api.image')
         fake_call = (
-            '%(venv)s python -m subunit.run tempest.api.image '
+            '%(venv)s testr run --parallel --subunit tempest.api.image '
             '| %(venv)s subunit2junitxml --forward '
             '--output-to=%(tempest_path)s/tests_log.xml '
             '| %(venv)s subunit-2to1 '
@@ -106,44 +104,25 @@ class TempestTestCase(test.TestCase):
             fake_call, env=mock_env, cwd=self.verifier.tempest_path,
             shell=True)
 
+    @mock.patch(TEMPEST_PATH + '.tempest.os.remove')
     @mock.patch(TEMPEST_PATH + '.tempest.Tempest.discover_tests')
     @mock.patch(TEMPEST_PATH + '.tempest.Tempest._initialize_testr')
     @mock.patch(TEMPEST_PATH + '.tempest.Tempest.run')
     @mock.patch(TEMPEST_PATH + '.tempest.Tempest._write_config')
-    @mock.patch(TEMPEST_PATH + '.config.TempestConf.generate')
+    @mock.patch(TEMPEST_PATH + '.config.TempestConf')
     @mock.patch('rally.db.deployment_get')
     @mock.patch('rally.osclients.Clients')
     @mock.patch('rally.objects.endpoint.Endpoint')
-    @mock.patch(TEMPEST_PATH + '.config.urllib2')
-    def test_verify(self, mock_urllib2, mock_endpoint, mock_osclients,
-                    mock_get, mock_gen, mock_write, mock_run, mock_testr_init,
-                    mock_discover):
+    def test_verify(self, mock_endpoint, mock_osclients, mock_get, mock_conf,
+                    mock_write, mock_run, mock_testr_init, mock_discover,
+                    mock_os):
         fake_conf = mock.MagicMock()
-        mock_gen.return_value = fake_conf
-
-        class MockResponse(object):
-            def __init__(self, resp_data, code=200, msg='OK'):
-                self.resp_data = resp_data
-                self.code = code
-                self.msg = msg
-                self.headers = {'content-type': 'text/plain; charset=utf-8'}
-
-            def read(self):
-                return self.resp_data
-
-            def getcode(self):
-                return self.code
-
-        mock_urllib2.urlopen.return_value = MockResponse(json.dumps({}))
-
-        fake_tests = ['tempest.test.fake1', 'tempest.test.fake2']
-        mock_discover.return_value = fake_tests
+        mock_conf().generate.return_value = fake_conf
 
         self.verifier.verify("smoke", None)
-
-        mock_gen.assert_called_once()
+        mock_conf().generate.assert_called_once_with()
         mock_write.assert_called_once_with(fake_conf)
-        mock_run.assert_called_once_with(' '.join(fake_tests))
+        mock_run.assert_called_once_with("smoke")
 
     @mock.patch('os.environ')
     def test__generate_env(self, mock_env):
@@ -166,7 +145,7 @@ class TempestTestCase(test.TestCase):
 
         mock_isdir.assert_called_once_with(
             os.path.join(self.verifier.tempest_path, '.venv'))
-        self.assertEqual(0, mock_sp.call_count)
+        self.assertFalse(mock_sp.called)
 
     @mock.patch('os.path.isdir')
     @mock.patch(TEMPEST_PATH + '.tempest.subprocess.check_call')
@@ -194,7 +173,7 @@ class TempestTestCase(test.TestCase):
 
         mock_isdir.assert_called_once_with(
             os.path.join(self.verifier.tempest_path, '.testrepository'))
-        self.assertEqual(0, mock_sp.call_count)
+        self.assertFalse(mock_sp.called)
 
     @mock.patch('os.path.isdir')
     @mock.patch(TEMPEST_PATH + '.tempest.subprocess.check_call')
@@ -219,12 +198,12 @@ class TempestTestCase(test.TestCase):
         mock_isfile.assert_called_once_with(self.verifier.log_file)
         self.assertEqual(0, mock_parse.call_count)
 
-    @mock.patch('xml.dom.minidom.parse')
     @mock.patch('os.path.isfile')
-    def test__save_results_with_log_file(self, mock_isfile, mock_parse):
+    def test__save_results_with_log_file(self, mock_isfile):
         mock_isfile.return_value = True
         self.verifier.log_file = os.path.join(os.path.dirname(__file__),
                                               'fake_log.xml')
         self.verifier._save_results()
         mock_isfile.assert_called_once_with(self.verifier.log_file)
-        self.verifier.verification.finish_verification.assert_called_once()
+        self.assertEqual(
+            1, self.verifier.verification.finish_verification.call_count)

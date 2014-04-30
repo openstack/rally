@@ -242,7 +242,7 @@ def tempest_tests_exists():
                     and test.split('.')[0] in consts.TEMPEST_TEST_SETS):
                 tests[tests.index(test)] = 'tempest.api.' + test
 
-        wrong_tests = set(tests) - set(allowed_tests)
+        wrong_tests = set(tests) - allowed_tests
 
         if not wrong_tests:
             return ValidationResult()

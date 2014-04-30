@@ -35,7 +35,7 @@ class TempestScenarioTestCase(test.TestCase):
     def test_single_test(self, mock_sp):
         self.scenario.single_test("tempest.api.fake.test")
         expected_call = (
-            "%(venv)s python -m subunit.run tempest.api.fake.test "
+            "%(venv)s testr run --parallel --subunit tempest.api.fake.test "
             "| %(venv)s subunit2junitxml --forward --output-to=/dev/null "
             "| %(venv)s subunit-2to1 "
             "| %(venv)s %(tempest_path)s/tools/colorizer.py" %
