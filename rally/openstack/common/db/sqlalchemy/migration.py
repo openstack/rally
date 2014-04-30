@@ -213,8 +213,15 @@ def _db_schema_sanity_check(engine):
                         'where TABLE_SCHEMA=%s and '
                         'TABLE_COLLATION NOT LIKE "%%utf8%%"')
 
-        table_names = [res[0] for res in engine.execute(onlyutf8_sql,
-                                                        engine.url.database)]
+        # NOTE(morganfainberg): exclude the sqlalchemy-migrate and alembic
+        # versioning tables from the tables we need to verify utf8 status on.
+        # Non-standard table names are not supported.
+        EXCLUDED_TABLES = ['migrate_version', 'alembic_version']
+
+        table_names = [res[0] for res in
+                       engine.execute(onlyutf8_sql, engine.url.database) if
+                       res[0].lower() not in EXCLUDED_TABLES]
+
         if len(table_names) > 0:
             raise ValueError(_('Tables "%s" have non utf8 collation, '
                                'please make sure all tables are CHARSET=utf8'
