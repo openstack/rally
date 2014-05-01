@@ -13,6 +13,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+
+import json
 import mock
 import os
 
@@ -112,10 +114,27 @@ class TempestTestCase(test.TestCase):
     @mock.patch('rally.db.deployment_get')
     @mock.patch('rally.osclients.Clients')
     @mock.patch('rally.objects.endpoint.Endpoint')
-    def test_verify(self, mock_endpoint, mock_osclients, mock_get, mock_gen,
-                    mock_write, mock_run, mock_testr_init, mock_discover):
+    @mock.patch(TEMPEST_PATH + '.config.urllib2')
+    def test_verify(self, mock_urllib2, mock_endpoint, mock_osclients,
+                    mock_get, mock_gen, mock_write, mock_run, mock_testr_init,
+                    mock_discover):
         fake_conf = mock.MagicMock()
         mock_gen.return_value = fake_conf
+
+        class MockResponse(object):
+            def __init__(self, resp_data, code=200, msg='OK'):
+                self.resp_data = resp_data
+                self.code = code
+                self.msg = msg
+                self.headers = {'content-type': 'text/plain; charset=utf-8'}
+
+            def read(self):
+                return self.resp_data
+
+            def getcode(self):
+                return self.code
+
+        mock_urllib2.urlopen.return_value = MockResponse(json.dumps({}))
 
         fake_tests = ['tempest.test.fake1', 'tempest.test.fake2']
         mock_discover.return_value = fake_tests
