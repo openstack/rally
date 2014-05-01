@@ -84,6 +84,9 @@ def hvariety(data):
     """Returns a list of dictionaries, where every dictionary
     describes a method of calculating the number of bins.
     """
+    if len(data) == 0:
+        raise ValueError("Cannot calculate number of histrogram bins "
+                         "for zero length array of data")
     return [
             {
                 'method': 'Square Root Choice',

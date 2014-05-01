@@ -26,6 +26,7 @@ from rally.benchmark.processing import utils
 def _process_main_duration(result):
 
     pie = filter(lambda t: not t["error"], result["result"])
+    num_successful_iterations = len(pie)
     stacked_area = map(
         lambda t: {"idle_duration": 0, "duration": 0} if t["error"] else t,
         result["result"])
@@ -34,11 +35,12 @@ def _process_main_duration(result):
         result["result"]))
 
     histograms = []
-    hvariety = histo.hvariety(histogram_data)
-    for i in range(len(hvariety)):
-        histograms.append(histo.Histogram(histogram_data,
-                                          hvariety[i]['number_of_bins'],
-                                          hvariety[i]['method']))
+    if num_successful_iterations > 0:
+        hvariety = histo.hvariety(histogram_data)
+        for i in range(len(hvariety)):
+            histograms.append(histo.Histogram(histogram_data,
+                                              hvariety[i]['number_of_bins'],
+                                              hvariety[i]['method']))
 
     return {
         "pie": [
@@ -127,7 +129,6 @@ def _process_atomic(result):
                                                  hvariety[v]['number_of_bins'],
                                                  hvariety[v]['method'],
                                                  atomic_action['key']))
-    #print(histograms)
     return {
         "histogram": [[
             {
@@ -136,8 +137,7 @@ def _process_atomic(result):
                 "method": action.method,
                 "values": [{"x": x, "y": y}
                            for x, y in zip(action.x_axis, action.y_axis)]
-            }
-                for action in atomic_action_list]
+            } for action in atomic_action_list]
             for i, atomic_action_list in enumerate(histograms)
         ],
         "iter": stacked_area,

@@ -178,26 +178,38 @@
                     return d["duration"]["pie"]
                 })
 
-                draw_histogram("#results .total_duration .histogram", function(){
-                    return [d["duration"]["histogram"][0]];
-                })
+                if (d["duration"]["histogram"].length > 0) {
+                  //at least one successfull iteration so plot histogram
+                  draw_histogram("#results .total_duration .histogram", function(){
+                      return [d["duration"]["histogram"][0]];
+                  })
+                } else {
+                  total_histogram_select.hide()
+                }
 
-                draw_pie("#results .atomic .pie", function(){
-                    return d["atomic"]["pie"]
-                })
 
-                draw_stacked("#results .atomic .stackedarea", function(){
-                    return d["atomic"]["iter"]
-                })
+                if (d["atomic"]["iter"].length > 0){
+                // There are atomic actions results to plot
+                  draw_pie("#results .atomic .pie", function(){
+                      return d["atomic"]["pie"]
+                  })
 
-                draw_histogram("#results .atomic .histogram", function(){
-                    var atomic_actions = []
-                    for (var i = 0; i < d.atomic.histogram.length; i++) {
-                        atomic_actions[i] = d["atomic"]["histogram"][i][0];
-                    }
-                    return atomic_actions;
-                })
+                  draw_stacked("#results .atomic .stackedarea", function(){
+                      return d["atomic"]["iter"]
+                  })
 
+                  draw_histogram("#results .atomic .histogram", function(){
+                      var atomic_actions = []
+                      for (var i = 0; i < d.atomic.histogram.length; i++) {
+                          atomic_actions[i] = d["atomic"]["histogram"][i][0];
+                      }
+                      return atomic_actions;
+                  })
+                } else {
+                  // No atomic actions results
+                  // Don't show atomic actions header & Select
+                  $("#results .atomic").hide()
+                }
 
                 $("#template").hide()
             }).change();
