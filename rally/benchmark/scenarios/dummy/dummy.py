@@ -10,9 +10,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import random
 import time
 
 from rally.benchmark.scenarios import base
+from rally.benchmark import validation as valid
 from rally import exceptions
 
 
@@ -32,6 +34,10 @@ class Dummy(base.Scenario):
         if sleep:
             time.sleep(sleep)
 
+    @valid.add_validator(valid.number("size_of_message",
+                                      minval=1,
+                                      integer_only=True,
+                                      nullable=True))
     @base.scenario()
     def dummy_exception(self, size_of_message=1):
         """Test if exceptions are processed properly.
@@ -44,3 +50,25 @@ class Dummy(base.Scenario):
         """
 
         raise exceptions.DummyScenarioException("M" * size_of_message)
+
+    @valid.add_validator(valid.number("exception_probability",
+                                      minval=0,
+                                      maxval=1,
+                                      integer_only=False,
+                                      nullable=True))
+    @base.scenario()
+    def dummy_exception_probability(self, exception_probability=0.5):
+        """Test if exceptions are processed properly.
+
+        This scenario will throw an exception sometimes.
+
+        :param exception_probability: Sets how likely it is that an exception
+                                      will be thrown. Float between 0 and 1
+                                      0=never 1=always.
+        """
+
+        if random.random() < exception_probability:
+            raise exceptions.DummyScenarioException(
+                "Dummy Scenario Exception: Probability: %s"
+                % exception_probability
+            )

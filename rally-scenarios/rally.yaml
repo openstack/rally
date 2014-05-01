@@ -83,3 +83,42 @@
         type: "constant"
         times: 10
         concurrency: 10
+
+  Dummy.dummy:
+    -
+      args:
+        sleep: 5
+      runner:
+        type: "constant"
+        times: 20
+        concurrency: 5
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+
+  Dummy.dummy_exception:
+    -
+      args:
+        size_of_message: 5
+      runner:
+        type: "constant"
+        times: 20
+        concurrency: 5
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+
+  Dummy.dummy_exception_probability:
+    -
+      args:
+        exception_probability: 0.5
+      runner:
+        type: "constant"
+        times: 100
+        concurrency: 1
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1

@@ -1,13 +1,13 @@
 {
-    "Dummy.dummy": [
+    "Dummy.dummy_exception_probability": [
         {
             "args": {
-                "sleep": 5
+                "exception_probability": 0.5
             },
             "runner": {
                 "type": "constant",
-                "times": 20,
-                "concurrency": 5
+                "times": 1000,
+                "concurrency": 1
             },
             "context": {
                 "users": {
