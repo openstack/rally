@@ -71,13 +71,15 @@ init_variables() {
 install_rhel_based_system_requirements() {
   local install_rally_dependencies='curl'
   local cryptography_dependencies='gcc libffi-devel python-devel openssl-devel gmp-devel'
-  yum -y install ${install_rally_dependencies} ${cryptography_dependencies}
+  local external_dependencies='libxml2-devel libxslt1-devel' # dependencies from projects, which are used by rally
+  yum -y install ${install_rally_dependencies} ${cryptography_dependencies} ${external_dependencies}
 }
 
 install_debian_based_system_requirements() {
   local install_rally_dependencies='curl'
   local cryptography_dependencies='build-essential libssl-dev libffi-dev python-dev'
-  apt-get -y install ${install_rally_dependencies} ${cryptography_dependencies}
+  local external_dependencies='libxml2-dev libxslt1-dev' # dependencies from projects, which are used by rally
+  apt-get -y install ${install_rally_dependencies} ${cryptography_dependencies} ${external_dependencies}
 }
 
 unsupported_os_system_requirements() {
