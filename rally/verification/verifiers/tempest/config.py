@@ -71,7 +71,12 @@ class TempestConf(object):
         cirros_url = ('http://download.cirros-cloud.net/%s/%s' %
                       (CONF.image.cirros_version,
                        CONF.image.cirros_image))
-        response = urllib2.urlopen(cirros_url)
+        try:
+            response = urllib2.urlopen(cirros_url)
+        except urllib2.URLError as err:
+            msg = _('Error on downloading cirros image, possibly'
+                    ' no connection to Internet with message %s') % str(err)
+            raise exceptions.TempestConfigCreationFailure(message=msg)
         if response.getcode() == httplib.OK:
             with open(self.img_path, 'wb') as img_file:
                 img_file.write(response.read())
