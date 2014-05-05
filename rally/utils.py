@@ -14,6 +14,7 @@
 #    under the License.
 
 import functools
+import imp
 import itertools
 import os
 import StringIO
@@ -23,7 +24,9 @@ import time
 from rally import exceptions
 from rally.openstack.common.gettextutils import _
 from rally.openstack.common import importutils
+from rally.openstack.common import log as logging
 
+LOG = logging.getLogger(__name__)
 
 JSON_SCHEMA = 'http://json-schema.org/draft-04/schema'
 
@@ -171,3 +174,20 @@ def log_deploy_wrapper(log, msg, **kw):
 
 def log_verification_wrapper(log, msg, **kw):
     return _log_wrapper('verification', log, msg, **kw)
+
+
+def load_plugins(directory):
+    if os.path.exists(directory):
+        plugins = (pl[:-3] for pl in os.listdir(directory)
+                   if pl.endswith(".py") and
+                   os.path.isfile(os.path.join(directory, pl)))
+        for plugin in plugins:
+            fullpath = os.path.join(directory, plugin)
+            try:
+                fp, pathname, descr = imp.find_module(plugin, [directory])
+                imp.load_module(plugin, fp, pathname, descr)
+                fp.close()
+                LOG.debug(_("Load plugin from file %s") % fullpath)
+            except Exception as e:
+                LOG.error(_("Couldn't load module from %(path)s: %(msg)s") %
+                          {"path": fullpath, "msg": e.message})
