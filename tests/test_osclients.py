@@ -146,17 +146,20 @@ class OSClientsTestCase(test.TestCase):
             fake_ceilometer = fakes.FakeCeilometerClient()
             mock_ceilometer.Client = mock.MagicMock(
                 return_value=fake_ceilometer)
+            kc = fakes.FakeKeystoneClient()
+            self.clients.keystone = mock.MagicMock(return_value=kc)
             self.assertTrue("ceilometer" not in self.clients.cache)
+            kc.auth_token = mock.MagicMock()
             client = self.clients.ceilometer()
             self.assertEqual(client, fake_ceilometer)
-            kw = {"username": self.endpoint.username,
-                  "password": self.endpoint.password,
-                  "tenant_name": self.endpoint.tenant_name,
-                  "region_name": self.endpoint.region_name,
-                  "endpoint": self.endpoint.auth_url,
+            endpoint = kc.service_catalog.get_endpoints()["metering"][0]
+
+            kw = {"endpoint": endpoint["publicURL"],
+                  "token": kc.auth_token,
                   "timeout": cfg.CONF.openstack_client_http_timeout,
-                  "insecure": False, "cacert": None}
-            mock_ceilometer.Client.assert_called_once_with("1", **kw)
+                  "insecure": False, "cacert": None,
+                  "region_name": None}
+            mock_ceilometer.Client.assert_called_once_with("2", **kw)
             self.assertEqual(self.clients.cache["ceilometer"],
                              fake_ceilometer)
 

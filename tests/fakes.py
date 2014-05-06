@@ -413,7 +413,8 @@ class FakeRolesManager(FakeManager):
 
 class FakeServiceCatalog(object):
     def get_endpoints(self):
-        return {'image': [{'publicURL': 'http://fake.to'}]}
+        return {'image': [{'publicURL': 'http://fake.to'}],
+                'metering': [{'publicURL': 'http://fake.to'}]}
 
 
 class FakeGlanceClient(object):

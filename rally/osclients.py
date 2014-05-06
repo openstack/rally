@@ -174,13 +174,18 @@ class Clients(object):
         return client
 
     @memoize('ceilometer')
-    def ceilometer(self, version='1'):
+    def ceilometer(self, version='2'):
         """Returns ceilometer client."""
+        kc = self.keystone()
+        endpoint = kc.service_catalog.get_endpoints()['metering'][0]
+        auth_token = kc.auth_token
+        if not hasattr(auth_token, '__call__'):
+            # python-ceilometerclient requires auth_token to be a callable
+            auth_token = lambda: kc.auth_token
+
         client = ceilometer.Client(version,
-                                   username=self.endpoint.username,
-                                   password=self.endpoint.password,
-                                   tenant_name=self.endpoint.tenant_name,
-                                   endpoint=self.endpoint.auth_url,
+                                   endpoint=endpoint['publicURL'],
+                                   token=auth_token,
                                    region_name=self.endpoint.region_name,
                                    timeout=CONF.openstack_client_http_timeout,
                                    insecure=CONF.https_insecure,

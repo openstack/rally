@@ -39,7 +39,8 @@ class ResourceCleaner(base.Context):
         "$schema": rutils.JSON_SCHEMA,
         "items": {
             "type": "string",
-            "enum": ["nova", "glance", "cinder", "quotas", "neutron"]
+            "enum": ["nova", "glance", "cinder",
+                     "quotas", "neutron", "ceilometer"]
         },
         "uniqueItems": True
     }
@@ -67,7 +68,11 @@ class ResourceCleaner(base.Context):
                                             clients.keystone().tenant_id),
                 "neutron": functools.partial(utils.delete_neutron_resources,
                                              clients.neutron(),
-                                             clients.keystone().tenant_id)
+                                             clients.keystone().tenant_id),
+                "ceilometer": functools.partial(
+                                            utils.delete_ceilometer_resources,
+                                            clients.ceilometer(),
+                                            clients.keystone().tenant_id)
             }
 
             for service in self.config:

@@ -108,6 +108,18 @@ def delete_neutron_resources(neutron, project_uuid):
     delete_neutron_networks(neutron, project_uuid)
 
 
+def delete_ceilometer_resources(ceilometer, project_uuid):
+    delete_alarms(ceilometer, project_uuid)
+
+
+def delete_alarms(ceilometer, project_uuid):
+    alarms = ceilometer.alarms.list(q=[{"field": "project_id",
+                                        "op": "eq",
+                                        "value": project_uuid}])
+    for alarm in alarms:
+        ceilometer.alarms.delete(alarm.alarm_id)
+
+
 def _wait_for_empty_list(mgr, timeout=10, check_interval=1):
     _wait_for_list_size(mgr, sizes=[0], timeout=timeout,
                         check_interval=check_interval)
