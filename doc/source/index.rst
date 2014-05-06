@@ -35,6 +35,7 @@ Contents:
    objects
    cmds
    osclients
+   plugins
 
 
 Indices and tables
