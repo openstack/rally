@@ -22,6 +22,7 @@ import six
 
 from rally.cmd import cliutils
 from rally.cmd import envutils
+from rally import consts
 from rally import db
 from rally import exceptions
 from rally import objects
@@ -30,31 +31,17 @@ from rally.openstack.common.gettextutils import _
 from rally.orchestrator import api
 
 
-TEMPEST_TEST_SETS = ('full',
-                     'smoke',
-                     'baremetal',
-                     'compute',
-                     'data_processing',
-                     'identity',
-                     'image',
-                     'network',
-                     'object_storage',
-                     'orchestration',
-                     'telemetry',
-                     'volume')
-
-
 class VerifyCommands(object):
 
-    @cliutils.args('--deploy-id', dest='deploy_id', type=str, required=False,
-                   help='UUID of a deployment.')
-    @cliutils.args('--set', dest='set_name', type=str, required=False,
-                   help='Name of tempest test set. '
-                        'Available sets: %s' % ', '.join(TEMPEST_TEST_SETS))
-    @cliutils.args('--regex', dest='regex', type=str, required=False,
-                   help='Regular expression of test.')
+    @cliutils.args("--deploy-id", dest="deploy_id", type=str, required=False,
+                   help="UUID of a deployment.")
+    @cliutils.args("--set", dest="set_name", type=str, required=False,
+                   help="Name of tempest test set. Available sets: %s" % ", ".
+                   join(consts.TEMPEST_TEST_SETS))
+    @cliutils.args("--regex", dest="regex", type=str, required=False,
+                   help="Regular expression of test.")
     @envutils.with_default_deploy_id
-    def start(self, deploy_id=None, set_name='smoke', regex=None):
+    def start(self, deploy_id=None, set_name="smoke", regex=None):
         """Start running tempest tests against a live cloud cluster.
 
         :param deploy_id: a UUID of a deployment
@@ -62,10 +49,10 @@ class VerifyCommands(object):
         :param regex: Regular expression of test
         """
         if regex:
-            set_name = 'full'
-        if set_name not in TEMPEST_TEST_SETS:
-            print('Sorry, but there are no desired tempest test set. '
-                  'Please choose from: %s' % ', '.join(TEMPEST_TEST_SETS))
+            set_name = "full"
+        if set_name not in consts.TEMPEST_TEST_SETS:
+            print("Sorry, but there are no desired tempest test set. Please "
+                  "choose from: %s" % ", ".join(consts.TEMPEST_TEST_SETS))
             return(1)
 
         api.verify(deploy_id, set_name, regex)

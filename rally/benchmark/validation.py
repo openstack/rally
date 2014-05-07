@@ -238,7 +238,8 @@ def tempest_tests_exists():
             tests = kwargs['test_names']
 
         for test in tests:
-            if not test.startswith('tempest.api.'):
+            if (not test.startswith("tempest.api.")
+                    and test.split('.')[0] in consts.TEMPEST_TEST_SETS):
                 tests[tests.index(test)] = 'tempest.api.' + test
 
         wrong_tests = set(tests) - set(allowed_tests)

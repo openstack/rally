@@ -17,6 +17,7 @@ import mock
 import uuid
 
 from rally.cmd.commands import verify
+from rally import consts
 from tests import test
 
 
@@ -67,5 +68,5 @@ class VerifyCommandsTestCase(test.TestCase):
 
         self.verify.start(deploy_id, wrong_set_name)
 
-        self.assertNotIn(wrong_set_name, verify.TEMPEST_TEST_SETS)
+        self.assertNotIn(wrong_set_name, consts.TEMPEST_TEST_SETS)
         self.assertFalse(mock_verify.called)
