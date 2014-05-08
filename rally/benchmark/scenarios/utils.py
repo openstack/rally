@@ -141,3 +141,29 @@ def atomic_action_timer(name):
             return f
         return func_atomic_actions
     return wrap
+
+
+class AtomicAction(utils.Timer):
+    """A class to measure the duration of atomic operations
+
+    This would simplify the way measure atomic opeation duration
+    in certain cases. For example if we want to get the duration
+    for each operation which runs in an iteration
+    for i in range(repetitions):
+        with scenario_utils.AtomicAction(instance_of_base_scenario_subclass,
+                                         "name_of_action"):
+            self.clients(<client>).<operation>
+    """
+
+    def __init__(self, scenario_instance, name):
+        """Constructor
+        :param scenario_instance: instance of subclass of base scenario
+        :param name: name of the ActionBuilder
+        """
+        super(AtomicAction, self).__init__()
+        self.scenario_instance = scenario_instance
+        self.name = name
+
+    def __exit__(self, type, value, tb):
+        super(AtomicAction, self).__exit__(type, value, tb)
+        self.scenario_instance._add_atomic_actions(self.name, self.duration())
