@@ -51,7 +51,7 @@ def requires_permission(permission):
     return wrapper
 
 
-def number(param_name=None, minval=None, maxval=None, none_ok=False,
+def number(param_name=None, minval=None, maxval=None, nullable=False,
            integer_only=False):
     """Number Validator
 
@@ -61,7 +61,7 @@ def number(param_name=None, minval=None, maxval=None, none_ok=False,
     :param param_name: Name of parameter to validate
     :param minval: Lower endpoint of valid interval
     :param maxval: Upper endpoint of valid interval
-    :param none_ok: Allow parameter not specified, or paramater=None
+    :param nullable: Allow parameter not specified, or paramater=None
     :param integer_only: Only accept integers
     """
 
@@ -74,7 +74,7 @@ def number(param_name=None, minval=None, maxval=None, none_ok=False,
         val = kwargs.get(param_name, None)
 
         # None may be valid if the scenario sets a sensible default.
-        if none_ok and val is None:
+        if nullable and val is None:
             return ValidationResult()
 
         try:

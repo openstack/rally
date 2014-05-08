@@ -42,7 +42,7 @@ class ValidationUtilsTestCase(test.TestCase):
         self.assertEqual(validators[0], test_validator)
 
     def test_number_invalid(self):
-        validator = validation.number('param', 0, 10, none_ok=False)
+        validator = validation.number('param', 0, 10, nullable=False)
 
         result = validator(param=-1)
         self.assertFalse(result.is_valid)
@@ -63,18 +63,18 @@ class ValidationUtilsTestCase(test.TestCase):
         self.assertFalse(result.is_valid)
 
     def test_number_integer_only(self):
-        validator = validation.number('param', 0, 10, none_ok=False,
+        validator = validation.number('param', 0, 10, nullable=False,
                                       integer_only=True)
         result = validator(param="5.0")
         self.assertFalse(result.is_valid)
 
-        validator = validation.number('param', 0, 10, none_ok=False,
+        validator = validation.number('param', 0, 10, nullable=False,
                                       integer_only=False)
         result = validator(param="5.0")
         self.assertTrue(result.is_valid)
 
     def test_number_valid(self):
-        validator = validation.number('param', 0, 10, none_ok=False)
+        validator = validation.number('param', 0, 10, nullable=False)
 
         result = validator(param=0)
         self.assertTrue(result.is_valid)
@@ -88,8 +88,8 @@ class ValidationUtilsTestCase(test.TestCase):
         result = validator(param=5.6)
         self.assertTrue(result.is_valid)
 
-    def test_number_noneok(self):
-        validator = validation.number('param', 0, 10, none_ok=True)
+    def test_number_nullable(self):
+        validator = validation.number('param', 0, 10, nullable=True)
 
         result = validator(param=None)
         self.assertTrue(result.is_valid)

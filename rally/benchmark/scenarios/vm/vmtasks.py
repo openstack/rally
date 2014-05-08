@@ -34,7 +34,7 @@ class VMTasks(nova_utils.NovaScenario, vm_utils.VMScenario):
     @valid.add_validator(valid.image_valid_on_flavor("flavor_id", "image_id"))
     @valid.add_validator(valid.file_exists("script"))
     @valid.add_validator(valid.number("port", minval=1, maxval=65535,
-                                      none_ok=True, integer_only=True))
+                                      nullable=True, integer_only=True))
     @base.scenario(context={"cleanup": ["nova"],
                    "keypair": {}, "allow_ssh": {}})
     def boot_runcommand_delete(self, image_id, flavor_id,
