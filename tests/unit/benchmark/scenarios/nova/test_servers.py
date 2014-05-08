@@ -217,7 +217,7 @@ class NovaServersTestCase(test.TestCase):
         scenario._create_volume.assert_called_once_with(5, imageRef="img")
         scenario._boot_server.assert_called_once_with(
             "img", 0,
-            block_device_mapping={'vda': 'volume_id:::1'},
+            block_device_mapping={"vda": "volume_id:::1"},
             fakearg="f")
         scenario.sleep_between.assert_called_once_with(10, 20)
         scenario._delete_server.assert_called_once_with(fake_server,

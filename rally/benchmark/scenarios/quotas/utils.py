@@ -22,16 +22,23 @@ class QuotasScenario(base.Scenario):
     """Base class for quotas scenarios with basic atomic actions."""
 
     @base.atomic_action_timer("quotas.update_quotas")
-    def _update_quotas(self, component, tenant_id, max_quota=1024):
-        """Update quotas.
+    def _update_quotas(self, component, tenant_id, max_quota=1024,
+                       quota_update_fn=None):
+        """Updates quotas.
 
         :param component: Component for the quotas.
         :param tenant_id: The project_id for the quotas to be updated.
         :param max_quota: Max value to be updated for quota.
+        :param quota_update_fn: Client quota update function.
+
+        Standard OpenStack clients use quotas.update().
+        Use `quota_update_fn` to override for non-standard clients.
 
         :returns: Updated quotas dictionary.
         """
         quotas = self._generate_quota_values(max_quota, component)
+        if quota_update_fn:
+            return quota_update_fn(tenant_id, **quotas)
         return self.admin_clients(component).quotas.update(tenant_id, **quotas)
 
     @base.atomic_action_timer("quotas.delete_quotas")
@@ -62,4 +69,10 @@ class QuotasScenario(base.Scenario):
                 "snapshots": random.randint(-1, max_quota),
                 "gigabytes": random.randint(-1, max_quota),
             }
+        elif component == "neutron":
+            quota = {}
+            for key in ["network", "subnet", "port", "router", "floatingip",
+                        "security_group", "security_group_rule"]:
+                quota[key] = random.randint(-1, max_quota)
+            quotas = {"body": {"quota": quota}}
         return quotas

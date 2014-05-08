@@ -235,7 +235,7 @@ class QuotasTestCase(test.TestCase):
     @mock.patch("rally.benchmark.context.quotas.nova_quotas.NovaQuotas")
     @mock.patch("rally.benchmark.context.quotas.cinder_quotas.CinderQuotas")
     @mock.patch("rally.benchmark.context.quotas.neutron_quotas.NeutronQuotas")
-    def test_no_quotas(self, mock_neutron_quotas, mock_cinder_quotas,
+    def test_no_quotas(self, mock_neutron_quota, mock_cinder_quotas,
                        mock_nova_quotas, mock_osclients):
         ctx = copy.deepcopy(self.context)
         if "quotas" in ctx["config"]:
@@ -245,14 +245,14 @@ class QuotasTestCase(test.TestCase):
             quotas_ctx.setup()
             self.assertFalse(mock_cinder_quotas.update.called)
             self.assertFalse(mock_nova_quotas.update.called)
-            self.assertFalse(mock_neutron_quotas.update.called)
+            self.assertFalse(mock_neutron_quota.update.called)
 
         self.assertFalse(mock_cinder_quotas.delete.called)
         self.assertFalse(mock_nova_quotas.delete.called)
-        self.assertFalse(mock_neutron_quotas.delete.called)
+        self.assertFalse(mock_neutron_quota.delete.called)
 
     @mock.patch("rally.benchmark.context.quotas.nova_quotas.NovaQuotas")
-    def test_exception_during_cleanup(self, mock_nova_quotas):
+    def test_exception_during_cleanup_nova(self, mock_nova_quotas):
 
         mock_nova_quotas.delete.side_effect = Exception("boom")
 
@@ -263,4 +263,18 @@ class QuotasTestCase(test.TestCase):
         quotas.Quotas(ctx).cleanup()
 
         self.assertEqual(mock_nova_quotas().delete.call_count,
+                         len(self.context["tenants"]))
+
+    @mock.patch("rally.benchmark.context.quotas.neutron_quotas.NeutronQuotas")
+    def test_exception_during_cleanup_neutron(self, mock_neutron_quota):
+
+        mock_neutron_quota.delete.side_effect = Exception("boom")
+
+        ctx = copy.deepcopy(self.context)
+        ctx["config"]["quotas"] = {"neutron": {"cpu": 1}}
+
+        # NOTE(boris-42): ensure that cleanup didn't raise exceptions.
+        quotas.Quotas(ctx).cleanup()
+
+        self.assertEqual(mock_neutron_quota().delete.call_count,
                          len(self.context["tenants"]))

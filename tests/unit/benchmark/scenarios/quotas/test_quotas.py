@@ -21,14 +21,21 @@ from tests.unit import test
 
 class QuotasTestCase(test.TestCase):
 
+    def setUp(self):
+        super(QuotasTestCase, self).setUp()
+        self.context = {
+            "user": {"tenant_id": "fake"},
+            "tenant": {"id": "fake"}
+        }
+
     def test_nova_update(self):
-        scenario = quotas.Quotas(context={"user": {"tenant_id": "fake"}})
+        scenario = quotas.Quotas(self.context)
         scenario._update_quotas = mock.MagicMock()
         scenario.nova_update(max_quota=1024)
         scenario._update_quotas.assert_called_once_with("nova", "fake", 1024)
 
     def test_nova_update_and_delete(self):
-        scenario = quotas.Quotas(context={"user": {"tenant_id": "fake"}})
+        scenario = quotas.Quotas(self.context)
         scenario._update_quotas = mock.MagicMock()
         scenario._delete_quotas = mock.MagicMock()
         scenario.nova_update_and_delete(max_quota=1024)
@@ -36,15 +43,26 @@ class QuotasTestCase(test.TestCase):
         scenario._delete_quotas.assert_called_once_with("nova", "fake")
 
     def test_cinder_update(self):
-        scenario = quotas.Quotas(context={"user": {"tenant_id": "fake"}})
+        scenario = quotas.Quotas(self.context)
         scenario._update_quotas = mock.MagicMock()
         scenario.cinder_update(max_quota=1024)
         scenario._update_quotas.assert_called_once_with("cinder", "fake", 1024)
 
     def test_cinder_update_and_delete(self):
-        scenario = quotas.Quotas(context={"user": {"tenant_id": "fake"}})
+        scenario = quotas.Quotas(self.context)
         scenario._update_quotas = mock.MagicMock()
         scenario._delete_quotas = mock.MagicMock()
         scenario.cinder_update_and_delete(max_quota=1024)
         scenario._update_quotas.assert_called_once_with("cinder", "fake", 1024)
         scenario._delete_quotas.assert_called_once_with("cinder", "fake")
+
+    @mock.patch("rally.benchmark.scenarios.base.Scenario.admin_clients")
+    def test_neutron_update(self, mock_clients):
+        scenario = quotas.Quotas(self.context)
+
+        scenario._update_quotas = mock.MagicMock()
+        mock_quota_update_fn = mock_clients().update_quota
+        scenario.neutron_update(max_quota=1024)
+        scenario._update_quotas.assert_called_once_with("neutron", "fake",
+                                                        1024,
+                                                        mock_quota_update_fn)

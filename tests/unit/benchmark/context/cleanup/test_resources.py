@@ -172,6 +172,21 @@ class NeutronPortTestCase(test.TestCase):
             raw_res["device_id"], {"port_id": raw_res["id"]})
 
 
+class NeutronQuotaTestCase(test.TestCase):
+
+    @mock.patch("%s.NeutronQuota._manager" % BASE)
+    def test_delete(self, mock_manager):
+        user = mock.MagicMock()
+        resources.NeutronQuota(user=user, tenant_uuid="fake").delete()
+        mock_manager().delete_quota.assert_called_once_with("fake")
+
+    def test__manager(self):
+        admin = mock.MagicMock(neutron=mock.Mock(return_value="foo"))
+        res = resources.NeutronQuota(admin=admin, tenant_uuid="fake")
+        res._manager()
+        self.assertEqual("foo", getattr(admin, res._service)())
+
+
 class GlanceImageTestCase(test.TestCase):
 
     @mock.patch("%s.GlanceImage._manager" % BASE)
@@ -203,6 +218,15 @@ class CeilometerTestCase(test.TestCase):
         self.assertEqual(["a", "b", "c"], ceil.list())
         mock_manager().list.assert_called_once_with(
             q=[{"field": "project_id", "op": "eq", "value": ceil.tenant_uuid}])
+
+
+class ZaqarQueuesTestCase(test.TestCase):
+
+    def test_list(self):
+        user = mock.Mock()
+        zaqar = resources.ZaqarQueues(user=user)
+        zaqar.list()
+        user.zaqar().queues.assert_called_once_with()
 
 
 class KeystoneMixinTestCase(test.TestCase):

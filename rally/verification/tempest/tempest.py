@@ -92,7 +92,7 @@ class Tempest(object):
     @staticmethod
     def _is_git_repo(directory):
         # will suppress git output
-        with open(os.devnull, 'w') as devnull:
+        with open(os.devnull, "w") as devnull:
             return os.path.isdir(directory) and not subprocess.call(
                 "git status", shell=True,
                 stdout=devnull, stderr=subprocess.STDOUT,
