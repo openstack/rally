@@ -15,6 +15,7 @@
 
 from rally.benchmark.scenarios import base
 from rally.benchmark import validation as valid
+from rally import consts
 
 
 class TempestScenario(base.Scenario):
@@ -26,7 +27,8 @@ class TempestScenario(base.Scenario):
 
         :param test_name: name of tempest scenario for launching
         """
-        if not test_name.startswith("tempest.api."):
+        if (not test_name.startswith("tempest.api.")
+                and test_name.split('.')[0] in consts.TEMPEST_TEST_SETS):
             test_name = "tempest.api." + test_name
 
         self.context()["verifier"].run(test_name)

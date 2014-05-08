@@ -24,6 +24,20 @@ for each enum. (e.g TaskStatus)
 from rally import utils
 
 
+TEMPEST_TEST_SETS = ("full",
+                     "smoke",
+                     "baremetal",
+                     "compute",
+                     "data_processing",
+                     "identity",
+                     "image",
+                     "network",
+                     "object_storage",
+                     "orchestration",
+                     "telemetry",
+                     "volume")
+
+
 class _TaskStatus(utils.ImmutableMixin, utils.EnumMixin):
     INIT = "init"
     VERIFYING = "verifying"
