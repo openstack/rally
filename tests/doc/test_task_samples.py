@@ -15,6 +15,7 @@
 
 import mock
 import os
+import re
 import traceback
 
 import yaml
@@ -23,19 +24,25 @@ from rally.benchmark.scenarios import base
 from rally.benchmark import engine
 from tests import test
 
+
 class TaskSampleTestCase(test.TestCase):
 
     @mock.patch("rally.benchmark.engine.BenchmarkEngine"
                 "._validate_config_semantic")
     def test_schema_is_valid(self, mock_semantic):
-        samples_path =  os.path.join(os.path.dirname(__file__), "..", "..",
-                                     "doc",  "samples", "tasks")
+        samples_path = os.path.join(os.path.dirname(__file__), "..", "..",
+                                    "doc", "samples", "tasks")
 
         scenarios = set()
 
         for dirname, dirnames, filenames in os.walk(samples_path):
             for filename in filenames:
                 full_path = os.path.join(dirname, filename)
+
+                # NOTE(hughsaunders): Skip non config files
+                # (bug https://bugs.launchpad.net/rally/+bug/1314369)
+                if not re.search('\.(ya?ml|json)$', filename, flags=re.I):
+                    continue
 
                 with open(full_path) as task_file:
                     try:
