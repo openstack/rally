@@ -1,0 +1,12 @@
+{
+    "TempestScenario.specific_regex": [
+        {
+            "args": {"regex": "^tempest.*image.*Server.*$"},
+            "runner": {
+                "type": "constant",
+                "times": 1,
+                "concurrency": 1
+            }
+        }
+    ]
+}

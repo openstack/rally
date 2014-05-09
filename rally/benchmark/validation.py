@@ -224,7 +224,7 @@ def image_valid_on_flavor(flavor_name, image_name):
 def tempest_tests_exists():
     """Returns validator for tempest test."""
     def tempest_test_exists_validator(**kwargs):
-        verifier = tempest.Tempest(kwargs['task'].task.deployment_uuid)
+        verifier = tempest.Tempest(kwargs["task"].task.deployment_uuid)
         if not verifier.is_installed():
             verifier.install()
         if not verifier.is_configured():
@@ -232,15 +232,15 @@ def tempest_tests_exists():
 
         allowed_tests = verifier.discover_tests()
 
-        if 'test_name' in kwargs:
-            tests = [kwargs['test_name']]
+        if "test_name" in kwargs:
+            tests = [kwargs["test_name"]]
         else:
-            tests = kwargs['test_names']
+            tests = kwargs["test_names"]
 
         for test in tests:
             if (not test.startswith("tempest.api.")
-                    and test.split('.')[0] in consts.TEMPEST_TEST_SETS):
-                tests[tests.index(test)] = 'tempest.api.' + test
+                    and test.split(".")[0] in consts.TEMPEST_TEST_SETS):
+                tests[tests.index(test)] = "tempest.api." + test
 
         wrong_tests = set(tests) - allowed_tests
 
@@ -248,9 +248,21 @@ def tempest_tests_exists():
             return ValidationResult()
         else:
             message = (_("One or more tests not found: '%s'") %
-                       "', '".join(wrong_tests))
+                       "', '".join(sorted(wrong_tests)))
             return ValidationResult(False, message)
     return tempest_test_exists_validator
+
+
+def tempest_set_exists():
+    """Returns validator for tempest set."""
+    def tempest_set_exists_validator(**kwargs):
+        if kwargs["set_name"] not in consts.TEMPEST_TEST_SETS:
+            message = _("Set name '%s' not found.") % kwargs["set_name"]
+            return ValidationResult(False, message)
+        else:
+            return ValidationResult()
+
+    return tempest_set_exists_validator
 
 
 def required_parameters(params):

@@ -171,10 +171,13 @@ class Tempest(object):
             print("Test set %s has been finished with error. "
                   "Check log for details" % set_name)
 
-    def run(self, testr_arg=None):
+    def run(self, testr_arg=None, log_file=None):
         """Launch tempest with given arguments
 
         :param testr_arg: argument which will be transmitted into testr
+        :type testr_arg: str
+        :param log_file: file name for junitxml results of tests. If not
+                         specified, value from "self.log_file" will be chosen.
         :type testr_arg: str
 
         :raises: :class:`subprocess.CalledProcessError` if tests has been
@@ -190,7 +193,7 @@ class Tempest(object):
                 "venv": self.venv_wrapper,
                 "arg": testr_arg,
                 "tempest_path": self.tempest_path,
-                "log_file": self.log_file
+                "log_file": log_file or self.log_file
             })
         LOG.debug("Test(s) started by the command: %s" % test_cmd)
         subprocess.check_call(test_cmd, cwd=self.tempest_path,

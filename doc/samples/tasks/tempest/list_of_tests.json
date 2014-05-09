@@ -1,0 +1,17 @@
+{
+    "TempestScenario.list_of_tests": [
+        {
+            "args": {
+                "test_names": [
+                    "tempest.api.image.v2.test_images.ListImagesTest.test_index_no_params",
+                    "tempest.api.image.v2.test_images.ListImagesTest.test_list_images_param_status"
+                ]
+            },
+            "runner": {
+                "type": "constant",
+                "times": 10,
+                "concurrency": 1
+            }
+        }
+    ]
+}

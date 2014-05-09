@@ -32,11 +32,13 @@ class TempestContextTestCase(test.TestCase):
         task.task.deployment_uuid.return_value = "fake_uuid"
         self.context = {"task": task}
 
+    @mock.patch(CONTEXT + ".os.mkdir")
     @mock.patch(TEMPEST + ".Tempest.generate_config_file")
     @mock.patch(TEMPEST + ".Tempest.is_configured")
     @mock.patch(TEMPEST + ".Tempest.install")
     @mock.patch(TEMPEST + ".Tempest.is_installed")
-    def test_setup(self, mock_is_install, mock_install, mock_is_cfg, mock_cfg):
+    def test_setup(self, mock_is_install, mock_install, mock_is_cfg, mock_cfg,
+                   mock_mkdir):
         mock_is_install.return_value = True
         mock_is_cfg.return_value = False
 
@@ -48,11 +50,12 @@ class TempestContextTestCase(test.TestCase):
         self.assertEqual(1, mock_cfg.call_count)
         self.assertEqual('/dev/null', benchmark.verifier.log_file)
 
+    @mock.patch(CONTEXT + ".os.mkdir")
     @mock.patch(TEMPEST + ".Tempest.is_configured")
     @mock.patch(TEMPEST + ".Tempest.is_installed")
     @mock.patch(TEMPEST + ".Tempest.install")
     def test_setup_failure_on_tempest_installation(
-            self, mock_install, mock_is_installed, mock_is_cfg):
+            self, mock_install, mock_is_installed, mock_is_cfg, mock_mkdir):
         mock_is_installed.return_value = False
         mock_install.side_effect = exceptions.TempestSetupFailure()
 
@@ -61,10 +64,12 @@ class TempestContextTestCase(test.TestCase):
         self.assertRaises(exceptions.BenchmarkSetupFailure, benchmark.setup)
         self.assertEqual(0, mock_is_cfg.call_count)
 
+    @mock.patch(CONTEXT + ".shutil")
     @mock.patch(CONTEXT + ".subprocess")
-    def test_cleanup(self, mock_sp):
+    def test_cleanup(self, mock_sp, mock_shutil):
         benchmark = tempest.Tempest(self.context)
         benchmark.verifier = mock.MagicMock()
+        benchmark.results_dir = "/tmp/path"
 
         benchmark.cleanup()
 
@@ -73,3 +78,4 @@ class TempestContextTestCase(test.TestCase):
             (benchmark.verifier.tempest_path, benchmark.verifier.venv_wrapper),
             shell=True, cwd=benchmark.verifier.tempest_path,
             env=benchmark.verifier.env)
+        mock_shutil.rmtree.assert_called_once_with("/tmp/path")
