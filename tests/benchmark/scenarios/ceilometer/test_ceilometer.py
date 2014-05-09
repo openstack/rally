@@ -36,7 +36,7 @@ class CeilometerBasicTestCase(test.TestCase):
 
         scenario._list_alarms = mock.MagicMock()
         scenario.list_alarms()
-        scenario._list_alarms.assert_called_once()
+        scenario._list_alarms.assert_called_once_with()
 
     def test_create_and_list_alarm(self):
         fake_alarm = mock.MagicMock()

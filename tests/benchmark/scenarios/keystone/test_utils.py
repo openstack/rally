@@ -130,7 +130,7 @@ class KeystoneScenarioTestCase(test.TestCase):
         fake_clients._keystone = fake_keystone
         scenario = utils.KeystoneScenario(admin_clients=fake_clients)
         scenario._list_users()
-        fake_keystone.users.list.assert_called_once()
+        fake_keystone.users.list.assert_called_once_with()
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        'keystone.list_users')
 
@@ -141,6 +141,6 @@ class KeystoneScenarioTestCase(test.TestCase):
         fake_clients._keystone = fake_keystone
         scenario = utils.KeystoneScenario(admin_clients=fake_clients)
         scenario._list_tenants()
-        fake_keystone.tenants.list.assert_called_once()
+        fake_keystone.tenants.list.assert_called_once_with()
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        'keystone.list_tenants')

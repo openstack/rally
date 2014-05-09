@@ -74,8 +74,8 @@ class TestMultihostEngine(test.TestCase):
         fakeDeployment.assert_called_once_with(
             config=self.config['nodes'][0],
             parent_uuid=self.deployment['uuid'])
-        fake_engine.__enter__.assert_called_once()
-        fake_engine.__exit__.assert_called_once()
+        fake_engine.__enter__.assert_called_once_with()
+        fake_engine.__exit__.assert_called_once_with(None, None, None)
 
     def test__update_controller_ip(self):
         self.engine.controller_ip = '1.2.3.4'

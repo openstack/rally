@@ -135,9 +135,11 @@ class Tempest(object):
                 self._install_venv()
                 self._initialize_testr()
             except subprocess.CalledProcessError as e:
+                self.uninstall()
                 raise exceptions.TempestSetupFailure("failed cmd: '%s'", e.cmd)
             else:
                 print("Tempest has been successfully installed!")
+
         else:
             print("Tempest is already installed")
 
@@ -151,41 +153,42 @@ class Tempest(object):
             self.generate_config_file()
 
         if set_name == "full":
-            tests_arg = " ".join(self.discover_tests())
+            testr_arg = ""
         elif set_name == "smoke":
-            tests_arg = " ".join(self.discover_tests("smoke"))
+            testr_arg = "smoke"
         else:
-            tests_arg = " ".join(self.discover_tests("tempest.api.%s" %
-                                                     set_name))
-
-        if regex:
-            tests_arg += " %s" % " ".join(self.discover_tests(regex))
+            if set_name:
+                testr_arg = "tempest.api.%s" % set_name
+            elif regex:
+                testr_arg = regex
+            else:
+                testr_arg = ""
 
         self.verification.start_verifying(set_name)
         try:
-            self.run(tests_arg)
+            self.run(testr_arg)
         except subprocess.CalledProcessError:
             print("Test set %s has been finished with error. "
                   "Check log for details" % set_name)
 
-    def run(self, test_arg):
+    def run(self, testr_arg=None):
         """Launch tempest with given arguments
 
-        :param test_arg: argument which will be transmitted into test launcher
-        :type test_arg: str
+        :param testr_arg: argument which will be transmitted into testr
+        :type testr_arg: str
 
         :raises: :class:`subprocess.CalledProcessError` if tests has been
                  finished with error.
         """
 
         test_cmd = (
-            "%(venv)s python -m subunit.run %(arg)s "
+            "%(venv)s testr run --parallel --subunit %(arg)s "
             "| %(venv)s subunit2junitxml --forward --output-to=%(log_file)s "
             "| %(venv)s subunit-2to1 "
             "| %(venv)s %(tempest_path)s/tools/colorizer.py" %
             {
                 "venv": self.venv_wrapper,
-                "arg": test_arg,
+                "arg": testr_arg,
                 "tempest_path": self.tempest_path,
                 "log_file": self.log_file
             })
@@ -194,7 +197,7 @@ class Tempest(object):
                               env=self.env, shell=True)
 
     def discover_tests(self, pattern=""):
-        """Return a list with discovered tests which match given pattern."""
+        """Return a set of discovered tests which match given pattern."""
 
         cmd = "%(venv)s testr list-tests %(pattern)s" % {
             "venv": self.venv_wrapper,
@@ -203,21 +206,23 @@ class Tempest(object):
             cmd, shell=True, cwd=self.tempest_path, env=self.env,
             stdout=subprocess.PIPE).communicate()[0]
 
-        tests = []
+        tests = set()
         for test in raw_results.split('\n'):
             if test.startswith("tempest."):
                 index = test.find("[")
                 if index != -1:
-                    tests.append(test[:index])
+                    tests.add(test[:index])
                 else:
-                    tests.append(test)
+                    tests.add(test)
+
         return tests
 
-    @utils.log_verification_wrapper(
-        LOG.info, _("Saving verification results."))
-    def _save_results(self):
-        if os.path.isfile(self.log_file):
-            dom = md.parse(self.log_file).getElementsByTagName("testsuite")[0]
+    @staticmethod
+    def parse_results(log_file):
+        """Parse junitxml file."""
+
+        if os.path.isfile(log_file):
+            dom = md.parse(log_file).getElementsByTagName("testsuite")[0]
 
             total = {
                 "tests": int(dom.getAttribute("tests")),
@@ -246,11 +251,18 @@ class Tempest(object):
                     else:
                         test["status"] = "OK"
                     test_cases[test["name"]] = test
-            if self.verification:
-                self.verification.finish_verification(total=total,
-                                                      test_cases=test_cases)
+            return total, test_cases
         else:
             LOG.error("XML-log file not found.")
+            return None, None
+
+    @utils.log_verification_wrapper(
+        LOG.info, _("Saving verification results."))
+    def _save_results(self):
+        total, test_cases = self.parse_results(self.log_file)
+        if total and test_cases and self.verification:
+            self.verification.finish_verification(total=total,
+                                                  test_cases=test_cases)
 
     def verify(self, set_name, regex):
         self._prepare_and_run(set_name, regex)

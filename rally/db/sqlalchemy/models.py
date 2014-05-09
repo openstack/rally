@@ -215,7 +215,7 @@ class VerificationResult(BASE, RallyBase):
     verification_uuid = sa.Column(sa.String(36),
                                   sa.ForeignKey('verifications.uuid'))
 
-    data = sa.Column(sa_types.MutableJSONEncodedDict, nullable=False)
+    data = sa.Column(sa_types.BigMutableJSONEncodedDict, nullable=False)
 
 
 def create_db():
