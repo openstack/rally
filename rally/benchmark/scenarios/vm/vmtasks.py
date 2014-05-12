@@ -73,7 +73,7 @@ class VMTasks(nova_utils.NovaScenario, vm_utils.VMScenario):
             LOG.warning(_("Script %s did not output valid JSON.") % script)
 
         self._delete_server(server)
-        LOG.debug(_("Output streams from in-instance script execution: "
-                    "stdout: %(stdout)s, stderr: $(stderr)s") % dict(
-                        stdout=out, stderr=err))
+        LOG.debug("Output streams from in-instance script execution: "
+                  "stdout: %(stdout)s, stderr: $(stderr)s" % dict(
+                      stdout=out, stderr=err))
         return {"data": out, "errors": err}

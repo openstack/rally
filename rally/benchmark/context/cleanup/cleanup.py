@@ -79,7 +79,7 @@ class ResourceCleaner(base.Context):
                 try:
                     cleanup_methods[service]()
                 except Exception as e:
-                    LOG.debug(_("Not all resources were cleaned."),
+                    LOG.debug("Not all resources were cleaned.",
                               exc_info=sys.exc_info())
                     LOG.warning(_('Unable to fully cleanup the cloud: %s') %
                                 (e.message))
@@ -90,7 +90,7 @@ class ResourceCleaner(base.Context):
             admin = osclients.Clients(self.admin)
             utils.delete_keystone_resources(admin.keystone())
         except Exception as e:
-            LOG.debug(_("Not all resources were cleaned."),
+            LOG.debug("Not all resources were cleaned.",
                       exc_info=sys.exc_info())
             LOG.warning(_('Unable to fully cleanup keystone service: %s') %
                         (e.message))

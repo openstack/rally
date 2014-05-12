@@ -187,7 +187,7 @@ def load_plugins(directory):
                 fp, pathname, descr = imp.find_module(plugin, [directory])
                 imp.load_module(plugin, fp, pathname, descr)
                 fp.close()
-                LOG.debug(_("Load plugin from file %s") % fullpath)
+                LOG.debug("Load plugin from file %s" % fullpath)
             except Exception as e:
                 LOG.error(_("Couldn't load module from %(path)s: %(msg)s") %
                           {"path": fullpath, "msg": e.message})
