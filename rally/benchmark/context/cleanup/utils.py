@@ -15,6 +15,8 @@
 
 import logging
 
+from neutronclient.common import exceptions as neutron_exceptions
+
 from rally.benchmark.scenarios.keystone import utils as kutils
 from rally.benchmark import utils as bench_utils
 
@@ -116,21 +118,36 @@ def delete_keypairs(nova):
     _wait_for_empty_list(nova.keypairs)
 
 
-def delete_neutron_networks(neutron, project_uuid):
-    for network in neutron.list_networks()['networks']:
-        if network['tenant_id'] == project_uuid:
-            neutron.delete_network(network['id'])
-
-
-def delete_neutron_subnets(neutron, project_uuid):
-    for subnet in neutron.list_subnets()['subnets']:
-        if subnet['tenant_id'] == project_uuid:
-            neutron.delete_subnet(subnet['id'])
-
-
 def delete_neutron_resources(neutron, project_uuid):
-    delete_neutron_subnets(neutron, project_uuid)
-    delete_neutron_networks(neutron, project_uuid)
+    # Ports
+    for port in neutron.list_ports()["ports"]:
+        if port["tenant_id"] == project_uuid:
+
+            # Detach routers
+            for fip in port["fixed_ips"]:
+                neutron.remove_interface_router(
+                    port["device_id"], {
+                        "subnet_id": fip["subnet_id"]
+                    })
+            try:
+                neutron.delete_port(port["id"])
+            except neutron_exceptions.PortNotFoundClient:
+                # Port can be already auto-deleted, skip silently
+                pass
+    # Routers
+    for router in neutron.list_routers()["routers"]:
+        if router["tenant_id"] == project_uuid:
+                neutron.delete_router(router["id"])
+
+    # Subnets
+    for subnet in neutron.list_subnets()["subnets"]:
+        if subnet["tenant_id"] == project_uuid:
+            neutron.delete_subnet(subnet["id"])
+
+    # Networks
+    for network in neutron.list_networks()["networks"]:
+        if network["tenant_id"] == project_uuid:
+            neutron.delete_network(network["id"])
 
 
 def delete_ceilometer_resources(ceilometer, project_uuid):

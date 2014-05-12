@@ -67,33 +67,36 @@ class NeutronScenarioTestCase(test.TestCase):
 
     @mock.patch(NEUTRON_UTILS + 'NeutronScenario.clients')
     def test_list_networks(self, mock_clients):
+        scenario = utils.NeutronScenario()
         networks_list = []
         networks_dict = {"networks": networks_list}
         mock_clients("neutron").list_networks.return_value = networks_dict
-        neutron_scenario = utils.NeutronScenario()
-        return_networks_list = neutron_scenario._list_networks()
+        return_networks_list = scenario._list_networks()
         self.assertEqual(networks_list, return_networks_list)
-        self._test_atomic_action_timer(neutron_scenario.atomic_actions(),
+        self._test_atomic_action_timer(scenario.atomic_actions(),
                                        'neutron.list_networks')
 
+    @mock.patch(NEUTRON_UTILS + 'NeutronScenario._generate_random_name')
     @mock.patch(NEUTRON_UTILS + "NeutronScenario._generate_subnet_cidr")
     @mock.patch(NEUTRON_UTILS + "NeutronScenario.clients")
-    def test_create_subnet(self, mock_clients, mock_cidr):
+    def test_create_subnet(self, mock_clients, mock_cidr, mock_random_name):
+        scenario = utils.NeutronScenario()
         network_id = "fake-id"
         subnet_cidr = "192.168.0.0/24"
         mock_cidr.return_value = subnet_cidr
-        scenario = utils.NeutronScenario()
+        mock_random_name.return_value = "fake-name"
 
         network = {"network": {"id": network_id}}
         expected_subnet_data = {
             "subnet": {
                 "network_id": network_id,
                 "cidr": subnet_cidr,
-                "ip_version": scenario.SUBNET_IP_VERSION
+                "ip_version": scenario.SUBNET_IP_VERSION,
+                "name": "fake-name"
             }
         }
 
-        # No extra options
+        # Default options
         subnet_data = {"network_id": network_id}
         scenario._create_subnet(network, subnet_data)
         mock_clients("neutron")\
@@ -103,7 +106,7 @@ class NeutronScenarioTestCase(test.TestCase):
 
         mock_clients("neutron").create_subnet.reset_mock()
 
-        # Extra options are specified
+        # Custom options
         extras = {"cidr": "192.168.16.0/24", "allocation_pools": []}
         subnet_data.update(extras)
         expected_subnet_data["subnet"].update(extras)
@@ -122,32 +125,61 @@ class NeutronScenarioTestCase(test.TestCase):
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "neutron.list_subnets")
 
+    @mock.patch(NEUTRON_UTILS + 'NeutronScenario._generate_random_name')
+    @mock.patch(NEUTRON_UTILS + 'NeutronScenario.clients')
+    def test_create_router(self, mock_clients, mock_random_name):
+        scenario = utils.NeutronScenario()
+        router = mock.Mock()
+        explicit_name = "explicit_name"
+        random_name = "random_name"
+        mock_random_name.return_value = random_name
+        mock_clients("neutron").create_router.return_value = router
+
+        # Default options
+        result_router = scenario._create_router({})
+        mock_clients("neutron").create_router.assert_called_once_with(
+            {"router": {"name": random_name}})
+        self.assertEqual(result_router, router)
+        self._test_atomic_action_timer(scenario.atomic_actions(),
+                                       'neutron.create_router')
+
+        mock_clients("neutron").create_router.reset_mock()
+
+        # Custom options
+        router_data = {"name": explicit_name, "admin_state_up": True}
+        result_router = scenario._create_router(router_data)
+        mock_clients("neutron").create_router.assert_called_once_with(
+            {"router": router_data})
+
+    @mock.patch(NEUTRON_UTILS + 'NeutronScenario.clients')
+    def test_list_routers(self, mock_clients):
+        scenario = utils.NeutronScenario()
+        routers = [mock.Mock()]
+        mock_clients("neutron").list_routers.return_value = {
+            "routers": routers}
+        self.assertEqual(routers, scenario._list_routers())
+        self._test_atomic_action_timer(scenario.atomic_actions(),
+                                       'neutron.list_routers')
+
     def test_SUBNET_IP_VERSION(self):
-        "Curent NeutronScenario implementation supports only IPv4"
+        """Curent NeutronScenario implementation supports only IPv4."""
         self.assertEqual(utils.NeutronScenario.SUBNET_IP_VERSION, 4)
 
-    def test_SUBNET_CIDR_PATTERN(self):
-        netaddr.IPNetwork(utils.NeutronScenario.SUBNET_CIDR_PATTERN % 0)
-        self.assertRaises(netaddr.core.AddrFormatError,
-                          netaddr.IPNetwork,
-                          utils.NeutronScenario.SUBNET_CIDR_PATTERN % 256)
+    def test_SUBNET_CIDR_START(self):
+        """Valid default CIDR to generate first subnet."""
+        netaddr.IPNetwork(utils.NeutronScenario.SUBNET_CIDR_START)
 
     def test_generate_subnet_cidr(self):
         scenario = utils.NeutronScenario()
         network1_id = "fake1"
         network2_id = "fake2"
+        subnets_num = 300
 
-        cidrs1 = map(scenario._generate_subnet_cidr, [network1_id] * 256)
+        cidrs1 = map(scenario._generate_subnet_cidr,
+                     [network1_id] * subnets_num)
 
-        self.assertRaises(ValueError,
-                          scenario._generate_subnet_cidr,
-                          network1_id)
-
-        cidrs2 = map(scenario._generate_subnet_cidr, [network2_id] * 256)
-
-        self.assertRaises(ValueError,
-                          scenario._generate_subnet_cidr,
-                          network2_id)
+        cidrs2 = map(scenario._generate_subnet_cidr,
+                     [network2_id] * subnets_num)
 
         # All CIDRs must differ
         self.assertEqual(len(cidrs1), len(set(cidrs1)))

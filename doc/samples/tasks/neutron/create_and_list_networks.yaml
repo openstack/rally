@@ -2,7 +2,7 @@
   NeutronNetworks.create_and_list_networks:
     -
       args:
-        network_data:
+        network_create_args:
       runner:
         type: "constant"
         times: 100
@@ -11,3 +11,6 @@
         users:
           tenants: 1
           users_per_tenant: 1
+        quotas:
+          neutron:
+            network: -1

@@ -37,7 +37,7 @@
   NeutronNetworks.create_and_list_networks:
     -
       args:
-        network_data:
+        network_create_args:
       runner:
         type: "constant"
         times: 100
@@ -53,18 +53,41 @@
   NeutronNetworks.create_and_list_subnets:
     -
       args:
-        network_data:
-        subnet_data:
+        network_create_args:
+        subnet_create_args:
+        subnet_cidr_start: "1.1.0.0/30"
         subnets_per_network: 2
       runner:
         type: "constant"
         times: 100
-        concurrency: 5
+        concurrency: 10
       context:
         users:
           tenants: 1
           users_per_tenant: 1
         quotas:
           neutron:
-             subnet: -1
              network: -1
+             subnet: -1
+
+  NeutronNetworks.create_and_list_routers:
+    -
+      args:
+        network_create_args:
+        subnet_create_args:
+        subnet_cidr_start: "1.1.0.0/30"
+        subnets_per_network: 2
+        router_create_args:
+      runner:
+        type: "constant"
+        times: 100
+        concurrency: 10
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+        quotas:
+          neutron:
+             network: -1
+             subnet: -1
+             router: -1

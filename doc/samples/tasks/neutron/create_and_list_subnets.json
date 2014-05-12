@@ -2,8 +2,9 @@
     "NeutronNetworks.create_and_list_subnets": [
         {
             "args": {
-                "network_data": {},
-                "subnet_data": {},
+                "network_create_args": {},
+                "subnet_create_args": {},
+                "subnet_cidr_start": "1.1.0.0/30",
                 "subnets_per_network": 2
             },
             "runner": {
@@ -15,6 +16,12 @@
                 "users": {
                     "tenants": 5,
                     "users_per_tenant": 5
+                },
+                "quotas": {
+                    "neutron": {
+                        "network": -1,
+                        "subnet": -1
+                    }
                 }
             }
         }
