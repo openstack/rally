@@ -91,3 +91,22 @@
              network: -1
              subnet: -1
              router: -1
+
+  NeutronNetworks.create_and_list_ports:
+    -
+      args:
+        network_create_args:
+        port_create_args:
+        ports_per_network: 5
+      runner:
+        type: "constant"
+        times: 100
+        concurrency: 10
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+        quotas:
+          neutron:
+             network: -1
+             port: -1
