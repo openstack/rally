@@ -20,11 +20,12 @@ from glanceclient import exc as glance_exc
 from novaclient import exceptions as nova_exc
 
 from rally.benchmark import validation
+from rally.openstack.common.gettextutils import _
 from tests import fakes
 from tests import test
 
 
-TEMPEST = 'rally.verification.verifiers.tempest.tempest'
+TEMPEST = "rally.verification.verifiers.tempest.tempest"
 
 
 class ValidationUtilsTestCase(test.TestCase):
@@ -279,34 +280,100 @@ class ValidationUtilsTestCase(test.TestCase):
         self.assertFalse(result.is_valid)
         self.assertEqual(result.msg, "Flavor with id '101' not found")
 
-    @mock.patch(TEMPEST + '.Tempest.is_configured')
-    @mock.patch(TEMPEST + '.Tempest.is_installed')
-    @mock.patch(TEMPEST + '.subprocess')
+    @mock.patch(TEMPEST + ".Tempest.is_configured")
+    @mock.patch(TEMPEST + ".Tempest.is_installed")
+    @mock.patch(TEMPEST + ".subprocess")
     def test_tempest_test_name_not_valid(self, mock_sp, mock_install,
                                          mock_config):
         mock_sp.Popen().communicate.return_value = (
-            'tempest.api.fake_test1[gate]\ntempest.api.fate_test2\n',)
+            "tempest.api.fake_test1[gate]\ntempest.api.fate_test2\n",)
         mock_install.return_value = True
         mock_config.return_value = True
 
         validator = validation.tempest_tests_exists()
-        result = validator(test_name='no_valid_test_name',
+        result = validator(test_name="no_valid_test_name",
                            task=mock.MagicMock())
         self.assertFalse(result.is_valid)
         self.assertEqual("One or more tests not found: 'no_valid_test_name'",
                          result.msg)
 
-    @mock.patch(TEMPEST + '.Tempest.is_configured')
-    @mock.patch(TEMPEST + '.Tempest.is_installed')
-    @mock.patch(TEMPEST + '.subprocess')
+    @mock.patch(TEMPEST + ".Tempest.is_configured")
+    @mock.patch(TEMPEST + ".Tempest.is_installed")
+    @mock.patch(TEMPEST + ".subprocess")
     def test_tempest_test_name_valid(self, mock_sp, mock_install, mock_config):
         mock_sp.Popen().communicate.return_value = (
-            'tempest.api.compute.fake_test1[gate]\n'
-            'tempest.api.image.fake_test2\n',)
+            "tempest.api.compute.fake_test1[gate]\n"
+            "tempest.api.image.fake_test2\n",)
         mock_install.return_value = True
         mock_config.return_value = True
 
         validator = validation.tempest_tests_exists()
-        result = validator(test_name='image.fake_test2', task=mock.MagicMock())
+        result = validator(test_name="image.fake_test2", task=mock.MagicMock())
+
+        self.assertTrue(result.is_valid)
+
+    @mock.patch(TEMPEST + ".Tempest.is_configured")
+    @mock.patch(TEMPEST + ".Tempest.is_installed")
+    @mock.patch(TEMPEST + ".subprocess")
+    def test_tempest_test_names_one_invalid(self, mock_sp, mock_install,
+                                            mock_config):
+        mock_sp.Popen().communicate.return_value = ('\n'.join([
+            "tempest.api.fake_test1[gate]",
+            "tempest.api.fake_test2",
+            "tempest.api.fake_test3[gate,smoke]",
+            "tempest.api.fate_test4[fake]"]),)
+        mock_install.return_value = True
+        mock_config.return_value = True
+
+        validator = validation.tempest_tests_exists()
+        result = validator(test_names=["tempest.api.fake_test2",
+                                       "tempest.api.invalid.test"],
+                           task=mock.MagicMock())
+
+        self.assertFalse(result.is_valid)
+        self.assertEqual(_("One or more tests not found: '%s'") %
+                         "tempest.api.invalid.test", result.msg)
+
+    @mock.patch(TEMPEST + ".Tempest.is_configured")
+    @mock.patch(TEMPEST + ".Tempest.is_installed")
+    @mock.patch(TEMPEST + ".subprocess")
+    def test_tempest_test_names_all_invalid(self, mock_sp, mock_install,
+                                            mock_config):
+        mock_sp.Popen().communicate.return_value = ("\n".join([
+            "tempest.api.fake_test1[gate]",
+            "tempest.api.fake_test2",
+            "tempest.api.fake_test3[gate,smoke]",
+            "tempest.api.fate_test4[fake]"]),)
+        mock_install.return_value = True
+        mock_config.return_value = True
+
+        validator = validation.tempest_tests_exists()
+        result = validator(test_names=["tempest.api.invalid.test1",
+                                       "tempest.api.invalid.test2"],
+                           task=mock.MagicMock())
+
+        self.assertFalse(result.is_valid)
+        self.assertEqual(
+            _("One or more tests not found: '%s'") %
+            "tempest.api.invalid.test1', 'tempest.api.invalid.test2",
+            result.msg)
+
+    @mock.patch(TEMPEST + ".Tempest.is_configured")
+    @mock.patch(TEMPEST + ".Tempest.is_installed")
+    @mock.patch(TEMPEST + '.subprocess')
+    def test_tempest_test_names_all_valid(self, mock_sp, mock_install,
+                                          mock_config):
+        mock_sp.Popen().communicate.return_value = ("\n".join([
+            "tempest.api.fake_test1[gate]",
+            "tempest.api.fake_test2",
+            "tempest.api.fake_test3[gate,smoke]",
+            "tempest.api.fate_test4[fake]"]),)
+        mock_install.return_value = True
+        mock_config.return_value = True
+
+        validator = validation.tempest_tests_exists()
+        result = validator(test_names=["tempest.api.fake_test1",
+                                       "tempest.api.fake_test2"],
+                           task=mock.MagicMock())
 
         self.assertTrue(result.is_valid)

@@ -1,0 +1,12 @@
+{
+    "TempestScenario.set": [
+        {
+            "args": {"set_name": "image"},
+            "runner": {
+                "type": "constant",
+                "times": 1,
+                "concurrency": 1
+            }
+        }
+    ]
+}

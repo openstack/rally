@@ -13,7 +13,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import os
+import shutil
 import subprocess
+import tempfile
 
 from rally.benchmark.context import base
 from rally import exceptions
@@ -51,6 +54,12 @@ class Tempest(base.Context):
 
         self.context["verifier"] = self.verifier
 
+        # Create temporary directory for xml-results.
+        self.results_dir = os.path.join(
+            tempfile.gettempdir(), "%s-results" % self.task.task.uuid)
+        os.mkdir(self.results_dir)
+        self.context["tmp_results_dir"] = self.results_dir
+
     @utils.log_task_wrapper(LOG.info, _("Exit context: `tempest`"))
     def cleanup(self):
         try:
@@ -65,3 +74,4 @@ class Tempest(base.Context):
                                   cwd=self.verifier.tempest_path)
         except subprocess.CalledProcessError:
             LOG.error("Tempest cleanup failed.")
+        shutil.rmtree(self.results_dir)

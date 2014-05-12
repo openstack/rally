@@ -215,6 +215,10 @@ class TempestSetupFailure(RallyException):
     msg_fmt = _("Unable to setup tempest: '%(message)s'")
 
 
+class TempestBenchmarkFailure(RallyException):
+    msg_fmt = _("Failed tempest test(s): '%(message)s'")
+
+
 class BenchmarkSetupFailure(RallyException):
     msg_fmt = _("Unable to setup benchmark: '%(message)s'")
 
