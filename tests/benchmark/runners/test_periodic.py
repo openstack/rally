@@ -49,6 +49,7 @@ class PeriodicScenarioRunnerTestCase(test.TestCase):
 
     def test_run_scenario(self):
         context = fakes.FakeUserContext({}).context
+        context['task'] = {'uuid': 'fake_uuid'}
         config = {"times": 3, "period": 0, "timeout": 5}
         runner = periodic.PeriodicScenarioRunner(
                         None, [context["admin"]["endpoint"]], config)
@@ -59,6 +60,7 @@ class PeriodicScenarioRunnerTestCase(test.TestCase):
 
     def test_run_scenario_exception(self):
         context = fakes.FakeUserContext({}).context
+        context['task'] = {'uuid': 'fake_uuid'}
 
         config = {"times": 4, "period": 0}
         runner = periodic.PeriodicScenarioRunner(
@@ -70,9 +72,9 @@ class PeriodicScenarioRunnerTestCase(test.TestCase):
         self.assertIsNotNone(base.ScenarioRunnerResult(result))
 
     @mock.patch("rally.benchmark.runners.periodic.base.ScenarioRunnerResult")
-    @mock.patch("rally.benchmark.runners.periodic.multiprocessing_pool")
+    @mock.patch("rally.benchmark.runners.periodic.multiprocessing")
     @mock.patch("rally.benchmark.runners.periodic.time.sleep")
-    def test_run_scenario_internal_logic(self, mock_time, mock_pool,
+    def test_run_scenario_internal_logic(self, mock_time, mock_mp,
                                          mock_result):
         context = fakes.FakeUserContext({}).context
         config = {"times": 4, "period": 0, "timeout": 5}
@@ -80,7 +82,7 @@ class PeriodicScenarioRunnerTestCase(test.TestCase):
                         None, [context["admin"]["endpoint"]], config)
 
         mock_pool_inst = mock.MagicMock()
-        mock_pool.ThreadPool.return_value = mock_pool_inst
+        mock_mp.Pool.return_value = mock_pool_inst
 
         runner._run_scenario(fakes.FakeScenario, "do_it", context, {})
 
@@ -92,12 +94,14 @@ class PeriodicScenarioRunnerTestCase(test.TestCase):
                   base._get_scenario_context(context), {}),)
             )
             exptected_pool_inst_call.append(mock.call.apply_async(*args))
+            call = mock.call.close()
+            exptected_pool_inst_call.append(call)
 
         for i in range(config["times"]):
             call = mock.call.apply_async().get(timeout=5)
             exptected_pool_inst_call.append(call)
 
-        mock_pool.assert_has_calls([mock.call.ThreadPool(processes=1)])
+        mock_mp.assert_has_calls([mock.call.Pool(1)])
         mock_pool_inst.assert_has_calls(exptected_pool_inst_call)
         mock_time.assert_has_calls([])
 
