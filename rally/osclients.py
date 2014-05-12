@@ -23,6 +23,7 @@ from keystoneclient.v2_0 import client as keystone
 from neutronclient.neutron import client as neutron
 from novaclient import client as nova
 from oslo.config import cfg
+import urlparse
 
 from rally import exceptions
 
@@ -75,6 +76,17 @@ class Clients(object):
             "insecure": CONF.https_insecure, "cacert": CONF.https_cacert
         }
         kw = dict(self.endpoint.to_dict().items() + new_kw.items())
+        if kw["use_public_urls"]:
+            mgmt_url = urlparse.urlparse(kw["auth_url"])
+            if mgmt_url.port != kw["admin_port"]:
+                kw["endpoint"] = "{0}://{1}:{2}{3}".format(
+                    mgmt_url.scheme,
+                    mgmt_url.hostname,
+                    kw["admin_port"],
+                    mgmt_url.path
+                )
+            else:
+                kw["endpoint"] = kw["auth_url"]
         client = keystone.Client(**kw)
         client.authenticate()
         return client

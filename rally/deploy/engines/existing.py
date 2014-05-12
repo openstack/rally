@@ -30,7 +30,9 @@ class ExistingCloud(engine.EngineFactory):
                     "username": "admin",
                     "password": "password",
                     "tenant_name": "demo",
-                    "region_name": "RegionOne"
+                    "region_name": "RegionOne",
+                    "use_public_urls": False,
+                    "keystone_admin_port": 35357
                 }
             }
 
@@ -48,6 +50,12 @@ class ExistingCloud(engine.EngineFactory):
                     'password': {'type': 'string'},
                     'tenant_name': {'type': 'string'},
                     'region_name': {'type': 'string'},
+                    'use_public_urls': {'type': 'boolean'},
+                    'admin_port': {
+                        'type': 'integer',
+                        'minimum': 2,
+                        'maximum': 65535
+                    }
                 },
                 'required': ['auth_url', 'username', 'password',
                              'tenant_name'],
@@ -63,7 +71,11 @@ class ExistingCloud(engine.EngineFactory):
                                           endpoint_dict['password'],
                                           endpoint_dict['tenant_name'],
                                           consts.EndpointPermission.ADMIN,
-                                          endpoint_dict.get('region_name'))
+                                          endpoint_dict.get('region_name'),
+                                          endpoint_dict.get('use_public_urls',
+                                                            False),
+                                          endpoint_dict.get('admin_port',
+                                                            35357))
         return [admin_endpoint]
 
     def cleanup(self):

@@ -32,7 +32,9 @@ FAKE_DEPLOY_CONFIG = {
         'username': 'admin',
         'password': 'myadminpass',
         'tenant_name': 'demo',
-        'region_name': 'RegionOne'
+        'region_name': 'RegionOne',
+        'use_public_urls': False,
+        'admin_port': 35357,
     },
 }
 
