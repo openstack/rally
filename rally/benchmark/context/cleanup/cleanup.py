@@ -54,30 +54,28 @@ class ResourceCleaner(base.Context):
     def _cleanup_users_resources(self):
         for user in self.users:
             clients = osclients.Clients(user)
-            admin_clients = osclients.Clients(self.admin)
+            admin_clients = functools.partial(osclients.Clients, self.admin)
+            tenant_id = clients.keystone().tenant_id
             cleanup_methods = {
-                "nova": functools.partial(utils.delete_nova_resources,
-                                          clients.nova()),
-                "glance": functools.partial(utils.delete_glance_resources,
-                                            clients.glance(),
-                                            clients.keystone().tenant_id),
-                "cinder": functools.partial(utils.delete_cinder_resources,
-                                            clients.cinder()),
-                "quotas": functools.partial(utils.delete_quotas,
-                                            admin_clients,
-                                            clients.keystone().tenant_id),
-                "neutron": functools.partial(utils.delete_neutron_resources,
-                                             clients.neutron(),
-                                             clients.keystone().tenant_id),
-                "ceilometer": functools.partial(
-                                            utils.delete_ceilometer_resources,
-                                            clients.ceilometer(),
-                                            clients.keystone().tenant_id)
+                "nova": (utils.delete_nova_resources, clients.nova),
+                "glance": (utils.delete_glance_resources, clients.glance,
+                           tenant_id),
+                "cinder": (utils.delete_cinder_resources, clients.cinder),
+                "quotas": (utils.delete_quotas, admin_clients,
+                           tenant_id),
+                "neutron": (utils.delete_neutron_resources, clients.neutron,
+                            tenant_id),
+                "ceilometer": (utils.delete_ceilometer_resources,
+                               clients.ceilometer, tenant_id)
             }
 
-            for service in self.config:
+            for service_name in self.config:
                 try:
-                    cleanup_methods[service]()
+                    service = cleanup_methods[service_name]
+                    method = service[0]
+                    client = service[1]()
+                    args = service[2:]
+                    method(client, *args)
                 except Exception as e:
                     LOG.debug("Not all resources were cleaned.",
                               exc_info=sys.exc_info())
