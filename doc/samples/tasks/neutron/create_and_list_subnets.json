@@ -1,0 +1,22 @@
+{
+    "NeutronNetworks.create_and_list_subnets": [
+        {
+            "args": {
+                "network_data": {},
+                "subnet_data": {},
+                "subnets_per_network": 2
+            },
+            "runner": {
+                "type": "constant",
+                "times": 10,
+                "concurrency": 5
+            },
+            "context": {
+                "users": {
+                    "tenants": 5,
+                    "users_per_tenant": 5
+                }
+            }
+        }
+    ]
+}

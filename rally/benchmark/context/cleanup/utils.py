@@ -104,7 +104,14 @@ def delete_neutron_networks(neutron, project_uuid):
             neutron.delete_network(network['id'])
 
 
+def delete_neutron_subnets(neutron, project_uuid):
+    for subnet in neutron.list_subnets()['subnets']:
+        if subnet['tenant_id'] == project_uuid:
+            neutron.delete_subnet(subnet['id'])
+
+
 def delete_neutron_resources(neutron, project_uuid):
+    delete_neutron_subnets(neutron, project_uuid)
     delete_neutron_networks(neutron, project_uuid)
 
 
