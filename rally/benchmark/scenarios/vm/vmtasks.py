@@ -57,10 +57,9 @@ class VMTasks(nova_utils.NovaScenario, vm_utils.VMScenario):
 
         Example Script in doc/samples/support/instance_dd_test.sh
         """
-        server_name = self._generate_random_name(16)
-
-        server = self._boot_server(server_name, image_id, flavor_id,
-                                   key_name='rally_ssh_key', **kwargs)
+        server = self._boot_server(
+            self._generate_random_name("rally_novaserver_"),
+            image_id, flavor_id, key_name='rally_ssh_key', **kwargs)
 
         code, out, err = self.run_command(server, username, network, port,
                                           ip_version, interpreter, script)

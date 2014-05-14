@@ -54,12 +54,6 @@ class NovaScenarioTestCase(test.TestCase):
         self.assertIsNotNone(action_duration)
         self.assertIsInstance(action_duration, float)
 
-    def test_generate_random_name(self):
-        for length in [8, 16, 32, 64]:
-            name = utils.NovaScenario()._generate_random_name(length)
-            self.assertEqual(len(name), length)
-            self.assertTrue(name.isalpha())
-
     def test_failed_server_status(self):
         self.get_fm.cleanUp()
         server_manager = fakes.FakeFailedServerManager()

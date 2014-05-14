@@ -18,14 +18,13 @@ import mock
 from rally.benchmark.scenarios.keystone import basic
 from tests import test
 
-KEYSTONE_BASE = "rally.benchmark.scenarios.keystone."
-KEYSTONE_BASIC = KEYSTONE_BASE + "basic.KeystoneBasic."
-KEYSTONE_UTILS = KEYSTONE_BASE + "utils."
+BASE = "rally.benchmark.scenarios.keystone."
+BASIC = BASE + "basic.KeystoneBasic."
 
 
 class KeystoneBasicTestCase(test.TestCase):
 
-    @mock.patch(KEYSTONE_UTILS + "generate_keystone_name")
+    @mock.patch(BASIC + "_generate_random_name")
     def test_create_user(self, mock_gen_name):
         scenario = basic.KeystoneBasic()
         mock_gen_name.return_value = "teeeest"
@@ -35,7 +34,7 @@ class KeystoneBasicTestCase(test.TestCase):
                                                       password="tttt",
                                                       tenant_id="id")
 
-    @mock.patch(KEYSTONE_UTILS + "generate_keystone_name")
+    @mock.patch(BASIC + "_generate_random_name")
     def test_create_delete_user(self, mock_gen_name):
         create_result = mock.MagicMock()
 
@@ -51,7 +50,7 @@ class KeystoneBasicTestCase(test.TestCase):
                                                       enabled=True)
         scenario._resource_delete.assert_called_once_with(create_result)
 
-    @mock.patch(KEYSTONE_UTILS + "generate_keystone_name")
+    @mock.patch(BASIC + "_generate_random_name")
     def test_create_tenant(self, mock_gen_name):
         scenario = basic.KeystoneBasic()
         mock_gen_name.return_value = "teeeest"
@@ -60,7 +59,7 @@ class KeystoneBasicTestCase(test.TestCase):
         scenario._tenant_create.assert_called_once_with(name_length=20,
                                                         enabled=True)
 
-    @mock.patch(KEYSTONE_UTILS + "generate_keystone_name")
+    @mock.patch(BASIC + "_generate_random_name")
     def test_create_tenant_with_users(self, mock_gen_name):
         scenario = basic.KeystoneBasic()
         mock_gen_name.return_value = "teeeest"
@@ -75,7 +74,7 @@ class KeystoneBasicTestCase(test.TestCase):
                                                        users_per_tenant=1,
                                                        name_length=20)
 
-    @mock.patch(KEYSTONE_UTILS + "generate_keystone_name")
+    @mock.patch(BASIC + "_generate_random_name")
     def test_create_and_list_users(self, mock_gen_name):
         scenario = basic.KeystoneBasic()
         mock_gen_name.return_value = "teeeest"
@@ -88,7 +87,7 @@ class KeystoneBasicTestCase(test.TestCase):
                                                       tenant_id="id")
         scenario._list_users.assert_called_once_with()
 
-    @mock.patch(KEYSTONE_UTILS + "generate_keystone_name")
+    @mock.patch(BASIC + "_generate_random_name")
     def test_create_and_list_tenants(self, mock_gen_name):
         scenario = basic.KeystoneBasic()
         mock_gen_name.return_value = "teeeest"

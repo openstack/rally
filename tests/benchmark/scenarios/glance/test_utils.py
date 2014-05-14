@@ -45,11 +45,6 @@ class GlanceScenarioTestCase(test.TestCase):
         self.useFixture(mockpatch.Patch('time.sleep'))
         self.scenario = utils.GlanceScenario()
 
-    def test_generate_random_name(self):
-        for length in [8, 16, 32, 64]:
-            name = self.scenario._generate_random_name(length)
-            self.assertEqual(len(name), 16 + length)
-
     def test_failed_image_status(self):
         self.get_fm.cleanUp()
         image_manager = fakes.FakeFailedImageManager()

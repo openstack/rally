@@ -15,8 +15,6 @@
 
 import os
 from oslo.config import cfg
-import random
-import string
 import time
 
 from rally.benchmark.scenarios import base
@@ -120,7 +118,3 @@ class GlanceScenario(base.Scenario):
             update_resource=bench_utils.get_from_manager(),
             timeout=CONF.benchmark.glance_image_delete_timeout,
             check_interval=CONF.benchmark.glance_image_delete_poll_interval)
-
-    def _generate_random_name(self, length):
-        name = ''.join(random.choice(string.lowercase) for i in range(length))
-        return 'test-rally-image' + name

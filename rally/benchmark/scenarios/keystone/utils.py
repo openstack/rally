@@ -13,30 +13,20 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import random
-import string
-
 from rally.benchmark.scenarios import base
 from rally.benchmark.scenarios import utils as scenario_utils
 
-# TODO(boris-42): Bind name to the uuid of benchmark.
-TEMP_TEMPLATE = "rally_k_"
-
 
 def is_temporary(resource):
-    return resource.name.startswith(TEMP_TEMPLATE)
-
-
-def generate_keystone_name(length=10):
-    """Generate random name for keystone resources."""
-    rand_part = ''.join(random.choice(string.lowercase) for i in range(length))
-    return TEMP_TEMPLATE + rand_part
+    return resource.name.startswith(KeystoneScenario.RESOURCE_NAME_PREFIX)
 
 
 class KeystoneScenario(base.Scenario):
     """This class should contain base operations for benchmarking keystone,
        most of them are creating/deleting resources.
     """
+
+    RESOURCE_NAME_PREFIX = "rally_keystone_"
 
     @scenario_utils.atomic_action_timer('keystone.create_user')
     def _user_create(self, name_length=10, password=None, email=None,
@@ -48,7 +38,7 @@ class KeystoneScenario(base.Scenario):
                         "tenant_id", "enabled".
         :return: keystone user instance
         """
-        name = generate_keystone_name(length=name_length)
+        name = self._generate_random_name(length=name_length)
         # NOTE(boris-42): password and email parameters are required by
         #                 keystone client v2.0. This should be cleanuped
         #                 when we switch to v3.
@@ -70,7 +60,7 @@ class KeystoneScenario(base.Scenario):
         :param **kwargs: Other optional parameters
         :return: keystone tenant instance
         """
-        name = generate_keystone_name(length=name_length)
+        name = self._generate_random_name(length=name_length)
         return self.admin_clients("keystone").tenants.create(name, **kwargs)
 
     @scenario_utils.atomic_action_timer('keystone.create_users')
@@ -81,7 +71,7 @@ class KeystoneScenario(base.Scenario):
         :param name_length: length of generated (random) part of name for user
         """
         for i in range(users_per_tenant):
-            name = generate_keystone_name(length=name_length)
+            name = self._generate_random_name(length=name_length)
             password = name
             email = (name + "@rally.me")
             self.admin_clients("keystone").users.create(name, password, email,

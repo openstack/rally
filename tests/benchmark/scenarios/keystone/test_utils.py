@@ -27,19 +27,24 @@ UTILS = "rally.benchmark.scenarios.keystone.utils."
 
 class KeystoneUtilsTestCase(test.TestCase):
 
-    @mock.patch(UTILS + "random.choice")
-    def test_generate_keystone_name(self, mock_random_choice):
-        mock_random_choice.return_value = "a"
-
-        for length in [10, 20]:
-            result = utils.generate_keystone_name(length)
-            self.assertEqual(result, utils.TEMP_TEMPLATE + "a" * length)
+    def test_RESOURCE_NAME_PREFIX(self):
+        self.assertIsInstance(utils.KeystoneScenario.RESOURCE_NAME_PREFIX,
+                              basestring)
+        # Prefix must be long enough to guarantee that resource
+        # to be recognized as created by rally
+        self.assertTrue(
+            len(utils.KeystoneScenario.RESOURCE_NAME_PREFIX) > 7)
 
     def test_is_temporary(self):
+        prefix = utils.KeystoneScenario.RESOURCE_NAME_PREFIX
         tests = [
-            (fakes.FakeResource(name=utils.TEMP_TEMPLATE + "abc"), True),
-            (fakes.FakeResource(name="fdaffdafa"), False),
-            (fakes.FakeResource(name=utils.TEMP_TEMPLATE[:-3] + "agag"), False)
+            (fakes.FakeResource(
+                    name=prefix + "abc"),
+                True),
+            (fakes.FakeResource(name="another"), False),
+            (fakes.FakeResource(
+                    name=prefix[:-3] + "abc"),
+                False)
         ]
 
         for resource, is_valid in tests:
@@ -54,7 +59,7 @@ class KeystoneScenarioTestCase(test.TestCase):
         self.assertIsNotNone(action_duration)
         self.assertIsInstance(action_duration, float)
 
-    @mock.patch(UTILS + "generate_keystone_name")
+    @mock.patch(UTILS + "KeystoneScenario._generate_random_name")
     def test_user_create(self, mock_gen_name):
         name = "abc"
         mock_gen_name.return_value = name
@@ -84,7 +89,7 @@ class KeystoneScenarioTestCase(test.TestCase):
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        'keystone.delete_resource')
 
-    @mock.patch(UTILS + "generate_keystone_name")
+    @mock.patch(UTILS + "KeystoneScenario._generate_random_name")
     def test_tenant_create(self, mock_gen_name):
         name = "abc"
         mock_gen_name.return_value = name
@@ -103,7 +108,7 @@ class KeystoneScenarioTestCase(test.TestCase):
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        'keystone.create_tenant')
 
-    @mock.patch(UTILS + "generate_keystone_name")
+    @mock.patch(UTILS + "KeystoneScenario._generate_random_name")
     def test_tenant_create_with_users(self, mock_gen_name):
         name = "abc"
         mock_gen_name.return_value = name

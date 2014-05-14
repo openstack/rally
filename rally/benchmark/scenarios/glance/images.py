@@ -21,6 +21,9 @@ from rally.benchmark import validation
 
 class GlanceImages(utils.GlanceScenario, nova_utils.NovaScenario):
 
+    RESOURCE_NAME_PREFIX = "rally_image_"
+    RESOURCE_NAME_LENGTH = 16
+
     @base.scenario(context={"cleanup": ["glance"]})
     def create_and_list_image(self, container_format,
                               image_location, disk_format, **kwargs):
@@ -35,9 +38,7 @@ class GlanceImages(utils.GlanceScenario, nova_utils.NovaScenario):
         performance of the "glance image-list" command depending on
         the number of images owned by users.
         """
-
-        image_name = self._generate_random_name(16)
-        self._create_image(image_name,
+        self._create_image(self._generate_random_name(),
                            container_format,
                            image_location,
                            disk_format,
@@ -48,7 +49,7 @@ class GlanceImages(utils.GlanceScenario, nova_utils.NovaScenario):
     def create_and_delete_image(self, container_format,
                                 image_location, disk_format, **kwargs):
         """Test adds and then deletes image."""
-        image_name = self._generate_random_name(16)
+        image_name = self._generate_random_name()
         image = self._create_image(image_name,
                                    container_format,
                                    image_location,
@@ -63,13 +64,13 @@ class GlanceImages(utils.GlanceScenario, nova_utils.NovaScenario):
                                         flavor_id, number_instances,
                                         **kwargs):
         """Test adds image, boots instance from it and then deletes them."""
-        image_name = self._generate_random_name(16)
+        image_name = self._generate_random_name()
         image = self._create_image(image_name,
                                    container_format,
                                    image_location,
                                    disk_format,
                                    **kwargs)
         image_id = image.id
-        server_name = self._generate_random_name(16)
+        server_name = self._generate_random_name(prefix="rally_novaserver_")
         self._boot_servers(server_name, image_id,
                            flavor_id, number_instances, **kwargs)
