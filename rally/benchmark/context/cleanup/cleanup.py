@@ -16,6 +16,8 @@
 import functools
 import sys
 
+import six
+
 from rally.benchmark.context import base
 from rally.benchmark.context.cleanup import utils
 from rally.openstack.common.gettextutils import _
@@ -80,7 +82,7 @@ class ResourceCleaner(base.Context):
                     LOG.debug("Not all resources were cleaned.",
                               exc_info=sys.exc_info())
                     LOG.warning(_('Unable to fully cleanup the cloud: %s') %
-                                (e.message))
+                                (six.text_type(e)))
 
     @rutils.log_task_wrapper(LOG.info, _("Cleanup admin resources."))
     def _cleanup_admin_resources(self):
@@ -91,7 +93,7 @@ class ResourceCleaner(base.Context):
             LOG.debug("Not all resources were cleaned.",
                       exc_info=sys.exc_info())
             LOG.warning(_('Unable to fully cleanup keystone service: %s') %
-                        (e.message))
+                        (six.text_type(e)))
 
     @rutils.log_task_wrapper(LOG.info, _("Enter context: `cleanup`"))
     def setup(self):

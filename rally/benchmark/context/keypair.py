@@ -14,6 +14,7 @@
 #    under the License.
 
 import novaclient.exceptions
+import six
 
 from rally.benchmark.context import base
 from rally.openstack.common.gettextutils import _
@@ -71,4 +72,4 @@ class Keypair(base.Context):
                             % {'kpname': self.KEYPAIR_NAME,
                                'tenant': endpoint.tenant_name,
                                'user': endpoint.username,
-                               'message': e.message})
+                               'message': six.text_type(e)})

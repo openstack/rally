@@ -82,7 +82,7 @@ class VerifyCommands(object):
         try:
             results = db.verification_result_get(verification_uuid)['data']
         except exceptions.NotFoundException as e:
-            print(e.message)
+            print(six.text_type(e))
             return 1
 
         if not pretty or pretty == 'json':
@@ -113,7 +113,7 @@ class VerifyCommands(object):
             verification = db.verification_get(verification_uuid)
             tests = db.verification_result_get(verification_uuid)
         except exceptions.NotFoundException as e:
-            print(e.message)
+            print(six.text_type(e))
             return 1
 
         print ("Total results of verification:\n")

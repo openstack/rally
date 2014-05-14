@@ -15,6 +15,7 @@
 
 import json
 import jsonschema
+import six
 import traceback
 
 from rally.benchmark.context import base as base_ctx
@@ -106,9 +107,11 @@ class BenchmarkEngine(object):
                                                      non_hidden=True)
                 except (exceptions.RallyException,
                         jsonschema.ValidationError) as e:
-                    raise exceptions.InvalidBenchmarkConfig(name=scenario,
-                                                            pos=pos, args=kw,
-                                                            reason=e.message)
+                    raise exceptions.InvalidBenchmarkConfig(
+                        name=scenario,
+                        pos=pos, args=kw,
+                        reason=six.text_type(e)
+                    )
 
     def _validate_config_sematic_helper(self, admin, user, name, pos,
                                         task, kwargs):
@@ -117,7 +120,8 @@ class BenchmarkEngine(object):
             base_scenario.Scenario.validate(name, args, admin=admin,
                                             users=[user], task=task)
         except exceptions.InvalidScenarioArgument as e:
-            kw = {"name": name, "pos": pos, "args": args, "reason": e.message}
+            kw = {"name": name, "pos": pos,
+                  "args": args, "reason": six.text_type(e)}
             raise exceptions.InvalidBenchmarkConfig(**kw)
 
     @rutils.log_task_wrapper(LOG.info, _("Task validation of semantic."))

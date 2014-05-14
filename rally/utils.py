@@ -21,6 +21,8 @@ import StringIO
 import sys
 import time
 
+import six
+
 from rally import exceptions
 from rally.openstack.common.gettextutils import _
 from rally.openstack.common import importutils
@@ -190,4 +192,4 @@ def load_plugins(directory):
                 LOG.debug("Load plugin from file %s" % fullpath)
             except Exception as e:
                 LOG.error(_("Couldn't load module from %(path)s: %(msg)s") %
-                          {"path": fullpath, "msg": e.message})
+                          {"path": fullpath, "msg": six.text_type(e)})
