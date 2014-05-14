@@ -74,3 +74,12 @@ class CeilometerScenarioTestCase(test.TestCase):
         scenario._update_alarm("FAKE_ALARM_ID", fake_alarm_dict_diff)
         mock_clients("ceilometer").alarms.update.assert_called_once_with(
             "FAKE_ALARM_ID", **fake_alarm_dict_diff)
+
+    @mock.patch(UTILS + '.CeilometerScenario.clients')
+    def test__list_meters(self, mock_clients):
+        """Test _list_meters."""
+        fake_meters = []
+        mock_clients("ceilometer").meters.list.return_value = fake_meters
+        scenario = utils.CeilometerScenario()
+        meters = scenario._list_meters()
+        self.assertEqual(fake_meters, meters)

@@ -1,0 +1,7 @@
+---
+    CeilometerMeters.list_meters:
+     -
+       runner:
+         type: "constant"
+         times: 10
+         concurrency: 1

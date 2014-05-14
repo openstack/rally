@@ -84,6 +84,13 @@
         times: 10
         concurrency: 10
 
+  CeilometerMeters.list_meters:
+    -
+      runner:
+        type: "constant"
+        times: 10
+        concurrency: 1
+
   Dummy.dummy:
     -
       args:

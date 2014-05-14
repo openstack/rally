@@ -83,3 +83,8 @@ class CeilometerScenario(base.Scenario):
         :param alarm_dict_delta: features of alarm to be updated
         """
         self.clients("ceilometer").alarms.update(alarm_id, **alarm_dict_delta)
+
+    @scenario_utils.atomic_action_timer('ceilometer.get_meters')
+    def _list_meters(self):
+        """Get list of user's meters."""
+        return self.clients("ceilometer").meters.list()
