@@ -1,0 +1,12 @@
+{
+    "CeilometerResource.list_resources": [
+        {
+            "runner":{
+                "type": "constant",
+                "times": 10,
+                "concurrency": 1
+            }
+        }
+    ]
+}
+

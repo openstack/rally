@@ -91,6 +91,13 @@
         times: 10
         concurrency: 1
 
+  CeilometerResource.list_resources:
+    -
+      runner:
+        type: "constant"
+        times: 10
+        concurrency: 10
+
   Dummy.dummy:
     -
       args:
