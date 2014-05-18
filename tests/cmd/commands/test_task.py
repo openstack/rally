@@ -123,9 +123,10 @@ class TaskCommandsTestCase(test.TestCase):
         mock_db.task_result_get_all_by_uuid.assert_called_once_with(test_uuid)
         self.assertEqual(1, return_value)
 
+    @mock.patch('rally.cmd.commands.task.common_cliutils.print_list')
     @mock.patch('rally.cmd.commands.task.envutils.get_global')
     @mock.patch("rally.cmd.commands.task.db")
-    def test_list(self, mock_db, mock_default):
+    def test_list(self, mock_db, mock_default, mock_print_list):
         mock_default.side_effect = exceptions.InvalidArgumentsException
         self.assertRaises(exceptions.InvalidArgumentsException,
                           self.task.results, None)
@@ -140,6 +141,9 @@ class TaskCommandsTestCase(test.TestCase):
         mock_db.task_list = mock.MagicMock(return_value=db_response)
         self.task.list()
         mock_db.task_list.assert_called_once_with()
+
+        headers = ['uuid', 'created_at', 'status', 'failed', 'tag']
+        mock_print_list.assert_called_once_with(db_response, headers)
 
     def test_delete(self):
         task_uuid = str(uuid.uuid4())

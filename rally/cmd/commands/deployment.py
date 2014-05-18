@@ -19,7 +19,6 @@ from __future__ import print_function
 
 import json
 import os
-import prettytable
 import sys
 
 import yaml
@@ -30,9 +29,11 @@ from rally.cmd import envutils
 from rally import db
 from rally import exceptions
 from rally.objects import endpoint
+from rally.openstack.common import cliutils as common_cliutils
 from rally.openstack.common.gettextutils import _
 from rally.orchestrator import api
 from rally import osclients
+from rally import utils
 
 
 class DeploymentCommands(object):
@@ -118,15 +119,14 @@ class DeploymentCommands(object):
         headers = ['uuid', 'created_at', 'name', 'status', 'active']
         current_deploy_id = envutils.get_global('RALLY_DEPLOYMENT')
         deployment_list = deployment_list or db.deployment_list()
-        if deployment_list:
-            table = prettytable.PrettyTable(headers)
 
+        table_rows = []
+        if deployment_list:
             for t in deployment_list:
                 r = [str(t[column]) for column in headers[:-1]]
                 r.append("" if t["uuid"] != current_deploy_id else "*")
-                table.add_row(r)
-
-            print(table)
+                table_rows.append(utils.Struct(**dict(zip(headers, r))))
+            common_cliutils.print_list(table_rows, headers)
         else:
             print(_("There are no deployments. "
                     "To create a new deployment, use:"
@@ -148,16 +148,16 @@ class DeploymentCommands(object):
     @envutils.with_default_deploy_id
     def endpoint(self, deploy_id=None):
         """Print endpoint of the deployment.
-
         :param deploy_id: a UUID of the deployment
         """
         headers = ['auth_url', 'username', 'password', 'tenant_name',
                    'region_name', 'use_public_urls', 'admin_port']
-        table = prettytable.PrettyTable(headers)
+        table_rows = []
         endpoints = db.deployment_get(deploy_id)['endpoints']
         for ep in endpoints:
-            table.add_row([ep.get(m, '') for m in headers])
-        print(table)
+            data = [ep.get(m, '') for m in headers]
+            table_rows.append(utils.Struct(**dict(zip(headers, data))))
+        common_cliutils.print_list(table_rows, headers)
 
     @cliutils.args('--uuid', dest='deploy_id', type=str, required=False,
                    help='UUID of a deployment.')
@@ -170,7 +170,7 @@ class DeploymentCommands(object):
         :param deploy_id: a UUID of the deployment
         """
         headers = ['services', 'type', 'status']
-        table = prettytable.PrettyTable(headers)
+        table_rows = []
         try:
             endpoints = db.deployment_get(deploy_id)['endpoints']
             for endpoint_dict in endpoints:
@@ -179,11 +179,12 @@ class DeploymentCommands(object):
                 print("keystone endpoints are valid and following "
                       "services are available:")
                 for service in client.service_catalog.get_data():
-                    table.add_row([service['name'], service['type'],
-                                   'Available'])
+                    data = [service['name'], service['type'], 'Available']
+                    table_rows.append(utils.Struct(**dict(zip(headers, data))))
         except exceptions.InvalidArgumentsException:
-            table.add_row(['keystone', 'identity', 'Error'])
+            data = ['keystone', 'identity', 'Error']
+            table_rows.append(utils.Struct(**dict(zip(headers, data))))
             print(_("Authentication Issues: %s.")
                   % sys.exc_info()[1])
             return(1)
-        print(table)
+        common_cliutils.print_list(table_rows, headers)

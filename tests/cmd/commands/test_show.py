@@ -35,10 +35,13 @@ class ShowCommandsTestCase(test.TestCase):
         self.fake_glance_client = fakes.FakeGlanceClient()
         self.fake_nova_client = fakes.FakeNovaClient()
 
+    @mock.patch('rally.cmd.commands.show.common_cliutils.print_list')
+    @mock.patch('rally.cmd.commands.show.cliutils.pretty_float_formatter')
+    @mock.patch('rally.cmd.commands.show.utils.Struct')
     @mock.patch('rally.cmd.commands.show.osclients.Clients.glance')
-    @mock.patch('rally.cmd.commands.show.prettytable.PrettyTable.add_row')
     @mock.patch('rally.cmd.commands.show.db.deployment_get')
-    def test_images(self, mock_deployment_get, mock_add_row, mock_get_glance):
+    def test_images(self, mock_deployment_get, mock_get_glance,
+                    mock_struct, mock_formatter, mock_print_list):
         self.fake_glance_client.images.create('image', None, None, None)
         fake_image = self.fake_glance_client.images.cache.values()[0]
         fake_image.size = 1
@@ -47,14 +50,26 @@ class ShowCommandsTestCase(test.TestCase):
         self.show.images(self.fake_deploy_id)
         mock_deployment_get.assert_called_once_with(self.fake_deploy_id)
         mock_get_glance.assert_called_once_with()
-        mock_add_row.assert_called_once_with([fake_image.id,
-                                              fake_image.name,
-                                              fake_image.size])
 
+        headers = ['UUID', 'Name', 'Size (B)']
+        fake_data = [fake_image.id, fake_image.name, fake_image.size]
+        mock_struct.assert_called_once_with(**dict(zip(headers, fake_data)))
+
+        fake_formatters = {'Size (B)': mock_formatter()}
+        mixed_case_fields = ['UUID', 'Name']
+        mock_print_list.assert_called_once_with(
+            [mock_struct()],
+            fields=headers,
+            formatters=fake_formatters,
+            mixed_case_fields=mixed_case_fields)
+
+    @mock.patch('rally.cmd.commands.show.common_cliutils.print_list')
+    @mock.patch('rally.cmd.commands.show.cliutils.pretty_float_formatter')
+    @mock.patch('rally.cmd.commands.show.utils.Struct')
     @mock.patch('rally.cmd.commands.show.osclients.Clients.nova')
-    @mock.patch('rally.cmd.commands.show.prettytable.PrettyTable.add_row')
     @mock.patch('rally.cmd.commands.show.db.deployment_get')
-    def test_flavors(self, mock_deployment_get, mock_add_row, mock_get_nova):
+    def test_flavors(self, mock_deployment_get, mock_get_nova,
+                     mock_struct, mock_formatter, mock_print_list):
         self.fake_nova_client.flavors.create()
         fake_flavor = self.fake_nova_client.flavors.cache.values()[0]
         fake_flavor.id, fake_flavor.name, fake_flavor.vcpus = 1, 'm1.fake', 1
@@ -64,17 +79,28 @@ class ShowCommandsTestCase(test.TestCase):
         self.show.flavors(self.fake_deploy_id)
         mock_deployment_get.assert_called_once_with(self.fake_deploy_id)
         mock_get_nova.assert_called_once_with()
-        mock_add_row.assert_called_once_with([fake_flavor.id,
-                                              fake_flavor.name,
-                                              fake_flavor.vcpus,
-                                              fake_flavor.ram,
-                                              fake_flavor.swap,
-                                              fake_flavor.disk])
 
+        headers = ['ID', 'Name', 'vCPUs', 'RAM (MB)', 'Swap (MB)', 'Disk (GB)']
+        fake_data = [fake_flavor.id, fake_flavor.name, fake_flavor.vcpus,
+                     fake_flavor.ram, fake_flavor.swap, fake_flavor.disk]
+        mock_struct.assert_called_once_with(**dict(zip(headers, fake_data)))
+
+        fake_formatters = {'RAM (MB)': mock_formatter(),
+                           'Swap (MB)': mock_formatter(),
+                           'Disk (GB)': mock_formatter()}
+        mixed_case_fields = ['ID', 'Name', 'vCPUs']
+        mock_print_list.assert_called_once_with(
+            [mock_struct()],
+            fields=headers,
+            formatters=fake_formatters,
+            mixed_case_fields=mixed_case_fields)
+
+    @mock.patch('rally.cmd.commands.show.common_cliutils.print_list')
+    @mock.patch('rally.cmd.commands.show.utils.Struct')
     @mock.patch('rally.cmd.commands.show.osclients.Clients.nova')
-    @mock.patch('rally.cmd.commands.show.prettytable.PrettyTable.add_row')
     @mock.patch('rally.cmd.commands.show.db.deployment_get')
-    def test_networks(self, mock_deployment_get, mock_add_row, mock_get_nova):
+    def test_networks(self, mock_deployment_get, mock_get_nova,
+                      mock_struct, mock_print_list):
         self.fake_nova_client.networks.create(1234)
         fake_network = self.fake_nova_client.networks.cache.values()[0]
         fake_network.label = 'fakenet'
@@ -84,14 +110,23 @@ class ShowCommandsTestCase(test.TestCase):
         self.show.networks(self.fake_deploy_id)
         mock_deployment_get.assert_called_once_with(self.fake_deploy_id)
         mock_get_nova.assert_called_once_with()
-        mock_add_row.assert_called_once_with([fake_network.id,
-                                              fake_network.label,
-                                              fake_network.cidr])
 
+        headers = ['ID', 'Label', 'CIDR']
+        fake_data = [fake_network.id, fake_network.label, fake_network.cidr]
+        mock_struct.assert_called_once_with(**dict(zip(headers, fake_data)))
+
+        mixed_case_fields = ['ID', 'Label', 'CIDR']
+        mock_print_list.assert_called_once_with(
+            [mock_struct()],
+            fields=headers,
+            mixed_case_fields=mixed_case_fields)
+
+    @mock.patch('rally.cmd.commands.show.common_cliutils.print_list')
+    @mock.patch('rally.cmd.commands.show.utils.Struct')
     @mock.patch('rally.cmd.commands.show.osclients.Clients.nova')
-    @mock.patch('rally.cmd.commands.show.prettytable.PrettyTable.add_row')
     @mock.patch('rally.cmd.commands.show.db.deployment_get')
-    def test_secgroups(self, mock_deployment_get, mock_add_row, mock_get_nova):
+    def test_secgroups(self, mock_deployment_get, mock_get_nova,
+                       mock_struct, mock_print_list):
         fake_secgroup = self.fake_nova_client.security_groups.cache.values()[0]
         fake_secgroup.id = 0
         mock_get_nova.return_value = self.fake_nova_client
@@ -99,14 +134,23 @@ class ShowCommandsTestCase(test.TestCase):
         self.show.secgroups(self.fake_deploy_id)
         mock_deployment_get.assert_called_once_with(self.fake_deploy_id)
         mock_get_nova.assert_called_once_with()
-        mock_add_row.assert_called_once_with([fake_secgroup.id,
-                                              fake_secgroup.name,
-                                              fake_secgroup.description])
 
+        headers = ['ID', 'Name', 'Description']
+        fake_data = [fake_secgroup.id, fake_secgroup.name, '']
+        mock_struct.assert_called_once_with(**dict(zip(headers, fake_data)))
+
+        mixed_case_fields = ['ID', 'Name', 'Description']
+        mock_print_list.assert_called_once_with(
+            [mock_struct()],
+            fields=headers,
+            mixed_case_fields=mixed_case_fields)
+
+    @mock.patch('rally.cmd.commands.show.common_cliutils.print_list')
+    @mock.patch('rally.cmd.commands.show.utils.Struct')
     @mock.patch('rally.cmd.commands.show.osclients.Clients.nova')
-    @mock.patch('rally.cmd.commands.show.prettytable.PrettyTable.add_row')
     @mock.patch('rally.cmd.commands.show.db.deployment_get')
-    def test_keypairs(self, mock_deployment_get, mock_add_row, mock_get_nova):
+    def test_keypairs(self, mock_deployment_get, mock_get_nova,
+                      mock_struct, mock_print_list):
         self.fake_nova_client.keypairs.create('keypair')
         fake_keypair = self.fake_nova_client.keypairs.cache.values()[0]
         fake_keypair.fingerprint = '84:87:58'
@@ -115,5 +159,13 @@ class ShowCommandsTestCase(test.TestCase):
         self.show.keypairs(self.fake_deploy_id)
         mock_deployment_get.assert_called_once_with(self.fake_deploy_id)
         mock_get_nova.assert_called_once_with()
-        mock_add_row.assert_called_once_with([fake_keypair.name,
-                                              fake_keypair.fingerprint])
+
+        headers = ['Name', 'Fingerprint']
+        fake_data = [fake_keypair.name, fake_keypair.fingerprint]
+        mock_struct.assert_called_once_with(**dict(zip(headers, fake_data)))
+
+        mixed_case_fields = ['Name', 'Fingerprint']
+        mock_print_list.assert_called_once_with(
+            [mock_struct()],
+            fields=headers,
+            mixed_case_fields=mixed_case_fields)

@@ -17,7 +17,6 @@
 
 from __future__ import print_function
 
-import prettytable
 import sys
 
 from rally.cmd import cliutils
@@ -25,7 +24,9 @@ from rally.cmd import envutils
 from rally import db
 from rally import exceptions
 from rally.objects import endpoint
+from rally.openstack.common import cliutils as common_cliutils
 from rally import osclients
+from rally import utils
 
 
 class ShowCommands(object):
@@ -39,18 +40,28 @@ class ShowCommands(object):
         :param deploy_id: the UUID of a deployment
         """
         headers = ['UUID', 'Name', 'Size (B)']
-        table = prettytable.PrettyTable(headers)
+        mixed_case_fields = ['UUID', 'Name']
+        float_cols = ["Size (B)"]
+        table_rows = []
+        formatters = dict(zip(float_cols,
+                              [cliutils.pretty_float_formatter(col)
+                               for col in float_cols]))
         try:
             endpoints = db.deployment_get(deploy_id)['endpoints']
             for endpoint_dict in endpoints:
                 clients = osclients.Clients(endpoint.Endpoint(**endpoint_dict))
                 glance_client = clients.glance()
                 for image in glance_client.images.list():
-                    table.add_row([image.id, image.name, image.size])
+                    data = [image.id, image.name, image.size]
+                    table_rows.append(utils.Struct(**dict(zip(headers, data))))
+
         except exceptions.InvalidArgumentsException:
             print(_("Authentication Issues: %s") % sys.exc_info()[1])
             return(1)
-        print(table)
+        common_cliutils.print_list(table_rows,
+                                   fields=headers,
+                                   formatters=formatters,
+                                   mixed_case_fields=mixed_case_fields)
 
     @cliutils.args('--deploy-id', dest='deploy_id', type=str, required=False,
                    help='the UUID of a deployment')
@@ -61,71 +72,94 @@ class ShowCommands(object):
         :param deploy_id: the UUID of a deployment
         """
         headers = ['ID', 'Name', 'vCPUs', 'RAM (MB)', 'Swap (MB)', 'Disk (GB)']
-        table = prettytable.PrettyTable(headers)
+        mixed_case_fields = ['ID', 'Name', 'vCPUs']
+        float_cols = ['RAM (MB)', 'Swap (MB)', 'Disk (GB)']
+        formatters = dict(zip(float_cols,
+                              [cliutils.pretty_float_formatter(col)
+                               for col in float_cols]))
+        table_rows = []
         try:
             endpoints = db.deployment_get(deploy_id)['endpoints']
             for endpoint_dict in endpoints:
                 clients = osclients.Clients(endpoint.Endpoint(**endpoint_dict))
                 nova_client = clients.nova()
                 for flavor in nova_client.flavors.list():
-                    table.add_row([flavor.id, flavor.name, flavor.vcpus,
-                                   flavor.ram, flavor.swap, flavor.disk])
+                    data = [flavor.id, flavor.name, flavor.vcpus,
+                            flavor.ram, flavor.swap, flavor.disk]
+                    table_rows.append(utils.Struct(**dict(zip(headers, data))))
+
         except exceptions.InvalidArgumentsException:
             print(_("Authentication Issues: %s") % sys.exc_info()[1])
             return(1)
-        print(table)
+        common_cliutils.print_list(table_rows,
+                                   fields=headers,
+                                   formatters=formatters,
+                                   mixed_case_fields=mixed_case_fields)
 
     @cliutils.args('--deploy-id', dest='deploy_id', type=str, required=False,
                    help='the UUID of a deployment')
     @envutils.with_default_deploy_id
     def networks(self, deploy_id=None):
         headers = ['ID', 'Label', 'CIDR']
-        table = prettytable.PrettyTable(headers)
+        mixed_case_fields = ['ID', 'Label', 'CIDR']
+        table_rows = []
         try:
             endpoints = db.deployment_get(deploy_id)['endpoints']
             for endpoint_dict in endpoints:
                 clients = osclients.Clients(endpoint.Endpoint(**endpoint_dict))
             nova_client = clients.nova()
             for network in nova_client.networks.list():
-                table.add_row([network.id, network.label, network.cidr])
+                data = [network.id, network.label, network.cidr]
+                table_rows.append(utils.Struct(**dict(zip(headers, data))))
         except exceptions.InvalidArgumentsException:
             print(_("Authentication Issues: %s") % sys.exc_info()[1])
             return(1)
-        print(table)
+        common_cliutils.print_list(table_rows,
+                                   fields=headers,
+                                   mixed_case_fields=mixed_case_fields)
 
     @cliutils.args('--deploy-id', dest='deploy_id', type=str, required=False,
                    help='the UUID of a deployment')
     @envutils.with_default_deploy_id
     def secgroups(self, deploy_id=None):
         headers = ['ID', 'Name', 'Description']
-        table = prettytable.PrettyTable(headers)
+        mixed_case_fields = ['ID', 'Name', 'Description']
+        table_rows = []
         try:
             endpoints = db.deployment_get(deploy_id)['endpoints']
             for endpoint_dict in endpoints:
                 clients = osclients.Clients(endpoint.Endpoint(**endpoint_dict))
                 nova_client = clients.nova()
                 for secgroup in nova_client.security_groups.list():
-                    table.add_row([secgroup.id, secgroup.name,
-                                   secgroup.description])
+                    data = [secgroup.id, secgroup.name,
+                            secgroup.description]
+                    table_rows.append(utils.Struct(**dict(zip(headers,
+                                                              data))))
         except exceptions.InvalidArgumentsException:
             print(_("Authentication Issues: %s") % sys.exc_info()[1])
             return(1)
-        print(table)
+        common_cliutils.print_list(table_rows,
+                                   fields=headers,
+                                   mixed_case_fields=mixed_case_fields)
 
     @cliutils.args('--deploy-id', dest='deploy_id', type=str, required=False,
                    help='the UUID of a deployment')
     @envutils.with_default_deploy_id
     def keypairs(self, deploy_id=None):
         headers = ['Name', 'Fingerprint']
-        table = prettytable.PrettyTable(headers)
+        mixed_case_fields = ['Name', 'Fingerprint']
+        table_rows = []
         try:
             endpoints = db.deployment_get(deploy_id)['endpoints']
             for endpoint_dict in endpoints:
                 clients = osclients.Clients(endpoint.Endpoint(**endpoint_dict))
                 nova_client = clients.nova()
                 for keypair in nova_client.keypairs.list():
-                    table.add_row([keypair.name, keypair.fingerprint])
+                    data = [keypair.name, keypair.fingerprint]
+                    table_rows.append(utils.Struct(**dict(zip(headers, data))))
         except exceptions.InvalidArgumentsException:
             print(_("Authentication Issues: %s") % sys.exc_info()[1])
             return(1)
-        print(table)
+        common_cliutils.print_list(table_rows,
+                                   fields=headers,
+                                   mixed_case_fields=mixed_case_fields)

@@ -20,7 +20,6 @@ from __future__ import print_function
 import json
 import os
 import pprint
-import prettytable
 import webbrowser
 import yaml
 
@@ -110,13 +109,18 @@ class TaskCommands(object):
         """
         def _print_iterations_data(raw):
             headers = ['iteration', "full duration"]
+            float_cols = ['full duration']
             for i in range(0, len(raw)):
                 if raw[i]['atomic_actions']:
                     for (c, a) in enumerate(raw[i]['atomic_actions'], 1):
                         action = str(c) + "-" + a['action']
                         headers.append(action)
+                        float_cols.append(action)
                     break
-            atomic_action_table = prettytable.PrettyTable(headers)
+            table_rows = []
+            formatters = dict(zip(float_cols,
+                                  [cliutils.pretty_float_formatter(col, 3)
+                                   for col in float_cols]))
             for (c, r) in enumerate(raw, 1):
                 dlist = [c]
                 d = []
@@ -125,12 +129,15 @@ class TaskCommands(object):
                         d.append(l['duration'])
                     dlist.append(sum(d))
                     dlist = dlist + d
-                    atomic_action_table.add_row(dlist)
+                    table_rows.append(rutils.Struct(**dict(zip(headers,
+                                                               dlist))))
                 else:
-                    atomic_action_table.add_row(dlist +
-                                                ["N/A" for i in
-                                                 range(1, len(headers))])
-            print(atomic_action_table)
+                    data = dlist + ["N/A" for i in range(1, len(headers))]
+                    table_rows.append(rutils.Struct(**dict(zip(headers,
+                                                               data))))
+            common_cliutils.print_list(table_rows,
+                                       fields=headers,
+                                       formatters=formatters)
             print()
 
         def _get_atomic_action_durations(raw):
@@ -149,15 +156,6 @@ class TaskCommands(object):
                     lambda r: any((a["action"] == atomic_action)
                                   for a in r["atomic_actions"]))
             return result
-
-        def _pretty_float_formatter(field):
-            def _formatter(obj):
-                value = getattr(obj, field)
-                if value:
-                    return "%.3f" % value
-                else:
-                    return "n/a"
-            return _formatter
 
         if task_id == "last":
             task = db.task_get_detailed_last()
@@ -204,7 +202,7 @@ class TaskCommands(object):
             float_cols = ["min (sec)", "avg (sec)", "max (sec)",
                           "90 percentile", "95 percentile"]
             formatters = dict(zip(float_cols,
-                                  [_pretty_float_formatter(col)
+                                  [cliutils.pretty_float_formatter(col, 3)
                                    for col in float_cols]))
             table_rows = []
 
@@ -246,13 +244,14 @@ class TaskCommands(object):
                 keys = set()
                 for ssr in ssrs:
                     keys.update(ssr.keys())
-
-                ssr_table = prettytable.PrettyTable(["Key",
-                                                     "max",
-                                                     "avg",
-                                                     "min",
-                                                     "90 pecentile",
-                                                     "95 pecentile"])
+                headers = ["Key", "max", "avg", "min",
+                           "90 pecentile", "95 pecentile"]
+                float_cols = ["max", "avg", "min",
+                              "90 pecentile", "95 pecentile"]
+                formatters = dict(zip(float_cols,
+                                  [cliutils.pretty_float_formatter(col, 3)
+                                   for col in float_cols]))
+                table_rows = []
                 for key in keys:
                     values = [float(ssr[key]) for ssr in ssrs if key in ssr]
 
@@ -265,9 +264,11 @@ class TaskCommands(object):
                                utils.percentile(values, 0.95)]
                     else:
                         row = [str(key)] + ['n/a'] * 5
-                    ssr_table.add_row(row)
+                    table_rows.append(rutils.Struct(**dict(zip(headers, row))))
                 print("\nScenario Specific Results\n")
-                print(ssr_table)
+                common_cliutils.print_list(table_rows,
+                                           fields=headers,
+                                           formatters=formatters)
 
                 for result in raw:
                     if result['scenario_output']['errors']:
@@ -313,17 +314,7 @@ class TaskCommands(object):
         headers = ['uuid', 'created_at', 'status', 'failed', 'tag']
         task_list = task_list or db.task_list()
         if task_list:
-            table = prettytable.PrettyTable(headers)
-
-            for t in task_list:
-                r = [t['uuid'],
-                     str(t['created_at']),
-                     t['status'],
-                     t['failed'],
-                     t['tag']]
-                table.add_row(r)
-
-            print(table)
+            common_cliutils.print_list(task_list, headers)
         else:
             print(_("There are no tasks. To run a new task, use:"
                     "\nrally task start"))

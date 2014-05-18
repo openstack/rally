@@ -37,6 +37,27 @@ LOG = logging.getLogger(__name__)
 _DEFAULT_SQL_CONNECTION = 'sqlite:////tmp/rally.sqlite'
 
 
+def pretty_float_formatter(field, ndigits=None):
+    """Create a formatter function for the given float field.
+
+    :param field: a float object attribute name to be formatted.
+    :param ndigits: The number of digits after decimal point after round.
+    If None, then no rounding will be done.
+    :returns: the formatter function
+    """
+
+    def _formatter(obj):
+        value = getattr(obj, field)
+        if value is not None:
+            if ndigits is not None:
+                return round(value, ndigits)
+            else:
+                return value
+        else:
+            return "n/a"
+    return _formatter
+
+
 def args(*args, **kwargs):
     def _decorator(func):
         func.__dict__.setdefault('args', []).insert(0, (args, kwargs))
