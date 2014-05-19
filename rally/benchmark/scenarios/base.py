@@ -52,9 +52,7 @@ class Scenario(object):
         self._idle_duration = 0
         self._atomic_actions = []
 
-    # TODO(amaretskiy): in separate patch, refactor all child scenario classes
-    # to replace code that generates random names with the method below
-    # and set proper RESOURCE_NAME_PREFIX and RESOURCE_NAME_LENGTH values
+    # TODO(amaretskiy): consider about prefix part of benchmark uuid
     @classmethod
     def _generate_random_name(cls, prefix=None, length=None):
         """Generates random name.

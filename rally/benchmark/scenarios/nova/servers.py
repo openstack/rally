@@ -32,6 +32,9 @@ LOG = logging.getLogger(__name__)
 class NovaServers(utils.NovaScenario,
                   cinder_utils.CinderScenario):
 
+    RESOURCE_NAME_PREFIX = "rally_novaserver_"
+    RESOURCE_NAME_LENGTH = 16
+
     def __init__(self, *args, **kwargs):
         super(NovaServers, self).__init__(*args, **kwargs)
 
@@ -50,10 +53,8 @@ class NovaServers(utils.NovaScenario,
            performance of the "nova list" command depending on
            the number of servers owned by users.
         """
-
-        server_name = self._generate_random_name(16)
-
-        self._boot_server(server_name, image_id, flavor_id, **kwargs)
+        self._boot_server(
+            self._generate_random_name(), image_id, flavor_id, **kwargs)
         self._list_servers(detailed)
 
     @valid.add_validator(valid.image_valid_on_flavor("flavor_id", "image_id"))
@@ -61,9 +62,8 @@ class NovaServers(utils.NovaScenario,
     def boot_and_delete_server(self, image_id, flavor_id,
                                min_sleep=0, max_sleep=0, **kwargs):
         """Tests booting and then deleting an image."""
-        server_name = self._generate_random_name(16)
-
-        server = self._boot_server(server_name, image_id, flavor_id, **kwargs)
+        server = self._boot_server(
+            self._generate_random_name(), image_id, flavor_id, **kwargs)
         self.sleep_between(min_sleep, max_sleep)
         self._delete_server(server)
 
@@ -73,11 +73,10 @@ class NovaServers(utils.NovaScenario,
                                            volume_size,
                                            min_sleep=0, max_sleep=0, **kwargs):
         """Tests booting from volume and then deleting an image and volume."""
-        server_name = self._generate_random_name(16)
-
         volume = self._create_volume(volume_size, imageRef=image_id)
         block_device_mapping = {'vda': '%s:::1' % volume.id}
-        server = self._boot_server(server_name, image_id, flavor_id,
+        server = self._boot_server(self._generate_random_name(),
+                                   image_id, flavor_id,
                                    block_device_mapping=block_device_mapping,
                                    **kwargs)
         self.sleep_between(min_sleep, max_sleep)
@@ -97,7 +96,7 @@ class NovaServers(utils.NovaScenario,
             raise rally_exceptions.InvalidConfigException(
                 "Invalid server actions configuration \'%(actions)s\' due to: "
                 "%(error)s" % {'actions': str(actions), 'error': str(error)})
-        server = self._boot_server(self._generate_random_name(16),
+        server = self._boot_server(self._generate_random_name(),
                                    image_id, flavor_id, **kwargs)
         for action in action_builder.build_actions(actions, server):
             action()
@@ -107,7 +106,7 @@ class NovaServers(utils.NovaScenario,
     @base.scenario(context={"cleanup": ["nova", "glance"]})
     def snapshot_server(self, image_id, flavor_id, **kwargs):
         """Tests Nova instance snapshotting."""
-        server_name = self._generate_random_name(16)
+        server_name = self._generate_random_name()
 
         server = self._boot_server(server_name, image_id, flavor_id, **kwargs)
         image = self._create_image(server)
@@ -121,20 +120,19 @@ class NovaServers(utils.NovaScenario,
     @base.scenario(context={"cleanup": ["nova"]})
     def boot_server(self, image_id, flavor_id, **kwargs):
         """Test VM boot - assumed clean-up is done elsewhere."""
-        server_name = self._generate_random_name(16)
         if 'nics' not in kwargs:
             nets = self.clients("nova").networks.list()
             if nets:
                 random_nic = random.choice(nets)
                 kwargs['nics'] = [{'net-id': random_nic.id}]
-        self._boot_server(server_name, image_id, flavor_id, **kwargs)
+        self._boot_server(
+            self._generate_random_name(), image_id, flavor_id, **kwargs)
 
     @valid.add_validator(valid.image_valid_on_flavor("flavor_id", "image_id"))
     @base.scenario(context={"cleanup": ["nova", "cinder"]})
     def boot_server_from_volume(self, image_id, flavor_id,
                                 volume_size, **kwargs):
         """Test VM boot from volume - assumed clean-up is done elsewhere."""
-        server_name = self._generate_random_name(16)
         if 'nics' not in kwargs:
             nets = self.clients("nova").networks.list()
             if nets:
@@ -142,7 +140,8 @@ class NovaServers(utils.NovaScenario,
                 kwargs['nics'] = [{'net-id': random_nic.id}]
         volume = self._create_volume(volume_size, imageRef=image_id)
         block_device_mapping = {'vda': '%s:::1' % volume.id}
-        self._boot_server(server_name, image_id, flavor_id,
+        self._boot_server(self._generate_random_name(),
+                          image_id, flavor_id,
                           block_device_mapping=block_device_mapping,
                           **kwargs)
 

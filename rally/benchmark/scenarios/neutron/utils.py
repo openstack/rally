@@ -22,7 +22,7 @@ class NeutronScenario(base.Scenario):
        most of them are creating/deleting resources.
     """
 
-    RESOURCE_NAME_PREFIX = "net_"
+    RESOURCE_NAME_PREFIX = "rally_net_"
     SUBNET_IP_VERSION = 4
     SUBNET_CIDR_PATTERN = "192.168.%d.0/24"
 

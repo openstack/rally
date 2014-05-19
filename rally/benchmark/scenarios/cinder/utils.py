@@ -14,16 +14,11 @@
 #    under the License.
 
 from oslo.config import cfg
-import random
-import string
 import time
 
 from rally.benchmark.scenarios import base
 from rally.benchmark.scenarios import utils as scenario_utils
 from rally.benchmark import utils as bench_utils
-
-# TODO(boris-42): Bind name to the uuid of benchmark.
-TEMP_TEMPLATE = "rally_c_"
 
 
 cinder_benchmark_opts = [
@@ -52,17 +47,9 @@ benchmark_group = cfg.OptGroup(name='benchmark', title='benchmark options')
 CONF.register_opts(cinder_benchmark_opts, group=benchmark_group)
 
 
-def is_temporary(resource):
-    return resource.name.startswith(TEMP_TEMPLATE)
-
-
-def generate_volume_name(length=10):
-    """Generate random name for volume."""
-    rand_part = ''.join(random.choice(string.lowercase) for i in range(length))
-    return TEMP_TEMPLATE + rand_part
-
-
 class CinderScenario(base.Scenario):
+
+    RESOURCE_NAME_PREFIX = "rally_volume_"
 
     @scenario_utils.atomic_action_timer('cinder.list_volumes')
     def _list_volumes(self, detailed=True):
@@ -82,8 +69,8 @@ class CinderScenario(base.Scenario):
 
         :returns: Created volume object
         """
-        volumename = kwargs.get('display_name', generate_volume_name(10))
-        kwargs['display_name'] = volumename
+        kwargs["display_name"] = kwargs.get("display_name",
+                                            self._generate_random_name())
         volume = self.clients("cinder").volumes.create(size, **kwargs)
         # NOTE(msdubov): It is reasonable to wait 5 secs before starting to
         #                check whether the volume is ready => less API calls.

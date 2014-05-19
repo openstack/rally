@@ -14,8 +14,6 @@
 #    under the License.
 
 from oslo.config import cfg
-import random
-import string
 import time
 
 from rally.benchmark.scenarios import base
@@ -313,6 +311,3 @@ class NovaScenario(base.Scenario):
             check_interval=CONF.benchmark.nova_server_boot_poll_interval
         ) for server in servers]
         return servers
-
-    def _generate_random_name(self, length):
-        return ''.join(random.choice(string.lowercase) for i in range(length))
