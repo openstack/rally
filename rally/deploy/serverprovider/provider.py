@@ -93,16 +93,29 @@ class ResourceManager(object):
 
 @six.add_metaclass(abc.ABCMeta)
 class ProviderFactory(object):
-    """ProviderFactory should be base class for all providers.
+    """Base class of all server providers.
 
-    Each provider supervises own resources using ResourceManager.
+    It's a base class with self-discovery of subclasses. Each subclass
+    has to implement create_servers() and destroy_servers() methods.
+    By default, each server provider located as a submodule of the package
+    rally.deploy.serverprovider.providers is auto-discovered.
 
-    All provider should be added to rally.vmprovider.providers.some_moduule.py
-    and implement 4 methods:
-        *) upload_image
-        *) destroy_image
-        *) create_servers
-        *) destroy_servers.
+    Each provider supervises its own resources using a ResourceManager.
+
+    Example of usage with a simple provider:
+
+    # Add new provider with __name__ == 'A'
+    class A(ProviderFactory):
+        def __init__(self, deployment, config):
+            # do something
+
+        def create_servers(self, image_uuid, type_id, amount):
+            # Create the requested number of servers of a given type from the
+            # image passed as the first parameter.
+            return [server_1, server_2, ...]
+
+        def destroy_servers(self):
+            # Destroy servers created in create_servers().
     """
 
     def __init__(self, deployment, config):
