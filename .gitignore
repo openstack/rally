@@ -30,6 +30,9 @@ cover
 *.sqlite
 .venv
 
+# Docs
+doc/source/_build/
+
 # Translations
 *.mo
 

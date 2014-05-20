@@ -20,8 +20,6 @@ import sys
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 sys.path.extend([
     os.path.abspath('../..'),
-    os.path.abspath('..'),
-    os.path.abspath('.'),
 ])
 
 
@@ -40,7 +38,6 @@ extensions = [
     'sphinx.ext.coverage',
     'sphinx.ext.ifconfig',
     'sphinx.ext.viewcode',
-    'oslosphinx',
 ]
 todo_include_todos = True
 

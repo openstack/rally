@@ -21,7 +21,7 @@ The Server Provider Layer
 Represents a pluggable mechanism of providers of servers for deployments.
 
 The :mod:`rally.deploy.serverprovider.provider` Module
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. automodule:: rally.deploy.serverprovider.provider
     :members:
@@ -32,9 +32,9 @@ The Dummy Server Provider
 -------------------------
 
 The :mod:`rally.deploy.serverprovider.providers.dummy` Module
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. automodule:: rally.deploy.serverprovider.providers.dummy
+.. automodule:: rally.deploy.serverprovider.providers.existing
     :members:
     :undoc-members:
     :show-inheritance:
@@ -43,7 +43,7 @@ The OpenStack Server Provider
 -----------------------------
 
 The :mod:`rally.deploy.serverprovider.providers.openstack` Module
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. automodule:: rally.deploy.serverprovider.providers.openstack
     :members:
@@ -54,7 +54,7 @@ The LXC Server Provider
 -----------------------
 
 The :mod:`rally.deploy.serverprovider.providers.lxc` Module
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. automodule:: rally.deploy.serverprovider.providers.lxc
     :members:
@@ -65,7 +65,7 @@ The Virsh Server Provider
 -------------------------
 
 The :mod:`rally.deploy.serverprovider.providers.virsh` Module
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. automodule:: rally.deploy.serverprovider.providers.virsh
     :members:
