@@ -191,3 +191,21 @@ def get_atomic_action_timer_value_by_name(atomic_actions, name):
         if action['action'] == name:
             return action['duration']
     return None
+
+
+class AtomicActionTestCase(test.TestCase):
+    def test__init__(self):
+        fake_scenario_instance = mock.MagicMock()
+        c = utils.AtomicAction(fake_scenario_instance, 'asdf')
+        self.assertEqual(c.scenario_instance, fake_scenario_instance)
+        self.assertEqual(c.name, 'asdf')
+
+    @mock.patch('rally.utils.time')
+    def test__exit__(self, mock_time):
+        fake_scenario_instance = mock.Mock()
+        self.start = mock_time.time()
+        with utils.AtomicAction(fake_scenario_instance, "asdf"):
+            pass
+        duration = mock_time.time() - self.start
+        fake_scenario_instance._add_atomic_actions.assert_called_once_with(
+                                            'asdf', duration)
