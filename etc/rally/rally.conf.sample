@@ -110,6 +110,18 @@
 # Syslog facility to receive log lines (string value)
 #syslog_log_facility=LOG_USER
 
+#
+# Options defined in rally.osclients
+#
+
+# HTTP timeout for any of OpenStack service in seconds
+#openstack_client_http_timeout=30.0
+
+# Use SSL for all OpenStack API interfaces
+#https_insecure=False
+
+# Path to CA server cetrificate for SSL
+#https_cacert=<None>
 
 [api]
 
