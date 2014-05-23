@@ -88,3 +88,11 @@ class CeilometerScenario(base.Scenario):
     def _list_meters(self):
         """Get list of user's meters."""
         return self.clients("ceilometer").meters.list()
+
+    @scenario_utils.atomic_action_timer('ceilometer.list_resources')
+    def _list_resources(self):
+        """List all resources.
+
+        :returns: list of all resources
+        """
+        return self.clients("ceilometer").resources.list()

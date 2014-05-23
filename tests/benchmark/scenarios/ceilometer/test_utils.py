@@ -83,3 +83,12 @@ class CeilometerScenarioTestCase(test.TestCase):
         scenario = utils.CeilometerScenario()
         meters = scenario._list_meters()
         self.assertEqual(fake_meters, meters)
+
+    @mock.patch(UTILS + '.CeilometerScenario.clients')
+    def test__list_resources(self, mock_clients):
+        """Test _list_resources."""
+        fake_resources = []
+        mock_clients("ceilometer").resources.list.return_value = fake_resources
+        scenario = utils.CeilometerScenario()
+        resources = scenario._list_resources()
+        self.assertEqual(fake_resources, resources)
