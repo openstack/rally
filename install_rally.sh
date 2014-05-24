@@ -135,7 +135,10 @@ install_rally() {
 configure_rally() {
   mkdir -p ${RALLY_DATABASE_DIR} ${RALLY_CONFIGURATION_DIR}
   cp ${TMP}/etc/rally/rally.conf.sample ${RALLY_CONFIGURATION_DIR}/rally.conf
-  sed -i "/#connection=<None>/a connection=sqlite:////${RALLY_DATABASE_DIR}/rally.sqlite" ${RALLY_CONFIGURATION_DIR}/rally.conf
+
+  local tmp=$(mktemp /tmp/rally.conf.XXXXX)
+  sed 's|#connection=<None>|connection=sqlite:///'${RALLY_DATABASE_DIR}'/rally.sqlite|' ${RALLY_CONFIGURATION_DIR}/rally.conf > ${tmp}
+  mv ${tmp} ${RALLY_CONFIGURATION_DIR}/rally.conf
 
   rally-manage db recreate
   chmod -R go+w ${RALLY_DATABASE_DIR}
