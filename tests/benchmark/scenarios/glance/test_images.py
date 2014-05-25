@@ -40,6 +40,12 @@ class GlanceImagesTestCase(test.TestCase):
                                             "url", "df", fakearg="f")
         mock_list.assert_called_once_with()
 
+    @mock.patch(GLANCE_IMAGES + "._list_images")
+    def test_list_images(self, mock_list):
+        glance_scenario = images.GlanceImages()
+        glance_scenario.list_images()
+        mock_list.assert_called_once_with()
+
     @mock.patch(GLANCE_IMAGES + "._generate_random_name")
     @mock.patch(GLANCE_IMAGES + "._delete_image")
     @mock.patch(GLANCE_IMAGES + "._create_image")

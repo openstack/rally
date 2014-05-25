@@ -242,3 +242,7 @@ class NoNodesFound(RallyException):
 
 class UnknownRelease(RallyException):
     msg_fmt = _("Unknown release '%(release)s'")
+
+
+class ImageCleanUpException(RallyException):
+    msg_fmt = _("Image Deletion Failed")
