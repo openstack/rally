@@ -20,7 +20,6 @@ from tests import test
 
 class CeilometerBasicTestCase(test.TestCase):
     def test_create_alarm(self):
-
         scenario = ceilometer.CeilometerBasic()
 
         scenario._create_alarm = mock.MagicMock()

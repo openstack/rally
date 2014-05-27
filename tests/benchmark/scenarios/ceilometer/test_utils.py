@@ -16,141 +16,117 @@ import mock
 
 from rally.benchmark.scenarios.ceilometer import utils
 from tests.benchmark.scenarios import test_utils
+from tests import fakes
 from tests import test
 
 UTILS = "rally.benchmark.scenarios.ceilometer.utils"
 
 
 class CeilometerScenarioTestCase(test.TestCase):
+    def setUp(self):
+        super(CeilometerScenarioTestCase, self).setUp()
+        self.scenario = utils.CeilometerScenario()
+        self.scenario.clients = mock.MagicMock(
+            return_value=fakes.FakeCeilometerClient())
+
     def _test_atomic_action_timer(self, atomic_actions_time, name):
         action_duration = test_utils.get_atomic_action_timer_value_by_name(
             atomic_actions_time, name)
         self.assertIsNotNone(action_duration)
         self.assertIsInstance(action_duration, float)
 
-    @mock.patch(UTILS + '.CeilometerScenario.clients')
-    def test__list_alarm(self, mock_clients):
-        """Test _list_alarms when alarm_id is passed to it."""
-        fake_alarms = ['fake_alarm']
-        mock_clients("ceilometer").alarms.get.return_value = fake_alarms
-        scenario = utils.CeilometerScenario()
-        alarms = scenario._list_alarms("FAKE_ALARM_ID")
-        self.assertEqual(fake_alarms, alarms)
+    def test__list_alarms(self):
+        alarm1_id = "fake_alarm1_id"
+        alarm2_id = "fake_alarm2_id"
+        alarm1 = self.scenario._create_alarm("fake_alarm1", 100,
+                                             {"alarm_id": alarm1_id})
+        alarm2 = self.scenario._create_alarm("fake_alarm2", 100,
+                                             {"alarm_id": alarm2_id})
 
-    @mock.patch(UTILS + '.CeilometerScenario.clients')
-    def test__list_alarms(self, mock_clients):
-        """Test _list_alarms when no alarm_id is passed to it."""
-        fake_alarms = []
-        mock_clients("ceilometer").alarms.list.return_value = fake_alarms
-        scenario = utils.CeilometerScenario()
-        alarms = scenario._list_alarms()
-        self.assertEqual(fake_alarms, alarms)
+        result_by_id = self.scenario._list_alarms(alarm1_id)
+        self.assertEqual([alarm1], result_by_id)
 
-    @mock.patch(UTILS + '.CeilometerScenario.clients')
-    def test__create_alarm(self, mock_clients):
+        result_no_args = self.scenario._list_alarms()
+        self.assertEqual(set(result_no_args), set([alarm1, alarm2]))
+
+    def test__create_alarm(self):
         """Test _create_alarm returns alarm."""
-        fake_alarm = mock.MagicMock()
-        fake_alarm_dict = dict()
-        mock_clients("ceilometer").alarms.create.return_value = fake_alarm
-        scenario = utils.CeilometerScenario()
-        created_alarm = scenario._create_alarm("fake_meter_name",
-                                               "fake_threshold",
-                                               fake_alarm_dict)
-        self.assertEqual(fake_alarm, created_alarm)
+        fake_alarm_dict = {"alarm_id": "fake-alarm-id"}
+        created_alarm = self.scenario._create_alarm("fake-meter-name", 100,
+                                                    fake_alarm_dict)
 
-    @mock.patch(UTILS + '.CeilometerScenario.clients')
-    def test__delete_alarms(self, mock_clients):
+        self.assertEqual(created_alarm.alarm_id, "fake-alarm-id")
+
+    def test__delete_alarms(self):
         """Test if call to alarms.delete is made to ensure alarm is deleted."""
-        scenario = utils.CeilometerScenario()
-        scenario._delete_alarm("FAKE_ALARM_ID")
-        mock_clients("ceilometer").alarms.delete.assert_called_once_with(
-            "FAKE_ALARM_ID")
+        # pre-populate alarm for this test scenario
+        fake_alarm_dict = {"alarm_id": "fake-alarm-id"}
+        fake_alarm = self.scenario._create_alarm("fake-meter-name", 100,
+                                                 fake_alarm_dict)
 
-    @mock.patch(UTILS + '.CeilometerScenario.clients')
-    def test__update_alarms(self, mock_clients):
+        self.scenario._delete_alarm(fake_alarm.alarm_id)
+        self.assertEqual(fake_alarm.status, "DELETED")
+
+    def test__update_alarms(self):
         """Test if call to alarms.update is made to ensure alarm is updated."""
+        # pre-populate alarm for this test scenario
+        fake_alarm_dict = {"alarm_id": "fake-alarm-id"}
+        fake_alarm = self.scenario._create_alarm("fake-meter-name", 100,
+                                                 fake_alarm_dict)
+
         fake_alarm_dict_diff = {"description": "Changed Test Description"}
-        scenario = utils.CeilometerScenario()
-        scenario._update_alarm("FAKE_ALARM_ID", fake_alarm_dict_diff)
-        mock_clients("ceilometer").alarms.update.assert_called_once_with(
-            "FAKE_ALARM_ID", **fake_alarm_dict_diff)
+        self.scenario._update_alarm(fake_alarm.alarm_id, fake_alarm_dict_diff)
+        self.assertEqual(fake_alarm.description, "Changed Test Description")
 
-    @mock.patch(UTILS + '.CeilometerScenario.clients')
-    def test__list_meters(self, mock_clients):
+    def test__list_meters(self):
         """Test _list_meters."""
-        fake_meters = []
-        mock_clients("ceilometer").meters.list.return_value = fake_meters
-        scenario = utils.CeilometerScenario()
-        meters = scenario._list_meters()
-        self.assertEqual(fake_meters, meters)
+        fake_meters = self.scenario._list_meters()
+        self.assertEqual(fake_meters, ["fake-meter"])
 
-    @mock.patch(UTILS + '.CeilometerScenario.clients')
-    def test__list_resources(self, mock_clients):
+    def test__list_resources(self):
         """Test _list_resources."""
-        fake_resources = []
-        mock_clients("ceilometer").resources.list.return_value = fake_resources
-        scenario = utils.CeilometerScenario()
-        resources = scenario._list_resources()
-        self.assertEqual(fake_resources, resources)
+        fake_resources = self.scenario._list_resources()
+        self.assertEqual(fake_resources, ["fake-resource"])
 
-    @mock.patch(UTILS + '.CeilometerScenario.clients')
-    def test__get_stats(self, mock_clients):
+    def test__get_stats(self):
         """Test _get_stats function."""
-        fake_stats = mock.MagicMock()
-        mock_clients("ceilometer").statistics.list.return_value = fake_stats
-        scenario = utils.CeilometerScenario()
-        stats = scenario._get_stats("fake_name")
-        self.assertEqual(fake_stats, stats)
+        fake_statistics = self.scenario._get_stats("fake-meter")
+        self.assertEqual(fake_statistics, ["fake-meter-statistics"])
 
-    @mock.patch(UTILS + '.CeilometerScenario.clients')
-    def test__create_meter(self, mock_clients):
+    def test__create_meter(self):
         """Test _create_meter returns meter."""
-        fake_meter = mock.MagicMock()
-        kwargs = mock.MagicMock()
-        mock_clients("ceilometer").samples.create.return_value = [fake_meter]
-        scenario = utils.CeilometerScenario()
-        created_meter = scenario._create_meter(**kwargs)
-        self.assertEqual(fake_meter, created_meter)
+        self.scenario._generate_random_name = mock.MagicMock(
+            return_value="fake-counter-name")
+        created_meter = self.scenario._create_meter()
+        self.assertEqual(created_meter.counter_name, "fake-counter-name")
 
-    @mock.patch(UTILS + '.CeilometerScenario.clients')
-    def test__query_alarms(self, mock_clients):
-        mock_client = mock_clients("ceilometer")
-        mock_client.query_alarms.query = mock.MagicMock()
-        scenario = utils.CeilometerScenario()
-        scenario._query_alarms("fake_filter", "fake_orderby_attribute", 10)
-        mock_client.query_alarms.query.assert_called_once_with(
-            "fake_filter", "fake_orderby_attribute", 10)
+    def test__query_alarms(self):
+        expected_result = ["fake-query-result"]
+        query_result = self.scenario._query_alarms("fake-filter",
+                                                   "fake-orderby-attribute",
+                                                   10)
+        self.assertEqual(query_result, expected_result)
 
-    @mock.patch(UTILS + '.CeilometerScenario.clients')
-    def test__query_alarm_history(self, mock_clients):
-        mock_client = mock_clients("ceilometer")
-        mock_client.query_alarm_history.query = mock.MagicMock()
-        scenario = utils.CeilometerScenario()
-        scenario._query_alarm_history("fake_filter",
-                                      "fake_orderby_attribute", 10)
-        mock_client.query_alarm_history.query.assert_called_once_with(
-            "fake_filter", "fake_orderby_attribute", 10)
+    def test__query_alarm_history(self):
+        expected_result = ["fake-query-result"]
+        query_result = self.scenario._query_alarm_history(
+            "fake-filter", "fake-orderby-attribute", 10)
+        self.assertEqual(query_result, expected_result)
 
-    @mock.patch(UTILS + '.CeilometerScenario.clients')
-    def test__query_samples(self, mock_clients):
-        mock_client = mock_clients("ceilometer")
-        mock_client.query_samples.query = mock.MagicMock()
-        scenario = utils.CeilometerScenario()
-        scenario._query_samples("fake_filter", "fake_orderby_attribute", 10)
-        mock_client.query_samples.query.assert_called_once_with(
-            "fake_filter", "fake_orderby_attribute", 10)
+    def test__query_samples(self):
+        expected_result = ["fake-query-result"]
+        query_result = self.scenario._query_samples("fake-filter",
+                                                    "fake-orderby-attribute",
+                                                    10)
+        self.assertEqual(query_result, expected_result)
 
-    @mock.patch(UTILS + '.CeilometerScenario.clients')
-    def test__create_sample(self, mock_clients):
+    def test__create_sample(self):
         """Test _create_sample returns sample."""
-        fake_sample = mock.MagicMock()
-        fake_sample_dict = dict()
-        mock_clients("ceilometer").samples.create.return_value = fake_sample
-        scenario = utils.CeilometerScenario()
-        created_sample = scenario._create_sample("fake_counter_name",
-                                                 "fake_counter_type",
-                                                 "fake_counter_unit",
-                                                 "fake_counter_volume",
-                                                 "fake_resource_id",
-                                                 **fake_sample_dict)
-        self.assertEqual(fake_sample, created_sample)
+        self.scenario._generate_random_name = mock.MagicMock(
+            return_value="test-counter-name")
+        created_sample = self.scenario._create_sample("test-counter-name",
+                                                      "fake-counter-type",
+                                                      "fake-counter-unit",
+                                                      "fake-counter-volume",
+                                                      "fake-resource-id")
+        self.assertEqual(created_sample[0].counter_name, "test-counter-name")

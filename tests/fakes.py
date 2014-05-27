@@ -17,6 +17,7 @@ import mock
 import multiprocessing
 import uuid
 
+from ceilometerclient import exc as ceilometer_exc
 from glanceclient import exc
 from novaclient import exceptions
 from rally.benchmark.context import base as base_ctx
@@ -135,6 +136,25 @@ class FakeSecurityGroupRule(FakeResource):
         for key, value in kwargs.items():
             self.items[key] = value
             setattr(self, key, value)
+
+
+class FakeAlarm(FakeResource):
+    def __init__(self, manager=None, **kwargs):
+        super(FakeAlarm, self).__init__(manager)
+        self.meter_name = kwargs.get('meter_name')
+        self.threshold = kwargs.get('threshold')
+        self.alarm_id = kwargs.get('alarm_id', 'fake-alarm-id')
+        self.optional_args = kwargs.get('optional_args', {})
+
+
+class FakeSample(FakeResource):
+    def __init__(self, manager=None, **kwargs):
+        super(FakeSample, self).__init__(manager)
+        self.counter_name = kwargs.get('counter_name', 'fake-counter-name')
+        self.counter_type = kwargs.get('counter_type', 'fake-counter-type')
+        self.counter_unit = kwargs.get('counter_unit', 'fake-counter-unit')
+        self.counter_volume = kwargs.get('counter_volume', 100)
+        self.resource_id = kwargs.get('resource_id', 'fake-resource-id')
 
 
 class FakeVolume(FakeResource):
@@ -404,6 +424,64 @@ class FakeRolesManager(FakeManager):
         return [role, ]
 
 
+class FakeAlarmManager(FakeManager):
+
+    def get(self, alarm_id):
+        alarm = self.find(alarm_id=alarm_id)
+        if alarm:
+            return [alarm]
+        raise ceilometer_exc.HTTPNotFound(
+            "Alarm with %s not found" % (alarm_id))
+
+    def update(self, alarm_id, **fake_alarm_dict_diff):
+        alarm = self.get(alarm_id)[0]
+        for attr, value in fake_alarm_dict_diff.iteritems():
+            setattr(alarm, attr, value)
+        return alarm
+
+    def create(self, **kwargs):
+        alarm = FakeAlarm(self, **kwargs)
+        return self._cache(alarm)
+
+    def delete(self, alarm_id):
+        alarm = self.find(alarm_id=alarm_id)
+        if alarm is not None:
+            alarm.status = "DELETED"
+            del self.cache[alarm.id]
+            self.resources_order.remove(alarm.id)
+
+
+class FakeSampleManager(FakeManager):
+
+    def create(self, **kwargs):
+        sample = FakeSample(self, **kwargs)
+        return [self._cache(sample)]
+
+
+class FakeMeterManager(FakeManager):
+
+    def list(self):
+        return ['fake-meter']
+
+
+class FakeCeilometerResourceManager(FakeManager):
+
+    def list(self):
+        return ['fake-resource']
+
+
+class FakeStatisticsManager(FakeManager):
+
+    def list(self, meter):
+        return ['%s-statistics' % meter]
+
+
+class FakeQueryManager(FakeManager):
+
+    def query(self, filter, orderby, limit):
+        return ['fake-query-result']
+
+
 class FakeServiceCatalog(object):
     def get_endpoints(self):
         return {'image': [{'publicURL': 'http://fake.to'}],
@@ -469,8 +547,14 @@ class FakeKeystoneClient(object):
 class FakeCeilometerClient(object):
 
     def __init__(self):
-        #TODO(marcoemorais): Fake Manager subclasses to retrieve metrics.
-        pass
+        self.alarms = FakeAlarmManager()
+        self.meters = FakeMeterManager()
+        self.resources = FakeCeilometerResourceManager()
+        self.statistics = FakeStatisticsManager()
+        self.samples = FakeSampleManager()
+        self.query_alarms = FakeQueryManager()
+        self.query_samples = FakeQueryManager()
+        self.query_alarm_history = FakeQueryManager()
 
 
 class FakeNeutronClient(object):
