@@ -225,3 +225,15 @@ class BenchmarkSetupFailure(RallyException):
 
 class DummyScenarioException(RallyException):
     msg_fmt = _("Dummy scenario expected exception: '%(message)s'")
+
+
+class ValidationError(RallyException):
+    msg_fmt = _("Validation error: %(message)s")
+
+
+class NoNodesFound(RallyException):
+    msg_fmt = _("There is no nodes matching filters: %(filters)r")
+
+
+class UnknownRelease(RallyException):
+    msg_fmt = _("Unknown release '%(release)s'")
