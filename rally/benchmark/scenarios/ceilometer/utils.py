@@ -22,6 +22,8 @@ class CeilometerScenario(base.Scenario):
     """This class should contain base operations for benchmarking Ceilometer,
     most of them are GET/PUT/POST/DELETE Api calls.
     """
+    RESOURCE_NAME_PREFIX = "rally_ceilometer_"
+
     def _get_alarm_dict(self, **kwargs):
         """Prepares and returns alarm dictionary for creating an alarm.
 
@@ -96,3 +98,24 @@ class CeilometerScenario(base.Scenario):
         :returns: list of all resources
         """
         return self.clients("ceilometer").resources.list()
+
+    @scenario_utils.atomic_action_timer('ceilometer.get_stats')
+    def _get_stats(self, meter_name):
+        """Get stats for a specific meter.
+
+        :param meter_name: Name of ceilometer meter
+        """
+        return self.clients("ceilometer").statistics.list(meter_name)
+
+    @scenario_utils.atomic_action_timer('ceilometer.create_meter')
+    def _create_meter(self, **kwargs):
+        """Create a new meter.
+
+        :param name_length: Length of meter name to be generated
+        :param kwargs: Contains the optional attributes for meter creation
+        :returns: Newly created meter
+        """
+        name = self._generate_random_name()
+        samples = self.clients("ceilometer").samples.create(
+            counter_name=name, **kwargs)
+        return samples[0]

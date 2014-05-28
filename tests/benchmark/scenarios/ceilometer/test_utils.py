@@ -92,3 +92,22 @@ class CeilometerScenarioTestCase(test.TestCase):
         scenario = utils.CeilometerScenario()
         resources = scenario._list_resources()
         self.assertEqual(fake_resources, resources)
+
+    @mock.patch(UTILS + '.CeilometerScenario.clients')
+    def test__get_stats(self, mock_clients):
+        """Test _get_stats function."""
+        fake_stats = mock.MagicMock()
+        mock_clients("ceilometer").statistics.list.return_value = fake_stats
+        scenario = utils.CeilometerScenario()
+        stats = scenario._get_stats("fake_name")
+        self.assertEqual(fake_stats, stats)
+
+    @mock.patch(UTILS + '.CeilometerScenario.clients')
+    def test__create_meter(self, mock_clients):
+        """Test _create_meter returns meter."""
+        fake_meter = mock.MagicMock()
+        kwargs = mock.MagicMock()
+        mock_clients("ceilometer").samples.create.return_value = [fake_meter]
+        scenario = utils.CeilometerScenario()
+        created_meter = scenario._create_meter(**kwargs)
+        self.assertEqual(fake_meter, created_meter)
