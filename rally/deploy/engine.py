@@ -33,9 +33,9 @@ LOG = logging.getLogger(__name__)
 class EngineFactory(object):
     """Base class of all deployment engines.
 
-    It's a base class with self-discovery of subclasses. Each a subclass
-    have to implement deploy and cleanup methods. By default each engine
-    that located as a submodule of the package rally.deploy.engines is
+    It's a base class with self-discovery of subclasses. Each subclass
+    has to implement deploy() and cleanup() methods. By default, each engine
+    located as a submodule of the package rally.deploy.engines is
     auto-discovered.
 
     Example of usage with a simple engine:
@@ -46,7 +46,7 @@ class EngineFactory(object):
             # do something
 
         def deploy(self):
-            # Make deployment and return OpenStack endpoints.
+            # Make a deployment and return OpenStack endpoints.
             # The endpoints may have either admin or ordinary users
             # permissions (depending on how the deploy engine has been
             # initialized).
@@ -99,7 +99,7 @@ class EngineFactory(object):
 
     @abc.abstractmethod
     def deploy(self):
-        """Deploy OpenStack cloud and return an endpoint."""
+        """Deploy OpenStack cloud and return endpoints."""
 
     @abc.abstractmethod
     def cleanup(self):
