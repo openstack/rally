@@ -222,7 +222,7 @@
         <div id="task_choser">
             <h2>Select benchmark scenario:</h2>
             <select>
-            % for i, name in enumerate(tasks):
+            % for i, name in enumerate(sorted(tasks)):
                 <option value=${i}>${name}</option>
             % endfor
             </select>
