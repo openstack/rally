@@ -155,6 +155,7 @@ def _process_results(results):
             "duration": _process_main_duration(result),
             "atomic": _process_atomic(result)
         })
+    output = sorted(output, key=lambda r: r["name"])
     return output
 
 
