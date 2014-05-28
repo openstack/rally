@@ -16,6 +16,12 @@
 
 PROJECT=`echo $ZUUL_PROJECT | cut -d \/ -f 2`
 SCENARIO=$BASE/new/$PROJECT/rally-scenarios/${RALLY_SCENARIO}.yaml
+PLUGINS_DIR=$BASE/new/$PROJECT/rally-scenarios/plugins
+
+if [ -d $PLUGINS_DIR ]; then
+ mkdir -p ~/.rally/plugins/scenarios
+ cp $PLUGINS_DIR/*.py ~/.rally/plugins/scenarios/
+fi
 
 rally use deployment --name devstack
 rally -v task start --task $SCENARIO

@@ -136,3 +136,10 @@
         users:
           tenants: 1
           users_per_tenant: 1
+
+  FakePlugin.testplugin:
+    -
+      runner:
+        type: "constant"
+        times: 4
+        concurrency: 2
