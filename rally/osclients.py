@@ -30,7 +30,7 @@ from rally import exceptions
 
 CONF = cfg.CONF
 CONF.register_opts([
-    cfg.FloatOpt("openstack_client_http_timeout", default=30.0,
+    cfg.FloatOpt("openstack_client_http_timeout", default=180.0,
                  help="HTTP timeout for any of OpenStack service in seconds"),
     cfg.BoolOpt("https_insecure", default=False,
                 help="Use SSL for all OpenStack API interfaces"),

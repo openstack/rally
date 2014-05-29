@@ -115,7 +115,7 @@
 #
 
 # HTTP timeout for any of OpenStack service in seconds
-#openstack_client_http_timeout=30.0
+#openstack_client_http_timeout=180.0
 
 # Use SSL for all OpenStack API interfaces
 #https_insecure=False
