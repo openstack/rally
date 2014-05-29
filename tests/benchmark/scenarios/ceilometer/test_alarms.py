@@ -14,13 +14,13 @@
 
 import mock
 
-from rally.benchmark.scenarios.ceilometer import ceilometer
+from rally.benchmark.scenarios.ceilometer import alarms
 from tests import test
 
 
-class CeilometerBasicTestCase(test.TestCase):
+class CeilometerAlarmsTestCase(test.TestCase):
     def test_create_alarm(self):
-        scenario = ceilometer.CeilometerBasic()
+        scenario = alarms.CeilometerAlarms()
 
         scenario._create_alarm = mock.MagicMock()
         scenario.create_alarm("fake_meter_name",
@@ -31,7 +31,7 @@ class CeilometerBasicTestCase(test.TestCase):
                                                        {'fakearg': 'f'})
 
     def test_list_alarm(self):
-        scenario = ceilometer.CeilometerBasic()
+        scenario = alarms.CeilometerAlarms()
 
         scenario._list_alarms = mock.MagicMock()
         scenario.list_alarms()
@@ -39,7 +39,7 @@ class CeilometerBasicTestCase(test.TestCase):
 
     def test_create_and_list_alarm(self):
         fake_alarm = mock.MagicMock()
-        scenario = ceilometer.CeilometerBasic()
+        scenario = alarms.CeilometerAlarms()
 
         scenario._create_alarm = mock.MagicMock(return_value=fake_alarm)
         scenario._list_alarms = mock.MagicMock()
@@ -54,7 +54,7 @@ class CeilometerBasicTestCase(test.TestCase):
     def test_create_and_update_alarm(self):
         fake_alram_dict_diff = {'description': 'Changed Test Description'}
         fake_alarm = mock.MagicMock()
-        scenario = ceilometer.CeilometerBasic()
+        scenario = alarms.CeilometerAlarms()
 
         scenario._create_alarm = mock.MagicMock(return_value=fake_alarm)
         scenario._update_alarm = mock.MagicMock()
@@ -69,7 +69,7 @@ class CeilometerBasicTestCase(test.TestCase):
 
     def test_create_and_delete_alarm(self):
         fake_alarm = mock.MagicMock()
-        scenario = ceilometer.CeilometerBasic()
+        scenario = alarms.CeilometerAlarms()
 
         scenario._create_alarm = mock.MagicMock(return_value=fake_alarm)
         scenario._delete_alarm = mock.MagicMock()

@@ -17,7 +17,7 @@
         times: 10
         concurrency: 10
 
-  CeilometerBasic.create_alarm:
+  CeilometerAlarms.create_alarm:
     -
       args:
         meter_name: "ram_util"
@@ -32,7 +32,7 @@
         times: 10
         concurrency: 10
 
-  CeilometerBasic.create_and_delete_alarm:
+  CeilometerAlarms.create_and_delete_alarm:
     -
       args:
         meter_name: "ram_util"
@@ -47,7 +47,7 @@
         times: 10
         concurrency: 10
 
-  CeilometerBasic.create_and_list_alarm:
+  CeilometerAlarms.create_and_list_alarm:
     -
       args:
         meter_name: "ram_util"
@@ -62,7 +62,7 @@
         times: 10
         concurrency: 10
 
-  CeilometerBasic.create_and_update_alarm:
+  CeilometerAlarms.create_and_update_alarm:
     -
       args:
         meter_name: "ram_util"
@@ -77,7 +77,7 @@
         times: 10
         concurrency: 10
 
-  CeilometerBasic.list_alarms:
+  CeilometerAlarms.list_alarms:
     -
       runner:
         type: "constant"

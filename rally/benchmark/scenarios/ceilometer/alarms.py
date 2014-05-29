@@ -16,7 +16,7 @@ from rally.benchmark.scenarios import base
 from rally.benchmark.scenarios.ceilometer import utils as ceilometerutils
 
 
-class CeilometerBasic(ceilometerutils.CeilometerScenario):
+class CeilometerAlarms(ceilometerutils.CeilometerScenario):
     @base.scenario(context={"cleanup": ["ceilometer"]})
     def create_alarm(self, meter_name, threshold, **kwargs):
         """Test creating an alarm.

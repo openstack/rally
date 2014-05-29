@@ -1,5 +1,5 @@
 ---
-    CeilometerBasic.create_alarm:
+    CeilometerAlarms.create_alarm:
      -
        args:
          meter_name: "ram_util"

@@ -1,5 +1,5 @@
 {
-    "CeilometerBasic.create_and_delete_alarm": [
+    "CeilometerAlarms.create_and_delete_alarm": [
         {
             "args": {
                 "meter_name": "ram_util",

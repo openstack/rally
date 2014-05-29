@@ -1,5 +1,5 @@
 {
-    "CeilometerBasic.list_alarms": [
+    "CeilometerAlarms.list_alarms": [
         {
             "runner":{
                 "type": "constant",

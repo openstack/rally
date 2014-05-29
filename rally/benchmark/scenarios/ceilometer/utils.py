@@ -12,8 +12,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import uuid
-
 from rally.benchmark.scenarios import base
 from rally.benchmark.scenarios import utils as scenario_utils
 
@@ -27,11 +25,9 @@ class CeilometerScenario(base.Scenario):
         :param kwargs: optional parameters to create alarm
         :returns: alarm dictionary used to create an alarm
         """
-        # TODO(Aswad): Reuse _generate_random_name from base.Scenario instead
-        # of generating alarm_uuid. Ref: bp/benchmark-scenarios-for-neutron.
-        alarm_uuid = str(uuid.uuid4())
-        alarm = {"alarm_id": alarm_uuid,
-                 "name": "TestAlarm-%s" % alarm_uuid,
+        alarm_id = self._generate_random_name()
+        alarm = {"alarm_id": alarm_id,
+                 "name": "TestAlarm-%s" % alarm_id,
                  "description": "Test Alarm"}
 
         alarm.update(kwargs)
