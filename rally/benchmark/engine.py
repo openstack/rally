@@ -176,6 +176,7 @@ class BenchmarkEngine(object):
         for name in self.config:
             for n, kw in enumerate(self.config[name]):
                 key = {'name': name, 'pos': n, 'kw': kw}
+                LOG.info("Running benchmark with key: %s" % key)
                 runner = self._get_runner(kw)
                 result = runner.run(name, kw.get("context", {}),
                                     kw.get("args", {}))

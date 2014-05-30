@@ -95,6 +95,8 @@ def start_task(deploy_uuid, config, task=None):
     """
     deployment = objects.Deployment.get(deploy_uuid)
     task = task or objects.Task(deployment_uuid=deploy_uuid)
+    LOG.info("Benchmark Task %s on Deployment %s" % (task['uuid'],
+                                                     deployment['uuid']))
     benchmark_engine = engine.BenchmarkEngine(config, task)
     endpoint = deployment['endpoints']
 
