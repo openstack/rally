@@ -145,9 +145,59 @@ def _process_atomic(result):
     }
 
 
+def _get_atomic_action_durations(result):
+    raw = result.get('result', [])
+    atomic_actions_names = []
+    for r in raw:
+        if 'atomic_actions' in r:
+            for a in r['atomic_actions']:
+                atomic_actions_names.append(a["action"])
+            break
+    action_durations = {}
+    for atomic_action in atomic_actions_names:
+        action_durations[atomic_action] = utils.get_durations(
+            raw,
+            lambda r: next(a["duration"] for a in r["atomic_actions"]
+                           if a["action"] == atomic_action),
+            lambda r: any((a["action"] == atomic_action)
+                          for a in r["atomic_actions"]))
+
+    table = []
+    actions_list = action_durations.keys()
+    action_durations["total"] = utils.get_durations(
+            raw, lambda x: x["duration"], lambda r: not r["error"])
+    actions_list.append("total")
+    for action in actions_list:
+        durations = action_durations[action]
+        if durations:
+            data = [action,
+                    round(min(durations), 3),
+                    round(utils.mean(durations), 3),
+                    round(max(durations), 3),
+                    round(utils.percentile(durations, 0.90), 3),
+                    round(utils.percentile(durations, 0.95), 3),
+                    "%.1f%%" % (len(durations) * 100.0 / len(raw)),
+                    len(raw)]
+        else:
+            data = [action, None, None, None, None, None, 0, len(raw)]
+        table.append(data)
+
+    return table
+
+
 def _process_results(results):
     output = []
     for result in results:
+        table_cols = [
+                {"title": "action", "class": "center"},
+                {"title": "min (sec)", "class": "center"},
+                {"title": "avg (sec)", "class": "center"},
+                {"title": "max (sec)", "class": "center"},
+                {"title": "90 percentile", "class": "center"},
+                {"title": "95 percentile", "class": "center"},
+                {"title": "success", "class": "center"},
+                {"title": "count", "class": "center"}]
+        table_rows = _get_atomic_action_durations(result)
         info = result["key"]
         config = {}
         config[info["name"]] = [info["kw"]]
@@ -155,7 +205,9 @@ def _process_results(results):
             "name": "%s (task #%d)" % (info["name"], info["pos"]),
             "config": config,
             "duration": _process_main_duration(result),
-            "atomic": _process_atomic(result)
+            "atomic": _process_atomic(result),
+            "table_rows": table_rows,
+            "table_cols": table_cols
         })
     output = sorted(output, key=lambda r: r["name"])
     return output

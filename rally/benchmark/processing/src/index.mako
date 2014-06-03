@@ -6,6 +6,9 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/nvd3/1.1.13-beta/nv.d3.min.css"
           rel="stylesheet"
           type="text/css" />
+    <link href="http://cdn.datatables.net/1.10.0/css/jquery.dataTables.css"
+          rel="stylesheet"
+          type="text/css" />
 
     <!-- Remove jQuery and use d3.select in futuer -->
     <script type="text/javascript"
@@ -18,6 +21,10 @@
     </script>
     <script type="text/javascript"
             src="https://cdnjs.cloudflare.com/ajax/libs/nvd3/1.1.13-beta/nv.d3.min.js"
+            charset="utf-8">
+    </script>
+    <script type="text/javascript"
+            src="http://cdn.datatables.net/1.10.0/js/jquery.dataTables.js"
             charset="utf-8">
     </script>
 
@@ -43,6 +50,9 @@
             min-width: 1000px;
             overflow: scroll;
         }
+        #atomic_table {
+            padding-bottom:0px;
+        }.dataTables_wrapper {width: 950px;}
     </style>
 
 
@@ -170,6 +180,13 @@
                     });
                 });
 
+                $('#atomic_table').dataTable({
+                    "data": d["table_rows"],
+                    "columns": d["table_cols"],
+                    "searching": false,
+                    "paging": false
+                });
+
                 draw_stacked("#results .total_duration .stackedarea", function(){
                     return d["duration"]["iter"]
                 })
@@ -234,6 +251,8 @@
             <div class="results">
                 <h2>Benchmark Scenario Configuration</h2>
                 <div class="config"></div>
+                <h2>Table for task results</h2>
+                <table cellpadding="0" cellspacing="0" border="0" class="display" id="atomic_table"></table>
                 <h2>Charts for the Total Duration</h2>
                 <div class="total_duration">
                     <svg class="stackedarea"></svg>
