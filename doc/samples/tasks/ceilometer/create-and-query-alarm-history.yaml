@@ -1,0 +1,17 @@
+---
+    CeilometerQueries.create_and_query_alarm_history:
+     -
+       args:
+         orderby: !!null
+         limit: !!null
+         meter_name: "ram_util"
+         threshold: 10.0
+         type: "threshold"
+         statistic: "avg"
+         alarm_actions: ["http://localhost:8776/alarm"]
+         ok_actions: ["http://localhost:8776/ok"]
+         insufficient_data_actions: ["http://localhost:8776/notok"]
+       runner:
+         type: "constant"
+         times: 100
+         concurrency: 10
