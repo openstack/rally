@@ -26,14 +26,15 @@ from rally import utils
 class Context(object):
     """This class is a factory for context classes.
 
-        Every context class should be a subclass of this method and implement
-        2 abstract methods: setup() and cleanup()
+    Every context class should be a subclass of this class and implement
+    2 abstract methods: setup() and cleanup()
 
-        It covers:
-            1) proper setting up of context config
-            2) Auto discovering & get by name
-            3) Validation by CONFIG_SCHEMA
-            4) Order of context creation
+    It covers:
+        1) proper setting up of context config
+        2) Auto discovering & get by name
+        3) Validation by CONFIG_SCHEMA
+        4) Order of context creation
+
     """
     __ctx_name__ = "base"
     __ctx_order__ = 0
@@ -54,7 +55,7 @@ class Context(object):
 
     @staticmethod
     def get_by_name(name):
-        """Returns Context class by name."""
+        """Return Context class by name."""
         for context in utils.itersubclasses(Context):
             if name == context.__ctx_name__:
                 return context
@@ -62,11 +63,11 @@ class Context(object):
 
     @abc.abstractmethod
     def setup(self):
-        """This method sets context of benchmark."""
+        """Set context of benchmark."""
 
     @abc.abstractmethod
     def cleanup(self):
-        """This method cleans context of benchmark."""
+        """Clean context of benchmark."""
 
     def __enter__(self):
         return self
@@ -76,7 +77,7 @@ class Context(object):
 
 
 class ContextManager(object):
-    """Creates context environment and runs method inside it."""
+    """Create context environment and run method inside it."""
 
     @staticmethod
     def run(context, func, *args, **kwargs):
