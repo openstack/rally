@@ -111,3 +111,46 @@ class CeilometerScenarioTestCase(test.TestCase):
         scenario = utils.CeilometerScenario()
         created_meter = scenario._create_meter(**kwargs)
         self.assertEqual(fake_meter, created_meter)
+
+    @mock.patch(UTILS + '.CeilometerScenario.clients')
+    def test__query_alarms(self, mock_clients):
+        mock_client = mock_clients("ceilometer")
+        mock_client.query_alarms.query = mock.MagicMock()
+        scenario = utils.CeilometerScenario()
+        scenario._query_alarms("fake_filter", "fake_orderby_attribute", 10)
+        mock_client.query_alarms.query.assert_called_once_with(
+            "fake_filter", "fake_orderby_attribute", 10)
+
+    @mock.patch(UTILS + '.CeilometerScenario.clients')
+    def test__query_alarm_history(self, mock_clients):
+        mock_client = mock_clients("ceilometer")
+        mock_client.query_alarm_history.query = mock.MagicMock()
+        scenario = utils.CeilometerScenario()
+        scenario._query_alarm_history("fake_filter",
+                                      "fake_orderby_attribute", 10)
+        mock_client.query_alarm_history.query.assert_called_once_with(
+            "fake_filter", "fake_orderby_attribute", 10)
+
+    @mock.patch(UTILS + '.CeilometerScenario.clients')
+    def test__query_samples(self, mock_clients):
+        mock_client = mock_clients("ceilometer")
+        mock_client.query_samples.query = mock.MagicMock()
+        scenario = utils.CeilometerScenario()
+        scenario._query_samples("fake_filter", "fake_orderby_attribute", 10)
+        mock_client.query_samples.query.assert_called_once_with(
+            "fake_filter", "fake_orderby_attribute", 10)
+
+    @mock.patch(UTILS + '.CeilometerScenario.clients')
+    def test__create_sample(self, mock_clients):
+        """Test _create_sample returns sample."""
+        fake_sample = mock.MagicMock()
+        fake_sample_dict = dict()
+        mock_clients("ceilometer").samples.create.return_value = fake_sample
+        scenario = utils.CeilometerScenario()
+        created_sample = scenario._create_sample("fake_counter_name",
+                                                 "fake_counter_type",
+                                                 "fake_counter_unit",
+                                                 "fake_counter_volume",
+                                                 "fake_resource_id",
+                                                 **fake_sample_dict)
+        self.assertEqual(fake_sample, created_sample)

@@ -119,3 +119,62 @@ class CeilometerScenario(base.Scenario):
         samples = self.clients("ceilometer").samples.create(
             counter_name=name, **kwargs)
         return samples[0]
+
+    @scenario_utils.atomic_action_timer('ceilometer.query_alarms')
+    def _query_alarms(self, filter, orderby, limit):
+        """Query alarms with specific parameters.
+
+        If no input params are provided, it returns all the results in database
+        :param limit: optional param for maximum number of results returned
+        :param orderby: optional param for specifying ordering of results
+        :param filter: optional filter query
+        :returns: queried alarms
+        """
+        return self.clients("ceilometer").query_alarms.query(
+                filter, orderby, limit)
+
+    @scenario_utils.atomic_action_timer('ceilometer.query_alarm_history')
+    def _query_alarm_history(self, filter, orderby, limit):
+        """Query history of an alarm.
+
+        If no input params are provided, it returns all the results in database
+        :param limit: optional param for maximum number of results returned
+        :param orderby: optional param for specifying ordering of results
+        :param filter: optional filter query
+        :returns: alarm history
+        """
+        return self.clients("ceilometer").query_alarm_history.query(
+                filter, orderby, limit)
+
+    @scenario_utils.atomic_action_timer('ceilometer.create_sample')
+    def _create_sample(self, counter_name, counter_type, counter_unit,
+                       counter_volume, resource_id, **kwargs):
+        """Creates a Sample with specified parameters.
+
+        :param counter_name: specifies name of the counter
+        :param counter_type: specifies type of the counter
+        :param counter_unit: specifies name of the counter
+        :param counter_volume: specifies name of the counter
+        :param resource_id: specifies resource id for the sample created
+        :param kwargs: contains optional parameters for creating a sample
+        :returns: created sample
+        """
+        kwargs.update({"counter_name": counter_name,
+                       "counter_type": counter_type,
+                       "counter_unit": counter_unit,
+                       "counter_volume": counter_volume,
+                       "resource_id": resource_id})
+        return self.clients("ceilometer").samples.create(**kwargs)
+
+    @scenario_utils.atomic_action_timer('ceilometer.query_samples')
+    def _query_samples(self, filter, orderby, limit):
+        """Query samples with specified parameters.
+
+        If no input params are provided, it returns all the results in database
+        :param limit: optional param for maximum number of results returned
+        :param orderby: optional param for specifying ordering of results
+        :param filter: optional filter query
+        :returns: queried samples
+        """
+        return self.clients("ceilometer").query_samples.query(
+                filter, orderby, limit)

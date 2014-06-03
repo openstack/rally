@@ -1,0 +1,21 @@
+{
+    "CeilometerQueries.create_and_query_samples": [
+        {
+            "args": {
+                "filter": {"=": {"counter_unit": "instance"}},
+                "orderby": null,
+                "limit": 10,
+                "counter_name": "cpu_util",
+                "counter_type": "gauge",
+                "counter_unit": "instance",
+                "counter_volume": 1.0,
+                "resource_id": "resource_id",
+            },
+            "runner": {
+                "type": "constant",
+                "times": 100,
+                "concurrency": 10
+            }
+        }
+    ]
+}
