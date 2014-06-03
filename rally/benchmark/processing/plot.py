@@ -149,9 +149,11 @@ def _process_results(results):
     output = []
     for result in results:
         info = result["key"]
+        config = {}
+        config[info["name"]] = [info["kw"]]
         output.append({
             "name": "%s (task #%d)" % (info["name"], info["pos"]),
-            "config": info["kw"],
+            "config": config,
             "duration": _process_main_duration(result),
             "atomic": _process_atomic(result)
         })

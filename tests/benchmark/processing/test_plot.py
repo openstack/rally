@@ -65,7 +65,7 @@ class PlotTestCase(test.TestCase):
         for i, r in enumerate(results):
             self.assertEqual(output[i], {
                 "name": "%s (task #%d)" % (r["key"]["name"], r["key"]["pos"]),
-                "config": r["key"]["kw"],
+                "config": {r["key"]["name"]: [r["key"]["kw"]]},
                 "duration": mock_main_duration.return_value,
                 "atomic": mock_atomic.return_value
             })
