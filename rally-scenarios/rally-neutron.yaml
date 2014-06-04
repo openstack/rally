@@ -1,0 +1,35 @@
+---
+  NeutronNetworks.create_and_list_networks:
+    -
+      args:
+        network_data:
+      runner:
+        type: "constant"
+        times: 100
+        concurrency: 10
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+        quotas:
+          neutron:
+             network: -1
+
+  NeutronNetworks.create_and_list_subnets:
+    -
+      args:
+        network_data:
+        subnet_data:
+        subnets_per_network: 2
+      runner:
+        type: "constant"
+        times: 100
+        concurrency: 5
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+        quotas:
+          neutron:
+             subnet: -1
+             network: -1
