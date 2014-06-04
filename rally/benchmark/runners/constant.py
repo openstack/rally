@@ -91,6 +91,8 @@ class ConstantScenarioRunner(base.ScenarioRunner):
                 result = iter_result.next(timeout)
             except multiprocessing.TimeoutError as e:
                 result = {"duration": timeout, "idle_duration": 0,
+                          "scenario_output": {},
+                          "atomic_actions": [],
                           "error": utils.format_exc(e)}
             results.append(result)
 
@@ -164,6 +166,8 @@ class ConstantForDurationScenarioRunner(base.ScenarioRunner):
                 result = iter_result.next(timeout)
             except multiprocessing.TimeoutError as e:
                 result = {"duration": timeout, "idle_duration": 0,
+                          "scenario_output": {},
+                          "atomic_actions": [],
                           "error": utils.format_exc(e)}
             results_queue.append(result)
 
