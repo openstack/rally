@@ -14,34 +14,22 @@
 #    under the License.
 
 from pecan import rest
-from wsme import types as wtypes
 import wsmeext.pecan as wsme_pecan
 
-from rally.api.controllers import v1
-from rally.api import types
+from rally.aas.rest import types
 
 
-class Root(wtypes.Base):
-
-    name = wtypes.text
-    description = wtypes.text
-    versions = [types.Version]
-
+class Version(types.Version):
     @classmethod
-    def convert(self, name, description, versions):
-        root = Root(name=name, description=description)
-        root.versions = [v.get()['result'] for v in versions]
-        return root
+    def convert(cls):
+        v = super(Version, cls).convert('v1', 'CURRENT',
+                                        updated_at='2014-01-07T00:00:00Z')
+        return v
 
 
-class RootController(rest.RestController):
+class Controller(rest.RestController):
+    """Version 1 API Controller Root."""
 
-    v1 = v1.Controller()
-
-    @wsme_pecan.wsexpose(Root)
+    @wsme_pecan.wsexpose(Version)
     def get(self):
-        name = "OpenStack Rally API"
-        description = ("Rally is a Benchmark-as-a-Service project for "
-                       "OpenStack.")
-        root = Root.convert(name, description, [self.v1])
-        return root
+        return Version.convert()

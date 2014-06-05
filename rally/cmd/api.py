@@ -22,7 +22,7 @@ from wsgiref import simple_server
 
 from oslo.config import cfg
 
-from rally.api import app as rally_app
+from rally.aas.rest import app as rally_app
 from rally.openstack.common.gettextutils import _  # noqa
 from rally.openstack.common import log
 
@@ -36,8 +36,8 @@ def main():
     CONF(sys.argv[1:], project='rally')
     log.setup('rally')
     # Prepare application and bind to the service socket.
-    host = CONF.api.host
-    port = CONF.api.port
+    host = CONF.rest.host
+    port = CONF.rest.port
     app = rally_app.make_app()
     server = simple_server.make_server(host, port, app)
     # Start application.

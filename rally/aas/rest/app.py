@@ -36,8 +36,8 @@ def setup_app(config):
 def make_app():
     config = {
         'app': {
-            'root': 'rally.api.controllers.root.RootController',
-            'modules': ['rally.api'],
+            'root': 'rally.aas.rest.controllers.root.RootController',
+            'modules': ['rally.aas.rest'],
             'debug': CONF.debug,
         },
         'wsme': {

@@ -16,7 +16,7 @@
 from oslo.config import cfg
 
 
-API_SERVICE_OPTS = [
+REST_SERVICE_OPTS = [
     cfg.IntOpt('port',
                default=8877,
                help='The port for the Rally API server',
@@ -26,10 +26,10 @@ API_SERVICE_OPTS = [
                help='The listen IP for the Rally API server',
                ),
 ]
-API_OPT_GROUP = cfg.OptGroup(name='api',
-                             title='Options for the openstack-rally-api '
-                                   'service')
+REST_OPT_GROUP = cfg.OptGroup(name='rest',
+                              title='Options for the openstack-rally-api '
+                                    'service')
 
 CONF = cfg.CONF
-CONF.register_group(API_OPT_GROUP)
-CONF.register_opts(API_SERVICE_OPTS, API_OPT_GROUP)
+CONF.register_group(REST_OPT_GROUP)
+CONF.register_opts(REST_SERVICE_OPTS, REST_OPT_GROUP)

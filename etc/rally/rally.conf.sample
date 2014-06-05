@@ -123,19 +123,6 @@
 # Path to CA server cetrificate for SSL
 #https_cacert=<None>
 
-[api]
-
-#
-# Options defined in rally.api
-#
-
-# The port for the Rally API server (integer value)
-#port=8877
-
-# The listen IP for the Rally API server (string value)
-#host=0.0.0.0
-
-
 [benchmark]
 
 #
@@ -186,6 +173,31 @@
 # Interval between checks when waiting for image deletion.
 # (floating point value)
 #glance_image_delete_poll_interval=1.0
+
+
+#
+# Options defined in rally.benchmark.scenarios.heat.utils
+#
+
+# Time to sleep after creating a resource before polling for
+# it status (floating point value)
+#heat_stack_create_prepoll_delay=2.0
+
+# Time to wait for heat stack to be created. (floating point
+# value)
+#heat_stack_create_timeout=3600.0
+
+# Interval between checks when waiting for stack creation.
+# (floating point value)
+#heat_stack_create_poll_interval=1.0
+
+# Time to wait for heat stack to be deleted. (floating point
+# value)
+#heat_stack_delete_timeout=3600.0
+
+# Interval between checks when waiting for stack deletion.
+# (floating point value)
+#heat_stack_delete_poll_interval=1.0
 
 
 #
@@ -401,11 +413,24 @@
 # Options defined in rally.verification.verifiers.tempest.config
 #
 
-# Version of cirros image
+# Version of cirros image (string value)
 #cirros_version=0.3.2
 
-# Cirros image name
+# Cirros image name (string value)
 #cirros_image=cirros-0.3.2-x86_64-disk.img
+
+
+[rest]
+
+#
+# Options defined in rally.aas.rest
+#
+
+# The port for the Rally API server (integer value)
+#port=8877
+
+# The listen IP for the Rally API server (string value)
+#host=0.0.0.0
 
 
 [users_context]

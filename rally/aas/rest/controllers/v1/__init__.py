@@ -13,4 +13,4 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from rally.api.controllers.v1.root import Controller  # noqa
+from rally.aas.rest.controllers.v1.root import Controller  # noqa
