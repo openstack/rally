@@ -143,9 +143,9 @@ def verify(deploy_id, set_name, regex):
     verification = objects.Verification(deployment_uuid=deploy_id)
     verifier = tempest.Tempest(deploy_id, verification=verification)
     if not verifier.is_installed():
-        print("Tempest is not installed for specified deployment. "
-              "Please use 'rally-manage tempest install'")
-        return
+        print("Tempest is not installed for specified deployment.")
+        print("Installing Tempest for deployment %s" % deploy_id)
+        verifier.install()
     LOG.info("Starting verification of deployment: %s" % deploy_id)
 
     verification.set_running()

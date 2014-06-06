@@ -225,3 +225,16 @@ class APITestCase(test.TestCase):
         self.tempest.is_installed.assert_called_once_with()
         self.tempest.verify.assert_called_once_with(set_name='smoke',
                                                     regex=None)
+
+    @mock.patch('rally.orchestrator.api.objects.Verification')
+    @mock.patch('rally.verification.verifiers.tempest.tempest.Tempest')
+    def test_verify_tempest_not_installed(self, mock_tempest,
+                                          mock_verification):
+        mock_tempest.return_value = self.tempest
+        self.tempest.is_installed.return_value = False
+        api.verify(self.deploy_uuid, 'smoke', None)
+
+        self.tempest.is_installed.assert_called_once_with()
+        self.tempest.install.assert_called_once_with()
+        self.tempest.verify.assert_called_once_with(set_name='smoke',
+                                                    regex=None)
