@@ -9,6 +9,7 @@
 # programs already installed:
 # -> Python 2.6 or Python 2.7
 
+set -e
 
 err() {
   echo "${0##*/}: $@" >&2
