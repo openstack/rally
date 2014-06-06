@@ -44,10 +44,10 @@ The :mod:`rally.deploy.engines.devstack` Module
 The Dummy Engine
 ----------------
 
-The :mod:`rally.deploy.engines.dummy` Module
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The :mod:`rally.deploy.engines.existing` Module
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. automodule:: rally.deploy.engines.dummy
+.. automodule:: rally.deploy.engines.existing
     :members:
     :undoc-members:
     :show-inheritance:

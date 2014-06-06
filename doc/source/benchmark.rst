@@ -30,26 +30,26 @@ The :mod:`rally.benchmark.engine` Module
     :undoc-members:
     :show-inheritance:
 
-The :mod:`rally.benchmark.runner` Module
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The :mod:`rally.benchmark.runners` Module
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. automodule:: rally.benchmark.runner
+.. automodule:: rally.benchmark.runners
     :members:
     :undoc-members:
     :show-inheritance:
 
-The :mod:`rally.benchmark.base` Module
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The :mod:`rally.benchmark.context` Module
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. automodule:: rally.benchmark.base
+.. automodule:: rally.benchmark.context
     :members:
     :undoc-members:
     :show-inheritance:
 
-The :mod:`rally.benchmark.utils` Module
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The :mod:`rally.benchmark.processing` Module
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. automodule:: rally.benchmark.utils
+.. automodule:: rally.benchmark.processing
     :members:
     :undoc-members:
     :show-inheritance:
