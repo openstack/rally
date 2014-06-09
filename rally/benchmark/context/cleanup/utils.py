@@ -95,6 +95,13 @@ def delete_volume_backups(cinder):
 def delete_nova_resources(nova):
     delete_servers(nova)
     delete_keypairs(nova)
+    delete_secgroups(nova)
+
+
+def delete_secgroups(nova):
+    for secgroup in nova.security_groups.list():
+        if secgroup.name != "default":  # inc0: we shouldn't mess with default
+            secgroup.delete()
 
 
 def delete_servers(nova):
