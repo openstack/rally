@@ -28,7 +28,7 @@ In terms of software architecture, Rally is built of 4 main components:
 
 1. **Server Providers** - provide servers (virtual servers), with ssh access, in one L3 network.
 2. **Deploy Engines** - deploy OpenStack cloud on servers that are presented by **Server Providers**
-3. **Verification** - component that runs tempest (or another pecific set of tests) against a deployed cloud, collects results & presents them in human readable form.
+3. **Verification** - component that runs tempest (or another specific set of tests) against a deployed cloud, collects results & presents them in human readable form.
 4. **Benchmark engine** - allows to write parameterized benchmark scenarios & run them against the cloud.
 
 Use Cases
