@@ -110,8 +110,7 @@ install_system_requirements() {
     unsupported_os_system_requirements
   fi
 
-  hash pip 2> /dev/null
-  if [ $? -ne 0 ]; then
+  if ! hash pip 2> /dev/null; then
     curl -L -o ${GETPIPPY_FILE} ${PIP_SECURE_LOCATION}
     python ${GETPIPPY_FILE}
   fi
