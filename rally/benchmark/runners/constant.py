@@ -14,7 +14,6 @@
 #    under the License.
 
 
-import collections
 import multiprocessing
 import time
 
@@ -159,7 +158,7 @@ class ConstantForDurationScenarioRunner(base.ScenarioRunner):
                     self._iter_scenario_args(cls, method, context, args))
         iter_result = pool.imap(base._run_scenario_once, run_args)
 
-        results_queue = collections.deque([], maxlen=concurrency)
+        results = []
         start = time.time()
         while True:
             try:
@@ -169,12 +168,10 @@ class ConstantForDurationScenarioRunner(base.ScenarioRunner):
                           "scenario_output": {},
                           "atomic_actions": [],
                           "error": utils.format_exc(e)}
-            results_queue.append(result)
+            results.append(result)
 
             if time.time() - start > duration:
                 break
-
-        results = list(results_queue)
 
         pool.terminate()
         pool.join()
