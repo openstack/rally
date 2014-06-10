@@ -244,7 +244,7 @@ class TaskCommands(object):
                 keys = set()
                 for ssr in ssrs:
                     keys.update(ssr.keys())
-                headers = ["Key", "max", "avg", "min",
+                headers = ["key", "max", "avg", "min",
                            "90 pecentile", "95 pecentile"]
                 float_cols = ["max", "avg", "min",
                               "90 pecentile", "95 pecentile"]
