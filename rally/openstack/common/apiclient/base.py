@@ -24,11 +24,13 @@ Base utilities to build API operation managers and objects on top of.
 # pylint: disable=E1102
 
 import abc
+import copy
 
 import six
+from six.moves.urllib import parse
 
 from rally.openstack.common.apiclient import exceptions
-from rally.openstack.common.py3kcompat import urlutils
+from rally.openstack.common.gettextutils import _
 from rally.openstack.common import strutils
 
 
@@ -73,8 +75,8 @@ class HookableMixin(object):
 
         :param cls: class that registers hooks
         :param hook_type: hook type, e.g., '__pre_parse_args__'
-        :param **args: args to be passed to every hook function
-        :param **kwargs: kwargs to be passed to every hook function
+        :param args: args to be passed to every hook function
+        :param kwargs: kwargs to be passed to every hook function
         """
         hook_funcs = cls._hooks_map.get(hook_type) or []
         for hook_func in hook_funcs:
@@ -218,7 +220,10 @@ class ManagerWithFind(BaseManager):
         matches = self.findall(**kwargs)
         num_matches = len(matches)
         if num_matches == 0:
-            msg = "No %s matching %s." % (self.resource_class.__name__, kwargs)
+            msg = _("No %(name)s matching %(args)s.") % {
+                'name': self.resource_class.__name__,
+                'args': kwargs
+            }
             raise exceptions.NotFound(msg)
         elif num_matches > 1:
             raise exceptions.NoUniqueMatch()
@@ -327,7 +332,7 @@ class CrudManager(BaseManager):
         return self._list(
             '%(base_url)s%(query)s' % {
                 'base_url': self.build_url(base_url=base_url, **kwargs),
-                'query': '?%s' % urlutils.urlencode(kwargs) if kwargs else '',
+                'query': '?%s' % parse.urlencode(kwargs) if kwargs else '',
             },
             self.collection_key)
 
@@ -366,13 +371,16 @@ class CrudManager(BaseManager):
         rl = self._list(
             '%(base_url)s%(query)s' % {
                 'base_url': self.build_url(base_url=base_url, **kwargs),
-                'query': '?%s' % urlutils.urlencode(kwargs) if kwargs else '',
+                'query': '?%s' % parse.urlencode(kwargs) if kwargs else '',
             },
             self.collection_key)
         num = len(rl)
 
         if num == 0:
-            msg = "No %s matching %s." % (self.resource_class.__name__, kwargs)
+            msg = _("No %(name)s matching %(args)s.") % {
+                'name': self.resource_class.__name__,
+                'args': kwargs
+            }
             raise exceptions.NotFound(404, msg)
         elif num > 1:
             raise exceptions.NoUniqueMatch
@@ -465,6 +473,11 @@ class Resource(object):
             return self.__dict__[k]
 
     def get(self):
+        """Support for lazy loading details.
+
+        Some clients, such as novaclient have the option to lazy load the
+        details, details which can be loaded with this function.
+        """
         # set_loaded() first ... so if we have to bail, we know we tried.
         self.set_loaded(True)
         if not hasattr(self.manager, 'get'):
@@ -489,3 +502,6 @@ class Resource(object):
 
     def set_loaded(self, val):
         self._loaded = val
+
+    def to_dict(self):
+        return copy.deepcopy(self._info)

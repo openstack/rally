@@ -19,16 +19,12 @@
 
 import abc
 import argparse
-import logging
 import os
 
 import six
 from stevedore import extension
 
 from rally.openstack.common.apiclient import exceptions
-
-
-logger = logging.getLogger(__name__)
 
 
 _discovered_plugins = {}
@@ -80,7 +76,7 @@ def load_plugin_from_args(args):
     alphabetical order.
 
     :type args: argparse.Namespace
-    :raises: AuthorizationFailure
+    :raises: AuthPluginOptionsMissing
     """
     auth_system = args.os_auth_system
     if auth_system:
@@ -217,8 +213,8 @@ class BaseAuthPlugin(object):
         :type service_type: string
         :param endpoint_type: Type of endpoint.
                               Possible values: public or publicURL,
-                                  internal or internalURL,
-                                  admin or adminURL
+                              internal or internalURL,
+                              admin or adminURL
         :type endpoint_type: string
         :returns: tuple of token and endpoint strings
         :raises: EndpointException
