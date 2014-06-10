@@ -56,6 +56,15 @@ class PlotTestCase(test.TestCase):
             {"key": {"name": "n1", "pos": 1, "kw": "config1"}},
             {"key": {"name": "n2", "pos": 2, "kw": "config2"}}
         ]
+        table_cols = [
+                {"title": "action", "class": "center"},
+                {"title": "min (sec)", "class": "center"},
+                {"title": "avg (sec)", "class": "center"},
+                {"title": "max (sec)", "class": "center"},
+                {"title": "90 percentile", "class": "center"},
+                {"title": "95 percentile", "class": "center"},
+                {"title": "success", "class": "center"},
+                {"title": "count", "class": "center"}]
 
         mock_main_duration.return_value = "main_duration"
         mock_atomic.return_value = "main_atomic"
@@ -67,7 +76,9 @@ class PlotTestCase(test.TestCase):
                 "name": "%s (task #%d)" % (r["key"]["name"], r["key"]["pos"]),
                 "config": {r["key"]["name"]: [r["key"]["kw"]]},
                 "duration": mock_main_duration.return_value,
-                "atomic": mock_atomic.return_value
+                "atomic": mock_atomic.return_value,
+                "table_cols": table_cols,
+                "table_rows": [['total', None, None, None, None, None, 0, 0]]
             })
 
     def test__process_main_time(self):
