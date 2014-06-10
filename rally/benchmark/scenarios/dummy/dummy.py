@@ -72,3 +72,12 @@ class Dummy(base.Scenario):
                 "Dummy Scenario Exception: Probability: %s"
                 % exception_probability
             )
+
+    @base.scenario()
+    def dummy_with_scenario_output(self):
+        out = {
+            'value_1': random.randint(1, 100),
+            'value_2': random.random()
+        }
+        err = ""
+        return {"data": out, "errors": err}

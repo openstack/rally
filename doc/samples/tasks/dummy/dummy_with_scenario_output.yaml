@@ -1,0 +1,11 @@
+---
+  Dummy.dummy_with_scenario_output:
+    -
+      runner:
+        type: "constant"
+        times: 20
+        concurrency: 10
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
