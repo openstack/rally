@@ -13,10 +13,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import httplib
 import mock
 import os
 from oslo.config import cfg
+from six.moves import http_client as httplib
 
 from rally import exceptions
 from rally.verification.verifiers.tempest import config

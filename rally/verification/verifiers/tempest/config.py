@@ -14,10 +14,10 @@
 #    under the License.
 
 import datetime
-import httplib
 import os
 from oslo.config import cfg
 from six.moves import configparser
+from six.moves import http_client as httplib
 import time
 import urllib2
 import urlparse
