@@ -42,54 +42,54 @@ class NovaQuotas(object):
                 "type": "integer",
                 "minimum": -1
             },
-            "floating-ips": {
+            "floating_ips": {
                 "type": "integer",
                 "minimum": -1
             },
-            "fixed-ips": {
+            "fixed_ips": {
                 "type": "integer",
                 "minimum": -1
             },
-            "metadata-items": {
+            "metadata_items": {
                 "type": "integer",
                 "minimum": -1
             },
-            "injected-files": {
+            "injected_files": {
                 "type": "integer",
                 "minimum": -1
             },
-            "injected-file-content-bytes": {
+            "injected_file_content_bytes": {
                 "type": "integer",
                 "minimum": -1
             },
-            "injected-file-path-bytes": {
+            "injected_file_path_bytes": {
                 "type": "integer",
                 "minimum": -1
             },
-            "key-pairs": {
+            "key_pairs": {
                 "type": "integer",
                 "minimum": -1
             },
-            "security-groups": {
+            "security_groups": {
                 "type": "integer",
                 "minimum": -1
             },
-            "security-group-rules": {
+            "security_group_rules": {
                 "type": "integer",
                 "minimum": -1
             }
         }
     }
 
-    def __init__(self, client):
-        self.client = client
+    def __init__(self, clients):
+        self.clients = clients
 
     def update(self, tenant_id, **kwargs):
-        self.client.quotas.update(tenant_id, **kwargs)
+        self.clients.nova().quotas.update(tenant_id, **kwargs)
 
     def delete(self, tenant_id):
         # Reset quotas to defaults and tag database objects as deleted
-        self.client.quotas.delete(tenant_id)
+        self.clients.nova().quotas.delete(tenant_id)
 
 
 class CinderQuotas(object):
@@ -114,11 +114,11 @@ class CinderQuotas(object):
         }
     }
 
-    def __init__(self, client):
-        self.client = client
+    def __init__(self, clients):
+        self.clients = clients
 
     def update(self, tenant_id, **kwargs):
-        self.client.quotas.update(tenant_id, **kwargs)
+        self.clients.cinder().quotas.update(tenant_id, **kwargs)
 
     def delete(self, tenant_id):
         # Currently, no method to delete quotas available in cinder client:
@@ -153,27 +153,27 @@ class NeutronQuotas(object):
                 "type": "integer",
                 "minimum": -1
             },
-            "security-group": {
+            "security_group": {
                 "type": "integer",
                 "minimum": -1
             },
-            "security-group-rule": {
+            "security_group_rule": {
                 "type": "integer",
                 "minimum": -1
             }
         }
     }
 
-    def __init__(self, client):
-        self.client = client
+    def __init__(self, clients):
+        self.clients = clients
 
     def update(self, tenant_id, **kwargs):
         body = {"quota": kwargs}
-        self.client.update_quota(tenant_id, body=body)
+        self.clients.neutron().update_quota(tenant_id, body=body)
 
     def delete(self, tenant_id):
         # Reset quotas to defaults and tag database objects as deleted
-        self.client.delete_quota(tenant_id)
+        self.clients.neutron().delete_quota(tenant_id)
 
 
 class Quotas(base.Context):
@@ -197,29 +197,34 @@ class Quotas(base.Context):
     def __init__(self, context):
         super(Quotas, self).__init__(context)
         self.clients = osclients.Clients(context["admin"]["endpoint"])
-        self.nova_quotas = NovaQuotas(self.clients.nova())
-        self.cinder_quotas = CinderQuotas(self.clients.cinder())
-        self.neutron_quotas = NeutronQuotas(self.clients.neutron())
+
+        self.manager = {
+            "nova": NovaQuotas(self.clients),
+            "cinder": CinderQuotas(self.clients),
+            "neutron": NeutronQuotas(self.clients)
+        }
+
+    def _service_has_quotas(self, service):
+        return len(self.config.get(service, {})) > 0
 
     @utils.log_task_wrapper(LOG.info, _("Enter context: `quotas`"))
     def setup(self):
         for tenant in self.context["tenants"]:
-            if "nova" in self.config and len(self.config["nova"]) > 0:
-                self.nova_quotas.update(tenant["id"],
-                                        **self.config["nova"])
-
-            if "cinder" in self.config and len(self.config["cinder"]) > 0:
-                self.cinder_quotas.update(tenant["id"],
-                                          **self.config["cinder"])
-
-            if "neutron" in self.config and len(self.config["neutron"]) > 0:
-                self.neutron_quotas.update(tenant["id"],
-                                           **self.config["neutron"])
+            for service in self.manager:
+                if self._service_has_quotas(service):
+                    self.manager[service].update(tenant["id"],
+                                                 **self.config[service])
 
     @utils.log_task_wrapper(LOG.info, _("Exit context: `quotas`"))
     def cleanup(self):
-        for tenant in self.context["tenants"]:
-            # Always cleanup quotas before deleting a tenant
-            self.nova_quotas.delete(tenant["id"])
-            self.cinder_quotas.delete(tenant["id"])
-            self.neutron_quotas.delete(tenant["id"])
+        for service in self.manager:
+            if self._service_has_quotas(service):
+                for tenant in self.context["tenants"]:
+                    try:
+                        self.manager[service].delete(tenant["id"])
+                    except Exception as e:
+                        LOG.warning("Failed to remove quotas for tenant "
+                                    "%(tenant_id)s in service %(service)s "
+                                    "\n reason: %(exc)s"
+                                    % {"tenant_id": tenant["id"],
+                                       "service": service, "exc": e})

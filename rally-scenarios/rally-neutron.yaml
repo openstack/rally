@@ -1,4 +1,39 @@
 ---
+  Dummy.dummy:
+    -
+      args:
+        sleep: 0.01
+      runner:
+        type: "constant"
+        times: 1
+        concurrency: 1
+      context:
+        users:
+          tenants: 5
+          users_per_tenant: 5
+        quotas:
+          nova:
+            instances: 200
+            cores: 200
+            ram: -1
+            metadata_items: -1
+            injected_files: -1
+            injected_file_content_bytes: -1
+            injected_file_path_bytes: -1
+            key_pairs: 500
+          cinder:
+            gigabytes: -1
+            snapshots: -1
+            volumes: -1
+          neutron:
+            network: -1
+            subnet: -1
+            port: 200
+            router: 300
+            floatingip: -1
+            security_group: -1
+            security_group_rule: -1
+
   NeutronNetworks.create_and_list_networks:
     -
       args:

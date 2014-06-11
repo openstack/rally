@@ -24,7 +24,7 @@ from tests import test
 
 class NovaQuotasTestCase(test.TestCase):
 
-    @mock.patch("rally.benchmark.context.quotas.osclients.Clients.nova")
+    @mock.patch("rally.benchmark.context.quotas.osclients.Clients")
     def test_update(self, client_mock):
         nova_quotas = quotas.NovaQuotas(client_mock)
         tenant_id = mock.MagicMock()
@@ -32,31 +32,31 @@ class NovaQuotasTestCase(test.TestCase):
             "instances": 10,
             "cores": 100,
             "ram": 100000,
-            "floating-ips": 100,
-            "fixed-ips": 10000,
-            "metadata-items": 5,
-            "injected-files": 5,
-            "injected-file-content-bytes": 2048,
-            "injected-file-path-bytes": 1024,
-            "key-pairs": 50,
-            "security-groups": 50,
-            "security-group-rules": 50
+            "floating_ips": 100,
+            "fixed_ips": 10000,
+            "metadata_items": 5,
+            "injected_files": 5,
+            "injected_file_content_bytes": 2048,
+            "injected_file_path_bytes": 1024,
+            "key_pairs": 50,
+            "security_groups": 50,
+            "security_group_rules": 50
         }
         nova_quotas.update(tenant_id, **quotas_values)
-        client_mock.quotas.update.assert_called_once_with(tenant_id,
-                                                          **quotas_values)
+        client_mock.nova().quotas.update.assert_called_once_with(
+            tenant_id, **quotas_values)
 
-    @mock.patch("rally.benchmark.context.quotas.osclients.Clients.nova")
+    @mock.patch("rally.benchmark.context.quotas.osclients.Clients")
     def test_delete(self, client_mock):
         nova_quotas = quotas.NovaQuotas(client_mock)
         tenant_id = mock.MagicMock()
         nova_quotas.delete(tenant_id)
-        client_mock.quotas.delete.assert_called_once_with(tenant_id)
+        client_mock.nova().quotas.delete.assert_called_once_with(tenant_id)
 
 
 class CinderQuotasTestCase(test.TestCase):
 
-    @mock.patch("rally.benchmark.context.quotas.osclients.Clients.cinder")
+    @mock.patch("rally.benchmark.context.quotas.osclients.Clients")
     def test_update(self, client_mock):
         cinder_quotas = quotas.CinderQuotas(client_mock)
         tenant_id = mock.MagicMock()
@@ -66,10 +66,10 @@ class CinderQuotasTestCase(test.TestCase):
             "gigabytes": 1000
         }
         cinder_quotas.update(tenant_id, **quotas_values)
-        client_mock.quotas.update.assert_called_once_with(tenant_id,
-                                                          **quotas_values)
+        client_mock.cinder().quotas.update.assert_called_once_with(
+            tenant_id, **quotas_values)
 
-    @mock.patch("rally.benchmark.context.quotas.osclients.Clients.cinder")
+    @mock.patch("rally.benchmark.context.quotas.osclients.Clients")
     def test_delete(self, client_mock):
         pass
         # Currently, no method to delete quotas available in cinder client:
@@ -82,7 +82,7 @@ class CinderQuotasTestCase(test.TestCase):
 
 class NeutronQuotasTestCase(test.TestCase):
 
-    @mock.patch("rally.benchmark.context.quotas.osclients.Clients.neutron")
+    @mock.patch("rally.benchmark.context.quotas.osclients.Clients")
     def test_update(self, client_mock):
         neutron_quotas = quotas.NeutronQuotas(client_mock)
         tenant_id = mock.MagicMock()
@@ -92,19 +92,20 @@ class NeutronQuotasTestCase(test.TestCase):
             "port": 100,
             "router": 20,
             "floatingip": 100,
-            "security-group": 100,
-            "security-group-rule": 100
+            "security_group": 100,
+            "security_group_rule": 100
         }
         neutron_quotas.update(tenant_id, **quotas_values)
         body = {"quota": quotas_values}
-        client_mock.update_quota.assert_called_once_with(tenant_id, body=body)
+        client_mock.neutron().update_quota.assert_called_once_with(tenant_id,
+                                                                   body=body)
 
-    @mock.patch("rally.benchmark.context.quotas.osclients.Clients.neutron")
+    @mock.patch("rally.benchmark.context.quotas.osclients.Clients")
     def test_delete(self, client_mock):
         neutron_quotas = quotas.NeutronQuotas(client_mock)
         tenant_id = mock.MagicMock()
         neutron_quotas.delete(tenant_id)
-        client_mock.delete_quota.assert_called_once_with(tenant_id)
+        client_mock.neutron().delete_quota.assert_called_once_with(tenant_id)
 
 
 class QuotasTestCase(test.TestCase):
@@ -135,15 +136,15 @@ class QuotasTestCase(test.TestCase):
                 "instances": self.unlimited,
                 "cores": self.unlimited,
                 "ram": self.unlimited,
-                "floating-ips": self.unlimited,
-                "fixed-ips": self.unlimited,
-                "metadata-items": self.unlimited,
-                "injected-files": self.unlimited,
-                "injected-file-content-bytes": self.unlimited,
-                "injected-file-path-bytes": self.unlimited,
-                "key-pairs": self.unlimited,
-                "security-groups": self.unlimited,
-                "security-group-rules": self.unlimited
+                "floating_ips": self.unlimited,
+                "fixed_ips": self.unlimited,
+                "metadata_items": self.unlimited,
+                "injected_files": self.unlimited,
+                "injected_file_content_bytes": self.unlimited,
+                "injected_file_path_bytes": self.unlimited,
+                "key_pairs": self.unlimited,
+                "security_groups": self.unlimited,
+                "security_group_rules": self.unlimited
             },
             "neutron": {
                 "network": self.unlimited,
@@ -151,8 +152,8 @@ class QuotasTestCase(test.TestCase):
                 "port": self.unlimited,
                 "router": self.unlimited,
                 "floatingip": self.unlimited,
-                "security-group": self.unlimited,
-                "security-group-rule": self.unlimited
+                "security_group": self.unlimited,
+                "security_group_rule": self.unlimited
             }
         }
         for service in ctx["config"]["quotas"]:
@@ -234,15 +235,15 @@ class QuotasTestCase(test.TestCase):
             quotas_ctx.setup()
             expected_setup_calls = []
             for tenant in tenants:
-                expected_setup_calls.extend([mock.call()
-                                                 .update(tenant["id"],
-                                                         **cinder_quotas)])
+                expected_setup_calls.append(mock.call()
+                                                .update(tenant["id"],
+                                                        **cinder_quotas))
             mock_quotas.assert_has_calls(expected_setup_calls, any_order=True)
             mock_quotas.reset_mock()
 
         expected_cleanup_calls = []
         for tenant in tenants:
-            expected_cleanup_calls.extend([mock.call().delete(tenant["id"])])
+            expected_cleanup_calls.append(mock.call().delete(tenant["id"]))
         mock_quotas.assert_has_calls(expected_cleanup_calls, any_order=True)
 
     @mock.patch("rally.benchmark.context.quotas.osclients.Clients")
@@ -257,13 +258,13 @@ class QuotasTestCase(test.TestCase):
                 "ram": self.unlimited,
                 "floating-ips": self.unlimited,
                 "fixed-ips": self.unlimited,
-                "metadata-items": self.unlimited,
-                "injected-files": self.unlimited,
-                "injected-file-content-bytes": self.unlimited,
-                "injected-file-path-bytes": self.unlimited,
-                "key-pairs": self.unlimited,
-                "security-groups": self.unlimited,
-                "security-group-rules": self.unlimited,
+                "metadata_items": self.unlimited,
+                "injected_files": self.unlimited,
+                "injected_file_content_bytes": self.unlimited,
+                "injected_file_path_bytes": self.unlimited,
+                "key_pairs": self.unlimited,
+                "security_groups": self.unlimited,
+                "security_group_rules": self.unlimited,
             }
         }
 
@@ -273,15 +274,15 @@ class QuotasTestCase(test.TestCase):
             quotas_ctx.setup()
             expected_setup_calls = []
             for tenant in tenants:
-                expected_setup_calls.extend([mock.call()
-                                                 .update(tenant["id"],
-                                                         **nova_quotas)])
+                expected_setup_calls.append(mock.call()
+                                                .update(tenant["id"],
+                                                        **nova_quotas))
             mock_quotas.assert_has_calls(expected_setup_calls, any_order=True)
             mock_quotas.reset_mock()
 
         expected_cleanup_calls = []
         for tenant in tenants:
-            expected_cleanup_calls.extend([mock.call().delete(tenant["id"])])
+            expected_cleanup_calls.append(mock.call().delete(tenant["id"]))
         mock_quotas.assert_has_calls(expected_cleanup_calls, any_order=True)
 
     @mock.patch("rally.benchmark.context.quotas.osclients.Clients")
@@ -296,8 +297,8 @@ class QuotasTestCase(test.TestCase):
                 "port": self.unlimited,
                 "router": self.unlimited,
                 "floatingip": self.unlimited,
-                "security-group": self.unlimited,
-                "security-group-rule": self.unlimited
+                "security_group": self.unlimited,
+                "security_group_rule": self.unlimited
             }
         }
 
@@ -307,15 +308,15 @@ class QuotasTestCase(test.TestCase):
             quotas_ctx.setup()
             expected_setup_calls = []
             for tenant in tenants:
-                expected_setup_calls.extend([mock.call()
-                                                 .update(tenant["id"],
-                                                         **neutron_quotas)])
+                expected_setup_calls.append(mock.call()
+                                                .update(tenant["id"],
+                                                        **neutron_quotas))
             mock_quotas.assert_has_calls(expected_setup_calls, any_order=True)
             mock_quotas.reset_mock()
 
         expected_cleanup_calls = []
         for tenant in tenants:
-            expected_cleanup_calls.extend([mock.call().delete(tenant["id"])])
+            expected_cleanup_calls.append(mock.call().delete(tenant["id"]))
         mock_quotas.assert_has_calls(expected_cleanup_calls, any_order=True)
 
     @mock.patch("rally.benchmark.context.quotas.osclients.Clients")
@@ -333,17 +334,21 @@ class QuotasTestCase(test.TestCase):
             self.assertFalse(mock_cinder_quotas.update.called)
             self.assertFalse(mock_nova_quotas.update.called)
             self.assertFalse(mock_neutron_quotas.update.called)
-            mock_nova_quotas.reset_mock()
-            mock_cinder_quotas.reset_mock()
-            mock_neutron_quotas.reset_mock()
 
-        tenants = ctx["tenants"]
-        expected_cleanup_calls = []
-        for tenant in tenants:
-            expected_cleanup_calls.extend([mock.call().delete(tenant["id"])])
-        mock_nova_quotas.assert_has_calls(expected_cleanup_calls,
-                                          any_order=True)
-        mock_cinder_quotas.assert_has_calls(expected_cleanup_calls,
-                                            any_order=True)
-        mock_neutron_quotas.assert_has_calls(expected_cleanup_calls,
-                                             any_order=True)
+        self.assertFalse(mock_cinder_quotas.delete.called)
+        self.assertFalse(mock_nova_quotas.delete.called)
+        self.assertFalse(mock_neutron_quotas.delete.called)
+
+    @mock.patch("rally.benchmark.context.quotas.NovaQuotas")
+    def test_exception_during_cleanup(self, mock_nova_quotas):
+
+        mock_nova_quotas.delete.side_effect = Exception("boom")
+
+        ctx = copy.deepcopy(self.context)
+        ctx["config"]["quotas"] = {"nova": {"cpu": 1}}
+
+        # NOTE(boris-42): ensure that cleanup didn't raise exceptions.
+        quotas.Quotas(ctx).cleanup()
+
+        self.assertEqual(mock_nova_quotas().delete.call_count,
+                         len(self.context["tenants"]))
