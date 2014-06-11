@@ -32,7 +32,7 @@ class ValidationResult(object):
         self.msg = msg
 
 
-def add_validator(validator):
+def add(validator):
     def wrapper(func):
         if not getattr(func, 'validators', None):
             func.validators = []

@@ -21,7 +21,7 @@ from rally.benchmark.scenarios.cinder import utils as cinder_utils
 from rally.benchmark.scenarios.nova import utils
 from rally.benchmark.scenarios import utils as scenario_utils
 from rally.benchmark import types as types
-from rally.benchmark import validation as valid
+from rally.benchmark import validation
 from rally import exceptions as rally_exceptions
 from rally.openstack.common.gettextutils import _  # noqa
 from rally.openstack.common import log as logging
@@ -41,7 +41,7 @@ class NovaServers(utils.NovaScenario,
 
     @types.set(image=types.ImageResourceType,
                flavor=types.FlavorResourceType)
-    @valid.add_validator(valid.image_valid_on_flavor("flavor", "image"))
+    @validation.add(validation.image_valid_on_flavor("flavor", "image"))
     @base.scenario(context={"cleanup": ["nova"]})
     def boot_and_list_server(self, image, flavor,
                              detailed=True, **kwargs):
@@ -62,7 +62,7 @@ class NovaServers(utils.NovaScenario,
 
     @types.set(image=types.ImageResourceType,
                flavor=types.FlavorResourceType)
-    @valid.add_validator(valid.image_valid_on_flavor("flavor", "image"))
+    @validation.add(validation.image_valid_on_flavor("flavor", "image"))
     @base.scenario(context={"cleanup": ["nova"]})
     def boot_and_delete_server(self, image, flavor,
                                min_sleep=0, max_sleep=0, **kwargs):
@@ -74,7 +74,7 @@ class NovaServers(utils.NovaScenario,
 
     @types.set(image=types.ImageResourceType,
                flavor=types.FlavorResourceType)
-    @valid.add_validator(valid.image_valid_on_flavor("flavor", "image"))
+    @validation.add(validation.image_valid_on_flavor("flavor", "image"))
     @base.scenario(context={"cleanup": ["nova", "cinder"]})
     def boot_server_from_volume_and_delete(self, image, flavor,
                                            volume_size,
@@ -91,7 +91,7 @@ class NovaServers(utils.NovaScenario,
 
     @types.set(image=types.ImageResourceType,
                flavor=types.FlavorResourceType)
-    @valid.add_validator(valid.image_valid_on_flavor("flavor", "image"))
+    @validation.add(validation.image_valid_on_flavor("flavor", "image"))
     @base.scenario(context={"cleanup": ["nova"]})
     def boot_and_bounce_server(self, image, flavor, **kwargs):
         """Tests booting a server then performing stop/start or hard/soft
@@ -113,7 +113,7 @@ class NovaServers(utils.NovaScenario,
 
     @types.set(image=types.ImageResourceType,
                flavor=types.FlavorResourceType)
-    @valid.add_validator(valid.image_valid_on_flavor("flavor", "image"))
+    @validation.add(validation.image_valid_on_flavor("flavor", "image"))
     @base.scenario(context={"cleanup": ["nova", "glance"]})
     def snapshot_server(self, image, flavor, **kwargs):
         """Tests Nova instance snapshotting."""
@@ -129,7 +129,7 @@ class NovaServers(utils.NovaScenario,
 
     @types.set(image=types.ImageResourceType,
                flavor=types.FlavorResourceType)
-    @valid.add_validator(valid.image_valid_on_flavor("flavor", "image"))
+    @validation.add(validation.image_valid_on_flavor("flavor", "image"))
     @base.scenario(context={"cleanup": ["nova"]})
     def boot_server(self, image, flavor, **kwargs):
         """Test VM boot - assumed clean-up is done elsewhere."""
@@ -143,7 +143,7 @@ class NovaServers(utils.NovaScenario,
 
     @types.set(image=types.ImageResourceType,
                flavor=types.FlavorResourceType)
-    @valid.add_validator(valid.image_valid_on_flavor("flavor", "image"))
+    @validation.add(validation.image_valid_on_flavor("flavor", "image"))
     @base.scenario(context={"cleanup": ["nova", "cinder"]})
     def boot_server_from_volume(self, image, flavor,
                                 volume_size, **kwargs):

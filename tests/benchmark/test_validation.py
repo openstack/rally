@@ -30,11 +30,11 @@ TEMPEST = "rally.verification.verifiers.tempest.tempest"
 
 class ValidationUtilsTestCase(test.TestCase):
 
-    def test_add_validator(self):
+    def test_add(self):
         def test_validator():
             pass
 
-        @validation.add_validator(test_validator)
+        @validation.add(test_validator)
         def test_function():
             pass
 

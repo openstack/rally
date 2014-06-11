@@ -15,13 +15,13 @@
 
 from rally.benchmark.scenarios import base
 from rally.benchmark.scenarios.tempest import utils
-from rally.benchmark import validation as valid
+from rally.benchmark import validation
 from rally import consts
 
 
 class TempestScenario(base.Scenario):
 
-    @valid.add_validator(valid.tempest_tests_exists())
+    @validation.add(validation.tempest_tests_exists())
     @base.scenario(context={"tempest": {}})
     @utils.tempest_log_wrapper
     def single_test(self, test_name, log_file):
@@ -46,7 +46,7 @@ class TempestScenario(base.Scenario):
 
         self.context()["verifier"].run("", log_file)
 
-    @valid.add_validator(valid.tempest_set_exists())
+    @validation.add(validation.tempest_set_exists())
     @base.scenario(context={"tempest": {}})
     @utils.tempest_log_wrapper
     def set(self, set_name, log_file):
@@ -65,7 +65,7 @@ class TempestScenario(base.Scenario):
 
         self._context["verifier"].run(testr_arg, log_file)
 
-    @valid.add_validator(valid.tempest_tests_exists())
+    @validation.add(validation.tempest_tests_exists())
     @base.scenario(context={"tempest": {}})
     @utils.tempest_log_wrapper
     def list_of_tests(self, test_names, log_file):
