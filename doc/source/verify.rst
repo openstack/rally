@@ -13,26 +13,9 @@
       License for the specific language governing permissions and limitations
       under the License.
 
-.. _objects:
+.. _verify:
 
-The Object Layer
-================
+Verify
+======
 
-Represents a high level abstraction of persistent database objects and
-operations on them.
-
-The :mod:`rally.objects.task` Module
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. automodule:: rally.objects.task
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-The :mod:`rally.objects.deploy` Module
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. automodule:: rally.objects.deploy
-    :members:
-    :undoc-members:
-    :show-inheritance:
+Rally has a component that runs *Tempest* (or another specific set of tests) against a deployed OpenStack cloud, collects results & represents them in human-readable form.
