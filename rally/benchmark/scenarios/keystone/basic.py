@@ -15,7 +15,7 @@
 
 from rally.benchmark.scenarios import base
 from rally.benchmark.scenarios.keystone import utils as kutils
-from rally.benchmark import validation as valid
+from rally.benchmark import validation
 
 
 class KeystoneBasic(kutils.KeystoneScenario):
@@ -34,7 +34,7 @@ class KeystoneBasic(kutils.KeystoneScenario):
         self._tenant_create(name_length=name_length, **kwargs)
 
     @base.scenario(admin_only=True, context={"cleanup": []})
-    @valid.add_validator(valid.required_parameters(['users_per_tenant']))
+    @validation.add(validation.required_parameters(['users_per_tenant']))
     def create_tenant_with_users(self, users_per_tenant, name_length=10,
                                  **kwargs):
         tenant = self._tenant_create(name_length=name_length, **kwargs)

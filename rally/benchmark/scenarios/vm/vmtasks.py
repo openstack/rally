@@ -19,7 +19,7 @@ from rally.benchmark.scenarios import base
 from rally.benchmark.scenarios.nova import utils as nova_utils
 from rally.benchmark.scenarios.vm import utils as vm_utils
 from rally.benchmark import types as types
-from rally.benchmark import validation as valid
+from rally.benchmark import validation
 from rally.openstack.common.gettextutils import _  # noqa
 from rally.openstack.common import log as logging
 
@@ -34,9 +34,9 @@ class VMTasks(nova_utils.NovaScenario, vm_utils.VMScenario):
 
     @types.set(image=types.ImageResourceType,
                flavor=types.FlavorResourceType)
-    @valid.add_validator(valid.image_valid_on_flavor("flavor", "image"))
-    @valid.add_validator(valid.file_exists("script"))
-    @valid.add_validator(valid.number("port", minval=1, maxval=65535,
+    @validation.add(validation.image_valid_on_flavor("flavor", "image"))
+    @validation.add(validation.file_exists("script"))
+    @validation.add(validation.number("port", minval=1, maxval=65535,
                                       nullable=True, integer_only=True))
     @base.scenario(context={"cleanup": ["nova"],
                    "keypair": {}, "allow_ssh": {}})

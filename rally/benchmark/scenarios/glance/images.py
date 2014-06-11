@@ -59,7 +59,7 @@ class GlanceImages(utils.GlanceScenario, nova_utils.NovaScenario):
         self._delete_image(image)
 
     @types.set(flavor=types.FlavorResourceType)
-    @validation.add_validator(validation.flavor_exists("flavor"))
+    @validation.add(validation.flavor_exists("flavor"))
     @base.scenario(context={"cleanup": ["glance", "nova"]})
     def create_image_and_boot_instances(self, container_format,
                                         image_location, disk_format,
