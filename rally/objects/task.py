@@ -29,7 +29,7 @@ class Task(object):
             self.task = db.task_create(attributes)
 
     def __getitem__(self, key):
-            return self.task[key]
+        return self.task[key]
 
     @staticmethod
     def get(uuid):
