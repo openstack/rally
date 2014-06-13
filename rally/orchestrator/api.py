@@ -47,7 +47,7 @@ def destroy_deploy(deploy_uuid):
     # TODO(akscram): We have to be sure that there are no running
     #                tasks for this deployment.
     # TODO(akscram): Check that the deployment have got a status that
-    #                is equal to "*->finised" or "deploy->inconsistent".
+    #                is equal to "*->finished" or "deploy->inconsistent".
     deployment = objects.Deployment.get(deploy_uuid)
     deployer = deploy.EngineFactory.get_engine(deployment['config']['type'],
                                                deployment)
