@@ -209,8 +209,7 @@ class ScenarioRunner(object):
 
         args = cls.preprocess(method_name, context_obj, args)
         results = base_ctx.ContextManager.run(context_obj, self._run_scenario,
-                                              cls, method_name, context_obj,
-                                              args)
+                                              cls, method_name, args)
 
         if not isinstance(results, ScenarioRunnerResult):
             name = self.__execution_type__

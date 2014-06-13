@@ -16,11 +16,13 @@
 from rally.benchmark.scenarios import base
 from rally.benchmark.scenarios.neutron import utils
 from rally.benchmark import validation
+from rally import consts
 
 
 class NeutronNetworks(utils.NeutronScenario):
 
     @base.scenario(context={"cleanup": ["neutron"]})
+    @validation.required_services(consts.Service.NEUTRON)
     def create_and_list_networks(self, network_create_args=None):
         """Create a network and then listing all networks.
 
@@ -40,6 +42,7 @@ class NeutronNetworks(utils.NeutronScenario):
 
     @base.scenario(context={"cleanup": ["neutron"]})
     @validation.add(validation.required_parameters(['subnets_per_network']))
+    @validation.required_services(consts.Service.NEUTRON)
     def create_and_list_subnets(self,
                                 network_create_args=None,
                                 subnet_create_args=None,
@@ -65,6 +68,7 @@ class NeutronNetworks(utils.NeutronScenario):
 
     @base.scenario(context={"cleanup": ["neutron"]})
     @validation.add(validation.required_parameters(['subnets_per_network']))
+    @validation.required_services(consts.Service.NEUTRON)
     def create_and_list_routers(self,
                                 network_create_args=None,
                                 subnet_create_args=None,
@@ -96,6 +100,7 @@ class NeutronNetworks(utils.NeutronScenario):
 
     @base.scenario(context={"cleanup": ["neutron"]})
     @validation.add(validation.required_parameters(["ports_per_network"]))
+    @validation.required_services(consts.Service.NEUTRON)
     def create_and_list_ports(self,
                               network_create_args=None,
                               port_create_args=None,

@@ -20,6 +20,7 @@ from rally.benchmark.scenarios.nova import utils as nova_utils
 from rally.benchmark.scenarios.vm import utils as vm_utils
 from rally.benchmark import types as types
 from rally.benchmark import validation
+from rally import consts
 from rally import exceptions
 
 
@@ -38,6 +39,7 @@ class VMTasks(nova_utils.NovaScenario, vm_utils.VMScenario):
                                                        "use_floatingip"))
     @base.scenario(context={"cleanup": ["nova"],
                    "keypair": {}, "allow_ssh": {}})
+    @validation.required_services(consts.Service.NOVA)
     def boot_runcommand_delete(self, image, flavor,
                                script, interpreter, username,
                                fixed_network="private",

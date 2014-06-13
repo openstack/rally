@@ -16,10 +16,13 @@ import json
 
 from rally.benchmark.scenarios import base
 from rally.benchmark.scenarios.ceilometer import utils as ceilometerutils
+from rally.benchmark import validation
+from rally import consts
 
 
 class CeilometerQueries(ceilometerutils.CeilometerScenario):
     @base.scenario(context={"cleanup": ["ceilometer"]})
+    @validation.required_services(consts.Service.CEILOMETER)
     def create_and_query_alarms(self, meter_name, threshold, filter=None,
                                 orderby=None, limit=None, **kwargs):
         """Creates an alarm and then queries it with specific parameters.
@@ -40,6 +43,7 @@ class CeilometerQueries(ceilometerutils.CeilometerScenario):
         self._query_alarms(filter, orderby, limit)
 
     @base.scenario(context={"cleanup": ["ceilometer"]})
+    @validation.required_services(consts.Service.CEILOMETER)
     def create_and_query_alarm_history(self, meter_name, threshold,
                                        orderby=None, limit=None, **kwargs):
         """Creates an alarm and then queries for its history
@@ -58,6 +62,7 @@ class CeilometerQueries(ceilometerutils.CeilometerScenario):
         self._query_alarm_history(alarm_filter, orderby, limit)
 
     @base.scenario()
+    @validation.required_services(consts.Service.CEILOMETER)
     def create_and_query_samples(self, counter_name, counter_type,
                                  counter_unit, counter_volume, resource_id,
                                  filter=None, orderby=None, limit=None,

@@ -26,6 +26,7 @@ from neutronclient.neutron import client as neutron
 from novaclient import client as nova
 from oslo.config import cfg
 
+from rally import consts
 from rally import exceptions
 
 
@@ -44,6 +45,20 @@ CONF.register_opts([
 nova._adapter_pool = lambda x: nova.adapters.HTTPAdapter()
 
 
+def cached(func):
+    """Cache client handles."""
+    def wrapper(self, *args, **kwargs):
+        key = '{0}{1}{2}'.format(func.__name__,
+                                 str(args) if args else '',
+                                 str(kwargs) if kwargs else '')
+
+        if key in self.cache:
+            return self.cache[key]
+        self.cache[key] = func(self, *args, **kwargs)
+        return self.cache[key]
+    return wrapper
+
+
 class Clients(object):
     """This class simplify and unify work with openstack python clients."""
 
@@ -55,21 +70,7 @@ class Clients(object):
         """Remove all cached client handles."""
         self.cache = {}
 
-    def memoize(name):
-        """Cache client handles."""
-        def decorate(func):
-            def wrapper(self, *args, **kwargs):
-                key = '{0}{1}{2}'.format(func.__name__,
-                                         str(args) if args else '',
-                                         str(kwargs) if kwargs else '')
-                if key in self.cache:
-                    return self.cache[key]
-                self.cache[key] = func(self, *args, **kwargs)
-                return self.cache[key]
-            return wrapper
-        return decorate
-
-    @memoize('keystone')
+    @cached
     def keystone(self):
         """Return keystone client."""
         new_kw = {
@@ -111,9 +112,9 @@ class Clients(object):
                 url=self.endpoint.auth_url)
         return client
 
-    @memoize('nova')
+    @cached
     def nova(self, version='2'):
-        """Returns nova client."""
+        """Return nova client."""
         client = nova.Client(version,
                              self.endpoint.username,
                              self.endpoint.password,
@@ -127,9 +128,9 @@ class Clients(object):
                              cacert=CONF.https_cacert)
         return client
 
-    @memoize('neutron')
+    @cached
     def neutron(self, version='2.0'):
-        """Returns neutron client."""
+        """Return neutron client."""
         client = neutron.Client(version,
                                 username=self.endpoint.username,
                                 password=self.endpoint.password,
@@ -141,9 +142,9 @@ class Clients(object):
                                 cacert=CONF.https_cacert)
         return client
 
-    @memoize('glance')
+    @cached
     def glance(self, version='1'):
-        """Returns glance client."""
+        """Return glance client."""
         kc = self.keystone()
         endpoint = kc.service_catalog.get_endpoints()['image'][0]
         client = glance.Client(version,
@@ -155,9 +156,9 @@ class Clients(object):
                                cacert=CONF.https_cacert)
         return client
 
-    @memoize('heat')
+    @cached
     def heat(self, version='1'):
-        """Returns heat client."""
+        """Return heat client."""
         kc = self.keystone()
         endpoint = kc.service_catalog.get_endpoints()['orchestration'][0]
 
@@ -170,9 +171,9 @@ class Clients(object):
                              cacert=CONF.https_cacert)
         return client
 
-    @memoize('cinder')
+    @cached
     def cinder(self, version='1'):
-        """Returns cinder client."""
+        """Return cinder client."""
         client = cinder.Client(version,
                                self.endpoint.username,
                                self.endpoint.password,
@@ -186,9 +187,9 @@ class Clients(object):
                                cacert=CONF.https_cacert)
         return client
 
-    @memoize('ceilometer')
+    @cached
     def ceilometer(self, version='2'):
-        """Returns ceilometer client."""
+        """Return ceilometer client."""
         kc = self.keystone()
         endpoint = kc.service_catalog.get_endpoints()['metering'][0]
         auth_token = kc.auth_token
@@ -205,9 +206,9 @@ class Clients(object):
                                    cacert=CONF.https_cacert)
         return client
 
-    @memoize('ironic')
+    @cached
     def ironic(self, version='1.0'):
-        """Returns Ironic client."""
+        """Return Ironic client."""
         client = ironic.Client(version,
                                username=self.endpoint.username,
                                password=self.endpoint.password,
@@ -217,3 +218,16 @@ class Clients(object):
                                insecure=CONF.https_insecure,
                                cacert=CONF.https_cacert)
         return client
+
+    @cached
+    def services(self):
+        """Return available services names and types.
+
+        :returns: dict, {"service_type": "service_name", ...}
+        """
+        services_data = {}
+        available_services = self.keystone().service_catalog.get_endpoints()
+        for service_type in available_services.keys():
+            if service_type in consts.ServiceType:
+                services_data[service_type] = consts.ServiceType[service_type]
+        return services_data

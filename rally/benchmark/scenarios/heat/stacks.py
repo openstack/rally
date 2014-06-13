@@ -15,6 +15,8 @@
 
 from rally.benchmark.scenarios import base
 from rally.benchmark.scenarios.heat import utils
+from rally.benchmark import validation
+from rally import consts
 
 
 class HeatStacks(utils.HeatScenario):
@@ -35,6 +37,7 @@ class HeatStacks(utils.HeatScenario):
 
     @base.scenario(context={"cleanup": ["heat"],
                             "roles": ["heat_stack_owner"]})
+    @validation.required_services(consts.Service.HEAT)
     def create_and_list_stack(self, template_path=None):
         """Test adding an stack and then listing all stacks.
 
@@ -53,6 +56,7 @@ class HeatStacks(utils.HeatScenario):
 
     @base.scenario(context={"cleanup": ["heat"],
                             "roles": ["heat_stack_owner"]})
+    @validation.required_services(consts.Service.HEAT)
     def create_and_delete_stack(self, template_path=None):
         """Test adds and then deletes stack.
 

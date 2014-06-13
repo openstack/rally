@@ -229,8 +229,8 @@ class ScenarioRunnerTestCase(test.TestCase):
             }
         }
 
-        expected = [context_obj, runner._run_scenario, cls, method_name,
-                    context_obj, config_kwargs]
+        expected = [context_obj, runner._run_scenario, cls,
+                    method_name, config_kwargs]
         mock_ctx_manager.run.assert_called_once_with(*expected)
 
     @mock.patch("rally.benchmark.runners.base.base_ctx.ContextManager")

@@ -104,10 +104,10 @@ class Scenario(object):
             if not result.is_valid:
                 raise exceptions.InvalidScenarioArgument(message=result.msg)
 
-    @staticmethod
-    def validate(name, args, admin=None, users=None, task=None):
+    @classmethod
+    def validate(cls, name, args, admin=None, users=None, task=None):
         """Semantic check of benchmark arguments."""
-        validators = Scenario.meta(name, "validators", default=[])
+        validators = cls.meta(name, "validators", default=[])
 
         if not validators:
             return
@@ -120,10 +120,10 @@ class Scenario(object):
         # NOTE(boris-42): Potential bug, what if we don't have "admin" client
         #                 and scenario have "admin" validators.
         if admin:
-            Scenario._validate_helper(admin_validators, admin, args, task)
+            cls._validate_helper(admin_validators, admin, args, task)
         if users:
             for user in users:
-                Scenario._validate_helper(user_validators, user, args, task)
+                cls._validate_helper(user_validators, user, args, task)
 
     @staticmethod
     def meta(cls, attr_name, method_name=None, default=None):

@@ -18,6 +18,7 @@ from rally.benchmark.scenarios.glance import utils
 from rally.benchmark.scenarios.nova import utils as nova_utils
 from rally.benchmark import types as types
 from rally.benchmark import validation
+from rally import consts
 
 
 class GlanceImages(utils.GlanceScenario, nova_utils.NovaScenario):
@@ -26,6 +27,7 @@ class GlanceImages(utils.GlanceScenario, nova_utils.NovaScenario):
     RESOURCE_NAME_LENGTH = 16
 
     @base.scenario(context={"cleanup": ["glance"]})
+    @validation.required_services(consts.Service.GLANCE)
     def create_and_list_image(self, container_format,
                               image_location, disk_format, **kwargs):
         """Test adding an image and then listing all images.
@@ -47,6 +49,7 @@ class GlanceImages(utils.GlanceScenario, nova_utils.NovaScenario):
         self._list_images()
 
     @base.scenario(context={"cleanup": ["glance"]})
+    @validation.required_services(consts.Service.GLANCE)
     def list_images(self):
         """Test the glance image-list command.
 
@@ -61,6 +64,7 @@ class GlanceImages(utils.GlanceScenario, nova_utils.NovaScenario):
         self._list_images()
 
     @base.scenario(context={"cleanup": ["glance"]})
+    @validation.required_services(consts.Service.GLANCE)
     def create_and_delete_image(self, container_format,
                                 image_location, disk_format, **kwargs):
         """Test adds and then deletes image."""
@@ -74,6 +78,7 @@ class GlanceImages(utils.GlanceScenario, nova_utils.NovaScenario):
 
     @types.set(flavor=types.FlavorResourceType)
     @validation.add(validation.flavor_exists("flavor"))
+    @validation.required_services(consts.Service.GLANCE, consts.Service.NOVA)
     @base.scenario(context={"cleanup": ["glance", "nova"]})
     def create_image_and_boot_instances(self, container_format,
                                         image_location, disk_format,

@@ -85,12 +85,13 @@ class ContextManager(object):
     """Create context environment and run method inside it."""
 
     @staticmethod
-    def run(context, func, *args, **kwargs):
+    def run(context, func, cls, method_name, args):
         ctxlst = [Context.get_by_name(name) for name in context["config"]]
         ctxlst = map(lambda ctx: ctx(context),
                      sorted(ctxlst, key=lambda x: x.__ctx_order__))
 
-        return ContextManager._magic(ctxlst, func, *args, **kwargs)
+        return ContextManager._magic(ctxlst, func, cls,
+                                     method_name, context, args)
 
     @staticmethod
     def validate(context, non_hidden=False):
@@ -104,7 +105,7 @@ class ContextManager(object):
                                                         users=users, task=task)
 
     @staticmethod
-    def _magic(ctxlst, func, *args, **kwargs):
+    def _magic(ctxlst, func, *args):
         """Some kind of contextlib.nested but with black jack & recursion.
 
         This method uses recursion to build nested "with" from list of context
@@ -114,16 +115,15 @@ class ContextManager(object):
         :param ctxlst: list of instances of subclasses of Context
         :param func: function that will be called inside this context
         :param args: args that will be passed to function `func`
-        :param kwargs: kwargs that will be passed to function `func`
         :returns: result of function call
         """
         if not ctxlst:
-            return func(*args, **kwargs)
+            return func(*args)
 
         with ctxlst[0]:
             # TODO(boris-42): call of setup could be moved inside __enter__
             #                 but it should be in try-except, and in except
             #                 we should call by hand __exit__
             ctxlst[0].setup()
-            tmp = ContextManager._magic(ctxlst[1:], func, *args, **kwargs)
+            tmp = ContextManager._magic(ctxlst[1:], func, *args)
             return tmp
