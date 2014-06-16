@@ -14,12 +14,13 @@
 #    under the License.
 
 import ConfigParser
-import mock
 import os
 import shutil
 import subprocess
 import tempfile
 import unittest
+
+import mock
 
 
 """Test rally command line interface.

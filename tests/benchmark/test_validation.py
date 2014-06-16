@@ -13,10 +13,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import mock
 import os
 
 from glanceclient import exc as glance_exc
+import mock
 from novaclient import exceptions as nova_exc
 
 from rally.benchmark import validation

@@ -60,8 +60,9 @@ class HeatScenarioTestCase(test.TestCase):
 
     @mock.patch(HEAT_UTILS + '.HeatScenario.clients')
     def test_create_stack(self, mock_clients):
-        mock_clients("heat").stacks.create.return_value = \
-            {'stack': {'id': 'test_id'}}
+        mock_clients("heat").stacks.create.return_value = {
+            'stack': {'id': 'test_id'}
+        }
         mock_clients("heat").stacks.get.return_value = self.stack
         scenario = utils.HeatScenario()
         return_stack = scenario._create_stack('stack_name')
@@ -79,10 +80,10 @@ class HeatScenarioTestCase(test.TestCase):
         scenario = utils.HeatScenario()
         scenario._delete_stack(self.stack)
         self.stack.delete.assert_called_once_with()
-        self.wait_for_delete.\
-            mock.assert_called_once_with(self.stack,
-                                         update_resource=self.gfm(),
-                                         check_interval=1,
-                                         timeout=3600)
+        self.wait_for_delete.mock.assert_called_once_with(
+            self.stack,
+            update_resource=self.gfm(),
+            check_interval=1,
+            timeout=3600)
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        'heat.delete_stack')

@@ -20,6 +20,7 @@ import time
 import traceback
 
 from novaclient.v1_1 import servers
+
 from rally import exceptions
 
 

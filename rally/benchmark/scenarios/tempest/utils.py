@@ -14,9 +14,10 @@
 #    under the License.
 
 import os
-import six
 import subprocess
 import tempfile
+
+import six
 
 from rally import exceptions
 from rally.openstack.common.gettextutils import _

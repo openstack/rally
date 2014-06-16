@@ -14,9 +14,10 @@
 #    under the License.
 
 import json
+import traceback
+
 import jsonschema
 import six
-import traceback
 
 from rally.benchmark.context import base as base_ctx
 from rally.benchmark.context import users as users_ctx
@@ -65,9 +66,10 @@ CONFIG_SCHEMA = {
 
 
 class BenchmarkEngine(object):
-    """The Benchmark engine class, an instance of which is initialized by the
-    Orchestrator with the benchmarks configuration and then is used to execute
-    all specified benchmark scenarios.
+    """The Benchmark engine class is used to execute benchmark scenarios.
+
+    An instance of class is initialized by the Orchestrator with the benchmarks
+    configuration and then is used to execute all specified scenarios.
     .. note::
 
         Typical usage:
@@ -81,6 +83,7 @@ class BenchmarkEngine(object):
 
     def __init__(self, config, task):
         """BenchmarkEngine constructor.
+
         :param config: The configuration with specified benchmark scenarios
         :param task: The current task which is being performed
         """
@@ -165,8 +168,9 @@ class BenchmarkEngine(object):
 
     @rutils.log_task_wrapper(LOG.info, _("Benchmarking."))
     def run(self):
-        """Runs the benchmarks according to the test configuration
-        the benchmark engine was initialized with.
+        """Run the benchmark according to the test configuration.
+
+        Test configuration is specified on engine initialization.
 
         :returns: List of dicts, each dict containing the results of all the
                   corresponding benchmark test launches

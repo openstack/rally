@@ -13,6 +13,7 @@
 #    under the License.
 
 import json
+
 import mock
 
 from rally.benchmark.scenarios.ceilometer import queries

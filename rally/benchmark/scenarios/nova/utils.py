@@ -13,8 +13,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from oslo.config import cfg
 import time
+
+from oslo.config import cfg
 
 from rally.benchmark.scenarios import base
 from rally.benchmark.scenarios import utils as scenario_utils
@@ -241,12 +242,12 @@ class NovaScenario(base.Scenario):
         :param image: Image object
         """
         image.delete()
+        check_interval = CONF.benchmark.nova_server_image_delete_poll_interval
         bench_utils.wait_for_delete(
             image,
             update_resource=bench_utils.get_from_manager(),
             timeout=CONF.benchmark.nova_server_image_delete_timeout,
-            check_interval=
-                CONF.benchmark.nova_server_image_delete_poll_interval
+            check_interval=check_interval
         )
 
     @scenario_utils.atomic_action_timer('nova.create_image')
@@ -263,13 +264,13 @@ class NovaScenario(base.Scenario):
         image_uuid = self.clients("nova").servers.create_image(server,
                                                                server.name)
         image = self.clients("nova").images.get(image_uuid)
+        check_interval = CONF.benchmark.nova_server_image_create_poll_interval
         image = bench_utils.wait_for(
             image,
             is_ready=bench_utils.resource_is("ACTIVE"),
             update_resource=bench_utils.get_from_manager(),
             timeout=CONF.benchmark.nova_server_image_create_timeout,
-            check_interval=
-                CONF.benchmark.nova_server_image_create_poll_interval
+            check_interval=check_interval
         )
         return image
 

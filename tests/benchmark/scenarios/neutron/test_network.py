@@ -16,7 +16,6 @@
 import mock
 
 from rally.benchmark.scenarios.neutron import network
-
 from tests import test
 
 NEUTRON_NETWORKS = "rally.benchmark.scenarios.neutron.network.NeutronNetworks"

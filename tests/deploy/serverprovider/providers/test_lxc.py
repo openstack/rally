@@ -163,13 +163,13 @@ class LxcHostTestCase(test.TestCase):
         self.assertEqual(['name'], self.host.containers)
         self.host.configure_container.assert_called_once_with('name')
 
-        #check with no btrfs
+        # check with no btrfs
         self.host._backingstore = ''
         self.host.create_container('name', 'dist')
         self.assertEqual(mock.call('lxc-create -n name -t dist'),
                          self.server.ssh.run.mock_calls[1])
 
-        #check release
+        # check release
         self.host.create_container('name', 'ubuntu', 'raring')
         self.host.create_container('name', 'debian', 'woody')
         expected = [mock.call('lxc-create -n name -t ubuntu -- -r raring'),
@@ -184,7 +184,7 @@ class LxcHostTestCase(test.TestCase):
                                                         ' -o src -n name')
         self.assertEqual(['name'], self.host.containers)
 
-        #check with no btrfs
+        # check with no btrfs
         self.host._backingstore = ''
         self.host.create_clone('name', 'src')
         self.assertEqual(mock.call('lxc-clone -o src -n name'),

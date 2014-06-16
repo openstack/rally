@@ -104,8 +104,10 @@ class UseCommands(object):
     @cliutils.args('--uuid', type=str, dest='task_id', required=False,
                    help='UUID of the task')
     def task(self, task_id):
-        """Set the RALLY_TASK env var so the user does not need to specify a
-        task UUID in the command requiring this parameter.
+        """Set the RALLY_TASK env var.
+
+        Is used to allow the user not to specify a task UUID in the command
+        requiring this parameter.
         If the task uuid specified in parameter by the user does not exist,
         a TaskNotFound will be raised by task_get().
 

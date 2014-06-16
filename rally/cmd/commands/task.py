@@ -16,14 +16,13 @@
 """ Rally command: task """
 
 from __future__ import print_function
-
 import json
 import os
 import pprint
 import webbrowser
-import yaml
 
 from oslo.config import cfg
+import yaml
 
 from rally.benchmark.processing import plot
 from rally.benchmark.processing import utils

@@ -148,6 +148,7 @@ class DeploymentCommands(object):
     @envutils.with_default_deploy_id
     def endpoint(self, deploy_id=None):
         """Print endpoint of the deployment.
+
         :param deploy_id: a UUID of the deployment
         """
         headers = ['auth_url', 'username', 'password', 'tenant_name',

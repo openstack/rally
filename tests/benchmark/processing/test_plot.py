@@ -14,6 +14,7 @@
 #    under the License.
 
 import json
+
 import mock
 
 from rally.benchmark.processing import plot

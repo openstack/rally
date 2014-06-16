@@ -14,8 +14,9 @@
 #    under the License.
 
 import itertools
-import mock
 import uuid
+
+import mock
 
 from rally.benchmark.context import users
 from rally.benchmark import utils
@@ -23,8 +24,8 @@ from tests import fakes
 from tests import test
 
 
-run_concurrent = lambda dummy, cls, f, args: \
-        list(itertools.imap(getattr(cls, f), args))
+run_concurrent = (lambda dummy, cls, f, args: list(
+    itertools.imap(getattr(cls, f), args)))
 
 
 @mock.patch.object(utils, "run_concurrent", run_concurrent)
@@ -71,9 +72,9 @@ class UserGeneratorTestCase(test.TestCase):
         tenant2 = mock.MagicMock()
         args = (mock.MagicMock(), [tenant1, tenant2])
         users.UserGenerator._delete_tenants(args)
-        mock_osclients.Clients().keystone()\
-            .tenants.delete.assert_has_calls([mock.call(tenant1["id"]),
-                                              mock.call(tenant2["id"])])
+        mock_osclients.Clients().keystone().tenants.delete.assert_has_calls([
+            mock.call(tenant1["id"]),
+            mock.call(tenant2["id"])])
 
     @mock.patch("rally.benchmark.context.users.osclients")
     def test_delete_users(self, mock_osclients):
@@ -81,9 +82,9 @@ class UserGeneratorTestCase(test.TestCase):
         user2 = mock.MagicMock()
         args = (mock.MagicMock(), [user1, user2])
         users.UserGenerator._delete_users(args)
-        mock_osclients.Clients().keystone()\
-            .users.delete.assert_has_calls([mock.call(user1["id"]),
-                                            mock.call(user2["id"])])
+        mock_osclients.Clients().keystone().users.delete.assert_has_calls([
+            mock.call(user1["id"]),
+            mock.call(user2["id"])])
 
     @mock.patch("rally.benchmark.context.users.osclients")
     def test_setup_and_cleanup(self, mock_osclients):

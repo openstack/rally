@@ -14,6 +14,7 @@
 #    under the License.
 
 import multiprocessing
+
 import netaddr
 
 from rally.benchmark.scenarios import base
@@ -21,9 +22,7 @@ from rally.benchmark.scenarios import utils as scenario_utils
 
 
 class NeutronScenario(base.Scenario):
-    """This class should contain base operations for benchmarking neutron,
-       most of them are creating/deleting resources.
-    """
+    """This class should contain base operations for benchmarking neutron."""
 
     RESOURCE_NAME_PREFIX = "rally_net_"
     SUBNET_IP_VERSION = 4
@@ -33,8 +32,7 @@ class NeutronScenario(base.Scenario):
 
     @classmethod
     def _generate_subnet_cidr(cls, network_id):
-        """Generate next subnet CIDR for given network,
-           without IP overlapping.
+        """Generate next subnet CIDR for network, without IP overlapping.
 
         :param network_id: str, network UUID for subnet
         :returns: str, next available subnet CIDR

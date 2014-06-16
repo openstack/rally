@@ -13,8 +13,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import mock
 import os
+
+import mock
 
 from rally.verification.verifiers.tempest import tempest
 from tests import test

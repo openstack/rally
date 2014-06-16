@@ -18,7 +18,6 @@ import netaddr
 
 from rally.benchmark.scenarios.neutron import utils
 from tests.benchmark.scenarios import test_utils
-
 from tests import test
 
 
@@ -99,8 +98,8 @@ class NeutronScenarioTestCase(test.TestCase):
         # Default options
         subnet_data = {"network_id": network_id}
         scenario._create_subnet(network, subnet_data)
-        mock_clients("neutron")\
-            .create_subnet.assert_called_once_with(expected_subnet_data)
+        mock_clients("neutron").create_subnet.assert_called_once_with(
+            expected_subnet_data)
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "neutron.create_subnet")
 
@@ -111,14 +110,15 @@ class NeutronScenarioTestCase(test.TestCase):
         subnet_data.update(extras)
         expected_subnet_data["subnet"].update(extras)
         scenario._create_subnet(network, subnet_data)
-        mock_clients("neutron")\
-            .create_subnet.assert_called_once_with(expected_subnet_data)
+        mock_clients("neutron").create_subnet.assert_called_once_with(
+            expected_subnet_data)
 
     @mock.patch(NEUTRON_UTILS + "NeutronScenario.clients")
     def test_list_subnets(self, mock_clients):
         subnets = [{"name": "fake1"}, {"name": "fake2"}]
-        mock_clients("neutron")\
-            .list_subnets.return_value = {"subnets": subnets}
+        mock_clients("neutron").list_subnets.return_value = {
+            "subnets": subnets
+        }
         scenario = utils.NeutronScenario()
         result = scenario._list_subnets()
         self.assertEqual(subnets, result)

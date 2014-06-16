@@ -67,8 +67,8 @@ class BenchmarkEngineTestCase(test.TestCase):
     def test_validate__wrong_scenarios_name(self, mova_validate):
         task = mock.MagicMock()
         eng = engine.BenchmarkEngine(mock.MagicMock(), task)
-        eng._validate_config_scenarios_name = \
-            mock.MagicMock(side_effect=exceptions.NotFoundScenarios)
+        eng._validate_config_scenarios_name = mock.MagicMock(
+            side_effect=exceptions.NotFoundScenarios)
 
         self.assertRaises(exceptions.InvalidTaskException, eng.validate)
         self.assertTrue(task.set_failed.called)
@@ -78,8 +78,8 @@ class BenchmarkEngineTestCase(test.TestCase):
         task = mock.MagicMock()
         eng = engine.BenchmarkEngine(mock.MagicMock(), task)
         eng._validate_config_scenarios_name = mock.MagicMock()
-        eng._validate_config_syntax = \
-            mock.MagicMock(side_effect=exceptions.InvalidBenchmarkConfig)
+        eng._validate_config_syntax = mock.MagicMock(
+            side_effect=exceptions.InvalidBenchmarkConfig)
 
         self.assertRaises(exceptions.InvalidTaskException, eng.validate)
         self.assertTrue(task.set_failed.called)
@@ -90,8 +90,8 @@ class BenchmarkEngineTestCase(test.TestCase):
         eng = engine.BenchmarkEngine(mock.MagicMock(), task)
         eng._validate_config_scenarios_name = mock.MagicMock()
         eng._validate_config_syntax = mock.MagicMock()
-        eng._validate_config_semantic = \
-            mock.MagicMock(side_effect=exceptions.InvalidBenchmarkConfig)
+        eng._validate_config_semantic = mock.MagicMock(
+            side_effect=exceptions.InvalidBenchmarkConfig)
 
         self.assertRaises(exceptions.InvalidTaskException, eng.validate)
         self.assertTrue(task.set_failed.called)

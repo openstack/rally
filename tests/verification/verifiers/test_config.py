@@ -13,8 +13,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import mock
 import os
+
+import mock
 from oslo.config import cfg
 from six.moves import http_client as httplib
 
@@ -78,10 +79,11 @@ class ConfigTestCase(test.TestCase):
         service = "test_service"
         url = "test_url"
         # mocked at setUp
-        self.conf_generator.keystoneclient.auth_ref = {"serviceCatalog":
-                                                       [{"name": service,
-                                                        "endpoints":
-                                                        [{"publicURL": url}]}]}
+        self.conf_generator.keystoneclient.auth_ref = {
+            "serviceCatalog": [{
+                "name": service,
+                "endpoints": [{"publicURL": url}]
+            }]}
         self.assertEqual(self.conf_generator._get_url(service), url)
 
     @mock.patch("rally.verification.verifiers.tempest.config.TempestConf"

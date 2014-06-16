@@ -15,14 +15,14 @@
 #    under the License.
 
 import functools
+
 import jsonschema
 
 from rally import utils
 
 
 class ActionBuilder(object):
-    """Builder class for mapping and creating action objects into
-    callable methods.
+    """Builder class for mapping and creating action objects.
 
     An action list is an array of single key/value dicts which takes
     the form:
@@ -56,8 +56,7 @@ class ActionBuilder(object):
     }
 
     def __init__(self, action_keywords):
-        """Creates a new instance of the builder which supports the given
-        action keywords.
+        """Create a new instance of the builder for the given action keywords.
 
         :param action_keywords: A list of strings which are the keywords this
         instance of the builder supports.
@@ -65,13 +64,13 @@ class ActionBuilder(object):
         self._bindings = {}
         self.schema = dict(ActionBuilder.SCHEMA_TEMPLATE)
         for kw in action_keywords:
-            self.schema['items']['properties'][kw] =\
-                ActionBuilder.ITEM_TEMPLATE
+            self.schema['items']['properties'][kw] = (
+                ActionBuilder.ITEM_TEMPLATE)
 
     def bind_action(self, action_key, action, *args, **kwargs):
-        """Binds an action and optionally static args/kwargs to an
-        action key.
+        """Bind an action to an action key.
 
+        Static args/kwargs can be optionally binded.
         :param action_key: The action keyword to bind the action to.
         :param action: A method/function to call for the action.
         :param args: (optional) Static positional args to prepend
@@ -87,23 +86,24 @@ class ActionBuilder(object):
         }
 
     def validate(self, actions):
-        """Validates the list of action objects against the schema
-        for this builder.
+        """Validate the list of action objects against the builder schema.
 
         :param actions: The list of action objects to validate.
         """
         jsonschema.validate(actions, self.schema)
 
     def _build(self, func, times, *args, **kwargs):
-        """Builds the wrapper action call."""
+        """Build the wrapper action call."""
         def _f():
             for i in range(times):
                 func(*args, **kwargs)
         return _f
 
     def build_actions(self, actions, *args, **kwargs):
-        """Builds a list of callable actions based on the given
-        action object list and the actions bound to this builder.
+        """Build a list of callable actions.
+
+        A list of callable actions based on the given action object list and
+        the actions bound to this builder.
 
         :param actions: A list of action objects to build callable
         action for.
@@ -129,8 +129,10 @@ class ActionBuilder(object):
 
 
 def atomic_action_timer(name):
-    """Decorates methods of the Scenario class requiring a measure of execution
-     time. This provides duration in seconds of each atomic action.
+    """Provide measure of execution time.
+
+    Decorates methods of the Scenario class.
+    This provides duration in seconds of each atomic action.
     """
     def wrap(func):
         @functools.wraps(func)
@@ -156,7 +158,8 @@ class AtomicAction(utils.Timer):
     """
 
     def __init__(self, scenario_instance, name):
-        """Constructor
+        """Create a new instance of the AtomicAction.
+
         :param scenario_instance: instance of subclass of base scenario
         :param name: name of the ActionBuilder
         """

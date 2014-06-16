@@ -57,11 +57,12 @@ Eventlet:
 
 """
 
-import paramiko
 import select
 import socket
 import StringIO
 import time
+
+import paramiko
 
 from rally.openstack.common.gettextutils import _
 from rally.openstack.common import log as logging

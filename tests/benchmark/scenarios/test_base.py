@@ -13,8 +13,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import mock
 import traceback
+
+import mock
 
 from rally.benchmark.context import base as base_ctx
 from rally.benchmark.scenarios import base
@@ -255,8 +256,9 @@ class ScenarioTestCase(test.TestCase):
         "prefix_")
     def test_generate_random_name(self):
         set_by_length = lambda lst: set(map(len, lst))
-        len_by_prefix = lambda lst, prefix:\
-            len(filter(bool, map(lambda i: i.startswith(prefix), lst)))
+        len_by_prefix = (lambda lst, prefix:
+                         len(filter(bool, map(lambda i: i.startswith(prefix),
+                             lst))))
         range_num = 50
 
         # Defaults

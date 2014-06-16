@@ -13,8 +13,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from oslo.config import cfg
 import time
+
+from oslo.config import cfg
 
 from rally.benchmark.scenarios import base
 from rally.benchmark.scenarios import utils as scenario_utils

@@ -146,9 +146,9 @@ def image_exists(param_name):
     """
     def image_exists_validator(**kwargs):
         clients = kwargs.get('clients')
-        image_id = types.ImageResourceType.transform(clients=clients,
-                                                     resource_config=
-                                                     kwargs.get(param_name))
+        image_id = types.ImageResourceType.transform(
+            clients=clients,
+            resource_config=kwargs.get(param_name))
         try:
             clients.glance().images.get(image=image_id)
             return ValidationResult()
@@ -166,9 +166,9 @@ def flavor_exists(param_name):
     """
     def flavor_exists_validator(**kwargs):
         clients = kwargs.get('clients')
-        flavor_id = types.FlavorResourceType.transform(clients=clients,
-                                                       resource_config=
-                                                       kwargs.get(param_name))
+        flavor_id = types.FlavorResourceType.transform(
+            clients=clients,
+            resource_config=kwargs.get(param_name))
         try:
             clients.nova().flavors.get(flavor=flavor_id)
             return ValidationResult()
@@ -190,18 +190,18 @@ def image_valid_on_flavor(flavor_name, image_name):
     def image_valid_on_flavor_validator(**kwargs):
         clients = kwargs.get('clients')
 
-        flavor_id = types.FlavorResourceType.transform(clients=clients,
-                                                       resource_config=
-                                                       kwargs.get(flavor_name))
+        flavor_id = types.FlavorResourceType.transform(
+            clients=clients,
+            resource_config=kwargs.get(flavor_name))
         try:
             flavor = clients.nova().flavors.get(flavor=flavor_id)
         except nova_exc.NotFound:
             message = _("Flavor with id '%s' not found") % flavor_id
             return ValidationResult(False, message)
 
-        image_id = types.ImageResourceType.transform(clients=clients,
-                                                     resource_config=
-                                                     kwargs.get(image_name))
+        image_id = types.ImageResourceType.transform(
+            clients=clients,
+            resource_config=kwargs.get(image_name))
         try:
             image = clients.glance().images.get(image=image_id)
         except glance_exc.HTTPNotFound:

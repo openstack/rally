@@ -109,12 +109,12 @@ class NovaScenarioTestCase(test.TestCase):
         mock_clients("nova").images.get.return_value = self.image
         nova_scenario = utils.NovaScenario()
         return_image = nova_scenario._create_image(self.server)
+        check_interval = CONF.benchmark.nova_server_image_create_poll_interval
         self.wait_for.mock.assert_called_once_with(
             self.image,
             update_resource=self.gfm(),
             is_ready=self.res_is.mock(),
-            check_interval=
-                CONF.benchmark.nova_server_image_create_poll_interval,
+            check_interval=check_interval,
             timeout=CONF.benchmark.nova_server_image_create_timeout
         )
         self.res_is.mock.assert_has_calls(mock.call('ACTIVE'))
@@ -216,17 +216,16 @@ class NovaScenarioTestCase(test.TestCase):
                                                           self.server1]
         nova_scenario = utils.NovaScenario()
         nova_scenario._delete_all_servers()
+        check_interval = CONF.benchmark.nova_server_delete_poll_interval
         expected = [
             mock.call(
                 self.server, update_resource=self.gfm(),
-                check_interval=
-                    CONF.benchmark.nova_server_delete_poll_interval,
+                check_interval=check_interval,
                 timeout=CONF.benchmark.nova_server_delete_timeout
             ),
             mock.call(
                 self.server1, update_resource=self.gfm(),
-                check_interval=
-                    CONF.benchmark.nova_server_delete_poll_interval,
+                check_interval=check_interval,
                 timeout=CONF.benchmark.nova_server_delete_timeout
             )
         ]
@@ -238,10 +237,10 @@ class NovaScenarioTestCase(test.TestCase):
         nova_scenario = utils.NovaScenario()
         nova_scenario._delete_image(self.image)
         self.image.delete.assert_called_once_with()
+        check_interval = CONF.benchmark.nova_server_image_delete_poll_interval
         self.wait_for_delete.mock.assert_called_once_with(
             self.image, update_resource=self.gfm(),
-            check_interval=
-                CONF.benchmark.nova_server_image_delete_poll_interval,
+            check_interval=check_interval,
             timeout=CONF.benchmark.nova_server_image_delete_timeout
         )
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),

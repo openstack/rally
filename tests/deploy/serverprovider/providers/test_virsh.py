@@ -13,11 +13,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import jsonschema
-import netaddr
 import os
 
+import jsonschema
 import mock
+import netaddr
 from oslotest import mockpatch
 
 from rally.deploy.serverprovider.providers import virsh

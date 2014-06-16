@@ -24,6 +24,7 @@ class VMScenario(base.Scenario):
     @scenario_utils.atomic_action_timer('vm.run_command')
     def run_action(self, ssh, interpreter, script):
         """Run command inside an instance.
+
         This is a separate function so that only script execution is timed
         """
         return ssh.execute(interpreter, stdin=open(script, "rb"))
@@ -34,7 +35,9 @@ class VMScenario(base.Scenario):
 
     def run_command(self, server, username, network, port, ip_version,
                     interpreter, script):
-        """Create SSH connection for server, wait for server to become
+        """Run command via SSH on server.
+
+        Create SSH connection for server, wait for server to become
         available (there is a delay between server being set to ACTIVE
         and sshd being available). Then call __run_command to actually
         execute the command.

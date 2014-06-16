@@ -15,10 +15,12 @@
 """
 SQLAlchemy models for rally data.
 """
+
+import uuid
+
 import sqlalchemy as sa
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import types
-import uuid
 
 from rally import consts
 from rally.db.sqlalchemy import types as sa_types
@@ -65,7 +67,7 @@ class Deployment(BASE, RallyBase):
     completed_at = sa.Column(sa.DateTime)
     # XXX(akscram): Do we need to explicitly store a name of the
     #               deployment engine?
-    #engine_name = sa.Column(sa.String(36))
+    # engine_name = sa.Column(sa.String(36))
 
     config = sa.Column(
         sa_types.MutableJSONEncodedDict,
