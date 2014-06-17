@@ -38,16 +38,6 @@ class TempestTestCase(test.TestCase):
         self.verifier.log_file_raw = '/tmp/subunit.stream'
         self.regex = None
 
-    @mock.patch('six.moves.builtins.open')
-    def test__write_config(self, mock_open):
-        conf = mock.Mock()
-        mock_file = mock.MagicMock()
-        mock_open.return_value = mock_file
-        self.verifier._write_config(conf)
-        mock_open.assert_called_once_with(self.verifier.config_file, 'w+')
-        conf.write.assert_called_once_with(mock_file.__enter__())
-        mock_file.__exit__.assert_called_once_with(None, None, None)
-
     @mock.patch('os.path.exists')
     def test_is_installed(self, mock_exists):
         mock_exists.return_value = True
@@ -110,20 +100,14 @@ class TempestTestCase(test.TestCase):
     @mock.patch(TEMPEST_PATH + '.tempest.Tempest.discover_tests')
     @mock.patch(TEMPEST_PATH + '.tempest.Tempest._initialize_testr')
     @mock.patch(TEMPEST_PATH + '.tempest.Tempest.run')
-    @mock.patch(TEMPEST_PATH + '.tempest.Tempest._write_config')
     @mock.patch(TEMPEST_PATH + '.config.TempestConf')
     @mock.patch('rally.db.deployment_get')
     @mock.patch('rally.osclients.Clients')
     @mock.patch('rally.objects.endpoint.Endpoint')
     def test_verify(self, mock_endpoint, mock_osclients, mock_get, mock_conf,
-                    mock_write, mock_run, mock_testr_init, mock_discover,
-                    mock_os):
-        fake_conf = mock.MagicMock()
-        mock_conf().generate.return_value = fake_conf
-
+                    mock_run, mock_testr_init, mock_discover, mock_os):
         self.verifier.verify("smoke", None)
-        mock_conf().generate.assert_called_once_with()
-        mock_write.assert_called_once_with(fake_conf)
+        mock_conf().generate.assert_called_once_with(self.verifier.config_file)
         mock_run.assert_called_once_with("smoke")
 
     @mock.patch('os.environ')

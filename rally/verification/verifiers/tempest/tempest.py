@@ -46,10 +46,6 @@ class Tempest(object):
         self.verification = verification
         self._env = None
 
-    def _write_config(self, conf):
-        with open(self.config_file, "w+") as f:
-            conf.write(f)
-
     def _generate_env(self):
         env = os.environ.copy()
         env["TEMPEST_CONFIG_DIR"] = self.tempest_path
@@ -87,8 +83,7 @@ class Tempest(object):
             msg = _("Creation of configuration file for tempest.")
             LOG.info(_("Starting: ") + msg)
 
-            conf = config.TempestConf(self.deploy_id).generate()
-            self._write_config(conf)
+            config.TempestConf(self.deploy_id).generate(self.config_file)
             LOG.info(_("Completed: ") + msg)
         else:
             LOG.info("Tempest is already configured.")
