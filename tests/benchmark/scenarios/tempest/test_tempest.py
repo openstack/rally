@@ -28,7 +28,7 @@ class TempestScenarioTestCase(test.TestCase):
     def setUp(self):
         super(TempestScenarioTestCase, self).setUp()
         self.verifier = verifier.Tempest("fake_uuid")
-        self.verifier.log_file = "/dev/null"
+        self.verifier.log_file_raw = "/dev/null"
         self.verifier.parse_results = mock.MagicMock()
         self.verifier.parse_results.return_value = ({"fake": True},
                                                     {"have_results": True})
@@ -39,7 +39,7 @@ class TempestScenarioTestCase(test.TestCase):
 
     def get_tests_launcher_cmd(self, tests):
         return ("%(venv)s testr run --parallel --subunit %(tests)s "
-                "| %(venv)s subunit2junitxml --forward --output-to=/dev/null "
+                "| tee /dev/null "
                 "| %(venv)s subunit-2to1 "
                 "| %(venv)s %(tempest_path)s/tools/colorizer.py" %
                 {

@@ -18,12 +18,13 @@ import logging
 import os
 import shutil
 import subprocess
-from xml.dom import minidom as md
 
 from rally import exceptions
 from rally.openstack.common.gettextutils import _
+from rally.openstack.common import jsonutils
 from rally import utils
 from rally.verification.verifiers.tempest import config
+from rally.verification.verifiers.tempest import subunit2json
 
 LOG = logging.getLogger(__name__)
 
@@ -39,7 +40,7 @@ class Tempest(object):
                                          ".rally/tempest",
                                          "for-deployment-%s" % deploy_id)
         self.config_file = os.path.join(self.tempest_path, "tempest.conf")
-        self.log_file = os.path.join(self.tempest_path, "testr_log.xml")
+        self.log_file_raw = os.path.join(self.tempest_path, "subunit.stream")
         self.venv_wrapper = os.path.join(self.tempest_path,
                                          "tools/with_venv.sh")
         self.verification = verification
@@ -71,12 +72,6 @@ class Tempest(object):
                       os.path.join(self.tempest_path, ".venv"))
             subprocess.check_call("python ./tools/install_venv.py", shell=True,
                                   cwd=self.tempest_path)
-            # NOTE(akurilin): junitxml is required for subunit2junitxml filter.
-            # This library not in openstack/requirements, so we must install it
-            # by this way.
-            subprocess.check_call(
-                "%s pip install junitxml" % self.venv_wrapper,
-                shell=True, cwd=self.tempest_path)
             subprocess.check_call(
                 "%s python setup.py install" % self.venv_wrapper,
                 shell=True, cwd=self.tempest_path)
@@ -176,8 +171,9 @@ class Tempest(object):
 
         :param testr_arg: argument which will be transmitted into testr
         :type testr_arg: str
-        :param log_file: file name for junitxml results of tests. If not
-                         specified, value from "self.log_file" will be chosen.
+        :param log_file: file name for raw subunit results of tests. If not
+                         specified, value from "self.log_file_raw"
+                         will be chosen.
         :type testr_arg: str
 
         :raises: :class:`subprocess.CalledProcessError` if tests has been
@@ -186,14 +182,14 @@ class Tempest(object):
 
         test_cmd = (
             "%(venv)s testr run --parallel --subunit %(arg)s "
-            "| %(venv)s subunit2junitxml --forward --output-to=%(log_file)s "
+            "| tee %(log_file)s "
             "| %(venv)s subunit-2to1 "
             "| %(venv)s %(tempest_path)s/tools/colorizer.py" %
             {
                 "venv": self.venv_wrapper,
                 "arg": testr_arg,
                 "tempest_path": self.tempest_path,
-                "log_file": log_file or self.log_file
+                "log_file": log_file or self.log_file_raw
             })
         LOG.debug("Test(s) started by the command: %s" % test_cmd)
         subprocess.check_call(test_cmd, cwd=self.tempest_path,
@@ -221,48 +217,20 @@ class Tempest(object):
         return tests
 
     @staticmethod
-    def parse_results(log_file):
-        """Parse junitxml file."""
+    def parse_results(log_file_raw):
+        """Parse subunit raw log file."""
 
-        if os.path.isfile(log_file):
-            dom = md.parse(log_file).getElementsByTagName("testsuite")[0]
-
-            total = {
-                "tests": int(dom.getAttribute("tests")),
-                "errors": int(dom.getAttribute("errors")),
-                "failures": int(dom.getAttribute("failures")),
-                "time": float(dom.getAttribute("time")),
-            }
-
-            test_cases = {}
-            for test_elem in dom.getElementsByTagName('testcase'):
-                if test_elem.getAttribute('name') == 'process-returncode':
-                    total['failures'] -= 1
-                else:
-                    test = {
-                        "name": ".".join((test_elem.getAttribute("classname"),
-                                          test_elem.getAttribute("name"))),
-                        "time": float(test_elem.getAttribute("time"))
-                    }
-
-                    failure = test_elem.getElementsByTagName('failure')
-                    if failure:
-                        test["status"] = "FAIL"
-                        test["failure"] = {
-                            "type": failure[0].getAttribute("type"),
-                            "log": failure[0].firstChild.nodeValue}
-                    else:
-                        test["status"] = "OK"
-                    test_cases[test["name"]] = test
-            return total, test_cases
+        if os.path.isfile(log_file_raw):
+            data = jsonutils.loads(subunit2json.main(log_file_raw))
+            return data['total'], data['test_cases']
         else:
-            LOG.error("XML-log file not found.")
+            LOG.error("JSON-log file not found.")
             return None, None
 
     @utils.log_verification_wrapper(
         LOG.info, _("Saving verification results."))
     def _save_results(self):
-        total, test_cases = self.parse_results(self.log_file)
+        total, test_cases = self.parse_results(self.log_file_raw)
         if total and test_cases and self.verification:
             self.verification.finish_verification(total=total,
                                                   test_cases=test_cases)

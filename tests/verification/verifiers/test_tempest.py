@@ -17,6 +17,8 @@ import os
 
 import mock
 
+from rally.openstack.common import jsonutils
+from rally.verification.verifiers.tempest import subunit2json
 from rally.verification.verifiers.tempest import tempest
 from tests import test
 
@@ -33,7 +35,7 @@ class TempestTestCase(test.TestCase):
 
         self.verifier.tempest_path = '/tmp'
         self.verifier.config_file = '/tmp/tempest.conf'
-        self.verifier.log_file = '/tmp/tests_log.xml'
+        self.verifier.log_file_raw = '/tmp/subunit.stream'
         self.regex = None
 
     @mock.patch('six.moves.builtins.open')
@@ -95,8 +97,7 @@ class TempestTestCase(test.TestCase):
         self.verifier.run('tempest.api.image')
         fake_call = (
             '%(venv)s testr run --parallel --subunit tempest.api.image '
-            '| %(venv)s subunit2junitxml --forward '
-            '--output-to=%(tempest_path)s/tests_log.xml '
+            '| tee %(tempest_path)s/subunit.stream '
             '| %(venv)s subunit-2to1 '
             '| %(venv)s %(tempest_path)s/tools/colorizer.py' % {
                 'venv': self.verifier.venv_wrapper,
@@ -159,8 +160,6 @@ class TempestTestCase(test.TestCase):
         mock_sp.assert_has_calls([
             mock.call('python ./tools/install_venv.py', shell=True,
                       cwd=self.verifier.tempest_path),
-            mock.call('%s pip install junitxml' % self.verifier.venv_wrapper,
-                      shell=True, cwd=self.verifier.tempest_path),
             mock.call('%s python setup.py install' %
                       self.verifier.venv_wrapper, shell=True,
                       cwd=self.verifier.tempest_path)])
@@ -196,15 +195,22 @@ class TempestTestCase(test.TestCase):
 
         self.verifier._save_results()
 
-        mock_isfile.assert_called_once_with(self.verifier.log_file)
+        mock_isfile.assert_called_once_with(self.verifier.log_file_raw)
         self.assertEqual(0, mock_parse.call_count)
 
     @mock.patch('os.path.isfile')
     def test__save_results_with_log_file(self, mock_isfile):
-        mock_isfile.return_value = True
-        self.verifier.log_file = os.path.join(os.path.dirname(__file__),
-                                              'fake_log.xml')
-        self.verifier._save_results()
-        mock_isfile.assert_called_once_with(self.verifier.log_file)
-        self.assertEqual(
-            1, self.verifier.verification.finish_verification.call_count)
+        with mock.patch.object(subunit2json, 'main') as mock_main:
+            mock_isfile.return_value = True
+            data = {'total': True, 'test_cases': True}
+            mock_main.return_value = jsonutils.dumps(data)
+            self.verifier.log_file_raw = os.path.join(
+                                            os.path.dirname(__file__),
+                                            'subunit.stream')
+            self.verifier._save_results()
+            mock_isfile.assert_called_once_with(self.verifier.log_file_raw)
+            mock_main.assert_called_once_with(
+                self.verifier.log_file_raw)
+
+            self.assertEqual(
+                1, self.verifier.verification.finish_verification.call_count)
