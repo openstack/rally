@@ -13,17 +13,19 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import netaddr
 import os
 import subprocess
 import time
 import uuid
 
+import netaddr
+
 from rally.deploy.serverprovider import provider
 
 
 class VirshProvider(provider.ProviderFactory):
-    '''Creates VMs from prebuilt templates.
+    """Create VMs from prebuilt templates.
+
     config example:
         "vm_provider": {
             "type": "VirshProvider",
@@ -32,7 +34,7 @@ class VirshProvider(provider.ProviderFactory):
             "template_user": "ubuntu",  # vm user to launch devstack
             "template_password": "password" # vm password to launch devstack
         },
-    '''
+    """
 
     CONFIG_SCHEMA = {
         'type': 'object',
@@ -59,6 +61,7 @@ class VirshProvider(provider.ProviderFactory):
 
     def create_servers(self, image_uuid=None, type_id=None, amount=1):
         """Create VMs with chosen image.
+
         :param image_uuid: Indetificator of image
         :param amount: amount of required VMs
         Returns list of VMs uuids.
@@ -66,7 +69,7 @@ class VirshProvider(provider.ProviderFactory):
         return [self.create_vm(str(uuid.uuid4())) for i in range(amount)]
 
     def create_vm(self, vm_name):
-        '''Clones prebuilt VM template and starts it.'''
+        """Clone prebuilt VM template and start it."""
 
         virt_url = self._get_virt_connection_url(self.config['connection'])
         cmd = 'virt-clone --connect=%(url)s -o %(t)s -n %(n)s --auto-clone' % {
@@ -87,13 +90,13 @@ class VirshProvider(provider.ProviderFactory):
         )
 
     def destroy_servers(self):
-        '''Destroy already created vms.'''
+        """Destroy already created vms."""
         for resource in self.resources.get_all():
             self.destroy_vm(resource['info']['name'])
             self.resources.delete(resource)
 
     def destroy_vm(self, vm_name):
-        '''Destroy single vm and delete all allocated resources.'''
+        """Destroy single vm and delete all allocated resources."""
         print('Destroy VM %s' % vm_name)
         vconnection = self._get_virt_connection_url(self.config['connection'])
 
@@ -107,7 +110,7 @@ class VirshProvider(provider.ProviderFactory):
 
     @staticmethod
     def _get_virt_connection_url(connection):
-        '''Formats QEMU connection string from SSH url.'''
+        """Format QEMU connection string from SSH url."""
         return 'qemu+ssh://%s/system' % connection
 
     def _determine_vm_ip(self, vm_name):

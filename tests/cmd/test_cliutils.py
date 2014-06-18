@@ -14,7 +14,6 @@
 #    under the License.
 
 from rally.cmd import cliutils
-
 from tests import test
 
 

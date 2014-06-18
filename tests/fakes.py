@@ -19,12 +19,12 @@ import re
 import string
 import uuid
 
-import mock
-
 from ceilometerclient import exc as ceilometer_exc
 from glanceclient import exc
+import mock
 from neutronclient.common import exceptions as neutron_exceptions
 from novaclient import exceptions as nova_exceptions
+
 from rally.benchmark.context import base as base_ctx
 from rally.benchmark.scenarios import base
 from rally.objects import endpoint
@@ -57,6 +57,7 @@ def generate_mac():
 
 def setup_dict(data, required=None, defaults=None):
     """Setup and validate dict based on mandatory keys and default data.
+
     This function reduces code that constructs dict objects
     with specific schema (e.g. for API data).
 
@@ -620,8 +621,8 @@ class FakeNeutronClient(object):
     def add_interface_router(self, router_id, data):
         subnet_id = data["subnet_id"]
 
-        if router_id not in self.__routers\
-                or subnet_id not in self.__subnets:
+        if (router_id not in self.__routers or
+                subnet_id not in self.__subnets):
             raise neutron_exceptions.NeutronClientException
 
         subnet = self.__subnets[subnet_id]
@@ -769,8 +770,8 @@ class FakeNeutronClient(object):
     def remove_interface_router(self, router_id, data):
         subnet_id = data["subnet_id"]
 
-        if router_id not in self.__routers\
-                or subnet_id not in self.__subnets:
+        if (router_id not in self.__routers
+                or subnet_id not in self.__subnets):
             raise neutron_exceptions.NeutronClientException
 
         subnet = self.__subnets[subnet_id]

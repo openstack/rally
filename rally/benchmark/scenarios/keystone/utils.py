@@ -22,10 +22,6 @@ def is_temporary(resource):
 
 
 class KeystoneScenario(base.Scenario):
-    """This class should contain base operations for benchmarking keystone,
-       most of them are creating/deleting resources.
-    """
-
     RESOURCE_NAME_PREFIX = "rally_keystone_"
 
     @scenario_utils.atomic_action_timer('keystone.create_user')

@@ -16,7 +16,6 @@
 import mock
 
 from rally.benchmark.runners import serial
-
 from rally import consts
 from tests import fakes
 from tests import test

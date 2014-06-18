@@ -15,8 +15,9 @@
 
 import json
 import re
-import requests
 import time
+
+import requests
 
 from rally.openstack.common import log as logging
 

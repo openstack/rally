@@ -14,8 +14,9 @@
 #    under the License.
 
 import os
-from oslo.config import cfg
 import time
+
+from oslo.config import cfg
 
 from rally.benchmark.scenarios import base
 from rally.benchmark.scenarios import utils as scenario_utils
@@ -97,7 +98,7 @@ class GlanceScenario(base.Scenario):
                 update_resource=bench_utils.get_from_manager(),
                 timeout=CONF.benchmark.glance_image_create_timeout,
                 check_interval=CONF.benchmark.
-                                    glance_image_create_poll_interval)
+                glance_image_create_poll_interval)
 
         finally:
             if "data" in kw:

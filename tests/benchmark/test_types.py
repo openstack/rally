@@ -15,7 +15,6 @@
 
 from rally.benchmark import types
 from rally import exceptions
-
 from tests import fakes
 from tests import test
 
@@ -32,23 +31,23 @@ class FlavorResourceTypeTestCase(test.TestCase):
 
     def test_transform_by_id(self):
         resource_config = {"id": 42}
-        flavor_id = types.FlavorResourceType.transform(clients=self.clients,
-                                                       resource_config=
-                                                       resource_config)
+        flavor_id = types.FlavorResourceType.transform(
+                    clients=self.clients,
+                    resource_config=resource_config)
         self.assertEqual(flavor_id, 42)
 
     def test_transform_by_name(self):
         resource_config = {"name": "m1.nano"}
-        flavor_id = types.FlavorResourceType.transform(clients=self.clients,
-                                                       resource_config=
-                                                       resource_config)
+        flavor_id = types.FlavorResourceType.transform(
+                    clients=self.clients,
+                    resource_config=resource_config)
         self.assertEqual(flavor_id, 42)
 
     def test_transform_by_name_to_dest(self):
         resource_config = {"name": "m1.nano"}
-        flavor_id = types.FlavorResourceType.transform(clients=self.clients,
-                                                       resource_config=
-                                                       resource_config)
+        flavor_id = types.FlavorResourceType.transform(
+                    clients=self.clients,
+                    resource_config=resource_config)
         self.assertEqual(flavor_id, 42)
 
     def test_transform_by_name_no_match(self):
@@ -59,9 +58,9 @@ class FlavorResourceTypeTestCase(test.TestCase):
 
     def test_transform_by_regex(self):
         resource_config = {"regex": "m(1|2)\.nano"}
-        flavor_id = types.FlavorResourceType.transform(clients=self.clients,
-                                                       resource_config=
-                                                       resource_config)
+        flavor_id = types.FlavorResourceType.transform(
+                    clients=self.clients,
+                    resource_config=resource_config)
         self.assertEqual(flavor_id, 42)
 
     def test_transform_by_regex_no_match(self):
@@ -83,23 +82,23 @@ class ImageResourceTypeTestCase(test.TestCase):
 
     def test_transform_by_id(self):
         resource_config = {"id": 100}
-        image_id = types.ImageResourceType.transform(clients=self.clients,
-                                                     resource_config=
-                                                     resource_config)
+        image_id = types.ImageResourceType.transform(
+                    clients=self.clients,
+                    resource_config=resource_config)
         self.assertEqual(image_id, 100)
 
     def test_transform_by_name(self):
         resource_config = {"name": "cirros-0.3.1-uec"}
-        image_id = types.ImageResourceType.transform(clients=self.clients,
-                                                     resource_config=
-                                                     resource_config)
+        image_id = types.ImageResourceType.transform(
+                    clients=self.clients,
+                    resource_config=resource_config)
         self.assertEqual(image_id, 100)
 
     def test_transform_by_name_to_dest(self):
         resource_config = {"name": "cirros-0.3.1-uec"}
-        image_id = types.ImageResourceType.transform(clients=self.clients,
-                                                     resource_config=
-                                                     resource_config)
+        image_id = types.ImageResourceType.transform(
+                    clients=self.clients,
+                    resource_config=resource_config)
         self.assertEqual(image_id, 100)
 
     def test_transform_by_name_no_match(self):
@@ -110,9 +109,9 @@ class ImageResourceTypeTestCase(test.TestCase):
 
     def test_transform_by_regex(self):
         resource_config = {"regex": "-uec$"}
-        image_id = types.ImageResourceType.transform(clients=self.clients,
-                                                     resource_config=
-                                                     resource_config)
+        image_id = types.ImageResourceType.transform(
+                    clients=self.clients,
+                    resource_config=resource_config)
         self.assertEqual(image_id, 100)
 
     def test_transform_by_regex_no_match(self):

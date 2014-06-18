@@ -13,10 +13,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import novaclient.exceptions
 import os
 import time
 import urllib2
+
+import novaclient.exceptions
 
 from rally.benchmark import utils as benchmark_utils
 from rally.deploy.serverprovider import provider

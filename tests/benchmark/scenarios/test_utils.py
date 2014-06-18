@@ -14,9 +14,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from jsonschema import exceptions as schema_exceptions
 import mock
 
-from jsonschema import exceptions as schema_exceptions
 from rally.benchmark.scenarios import utils
 from tests import test
 

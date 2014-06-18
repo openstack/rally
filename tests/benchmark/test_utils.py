@@ -13,14 +13,14 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import mock
-
 import datetime
-from tests import fakes
-from tests import test
+
+import mock
 
 from rally.benchmark import utils
 from rally import exceptions
+from tests import fakes
+from tests import test
 
 
 class BenchmarkUtilsTestCase(test.TestCase):

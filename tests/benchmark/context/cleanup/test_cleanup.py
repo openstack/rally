@@ -16,7 +16,6 @@
 import mock
 
 from rally.benchmark.context.cleanup import cleanup as cleanup_ctx
-
 from tests import fakes
 from tests import test
 

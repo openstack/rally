@@ -15,12 +15,13 @@
 
 import datetime
 import os
-from oslo.config import cfg
-from six.moves import configparser
-from six.moves import http_client as httplib
 import time
 import urllib2
 import urlparse
+
+from oslo.config import cfg
+from six.moves import configparser
+from six.moves import http_client as httplib
 
 from rally import db
 from rally import exceptions
@@ -184,8 +185,8 @@ class TempestConf(object):
             if public_net:
                 net_id = public_net[0]['id']
                 self.conf.set('network', 'public_network_id', net_id)
-                public_router = neutron.list_routers(network_id=
-                                                     net_id)['routers'][0]
+                public_router = neutron.list_routers(
+                    network_id=net_id)['routers'][0]
                 self.conf.set('network', 'public_router_id',
                               public_router['id'])
                 subnet = neutron.list_subnets(network_id=net_id)['subnets'][0]

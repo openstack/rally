@@ -13,9 +13,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import mock
 import os
 import StringIO
+
+import mock
 
 from rally.cmd import envutils
 from rally import exceptions
@@ -94,7 +95,7 @@ class EnvUtilsTestCase(test.TestCase):
 
     @mock.patch.dict(os.environ,
                      values={envutils.ENV_DEPLOYMENT: 'test_deployment_id',
-                     envutils.ENV_TASK: 'test_task_id'},
+                             envutils.ENV_TASK: 'test_task_id'},
                      clear=True)
     @mock.patch('os.path.exists')
     @mock.patch('rally.cmd.envutils.fileutils.update_env_file')

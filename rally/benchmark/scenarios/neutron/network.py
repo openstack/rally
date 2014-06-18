@@ -45,8 +45,10 @@ class NeutronNetworks(utils.NeutronScenario):
                                 subnet_create_args=None,
                                 subnet_cidr_start=None,
                                 subnets_per_network=None):
-        """Create a network, a given number of subnets
-        and then list all subnets.
+        """Test creating and listing a given number of subnets.
+
+        The scenario creates a network, a given number of subnets and then
+        lists subnets.
 
         :param network_create_args: dict, POST /v2.0/networks request options
         :param subnet_create_args: dict, POST /v2.0/subnets request options
@@ -69,7 +71,9 @@ class NeutronNetworks(utils.NeutronScenario):
                                 subnet_cidr_start=None,
                                 subnets_per_network=None,
                                 router_create_args=None):
-        """Create a network, a given number of subnets and routers
+        """Test creating and listing a given number of routers.
+
+        Create a network, a given number of subnets and routers
         and then list all routers.
 
         :param network_create_args: dict, POST /v2.0/networks request options

@@ -244,10 +244,10 @@ class NovaServersTestCase(test.TestCase):
     @mock.patch("rally.benchmark.scenarios.nova.servers.random.choice")
     def _verify_boot_server(self, mock_choice, mock_osclients, nic=None,
                             assert_nic=False):
-        scenario, kwargs, expected_kwargs = \
-            self._prepare_boot(mock_osclients=mock_osclients,
-                               mock_choice=mock_choice,
-                               nic=nic, assert_nic=assert_nic)
+        scenario, kwargs, expected_kwargs = self._prepare_boot(
+            mock_osclients=mock_osclients,
+            mock_choice=mock_choice,
+            nic=nic, assert_nic=assert_nic)
 
         scenario.boot_server("img", 0, **kwargs)
         scenario._boot_server.assert_called_once_with("name", "img", 0,
@@ -277,10 +277,10 @@ class NovaServersTestCase(test.TestCase):
     def test_boot_server_from_volume_random_nic(self, mock_choice,
                                                 mock_osclients,
                                                 mock_nova_clients):
-        scenario, kwargs, expected_kwargs = \
-            self._prepare_boot(mock_osclients=mock_osclients,
-                               mock_choice=mock_choice,
-                               nic=None, assert_nic=True)
+        scenario, kwargs, expected_kwargs = self._prepare_boot(
+            mock_osclients=mock_osclients,
+            mock_choice=mock_choice,
+            nic=None, assert_nic=True)
 
         fake_volume = fakes.FakeVolumeManager().create()
         fake_volume.id = "volume_id"

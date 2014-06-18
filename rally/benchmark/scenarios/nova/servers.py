@@ -13,8 +13,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import jsonschema
 import random
+
+import jsonschema
 
 from rally.benchmark.scenarios import base
 from rally.benchmark.scenarios.cinder import utils as cinder_utils
@@ -94,8 +95,11 @@ class NovaServers(utils.NovaScenario,
     @validation.add(validation.image_valid_on_flavor("flavor", "image"))
     @base.scenario(context={"cleanup": ["nova"]})
     def boot_and_bounce_server(self, image, flavor, **kwargs):
-        """Tests booting a server then performing stop/start or hard/soft
-        reboot a number of times.
+        """Test booting a server with further performing specified actions.
+
+        Actions should be passed into kwargs. Available actions are
+        'hard_reboot', 'soft_reboot', 'stop_start' and 'rescue_unrescue'.
+        Delete server after all actions.
         """
         action_builder = self._bind_actions()
         actions = kwargs.get('actions', [])
@@ -190,6 +194,7 @@ class NovaServers(utils.NovaScenario,
 
     def _rescue_and_unrescue_server(self, server):
         """Rescue and then unrescue the given server.
+
         A rescue will be issued on the given server upon which time
         this method will wait for the server to become 'RESCUE'.
         Once the server is RESCUE a unrescue will be issued and

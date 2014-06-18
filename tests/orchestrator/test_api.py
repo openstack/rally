@@ -15,8 +15,9 @@
 
 """ Test for orchestrator. """
 
-import mock
 import uuid
+
+import mock
 
 from rally.benchmark.scenarios import base
 from rally import consts

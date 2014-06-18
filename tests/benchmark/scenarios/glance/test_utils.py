@@ -90,10 +90,10 @@ class GlanceScenarioTestCase(test.TestCase):
         scenario = utils.GlanceScenario()
         scenario._delete_image(self.image)
         self.image.delete.assert_called_once_with()
-        self.wait_for_delete.\
-            mock.assert_called_once_with(self.image,
-                                         update_resource=self.gfm(),
-                                         check_interval=1,
-                                         timeout=120)
+        self.wait_for_delete.mock.assert_called_once_with(
+            self.image,
+            update_resource=self.gfm(),
+            check_interval=1,
+            timeout=120)
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        'glance.delete_image')

@@ -25,7 +25,9 @@ from rally import utils
 
 
 def scenario(admin_only=False, context=None):
-    """This method is used as decorator for the methods of benchmark scenarios
+    """Add extra fields to benchmark scenarios methods.
+
+       This method is used as decorator for the methods of benchmark scenarios
        and it adds following extra fields to the methods.
        'is_scenario' is set to True
        'admin_only' is set to True if a scenario require admin endpoints
@@ -40,7 +42,8 @@ def scenario(admin_only=False, context=None):
 
 class Scenario(object):
     """This is base class for any benchmark scenario.
-       You should create subclass of this class. And you test scenarios will
+
+       You should create subclass of this class. And your test scenarios will
        be auto discoverable and you will be able to specify it in test config.
     """
     RESOURCE_NAME_PREFIX = ""

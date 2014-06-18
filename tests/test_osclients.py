@@ -13,9 +13,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import mock
-
 from keystoneclient import exceptions as keystone_exceptions
+import mock
 from oslo.config import cfg
 
 from rally import exceptions
@@ -49,8 +48,8 @@ class OSClientsTestCase(test.TestCase):
     @mock.patch("rally.osclients.Clients.keystone")
     def test_verified_keystone_user_not_admin(self, mock_keystone):
         mock_keystone.return_value = fakes.FakeKeystoneClient()
-        mock_keystone.return_value.auth_ref["user"]["roles"] = \
-            [{"name": "notadmin"}]
+        mock_keystone.return_value.auth_ref["user"]["roles"] = [{"name":
+                                                                 "notadmin"}]
         self.assertRaises(exceptions.InvalidAdminException,
                           self.clients.verified_keystone)
 

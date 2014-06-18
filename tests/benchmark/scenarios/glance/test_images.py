@@ -82,9 +82,9 @@ class GlanceImagesTestCase(test.TestCase):
         mock_random_name.return_value = "random_name"
         kwargs = {'fakearg': 'f'}
         with mock.patch("rally.benchmark.scenarios.glance.utils.time.sleep"):
-            glance_scenario.\
-                create_image_and_boot_instances("cf", "url", "df",
-                                                "fid", 5, **kwargs)
+            glance_scenario.create_image_and_boot_instances("cf", "url",
+                                                            "df", "fid",
+                                                            5, **kwargs)
             mock_create_image.assert_called_once_with("random_name", "cf",
                                                       "url", "df", **kwargs)
             mock_boot_servers.assert_called_once_with("random_name",

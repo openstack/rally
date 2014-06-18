@@ -30,8 +30,8 @@ def _read_env_file(path, except_env=None):
         with open(path, 'r') as env_file:
             content = env_file.readlines()
             for line in content:
-                if except_env is None or \
-                        not line.startswith("%s=" % except_env):
+                if except_env is None or not line.startswith("%s=" %
+                                                             except_env):
                     output.append(line)
     return output
 

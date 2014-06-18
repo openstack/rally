@@ -13,6 +13,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import urlparse
+
 from ceilometerclient import client as ceilometer
 from cinderclient import client as cinder
 import glanceclient as glance
@@ -23,7 +25,6 @@ from keystoneclient.v2_0 import client as keystone
 from neutronclient.neutron import client as neutron
 from novaclient import client as nova
 from oslo.config import cfg
-import urlparse
 
 from rally import exceptions
 

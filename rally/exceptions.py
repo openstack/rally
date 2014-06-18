@@ -14,8 +14,9 @@
 #    under the License.
 
 
-from oslo.config import cfg
 import sys
+
+from oslo.config import cfg
 
 from rally.openstack.common.gettextutils import _
 from rally.openstack.common import log as logging
@@ -142,6 +143,10 @@ class NoSuchContext(NotFoundException):
 
 class NoSuchConfigField(NotFoundException):
     msg_fmt = _("There is no field in the task config with name `%(name)s`.")
+
+
+class NoSuchRole(NotFoundException):
+    msg_fmt = _("There is no role with name `%(role)s`.")
 
 
 class TaskNotFound(NotFoundException):

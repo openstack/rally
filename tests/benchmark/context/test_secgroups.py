@@ -34,9 +34,9 @@ class SecGroupContextTestCase(test.TestCase):
 
         self.assertEqual(len(fake_nova.security_groups.list()), 2)
         self.assertTrue(
-            secgroup.SSH_GROUP_NAME in
-                [sg.name for sg in fake_nova.security_groups.list()]
-        )
+            secgroup.SSH_GROUP_NAME in [
+                sg.name for sg in fake_nova.security_groups.list()
+            ])
 
         # run prep again, check that another security group is not created
         secgroup._prepare_open_secgroup('endpoint')
@@ -46,7 +46,7 @@ class SecGroupContextTestCase(test.TestCase):
     def test_prep_ssh_sec_group_rules(self, mock_osclients):
         fake_nova = fakes.FakeNovaClient()
 
-        #NOTE(hughsaunders) Default security group is precreated
+        # NOTE(hughsaunders) Default security group is precreated
         self.assertEqual(len(fake_nova.security_groups.list()), 1)
         mock_cl = mock.MagicMock()
         mock_cl.nova.return_value = fake_nova

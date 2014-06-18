@@ -13,8 +13,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import mock
 import uuid
+
+import mock
 
 from rally.cmd.commands import show
 from tests import fakes

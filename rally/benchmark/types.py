@@ -72,7 +72,7 @@ def _id_from_name(resource_config, resources, typename):
         raise exceptions.InvalidScenarioArgument(
             "{typename} 'id', 'name', or 'regex' not found "
             "in '{resource_config}' ".format(typename=typename.title(),
-            resource_config=resource_config))
+                                             resource_config=resource_config))
 
     pattern = re.compile(patternstr)
     matching = filter(lambda resource: re.search(pattern, resource.name),
@@ -80,13 +80,14 @@ def _id_from_name(resource_config, resources, typename):
     if not matching:
         raise exceptions.InvalidScenarioArgument(
             "{typename} with pattern '{pattern}' not found".format(
-            typename=typename.title(), pattern=pattern.pattern))
+                typename=typename.title(), pattern=pattern.pattern))
     elif len(matching) > 1:
         raise exceptions.InvalidScenarioArgument(
-            "{typename} with name '{pattern}' is ambiguous, "
-            "possible matches by id: {ids}".format(
-            typename=typename.title(), pattern=pattern.pattern,
-            ids=", ".join(map(operator.attrgetter("id"), matching))))
+            "{typename} with name '{pattern}' is ambiguous, possible matches "
+            "by id: {ids}".format(typename=typename.title(),
+                                  pattern=pattern.pattern,
+                                  ids=", ".join(map(operator.attrgetter("id"),
+                                                    matching))))
     return matching[0].id
 
 

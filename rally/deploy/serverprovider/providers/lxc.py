@@ -13,11 +13,12 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import netaddr
 import os
 import re
 import StringIO
 import time
+
+import netaddr
 
 from rally.deploy.serverprovider import provider
 from rally import exceptions

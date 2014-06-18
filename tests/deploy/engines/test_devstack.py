@@ -13,9 +13,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import uuid
+
 import jsonschema
 import mock
-import uuid
 
 from rally.deploy.engines import devstack
 from tests import test

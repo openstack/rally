@@ -16,8 +16,9 @@
 """Tests for db.task layer."""
 
 import json
-import mock
 import uuid
+
+import mock
 
 from rally import consts
 from rally import objects

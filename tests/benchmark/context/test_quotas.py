@@ -14,9 +14,10 @@
 #    under the License.
 
 import copy
+import random
+
 import jsonschema
 import mock
-import random
 
 from rally.benchmark.context import quotas
 from tests import test
@@ -74,10 +75,10 @@ class CinderQuotasTestCase(test.TestCase):
         pass
         # Currently, no method to delete quotas available in cinder client:
         # Will be added with https://review.openstack.org/#/c/74841/
-        #cinder_quotas = quotas.CinderQuotas(client_mock)
-        #tenant_id = mock.MagicMock()
-        #cinder_quotas.delete(tenant_id)
-        #client_mock.quotas.delete.assert_called_once_with(tenant_id)
+        # cinder_quotas = quotas.CinderQuotas(client_mock)
+        # tenant_id = mock.MagicMock()
+        # cinder_quotas.delete(tenant_id)
+        # client_mock.quotas.delete.assert_called_once_with(tenant_id)
 
 
 class NeutronQuotasTestCase(test.TestCase):
@@ -187,8 +188,8 @@ class QuotasTestCase(test.TestCase):
                               % ctx["config"]["quotas"][service][key])
 
                 # Test valid values
-                ctx["config"]["quotas"][service][key] = \
-                    random.randint(0, 1000000)
+                ctx["config"]["quotas"][service][key] = random.randint(0,
+                                                                       1000000)
                 try:
                     quotas.Quotas.validate(ctx["config"]["quotas"])
                 except jsonschema.ValidationError:

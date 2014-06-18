@@ -16,8 +16,9 @@ from rally.benchmark.scenarios import base
 
 
 class Authenticate(base.Scenario):
-    """This class should contain authentication mechanism for different
-    types of clients like Keystone.
+    """This class should contain authentication mechanism.
+
+    For different types of clients like Keystone.
     """
 
     @base.scenario()

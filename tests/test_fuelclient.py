@@ -13,11 +13,12 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import copy
+
+import mock
+
 from rally.deploy.fuel import fuelclient
 from tests import test
-
-import copy
-import mock
 
 
 class FuelNodeTestCase(test.TestCase):

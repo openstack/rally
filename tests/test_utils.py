@@ -16,10 +16,10 @@
 """Test for Rally utils."""
 
 from __future__ import print_function
-
-import mock
 import sys
 import time
+
+import mock
 
 from rally import exceptions
 from rally.openstack.common.gettextutils import _

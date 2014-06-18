@@ -19,9 +19,6 @@ from rally.benchmark.scenarios import utils as scenario_utils
 
 
 class CeilometerScenario(base.Scenario):
-    """This class should contain base operations for benchmarking Ceilometer,
-    most of them are GET/PUT/POST/DELETE Api calls.
-    """
     RESOURCE_NAME_PREFIX = "rally_ceilometer_"
 
     def _get_alarm_dict(self, **kwargs):
