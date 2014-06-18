@@ -1,0 +1,13 @@
+---
+  Dummy.dummy:
+    -
+      args:
+        sleep: 5
+      runner:
+        type: "constant_for_duration"
+        concurrency: 5
+        duration: 30
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1

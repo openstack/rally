@@ -1,0 +1,21 @@
+{
+    "Dummy.dummy": [
+        {
+            "args": {
+                "sleep": 5
+            },
+            "runner": {
+                "type": "periodic",
+                "times": 20,
+                "period": 3,
+                "timeout": 6
+            },
+            "context": {
+                "users": {
+                    "tenants": 1,
+                    "users_per_tenant": 1
+                }
+            }
+        }
+    ]
+}

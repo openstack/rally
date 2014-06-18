@@ -1,0 +1,21 @@
+{
+    "Dummy.dummy": [
+        {
+            "args": {
+                "sleep": 10
+            },
+            "runner": {
+                "type": "constant",
+                "times": 20,
+                "concurrency": 5,
+                "timeout": 5
+            },
+            "context": {
+                "users": {
+                    "tenants": 1,
+                    "users_per_tenant": 1
+                }
+            }
+        }
+    ]
+}
