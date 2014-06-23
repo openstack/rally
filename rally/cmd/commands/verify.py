@@ -29,6 +29,7 @@ from rally import objects
 from rally.openstack.common import cliutils as common_cliutils
 from rally.openstack.common.gettextutils import _
 from rally.orchestrator import api
+from rally.verification.verifiers.tempest import json2html
 
 
 class VerifyCommands(object):
@@ -71,13 +72,26 @@ class VerifyCommands(object):
 
     @cliutils.args('--uuid', type=str, dest='verification_uuid',
                    help='UUID of the verification')
-    @cliutils.args('--pretty', type=str, help=('pretty print (pprint) '
-                                               'or json print (json)'))
-    def results(self, verification_uuid, pretty=False):
+    @cliutils.args('--html', action='store_true', dest='output_html',
+                   help=('Save results in html format to specified file'))
+    @cliutils.args('--json', action='store_true', dest='output_json',
+                   help=('Save results in json format to specified file'))
+    @cliutils.args('--pprint', action='store_true', dest='output_pprint',
+                   help=('Save results in pprint format to specified file'))
+    @cliutils.args('--output-file', type=str, required=False,
+                   dest='output_file',
+                   help='If specified, output will be saved to given file')
+    def results(self, verification_uuid, output_file=None, output_html=None,
+                output_json=None, output_pprint=None):
         """Print raw results of verification.
 
         :param verification_uuid: Verification UUID
-        :param pretty: Pretty print (pprint) or not (json)
+        :param output_file: If specified, output will be saved to given file
+        :param output_html: Save results in html format to the specified file
+        :param output_json: Save results in json format to the specified file
+                            (Default)
+        :param output_pprint: Save results in pprint format to the
+                              specified file
         """
         try:
             results = db.verification_result_get(verification_uuid)['data']
@@ -85,14 +99,23 @@ class VerifyCommands(object):
             print(six.text_type(e))
             return 1
 
-        if not pretty or pretty == 'json':
-            print(json.dumps(results))
-        elif pretty == 'pprint':
-            print()
-            pprint.pprint(results)
-            print()
+        result = ''
+        if len(filter(lambda x: bool(x), [output_json, output_pprint,
+                                          output_html])) > 1:
+            print("Please specify only on output format")
+            return 1
+        elif output_pprint:
+            result = pprint.pformat(results)
+        elif output_html:
+            result = json2html.main(results)
         else:
-            print(_("Wrong value for --pretty=%s") % pretty)
+            result = json.dumps(results)
+
+        if output_file:
+            with open(output_file, 'wb') as f:
+                f.write(result)
+        else:
+            print(result)
 
     @cliutils.args('--uuid', dest='verification_uuid', type=str,
                    required=False,
@@ -119,9 +142,7 @@ class VerifyCommands(object):
         print ("Total results of verification:\n")
         total_fields = ['UUID', 'Deployment UUID', 'Set name', 'Tests',
                         'Failures', 'Created at', 'Status']
-        common_cliutils.print_list([verification], fields=total_fields,
-                                   sortby_index=total_fields.index(
-                                       'Created at'))
+        common_cliutils.print_list([verification], fields=total_fields)
 
         print ("\nTests:\n")
         fields = ['name', 'time', 'status']
