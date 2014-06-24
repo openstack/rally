@@ -17,19 +17,15 @@ SQLAlchemy implementation for DB.API
 """
 
 from oslo.config import cfg
+from oslo.db.sqlalchemy import session as db_session
 import sqlalchemy as sa
 
 from rally.db.sqlalchemy import models
 from rally import exceptions
-from rally.openstack.common.db.sqlalchemy import session as db_session
 from rally.openstack.common.gettextutils import _
 
 
 CONF = cfg.CONF
-
-CONF.import_opt('connection',
-                'rally.openstack.common.db.options',
-                group='database')
 
 _FACADE = None
 
@@ -38,8 +34,7 @@ def _create_facade_lazily():
     global _FACADE
 
     if _FACADE is None:
-        _FACADE = db_session.EngineFacade.from_config(
-            CONF.database.connection, CONF)
+        _FACADE = db_session.EngineFacade.from_config(CONF)
 
     return _FACADE
 

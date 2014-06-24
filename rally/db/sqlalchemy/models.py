@@ -18,13 +18,13 @@ SQLAlchemy models for rally data.
 
 import uuid
 
+from oslo.db.sqlalchemy import models
 import sqlalchemy as sa
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import types
 
 from rally import consts
 from rally.db.sqlalchemy import types as sa_types
-from rally.openstack.common.db.sqlalchemy import models
 
 
 BASE = declarative_base()
