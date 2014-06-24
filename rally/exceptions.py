@@ -255,3 +255,11 @@ class ImageCleanUpException(RallyException):
 class IncompatiblePythonVersion(RallyException):
     msg_fmt = _("Incompatible python version found '%(version)s', "
                 "required at least python>=2.7.x")
+
+
+class WorkerNotFound(NotFoundException):
+    msg_fmt = _("Worker %(worker)s could not be found")
+
+
+class WorkerAlreadyRegistered(RallyException):
+    msg_fmt = _("Worker %(worker)s already registered")

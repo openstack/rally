@@ -17,12 +17,15 @@ SQLAlchemy implementation for DB.API
 """
 
 from oslo.config import cfg
+from oslo.db import exception as db_exc
 from oslo.db.sqlalchemy import session as db_session
 import sqlalchemy as sa
+from sqlalchemy.orm.exc import NoResultFound
 
 from rally.db.sqlalchemy import models
 from rally import exceptions
 from rally.openstack.common.gettextutils import _
+from rally.openstack.common import timeutils
 
 
 CONF = cfg.CONF
@@ -281,3 +284,34 @@ class Connection(object):
             raise exceptions.NotFoundException(
                 "No results for following UUID '%s'." % verification_uuid)
         return result
+
+    def register_worker(self, values):
+        try:
+            worker = models.Worker()
+            worker.update(values)
+            worker.update({'updated_at': timeutils.utcnow()})
+            worker.save()
+            return worker
+        except db_exc.DBDuplicateEntry:
+            raise exceptions.WorkerAlreadyRegistered(
+                    worker=values['hostname'])
+
+    def get_worker(self, hostname):
+        try:
+            return (self.model_query(models.Worker).
+                    filter_by(hostname=hostname).one())
+        except NoResultFound:
+            raise exceptions.WorkerNotFound(worker=hostname)
+
+    def unregister_worker(self, hostname):
+        count = (self.model_query(models.Worker).
+                 filter_by(hostname=hostname).delete())
+        if count == 0:
+            raise exceptions.WorkerNotFound(worker=hostname)
+
+    def update_worker(self, hostname):
+        count = (self.model_query(models.Worker).
+                 filter_by(hostname=hostname).
+                 update({'updated_at': timeutils.utcnow()}))
+        if count == 0:
+            raise exceptions.WorkerNotFound(worker=hostname)

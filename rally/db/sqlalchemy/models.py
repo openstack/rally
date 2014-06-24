@@ -21,6 +21,7 @@ import uuid
 from oslo.db.sqlalchemy import models
 import sqlalchemy as sa
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import schema
 from sqlalchemy import types
 
 from rally import consts
@@ -218,6 +219,15 @@ class VerificationResult(BASE, RallyBase):
                                   sa.ForeignKey('verifications.uuid'))
 
     data = sa.Column(sa_types.BigMutableJSONEncodedDict, nullable=False)
+
+
+class Worker(BASE, RallyBase):
+    __tablename__ = "workers"
+    __table_args__ = (
+        schema.UniqueConstraint('hostname', name='uniq_worker@hostname'),
+    )
+    id = sa.Column(sa.Integer, primary_key=True, autoincrement=True)
+    hostname = sa.Column(sa.String(255))
 
 
 def create_db():

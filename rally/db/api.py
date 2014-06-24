@@ -317,3 +317,45 @@ def verification_result_create(verification_uuid, values):
     :returns: TaskResult instance appended.
     """
     return IMPL.verification_result_create(verification_uuid, values)
+
+
+def register_worker(values):
+    """Register a new worker service at the specified hostname.
+
+    :param values: A dict of values which must contain the following:
+                   {
+                    'hostname': the unique hostname which identifies
+                                this worker service.
+                   }
+    :returns: A worker.
+    :raises: WorkerAlreadyRegistered
+    """
+    return IMPL.register_worker(values)
+
+
+def get_worker(hostname):
+    """Retrieve a worker service record from the database.
+
+    :param hostname: The hostname of the worker service.
+    :returns: A worker.
+    :raises: WorkerNotFound
+    """
+    return IMPL.get_worker(hostname)
+
+
+def unregister_worker(hostname):
+    """Unregister this worker with the service registry.
+
+    :param hostname: The hostname of the worker service.
+    :raises: WorkerNotFound
+    """
+    IMPL.unregister_worker(hostname)
+
+
+def update_worker(hostname):
+    """Mark a worker as active by updating its 'updated_at' property.
+
+    :param hostname: The hostname of this worker service.
+    :raises: WorkerNotFound
+    """
+    IMPL.update_worker(hostname)

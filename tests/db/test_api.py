@@ -418,3 +418,40 @@ class VerificationTestCase(test.DBTestCase):
         self.assertEqual(verification['time'], db_verification['time'])
         self.assertEqual(verification['errors'], db_verification['errors'])
         self.assertEqual(verification['failures'], db_verification['failures'])
+
+
+class WorkerTestCase(test.DBTestCase):
+    def setUp(self):
+        super(WorkerTestCase, self).setUp()
+        self.worker = db.register_worker({'hostname': 'test'})
+
+    def test_register_worker_duplicate(self):
+        self.assertRaises(exceptions.WorkerAlreadyRegistered,
+                          db.register_worker, {'hostname': 'test'})
+
+    def test_get_worker(self):
+        worker = db.get_worker('test')
+        self.assertEqual(self.worker['id'], worker['id'])
+        self.assertEqual(self.worker['hostname'], worker['hostname'])
+
+    def test_get_worker_not_found(self):
+        self.assertRaises(exceptions.WorkerNotFound,
+                          db.get_worker, 'notfound')
+
+    def test_unregister_worker(self):
+        db.unregister_worker('test')
+        self.assertRaises(exceptions.WorkerNotFound,
+                          db.get_worker, 'test')
+
+    def test_unregister_worker_not_found(self):
+        self.assertRaises(exceptions.WorkerNotFound,
+                          db.unregister_worker, 'fake')
+
+    def test_update_worker(self):
+        db.update_worker('test')
+        worker = db.get_worker('test')
+        self.assertNotEqual(self.worker['updated_at'], worker['updated_at'])
+
+    def test_update_worker_not_found(self):
+        self.assertRaises(exceptions.WorkerNotFound,
+                          db.update_worker, 'fake')
