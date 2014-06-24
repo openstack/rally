@@ -269,3 +269,55 @@
         users:
           tenants: 2
           users_per_tenant: 3
+
+  Authenticate.validate_cinder:
+    -
+      args:
+        repetitions: 2
+      runner:
+        type: "constant"
+        times: 10
+        concurrency: 5
+      context:
+        users:
+          tenants: 3
+          users_per_tenant: 5
+
+  Authenticate.validate_glance:
+    -
+      args:
+        repetitions: 2
+      runner:
+        type: "constant"
+        times: 10
+        concurrency: 5
+      context:
+        users:
+          tenants: 3
+          users_per_tenant: 5
+
+  Authenticate.validate_heat:
+    -
+      args:
+        repetitions: 2
+      runner:
+        type: "constant"
+        times: 10
+        concurrency: 5
+      context:
+        users:
+          tenants: 3
+          users_per_tenant: 5
+
+  Authenticate.validate_nova:
+    -
+      args:
+        repetitions: 2
+      runner:
+        type: "constant"
+        times: 10
+        concurrency: 5
+      context:
+        users:
+          tenants: 3
+          users_per_tenant: 5
