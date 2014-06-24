@@ -34,7 +34,7 @@ import six
 
 _AVAILABLE_LANGUAGES = {}
 
-# FIXME(dhellmann): Remove this when moving to rally.i18n.
+# FIXME(dhellmann): Remove this when moving to oslo.i18n.
 USE_LAZY = False
 
 
@@ -116,7 +116,7 @@ class TranslatorFactory(object):
 
 
 # NOTE(dhellmann): When this module moves out of the incubator into
-# rally.i18n, these global variables can be moved to an integration
+# oslo.i18n, these global variables can be moved to an integration
 # module within each application.
 
 # Create the global translation functions.
@@ -147,7 +147,7 @@ def enable_lazy():
     your project is importing _ directly instead of using the
     gettextutils.install() way of importing the _ function.
     """
-    # FIXME(dhellmann): This function will be removed in rally.i18n,
+    # FIXME(dhellmann): This function will be removed in oslo.i18n,
     # because the TranslatorFactory makes it superfluous.
     global _, _LI, _LW, _LE, _LC, USE_LAZY
     tf = TranslatorFactory('rally', lazy=True)
@@ -373,8 +373,8 @@ def get_available_languages(domain):
                'zh_Hant_HK': 'zh_HK',
                'zh_Hant': 'zh_TW',
                'fil': 'tl_PH'}
-    for (locale, alias) in six.iteritems(aliases):
-        if locale in language_list and alias not in language_list:
+    for (locale_, alias) in six.iteritems(aliases):
+        if locale_ in language_list and alias not in language_list:
             language_list.append(alias)
 
     _AVAILABLE_LANGUAGES[domain] = language_list
