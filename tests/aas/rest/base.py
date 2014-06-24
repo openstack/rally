@@ -19,14 +19,14 @@
 
 import pecan
 import pecan.testing
-from six.moves.urllib import parse as urlparse
+from requests import utils
 
 from tests import test
 
 PATH_PREFIX = '/v1'
 
 
-class FunctionalTest(test.TestCase):
+class PecanControllerTest(test.TestCase):
     """Used for functional tests of Pecan controllers.
 
     Use this class where you need to test your literal application
@@ -36,7 +36,7 @@ class FunctionalTest(test.TestCase):
     SOURCE_DATA = {'test_source': {'somekey': '666'}}
 
     def setUp(self):
-        super(FunctionalTest, self).setUp()
+        super(PecanControllerTest, self).setUp()
         self.app = self._make_app()
 
         def reset_pecan():
@@ -76,7 +76,6 @@ class FunctionalTest(test.TestCase):
         :param path_prefix: prefix of the url path
         """
         full_path = path_prefix + path
-        print('%s: %s %s' % (method.upper(), full_path, params))
         response = getattr(self.app, "%s_json" % method)(
             str(full_path),
             params=params,
@@ -85,7 +84,6 @@ class FunctionalTest(test.TestCase):
             extra_environ=extra_environ,
             expect_errors=expect_errors
         )
-        print('GOT:%s' % response)
         return response
 
     def put_json(self, path, params, expect_errors=False, headers=None,
@@ -148,13 +146,14 @@ class FunctionalTest(test.TestCase):
                                   headers=headers, extra_environ=extra_environ,
                                   status=status, method="patch")
 
-    def delete(self, path, expect_errors=False, headers=None,
-               extra_environ=None, status=None, path_prefix=PATH_PREFIX):
+    def delete_json(self, path, params, expect_errors=False, headers=None,
+                    extra_environ=None, status=None, path_prefix=PATH_PREFIX):
         """Simulate a delete request.
 
         Sends simulated HTTP DELETE request to Pecan test app.
 
         :param path: url path of target service
+        :param params: content for wsgi.input of request
         :param expect_errors: Boolean value; whether an error is expected based
                               on request
         :param headers: a dictionary of headers to send along with the request
@@ -163,15 +162,10 @@ class FunctionalTest(test.TestCase):
         :param status: expected status code of response
         :param path_prefix: prefix of the url path
         """
-        full_path = path_prefix + path
-        print('DELETE: %s' % (full_path))
-        response = self.app.delete(full_path,
-                                   headers=headers,
-                                   status=status,
-                                   extra_environ=extra_environ,
-                                   expect_errors=expect_errors)
-        print('GOT:%s' % response)
-        return response
+        return self._request_json(path=path, params=params,
+                                  expect_errors=expect_errors,
+                                  headers=headers, extra_environ=extra_environ,
+                                  status=status, method="delete")
 
     def get_json(self, path, expect_errors=False, headers=None,
                  extra_environ=None, q=[], path_prefix=PATH_PREFIX, **params):
@@ -202,8 +196,6 @@ class FunctionalTest(test.TestCase):
         all_params.update(params)
         if q:
             all_params.update(query_params)
-        print('GET: %(path)s %(params)r' % {'path': full_path,
-                                            'params': all_params})
         response = self.app.get(full_path,
                                 params=all_params,
                                 headers=headers,
@@ -211,20 +203,19 @@ class FunctionalTest(test.TestCase):
                                 expect_errors=expect_errors)
         if not expect_errors:
             response = response.json
-        print('GOT:%s' % response)
         return response
 
     def validate_link(self, link, bookmark=False):
         """Check if the given link can get correct data."""
         # removes the scheme and net location parts of the link
-        url_parts = list(urlparse.urlparse(link))
+        url_parts = list(utils.urlparse.urlparse(link))
         url_parts[0] = url_parts[1] = ''
 
         # bookmark link should not have the version in the URL
         if bookmark and url_parts[2].startswith(PATH_PREFIX):
             return False
 
-        full_path = urlparse.urlunparse(url_parts)
+        full_path = utils.urlparse.urlunparse(url_parts)
         try:
             self.get_json(full_path, path_prefix='')
             return True
