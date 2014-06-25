@@ -103,3 +103,21 @@ class NeutronScenario(base.Scenario):
     def _list_routers(self):
         """Returns user routers list."""
         return self.clients("neutron").list_routers()["routers"]
+
+    @scenario_utils.atomic_action_timer('neutron.create_port')
+    def _create_port(self, network, port_create_args):
+        """Create neutron port.
+
+        :param network: neutron network dict
+        :param port_create_args: POST /v2.0/ports request options
+        :returns: neutron port dict
+        """
+        port_create_args["network_id"] = network["network"]["id"]
+        port_create_args.setdefault(
+            "name", self._generate_random_name("rally_port_"))
+        return self.clients("neutron").create_port({"port": port_create_args})
+
+    @scenario_utils.atomic_action_timer('neutron.list_ports')
+    def _list_ports(self):
+        """Return user ports list."""
+        return self.clients("neutron").list_ports()["ports"]

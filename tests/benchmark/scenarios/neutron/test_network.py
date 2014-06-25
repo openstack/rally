@@ -164,3 +164,44 @@ class NeutronNetworksTestCase(test.TestCase):
             ] * subnets_per_network)
 
         mock_list.assert_called_once_with()
+
+    @mock.patch(NEUTRON_NETWORKS + "._generate_random_name")
+    @mock.patch(NEUTRON_NETWORKS + "._list_ports")
+    @mock.patch(NEUTRON_NETWORKS + "._create_port")
+    @mock.patch(NEUTRON_NETWORKS + "._create_network")
+    def test_create_and_list_ports(self,
+                                   mock_create_network,
+                                   mock_create_port,
+                                   mock_list,
+                                   mock_random_name):
+        scenario = network.NeutronNetworks()
+        mock_random_name.return_value = "random-name"
+        net = {"network": {"id": "fake-id"}}
+        mock_create_network.return_value = net
+        ports_per_network = 10
+
+        self.assertRaises(TypeError, scenario.create_and_list_ports)
+
+        mock_create_network.reset_mock()
+
+        # Defaults
+        scenario.create_and_list_ports(ports_per_network=ports_per_network)
+        mock_create_network.assert_called_once_with({})
+        self.assertEqual(mock_create_port.mock_calls,
+                         [mock.call(net, {})] * ports_per_network)
+        mock_list.assert_called_once_with()
+
+        mock_create_network.reset_mock()
+        mock_create_port.reset_mock()
+        mock_list.reset_mock()
+
+        # Custom options
+        scenario.create_and_list_ports(
+            network_create_args={"name": "given-name"},
+            port_create_args={"allocation_pools": []},
+            ports_per_network=ports_per_network)
+        mock_create_network.assert_called_once_with({"name": "given-name"})
+        self.assertEqual(
+            mock_create_port.mock_calls,
+            [mock.call(net, {"allocation_pools": []})] * ports_per_network)
+        mock_list.assert_called_once_with()

@@ -187,3 +187,45 @@ class NeutronScenarioTestCase(test.TestCase):
 
         # All CIDRs must be valid
         map(netaddr.IPNetwork, cidrs1 + cidrs2)
+
+    @mock.patch(NEUTRON_UTILS + "NeutronScenario._generate_random_name")
+    @mock.patch(NEUTRON_UTILS + "NeutronScenario.clients")
+    def test_create_port(self, mock_clients, mock_rand_name):
+        scenario = utils.NeutronScenario()
+
+        net_id = "network-id"
+        net = {"network": {"id": net_id}}
+        rand_name = "random-name"
+        mock_rand_name.return_value = rand_name
+        expected_port_args = {
+            "port": {
+                "network_id": net_id,
+                "name": rand_name
+            }
+        }
+
+        # Defaults
+        port_create_args = {}
+        scenario._create_port(net, port_create_args)
+        mock_clients("neutron"
+                     ).create_port.assert_called_once_with(expected_port_args)
+        self._test_atomic_action_timer(scenario.atomic_actions(),
+                                       "neutron.create_port")
+
+        mock_clients("neutron").create_port.reset_mock()
+
+        # Custom options
+        port_args = {"admin_state_up": True}
+        expected_port_args["port"].update(port_args)
+        scenario._create_port(net, port_args)
+        mock_clients("neutron"
+                     ).create_port.assert_called_once_with(expected_port_args)
+
+    @mock.patch(NEUTRON_UTILS + "NeutronScenario.clients")
+    def test_list_ports(self, mock_clients):
+        scenario = utils.NeutronScenario()
+        ports = [{"name": "port1"}, {"name": "port2"}]
+        mock_clients("neutron").list_ports.return_value = {"ports": ports}
+        self.assertEqual(ports, scenario._list_ports())
+        self._test_atomic_action_timer(scenario.atomic_actions(),
+                                       "neutron.list_ports")

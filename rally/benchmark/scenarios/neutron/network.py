@@ -93,3 +93,21 @@ class NeutronNetworks(utils.NeutronScenario):
                 {"subnet_id": subnet["subnet"]["id"]})
 
         self._list_routers()
+
+    @base.scenario(context={"cleanup": ["neutron"]})
+    @validation.add(validation.required_parameters(["ports_per_network"]))
+    def create_and_list_ports(self,
+                              network_create_args=None,
+                              port_create_args=None,
+                              ports_per_network=None):
+        """Test creating and listing a given number of ports.
+
+        :param network_create_args: dict, POST /v2.0/networks request options
+        :param port_create_args: dict, POST /v2.0/ports request options
+        :param ports_per_network: int, number of ports for one network
+        """
+        network = self._create_network(network_create_args or {})
+        for i in range(ports_per_network):
+            self._create_port(network, port_create_args or {})
+
+        self._list_ports()
