@@ -47,6 +47,20 @@ class GlanceImages(utils.GlanceScenario, nova_utils.NovaScenario):
         self._list_images()
 
     @base.scenario(context={"cleanup": ["glance"]})
+    def list_images(self):
+        """Test the glance image-list command.
+
+        This simple scenario tests the glance image-list command by listing
+        all the images.
+
+        Suppose if we have 2 users in context and each has 2 images
+        uploaded for them we will be able to test the performance of
+        glance image-list command in this case.
+        """
+
+        self._list_images()
+
+    @base.scenario(context={"cleanup": ["glance"]})
     def create_and_delete_image(self, container_format,
                                 image_location, disk_format, **kwargs):
         """Test adds and then deletes image."""
