@@ -2,8 +2,8 @@
   NeutronNetworks.create_and_list_ports:
     -
       args:
-        network_create_args:
-        port_create_args:
+        network_create_args: {}
+        port_create_args: {}
         ports_per_network: 10
       runner:
         type: "constant"

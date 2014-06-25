@@ -8,8 +8,7 @@
             name: "cirros-0.3.1-x86_64-uec"
         script: "doc/samples/support/instance_dd_test.sh"
         interpreter: "/bin/sh"
-        username: "ubuntu"
-        port: "22"
+        username: "cirros"
       runner:
         type: "constant"
         times: 10

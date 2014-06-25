@@ -26,16 +26,15 @@ from tests import test
 
 
 class TaskSampleTestCase(test.TestCase):
+    samples_path = os.path.join(
+        os.path.dirname(__file__), "..", "..", "doc", "samples", "tasks")
 
     @mock.patch("rally.benchmark.engine.BenchmarkEngine"
                 "._validate_config_semantic")
     def test_schema_is_valid(self, mock_semantic):
-        samples_path = os.path.join(os.path.dirname(__file__), "..", "..",
-                                    "doc", "samples", "tasks")
-
         scenarios = set()
 
-        for dirname, dirnames, filenames in os.walk(samples_path):
+        for dirname, dirnames, filenames in os.walk(self.samples_path):
             for filename in filenames:
                 full_path = os.path.join(dirname, filename)
 
@@ -62,3 +61,46 @@ class TaskSampleTestCase(test.TestCase):
         missing = set(base.Scenario.list_benchmark_scenarios()) - scenarios
         self.assertEqual(missing, set([]),
                          "These scenarios don't have samples: %s" % missing)
+
+    def test_task_config_pair_existance(self):
+        inexistent_paths = []
+
+        for dirname, dirnames, filenames in os.walk(self.samples_path):
+            # iterate over unique config names
+            for sample_name in set(
+                    f[:-5] for f in filenames
+                    if f.endswith(".json") or f.endswith(".yaml")):
+
+                partial_path = os.path.join(dirname, sample_name)
+                yaml_path = partial_path + ".yaml"
+                json_path = partial_path + ".json"
+
+                if not os.path.exists(yaml_path):
+                    inexistent_paths.append(yaml_path)
+                elif not os.path.exists(json_path):
+                    inexistent_paths.append(json_path)
+
+        if inexistent_paths:
+            self.fail("Sample task configs are missing:\n%r" % inexistent_paths)
+
+    def test_task_config_pairs_equality(self):
+        for dirname, dirnames, filenames in os.walk(self.samples_path):
+            # iterate over unique config names
+            for sample_name in set(
+                    f[:-5] for f in filenames
+                    if f.endswith(".json") or f.endswith(".yaml")):
+
+                partial_path = os.path.join(dirname, sample_name)
+                yaml_path = partial_path + ".yaml"
+                json_path = partial_path + ".json"
+
+                if os.path.exists(yaml_path) and os.path.exists(json_path):
+                    with open(json_path) as json_file:
+                        with open(yaml_path) as yaml_file:
+                            json_config = yaml.safe_load(json_file.read())
+                            yaml_config = yaml.safe_load(yaml_file.read())
+                            self.assertEqual(
+                                json_config,
+                                yaml_config,
+                                "Sample task configs are not equal:\n%s\n%s" %
+                                (yaml_path, json_path))
