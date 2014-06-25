@@ -38,6 +38,7 @@ class TempestLogWrappersTestCase(test.TestCase):
     def test_launch_without_specified_log_file(self, mock_tmp):
         mock_tmp.NamedTemporaryFile().name = "tmp_file"
         target_func = mock.MagicMock()
+        target_func.__name__ = "target_func"
         func = utils.tempest_log_wrapper(target_func)
 
         func(self.scenario)
@@ -48,6 +49,7 @@ class TempestLogWrappersTestCase(test.TestCase):
     @mock.patch(TS + ".utils.tempfile")
     def test_launch_with_specified_log_file(self, mock_tmp):
         target_func = mock.MagicMock()
+        target_func.__name__ = "target_func"
         func = utils.tempest_log_wrapper(target_func)
 
         func(self.scenario, log_file='log_file')
