@@ -18,7 +18,7 @@ from __future__ import print_function
 from tests.aas.rest import base
 
 
-class TestRoot(base.FunctionalTest):
+class TestRoot(base.PecanControllerTest):
 
     def test_get_root(self):
         data = self.get_json('/', path_prefix='')
@@ -27,7 +27,7 @@ class TestRoot(base.FunctionalTest):
         [self.assertTrue(f) for f in data.keys()]
 
 
-class TestV1Root(base.FunctionalTest):
+class TestV1Root(base.PecanControllerTest):
 
     def test_get_v1_root(self):
         data = self.get_json('/')
