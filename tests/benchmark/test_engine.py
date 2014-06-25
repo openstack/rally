@@ -173,6 +173,19 @@ class BenchmarkEngineTestCase(test.TestCase):
                           eng._validate_config_semantic_helper, "a", "u", "n",
                           "p", mock.MagicMock(), {})
 
+    @mock.patch("rally.benchmark.engine.base_scenario.Scenario")
+    @mock.patch(
+        "rally.benchmark.engine.base_ctx.ContextManager.validate_semantic")
+    def test__validate_config_semanitc_helper_invalid_context(self,
+                                                              mock_validate_sm,
+                                                              mock_scenario):
+        mock_validate_sm.side_effect = exceptions.InvalidScenarioArgument()
+        eng = engine.BenchmarkEngine(mock.MagicMock(), mock.MagicMock())
+
+        self.assertRaises(exceptions.InvalidBenchmarkConfig,
+                          eng._validate_config_semantic_helper, "a", "u", "n",
+                          "p", mock.MagicMock(), {})
+
     @mock.patch("rally.benchmark.engine.osclients.Clients")
     @mock.patch("rally.benchmark.engine.users_ctx")
     @mock.patch("rally.benchmark.engine.BenchmarkEngine"
