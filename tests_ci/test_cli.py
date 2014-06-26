@@ -14,14 +14,15 @@
 #    under the License.
 
 import ConfigParser
+import json
 import os
+import pwd
 import shutil
 import subprocess
 import tempfile
 import unittest
 
 import mock
-
 
 """Test rally command line interface.
 
@@ -31,7 +32,6 @@ To start tests manually please use
  $ tox -ecli
 
 """
-
 
 TEST_ENV = {
             "OS_USERNAME": "admin",
@@ -54,6 +54,18 @@ class RallyCmdError(Exception):
         return "Code: %d Output: %s\n" % (self.code, self.output)
 
 
+class TaskConfig(object):
+
+    def __init__(self, config):
+        config_file = tempfile.NamedTemporaryFile(delete=False)
+        config_file.write(json.dumps(config))
+        config_file.close()
+        self.filename = config_file.name
+
+    def __del__(self):
+        os.unlink(self.filename)
+
+
 class Rally(object):
     """Create and represent separate rally installation.
 
@@ -66,26 +78,35 @@ class Rally(object):
     """
 
     def __init__(self):
+        # NOTE(sskripnick): we shoud change home dir to avoid races
+        # and do not touch any user files in ~/.rally
+        os.environ["HOME"] = pwd.getpwuid(os.getuid()).pw_dir
+        subprocess.call("rally deployment config > /tmp/.rd.json", shell=True)
         self.tmp_dir = tempfile.mkdtemp()
-        config_filename = os.path.join(self.tmp_dir, 'conf')
+        os.environ["HOME"] = self.tmp_dir
+        config_filename = os.path.join(self.tmp_dir, "conf")
         config = ConfigParser.RawConfigParser()
-        config.add_section('database')
-        config.set('database', 'connection', 'sqlite:///%s/db' % self.tmp_dir)
-        with open(config_filename, 'wb') as conf:
+        config.add_section("database")
+        config.set("database", "connection", "sqlite:///%s/db" % self.tmp_dir)
+        with open(config_filename, "wb") as conf:
             config.write(conf)
-        self.args = ['rally', '-d', '-v', '--config-file', config_filename]
-        subprocess.call(['rally-manage', '--config-file', config_filename,
-                         'db', 'recreate'])
+        self.args = ["rally", "--config-file", config_filename]
+        subprocess.call(["rally-manage", "--config-file", config_filename,
+                         "db", "recreate"])
+        self("deployment create --file /tmp/.rd.json --name MAIN")
 
     def __del__(self):
         shutil.rmtree(self.tmp_dir)
 
-    def __call__(self, cmd):
+    def __call__(self, cmd, getjson=False):
         if not isinstance(cmd, list):
             cmd = cmd.split(" ")
         try:
-            return subprocess.check_output(self.args + cmd,
-                                           stderr=subprocess.STDOUT)
+            output = subprocess.check_output(self.args + cmd,
+                                             stderr=subprocess.STDOUT)
+            if getjson:
+                return json.loads(output)
+            return output
         except subprocess.CalledProcessError as e:
             raise RallyCmdError(e.returncode, e.output)
 
@@ -94,7 +115,54 @@ class DeploymentTestCase(unittest.TestCase):
 
     def test_create_fromenv_list_endpoint(self):
         rally = Rally()
-        with mock.patch.dict('os.environ', TEST_ENV):
+        with mock.patch.dict("os.environ", TEST_ENV):
             rally("deployment create --name t_create --fromenv")
-        self.assertIn('t_create', rally("deployment list"))
-        self.assertIn(TEST_ENV['OS_AUTH_URL'], rally("deployment endpoint"))
+        self.assertIn("t_create", rally("deployment list"))
+        self.assertIn(TEST_ENV["OS_AUTH_URL"], rally("deployment endpoint"))
+
+
+class SLATestCase(unittest.TestCase):
+
+    def _get_sample_task_config(self, max_seconds_per_iteration=4,
+                                max_failure_percent=0):
+        return {
+            "KeystoneBasic.create_and_list_users": [
+                {
+                    "args": {
+                        "name_length": 10
+                    },
+                    "runner": {
+                        "type": "constant",
+                        "times": 5,
+                        "concurrency": 5
+                    },
+                    "sla": {
+                        "max_seconds_per_iteration": max_seconds_per_iteration,
+                        "max_failure_percent": max_failure_percent,
+                    }
+                }
+            ]
+        }
+
+    def test_sla_fail(self):
+        rally = Rally()
+        cfg = self._get_sample_task_config(max_seconds_per_iteration=0.001)
+        config = TaskConfig(cfg)
+        rally("task start --task %s" % config.filename)
+        self.assertRaises(RallyCmdError, rally, "task sla_check")
+
+    def test_sla_success(self):
+        rally = Rally()
+        config = TaskConfig(self._get_sample_task_config())
+        rally("task start --task %s" % config.filename)
+        rally("task sla_check")
+        expected = [
+                {"benchmark": "KeystoneBasic.create_and_list_users",
+                 "criterion": "max_seconds_per_iteration",
+                 "pos": 0, "success": True},
+                {"benchmark": "KeystoneBasic.create_and_list_users",
+                 "criterion": "max_failure_percent",
+                 "pos": 0, "success": True},
+        ]
+        data = rally("task sla_check --json", getjson=True)
+        self.assertEqual(expected, data)
