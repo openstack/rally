@@ -2,7 +2,7 @@
   NeutronNetworks.create_and_list_networks:
     -
       args:
-        network_create_args:
+        network_create_args: {}
       runner:
         type: "constant"
         times: 100
