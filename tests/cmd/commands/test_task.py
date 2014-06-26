@@ -164,3 +164,17 @@ class TaskCommandsTestCase(test.TestCase):
         expected_calls = [mock.call(task_uuid, force=force) for task_uuid
                           in task_uuids]
         self.assertTrue(mock_api.delete_task.mock_calls == expected_calls)
+
+    @mock.patch('rally.cmd.commands.task.common_cliutils.print_list')
+    @mock.patch("rally.cmd.commands.task.base_sla")
+    @mock.patch("rally.cmd.commands.task.db")
+    def test_sla_check(self, mock_db, mock_sla, mock_print_list):
+        fake_rows = [
+                {'success': True},
+                {'success': False},
+        ]
+        mock_db.task_get_detailed.return_value = 'fake_task'
+        mock_sla.SLA.check_all.return_value = fake_rows
+        retval = self.task.sla_check(task_id='fake_task_id')
+        self.assertEqual(1, retval)
+        mock_sla.SLA.check_all.assert_called_once_with('fake_task')

@@ -18,6 +18,9 @@ General structure of configuration file:
             "context": {
                 ...
             }
+            "sla": {
+                ...
+            }
         }
     }
 
@@ -35,6 +38,12 @@ Section "context" defines different types of environments in which task can
 be launched. Look at `doc/samples/tasks/context
 <https://github.com/stackforge/rally/tree/master/doc/samples/tasks/context>`_
 for samples.
+
+Section "sla" defines details for determining compliance with contracted values
+such as maximum error rate or minimum response time.
+Look at `doc/samples/tasks/sla
+<https://github.com/stackforge/rally/tree/master/doc/samples/tasks/sla>`_ for
+samples.
 
 See a `detailed description of benchmark scenarios, contexts & runners
 <https://github.com/stackforge/rally/tree/master/doc/source/benchmark.rst>`_.

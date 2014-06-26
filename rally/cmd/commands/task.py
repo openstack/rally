@@ -26,6 +26,7 @@ import yaml
 
 from rally.benchmark.processing import plot
 from rally.benchmark.processing import utils
+from rally.benchmark.sla import base as base_sla
 from rally.cmd import cliutils
 from rally.cmd.commands import use
 from rally.cmd import envutils
@@ -351,3 +352,27 @@ class TaskCommands(object):
                 api.delete_task(tid, force=force)
         else:
             api.delete_task(task_id, force=force)
+
+    @cliutils.args("--uuid", type=str, dest="task_id", help="uuid of task")
+    @cliutils.args("--json", dest="tojson",
+                   action="store_true",
+                   help="output in json format")
+    @envutils.with_default_task_id
+    def sla_check(self, task_id=None, tojson=False):
+        """Check if task was succeded according to SLA.
+
+        :param task_id: Task uuid.
+        :returns: Number of failed criteria.
+        """
+        task = db.task_get_detailed(task_id)
+        failed_criteria = 0
+        rows = []
+        for row in base_sla.SLA.check_all(task):
+            failed_criteria += 0 if row['success'] else 1
+            rows.append(row if tojson else rutils.Struct(**row))
+        if tojson:
+            print(json.dumps(rows))
+        else:
+            common_cliutils.print_list(rows, ('benchmark', 'pos',
+                                              'criterion', 'success'))
+        return failed_criteria
