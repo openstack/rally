@@ -43,11 +43,7 @@ class VMTasksTestCase(test.TestCase):
         scenario._create_floating_ip = mock.MagicMock(
             return_value=fake_floating_ip)
         scenario._associate_floating_ip = mock.MagicMock()
-        # scenario._dissociate_floating_ip = mock.MagicMock()
-        # scenario._delete_floating_ip = mock.MagicMock()
         scenario._release_server_floating_ip = mock.MagicMock()
-        # scenario.check_ip_address = mock.MagicMock(
-        #    return_value=mock.MagicMock(return_value=True))
 
         fake_floating_ip_pool = fakes.FakeFloatingIPPool()
         fake_floating_ip_pool.name = "public"
@@ -80,9 +76,6 @@ class VMTasksTestCase(test.TestCase):
 
         mock_json_loads.assert_called_once_with('stdout')
 
-        # scenario._dissociate_floating_ip.assert_called_once_with(
-        #    fake_server, fake_floating_ip)
-        # scenario._delete_floating_ip.assert_called_once_with(fake_floating_ip)
         scenario._release_server_floating_ip.assert_called_once_with(
             fake_server, fake_floating_ip)
         scenario._delete_server.assert_called_once_with(fake_server)
