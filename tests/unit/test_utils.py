@@ -16,6 +16,7 @@
 """Test for Rally utils."""
 
 from __future__ import print_function
+import string
 import sys
 import time
 
@@ -349,3 +350,100 @@ class TenantIteratorTestCase(test.TestCase):
         real_result = [i for i in utils.iterate_per_tenants(users)]
 
         self.assertEqual(expected_result, real_result)
+
+
+class RAMIntTestCase(test.TestCase):
+
+    @mock.patch("rally.utils.multiprocessing")
+    def test__init__(self, mock_multi):
+        utils.RAMInt()
+        mock_multi.Lock.assert_called_once_with()
+        mock_multi.Value.assert_called_once_with("I", 0)
+
+    @mock.patch("rally.utils.multiprocessing")
+    def test__int__(self, mock_multi):
+        mock_multi.Value.return_value = mock.Mock(value=42)
+        self.assertEqual(int(utils.RAMInt()), 42)
+
+    @mock.patch("rally.utils.multiprocessing")
+    def test__str__(self, mock_multi):
+        mock_multi.Value.return_value = mock.Mock(value=42)
+        self.assertEqual(str(utils.RAMInt()), "42")
+
+    @mock.patch("rally.utils.multiprocessing")
+    def test__iter__(self, mock_multi):
+        ram_int = utils.RAMInt()
+        self.assertEqual(iter(ram_int), ram_int)
+
+    @mock.patch("rally.utils.multiprocessing")
+    def test__next__(self, mock_multi):
+        class MemInt(int):
+            THRESHOLD = 5
+
+            def __iadd__(self, i):
+                return MemInt((int(self) + i) % self.THRESHOLD)
+
+        mock_lock = mock.MagicMock()
+        mock_multi.Lock.return_value = mock_lock
+        mock_multi.Value.return_value = mock.Mock(value=MemInt(0))
+
+        ram_int = utils.RAMInt()
+        self.assertEqual(int(ram_int), 0)
+        for i in range(MemInt.THRESHOLD - 1):
+            self.assertEqual(ram_int.__next__(), i)
+        self.assertRaises(StopIteration, ram_int.__next__)
+        self.assertEqual(mock_lock.__enter__.mock_calls,
+                         [mock.call()] * MemInt.THRESHOLD)
+        self.assertEqual(len(mock_lock.__exit__.mock_calls), MemInt.THRESHOLD)
+
+    @mock.patch("rally.utils.RAMInt.__next__", return_value="next_value")
+    @mock.patch("rally.utils.multiprocessing")
+    def test_next(self, mock_multi, mock_next):
+        self.assertEqual(utils.RAMInt().next(), "next_value")
+        mock_next.assert_called_once_with()
+
+    @mock.patch("rally.utils.multiprocessing")
+    def test_reset(self, mock_multi):
+        ram_int = utils.RAMInt()
+        self.assertRaises(TypeError, int, ram_int)
+        ram_int.reset()
+        self.assertEqual(int(ram_int), 0)
+
+
+class GenerateRandomTestCase(test.TestCase):
+
+    @mock.patch("rally.utils.random")
+    def test_generate_random_name(self, mock_random):
+        choice = "foobarspamchoicestring"
+
+        idx = iter(range(100))
+        mock_random.choice.side_effect = lambda choice: choice[idx.next()]
+        self.assertEqual(utils.generate_random_name(), string.lowercase[:16])
+
+        idx = iter(range(100))
+        mock_random.choice.side_effect = lambda choice: choice[idx.next()]
+        self.assertEqual(utils.generate_random_name(length=10),
+                         string.lowercase[:10])
+
+        idx = iter(range(100))
+        mock_random.choice.side_effect = lambda choice: choice[idx.next()]
+        self.assertEqual(utils.generate_random_name(choice=choice),
+                         choice[:16])
+
+        idx = iter(range(100))
+        mock_random.choice.side_effect = lambda choice: choice[idx.next()]
+        self.assertEqual(utils.generate_random_name(choice=choice, length=5),
+                         choice[:5])
+
+        idx = iter(range(100))
+        mock_random.choice.side_effect = lambda choice: choice[idx.next()]
+        self.assertEqual(
+            utils.generate_random_name(prefix="foo_", length=10),
+            "foo_" + string.lowercase[:10])
+
+        idx = iter(range(100))
+        mock_random.choice.side_effect = lambda choice: choice[idx.next()]
+        self.assertEqual(
+            utils.generate_random_name(prefix="foo_",
+                                       choice=choice, length=10),
+            "foo_" + choice[:10])

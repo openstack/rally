@@ -13,12 +13,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import netaddr
-
 from rally.benchmark.scenarios import base
+from rally.benchmark.wrappers import network as network_wrapper
 from rally import log as logging
 from rally.openstack.common import uuidutils as uid
-
 
 LOG = logging.getLogger(__name__)
 
@@ -27,25 +25,8 @@ class NeutronScenario(base.Scenario):
     """This class should contain base operations for benchmarking neutron."""
 
     RESOURCE_NAME_PREFIX = "rally_net_"
+    RESOURCE_NAME_LENGTH = 16
     SUBNET_IP_VERSION = 4
-    SUBNET_CIDR_START = "1.1.0.0/30"
-    _cidr = 0
-
-    def _generate_subnet_cidr(self, subnets_per_network):
-        """Generate next subnet CIDR for network, without IP overlapping.
-
-        We should know total number of subnets for proper allocation
-        non-overlapped subnets
-
-        :param subnets_per_networks: total number of subnets to be allocated
-        :returns: str, next available subnet CIDR
-        """
-        i = self.context["iteration"]
-        cidr = netaddr.IPNetwork(self.SUBNET_CIDR_START)
-        cidr = str(cidr.next(subnets_per_network * i + self._cidr))
-        LOG.debug("CIDR generated: %s" % cidr)
-        self._cidr += 1
-        return cidr
 
     @base.atomic_action_timer('neutron.create_network')
     def _create_network(self, network_create_args):
@@ -95,28 +76,27 @@ class NeutronScenario(base.Scenario):
         self.clients("neutron").delete_network(network['id'])
 
     @base.atomic_action_timer('neutron.create_subnet')
-    def _create_subnet(self, network, subnets_per_network, subnet_create_args):
+    def _create_subnet(self, network, subnet_create_args, start_cidr=None):
         """Create neutron subnet.
 
-        We should know total number of subnets per network for proper
-        aloocation of non-overlapped subnets
-
         :param network: neutron network dict
-        :param subnets_per_network: number of subnets per network
         :param subnet_create_args: POST /v2.0/subnets request options
         :returns: neutron subnet dict
         """
         network_id = network["network"]["id"]
+
+        if not subnet_create_args.get("cidr"):
+            start_cidr = start_cidr or "1.0.0.0/24"
+            subnet_create_args["cidr"] = (
+                network_wrapper.generate_cidr(start_cidr=start_cidr))
+
         subnet_create_args["network_id"] = network_id
         subnet_create_args.setdefault(
             "name", self._generate_random_name("rally_subnet_"))
-        subnet_create_args.setdefault(
-            "cidr", self._generate_subnet_cidr(subnets_per_network))
-        subnet_create_args.setdefault(
-            "ip_version", self.SUBNET_IP_VERSION)
+        subnet_create_args.setdefault("ip_version", self.SUBNET_IP_VERSION)
 
-        return self.clients("neutron"
-                            ).create_subnet({"subnet": subnet_create_args})
+        return self.clients("neutron").create_subnet(
+            {"subnet": subnet_create_args})
 
     @base.atomic_action_timer('neutron.list_subnets')
     def _list_subnets(self):
@@ -155,7 +135,7 @@ class NeutronScenario(base.Scenario):
         self.clients("neutron").delete_subnet(subnet['subnet']['id'])
 
     @base.atomic_action_timer('neutron.create_router')
-    def _create_router(self, router_create_args):
+    def _create_router(self, router_create_args, external_gw=False):
         """Create neutron router.
 
         :param router_create_args: POST /v2.0/routers request options
@@ -163,6 +143,16 @@ class NeutronScenario(base.Scenario):
         """
         router_create_args.setdefault(
             "name", self._generate_random_name("rally_router_"))
+
+        if external_gw:
+            for network in self._list_networks():
+                if network.get("router:external"):
+                    external_network = network
+                    gw_info = {"network_id": external_network["id"],
+                               "enable_snat": True}
+                    router_create_args.setdefault("external_gateway_info",
+                                                  gw_info)
+
         return self.clients("neutron").create_router(
             {"router": router_create_args})
 
@@ -248,10 +238,10 @@ class NeutronScenario(base.Scenario):
         self.clients("neutron").delete_port(port['port']['id'])
 
     def _create_network_and_subnets(self,
-                                    network_create_args,
-                                    subnet_create_args,
-                                    subnets_per_network,
-                                    subnet_cidr_start):
+                                    network_create_args=None,
+                                    subnet_create_args=None,
+                                    subnets_per_network=1,
+                                    subnet_cidr_start="1.0.0.0/24"):
         """Create network and subnets.
 
         :parm network_create_args: dict, POST /v2.0/networks request options
@@ -261,13 +251,20 @@ class NeutronScenario(base.Scenario):
         :returns: tuple of result network and subnets list
         """
         subnets = []
-
-        if subnet_cidr_start:
-            self.SUBNET_CIDR_START = subnet_cidr_start
         network = self._create_network(network_create_args or {})
 
         for i in range(subnets_per_network):
-            subnet = self._create_subnet(network, subnets_per_network,
-                                         subnet_create_args or {})
+            subnet = self._create_subnet(network, subnet_create_args or {},
+                                         subnet_cidr_start)
             subnets.append(subnet)
         return network, subnets
+
+    @base.atomic_action_timer("neutron.add_interface_router")
+    def _add_interface_router(self, subnet, router):
+        """Connect subnet to router.
+
+        :param subnet: dict, neutron subnet
+        :param router: dict, neutron router
+        """
+        self.clients("neutron").add_interface_router(
+            router["id"], {"subnet_id": subnet["id"]})

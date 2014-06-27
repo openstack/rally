@@ -114,35 +114,35 @@ class NovaScenarioTestCase(test.TestCase):
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        'nova.boot_server')
 
-    @mock.patch(NOVA_UTILS + '.NovaScenario.clients')
+    @mock.patch(NOVA_UTILS + ".NovaScenario.clients")
     def test__boot_server_with_network(self, mock_clients):
         mock_clients("nova").servers.create.return_value = self.server
-        nova = fakes.FakeNovaClient()
-        networks = [
-                    nova.networks.create('net-1'),
-                    nova.networks.create('net-2')
-                   ]
+        networks = [{"id": "foo_id", "external": False},
+                    {"id": "bar_id", "external": False}]
         mock_clients("nova").networks.list.return_value = networks
-        nova_scenario = utils.NovaScenario(context={})
-        return_server = nova_scenario._boot_server('server_name', 'image_id',
-                                                   'flavor_id',
+        nova_scenario = utils.NovaScenario(context={
+                "iteration": 3,
+                "config": {"users": {"tenants": 2}},
+                "tenant": {"networks": networks}})
+        return_server = nova_scenario._boot_server("server_name", "image_id",
+                                                   "flavor_id",
                                                    auto_assign_nic=True)
         self._test_assert_called_once_with(
             self.wait_for.mock, self.server,
             CONF.benchmark.nova_server_boot_poll_interval,
             CONF.benchmark.nova_server_boot_timeout)
-        self.res_is.mock.assert_has_calls(mock.call('ACTIVE'))
+        self.res_is.mock.assert_has_calls(mock.call("ACTIVE"))
         self.assertEqual(self.wait_for.mock(), return_server)
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
-                                       'nova.boot_server')
+                                       "nova.boot_server")
 
-    @mock.patch(NOVA_UTILS + '.NovaScenario.clients')
+    @mock.patch(NOVA_UTILS + ".NovaScenario.clients")
     def test__boot_server_with_network_exception(self, mock_clients):
         mock_clients("nova").servers.create.return_value = self.server
-        mock_clients("nova").networks.list.return_value = None
-        nova_scenario = utils.NovaScenario(context={})
+        nova_scenario = utils.NovaScenario(
+            context={"tenant": {"networks": None}})
         self.assertRaises(TypeError, nova_scenario._boot_server,
-                          'server_name', 'image_id', 'flavor_id',
+                          "server_name", "image_id", "flavor_id",
                           auto_assign_nic=True)
 
     @mock.patch(NOVA_UTILS + '.NovaScenario.clients')

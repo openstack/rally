@@ -77,47 +77,45 @@ class NovaScenario(base.Scenario):
 
         return self.clients("nova").servers.list(detailed)
 
-    @base.atomic_action_timer('nova.boot_server')
+    @base.atomic_action_timer("nova.boot_server")
     def _boot_server(self, server_name, image_id, flavor_id,
                      auto_assign_nic=False, **kwargs):
-        """Boots one server.
+        """Boots a server.
 
-        Returns when the server is actually booted and is in the "Active"
-        state.
+        Returns when the server is actually booted and in "ACTIVE" state.
 
         If multiple networks are present, the first network found that
         isn't associated with a floating IP pool is used.
 
-        :param server_name: String used to name the server
-        :param image_id: ID of the image to be used for server creation
-        :param flavor_id: ID of the flavor to be used for server creation
-        :param auto_assign_nic: Boolean for whether or not to assign NICs
-        :param **kwargs: Other optional parameters to initialize the server
-
-        :returns: Created server object
+        :param server_name: str, server name
+        :param image_id: int, image ID for server creation
+        :param flavor_id: int, flavor ID for server creation
+        :param auto_assign_nic: bool, whether or not to auto assign NICs
+        :param **kwargs: other optional parameters to initialize the server
+        :returns: nova Server instance
         """
         allow_ssh_secgroup = self.context.get("allow_ssh")
         if allow_ssh_secgroup:
-            if 'security_groups' not in kwargs:
-                kwargs['security_groups'] = [allow_ssh_secgroup]
-            elif allow_ssh_secgroup not in kwargs['security_groups']:
-                kwargs['security_groups'].append(allow_ssh_secgroup)
+            if "security_groups" not in kwargs:
+                kwargs["security_groups"] = [allow_ssh_secgroup]
+            elif allow_ssh_secgroup not in kwargs["security_groups"]:
+                kwargs["security_groups"].append(allow_ssh_secgroup)
 
-        nics = kwargs.get('nics', False)
+        if auto_assign_nic and not kwargs.get("nics", False):
+            nets = [net["id"]
+                    for net in filter(lambda net: not net["external"],
+                                      self.context["tenant"]["networks"])]
+            if nets:
+                # NOTE(amaretskiy): Balance servers among networks:
+                #     divmod(iteration % tenants_num, nets_num)[1]
+                net_id = divmod(
+                    (self.context["iteration"]
+                     % self.context["config"]["users"]["tenants"]),
+                    len(nets))[1]
+                kwargs["nics"] = [{"net-id": nets[net_id]}]
 
-        if auto_assign_nic and nics is False:
-            nets = self.clients("nova").networks.list()
-            fip_pool = [
-                        pool.name
-                        for pool in
-                        self.clients("nova").floating_ip_pools.list()
-                       ]
-            for net in nets:
-                if net.label not in fip_pool:
-                    kwargs['nics'] = [{'net-id': net.id}]
-                    break
-        server = self.clients("nova").servers.create(server_name, image_id,
-                                                     flavor_id, **kwargs)
+        server = self.clients("nova").servers.create(
+            server_name, image_id, flavor_id, **kwargs)
 
         time.sleep(CONF.benchmark.nova_server_boot_prepoll_delay)
         server = bench_utils.wait_for(
