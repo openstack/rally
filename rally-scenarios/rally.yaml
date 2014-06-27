@@ -160,6 +160,20 @@
         users:
           tenants: 1
           users_per_tenant: 1
+
+    -
+      args:
+        sleep: 0.01
+      runner:
+        type: "rps"
+        times: 10000
+        rps: 100
+        timeout: 600
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+
     -
       args:
         sleep: 0.01

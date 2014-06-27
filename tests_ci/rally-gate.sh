@@ -46,3 +46,4 @@ gzip -9 rally-plot/results.json
 rally task detailed > rally-plot/detailed.txt
 gzip -9 rally-plot/detailed.txt
 env
+

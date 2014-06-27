@@ -71,7 +71,7 @@ class _RunnerType(utils.ImmutableMixin, utils.EnumMixin):
     SERIAL = "serial"
     CONSTANT = "constant"
     CONSTANT_FOR_DURATION = "constant_for_duration"
-    PERIODIC = "periodic"
+    RPS = "rps"
 
 
 class _Service(utils.ImmutableMixin, utils.EnumMixin):

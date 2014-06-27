@@ -4,9 +4,9 @@
       args:
         sleep: 5
       runner:
-        type: "periodic"
+        type: "rps"
         times: 20
-        period: 3
+        rps: 3
         timeout: 6
       context:
         users:
