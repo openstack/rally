@@ -70,14 +70,14 @@ init_variables() {
 }
 
 install_rhel_based_system_requirements() {
-  local install_rally_dependencies='curl'
+  local install_rally_dependencies='wget'
   local cryptography_dependencies='gcc libffi-devel python-devel openssl-devel gmp-devel'
   local external_dependencies='libxml2-devel libxslt-devel' # dependencies from projects, which are used by rally
   yum -y install ${install_rally_dependencies} ${cryptography_dependencies} ${external_dependencies}
 }
 
 install_debian_based_system_requirements() {
-  local install_rally_dependencies='curl'
+  local install_rally_dependencies='wget'
   local cryptography_dependencies='build-essential libssl-dev libffi-dev python-dev'
   local external_dependencies='libxml2-dev libxslt1-dev' # dependencies from projects, which are used by rally
   apt-get -y install ${install_rally_dependencies} ${cryptography_dependencies} ${external_dependencies}
@@ -87,7 +87,7 @@ unsupported_os_system_requirements() {
   echo "Your system is currently unsupported by this installation script."
   echo "Currently supported systems: RHEL-based, Debian-based."
   echo "If you want to proceed, first install manually the following dependencies:"
-  echo "gcc, libffi-devel, python-devel, openssl-devel, curl"
+  echo "gcc, libffi-devel, python-devel, openssl-devel, wget"
   while true; do
     read -p "Do you want to proceed with the installation of Rally? [Y/n]: " ans
     case ${ans} in
@@ -111,7 +111,7 @@ install_system_requirements() {
   fi
 
   if ! hash pip 2> /dev/null; then
-    curl -L -o ${GETPIPPY_FILE} ${PIP_SECURE_LOCATION}
+    wget -O ${GETPIPPY_FILE} ${PIP_SECURE_LOCATION}
     python ${GETPIPPY_FILE}
   fi
 }
