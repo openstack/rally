@@ -15,112 +15,397 @@
 
 .. _benchmark:
 
-The Benchmark Layer
+Benchmark
+=========
+
+Benchmark Scenarios
 ===================
 
-Represents a core of benchmarking, a base class of scenarios and scenarios.
-The core itself consists of an engine that performs a benchmark and a runner of
-scenarios.
+Notion of benchmark scenarios
+-----------------------------
 
-The :mod:`rally.benchmark.engine` Module
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The concept of **benchmark scenarios** is a central one in Rally. Benchmark scenarios are what Rally actually uses to **test the performance of an OpenStack deployment**. They also play the role of main building blocks in the configurations of benchmark tasks. Each benchmark scenario performs a small **set of atomic operations**, thus testing some **simple use case**, usually that of a specific OpenStack project. For example, the **"NovaServers"** scenario group contains scenarios that use several basic operations available in **nova**. The **"boot_and_delete_server"** benchmark scenario from that group allows to benchmark the performance of a sequence of only **two simple operations**: it first **boots** a server (with customizable parameters) and then **deletes** it.
 
-.. automodule:: rally.benchmark.engine
-    :members:
-    :undoc-members:
-    :show-inheritance:
 
-The :mod:`rally.benchmark.runners` Module
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+User's view
+-----------
 
-.. automodule:: rally.benchmark.runners
-    :members:
-    :undoc-members:
-    :show-inheritance:
+From user's point of view, Rally launches different benchmark scenarios while performing some benchmark task. **Benchmark task** is essentially a set of benchmark scenarios run against some OpenStack deployment in a specific (and customizable) manner by the CLI command:
 
-The :mod:`rally.benchmark.context` Module
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+**rally task start --task=<task_config.json>**
 
-.. automodule:: rally.benchmark.context
-    :members:
-    :undoc-members:
-    :show-inheritance:
+Accordingly, the user may specify the names and parameters of benchmark scenarios to be run in **benchmark task configuration files**. A typical configuration file would have the following contents:
 
-The :mod:`rally.benchmark.processing` Module
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. parsed-literal::
 
-.. automodule:: rally.benchmark.processing
-    :members:
-    :undoc-members:
-    :show-inheritance:
+    {
+        **"NovaServers.boot_server"**: [
+            {
+                **"args": {**
+                    **"flavor_id": 42,**
+                    **"image_id": "73257560-c59b-4275-a1ec-ab140e5b9979"**
+                **},**
+                "runner": {"times": 3},
+                "context": {...}
+            },
+            {
+                **"args": {**
+                    **"flavor_id": 1,**
+                    **"image_id": "3ba2b5f6-8d8d-4bbe-9ce5-4be01d912679"**
+                **},**
+                "runner": {"times": 3},
+                "context": {...}
+            }
+        ],
+        **"CinderVolumes.create_volume"**: [
+            {
+                 **"args": {**
+                    **"size": 42**
+                **},**
+                "runner": {"times": 3},
+                "context": {...}
+            }
+        ]
+    }
 
-The Benchmark Scenarios
-=======================
 
-There is a set of scenarios that available for benchmarking. Scenarios was
-decomposed per a service.
+In this example, the task configuration file specifies two benchmarks to be run, namely **"NovaServers.boot_server"** and **"CinderVolumes.create_volume"** (benchmark name = *ScenarioClassName.method_name*). Each benchmark scenario may be started several times with different parameters. In our example, that's the case with **"NovaServers.boot_server"**, which is used to test booting servers from different images & flavors.
 
-The :mod:`rally.benchmark.scenarios.utils` Module
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Note that inside each scenario configuration, the benchmark scenario is actually launched **3 times** (that is specified in the **"runner"** field). It can be specified in **"runner"** in more detail how exactly the benchmark scenario should be launched; we elaborate on that in the *"Sceario Runners"* section below.
 
-.. automodule:: rally.benchmark.scenarios.utils
-    :members:
-    :undoc-members:
-    :show-inheritance:
 
-The Cinder Scenarios
---------------------
+Developer's  view
+-----------------
 
-The :mod:`rally.benchmark.scenarios.cinder.volumes` Module
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+From developer's prospective, a benchmark scenario is a method marked by a **@scenario** decorator and placed in a class that inherits from the base `Scenario <https://github.com/stackforge/rally/blob/master/rally/benchmark/scenarios/base.py#L40>`_ class and located in some subpackage of `rally.benchmark.scenarios <https://github.com/stackforge/rally/tree/master/rally/benchmark/scenarios>`_. There may be arbitrary many benchmark scenarios in a scenario class; each of them should be referenced to (in the task configuration file) as *ScenarioClassName.method_name*.
 
-.. automodule:: rally.benchmark.scenarios.cinder.volumes
-    :members:
-    :undoc-members:
-    :show-inheritance:
+In a toy example below, we define a scenario class *MyScenario* with one benchmark scenario *MyScenario.scenario*. This benchmark scenario tests the performance of a sequence of 2 actions, implemented via private methods in the same class. Both methods are marked with the **@atomic_action_timer** decorator. This allows Rally to handle those actions in a special way and, after benchmarks complete, show runtime statistics not only for the whole scenarios, but for separate actions as well.
 
-The :mod:`rally.benchmark.scenarios.cinder.utils` Module
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+::
 
-.. automodule:: rally.benchmark.scenarios.cinder.utils
-    :members:
-    :undoc-members:
-    :show-inheritance:
+    from rally.benchmark.scenarios import base
+    from rally.benchmark.scenarios import utils
 
-The Keystone Scenarios
-----------------------
 
-The :mod:`rally.benchmark.scenarios.keystone.basic` Module
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    class MyScenario(base.Scenario):
+        """My class that contains benchmark scenarios."""
 
-.. automodule:: rally.benchmark.scenarios.keystone.basic
-    :members:
-    :undoc-members:
-    :show-inheritance:
+        @utils.atomic_action_timer("action_1")
+        def _action_1(self, **kwargs):
+            """Do something with the cloud."""
 
-The :mod:`rally.benchmark.scenarios.keystone.utils` Module
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        @utils.atomic_action_timer("action_2")
+        def _action_2(self, **kwargs):
+            """Do something with the cloud."""
 
-.. automodule:: rally.benchmark.scenarios.keystone.utils
-    :members:
-    :undoc-members:
-    :show-inheritance:
+        @base.scenario()
+        def scenario(self, **kwargs):
+            self._action_1()
+            self._action_2()
 
-The Nova Scenarios
+
+
+Benchmark engine
+================
+
+The core classes responsible for the benchmarking mechanism, including
+the benchmark engine class, benchmark scenario runners and others.
+
+Notion of scenario runners
+--------------------------
+
+**Scenario Runners** in Rally are entities that control the execution type and order of benchmark scenarios. They support different running **strategies for creating load on the cloud**, including simulating *concurrent requests* from different users, periodic load, gradually growing load and so on.
+
+
+User's view
+-----------
+
+The user can specify which type of load on the cloud he would like to have through the **"runner"** section in the **task configuration file**:
+
+.. parsed-literal::
+
+    {
+        "NovaServers.boot_server": [
+            {
+                "args": {
+                    "flavor_id": 42,
+                    "image_id": "73257560-c59b-4275-a1ec-ab140e5b9979"
+                },
+                **"runner": {**
+                    **"type": "constant",**
+                    **"times": 15,**
+                    **"concurrency": 2**
+                **},**
+                "context": {
+                    "users": {
+                        "tenants": 1,
+                        "users_per_tenant": 3
+                    },
+                    "quotas": {
+                        "nova": {
+                            "instances": 20
+                        }
+                    }
+                }
+            }
+        ]
+    }
+
+
+The scenario running strategy is specified by its **type** and also by some type-specific parameters. Available types include:
+
+* **constant**, for creating a constant load by running the scenario for a fixed number of **times**, possibly in parallel (that's controlled by the *"concurrency"* parameter).
+* **constant_for_duration** that works exactly as **constant**, but runs the benchmark scenario until a specified number of seconds elapses (**"duration"** parameter).
+* **periodic**, which executes benchmark scenarios with intervals between two consecutive runs, specified in the **"period"** field in seconds.
+* **serial**, which is very useful to test new scenarios since it just runs the benchmark scenario for a fixed number of **times** in a single thread.
+
+
+Also, all scenario runners can be provided (again, through the **"runner"** section in the config file) with an optional *"timeout"* parameter, which specifies the timeout for each single benchmark scenario run (in seconds).
+
+
+Developer's  view
+-----------------
+
+It is possible to extend Rally with new Scenario Runner types, if needed. Basically, each scenario runner should be implemented as a subclass of the base `ScenarioRunner <https://github.com/stackforge/rally/blob/master/rally/benchmark/runners/base.py#L137>`_ class and located in the `rally.benchmark.runners package <https://github.com/stackforge/rally/tree/master/rally/benchmark/runners>`_. The interface each scenario runner class should support is fairly easy:
+
+.. parsed-literal::
+
+    from rally.benchmark.runners import base
+    from rally import utils
+
+    class MyScenarioRunner(base.ScenarioRunner):
+        *"""My scenario runner."""*
+
+        *# This string is what the user will have to specify in the task*
+        *# configuration file (in "runner": {"type": ...})*
+
+        __execution_type__ = "my_scenario_runner"
+
+
+        *# CONFIG_SCHEMA is used to automatically validate the input*
+        *# config of the scenario runner, passed by the user in the task*
+        *# configuration file.*
+
+        CONFIG_SCHEMA = {
+            "type": "object",
+            "$schema": utils.JSON_SCHEMA,
+            "properties": {
+                "type": {
+                    "type": "string"
+                },
+                "some_specific_property": {...}
+            }
+        }
+
+        def _run_scenario(self, cls, method_name, ctx, args):
+            *"""Run the scenario 'method_name' from scenario class 'cls'
+            with arguments 'args', given a context 'ctx'.
+
+            This method should return the results dictionary wrapped in
+            a base.ScenarioRunnerResult object (not plain JSON)
+            """*
+            results = ...
+
+            return base.ScenarioRunnerResult(results)
+
+
+
+
+Benchmark contexts
+==================
+
+Notion of contexts
 ------------------
 
-The :mod:`rally.benchmark.scenarios.nova.servers` Module
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The notion of **contexts** in Rally is essentially used to define different types of **environments** in which benchmark scenarios can be launched. Those environments are usually specified by such parameters as the number of **tenants and users** that should be present in an OpenStack project, the **roles** granted to those users, extended or narrowed **quotas** and so on.
 
-.. automodule:: rally.benchmark.scenarios.nova.servers
-    :members:
-    :undoc-members:
-    :show-inheritance:
 
-The :mod:`rally.benchmark.scenarios.nova.utils` Module
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+User's view
+-----------
 
-.. automodule:: rally.benchmark.scenarios.nova.utils
-    :members:
-    :undoc-members:
-    :show-inheritance:
+From user's prospective, contexts in Rally are manageable via the **task configuration files**. In a typical configuration file, each benchmark scenario to be run is not only supplied by the information about its arguments and how many times it should be launched, but also with a special **"context"** section. In this section, the user may configure a number of contexts he needs his scenarios to be run within.
+
+In the example below, the **"users" context** specifies that the *"NovaServers.boot_server"* scenario should be run from **1 tenant** having **3 users** in it. Bearing in mind that the default quota for the number of instances is 10 instances pro tenant, it is also reasonable to extend it to, say, **20 instances** in the **"quotas" context**. Otherwise the scenario would eventually fail, since it tries to boot a server 15 times from a single tenant.
+
+.. parsed-literal::
+
+    {
+        "NovaServers.boot_server": [
+            {
+                "args": {
+                    "flavor_id": 42,
+                    "image_id": "73257560-c59b-4275-a1ec-ab140e5b9979"
+                },
+                "runner": {
+                    "type": "constant",
+                    "times": 15,
+                    "concurrency": 2
+                },
+                **"context": {**
+                    **"users": {**
+                        **"tenants": 1,**
+                        **"users_per_tenant": 3**
+                    **},**
+                    **"quotas": {**
+                        **"nova": {**
+                            **"instances": 20**
+                        **}**
+                    **}**
+                **}**
+            }
+        ]
+    }
+
+
+Developer's view
+----------------
+
+From developer's view, contexts management is implemented via **Context classes**. Each context type that can be specified in the task configuration file corresponds to a certain subclass of the base [https://github.com/stackforge/rally/blob/master/rally/benchmark/context/base.py **Context**] class, located in the [https://github.com/stackforge/rally/tree/master/rally/benchmark/context **rally.benchmark.context**] module. Every context class should implement a fairly simple **interface**:
+
+.. parsed-literal::
+
+    from rally import utils
+
+    class YourContext(base.Context):
+        *"""Yet another context class."""*
+
+        __ctx_name__ = "your_context"  *# Corresponds to the context field name in task configuration files*
+        __ctx_order__ = xxx            *# a 3-digit number specifying the priority with which the context should be set up*
+        __ctx_hidden__ = False         *# True if the context cannot be configured through the task configuration file*
+
+        *# The schema of the context configuration format*
+        CONFIG_SCHEMA = {
+            "type": "object",
+            "$schema": utils.JSON_SCHEMA,
+            "additionalProperties": False,
+            "properties": {
+                "property_1": <SCHEMA>,
+                "property_2": <SCHEMA>
+            }
+        }
+
+        def __init__(self, context):
+            super(YourContext, self).__init__(context)
+            *# Initialize the necessary stuff*
+
+        def setup(self):
+            *# Prepare the environment in the desired way*
+
+        def cleanup(self):
+            *# Cleanup the environment properly*
+
+Consequently, the algorithm of initiating the contexts can be roughly seen as follows:
+
+.. parsed-literal::
+
+    context1 = Context1(ctx)
+    context2 = Context2(ctx)
+    context3 = Context3(ctx)
+
+    context1.setup()
+    context2.setup()
+    context3.setup()
+
+    *<Run benchmark scenarios in the prepared environment>*
+
+    context3.cleanup()
+    context2.cleanup()
+    context1.cleanup()
+
+- where the order of contexts in which they are set up depends on the value of their *__ctx_order__* attribute. Contexts with lower *__ctx_order__* have higher priority: *1xx* contexts are reserved for users-related stuff (e.g. users/tenants creation, roles assignment etc.), *2xx* - for quotas etc.
+
+The *__ctx_hidden__* attribute defines whether the context should be a *hidden* one. **Hidden contexts** cannot be configured by end-users through the task configuration file as shown above, but should be specified by a benchmark scenario developer through a special *@base.scenario(context={...})* decorator. Hidden contexts are typically needed to satisfy some specific benchmark scenario-specific needs, which don't require the end-user's attention. For example, the hidden **"allow_ssh" context** (:mod:`rally.benchmark.context.secgroup`) is used in the **VMTasks.boot_runcommand_delete benchmark scenario** (:mod:`rally.benchmark.scenarios.vm.vmtasks`) to enable the SSH access to the servers. The fact that end-users do not have to worry about such details about SSH while launching this benchmark scenarios obviously makes their life easier and shows why hiddent contexts are of great importance in Rally.
+
+If you want to dive deeper, also see the context manager (:mod:`rally.benchmark.context.base`) class that actually implements the algorithm described above.
+
+
+Scenarios Plugins
+=================
+
+Rally provides an opportunity to create and use a custom benchmark scenario as
+a plugin. The plugins mechanism can be used to simplify some experiments with
+new scenarios and to facilitate their creation by users who don't want to edit
+the actual Rally code.
+
+Placement
+---------
+
+Put the plugin into the **/etc/rally/plugins/scenarios** or
+**~/.rally/plugins/scenarios** directory and it will be autoloaded (they are
+not created automatically, you should create them manually). The corresponding
+module should have ".py" extension.
+
+Creation
+--------
+
+Inherit a class containing the scenario method(s) from
+`rally.benchmark.scenarios.base.Scenario` or its subclasses.
+Place every atomic action in separate function and wrap it with decorator
+**atomic_action_timer** from `rally.benchmark.scenarios.utils`. Pass
+action name as a string argument to decorator. This name should be unique for
+every atomic action. It also will be used to show and store results.
+Combine atomic actions into your benchmark method and wrap it with the
+**scenario** decorator from `rally.benchmark.scenarios.base`.
+
+Sample
+~~~~~~
+You can run this sample to test whether the plugin has been loaded and
+benchmark scenario results have been stored correctly.
+
+::
+
+    import random
+    import time
+
+    from rally.benchmark.scenarios import base
+    from rally.benchmark.scenarios import utils as scenario_utils
+
+
+    class PluginClass(base.Scenario):
+
+        @scenario_utils.atomic_action_timer("test1")
+        def _test1(self, factor):
+            time.sleep(random.random() * factor)
+
+        @scenario_utils.atomic_action_timer("test2")
+        def _test2(self, factor):
+            time.sleep(random.random() * factor * 10)
+
+        @base.scenario()
+        def testplugin(self, factor=1):
+            self._test1(factor)
+            self._test2(factor)
+
+Usage
+-----
+
+Specify the class and the benchmark method of your plugin at the top level of
+the benchmark task configuration file.
+If you need to pass some arguments to the benchmark method, place it in the
+**args** section of the task configuration file.
+
+Sample
+~~~~~~
+
+::
+
+    {
+        "PluginClass.testplugin": [
+            {
+                "args": {
+                    "factor": 2
+                },
+                "runner": {
+                    "type": "constant",
+                    "times": 3,
+                    "concurrency": 1
+                },
+                "context": {
+                    "users": {
+                        "tenants": 1,
+                        "users_per_tenant": 1
+                    }
+                }
+            }
+        ]
+    }

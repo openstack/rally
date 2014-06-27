@@ -28,14 +28,11 @@ Contents:
 .. toctree::
    :maxdepth: 3
 
-   database
    deploy
+   verify
    benchmark
-   provisioning
-   objects
    cmds
-   osclients
-   plugins
+   implementation
 
 
 Indices and tables
