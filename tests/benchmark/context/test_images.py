@@ -15,6 +15,7 @@
 
 import copy
 
+import jsonschema
 import mock
 
 from rally.benchmark.context import images
@@ -28,90 +29,138 @@ SCN = "rally.benchmark.scenarios"
 
 class ImageGeneratorTestCase(test.TestCase):
 
-    def setUp(self):
-        super(ImageGeneratorTestCase, self).setUp()
-        self.image = mock.MagicMock()
-        self.image1 = mock.MagicMock()
-        self.tenants_num = 2
-        self.users_per_tenant = 5
-        self.users = self.tenants_num * self.users_per_tenant
-        self.concurrent = 10
-        self.image_type = "qcow2"
-        self.image_container = "bare"
-        self.images_per_tenant = 5
-        self.task = mock.MagicMock()
-        self.image_list = ["uuid" for i in range(self.images_per_tenant)]
-        self.users_key_with_image_id = [{'image_id': self.image_list,
-                                         'endpoint': 'endpoint',
-                                         'tenant_id': i}
-                                        for i in range(self.tenants_num)]
-        self.user_key = [{'id': i, 'tenant_id': j, 'endpoint': 'endpoint'}
-                         for j in range(self.tenants_num)
-                         for i in range(self.users_per_tenant)]
+    def test_init(self):
+        context = {}
+        context["task"] = mock.MagicMock()
+        context["config"] = {
+            "images": {
+                "image_url": "mock_url",
+                "image_type": "qcow2",
+                "image_container": "bare",
+                "images_per_tenant": 4,
+            }
+        }
 
-    @property
-    def context_without_images_key(self):
-        return {
+        new_context = copy.deepcopy(context)
+        new_context["images"] = []
+        images.ImageGenerator(context)
+        self.assertEqual(new_context, context)
+
+    def test_init_validation(self):
+        context = {}
+        context["task"] = mock.MagicMock()
+        context["config"] = {
+            "images": {
+                "image_url": "mock_url"
+            }
+        }
+
+        self.assertRaises(jsonschema.ValidationError,
+                          images.ImageGenerator.validate, context)
+
+    @mock.patch("%s.glance.utils.GlanceScenario._create_image" % SCN,
+                return_value=fakes.FakeImage(id="uuid"))
+    @mock.patch("%s.images.osclients" % CTX)
+    def test_setup(self, mock_osclients, mock_image_create):
+
+        fc = fakes.FakeClients()
+        mock_osclients.Clients.return_value = fc
+
+        image_list = ["uuid"] * 5
+        image_key = [{'image_id': image_list, 'endpoint': 'endpoint',
+                      'tenant_id': i} for i in range(2)]
+        user_key = [{'id': i, 'tenant_id': j, 'endpoint': 'endpoint'}
+                    for j in range(2)
+                    for i in range(5)]
+
+        real_context = {
             "config": {
                 "users": {
-                    "tenants": self.tenants_num,
-                    "users_per_tenant": self.users_per_tenant,
-                    "concurrent": self.concurrent,
+                    "tenants": 2,
+                    "users_per_tenant": 5,
+                    "concurrent": 10,
                 },
                 "images": {
                     "image_url": "mock_url",
-                    "image_type": self.image_type,
-                    "image_container": self.image_container,
-                    "images_per_tenant": self.images_per_tenant,
+                    "image_type": "qcow2",
+                    "image_container": "bare",
+                    "images_per_tenant": 5,
                 }
             },
-            "admin": {"endpoint": mock.MagicMock()},
+            "admin": {
+                "endpoint": mock.MagicMock()
+            },
             "task": mock.MagicMock(),
-            "users": self.user_key,
+            "users": user_key,
         }
 
-    @mock.patch("%s.glance.utils.GlanceScenario._create_image" % SCN)
-    @mock.patch("%s.images.osclients" % CTX)
-    @mock.patch("%s.cleanup.utils.delete_glance_resources" % CTX)
-    def test_setup_and_cleanup(self, mock_image_remover, mock_osclients,
-                               mock_image_generator):
-
-        class FakeImage(object):
-            def __init__(self):
-                self.id = "uuid"
-        fake_image = FakeImage()
-
-        endpoint = mock.MagicMock()
-        (mock_osclients.Clients(endpoint).glance().images.get.
-            return_value) = self.image1
-        mock_image_generator.return_value = fake_image
-
-        real_context = self.context_without_images_key
         new_context = copy.deepcopy(real_context)
-        new_context["images"] = self.users_key_with_image_id
+        new_context["images"] = image_key
 
         images_ctx = images.ImageGenerator(real_context)
         images_ctx.setup()
         self.assertEqual(new_context, real_context)
+
+    @mock.patch("%s.images.osclients" % CTX)
+    @mock.patch("%s.cleanup.utils.delete_glance_resources" % CTX)
+    def test_cleanup(self, mock_image_remover, mock_osclients):
+        image_list = ["uuid"] * 5
+        image_key = [{'image_id': image_list, 'endpoint': 'endpoint',
+                      'tenant_id': i} for i in range(2)]
+        user_key = [{'id': i, 'tenant_id': j, 'endpoint': 'endpoint'}
+                    for j in range(2)
+                    for i in range(5)]
+
+        context = {
+            "config": {
+                "users": {
+                    "tenants": 2,
+                    "users_per_tenant": 5,
+                    "concurrent": 10,
+                },
+                "images": {
+                    "image_url": "mock_url",
+                    "image_type": "qcow2",
+                    "image_container": "bare",
+                    "images_per_tenant": 5,
+                }
+            },
+            "admin": {
+                "endpoint": mock.MagicMock()
+            },
+            "task": mock.MagicMock(),
+            "users": user_key,
+            "images": image_key,
+        }
+
+        images_ctx = images.ImageGenerator(context)
         images_ctx.cleanup()
 
-        self.assertEqual(self.tenants_num, len(mock_image_remover.mock_calls))
+        self.assertEqual(2, len(mock_image_remover.mock_calls))
 
         mock_image_remover.side_effect = Exception('failed_deletion')
         self.assertRaises(exceptions.ImageCleanUpException, images_ctx.cleanup)
 
     @mock.patch("%s.images.osclients" % CTX)
     def test_validate_semantic(self, mock_osclients):
+        user_key = [{'id': i, 'tenant_id': j, 'endpoint': 'endpoint'}
+                    for j in range(2)
+                    for i in range(5)]
+
         fc = fakes.FakeClients()
         mock_osclients.Clients.return_value = fc
         images.ImageGenerator.validate_semantic(None, None,
-                                                self.user_key, None)
+                                                user_key, None)
 
     @mock.patch("%s.images.osclients" % CTX)
     def test_validate_semantic_unavailabe(self, mock_osclients):
+        user_key = [{'id': i, 'tenant_id': j, 'endpoint': 'endpoint'}
+                    for j in range(2)
+                    for i in range(5)]
+
         endpoint = mock.MagicMock()
         (mock_osclients.Clients(endpoint).glance().images.list.
             side_effect) = Exception('list_error')
         self.assertRaises(exceptions.InvalidScenarioArgument,
                           images.ImageGenerator.validate_semantic, None, None,
-                          self.user_key, None)
+                          user_key, None)
