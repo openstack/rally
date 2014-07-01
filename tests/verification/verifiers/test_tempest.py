@@ -14,9 +14,12 @@
 #    under the License.
 
 import os
+import sys
 
 import mock
+import testtools
 
+from rally import exceptions
 from rally.openstack.common import jsonutils
 from rally.verification.verifiers.tempest import subunit2json
 from rally.verification.verifiers.tempest import tempest
@@ -125,6 +128,7 @@ class TempestTestCase(test.TestCase):
 
     @mock.patch('os.path.isdir')
     @mock.patch(TEMPEST_PATH + '.tempest.subprocess')
+    @testtools.skipIf(sys.version_info < (2, 7), "Incompatible Python Version")
     def test__venv_install_when_venv_exists(self, mock_sp, mock_isdir):
         mock_isdir.return_value = True
         self.verifier._install_venv()
@@ -135,6 +139,7 @@ class TempestTestCase(test.TestCase):
 
     @mock.patch('os.path.isdir')
     @mock.patch(TEMPEST_PATH + '.tempest.subprocess.check_call')
+    @testtools.skipIf(sys.version_info < (2, 7), "Incompatible Python Version")
     def test__venv_install_when_venv_not_exist(self, mock_sp, mock_isdir):
         mock_isdir.return_value = False
         self.verifier._install_venv()
@@ -147,6 +152,17 @@ class TempestTestCase(test.TestCase):
             mock.call('%s python setup.py install' %
                       self.verifier.venv_wrapper, shell=True,
                       cwd=self.verifier.tempest_path)])
+
+    @mock.patch('os.path.isdir')
+    @testtools.skipIf(sys.version_info >= (2, 7),
+                      "Incompatible Python Version")
+    def test__venv_install_for_py26_fails(self, mock_isdir):
+        mock_isdir.return_value = False
+        self.assertRaises(exceptions.IncompatiblePythonVersion,
+                          self.verifier._install_venv)
+
+        mock_isdir.assert_called_once_with(
+            os.path.join(self.verifier.tempest_path, '.venv'))
 
     @mock.patch('os.path.isdir')
     @mock.patch(TEMPEST_PATH + '.tempest.subprocess')
