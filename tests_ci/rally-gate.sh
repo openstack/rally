@@ -27,6 +27,7 @@ fi
 if [ -d $EXTRA_DIR ]; then
  mkdir -p ~/.rally/extra
  cp -r $EXTRA_DIR/* ~/.rally/extra/
+ touch ~/.rally/extra/fake-image.img
 fi
 
 rally use deployment --name devstack
