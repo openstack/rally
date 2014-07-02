@@ -83,7 +83,7 @@ class TempestConf(object):
             msg = _('Error on downloading cirros image, possibly'
                     ' no connection to Internet with message %s') % str(err)
             raise exceptions.TempestConfigCreationFailure(message=msg)
-        if response.http_status == 200:
+        if response.status_code == 200:
             with open(self.img_path + '.tmp', 'wb') as img_file:
                 for chunk in response.iter_content(chunk_size=1024):
                     if chunk:   # filter out keep-alive new chunks
@@ -91,7 +91,7 @@ class TempestConf(object):
                         img_file.flush()
             os.rename(self.img_path + '.tmp', self.img_path)
         else:
-            if response.http_status == 404:
+            if response.status_code == 404:
                 msg = _('Error on downloading cirros image, possibly'
                         'invalid cirros_version or cirros_image in rally.conf')
             else:
@@ -227,7 +227,7 @@ class TempestConf(object):
                           str(service in self.available_services))
         horizon_url = ('http://' +
                        urlparse.urlparse(self.endpoint['auth_url']).hostname)
-        horizon_availability = (requests.get(horizon_url).http_status == 200)
+        horizon_availability = (requests.get(horizon_url).status_code == 200)
         # convert boolean to string because ConfigParser fails
         # on attempt to get option with boolean value
         self.conf.set(section_name, 'horizon', str(horizon_availability))
