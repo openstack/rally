@@ -235,11 +235,8 @@ class TaskCommands(object):
             # NOTE(hughsaunders): ssrs=scenario specific results
             ssrs = []
             for result in raw:
-                try:
+                if result['scenario_output']['data']:
                     ssrs.append(result['scenario_output']['data'])
-                except (KeyError, TypeError):
-                    # No SSRs in this result
-                    pass
             if ssrs:
                 keys = set()
                 for ssr in ssrs:

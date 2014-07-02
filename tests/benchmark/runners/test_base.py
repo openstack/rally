@@ -75,14 +75,14 @@ class ScenarioHelpersTestCase(test.TestCase):
         args = (1, fakes.FakeScenario, "do_it", context, {})
         result = base._run_scenario_once(args)
 
-        expected_reuslt = {
+        expected_result = {
             "duration": fakes.FakeTimer().duration(),
             "idle_duration": 0,
             "error": [],
-            "scenario_output": {},
+            "scenario_output": {"errors": "", "data": {}},
             "atomic_actions": []
         }
-        self.assertEqual(expected_reuslt, result)
+        self.assertEqual(expected_result, result)
 
     @mock.patch("rally.benchmark.runners.base.rutils")
     @mock.patch("rally.benchmark.runners.base.osclients")
@@ -93,14 +93,14 @@ class ScenarioHelpersTestCase(test.TestCase):
         args = (1, fakes.FakeScenario, "with_output", context, {})
         result = base._run_scenario_once(args)
 
-        expected_reuslt = {
+        expected_result = {
             "duration": fakes.FakeTimer().duration(),
             "idle_duration": 0,
             "error": [],
             "scenario_output": fakes.FakeScenario().with_output(),
             "atomic_actions": []
         }
-        self.assertEqual(expected_reuslt, result)
+        self.assertEqual(expected_result, result)
 
     @mock.patch("rally.benchmark.runners.base.rutils")
     @mock.patch("rally.benchmark.runners.base.osclients")
@@ -110,13 +110,13 @@ class ScenarioHelpersTestCase(test.TestCase):
         args = (1, fakes.FakeScenario, "something_went_wrong", context, {})
         result = base._run_scenario_once(args)
         expected_error = result.pop("error")
-        expected_reuslt = {
+        expected_result = {
             "duration": fakes.FakeTimer().duration(),
             "idle_duration": 0,
-            "scenario_output": {},
+            "scenario_output": {"errors": "", "data": {}},
             "atomic_actions": []
         }
-        self.assertEqual(expected_reuslt, result)
+        self.assertEqual(expected_result, result)
         self.assertEqual(expected_error[:2],
                          [str(Exception), "Something went wrong"])
 

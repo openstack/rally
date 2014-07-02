@@ -55,11 +55,11 @@ def _run_scenario_once(args):
             clients=osclients.Clients(context["user"]["endpoint"]))
 
     error = []
-    scenario_output = {}
+    scenario_output = {"errors": "", "data": {}}
     try:
         with rutils.Timer() as timer:
             scenario_output = getattr(scenario,
-                                      method_name)(**kwargs) or {}
+                                      method_name)(**kwargs) or scenario_output
     except Exception as e:
         error = utils.format_exc(e)
         if cfg.CONF.debug:
