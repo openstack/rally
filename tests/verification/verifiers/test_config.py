@@ -55,7 +55,7 @@ class ConfigTestCase(test.TestCase):
     @mock.patch("six.moves.builtins.open")
     def test__load_img_success(self, mock_open, mock_rename, mock_requests):
         mock_result = mock.MagicMock()
-        mock_result.http_status = 200
+        mock_result.status_code = 200
         mock_requests.get.return_value = mock_result
         mock_file = mock.MagicMock()
         mock_open.return_value = mock_file
@@ -68,7 +68,7 @@ class ConfigTestCase(test.TestCase):
     @mock.patch("rally.verification.verifiers.tempest.config.requests")
     def test__load_img_notfound(self, mock_requests):
         mock_result = mock.MagicMock()
-        mock_result.http_status = 404
+        mock_result.status_code = 404
         mock_requests.get.return_value = mock_result
         self.assertRaises(exceptions.TempestConfigCreationFailure,
                           self.conf_generator._load_img)
@@ -272,7 +272,7 @@ class ConfigTestCase(test.TestCase):
     @mock.patch("rally.verification.verifiers.tempest.config.requests")
     def test__set_service_available(self, mock_requests):
         mock_result = mock.MagicMock()
-        mock_result.http_status = 404
+        mock_result.status_code = 404
         mock_requests.get.return_value = mock_result
         available_services = ("nova", "cinder", "glance")
         self.conf_generator.available_services = available_services
@@ -288,7 +288,7 @@ class ConfigTestCase(test.TestCase):
     @mock.patch("rally.verification.verifiers.tempest.config.requests")
     def test__set_service_available_horizon(self, mock_requests):
         mock_result = mock.MagicMock()
-        mock_result.http_status = 200
+        mock_result.status_code = 200
         mock_requests.get.return_value = mock_result
         self.conf_generator._set_service_available()
         self.assertEqual(self.conf_generator.conf.get(
