@@ -15,6 +15,7 @@
 
 """ Test for orchestrator. """
 
+import collections
 import uuid
 
 import mock
@@ -123,7 +124,7 @@ class APITestCase(test.TestCase):
         mock_deploy_get.return_value = self.deployment
 
         mock_utils_runner.return_value = mock_runner = mock.Mock()
-        mock_runner.run.return_value = ['fake_result']
+        mock_runner.result_queue = collections.deque(['fake_result'])
 
         mock_osclients.Clients.return_value = fakes.FakeClients()
 

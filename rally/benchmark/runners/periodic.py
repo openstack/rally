@@ -85,7 +85,6 @@ class PeriodicScenarioRunner(base.ScenarioRunner):
             if i < times - 1:
                 time.sleep(period)
 
-        results = []
         for async_result in async_results:
             try:
                 result = async_result.get(timeout=timeout)
@@ -94,9 +93,7 @@ class PeriodicScenarioRunner(base.ScenarioRunner):
                           "scenario_output": {},
                           "atomic_actions": [],
                           "error": utils.format_exc(e)}
-            results.append(result)
+            self._send_result(result)
 
         for pool in pools:
             pool.join()
-
-        return base.ScenarioRunnerResult(results)

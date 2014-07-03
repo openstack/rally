@@ -220,21 +220,22 @@ class BenchmarkEngineTestCase(test.TestCase):
         ]
         mock_helper.assert_has_calls(expected_calls)
 
-    def test_run__update_status(self):
+    @mock.patch("rally.benchmark.engine.BenchmarkEngine.consume_results")
+    def test_run__update_status(self, mock_consume):
         task = mock.MagicMock()
         eng = engine.BenchmarkEngine([], task)
-        results = eng.run()
-        self.assertEqual(results, {})
+        eng.run()
         task.update_status.assert_has_calls([
             mock.call(consts.TaskStatus.RUNNING),
             mock.call(consts.TaskStatus.FINISHED)
         ])
 
-    @mock.patch("rally.benchmark.engine.endpoint.Endpoint")
-    @mock.patch("rally.benchmark.engine.osclients")
+    @mock.patch("rally.benchmark.engine.BenchmarkEngine.consume_results")
     @mock.patch("rally.benchmark.engine.base_runner.ScenarioRunner")
+    @mock.patch("rally.benchmark.engine.osclients")
+    @mock.patch("rally.benchmark.engine.endpoint.Endpoint")
     def test_run__config_has_args(self, mock_endpoint, mock_osclients,
-                                  mock_runner):
+                                  mock_runner, mock_consume):
         config = {
             "a.args": [{"args": {"a": "a", "b": 1}}],
             "b.args": [{"args": {"a": 1}}]
@@ -243,11 +244,12 @@ class BenchmarkEngineTestCase(test.TestCase):
         eng = engine.BenchmarkEngine(config, task).bind([{}])
         eng.run()
 
-    @mock.patch("rally.benchmark.engine.endpoint.Endpoint")
-    @mock.patch("rally.benchmark.engine.osclients")
+    @mock.patch("rally.benchmark.engine.BenchmarkEngine.consume_results")
     @mock.patch("rally.benchmark.engine.base_runner.ScenarioRunner")
+    @mock.patch("rally.benchmark.engine.osclients")
+    @mock.patch("rally.benchmark.engine.endpoint.Endpoint")
     def test_run__config_has_runner(self, mock_endpoint, mock_osclients,
-                                    mock_runner):
+                                    mock_runner, mock_consume):
         config = {
             "a.args": [{"runner": {"type": "a", "b": 1}}],
             "b.args": [{"runner": {"a": 1}}]
@@ -256,11 +258,12 @@ class BenchmarkEngineTestCase(test.TestCase):
         eng = engine.BenchmarkEngine(config, task).bind([{}])
         eng.run()
 
-    @mock.patch("rally.benchmark.engine.endpoint.Endpoint")
-    @mock.patch("rally.benchmark.engine.osclients")
+    @mock.patch("rally.benchmark.engine.BenchmarkEngine.consume_results")
     @mock.patch("rally.benchmark.engine.base_runner.ScenarioRunner")
+    @mock.patch("rally.benchmark.engine.osclients")
+    @mock.patch("rally.benchmark.engine.endpoint.Endpoint")
     def test_run__config_has_context(self, mock_endpoint, mock_osclients,
-                                     mock_runner):
+                                     mock_runner, mock_consume):
         config = {
             "a.args": [{"context": {"context_a": {"a": 1}}}],
             "b.args": [{"context": {"context_b": {"b": 2}}}]

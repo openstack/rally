@@ -49,31 +49,33 @@ class ConstantScenarioRunnerTestCase(test.TestCase):
         runner = constant.ConstantScenarioRunner(
                         None, [self.context["admin"]["endpoint"]], self.config)
 
-        result = runner._run_scenario(fakes.FakeScenario, "do_it",
-                                      self.context, self.args)
-        self.assertEqual(len(result), self.config["times"])
-        self.assertIsNotNone(base.ScenarioRunnerResult(result))
+        runner._run_scenario(fakes.FakeScenario,
+                             "do_it", self.context, self.args)
+        self.assertEqual(len(runner.result_queue), self.config["times"])
+        for result in runner.result_queue:
+            self.assertIsNotNone(base.ScenarioRunnerResult(result))
 
     def test_run_scenario_constantly_for_times_exception(self):
         runner = constant.ConstantScenarioRunner(
                         None, [self.context["admin"]["endpoint"]], self.config)
 
-        result = runner._run_scenario(fakes.FakeScenario,
-                                      "something_went_wrong",
-                                      self.context, self.args)
-        self.assertEqual(len(result), self.config["times"])
-        self.assertIsNotNone(base.ScenarioRunnerResult(result))
-        self.assertIn('error', result[0])
+        runner._run_scenario(fakes.FakeScenario,
+                             "something_went_wrong", self.context, self.args)
+        self.assertEqual(len(runner.result_queue), self.config["times"])
+        for result in runner.result_queue:
+            self.assertIsNotNone(base.ScenarioRunnerResult(result))
+        self.assertIn('error', runner.result_queue[0])
 
     def test_run_scenario_constantly_for_times_timeout(self):
         runner = constant.ConstantScenarioRunner(
                         None, [self.context["admin"]["endpoint"]], self.config)
 
-        result = runner._run_scenario(fakes.FakeScenario,
-                                      "raise_timeout", self.context, self.args)
-        self.assertEqual(len(result), self.config["times"])
-        self.assertIsNotNone(base.ScenarioRunnerResult(result))
-        self.assertIn('error', result[0])
+        runner._run_scenario(fakes.FakeScenario,
+                             "raise_timeout", self.context, self.args)
+        self.assertEqual(len(runner.result_queue), self.config["times"])
+        for result in runner.result_queue:
+            self.assertIsNotNone(base.ScenarioRunnerResult(result))
+        self.assertIn('error', runner.result_queue[0])
 
 
 class ConstantForDurationScenarioRunnerTeestCase(test.TestCase):
@@ -103,34 +105,36 @@ class ConstantForDurationScenarioRunnerTeestCase(test.TestCase):
         runner = constant.ConstantForDurationScenarioRunner(
                         None, [self.context["admin"]["endpoint"]], self.config)
 
-        result = runner._run_scenario(fakes.FakeScenario, "do_it",
-                                      self.context, self.args)
+        runner._run_scenario(fakes.FakeScenario, "do_it",
+                             self.context, self.args)
         # NOTE(mmorais): when duration is 0, scenario executes exactly 1 time
         expected_times = 1
-        self.assertEqual(len(result), expected_times)
-        self.assertIsNotNone(base.ScenarioRunnerResult(result))
+        self.assertEqual(len(runner.result_queue), expected_times)
+        for result in runner.result_queue:
+            self.assertIsNotNone(base.ScenarioRunnerResult(result))
 
     def test_run_scenario_constantly_for_duration_exception(self):
         runner = constant.ConstantForDurationScenarioRunner(
                         None, [self.context["admin"]["endpoint"]], self.config)
 
-        result = runner._run_scenario(fakes.FakeScenario,
-                                      "something_went_wrong",
-                                      self.context, self.args)
+        runner._run_scenario(fakes.FakeScenario,
+                             "something_went_wrong", self.context, self.args)
         # NOTE(mmorais): when duration is 0, scenario executes exactly 1 time
         expected_times = 1
-        self.assertEqual(len(result), expected_times)
-        self.assertIsNotNone(base.ScenarioRunnerResult(result))
-        self.assertIn('error', result[0])
+        self.assertEqual(len(runner.result_queue), expected_times)
+        for result in runner.result_queue:
+            self.assertIsNotNone(base.ScenarioRunnerResult(result))
+        self.assertIn('error', runner.result_queue[0])
 
     def test_run_scenario_constantly_for_duration_timeout(self):
         runner = constant.ConstantForDurationScenarioRunner(
-                        None, [self.context["admin"]["endpoint"]], self.config)
+            None, [self.context["admin"]["endpoint"]], self.config)
 
-        result = runner._run_scenario(fakes.FakeScenario,
-                                      "raise_timeout", self.context, self.args)
+        runner._run_scenario(fakes.FakeScenario,
+                             "raise_timeout", self.context, self.args)
         # NOTE(mmorais): when duration is 0, scenario executes exactly 1 time
         expected_times = 1
-        self.assertEqual(len(result), expected_times)
-        self.assertIsNotNone(base.ScenarioRunnerResult(result))
-        self.assertIn('error', result[0])
+        self.assertEqual(len(runner.result_queue), expected_times)
+        for result in runner.result_queue:
+            self.assertIsNotNone(base.ScenarioRunnerResult(result))
+        self.assertIn('error', runner.result_queue[0])
