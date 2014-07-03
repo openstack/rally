@@ -108,8 +108,8 @@ class NotFoundScenarios(InvalidTaskException):
 
 class InvalidBenchmarkConfig(InvalidTaskException):
     msg_fmt = _("Task config is invalid.\n"
-                "\tBenchmark %(name)s has wrong configuration of args at"
-                " position %(pos)s: %(args)s"
+                "\tBenchmark %(name)s has wrong configuration at"
+                " position %(pos)s"
                 "\n\tReason: %(reason)s")
 
 

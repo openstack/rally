@@ -53,6 +53,11 @@ class Context(object):
             raise exceptions.NoSuchContext(name=cls.__ctx_name__)
         jsonschema.validate(config, cls.CONFIG_SCHEMA)
 
+    @classmethod
+    def validate_semantic(cls, config, admin=None, users=None, task=None):
+        """Context semantic validation towards the deployment."""
+        pass
+
     @staticmethod
     def get_by_name(name):
         """Return Context class by name."""
@@ -91,6 +96,12 @@ class ContextManager(object):
     def validate(context, non_hidden=False):
         for name, config in context.iteritems():
             Context.get_by_name(name).validate(config, non_hidden=non_hidden)
+
+    @staticmethod
+    def validate_semantic(context, admin=None, users=None, task=None):
+        for name, config in context.iteritems():
+            Context.get_by_name(name).validate_semantic(config, admin=admin,
+                                                        users=users, task=task)
 
     @staticmethod
     def _magic(ctxlst, func, *args, **kwargs):

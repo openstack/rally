@@ -151,6 +151,23 @@ class ContextManagerTestCase(test.TestCase):
         ])
 
     @mock.patch("rally.benchmark.context.base.Context.get_by_name")
+    def test_validate_semantic(self, mock_get):
+        config = {
+            "ctx1": mock.MagicMock(),
+            "ctx2": mock.MagicMock()
+        }
+
+        base.ContextManager.validate_semantic(config)
+        mock_get.assert_has_calls([
+            mock.call("ctx1"),
+            mock.call().validate_semantic(config["ctx1"], admin=None,
+                                          users=None, task=None),
+            mock.call("ctx2"),
+            mock.call().validate_semantic(config["ctx2"], admin=None,
+                                          users=None, task=None)
+        ])
+
+    @mock.patch("rally.benchmark.context.base.Context.get_by_name")
     def test_validate_non_hidden(self, mock_get):
         config = {
             "ctx1": mock.MagicMock(),
