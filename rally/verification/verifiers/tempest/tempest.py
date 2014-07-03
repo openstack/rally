@@ -18,6 +18,7 @@ import logging
 import os
 import shutil
 import subprocess
+import sys
 
 from rally import exceptions
 from rally.openstack.common.gettextutils import _
@@ -63,6 +64,8 @@ class Tempest(object):
 
     def _install_venv(self):
         if not os.path.isdir(os.path.join(self.tempest_path, '.venv')):
+            LOG.info('Validating python environment')
+            self.validate_env()
             LOG.info("No virtual environment found...Install the virtualenv.")
             LOG.debug("Virtual environment directory: %s" %
                       os.path.join(self.tempest_path, ".venv"))
@@ -229,6 +232,14 @@ class Tempest(object):
         if total and test_cases and self.verification:
             self.verification.finish_verification(total=total,
                                                   test_cases=test_cases)
+
+    def validate_env(self):
+        """Validate environment parameters required for running tempest
+           eg: python>2.7
+        """
+        if sys.version_info < (2, 7):
+            raise exceptions.IncompatiblePythonVersion(
+                                                    version=sys.version_info)
 
     def verify(self, set_name, regex):
         self._prepare_and_run(set_name, regex)

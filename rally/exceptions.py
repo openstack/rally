@@ -246,3 +246,8 @@ class UnknownRelease(RallyException):
 
 class ImageCleanUpException(RallyException):
     msg_fmt = _("Image Deletion Failed")
+
+
+class IncompatiblePythonVersion(RallyException):
+    msg_fmt = _("Incompatible python version found '%(version)s', "
+                "required at least python>=2.7.x")
