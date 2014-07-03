@@ -19,6 +19,7 @@ import mock
 
 from rally.benchmark.context import images
 from rally import exceptions
+from tests import fakes
 from tests import test
 
 CTX = "rally.benchmark.context"
@@ -98,3 +99,19 @@ class ImageGeneratorTestCase(test.TestCase):
 
         mock_image_remover.side_effect = Exception('failed_deletion')
         self.assertRaises(exceptions.ImageCleanUpException, images_ctx.cleanup)
+
+    @mock.patch("%s.images.osclients" % CTX)
+    def test_validate_semantic(self, mock_osclients):
+        fc = fakes.FakeClients()
+        mock_osclients.Clients.return_value = fc
+        images.ImageGenerator.validate_semantic(None, None,
+                                                self.user_key, None)
+
+    @mock.patch("%s.images.osclients" % CTX)
+    def test_validate_semantic_unavailabe(self, mock_osclients):
+        endpoint = mock.MagicMock()
+        (mock_osclients.Clients(endpoint).glance().images.list.
+            side_effect) = Exception('list_error')
+        self.assertRaises(exceptions.InvalidScenarioArgument,
+                          images.ImageGenerator.validate_semantic, None, None,
+                          self.user_key, None)
