@@ -21,6 +21,7 @@ from rally.benchmark.scenarios import base
 from rally.benchmark.scenarios import utils as scenario_utils
 from rally.benchmark import utils as bench_utils
 
+
 nova_benchmark_opts = []
 option_names_and_defaults = [
     # action, prepoll delay, timeout, poll interval
@@ -93,6 +94,7 @@ class NovaScenario(base.Scenario):
 
         server = self.clients("nova").servers.create(server_name, image_id,
                                                      flavor_id, **kwargs)
+
         time.sleep(CONF.benchmark.nova_server_boot_prepoll_delay)
         server = bench_utils.wait_for(
             server,
@@ -312,3 +314,86 @@ class NovaScenario(base.Scenario):
             check_interval=CONF.benchmark.nova_server_boot_poll_interval
         ) for server in servers]
         return servers
+
+    @scenario_utils.atomic_action_timer('nova.list_floating_ip_pools')
+    def _list_floating_ip_pools(self):
+        """Returns user floating ip pools list."""
+        return self.clients("nova").floating_ip_pools.list()
+
+    @scenario_utils.atomic_action_timer('nova.list_floating_ips')
+    def _list_floating_ips(self):
+        """Returns user floating ips list."""
+        return self.clients("nova").floating_ips.list()
+
+    @scenario_utils.atomic_action_timer('nova.create_floating_ip')
+    def _create_floating_ip(self, pool):
+        """Create (allocate) a floating ip from the given pool
+
+        :param pool: Name of the floating ip pool or external network
+
+        :returns: The created floating ip
+        """
+        return self.clients("nova").floating_ips.create(pool)
+
+    @scenario_utils.atomic_action_timer('nova.delete_floating_ip')
+    def _delete_floating_ip(self, floating_ip):
+        """Delete (deallocate) a  floating ip for a tenant
+
+        :param floating_ip: The floating ip address to delete.
+        """
+        self.clients("nova").floating_ips.delete(floating_ip)
+        bench_utils.wait_for_delete(
+            floating_ip,
+            update_resource=bench_utils.get_from_manager()
+        )
+
+    @scenario_utils.atomic_action_timer('nova.associate_floating_ip')
+    def _associate_floating_ip(self, server, address, fixed_address=None):
+        """Add floating IP to an instance
+
+        :param server: The :class:`Server` to add an IP to.
+        :param address: The ip address or FloatingIP to add to the instance
+        :param fixed_address: The fixedIP address the FloatingIP is to be
+               associated with (optional)
+        """
+        server.add_floating_ip(address, fixed_address=fixed_address)
+        bench_utils.wait_for(
+            server,
+            is_ready=self.check_ip_address(address),
+            update_resource=bench_utils.get_from_manager()
+        )
+        # Update server data
+        server.addresses = server.manager.get(server.id).addresses
+
+    @scenario_utils.atomic_action_timer('nova.dissociate_floating_ip')
+    def _dissociate_floating_ip(self, server, address):
+        """Remove floating IP from an instance
+
+        :param server: The :class:`Server` to add an IP to.
+        :param address: The ip address or FloatingIP to remove
+        """
+        server.remove_floating_ip(address)
+        bench_utils.wait_for(
+            server,
+            is_ready=self.check_ip_address(address, must_exist=False),
+            update_resource=bench_utils.get_from_manager()
+        )
+        # Update server data
+        server.addresses = server.manager.get(server.id).addresses
+
+    @staticmethod
+    def check_ip_address(address, must_exist=True):
+        ip_to_check = getattr(address, "ip", address)
+
+        def _check_addr(resource):
+            for network, addr_list in resource.addresses.items():
+                for addr in addr_list:
+                        if ip_to_check == addr["addr"]:
+                            return must_exist
+                return not must_exist
+        return _check_addr
+
+    @scenario_utils.atomic_action_timer('nova.list_networks')
+    def _list_networks(self):
+        """Returns user networks list."""
+        return self.clients("nova").networks.list()

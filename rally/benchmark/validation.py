@@ -227,6 +227,46 @@ def image_valid_on_flavor(flavor_name, image_name):
     return image_valid_on_flavor_validator
 
 
+def network_exists(network_name):
+    def network_exists_validator(**kwargs):
+        network = kwargs.get(network_name, "private")
+
+        networks = [net.label for net in
+                    kwargs["clients"].nova().networks.list()]
+        if network not in networks:
+            message = _("Network with name %(network)s not found. "
+                        "Available networks: %(networks)s") % {
+                            "network": network,
+                            "networks": networks
+                        }
+            return ValidationResult(False, message)
+
+        return ValidationResult()
+    return network_exists_validator
+
+
+def external_network_exists(network_name, use_external_network):
+    def external_network_exists_validator(**kwargs):
+        if not kwargs.get(use_external_network, True):
+            return ValidationResult()
+
+        ext_network = kwargs.get(network_name, "public")
+
+        networks = [net.name for net in
+                    kwargs["clients"].nova().floating_ip_pools.list()]
+        if ext_network not in networks:
+            message = _("External (floating) network with name %(network)s "
+                        "not found. "
+                        "Available networks: %(networks)s") % {
+                            "network": ext_network,
+                            "networks": networks
+                        }
+            return ValidationResult(False, message)
+
+        return ValidationResult()
+    return external_network_exists_validator
+
+
 def tempest_tests_exists():
     """Returns validator for tempest test."""
     def tempest_test_exists_validator(**kwargs):

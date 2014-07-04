@@ -8,6 +8,9 @@
                 "image": {
                     "name": "cirros-0.3.1-x86_64-uec"
                 },
+                "fixed_network": "private",
+                "floating_network": "public",
+                "use_floatingip": true,
                 "script": "doc/samples/support/instance_dd_test.sh",
                 "interpreter": "/bin/sh",
                 "username": "cirros"

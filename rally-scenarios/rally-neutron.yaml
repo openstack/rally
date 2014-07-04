@@ -102,6 +102,24 @@
         type: "constant"
         times: 100
         concurrency: 10
+
+  VMTasks.boot_runcommand_delete:
+    -
+      args:
+        flavor:
+          name: "m1.tiny"
+        image:
+          name: "cirros-0.3.2-x86_64-uec"
+        fixed_network: "private"
+        floating_network: "public"
+        use_floatingip: true
+        script: "/home/jenkins/.rally/extra/instance_dd_test.sh"
+        interpreter: "/bin/sh"
+        username: "cirros"
+      runner:
+        type: "constant"
+        times: 6
+        concurrency: 3
       context:
         users:
           tenants: 1

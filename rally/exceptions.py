@@ -186,6 +186,10 @@ class SSHError(RallyException):
     msg_fmt = _("Remote command failed.")
 
 
+class ScriptError(RallyException):
+    msg_fmt = _("Script execution failed.")
+
+
 class TaskInvalidStatus(RallyException):
     msg_fmt = _("Task `%(uuid)s` in `%(actual)s` status but `%(require)s` is "
                 "required.")

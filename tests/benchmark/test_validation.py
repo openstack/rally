@@ -261,6 +261,118 @@ class ValidationUtilsTestCase(test.TestCase):
         self.assertEqual(result.msg, "Image with id 'test_image_id' not found")
 
     @mock.patch("rally.osclients.Clients")
+    def test_network_exists(self, mock_osclients):
+        fakenclient = fakes.FakeNovaClient()
+        fake_network = fakes.FakeNetwork()
+        fake_network.label = "private"
+        fake_network.id = "net_id_1234"
+
+        fakenclient.networks.list = mock.MagicMock(
+            return_value=[fake_network])
+        mock_osclients.nova.return_value = fakenclient
+
+        validator = validation.network_exists("fixed_network")
+
+        network_name = "private"
+
+        result = validator(clients=mock_osclients,
+                           fixed_network=network_name)
+
+        fakenclient.networks.list.assert_called_once_with()
+        self.assertTrue(result.is_valid)
+        self.assertIsNone(result.msg)
+
+    @mock.patch("rally.osclients.Clients")
+    def test_network_exists_fail(self, mock_osclients):
+        fakenclient = fakes.FakeNovaClient()
+        fake_network = fakes.FakeNetwork()
+        fake_network.label = "private"
+        fake_network.id = "net_id_1234"
+
+        fakenclient.networks.list = mock.MagicMock(
+            return_value=[fake_network])
+        mock_osclients.nova.return_value = fakenclient
+
+        validator = validation.network_exists("fixed_network")
+
+        network_name = "foo"
+
+        result = validator(clients=mock_osclients,
+                           fixed_network=network_name)
+
+        fakenclient.networks.list.assert_called_once_with()
+        self.assertFalse(result.is_valid)
+        self.assertEqual(result.msg,
+                         "Network with name foo not found. "
+                         "Available networks: ['private']")
+
+    @mock.patch("rally.osclients.Clients")
+    def test_external_network_exists(self, mock_osclients):
+        fakenclient = fakes.FakeNovaClient()
+        fake_pool = fakes.FakeFloatingIPPool()
+        fake_pool.name = "floating"
+        fakenclient.floating_ip_pools.list = mock.MagicMock(
+            return_value=[fake_pool])
+        mock_osclients.nova.return_value = fakenclient
+
+        validator = validation.external_network_exists("floating_network",
+                                                       "use_floatingip")
+
+        network_name = "floating"
+
+        result = validator(clients=mock_osclients,
+                           floating_network=network_name)
+
+        fakenclient.floating_ip_pools.list.assert_called_once_with()
+        self.assertTrue(result.is_valid)
+        self.assertIsNone(result.msg)
+
+    @mock.patch("rally.osclients.Clients")
+    def test_external_network_exists_ignored(self, mock_osclients):
+        fakenclient = fakes.FakeNovaClient()
+        fake_pool = fakes.FakeFloatingIPPool()
+        fake_pool.name = "floating"
+        fakenclient.floating_ip_pools.list = mock.MagicMock(
+            return_value=[fake_pool])
+        mock_osclients.nova.return_value = fakenclient
+
+        validator = validation.external_network_exists("floating_network",
+                                                       "use_floatingip")
+
+        network_name = "not_used"
+
+        result = validator(clients=mock_osclients,
+                           floating_network=network_name,
+                           use_floatingip=False)
+
+        self.assertFalse(fakenclient.floating_ip_pools.list.called)
+        self.assertTrue(result.is_valid)
+        self.assertIsNone(result.msg)
+
+    @mock.patch("rally.osclients.Clients")
+    def test_external_network_exists_fail(self, mock_osclients):
+        fakenclient = fakes.FakeNovaClient()
+        fake_pool = fakes.FakeFloatingIPPool()
+        fake_pool.name = "floating"
+        fakenclient.floating_ip_pools.list = mock.MagicMock(
+            return_value=[fake_pool])
+        mock_osclients.nova.return_value = fakenclient
+
+        validator = validation.external_network_exists("floating_network",
+                                                       "use_floatingip")
+
+        network_name = "foo"
+
+        result = validator(clients=mock_osclients,
+                           floating_network=network_name)
+
+        fakenclient.floating_ip_pools.list.assert_called_once_with()
+        self.assertFalse(result.is_valid)
+        self.assertEqual(result.msg, "External (floating) network with name "
+                                     "foo not found. "
+                                     "Available networks: ['floating']")
+
+    @mock.patch("rally.osclients.Clients")
     def test_image_valid_on_flavor_flavor_not_exist(self, mock_osclients):
         fakegclient = fakes.FakeGlanceClient()
         mock_osclients.glance.return_value = fakegclient
