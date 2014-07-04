@@ -48,7 +48,7 @@ class TempestContextTestCase(test.TestCase):
 
         self.assertEqual(0, mock_install.call_count)
         self.assertEqual(1, mock_cfg.call_count)
-        self.assertEqual('/dev/null', benchmark.verifier.log_file)
+        self.assertEqual('/dev/null', benchmark.verifier.log_file_raw)
 
     @mock.patch(CONTEXT + ".os.mkdir")
     @mock.patch(TEMPEST + ".Tempest.is_configured")
@@ -64,12 +64,14 @@ class TempestContextTestCase(test.TestCase):
         self.assertRaises(exceptions.BenchmarkSetupFailure, benchmark.setup)
         self.assertEqual(0, mock_is_cfg.call_count)
 
+    @mock.patch(CONTEXT + ".os.path.exists")
     @mock.patch(CONTEXT + ".shutil")
     @mock.patch(CONTEXT + ".subprocess")
-    def test_cleanup(self, mock_sp, mock_shutil):
+    def test_cleanup(self, mock_sp, mock_shutil, mock_os_path_exists):
         benchmark = tempest.Tempest(self.context)
         benchmark.verifier = mock.MagicMock()
         benchmark.results_dir = "/tmp/path"
+        mock_os_path_exists.return_value = True
 
         benchmark.cleanup()
 
