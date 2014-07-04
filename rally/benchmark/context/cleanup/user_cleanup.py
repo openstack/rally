@@ -13,7 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import functools
 import sys
 
 import six
@@ -29,11 +28,11 @@ from rally import utils as rutils
 LOG = logging.getLogger(__name__)
 
 
-class ResourceCleaner(base.Context):
-    """Context class for resource cleanup (both admin and non-admin)."""
+class UserCleanup(base.Context):
+    """Context class for user resource cleanup."""
 
     __ctx_name__ = "cleanup"
-    __ctx_order__ = 200
+    __ctx_order__ = 201
     __ctx_hidden__ = True
 
     CONFIG_SCHEMA = {
@@ -42,29 +41,24 @@ class ResourceCleaner(base.Context):
         "items": {
             "type": "string",
             "enum": ["nova", "glance", "cinder",
-                     "quotas", "neutron", "ceilometer", "heat", "sahara"]
+                     "neutron", "ceilometer", "heat", "sahara"]
         },
         "uniqueItems": True
     }
 
     def __init__(self, context):
-        super(ResourceCleaner, self).__init__(context)
-        self.admin = []
-        self.users = []
+        super(UserCleanup, self).__init__(context)
+        self.users_endpoints = []
 
-    @rutils.log_task_wrapper(LOG.info, _("Cleanup users resources."))
-    def _cleanup_users_resources(self):
-        for user in self.users:
+    def _cleanup_resources(self):
+        for user in self.users_endpoints:
             clients = osclients.Clients(user)
-            admin_clients = functools.partial(osclients.Clients, self.admin)
             tenant_id = clients.keystone().tenant_id
             cleanup_methods = {
                 "nova": (utils.delete_nova_resources, clients.nova),
                 "glance": (utils.delete_glance_resources, clients.glance,
                            tenant_id),
                 "cinder": (utils.delete_cinder_resources, clients.cinder),
-                "quotas": (utils.delete_quotas, admin_clients,
-                           tenant_id),
                 "neutron": (utils.delete_neutron_resources, clients.neutron,
                             tenant_id),
                 "ceilometer": (utils.delete_ceilometer_resources,
@@ -74,39 +68,23 @@ class ResourceCleaner(base.Context):
             }
 
             for service_name in self.config:
+                cleanup_method = cleanup_methods[service_name]
+                method = cleanup_method[0]
+                client = cleanup_method[1]()
                 try:
-                    service = cleanup_methods[service_name]
-                    method = service[0]
-                    client = service[1]()
-                    args = service[2:]
-                    method(client, *args)
+                    method(client, *cleanup_method[2:])
                 except Exception as e:
-                    LOG.debug("Not all resources were cleaned.",
+                    LOG.debug("Not all user resources were cleaned.",
                               exc_info=sys.exc_info())
                     LOG.warning(_('Unable to fully cleanup the cloud: %s') %
                                 (six.text_type(e)))
 
-    @rutils.log_task_wrapper(LOG.info, _("Cleanup admin resources."))
-    def _cleanup_admin_resources(self):
-        try:
-            admin = osclients.Clients(self.admin)
-            utils.delete_keystone_resources(admin.keystone())
-        except Exception as e:
-            LOG.debug("Not all resources were cleaned.",
-                      exc_info=sys.exc_info())
-            LOG.warning(_('Unable to fully cleanup keystone service: %s') %
-                        (six.text_type(e)))
-
     @rutils.log_task_wrapper(LOG.info, _("Enter context: `cleanup`"))
     def setup(self):
-        if "admin" in self.context and self.context["admin"]:
-            self.admin = self.context["admin"]["endpoint"]
-        if "users" in self.context and self.context["users"]:
-            self.users = [u["endpoint"] for u in self.context["users"]]
+        self.users_endpoints = [u["endpoint"]
+                                for u in self.context.get("users", [])]
 
     @rutils.log_task_wrapper(LOG.info, _("Exit context: `cleanup`"))
     def cleanup(self):
-        if self.users and self.config:
-            self._cleanup_users_resources()
-        if self.admin:
-            self._cleanup_admin_resources()
+        if self.users_endpoints and self.config:
+            self._cleanup_resources()
