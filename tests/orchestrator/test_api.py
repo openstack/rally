@@ -128,6 +128,8 @@ class APITestCase(test.TestCase):
         mock_utils_runner.return_value = mock_runner = mock.Mock()
         mock_runner.result_queue = collections.deque(['fake_result'])
 
+        mock_runner.run.return_value = 42
+
         mock_osclients.Clients.return_value = fakes.FakeClients()
 
         api.start_task(self.deploy_uuid, self.task_config)
@@ -164,7 +166,8 @@ class APITestCase(test.TestCase):
                 'pos': 0,
             },
             {
-                'raw': ['fake_result']
+                'raw': ['fake_result'],
+                'scenario_duration': 42
             }
         )
 
