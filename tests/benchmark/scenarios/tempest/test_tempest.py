@@ -63,6 +63,31 @@ class TempestScenarioTestCase(test.TestCase):
 
     @mock.patch(TS + ".utils.tempfile")
     @mock.patch(VERIFIER + ".subprocess")
+    def test_single_test_negative(self, mock_sp, mock_tmp):
+        mock_tmp.NamedTemporaryFile().name = "/dev/null"
+        fake_test = "tempest.api.network"
+
+        self.scenario.single_test(test_name=fake_test)
+
+        expected_call = self.get_tests_launcher_cmd([fake_test])
+        mock_sp.check_call.assert_called_once_with(
+            expected_call, cwd=self.verifier.tempest_path,
+            env=self.verifier.env, shell=True)
+
+    @mock.patch(TS + ".utils.tempfile")
+    @mock.patch(VERIFIER + ".subprocess")
+    def test_single_test_without_prefix(self, mock_sp, mock_tmp):
+        mock_tmp.NamedTemporaryFile().name = "/dev/null"
+
+        self.scenario.single_test("network")
+
+        expected_call = self.get_tests_launcher_cmd(["tempest.api.network"])
+        mock_sp.check_call.assert_called_once_with(
+            expected_call, cwd=self.verifier.tempest_path,
+            env=self.verifier.env, shell=True)
+
+    @mock.patch(TS + ".utils.tempfile")
+    @mock.patch(VERIFIER + ".subprocess")
     def test_all(self, mock_sp, mock_tmp):
         mock_tmp.NamedTemporaryFile().name = "/dev/null"
 
@@ -75,12 +100,54 @@ class TempestScenarioTestCase(test.TestCase):
 
     @mock.patch(TS + ".utils.tempfile")
     @mock.patch(VERIFIER + ".subprocess")
-    def test_set(self, mock_sp, mock_tmp):
+    def test_set_smoke(self, mock_sp, mock_tmp):
         mock_tmp.NamedTemporaryFile().name = "/dev/null"
 
         self.scenario.set("smoke")
 
         expected_call = self.get_tests_launcher_cmd(["smoke"])
+        mock_sp.check_call.assert_called_once_with(
+            expected_call, cwd=self.verifier.tempest_path,
+            env=self.verifier.env, shell=True)
+
+    @mock.patch(TS + ".utils.tempfile")
+    @mock.patch(VERIFIER + ".subprocess")
+    def test_set_full(self, mock_sp, mock_tmp):
+        mock_tmp.NamedTemporaryFile().name = "/dev/null"
+
+        self.scenario.set("full")
+
+        expected_call = self.get_tests_launcher_cmd([])
+        mock_sp.check_call.assert_called_once_with(
+            expected_call, cwd=self.verifier.tempest_path,
+            env=self.verifier.env, shell=True)
+
+    @mock.patch(TS + ".utils.tempfile")
+    def test_set_from_list(self, mock_tmp):
+        mock_tmp.NamedTemporaryFile().name = "/dev/null"
+
+        fake_scenarios = ["network", "volume", "baremetal",
+                          "image", "identity", "compute", "database",
+                          "data_processing", "object_storage",
+                          "telemetry", "queuing", "orchestration"]
+        for fake_scenario in fake_scenarios:
+            with mock.patch(VERIFIER + ".subprocess") as mock_sp:
+                self.scenario.set(fake_scenario)
+                fake_test = "tempest.api." + fake_scenario
+
+                expected_call = self.get_tests_launcher_cmd([fake_test])
+                mock_sp.check_call.assert_called_once_with(
+                    expected_call, cwd=self.verifier.tempest_path,
+                    env=self.verifier.env, shell=True)
+
+    @mock.patch(TS + ".utils.tempfile")
+    @mock.patch(VERIFIER + ".subprocess")
+    def test_set_selective(self, mock_sp, mock_tmp):
+        mock_tmp.NamedTemporaryFile().name = "/dev/null"
+
+        self.scenario.set("network")
+
+        expected_call = self.get_tests_launcher_cmd(["tempest.api.network"])
         mock_sp.check_call.assert_called_once_with(
             expected_call, cwd=self.verifier.tempest_path,
             env=self.verifier.env, shell=True)
@@ -94,6 +161,19 @@ class TempestScenarioTestCase(test.TestCase):
         self.scenario.list_of_tests(fake_tests)
 
         expected_call = self.get_tests_launcher_cmd(fake_tests)
+        mock_sp.check_call.assert_called_once_with(
+            expected_call, cwd=self.verifier.tempest_path,
+            env=self.verifier.env, shell=True)
+
+    @mock.patch(TS + ".utils.tempfile")
+    @mock.patch(VERIFIER + ".subprocess")
+    def test_specific_regex(self, mock_sp, mock_tmp):
+        mock_tmp.NamedTemporaryFile().name = "/dev/null"
+        regex = "tempest.fake.test1"
+
+        self.scenario.specific_regex(regex)
+
+        expected_call = self.get_tests_launcher_cmd([regex])
         mock_sp.check_call.assert_called_once_with(
             expected_call, cwd=self.verifier.tempest_path,
             env=self.verifier.env, shell=True)
