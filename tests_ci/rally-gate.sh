@@ -40,4 +40,6 @@ rally -v task start --task $SCENARIO
 mkdir rally-plot
 rally task plot2html --out rally-plot/results.html
 gzip -9 rally-plot/results.html
+rally task results | python -m json.tool > rally-plot/results.json
+gzip -9 rally-plot/results.json
 env
