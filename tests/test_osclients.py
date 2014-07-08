@@ -33,24 +33,33 @@ class OSClientsTestCase(test.TestCase):
                                           "tenant")
         self.clients = osclients.Clients(self.endpoint)
 
+        self.fake_keystone = fakes.FakeKeystoneClient()
+        self.fake_keystone.auth_token = mock.MagicMock()
+        self.service_catalog = self.fake_keystone.service_catalog
+        self.service_catalog.url_for = mock.MagicMock()
+
+        keystone_patcher = mock.patch("rally.osclients.create_keystone_client")
+        self.mock_create_keystone_client = keystone_patcher.start()
+        self.addCleanup(keystone_patcher.stop)
+        self.mock_create_keystone_client.return_value = self.fake_keystone
+
+    def tearDown(self):
+        super(OSClientsTestCase, self).tearDown()
+
     def test_keystone(self):
-        with mock.patch("rally.osclients.keystone") as mock_keystone:
-            fake_keystone = fakes.FakeKeystoneClient()
-            mock_keystone.Client = mock.MagicMock(return_value=fake_keystone)
-            self.assertTrue("keystone" not in self.clients.cache)
-            client = self.clients.keystone()
-            self.assertEqual(client, fake_keystone)
-            endpoint = {"timeout": cfg.CONF.openstack_client_http_timeout,
-                        "insecure": False, "cacert": None}
-            kwargs = dict(self.endpoint.to_dict().items() + endpoint.items())
-            mock_keystone.Client.assert_called_once_with(**kwargs)
-            self.assertEqual(self.clients.cache["keystone"], fake_keystone)
+        self.assertTrue("keystone" not in self.clients.cache)
+        client = self.clients.keystone()
+        self.assertEqual(client, self.fake_keystone)
+        endpoint = {"timeout": cfg.CONF.openstack_client_http_timeout,
+                    "insecure": False, "cacert": None}
+        kwargs = dict(self.endpoint.to_dict().items() + endpoint.items())
+        self.mock_create_keystone_client.assert_called_once_with(kwargs)
+        self.assertEqual(self.clients.cache["keystone"], self.fake_keystone)
 
     @mock.patch("rally.osclients.Clients.keystone")
     def test_verified_keystone_user_not_admin(self, mock_keystone):
         mock_keystone.return_value = fakes.FakeKeystoneClient()
-        mock_keystone.return_value.auth_ref["user"]["roles"] = [{"name":
-                                                                 "notadmin"}]
+        mock_keystone.return_value.auth_ref.role_names = ["notadmin"]
         self.assertRaises(exceptions.InvalidAdminException,
                           self.clients.verified_keystone)
 
@@ -75,14 +84,17 @@ class OSClientsTestCase(test.TestCase):
             self.assertTrue("nova" not in self.clients.cache)
             client = self.clients.nova()
             self.assertEqual(client, fake_nova)
+            self.service_catalog.url_for.assert_called_once_with(
+                service_type='compute', endpoint_type='public',
+                region_name=self.endpoint.region_name)
             mock_nova.Client.assert_called_once_with(
-                "2", self.endpoint.username, self.endpoint.password,
-                self.endpoint.tenant_name, auth_url=self.endpoint.auth_url,
-                region_name=self.endpoint.region_name,
-                service_type="compute",
+                "2",
+                auth_token=self.fake_keystone.auth_token,
                 http_log_debug=False,
                 timeout=cfg.CONF.openstack_client_http_timeout,
                 insecure=False, cacert=None)
+            client.set_management_url.assert_called_once_with(
+                self.service_catalog.url_for.return_value)
             self.assertEqual(self.clients.cache["nova"], fake_nova)
 
     @mock.patch("rally.osclients.neutron")
@@ -93,15 +105,15 @@ class OSClientsTestCase(test.TestCase):
         client = self.clients.neutron()
         self.assertEqual(client, fake_neutron)
         kw = {
-            "username": self.endpoint.username,
-            "password": self.endpoint.password,
-            "tenant_name": self.endpoint.tenant_name,
-            "auth_url": self.endpoint.auth_url,
-            "region_name": self.endpoint.region_name,
+            "token": self.fake_keystone.auth_token,
+            "endpoint_url": self.service_catalog.url_for.return_value,
             "timeout": cfg.CONF.openstack_client_http_timeout,
             "insecure": cfg.CONF.https_insecure,
             "cacert": cfg.CONF.https_cacert
         }
+        self.service_catalog.url_for.assert_called_once_with(
+            service_type='network', endpoint_type='public',
+            region_name=self.endpoint.region_name)
         mock_neutron.Client.assert_called_once_with("2.0", **kw)
         self.assertEqual(self.clients.cache["neutron"], fake_neutron)
 
@@ -109,36 +121,38 @@ class OSClientsTestCase(test.TestCase):
         with mock.patch("rally.osclients.glance") as mock_glance:
             fake_glance = fakes.FakeGlanceClient()
             mock_glance.Client = mock.MagicMock(return_value=fake_glance)
-            kc = fakes.FakeKeystoneClient()
-            self.clients.keystone = mock.MagicMock(return_value=kc)
             self.assertTrue("glance" not in self.clients.cache)
             client = self.clients.glance()
             self.assertEqual(client, fake_glance)
-            endpoint = kc.service_catalog.get_endpoints()["image"][0]
-
-            kw = {"endpoint": endpoint["publicURL"],
-                  "token": kc.auth_token,
+            kw = {"endpoint": self.service_catalog.url_for.return_value,
+                  "token": self.fake_keystone.auth_token,
                   "timeout": cfg.CONF.openstack_client_http_timeout,
-                  "insecure": False, "cacert": None,
-                  "region_name": None}
+                  "insecure": False, "cacert": None}
+            self.service_catalog.url_for.assert_called_once_with(
+                service_type='image', endpoint_type='public',
+                region_name=self.endpoint.region_name)
             mock_glance.Client.assert_called_once_with("1", **kw)
             self.assertEqual(self.clients.cache["glance"], fake_glance)
 
     def test_cinder(self):
         with mock.patch("rally.osclients.cinder") as mock_cinder:
             fake_cinder = fakes.FakeCinderClient()
+            fake_cinder.client = mock.MagicMock()
             mock_cinder.Client = mock.MagicMock(return_value=fake_cinder)
             self.assertTrue("cinder" not in self.clients.cache)
             client = self.clients.cinder()
             self.assertEqual(client, fake_cinder)
+            self.service_catalog.url_for.assert_called_once_with(
+                service_type='volume', endpoint_type='public',
+                region_name=self.endpoint.region_name)
             mock_cinder.Client.assert_called_once_with(
-                "1", self.endpoint.username, self.endpoint.password,
-                self.endpoint.tenant_name, auth_url=self.endpoint.auth_url,
-                region_name=self.endpoint.region_name,
-                service_type="volume",
-                http_log_debug=False,
+                "1", None, None, http_log_debug=False,
                 timeout=cfg.CONF.openstack_client_http_timeout,
                 insecure=False, cacert=None)
+            self.assertEqual(fake_cinder.client.management_url,
+                             self.service_catalog.url_for.return_value)
+            self.assertEqual(fake_cinder.client.auth_token,
+                             self.fake_keystone.auth_token)
             self.assertEqual(self.clients.cache["cinder"], fake_cinder)
 
     def test_ceilometer(self):
@@ -146,19 +160,16 @@ class OSClientsTestCase(test.TestCase):
             fake_ceilometer = fakes.FakeCeilometerClient()
             mock_ceilometer.Client = mock.MagicMock(
                 return_value=fake_ceilometer)
-            kc = fakes.FakeKeystoneClient()
-            self.clients.keystone = mock.MagicMock(return_value=kc)
             self.assertTrue("ceilometer" not in self.clients.cache)
-            kc.auth_token = mock.MagicMock()
             client = self.clients.ceilometer()
             self.assertEqual(client, fake_ceilometer)
-            endpoint = kc.service_catalog.get_endpoints()["metering"][0]
-
-            kw = {"endpoint": endpoint["publicURL"],
-                  "token": kc.auth_token,
+            self.service_catalog.url_for.assert_called_once_with(
+                service_type='metering', endpoint_type='public',
+                region_name=self.endpoint.region_name)
+            kw = {"endpoint": self.service_catalog.url_for.return_value,
+                  "token": self.fake_keystone.auth_token,
                   "timeout": cfg.CONF.openstack_client_http_timeout,
-                  "insecure": False, "cacert": None,
-                  "region_name": None}
+                  "insecure": False, "cacert": None}
             mock_ceilometer.Client.assert_called_once_with("2", **kw)
             self.assertEqual(self.clients.cache["ceilometer"],
                              fake_ceilometer)
@@ -166,20 +177,21 @@ class OSClientsTestCase(test.TestCase):
     @mock.patch("rally.osclients.ironic")
     def test_ironic(self, mock_ironic):
         fake_ironic = fakes.FakeIronicClient()
-        mock_ironic.Client = mock.MagicMock(return_value=fake_ironic)
+        mock_ironic.get_client = mock.MagicMock(return_value=fake_ironic)
         self.assertTrue("ironic" not in self.clients.cache)
         client = self.clients.ironic()
         self.assertEqual(client, fake_ironic)
+        self.service_catalog.url_for.assert_called_once_with(
+            service_type='baremetal', endpoint_type='public',
+            region_name=self.endpoint.region_name)
         kw = {
-            "username": self.endpoint.username,
-            "password": self.endpoint.password,
-            "tenant_name": self.endpoint.tenant_name,
-            "auth_url": self.endpoint.auth_url,
+            "os_auth_token": self.fake_keystone.auth_token,
+            "ironic_url": self.service_catalog.url_for.return_value,
             "timeout": cfg.CONF.openstack_client_http_timeout,
             "insecure": cfg.CONF.https_insecure,
             "cacert": cfg.CONF.https_cacert
         }
-        mock_ironic.Client.assert_called_once_with("1.0", **kw)
+        mock_ironic.get_client.assert_called_once_with("1.0", **kw)
         self.assertEqual(self.clients.cache["ironic"], fake_ironic)
 
     @mock.patch("rally.osclients.sahara")

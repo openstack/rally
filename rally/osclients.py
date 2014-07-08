@@ -20,8 +20,10 @@ from cinderclient import client as cinder
 import glanceclient as glance
 from heatclient import client as heat
 from ironicclient import client as ironic
+from keystoneclient import discover as keystone_discover
 from keystoneclient import exceptions as keystone_exceptions
-from keystoneclient.v2_0 import client as keystone
+from keystoneclient.v2_0 import client as keystone_v2
+from keystoneclient.v3 import client as keystone_v3
 from neutronclient.neutron import client as neutron
 from novaclient import client as nova
 from oslo.config import cfg
@@ -60,6 +62,18 @@ def cached(func):
     return wrapper
 
 
+def create_keystone_client(args):
+    discover = keystone_discover.Discover(**args)
+    for version_data in discover.version_data():
+        version = version_data['version']
+        if version[0] <= 2:
+            return keystone_v2.Client(**args)
+        elif version[0] == 3:
+            return keystone_v3.Client(**args)
+    raise exceptions.RallyException(
+        'Failed to discover keystone version for url %(auth_url)s.', **args)
+
+
 class Clients(object):
     """This class simplify and unify work with openstack python clients."""
 
@@ -90,7 +104,7 @@ class Clients(object):
                 )
             else:
                 kw["endpoint"] = kw["auth_url"]
-        client = keystone.Client(**kw)
+        client = create_keystone_client(kw)
         client.authenticate()
         return client
 
@@ -102,8 +116,7 @@ class Clients(object):
         try:
             # Ensure that user is admin
             client = self.keystone()
-            roles = client.auth_ref['user']['roles']
-            if not any('admin' == role['name'] for role in roles):
+            if 'admin' not in client.auth_ref.role_names:
                 raise exceptions.InvalidAdminException(
                     username=self.endpoint.username)
         except keystone_exceptions.Unauthorized:
@@ -116,28 +129,29 @@ class Clients(object):
     @cached
     def nova(self, version='2'):
         """Return nova client."""
+        kc = self.keystone()
+        compute_api_url = kc.service_catalog.url_for(
+            service_type='compute', endpoint_type='public',
+            region_name=self.endpoint.region_name)
         client = nova.Client(version,
-                             self.endpoint.username,
-                             self.endpoint.password,
-                             self.endpoint.tenant_name,
-                             auth_url=self.endpoint.auth_url,
-                             region_name=self.endpoint.region_name,
-                             service_type='compute',
+                             auth_token=kc.auth_token,
                              http_log_debug=CONF.debug,
                              timeout=CONF.openstack_client_http_timeout,
                              insecure=CONF.https_insecure,
                              cacert=CONF.https_cacert)
+        client.set_management_url(compute_api_url)
         return client
 
     @cached
     def neutron(self, version='2.0'):
         """Return neutron client."""
+        kc = self.keystone()
+        network_api_url = kc.service_catalog.url_for(
+            service_type='network', endpoint_type='public',
+            region_name=self.endpoint.region_name)
         client = neutron.Client(version,
-                                username=self.endpoint.username,
-                                password=self.endpoint.password,
-                                tenant_name=self.endpoint.tenant_name,
-                                auth_url=self.endpoint.auth_url,
-                                region_name=self.endpoint.region_name,
+                                token=kc.auth_token,
+                                endpoint_url=network_api_url,
                                 timeout=CONF.openstack_client_http_timeout,
                                 insecure=CONF.https_insecure,
                                 cacert=CONF.https_cacert)
@@ -147,11 +161,12 @@ class Clients(object):
     def glance(self, version='1'):
         """Return glance client."""
         kc = self.keystone()
-        endpoint = kc.service_catalog.get_endpoints()['image'][0]
+        image_api_url = kc.service_catalog.url_for(
+            service_type='image', endpoint_type='public',
+            region_name=self.endpoint.region_name)
         client = glance.Client(version,
-                               endpoint=endpoint['publicURL'],
+                               endpoint=image_api_url,
                                token=kc.auth_token,
-                               region_name=self.endpoint.region_name,
                                timeout=CONF.openstack_client_http_timeout,
                                insecure=CONF.https_insecure,
                                cacert=CONF.https_cacert)
@@ -161,12 +176,12 @@ class Clients(object):
     def heat(self, version='1'):
         """Return heat client."""
         kc = self.keystone()
-        endpoint = kc.service_catalog.get_endpoints()['orchestration'][0]
-
+        orchestration_api_url = kc.service_catalog.url_for(
+            service_type='orchestration', endpoint_type='public',
+            region_name=self.endpoint.region_name)
         client = heat.Client(version,
-                             endpoint=endpoint['publicURL'],
+                             endpoint=orchestration_api_url,
                              token=kc.auth_token,
-                             region_name=self.endpoint.region_name,
                              timeout=CONF.openstack_client_http_timeout,
                              insecure=CONF.https_insecure,
                              cacert=CONF.https_cacert)
@@ -175,33 +190,34 @@ class Clients(object):
     @cached
     def cinder(self, version='1'):
         """Return cinder client."""
-        client = cinder.Client(version,
-                               self.endpoint.username,
-                               self.endpoint.password,
-                               self.endpoint.tenant_name,
-                               auth_url=self.endpoint.auth_url,
-                               region_name=self.endpoint.region_name,
-                               service_type='volume',
+        client = cinder.Client(version, None, None,
                                http_log_debug=CONF.debug,
                                timeout=CONF.openstack_client_http_timeout,
                                insecure=CONF.https_insecure,
                                cacert=CONF.https_cacert)
+        kc = self.keystone()
+        volume_api_url = kc.service_catalog.url_for(
+            service_type='volume', endpoint_type='public',
+            region_name=self.endpoint.region_name)
+        client.client.management_url = volume_api_url
+        client.client.auth_token = kc.auth_token
         return client
 
     @cached
     def ceilometer(self, version='2'):
         """Return ceilometer client."""
         kc = self.keystone()
-        endpoint = kc.service_catalog.get_endpoints()['metering'][0]
+        metering_api_url = kc.service_catalog.url_for(
+            service_type='metering', endpoint_type='public',
+            region_name=self.endpoint.region_name)
         auth_token = kc.auth_token
         if not hasattr(auth_token, '__call__'):
             # python-ceilometerclient requires auth_token to be a callable
             auth_token = lambda: kc.auth_token
 
         client = ceilometer.Client(version,
-                                   endpoint=endpoint['publicURL'],
+                                   endpoint=metering_api_url,
                                    token=auth_token,
-                                   region_name=self.endpoint.region_name,
                                    timeout=CONF.openstack_client_http_timeout,
                                    insecure=CONF.https_insecure,
                                    cacert=CONF.https_cacert)
@@ -210,14 +226,16 @@ class Clients(object):
     @cached
     def ironic(self, version='1.0'):
         """Return Ironic client."""
-        client = ironic.Client(version,
-                               username=self.endpoint.username,
-                               password=self.endpoint.password,
-                               tenant_name=self.endpoint.tenant_name,
-                               auth_url=self.endpoint.auth_url,
-                               timeout=CONF.openstack_client_http_timeout,
-                               insecure=CONF.https_insecure,
-                               cacert=CONF.https_cacert)
+        kc = self.keystone()
+        baremetal_api_url = kc.service_catalog.url_for(
+            service_type='baremetal', endpoint_type='public',
+            region_name=self.endpoint.region_name)
+        client = ironic.get_client(version,
+                                   os_auth_token=kc.auth_token,
+                                   ironic_url=baremetal_api_url,
+                                   timeout=CONF.openstack_client_http_timeout,
+                                   insecure=CONF.https_insecure,
+                                   cacert=CONF.https_cacert)
         return client
 
     @cached

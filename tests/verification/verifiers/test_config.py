@@ -43,6 +43,10 @@ class ConfigTestCase(test.TestCase):
         self.deploy_id = "fake_deploy_id"
         self.conf_generator = config.TempestConf(self.deploy_id)
 
+        keystone_patcher = mock.patch("rally.osclients.create_keystone_client")
+        keystone_patcher.start()
+        self.addCleanup(keystone_patcher.stop)
+
     def _remove_default_section(self, items):
         # getting items from configparser by specified section name
         # retruns also values from DEFAULT section
@@ -149,8 +153,7 @@ class ConfigTestCase(test.TestCase):
                           self.conf_generator._set_compute_flavors)
 
     @mock.patch("rally.osclients.glance")
-    @mock.patch("rally.osclients.keystone")
-    def test__set_compute_images(self, mock_keystone, mock_glance):
+    def test__set_compute_images(self, mock_glance):
         mock_glanceclient = mock.MagicMock()
         mock_glanceclient.images.list.return_value = [
             fakes.FakeImage(id="id1", name="cirros1"),
@@ -163,10 +166,8 @@ class ConfigTestCase(test.TestCase):
         self.assertEqual(sorted(expected), sorted(results))
 
     @mock.patch("rally.osclients.glance")
-    @mock.patch("rally.osclients.keystone")
     @mock.patch("six.moves.builtins.open")
-    def test__set_compute_images_create(self, mock_open, mock_keystone,
-                                        mock_glance):
+    def test__set_compute_images_create(self, mock_open, mock_glance):
         mock_glanceclient = mock.MagicMock()
         mock_glanceclient.images.list.return_value = []
         mock_glanceclient.images.create.side_effect = [
@@ -180,9 +181,7 @@ class ConfigTestCase(test.TestCase):
         self.assertEqual(sorted(expected), sorted(results))
 
     @mock.patch("rally.osclients.glance")
-    @mock.patch("rally.osclients.keystone")
-    def test__set_compute_images_create_fails(self, mock_keystone,
-                                              mock_glance):
+    def test__set_compute_images_create_fails(self, mock_glance):
         mock_glanceclient = mock.MagicMock()
         mock_glanceclient.images.list.return_value = []
         mock_glanceclient.images.create.side_effect = Exception()

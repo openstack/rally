@@ -546,6 +546,9 @@ class FakeServiceCatalog(object):
         return {'image': [{'publicURL': 'http://fake.to'}],
                 'metering': [{'publicURL': 'http://fake.to'}]}
 
+    def url_for(self, **kwargs):
+        return 'http://fake.to'
+
 
 class FakeGlanceClient(object):
 
@@ -583,6 +586,7 @@ class FakeNovaClient(object):
         self.security_groups = FakeSecurityGroupManager(
             rule_manager=self.security_group_rules)
         self.quotas = FakeNovaQuotasManager()
+        self.set_management_url = mock.MagicMock()
 
 
 class FakeKeystoneClient(object):
@@ -598,7 +602,11 @@ class FakeKeystoneClient(object):
         self.auth_tenant_id = generate_uuid()
         self.service_catalog = FakeServiceCatalog()
         self.region_name = 'RegionOne'
-        self.auth_ref = {'user': {'roles': [{'name': 'admin'}]}}
+        self.auth_ref = mock.Mock()
+        self.auth_ref.role_names = ['admin']
+        self.version = 'v2.0'
+        self.session = mock.Mock()
+        self.authenticate = mock.MagicMock()
 
     def authenticate(self):
         return True

@@ -36,6 +36,22 @@ class ExistingCloud(engine.EngineFactory):
                 }
             }
 
+       Or using keystone v3 API endpoint:
+
+            {
+                "type": "ExistingCloud",
+                "endpoint": {
+                    "auth_url": "http://localhost:5000/v3/",
+                    "username": "engineer1",
+                    "user_domain_name": "qa",
+                    "project_name": "qa_admin_project",
+                    "project_domain_name": "qa",
+                    "password": "password",
+                    "region_name": "RegionOne",
+                    "use_public_urls": False,
+                    "admin_port": 35357,
+                }
+            }
     """
 
     CONFIG_SCHEMA = {
@@ -48,17 +64,34 @@ class ExistingCloud(engine.EngineFactory):
                     'auth_url': {'type': 'string'},
                     'username': {'type': 'string'},
                     'password': {'type': 'string'},
-                    'tenant_name': {'type': 'string'},
                     'region_name': {'type': 'string'},
                     'use_public_urls': {'type': 'boolean'},
                     'admin_port': {
                         'type': 'integer',
                         'minimum': 2,
                         'maximum': 65535
-                    }
+                    },
                 },
-                'required': ['auth_url', 'username', 'password',
-                             'tenant_name'],
+                'oneOf': [
+                    {
+                        # v2.0 authentication
+                        'properties': {
+                            'tenant_name': {'type': 'string'},
+                        },
+                        'required': ['auth_url', 'username', 'password',
+                                     'tenant_name'],
+                    },
+                    {
+                        # Authentication in project scope
+                        'properties': {
+                            'user_domain_name': {'type': 'string'},
+                            'project_name': {'type': 'string'},
+                            'project_domain_name': {'type': 'string'},
+                        },
+                        'required': ['auth_url', 'username', 'password',
+                                     'project_name'],
+                    },
+                ]
             },
         },
         'required': ['type', 'endpoint'],
@@ -66,16 +99,23 @@ class ExistingCloud(engine.EngineFactory):
 
     def deploy(self):
         endpoint_dict = self.deployment['config']['endpoint']
-        admin_endpoint = objects.Endpoint(endpoint_dict['auth_url'],
-                                          endpoint_dict['username'],
-                                          endpoint_dict['password'],
-                                          endpoint_dict['tenant_name'],
-                                          consts.EndpointPermission.ADMIN,
-                                          endpoint_dict.get('region_name'),
-                                          endpoint_dict.get('use_public_urls',
-                                                            True),
-                                          endpoint_dict.get('admin_port',
-                                                            35357))
+        project_name = endpoint_dict.get('project_name',
+                                         endpoint_dict.get('tenant_name'))
+
+        admin_endpoint = objects.Endpoint(
+            endpoint_dict['auth_url'], endpoint_dict['username'],
+            endpoint_dict['password'],
+            tenant_name=project_name,
+            permission=consts.EndpointPermission.ADMIN,
+            region_name=endpoint_dict.get('region_name'),
+            use_public_urls=endpoint_dict.get('use_public_urls', False),
+            admin_port=endpoint_dict.get('admin_port', 35357),
+            domain_name=endpoint_dict.get('domain_name'),
+            user_domain_name=endpoint_dict.get('user_domain_name',
+                                               'Default'),
+            project_domain_name=endpoint_dict.get('project_domain_name',
+                                                  'Default')
+        )
         return [admin_endpoint]
 
     def cleanup(self):

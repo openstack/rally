@@ -36,6 +36,9 @@ FAKE_DEPLOY_CONFIG = {
         'region_name': 'RegionOne',
         'use_public_urls': False,
         'admin_port': 35357,
+        'domain_name': None,
+        'project_domain_name': 'Default',
+        'user_domain_name': 'Default',
     },
 }
 

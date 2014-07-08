@@ -33,8 +33,11 @@ class TestExistingCloud(test.TestCase):
                     'password': 'myadminpass',
                     'tenant_name': 'demo',
                     'region_name': 'RegionOne',
-                    'use_public_urls': True,
-                    'admin_port': 35357
+                    'use_public_urls': False,
+                    'admin_port': 35357,
+                    'domain_name': None,
+                    'project_domain_name': 'Default',
+                    'user_domain_name': 'Default',
                 },
             },
         }

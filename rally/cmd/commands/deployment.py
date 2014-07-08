@@ -181,8 +181,8 @@ class DeploymentCommands(object):
                 client = clients.verified_keystone()
                 print("keystone endpoints are valid and following "
                       "services are available:")
-                for service in client.service_catalog.get_data():
-                    data = [service['name'], service['type'], 'Available']
+                for service in client.services.list():
+                    data = [service.name, service.type, 'Available']
                     table_rows.append(utils.Struct(**dict(zip(headers, data))))
         except exceptions.InvalidArgumentsException:
             data = ['keystone', 'identity', 'Error']

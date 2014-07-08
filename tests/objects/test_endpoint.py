@@ -25,4 +25,7 @@ class EndpointTestCase(test.TestCase):
                          {"auth_url": "url", "username": "user",
                           "password": "pwd", "tenant_name": "tenant",
                           "region_name": None, "permission": "admin",
-                          "use_public_urls": False, 'admin_port': 35357})
+                          "domain_name": None, "use_public_urls": False,
+                          "project_domain_name": "Default",
+                          "user_domain_name": "Default",
+                          'admin_port': 35357})

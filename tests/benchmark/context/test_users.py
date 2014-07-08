@@ -19,7 +19,6 @@ import mock
 
 from rally.benchmark.context import users
 from rally.benchmark import utils
-from tests import fakes
 from tests import test
 
 
@@ -49,12 +48,26 @@ class UserGeneratorTestCase(test.TestCase):
             "task": mock.MagicMock()
         }
 
-    @mock.patch("rally.benchmark.context.users.osclients")
-    def test_create_tenant_users(self, mock_osclients):
-        users_num = 5
-        args = (mock.MagicMock(), users_num,
-                'ad325aec-f7b4-4a62-832a-bb718e465bb7', 1)
+    def setUp(self):
+        super(UserGeneratorTestCase, self).setUp()
+        self.osclients_patcher = mock.patch(
+            "rally.benchmark.context.users.osclients")
+        self.osclients = self.osclients_patcher.start()
 
+        self.keystone_wrapper_patcher = mock.patch(
+            "rally.benchmark.context.users.keystone")
+        self.keystone_wrapper = self.keystone_wrapper_patcher.start()
+        self.wrapped_keystone = self.keystone_wrapper.wrap.return_value
+
+    def tearDown(self):
+        self.keystone_wrapper_patcher.stop()
+        self.osclients_patcher.stop()
+        super(UserGeneratorTestCase, self).tearDown()
+
+    def test_create_tenant_users(self):
+        users_num = 5
+        args = (mock.MagicMock(), users_num, 'default', 'default',
+                'ad325aec-f7b4-4a62-832a-bb718e465bb7', 1)
         result = users.UserGenerator._create_tenant_users(args)
 
         self.assertEqual(len(result), 2)
@@ -66,55 +79,55 @@ class UserGeneratorTestCase(test.TestCase):
             self.assertIn("id", user)
             self.assertIn("endpoint", user)
 
-    @mock.patch("rally.benchmark.context.users.osclients")
-    def test_delete_tenants(self, mock_osclients):
+    def test_delete_tenants(self):
         tenant1 = mock.MagicMock()
         tenant2 = mock.MagicMock()
         args = (mock.MagicMock(), [tenant1, tenant2])
         users.UserGenerator._delete_tenants(args)
-        mock_osclients.Clients().keystone().tenants.delete.assert_has_calls([
+        self.keystone_wrapper.wrap.assert_called_once()
+        self.wrapped_keystone.delete_project.assert_has_calls([
             mock.call(tenant1["id"]),
             mock.call(tenant2["id"])])
 
-    @mock.patch("rally.benchmark.context.users.osclients")
-    def test_delete_users(self, mock_osclients):
+    def test_delete_users(self):
         user1 = mock.MagicMock()
         user2 = mock.MagicMock()
         args = (mock.MagicMock(), [user1, user2])
         users.UserGenerator._delete_users(args)
-        mock_osclients.Clients().keystone().users.delete.assert_has_calls([
+        self.wrapped_keystone.delete_user.assert_has_calls([
             mock.call(user1["id"]),
             mock.call(user2["id"])])
 
-    @mock.patch("rally.benchmark.context.users.osclients")
-    def test_setup_and_cleanup(self, mock_osclients):
-        fc = fakes.FakeClients()
-        mock_osclients.Clients.return_value = fc
-
+    def test_setup_and_cleanup(self):
         with users.UserGenerator(self.context) as ctx:
-            self.assertEqual(len(fc.keystone().users.list()), 0)
-            self.assertEqual(len(fc.keystone().tenants.list()), 0)
+            self.assertEqual(self.wrapped_keystone.create_user.call_count, 0)
+            self.assertEqual(self.wrapped_keystone.create_project.call_count,
+                             0)
 
             ctx.setup()
 
             self.assertEqual(len(ctx.context["users"]),
                              self.users_num)
-            self.assertEqual(len(fc.keystone().users.list()),
+            self.assertEqual(self.wrapped_keystone.create_user.call_count,
                              self.users_num)
             self.assertEqual(len(ctx.context["tenants"]),
                              self.tenants_num)
-            self.assertEqual(len(fc.keystone().tenants.list()),
+            self.assertEqual(self.wrapped_keystone.create_project.call_count,
                              self.tenants_num)
 
+            # Assert nothing is deleted yet
+            self.assertEqual(self.wrapped_keystone.delete_user.call_count,
+                             0)
+            self.assertEqual(self.wrapped_keystone.delete_project.call_count,
+                             0)
+
         # Cleanup (called by content manager)
-        self.assertEqual(len(fc.keystone().users.list()), 0)
-        self.assertEqual(len(fc.keystone().tenants.list()), 0)
+        self.assertEqual(self.wrapped_keystone.delete_user.call_count,
+                         self.users_num)
+        self.assertEqual(self.wrapped_keystone.delete_project.call_count,
+                         self.tenants_num)
 
-    @mock.patch("rally.benchmark.context.users.osclients")
-    def test_users_and_tenants_in_context(self, mock_osclients):
-        fc = fakes.FakeClients()
-        mock_osclients.Clients.return_value = fc
-
+    def test_users_and_tenants_in_context(self):
         task = {"uuid": "abcdef"}
 
         config = {
@@ -129,30 +142,32 @@ class UserGeneratorTestCase(test.TestCase):
             "task": task
         }
 
+        user_list = [mock.MagicMock(id='id_%d' % i)
+                     for i in range(self.users_num)]
+        self.wrapped_keystone.create_user.side_effect = user_list
+
         with users.UserGenerator(config) as ctx:
             ctx.setup()
 
-            tenants = []
-            for i, t in enumerate(fc.keystone().tenants.list()):
+            create_tenant_calls = []
+            for i, t in enumerate(ctx.context["tenants"]):
                 pattern = users.UserGenerator.PATTERN_TENANT
-                tenants.append({
-                    "id": t.id,
-                    "name": pattern % {"task_id": task["uuid"], "iter": i}
-                })
+                create_tenant_calls.append(
+                    mock.call(pattern % {"task_id": task["uuid"], "iter": i},
+                              ctx.config["project_domain"]))
 
-            self.assertEqual(ctx.context["tenants"], tenants)
+            self.wrapped_keystone.create_project.assert_has_calls(
+                create_tenant_calls, any_order=True)
 
             for user in ctx.context["users"]:
                 self.assertEqual(set(["id", "endpoint", "tenant_id"]),
                                  set(user.keys()))
 
             tenants_ids = []
-            for t in tenants:
+            for t in ctx.context["tenants"]:
                 tenants_ids.extend([t["id"], t["id"]])
 
-            users_ids = [user.id for user in fc.keystone().users.list()]
-
-            for (user, tenant_id, user_id) in zip(ctx.context["users"],
-                                                  tenants_ids, users_ids):
-                self.assertEqual(user["id"], user_id)
+            for (user, tenant_id, orig_user) in zip(ctx.context["users"],
+                                                    tenants_ids, user_list):
+                self.assertEqual(user["id"], orig_user.id)
                 self.assertEqual(user["tenant_id"], tenant_id)

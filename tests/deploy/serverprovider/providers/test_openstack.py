@@ -88,9 +88,9 @@ class OpenStackProviderTestCase(test.TestCase):
         self.assertEqual('nova', os_provider.nova)
         self.assertEqual('glance', os_provider.glance)
 
-    @mock.patch('rally.osclients.Clients.glance')
-    def test_init_no_glance(self, mock_glance):
-        mock_glance.side_effect = KeyError('image')
+    @mock.patch('rally.osclients.Clients')
+    def test_init_no_glance(self, mock_clients):
+        mock_clients.return_value.glance.side_effect = KeyError('image')
         cfg = self._get_valid_config()
         provider = OSProvider(mock.MagicMock(), cfg)
         self.assertEqual(provider.glance, None)

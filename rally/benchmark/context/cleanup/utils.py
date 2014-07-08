@@ -19,6 +19,7 @@ from neutronclient.common import exceptions as neutron_exceptions
 
 from rally.benchmark.scenarios.keystone import utils as kutils
 from rally.benchmark import utils as bench_utils
+from rally.benchmark.wrappers import keystone as keystone_wrapper
 
 LOG = logging.getLogger(__name__)
 
@@ -39,14 +40,15 @@ def delete_heat_resources(heat):
 
 
 def delete_keystone_resources(keystone):
-    for resource in ["users", "tenants", "services", "roles"]:
+    keystone = keystone_wrapper.wrap(keystone)
+    for resource in ["user", "project", "service", "role"]:
         _delete_single_keystone_resource_type(keystone, resource)
 
 
 def _delete_single_keystone_resource_type(keystone, resource_name):
-    for resource in getattr(keystone, resource_name).list():
+    for resource in getattr(keystone, "list_%ss" % resource_name)():
         if kutils.is_temporary(resource):
-            resource.delete()
+            getattr(keystone, "delete_%s" % resource_name)(resource.id)
 
 
 def delete_images(glance, project_uuid):

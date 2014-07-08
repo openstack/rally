@@ -17,6 +17,7 @@ from oslo.config import cfg
 
 from rally.benchmark.context import base
 from rally.benchmark import utils
+from rally.benchmark.wrappers import keystone
 from rally import consts
 from rally.objects import endpoint
 from rally.openstack.common.gettextutils import _
@@ -31,7 +32,13 @@ context_opts = [
     cfg.IntOpt("concurrent",
                default=30,
                help="How many concurrent threads use for serving users "
-                    "context")
+                    "context"),
+    cfg.StrOpt("project_domain",
+               default="default",
+               help="ID of domain in which projects will be created."),
+    cfg.StrOpt("user_domain",
+               default="default",
+               help="ID of domain in which users will be created."),
 ]
 
 CONF = cfg.CONF
@@ -63,6 +70,12 @@ class UserGenerator(base.Context):
                 "type": "integer",
                 "minimum": 1
             },
+            "project_domain": {
+                "type": "string",
+            },
+            "user_domain": {
+                "type": "string",
+            },
         },
         "additionalProperties": False
     }
@@ -75,6 +88,10 @@ class UserGenerator(base.Context):
         self.config.setdefault("users_per_tenant", 1)
         self.config.setdefault("concurrent",
                                cfg.CONF.users_context.concurrent)
+        self.config.setdefault("project_domain",
+                               cfg.CONF.users_context.project_domain)
+        self.config.setdefault("user_domain",
+                               cfg.CONF.users_context.user_domain)
         self.context["users"] = []
         self.context["tenants"] = []
         self.endpoint = self.context["admin"]["endpoint"]
@@ -93,24 +110,27 @@ class UserGenerator(base.Context):
         :returns: tuple (dict tenant, list users)
         """
 
-        admin_endpoint, users_num, task_id, i = args
+        admin_endpoint, users_num, project_dom, user_dom, task_id, i = args
         users = []
 
-        client = osclients.Clients(admin_endpoint).keystone()
-        tenant = client.tenants.create(
-            cls.PATTERN_TENANT % {"task_id": task_id, "iter": i})
+        client = keystone.wrap(osclients.Clients(admin_endpoint).keystone())
+        tenant = client.create_project(
+            cls.PATTERN_TENANT % {"task_id": task_id, "iter": i}, project_dom)
 
         LOG.debug("Creating %d users for tenant %s" % (users_num, tenant.id))
 
         for user_id in range(users_num):
             username = cls.PATTERN_USER % {"tenant_id": tenant.id,
                                            "uid": user_id}
-            user = client.users.create(username, "password",
-                                       "%s@email.me" % username, tenant.id)
+            user = client.create_user(username, "password",
+                                      "%s@email.me" % username, tenant.id,
+                                      user_dom)
             user_endpoint = endpoint.Endpoint(client.auth_url, user.name,
                                               "password", tenant.name,
                                               consts.EndpointPermission.USER,
-                                              client.region_name)
+                                              client.region_name,
+                                              project_domain_name=project_dom,
+                                              user_domain_name=user_dom)
             users.append({"id": user.id,
                           "endpoint": user_endpoint,
                           "tenant_id": tenant.id})
@@ -124,11 +144,11 @@ class UserGenerator(base.Context):
         :param args: tuple arguments, for Pool.imap()
         """
         admin_endpoint, tenants = args
-        client = osclients.Clients(admin_endpoint).keystone()
+        client = keystone.wrap(osclients.Clients(admin_endpoint).keystone())
 
         for tenant in tenants:
             try:
-                client.tenants.delete(tenant["id"])
+                client.delete_project(tenant["id"])
             except Exception as ex:
                 LOG.warning("Failed to delete tenant: %(tenant_id)s. "
                             "Exception: %(ex)s" %
@@ -141,11 +161,11 @@ class UserGenerator(base.Context):
         :param args: tuple arguments, for Pool.imap()
         """
         admin_endpoint, users = args
-        client = osclients.Clients(admin_endpoint).keystone()
+        client = keystone.wrap(osclients.Clients(admin_endpoint).keystone())
 
         for user in users:
             try:
-                client.users.delete(user["id"])
+                client.delete_user(user["id"])
             except Exception as ex:
                 LOG.warning("Failed to delete user: %(user_id)s. "
                             "Exception: %(ex)s" %
@@ -157,11 +177,12 @@ class UserGenerator(base.Context):
 
         users_num = self.config["users_per_tenant"]
 
-        args = [(self.endpoint, users_num, self.task["uuid"], i)
+        args = [(self.endpoint, users_num, self.config["project_domain"],
+                 self.config["user_domain"], self.task["uuid"], i)
                 for i in range(self.config["tenants"])]
 
         LOG.debug("Creating %d users using %s threads" % (
-                users_num * self.config["tenants"], self.config["concurrent"]))
+            users_num * self.config["tenants"], self.config["concurrent"]))
 
         for tenant, users in utils.run_concurrent(
                 self.config["concurrent"],
