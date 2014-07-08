@@ -13,6 +13,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import subprocess
+
 import mock
 
 from rally.benchmark.context import tempest
@@ -40,14 +42,14 @@ class TempestContextTestCase(test.TestCase):
     def test_setup(self, mock_is_install, mock_install, mock_is_cfg, mock_cfg,
                    mock_mkdir):
         mock_is_install.return_value = True
-        mock_is_cfg.return_value = False
+        mock_is_cfg.return_value = True
 
         benchmark = tempest.Tempest(self.context)
 
         benchmark.setup()
 
         self.assertEqual(0, mock_install.call_count)
-        self.assertEqual(1, mock_cfg.call_count)
+        self.assertEqual(0, mock_cfg.call_count)
         self.assertEqual('/dev/null', benchmark.verifier.log_file_raw)
 
     @mock.patch(CONTEXT + ".os.mkdir")
@@ -63,6 +65,36 @@ class TempestContextTestCase(test.TestCase):
 
         self.assertRaises(exceptions.BenchmarkSetupFailure, benchmark.setup)
         self.assertEqual(0, mock_is_cfg.call_count)
+
+    @mock.patch(CONTEXT + ".os.mkdir")
+    @mock.patch(TEMPEST + ".Tempest.is_configured")
+    @mock.patch(TEMPEST + ".Tempest.is_installed")
+    @mock.patch(TEMPEST + ".Tempest.generate_config_file")
+    def test_setup_failure_on_tempest_configuration(
+            self, mock_gen, mock_is_installed, mock_is_cfg, mock_mkdir):
+        mock_is_installed.return_value = True
+        mock_is_cfg.return_value = False
+        mock_gen.side_effect = exceptions.TempestConfigCreationFailure()
+
+        benchmark = tempest.Tempest(self.context)
+
+        self.assertRaises(exceptions.BenchmarkSetupFailure, benchmark.setup)
+        self.assertEqual(1, mock_is_cfg.call_count)
+
+    @mock.patch(CONTEXT + ".os.mkdir")
+    @mock.patch(TEMPEST + ".Tempest.is_configured")
+    @mock.patch(TEMPEST + ".Tempest.is_installed")
+    @mock.patch(TEMPEST + ".Tempest.generate_config_file")
+    def test_setup_with_no_configuration(
+            self, mock_gen, mock_is_installed, mock_is_cfg, mock_mkdir):
+        mock_is_installed.return_value = True
+        mock_is_cfg.return_value = False
+
+        benchmark = tempest.Tempest(self.context)
+        benchmark.setup()
+        self.assertEqual(1, mock_is_installed.call_count)
+        self.assertEqual('/dev/null', benchmark.verifier.log_file_raw)
+        self.assertEqual(1, mock_gen.call_count)
 
     @mock.patch(CONTEXT + ".os.path.exists")
     @mock.patch(CONTEXT + ".shutil")
@@ -81,3 +113,15 @@ class TempestContextTestCase(test.TestCase):
             shell=True, cwd=benchmark.verifier.tempest_path,
             env=benchmark.verifier.env)
         mock_shutil.rmtree.assert_called_once_with("/tmp/path")
+
+    @mock.patch(CONTEXT + ".os.path.exists")
+    @mock.patch(CONTEXT + ".shutil")
+    @mock.patch(CONTEXT + ".subprocess")
+    def test_cleanup_fail(self, mock_sp, mock_shutil, mock_os_path_exists):
+        benchmark = tempest.Tempest(self.context)
+        benchmark.verifier = mock.MagicMock()
+        benchmark.results_dir = "/tmp/path"
+        mock_os_path_exists.return_value = False
+        benchmark.cleanup()
+        mock_sp.check_call.side_effect = subprocess.CalledProcessError(0, '')
+        self.assertRaises(subprocess.CalledProcessError, benchmark.cleanup)
