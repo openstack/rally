@@ -166,6 +166,18 @@
           tenants: 1
           users_per_tenant: 1
 
+    -
+      args:
+        exception_probability: 0.05
+      runner:
+        type: "constant"
+        times: 2042
+        concurrency: 1
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+
   Dummy.dummy_with_scenario_output:
     -
       runner:

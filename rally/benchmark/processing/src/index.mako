@@ -58,7 +58,6 @@
 
     <script>
         var DATA = ${data}
-        console.log(DATA)
 
         function draw_stacked(where, source){
             nv.addGraph(function() {

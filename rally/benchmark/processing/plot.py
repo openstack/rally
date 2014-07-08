@@ -23,55 +23,112 @@ from rally.benchmark.processing.charts import histogram as histo
 from rally.benchmark.processing import utils
 
 
-def _process_main_duration(result):
+def _prepare_data(data, reduce_rows=1000):
+    """Prepare data to be displayed.
 
-    pie = filter(lambda t: not t["error"], result["result"])
-    num_successful_iterations = len(pie)
-    stacked_area = map(
-        lambda t: {"idle_duration": 0, "duration": 0} if t["error"] else t,
-        result["result"])
-    histogram_data = filter(None, map(
-        lambda t: t["duration"] if not t["error"] else None,
-        result["result"]))
+      * replace errors with zero values
+      * reduce number of rows if necessary
+      * count errors
+    """
 
+    def _append(d1, d2):
+        for k, v in d1.iteritems():
+            v.append(d2[k])
+
+    def _merge(d1, d2):
+        for k, v in d1.iteritems():
+            v[-1] = (v[-1] + d2[k]) / 2.0
+
+    zero_atomic_actions = {}
+    for row in data["result"]:
+        # find first non-error result to get atomic actions names
+        if not row["error"] and "atomic_actions" in row:
+            zero_atomic_actions = dict([(a["action"], 0)
+                                        for a in row["atomic_actions"]])
+            break
+
+    total_durations = {"duration": [], "idle_duration": []}
+    atomic_durations = dict([(a, []) for a in zero_atomic_actions])
+    num_errors = 0
+
+    # For determining which rows should be merged we are using "factor"
+    # e.g if we have 100 rows and should reduce it to 75 then we should
+    # delete (merge with previous) every 4th row.
+    # If we increment "store" to 0.25 in each iteration then we
+    # get store >= 1 every 4th iteration.
+
+    data_size = len(data["result"])
+    factor = (data_size - reduce_rows + 1) / float(data_size)
+    if factor < 0:
+        factor = 0.0
+    store = 0.0
+
+    for row in data["result"]:
+        row.setdefault("atomic_actions", zero_atomic_actions)
+        if row["error"]:
+            new_row_total = {"duration": 0, "idle_duration": 0}
+            new_row_atomic = zero_atomic_actions
+            num_errors += 1
+        else:
+            new_row_total = {
+                "duration": row["duration"],
+                "idle_duration": row["idle_duration"],
+            }
+            new_row_atomic = dict([(a["action"], a["duration"])
+                                   for a in row["atomic_actions"]])
+        if store < 1:
+            _append(total_durations, new_row_total)
+            _append(atomic_durations, new_row_atomic)
+        else:
+            _merge(total_durations, new_row_total)
+            _merge(atomic_durations, new_row_atomic)
+            store -= 1
+        store += factor
+
+    return {
+        "total_durations": total_durations,
+        "atomic_durations": atomic_durations,
+        "num_errors": num_errors,
+    }
+
+
+def _process_main_duration(result, data):
+    histogram_data = [r["duration"] for r in result["result"]
+                      if not r["error"]]
     histograms = []
-    if num_successful_iterations > 0:
+    if histogram_data:
         hvariety = histo.hvariety(histogram_data)
         for i in range(len(hvariety)):
             histograms.append(histo.Histogram(histogram_data,
                                               hvariety[i]['number_of_bins'],
                                               hvariety[i]['method']))
 
+    stacked_area = []
+    for key in "duration", "idle_duration":
+        stacked_area.append({
+            "key": key,
+            "values": list(enumerate([round(d, 2) for d in
+                                      data["total_durations"][key]], start=1)),
+        })
+
     return {
         "pie": [
-            {"key": "success", "value": len(pie)},
-            {"key": "errors",
-             "value": len(result["result"]) - len(pie)}
+            {"key": "success", "value": len(histogram_data)},
+            {"key": "errors", "value": data["num_errors"]},
         ],
-        "iter": [
-            {
-                "key": "duration",
-                "values": [[i + 1, v["duration"]]
-                           for i, v in enumerate(stacked_area)]
-            },
-            {
-                "key": "idle_duration",
-                "values": [[i + 1, v["idle_duration"]]
-                           for i, v in enumerate(stacked_area)]
-            }
-        ],
+        "iter": stacked_area,
         "histogram": [
             {
                 "key": "task",
                 "method": histogram.method,
-                "values": [{"x": x, "y": y}
+                "values": [{"x": round(x, 2), "y": y}
                            for x, y in zip(histogram.x_axis, histogram.y_axis)]
             } for histogram in histograms
         ],
     }
 
 
-def _process_atomic(result):
+def _process_atomic(result, data):
 
     def avg(lst, key=None):
         lst = lst if not key else map(lambda x: x[key], lst)
@@ -108,17 +165,16 @@ def _process_atomic(result):
     if stacked_area:
         pie = copy.deepcopy(stacked_area)
         histogram_data = copy.deepcopy(stacked_area)
-        for i, data in enumerate(result["result"]):
+        for i, res in enumerate(result["result"]):
             # in case of error put (order, 0.0) to all actions of stacked area
-            if data["error"]:
+            if res["error"]:
                 for k in range(len(stacked_area)):
                     stacked_area[k]["values"].append([i + 1, 0.0])
                 continue
 
             # in case of non error put real durations to pie and stacked area
-            for j, action in enumerate(data["atomic_actions"]):
+            for j, action in enumerate(res["atomic_actions"]):
                 pie[j]["values"].append(action["duration"])
-                stacked_area[j]["values"].append([i + 1, action["duration"]])
                 histogram_data[j]["values"].append(action["duration"])
 
     histograms = [[] for atomic_action in range(len(histogram_data))]
@@ -129,13 +185,21 @@ def _process_atomic(result):
                                                  hvariety[v]['number_of_bins'],
                                                  hvariety[v]['method'],
                                                  atomic_action['key']))
+    stacked_area = []
+    for name, durations in data["atomic_durations"].iteritems():
+        stacked_area.append({
+            "key": name,
+            "values": list(enumerate([round(d, 2) for d in durations],
+                           start=1)),
+        })
+
     return {
         "histogram": [[
             {
                 "key": action.key,
                 "disabled": i,
                 "method": action.method,
-                "values": [{"x": x, "y": y}
+                "values": [{"x": round(x, 2), "y": y}
                            for x, y in zip(action.x_axis, action.y_axis)]
             } for action in atomic_action_list]
             for i, atomic_action_list in enumerate(histograms)
@@ -201,11 +265,12 @@ def _process_results(results):
         info = result["key"]
         config = {}
         config[info["name"]] = [info["kw"]]
+        data = _prepare_data(result)
         output.append({
             "name": "%s (task #%d)" % (info["name"], info["pos"]),
             "config": config,
-            "duration": _process_main_duration(result),
-            "atomic": _process_atomic(result),
+            "duration": _process_main_duration(result, data),
+            "atomic": _process_atomic(result, data),
             "table_rows": table_rows,
             "table_cols": table_cols
         })
