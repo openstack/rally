@@ -32,6 +32,35 @@ class ValidationResult(object):
         self.msg = msg
 
 
+def validator(fn):
+    """Decorator that constructs a scenario validator from given function.
+
+    Decorated function should return ValidationResult on error.
+
+    :param fn: function that performs validation
+    :returns: rally scenario validator
+    """
+    def wrap_given(*args, **kwargs):
+        def wrap_validator(**options):
+            options.update({"args": args, "kwargs": kwargs})
+            # NOTE(amaretskiy): validator is successful by default
+            return fn(*args, **options) or ValidationResult()
+
+        def wrap_scenario(scenario):
+            # NOTE(amaretskiy): user permission by default
+            wrap_validator.permission = getattr(
+                fn, "permission", consts.EndpointPermission.USER)
+            if not hasattr(scenario, "validators"):
+                scenario.validators = []
+            scenario.validators.append(wrap_validator)
+            return scenario
+
+        return wrap_scenario
+
+    return wrap_given
+
+
+# NOTE(amaretskiy): Deprecated by validator()
 def add(validator):
     def wrapper(func):
         if not getattr(func, 'validators', None):
@@ -324,3 +353,18 @@ def required_parameters(params):
             return ValidationResult(False, message)
         return ValidationResult()
     return required_parameters_validator
+
+
+@validator
+def required_services(*args, **kwargs):
+    """Check if specified services are available.
+
+    :param args: list of servives names
+    """
+    available_services = kwargs.get("clients").services().values()
+    for service in args:
+        if service not in consts.Service:
+            return ValidationResult(False, _("Unknown service: %s") % service)
+        if service not in available_services:
+            return ValidationResult(
+                False, _("Service is not available: %s") % service)

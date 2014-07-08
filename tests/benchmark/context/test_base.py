@@ -125,7 +125,8 @@ class ContextManagerTestCase(test.TestCase):
 
         mock_magic.return_value = 5
 
-        result = base.ContextManager.run(context, lambda x, y: x + y, 1, 2)
+        result = base.ContextManager.run(context, lambda x, y: x + y, type,
+                                         "fake_method", {"fake": "value"})
         self.assertEqual(result, 5)
 
         mock_get.assert_has_calls([

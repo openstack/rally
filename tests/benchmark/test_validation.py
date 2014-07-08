@@ -20,6 +20,7 @@ import mock
 from novaclient import exceptions as nova_exc
 
 from rally.benchmark import validation
+from rally import consts
 from rally.openstack.common.gettextutils import _
 from tests import fakes
 from tests import test
@@ -29,6 +30,84 @@ TEMPEST = "rally.verification.verifiers.tempest.tempest"
 
 
 class ValidationUtilsTestCase(test.TestCase):
+
+    def _get_scenario_validators(self, func_, scenario_, reset=True):
+        """Unwrap scenario validators created by validation.validator()."""
+        if reset:
+            if hasattr(func_, "permission"):
+                del func_.permission
+            if hasattr(scenario_, "validators"):
+                del scenario_.validators
+        scenario = validation.validator(func_)()(scenario_)
+        return scenario.validators
+
+    def test_validator(self):
+
+        failure = validation.ValidationResult(False)
+        func = lambda *args, **kv: kv
+        scenario = lambda: None
+
+        # Check arguments passed to validator
+        wrap = validation.validator(func)
+        wrap_args = ["foo", "bar"]
+        wrap_kwargs = {"foo": "spam"}
+        wrap_scenario = wrap(*wrap_args, **wrap_kwargs)
+        wrap_validator = wrap_scenario(scenario)
+        validators = wrap_validator.validators
+        self.assertEqual(1, len(validators))
+        validator, = validators
+        self.assertEqual({"args": tuple(wrap_args), "kwargs": wrap_kwargs},
+                         validator())
+        self.assertEqual(wrap_validator, scenario)
+
+        # Default permission
+        validator, = self._get_scenario_validators(func, scenario)
+        self.assertEqual(validator.permission,
+                         validation.consts.EndpointPermission.USER)
+
+        # Custom permission
+        func.permission = "another_permission"
+        del scenario.validators
+        validator, = self._get_scenario_validators(func, scenario, reset=False)
+        self.assertEqual(validator.permission, "another_permission")
+
+        # Default result
+        func_success = lambda *a, **kv: None
+        validator, = self._get_scenario_validators(func_success, scenario)
+        self.assertTrue(validator().is_valid)
+
+        # Failure result
+        func_failure = lambda *a, **kv: failure
+        validator, = self._get_scenario_validators(func_failure, scenario)
+        self.assertFalse(validator().is_valid)
+
+    def test_required_services(self):
+        available_services = {
+            consts.ServiceType.IDENTITY: consts.Service.KEYSTONE,
+            consts.ServiceType.COMPUTE: consts.Service.NOVA,
+            consts.ServiceType.IMAGE: consts.Service.GLANCE}
+
+        clients = mock.Mock(
+            services=mock.Mock(return_value=available_services))
+
+        # Unwrap
+        required_services = lambda *services:\
+            validation.required_services(*services)(lambda: None)\
+            .validators.pop()(clients=clients)
+
+        # Services are available
+        result = required_services(consts.Service.KEYSTONE)
+        self.assertTrue(result.is_valid)
+
+        # Service is not available
+        service = consts.Service.CEILOMETER
+        result = required_services(consts.Service.KEYSTONE, service)
+        self.assertFalse(result.is_valid)
+
+        # Service is unknown
+        service = "unknown_service"
+        result = required_services(consts.Service.KEYSTONE, service)
+        self.assertFalse(result.is_valid)
 
     def test_add(self):
         def test_validator():

@@ -15,11 +15,14 @@
 
 from rally.benchmark.scenarios import base
 from rally.benchmark.scenarios.cinder import utils
+from rally.benchmark import validation
+from rally import consts
 
 
 class CinderVolumes(utils.CinderScenario):
 
     @base.scenario(context={"cleanup": ["cinder"]})
+    @validation.required_services(consts.Service.CINDER)
     def create_and_list_volume(self, size, detailed=True, **kwargs):
         """Tests creating a volume and listing volumes.
 
@@ -37,6 +40,7 @@ class CinderVolumes(utils.CinderScenario):
         self._list_volumes(detailed)
 
     @base.scenario(context={"cleanup": ["cinder"]})
+    @validation.required_services(consts.Service.CINDER)
     def create_and_delete_volume(self, size, min_sleep=0, max_sleep=0,
                                  **kwargs):
         """Tests creating and then deleting a volume.
@@ -49,6 +53,7 @@ class CinderVolumes(utils.CinderScenario):
         self._delete_volume(volume)
 
     @base.scenario(context={"cleanup": ["cinder"]})
+    @validation.required_services(consts.Service.CINDER)
     def create_volume(self, size, **kwargs):
         """Test creating volumes perfromance.
 

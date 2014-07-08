@@ -14,10 +14,13 @@
 
 from rally.benchmark.scenarios import base
 from rally.benchmark.scenarios.ceilometer import utils as ceilometerutils
+from rally.benchmark import validation
+from rally import consts
 
 
 class CeilometerResource(ceilometerutils.CeilometerScenario):
     @base.scenario()
+    @validation.required_services(consts.Service.CEILOMETER)
     def list_resources(self):
         """Test fetching all resources.
 
