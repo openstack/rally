@@ -122,6 +122,19 @@ class ValidationUtilsTestCase(test.TestCase):
         self.assertEqual(len(validators), 1)
         self.assertEqual(validators[0], test_validator)
 
+    def test_requires_permission(self):
+        def test_permission():
+            pass
+
+        @validation.add(test_permission)
+        @validation.requires_permission(test_permission)
+        def test_function():
+            pass
+
+        validators = getattr(test_function, "validators")
+        self.assertEqual(len(validators), 1)
+        self.assertEqual(validators, [test_permission])
+
     def test_number_invalid(self):
         validator = validation.number('param', 0, 10, nullable=False)
 
@@ -191,10 +204,9 @@ class ValidationUtilsTestCase(test.TestCase):
         mock_access.assert_called_once_with('/tmp/foo', os.R_OK)
         self.assertTrue(result.is_valid)
 
-    @mock.patch("os.access")
+    @mock.patch("os.access", return_value=False)
     def test_file_exists_negative(self, mock_access):
         validator = validation.file_exists('param')
-        mock_access.return_value = False
         result = validator(param='/tmp/bah')
         mock_access.assert_called_with('/tmp/bah', os.R_OK)
         self.assertFalse(result.is_valid)
@@ -315,6 +327,93 @@ class ValidationUtilsTestCase(test.TestCase):
 
         self.assertFalse(result.is_valid)
         self.assertIsNotNone(result.msg)
+
+    @mock.patch("rally.osclients.Clients")
+    def test_image_invalid_on_flavor(self, mock_osclients):
+        fakegclient = fakes.FakeGlanceClient()
+        image = fakes.FakeImage()
+        image.min_ram = 0
+        image.size = 0
+        image.min_disk = 0
+        fakegclient.images.get = mock.MagicMock(return_value=image)
+        mock_osclients.glance.return_value = fakegclient
+
+        fakenclient = fakes.FakeNovaClient()
+        flavor = fakes.FakeFlavor()
+        flavor.ram = 1
+        flavor.disk = -1
+        fakenclient.flavors.get = mock.MagicMock(return_value=flavor)
+        mock_osclients.nova.return_value = fakenclient
+
+        validator = validation.image_valid_on_flavor("flavor", "image")
+
+        result = validator(clients=mock_osclients,
+                           flavor={"id": flavor.id},
+                           image={"id": image.id})
+
+        fakenclient.flavors.get.assert_called_once_with(flavor=flavor.id)
+        fakegclient.images.get.assert_called_once_with(image=image.id)
+
+        self.assertFalse(result.is_valid)
+        self.assertEqual(result.msg, _("The disk size for flavor 'flavor-id-0'"
+                         " is too small for requested image 'image-id-0'"))
+
+    @mock.patch("rally.osclients.Clients")
+    def test_image_invalid_on_size(self, mock_osclients):
+        fakegclient = fakes.FakeGlanceClient()
+        image = fakes.FakeImage()
+        image.min_ram = 0
+        image.size = 0
+        image.min_disk = 100
+        fakegclient.images.get = mock.MagicMock(return_value=image)
+        mock_osclients.glance.return_value = fakegclient
+
+        fakenclient = fakes.FakeNovaClient()
+        flavor = fakes.FakeFlavor()
+        flavor.ram = 1
+        flavor.disk = 99
+        fakenclient.flavors.get = mock.MagicMock(return_value=flavor)
+        mock_osclients.nova.return_value = fakenclient
+
+        validator = validation.image_valid_on_flavor("flavor", "image")
+
+        result = validator(clients=mock_osclients,
+                           flavor={"id": flavor.id},
+                           image={"id": image.id})
+
+        fakenclient.flavors.get.assert_called_once_with(flavor=flavor.id)
+        fakegclient.images.get.assert_called_once_with(image=image.id)
+
+        self.assertFalse(result.is_valid)
+        self.assertEqual(result.msg, _("The disk size for flavor 'flavor-id-0'"
+                         " is too small for requested image 'image-id-0'"))
+
+    @mock.patch("rally.osclients.Clients")
+    def test_image_valid_on_missing_flavor_disk(self, mock_osclients):
+        fakegclient = fakes.FakeGlanceClient()
+        image = fakes.FakeImage()
+        image.min_ram = 0
+        image.size = 0
+        image.min_disk = 100
+        fakegclient.images.get = mock.MagicMock(return_value=image)
+        mock_osclients.glance.return_value = fakegclient
+
+        fakenclient = fakes.FakeNovaClient()
+        flavor = fakes.FakeFlavor()
+        flavor.ram = 1
+        fakenclient.flavors.get = mock.MagicMock(return_value=flavor)
+        mock_osclients.nova.return_value = fakenclient
+
+        validator = validation.image_valid_on_flavor("flavor", "image")
+
+        result = validator(clients=mock_osclients,
+                           flavor={"id": flavor.id},
+                           image={"id": image.id})
+
+        fakenclient.flavors.get.assert_called_once_with(flavor=flavor.id)
+        fakegclient.images.get.assert_called_once_with(image=image.id)
+
+        self.assertTrue(result.is_valid)
 
     @mock.patch("rally.osclients.Clients")
     def test_image_valid_on_flavor_image_not_exist(self, mock_osclients):
@@ -478,15 +577,13 @@ class ValidationUtilsTestCase(test.TestCase):
         self.assertFalse(result.is_valid)
         self.assertEqual(result.msg, "Flavor with id '101' not found")
 
-    @mock.patch(TEMPEST + ".Tempest.is_configured")
-    @mock.patch(TEMPEST + ".Tempest.is_installed")
+    @mock.patch(TEMPEST + ".Tempest.is_configured", return_value=True)
+    @mock.patch(TEMPEST + ".Tempest.is_installed", return_value=True)
     @mock.patch(TEMPEST + ".subprocess")
     def test_tempest_test_name_not_valid(self, mock_sp, mock_install,
                                          mock_config):
         mock_sp.Popen().communicate.return_value = (
             "tempest.api.fake_test1[gate]\ntempest.api.fate_test2\n",)
-        mock_install.return_value = True
-        mock_config.return_value = True
 
         validator = validation.tempest_tests_exists()
         result = validator(test_name="no_valid_test_name",
@@ -495,23 +592,21 @@ class ValidationUtilsTestCase(test.TestCase):
         self.assertEqual("One or more tests not found: 'no_valid_test_name'",
                          result.msg)
 
-    @mock.patch(TEMPEST + ".Tempest.is_configured")
-    @mock.patch(TEMPEST + ".Tempest.is_installed")
+    @mock.patch(TEMPEST + ".Tempest.is_configured", return_value=True)
+    @mock.patch(TEMPEST + ".Tempest.is_installed", return_value=True)
     @mock.patch(TEMPEST + ".subprocess")
     def test_tempest_test_name_valid(self, mock_sp, mock_install, mock_config):
         mock_sp.Popen().communicate.return_value = (
             "tempest.api.compute.fake_test1[gate]\n"
             "tempest.api.image.fake_test2\n",)
-        mock_install.return_value = True
-        mock_config.return_value = True
 
         validator = validation.tempest_tests_exists()
         result = validator(test_name="image.fake_test2", task=mock.MagicMock())
 
         self.assertTrue(result.is_valid)
 
-    @mock.patch(TEMPEST + ".Tempest.is_configured")
-    @mock.patch(TEMPEST + ".Tempest.is_installed")
+    @mock.patch(TEMPEST + ".Tempest.is_configured", return_value=True)
+    @mock.patch(TEMPEST + ".Tempest.is_installed", return_value=True)
     @mock.patch(TEMPEST + ".subprocess")
     def test_tempest_test_names_one_invalid(self, mock_sp, mock_install,
                                             mock_config):
@@ -520,8 +615,6 @@ class ValidationUtilsTestCase(test.TestCase):
             "tempest.api.fake_test2",
             "tempest.api.fake_test3[gate,smoke]",
             "tempest.api.fate_test4[fake]"]),)
-        mock_install.return_value = True
-        mock_config.return_value = True
 
         validator = validation.tempest_tests_exists()
         result = validator(test_names=["tempest.api.fake_test2",
@@ -532,8 +625,8 @@ class ValidationUtilsTestCase(test.TestCase):
         self.assertEqual(_("One or more tests not found: '%s'") %
                          "tempest.api.invalid.test", result.msg)
 
-    @mock.patch(TEMPEST + ".Tempest.is_configured")
-    @mock.patch(TEMPEST + ".Tempest.is_installed")
+    @mock.patch(TEMPEST + ".Tempest.is_configured", return_value=True)
+    @mock.patch(TEMPEST + ".Tempest.is_installed", return_value=True)
     @mock.patch(TEMPEST + ".subprocess")
     def test_tempest_test_names_all_invalid(self, mock_sp, mock_install,
                                             mock_config):
@@ -542,8 +635,6 @@ class ValidationUtilsTestCase(test.TestCase):
             "tempest.api.fake_test2",
             "tempest.api.fake_test3[gate,smoke]",
             "tempest.api.fate_test4[fake]"]),)
-        mock_install.return_value = True
-        mock_config.return_value = True
 
         validator = validation.tempest_tests_exists()
         result = validator(test_names=["tempest.api.invalid.test1",
@@ -556,8 +647,8 @@ class ValidationUtilsTestCase(test.TestCase):
             "tempest.api.invalid.test1', 'tempest.api.invalid.test2",
             result.msg)
 
-    @mock.patch(TEMPEST + ".Tempest.is_configured")
-    @mock.patch(TEMPEST + ".Tempest.is_installed")
+    @mock.patch(TEMPEST + ".Tempest.is_configured", return_value=True)
+    @mock.patch(TEMPEST + ".Tempest.is_installed", return_value=True)
     @mock.patch(TEMPEST + '.subprocess')
     def test_tempest_test_names_all_valid(self, mock_sp, mock_install,
                                           mock_config):
@@ -566,8 +657,6 @@ class ValidationUtilsTestCase(test.TestCase):
             "tempest.api.fake_test2",
             "tempest.api.fake_test3[gate,smoke]",
             "tempest.api.fate_test4[fake]"]),)
-        mock_install.return_value = True
-        mock_config.return_value = True
 
         validator = validation.tempest_tests_exists()
         result = validator(test_names=["tempest.api.fake_test1",
@@ -575,3 +664,43 @@ class ValidationUtilsTestCase(test.TestCase):
                            task=mock.MagicMock())
 
         self.assertTrue(result.is_valid)
+
+    @mock.patch(TEMPEST + ".Tempest.is_configured", return_value=False)
+    @mock.patch(TEMPEST + ".Tempest.is_installed", return_value=False)
+    @mock.patch(TEMPEST + ".Tempest.install")
+    @mock.patch(TEMPEST + ".Tempest.generate_config_file")
+    @mock.patch(TEMPEST + '.subprocess')
+    def test_tempest_test_no_config_install(self, mock_sp, mock_gen,
+                                            mock_inst, mock_install,
+                                            mock_config):
+        mock_sp.Popen().communicate.return_value = ("\n".join([
+            "tempest.api.fake_test1[gate]",
+            "tempest.api.fake_test2",
+            "tempest.api.fake_test3[gate,smoke]",
+            "tempest.api.fate_test4[fake]"]),)
+
+        validator = validation.tempest_tests_exists()
+        result = validator(test_names=["tempest.api.fake_test1",
+                                       "tempest.api.fake_test2"],
+                           task=mock.MagicMock())
+
+        self.assertTrue(result.is_valid)
+
+    def test_tempest_set_exists_fail(self):
+        validator = validation.tempest_set_exists()
+        result = validator(set_name="faketest",
+                           task=mock.MagicMock())
+
+        self.assertFalse(result.is_valid)
+
+    def test_tempest_set_exists(self):
+        validator = validation.tempest_set_exists()
+        result = validator(set_name="network",
+                           task=mock.MagicMock())
+
+        self.assertTrue(result.is_valid)
+
+    def test_required_parameters(self):
+        validator = validation.required_parameters("test1")
+        result = validator(task=mock.MagicMock())
+        self.assertFalse(result.is_valid)
