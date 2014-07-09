@@ -14,6 +14,8 @@
 #    under the License.
 
 import json
+import threading
+import time
 import traceback
 
 import jsonschema
@@ -185,18 +187,20 @@ class BenchmarkEngine(object):
                   corresponding benchmark test launches
         """
         self.task.update_status(consts.TaskStatus.RUNNING)
-        results = {}
         for name in self.config:
             for n, kw in enumerate(self.config[name]):
                 key = {'name': name, 'pos': n, 'kw': kw}
                 LOG.info("Running benchmark with key: %s" % key)
                 runner = self._get_runner(kw)
-                result = runner.run(name, kw.get("context", {}),
-                                    kw.get("args", {}))
-                self.task.append_results(key, {"raw": result})
-                results[json.dumps(key)] = result
+                is_done = threading.Event()
+                consumer = threading.Thread(
+                    target=self.consume_results,
+                    args=(key, self.task, runner.result_queue, is_done))
+                consumer.start()
+                runner.run(name, kw.get("context", {}), kw.get("args", {}))
+                is_done.set()
+                consumer.join()
         self.task.update_status(consts.TaskStatus.FINISHED)
-        return results
 
     @rutils.log_task_wrapper(LOG.info, _("Check cloud."))
     def bind(self, endpoints):
@@ -211,3 +215,27 @@ class BenchmarkEngine(object):
         clients = osclients.Clients(self.admin_endpoint)
         clients.verified_keystone()
         return self
+
+    @staticmethod
+    def consume_results(key, task, result_queue, is_done):
+        """Consume scenario runner results from queue and send them to db.
+
+        Has to be run from different thread simultaneously with the runner.run
+        method.
+
+        :param key: Scenario identifier
+        :param task: Running task
+        :param result_queue: Deque with runner results
+        :param is_done: Event which is set from the runner thread after the
+                        runner finishes it's work.
+        """
+        results = []
+        while True:
+            if result_queue:
+                result = result_queue.popleft()
+                results.append(result)
+            elif is_done.isSet():
+                break
+            else:
+                time.sleep(0.1)
+        task.append_results(key, {"raw": results})

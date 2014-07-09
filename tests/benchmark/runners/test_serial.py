@@ -41,7 +41,8 @@ class SerialScenarioRunnerTestCase(test.TestCase):
         runner = serial.SerialScenarioRunner(mock.MagicMock(),
                                              self.fake_endpoints,
                                              {"times": times})
-        results = runner._run_scenario(fakes.FakeScenario, "do_it",
-                                       fakes.FakeUserContext({}).context, {})
-        self.assertEqual(mock_run_once.call_count, times)
+        runner._run_scenario(fakes.FakeScenario, "do_it",
+                             fakes.FakeUserContext({}).context, {})
+        self.assertEqual(len(runner.result_queue), times)
+        results = list(runner.result_queue)
         self.assertEqual(results, expected_results)

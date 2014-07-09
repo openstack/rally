@@ -147,10 +147,11 @@ class ScenarioRunnerResultTestCase(test.TestCase):
             }
         ]
 
-        self.assertEqual(config, base.ScenarioRunnerResult(config))
+        self.assertEqual(config[0], base.ScenarioRunnerResult(config[0]))
+        self.assertEqual(config[1], base.ScenarioRunnerResult(config[1]))
 
     def test_validate_failed(self):
-        config = [{"a": 10}]
+        config = {"a": 10}
         self.assertRaises(jsonschema.ValidationError,
                           base.ScenarioRunnerResult, config)
 
@@ -207,15 +208,15 @@ class ScenarioRunnerTestCase(test.TestCase):
     @mock.patch("rally.benchmark.runners.base.osclients")
     @mock.patch("rally.benchmark.runners.base.base_ctx.ContextManager")
     def test_run(self, mock_ctx_manager, mock_osclients):
-        runner = constant.ConstantScenarioRunner(mock.MagicMock(),
-                                                 self.fake_endpoints,
-                                                 mock.MagicMock())
-        mock_ctx_manager.run.return_value = base.ScenarioRunnerResult([])
+        runner = constant.ConstantScenarioRunner(
+            mock.MagicMock(),
+            self.fake_endpoints,
+            mock.MagicMock())
         scenario_name = "NovaServers.boot_server_from_volume_and_delete"
         config_kwargs = {"image": {"id": 1}, "flavor": {"id": 1}}
-        result = runner.run(scenario_name, {"some_ctx": 2}, config_kwargs)
+        runner.run(scenario_name, {"some_ctx": 2}, config_kwargs)
 
-        self.assertEqual(result, mock_ctx_manager.run.return_value)
+        self.assertEqual(list(runner.result_queue), [])
 
         cls_name, method_name = scenario_name.split(".", 1)
         cls = base_scenario.Scenario.get_by_name(cls_name)
@@ -233,12 +234,11 @@ class ScenarioRunnerTestCase(test.TestCase):
                     method_name, config_kwargs]
         mock_ctx_manager.run.assert_called_once_with(*expected)
 
-    @mock.patch("rally.benchmark.runners.base.base_ctx.ContextManager")
-    def test_run_scenario_runner_results_exception(self, mock_ctx_manager):
-        srunner_cls = constant.ConstantForDurationScenarioRunner
-        srunner = srunner_cls(mock.MagicMock(), self.fake_endpoints,
-                              mock.MagicMock())
-        self.assertRaises(exceptions.InvalidRunnerResult,
-                          srunner.run,
-                          "NovaServers.boot_server_from_volume_and_delete",
-                          mock.MagicMock(), {})
+    def test_runner_send_result_exception(self):
+        runner = constant.ConstantScenarioRunner(
+            mock.MagicMock(),
+            self.fake_endpoints,
+            mock.MagicMock())
+        self.assertRaises(
+            jsonschema.ValidationError,
+            lambda: runner._send_result(mock.MagicMock()))

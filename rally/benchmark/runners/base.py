@@ -14,6 +14,7 @@
 #    under the License.
 
 import abc
+import collections
 import copy
 import random
 
@@ -77,56 +78,53 @@ def _run_scenario_once(args):
                 "atomic_actions": scenario.atomic_actions()}
 
 
-class ScenarioRunnerResult(list):
+class ScenarioRunnerResult(dict):
     """Class for all scenario runners' result."""
 
     RESULT_SCHEMA = {
-        "type": "array",
+        "type": "object",
         "$schema": rutils.JSON_SCHEMA,
-        "items": {
-            "type": "object",
-            "properties": {
-                "duration": {
-                    "type": "number"
+        "properties": {
+            "duration": {
+                "type": "number"
+            },
+            "idle_duration": {
+                "type": "number"
+            },
+            "scenario_output": {
+                "type": "object",
+                "properties": {
+                    "data": {
+                        "type": "object",
+                        "patternProperties": {
+                            ".*": {"type": "number"}
+                        }
+                    },
+                    "errors": {
+                        "type": "string"
+                    },
                 },
-                "idle_duration": {
-                    "type": "number"
-                },
-                "scenario_output": {
+                "additionalProperties": False
+            },
+            "atomic_actions": {
+                "type": "array",
+                "items": {
                     "type": "object",
                     "properties": {
-                        "data": {
-                            "type": "object",
-                            "patternProperties": {
-                                ".*": {"type": "number"}
-                            }
-                        },
-                        "errors": {
-                            "type": "string"
-                        },
+                        "action": {"type": "string"},
+                        "duration": {"type": "number"}
                     },
                     "additionalProperties": False
-                },
-                "atomic_actions": {
-                    "type": "array",
-                    "items": {
-                        "type": "object",
-                        "properties": {
-                            "action": {"type": "string"},
-                            "duration": {"type": "number"}
-                        },
-                        "additionalProperties": False
-                    }
-                },
-                "error": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
                 }
             },
-            "additionalProperties": False
-        }
+            "error": {
+                "type": "array",
+                "items": {
+                    "type": "string"
+                }
+            }
+        },
+        "additionalProperties": False
     }
 
     def __init__(self, result_list):
@@ -154,6 +152,7 @@ class ScenarioRunner(object):
         #                a single admin endpoint here.
         self.admin_user = endpoints[0]
         self.config = config
+        self.result_queue = collections.deque()
 
     @staticmethod
     def _get_cls(runner_type):
@@ -208,13 +207,14 @@ class ScenarioRunner(object):
         }
 
         args = cls.preprocess(method_name, context_obj, args)
-        results = base_ctx.ContextManager.run(context_obj, self._run_scenario,
-                                              cls, method_name, args)
+        base_ctx.ContextManager.run(context_obj, self._run_scenario,
+                                    cls, method_name, args)
 
-        if not isinstance(results, ScenarioRunnerResult):
-            name = self.__execution_type__
-            results_type = type(results)
-            raise exceptions.InvalidRunnerResult(name=name,
-                                                 results_type=results_type)
+    def _send_result(self, result):
+        """Send partial result to consumer.
 
-        return results
+        :param result: Result dict to be sent. It should match the
+                       ScenarioRunnerResult schema, otherwise
+                       ValidationError is raised.
+        """
+        self.result_queue.append(ScenarioRunnerResult(result))

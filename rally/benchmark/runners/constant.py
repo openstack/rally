@@ -82,9 +82,6 @@ class ConstantScenarioRunner(base.ScenarioRunner):
         iter_result = pool.imap(base._run_scenario_once,
                                 self._iter_scenario_args(cls, method, context,
                                                          args, times))
-
-        results = []
-
         for i in range(times):
             try:
                 result = iter_result.next(timeout)
@@ -93,12 +90,10 @@ class ConstantScenarioRunner(base.ScenarioRunner):
                           "scenario_output": {},
                           "atomic_actions": [],
                           "error": utils.format_exc(e)}
-            results.append(result)
+            self._send_result(result)
 
         pool.close()
         pool.join()
-
-        return base.ScenarioRunnerResult(results)
 
 
 class ConstantForDurationScenarioRunner(base.ScenarioRunner):
@@ -158,7 +153,6 @@ class ConstantForDurationScenarioRunner(base.ScenarioRunner):
                     self._iter_scenario_args(cls, method, context, args))
         iter_result = pool.imap(base._run_scenario_once, run_args)
 
-        results = []
         start = time.time()
         while True:
             try:
@@ -168,12 +162,10 @@ class ConstantForDurationScenarioRunner(base.ScenarioRunner):
                           "scenario_output": {},
                           "atomic_actions": [],
                           "error": utils.format_exc(e)}
-            results.append(result)
+            self._send_result(result)
 
             if time.time() - start > duration:
                 break
 
         pool.terminate()
         pool.join()
-
-        return base.ScenarioRunnerResult(results)
