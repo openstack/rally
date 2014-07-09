@@ -28,6 +28,22 @@ from tests import test
 
 class ScenarioHelpersTestCase(test.TestCase):
 
+    @mock.patch("rally.benchmark.runners.base.utils.format_exc")
+    def test_format_result_on_timeout(self, mock_format_exc):
+        mock_exc = mock.MagicMock()
+
+        expected = {
+            "duration": 100,
+            "idle_duration": 0,
+            "scenario_output": {"errors": "", "data": {}},
+            "atomic_actions": [],
+            "error": mock_format_exc.return_value
+        }
+
+        self.assertEqual(base.format_result_on_timeout(mock_exc, 100),
+                         expected)
+        mock_format_exc.assert_called_once_with(mock_exc)
+
     @mock.patch("rally.benchmark.runners.base.random")
     def test_get_scenario_context(self, mock_random):
         mock_random.choice = lambda x: x[1]

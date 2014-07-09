@@ -235,8 +235,9 @@ class TaskCommands(object):
             # NOTE(hughsaunders): ssrs=scenario specific results
             ssrs = []
             for result in raw:
-                if result['scenario_output']['data']:
-                    ssrs.append(result['scenario_output']['data'])
+                data = result["scenario_output"].get("data")
+                if data:
+                    ssrs.append(data)
             if ssrs:
                 keys = set()
                 for ssr in ssrs:
@@ -268,8 +269,9 @@ class TaskCommands(object):
                                            formatters=formatters)
 
                 for result in raw:
-                    if result['scenario_output']['errors']:
-                        print(result['scenario_output']['errors'])
+                    errors = result["scenario_output"].get("errors")
+                    if errors:
+                        print(errors)
 
         print()
         print("HINTS:")

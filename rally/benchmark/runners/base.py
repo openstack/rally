@@ -34,6 +34,16 @@ from rally import utils as rutils
 LOG = logging.getLogger(__name__)
 
 
+def format_result_on_timeout(exc, timeout):
+    return {
+        "duration": timeout,
+        "idle_duration": 0,
+        "scenario_output": {"errors": "", "data": {}},
+        "atomic_actions": [],
+        "error": utils.format_exc(exc)
+    }
+
+
 def _get_scenario_context(context):
     scenario_ctx = {}
     for key, value in context.iteritems():

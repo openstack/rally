@@ -86,10 +86,8 @@ class ConstantScenarioRunner(base.ScenarioRunner):
             try:
                 result = iter_result.next(timeout)
             except multiprocessing.TimeoutError as e:
-                result = {"duration": timeout, "idle_duration": 0,
-                          "scenario_output": {},
-                          "atomic_actions": [],
-                          "error": utils.format_exc(e)}
+                result = base.format_result_on_timeout(e, timeout)
+
             self._send_result(result)
 
         pool.close()
@@ -158,10 +156,8 @@ class ConstantForDurationScenarioRunner(base.ScenarioRunner):
             try:
                 result = iter_result.next(timeout)
             except multiprocessing.TimeoutError as e:
-                result = {"duration": timeout, "idle_duration": 0,
-                          "scenario_output": {},
-                          "atomic_actions": [],
-                          "error": utils.format_exc(e)}
+                result = base.format_result_on_timeout(e, timeout)
+
             self._send_result(result)
 
             if time.time() - start > duration:
