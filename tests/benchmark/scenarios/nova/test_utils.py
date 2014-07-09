@@ -294,8 +294,8 @@ class NovaScenarioTestCase(test.TestCase):
 
     @mock.patch(NOVA_UTILS + '.NovaScenario.clients')
     def test__create_floating_ip(self, mock_clients):
-        mock_clients("nova").floating_ips.create.return_value = \
-            self.floating_ip
+        (mock_clients("nova").floating_ips.create.
+            return_value) = self.floating_ip
         nova_scenario = utils.NovaScenario()
         return_floating_ip = nova_scenario._create_floating_ip("public")
         self.assertEqual(self.floating_ip, return_floating_ip)

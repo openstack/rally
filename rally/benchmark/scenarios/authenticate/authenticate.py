@@ -31,7 +31,9 @@ class Authenticate(base.Scenario):
     @base.scenario()
     @validation.add(validation.required_parameters(['repetitions']))
     def validate_glance(self, repetitions):
-        """Creation of the client does not ensure validation of the token.
+        """Check Glance Client to ensure validation of token.
+
+        Creation of the client does not ensure validation of the token.
         We have to do some minimal operation to make sure token gets validated.
         In following we are checking for non-existent image.
 
@@ -47,7 +49,9 @@ class Authenticate(base.Scenario):
     @base.scenario()
     @validation.add(validation.required_parameters(['repetitions']))
     def validate_nova(self, repetitions):
-        """Creation of the client does not ensure validation of the token.
+        """Check Nova Client to ensure validation of token.
+
+        Creation of the client does not ensure validation of the token.
         We have to do some minimal operation to make sure token gets validated.
 
         :param repetitions: number of times to validate
@@ -61,7 +65,9 @@ class Authenticate(base.Scenario):
     @base.scenario()
     @validation.add(validation.required_parameters(['repetitions']))
     def validate_cinder(self, repetitions):
-        """Creation of the client does not ensure validation of the token.
+        """Check Cinder Client to ensure validation of token.
+
+        Creation of the client does not ensure validation of the token.
         We have to do some minimal operation to make sure token gets validated.
 
         :param repetitions: number of times to validate
@@ -75,7 +81,9 @@ class Authenticate(base.Scenario):
     @base.scenario()
     @validation.add(validation.required_parameters(['repetitions']))
     def validate_neutron(self, repetitions):
-        """Creation of the client does not ensure validation of the token.
+        """Check Neutron Client to ensure validation of token.
+
+        Creation of the client does not ensure validation of the token.
         We have to do some minimal operation to make sure token gets validated.
 
         :param repetitions: number of times to validate
@@ -89,7 +97,9 @@ class Authenticate(base.Scenario):
     @base.scenario()
     @validation.add(validation.required_parameters(['repetitions']))
     def validate_heat(self, repetitions):
-        """Creation of the client does not ensure validation of the token.
+        """Check Heat Client to ensure validation of token.
+
+        Creation of the client does not ensure validation of the token.
         We have to do some minimal operation to make sure token gets validated.
 
         :param repetitions: number of times to validate

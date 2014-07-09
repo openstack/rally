@@ -76,8 +76,8 @@ class ImageGenerator(base.Context):
                 current_images = []
 
                 clients = osclients.Clients(user["endpoint"])
-                glance_util_class = glance_utils.GlanceScenario(clients=
-                                                                clients)
+                glance_util_class = glance_utils.GlanceScenario(
+                                        clients=clients)
                 for i in range(images_per_tenant):
                     rnd_name = scenarios_base.Scenario._generate_random_name()
 

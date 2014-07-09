@@ -14,6 +14,7 @@
 
 
 import copy
+
 import mock
 
 from rally.benchmark.context import images
@@ -80,8 +81,8 @@ class ImageGeneratorTestCase(test.TestCase):
         fake_image = FakeImage()
 
         endpoint = mock.MagicMock()
-        mock_osclients.Clients(endpoint).glance().images.get.\
-            return_value = self.image1
+        (mock_osclients.Clients(endpoint).glance().images.get.
+            return_value) = self.image1
         mock_image_generator.return_value = fake_image
 
         real_context = self.context_without_images_key

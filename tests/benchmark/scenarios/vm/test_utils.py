@@ -13,10 +13,12 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import mock
+
 import subprocess
 
+import mock
 from oslotest import mockpatch
+
 from rally.benchmark.scenarios.vm import utils
 from tests import fakes
 from tests import test

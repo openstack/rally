@@ -20,6 +20,7 @@ with contracted values such as maximum error rate or minimum response time.
 """
 
 import abc
+
 import jsonschema
 import six
 

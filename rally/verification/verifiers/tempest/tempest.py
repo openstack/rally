@@ -234,9 +234,11 @@ class Tempest(object):
                                                   test_cases=test_cases)
 
     def validate_env(self):
-        """Validate environment parameters required for running tempest
+        """Validate environment parameters required for running tempest.
+
            eg: python>2.7
         """
+
         if sys.version_info < (2, 7):
             raise exceptions.IncompatiblePythonVersion(
                                                     version=sys.version_info)

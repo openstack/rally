@@ -12,14 +12,14 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import mock
 import os
-import rally.utils as rutils
 import traceback
 
+import mock
 import yaml
 
 from rally.benchmark import engine
+import rally.utils as rutils
 from tests import test
 
 

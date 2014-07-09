@@ -91,9 +91,10 @@ class ValidationUtilsTestCase(test.TestCase):
             services=mock.Mock(return_value=available_services))
 
         # Unwrap
-        required_services = lambda *services:\
-            validation.required_services(*services)(lambda: None)\
-            .validators.pop()(clients=clients)
+        required_services = (lambda *services:
+                             validation.required_services(*services)
+                             (lambda: None).validators.pop()
+                             (clients=clients))
 
         # Services are available
         result = required_services(consts.Service.KEYSTONE)

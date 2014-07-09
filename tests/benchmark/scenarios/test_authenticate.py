@@ -48,8 +48,8 @@ class AuthenticateTestCase(test.TestCase):
         image_name = "__intentionally_non_existent_image___"
         with utils.AtomicAction(scenario, "authenticate.validate_glance"):
             scenario.validate_glance(5)
-        scenario._clients.glance().images.list.assert_called_with(name=
-                                                                  image_name)
+        scenario._clients.glance().images.list.assert_called_with(
+                name=image_name)
         self.assertEqual(scenario._clients.glance().images.list.call_count, 5)
 
     @mock.patch("rally.osclients")
