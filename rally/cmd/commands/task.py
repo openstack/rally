@@ -313,7 +313,9 @@ class TaskCommands(object):
         headers = ['uuid', 'created_at', 'status', 'failed', 'tag']
         task_list = task_list or db.task_list()
         if task_list:
-            common_cliutils.print_list(task_list, headers)
+            common_cliutils.print_list(task_list, headers,
+                                       sortby_index=headers.index(
+                                           'created_at'))
         else:
             print(_("There are no tasks. To run a new task, use:"
                     "\nrally task start"))

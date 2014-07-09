@@ -126,7 +126,9 @@ class DeploymentCommands(object):
                 r = [str(t[column]) for column in headers[:-1]]
                 r.append("" if t["uuid"] != current_deploy_id else "*")
                 table_rows.append(utils.Struct(**dict(zip(headers, r))))
-            common_cliutils.print_list(table_rows, headers)
+            common_cliutils.print_list(table_rows, headers,
+                                       sortby_index=headers.index(
+                                           'created_at'))
         else:
             print(_("There are no deployments. "
                     "To create a new deployment, use:"

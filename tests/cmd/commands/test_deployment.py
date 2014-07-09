@@ -123,7 +123,9 @@ class DeploymentCommandsTestCase(test.TestCase):
         mock_struct.assert_called_once_with(**fake_deployment)
 
         headers = ['uuid', 'created_at', 'name', 'status', 'active']
-        mock_print_list.assert_called_once_with([mock_struct()], headers)
+        mock_print_list.assert_called_once_with([mock_struct()], headers,
+                                                sortby_index=headers.index(
+                                                'created_at'))
 
     @mock.patch('rally.cmd.commands.deployment.common_cliutils.print_list')
     @mock.patch('rally.cmd.commands.deployment.utils.Struct')
@@ -147,7 +149,9 @@ class DeploymentCommandsTestCase(test.TestCase):
         mock_struct.assert_called_once_with(**fake_deployment)
 
         headers = ['uuid', 'created_at', 'name', 'status', 'active']
-        mock_print_list.assert_called_once_with([mock_struct()], headers)
+        mock_print_list.assert_called_once_with([mock_struct()], headers,
+                                                sortby_index=headers.index(
+                                                'created_at'))
 
     @mock.patch('rally.cmd.commands.deployment.db.deployment_get')
     def test_config(self, mock_deployment):

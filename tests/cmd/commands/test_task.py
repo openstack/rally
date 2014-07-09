@@ -144,7 +144,9 @@ class TaskCommandsTestCase(test.TestCase):
         mock_db.task_list.assert_called_once_with()
 
         headers = ['uuid', 'created_at', 'status', 'failed', 'tag']
-        mock_print_list.assert_called_once_with(db_response, headers)
+        mock_print_list.assert_called_once_with(db_response, headers,
+                                                sortby_index=headers.index(
+                                                    'created_at'))
 
     def test_delete(self):
         task_uuid = str(uuid.uuid4())

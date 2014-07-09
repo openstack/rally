@@ -119,7 +119,9 @@ class VerifyCommands(object):
         print ("Total results of verification:\n")
         total_fields = ['UUID', 'Deployment UUID', 'Set name', 'Tests',
                         'Failures', 'Created at', 'Status']
-        common_cliutils.print_list([verification], fields=total_fields)
+        common_cliutils.print_list([verification], fields=total_fields,
+                                   sortby_index=total_fields.index(
+                                       'Created at'))
 
         print ("\nTests:\n")
         fields = ['name', 'time', 'status']

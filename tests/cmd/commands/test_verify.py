@@ -16,9 +16,11 @@
 import uuid
 
 import mock
+import six
 
 from rally.cmd.commands import verify
 from rally import consts
+from rally import objects
 from tests import test
 
 
@@ -71,3 +73,51 @@ class VerifyCommandsTestCase(test.TestCase):
 
         self.assertNotIn(wrong_set_name, consts.TEMPEST_TEST_SETS)
         self.assertFalse(mock_verify.called)
+
+    @mock.patch('rally.openstack.common.cliutils.print_list')
+    @mock.patch('rally.db.verification_list')
+    def test_list(self, mock_db_verification_list, mock_print_list):
+        fields = ['UUID', 'Deployment UUID', 'Set name', 'Tests', 'Failures',
+                  'Created at', 'Status']
+        verifications = {'dummy': []}
+        mock_db_verification_list.return_value = verifications
+        self.verify.list()
+        mock_db_verification_list.assert_called_once()
+        mock_print_list.assert_called_once_with(verifications, fields,
+                                                sortby_index=fields.index(
+                                                    'Created at'))
+
+    @mock.patch('rally.openstack.common.cliutils.print_list')
+    @mock.patch('rally.db.verification_get')
+    @mock.patch('rally.db.verification_result_get')
+    @mock.patch('rally.objects.Verification')
+    def test_show(self, mock_obj_verification,
+                  mock_verification_result_get, mock_verification_get,
+                  mock_print_list):
+
+        class Test_dummy():
+            data = {'test_cases': {'test_a': {'name': 'test_a', 'time': 20,
+                                              'status': 'PASS'},
+                                   'test_b': {'name': 'test_b', 'time': 20,
+                                              'status': 'SKIP'},
+                                   'test_c': {'name': 'test_c', 'time': 20,
+                                              'status': 'FAIL'}}}
+
+        verification_id = '39121186-b9a4-421d-b094-6c6b270cf9e9'
+        total_fields = ['UUID', 'Deployment UUID', 'Set name', 'Tests',
+                        'Failures', 'Created at', 'Status']
+        fields = ['name', 'time', 'status']
+        verification = mock.MagicMock()
+        tests = Test_dummy()
+        mock_verification_result_get.return_value = tests
+        mock_verification_get.return_value = verification
+        mock_obj_verification.return_value = 1
+        values = map(objects.Verification,
+                     six.itervalues(tests.data['test_cases']))
+        self.verify.show(verification_id)
+        mock_print_list.assert_any_call(
+                [verification], fields=total_fields,
+                sortby_index=total_fields.index('Created at'))
+        mock_verification_get.assert_called_once_with(verification_id)
+        mock_verification_result_get.assert_called_once_with(verification_id)
+        mock_print_list.assert_any_call(values, fields, sortby_index=0)
