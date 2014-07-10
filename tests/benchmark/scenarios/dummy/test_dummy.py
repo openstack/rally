@@ -49,3 +49,11 @@ class DummyTestCase(test.TestCase):
             self.assertRaises(exceptions.DummyScenarioException,
                               scenario.dummy_exception_probability,
                               {'exception_probability': 1})
+
+    def test_dummy_dummy_with_scenario_output(self):
+        scenario = dummy.Dummy()
+        result = scenario.dummy_with_scenario_output()
+        self.assertEqual(result['errors'], "")
+        # Since the data is generated in random,
+        # checking for not None
+        self.assertNotEqual(result['data'], None)

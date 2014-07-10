@@ -35,6 +35,20 @@ class CeilometerQueriesTestCase(test.TestCase):
         scenario._query_alarms.assert_called_once_with(
             json.dumps("fake_filter"), "fake_orderby_attribute", 10)
 
+    def test_create_and_query_alarms_no_filter(self):
+        scenario = queries.CeilometerQueries()
+        scenario._create_alarm = mock.MagicMock()
+        scenario._query_alarms = mock.MagicMock()
+
+        scenario.create_and_query_alarms("fake_meter_name",
+                                         100, None,
+                                         "fake_orderby_attribute", 10,
+                                         fakearg="f")
+        scenario._create_alarm.assert_called_once_with("fake_meter_name",
+                                                       100, {'fakearg': 'f'})
+        scenario._query_alarms.assert_called_once_with(
+            None, "fake_orderby_attribute", 10)
+
     def test_create_and_query_alarm_history(self):
         fake_alarm = mock.MagicMock()
         fake_alarm.alarm_id = 'fake_alarm_id'
@@ -73,3 +87,26 @@ class CeilometerQueriesTestCase(test.TestCase):
                                                         fakearg="f")
         scenario._query_samples.assert_called_once_with(
             json.dumps("fake_filter"), "fake_orderby_attribute", 10)
+
+    def test_create_and_query_samples_no_filter(self):
+        scenario = queries.CeilometerQueries()
+        scenario._create_sample = mock.MagicMock()
+        scenario._query_samples = mock.MagicMock()
+
+        scenario.create_and_query_samples("fake_counter_name",
+                                          "fake_counter_type",
+                                          "fake_counter_unit",
+                                          "fake_counter_volume",
+                                          "fake_resource_id",
+                                          None,
+                                          "fake_orderby_attribute",
+                                          10,
+                                          fakearg="f")
+        scenario._create_sample.assert_called_once_with("fake_counter_name",
+                                                        "fake_counter_type",
+                                                        "fake_counter_unit",
+                                                        "fake_counter_volume",
+                                                        "fake_resource_id",
+                                                        fakearg="f")
+        scenario._query_samples.assert_called_once_with(
+            None, "fake_orderby_attribute", 10)
