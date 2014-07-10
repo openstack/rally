@@ -173,7 +173,7 @@ class LoadExtraModulesTestCase(test.TestCase):
 
     @mock.patch("rally.utils.imp.load_module")
     @mock.patch("rally.utils.imp.find_module")
-    @mock.patch("rally.utils.os.path.exists")
+    @mock.patch("rally.utils.os.path.exists", return_value=True)
     @mock.patch("rally.utils.os.path.isfile")
     @mock.patch("rally.utils.os.listdir")
     def test_load_plugins_successfull(self, mock_listdir, mock_isfile,
@@ -182,7 +182,6 @@ class LoadExtraModulesTestCase(test.TestCase):
         mock_listdir.return_value = ["plugin1.py", "plugin2.py",
                                      "somethingnotpythonmodule",
                                      "somestrangedir.py"]
-        mock_exists.return_value = True
 
         # check we don't try to load something that is not file
         def isfile_side_effect(*args):
@@ -211,11 +210,10 @@ class LoadExtraModulesTestCase(test.TestCase):
 
     @mock.patch("rally.utils.imp.load_module")
     @mock.patch("rally.utils.imp.find_module")
-    @mock.patch("rally.utils.os.path")
+    @mock.patch("rally.utils.os.path.exists", return_value=True)
     @mock.patch("rally.utils.os.listdir")
     def test_load_plugins_fails(self, mock_oslistdir, mock_ospath,
                                 mock_load_module, mock_find_module):
-        mock_ospath.exists.return_value = True
         mock_oslistdir.return_value = ["somebrokenplugin.py", ]
         mock_load_module.side_effect = Exception()
         # test no fails if module is broken
