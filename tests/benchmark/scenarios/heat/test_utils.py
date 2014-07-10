@@ -87,3 +87,8 @@ class HeatScenarioTestCase(test.TestCase):
             timeout=3600)
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        'heat.delete_stack')
+
+    def test_heat_resource_is(self):
+        stack = {'stack_status': 'CREATE_COMPLETED'}
+        status_fn = utils.heat_resource_is('CREATE_COMPLETED')
+        status_fn(stack)
