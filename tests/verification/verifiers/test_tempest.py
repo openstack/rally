@@ -41,10 +41,8 @@ class TempestTestCase(test.TestCase):
         self.verifier.log_file_raw = '/tmp/subunit.stream'
         self.regex = None
 
-    @mock.patch('os.path.exists')
+    @mock.patch('os.path.exists', return_value=True)
     def test_is_installed(self, mock_exists):
-        mock_exists.return_value = True
-
         result = self.verifier.is_installed()
 
         mock_exists.assert_called_once_with(
@@ -78,9 +76,8 @@ class TempestTestCase(test.TestCase):
             shell=True)
 
     @mock.patch('rally.verification.verifiers.tempest.tempest.shutil')
-    @mock.patch('os.path.exists')
+    @mock.patch('os.path.exists', return_value=True)
     def test_uninstall(self, mock_exists, mock_shutil):
-        mock_exists.return_value = True
         self.verifier.uninstall()
         mock_shutil.rmtree.assert_called_once_with(self.verifier.tempest_path)
 
@@ -126,22 +123,20 @@ class TempestTestCase(test.TestCase):
         self.verifier._generate_env()
         self.assertEqual(expected_env, self.verifier._env)
 
-    @mock.patch('os.path.isdir')
+    @mock.patch('os.path.isdir', return_value=True)
     @mock.patch(TEMPEST_PATH + '.tempest.subprocess')
     @testtools.skipIf(sys.version_info < (2, 7), "Incompatible Python Version")
     def test__venv_install_when_venv_exists(self, mock_sp, mock_isdir):
-        mock_isdir.return_value = True
         self.verifier._install_venv()
 
         mock_isdir.assert_called_once_with(
             os.path.join(self.verifier.tempest_path, '.venv'))
         self.assertFalse(mock_sp.called)
 
-    @mock.patch('os.path.isdir')
+    @mock.patch('os.path.isdir', return_value=False)
     @mock.patch(TEMPEST_PATH + '.tempest.subprocess.check_call')
     @testtools.skipIf(sys.version_info < (2, 7), "Incompatible Python Version")
     def test__venv_install_when_venv_not_exist(self, mock_sp, mock_isdir):
-        mock_isdir.return_value = False
         self.verifier._install_venv()
 
         mock_isdir.assert_called_once_with(
@@ -153,33 +148,30 @@ class TempestTestCase(test.TestCase):
                       self.verifier.venv_wrapper, shell=True,
                       cwd=self.verifier.tempest_path)])
 
-    @mock.patch('os.path.isdir')
+    @mock.patch('os.path.isdir', return_value=False)
     @testtools.skipIf(sys.version_info >= (2, 7),
                       "Incompatible Python Version")
     def test__venv_install_for_py26_fails(self, mock_isdir):
-        mock_isdir.return_value = False
         self.assertRaises(exceptions.IncompatiblePythonVersion,
                           self.verifier._install_venv)
 
         mock_isdir.assert_called_once_with(
             os.path.join(self.verifier.tempest_path, '.venv'))
 
-    @mock.patch('os.path.isdir')
+    @mock.patch('os.path.isdir', return_value=True)
     @mock.patch(TEMPEST_PATH + '.tempest.subprocess')
     def test__initialize_testr_when_testr_already_initialized(
             self, mock_sp, mock_isdir):
-        mock_isdir.return_value = True
         self.verifier._initialize_testr()
 
         mock_isdir.assert_called_once_with(
             os.path.join(self.verifier.tempest_path, '.testrepository'))
         self.assertFalse(mock_sp.called)
 
-    @mock.patch('os.path.isdir')
+    @mock.patch('os.path.isdir', return_value=False)
     @mock.patch(TEMPEST_PATH + '.tempest.subprocess.check_call')
     def test__initialize_testr_when_testr_not_initialized(
             self, mock_sp, mock_isdir):
-        mock_isdir.return_value = False
         self.verifier._initialize_testr()
 
         mock_isdir.assert_called_once_with(
@@ -188,20 +180,16 @@ class TempestTestCase(test.TestCase):
             '%s testr init' % self.verifier.venv_wrapper, shell=True,
             cwd=self.verifier.tempest_path)
 
-    @mock.patch('xml.dom.minidom.parse')
-    @mock.patch('os.path.isfile')
+    @mock.patch.object(subunit2json, 'main')
+    @mock.patch('os.path.isfile', return_value=False)
     def test__save_results_without_log_file(self, mock_isfile, mock_parse):
-        mock_isfile.return_value = False
 
         self.verifier._save_results()
-
-        mock_isfile.assert_called_once_with(self.verifier.log_file_raw)
         self.assertEqual(0, mock_parse.call_count)
 
-    @mock.patch('os.path.isfile')
+    @mock.patch('os.path.isfile', return_value=True)
     def test__save_results_with_log_file(self, mock_isfile):
         with mock.patch.object(subunit2json, 'main') as mock_main:
-            mock_isfile.return_value = True
             data = {'total': True, 'test_cases': True}
             mock_main.return_value = jsonutils.dumps(data)
             self.verifier.log_file_raw = os.path.join(

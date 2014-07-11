@@ -54,7 +54,7 @@ class UseCommandsTestCase(test.TestCase):
     @mock.patch('os.remove')
     @mock.patch('os.symlink')
     @mock.patch(MOD + 'db.deployment_get')
-    @mock.patch('os.path.exists')
+    @mock.patch('os.path.exists', return_value=True)
     @mock.patch(MOD + 'fileutils.update_env_file')
     def test_deployment(self, mock_env, mock_path, mock_deployment,
                         mock_symlink, mock_remove):
@@ -65,7 +65,6 @@ class UseCommandsTestCase(test.TestCase):
                                     'tenant_name': 'fake_tenant_name',
                                     'region_name': None}]}
         mock_deployment.return_value = endpoints
-        mock_path.return_value = True
         with mock.patch('rally.cmd.commands.use.open', mock.mock_open(),
                         create=True) as mock_file:
             self.use.deployment(deploy_id)
@@ -91,10 +90,9 @@ class UseCommandsTestCase(test.TestCase):
         self.assertEqual(1, self.use.deployment(deploy_id))
 
     @mock.patch(MOD + 'fileutils._rewrite_env_file')
-    @mock.patch(MOD + 'db.task_get')
+    @mock.patch(MOD + 'db.task_get', return_value=True)
     def test_task(self, mock_task, mock_file):
         task_id = str(uuid.uuid4())
-        mock_task.return_value = True
         self.use.task(task_id)
         mock_file.assert_called_once_with(
             os.path.expanduser('~/.rally/globals'),

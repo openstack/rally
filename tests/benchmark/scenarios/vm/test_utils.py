@@ -51,9 +51,9 @@ class VMScenarioTestCase(test.TestCase):
         vm_scenario.wait_for_ssh(ssh)
         ssh.wait.assert_called_once_with()
 
-    @mock.patch(VMTASKS_UTILS + ".VMScenario.ping_ip_address")
+    @mock.patch(VMTASKS_UTILS + ".VMScenario.ping_ip_address",
+                return_value=True)
     def test_wait_for_ping(self, mock_ping):
-        mock_ping.return_value = True
         vm_scenario = utils.VMScenario()
         vm_scenario.wait_for_ping("1.2.3.4")
         self.wait_for.mock.assert_called_once_with("1.2.3.4",

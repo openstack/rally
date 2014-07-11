@@ -30,7 +30,8 @@ class ConfigTestCase(test.TestCase):
 
     @mock.patch("rally.objects.deploy.db.deployment_get")
     @mock.patch("rally.osclients.Clients.verified_keystone")
-    @mock.patch("rally.verification.verifiers.tempest.config.os.path.isfile")
+    @mock.patch("rally.verification.verifiers.tempest.config.os.path.isfile",
+                return_value=True)
     def setUp(self, mock_isfile, mock_verified_keystone, mock_get):
         super(ConfigTestCase, self).setUp()
         self.endpoint = {"username": "test",
@@ -39,7 +40,6 @@ class ConfigTestCase(test.TestCase):
                          "auth_url": "http://test/v2.0",
                          "permission": "admin"}
         mock_get.return_value = {"endpoints": [self.endpoint]}
-        mock_isfile.return_value = True
         self.deploy_id = "fake_deploy_id"
         self.conf_generator = config.TempestConf(self.deploy_id)
 
@@ -202,10 +202,10 @@ class ConfigTestCase(test.TestCase):
                          self.conf_generator.conf.get("compute",
                                                       "ssh_connect_method"))
 
-    @mock.patch("rally.verification.verifiers.tempest.config.os.path.exists")
+    @mock.patch("rally.verification.verifiers.tempest.config.os.path.exists",
+                return_value=False)
     @mock.patch("rally.verification.verifiers.tempest.config.os.makedirs")
     def test__set_default(self, mock_makedirs, mock_exists):
-        mock_exists.return_value = False
         self.conf_generator._set_default()
         lock_path = os.path.join(self.conf_generator.data_path, "lock_files_%s"
                                  % self.deploy_id)

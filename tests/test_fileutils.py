@@ -23,11 +23,10 @@ from tests import test
 
 class FileUtilsTestCase(test.TestCase):
 
-    @mock.patch('os.path.exists')
+    @mock.patch('os.path.exists', return_value=True)
     @mock.patch.dict('os.environ', values={}, clear=True)
     def test_load_env_vile(self, mock_path):
         file_data = ["FAKE_ENV=fake_env\n"]
-        mock_path.return_value = True
         with mock.patch('rally.fileutils.open', mock.mock_open(
                 read_data=file_data), create=True) as mock_file:
             mock_file.return_value.readlines.return_value = file_data
@@ -35,10 +34,9 @@ class FileUtilsTestCase(test.TestCase):
             self.assertIn('FAKE_ENV', os.environ)
             mock_file.return_value.readlines.assert_called_once_with()
 
-    @mock.patch('os.path.exists')
+    @mock.patch('os.path.exists', return_value=True)
     def test_update_env_file(self, mock_path):
         file_data = ["FAKE_ENV=old_value\n", "FAKE_ENV2=any\n"]
-        mock_path.return_value = True
         with mock.patch('rally.fileutils.open', mock.mock_open(
                 read_data=file_data), create=True) as mock_file:
             mock_file.return_value.readlines.return_value = file_data
