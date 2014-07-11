@@ -246,7 +246,8 @@ class ValidationUtilsTestCase(test.TestCase):
     def test_flavor_exists_fail(self, mock_osclients):
         fakenclient = fakes.FakeNovaClient()
         fakenclient.flavors = mock.MagicMock()
-        fakenclient.flavors.get.side_effect = nova_exc.NotFound(code=404)
+        fakenclient.flavors.get.side_effect = nova_exc.NotFound(
+                                                    http_status=404)
         mock_osclients.nova.return_value = fakenclient
         validator = validation.flavor_exists("flavor")
         test_flavor_id = 101
@@ -459,7 +460,8 @@ class ValidationUtilsTestCase(test.TestCase):
 
         fakenclient = fakes.FakeNovaClient()
         fakenclient.flavors = mock.MagicMock()
-        fakenclient.flavors.get.side_effect = nova_exc.NotFound(code=404)
+        fakenclient.flavors.get.side_effect = nova_exc.NotFound(
+                                                    http_status=404)
         mock_osclients.nova.return_value = fakenclient
 
         validator = validation.image_valid_on_flavor("flavor", "image")
