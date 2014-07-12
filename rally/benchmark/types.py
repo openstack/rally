@@ -46,7 +46,6 @@ class ResourceType(object):
 
         :returns: transformed value of resource
         """
-        pass
 
 
 def _id_from_name(resource_config, resources, typename):
@@ -106,8 +105,8 @@ class FlavorResourceType(ResourceType):
         if not resource_id:
             novaclient = clients.nova()
             resource_id = _id_from_name(resource_config=resource_config,
-                                        resources=novaclient.
-                                        flavors.list(), typename='flavor')
+                                        resources=novaclient.flavors.list(),
+                                        typename='flavor')
         return resource_id
 
 
@@ -126,6 +125,6 @@ class ImageResourceType(ResourceType):
         if not resource_id:
             glanceclient = clients.glance()
             resource_id = _id_from_name(resource_config=resource_config,
-                                        resources=glanceclient.
-                                        images.list(), typename='image')
+                                        resources=glanceclient.images.list(),
+                                        typename='image')
         return resource_id
