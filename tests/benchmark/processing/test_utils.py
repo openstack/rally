@@ -23,12 +23,21 @@ class ProcessingUtilsTestCase(test.TestCase):
     def test_percentile(self):
         lst = range(1, 101)
         result = utils.percentile(lst, 0.1)
-        self.assertTrue(result == 10.9)
+        self.assertEqual(result, 10.9)
+
+    def test_percentile_value_none(self):
+        result = utils.percentile(None, 0.1)
+        self.assertEqual(result, None)
+
+    def test_percentile_equal(self):
+        lst = range(1, 101)
+        result = utils.percentile(lst, 1)
+        self.assertEqual(result, 100)
 
     def test_mean(self):
         lst = range(1, 100)
         result = utils.mean(lst)
-        self.assertTrue(result == 50.0)
+        self.assertEqual(result, 50.0)
 
     def test_mean_empty_list(self):
         lst = []
