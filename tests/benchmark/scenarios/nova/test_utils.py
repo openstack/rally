@@ -62,6 +62,34 @@ class NovaScenarioTestCase(test.TestCase):
                           butils.get_from_manager(),
                           server_manager.create('fails', '1', '2'))
 
+    def _test_assert_called_once_with(self, mock, resource,
+                                      chk_interval, time_out, **kwargs):
+        """Method to replace repeatative asserts on resources
+
+        :param mock: The mock to call assert with
+        :param resource: The resource used in mock
+        :param chk_interval: The interval used for polling the action
+        :param time_out: Time out value for action
+        :param kwargs: currently used for validating the is_ready attribute,
+        can be extended as required
+        """
+
+        isready = self.res_is.mock()
+        if kwargs:
+            if kwargs['is_ready']:
+                mock.assert_called_once_with(
+                    resource,
+                    update_resource=self.gfm(),
+                    is_ready=isready,
+                    check_interval=chk_interval,
+                    timeout=time_out)
+            else:
+                mock.assert_called_once_with(
+                    resource,
+                    update_resource=self.gfm(),
+                    check_interval=chk_interval,
+                    timeout=time_out)
+
     @mock.patch(NOVA_UTILS + '.NovaScenario.clients')
     def test__list_servers(self, mock_clients):
         servers_list = []
@@ -78,13 +106,57 @@ class NovaScenarioTestCase(test.TestCase):
         nova_scenario = utils.NovaScenario(context={})
         return_server = nova_scenario._boot_server('server_name', 'image_id',
                                                    'flavor_id')
-        self.wait_for.mock.assert_called_once_with(
-            self.server,
-            update_resource=self.gfm(),
-            is_ready=self.res_is.mock(),
-            check_interval=CONF.benchmark.nova_server_boot_poll_interval,
-            timeout=CONF.benchmark.nova_server_boot_timeout
-        )
+        self._test_assert_called_once_with(
+            self.wait_for.mock, self.server,
+            CONF.benchmark.nova_server_boot_poll_interval,
+            CONF.benchmark.nova_server_boot_timeout)
+        self.res_is.mock.assert_has_calls(mock.call('ACTIVE'))
+        self.assertEqual(self.wait_for.mock(), return_server)
+        self._test_atomic_action_timer(nova_scenario.atomic_actions(),
+                                       'nova.boot_server')
+
+    @mock.patch(NOVA_UTILS + '.NovaScenario.clients')
+    def test__boot_server_with_ssh(self, mock_clients):
+        mock_clients("nova").servers.create.return_value = self.server
+        nova_scenario = utils.NovaScenario(context={"allow_ssh": "test"})
+        return_server = nova_scenario._boot_server('server_name', 'image_id',
+                                                   'flavor_id')
+        self._test_assert_called_once_with(
+            self.wait_for.mock, self.server,
+            CONF.benchmark.nova_server_boot_poll_interval,
+            CONF.benchmark.nova_server_boot_timeout)
+        self.res_is.mock.assert_has_calls(mock.call('ACTIVE'))
+        self.assertEqual(self.wait_for.mock(), return_server)
+        self._test_atomic_action_timer(nova_scenario.atomic_actions(),
+                                       'nova.boot_server')
+
+    @mock.patch(NOVA_UTILS + '.NovaScenario.clients')
+    def test__boot_server_with_sec_group(self, mock_clients):
+        mock_clients("nova").servers.create.return_value = self.server
+        nova_scenario = utils.NovaScenario(context={"allow_ssh": "new"})
+        return_server = nova_scenario._boot_server(
+            'server_name', 'image_id', 'flavor_id',
+            security_groups=['test1'])
+        self._test_assert_called_once_with(
+            self.wait_for.mock, self.server,
+            CONF.benchmark.nova_server_boot_poll_interval,
+            CONF.benchmark.nova_server_boot_timeout)
+        self.res_is.mock.assert_has_calls(mock.call('ACTIVE'))
+        self.assertEqual(self.wait_for.mock(), return_server)
+        self._test_atomic_action_timer(nova_scenario.atomic_actions(),
+                                       'nova.boot_server')
+
+    @mock.patch(NOVA_UTILS + '.NovaScenario.clients')
+    def test__boot_server_with_similar_sec_group(self, mock_clients):
+        mock_clients("nova").servers.create.return_value = self.server
+        nova_scenario = utils.NovaScenario(context={"allow_ssh": "test1"})
+        return_server = nova_scenario._boot_server(
+            'server_name', 'image_id', 'flavor_id',
+            security_groups=['test1'])
+        self._test_assert_called_once_with(
+            self.wait_for.mock, self.server,
+            CONF.benchmark.nova_server_boot_poll_interval,
+            CONF.benchmark.nova_server_boot_timeout)
         self.res_is.mock.assert_has_calls(mock.call('ACTIVE'))
         self.assertEqual(self.wait_for.mock(), return_server)
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
@@ -94,13 +166,10 @@ class NovaScenarioTestCase(test.TestCase):
         nova_scenario = utils.NovaScenario()
         nova_scenario._suspend_server(self.server)
         self.server.suspend.assert_called_once_with()
-        self.wait_for.mock.assert_called_once_with(
-            self.server,
-            update_resource=self.gfm(),
-            is_ready=self.res_is.mock(),
-            check_interval=CONF.benchmark.nova_server_suspend_poll_interval,
-            timeout=CONF.benchmark.nova_server_suspend_timeout
-        )
+        self._test_assert_called_once_with(
+            self.wait_for.mock, self.server,
+            CONF.benchmark.nova_server_suspend_poll_interval,
+            CONF.benchmark.nova_server_suspend_timeout)
         self.res_is.mock.assert_has_calls(mock.call('SUSPENDED'))
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        'nova.suspend_server')
@@ -110,14 +179,10 @@ class NovaScenarioTestCase(test.TestCase):
         mock_clients("nova").images.get.return_value = self.image
         nova_scenario = utils.NovaScenario()
         return_image = nova_scenario._create_image(self.server)
-        check_interval = CONF.benchmark.nova_server_image_create_poll_interval
-        self.wait_for.mock.assert_called_once_with(
-            self.image,
-            update_resource=self.gfm(),
-            is_ready=self.res_is.mock(),
-            check_interval=check_interval,
-            timeout=CONF.benchmark.nova_server_image_create_timeout
-        )
+        self._test_assert_called_once_with(
+            self.wait_for.mock, self.image,
+            CONF.benchmark.nova_server_image_create_poll_interval,
+            CONF.benchmark.nova_server_image_create_timeout)
         self.res_is.mock.assert_has_calls(mock.call('ACTIVE'))
         self.assertEqual(self.wait_for.mock(), return_image)
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
@@ -127,12 +192,11 @@ class NovaScenarioTestCase(test.TestCase):
         nova_scenario = utils.NovaScenario()
         nova_scenario._delete_server(self.server)
         self.server.delete.assert_called_once_with()
-        self.wait_for_delete.mock.assert_called_once_with(
-            self.server,
-            update_resource=self.gfm(),
-            check_interval=CONF.benchmark.nova_server_delete_poll_interval,
-            timeout=CONF.benchmark.nova_server_delete_timeout
-        )
+        self._test_assert_called_once_with(
+            self.wait_for_delete.mock, self.server,
+            CONF.benchmark.nova_server_delete_poll_interval,
+            CONF.benchmark.nova_server_delete_timeout,
+            is_ready=None)
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        'nova.delete_server')
 
@@ -140,13 +204,10 @@ class NovaScenarioTestCase(test.TestCase):
         nova_scenario = utils.NovaScenario()
         nova_scenario._reboot_server(self.server)
         self.server.reboot.assert_called_once_with(reboot_type='SOFT')
-        self.wait_for.mock.assert_called_once_with(
-            self.server,
-            update_resource=self.gfm(),
-            is_ready=self.res_is.mock(),
-            check_interval=CONF.benchmark.nova_server_reboot_poll_interval,
-            timeout=CONF.benchmark.nova_server_reboot_timeout
-        )
+        self._test_assert_called_once_with(
+            self.wait_for.mock, self.server,
+            CONF.benchmark.nova_server_reboot_poll_interval,
+            CONF.benchmark.nova_server_reboot_timeout)
         self.res_is.mock.assert_has_calls(mock.call('ACTIVE'))
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        'nova.reboot_server')
@@ -155,13 +216,10 @@ class NovaScenarioTestCase(test.TestCase):
         nova_scenario = utils.NovaScenario()
         nova_scenario._start_server(self.server)
         self.server.start.assert_called_once_with()
-        self.wait_for.mock.assert_called_once_with(
-            self.server,
-            update_resource=self.gfm(),
-            is_ready=self.res_is.mock(),
-            check_interval=CONF.benchmark.nova_server_start_poll_interval,
-            timeout=CONF.benchmark.nova_server_start_timeout
-        )
+        self._test_assert_called_once_with(
+            self.wait_for.mock, self.server,
+            CONF.benchmark.nova_server_start_poll_interval,
+            CONF.benchmark.nova_server_start_timeout)
         self.res_is.mock.assert_has_calls(mock.call('ACTIVE'))
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        'nova.start_server')
@@ -170,13 +228,10 @@ class NovaScenarioTestCase(test.TestCase):
         nova_scenario = utils.NovaScenario()
         nova_scenario._stop_server(self.server)
         self.server.stop.assert_called_once_with()
-        self.wait_for.mock.assert_called_once_with(
-            self.server,
-            update_resource=self.gfm(),
-            is_ready=self.res_is.mock(),
-            check_interval=CONF.benchmark.nova_server_stop_poll_interval,
-            timeout=CONF.benchmark.nova_server_stop_timeout
-        )
+        self._test_assert_called_once_with(
+            self.wait_for.mock, self.server,
+            CONF.benchmark.nova_server_stop_poll_interval,
+            CONF.benchmark.nova_server_stop_timeout)
         self.res_is.mock.assert_has_calls(mock.call('SHUTOFF'))
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        'nova.stop_server')
@@ -185,13 +240,10 @@ class NovaScenarioTestCase(test.TestCase):
         nova_scenario = utils.NovaScenario()
         nova_scenario._rescue_server(self.server)
         self.server.rescue.assert_called_once_with()
-        self.wait_for.mock.assert_called_once_with(
-            self.server,
-            update_resource=self.gfm(),
-            is_ready=self.res_is.mock(),
-            check_interval=CONF.benchmark.nova_server_rescue_poll_interval,
-            timeout=CONF.benchmark.nova_server_rescue_timeout
-        )
+        self._test_assert_called_once_with(
+            self.wait_for.mock, self.server,
+            CONF.benchmark.nova_server_rescue_poll_interval,
+            CONF.benchmark.nova_server_rescue_timeout)
         self.res_is.mock.assert_has_calls(mock.call('RESCUE'))
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        'nova.rescue_server')
@@ -200,13 +252,10 @@ class NovaScenarioTestCase(test.TestCase):
         nova_scenario = utils.NovaScenario()
         nova_scenario._unrescue_server(self.server)
         self.server.unrescue.assert_called_once_with()
-        self.wait_for.mock.assert_called_once_with(
-            self.server,
-            update_resource=self.gfm(),
-            is_ready=self.res_is.mock(),
-            check_interval=CONF.benchmark.nova_server_unrescue_poll_interval,
-            timeout=CONF.benchmark.nova_server_unrescue_timeout
-        )
+        self._test_assert_called_once_with(
+            self.wait_for.mock, self.server,
+            CONF.benchmark.nova_server_unrescue_poll_interval,
+            CONF.benchmark.nova_server_unrescue_timeout)
         self.res_is.mock.assert_has_calls(mock.call('ACTIVE'))
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        'nova.unrescue_server')
@@ -238,12 +287,11 @@ class NovaScenarioTestCase(test.TestCase):
         nova_scenario = utils.NovaScenario()
         nova_scenario._delete_image(self.image)
         self.image.delete.assert_called_once_with()
-        check_interval = CONF.benchmark.nova_server_image_delete_poll_interval
-        self.wait_for_delete.mock.assert_called_once_with(
-            self.image, update_resource=self.gfm(),
-            check_interval=check_interval,
-            timeout=CONF.benchmark.nova_server_image_delete_timeout
-        )
+        self._test_assert_called_once_with(
+            self.wait_for_delete.mock, self.image,
+            CONF.benchmark.nova_server_image_delete_poll_interval,
+            CONF.benchmark.nova_server_image_delete_timeout,
+            is_ready=None)
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        'nova.delete_image')
 
