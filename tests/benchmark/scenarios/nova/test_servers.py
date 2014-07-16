@@ -94,7 +94,7 @@ class NovaServersTestCase(test.TestCase):
                                                       actions=actions)
         server_calls = []
         for i in range(5):
-            server_calls.append(mock.call(fake_server, soft=False))
+            server_calls.append(mock.call(fake_server))
         self.assertEqual(5, scenario._reboot_server.call_count,
                          "Reboot not called 5 times")
         scenario._reboot_server.assert_has_calls(server_calls)
@@ -136,6 +136,7 @@ class NovaServersTestCase(test.TestCase):
         scenario = servers.NovaServers()
 
         scenario._reboot_server = mock.MagicMock()
+        scenario._soft_reboot_server = mock.MagicMock()
         scenario._boot_server = mock.MagicMock(return_value=fake_server)
         scenario._delete_server = mock.MagicMock()
         scenario._generate_random_name = mock.MagicMock(return_value='name')
@@ -146,10 +147,15 @@ class NovaServersTestCase(test.TestCase):
                                                       actions=actions)
         server_calls = []
         for i in range(5):
-            server_calls.append(mock.call(fake_server, soft=soft))
-        self.assertEqual(5, scenario._reboot_server.call_count,
-                         "Reboot not called 5 times")
-        scenario._reboot_server.assert_has_calls(server_calls)
+            server_calls.append(mock.call(fake_server))
+        if soft:
+            self.assertEqual(5, scenario._soft_reboot_server.call_count,
+                             "Reboot not called 5 times")
+            scenario._soft_reboot_server.assert_has_calls(server_calls)
+        else:
+            self.assertEqual(5, scenario._reboot_server.call_count,
+                             "Reboot not called 5 times")
+            scenario._reboot_server.assert_has_calls(server_calls)
         scenario._delete_server.assert_called_once_with(fake_server)
 
     def test_boot_soft_reboot(self):

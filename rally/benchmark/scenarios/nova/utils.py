@@ -105,18 +105,8 @@ class NovaScenario(base.Scenario):
         )
         return server
 
-    @scenario_utils.atomic_action_timer('nova.reboot_server')
-    def _reboot_server(self, server, soft=True):
-        """Reboots the given server using hard or soft reboot.
-
-        A reboot will be issued on the given server upon which time
-        this method will wait for the server to become active.
-
-        :param server: The server to reboot.
-        :param soft: False if hard reboot should be used, otherwise
-        soft reboot is done (default).
-        """
-        server.reboot(reboot_type=("SOFT" if soft else "HARD"))
+    def _do_server_reboot(self, server, reboottype):
+        server.reboot(reboot_type=reboottype)
         time.sleep(CONF.benchmark.nova_server_reboot_prepoll_delay)
         bench_utils.wait_for(
             server, is_ready=bench_utils.resource_is("ACTIVE"),
@@ -124,6 +114,28 @@ class NovaScenario(base.Scenario):
             timeout=CONF.benchmark.nova_server_reboot_timeout,
             check_interval=CONF.benchmark.nova_server_reboot_poll_interval
         )
+
+    @scenario_utils.atomic_action_timer('nova.soft_reboot_server')
+    def _soft_reboot_server(self, server):
+        """Reboots the given server using soft reboot.
+
+        A soft reboot will be issued on the given server upon which time
+        this method will wait for the server to become active.
+
+        :param server: The server to reboot.
+        """
+        self._do_server_reboot(server, "SOFT")
+
+    @scenario_utils.atomic_action_timer('nova.reboot_server')
+    def _reboot_server(self, server):
+        """Reboots the given server using hard reboot.
+
+        A reboot will be issued on the given server upon which time
+        this method will wait for the server to become active.
+
+        :param server: The server to reboot.
+        """
+        self._do_server_reboot(server, "HARD")
 
     @scenario_utils.atomic_action_timer('nova.start_server')
     def _start_server(self, server):
