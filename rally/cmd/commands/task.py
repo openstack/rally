@@ -70,6 +70,9 @@ class TaskCommands(object):
                     use.UseCommands().task(task['uuid'])
             except exceptions.InvalidConfigException:
                 return(1)
+            except KeyboardInterrupt:
+                api.abort_task(task['uuid'])
+                raise
 
     @cliutils.args('--uuid', type=str, dest='task_id', help='UUID of task')
     @envutils.with_default_task_id
