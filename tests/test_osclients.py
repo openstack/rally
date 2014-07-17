@@ -182,6 +182,22 @@ class OSClientsTestCase(test.TestCase):
         mock_ironic.Client.assert_called_once_with("1.0", **kw)
         self.assertEqual(self.clients.cache["ironic"], fake_ironic)
 
+    @mock.patch("rally.osclients.sahara")
+    def test_sahara(self, mock_sahara):
+        fake_sahara = fakes.FakeSaharaClient()
+        mock_sahara.Client = mock.MagicMock(return_value=fake_sahara)
+        self.assertTrue("sahara" not in self.clients.cache)
+        client = self.clients.sahara()
+        self.assertEqual(client, fake_sahara)
+        kw = {
+            "username": self.endpoint.username,
+            "api_key": self.endpoint.password,
+            "project_name": self.endpoint.tenant_name,
+            "auth_url": self.endpoint.auth_url
+        }
+        mock_sahara.Client.assert_called_once_with("1.1", **kw)
+        self.assertEqual(self.clients.cache["sahara"], fake_sahara)
+
     @mock.patch("rally.osclients.Clients.keystone")
     def test_services(self, mock_keystone):
         available_services = {consts.ServiceType.IDENTITY: {},
