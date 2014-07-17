@@ -239,7 +239,7 @@ class TempestConf(object):
     def generate(self, file_name=None):
         for name, func in inspect.getmembers(self, predicate=inspect.ismethod):
             if name.startswith('_set_'):
-                func(self)
+                func()
         if file_name:
             self.write_config(file_name)
 
