@@ -21,7 +21,7 @@ specific, complex and reproducible tests for real deployment scenarios.
 
 
 Source Documentation
-====================
+--------------------
 
 Contents:
 
@@ -36,7 +36,7 @@ Contents:
 
 
 Indices and tables
-==================
+------------------
 
 * :ref:`genindex`
 * :ref:`modindex`

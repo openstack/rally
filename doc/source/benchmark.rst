@@ -19,16 +19,16 @@ Benchmark
 =========
 
 Benchmark Scenarios
-===================
+-------------------
 
 Notion of benchmark scenarios
------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The concept of **benchmark scenarios** is a central one in Rally. Benchmark scenarios are what Rally actually uses to **test the performance of an OpenStack deployment**. They also play the role of main building blocks in the configurations of benchmark tasks. Each benchmark scenario performs a small **set of atomic operations**, thus testing some **simple use case**, usually that of a specific OpenStack project. For example, the **"NovaServers"** scenario group contains scenarios that use several basic operations available in **nova**. The **"boot_and_delete_server"** benchmark scenario from that group allows to benchmark the performance of a sequence of only **two simple operations**: it first **boots** a server (with customizable parameters) and then **deletes** it.
 
 
 User's view
------------
+^^^^^^^^^^^
 
 From user's point of view, Rally launches different benchmark scenarios while performing some benchmark task. **Benchmark task** is essentially a set of benchmark scenarios run against some OpenStack deployment in a specific (and customizable) manner by the CLI command:
 
@@ -75,7 +75,7 @@ Note that inside each scenario configuration, the benchmark scenario is actually
 
 
 Developer's  view
------------------
+^^^^^^^^^^^^^^^^^
 
 From developer's prospective, a benchmark scenario is a method marked by a **@scenario** decorator and placed in a class that inherits from the base `Scenario <https://github.com/stackforge/rally/blob/master/rally/benchmark/scenarios/base.py#L40>`_ class and located in some subpackage of `rally.benchmark.scenarios <https://github.com/stackforge/rally/tree/master/rally/benchmark/scenarios>`_. There may be arbitrary many benchmark scenarios in a scenario class; each of them should be referenced to (in the task configuration file) as *ScenarioClassName.method_name*.
 
@@ -106,19 +106,19 @@ In a toy example below, we define a scenario class *MyScenario* with one benchma
 
 
 Benchmark engine
-================
+----------------
 
 The core classes responsible for the benchmarking mechanism, including
 the benchmark engine class, benchmark scenario runners and others.
 
 Notion of scenario runners
---------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Scenario Runners** in Rally are entities that control the execution type and order of benchmark scenarios. They support different running **strategies for creating load on the cloud**, including simulating *concurrent requests* from different users, periodic load, gradually growing load and so on.
 
 
 User's view
------------
+^^^^^^^^^^^
 
 The user can specify which type of load on the cloud he would like to have through the **"runner"** section in the **task configuration file**:
 
@@ -164,7 +164,7 @@ Also, all scenario runners can be provided (again, through the **"runner"** sect
 
 
 Developer's  view
------------------
+^^^^^^^^^^^^^^^^^
 
 It is possible to extend Rally with new Scenario Runner types, if needed. Basically, each scenario runner should be implemented as a subclass of the base `ScenarioRunner <https://github.com/stackforge/rally/blob/master/rally/benchmark/runners/base.py#L137>`_ class and located in the `rally.benchmark.runners package <https://github.com/stackforge/rally/tree/master/rally/benchmark/runners>`_. The interface each scenario runner class should support is fairly easy:
 
@@ -212,16 +212,16 @@ It is possible to extend Rally with new Scenario Runner types, if needed. Basica
 
 
 Benchmark contexts
-==================
+------------------
 
 Notion of contexts
-------------------
+^^^^^^^^^^^^^^^^^^
 
 The notion of **contexts** in Rally is essentially used to define different types of **environments** in which benchmark scenarios can be launched. Those environments are usually specified by such parameters as the number of **tenants and users** that should be present in an OpenStack project, the **roles** granted to those users, extended or narrowed **quotas** and so on.
 
 
 User's view
------------
+^^^^^^^^^^^
 
 From user's prospective, contexts in Rally are manageable via the **task configuration files**. In a typical configuration file, each benchmark scenario to be run is not only supplied by the information about its arguments and how many times it should be launched, but also with a special **"context"** section. In this section, the user may configure a number of contexts he needs his scenarios to be run within.
 
@@ -258,7 +258,7 @@ In the example below, the **"users" context** specifies that the *"NovaServers.b
 
 
 Developer's view
-----------------
+^^^^^^^^^^^^^^^^
 
 From developer's view, contexts management is implemented via **Context classes**. Each context type that can be specified in the task configuration file corresponds to a certain subclass of the base [https://github.com/stackforge/rally/blob/master/rally/benchmark/context/base.py **Context**] class, located in the [https://github.com/stackforge/rally/tree/master/rally/benchmark/context **rally.benchmark.context**] module. Every context class should implement a fairly simple **interface**:
 
@@ -320,7 +320,7 @@ If you want to dive deeper, also see the context manager (:mod:`rally.benchmark.
 
 
 Scenarios Plugins
-=================
+-----------------
 
 Rally provides an opportunity to create and use a custom benchmark scenario as
 a plugin. The plugins mechanism can be used to simplify some experiments with
@@ -328,7 +328,7 @@ new scenarios and to facilitate their creation by users who don't want to edit
 the actual Rally code.
 
 Placement
----------
+^^^^^^^^^
 
 Put the plugin into the **/etc/rally/plugins/scenarios** or
 **~/.rally/plugins/scenarios** directory and it will be autoloaded (they are
@@ -336,7 +336,7 @@ not created automatically, you should create them manually). The corresponding
 module should have ".py" extension.
 
 Creation
---------
+^^^^^^^^
 
 Inherit a class containing the scenario method(s) from
 `rally.benchmark.scenarios.base.Scenario` or its subclasses.
@@ -377,7 +377,7 @@ benchmark scenario results have been stored correctly.
             self._test2(factor)
 
 Usage
------
+^^^^^
 
 Specify the class and the benchmark method of your plugin at the top level of
 the benchmark task configuration file.

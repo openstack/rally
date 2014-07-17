@@ -19,7 +19,7 @@ Deploy
 ======
 
 Deployment engines
-==================
+------------------
 
 One of the core entities in Rally architecture are the **Deploy engines**. The main task of a deploy engine is to control the process of **deploying some OpenStack distribution** like *DevStack* or *FUEL* before any benchmarking procedures take place. Every deploy engine should implement the following fairly simple interface:
 
@@ -30,7 +30,7 @@ One of the core entities in Rally architecture are the **Deploy engines**. The m
 
 
 Server Providers
-================
+----------------
 
 **Server providers** in Rally are typically used by **deploy engines** to manage virtual machines necessary for OpenStack deployment and its following benchmarking. The key feature of server providers is that they provide a **unified interface** for interacting with different **virtualization technologies** (*LXS*, *Virsh* etc.) and **cloud suppliers** (like *Amazon*).
 
