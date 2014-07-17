@@ -25,6 +25,7 @@ from keystoneclient.v2_0 import client as keystone
 from neutronclient.neutron import client as neutron
 from novaclient import client as nova
 from oslo.config import cfg
+from saharaclient import client as sahara
 
 from rally import consts
 from rally import exceptions
@@ -217,6 +218,17 @@ class Clients(object):
                                timeout=CONF.openstack_client_http_timeout,
                                insecure=CONF.https_insecure,
                                cacert=CONF.https_cacert)
+        return client
+
+    @cached
+    def sahara(self, version='1.1'):
+        """Return Sahara client."""
+        client = sahara.Client(version,
+                               username=self.endpoint.username,
+                               api_key=self.endpoint.password,
+                               project_name=self.endpoint.tenant_name,
+                               auth_url=self.endpoint.auth_url)
+
         return client
 
     @cached

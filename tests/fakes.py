@@ -807,6 +807,12 @@ class FakeIronicClient(object):
         pass
 
 
+class FakeSaharaClient(object):
+
+    def __init__(self):
+        pass
+
+
 class FakeClients(object):
 
     def __init__(self, endpoint_=None):
@@ -815,6 +821,7 @@ class FakeClients(object):
         self._keystone = None
         self._cinder = None
         self._neutron = None
+        self._sahara = None
         self._endpoint = endpoint_ or endpoint.Endpoint(
             "http://fake.example.org:5000/v2.0/",
             "fake_username",
@@ -848,6 +855,11 @@ class FakeClients(object):
         if not self._neutron:
             self._neutron = FakeNeutronClient()
         return self._neutron
+
+    def sahara(self):
+        if not self._sahara:
+            self._sahara = FakeSaharaClient()
+        return self._sahara
 
 
 class FakeRunner(object):
