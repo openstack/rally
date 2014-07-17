@@ -203,7 +203,7 @@ class NovaScenarioTestCase(test.TestCase):
     def test__reboot_server(self):
         nova_scenario = utils.NovaScenario()
         nova_scenario._reboot_server(self.server)
-        self.server.reboot.assert_called_once_with(reboot_type='SOFT')
+        self.server.reboot.assert_called_once_with(reboot_type='HARD')
         self._test_assert_called_once_with(
             self.wait_for.mock, self.server,
             CONF.benchmark.nova_server_reboot_poll_interval,
@@ -211,6 +211,18 @@ class NovaScenarioTestCase(test.TestCase):
         self.res_is.mock.assert_has_calls(mock.call('ACTIVE'))
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        'nova.reboot_server')
+
+    def test__soft_reboot_server(self):
+        nova_scenario = utils.NovaScenario()
+        nova_scenario._soft_reboot_server(self.server)
+        self.server.reboot.assert_called_once_with(reboot_type='SOFT')
+        self._test_assert_called_once_with(
+            self.wait_for.mock, self.server,
+            CONF.benchmark.nova_server_reboot_poll_interval,
+            CONF.benchmark.nova_server_reboot_timeout)
+        self.res_is.mock.assert_has_calls(mock.call('ACTIVE'))
+        self._test_atomic_action_timer(nova_scenario.atomic_actions(),
+                                       'nova.soft_reboot_server')
 
     def test__start_server(self):
         nova_scenario = utils.NovaScenario()

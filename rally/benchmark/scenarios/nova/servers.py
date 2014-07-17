@@ -176,10 +176,8 @@ class NovaServers(utils.NovaScenario,
         actions = ['hard_reboot', 'soft_reboot', 'stop_start',
                    'rescue_unrescue']
         action_builder = scenario_utils.ActionBuilder(actions)
-        action_builder.bind_action('hard_reboot', self._reboot_server,
-                                   soft=False)
-        action_builder.bind_action('soft_reboot', self._reboot_server,
-                                   soft=True)
+        action_builder.bind_action('hard_reboot', self._reboot_server)
+        action_builder.bind_action('soft_reboot', self._soft_reboot_server)
         action_builder.bind_action('stop_start',
                                    self._stop_and_start_server)
         action_builder.bind_action('rescue_unrescue',
