@@ -331,6 +331,34 @@
           tenants: 2
           users_per_tenant: 10
 
+  SaharaNodeGroupTemplates.create_and_list_node_group_templates:
+    -
+      args:
+        flavor:
+         name: "m1.small"
+      runner:
+        type: "constant"
+        times: 100
+        concurrency: 10
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+
+  SaharaNodeGroupTemplates.create_delete_node_group_templates:
+    -
+      args:
+        flavor:
+         name: "m1.small"
+      runner:
+        type: "constant"
+        times: 100
+        concurrency: 10
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+
   Authenticate.validate_cinder:
     -
       args:
