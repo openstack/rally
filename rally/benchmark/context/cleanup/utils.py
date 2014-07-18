@@ -162,6 +162,58 @@ def delete_alarms(ceilometer, project_uuid):
         ceilometer.alarms.delete(alarm.alarm_id)
 
 
+def delete_sahara_resources(sahara):
+    # Delete EDP related objects
+    delete_job_executions(sahara)
+    delete_jobs(sahara)
+    delete_job_binaries(sahara)
+    delete_data_sources(sahara)
+
+    # Delete cluster related objects
+    delete_clusters(sahara)
+    delete_cluster_templates(sahara)
+    delete_node_group_templates(sahara)
+
+
+def delete_job_executions(sahara):
+    for je in sahara.job_executions.list():
+        sahara.job_executions.delete(je.id)
+
+    _wait_for_empty_list(sahara.job_executions)
+
+
+def delete_jobs(sahara):
+    for job in sahara.jobs.list():
+        sahara.jobs.delete(job.id)
+
+
+def delete_job_binaries(sahara):
+    for jb in sahara.job_binaries.list():
+        sahara.job_binaries.delete(jb.id)
+
+
+def delete_data_sources(sahara):
+    for ds in sahara.data_sources.list():
+        sahara.data_sources.delete(ds.id)
+
+
+def delete_clusters(sahara):
+    for cluster in sahara.clusters.list():
+        sahara.clusters.delete(cluster.id)
+
+    _wait_for_empty_list(sahara.clusters)
+
+
+def delete_cluster_templates(sahara):
+    for ct in sahara.cluster_templates.list():
+        sahara.cluster_templates.delete(ct.id)
+
+
+def delete_node_group_templates(sahara):
+    for ngt in sahara.node_group_templates.list():
+        sahara.node_group_templates.delete(ngt.id)
+
+
 def _wait_for_empty_list(mgr, timeout=10, check_interval=1):
     _wait_for_list_size(mgr, sizes=[0], timeout=timeout,
                         check_interval=check_interval)
