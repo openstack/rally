@@ -137,7 +137,7 @@ class FileAccumulator(testtools.StreamResult):
 
 
 def main(subunit_log_file):
-    results_file, _ = tempfile.mkstemp()
+    fd, results_file = tempfile.mkstemp()
     result = JsonOutput(results_file)
     stream = open(subunit_log_file, 'rb')
 
@@ -161,8 +161,8 @@ def main(subunit_log_file):
         suite = subunit.ProtocolTestCase(bytes_io)
         suite.run(result)
     result.stopTestRun()
-    with open(results_file, 'rb') as results_file:
-        data = results_file.read()
+    with open(results_file, 'rb') as temp_results_file:
+        data = temp_results_file.read()
     try:
         os.unlink(results_file)
     except OSError as e:
