@@ -13,8 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import uuid
-
 import jsonschema
 import mock
 
@@ -41,7 +39,7 @@ class DevstackEngineTestCase(test.TestCase):
     def setUp(self):
         super(DevstackEngineTestCase, self).setUp()
         self.deployment = {
-            'uuid': str(uuid.uuid4()),
+            'uuid': 'de641026-dbe3-4abe-844a-ffef930a600a',
             'config': SAMPLE_CONFIG,
         }
         self.engine = devstack.DevstackEngine(self.deployment)

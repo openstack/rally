@@ -16,7 +16,6 @@
 """ Test for orchestrator. """
 
 import collections
-import uuid
 
 import mock
 
@@ -77,12 +76,12 @@ class APITestCase(test.TestCase):
         super(APITestCase, self).setUp()
         self.deploy_config = FAKE_DEPLOY_CONFIG
         self.task_config = FAKE_TASK_CONFIG
-        self.deploy_uuid = str(uuid.uuid4())
+        self.deploy_uuid = '599bdf1d-fe77-461a-a810-d59b1490f4e3'
         self.endpoints = [FAKE_DEPLOY_CONFIG['endpoint']]
         # TODO(msdubov): Remove this as soon as ExistingCloud requires
         #                permission on input
         self.endpoints[0]["permission"] = consts.EndpointPermission.ADMIN
-        self.task_uuid = str(uuid.uuid4())
+        self.task_uuid = 'b0d9cd6c-2c94-4417-a238-35c7019d0257'
         self.task = {
             'uuid': self.task_uuid,
         }
@@ -96,7 +95,7 @@ class APITestCase(test.TestCase):
 
     @mock.patch('rally.objects.Task')
     def test_create_task(self, mock_task):
-        deployment_uuid = uuid.uuid4()
+        deployment_uuid = 'b0d9cd6c-2c94-4417-a238-35c7019d0257'
         tag = "a"
         api.create_task(deployment_uuid, tag)
         mock_task.assert_called_once_with(deployment_uuid=deployment_uuid,

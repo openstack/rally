@@ -14,8 +14,6 @@
 #    under the License.
 
 
-import uuid
-
 import mock
 
 from rally import consts
@@ -48,7 +46,7 @@ class TestMultihostEngine(test.TestCase):
             ]
         }
         self.deployment = fakes.FakeDeployment(
-            uuid=str(uuid.uuid4()),
+            uuid='905b2f16-6453-4b86-8ba5-6d32025fcfa6',
             config=self.config,
         )
         self.engine = deploy.engine.EngineFactory.get_engine('MultihostEngine',

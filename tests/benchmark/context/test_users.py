@@ -14,7 +14,6 @@
 #    under the License.
 
 import itertools
-import uuid
 
 import mock
 
@@ -53,7 +52,8 @@ class UserGeneratorTestCase(test.TestCase):
     @mock.patch("rally.benchmark.context.users.osclients")
     def test_create_tenant_users(self, mock_osclients):
         users_num = 5
-        args = (mock.MagicMock(), users_num, str(uuid.uuid4()), 1)
+        args = (mock.MagicMock(), users_num,
+                'ad325aec-f7b4-4a62-832a-bb718e465bb7', 1)
 
         result = users.UserGenerator._create_tenant_users(args)
 

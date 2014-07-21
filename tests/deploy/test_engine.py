@@ -15,8 +15,6 @@
 
 """Test for deploy engines."""
 
-import uuid
-
 import mock
 
 from rally import consts
@@ -27,7 +25,7 @@ from tests import test
 
 def make_fake_deployment(**kwargs):
     values = dict({
-        'uuid': uuid.uuid4(),
+        'uuid': '1359befb-8737-4f4e-bea9-492416106977',
         'config': {
             'name': 'fake',
         },

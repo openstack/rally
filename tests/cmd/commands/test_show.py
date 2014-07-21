@@ -13,8 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import uuid
-
 import mock
 
 from rally.cmd.commands import show
@@ -31,7 +29,7 @@ class ShowCommandsTestCase(test.TestCase):
                               'password': 'fake_password',
                               'tenant_name': 'fake_tenant_name',
                               'auth_url': 'http://fake.auth.url'}
-        self.fake_deploy_id = str(uuid.uuid4)
+        self.fake_deploy_id = '7f6e88e0-897e-45c0-947c-595ce2437bee'
         self.fake_clients = fakes.FakeClients()
         self.fake_glance_client = fakes.FakeGlanceClient()
         self.fake_nova_client = fakes.FakeNovaClient()
