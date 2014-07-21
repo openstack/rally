@@ -12,6 +12,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import six
 
 from rally.benchmark.context import base
 from rally.benchmark.context.cleanup import utils as cleanup_utils
@@ -100,3 +101,16 @@ class ImageGenerator(base.Context):
                                                       images["tenant_id"])
             except Exception:
                 raise exceptions.ImageCleanUpException()
+
+    @classmethod
+    def validate_semantic(cls, config, admin, users, task):
+        """Check if the image service is available."""
+
+        try:
+            glance = osclients.Clients(users[0]["endpoint"]).glance()
+            list(glance.images.list(limit=0))
+        except Exception as e:
+            message = _(
+                "The image service is unavailable, Reason: %(reason)s") % {
+                      "reason": six.text_type(e)}
+            raise exceptions.InvalidScenarioArgument(message=message)
