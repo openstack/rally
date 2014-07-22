@@ -78,6 +78,9 @@ class NovaScenario(base.Scenario):
         Returns when the server is actually booted and is in the "Active"
         state.
 
+        If multiple networks are present, the first network found that
+        isn't associated with a floating IP pool is used.
+
         :param server_name: String used to name the server
         :param image_id: ID of the image to be used for server creation
         :param flavor_id: ID of the flavor to be used for server creation
@@ -91,6 +94,16 @@ class NovaScenario(base.Scenario):
                 kwargs['security_groups'] = [allow_ssh_secgroup]
             elif allow_ssh_secgroup not in kwargs['security_groups']:
                 kwargs['security_groups'].append(allow_ssh_secgroup)
+
+        nets = self.clients("nova").networks.list()
+        fip_pool = [
+                    pool.name
+                    for pool in self.clients("nova").floating_ip_pools.list()
+                   ]
+        for net in nets:
+            if net.label not in fip_pool:
+                kwargs['nics'] = [{'net-id': net.id}]
+                break
 
         server = self.clients("nova").servers.create(server_name, image_id,
                                                      flavor_id, **kwargs)
