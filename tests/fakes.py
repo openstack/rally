@@ -629,6 +629,12 @@ class FakeNeutronClient(object):
         self.format = "json"
         self.version = "2.0"
 
+    @staticmethod
+    def _filter(resource_list, search_opts):
+        return [res for res in resource_list
+                if all(res[field] == value
+                       for field, value in search_opts.items())]
+
     def add_interface_router(self, router_id, data):
         subnet_id = data["subnet_id"]
 
@@ -766,17 +772,21 @@ class FakeNeutronClient(object):
         del self.__subnets[subnet_id]
         return ""
 
-    def list_networks(self):
-        return {"networks": self.__networks.values()}
+    def list_networks(self, **search_opts):
+        nets = self._filter(self.__networks.values(), search_opts)
+        return {"networks": nets}
 
-    def list_ports(self):
-        return {"ports": self.__ports.values()}
+    def list_ports(self, **search_opts):
+        ports = self._filter(self.__ports.values(), search_opts)
+        return {"ports": ports}
 
-    def list_routers(self):
-        return {"routers": self.__routers.values()}
+    def list_routers(self, **search_opts):
+        routers = self._filter(self.__routers.values(), search_opts)
+        return {"routers": routers}
 
-    def list_subnets(self):
-        return {"subnets": self.__subnets.values()}
+    def list_subnets(self, **search_opts):
+        subnets = self._filter(self.__subnets.values(), search_opts)
+        return {"subnets": subnets}
 
     def remove_interface_router(self, router_id, data):
         subnet_id = data["subnet_id"]
