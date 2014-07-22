@@ -49,3 +49,17 @@ class CleanupUtilsTestCase(test.TestCase):
                                        network1["network"]["tenant_id"])
 
         self.assertEqual(total(neutron), 0)
+
+    def test_delete_sahara_resources(self):
+
+        sahara = fakes.FakeClients().sahara()
+        utils.delete_sahara_resources(sahara)
+
+        sahara.job_executions.delete.assert_called_once_with(42)
+        sahara.jobs.delete.assert_called_once_with(42)
+        sahara.job_binaries.delete.assert_called_once_with(42)
+        sahara.data_sources.delete.assert_called_once_with(42)
+
+        sahara.clusters.delete.assert_called_once_with(42)
+        sahara.cluster_templates.delete.assert_called_once_with(42)
+        sahara.node_group_templates.delete.assert_called_once_with(42)

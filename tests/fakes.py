@@ -810,7 +810,31 @@ class FakeIronicClient(object):
 class FakeSaharaClient(object):
 
     def __init__(self):
-        pass
+        self.job_executions = mock.MagicMock()
+        self.jobs = mock.MagicMock()
+        self.job_binaries = mock.MagicMock()
+        self.data_sources = mock.MagicMock()
+
+        self.clusters = mock.MagicMock()
+        self.cluster_templates = mock.MagicMock()
+        self.node_group_templates = mock.MagicMock()
+
+        self.setup_list_methods()
+
+    def setup_list_methods(self):
+        mock_with_id = mock.MagicMock()
+        mock_with_id.id = 42
+
+        # First call of list returns a list with one object, the next should
+        # empty after delete.
+        self.job_executions.list.side_effect = [[mock_with_id], []]
+        self.jobs.list.side_effect = [[mock_with_id], []]
+        self.job_binaries.list.side_effect = [[mock_with_id], []]
+        self.data_sources.list.side_effect = [[mock_with_id], []]
+
+        self.clusters.list.side_effect = [[mock_with_id], []]
+        self.cluster_templates.list.side_effect = [[mock_with_id], []]
+        self.node_group_templates.list.side_effect = [[mock_with_id], []]
 
 
 class FakeClients(object):

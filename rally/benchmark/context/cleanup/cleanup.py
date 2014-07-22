@@ -42,7 +42,7 @@ class ResourceCleaner(base.Context):
         "items": {
             "type": "string",
             "enum": ["nova", "glance", "cinder",
-                     "quotas", "neutron", "ceilometer", "heat"]
+                     "quotas", "neutron", "ceilometer", "heat", "sahara"]
         },
         "uniqueItems": True
     }
@@ -69,7 +69,8 @@ class ResourceCleaner(base.Context):
                             tenant_id),
                 "ceilometer": (utils.delete_ceilometer_resources,
                                clients.ceilometer, tenant_id),
-                "heat": (utils.delete_heat_resources, clients.heat)
+                "heat": (utils.delete_heat_resources, clients.heat),
+                "sahara": (utils.delete_sahara_resources, clients.sahara)
             }
 
             for service_name in self.config:
