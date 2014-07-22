@@ -126,9 +126,11 @@ class BenchmarkEngineTestCase(test.TestCase):
         config = {"sca": [{"context": "a"}], "scb": [{"runner": "b"}]}
         eng = engine.BenchmarkEngine(mock.MagicMock(), mock.MagicMock())
         eng._validate_config_syntax(config)
-        mock_runner.assert_has_calls([mock.call({}), mock.call("b")])
+        mock_runner.assert_has_calls([mock.call({}), mock.call("b")],
+                                     any_order=True)
         mock_context.assert_has_calls([mock.call("a", non_hidden=True),
-                                       mock.call({}, non_hidden=True)])
+                                       mock.call({}, non_hidden=True)],
+                                      any_order=True)
 
     @mock.patch("rally.benchmark.engine.base_runner.ScenarioRunner")
     @mock.patch("rally.benchmark.engine.base_ctx.ContextManager.validate")
@@ -218,7 +220,7 @@ class BenchmarkEngineTestCase(test.TestCase):
             mock.call(admin, user, "a", 1, fake_task, config["a"][1]),
             mock.call(admin, user, "b", 0, fake_task, config["b"][0])
         ]
-        mock_helper.assert_has_calls(expected_calls)
+        mock_helper.assert_has_calls(expected_calls, any_order=True)
 
     @mock.patch("rally.benchmark.engine.BenchmarkEngine.consume_results")
     def test_run__update_status(self, mock_consume):

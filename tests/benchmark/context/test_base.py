@@ -132,9 +132,11 @@ class ContextManagerTestCase(test.TestCase):
         mock_get.assert_has_calls([
             mock.call("a"),
             mock.call("b"),
+        ], any_order=True)
+        mock_get.assert_has_calls([
             mock.call()(context),
-            mock.call()(context)
-        ])
+            mock.call()(context),
+        ], any_order=True)
 
     @mock.patch("rally.benchmark.context.base.Context.get_by_name")
     def test_validate(self, mock_get):
@@ -144,12 +146,11 @@ class ContextManagerTestCase(test.TestCase):
         }
 
         base.ContextManager.validate(config)
-        mock_get.assert_has_calls([
-            mock.call("ctx1"),
-            mock.call().validate(config["ctx1"], non_hidden=False),
-            mock.call("ctx2"),
-            mock.call().validate(config["ctx2"], non_hidden=False)
-        ])
+        for ctx in ("ctx1", "ctx2"):
+            mock_get.assert_has_calls([
+                mock.call(ctx),
+                mock.call().validate(config[ctx], non_hidden=False),
+            ])
 
     @mock.patch("rally.benchmark.context.base.Context.get_by_name")
     def test_validate_semantic(self, mock_get):
@@ -159,14 +160,12 @@ class ContextManagerTestCase(test.TestCase):
         }
 
         base.ContextManager.validate_semantic(config)
-        mock_get.assert_has_calls([
-            mock.call("ctx1"),
-            mock.call().validate_semantic(config["ctx1"], admin=None,
-                                          users=None, task=None),
-            mock.call("ctx2"),
-            mock.call().validate_semantic(config["ctx2"], admin=None,
-                                          users=None, task=None)
-        ])
+        for ctx in ("ctx1", "ctx2"):
+            mock_get.assert_has_calls([
+                mock.call(ctx),
+                mock.call().validate_semantic(config[ctx], admin=None,
+                                              users=None, task=None),
+            ])
 
     @mock.patch("rally.benchmark.context.base.Context.get_by_name")
     def test_validate_non_hidden(self, mock_get):
@@ -176,12 +175,11 @@ class ContextManagerTestCase(test.TestCase):
         }
 
         base.ContextManager.validate(config, non_hidden=True)
-        mock_get.assert_has_calls([
-            mock.call("ctx1"),
-            mock.call().validate(config["ctx1"], non_hidden=True),
-            mock.call("ctx2"),
-            mock.call().validate(config["ctx2"], non_hidden=True)
-        ])
+        for ctx in ("ctx1", "ctx2"):
+            mock_get.assert_has_calls([
+                mock.call(ctx),
+                mock.call().validate(config[ctx], non_hidden=True),
+            ])
 
     def test_validate__non_existing_context(self):
         config = {

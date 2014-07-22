@@ -23,16 +23,11 @@ from tests import test
 
 class RoleGeneratorTestCase(test.TestCase):
 
-    def create_default_roles_and_patch_add_remove_fuinctions(self, fc):
+    def create_default_roles_and_patch_add_remove_functions(self, fc):
         fc.keystone().roles.add_user_role = mock.MagicMock()
         fc.keystone().roles.remove_user_role = mock.MagicMock()
-
-        self.assertEqual(0, len(fc.keystone().roles.list()))
-        default_roles = [{"id": "r1", "name": "test_role1"},
-                         {"id": "r2", "name": "test_role2"}]
-
-        fc.keystone().roles.create(*default_roles[0].values())
-        fc.keystone().roles.create(*default_roles[1].values())
+        fc.keystone().roles.create("r1", "test_role1")
+        fc.keystone().roles.create("r2", "test_role2")
         self.assertEqual(2, len(fc.keystone().roles.list()))
 
     @property
@@ -52,7 +47,7 @@ class RoleGeneratorTestCase(test.TestCase):
     def test_add_role(self, mock_osclients):
         fc = fakes.FakeClients()
         mock_osclients.Clients.return_value = fc
-        self.create_default_roles_and_patch_add_remove_fuinctions(fc)
+        self.create_default_roles_and_patch_add_remove_functions(fc)
 
         ctx = roles.RoleGenerator(self.context)
         ctx.context["users"] = [{"id": "u1", "tenant_id": "t1"},
@@ -67,7 +62,7 @@ class RoleGeneratorTestCase(test.TestCase):
     def test_add_role_which_does_not_exist(self, mock_osclients):
         fc = fakes.FakeClients()
         mock_osclients.Clients.return_value = fc
-        self.create_default_roles_and_patch_add_remove_fuinctions(fc)
+        self.create_default_roles_and_patch_add_remove_functions(fc)
 
         ctx = roles.RoleGenerator(self.context)
         ctx.context["users"] = [{"id": "u1", "tenant_id": "t1"},
@@ -96,7 +91,7 @@ class RoleGeneratorTestCase(test.TestCase):
     def test_setup_and_cleanup(self, mock_osclients):
         fc = fakes.FakeClients()
         mock_osclients.Clients.return_value = fc
-        self.create_default_roles_and_patch_add_remove_fuinctions(fc)
+        self.create_default_roles_and_patch_add_remove_functions(fc)
 
         with roles.RoleGenerator(self.context) as ctx:
             ctx.context["users"] = [{"id": "u1", "tenant_id": "t1"},
