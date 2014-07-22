@@ -15,7 +15,6 @@
 
 """Tests for db.deploy layer."""
 
-import uuid
 
 import mock
 
@@ -28,7 +27,7 @@ class DeploymentTestCase(test.TestCase):
     def setUp(self):
         super(DeploymentTestCase, self).setUp()
         self.deployment = {
-            'uuid': str(uuid.uuid4()),
+            'uuid': 'baa1bfb6-0c38-4f6c-9bd0-45968890e4f4',
             'name': '',
             'config': {},
             'endpoint': {},

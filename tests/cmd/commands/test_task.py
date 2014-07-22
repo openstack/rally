@@ -13,8 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import uuid
-
 import mock
 
 from rally.cmd.commands import task
@@ -40,7 +38,7 @@ class TaskCommandsTestCase(test.TestCase):
             dict(uuid='fc1a9bbe-1ead-4740-92b5-0feecf421634',
                  created_at='2014-01-14 09:14:45.395822',
                  status='init', failed=False, tag=None))
-        deploy_id = str(uuid.uuid4())
+        deploy_id = 'e0617de9-77d1-4875-9b49-9d5789e29f20'
         self.task.start('path_to_config.json', deploy_id)
         mock_api.assert_called_once_with(deploy_id, {u'some': u'json'},
                                          task=mock_create_task.return_value)
@@ -64,7 +62,7 @@ class TaskCommandsTestCase(test.TestCase):
                  created_at='2014-01-14 09:14:45.395822',
                  status='init', failed=False, tag=None))
         mock_api.start_task.side_effect = KeyboardInterrupt
-        deploy_id = str(uuid.uuid4())
+        deploy_id = 'f586dcd7-8473-4c2e-a4d4-22be26371c10'
         self.assertRaises(KeyboardInterrupt, self.task.start,
                           'path_to_config.json', deploy_id)
         mock_api.abort_task.assert_called_once_with(
@@ -72,7 +70,7 @@ class TaskCommandsTestCase(test.TestCase):
 
     @mock.patch("rally.cmd.commands.task.api")
     def test_abort(self, mock_api):
-        test_uuid = str(uuid.uuid4())
+        test_uuid = '17860c43-2274-498d-8669-448eff7b073f'
         mock_api.abort_task = mock.MagicMock()
         self.task.abort(test_uuid)
         task.api.abort_task.assert_called_once_with(test_uuid)
@@ -84,7 +82,7 @@ class TaskCommandsTestCase(test.TestCase):
                           self.task.abort, None)
 
     def test_status(self):
-        test_uuid = str(uuid.uuid4())
+        test_uuid = 'a3e7cefb-bec2-4802-89f6-410cc31f71af'
         value = {'task_id': "task", "status": "status"}
         with mock.patch("rally.cmd.commands.task.db") as mock_db:
             mock_db.task_get = mock.MagicMock(return_value=value)
@@ -99,7 +97,7 @@ class TaskCommandsTestCase(test.TestCase):
 
     @mock.patch('rally.cmd.commands.task.db')
     def test_detailed(self, mock_db):
-        test_uuid = str(uuid.uuid4())
+        test_uuid = 'c0d874d4-7195-4fd5-8688-abe82bfad36f'
         value = {
             "id": "task",
             "uuid": test_uuid,
@@ -119,14 +117,14 @@ class TaskCommandsTestCase(test.TestCase):
 
     @mock.patch('rally.cmd.commands.task.db')
     def test_detailed_wrong_id(self, mock_db):
-        test_uuid = str(uuid.uuid4())
+        test_uuid = 'eb290c30-38d8-4c8f-bbcc-fc8f74b004ae'
         mock_db.task_get_detailed = mock.MagicMock(return_value=None)
         self.task.detailed(test_uuid)
         mock_db.task_get_detailed.assert_called_once_with(test_uuid)
 
     @mock.patch('rally.cmd.commands.task.db')
     def test_results(self, mock_db):
-        test_uuid = str(uuid.uuid4())
+        test_uuid = 'aa808c14-69cc-4faf-a906-97e05f5aebbd'
         value = [
             {'key': 'key', 'data': {'raw': 'raw'}}
         ]
@@ -136,7 +134,7 @@ class TaskCommandsTestCase(test.TestCase):
 
     @mock.patch('rally.cmd.commands.task.db')
     def test_invalid_results(self, mock_db):
-        test_uuid = str(uuid.uuid4())
+        test_uuid = 'd1f58069-d221-4577-b6ba-5c635027765a'
         mock_db.task_result_get_all_by_uuid.return_value = []
         return_value = self.task.results(test_uuid)
         mock_db.task_result_get_all_by_uuid.assert_called_once_with(test_uuid)
@@ -167,7 +165,7 @@ class TaskCommandsTestCase(test.TestCase):
                                                     'created_at'))
 
     def test_delete(self):
-        task_uuid = str(uuid.uuid4())
+        task_uuid = '8dcb9c5e-d60b-4022-8975-b5987c7833f7'
         force = False
         with mock.patch("rally.cmd.commands.task.api") as mock_api:
             mock_api.delete_task = mock.Mock()
@@ -177,7 +175,11 @@ class TaskCommandsTestCase(test.TestCase):
 
     @mock.patch("rally.cmd.commands.task.api")
     def test_delete_multiple_uuid(self, mock_api):
-        task_uuids = [str(uuid.uuid4()) for _ in range(5)]
+        task_uuids = ['4bf35b06-5916-484f-9547-12dce94902b7',
+                      '52cad69d-d3e4-47e1-b445-dec9c5858fe8',
+                      '6a3cb11c-ac75-41e7-8ae7-935732bfb48f',
+                      '018af931-0e5a-40d5-9d6f-b13f4a3a09fc',
+                      '1a4d88c9-fb68-4ff6-a246-f9122aec79b0']
         force = False
         self.task.delete(task_uuids, force=force)
         self.assertTrue(mock_api.delete_task.call_count == len(task_uuids))

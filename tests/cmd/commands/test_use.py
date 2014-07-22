@@ -14,7 +14,6 @@
 #    under the License.
 
 import os
-import uuid
 
 import mock
 
@@ -58,7 +57,7 @@ class UseCommandsTestCase(test.TestCase):
     @mock.patch(MOD + 'fileutils.update_env_file')
     def test_deployment(self, mock_env, mock_path, mock_deployment,
                         mock_symlink, mock_remove):
-        deploy_id = str(uuid.uuid4())
+        deploy_id = '593b683c-4b16-4b2b-a56b-e162bd60f10b'
         endpoints = {'endpoints': [{'auth_url': 'fake_auth_url',
                                     'username': 'fake_username',
                                     'password': 'fake_password',
@@ -84,7 +83,7 @@ class UseCommandsTestCase(test.TestCase):
 
     @mock.patch(MOD + 'db.deployment_get')
     def test_deployment_not_found(self, mock_deployment):
-        deploy_id = str(uuid.uuid4())
+        deploy_id = 'e87e4dca-b515-4477-888d-5f6103f13b42'
         mock_deployment.side_effect = exceptions.DeploymentNotFound(
             uuid=deploy_id)
         self.assertEqual(1, self.use.deployment(deploy_id))
@@ -92,7 +91,7 @@ class UseCommandsTestCase(test.TestCase):
     @mock.patch(MOD + 'fileutils._rewrite_env_file')
     @mock.patch(MOD + 'db.task_get', return_value=True)
     def test_task(self, mock_task, mock_file):
-        task_id = str(uuid.uuid4())
+        task_id = '80422553-5774-44bd-98ac-38bd8c7a0feb'
         self.use.task(task_id)
         mock_file.assert_called_once_with(
             os.path.expanduser('~/.rally/globals'),
@@ -100,6 +99,6 @@ class UseCommandsTestCase(test.TestCase):
 
     @mock.patch(MOD + 'db.task_get')
     def test_task_not_found(self, mock_task):
-        task_id = str(uuid.uuid4())
+        task_id = 'ddc3f8ba-082a-496d-b18f-72cdf5c10a14'
         mock_task.side_effect = exceptions.TaskNotFound(uuid=task_id)
         self.assertRaises(exceptions.TaskNotFound, self.use.task, task_id)

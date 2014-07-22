@@ -15,8 +15,6 @@
 
 """Tests for db.api layer."""
 
-import uuid
-
 from rally import consts
 from rally import db
 from rally import exceptions
@@ -39,7 +37,7 @@ class TasksTestCase(test.DBTestCase):
 
     def test_task_get_not_found(self):
         self.assertRaises(exceptions.TaskNotFound,
-                          db.task_get, str(uuid.uuid4()))
+                          db.task_get, 'f885f435-f6ca-4f3e-9b3e-aeb6837080f2')
 
     def test_task_create(self):
         task = self._create_task()
@@ -50,7 +48,7 @@ class TasksTestCase(test.DBTestCase):
         self.assertFalse(db_task['failed'])
 
     def test_task_create_without_uuid(self):
-        _uuid = str(uuid.uuid4())
+        _uuid = '19be8589-48b0-4af1-a369-9bebaaa563ab'
         task = self._create_task({'uuid': _uuid})
         db_task = self._get_task(task['uuid'])
         self.assertEqual(db_task['uuid'], _uuid)
@@ -63,7 +61,8 @@ class TasksTestCase(test.DBTestCase):
 
     def test_task_update_not_found(self):
         self.assertRaises(exceptions.TaskNotFound,
-                          db.task_update, str(uuid.uuid4()), {})
+                          db.task_update,
+                          '7ae1da26-feaa-4213-8208-76af2857a5ab', {})
 
     def test_task_update_all_stats(self):
         _uuid = self._create_task({})['uuid']
@@ -106,7 +105,8 @@ class TasksTestCase(test.DBTestCase):
 
     def test_task_delete_not_found(self):
         self.assertRaises(exceptions.TaskNotFound,
-                          db.task_delete, str(uuid.uuid4()))
+                          db.task_delete,
+                          'da6f820c-b133-4b9f-8534-4c3bcc40724b')
 
     def test_task_delete_with_results(self):
         task_id = self._create_task()['uuid']
@@ -138,7 +138,8 @@ class TasksTestCase(test.DBTestCase):
 
     def test_task_delete_by_uuid_and_status_not_found(self):
         self.assertRaises(exceptions.TaskNotFound,
-                          db.task_delete, str(uuid.uuid4()),
+                          db.task_delete,
+                          'fcd0483f-a405-44c4-b712-99c9e52254eb',
                           status=consts.TaskStatus.FINISHED)
 
     def test_task_result_get_all_by_uuid(self):
@@ -260,7 +261,8 @@ class DeploymentTestCase(test.DBTestCase):
 
     def test_deployment_get_not_found(self):
         self.assertRaises(exceptions.DeploymentNotFound,
-                          db.deployment_get, str(uuid.uuid4()))
+                          db.deployment_get,
+                          '852e932b-9552-4b2d-89e3-a5915780a5e3')
 
     def test_deployment_list(self):
         deploy_one = db.deployment_create({})
@@ -308,7 +310,8 @@ class DeploymentTestCase(test.DBTestCase):
 
     def test_deployment_delete_not_found(self):
         self.assertRaises(exceptions.DeploymentNotFound,
-                          db.deployment_delete, str(uuid.uuid4()))
+                          db.deployment_delete,
+                          '5f2883be-46c8-4c4b-a4fe-988ad0c6b20a')
 
     def test_deployment_delete_is_busy(self):
         deployment = db.deployment_create({})
@@ -343,7 +346,8 @@ class ResourceTestCase(test.DBTestCase):
 
     def test_delete_not_found(self):
         self.assertRaises(exceptions.ResourceNotFound,
-                          db.resource_delete, str(uuid.uuid4()))
+                          db.resource_delete,
+                          '2d02ecb0-d973-4ffd-975d-2f08a906222b')
 
     def test_get_all(self):
         deployment0 = db.deployment_create({})

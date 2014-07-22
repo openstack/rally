@@ -13,8 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import uuid
-
 import mock
 import six
 
@@ -50,7 +48,7 @@ class VerifyCommandsTestCase(test.TestCase):
     @mock.patch('rally.osclients.Clients')
     @mock.patch('rally.orchestrator.api.verify')
     def test_start(self, mock_verify, mock_clients):
-        deploy_id = str(uuid.uuid4())
+        deploy_id = '0fba91c6-82d5-4ce1-bd00-5d7c989552d9'
         mock_clients().glance().images.list.return_value = [
             self.image1, self.image2]
         mock_clients().nova().flavors.list.return_value = [
@@ -65,7 +63,7 @@ class VerifyCommandsTestCase(test.TestCase):
 
     @mock.patch('rally.orchestrator.api.verify')
     def test_start_with_wrong_set_name(self, mock_verify):
-        deploy_id = str(uuid.uuid4())
+        deploy_id = 'f2009aae-6ef3-468e-96b2-3c987d584010'
 
         wrong_set_name = 'unexpected_value'
 

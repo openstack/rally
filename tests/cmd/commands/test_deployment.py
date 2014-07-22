@@ -14,7 +14,6 @@
 #    under the License.
 
 import os
-import uuid
 
 import mock
 
@@ -78,7 +77,7 @@ class DeploymentCommandsTestCase(test.TestCase):
 
     @mock.patch('rally.cmd.commands.deployment.api.recreate_deploy')
     def test_recreate(self, mock_recreate):
-        deploy_id = str(uuid.uuid4())
+        deploy_id = '43924f8b-9371-4152-af9f-4cf02b4eced4'
         self.deployment.recreate(deploy_id)
         mock_recreate.assert_called_once_with(deploy_id)
 
@@ -90,7 +89,7 @@ class DeploymentCommandsTestCase(test.TestCase):
 
     @mock.patch('rally.cmd.commands.deployment.api.destroy_deploy')
     def test_destroy(self, mock_destroy):
-        deploy_id = str(uuid.uuid4())
+        deploy_id = '53fd0273-60ce-42e5-a759-36f1a683103e'
         self.deployment.destroy(deploy_id)
         mock_destroy.assert_called_once_with(deploy_id)
 
@@ -107,13 +106,14 @@ class DeploymentCommandsTestCase(test.TestCase):
     def test_list_different_deploy_id(self, mock_deployments,
                                       mock_default, mock_struct,
                                       mock_print_list):
-        current_deploy_id = str(uuid.uuid4())
+        current_deploy_id = '26a3ce76-0efa-40e4-86e5-514574bd1ff6'
         mock_default.return_value = current_deploy_id
-        fake_deployment_list = [{'uuid': str(uuid.uuid4()),
-                                 'created_at': '03-12-2014',
-                                 'name': 'dep1',
-                                 'status': 'deploy->started',
-                                 'active': 'False'}]
+        fake_deployment_list = [
+                            {'uuid': 'fa34aea2-ae2e-4cf7-a072-b08d67466e3e',
+                             'created_at': '03-12-2014',
+                             'name': 'dep1',
+                             'status': 'deploy->started',
+                             'active': 'False'}]
 
         mock_deployments.return_value = fake_deployment_list
         self.deployment.list()
@@ -134,7 +134,7 @@ class DeploymentCommandsTestCase(test.TestCase):
     def test_list_current_deploy_id(self, mock_deployments,
                                     mock_default, mock_struct,
                                     mock_print_list):
-        current_deploy_id = str(uuid.uuid4())
+        current_deploy_id = '64258e84-ffa1-4011-9e4c-aba07bdbcc6b'
         mock_default.return_value = current_deploy_id
         fake_deployment_list = [{'uuid': current_deploy_id,
                                  'created_at': '13-12-2014',
@@ -155,7 +155,7 @@ class DeploymentCommandsTestCase(test.TestCase):
 
     @mock.patch('rally.cmd.commands.deployment.db.deployment_get')
     def test_config(self, mock_deployment):
-        deploy_id = str(uuid.uuid4())
+        deploy_id = 'fa4a423e-f15d-4d83-971a-89574f892999'
         value = {'config': 'config'}
         mock_deployment.return_value = value
         self.deployment.config(deploy_id)
@@ -171,7 +171,7 @@ class DeploymentCommandsTestCase(test.TestCase):
     @mock.patch('rally.cmd.commands.deployment.utils.Struct')
     @mock.patch('rally.cmd.commands.deployment.db.deployment_get')
     def test_endpoint(self, mock_deployment, mock_struct, mock_print_list):
-        deploy_id = str(uuid.uuid4())
+        deploy_id = 'b1a6153e-a314-4cb3-b63b-cf08c1a416c3'
         value = {'endpoints': [{}]}
         mock_deployment.return_value = value
         self.deployment.endpoint(deploy_id)

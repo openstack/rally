@@ -14,7 +14,6 @@
 #    under the License.
 
 import sys
-import uuid
 
 import mock
 
@@ -54,7 +53,7 @@ class TempestCommandsTestCase(test.TestCase):
 
     @mock.patch('rally.verification.verifiers.tempest.tempest.Tempest')
     def test_install(self, mock_tempest):
-        deploy_id = str(uuid.uuid4())
+        deploy_id = 'e24b5af0-0e2a-4a70-9443-b30a88ab152e'
         mock_tempest.return_value = self.tempest
         self.tempest_commands.install(deploy_id)
         self.tempest.install.assert_called_once_with()

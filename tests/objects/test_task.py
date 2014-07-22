@@ -16,7 +16,6 @@
 """Tests for db.task layer."""
 
 import json
-import uuid
 
 import mock
 
@@ -29,7 +28,7 @@ class TaskTestCase(test.TestCase):
     def setUp(self):
         super(TaskTestCase, self).setUp()
         self.task = {
-            'uuid': str(uuid.uuid4()),
+            'uuid': '00ef46a2-c5b8-4aea-a5ca-0f54a10cbca1',
             'status': consts.TaskStatus.INIT,
             'failed': False,
             'verification_log': '',
