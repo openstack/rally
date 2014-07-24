@@ -119,35 +119,32 @@ def delete_keypairs(nova):
 
 
 def delete_neutron_resources(neutron, project_uuid):
+    search_opts = {"tenant_id": project_uuid}
     # Ports
-    for port in neutron.list_ports()["ports"]:
-        if port["tenant_id"] == project_uuid:
-
-            # Detach routers
-            for fip in port["fixed_ips"]:
-                neutron.remove_interface_router(
-                    port["device_id"], {
-                        "subnet_id": fip["subnet_id"]
-                    })
+    for port in neutron.list_ports(**search_opts)["ports"]:
+        # Detach routers
+        if port["device_owner"] == "network:router_interface":
+            neutron.remove_interface_router(
+                port["device_id"], {
+                    "port_id": port["id"]
+                })
+        else:
             try:
                 neutron.delete_port(port["id"])
             except neutron_exceptions.PortNotFoundClient:
                 # Port can be already auto-deleted, skip silently
                 pass
     # Routers
-    for router in neutron.list_routers()["routers"]:
-        if router["tenant_id"] == project_uuid:
-                neutron.delete_router(router["id"])
+    for router in neutron.list_routers(**search_opts)["routers"]:
+        neutron.delete_router(router["id"])
 
     # Subnets
-    for subnet in neutron.list_subnets()["subnets"]:
-        if subnet["tenant_id"] == project_uuid:
-            neutron.delete_subnet(subnet["id"])
+    for subnet in neutron.list_subnets(**search_opts)["subnets"]:
+        neutron.delete_subnet(subnet["id"])
 
     # Networks
-    for network in neutron.list_networks()["networks"]:
-        if network["tenant_id"] == project_uuid:
-            neutron.delete_network(network["id"])
+    for network in neutron.list_networks(**search_opts)["networks"]:
+        neutron.delete_network(network["id"])
 
 
 def delete_ceilometer_resources(ceilometer, project_uuid):
