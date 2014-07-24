@@ -1,4 +1,14 @@
 ---
+
+  KeystoneBasic.create_user:
+    -
+      args:
+        name_length: 10
+      runner:
+        type: "constant"
+        times: 10
+        concurrency: 10
+
   KeystoneBasic.create_delete_user:
     -
       args:
@@ -9,6 +19,46 @@
         concurrency: 10
 
   KeystoneBasic.create_and_list_tenants:
+    -
+      args:
+        name_length: 10
+      runner:
+        type: "constant"
+        times: 10
+        concurrency: 10
+
+  KeystoneBasic.create_and_list_users:
+    -
+      args:
+        name_length: 10
+      runner:
+        type: "constant"
+        times: 10
+        concurrency: 10
+
+  KeystoneBasic.create_tenant:
+    -
+      args:
+        name_length: 10
+      runner:
+        type: "constant"
+        times: 10
+        concurrency: 10
+
+  KeystoneBasic.create_tenant_with_users:
+    -
+      args:
+        name_length: 10
+        users_per_tenant: 10
+      runner:
+        type: "constant"
+        times: 10
+        concurrency: 10
+      context:
+        users:
+          tenants: 3
+
+  KeystoneBasic.create_delete_user:
     -
       args:
         name_length: 10
@@ -270,6 +320,17 @@
           tenants: 2
           users_per_tenant: 3
 
+  Authenticate.keystone:
+    -
+      runner:
+        type: "constant"
+        times: 40
+        concurrency: 20
+      context:
+        users:
+          tenants: 2
+          users_per_tenant: 10
+
   Authenticate.validate_cinder:
     -
       args:
@@ -322,23 +383,67 @@
           tenants: 3
           users_per_tenant: 5
 
-  VMTasks.boot_runcommand_delete:
+  Quotas.cinder_update:
     -
       args:
-        flavor:
-          name: "m1.tiny"
-        image:
-          name: "cirros-0.3.2-x86_64-uec"
-        fixed_network: "private"
-        floating_network: "public"
-        use_floatingip: true
-        script: "/home/jenkins/.rally/extra/instance_dd_test.sh"
-        interpreter: "/bin/sh"
-        username: "cirros"
+        max_quota: 1024
       runner:
         type: "constant"
-        times: 6
-        concurrency: 3
+        times: 10
+        concurrency: 2
+      context:
+        users:
+          tenants: 3
+          users_per_tenant: 2
+
+  Quotas.nova_update_and_delete:
+    -
+      args:
+        max_quota: 1024
+      runner:
+        type: "constant"
+        times: 10
+        concurrency: 2
+      context:
+        users:
+          tenants: 3
+          users_per_tenant: 2
+
+  Quotas.nova_update:
+    -
+      args:
+        max_quota: 1024
+      runner:
+        type: "constant"
+        times: 10
+        concurrency: 2
+      context:
+        users:
+          tenants: 3
+          users_per_tenant: 2
+
+  CinderVolumes.create_and_delete_volume:
+    -
+      args:
+        size: 1
+      runner:
+        type: "constant"
+        times: 3
+        concurrency: 2
+      context:
+        users:
+          tenants: 2
+          users_per_tenant: 2
+
+  CinderVolumes.create_and_list_volume:
+    -
+      args:
+        size: 1
+        detailed: True
+      runner:
+        type: "constant"
+        times: 3
+        concurrency: 1
       context:
         users:
           tenants: 1
@@ -358,7 +463,188 @@
         type: "constant"
         times: 6
         concurrency: 3
+
+  CinderVolumes.create_volume:
+    -
+      args:
+        size: 1
+      runner:
+        type: "constant"
+        times: 2
+        concurrency: 2
+      context:
+        users:
+          tenants: 2
+          users_per_tenant: 2
+
+  GlanceImages.create_and_delete_image:
+    -
+      args:
+        image_location: "http://download.cirros-cloud.net/0.3.2/cirros-0.3.2-x86_64-disk.img"
+        container_format: "bare"
+        disk_format: "qcow2"
+      runner:
+        type: "constant"
+        times: 6
+        concurrency: 3
+      context:
+        users:
+          tenants: 2
+          users_per_tenant: 3
+
+  GlanceImages.create_and_list_image:
+    -
+      args:
+        image_location: "/home/jenkins/.rally/extra/fake-image.img"
+        container_format: "bare"
+        disk_format: "qcow2"
+      runner:
+        type: "constant"
+        times: 6
+        concurrency: 2
       context:
         users:
           tenants: 1
           users_per_tenant: 1
+
+  GlanceImages.create_image_and_boot_instances:
+    -
+      args:
+        image_location: "http://download.cirros-cloud.net/0.3.2/cirros-0.3.2-x86_64-disk.img"
+        container_format: "bare"
+        disk_format: "qcow2"
+        flavor:
+            name: "m1.tiny"
+        number_instances: 2
+      runner:
+        type: "constant"
+        times: 4
+        concurrency: 2
+      context:
+        users:
+          tenants: 3
+          users_per_tenant: 1
+
+  NovaServers.boot_and_delete_server:
+    -
+      args:
+        flavor:
+            name: "m1.tiny"
+        image:
+            name: "cirros-0.3.2-x86_64-uec"
+      runner:
+        type: "constant"
+        times: 4
+        concurrency: 2
+      context:
+        users:
+          tenants: 3
+          users_per_tenant: 2
+
+  NovaServers.boot_and_list_server:
+    -
+      args:
+        flavor:
+            name: "m1.tiny"
+        image:
+            name: "cirros-0.3.2-x86_64-uec"
+        detailed: True
+      runner:
+        type: "constant"
+        times: 1
+        concurrency: 1
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+
+  NovaServers.boot_and_bounce_server:
+    -
+      args:
+        flavor:
+            name: "m1.tiny"
+        image:
+            name: "cirros-0.3.2-x86_64-uec"
+        actions:
+          -
+            hard_reboot: 1
+          -
+            soft_reboot: 1
+          -
+            stop_start: 1
+          -
+            rescue_unrescue: 1
+      runner:
+        type: "constant"
+        times: 3
+        concurrency: 3
+      context:
+        users:
+          tenants: 3
+          users_per_tenant: 2
+
+  NovaServers.boot_server_from_volume_and_delete:
+    -
+      args:
+        flavor:
+            name: "m1.tiny"
+        image:
+            name: "cirros-0.3.2-x86_64-uec"
+        volume_size: 1
+      runner:
+        type: "constant"
+        times: 4
+        concurrency: 2
+      context:
+        users:
+          tenants: 3
+          users_per_tenant: 2
+
+  NovaServers.boot_server_from_volume:
+    -
+      args:
+        flavor:
+            name: "m1.tiny"
+        image:
+            name: "cirros-0.3.2-x86_64-uec"
+        volume_size: 1
+      runner:
+        type: "constant"
+        times: 4
+        concurrency: 2
+      context:
+        users:
+          tenants: 3
+          users_per_tenant: 2
+
+  NovaServers.snapshot_server:
+    -
+      args:
+        flavor:
+            name: "m1.tiny"
+        image:
+            name: "cirros-0.3.2-x86_64-uec"
+      runner:
+        type: "constant"
+        times: 2
+        concurrency: 2
+      context:
+        users:
+          tenants: 3
+          users_per_tenant: 2
+
+  NovaServers.boot_server:
+    -
+      args:
+        flavor:
+            name: "m1.tiny"
+        image:
+            name: "cirros-0.3.2-x86_64-uec"
+      runner:
+        type: "constant"
+        times: 4
+        concurrency: 2
+      context:
+        users:
+          tenants: 3
+          users_per_tenant: 2
