@@ -16,7 +16,7 @@ import six
 
 from rally.benchmark.context import base
 from rally.benchmark.context.cleanup import utils as cleanup_utils
-from rally.benchmark.scenarios import base as scenarios_base
+from rally.benchmark.scenarios import base as scenario_base
 from rally.benchmark.scenarios.glance import utils as glance_utils
 from rally import exceptions
 from rally.openstack.common import log as logging
@@ -53,15 +53,14 @@ class ImageGenerator(base.Context):
                 "minimum": 1
             },
         },
+        'required': ['image_url', 'image_type', 'image_container',
+                     'images_per_tenant'],
         "additionalProperties": False
     }
 
     def __init__(self, context):
         super(ImageGenerator, self).__init__(context)
-        self.config.setdefault("images_per_tenant", 1)
-        self.config.setdefault("image_type", "qcow2")
-        self.config.setdefault("image_container", "bare")
-        self.context["images"] = []
+        self.context.setdefault("images", [])
 
     @rutils.log_task_wrapper(LOG.info, _("Enter context: `Images`"))
     def setup(self):
@@ -80,7 +79,7 @@ class ImageGenerator(base.Context):
                 glance_util_class = glance_utils.GlanceScenario(
                                         clients=clients)
                 for i in range(images_per_tenant):
-                    rnd_name = scenarios_base.Scenario._generate_random_name()
+                    rnd_name = scenario_base.Scenario._generate_random_name()
 
                     image = glance_util_class._create_image(rnd_name,
                                                             image_container,
