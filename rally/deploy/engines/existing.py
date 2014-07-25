@@ -32,7 +32,7 @@ class ExistingCloud(engine.EngineFactory):
                     "tenant_name": "demo",
                     "region_name": "RegionOne",
                     "use_public_urls": True,
-                    "keystone_admin_port": 35357
+                    "admin_port": 35357
                 }
             }
 
