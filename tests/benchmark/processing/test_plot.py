@@ -50,9 +50,11 @@ class PlotTestCase(test.TestCase):
         mock_open.assert_called_once_with("%s/src/index.mako"
                                           % mock_dirname.return_value)
 
+    @mock.patch("rally.benchmark.processing.plot._prepare_data")
     @mock.patch("rally.benchmark.processing.plot._process_atomic")
     @mock.patch("rally.benchmark.processing.plot._process_main_duration")
-    def test__process_results(self, mock_main_duration, mock_atomic):
+    def test__process_results(self, mock_main_duration, mock_atomic,
+                              mock_prepare):
         results = [
             {"key": {"name": "n1", "pos": 1, "kw": "config1"}},
             {"key": {"name": "n2", "pos": 2, "kw": "config2"}}
@@ -103,7 +105,8 @@ class PlotTestCase(test.TestCase):
             ]
         }
 
-        output = plot._process_main_duration(result)
+        output = plot._process_main_duration(result,
+                                             plot._prepare_data(result))
 
         self.assertEqual(output, {
             "pie": [
@@ -113,11 +116,11 @@ class PlotTestCase(test.TestCase):
             "iter": [
                 {
                     "key": "duration",
-                    "values": [[1, 1], [2, 0], [3, 2]]
+                    "values": [(1, 1), (2, 0), (3, 2)]
                 },
                 {
                     "key": "idle_duration",
-                    "values": [[1, 2], [2, 0], [3, 3]]
+                    "values": [(1, 2), (2, 0), (3, 3)]
                 }
             ],
             "histogram": [
@@ -172,7 +175,10 @@ class PlotTestCase(test.TestCase):
             ]
         }
 
-        output = plot._process_atomic(result)
+        data = {"atomic_durations": {"action1": [1, 0, 3],
+                                     "action2": [2, 0, 4]}}
+
+        output = plot._process_atomic(result, data)
 
         self.assertEqual(output, {
             "histogram": [
@@ -238,11 +244,57 @@ class PlotTestCase(test.TestCase):
             "iter": [
                 {
                     "key": "action1",
-                    "values": [[1, 1], [2, 0], [3, 3]]
+                    "values": [(1, 1), (2, 0), (3, 3)]
                 },
                 {
                     "key": "action2",
-                    "values": [[1, 2], [2, 0], [3, 4]]
+                    "values": [(1, 2), (2, 0), (3, 4)]
                 }
             ]
         })
+
+    def test__prepare_data(self):
+
+        def assertAlmostEqualLists(l1, l2, places=1):
+            self.assertEqual(len(l1), len(l2), "List sizes differs")
+            for vals in zip(l1, l2):
+                self.assertAlmostEqual(*vals, places=places)
+
+        data = []
+        for i in range(100):
+            atomic_actions = [
+                    {"action": "a1", "duration": i + 0.1},
+                    {"action": "a2", "duration": i + 0.8},
+            ]
+            row = {
+                    "duration": i * 3.14,
+                    "idle_duration": i * 0.2,
+                    "error": [],
+                    "atomic_actions": atomic_actions,
+            }
+            data.append(row)
+        data.insert(42, {"error": ["error"]})
+        data.insert(52, {"error": ["error"]})
+
+        new_data = plot._prepare_data({"result": data}, reduce_rows=10)
+        self.assertEqual(2, new_data["num_errors"])
+
+        expected_durations = [0.0, 31.4, 65.9, 100.5, 127.2,
+                              161.6, 201.0, 238.6, 273.2, 307.7]
+        total_durations = new_data["total_durations"]["duration"]
+        assertAlmostEqualLists(expected_durations, total_durations)
+
+        expected_durations = [0.0, 2.0, 4.2, 6.4, 8.1, 10.3,
+                              12.8, 15.2, 17.4, 19.6]
+        idle_durations = new_data["total_durations"]["idle_duration"]
+        assertAlmostEqualLists(expected_durations, idle_durations)
+
+        expected_durations = [0.1, 10.1, 21.1, 32.1, 40.6,
+                              51.6, 64.1, 76.1, 87.1, 98.1]
+        atomic_a1 = new_data["atomic_durations"]["a1"]
+        assertAlmostEqualLists(expected_durations, atomic_a1)
+
+        expected_durations = [0.8, 10.8, 21.8, 32.8, 41.3,
+                              52.2, 64.8, 76.8, 87.8, 98.8]
+        atomic_a2 = new_data["atomic_durations"]["a2"]
+        assertAlmostEqualLists(expected_durations, atomic_a2)
