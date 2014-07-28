@@ -13,11 +13,14 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import os
+
 import mock
 import six
 
 from rally.cmd.commands import verify
 from rally import consts
+from rally import exceptions
 from rally import objects
 from tests import test
 
@@ -114,8 +117,60 @@ class VerifyCommandsTestCase(test.TestCase):
                      six.itervalues(tests.data['test_cases']))
         self.verify.show(verification_id)
         mock_print_list.assert_any_call(
-                [verification], fields=total_fields,
-                sortby_index=total_fields.index('Created at'))
+                [verification], fields=total_fields)
         mock_verification_get.assert_called_once_with(verification_id)
         mock_verification_result_get.assert_called_once_with(verification_id)
         mock_print_list.assert_any_call(values, fields, sortby_index=0)
+
+    @mock.patch('rally.db.verification_result_get', return_value={'data': {}})
+    @mock.patch('json.dumps')
+    def test_results(self, mock_json_dumps, mock_db_result_get):
+        verification_uuid = 'a0231bdf-6a4e-4daf-8ab1-ae076f75f070'
+        self.verify.results(verification_uuid, output_json=True)
+
+        mock_db_result_get.assert_called_once_with(verification_uuid)
+        mock_json_dumps.assert_called_once_with({})
+
+    @mock.patch('rally.db.verification_result_get')
+    def test_results_verification_not_found(self, mock_db_result_get):
+        verification_uuid = '9044ced5-9c84-4666-8a8f-4b73a2b62acb'
+        mock_db_result_get.side_effect = exceptions.NotFoundException()
+        self.assertEqual(self.verify.results(verification_uuid), 1)
+
+        mock_db_result_get.assert_called_once_with(verification_uuid)
+
+    @mock.patch('rally.db.verification_result_get', return_value={'data': {}})
+    def test_results_with_output_json_and_output_file(self,
+                                                      mock_db_result_get):
+        verification_uuid = '94615cd4-ff45-4123-86bd-4b0741541d09'
+        self.verify.results(verification_uuid, output_file='results',
+                            output_json=True)
+
+        mock_db_result_get.assert_called_once_with(verification_uuid)
+        self.assertTrue(os.path.isfile('results'))
+
+    @mock.patch('rally.db.verification_result_get', return_value={'data': {}})
+    def test_results_with_output_pprint_and_output_file(self,
+                                                        mock_db_result_get):
+        verification_uuid = 'fa882ccc-153e-4a6e-9001-91fecda6a75c'
+        self.verify.results(verification_uuid, output_pprint=True,
+                            output_file='results')
+
+        mock_db_result_get.assert_called_once_with(verification_uuid)
+        self.assertTrue(os.path.isfile('results'))
+
+    @mock.patch('rally.db.verification_result_get')
+    @mock.patch('rally.verification.verifiers.tempest.json2html.main',
+                return_value='')
+    def test_results_with_output_html_and_output_file(self,
+                                                      mock_json2html_main,
+                                                      mock_db_result_get):
+        verification_uuid = '7140dd59-3a7b-41fd-a3ef-5e3e615d7dfa'
+        results = {'data': {}}
+        mock_db_result_get.return_value = results
+        self.verify.results(verification_uuid, output_html=True,
+                            output_file='results')
+
+        mock_db_result_get.assert_called_once_with(verification_uuid)
+        mock_json2html_main.assert_called_once()
+        self.assertTrue(os.path.isfile('results'))
