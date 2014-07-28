@@ -1,0 +1,19 @@
+---
+  NovaServers.resize_server:
+    -
+      args:
+        flavor:
+            name: "m1.nano"
+        image:
+            name: "cirros-0.3.1-x86_64-uec"
+        to_flavor:
+            name: "m1.small"
+        confirm: true
+      runner:
+        type: "constant"
+        times: 10
+        concurrency: 5
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1

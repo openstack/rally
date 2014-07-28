@@ -34,7 +34,10 @@ option_names_and_defaults = [
     ('unrescue', 2, 300, 2),
     ('suspend', 2, 300, 2),
     ('image_create', 0, 300, 2),
-    ('image_delete', 0, 300, 2)
+    ('image_delete', 0, 300, 2),
+    ('resize', 2, 400, 5),
+    ('resize_confirm', 0, 200, 2),
+    ('resize_revert', 0, 200, 2),
 ]
 
 for action, prepoll, timeout, poll in option_names_and_defaults:
@@ -422,3 +425,38 @@ class NovaScenario(base.Scenario):
     def _list_networks(self):
         """Returns user networks list."""
         return self.clients("nova").networks.list()
+
+    @scenario_utils.atomic_action_timer('nova.resize')
+    def _resize(self, server, flavor):
+        server.resize(flavor)
+        bench_utils.wait_for(
+            server,
+            is_ready=bench_utils.resource_is("VERIFY_RESIZE"),
+            update_resource=bench_utils.get_from_manager(),
+            timeout=CONF.benchmark.nova_server_resize_timeout,
+            check_interval=CONF.benchmark.nova_server_resize_poll_interval
+        )
+
+    @scenario_utils.atomic_action_timer('nova.resize_confirm')
+    def _resize_confirm(self, server):
+        server.confirm_resize()
+        bench_utils.wait_for(
+            server,
+            is_ready=bench_utils.resource_is("ACTIVE"),
+            update_resource=bench_utils.get_from_manager(),
+            timeout=CONF.benchmark.nova_server_resize_confirm_timeout,
+            check_interval=(
+                CONF.benchmark.nova_server_resize_confirm_poll_interval)
+        )
+
+    @scenario_utils.atomic_action_timer('nova.resize_revert')
+    def _resize_revert(self, server):
+        server.revert_resize()
+        bench_utils.wait_for(
+            server,
+            is_ready=bench_utils.resource_is("ACTIVE"),
+            update_resource=bench_utils.get_from_manager(),
+            timeout=CONF.benchmark.nova_server_resize_revert_timeout,
+            check_interval=(
+                    CONF.benchmark.nova_server_resize_revert_poll_interval)
+        )
