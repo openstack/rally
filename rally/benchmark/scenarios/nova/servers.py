@@ -212,3 +212,22 @@ class NovaServers(utils.NovaScenario,
         """
         self._rescue_server(server)
         self._unrescue_server(server)
+
+    @types.set(image=types.ImageResourceType,
+               flavor=types.FlavorResourceType,
+               to_flavor=types.FlavorResourceType)
+    @validation.add(validation.image_valid_on_flavor("flavor", "image"))
+    @base.scenario(context={"cleanup": ["nova"]})
+    @validation.required_services(consts.Service.NOVA)
+    def resize_server(self, image, flavor, to_flavor, **kwargs):
+        """Tests resize serveri."""
+        server = self._boot_server(self._generate_random_name(),
+                                   image, flavor, **kwargs)
+        self._resize(server, to_flavor)
+        # by default we confirm
+        confirm = kwargs.get('confirm', True)
+        if confirm:
+            self._resize_confirm(server)
+        else:
+            self._resize_revert(server)
+        self._delete_server(server)

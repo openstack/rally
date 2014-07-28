@@ -322,3 +322,34 @@ class NovaServersTestCase(test.TestCase):
             mock.call(fake_server),
             mock.call(fake_server)])
         scenario._delete_image.assert_called_once_with(fake_image)
+
+    def _test_resize(self, confirm=False):
+        fake_server = object()
+        fake_image = fakes.FakeImageManager()._create()
+        fake_image.id = "image_id"
+        flavor = mock.MagicMock()
+        to_flavor = mock.MagicMock()
+
+        scenario = servers.NovaServers()
+        scenario._generate_random_name = mock.MagicMock(return_value="name")
+        scenario._boot_server = mock.MagicMock(return_value=fake_server)
+        scenario._resize_confirm = mock.MagicMock()
+        scenario._resize_revert = mock.MagicMock()
+        scenario._resize = mock.MagicMock()
+        scenario._delete_server = mock.MagicMock()
+
+        kwargs = {'confirm': confirm}
+        scenario.resize_server(fake_image, flavor, to_flavor, **kwargs)
+
+        scenario._resize.assert_called_once_with(fake_server, to_flavor)
+
+        if confirm:
+            scenario._resize_confirm.assert_called_once_with(fake_server)
+        else:
+            scenario._resize_revert.assert_called_once_with(fake_server)
+
+    def test_resize_with_confirm(self):
+        self._test_resize(confirm=True)
+
+    def test_resize_with_revert(self):
+        self._test_resize(confirm=False)

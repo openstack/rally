@@ -447,3 +447,22 @@ class NovaScenarioTestCase(test.TestCase):
         self.assertEqual(network_list, return_network_list)
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        'nova.list_networks')
+
+    def test__resize(self):
+        nova_scenario = utils.NovaScenario()
+        to_flavor = mock.Mock()
+        nova_scenario._resize(self.server, to_flavor)
+        self._test_atomic_action_timer(nova_scenario.atomic_actions(),
+                                       'nova.resize')
+
+    def test__resize_confirm(self):
+        nova_scenario = utils.NovaScenario()
+        nova_scenario._resize_confirm(self.server)
+        self._test_atomic_action_timer(nova_scenario.atomic_actions(),
+                                       'nova.resize_confirm')
+
+    def test__resize_revert(self):
+        nova_scenario = utils.NovaScenario()
+        nova_scenario._resize_revert(self.server)
+        self._test_atomic_action_timer(nova_scenario.atomic_actions(),
+                                       'nova.resize_revert')
