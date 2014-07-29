@@ -99,3 +99,48 @@ class CinderScenario(base.Scenario):
             timeout=CONF.benchmark.cinder_volume_delete_timeout,
             check_interval=CONF.benchmark.cinder_volume_delete_poll_interval
         )
+
+    @base.atomic_action_timer('cinder.create_snapshot')
+    def _create_snapshot(self, volume_id, force=False, **kwargs):
+        """Create one snapshot.
+
+        Returns when the snapshot is actually created and is in the "Available"
+        state.
+
+        :param volume_id: volume uuid for creating snapshot
+        :param force: flag to indicate whether to snapshot a volume even if
+                      it's attached to an instance
+        :param **kwargs: Other optional parameters to initialize the volume
+
+        :returns: Created snapshot object
+        """
+        kwargs["display_name"] = kwargs.get("display_name",
+                                            self._generate_random_name())
+        kwargs["force"] = force
+        snapshot = self.clients("cinder").volume_snapshots.create(volume_id,
+                                                                  **kwargs)
+        time.sleep(CONF.benchmark.cinder_volume_create_prepoll_delay)
+        snapshot = bench_utils.wait_for(
+            snapshot,
+            is_ready=bench_utils.resource_is("available"),
+            update_resource=bench_utils.get_from_manager(),
+            timeout=CONF.benchmark.cinder_volume_create_timeout,
+            check_interval=CONF.benchmark.cinder_volume_create_poll_interval
+        )
+        return snapshot
+
+    @base.atomic_action_timer('cinder.delete_snapshot')
+    def _delete_snapshot(self, snapshot):
+        """Delete the given snapshot.
+
+        Returns when the snapshot is actually deleted.
+
+        :param snapshot: snapshot object
+        """
+        snapshot.delete()
+        bench_utils.wait_for_delete(
+            snapshot,
+            update_resource=bench_utils.get_from_manager(),
+            timeout=CONF.benchmark.cinder_volume_delete_timeout,
+            check_interval=CONF.benchmark.cinder_volume_delete_poll_interval
+        )

@@ -61,3 +61,19 @@ class CinderVolumes(utils.CinderScenario):
         performance of creating new.
         """
         self._create_volume(size, **kwargs)
+
+    @base.scenario(context={"cleanup": ["cinder"]})
+    @validation.required_services(consts.Service.CINDER)
+    @validation.required_contexts("volumes")
+    def create_and_delete_snapshot(self, force=False, min_sleep=0,
+                                   max_sleep=0, **kwargs):
+        """Tests creating and then deleting a volume-snapshot."""
+        tenant_id = self.context()["user"]["tenant_id"]
+        volumes = self.context()["volumes"]
+        for volume in volumes:
+            if tenant_id == volume["tenant_id"]:
+                volume_id = volume["volume_id"]
+
+        snapshot = self._create_snapshot(volume_id, force=force, **kwargs)
+        self.sleep_between(min_sleep, max_sleep)
+        self._delete_snapshot(snapshot)

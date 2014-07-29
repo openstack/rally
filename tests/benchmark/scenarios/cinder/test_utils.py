@@ -14,15 +14,33 @@
 #    under the License.
 
 import mock
+from oslo.config import cfg
+from oslotest import mockpatch
 
 from rally.benchmark.scenarios.cinder import utils
 from tests.benchmark.scenarios import test_base
 from tests import test
 
+BM_UTILS = 'rally.benchmark.utils'
 CINDER_UTILS = "rally.benchmark.scenarios.cinder.utils"
 
 
 class CinderScenarioTestCase(test.TestCase):
+
+    def setUp(self):
+        super(CinderScenarioTestCase, self).setUp()
+        self.res_is = mockpatch.Patch(BM_UTILS + ".resource_is")
+        self.get_fm = mockpatch.Patch(BM_UTILS + '.get_from_manager')
+        self.wait_for = mockpatch.Patch(CINDER_UTILS + ".bench_utils.wait_for")
+        self.wait_for_delete = mockpatch.Patch(
+            CINDER_UTILS + ".bench_utils.wait_for_delete")
+        self.useFixture(self.wait_for)
+        self.useFixture(self.wait_for_delete)
+        self.useFixture(self.res_is)
+        self.useFixture(self.get_fm)
+        self.gfm = self.get_fm.mock
+        self.useFixture(mockpatch.Patch('time.sleep'))
+        self.scenario = utils.CinderScenario()
 
     def _test_atomic_action_timer(self, atomic_actions, name):
         action_duration = test_base.get_atomic_action_timer_value_by_name(
@@ -34,8 +52,39 @@ class CinderScenarioTestCase(test.TestCase):
     def test__list_volumes(self, mock_clients):
         volumes_list = mock.Mock()
         mock_clients("cinder").volumes.list.return_value = volumes_list
-        scenario = utils.CinderScenario()
-        return_volumes_list = scenario._list_volumes()
+        return_volumes_list = self.scenario._list_volumes()
         self.assertEqual(volumes_list, return_volumes_list)
-        self._test_atomic_action_timer(scenario.atomic_actions(),
+        self._test_atomic_action_timer(self.scenario.atomic_actions(),
                                        'cinder.list_volumes')
+
+    @mock.patch(CINDER_UTILS + '.CinderScenario.clients')
+    def test__create_snapshot(self, mock_clients):
+        snapshot = mock.Mock()
+        mock_clients("cinder").volume_snapshots.create.return_value = snapshot
+
+        return_snapshot = self.scenario._create_snapshot('uuid', False)
+
+        self.wait_for.mock.assert_called_once_with(
+            snapshot,
+            is_ready=self.res_is.mock(),
+            update_resource=self.gfm(),
+            timeout=cfg.CONF.benchmark.cinder_volume_create_timeout,
+            check_interval=cfg.CONF.benchmark
+            .cinder_volume_create_poll_interval)
+        self.res_is.mock.assert_has_calls(mock.call('available'))
+        self.assertEqual(self.wait_for.mock(), return_snapshot)
+        self._test_atomic_action_timer(self.scenario.atomic_actions(),
+                                       'cinder.create_snapshot')
+
+    def test__delete_snapshot(self):
+        snapshot = mock.Mock()
+        self.scenario._delete_snapshot(snapshot)
+        snapshot.delete.assert_called_once_with()
+        self.wait_for_delete.mock.assert_called_once_with(
+            snapshot,
+            update_resource=self.gfm(),
+            timeout=cfg.CONF.benchmark.cinder_volume_create_timeout,
+            check_interval=cfg.CONF.benchmark
+            .cinder_volume_create_poll_interval)
+        self._test_atomic_action_timer(self.scenario.atomic_actions(),
+                                       'cinder.delete_snapshot')
