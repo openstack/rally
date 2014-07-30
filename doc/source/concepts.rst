@@ -13,16 +13,16 @@
       License for the specific language governing permissions and limitations
       under the License.
 
-.. _benchmark:
+.. _main_concepts:
 
-Benchmark
-=========
+Main concepts of Rally
+======================
 
 Benchmark Scenarios
 -------------------
 
-Notion of benchmark scenarios
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Concept
+^^^^^^^
 
 The concept of **benchmark scenarios** is a central one in Rally. Benchmark scenarios are what Rally actually uses to **test the performance of an OpenStack deployment**. They also play the role of main building blocks in the configurations of benchmark tasks. Each benchmark scenario performs a small **set of atomic operations**, thus testing some **simple use case**, usually that of a specific OpenStack project. For example, the **"NovaServers"** scenario group contains scenarios that use several basic operations available in **nova**. The **"boot_and_delete_server"** benchmark scenario from that group allows to benchmark the performance of a sequence of only **two simple operations**: it first **boots** a server (with customizable parameters) and then **deletes** it.
 
@@ -105,14 +105,11 @@ In a toy example below, we define a scenario class *MyScenario* with one benchma
 
 
 
-Benchmark engine
+Scenario runners
 ----------------
 
-The core classes responsible for the benchmarking mechanism, including
-the benchmark engine class, benchmark scenario runners and others.
-
-Notion of scenario runners
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+Concept
+^^^^^^^
 
 **Scenario Runners** in Rally are entities that control the execution type and order of benchmark scenarios. They support different running **strategies for creating load on the cloud**, including simulating *concurrent requests* from different users, periodic load, gradually growing load and so on.
 
@@ -214,8 +211,8 @@ It is possible to extend Rally with new Scenario Runner types, if needed. Basica
 Benchmark contexts
 ------------------
 
-Notion of contexts
-^^^^^^^^^^^^^^^^^^
+Concept
+^^^^^^^
 
 The notion of **contexts** in Rally is essentially used to define different types of **environments** in which benchmark scenarios can be launched. Those environments are usually specified by such parameters as the number of **tenants and users** that should be present in an OpenStack project, the **roles** granted to those users, extended or narrowed **quotas** and so on.
 
