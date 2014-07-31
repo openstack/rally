@@ -90,6 +90,7 @@ class _Service(utils.ImmutableMixin, utils.EnumMixin):
     CEILOMETER = "ceilometer"
     S3 = "s3"
     TROVE = "trove"
+    SAHARA = "sahara"
 
 
 class _ServiceType(utils.ImmutableMixin, utils.EnumMixin):
@@ -108,6 +109,7 @@ class _ServiceType(utils.ImmutableMixin, utils.EnumMixin):
     METERING = "metering"
     S3 = "s3"
     DATABASE = "database"
+    DATA_PROCESSING = "data_processing"
 
     def __init__(self):
         self.__names = {
@@ -123,7 +125,8 @@ class _ServiceType(utils.ImmutableMixin, utils.EnumMixin):
             self.NETWORK: _Service.NEUTRON,
             self.METERING: _Service.CEILOMETER,
             self.S3: _Service.S3,
-            self.DATABASE: _Service.TROVE
+            self.DATABASE: _Service.TROVE,
+            self.DATA_PROCESSING: _Service.SAHARA
         }
 
     def __getitem__(self, service_type):
