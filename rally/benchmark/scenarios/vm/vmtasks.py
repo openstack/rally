@@ -64,7 +64,7 @@ class VMTasks(nova_utils.NovaScenario, vm_utils.VMScenario):
                  script's standard error stream.
 
 
-        Example Script in doc/samples/support/instance_dd_test.sh
+        Example Script in doc/samples/tasks/support/instance_dd_test.sh
         """
         server = None
         floating_ip = None
