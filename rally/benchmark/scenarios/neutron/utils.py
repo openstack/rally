@@ -62,6 +62,14 @@ class NeutronScenario(base.Scenario):
         """Return user networks list."""
         return self.clients("neutron").list_networks()['networks']
 
+    @scenario_utils.atomic_action_timer('neutron.delete_network')
+    def _delete_network(self, network):
+        """Delete neutron network.
+
+        :param network: Network object
+        """
+        self.clients("neutron").delete_network(network['id'])
+
     @scenario_utils.atomic_action_timer('neutron.create_subnet')
     def _create_subnet(self, network, subnet_create_args):
         """Create neutron subnet.
@@ -86,6 +94,14 @@ class NeutronScenario(base.Scenario):
     def _list_subnets(self):
         """Returns user subnetworks list."""
         return self.clients("neutron").list_subnets()["subnets"]
+
+    @scenario_utils.atomic_action_timer('neutron.delete_subnet')
+    def _delete_subnet(self, subnet):
+        """Delete neutron subnet
+
+        :param subnet: Subnet object
+        """
+        self.clients("neutron").delete_subnet(subnet['subnet']['id'])
 
     @scenario_utils.atomic_action_timer('neutron.create_router')
     def _create_router(self, router_create_args):
@@ -121,3 +137,11 @@ class NeutronScenario(base.Scenario):
     def _list_ports(self):
         """Return user ports list."""
         return self.clients("neutron").list_ports()["ports"]
+
+    @scenario_utils.atomic_action_timer('neutron.delete_port')
+    def _delete_port(self, port):
+        """Delete neutron port.
+
+        :param port: Port object
+        """
+        self.clients("neutron").delete_port(port['port']['id'])

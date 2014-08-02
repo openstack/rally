@@ -75,6 +75,16 @@ class NeutronScenarioTestCase(test.TestCase):
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        'neutron.list_networks')
 
+    @mock.patch(NEUTRON_UTILS + 'NeutronScenario.clients')
+    def test_delete_network(self, mock_clients):
+        scenario = utils.NeutronScenario()
+
+        network_create_args = {}
+        network = scenario._create_network(network_create_args)
+        scenario._delete_network(network)
+        self._test_atomic_action_timer(scenario.atomic_actions(),
+                                       'neutron.delete_network')
+
     @mock.patch(NEUTRON_UTILS + 'NeutronScenario._generate_random_name')
     @mock.patch(NEUTRON_UTILS + "NeutronScenario._generate_subnet_cidr")
     @mock.patch(NEUTRON_UTILS + "NeutronScenario.clients")
@@ -124,6 +134,17 @@ class NeutronScenarioTestCase(test.TestCase):
         self.assertEqual(subnets, result)
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "neutron.list_subnets")
+
+    @mock.patch(NEUTRON_UTILS + 'NeutronScenario.clients')
+    def test_delete_subnet(self, mock_clients):
+        scenario = utils.NeutronScenario()
+
+        network = scenario._create_network({})
+        subnet = scenario._create_subnet(network, {})
+        scenario._delete_subnet(subnet)
+
+        self._test_atomic_action_timer(scenario.atomic_actions(),
+                                       'neutron.delete_subnet')
 
     @mock.patch(NEUTRON_UTILS + 'NeutronScenario._generate_random_name')
     @mock.patch(NEUTRON_UTILS + 'NeutronScenario.clients')
@@ -229,3 +250,14 @@ class NeutronScenarioTestCase(test.TestCase):
         self.assertEqual(ports, scenario._list_ports())
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "neutron.list_ports")
+
+    @mock.patch(NEUTRON_UTILS + 'NeutronScenario.clients')
+    def test_delete_port(self, mock_clients):
+        scenario = utils.NeutronScenario()
+
+        network = scenario._create_network({})
+        port = scenario._create_port(network, {})
+        scenario._delete_port(port)
+
+        self._test_atomic_action_timer(scenario.atomic_actions(),
+                                       "neutron.create_port")

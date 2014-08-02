@@ -41,6 +41,19 @@ class NeutronNetworks(utils.NeutronScenario):
         self._list_networks()
 
     @base.scenario(context={"cleanup": ["neutron"]})
+    @validation.required_services(consts.Service.NEUTRON)
+    def create_and_delete_networks(self, network_create_args=None):
+        """Create a network and then deleting it.
+
+        This scenario is a very useful tool to measure
+        the "neutron net-create" and "net-delete" command performance.
+
+        :param network_create_agrs: dict, POST /v2.0/networks request options
+        """
+        network = self._create_network(network_create_args or {})
+        self._delete_network(network['network'])
+
+    @base.scenario(context={"cleanup": ["neutron"]})
     @validation.add(validation.required_parameters(['subnets_per_network']))
     @validation.required_services(consts.Service.NEUTRON)
     def create_and_list_subnets(self,
@@ -65,6 +78,32 @@ class NeutronNetworks(utils.NeutronScenario):
             self._create_subnet(network, subnet_create_args or {})
 
         self._list_subnets()
+
+    @base.scenario(context={"cleanup": ["neutron"]})
+    @validation.add(validation.required_parameters(['subnets_per_network']))
+    @validation.required_services(consts.Service.NEUTRON)
+    def create_and_delete_subnets(self,
+                                  network_create_args=None,
+                                  subnet_create_args=None,
+                                  subnet_cidr_start=None,
+                                  subnets_per_network=None):
+        """Test creating and deleting a given number of subnets.
+
+        The scenario creates a network, a given number of subnets and then
+        deletes subnets.
+
+        :param network_create_args: dict, POST /v2.0/networks request options
+        :param subnet_create_args: dict, POST /v2.0/subnets request options
+        :param subnet_cidr_start: str, start value for subnets CIDR
+        :param subnets_per_network: int, number of subnets for one network
+        """
+
+        if subnet_cidr_start:
+            NeutronNetworks.SUBNET_CIDR_START = subnet_cidr_start
+        network = self._create_network(network_create_args or {})
+        for i in range(subnets_per_network):
+            subnet = self._create_subnet(network, subnet_create_args or {})
+            self._delete_subnet(subnet)
 
     @base.scenario(context={"cleanup": ["neutron"]})
     @validation.add(validation.required_parameters(['subnets_per_network']))
@@ -116,3 +155,25 @@ class NeutronNetworks(utils.NeutronScenario):
             self._create_port(network, port_create_args or {})
 
         self._list_ports()
+
+    @base.scenario(context={"cleanup": ["neutron"]})
+    @validation.add(validation.required_parameters(["ports_per_network"]))
+    @validation.required_services(consts.Service.NEUTRON)
+    def create_and_delete_ports(self,
+                                network_create_args=None,
+                                port_create_args=None,
+                                ports_per_network=None):
+        """Create a port and then deleting it.
+
+        This scenario is a very useful tool to measure
+        the "neutron port-create" and
+        "neutron port-delete" command performance.
+
+        :param network_create_args: dict, POST /v2.0/networks request options
+        :param port_create_args: dict, POST /v2.0/ports request options
+        :param ports_per_network: int, number of ports for one network
+        """
+        network = self._create_network(network_create_args or {})
+        for i in range(ports_per_network):
+            port = self._create_port(network, port_create_args or {})
+            self._delete_port(port)
