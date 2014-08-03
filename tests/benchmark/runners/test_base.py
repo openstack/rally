@@ -17,7 +17,6 @@ import jsonschema
 import mock
 
 from rally.benchmark.runners import base
-from rally.benchmark.runners import constant
 from rally.benchmark.runners import serial
 from rally.benchmark.scenarios import base as scenario_base
 from rally import consts
@@ -221,17 +220,23 @@ class ScenarioRunnerTestCase(test.TestCase):
                 config,
                 serial.SerialScenarioRunner.CONFIG_SCHEMA)
 
-    @mock.patch("rally.benchmark.runners.base.osclients")
-    @mock.patch("rally.benchmark.runners.base.base_ctx.ContextManager")
-    def test_run(self, mock_ctx_manager, mock_osclients):
-        runner = constant.ConstantScenarioRunner(
+    @mock.patch("rally.benchmark.runners.base.rutils.Timer.duration")
+    @mock.patch("rally.benchmark.runners.base.base_ctx.ContextManager.setup")
+    @mock.patch("rally.benchmark.runners.base.base_ctx.ContextManager.cleanup")
+    def test_run(self, mock_setup, mock_cleanup, mock_duration):
+        mock_duration.return_value = 10
+        runner = serial.SerialScenarioRunner(
             mock.MagicMock(),
             self.fake_endpoints,
             mock.MagicMock())
+
+        runner._run_scenario = mock.MagicMock()
+
         scenario_name = "NovaServers.boot_server_from_volume_and_delete"
         config_kwargs = {"image": {"id": 1}, "flavor": {"id": 1}}
-        runner.run(scenario_name, {"some_ctx": 2}, config_kwargs)
+        result = runner.run(scenario_name, {"some_ctx": 2}, config_kwargs)
 
+        self.assertEqual(result, mock_duration.return_value)
         self.assertEqual(list(runner.result_queue), [])
 
         cls_name, method_name = scenario_name.split(".", 1)
@@ -246,12 +251,11 @@ class ScenarioRunnerTestCase(test.TestCase):
             }
         }
 
-        expected = [context_obj, runner._wrap_run_scenario, cls,
-                    method_name, config_kwargs]
-        mock_ctx_manager.run.assert_called_once_with(*expected)
+        runner._run_scenario.assert_called_once_with(
+            cls, method_name, context_obj, config_kwargs)
 
     def test_runner_send_result_exception(self):
-        runner = constant.ConstantScenarioRunner(
+        runner = serial.SerialScenarioRunner(
             mock.MagicMock(),
             self.fake_endpoints,
             mock.MagicMock())

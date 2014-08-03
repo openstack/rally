@@ -19,7 +19,10 @@ import jsonschema
 import six
 
 from rally import exceptions
+from rally.openstack.common import log as logging
 from rally import utils
+
+LOG = logging.getLogger(__name__)
 
 
 @six.add_metaclass(abc.ABCMeta)
@@ -47,6 +50,15 @@ class Context(object):
         self.context = context
         self.task = context["task"]
 
+    def __lt__(self, other):
+        return self.get_order() < other.get_order()
+
+    def __gt__(self, other):
+        return self.get_order() > other.get_order()
+
+    def __eq__(self, other):
+        return self.get_order() == other.get_order()
+
     @classmethod
     def validate(cls, config, non_hidden=False):
         if non_hidden and cls.__ctx_hidden__:
@@ -56,7 +68,14 @@ class Context(object):
     @classmethod
     def validate_semantic(cls, config, admin=None, users=None, task=None):
         """Context semantic validation towards the deployment."""
-        pass
+
+    @classmethod
+    def get_name(cls):
+        return cls.__ctx_name__
+
+    @classmethod
+    def get_order(cls):
+        return cls.__ctx_order__
 
     @staticmethod
     def get_by_name(name):
@@ -84,14 +103,9 @@ class Context(object):
 class ContextManager(object):
     """Create context environment and run method inside it."""
 
-    @staticmethod
-    def run(context, func, cls, method_name, args):
-        ctxlst = [Context.get_by_name(name) for name in context["config"]]
-        ctxlst = map(lambda ctx: ctx(context),
-                     sorted(ctxlst, key=lambda x: x.__ctx_order__))
-
-        return ContextManager._magic(ctxlst, func, cls,
-                                     method_name, context, args)
+    def __init__(self, context_obj):
+        self._visited = []
+        self.context_obj = context_obj
 
     @staticmethod
     def validate(context, non_hidden=False):
@@ -104,26 +118,37 @@ class ContextManager(object):
             Context.get_by_name(name).validate_semantic(config, admin=admin,
                                                         users=users, task=task)
 
-    @staticmethod
-    def _magic(ctxlst, func, *args):
-        """Some kind of contextlib.nested but with black jack & recursion.
+    def _get_sorted_context_lst(self):
+        ctxlst = map(Context.get_by_name, self.context_obj["config"])
+        return sorted(map(lambda ctx: ctx(self.context_obj), ctxlst))
 
-        This method uses recursion to build nested "with" from list of context
-        objects. As it's actually a combination of dark and voodoo magic I
-        called it "_magic". Please don't repeat at home.
+    def setup(self):
+        """Creates benchmark environment from config."""
 
-        :param ctxlst: list of instances of subclasses of Context
-        :param func: function that will be called inside this context
-        :param args: args that will be passed to function `func`
-        :returns: result of function call
-        """
-        if not ctxlst:
-            return func(*args)
+        self._visited = []
+        for ctx in self._get_sorted_context_lst():
+            self._visited.append(ctx)
+            ctx.setup()
 
-        with ctxlst[0]:
-            # TODO(boris-42): call of setup could be moved inside __enter__
-            #                 but it should be in try-except, and in except
-            #                 we should call by hand __exit__
-            ctxlst[0].setup()
-            tmp = ContextManager._magic(ctxlst[1:], func, *args)
-            return tmp
+        return self.context_obj
+
+    def cleanup(self):
+        """Destroys benchmark environment."""
+
+        ctxlst = self._visited or self._get_sorted_context_lst()
+        for ctx in ctxlst[::-1]:
+            try:
+                ctx.cleanup()
+            except Exception as e:
+                LOG.error("Context %s failed during cleanup." % ctx.get_name())
+                LOG.exception(e)
+
+    def __enter__(self):
+        try:
+            self.setup()
+        except Exception:
+            self.cleanup()
+            raise
+
+    def __exit__(self, exc_type, exc_value, exc_traceback):
+        self.cleanup()
