@@ -371,3 +371,13 @@ def required_services(config, clients, task, *required_services):
         if service not in available_services:
             return ValidationResult(
                 False, _("Service is not available: %s") % service)
+
+
+@validator
+def required_contexts(config, clients, task, *context_names):
+    missing_contexts = set(context_names) - set(config.get("context", {}))
+    if missing_contexts:
+        message = (_("The following contexts are required but missing from "
+                     "the benchmark configuration file: %s") %
+                   ", ".join(missing_contexts))
+        return ValidationResult(False, message)

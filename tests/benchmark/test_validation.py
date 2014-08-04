@@ -80,6 +80,22 @@ class ValidationUtilsTestCase(test.TestCase):
         validator, = self._get_scenario_validators(func_failure, scenario)
         self.assertFalse(validator(None, None, None).is_valid)
 
+    def test_required_contexts(self):
+        config = {"context": {"context01": {}, "context02": {}}}
+
+        required_contexts = (lambda *contexts:
+                             validation.required_contexts(*contexts)
+                             (lambda: None).validators.pop()
+                             (config, None, None))
+
+        # All the required contexts are defined
+        result = required_contexts("context01", "context02")
+        self.assertTrue(result.is_valid)
+
+        # A required context is not defined
+        result = required_contexts("context03")
+        self.assertFalse(result.is_valid)
+
     def test_required_services(self):
         available_services = {
             consts.ServiceType.IDENTITY: consts.Service.KEYSTONE,
