@@ -128,3 +128,24 @@ class ImageResourceType(ResourceType):
                                         resources=glanceclient.images.list(),
                                         typename='image')
         return resource_id
+
+
+class VolumeTypeResourceType(ResourceType):
+
+    @classmethod
+    def transform(cls, clients, resource_config):
+        """Transform the resource config to id.
+
+        :param clients: openstack admin client handles
+        :param resource_config: scenario config with `id`, `name` or `regex`
+
+        :returns: id matching resource
+        """
+        resource_id = resource_config.get('id')
+        if not resource_id:
+            cinderclient = clients.cinder()
+            resource_id = _id_from_name(resource_config=resource_config,
+                                        resources=cinderclient.
+                                        volume_types.list(),
+                                        typename='volume_type')
+        return resource_id

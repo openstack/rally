@@ -49,13 +49,6 @@ class FlavorResourceTypeTestCase(test.TestCase):
                     resource_config=resource_config)
         self.assertEqual(flavor_id, "42")
 
-    def test_transform_by_name_to_dest(self):
-        resource_config = {"name": "m1.nano"}
-        flavor_id = types.FlavorResourceType.transform(
-                    clients=self.clients,
-                    resource_config=resource_config)
-        self.assertEqual(flavor_id, "42")
-
     def test_transform_by_name_no_match(self):
         resource_config = {"name": "m1.medium"}
         self.assertRaises(exceptions.InvalidScenarioArgument,
@@ -106,13 +99,6 @@ class ImageResourceTypeTestCase(test.TestCase):
                     resource_config=resource_config)
         self.assertEqual(image_id, "100")
 
-    def test_transform_by_name_to_dest(self):
-        resource_config = {"name": "cirros-0.3.1-uec"}
-        image_id = types.ImageResourceType.transform(
-                    clients=self.clients,
-                    resource_config=resource_config)
-        self.assertEqual(image_id, "100")
-
     def test_transform_by_name_no_match(self):
         resource_config = {"name": "cirros-0.3.1-uec-boot"}
         self.assertRaises(exceptions.InvalidScenarioArgument,
@@ -137,3 +123,45 @@ class ImageResourceTypeTestCase(test.TestCase):
         self.assertRaises(exceptions.InvalidScenarioArgument,
                           types.ImageResourceType.transform, self.clients,
                           resource_config)
+
+
+class VolumeTypeResourceTypeTestCase(test.TestCase):
+
+    def setUp(self):
+        super(VolumeTypeResourceTypeTestCase, self).setUp()
+        self.clients = fakes.FakeClients()
+        volume_type1 = fakes.FakeResource(name='lvmdriver-1', id=100)
+        self.clients.cinder().volume_types._cache(volume_type1)
+
+    def test_transform_by_id(self):
+        resource_config = {"id": 100}
+        volumetype_id = types.VolumeTypeResourceType.transform(
+                        clients=self.clients,
+                        resource_config=resource_config)
+        self.assertEqual(volumetype_id, 100)
+
+    def test_transform_by_name(self):
+        resource_config = {"name": "lvmdriver-1"}
+        volumetype_id = types.VolumeTypeResourceType.transform(
+                        clients=self.clients,
+                        resource_config=resource_config)
+        self.assertEqual(volumetype_id, 100)
+
+    def test_transform_by_name_no_match(self):
+        resource_config = {"name": "nomatch-1"}
+        self.assertRaises(exceptions.InvalidScenarioArgument,
+                          types.VolumeTypeResourceType.transform,
+                          self.clients, resource_config)
+
+    def test_transform_by_regex(self):
+        resource_config = {"regex": "^lvm.*-1"}
+        volumetype_id = types.VolumeTypeResourceType.transform(
+                        clients=self.clients,
+                        resource_config=resource_config)
+        self.assertEqual(volumetype_id, 100)
+
+    def test_transform_by_regex_no_match(self):
+        resource_config = {"regex": "dd"}
+        self.assertRaises(exceptions.InvalidScenarioArgument,
+                          types.VolumeTypeResourceType.transform,
+                          self.clients, resource_config)
