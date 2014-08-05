@@ -13,8 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import os
-
 import mock
 import six
 
@@ -139,32 +137,45 @@ class VerifyCommandsTestCase(test.TestCase):
 
         mock_db_result_get.assert_called_once_with(verification_uuid)
 
+    @mock.patch('rally.cmd.commands.verify.open', create=True)
     @mock.patch('rally.db.verification_result_get', return_value={'data': {}})
     def test_results_with_output_json_and_output_file(self,
-                                                      mock_db_result_get):
+                                                      mock_db_result_get,
+                                                      mock_open):
+        mock_open.return_value = mock.MagicMock()
         verification_uuid = '94615cd4-ff45-4123-86bd-4b0741541d09'
         self.verify.results(verification_uuid, output_file='results',
                             output_json=True)
 
         mock_db_result_get.assert_called_once_with(verification_uuid)
-        self.assertTrue(os.path.isfile('results'))
+        mock_open.assert_called_once_with('results', 'wb')
+        fake_file = mock_open.return_value.__enter__.return_value
+        fake_file.write.assert_called_once_with('{}')
 
+    @mock.patch('rally.cmd.commands.verify.open', create=True)
     @mock.patch('rally.db.verification_result_get', return_value={'data': {}})
     def test_results_with_output_pprint_and_output_file(self,
-                                                        mock_db_result_get):
+                                                        mock_db_result_get,
+                                                        mock_open):
+        mock_open.return_value = mock.MagicMock()
         verification_uuid = 'fa882ccc-153e-4a6e-9001-91fecda6a75c'
         self.verify.results(verification_uuid, output_pprint=True,
                             output_file='results')
 
         mock_db_result_get.assert_called_once_with(verification_uuid)
-        self.assertTrue(os.path.isfile('results'))
+        mock_open.assert_called_once_with('results', 'wb')
+        fake_file = mock_open.return_value.__enter__.return_value
+        fake_file.write.assert_called_once_with('{}')
 
+    @mock.patch('rally.cmd.commands.verify.open', create=True)
     @mock.patch('rally.db.verification_result_get')
     @mock.patch('rally.verification.verifiers.tempest.json2html.main',
                 return_value='')
     def test_results_with_output_html_and_output_file(self,
                                                       mock_json2html_main,
-                                                      mock_db_result_get):
+                                                      mock_db_result_get,
+                                                      mock_open):
+        mock_open.return_value = mock.MagicMock()
         verification_uuid = '7140dd59-3a7b-41fd-a3ef-5e3e615d7dfa'
         results = {'data': {}}
         mock_db_result_get.return_value = results
@@ -173,4 +184,6 @@ class VerifyCommandsTestCase(test.TestCase):
 
         mock_db_result_get.assert_called_once_with(verification_uuid)
         mock_json2html_main.assert_called_once()
-        self.assertTrue(os.path.isfile('results'))
+        mock_open.assert_called_once_with('results', 'wb')
+        fake_file = mock_open.return_value.__enter__.return_value
+        fake_file.write.assert_called_once_with('')
