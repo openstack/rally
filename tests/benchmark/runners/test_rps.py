@@ -72,7 +72,7 @@ class RPSScenarioRunnerTestCase(test.TestCase):
         for result in runner.result_queue:
             self.assertIsNotNone(base.ScenarioRunnerResult(result))
 
-    @mock.patch("rally.benchmark.runners.base.base")
+    @mock.patch("rally.benchmark.runners.base.scenario_base")
     @mock.patch("rally.benchmark.runners.base.osclients")
     def test_get_rps_runner(self, mock_osclients, mock_base):
         FakeScenario = mock.MagicMock()

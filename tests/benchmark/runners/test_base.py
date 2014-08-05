@@ -19,7 +19,7 @@ import mock
 from rally.benchmark.runners import base
 from rally.benchmark.runners import constant
 from rally.benchmark.runners import serial
-from rally.benchmark.scenarios import base as base_scenario
+from rally.benchmark.scenarios import base as scenario_base
 from rally import consts
 from rally import exceptions
 from tests import fakes
@@ -235,7 +235,7 @@ class ScenarioRunnerTestCase(test.TestCase):
         self.assertEqual(list(runner.result_queue), [])
 
         cls_name, method_name = scenario_name.split(".", 1)
-        cls = base_scenario.Scenario.get_by_name(cls_name)
+        cls = scenario_base.Scenario.get_by_name(cls_name)
 
         context_obj = {
             "task": runner.task,

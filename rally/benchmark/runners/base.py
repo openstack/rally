@@ -22,7 +22,7 @@ import jsonschema
 from oslo.config import cfg
 
 from rally.benchmark.context import base as base_ctx
-from rally.benchmark.scenarios import base
+from rally.benchmark.scenarios import base as scenario_base
 from rally.benchmark import utils
 from rally import consts
 from rally import exceptions
@@ -199,7 +199,7 @@ class ScenarioRunner(object):
 
     def run(self, name, context, args):
         cls_name, method_name = name.split(".", 1)
-        cls = base.Scenario.get_by_name(cls_name)
+        cls = scenario_base.Scenario.get_by_name(cls_name)
 
         scenario_context = copy.deepcopy(getattr(cls, method_name).context)
         # TODO(boris-42): We should keep default behavior for `users` context

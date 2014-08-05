@@ -13,18 +13,17 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from rally.benchmark.scenarios import base
-from rally.benchmark.scenarios import utils as scenario_utils
+from rally.benchmark.scenarios import base as scenario_base
 
 
 def is_temporary(resource):
     return resource.name.startswith(KeystoneScenario.RESOURCE_NAME_PREFIX)
 
 
-class KeystoneScenario(base.Scenario):
+class KeystoneScenario(scenario_base.Scenario):
     RESOURCE_NAME_PREFIX = "rally_keystone_"
 
-    @scenario_utils.atomic_action_timer('keystone.create_user')
+    @scenario_base.atomic_action_timer('keystone.create_user')
     def _user_create(self, name_length=10, password=None, email=None,
                      **kwargs):
         """Creates keystone user with random name.
@@ -43,12 +42,12 @@ class KeystoneScenario(base.Scenario):
         return self.admin_clients("keystone").users.create(name, password,
                                                            email, **kwargs)
 
-    @scenario_utils.atomic_action_timer('keystone.delete_resource')
+    @scenario_base.atomic_action_timer('keystone.delete_resource')
     def _resource_delete(self, resource):
         """"Delete keystone resource."""
         resource.delete()
 
-    @scenario_utils.atomic_action_timer('keystone.create_tenant')
+    @scenario_base.atomic_action_timer('keystone.create_tenant')
     def _tenant_create(self, name_length=10, **kwargs):
         """Creates keystone tenant with random name.
 
@@ -59,7 +58,7 @@ class KeystoneScenario(base.Scenario):
         name = self._generate_random_name(length=name_length)
         return self.admin_clients("keystone").tenants.create(name, **kwargs)
 
-    @scenario_utils.atomic_action_timer('keystone.create_users')
+    @scenario_base.atomic_action_timer('keystone.create_users')
     def _users_create(self, tenant, users_per_tenant, name_length=10):
         """Adds users to a tenant.
 
@@ -73,12 +72,12 @@ class KeystoneScenario(base.Scenario):
             self.admin_clients("keystone").users.create(name, password, email,
                                                         tenant_id=tenant.id)
 
-    @scenario_utils.atomic_action_timer('keystone.list_users')
+    @scenario_base.atomic_action_timer('keystone.list_users')
     def _list_users(self):
         """list users."""
         return self.admin_clients("keystone").users.list()
 
-    @scenario_utils.atomic_action_timer('keystone.list_tenants')
+    @scenario_base.atomic_action_timer('keystone.list_tenants')
     def _list_tenants(self):
         """list tenants."""
         return self.admin_clients("keystone").tenants.list()

@@ -17,21 +17,20 @@
 import random
 import time
 
-from rally.benchmark.scenarios import base
-from rally.benchmark.scenarios import utils as scenario_utils
+from rally.benchmark.scenarios import base as scenario_base
 
 
-class FakePlugin(base.Scenario):
+class FakePlugin(scenario_base.Scenario):
 
-    @scenario_utils.atomic_action_timer("test1")
+    @scenario_base.atomic_action_timer("test1")
     def _test1(self, factor):
         time.sleep(random.random())
 
-    @scenario_utils.atomic_action_timer("test2")
+    @scenario_base.atomic_action_timer("test2")
     def _test2(self, factor):
         time.sleep(random.random() * factor * 10)
 
-    @base.scenario()
+    @scenario_base.scenario()
     def testplugin(self, factor=1):
         self._test1(factor)
         self._test2(factor)

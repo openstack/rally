@@ -13,7 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from rally.benchmark.scenarios import base
+from rally.benchmark.scenarios import base as scenario_base
 from rally.benchmark.scenarios.heat import utils
 from rally.benchmark import validation
 from rally import consts
@@ -35,7 +35,7 @@ class HeatStacks(utils.HeatScenario):
                               % {"template_path": template_path})
         return template
 
-    @base.scenario(context={"cleanup": ["heat"],
+    @scenario_base.scenario(context={"cleanup": ["heat"],
                             "roles": ["heat_stack_owner"]})
     @validation.required_services(consts.Service.HEAT)
     def create_and_list_stack(self, template_path=None):
@@ -54,7 +54,7 @@ class HeatStacks(utils.HeatScenario):
         self._create_stack(stack_name, template)
         self._list_stacks()
 
-    @base.scenario(context={"cleanup": ["heat"],
+    @scenario_base.scenario(context={"cleanup": ["heat"],
                             "roles": ["heat_stack_owner"]})
     @validation.required_services(consts.Service.HEAT)
     def create_and_delete_stack(self, template_path=None):

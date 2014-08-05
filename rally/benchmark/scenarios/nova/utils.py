@@ -17,8 +17,7 @@ import time
 
 from oslo.config import cfg
 
-from rally.benchmark.scenarios import base
-from rally.benchmark.scenarios import utils as scenario_utils
+from rally.benchmark.scenarios import base as scenario_base
 from rally.benchmark import utils as bench_utils
 
 
@@ -66,15 +65,15 @@ CONF.register_group(benchmark_group)
 CONF.register_opts(nova_benchmark_opts, group=benchmark_group)
 
 
-class NovaScenario(base.Scenario):
+class NovaScenario(scenario_base.Scenario):
 
-    @scenario_utils.atomic_action_timer('nova.list_servers')
+    @scenario_base.atomic_action_timer('nova.list_servers')
     def _list_servers(self, detailed=True):
         """Returns user servers list."""
 
         return self.clients("nova").servers.list(detailed)
 
-    @scenario_utils.atomic_action_timer('nova.boot_server')
+    @scenario_base.atomic_action_timer('nova.boot_server')
     def _boot_server(self, server_name, image_id, flavor_id, **kwargs):
         """Boots one server.
 
@@ -131,7 +130,7 @@ class NovaScenario(base.Scenario):
             check_interval=CONF.benchmark.nova_server_reboot_poll_interval
         )
 
-    @scenario_utils.atomic_action_timer('nova.soft_reboot_server')
+    @scenario_base.atomic_action_timer('nova.soft_reboot_server')
     def _soft_reboot_server(self, server):
         """Reboots the given server using soft reboot.
 
@@ -142,7 +141,7 @@ class NovaScenario(base.Scenario):
         """
         self._do_server_reboot(server, "SOFT")
 
-    @scenario_utils.atomic_action_timer('nova.reboot_server')
+    @scenario_base.atomic_action_timer('nova.reboot_server')
     def _reboot_server(self, server):
         """Reboots the given server using hard reboot.
 
@@ -153,7 +152,7 @@ class NovaScenario(base.Scenario):
         """
         self._do_server_reboot(server, "HARD")
 
-    @scenario_utils.atomic_action_timer('nova.start_server')
+    @scenario_base.atomic_action_timer('nova.start_server')
     def _start_server(self, server):
         """Starts the given server.
 
@@ -170,7 +169,7 @@ class NovaScenario(base.Scenario):
             check_interval=CONF.benchmark.nova_server_start_poll_interval
         )
 
-    @scenario_utils.atomic_action_timer('nova.stop_server')
+    @scenario_base.atomic_action_timer('nova.stop_server')
     def _stop_server(self, server):
         """Stop the given server.
 
@@ -187,7 +186,7 @@ class NovaScenario(base.Scenario):
             check_interval=CONF.benchmark.nova_server_stop_poll_interval
         )
 
-    @scenario_utils.atomic_action_timer('nova.rescue_server')
+    @scenario_base.atomic_action_timer('nova.rescue_server')
     def _rescue_server(self, server):
         """Rescue the given server.
 
@@ -205,7 +204,7 @@ class NovaScenario(base.Scenario):
             check_interval=CONF.benchmark.nova_server_rescue_poll_interval
         )
 
-    @scenario_utils.atomic_action_timer('nova.unrescue_server')
+    @scenario_base.atomic_action_timer('nova.unrescue_server')
     def _unrescue_server(self, server):
         """Unrescue the given server.
 
@@ -222,7 +221,7 @@ class NovaScenario(base.Scenario):
             check_interval=CONF.benchmark.nova_server_unrescue_poll_interval
         )
 
-    @scenario_utils.atomic_action_timer('nova.suspend_server')
+    @scenario_base.atomic_action_timer('nova.suspend_server')
     def _suspend_server(self, server):
         """Suspends the given server.
 
@@ -240,7 +239,7 @@ class NovaScenario(base.Scenario):
             check_interval=CONF.benchmark.nova_server_suspend_poll_interval
         )
 
-    @scenario_utils.atomic_action_timer('nova.delete_server')
+    @scenario_base.atomic_action_timer('nova.delete_server')
     def _delete_server(self, server):
         """Deletes the given server.
 
@@ -256,14 +255,14 @@ class NovaScenario(base.Scenario):
             check_interval=CONF.benchmark.nova_server_delete_poll_interval
         )
 
-    @scenario_utils.atomic_action_timer('nova.delete_all_servers')
+    @scenario_base.atomic_action_timer('nova.delete_all_servers')
     def _delete_all_servers(self):
         """Deletes all servers in current tenant."""
         servers = self.clients("nova").servers.list()
         for server in servers:
             self._delete_server(server)
 
-    @scenario_utils.atomic_action_timer('nova.delete_image')
+    @scenario_base.atomic_action_timer('nova.delete_image')
     def _delete_image(self, image):
         """Deletes the given image.
 
@@ -280,7 +279,7 @@ class NovaScenario(base.Scenario):
             check_interval=check_interval
         )
 
-    @scenario_utils.atomic_action_timer('nova.create_image')
+    @scenario_base.atomic_action_timer('nova.create_image')
     def _create_image(self, server):
         """Creates an image of the given server
 
@@ -304,7 +303,7 @@ class NovaScenario(base.Scenario):
         )
         return image
 
-    @scenario_utils.atomic_action_timer('nova.boot_servers')
+    @scenario_base.atomic_action_timer('nova.boot_servers')
     def _boot_servers(self, name_prefix, image_id, flavor_id,
                       requests, instances_amount=1, **kwargs):
         """Boots multiple servers.
@@ -343,17 +342,17 @@ class NovaScenario(base.Scenario):
         ) for server in servers]
         return servers
 
-    @scenario_utils.atomic_action_timer('nova.list_floating_ip_pools')
+    @scenario_base.atomic_action_timer('nova.list_floating_ip_pools')
     def _list_floating_ip_pools(self):
         """Returns user floating ip pools list."""
         return self.clients("nova").floating_ip_pools.list()
 
-    @scenario_utils.atomic_action_timer('nova.list_floating_ips')
+    @scenario_base.atomic_action_timer('nova.list_floating_ips')
     def _list_floating_ips(self):
         """Returns user floating ips list."""
         return self.clients("nova").floating_ips.list()
 
-    @scenario_utils.atomic_action_timer('nova.create_floating_ip')
+    @scenario_base.atomic_action_timer('nova.create_floating_ip')
     def _create_floating_ip(self, pool):
         """Create (allocate) a floating ip from the given pool
 
@@ -363,7 +362,7 @@ class NovaScenario(base.Scenario):
         """
         return self.clients("nova").floating_ips.create(pool)
 
-    @scenario_utils.atomic_action_timer('nova.delete_floating_ip')
+    @scenario_base.atomic_action_timer('nova.delete_floating_ip')
     def _delete_floating_ip(self, floating_ip):
         """Delete (deallocate) a  floating ip for a tenant
 
@@ -375,7 +374,7 @@ class NovaScenario(base.Scenario):
             update_resource=bench_utils.get_from_manager()
         )
 
-    @scenario_utils.atomic_action_timer('nova.associate_floating_ip')
+    @scenario_base.atomic_action_timer('nova.associate_floating_ip')
     def _associate_floating_ip(self, server, address, fixed_address=None):
         """Add floating IP to an instance
 
@@ -393,7 +392,7 @@ class NovaScenario(base.Scenario):
         # Update server data
         server.addresses = server.manager.get(server.id).addresses
 
-    @scenario_utils.atomic_action_timer('nova.dissociate_floating_ip')
+    @scenario_base.atomic_action_timer('nova.dissociate_floating_ip')
     def _dissociate_floating_ip(self, server, address):
         """Remove floating IP from an instance
 
@@ -421,12 +420,12 @@ class NovaScenario(base.Scenario):
                 return not must_exist
         return _check_addr
 
-    @scenario_utils.atomic_action_timer('nova.list_networks')
+    @scenario_base.atomic_action_timer('nova.list_networks')
     def _list_networks(self):
         """Returns user networks list."""
         return self.clients("nova").networks.list()
 
-    @scenario_utils.atomic_action_timer('nova.resize')
+    @scenario_base.atomic_action_timer('nova.resize')
     def _resize(self, server, flavor):
         server.resize(flavor)
         bench_utils.wait_for(
@@ -437,7 +436,7 @@ class NovaScenario(base.Scenario):
             check_interval=CONF.benchmark.nova_server_resize_poll_interval
         )
 
-    @scenario_utils.atomic_action_timer('nova.resize_confirm')
+    @scenario_base.atomic_action_timer('nova.resize_confirm')
     def _resize_confirm(self, server):
         server.confirm_resize()
         bench_utils.wait_for(
@@ -449,7 +448,7 @@ class NovaScenario(base.Scenario):
                 CONF.benchmark.nova_server_resize_confirm_poll_interval)
         )
 
-    @scenario_utils.atomic_action_timer('nova.resize_revert')
+    @scenario_base.atomic_action_timer('nova.resize_revert')
     def _resize_revert(self, server):
         server.revert_resize()
         bench_utils.wait_for(

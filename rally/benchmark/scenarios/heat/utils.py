@@ -17,8 +17,7 @@ import time
 
 from oslo.config import cfg
 
-from rally.benchmark.scenarios import base
-from rally.benchmark.scenarios import utils as scenario_utils
+from rally.benchmark.scenarios import base as scenario_base
 from rally.benchmark import utils as bench_utils
 
 
@@ -55,17 +54,17 @@ def heat_resource_is(status):
     return lambda resource: resource.stack_status.upper() == status.upper()
 
 
-class HeatScenario(base.Scenario):
+class HeatScenario(scenario_base.Scenario):
 
     default_template = "HeatTemplateFormatVersion: '2012-12-12'"
 
-    @scenario_utils.atomic_action_timer('heat.list_stacks')
+    @scenario_base.atomic_action_timer('heat.list_stacks')
     def _list_stacks(self):
         """Return user stack list."""
 
         return list(self.clients("heat").stacks.list())
 
-    @scenario_utils.atomic_action_timer('heat.create_stack')
+    @scenario_base.atomic_action_timer('heat.create_stack')
     def _create_stack(self, stack_name, template=None):
         """Create a new stack.
 
@@ -101,7 +100,7 @@ class HeatScenario(base.Scenario):
 
         return stack
 
-    @scenario_utils.atomic_action_timer('heat.delete_stack')
+    @scenario_base.atomic_action_timer('heat.delete_stack')
     def _delete_stack(self, stack):
         """Delete the given stack.
 

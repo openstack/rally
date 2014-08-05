@@ -17,7 +17,7 @@ import mock
 import netaddr
 
 from rally.benchmark.scenarios.neutron import utils
-from tests.benchmark.scenarios import test_utils
+from tests.benchmark.scenarios import test_base
 from tests import test
 
 
@@ -31,7 +31,7 @@ class NeutronScenarioTestCase(test.TestCase):
         self.network = mock.Mock()
 
     def _test_atomic_action_timer(self, atomic_actions_time, name):
-        action_duration = test_utils.get_atomic_action_timer_value_by_name(
+        action_duration = test_base.get_atomic_action_timer_value_by_name(
             atomic_actions_time, name)
         self.assertIsNotNone(action_duration)
         self.assertIsInstance(action_duration, float)

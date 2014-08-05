@@ -12,14 +12,14 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from rally.benchmark.scenarios import base
+from rally.benchmark.scenarios import base as scenario_base
 from rally.benchmark.scenarios.ceilometer import utils
 from rally.benchmark import validation
 from rally import consts
 
 
 class CeilometerStats(utils.CeilometerScenario):
-    @base.scenario(context={"cleanup": ["ceilometer"]})
+    @scenario_base.scenario(context={"cleanup": ["ceilometer"]})
     @validation.required_services(consts.Service.CEILOMETER)
     def create_meter_and_get_stats(self, **kwargs):
         """Test creating a meter and fetching its statistics.

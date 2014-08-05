@@ -13,16 +13,16 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from rally.benchmark.scenarios import base
+from rally.benchmark.scenarios import base as scenario_base
 from rally.benchmark.scenarios.tempest import utils
 from rally.benchmark import validation
 from rally import consts
 
 
-class TempestScenario(base.Scenario):
+class TempestScenario(scenario_base.Scenario):
 
     @validation.add(validation.tempest_tests_exists())
-    @base.scenario(context={"tempest": {}})
+    @scenario_base.scenario(context={"tempest": {}})
     @utils.tempest_log_wrapper
     def single_test(self, test_name, log_file):
         """Launch a single test
@@ -36,7 +36,7 @@ class TempestScenario(base.Scenario):
 
         self.context()["verifier"].run(test_name, log_file)
 
-    @base.scenario(context={"tempest": {}})
+    @scenario_base.scenario(context={"tempest": {}})
     @utils.tempest_log_wrapper
     def all(self, log_file):
         """Launch all discovered tests
@@ -47,7 +47,7 @@ class TempestScenario(base.Scenario):
         self.context()["verifier"].run("", log_file)
 
     @validation.add(validation.tempest_set_exists())
-    @base.scenario(context={"tempest": {}})
+    @scenario_base.scenario(context={"tempest": {}})
     @utils.tempest_log_wrapper
     def set(self, set_name, log_file):
         """Launch one by one methods from the set
@@ -66,7 +66,7 @@ class TempestScenario(base.Scenario):
         self._context["verifier"].run(testr_arg, log_file)
 
     @validation.add(validation.tempest_tests_exists())
-    @base.scenario(context={"tempest": {}})
+    @scenario_base.scenario(context={"tempest": {}})
     @utils.tempest_log_wrapper
     def list_of_tests(self, test_names, log_file):
         """Launch all tests from given list
@@ -77,7 +77,7 @@ class TempestScenario(base.Scenario):
 
         self._context["verifier"].run(" ".join(test_names), log_file)
 
-    @base.scenario(context={"tempest": {}})
+    @scenario_base.scenario(context={"tempest": {}})
     @utils.tempest_log_wrapper
     def specific_regex(self, regex, log_file):
         """Launch all tests which match given regex

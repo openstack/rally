@@ -19,7 +19,7 @@ import collections
 
 import mock
 
-from rally.benchmark.scenarios import base
+from rally.benchmark.scenarios import base as scenario_base
 from rally import consts
 from rally.orchestrator import api
 from tests import fakes
@@ -64,14 +64,14 @@ FAKE_TASK_CONFIG = {
 }
 
 
-class FakeScenario(base.Scenario):
+class FakeScenario(scenario_base.Scenario):
     @classmethod
     def fake(cls, context):
         pass
 
 
 # TODO(akscram): The test cases are very superficial because they test
-#                only database operations and actually no more. Each
+#                only datascenario_base.operations and actually no more. Each
 #                case in this test should to mock everything external.
 class APITestCase(test.TestCase):
 

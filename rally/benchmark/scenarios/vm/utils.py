@@ -16,15 +16,14 @@
 
 import subprocess
 
-from rally.benchmark.scenarios import base
-from rally.benchmark.scenarios import utils as scenario_utils
+from rally.benchmark.scenarios import base as scenario_base
 from rally.benchmark import utils as bench_utils
 from rally import sshutils
 
 
-class VMScenario(base.Scenario):
+class VMScenario(scenario_base.Scenario):
 
-    @scenario_utils.atomic_action_timer('vm.run_command')
+    @scenario_base.atomic_action_timer('vm.run_command')
     def run_action(self, ssh, interpreter, script):
         """Run command inside an instance.
 
@@ -32,11 +31,11 @@ class VMScenario(base.Scenario):
         """
         return ssh.execute(interpreter, stdin=open(script, "rb"))
 
-    @scenario_utils.atomic_action_timer('vm.wait_for_ssh')
+    @scenario_base.atomic_action_timer('vm.wait_for_ssh')
     def wait_for_ssh(self, ssh):
         ssh.wait()
 
-    @scenario_utils.atomic_action_timer('vm.wait_for_ping')
+    @scenario_base.atomic_action_timer('vm.wait_for_ping')
     def wait_for_ping(self, server_ip):
         bench_utils.wait_for(
             server_ip,

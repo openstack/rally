@@ -17,11 +17,10 @@ import multiprocessing
 
 import netaddr
 
-from rally.benchmark.scenarios import base
-from rally.benchmark.scenarios import utils as scenario_utils
+from rally.benchmark.scenarios import base as scenario_base
 
 
-class NeutronScenario(base.Scenario):
+class NeutronScenario(scenario_base.Scenario):
     """This class should contain base operations for benchmarking neutron."""
 
     RESOURCE_NAME_PREFIX = "rally_net_"
@@ -46,7 +45,7 @@ class NeutronScenario(base.Scenario):
         cls._subnet_cidrs[network_id] = cidr
         return cidr
 
-    @scenario_utils.atomic_action_timer('neutron.create_network')
+    @scenario_base.atomic_action_timer('neutron.create_network')
     def _create_network(self, network_create_args):
         """Create neutron network.
 
@@ -57,12 +56,12 @@ class NeutronScenario(base.Scenario):
         return self.clients("neutron"
                             ).create_network({"network": network_create_args})
 
-    @scenario_utils.atomic_action_timer('neutron.list_networks')
+    @scenario_base.atomic_action_timer('neutron.list_networks')
     def _list_networks(self):
         """Return user networks list."""
         return self.clients("neutron").list_networks()['networks']
 
-    @scenario_utils.atomic_action_timer('neutron.delete_network')
+    @scenario_base.atomic_action_timer('neutron.delete_network')
     def _delete_network(self, network):
         """Delete neutron network.
 
@@ -70,7 +69,7 @@ class NeutronScenario(base.Scenario):
         """
         self.clients("neutron").delete_network(network['id'])
 
-    @scenario_utils.atomic_action_timer('neutron.create_subnet')
+    @scenario_base.atomic_action_timer('neutron.create_subnet')
     def _create_subnet(self, network, subnet_create_args):
         """Create neutron subnet.
 
@@ -90,12 +89,12 @@ class NeutronScenario(base.Scenario):
         return self.clients("neutron"
                             ).create_subnet({"subnet": subnet_create_args})
 
-    @scenario_utils.atomic_action_timer('neutron.list_subnets')
+    @scenario_base.atomic_action_timer('neutron.list_subnets')
     def _list_subnets(self):
         """Returns user subnetworks list."""
         return self.clients("neutron").list_subnets()["subnets"]
 
-    @scenario_utils.atomic_action_timer('neutron.delete_subnet')
+    @scenario_base.atomic_action_timer('neutron.delete_subnet')
     def _delete_subnet(self, subnet):
         """Delete neutron subnet
 
@@ -103,7 +102,7 @@ class NeutronScenario(base.Scenario):
         """
         self.clients("neutron").delete_subnet(subnet['subnet']['id'])
 
-    @scenario_utils.atomic_action_timer('neutron.create_router')
+    @scenario_base.atomic_action_timer('neutron.create_router')
     def _create_router(self, router_create_args):
         """Create neutron router.
 
@@ -115,12 +114,12 @@ class NeutronScenario(base.Scenario):
         return self.clients("neutron"
                             ).create_router({"router": router_create_args})
 
-    @scenario_utils.atomic_action_timer('neutron.list_routers')
+    @scenario_base.atomic_action_timer('neutron.list_routers')
     def _list_routers(self):
         """Returns user routers list."""
         return self.clients("neutron").list_routers()["routers"]
 
-    @scenario_utils.atomic_action_timer('neutron.create_port')
+    @scenario_base.atomic_action_timer('neutron.create_port')
     def _create_port(self, network, port_create_args):
         """Create neutron port.
 
@@ -133,12 +132,12 @@ class NeutronScenario(base.Scenario):
             "name", self._generate_random_name("rally_port_"))
         return self.clients("neutron").create_port({"port": port_create_args})
 
-    @scenario_utils.atomic_action_timer('neutron.list_ports')
+    @scenario_base.atomic_action_timer('neutron.list_ports')
     def _list_ports(self):
         """Return user ports list."""
         return self.clients("neutron").list_ports()["ports"]
 
-    @scenario_utils.atomic_action_timer('neutron.delete_port')
+    @scenario_base.atomic_action_timer('neutron.delete_port')
     def _delete_port(self, port):
         """Delete neutron port.
 

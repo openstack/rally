@@ -16,7 +16,7 @@
 import mock
 
 from rally.benchmark.scenarios.cinder import utils
-from tests.benchmark.scenarios import test_utils
+from tests.benchmark.scenarios import test_base
 from tests import test
 
 CINDER_UTILS = "rally.benchmark.scenarios.cinder.utils"
@@ -25,7 +25,7 @@ CINDER_UTILS = "rally.benchmark.scenarios.cinder.utils"
 class CinderScenarioTestCase(test.TestCase):
 
     def _test_atomic_action_timer(self, atomic_actions, name):
-        action_duration = test_utils.get_atomic_action_timer_value_by_name(
+        action_duration = test_base.get_atomic_action_timer_value_by_name(
             atomic_actions, name)
         self.assertIsNotNone(action_duration)
         self.assertIsInstance(action_duration, float)
