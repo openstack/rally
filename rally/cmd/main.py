@@ -27,12 +27,6 @@ from rally.cmd.commands import use
 from rally.cmd.commands import verify
 
 
-def deprecated():
-    print("\n\n---\n\nopenstack-rally and openstack-rally-manage are "
-          "deprecated, please use rally and rally-manage\n\n---\n\n")
-    main()
-
-
 def main():
     categories = {
         'deployment': deployment.DeploymentCommands,
