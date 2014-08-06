@@ -24,7 +24,15 @@ import abc
 import jsonschema
 import six
 
+from rally.openstack.common.gettextutils import _
 from rally import utils
+
+
+class SLAResult(object):
+
+    def __init__(self, success=True, msg=None):
+        self.success = success
+        self.msg = msg
 
 
 @six.add_metaclass(abc.ABCMeta)
@@ -67,11 +75,12 @@ class SLA(object):
             config = result['key']['kw'].get('sla', None)
             if config:
                 for name, criterion in config.iteritems():
-                    success = opt_name_map[name].check(criterion, result)
+                    check_result = opt_name_map[name].check(criterion, result)
                     yield {'benchmark': result['key']['name'],
                            'pos': result['key']['pos'],
                            'criterion': name,
-                           'success': success}
+                           'success': check_result.success,
+                           'detail': check_result.msg}
 
 
 class FailureRate(SLA):
@@ -84,8 +93,12 @@ class FailureRate(SLA):
         raw = result['data']['raw']
         errors = len(filter(lambda x: x['error'], raw))
         if criterion_value < errors * 100.0 / len(raw):
-            return False
-        return True
+            success = False
+        else:
+            success = True
+        msg = (_("Maximum failure percent %s%% failures, actually %s%%") %
+                (criterion_value, errors * 100.0 / len(raw)))
+        return SLAResult(success, msg)
 
 
 class IterationTime(SLA):
@@ -96,7 +109,13 @@ class IterationTime(SLA):
 
     @staticmethod
     def check(criterion_value, result):
+        duration = 0
+        success = True
         for i in result['data']['raw']:
+            duration = i['duration']
             if i['duration'] > criterion_value:
-                return False
-        return True
+                success = False
+                break
+        msg = (_("Maximum seconds per iteration %is, actually %is") %
+                (criterion_value, duration))
+        return SLAResult(success, msg)

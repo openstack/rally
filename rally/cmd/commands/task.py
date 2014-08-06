@@ -388,5 +388,6 @@ class TaskCommands(object):
             print(json.dumps(rows))
         else:
             common_cliutils.print_list(rows, ('benchmark', 'pos',
-                                              'criterion', 'success'))
+                                              'criterion', 'success',
+                                              'detail'))
         return failed_criteria

@@ -27,7 +27,8 @@ class TestCriterion(base.SLA):
 
     @staticmethod
     def check(criterion_value, result):
-        return criterion_value == result["data"]
+        return base.SLAResult(criterion_value == result["data"],
+                              msg='detail')
 
 
 class BaseSLATestCase(test.TestCase):
@@ -54,6 +55,7 @@ class BaseSLATestCase(test.TestCase):
         results = list(base.SLA.check_all(task))
         expected = [{'benchmark': 'fake',
                      'criterion': 'test_criterion',
+                     'detail': 'detail',
                      'pos': 0,
                      'success': True}]
         self.assertEqual(expected, results)
@@ -61,6 +63,7 @@ class BaseSLATestCase(test.TestCase):
         results = list(base.SLA.check_all(task))
         expected = [{'benchmark': 'fake',
                      'criterion': 'test_criterion',
+                     'detail': 'detail',
                      'pos': 0,
                      'success': False}]
         self.assertEqual(expected, results)
@@ -73,8 +76,10 @@ class FailureRateTestCase(test.TestCase):
                 {"error": []},
         ]  # one error and one success. 50% success rate
         result = {"data": {"raw": raw}}
-        self.assertTrue(base.FailureRate.check(75.0, result))  # 50% < 75.0%
-        self.assertFalse(base.FailureRate.check(25, result))  # 50% > 25%
+        # 50% < 75.0%
+        self.assertTrue(base.FailureRate.check(75.0, result).success)
+        # 50% > 25%
+        self.assertFalse(base.FailureRate.check(25, result).success)
 
 
 class IterationTimeTestCase(test.TestCase):
@@ -84,5 +89,5 @@ class IterationTimeTestCase(test.TestCase):
                 {"duration": 6.28},
         ]
         result = {"data": {"raw": raw}}
-        self.assertTrue(base.IterationTime.check(42, result))
-        self.assertFalse(base.IterationTime.check(3.62, result))
+        self.assertTrue(base.IterationTime.check(42, result).success)
+        self.assertFalse(base.IterationTime.check(3.62, result).success)
