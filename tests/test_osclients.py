@@ -109,7 +109,7 @@ class OSClientsTestCase(test.TestCase):
             "endpoint_url": self.service_catalog.url_for.return_value,
             "timeout": cfg.CONF.openstack_client_http_timeout,
             "insecure": cfg.CONF.https_insecure,
-            "cacert": cfg.CONF.https_cacert
+            "ca_cert": cfg.CONF.https_cacert
         }
         self.service_catalog.url_for.assert_called_once_with(
             service_type='network', endpoint_type='public',

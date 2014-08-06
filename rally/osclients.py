@@ -154,7 +154,7 @@ class Clients(object):
                                 endpoint_url=network_api_url,
                                 timeout=CONF.openstack_client_http_timeout,
                                 insecure=CONF.https_insecure,
-                                cacert=CONF.https_cacert)
+                                ca_cert=CONF.https_cacert)
         return client
 
     @cached
