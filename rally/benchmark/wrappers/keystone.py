@@ -111,7 +111,8 @@ class KeystoneV2Wrapper(KeystoneWrapper):
 
     @staticmethod
     def _wrap_v2_user(user):
-        return User(id=user.id, name=user.name, project_id=user.tenantId,
+        return User(id=user.id, name=user.name,
+                    project_id=getattr(user, 'tenantId', None),
                     domain_id='default')
 
     def create_project(self, project_name, domain_name='Default'):
