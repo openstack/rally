@@ -470,6 +470,21 @@
       sla:
         max_failure_percent: 0
 
+  Quotas.cinder_update_and_delete:
+    -
+      args:
+        max_quota: 1024
+      runner:
+        type: "constant"
+        times: 4
+        concurrency: 1
+      context:
+        users:
+          tenants: 3
+          users_per_tenant: 2
+      sla:
+        max_failure_percent: 0
+
   Quotas.cinder_update:
     -
       args:

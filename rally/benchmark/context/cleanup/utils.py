@@ -65,9 +65,8 @@ def delete_images(glance, project_uuid):
 
 
 def delete_quotas(admin_clients, project_uuid):
-    # TODO(yingjun): We need to add the cinder part for deleting
-    #                quotas when the new cinderclient released.
     admin_clients.nova().quotas.delete(project_uuid)
+    admin_clients.cinder().quotas.delete(project_uuid)
 
 
 def delete_stacks(heat):

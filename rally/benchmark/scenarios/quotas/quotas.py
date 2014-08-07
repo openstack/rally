@@ -47,3 +47,13 @@ class Quotas(utils.QuotasScenario):
         """
         tenant_id = self.context()["user"]["tenant_id"]
         self._update_quotas('cinder', tenant_id, max_quota)
+
+    @base.scenario(admin_only=True, context={"admin_cleanup": ["quotas"]})
+    def cinder_update_and_delete(self, max_quota=1024):
+        """Tests updating and deleting quotas for cinder.
+
+        :param max_quota: Max value to be updated for quota.
+        """
+        tenant_id = self.context()["user"]["tenant_id"]
+        self._update_quotas('cinder', tenant_id, max_quota)
+        self._delete_quotas('cinder', tenant_id)

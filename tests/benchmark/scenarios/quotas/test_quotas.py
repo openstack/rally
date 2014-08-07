@@ -40,3 +40,11 @@ class QuotasTestCase(test.TestCase):
         scenario._update_quotas = mock.MagicMock()
         scenario.cinder_update(max_quota=1024)
         scenario._update_quotas.assert_called_once_with('cinder', 'fake', 1024)
+
+    def test_cinder_update_and_delete(self):
+        scenario = quotas.Quotas(context={"user": {"tenant_id": "fake"}})
+        scenario._update_quotas = mock.MagicMock()
+        scenario._delete_quotas = mock.MagicMock()
+        scenario.cinder_update_and_delete(max_quota=1024)
+        scenario._update_quotas.assert_called_once_with('cinder', 'fake', 1024)
+        scenario._delete_quotas.assert_called_once_with('cinder', 'fake')
