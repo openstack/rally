@@ -139,10 +139,11 @@ class TaskCommandsTestCase(test.TestCase):
     def test_results_default(self, mock_json, mock_db):
         test_uuid = 'aa808c14-69cc-4faf-a906-97e05f5aebbd'
         value = [
-            {'key': 'key', 'data': {'raw': 'raw'}}
+            {'key': 'key', 'data': {'raw': 'raw', 'sla': []}}
         ]
         result = map(lambda x: {"key": x["key"],
-                                'result': x['data']['raw']}, value)
+                                "result": x["data"]["raw"],
+                                "sla": x["data"]["sla"]}, value)
         mock_db.task_result_get_all_by_uuid.return_value = value
         self.task.results(test_uuid)
         mock_json.assert_called_once_with(result)
@@ -153,10 +154,11 @@ class TaskCommandsTestCase(test.TestCase):
     def test_results_json(self, mock_json, mock_db):
         test_uuid = 'e87dd629-cd3d-4a1e-b377-7b93c19226fb'
         value = [
-            {'key': 'key', 'data': {'raw': 'raw'}}
+            {'key': 'key', 'data': {'raw': 'raw', 'sla': []}}
         ]
         result = map(lambda x: {"key": x["key"],
-                                'result': x['data']['raw']}, value)
+                                "result": x["data"]["raw"],
+                                "sla": x["data"]["sla"]}, value)
 
         mock_db.task_result_get_all_by_uuid.return_value = value
         self.task.results(test_uuid, output_json=True)
@@ -168,10 +170,11 @@ class TaskCommandsTestCase(test.TestCase):
     def test_results_pprint(self, mock_pprint, mock_db):
         test_uuid = 'c1e4bc59-a8fd-458c-9abb-c922d8df4285'
         value = [
-            {'key': 'key', 'data': {'raw': 'raw'}}
+            {'key': 'key', 'data': {'raw': 'raw', 'sla': []}}
         ]
         result = map(lambda x: {"key": x["key"],
-                                'result': x['data']['raw']}, value)
+                                "result": x["data"]["raw"],
+                                "sla": x["data"]["sla"]}, value)
         mock_db.task_result_get_all_by_uuid.return_value = value
         self.task.results(test_uuid, output_pprint=True)
         mock_pprint.assert_called_once_with(result)
@@ -233,18 +236,27 @@ class TaskCommandsTestCase(test.TestCase):
         self.assertTrue(mock_api.delete_task.mock_calls == expected_calls)
 
     @mock.patch('rally.cmd.commands.task.common_cliutils.print_list')
-    @mock.patch("rally.cmd.commands.task.base_sla")
     @mock.patch("rally.cmd.commands.task.db")
-    def test_sla_check(self, mock_db, mock_sla, mock_print_list):
-        fake_rows = [
-                {'success': True},
-                {'success': False},
-        ]
-        mock_db.task_get_detailed.return_value = 'fake_task'
-        mock_sla.SLA.check_all.return_value = fake_rows
+    def test_sla_check(self, mock_db, mock_print_list):
+        value = [{
+                    "key": {
+                        "name": "fake_name",
+                        "pos": "fake_pos",
+                        "kw": "fake_kw"
+                    },
+                    "data": {
+                        "scenario_duration": 1.0,
+                        "raw": [],
+                        "sla":
+                        [{"benchmark": "KeystoneBasic.create_user",
+                          "criterion": "max_seconds_per_iteration",
+                          "pos": 0, "success": False, "detail":
+                          "Maximum seconds per iteration 4s, actually 5s"}]
+                    }
+                }]
+        mock_db.task_result_get_all_by_uuid.return_value = value
         retval = self.task.sla_check(task_id='fake_task_id')
         self.assertEqual(1, retval)
-        mock_sla.SLA.check_all.assert_called_once_with('fake_task')
 
     @mock.patch('rally.cmd.commands.task.open',
                 mock.mock_open(read_data='{"some": "json"}'),

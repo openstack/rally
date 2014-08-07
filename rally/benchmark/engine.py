@@ -262,5 +262,7 @@ class BenchmarkEngine(object):
             else:
                 time.sleep(0.1)
 
+        sla = base_sla.SLA.check_all(key['kw'], results)
         task.append_results(key, {"raw": results,
-                                  "scenario_duration": self.duration})
+                                  "scenario_duration": self.duration,
+                                  "sla": sla})
