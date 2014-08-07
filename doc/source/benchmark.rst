@@ -83,22 +83,22 @@ In a toy example below, we define a scenario class *MyScenario* with one benchma
 
 ::
 
-    from rally.benchmark.scenarios import base
+    from rally.benchmark.scenarios import base as scenario_base
     from rally.benchmark.scenarios import utils
 
 
-    class MyScenario(base.Scenario):
+    class MyScenario(scenario_base.Scenario):
         """My class that contains benchmark scenarios."""
 
-        @utils.atomic_action_timer("action_1")
+        @scenario_base.atomic_action_timer("action_1")
         def _action_1(self, **kwargs):
             """Do something with the cloud."""
 
-        @utils.atomic_action_timer("action_2")
+        @scenario_base.atomic_action_timer("action_2")
         def _action_2(self, **kwargs):
             """Do something with the cloud."""
 
-        @base.scenario()
+        @scenario_base.scenario()
         def scenario(self, **kwargs):
             self._action_1()
             self._action_2()
@@ -357,21 +357,20 @@ benchmark scenario results have been stored correctly.
     import random
     import time
 
-    from rally.benchmark.scenarios import base
-    from rally.benchmark.scenarios import utils as scenario_utils
+    from rally.benchmark.scenarios import base as scenario_base
 
 
     class PluginClass(base.Scenario):
 
-        @scenario_utils.atomic_action_timer("test1")
+        @scenario_base.atomic_action_timer("test1")
         def _test1(self, factor):
             time.sleep(random.random() * factor)
 
-        @scenario_utils.atomic_action_timer("test2")
+        @scenario_base.atomic_action_timer("test2")
         def _test2(self, factor):
             time.sleep(random.random() * factor * 10)
 
-        @base.scenario()
+        @scenario_base.scenario()
         def testplugin(self, factor=1):
             self._test1(factor)
             self._test2(factor)

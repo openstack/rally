@@ -14,8 +14,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import functools
-
 import jsonschema
 
 from rally import utils
@@ -126,47 +124,3 @@ class ActionBuilder(object):
                                     binding['action'], times,
                                     *(binding['args'] + args), **dft_kwargs))
         return bound_actions
-
-
-def atomic_action_timer(name):
-    """Provide measure of execution time.
-
-    Decorates methods of the Scenario class.
-    This provides duration in seconds of each atomic action.
-    """
-    def wrap(func):
-        @functools.wraps(func)
-        def func_atomic_actions(self, *args, **kwargs):
-            with utils.Timer() as timer:
-                f = func(self, *args, **kwargs)
-            self._add_atomic_actions(name, timer.duration())
-            return f
-        return func_atomic_actions
-    return wrap
-
-
-class AtomicAction(utils.Timer):
-    """A class to measure the duration of atomic operations
-
-    This would simplify the way measure atomic opeation duration
-    in certain cases. For example if we want to get the duration
-    for each operation which runs in an iteration
-    for i in range(repetitions):
-        with scenario_utils.AtomicAction(instance_of_base_scenario_subclass,
-                                         "name_of_action"):
-            self.clients(<client>).<operation>
-    """
-
-    def __init__(self, scenario_instance, name):
-        """Create a new instance of the AtomicAction.
-
-        :param scenario_instance: instance of subclass of base scenario
-        :param name: name of the ActionBuilder
-        """
-        super(AtomicAction, self).__init__()
-        self.scenario_instance = scenario_instance
-        self.name = name
-
-    def __exit__(self, type, value, tb):
-        super(AtomicAction, self).__exit__(type, value, tb)
-        self.scenario_instance._add_atomic_actions(self.name, self.duration())

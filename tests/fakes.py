@@ -26,7 +26,7 @@ from neutronclient.common import exceptions as neutron_exceptions
 from novaclient import exceptions as nova_exceptions
 
 from rally.benchmark.context import base as base_ctx
-from rally.benchmark.scenarios import base
+from rally.benchmark.scenarios import base as scenario_base
 from rally.objects import endpoint
 from rally import utils as rally_utils
 
@@ -56,7 +56,7 @@ def generate_mac():
 
 
 def setup_dict(data, required=None, defaults=None):
-    """Setup and validate dict based on mandatory keys and default data.
+    """Setup and validate dict scenario_base. on mandatory keys and default data.
 
     This function reduces code that constructs dict objects
     with specific schema (e.g. for API data).
@@ -927,7 +927,7 @@ class FakeRunner(object):
     }
 
 
-class FakeScenario(base.Scenario):
+class FakeScenario(scenario_base.Scenario):
 
     def idle_time(self):
         return 0

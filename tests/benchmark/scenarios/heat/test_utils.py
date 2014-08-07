@@ -17,7 +17,7 @@ import mock
 from oslotest import mockpatch
 
 from rally.benchmark.scenarios.heat import utils
-from tests.benchmark.scenarios import test_utils
+from tests.benchmark.scenarios import test_base
 from tests import test
 
 BM_UTILS = 'rally.benchmark.utils'
@@ -43,7 +43,7 @@ class HeatScenarioTestCase(test.TestCase):
         self.scenario = utils.HeatScenario()
 
     def _test_atomic_action_timer(self, atomic_actions, name):
-        action_duration = test_utils.get_atomic_action_timer_value_by_name(
+        action_duration = test_base.get_atomic_action_timer_value_by_name(
             atomic_actions, name)
         self.assertIsNotNone(action_duration)
         self.assertIsInstance(action_duration, float)

@@ -13,7 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from rally.benchmark.scenarios import base
+from rally.benchmark.scenarios import base as scenario_base
 from rally.benchmark.scenarios.sahara import utils
 from rally.benchmark import types
 from rally.benchmark import validation
@@ -24,7 +24,7 @@ class SaharaNodeGroupTemplates(utils.SaharaScenario):
 
     @types.set(flavor=types.FlavorResourceType)
     @validation.add(validation.flavor_exists('flavor'))
-    @base.scenario(context={"cleanup": ["sahara"]})
+    @scenario_base.scenario(context={"cleanup": ["sahara"]})
     @validation.required_services(consts.Service.SAHARA)
     def create_and_list_node_group_templates(self, flavor,
                                              plugin_name="vanilla",
@@ -58,7 +58,7 @@ class SaharaNodeGroupTemplates(utils.SaharaScenario):
 
     @types.set(flavor=types.FlavorResourceType)
     @validation.add(validation.flavor_exists('flavor'))
-    @base.scenario(context={"cleanup": ["sahara"]})
+    @scenario_base.scenario(context={"cleanup": ["sahara"]})
     @validation.required_services(consts.Service.SAHARA)
     def create_delete_node_group_templates(self, flavor,
                                            plugin_name="vanilla",

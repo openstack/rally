@@ -12,14 +12,14 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from rally.benchmark.scenarios import base
+from rally.benchmark.scenarios import base as scenario_base
 from rally.benchmark.scenarios.ceilometer import utils as ceilometerutils
 from rally.benchmark import validation
 from rally import consts
 
 
 class CeilometerMeters(ceilometerutils.CeilometerScenario):
-    @base.scenario()
+    @scenario_base.scenario()
     @validation.required_services(consts.Service.CEILOMETER)
     def list_meters(self):
         """Test fetching user's meters."""

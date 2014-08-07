@@ -17,8 +17,7 @@ import time
 
 from oslo.config import cfg
 
-from rally.benchmark.scenarios import base
-from rally.benchmark.scenarios import utils as scenario_utils
+from rally.benchmark.scenarios import base as scenario_base
 from rally.benchmark import utils as bench_utils
 
 
@@ -48,17 +47,17 @@ benchmark_group = cfg.OptGroup(name='benchmark', title='benchmark options')
 CONF.register_opts(cinder_benchmark_opts, group=benchmark_group)
 
 
-class CinderScenario(base.Scenario):
+class CinderScenario(scenario_base.Scenario):
 
     RESOURCE_NAME_PREFIX = "rally_volume_"
 
-    @scenario_utils.atomic_action_timer('cinder.list_volumes')
+    @scenario_base.atomic_action_timer('cinder.list_volumes')
     def _list_volumes(self, detailed=True):
         """Returns user volumes list."""
 
         return self.clients("cinder").volumes.list(detailed)
 
-    @scenario_utils.atomic_action_timer('cinder.create_volume')
+    @scenario_base.atomic_action_timer('cinder.create_volume')
     def _create_volume(self, size, **kwargs):
         """create one volume.
 
@@ -85,7 +84,7 @@ class CinderScenario(base.Scenario):
         )
         return volume
 
-    @scenario_utils.atomic_action_timer('cinder.delete_volume')
+    @scenario_base.atomic_action_timer('cinder.delete_volume')
     def _delete_volume(self, volume):
         """Delete the given volume.
 

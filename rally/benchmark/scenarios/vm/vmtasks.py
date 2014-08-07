@@ -15,7 +15,7 @@
 
 import json
 
-from rally.benchmark.scenarios import base
+from rally.benchmark.scenarios import base as scenario_base
 from rally.benchmark.scenarios.nova import utils as nova_utils
 from rally.benchmark.scenarios.vm import utils as vm_utils
 from rally.benchmark import types as types
@@ -37,8 +37,8 @@ class VMTasks(nova_utils.NovaScenario, vm_utils.VMScenario):
                                       nullable=True, integer_only=True))
     @validation.add(validation.external_network_exists("floating_network",
                                                        "use_floatingip"))
-    @base.scenario(context={"cleanup": ["nova"],
-                   "keypair": {}, "allow_ssh": {}})
+    @scenario_base.scenario(
+        context={"cleanup": ["nova"], "keypair": {}, "allow_ssh": {}})
     @validation.required_services(consts.Service.NOVA)
     def boot_runcommand_delete(self, image, flavor,
                                script, interpreter, username,

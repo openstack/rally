@@ -16,7 +16,7 @@
 import mock
 
 from rally.benchmark.scenarios.authenticate import authenticate
-from rally.benchmark.scenarios import utils
+from rally.benchmark.scenarios import base as scenario_base
 from tests import fakes
 from tests import test
 
@@ -46,7 +46,8 @@ class AuthenticateTestCase(test.TestCase):
         scenario._clients.glance.images.list = mock.MagicMock(
                                                 return_value=images_list)
         image_name = "__intentionally_non_existent_image___"
-        with utils.AtomicAction(scenario, "authenticate.validate_glance"):
+        with scenario_base.AtomicAction(scenario,
+                                        "authenticate.validate_glance"):
             scenario.validate_glance(5)
         scenario._clients.glance().images.list.assert_called_with(
                 name=image_name)
@@ -63,7 +64,8 @@ class AuthenticateTestCase(test.TestCase):
                                              clients=mock_users_clients)
         scenario._clients.nova.flavors.list = mock.MagicMock(
                                                 return_value=flavors_list)
-        with utils.AtomicAction(scenario, "authenticate.validate_nova"):
+        with scenario_base.AtomicAction(scenario,
+                                        "authenticate.validate_nova"):
             scenario.validate_nova(5)
         self.assertEqual(scenario._clients.nova().flavors.list.call_count, 5)
 
@@ -78,7 +80,8 @@ class AuthenticateTestCase(test.TestCase):
                                              clients=mock_users_clients)
         scenario._clients.cinder.volume_types.list = mock.MagicMock(
                                                 return_value=volume_types_list)
-        with utils.AtomicAction(scenario, "authenticate.validate_cinder"):
+        with scenario_base.AtomicAction(scenario,
+                                        "authenticate.validate_cinder"):
             scenario.validate_cinder(5)
         self.assertEqual(scenario._clients.cinder().volume_types.
                          list.call_count, 5)
@@ -92,7 +95,8 @@ class AuthenticateTestCase(test.TestCase):
         scenario = authenticate.Authenticate(admin_clients=mock_admin_clients,
                                              clients=mock_users_clients)
         scenario._clients.neutron.get_auth_info = mock.MagicMock()
-        with utils.AtomicAction(scenario, "authenticate.validate_neutron"):
+        with scenario_base.AtomicAction(scenario,
+                                        "authenticate.validate_neutron"):
             scenario.validate_neutron(5)
         self.assertEqual(scenario._clients.neutron().get_auth_info.call_count,
                          5)
@@ -108,7 +112,8 @@ class AuthenticateTestCase(test.TestCase):
                                              clients=mock_users_clients)
         scenario._clients.heat.stacks.list = mock.MagicMock(
                                                 return_value=stacks_list)
-        with utils.AtomicAction(scenario, "authenticate.validate_heat"):
+        with scenario_base.AtomicAction(scenario,
+                                        "authenticate.validate_heat"):
             scenario.validate_heat(5)
         scenario._clients.heat().stacks.list.assert_called_with(limit=0)
         self.assertEqual(scenario._clients.heat().stacks.list.call_count, 5)

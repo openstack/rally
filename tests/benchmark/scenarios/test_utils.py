@@ -184,28 +184,3 @@ class ActionBuilderTestCase(test.TestCase):
         for i in range(3):
             mock_calls.append(mock.call('two', 'three', c=3, d=4))
         mock_action_two.assert_has_calls(mock_calls)
-
-
-def get_atomic_action_timer_value_by_name(atomic_actions, name):
-    for action in atomic_actions:
-        if action['action'] == name:
-            return action['duration']
-    return None
-
-
-class AtomicActionTestCase(test.TestCase):
-    def test__init__(self):
-        fake_scenario_instance = mock.MagicMock()
-        c = utils.AtomicAction(fake_scenario_instance, 'asdf')
-        self.assertEqual(c.scenario_instance, fake_scenario_instance)
-        self.assertEqual(c.name, 'asdf')
-
-    @mock.patch('rally.utils.time')
-    def test__exit__(self, mock_time):
-        fake_scenario_instance = mock.Mock()
-        self.start = mock_time.time()
-        with utils.AtomicAction(fake_scenario_instance, "asdf"):
-            pass
-        duration = mock_time.time() - self.start
-        fake_scenario_instance._add_atomic_actions.assert_called_once_with(
-                                            'asdf', duration)

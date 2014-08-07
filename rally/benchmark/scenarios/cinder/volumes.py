@@ -13,7 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from rally.benchmark.scenarios import base
+from rally.benchmark.scenarios import base as scenario_base
 from rally.benchmark.scenarios.cinder import utils
 from rally.benchmark import validation
 from rally import consts
@@ -21,7 +21,7 @@ from rally import consts
 
 class CinderVolumes(utils.CinderScenario):
 
-    @base.scenario(context={"cleanup": ["cinder"]})
+    @scenario_base.scenario(context={"cleanup": ["cinder"]})
     @validation.required_services(consts.Service.CINDER)
     def create_and_list_volume(self, size, detailed=True, **kwargs):
         """Tests creating a volume and listing volumes.
@@ -39,7 +39,7 @@ class CinderVolumes(utils.CinderScenario):
         self._create_volume(size, **kwargs)
         self._list_volumes(detailed)
 
-    @base.scenario(context={"cleanup": ["cinder"]})
+    @scenario_base.scenario(context={"cleanup": ["cinder"]})
     @validation.required_services(consts.Service.CINDER)
     def create_and_delete_volume(self, size, min_sleep=0, max_sleep=0,
                                  **kwargs):
@@ -52,7 +52,7 @@ class CinderVolumes(utils.CinderScenario):
         self.sleep_between(min_sleep, max_sleep)
         self._delete_volume(volume)
 
-    @base.scenario(context={"cleanup": ["cinder"]})
+    @scenario_base.scenario(context={"cleanup": ["cinder"]})
     @validation.required_services(consts.Service.CINDER)
     def create_volume(self, size, **kwargs):
         """Test creating volumes perfromance.

@@ -13,11 +13,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from rally.benchmark.scenarios import base
-from rally.benchmark.scenarios import utils
+from rally.benchmark.scenarios import base as scenario_base
 
 
-class SaharaScenario(base.Scenario):
+class SaharaScenario(scenario_base.Scenario):
 
     RESOURCE_NAME_LENGTH = 20
 
@@ -35,13 +34,13 @@ class SaharaScenario(base.Scenario):
         }
     }
 
-    @utils.atomic_action_timer('sahara.list_node_group_templates')
+    @scenario_base.atomic_action_timer('sahara.list_node_group_templates')
     def _list_node_group_templates(self):
         """Returns user Node Group Templates list."""
 
         return self.clients("sahara").node_group_templates.list()
 
-    @utils.atomic_action_timer(
+    @scenario_base.atomic_action_timer(
         'sahara.create_master_node_group_template')
     def _create_master_node_group_template(self, flavor_id, plugin_name,
                                            hadoop_version):
@@ -64,7 +63,7 @@ class SaharaScenario(base.Scenario):
             node_processes=self.NODE_PROCESSES[plugin_name][hadoop_version]
             ["master"])
 
-    @utils.atomic_action_timer(
+    @scenario_base.atomic_action_timer(
         'sahara.create_worker_node_group_template')
     def _create_worker_node_group_template(self, flavor_id, plugin_name,
                                            hadoop_version):
@@ -87,7 +86,7 @@ class SaharaScenario(base.Scenario):
             node_processes=self.NODE_PROCESSES[plugin_name][hadoop_version]
             ["worker"])
 
-    @utils.atomic_action_timer('sahara.delete_node_group_template')
+    @scenario_base.atomic_action_timer('sahara.delete_node_group_template')
     def _delete_node_group_template(self, node_group):
         """Deletes a Node Group Template by id.
 
