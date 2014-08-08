@@ -1,4 +1,4 @@
-#!/bin/sh -ex
+#!/bin/bash -ex
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
 # not use this file except in compliance with the License. You may obtain
@@ -30,6 +30,9 @@ if [ -d $EXTRA_DIR ]; then
  touch ~/.rally/extra/fake-image.img
 fi
 
+env
+set -o pipefail
+
 rally use deployment --name devstack
 rally deployment check
 rally show flavors
@@ -46,5 +49,3 @@ gzip -9 rally-plot/results.json
 rally task detailed > rally-plot/detailed.txt
 gzip -9 rally-plot/detailed.txt
 rally task sla_check | tee rally-plot/sla.txt
-env
-

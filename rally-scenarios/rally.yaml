@@ -308,10 +308,8 @@
         counter_type: "cumulative"
       runner:
         type: "constant"
-        times: 200
-        concurrency: 5
-      sla:
-        max_failure_percent: 0
+        times: 20
+        concurrency: 10
 
   CeilometerQueries.create_and_query_alarms:
     -
@@ -328,7 +326,7 @@
         insufficient_data_actions: ["http://localhost:8776/notok"]
       runner:
         type: "constant"
-        times: 10
+        times: 20
         concurrency: 10
       sla:
         max_failure_percent: 0
@@ -347,7 +345,7 @@
         insufficient_data_actions: ["http://localhost:8776/notok"]
       runner:
         type: "constant"
-        times: 10
+        times: 20
         concurrency: 10
       sla:
         max_failure_percent: 0
@@ -361,14 +359,12 @@
         counter_name: "cpu_util"
         counter_type: "gauge"
         counter_unit: "instance"
-        counter_volume: 1.0
+        counter_volume: "1.0"
         resource_id: "resource_id"
       runner:
         type: "constant"
-        times: 10
+        times: 20
         concurrency: 10
-      sla:
-        max_failure_percent: 0
 
   HeatStacks.create_and_list_stack:
     -
