@@ -289,28 +289,31 @@ class TaskCommands(object):
         print("\trally task results %s\n" % task["uuid"])
 
     @cliutils.args('--uuid', type=str, dest='task_id', help='uuid of task')
-    @cliutils.args('--pretty', type=str, help=('pretty print (pprint) '
-                                               'or json print (json)'))
+    @cliutils.args('--pprint', action='store_true', dest='output_pprint',
+                   help=('Output in pretty print format'))
+    @cliutils.args('--json', action='store_true', dest='output_json',
+                   help=('Output in json format(default)'))
     @envutils.with_default_task_id
-    def results(self, task_id=None, pretty=False):
+    def results(self, task_id=None, output_pprint=None, output_json=None):
         """Print raw results of task.
 
         :param task_id: Task uuid
-        :param pretty: Pretty print (pprint) or not (json)
+        :param output_pprint: Output in pretty print format
+        :param output_json: Output in json format (Default)
         """
         results = map(lambda x: {"key": x["key"], 'result': x['data']['raw']},
                       db.task_result_get_all_by_uuid(task_id))
 
         if results:
-            if not pretty or pretty == 'json':
-                print(json.dumps(results))
-            elif pretty == 'pprint':
+            if all([output_pprint, output_json]):
+                print(_('Please select only one output format'))
+                return 1
+            elif output_pprint:
                 print()
                 pprint.pprint(results)
                 print()
             else:
-                print(_("Wrong value for --pretty=%s") % pretty)
-                return(1)
+                print(json.dumps(results))
         else:
             print(_("The task %s can not be found") % task_id)
             return(1)

@@ -154,11 +154,33 @@ class DeploymentCommandsTestCase(test.TestCase):
                                                 'created_at'))
 
     @mock.patch('rally.cmd.commands.deployment.db.deployment_get')
-    def test_config(self, mock_deployment):
+    @mock.patch('json.dumps')
+    def test_config_default(self, mock_json_dumps, mock_deployment):
         deploy_id = 'fa4a423e-f15d-4d83-971a-89574f892999'
         value = {'config': 'config'}
         mock_deployment.return_value = value
         self.deployment.config(deploy_id)
+        mock_json_dumps.assert_called_once_with(value['config'])
+        mock_deployment.assert_called_once_with(deploy_id)
+
+    @mock.patch('rally.cmd.commands.deployment.db.deployment_get')
+    @mock.patch('json.dumps')
+    def test_config_json(self, mock_json_dumps, mock_deployment):
+        deploy_id = '25c5f6d3-56ce-4273-834c-1ae5e1c2599c'
+        value = {'config': 'config'}
+        mock_deployment.return_value = value
+        self.deployment.config(deploy_id, output_json=True)
+        mock_json_dumps.assert_called_once_with(value['config'])
+        mock_deployment.assert_called_once_with(deploy_id)
+
+    @mock.patch('rally.cmd.commands.deployment.db.deployment_get')
+    @mock.patch('pprint.pprint')
+    def test_config_pprint(self, mock_pprint, mock_deployment):
+        deploy_id = '840a0144-4634-46fd-8cf8-b84caa0dba67'
+        value = {'config': 'config'}
+        mock_deployment.return_value = value
+        self.deployment.config(deploy_id, output_pprint=True)
+        mock_pprint.assert_called_once_with(value['config'])
         mock_deployment.assert_called_once_with(deploy_id)
 
     @mock.patch('rally.cmd.commands.deployment.envutils.get_global')
