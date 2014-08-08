@@ -102,7 +102,19 @@ class TaskCommandsTestCase(test.TestCase):
             "id": "task",
             "uuid": test_uuid,
             "status": "status",
-            "results": [],
+            "results": [
+                {
+                    "key": {
+                        "name": "fake_name",
+                        "pos": "fake_pos",
+                        "kw": "fake_kw"
+                    },
+                    "data": {
+                        "scenario_duration": 1.0,
+                        "raw": []
+                    }
+                }
+            ],
             "failed": False
         }
         mock_db.task_get_detailed = mock.MagicMock(return_value=value)

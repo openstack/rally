@@ -197,7 +197,8 @@ class BenchmarkEngine(object):
                     target=self.consume_results,
                     args=(key, self.task, runner.result_queue, is_done))
                 consumer.start()
-                runner.run(name, kw.get("context", {}), kw.get("args", {}))
+                self.duration = runner.run(
+                        name, kw.get("context", {}), kw.get("args", {}))
                 is_done.set()
                 consumer.join()
         self.task.update_status(consts.TaskStatus.FINISHED)
@@ -216,8 +217,7 @@ class BenchmarkEngine(object):
         clients.verified_keystone()
         return self
 
-    @staticmethod
-    def consume_results(key, task, result_queue, is_done):
+    def consume_results(self, key, task, result_queue, is_done):
         """Consume scenario runner results from queue and send them to db.
 
         Has to be run from different thread simultaneously with the runner.run
@@ -238,4 +238,6 @@ class BenchmarkEngine(object):
                 break
             else:
                 time.sleep(0.1)
-        task.append_results(key, {"raw": results})
+
+        task.append_results(key, {"raw": results,
+                                  "scenario_duration": self.duration})

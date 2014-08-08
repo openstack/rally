@@ -246,7 +246,7 @@ class ScenarioRunnerTestCase(test.TestCase):
             }
         }
 
-        expected = [context_obj, runner._run_scenario, cls,
+        expected = [context_obj, runner._wrap_run_scenario, cls,
                     method_name, config_kwargs]
         mock_ctx_manager.run.assert_called_once_with(*expected)
 

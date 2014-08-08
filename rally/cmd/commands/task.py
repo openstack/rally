@@ -198,6 +198,7 @@ class TaskCommands(object):
             print("args values:")
             pprint.pprint(key["kw"])
 
+            scenario_time = result["data"]["scenario_duration"]
             raw = result["data"]["raw"]
             table_cols = ["action", "min (sec)", "avg (sec)", "max (sec)",
                           "90 percentile", "95 percentile", "success",
@@ -234,6 +235,9 @@ class TaskCommands(object):
 
             if iterations_data:
                 _print_iterations_data(raw)
+
+            print(_("Whole scenario time without context preparation: "),
+                  scenario_time)
 
             # NOTE(hughsaunders): ssrs=scenario specific results
             ssrs = []
@@ -330,7 +334,10 @@ class TaskCommands(object):
                    help='Open it in browser.')
     @envutils.with_default_task_id
     def plot2html(self, task_id=None, out=None, open_it=False):
-        results = map(lambda x: {"key": x["key"], 'result': x['data']['raw']},
+        results = map(lambda x: {
+                                 "key": x["key"],
+                                 'result': x['data']['raw']
+                                },
                       db.task_result_get_all_by_uuid(task_id))
 
         output_file = out or ("%s.html" % task_id)
