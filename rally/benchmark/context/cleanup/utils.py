@@ -39,6 +39,11 @@ def delete_heat_resources(heat):
     delete_stacks(heat)
 
 
+def delete_admin_quotas(client, tenants):
+    for tenant in tenants:
+        delete_quotas(client, tenant["id"])
+
+
 def delete_keystone_resources(keystone):
     keystone = keystone_wrapper.wrap(keystone)
     for resource in ["user", "project", "service", "role"]:
