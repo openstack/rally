@@ -163,8 +163,7 @@ class BenchmarkEngineTestCase(test.TestCase):
         eng._validate_config_semantic_helper("admin", "user", "name", "pos",
                                              task, {"args": "args"})
         mock_validate.assert_called_once_with(
-            "name", "args", admin="admin", users=["user"],
-            task=task)
+            "name", {"args": "args"}, admin="admin", users=["user"], task=task)
 
     @mock.patch("rally.benchmark.engine.base_scenario.Scenario.validate")
     def test__validate_config_semanitc_helper_invalid_arg(self, mock_validate):

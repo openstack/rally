@@ -56,8 +56,7 @@ class ValidationUtilsTestCase(test.TestCase):
         validators = wrap_validator.validators
         self.assertEqual(1, len(validators))
         validator, = validators
-        self.assertEqual({"args": tuple(wrap_args), "kwargs": wrap_kwargs},
-                         validator())
+        self.assertEqual(wrap_kwargs, validator(None, None, None))
         self.assertEqual(wrap_validator, scenario)
 
         # Default permission
@@ -74,12 +73,12 @@ class ValidationUtilsTestCase(test.TestCase):
         # Default result
         func_success = lambda *a, **kv: None
         validator, = self._get_scenario_validators(func_success, scenario)
-        self.assertTrue(validator().is_valid)
+        self.assertTrue(validator(None, None, None).is_valid)
 
         # Failure result
         func_failure = lambda *a, **kv: failure
         validator, = self._get_scenario_validators(func_failure, scenario)
-        self.assertFalse(validator().is_valid)
+        self.assertFalse(validator(None, None, None).is_valid)
 
     def test_required_services(self):
         available_services = {
@@ -94,7 +93,7 @@ class ValidationUtilsTestCase(test.TestCase):
         required_services = (lambda *services:
                              validation.required_services(*services)
                              (lambda: None).validators.pop()
-                             (clients=clients))
+                             (None, clients, None))
 
         # Services are available
         result = required_services(consts.Service.KEYSTONE)
@@ -138,76 +137,94 @@ class ValidationUtilsTestCase(test.TestCase):
     def test_number_invalid(self):
         validator = validation.number('param', 0, 10, nullable=False)
 
-        result = validator(param=-1)
+        config = {"args": {"param": -1}}
+        result = validator(config, None, None)
         self.assertFalse(result.is_valid)
 
-        result = validator(param=11)
+        config = {"args": {"param": 11}}
+        result = validator(config, None, None)
         self.assertFalse(result.is_valid)
 
-        result = validator(param="not an int")
+        config = {"args": {"param": "not an int"}}
+        result = validator(config, None, None)
         self.assertFalse(result.is_valid)
 
-        result = validator(param=None)
+        config = {"args": {"param": None}}
+        result = validator(config, None, None)
         self.assertFalse(result.is_valid)
 
-        result = validator()
+        config = {"args": {}}
+        result = validator(config, None, None)
         self.assertFalse(result.is_valid)
 
-        result = validator(param=-0.1)
+        config = {"args": {"param": -0.1}}
+        result = validator(config, None, None)
         self.assertFalse(result.is_valid)
 
     def test_number_integer_only(self):
         validator = validation.number('param', 0, 10, nullable=False,
                                       integer_only=True)
-        result = validator(param="5.0")
+        config = {"args": {"param": "5.0"}}
+        result = validator(config, None, None)
         self.assertFalse(result.is_valid)
 
         validator = validation.number('param', 0, 10, nullable=False,
                                       integer_only=False)
-        result = validator(param="5.0")
+        config = {"args": {"param": "5.0"}}
+        result = validator(config, None, None)
         self.assertTrue(result.is_valid)
 
     def test_number_valid(self):
         validator = validation.number('param', 0, 10, nullable=False)
 
-        result = validator(param=0)
+        config = {"args": {"param": 0}}
+        result = validator(config, None, None)
         self.assertTrue(result.is_valid)
 
-        result = validator(param=10)
+        config = {"args": {"param": 10}}
+        result = validator(config, None, None)
         self.assertTrue(result.is_valid)
 
-        result = validator(param=10.0)
+        config = {"args": {"param": 10.0}}
+        result = validator(config, None, None)
         self.assertTrue(result.is_valid)
 
-        result = validator(param=5.6)
+        config = {"args": {"param": 5.6}}
+        result = validator(config, None, None)
         self.assertTrue(result.is_valid)
 
     def test_number_nullable(self):
         validator = validation.number('param', 0, 10, nullable=True)
 
-        result = validator(param=None)
+        config = {"args": {"param": None}}
+        result = validator(config, None, None)
         self.assertTrue(result.is_valid)
 
-        result = validator()
+        config = {"args": {}}
+        result = validator(config, None, None)
         self.assertTrue(result.is_valid)
 
-        result = validator(param=-1)
+        config = {"args": {"param": -1}}
+        result = validator(config, None, None)
         self.assertFalse(result.is_valid)
 
-        result = validator(param=0)
+        config = {"args": {"param": 0}}
+        result = validator(config, None, None)
         self.assertTrue(result.is_valid)
 
     @mock.patch("os.access")
     def test_file_exists(self, mock_access):
         validator = validation.file_exists('param')
-        result = validator(param='/tmp/foo')
+        config = {"args": {"param": "/tmp/foo"}}
+        result = validator(config, None, None)
         mock_access.assert_called_once_with('/tmp/foo', os.R_OK)
         self.assertTrue(result.is_valid)
 
     @mock.patch("os.access", return_value=False)
     def test_file_exists_negative(self, mock_access):
         validator = validation.file_exists('param')
-        result = validator(param='/tmp/bah')
+        config = {"args": {"param": "/tmp/bah"}}
+        result = validator(config, None, None)
         mock_access.assert_called_with('/tmp/bah', os.R_OK)
         self.assertFalse(result.is_valid)
 
@@ -219,8 +236,8 @@ class ValidationUtilsTestCase(test.TestCase):
         validator = validation.image_exists("image")
         test_img_id = "test_image_id"
         resource = {"id": test_img_id}
-        result = validator(clients=mock_osclients,
-                           image=resource)
+        config = {"args": {"image": resource}}
+        result = validator(config, clients=mock_osclients, task=None)
         fakegclient.images.get.assert_called_once_with(image=test_img_id)
         self.assertTrue(result.is_valid)
         self.assertIsNone(result.msg)
@@ -234,8 +251,8 @@ class ValidationUtilsTestCase(test.TestCase):
         validator = validation.image_exists("image")
         test_img_id = "test_image_id"
         resource = {"id": test_img_id}
-        result = validator(clients=mock_osclients,
-                           image=resource)
+        config = {"args": {"image": resource}}
+        result = validator(config, clients=mock_osclients, task=None)
         fakegclient.images.get.assert_called_once_with(image=test_img_id)
         self.assertFalse(result.is_valid)
         self.assertIsNotNone(result.msg)
@@ -248,8 +265,8 @@ class ValidationUtilsTestCase(test.TestCase):
         validator = validation.flavor_exists("flavor")
         test_flavor_id = 1
         resource = {"id": test_flavor_id}
-        result = validator(clients=mock_osclients,
-                           flavor=resource)
+        config = {"args": {"flavor": resource}}
+        result = validator(config, clients=mock_osclients, task=None)
         fakenclient.flavors.get.assert_called_once_with(flavor=test_flavor_id)
         self.assertTrue(result.is_valid)
         self.assertIsNone(result.msg)
@@ -263,8 +280,8 @@ class ValidationUtilsTestCase(test.TestCase):
         validator = validation.flavor_exists("flavor")
         test_flavor_id = 101
         resource = {"id": test_flavor_id}
-        result = validator(clients=mock_osclients,
-                           flavor=resource)
+        config = {"args": {"flavor": resource}}
+        result = validator(config, clients=mock_osclients, task=None)
         fakenclient.flavors.get.assert_called_once_with(flavor=test_flavor_id)
         self.assertFalse(result.is_valid)
         self.assertIsNotNone(result.msg)
@@ -288,9 +305,9 @@ class ValidationUtilsTestCase(test.TestCase):
 
         validator = validation.image_valid_on_flavor("flavor", "image")
 
-        result = validator(clients=mock_osclients,
-                           flavor={"id": flavor.id},
-                           image={"id": image.id})
+        config = {"args": {"image": {"id": image.id},
+                           "flavor": {"id": flavor.id}}}
+        result = validator(config, clients=mock_osclients, task=None)
 
         fakenclient.flavors.get.assert_called_once_with(flavor=flavor.id)
         fakegclient.images.get.assert_called_once_with(image=image.id)
@@ -317,9 +334,9 @@ class ValidationUtilsTestCase(test.TestCase):
 
         validator = validation.image_valid_on_flavor("flavor", "image")
 
-        result = validator(clients=mock_osclients,
-                           flavor={"id": flavor.id},
-                           image={"id": image.id})
+        config = {"args": {"image": {"id": image.id},
+                           "flavor": {"id": flavor.id}}}
+        result = validator(config, clients=mock_osclients, task=None)
 
         fakenclient.flavors.get.assert_called_once_with(flavor=flavor.id)
         fakegclient.images.get.assert_called_once_with(image=image.id)
@@ -346,9 +363,9 @@ class ValidationUtilsTestCase(test.TestCase):
 
         validator = validation.image_valid_on_flavor("flavor", "image")
 
-        result = validator(clients=mock_osclients,
-                           flavor={"id": flavor.id},
-                           image={"id": image.id})
+        config = {"args": {"image": {"id": image.id},
+                           "flavor": {"id": flavor.id}}}
+        result = validator(config, clients=mock_osclients, task=None)
 
         fakenclient.flavors.get.assert_called_once_with(flavor=flavor.id)
         fakegclient.images.get.assert_called_once_with(image=image.id)
@@ -376,9 +393,9 @@ class ValidationUtilsTestCase(test.TestCase):
 
         validator = validation.image_valid_on_flavor("flavor", "image")
 
-        result = validator(clients=mock_osclients,
-                           flavor={"id": flavor.id},
-                           image={"id": image.id})
+        config = {"args": {"image": {"id": image.id},
+                           "flavor": {"id": flavor.id}}}
+        result = validator(config, clients=mock_osclients, task=None)
 
         fakenclient.flavors.get.assert_called_once_with(flavor=flavor.id)
         fakegclient.images.get.assert_called_once_with(image=image.id)
@@ -405,9 +422,9 @@ class ValidationUtilsTestCase(test.TestCase):
 
         validator = validation.image_valid_on_flavor("flavor", "image")
 
-        result = validator(clients=mock_osclients,
-                           flavor={"id": flavor.id},
-                           image={"id": image.id})
+        config = {"args": {"image": {"id": image.id},
+                           "flavor": {"id": flavor.id}}}
+        result = validator(config, clients=mock_osclients, task=None)
 
         fakenclient.flavors.get.assert_called_once_with(flavor=flavor.id)
         fakegclient.images.get.assert_called_once_with(image=image.id)
@@ -430,9 +447,9 @@ class ValidationUtilsTestCase(test.TestCase):
 
         test_img_id = "test_image_id"
 
-        result = validator(clients=mock_osclients,
-                           flavor={"id": flavor.id},
-                           image={"id": test_img_id})
+        config = {"args": {"flavor": {"id": flavor.id},
+                           "image": {"id": test_img_id}}}
+        result = validator(config, clients=mock_osclients, task=None)
 
         fakenclient.flavors.get.assert_called_once_with(flavor=flavor.id)
         fakegclient.images.get.assert_called_once_with(image=test_img_id)
@@ -454,8 +471,8 @@ class ValidationUtilsTestCase(test.TestCase):
 
         network_name = "private"
 
-        result = validator(clients=mock_osclients,
-                           fixed_network=network_name)
+        config = {"args": {"fixed_network": network_name}}
+        result = validator(config, clients=mock_osclients, task=None)
 
         fakenclient.networks.list.assert_called_once_with()
         self.assertTrue(result.is_valid)
@@ -476,8 +493,8 @@ class ValidationUtilsTestCase(test.TestCase):
 
         network_name = "foo"
 
-        result = validator(clients=mock_osclients,
-                           fixed_network=network_name)
+        config = {"args": {"fixed_network": network_name}}
+        result = validator(config, clients=mock_osclients, task=None)
 
         fakenclient.networks.list.assert_called_once_with()
         self.assertFalse(result.is_valid)
@@ -499,8 +516,8 @@ class ValidationUtilsTestCase(test.TestCase):
 
         network_name = "floating"
 
-        result = validator(clients=mock_osclients,
-                           floating_network=network_name)
+        config = {"args": {"floating_network": network_name}}
+        result = validator(config, clients=mock_osclients, task=None)
 
         fakenclient.floating_ip_pools.list.assert_called_once_with()
         self.assertTrue(result.is_valid)
@@ -520,9 +537,9 @@ class ValidationUtilsTestCase(test.TestCase):
 
         network_name = "not_used"
 
-        result = validator(clients=mock_osclients,
-                           floating_network=network_name,
-                           use_floatingip=False)
+        config = {"args": {"floating_network": network_name,
+                           "use_floatingip": False}}
+        result = validator(config, clients=mock_osclients, task=None)
 
         self.assertFalse(fakenclient.floating_ip_pools.list.called)
         self.assertTrue(result.is_valid)
@@ -542,8 +559,8 @@ class ValidationUtilsTestCase(test.TestCase):
 
         network_name = "foo"
 
-        result = validator(clients=mock_osclients,
-                           floating_network=network_name)
+        config = {"args": {"floating_network": network_name}}
+        result = validator(config, clients=mock_osclients, task=None)
 
         fakenclient.floating_ip_pools.list.assert_called_once_with()
         self.assertFalse(result.is_valid)
@@ -566,9 +583,9 @@ class ValidationUtilsTestCase(test.TestCase):
         test_img_id = "test_image_id"
         test_flavor_id = 101
 
-        result = validator(clients=mock_osclients,
-                           flavor={"id": test_flavor_id},
-                           image={"id": test_img_id})
+        config = {"args": {"flavor": {"id": test_flavor_id},
+                           "image": {"id": test_img_id}}}
+        result = validator(config, clients=mock_osclients, task=None)
 
         fakenclient.flavors.get.assert_called_once_with(flavor=test_flavor_id)
 
@@ -700,5 +717,6 @@ class ValidationUtilsTestCase(test.TestCase):
 
     def test_required_parameters(self):
         validator = validation.required_parameters("test1")
-        result = validator(task=mock.MagicMock())
+        config = {"args": {}}
+        result = validator(config, clients=None, task=mock.MagicMock())
         self.assertFalse(result.is_valid)

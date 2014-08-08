@@ -50,12 +50,12 @@ class ScenarioTestCase(test.TestCase):
             mock.MagicMock(return_value=validation.ValidationResult())
         ]
         clients = mock.MagicMock()
-        args = {"a": 1, "b": 2}
+        config = {"a": 1, "b": 2}
         task = mock.MagicMock()
         scenario_base.Scenario._validate_helper(validators, clients,
-                                                args, task)
+                                                config, task)
         for validator in validators:
-            validator.assert_called_with(clients=clients, task=task, **args)
+            validator.assert_called_with(config, clients=clients, task=task)
 
     def test__validate_helper__no_valid(self):
         validators = [

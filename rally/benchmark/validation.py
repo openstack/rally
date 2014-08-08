@@ -41,10 +41,17 @@ def validator(fn):
     :returns: rally scenario validator
     """
     def wrap_given(*args, **kwargs):
-        def wrap_validator(**options):
-            options.update({"args": args, "kwargs": kwargs})
+        """Dynamic validation decorator for scenario.
+
+        :param args: the arguments of the decorator of the benchmark scenario
+        ex. @my_decorator("arg1"), then args = ('arg1',)
+        :param kwargs: the keyword arguments of the decorator of the scenario
+        ex. @my_decorator(kwarg1="kwarg1"), then kwargs = {"kwarg1": "kwarg1"}
+        """
+        def wrap_validator(config, clients, task):
             # NOTE(amaretskiy): validator is successful by default
-            return fn(*args, **options) or ValidationResult()
+            return (fn(config, clients, task, *args, **kwargs) or
+                    ValidationResult())
 
         def wrap_scenario(scenario):
             # NOTE(amaretskiy): user permission by default
@@ -95,13 +102,13 @@ def number(param_name=None, minval=None, maxval=None, nullable=False,
     :param integer_only: Only accept integers
     """
 
-    def number_validator(**kwargs):
+    def number_validator(config, clients, task):
 
         num_func = float
         if integer_only:
             num_func = int
 
-        val = kwargs.get(param_name, None)
+        val = config.get("args", {}).get(param_name)
 
         # None may be valid if the scenario sets a sensible default.
         if nullable and val is None:
@@ -153,8 +160,8 @@ def file_exists(param_name, mode=os.R_OK):
             mode=os.R_OK+os.W_OK
     """
 
-    def file_exists_validator(**kwargs):
-        file_name = kwargs.get(param_name)
+    def file_exists_validator(config, clients, task):
+        file_name = config.get("args", {}).get(param_name)
         if os.access(file_name, mode):
             return ValidationResult()
         else:
@@ -173,11 +180,10 @@ def image_exists(param_name):
     :param param_name: defines which variable should be used
                        to get image id value.
     """
-    def image_exists_validator(**kwargs):
-        clients = kwargs.get('clients')
+    def image_exists_validator(config, clients, task):
         image_id = types.ImageResourceType.transform(
             clients=clients,
-            resource_config=kwargs.get(param_name))
+            resource_config=config.get("args", {}).get(param_name))
         try:
             clients.glance().images.get(image=image_id)
             return ValidationResult()
@@ -193,11 +199,10 @@ def flavor_exists(param_name):
     :param param_name: defines which variable should be used
                        to get flavor id value.
     """
-    def flavor_exists_validator(**kwargs):
-        clients = kwargs.get('clients')
+    def flavor_exists_validator(config, clients, task):
         flavor_id = types.FlavorResourceType.transform(
             clients=clients,
-            resource_config=kwargs.get(param_name))
+            resource_config=config.get("args", {}).get(param_name))
         try:
             clients.nova().flavors.get(flavor=flavor_id)
             return ValidationResult()
@@ -216,12 +221,10 @@ def image_valid_on_flavor(flavor_name, image_name):
                        to get image id value.
 
     """
-    def image_valid_on_flavor_validator(**kwargs):
-        clients = kwargs.get('clients')
-
+    def image_valid_on_flavor_validator(config, clients, task):
         flavor_id = types.FlavorResourceType.transform(
             clients=clients,
-            resource_config=kwargs.get(flavor_name))
+            resource_config=config.get("args", {}).get(flavor_name))
         try:
             flavor = clients.nova().flavors.get(flavor=flavor_id)
         except nova_exc.NotFound:
@@ -230,7 +233,7 @@ def image_valid_on_flavor(flavor_name, image_name):
 
         image_id = types.ImageResourceType.transform(
             clients=clients,
-            resource_config=kwargs.get(image_name))
+            resource_config=config.get("args", {}).get(image_name))
         try:
             image = clients.glance().images.get(image=image_id)
         except glance_exc.HTTPNotFound:
@@ -257,11 +260,11 @@ def image_valid_on_flavor(flavor_name, image_name):
 
 
 def network_exists(network_name):
-    def network_exists_validator(**kwargs):
-        network = kwargs.get(network_name, "private")
+    def network_exists_validator(config, clients, task):
+        network = config.get("args", {}).get(network_name, "private")
 
         networks = [net.label for net in
-                    kwargs["clients"].nova().networks.list()]
+                    clients.nova().networks.list()]
         if network not in networks:
             message = _("Network with name %(network)s not found. "
                         "Available networks: %(networks)s") % {
@@ -275,14 +278,14 @@ def network_exists(network_name):
 
 
 def external_network_exists(network_name, use_external_network):
-    def external_network_exists_validator(**kwargs):
-        if not kwargs.get(use_external_network, True):
+    def external_network_exists_validator(config, clients, task):
+        if not config.get("args", {}).get(use_external_network, True):
             return ValidationResult()
 
-        ext_network = kwargs.get(network_name, "public")
+        ext_network = config.get("args", {}).get(network_name, "public")
 
         networks = [net.name for net in
-                    kwargs["clients"].nova().floating_ip_pools.list()]
+                    clients.nova().floating_ip_pools.list()]
         if ext_network not in networks:
             message = _("External (floating) network with name %(network)s "
                         "not found. "
@@ -345,8 +348,8 @@ def required_parameters(params):
 
     :param params: list of required parameters
     """
-    def required_parameters_validator(**kwargs):
-        missing = set(params) - set(kwargs)
+    def required_parameters_validator(config, clients, task):
+        missing = set(params) - set(config.get("args", {}))
         if missing:
             message = _("%s parameters are not defined in "
                         "the benchmark config file") % ", ".join(missing)
@@ -356,13 +359,13 @@ def required_parameters(params):
 
 
 @validator
-def required_services(*args, **kwargs):
+def required_services(config, clients, task, *required_services):
     """Check if specified services are available.
 
     :param args: list of servives names
     """
-    available_services = kwargs.get("clients").services().values()
-    for service in args:
+    available_services = clients.services().values()
+    for service in required_services:
         if service not in consts.Service:
             return ValidationResult(False, _("Unknown service: %s") % service)
         if service not in available_services:

@@ -110,7 +110,8 @@ class InvalidBenchmarkConfig(InvalidTaskException):
     msg_fmt = _("Task config is invalid.\n"
                 "\tBenchmark %(name)s has wrong configuration at"
                 " position %(pos)s"
-                "\n\tReason: %(reason)s")
+                "\n\tReason: %(reason)s"
+                "\n\tBenchmark configuration: %(config)s")
 
 
 class TestException(RallyException):

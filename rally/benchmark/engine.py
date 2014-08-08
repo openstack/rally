@@ -125,17 +125,16 @@ class BenchmarkEngine(object):
 
     def _validate_config_semantic_helper(self, admin, user, name, pos,
                                          task, kwargs):
-        args = {} if not kwargs else kwargs.get("args", {})
         context = {} if not kwargs else kwargs.get("context", {})
 
         try:
-            base_scenario.Scenario.validate(name, args, admin=admin,
+            base_scenario.Scenario.validate(name, kwargs, admin=admin,
                                             users=[user], task=task)
             base_ctx.ContextManager.validate_semantic(context, admin=admin,
                                                       users=[user], task=task)
         except exceptions.InvalidScenarioArgument as e:
             kw = {"name": name, "pos": pos,
-                  "args": args, "reason": six.text_type(e)}
+                  "config": kwargs, "reason": six.text_type(e)}
             raise exceptions.InvalidBenchmarkConfig(**kw)
 
     @rutils.log_task_wrapper(LOG.info, _("Task validation of semantic."))

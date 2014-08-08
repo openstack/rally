@@ -99,14 +99,14 @@ class Scenario(object):
         return benchmark_scenarios_flattened
 
     @staticmethod
-    def _validate_helper(validators, clients, args, task):
+    def _validate_helper(validators, clients, config, task):
         for validator in validators:
-            result = validator(clients=clients, task=task, **args)
+            result = validator(config, clients=clients, task=task)
             if not result.is_valid:
                 raise exceptions.InvalidScenarioArgument(message=result.msg)
 
     @classmethod
-    def validate(cls, name, args, admin=None, users=None, task=None):
+    def validate(cls, name, config, admin=None, users=None, task=None):
         """Semantic check of benchmark arguments."""
         validators = cls.meta(name, "validators", default=[])
 
@@ -121,10 +121,10 @@ class Scenario(object):
         # NOTE(boris-42): Potential bug, what if we don't have "admin" client
         #                 and scenario have "admin" validators.
         if admin:
-            cls._validate_helper(admin_validators, admin, args, task)
+            cls._validate_helper(admin_validators, admin, config, task)
         if users:
             for user in users:
-                cls._validate_helper(user_validators, user, args, task)
+                cls._validate_helper(user_validators, user, config, task)
 
     @staticmethod
     def meta(cls, attr_name, method_name=None, default=None):
