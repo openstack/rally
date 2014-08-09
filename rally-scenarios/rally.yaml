@@ -790,6 +790,7 @@
             name: "m1.tiny"
         image:
             name: "cirros-0.3.2-x86_64-uec"
+        auto_assign_nics: false
       runner:
         type: "constant"
         times: 4

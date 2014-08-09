@@ -13,8 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import random
-
 import jsonschema
 
 from rally.benchmark.scenarios import base
@@ -142,33 +140,24 @@ class NovaServers(utils.NovaScenario,
     @validation.add(validation.image_valid_on_flavor("flavor", "image"))
     @base.scenario(context={"cleanup": ["nova"]})
     @validation.required_services(consts.Service.NOVA)
-    def boot_server(self, image, flavor, **kwargs):
+    def boot_server(self, image, flavor, auto_assign_nic=False, **kwargs):
         """Test VM boot - assumed clean-up is done elsewhere."""
-        if 'nics' not in kwargs:
-            nets = self.clients("nova").networks.list()
-            if nets:
-                random_nic = random.choice(nets)
-                kwargs['nics'] = [{'net-id': random_nic.id}]
-        self._boot_server(
-            self._generate_random_name(), image, flavor, **kwargs)
+        server_name = self._generate_random_name()
+        self._boot_server(server_name, image, flavor, auto_assign_nic,
+                          **kwargs)
 
     @types.set(image=types.ImageResourceType,
                flavor=types.FlavorResourceType)
     @validation.add(validation.image_valid_on_flavor("flavor", "image"))
     @base.scenario(context={"cleanup": ["nova", "cinder"]})
     @validation.required_services(consts.Service.NOVA, consts.Service.CINDER)
-    def boot_server_from_volume(self, image, flavor,
-                                volume_size, **kwargs):
+    def boot_server_from_volume(self, image, flavor, volume_size,
+                                auto_assign_nic=False, **kwargs):
         """Test VM boot from volume - assumed clean-up is done elsewhere."""
-        if 'nics' not in kwargs:
-            nets = self.clients("nova").networks.list()
-            if nets:
-                random_nic = random.choice(nets)
-                kwargs['nics'] = [{'net-id': random_nic.id}]
         volume = self._create_volume(volume_size, imageRef=image)
         block_device_mapping = {'vda': '%s:::1' % volume.id}
         self._boot_server(self._generate_random_name(),
-                          image, flavor,
+                          image, flavor, auto_assign_nic,
                           block_device_mapping=block_device_mapping,
                           **kwargs)
 

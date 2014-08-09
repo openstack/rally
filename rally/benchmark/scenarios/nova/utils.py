@@ -74,7 +74,8 @@ class NovaScenario(base.Scenario):
         return self.clients("nova").servers.list(detailed)
 
     @base.atomic_action_timer('nova.boot_server')
-    def _boot_server(self, server_name, image_id, flavor_id, **kwargs):
+    def _boot_server(self, server_name, image_id, flavor_id,
+                     auto_assign_nic=False, **kwargs):
         """Boots one server.
 
         Returns when the server is actually booted and is in the "Active"
@@ -86,6 +87,7 @@ class NovaScenario(base.Scenario):
         :param server_name: String used to name the server
         :param image_id: ID of the image to be used for server creation
         :param flavor_id: ID of the flavor to be used for server creation
+        :param auto_assign_nic: Boolean for whether or not to assign NICs
         :param **kwargs: Other optional parameters to initialize the server
 
         :returns: Created server object
@@ -97,15 +99,19 @@ class NovaScenario(base.Scenario):
             elif allow_ssh_secgroup not in kwargs['security_groups']:
                 kwargs['security_groups'].append(allow_ssh_secgroup)
 
-        nets = self.clients("nova").networks.list()
-        fip_pool = [
-                    pool.name
-                    for pool in self.clients("nova").floating_ip_pools.list()
-                   ]
-        for net in nets:
-            if net.label not in fip_pool:
-                kwargs['nics'] = [{'net-id': net.id}]
-                break
+        nics = kwargs.get('nics', False)
+
+        if auto_assign_nic and nics is False:
+            nets = self.clients("nova").networks.list()
+            fip_pool = [
+                        pool.name
+                        for pool in
+                        self.clients("nova").floating_ip_pools.list()
+                       ]
+            for net in nets:
+                if net.label not in fip_pool:
+                    kwargs['nics'] = [{'net-id': net.id}]
+                    break
 
         server = self.clients("nova").servers.create(server_name, image_id,
                                                      flavor_id, **kwargs)
