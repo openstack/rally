@@ -518,8 +518,8 @@
         max_quota: 1024
       runner:
         type: "constant"
-        times: 10
-        concurrency: 2
+        times: 4
+        concurrency: 1
       context:
         users:
           tenants: 3
