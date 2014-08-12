@@ -19,6 +19,7 @@ import mock
 
 from rally.benchmark.context import base
 from rally import exceptions
+from rally import utils
 from tests import fakes
 from tests import test
 
@@ -106,37 +107,30 @@ class BaseContextTestCase(test.TestCase):
 
         ctx.cleanup.assert_called_once_with()
 
+    def test_all_context_have_ctxt_order(self):
+        for cls in utils.itersubclasses(base.Context):
+            self.assertNotEqual(cls.get_order(), 0, str(cls))
+
+    def test_all_context_have_ctxt_name(self):
+        for cls in utils.itersubclasses(base.Context):
+            self.assertNotEqual(cls.get_name(), "base", str(cls))
+
+    def test_lt(self):
+        self.assertTrue(base.Context < fakes.FakeContext)
+        self.assertFalse(fakes.FakeContext < base.Context)
+        self.assertFalse(base.Context < base.Context)
+
+    def test_gt(self):
+        self.assertTrue(fakes.FakeContext > base.Context)
+        self.assertFalse(base.Context > fakes.FakeContext)
+        self.assertFalse(base.Context > base.Context)
+
+    def test_eq(self):
+        self.assertFalse(base.Context == fakes.FakeContext)
+        self.assertTrue(base.Context == base.Context)
+
 
 class ContextManagerTestCase(test.TestCase):
-
-    @mock.patch("rally.benchmark.context.base.ContextManager._magic")
-    @mock.patch("rally.benchmark.context.base.Context.get_by_name")
-    def test_run(self, mock_get, mock_magic):
-        context = {
-            "config": {
-                "a": mock.MagicMock(),
-                "b": mock.MagicMock()
-            }
-        }
-
-        cc = mock.MagicMock()
-        cc.__ctx_order__ = 10
-        mock_get.return_value = cc
-
-        mock_magic.return_value = 5
-
-        result = base.ContextManager.run(context, lambda x, y: x + y, type,
-                                         "fake_method", {"fake": "value"})
-        self.assertEqual(result, 5)
-
-        mock_get.assert_has_calls([
-            mock.call("a"),
-            mock.call("b"),
-        ], any_order=True)
-        mock_get.assert_has_calls([
-            mock.call()(context),
-            mock.call()(context),
-        ], any_order=True)
 
     @mock.patch("rally.benchmark.context.base.Context.get_by_name")
     def test_validate(self, mock_get):
@@ -188,20 +182,73 @@ class ContextManagerTestCase(test.TestCase):
         self.assertRaises(exceptions.NoSuchContext,
                           base.ContextManager.validate, config)
 
-    def test__magic(self):
-        func = lambda x, y: x + y
+    @mock.patch("rally.benchmark.context.base.Context.get_by_name")
+    def test_setup(self, mock_get_by_name):
+        mock_context = mock.MagicMock()
+        mock_get_by_name.return_value = mock_context
+        ctx_object = {"config": {"a": [], "b": []}}
 
-        result = base.ContextManager._magic([], func, 2, 3)
-        self.assertEqual(result, 5)
+        manager = base.ContextManager(ctx_object)
+        result = manager.setup()
 
-    def test__magic_with_ctx(self):
-        ctx = [mock.MagicMock(), mock.MagicMock()]
-        func = lambda x, y: x + y
+        self.assertEqual(result, ctx_object)
+        mock_get_by_name.assert_has_calls([mock.call("a"), mock.call("b")])
+        mock_context.assert_has_calls([mock.call(ctx_object),
+                                       mock.call(ctx_object)])
+        self.assertEqual([mock_context(), mock_context()], manager._visited)
+        mock_context.return_value.assert_has_calls([mock.call.setup(),
+                                                    mock.call.setup()])
 
-        result = base.ContextManager._magic(ctx, func, 2, 3)
-        self.assertEqual(result, 5)
+    @mock.patch("rally.benchmark.context.base.Context.get_by_name")
+    def test_cleanup(self, mock_get_by_name):
+        mock_context = mock.MagicMock()
+        mock_get_by_name.return_value = mock_context
+        ctx_object = {"config": {"a": [], "b": []}}
 
-        expected = [mock.call.__enter__(), mock.call.setup(),
-                    mock.call.__exit__(None, None, None)]
-        for c in ctx:
-            ctx[0].assert_has_calls(expected)
+        manager = base.ContextManager(ctx_object)
+        manager.cleanup()
+        mock_get_by_name.assert_has_calls([mock.call("a"), mock.call("b")])
+        mock_context.assert_has_calls([mock.call(ctx_object),
+                                       mock.call(ctx_object)])
+        mock_context.return_value.assert_has_calls([mock.call.cleanup(),
+                                                    mock.call.cleanup()])
+
+    @mock.patch("rally.benchmark.context.base.Context.get_by_name")
+    def test_cleanp_exception(self, mock_get_by_name):
+        mock_context = mock.MagicMock()
+        mock_context.cleanup.side_effect = Exception()
+        mock_get_by_name.return_value = mock_context
+        ctx_object = {"config": {"a": [], "b": []}}
+        manager = base.ContextManager(ctx_object)
+        manager.cleanup()
+
+        mock_get_by_name.assert_has_calls([mock.call("a"), mock.call("b")])
+        mock_context.assert_has_calls([mock.call(ctx_object),
+                                       mock.call(ctx_object)])
+        mock_context.return_value.assert_has_calls([mock.call.cleanup(),
+                                                    mock.call.cleanup()])
+
+    @mock.patch("rally.benchmark.context.base.ContextManager.cleanup")
+    @mock.patch("rally.benchmark.context.base.ContextManager.setup")
+    def test_with_statement(self, mock_setup, mock_cleanup):
+        with base.ContextManager(mock.MagicMock()):
+            mock_setup.assert_called_once_with()
+            mock_setup.reset_mock()
+            self.assertFalse(mock_cleanup.called)
+        self.assertFalse(mock_setup.called)
+        mock_cleanup.assert_called_once_with()
+
+    @mock.patch("rally.benchmark.context.base.ContextManager.cleanup")
+    @mock.patch("rally.benchmark.context.base.ContextManager.setup")
+    def test_with_statement_excpetion_during_setup(self, mock_setup,
+                                                   mock_cleanup):
+        mock_setup.side_effect = Exception("abcdef")
+
+        try:
+            with base.ContextManager(mock.MagicMock()):
+                pass
+        except Exception:
+            pass
+        finally:
+            mock_setup.assert_called_once_with()
+            mock_cleanup.assert_called_once_with()

@@ -197,13 +197,6 @@ class ScenarioRunner(object):
                   where each result is a dictionary
         """
 
-    def _wrap_run_scenario(self, cls, method_name, context, args):
-        """Whole scenario time measurement without context preparation."""
-
-        with rutils.Timer() as timer:
-            self._run_scenario(cls, method_name, context, args)
-        return timer.duration()
-
     def run(self, name, context, args):
         cls_name, method_name = name.split(".", 1)
         cls = scenario_base.Scenario.get_by_name(cls_name)
@@ -225,9 +218,10 @@ class ScenarioRunner(object):
 
         args = cls.preprocess(method_name, context_obj, args)
 
-        return base_ctx.ContextManager.run(context_obj,
-                                           self._wrap_run_scenario,
-                                           cls, method_name, args)
+        with base_ctx.ContextManager(context_obj):
+            with rutils.Timer() as timer:
+                self._run_scenario(cls, method_name, context_obj, args)
+            return timer.duration()
 
     def _send_result(self, result):
         """Send partial result to consumer.

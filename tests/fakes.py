@@ -957,6 +957,7 @@ class FakeTimer(rally_utils.Timer):
 class FakeContext(base_ctx.Context):
 
     __ctx_name__ = "fake"
+    __ctx_order__ = 1
 
     CONFIG_SCHEMA = {
         "type": "object",
