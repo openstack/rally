@@ -286,6 +286,10 @@ def external_network_exists(network_name, use_external_network):
 
         networks = [net.name for net in
                     clients.nova().floating_ip_pools.list()]
+
+        if isinstance(networks[0], dict):
+            networks = [n["name"] for n in networks]
+
         if ext_network not in networks:
             message = _("External (floating) network with name %(network)s "
                         "not found. "
