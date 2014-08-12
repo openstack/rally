@@ -1,6 +1,6 @@
-=========
-Benchmark
-=========
+
+Keystone token creation benchmark
+=================================
 Authenticate users with keystone to get tokens.
 
 Goal
@@ -45,10 +45,12 @@ Results
 
 1. Concurrency = 4
 
+.. code-block:: none
+
     {'context': {'users': {'concurrent': 30,
-                         | 'tenants': 12,
-                         | 'users_per_tenant': 512}},
-                         | 'runner': {'concurrency': 4, 'times': 10000, 'type': 'constant'}}
+                           'tenants': 12,
+                           'users_per_tenant': 512}},
+                           'runner': {'concurrency': 4, 'times': 10000, 'type': 'constant'}}
 
 
 +--------+-----------+-----------+-----------+---------------+---------------+---------+-------+-----------------------+--------------+
@@ -64,10 +66,12 @@ Results
 
 2. Concurrency = 16
 
+.. code-block:: none
+
     {'context': {'users': {'concurrent': 30,
-                         | 'tenants': 12,
-                         | 'users_per_tenant': 512}},
-                         | 'runner': {'concurrency': 16, 'times': 10000, 'type': 'constant'}}
+                           'tenants': 12,
+                           'users_per_tenant': 512}},
+                           'runner': {'concurrency': 16, 'times': 10000, 'type': 'constant'}}
 
 +--------+-----------+-----------+-----------+---------------+---------------+---------+-------+-----------------------+--------------+
 | action | min (sec) | avg (sec) | max (sec) | 90 percentile | 95 percentile | success | count |apache enabled keystone|public_workers|
@@ -82,10 +86,12 @@ Results
 
 3. Concurrency = 32
 
+.. code-block:: none
+
     {'context': {'users': {'concurrent': 30,
-                         | 'tenants': 12,
-                         | 'users_per_tenant': 512}},
-                         | 'runner': {'concurrency': 32, 'times': 10000, 'type': 'constant'}}
+                           'tenants': 12,
+                           'users_per_tenant': 512}},
+                           'runner': {'concurrency': 32, 'times': 10000, 'type': 'constant'}}
 
 +--------+-----------+-----------+-----------+---------------+---------------+---------+-------+-----------------------+--------------+
 | action | min (sec) | avg (sec) | max (sec) | 90 percentile | 95 percentile | success | count |apache enabled keystone|public_workers|

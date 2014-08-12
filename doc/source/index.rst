@@ -33,7 +33,7 @@ The OpenStack QA team mostly works on CI/CD that ensures that new patches don't 
 Deeper in Rally:
 ----------------
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 2
 
    overview
    concepts
@@ -42,21 +42,16 @@ Deeper in Rally:
    verify
    installation
    usage
+   feature_requests
+   user_stories
 
 Development information:
 ------------------------
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 2
 
    cmds
    implementation
    improve_rally
    rally_gatejob
-
-Indices and tables
-------------------
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
