@@ -104,9 +104,8 @@ class ImageGenerator(base.Context):
     @classmethod
     def validate_semantic(cls, config, admin, users, task):
         """Check if the image service is available."""
-
         try:
-            glance = osclients.Clients(users[0]["endpoint"]).glance()
+            glance = users[0].glance()
             list(glance.images.list(limit=0))
         except Exception as e:
             message = _(

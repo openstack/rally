@@ -642,6 +642,24 @@
       sla:
         max_failure_percent: 0
 
+  GlanceImages.list_images:
+    -
+      runner:
+        type: "constant"
+        times: 5
+        concurrency: 5
+      context:
+        users:
+          tenants: 2
+          users_per_tenant: 2
+        images:
+          image_url: "http://download.cirros-cloud.net/0.3.1/cirros-0.3.1-x86_64-disk.img"
+          image_type: "qcow2"
+          image_container: "bare"
+          images_per_tenant: 2
+      sla:
+        max_failure_percent: 0
+
   NovaServers.boot_and_delete_server:
     -
       args:
