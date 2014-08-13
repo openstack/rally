@@ -13,15 +13,15 @@
 import random
 import time
 
-from rally.benchmark.scenarios import base as scenario_base
+from rally.benchmark.scenarios import base
 from rally.benchmark import validation
 from rally import exceptions
 
 
-class Dummy(scenario_base.Scenario):
+class Dummy(base.Scenario):
     """Benchmarks for testing Rally benchmark engine at scale."""
 
-    @scenario_base.scenario()
+    @base.scenario()
     def dummy(self, sleep=0):
         """Test the performance of ScenarioRunners.
 
@@ -36,7 +36,7 @@ class Dummy(scenario_base.Scenario):
 
     @validation.add(validation.number("size_of_message", minval=1,
                                       integer_only=True, nullable=True))
-    @scenario_base.scenario()
+    @base.scenario()
     def dummy_exception(self, size_of_message=1):
         """Test if exceptions are processed properly.
 
@@ -52,7 +52,7 @@ class Dummy(scenario_base.Scenario):
     @validation.add(validation.number("exception_probability", minval=0,
                                       maxval=1, integer_only=False,
                                       nullable=True))
-    @scenario_base.scenario()
+    @base.scenario()
     def dummy_exception_probability(self, exception_probability=0.5):
         """Test if exceptions are processed properly.
 
@@ -69,7 +69,7 @@ class Dummy(scenario_base.Scenario):
                 % exception_probability
             )
 
-    @scenario_base.scenario()
+    @base.scenario()
     def dummy_with_scenario_output(self):
         out = {
             'value_1': random.randint(1, 100),

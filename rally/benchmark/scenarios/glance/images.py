@@ -13,7 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from rally.benchmark.scenarios import base as scenario_base
+from rally.benchmark.scenarios import base
 from rally.benchmark.scenarios.glance import utils
 from rally.benchmark.scenarios.nova import utils as nova_utils
 from rally.benchmark import types as types
@@ -26,7 +26,7 @@ class GlanceImages(utils.GlanceScenario, nova_utils.NovaScenario):
     RESOURCE_NAME_PREFIX = "rally_image_"
     RESOURCE_NAME_LENGTH = 16
 
-    @scenario_base.scenario(context={"cleanup": ["glance"]})
+    @base.scenario(context={"cleanup": ["glance"]})
     @validation.required_services(consts.Service.GLANCE)
     def create_and_list_image(self, container_format,
                               image_location, disk_format, **kwargs):
@@ -48,7 +48,7 @@ class GlanceImages(utils.GlanceScenario, nova_utils.NovaScenario):
                            **kwargs)
         self._list_images()
 
-    @scenario_base.scenario(context={"cleanup": ["glance"]})
+    @base.scenario(context={"cleanup": ["glance"]})
     @validation.required_services(consts.Service.GLANCE)
     def list_images(self):
         """Test the glance image-list command.
@@ -63,7 +63,7 @@ class GlanceImages(utils.GlanceScenario, nova_utils.NovaScenario):
 
         self._list_images()
 
-    @scenario_base.scenario(context={"cleanup": ["glance"]})
+    @base.scenario(context={"cleanup": ["glance"]})
     @validation.required_services(consts.Service.GLANCE)
     def create_and_delete_image(self, container_format,
                                 image_location, disk_format, **kwargs):
@@ -79,7 +79,7 @@ class GlanceImages(utils.GlanceScenario, nova_utils.NovaScenario):
     @types.set(flavor=types.FlavorResourceType)
     @validation.add(validation.flavor_exists("flavor"))
     @validation.required_services(consts.Service.GLANCE, consts.Service.NOVA)
-    @scenario_base.scenario(context={"cleanup": ["glance", "nova"]})
+    @base.scenario(context={"cleanup": ["glance", "nova"]})
     def create_image_and_boot_instances(self, container_format,
                                         image_location, disk_format,
                                         flavor, number_instances,

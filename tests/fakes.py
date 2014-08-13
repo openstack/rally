@@ -26,7 +26,7 @@ from neutronclient.common import exceptions as neutron_exceptions
 from novaclient import exceptions as nova_exceptions
 
 from rally.benchmark.context import base as base_ctx
-from rally.benchmark.scenarios import base as scenario_base
+from rally.benchmark.scenarios import base
 from rally.objects import endpoint
 from rally import utils as rally_utils
 
@@ -927,7 +927,7 @@ class FakeRunner(object):
     }
 
 
-class FakeScenario(scenario_base.Scenario):
+class FakeScenario(base.Scenario):
 
     def idle_time(self):
         return 0

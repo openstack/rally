@@ -12,10 +12,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from rally.benchmark.scenarios import base as scenario_base
+from rally.benchmark.scenarios import base
 
 
-class CeilometerScenario(scenario_base.Scenario):
+class CeilometerScenario(base.Scenario):
     RESOURCE_NAME_PREFIX = "rally_ceilometer_"
 
     def _get_alarm_dict(self, **kwargs):
@@ -32,7 +32,7 @@ class CeilometerScenario(scenario_base.Scenario):
         alarm.update(kwargs)
         return alarm
 
-    @scenario_base.atomic_action_timer('ceilometer.list_alarms')
+    @base.atomic_action_timer('ceilometer.list_alarms')
     def _list_alarms(self, alarm_id=None):
         """List alarms.
 
@@ -46,7 +46,7 @@ class CeilometerScenario(scenario_base.Scenario):
         else:
             return self.clients("ceilometer").alarms.list()
 
-    @scenario_base.atomic_action_timer('ceilometer.create_alarm')
+    @base.atomic_action_timer('ceilometer.create_alarm')
     def _create_alarm(self, meter_name, threshold, kwargs):
         """Create an alarm.
 
@@ -61,7 +61,7 @@ class CeilometerScenario(scenario_base.Scenario):
         alarm = self.clients("ceilometer").alarms.create(**alarm_dict)
         return alarm
 
-    @scenario_base.atomic_action_timer('ceilometer.delete_alarm')
+    @base.atomic_action_timer('ceilometer.delete_alarm')
     def _delete_alarm(self, alarm_id):
         """Deletes an alarm.
 
@@ -69,7 +69,7 @@ class CeilometerScenario(scenario_base.Scenario):
         """
         self.clients("ceilometer").alarms.delete(alarm_id)
 
-    @scenario_base.atomic_action_timer('ceilometer.update_alarm')
+    @base.atomic_action_timer('ceilometer.update_alarm')
     def _update_alarm(self, alarm_id, alarm_dict_delta):
         """Updates an alarm.
 
@@ -78,12 +78,12 @@ class CeilometerScenario(scenario_base.Scenario):
         """
         self.clients("ceilometer").alarms.update(alarm_id, **alarm_dict_delta)
 
-    @scenario_base.atomic_action_timer('ceilometer.get_meters')
+    @base.atomic_action_timer('ceilometer.get_meters')
     def _list_meters(self):
         """Get list of user's meters."""
         return self.clients("ceilometer").meters.list()
 
-    @scenario_base.atomic_action_timer('ceilometer.list_resources')
+    @base.atomic_action_timer('ceilometer.list_resources')
     def _list_resources(self):
         """List all resources.
 
@@ -91,7 +91,7 @@ class CeilometerScenario(scenario_base.Scenario):
         """
         return self.clients("ceilometer").resources.list()
 
-    @scenario_base.atomic_action_timer('ceilometer.get_stats')
+    @base.atomic_action_timer('ceilometer.get_stats')
     def _get_stats(self, meter_name):
         """Get stats for a specific meter.
 
@@ -99,7 +99,7 @@ class CeilometerScenario(scenario_base.Scenario):
         """
         return self.clients("ceilometer").statistics.list(meter_name)
 
-    @scenario_base.atomic_action_timer('ceilometer.create_meter')
+    @base.atomic_action_timer('ceilometer.create_meter')
     def _create_meter(self, **kwargs):
         """Create a new meter.
 
@@ -112,7 +112,7 @@ class CeilometerScenario(scenario_base.Scenario):
             counter_name=name, **kwargs)
         return samples[0]
 
-    @scenario_base.atomic_action_timer('ceilometer.query_alarms')
+    @base.atomic_action_timer('ceilometer.query_alarms')
     def _query_alarms(self, filter, orderby, limit):
         """Query alarms with specific parameters.
 
@@ -125,7 +125,7 @@ class CeilometerScenario(scenario_base.Scenario):
         return self.clients("ceilometer").query_alarms.query(
                 filter, orderby, limit)
 
-    @scenario_base.atomic_action_timer('ceilometer.query_alarm_history')
+    @base.atomic_action_timer('ceilometer.query_alarm_history')
     def _query_alarm_history(self, filter, orderby, limit):
         """Query history of an alarm.
 
@@ -138,7 +138,7 @@ class CeilometerScenario(scenario_base.Scenario):
         return self.clients("ceilometer").query_alarm_history.query(
                 filter, orderby, limit)
 
-    @scenario_base.atomic_action_timer('ceilometer.create_sample')
+    @base.atomic_action_timer('ceilometer.create_sample')
     def _create_sample(self, counter_name, counter_type, counter_unit,
                        counter_volume, resource_id, **kwargs):
         """Creates a Sample with specified parameters.
@@ -158,7 +158,7 @@ class CeilometerScenario(scenario_base.Scenario):
                        "resource_id": resource_id})
         return self.clients("ceilometer").samples.create(**kwargs)
 
-    @scenario_base.atomic_action_timer('ceilometer.query_samples')
+    @base.atomic_action_timer('ceilometer.query_samples')
     def _query_samples(self, filter, orderby, limit):
         """Query samples with specified parameters.
 

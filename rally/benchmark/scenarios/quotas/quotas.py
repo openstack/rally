@@ -13,14 +13,13 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from rally.benchmark.scenarios import base as scenario_base
+from rally.benchmark.scenarios import base
 from rally.benchmark.scenarios.quotas import utils
 
 
 class Quotas(utils.QuotasScenario):
 
-    @scenario_base.scenario(admin_only=True,
-                            context={"admin_cleanup": ["quotas"]})
+    @base.scenario(admin_only=True, context={"admin_cleanup": ["quotas"]})
     def nova_update(self, max_quota=1024):
         """Tests updating quotas for nova.
 
@@ -29,8 +28,7 @@ class Quotas(utils.QuotasScenario):
         tenant_id = self.context()["user"]["tenant_id"]
         self._update_quotas('nova', tenant_id, max_quota)
 
-    @scenario_base.scenario(admin_only=True,
-                            context={"admin_cleanup": ["quotas"]})
+    @base.scenario(admin_only=True, context={"admin_cleanup": ["quotas"]})
     def nova_update_and_delete(self, max_quota=1024):
         """Tests updating and deleting quotas for nova.
 
@@ -41,8 +39,7 @@ class Quotas(utils.QuotasScenario):
         self._update_quotas('nova', tenant_id, max_quota)
         self._delete_quotas('nova', tenant_id)
 
-    @scenario_base.scenario(admin_only=True,
-                            context={"admin_cleanup": ["quotas"]})
+    @base.scenario(admin_only=True, context={"admin_cleanup": ["quotas"]})
     def cinder_update(self, max_quota=1024):
         """Tests updating quotas for cinder.
 

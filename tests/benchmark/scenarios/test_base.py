@@ -18,7 +18,7 @@ import traceback
 import mock
 
 from rally.benchmark.context import base as base_ctx
-from rally.benchmark.scenarios import base as scenario_base
+from rally.benchmark.scenarios import base
 from rally.benchmark import validation
 from rally import consts
 from rally import exceptions
@@ -30,18 +30,18 @@ class ScenarioTestCase(test.TestCase):
 
     def test_get_by_name(self):
 
-        class Scenario1(scenario_base.Scenario):
+        class Scenario1(base.Scenario):
             pass
 
-        class Scenario2(scenario_base.Scenario):
+        class Scenario2(base.Scenario):
             pass
 
         for s in [Scenario1, Scenario2]:
-            self.assertEqual(s, scenario_base.Scenario.get_by_name(s.__name__))
+            self.assertEqual(s, base.Scenario.get_by_name(s.__name__))
 
     def test_get_by_name_not_found(self):
         self.assertRaises(exceptions.NoSuchScenario,
-                          scenario_base.Scenario.get_by_name,
+                          base.Scenario.get_by_name,
                           "non existing scenario")
 
     def test__validate_helper(self):
@@ -52,8 +52,7 @@ class ScenarioTestCase(test.TestCase):
         clients = mock.MagicMock()
         config = {"a": 1, "b": 2}
         task = mock.MagicMock()
-        scenario_base.Scenario._validate_helper(validators, clients,
-                                                config, task)
+        base.Scenario._validate_helper(validators, clients, config, task)
         for validator in validators:
             validator.assert_called_with(config, clients=clients, task=task)
 
@@ -67,7 +66,7 @@ class ScenarioTestCase(test.TestCase):
         clients = mock.MagicMock()
         args = {"a": 1, "b": 2}
         self.assertRaises(exceptions.InvalidScenarioArgument,
-                          scenario_base.Scenario._validate_helper,
+                          base.Scenario._validate_helper,
                           validators, clients, args, 'fake_uuid')
 
     @mock.patch("rally.benchmark.scenarios.base.Scenario.get_by_name")
@@ -80,7 +79,7 @@ class ScenarioTestCase(test.TestCase):
         FakeScenario.do_it.validators = []
         mock_base_get_by_name.return_value = FakeScenario
 
-        scenario_base.Scenario.validate("FakeScenario.do_it", {"a": 1, "b": 2})
+        base.Scenario.validate("FakeScenario.do_it", {"a": 1, "b": 2})
 
         mock_base_get_by_name.assert_called_once_with("FakeScenario")
 
@@ -102,7 +101,7 @@ class ScenarioTestCase(test.TestCase):
         FakeScenario.do_it.validators = validators
         task = mock.MagicMock()
         args = {"a": 1, "b": 2}
-        scenario_base.Scenario.validate(
+        base.Scenario.validate(
             "FakeScenario.do_it", args, admin="admin", task=task)
         mock_validate_helper.assert_called_once_with(validators, "admin", args,
                                                      task)
@@ -124,7 +123,7 @@ class ScenarioTestCase(test.TestCase):
 
         FakeScenario.do_it.validators = validators
         args = {"a": 1, "b": 2}
-        scenario_base.Scenario.validate(
+        base.Scenario.validate(
             "FakeScenario.do_it", args, users=["u1", "u2"])
 
         mock_validate_helper.assert_has_calls([
@@ -181,7 +180,7 @@ class ScenarioTestCase(test.TestCase):
                          empty_list)
 
     def test_sleep_between_invalid_args(self):
-        scenario = scenario_base.Scenario()
+        scenario = base.Scenario()
         self.assertRaises(exceptions.InvalidArgumentsException,
                           scenario.sleep_between, 15, 5)
 
@@ -192,12 +191,12 @@ class ScenarioTestCase(test.TestCase):
                           scenario.sleep_between, 0, -2)
 
     def test_sleep_between(self):
-        scenario = scenario_base.Scenario()
+        scenario = base.Scenario()
         scenario.sleep_between(0.001, 0.002)
         self.assertTrue(0.001 <= scenario.idle_duration() <= 0.002)
 
     def test_sleep_beetween_multi(self):
-        scenario = scenario_base.Scenario()
+        scenario = base.Scenario()
         scenario.sleep_between(0.001, 0.001)
         scenario.sleep_between(0.004, 0.004)
         self.assertEqual(scenario.idle_duration(), 0.005)
@@ -205,7 +204,7 @@ class ScenarioTestCase(test.TestCase):
     @mock.patch("rally.benchmark.scenarios.base.time.sleep")
     @mock.patch("rally.benchmark.scenarios.base.random.uniform")
     def test_sleep_between_internal(self, mock_uniform, mock_sleep):
-        scenario = scenario_base.Scenario()
+        scenario = base.Scenario()
 
         mock_uniform.return_value = 1.5
         scenario.sleep_between(1, 2)
@@ -215,29 +214,29 @@ class ScenarioTestCase(test.TestCase):
 
     def test_context(self):
         context = mock.MagicMock()
-        scenario = scenario_base.Scenario(context=context)
+        scenario = base.Scenario(context=context)
         self.assertEqual(context, scenario.context())
 
     def test_clients(self):
         clients = fakes.FakeClients()
 
-        scenario = scenario_base.Scenario(clients=clients)
+        scenario = base.Scenario(clients=clients)
         self.assertEqual(clients.nova(), scenario.clients("nova"))
         self.assertEqual(clients.glance(), scenario.clients("glance"))
 
     def test_admin_clients(self):
         clients = fakes.FakeClients()
 
-        scenario = scenario_base.Scenario(admin_clients=clients)
+        scenario = base.Scenario(admin_clients=clients)
         self.assertEqual(clients.nova(), scenario.admin_clients("nova"))
         self.assertEqual(clients.glance(), scenario.admin_clients("glance"))
 
     def test_scenario_context_are_valid(self):
-        scenarios = scenario_base.Scenario.list_benchmark_scenarios()
+        scenarios = base.Scenario.list_benchmark_scenarios()
 
         for scenario in scenarios:
             cls_name, method_name = scenario.split(".", 1)
-            cls = scenario_base.Scenario.get_by_name(cls_name)
+            cls = base.Scenario.get_by_name(cls_name)
             context = getattr(cls, method_name).context
             try:
                 base_ctx.ContextManager.validate(context)
@@ -247,13 +246,13 @@ class ScenarioTestCase(test.TestCase):
                                 "Scenario `%s` has wrong context" % scenario)
 
     def test_RESOURCE_NAME_PREFIX(self):
-        self.assertTrue(isinstance(scenario_base.Scenario.RESOURCE_NAME_PREFIX,
+        self.assertTrue(isinstance(base.Scenario.RESOURCE_NAME_PREFIX,
                                    basestring))
 
     def test_RESOURCE_NAME_LENGTH(self):
         self.assertTrue(
-            isinstance(scenario_base.Scenario.RESOURCE_NAME_LENGTH, int))
-        self.assertTrue(scenario_base.Scenario.RESOURCE_NAME_LENGTH > 4)
+            isinstance(base.Scenario.RESOURCE_NAME_LENGTH, int))
+        self.assertTrue(base.Scenario.RESOURCE_NAME_LENGTH > 4)
 
     @mock.patch(
         "rally.benchmark.scenarios.base."
@@ -266,48 +265,48 @@ class ScenarioTestCase(test.TestCase):
         range_num = 50
 
         # Defaults
-        result = [scenario_base.Scenario._generate_random_name()
+        result = [base.Scenario._generate_random_name()
                   for i in range(range_num)]
         self.assertEqual(len(result), len(set(result)))
         self.assertEqual(
             set_by_length(result),
             set([(len(
-                scenario_base.Scenario.RESOURCE_NAME_PREFIX) +
-                scenario_base.Scenario.RESOURCE_NAME_LENGTH)]))
+                base.Scenario.RESOURCE_NAME_PREFIX) +
+                base.Scenario.RESOURCE_NAME_LENGTH)]))
         self.assertEqual(
-            len_by_prefix(result, scenario_base.Scenario.RESOURCE_NAME_PREFIX),
+            len_by_prefix(result, base.Scenario.RESOURCE_NAME_PREFIX),
             range_num)
 
         # Custom prefix
         prefix = "another_prefix_"
-        result = [scenario_base.Scenario._generate_random_name(prefix)
+        result = [base.Scenario._generate_random_name(prefix)
                   for i in range(range_num)]
         self.assertEqual(len(result), len(set(result)))
         self.assertEqual(
             set_by_length(result),
-            set([len(prefix) + scenario_base.Scenario.RESOURCE_NAME_LENGTH]))
+            set([len(prefix) + base.Scenario.RESOURCE_NAME_LENGTH]))
         self.assertEqual(
             len_by_prefix(result, prefix), range_num)
 
         # Custom length
         name_length = 12
         result = [
-            scenario_base.Scenario._generate_random_name(length=name_length)
+            base.Scenario._generate_random_name(length=name_length)
             for i in range(range_num)]
         self.assertEqual(len(result), len(set(result)))
         self.assertEqual(
             set_by_length(result),
             set([len(
-                scenario_base.Scenario.RESOURCE_NAME_PREFIX) + name_length]))
+                base.Scenario.RESOURCE_NAME_PREFIX) + name_length]))
         self.assertEqual(
-            len_by_prefix(result, scenario_base.Scenario.RESOURCE_NAME_PREFIX),
+            len_by_prefix(result, base.Scenario.RESOURCE_NAME_PREFIX),
             range_num)
 
 
 class AtomicActionTestCase(test.TestCase):
     def test__init__(self):
         fake_scenario_instance = mock.MagicMock()
-        c = scenario_base.AtomicAction(fake_scenario_instance, 'asdf')
+        c = base.AtomicAction(fake_scenario_instance, 'asdf')
         self.assertEqual(c.scenario_instance, fake_scenario_instance)
         self.assertEqual(c.name, 'asdf')
 
@@ -315,7 +314,7 @@ class AtomicActionTestCase(test.TestCase):
     def test__exit__(self, mock_time):
         fake_scenario_instance = mock.Mock()
         self.start = mock_time.time()
-        with scenario_base.AtomicAction(fake_scenario_instance, "asdf"):
+        with base.AtomicAction(fake_scenario_instance, "asdf"):
             pass
         duration = mock_time.time() - self.start
         fake_scenario_instance._add_atomic_actions.assert_called_once_with(

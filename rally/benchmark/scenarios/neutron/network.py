@@ -13,7 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from rally.benchmark.scenarios import base as scenario_base
+from rally.benchmark.scenarios import base
 from rally.benchmark.scenarios.neutron import utils
 from rally.benchmark import validation
 from rally import consts
@@ -21,7 +21,7 @@ from rally import consts
 
 class NeutronNetworks(utils.NeutronScenario):
 
-    @scenario_base.scenario(context={"cleanup": ["neutron"]})
+    @base.scenario(context={"cleanup": ["neutron"]})
     @validation.required_services(consts.Service.NEUTRON)
     def create_and_list_networks(self, network_create_args=None):
         """Create a network and then listing all networks.
@@ -40,7 +40,7 @@ class NeutronNetworks(utils.NeutronScenario):
         self._create_network(network_create_args or {})
         self._list_networks()
 
-    @scenario_base.scenario(context={"cleanup": ["neutron"]})
+    @base.scenario(context={"cleanup": ["neutron"]})
     @validation.required_services(consts.Service.NEUTRON)
     def create_and_delete_networks(self, network_create_args=None):
         """Create a network and then deleting it.
@@ -53,7 +53,7 @@ class NeutronNetworks(utils.NeutronScenario):
         network = self._create_network(network_create_args or {})
         self._delete_network(network['network'])
 
-    @scenario_base.scenario(context={"cleanup": ["neutron"]})
+    @base.scenario(context={"cleanup": ["neutron"]})
     @validation.add(validation.required_parameters(['subnets_per_network']))
     @validation.required_services(consts.Service.NEUTRON)
     def create_and_list_subnets(self,
@@ -79,7 +79,7 @@ class NeutronNetworks(utils.NeutronScenario):
 
         self._list_subnets()
 
-    @scenario_base.scenario(context={"cleanup": ["neutron"]})
+    @base.scenario(context={"cleanup": ["neutron"]})
     @validation.add(validation.required_parameters(['subnets_per_network']))
     @validation.required_services(consts.Service.NEUTRON)
     def create_and_delete_subnets(self,
@@ -105,7 +105,7 @@ class NeutronNetworks(utils.NeutronScenario):
             subnet = self._create_subnet(network, subnet_create_args or {})
             self._delete_subnet(subnet)
 
-    @scenario_base.scenario(context={"cleanup": ["neutron"]})
+    @base.scenario(context={"cleanup": ["neutron"]})
     @validation.add(validation.required_parameters(['subnets_per_network']))
     @validation.required_services(consts.Service.NEUTRON)
     def create_and_list_routers(self,
@@ -137,7 +137,7 @@ class NeutronNetworks(utils.NeutronScenario):
 
         self._list_routers()
 
-    @scenario_base.scenario(context={"cleanup": ["neutron"]})
+    @base.scenario(context={"cleanup": ["neutron"]})
     @validation.add(validation.required_parameters(["ports_per_network"]))
     @validation.required_services(consts.Service.NEUTRON)
     def create_and_list_ports(self,
@@ -156,7 +156,7 @@ class NeutronNetworks(utils.NeutronScenario):
 
         self._list_ports()
 
-    @scenario_base.scenario(context={"cleanup": ["neutron"]})
+    @base.scenario(context={"cleanup": ["neutron"]})
     @validation.add(validation.required_parameters(["ports_per_network"]))
     @validation.required_services(consts.Service.NEUTRON)
     def create_and_delete_ports(self,

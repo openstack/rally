@@ -12,22 +12,22 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from rally.benchmark.scenarios import base as scenario_base
+from rally.benchmark.scenarios import base
 from rally.benchmark import validation
 
 
-class Authenticate(scenario_base.Scenario):
+class Authenticate(base.Scenario):
     """This class should contain authentication mechanism.
 
     For different types of clients like Keystone.
     """
 
-    @scenario_base.scenario()
-    @scenario_base.atomic_action_timer('authenticate.keystone')
+    @base.scenario()
+    @base.atomic_action_timer('authenticate.keystone')
     def keystone(self, **kwargs):
         self.clients("keystone")
 
-    @scenario_base.scenario()
+    @base.scenario()
     @validation.add(validation.required_parameters(['repetitions']))
     def validate_glance(self, repetitions):
         """Check Glance Client to ensure validation of token.
@@ -41,11 +41,10 @@ class Authenticate(scenario_base.Scenario):
         glance_client = self.clients("glance")
         image_name = "__intentionally_non_existent_image___"
         for i in range(repetitions):
-            with scenario_base.AtomicAction(self,
-                                            'authenticate.validate_glance'):
+            with base.AtomicAction(self, 'authenticate.validate_glance'):
                 list(glance_client.images.list(name=image_name))
 
-    @scenario_base.scenario()
+    @base.scenario()
     @validation.add(validation.required_parameters(['repetitions']))
     def validate_nova(self, repetitions):
         """Check Nova Client to ensure validation of token.
@@ -57,11 +56,10 @@ class Authenticate(scenario_base.Scenario):
         """
         nova_client = self.clients("nova")
         for i in range(repetitions):
-            with scenario_base.AtomicAction(self,
-                                            'authenticate.validate_nova'):
+            with base.AtomicAction(self, 'authenticate.validate_nova'):
                 nova_client.flavors.list()
 
-    @scenario_base.scenario()
+    @base.scenario()
     @validation.add(validation.required_parameters(['repetitions']))
     def validate_cinder(self, repetitions):
         """Check Cinder Client to ensure validation of token.
@@ -73,11 +71,10 @@ class Authenticate(scenario_base.Scenario):
         """
         cinder_client = self.clients("cinder")
         for i in range(repetitions):
-            with scenario_base.AtomicAction(self,
-                                            'authenticate.validate_cinder'):
+            with base.AtomicAction(self, 'authenticate.validate_cinder'):
                 cinder_client.volume_types.list()
 
-    @scenario_base.scenario()
+    @base.scenario()
     @validation.add(validation.required_parameters(['repetitions']))
     def validate_neutron(self, repetitions):
         """Check Neutron Client to ensure validation of token.
@@ -89,11 +86,10 @@ class Authenticate(scenario_base.Scenario):
         """
         neutron_client = self.clients("neutron")
         for i in range(repetitions):
-            with scenario_base.AtomicAction(self,
-                                            'authenticate.validate_neutron'):
+            with base.AtomicAction(self, 'authenticate.validate_neutron'):
                 neutron_client.get_auth_info()
 
-    @scenario_base.scenario()
+    @base.scenario()
     @validation.add(validation.required_parameters(['repetitions']))
     def validate_heat(self, repetitions):
         """Check Heat Client to ensure validation of token.
@@ -105,6 +101,5 @@ class Authenticate(scenario_base.Scenario):
         """
         heat_client = self.clients("heat")
         for i in range(repetitions):
-            with scenario_base.AtomicAction(self,
-                                            'authenticate.validate_heat'):
+            with base.AtomicAction(self, 'authenticate.validate_heat'):
                 list(heat_client.stacks.list(limit=0))

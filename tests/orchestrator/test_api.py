@@ -19,7 +19,7 @@ import collections
 
 import mock
 
-from rally.benchmark.scenarios import base as scenario_base
+from rally.benchmark.scenarios import base
 from rally import consts
 from rally.orchestrator import api
 from tests import fakes
@@ -64,7 +64,7 @@ FAKE_TASK_CONFIG = {
 }
 
 
-class FakeScenario(scenario_base.Scenario):
+class FakeScenario(base.Scenario):
     @classmethod
     def fake(cls, context):
         pass

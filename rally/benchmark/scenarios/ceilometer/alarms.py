@@ -12,14 +12,14 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from rally.benchmark.scenarios import base as scenario_base
+from rally.benchmark.scenarios import base
 from rally.benchmark.scenarios.ceilometer import utils as ceilometerutils
 from rally.benchmark import validation
 from rally import consts
 
 
 class CeilometerAlarms(ceilometerutils.CeilometerScenario):
-    @scenario_base.scenario(context={"cleanup": ["ceilometer"]})
+    @base.scenario(context={"cleanup": ["ceilometer"]})
     @validation.required_services(consts.Service.CEILOMETER)
     def create_alarm(self, meter_name, threshold, **kwargs):
         """Test creating an alarm.
@@ -34,7 +34,7 @@ class CeilometerAlarms(ceilometerutils.CeilometerScenario):
         """
         self._create_alarm(meter_name, threshold, kwargs)
 
-    @scenario_base.scenario()
+    @base.scenario()
     @validation.required_services(consts.Service.CEILOMETER)
     def list_alarms(self):
         """Test fetching all alarms.
@@ -43,7 +43,7 @@ class CeilometerAlarms(ceilometerutils.CeilometerScenario):
         """
         self._list_alarms()
 
-    @scenario_base.scenario(context={"cleanup": ["ceilometer"]})
+    @base.scenario(context={"cleanup": ["ceilometer"]})
     @validation.required_services(consts.Service.CEILOMETER)
     def create_and_list_alarm(self, meter_name, threshold, **kwargs):
         """Test creating and getting newly created alarm.
@@ -60,7 +60,7 @@ class CeilometerAlarms(ceilometerutils.CeilometerScenario):
         alarm = self._create_alarm(meter_name, threshold, kwargs)
         self._list_alarms(alarm.alarm_id)
 
-    @scenario_base.scenario(context={"cleanup": ["ceilometer"]})
+    @base.scenario(context={"cleanup": ["ceilometer"]})
     @validation.required_services(consts.Service.CEILOMETER)
     def create_and_update_alarm(self, meter_name, threshold, **kwargs):
         """Test creating and updating the newly created alarm.
@@ -78,7 +78,7 @@ class CeilometerAlarms(ceilometerutils.CeilometerScenario):
         alarm_dict_diff = {"description": "Changed Test Description"}
         self._update_alarm(alarm.alarm_id, alarm_dict_diff)
 
-    @scenario_base.scenario(context={"cleanup": ["ceilometer"]})
+    @base.scenario(context={"cleanup": ["ceilometer"]})
     @validation.required_services(consts.Service.CEILOMETER)
     def create_and_delete_alarm(self, meter_name, threshold, **kwargs):
         """Test creating and deleting the newly created alarm.

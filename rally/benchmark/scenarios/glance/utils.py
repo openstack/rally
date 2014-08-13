@@ -18,7 +18,7 @@ import time
 
 from oslo.config import cfg
 
-from rally.benchmark.scenarios import base as scenario_base
+from rally.benchmark.scenarios import base
 from rally.benchmark import utils as bench_utils
 
 
@@ -49,15 +49,15 @@ benchmark_group = cfg.OptGroup(name='benchmark', title='benchmark options')
 CONF.register_opts(glance_benchmark_opts, group=benchmark_group)
 
 
-class GlanceScenario(scenario_base.Scenario):
+class GlanceScenario(base.Scenario):
 
-    @scenario_base.atomic_action_timer('glance.list_images')
+    @base.atomic_action_timer('glance.list_images')
     def _list_images(self):
         """Returns user images list."""
 
         return list(self.clients("glance").images.list())
 
-    @scenario_base.atomic_action_timer('glance.create_image')
+    @base.atomic_action_timer('glance.create_image')
     def _create_image(self, image_name, container_format,
                       image_location, disk_format, **kwargs):
         """Create a new image.
@@ -105,7 +105,7 @@ class GlanceScenario(scenario_base.Scenario):
 
         return image
 
-    @scenario_base.atomic_action_timer('glance.delete_image')
+    @base.atomic_action_timer('glance.delete_image')
     def _delete_image(self, image):
         """Deletes the given image.
 

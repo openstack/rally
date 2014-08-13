@@ -15,12 +15,12 @@
 
 import random
 
-from rally.benchmark.scenarios import base as scenario_base
+from rally.benchmark.scenarios import base
 
 
-class QuotasScenario(scenario_base.Scenario):
+class QuotasScenario(base.Scenario):
 
-    @scenario_base.atomic_action_timer('quotas.update_quotas')
+    @base.atomic_action_timer('quotas.update_quotas')
     def _update_quotas(self, component, tenant_id, max_quota=1024):
         """Updates quotas.
 
@@ -33,7 +33,7 @@ class QuotasScenario(scenario_base.Scenario):
         quotas = self._generate_quota_values(max_quota, component)
         return self.admin_clients(component).quotas.update(tenant_id, **quotas)
 
-    @scenario_base.atomic_action_timer('quotas.delete_quotas')
+    @base.atomic_action_timer('quotas.delete_quotas')
     def _delete_quotas(self, component, tenant_id):
         """Deletes quotas.
 
