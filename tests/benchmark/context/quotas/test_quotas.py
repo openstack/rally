@@ -19,94 +19,8 @@ import random
 import jsonschema
 import mock
 
-from rally.benchmark.context import quotas
+from rally.benchmark.context.quotas import quotas
 from tests import test
-
-
-class NovaQuotasTestCase(test.TestCase):
-
-    @mock.patch("rally.benchmark.context.quotas.osclients.Clients")
-    def test_update(self, client_mock):
-        nova_quotas = quotas.NovaQuotas(client_mock)
-        tenant_id = mock.MagicMock()
-        quotas_values = {
-            "instances": 10,
-            "cores": 100,
-            "ram": 100000,
-            "floating_ips": 100,
-            "fixed_ips": 10000,
-            "metadata_items": 5,
-            "injected_files": 5,
-            "injected_file_content_bytes": 2048,
-            "injected_file_path_bytes": 1024,
-            "key_pairs": 50,
-            "security_groups": 50,
-            "security_group_rules": 50
-        }
-        nova_quotas.update(tenant_id, **quotas_values)
-        client_mock.nova().quotas.update.assert_called_once_with(
-            tenant_id, **quotas_values)
-
-    @mock.patch("rally.benchmark.context.quotas.osclients.Clients")
-    def test_delete(self, client_mock):
-        nova_quotas = quotas.NovaQuotas(client_mock)
-        tenant_id = mock.MagicMock()
-        nova_quotas.delete(tenant_id)
-        client_mock.nova().quotas.delete.assert_called_once_with(tenant_id)
-
-
-class CinderQuotasTestCase(test.TestCase):
-
-    @mock.patch("rally.benchmark.context.quotas.osclients.Clients")
-    def test_update(self, client_mock):
-        cinder_quotas = quotas.CinderQuotas(client_mock)
-        tenant_id = mock.MagicMock()
-        quotas_values = {
-            "volumes": 10,
-            "snapshots": 50,
-            "gigabytes": 1000
-        }
-        cinder_quotas.update(tenant_id, **quotas_values)
-        client_mock.cinder().quotas.update.assert_called_once_with(
-            tenant_id, **quotas_values)
-
-    @mock.patch("rally.benchmark.context.quotas.osclients.Clients")
-    def test_delete(self, client_mock):
-        pass
-        # Currently, no method to delete quotas available in cinder client:
-        # Will be added with https://review.openstack.org/#/c/74841/
-        # cinder_quotas = quotas.CinderQuotas(client_mock)
-        # tenant_id = mock.MagicMock()
-        # cinder_quotas.delete(tenant_id)
-        # client_mock.quotas.delete.assert_called_once_with(tenant_id)
-
-
-class NeutronQuotasTestCase(test.TestCase):
-
-    @mock.patch("rally.benchmark.context.quotas.osclients.Clients")
-    def test_update(self, client_mock):
-        neutron_quotas = quotas.NeutronQuotas(client_mock)
-        tenant_id = mock.MagicMock()
-        quotas_values = {
-            "network": 20,
-            "subnet": 20,
-            "port": 100,
-            "router": 20,
-            "floatingip": 100,
-            "security_group": 100,
-            "security_group_rule": 100
-        }
-        neutron_quotas.update(tenant_id, **quotas_values)
-        body = {"quota": quotas_values}
-        client_mock.neutron().update_quota.assert_called_once_with(tenant_id,
-                                                                   body=body)
-
-    @mock.patch("rally.benchmark.context.quotas.osclients.Clients")
-    def test_delete(self, client_mock):
-        neutron_quotas = quotas.NeutronQuotas(client_mock)
-        tenant_id = mock.MagicMock()
-        neutron_quotas.delete(tenant_id)
-        client_mock.neutron().delete_quota.assert_called_once_with(tenant_id)
 
 
 class QuotasTestCase(test.TestCase):
@@ -218,8 +132,8 @@ class QuotasTestCase(test.TestCase):
             except jsonschema.ValidationError:
                 self.fail("Valid quota keys are optional")
 
-    @mock.patch("rally.benchmark.context.quotas.osclients.Clients")
-    @mock.patch("rally.benchmark.context.quotas.CinderQuotas")
+    @mock.patch("rally.benchmark.context.quotas.quotas.osclients.Clients")
+    @mock.patch("rally.benchmark.context.quotas.cinder_quotas.CinderQuotas")
     def test_cinder_quotas(self, mock_quotas, mock_osclients):
         ctx = copy.deepcopy(self.context)
         ctx["config"]["quotas"] = {
@@ -247,8 +161,8 @@ class QuotasTestCase(test.TestCase):
             expected_cleanup_calls.append(mock.call().delete(tenant["id"]))
         mock_quotas.assert_has_calls(expected_cleanup_calls, any_order=True)
 
-    @mock.patch("rally.benchmark.context.quotas.osclients.Clients")
-    @mock.patch("rally.benchmark.context.quotas.NovaQuotas")
+    @mock.patch("rally.benchmark.context.quotas.quotas.osclients.Clients")
+    @mock.patch("rally.benchmark.context.quotas.nova_quotas.NovaQuotas")
     def test_nova_quotas(self, mock_quotas, mock_osclients):
         ctx = copy.deepcopy(self.context)
 
@@ -286,8 +200,8 @@ class QuotasTestCase(test.TestCase):
             expected_cleanup_calls.append(mock.call().delete(tenant["id"]))
         mock_quotas.assert_has_calls(expected_cleanup_calls, any_order=True)
 
-    @mock.patch("rally.benchmark.context.quotas.osclients.Clients")
-    @mock.patch("rally.benchmark.context.quotas.NeutronQuotas")
+    @mock.patch("rally.benchmark.context.quotas.quotas.osclients.Clients")
+    @mock.patch("rally.benchmark.context.quotas.neutron_quotas.NeutronQuotas")
     def test_neutron_quotas(self, mock_quotas, mock_osclients):
         ctx = copy.deepcopy(self.context)
 
@@ -320,10 +234,10 @@ class QuotasTestCase(test.TestCase):
             expected_cleanup_calls.append(mock.call().delete(tenant["id"]))
         mock_quotas.assert_has_calls(expected_cleanup_calls, any_order=True)
 
-    @mock.patch("rally.benchmark.context.quotas.osclients.Clients")
-    @mock.patch("rally.benchmark.context.quotas.NovaQuotas")
-    @mock.patch("rally.benchmark.context.quotas.CinderQuotas")
-    @mock.patch("rally.benchmark.context.quotas.NeutronQuotas")
+    @mock.patch("rally.benchmark.context.quotas.quotas.osclients.Clients")
+    @mock.patch("rally.benchmark.context.quotas.nova_quotas.NovaQuotas")
+    @mock.patch("rally.benchmark.context.quotas.cinder_quotas.CinderQuotas")
+    @mock.patch("rally.benchmark.context.quotas.neutron_quotas.NeutronQuotas")
     def test_no_quotas(self, mock_neutron_quotas, mock_cinder_quotas,
                        mock_nova_quotas, mock_osclients):
         ctx = copy.deepcopy(self.context)
@@ -340,7 +254,7 @@ class QuotasTestCase(test.TestCase):
         self.assertFalse(mock_nova_quotas.delete.called)
         self.assertFalse(mock_neutron_quotas.delete.called)
 
-    @mock.patch("rally.benchmark.context.quotas.NovaQuotas")
+    @mock.patch("rally.benchmark.context.quotas.nova_quotas.NovaQuotas")
     def test_exception_during_cleanup(self, mock_nova_quotas):
 
         mock_nova_quotas.delete.side_effect = Exception("boom")
