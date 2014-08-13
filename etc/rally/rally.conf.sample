@@ -331,6 +331,17 @@
 #nova_server_image_delete_poll_interval=2.0
 
 
+#
+# Options defined in rally.benchmark.scenarios.sahara.utils
+#
+
+# A timeout in seconds for a cluster create operation
+#cluster_create_timeout=600
+
+# Cluster status polling interval in seconds
+#cluster_check_interval=5
+
+
 [database]
 
 #
