@@ -163,7 +163,7 @@
       runner:
         type: "constant"
         times: 10
-        concurrency: 1
+        concurrency: 10
       sla:
         max_failure_percent: 0
 
@@ -184,25 +184,17 @@
         type: "constant"
         times: 20
         concurrency: 5
-      context:
-        users:
-          tenants: 1
-          users_per_tenant: 1
       sla:
         max_failure_percent: 0
 
     -
       args:
-        sleep: 0.01
+        sleep: 0.001
       runner:
         type: "rps"
         times: 10000
-        rps: 100
+        rps: 200
         timeout: 600
-      context:
-        users:
-          tenants: 1
-          users_per_tenant: 1
       sla:
         max_failure_percent: 0
 
@@ -214,9 +206,6 @@
         times: 1
         concurrency: 1
       context:
-        users:
-          tenants: 5
-          users_per_tenant: 5
         quotas:
           nova:
             instances: 200
@@ -246,10 +235,6 @@
         type: "constant"
         times: 20
         concurrency: 5
-      context:
-        users:
-          tenants: 1
-          users_per_tenant: 1
 
   Dummy.dummy_exception_probability:
     -
@@ -259,10 +244,6 @@
         type: "constant"
         times: 100
         concurrency: 1
-      context:
-        users:
-          tenants: 1
-          users_per_tenant: 1
 
     -
       args:
@@ -271,10 +252,6 @@
         type: "constant"
         times: 2042
         concurrency: 1
-      context:
-        users:
-          tenants: 1
-          users_per_tenant: 1
 
   Dummy.dummy_with_scenario_output:
     -
@@ -282,10 +259,6 @@
         type: "constant"
         times: 20
         concurrency: 10
-      context:
-        users:
-          tenants: 1
-          users_per_tenant: 1
       sla:
         max_failure_percent: 0
 
@@ -294,7 +267,7 @@
       runner:
         type: "constant"
         times: 4
-        concurrency: 2
+        concurrency: 4
       sla:
         max_failure_percent: 0
 
@@ -370,8 +343,8 @@
     -
       runner:
         type: "constant"
-        times: 10
-        concurrency: 1
+        times: 6
+        concurrency: 3
       context:
         users:
           tenants: 1
@@ -383,8 +356,8 @@
     -
       runner:
         type: "constant"
-        times: 10
-        concurrency: 2
+        times: 6
+        concurrency: 3
       context:
         users:
           tenants: 2
@@ -412,8 +385,8 @@
          name: "m1.small"
       runner:
         type: "constant"
-        times: 100
-        concurrency: 10
+        times: 20
+        concurrency: 20
       context:
         users:
           tenants: 1
@@ -428,8 +401,8 @@
          name: "m1.small"
       runner:
         type: "constant"
-        times: 100
-        concurrency: 10
+        times: 20
+        concurrency: 20
       context:
         users:
           tenants: 1
@@ -565,7 +538,7 @@
       runner:
         type: "constant"
         times: 3
-        concurrency: 1
+        concurrency: 3
       context:
         users:
           tenants: 1
@@ -597,7 +570,7 @@
       runner:
         type: "constant"
         times: 6
-        concurrency: 3
+        concurrency: 6
       context:
         users:
           tenants: 2
@@ -614,7 +587,7 @@
       runner:
         type: "constant"
         times: 6
-        concurrency: 2
+        concurrency: 6
       context:
         users:
           tenants: 1
@@ -691,8 +664,8 @@
         confirm: true
       runner:
         type: "constant"
-        times: 4
-        concurrency: 2
+        times: 3
+        concurrency: 3
       context:
         users:
           tenants: 1
@@ -722,8 +695,8 @@
         concurrency: 3
       context:
         users:
-          tenants: 3
-          users_per_tenant: 2
+          tenants: 1
+          users_per_tenant: 1
       sla:
         max_failure_percent: 0
 
@@ -737,12 +710,12 @@
         volume_size: 1
       runner:
         type: "constant"
-        times: 4
-        concurrency: 2
+        times: 3
+        concurrency: 3
       context:
         users:
-          tenants: 3
-          users_per_tenant: 2
+          tenants: 1
+          users_per_tenant: 3
       sla:
         max_failure_percent: 0
 
@@ -760,7 +733,7 @@
         concurrency: 2
       context:
         users:
-          tenants: 3
+          tenants: 2
           users_per_tenant: 2
       sla:
         max_failure_percent: 0
@@ -817,8 +790,8 @@
         username: "cirros"
       runner:
         type: "constant"
-        times: 6
-        concurrency: 3
+        times: 2
+        concurrency: 2
       context:
         users:
           tenants: 1
@@ -839,8 +812,8 @@
         username: "cirros"
       runner:
         type: "constant"
-        times: 6
-        concurrency: 3
+        times: 2
+        concurrency: 2
       context:
         users:
           tenants: 1
