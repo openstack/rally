@@ -146,6 +146,21 @@ class UserGenerator(base.Context):
         admin_endpoint, tenants = args
         client = keystone.wrap(osclients.Clients(admin_endpoint).keystone())
 
+        # NOTE(rmk): Ugly hack to deal with the fact that Nova Network
+        # networks can only be disassociated in an admin context. Discussed
+        # with boris-42 before taking this approach [LP-Bug #1350517].
+        nova_admin = osclients.Clients(admin_endpoint).nova()
+        for network in nova_admin.networks.list():
+            network_tenant_id = nova_admin.networks.get(network).project_id
+            for tenant in tenants:
+                if tenant["id"] == network_tenant_id:
+                    try:
+                        nova_admin.networks.disassociate(network)
+                    except Exception as ex:
+                        LOG.warning("Failed disassociate net: %(tenant_id)s. "
+                                    "Exception: %(ex)s" %
+                                    {"tenant_id": tenant["id"], "ex": ex})
+
         for tenant in tenants:
             try:
                 client.delete_project(tenant["id"])
