@@ -141,26 +141,13 @@ class ImageGeneratorTestCase(test.TestCase):
         mock_image_remover.side_effect = Exception('failed_deletion')
         self.assertRaises(exceptions.ImageCleanUpException, images_ctx.cleanup)
 
-    @mock.patch("%s.images.osclients" % CTX)
-    def test_validate_semantic(self, mock_osclients):
-        user_key = [{'id': i, 'tenant_id': j, 'endpoint': 'endpoint'}
-                    for j in range(2)
-                    for i in range(5)]
+    def test_validate_semantic(self):
+        users = [fakes.FakeClients()]
+        images.ImageGenerator.validate_semantic(None, None, users, None)
 
-        fc = fakes.FakeClients()
-        mock_osclients.Clients.return_value = fc
-        images.ImageGenerator.validate_semantic(None, None,
-                                                user_key, None)
-
-    @mock.patch("%s.images.osclients" % CTX)
-    def test_validate_semantic_unavailabe(self, mock_osclients):
-        user_key = [{'id': i, 'tenant_id': j, 'endpoint': 'endpoint'}
-                    for j in range(2)
-                    for i in range(5)]
-
-        endpoint = mock.MagicMock()
-        (mock_osclients.Clients(endpoint).glance().images.list.
-            side_effect) = Exception('list_error')
+    @mock.patch("%s.images.osclients.Clients.glance" % CTX)
+    def test_validate_semantic_unavailabe(self, mock_glance):
+        mock_glance.side_effect = Exception("list error")
         self.assertRaises(exceptions.InvalidScenarioArgument,
                           images.ImageGenerator.validate_semantic, None, None,
-                          user_key, None)
+                          None, None)
