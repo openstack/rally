@@ -1,4 +1,5 @@
 #!/bin/sh
+sudo resize2fs /dev/vda1 1>/dev/null 2>&1
 time_seconds(){ (time -p $1 ) 2>&1 |awk '/real/{print $2}'; }
 file=/tmp/test.img
 c=1000 #1GB
