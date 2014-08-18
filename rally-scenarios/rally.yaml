@@ -838,3 +838,13 @@
           users_per_tenant: 1
       sla:
         max_failure_percent: 0
+
+  Requests.check_response:
+    -
+      args:
+          url: "http://www.google.com"
+          response: 302
+      runner:
+        type: "constant"
+        times: 10
+        concurrency: 5

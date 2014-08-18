@@ -1,0 +1,10 @@
+---
+  Requests.check_response:
+    -
+      args:
+          url: "http://www.google.com"
+          response: 302
+      runner:
+        type: "constant"
+        times: 20
+        concurrency: 5
