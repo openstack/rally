@@ -139,11 +139,13 @@ class SaharaNodeGroupTemplatesScenarioTestCase(test.TestCase):
                 "name": "master-ng",
                 "flavor_id": "test_flavor",
                 "node_processes": ["p1"],
+                "floating_ip_pool": "test_pool",
                 "count": 1
             }, {
                 "name": "worker-ng",
                 "flavor_id": "test_flavor",
                 "node_processes": ["p2"],
+                "floating_ip_pool": "test_pool",
                 "count": 41
             }
         ]
@@ -162,6 +164,7 @@ class SaharaNodeGroupTemplatesScenarioTestCase(test.TestCase):
             hadoop_version="test_version",
             flavor_id="test_flavor",
             image_id="test_image",
+            floating_ip_pool="test_pool",
             node_count=42
         )
 
@@ -171,7 +174,8 @@ class SaharaNodeGroupTemplatesScenarioTestCase(test.TestCase):
             hadoop_version="test_version",
             node_groups=node_groups,
             default_image_id="test_image",
-            cluster_configs={"HDFS": {"dfs.replication": 3}}
+            cluster_configs={"HDFS": {"dfs.replication": 3}},
+            net_id=None
         )
 
         self._test_atomic_action_timer(scenario.atomic_actions(),

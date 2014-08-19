@@ -31,9 +31,9 @@ class SaharaClusters(utils.SaharaScenario):
     @validation.required_contexts("users", "sahara_image")
     @validation.number("node_count", minval=2, integer_only=True)
     @base.scenario(context={"cleanup": ["sahara"]})
-    def create_and_delete_cluster(self, flavor, node_count,
-                                  plugin_name="vanilla",
-                                  hadoop_version="2.3.0"):
+    def create_and_delete_cluster(self, flavor, node_count, plugin_name,
+                                  hadoop_version, floating_ip_pool=None,
+                                  neutron_net_id=None):
         """Test the Sahara Cluster launch and delete commands.
 
         This scenario launches a Hadoop cluster, waits until it becomes
@@ -45,6 +45,13 @@ class SaharaClusters(utils.SaharaScenario):
         :param plugin_name: The name of a provisioning plugin
         :param hadoop_version: The version of Hadoop distribution supported by
         the specified plugin.
+        :param floating_ip_pool: The floating ip pool name from which Floating
+        IPs will be allocated. Sahara will determine automatically how to treat
+        this depending on it's own configurations. Defaults to None because in
+        some cases Sahara may work w/o Floating IPs.
+        :param neutron_management_network: The id of a Neutron network that
+        will be used for fixed IPs. This parameter is ignored when Nova Network
+        is set up.
         """
 
         tenant_id = self.clients("keystone").tenant_id
@@ -52,10 +59,13 @@ class SaharaClusters(utils.SaharaScenario):
 
         LOG.debug("Using Image: %s" % image_id)
 
-        cluster = self._launch_cluster(flavor_id=flavor,
-                                       image_id=image_id,
-                                       node_count=node_count,
-                                       plugin_name=plugin_name,
-                                       hadoop_version=hadoop_version)
+        cluster = self._launch_cluster(
+            flavor_id=flavor,
+            image_id=image_id,
+            node_count=node_count,
+            plugin_name=plugin_name,
+            hadoop_version=hadoop_version,
+            floating_ip_pool=floating_ip_pool,
+            neutron_net_id=neutron_net_id)
 
         self._delete_cluster(cluster)

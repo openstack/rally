@@ -127,7 +127,8 @@ class SaharaScenario(base.Scenario):
 
     @base.atomic_action_timer('sahara.launch_cluster')
     def _launch_cluster(self, plugin_name, hadoop_version, flavor_id,
-                        image_id, node_count):
+                        image_id, node_count, floating_ip_pool=None,
+                        neutron_net_id=None):
         """Creates a cluster and wait until it becomes Active.
 
         The cluster is created with two node groups. The master Node Group is
@@ -140,6 +141,10 @@ class SaharaScenario(base.Scenario):
         :param image_id: The image id that will be used to boot instances
         :param node_count: The total number of instances. 1 master node, others
         for the workers
+        :param floating_ip_pool: The floating ip pool name from which Floating
+        IPs will be allocated
+        :param neutron_net_id: The network id to allocate Fixed IPs
+        from when Neutron is enabled for networking
         :return: The created cluster
         """
 
@@ -159,6 +164,11 @@ class SaharaScenario(base.Scenario):
             }
         ]
 
+        if floating_ip_pool:
+            LOG.debug("Floating IP pool is set. Appending to Node Groups")
+            for ng in node_groups:
+                ng["floating_ip_pool"] = floating_ip_pool
+
         name = self._generate_random_name(prefix="sahara-cluster-")
 
         replication_value = min(node_count - 1, 3)
@@ -173,6 +183,7 @@ class SaharaScenario(base.Scenario):
             hadoop_version=hadoop_version,
             node_groups=node_groups,
             default_image_id=image_id,
+            net_id=neutron_net_id,
             cluster_configs={conf["target"]: {
                 conf["config_name"]: replication_value}
             }
