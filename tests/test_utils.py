@@ -219,3 +219,93 @@ class LoadExtraModulesTestCase(test.TestCase):
         # test no fails if module is broken
         # TODO(olkonami): check exception is handled correct
         utils.load_plugins("/somwhere")
+
+
+def module_level_method():
+    pass
+
+
+class MethodClassTestCase(test.TestCase):
+
+    def test_method_class_for_class_level_method(self):
+        class A:
+            def m(self):
+                pass
+        self.assertEqual(utils.get_method_class(A.m), A)
+
+    def test_method_class_for_module_level_method(self):
+        self.assertIsNone(utils.get_method_class(module_level_method))
+
+
+class FirstIndexTestCase(test.TestCase):
+
+    def test_list_with_existing_matching_element(self):
+        lst = [1, 3, 5, 7]
+        self.assertEqual(utils.first_index(lst, lambda e: e == 1), 0)
+        self.assertEqual(utils.first_index(lst, lambda e: e == 5), 2)
+        self.assertEqual(utils.first_index(lst, lambda e: e == 7), 3)
+
+    def test_list_with_non_existing_matching_element(self):
+        lst = [1, 3, 5, 7]
+        self.assertEqual(utils.first_index(lst, lambda e: e == 2), None)
+
+
+class DocstringTestCase(test.TestCase):
+
+    def test_parse_complete_docstring(self):
+        docstring = """One-line description.
+
+Multi-
+line-
+description.
+
+:param p1: Param 1 description.
+:param p2: Param 2 description.
+:returns: Return value description.
+"""
+
+        dct = utils.parse_docstring(docstring)
+        expected = {
+            "short_description": "One-line description.",
+            "long_description": "Multi-\nline-\ndescription.",
+            "params": [{"name": "p1", "doc": "Param 1 description."},
+                       {"name": "p2", "doc": "Param 2 description."}],
+            "returns": "Return value description."
+        }
+        self.assertEqual(dct, expected)
+
+    def test_parse_incomplete_docstring(self):
+        docstring = """One-line description.
+
+:param p1: Param 1 description.
+:param p2: Param 2 description.
+"""
+
+        dct = utils.parse_docstring(docstring)
+        expected = {
+            "short_description": "One-line description.",
+            "long_description": None,
+            "params": [{"name": "p1", "doc": "Param 1 description."},
+                       {"name": "p2", "doc": "Param 2 description."}],
+            "returns": None
+        }
+        self.assertEqual(dct, expected)
+
+    def test_parse_docstring_with_no_params(self):
+        docstring = """One-line description.
+
+Multi-
+line-
+description.
+
+:returns: Return value description.
+"""
+
+        dct = utils.parse_docstring(docstring)
+        expected = {
+            "short_description": "One-line description.",
+            "long_description": "Multi-\nline-\ndescription.",
+            "params": [],
+            "returns": "Return value description."
+        }
+        self.assertEqual(dct, expected)

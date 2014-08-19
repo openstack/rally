@@ -15,13 +15,16 @@
 
 import functools
 import imp
+import inspect
 import itertools
 import os
+import re
 import StringIO
 import sys
 import time
 
 import six
+from sphinx.util import docstrings
 
 from rally import exceptions
 from rally.openstack.common.gettextutils import _
@@ -193,3 +196,112 @@ def load_plugins(directory):
             except Exception as e:
                 LOG.error(_("Couldn't load module from %(path)s: %(msg)s") %
                           {"path": fullpath, "msg": six.text_type(e)})
+
+
+def get_method_class(func):
+    """Return the class that defined the given method.
+
+    :param func: function to get the class for.
+    :returns: class object or None if func is not an instance method.
+    """
+    if not hasattr(func, "im_class"):
+        return None
+    for cls in inspect.getmro(func.im_class):
+        if func.__name__ in cls.__dict__:
+            return cls
+    return None
+
+
+def first_index(lst, predicate):
+    """Return the index of the first element that matches a predicate.
+
+    :param lst: list to find the matching element in.
+    :param predicate: predicate object.
+    :returns: the index of the first matching element or None if no element
+              matches the predicate.
+    """
+    for i in range(len(lst)):
+        if predicate(lst[i]):
+            return i
+    return None
+
+
+def format_docstring(docstring):
+    """Format the docstring to make it well-readable.
+
+    :param docstring: string.
+    :returns: formatted string.
+    """
+    if docstring:
+        return "\n".join(docstrings.prepare_docstring(docstring))
+    else:
+        return ""
+
+
+def parse_docstring(docstring):
+    """Parse the docstring into its components.
+
+    :returns: a dictionary of form
+              {
+                  "short_description": ...,
+                  "long_description": ...,
+                  "params": [{"name": ..., "doc": ...}, ...],
+                  "returns": ...
+              }
+    """
+
+    if docstring:
+        docstring_lines = docstrings.prepare_docstring(docstring)
+        docstring_lines = filter(lambda line: line != "", docstring_lines)
+    else:
+        docstring_lines = []
+
+    if docstring_lines:
+
+        short_description = docstring_lines[0]
+
+        param_lines_start = first_index(docstring_lines,
+                                        lambda line: line.startswith(":param")
+                                        or line.startswith(":returns"))
+        if param_lines_start:
+            long_description = "\n".join(docstring_lines[1:param_lines_start])
+        else:
+            long_description = "\n".join(docstring_lines[1:])
+
+        if not long_description:
+            long_description = None
+
+        params = []
+        param_regex = re.compile("^:param (?P<name>\w+): (?P<doc>.*)$")
+        for param_line in filter(lambda line: line.startswith(":param"),
+                                 docstring_lines):
+            match = param_regex.match(param_line)
+            if match:
+                params.append({
+                    "name": match.group("name"),
+                    "doc": match.group("doc")
+                })
+
+        returns = None
+        returns_line = filter(lambda line: line.startswith(":returns"),
+                              docstring_lines)
+        if returns_line:
+            returns_regex = re.compile("^:returns: (?P<doc>.*)$")
+            match = returns_regex.match(returns_line[0])
+            if match:
+                returns = match.group("doc")
+
+        return {
+            "short_description": short_description,
+            "long_description": long_description,
+            "params": params,
+            "returns": returns
+        }
+
+    else:
+        return {
+            "short_description": None,
+            "long_description": None,
+            "params": [],
+            "returns": None
+        }
