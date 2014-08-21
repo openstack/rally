@@ -116,18 +116,33 @@ class BaseContextTestCase(test.TestCase):
             self.assertNotEqual(cls.get_name(), "base", str(cls))
 
     def test_lt(self):
-        self.assertTrue(base.Context < fakes.FakeContext)
-        self.assertFalse(fakes.FakeContext < base.Context)
-        self.assertFalse(base.Context < base.Context)
+
+        class FakeLowerContext(fakes.FakeContext):
+            __ctx_order__ = fakes.FakeContext.get_order() - 1
+
+        ctx = mock.MagicMock()
+        self.assertTrue(FakeLowerContext(ctx) < fakes.FakeContext(ctx))
+        self.assertFalse(fakes.FakeContext(ctx) < FakeLowerContext(ctx))
+        self.assertFalse(fakes.FakeContext(ctx) < fakes.FakeContext(ctx))
 
     def test_gt(self):
-        self.assertTrue(fakes.FakeContext > base.Context)
-        self.assertFalse(base.Context > fakes.FakeContext)
-        self.assertFalse(base.Context > base.Context)
+
+        class FakeBiggerContext(fakes.FakeContext):
+            __ctx_order__ = fakes.FakeContext.get_order() + 1
+
+        ctx = mock.MagicMock()
+        self.assertTrue(FakeBiggerContext(ctx) > fakes.FakeContext(ctx))
+        self.assertFalse(fakes.FakeContext(ctx) > FakeBiggerContext(ctx))
+        self.assertFalse(fakes.FakeContext(ctx) > fakes.FakeContext(ctx))
 
     def test_eq(self):
-        self.assertFalse(base.Context == fakes.FakeContext)
-        self.assertTrue(base.Context == base.Context)
+
+        class FakeOtherContext(fakes.FakeContext):
+            __ctx_order__ = fakes.FakeContext.get_order() + 1
+
+        ctx = mock.MagicMock()
+        self.assertFalse(FakeOtherContext(ctx) == fakes.FakeContext(ctx))
+        self.assertTrue(FakeOtherContext(ctx) == FakeOtherContext(ctx))
 
 
 class ContextManagerTestCase(test.TestCase):
@@ -192,12 +207,14 @@ class ContextManagerTestCase(test.TestCase):
         result = manager.setup()
 
         self.assertEqual(result, ctx_object)
-        mock_get_by_name.assert_has_calls([mock.call("a"), mock.call("b")])
+        mock_get_by_name.assert_has_calls([mock.call("a"), mock.call("b")],
+                                          any_order=True)
         mock_context.assert_has_calls([mock.call(ctx_object),
-                                       mock.call(ctx_object)])
+                                       mock.call(ctx_object)], any_order=True)
         self.assertEqual([mock_context(), mock_context()], manager._visited)
         mock_context.return_value.assert_has_calls([mock.call.setup(),
-                                                    mock.call.setup()])
+                                                    mock.call.setup()],
+                                                   any_order=True)
 
     @mock.patch("rally.benchmark.context.base.Context.get_by_name")
     def test_cleanup(self, mock_get_by_name):
@@ -207,11 +224,13 @@ class ContextManagerTestCase(test.TestCase):
 
         manager = base.ContextManager(ctx_object)
         manager.cleanup()
-        mock_get_by_name.assert_has_calls([mock.call("a"), mock.call("b")])
+        mock_get_by_name.assert_has_calls([mock.call("a"), mock.call("b")],
+                                          any_order=True)
         mock_context.assert_has_calls([mock.call(ctx_object),
-                                       mock.call(ctx_object)])
+                                       mock.call(ctx_object)], any_order=True)
         mock_context.return_value.assert_has_calls([mock.call.cleanup(),
-                                                    mock.call.cleanup()])
+                                                    mock.call.cleanup()],
+                                                   any_order=True)
 
     @mock.patch("rally.benchmark.context.base.Context.get_by_name")
     def test_cleanp_exception(self, mock_get_by_name):
@@ -222,11 +241,13 @@ class ContextManagerTestCase(test.TestCase):
         manager = base.ContextManager(ctx_object)
         manager.cleanup()
 
-        mock_get_by_name.assert_has_calls([mock.call("a"), mock.call("b")])
+        mock_get_by_name.assert_has_calls([mock.call("a"), mock.call("b")],
+                                          any_order=True)
         mock_context.assert_has_calls([mock.call(ctx_object),
-                                       mock.call(ctx_object)])
+                                       mock.call(ctx_object)], any_order=True)
         mock_context.return_value.assert_has_calls([mock.call.cleanup(),
-                                                    mock.call.cleanup()])
+                                                    mock.call.cleanup()],
+                                                   any_order=True)
 
     @mock.patch("rally.benchmark.context.base.ContextManager.cleanup")
     @mock.patch("rally.benchmark.context.base.ContextManager.setup")
