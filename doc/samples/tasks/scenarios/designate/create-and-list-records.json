@@ -1,0 +1,28 @@
+{
+    "DesignateBasic.create_and_list_records": [
+        {
+            "args": {
+                "records_per_domain": 10
+            },
+            "runner": {
+                "type": "constant",
+                "times": 10,
+                "concurrency": 10
+            },
+            "context": {
+                "quotas": {
+                    "designate": {
+                        "domains": 100,
+                        "domain_recordsets": 2000,
+                        "domain_records": 2000,
+                        "recordset_records": 2000
+                    }
+                },
+                "users": {
+                    "tenants": 2,
+                    "users_per_tenant": 2
+                }
+            }
+        }
+    ]
+}
