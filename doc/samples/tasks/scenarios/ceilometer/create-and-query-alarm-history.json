@@ -10,7 +10,7 @@
                 "statistic": "avg",
                 "alarm_actions": ["http://localhost:8776/alarm"],
                 "ok_actions": ["http://localhost:8776/ok"],
-                "insufficient_data_actions": ["http://localhost:8776/notok"],
+                "insufficient_data_actions": ["http://localhost:8776/notok"]
             },
             "runner": {
                 "type": "constant",

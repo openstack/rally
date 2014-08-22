@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import json
 import mock
 import os
 import re
@@ -61,6 +62,15 @@ class TaskSampleTestCase(test.TestCase):
         missing = set(base.Scenario.list_benchmark_scenarios()) - scenarios
         self.assertEqual(missing, set([]),
                          "These scenarios don't have samples: %s" % missing)
+
+    def test_json_correct_syntax(self):
+        for dirname, dirnames, filenames in os.walk(self.samples_path):
+            for filename in filenames:
+                if not filename.endswith(".json"):
+                    continue
+                full_path = os.path.join(dirname, filename)
+                with open(full_path) as task_file:
+                    json.load(task_file)
 
     def test_task_config_pair_existance(self):
         inexistent_paths = []

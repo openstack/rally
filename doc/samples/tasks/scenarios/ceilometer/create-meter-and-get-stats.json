@@ -8,7 +8,7 @@
                 "counter_unit": "",
                 "counter_type": "cumulative"
             },
-            "runner":{
+            "runner": {
                 "type": "constant",
                 "times": 200,
                 "concurrency": 5

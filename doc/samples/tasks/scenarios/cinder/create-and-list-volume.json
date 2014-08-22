@@ -3,7 +3,7 @@
         {
             "args": {
                 "size": 1,
-                "detailed": True
+                "detailed": true
             },
             "runner": {
                 "type": "constant",

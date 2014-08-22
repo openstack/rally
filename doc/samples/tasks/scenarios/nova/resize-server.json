@@ -16,7 +16,7 @@
             "runner": {
                 "type": "constant",
                 "times": 10,
-                "concurrency": 5,
+                "concurrency": 5
             },
             "context": {
                 "users": {

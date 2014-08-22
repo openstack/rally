@@ -1,7 +1,7 @@
 {
     "CeilometerAlarms.list_alarms": [
         {
-            "runner":{
+            "runner": {
                 "type": "constant",
                 "times": 10,
                 "concurrency": 1

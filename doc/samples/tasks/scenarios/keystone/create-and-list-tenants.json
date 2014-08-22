@@ -8,7 +8,7 @@
                 "type": "constant",
                 "times": 10,
                 "concurrency": 1
-            },
+            }
         }
     ]
 }

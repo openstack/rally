@@ -4,7 +4,7 @@
             "args": {
                 "name_length": 10
             },
-            "runner":{
+            "runner": {
                 "type": "constant",
                 "times": 100,
                 "concurrency": 10

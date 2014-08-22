@@ -2,7 +2,7 @@
     "Quotas.cinder_update": [
         {
             "args": {
-                "max_quota": 1024,
+                "max_quota": 1024
             },
             "runner": {
                 "type": "constant",

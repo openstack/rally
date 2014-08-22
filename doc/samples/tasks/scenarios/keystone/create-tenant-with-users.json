@@ -5,7 +5,7 @@
                 "name_length": 10,
                 "users_per_tenant": 10
             },
-            "runner":{
+            "runner": {
                 "type": "constant",
                 "times": 10,
                 "concurrency": 10

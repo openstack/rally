@@ -9,7 +9,7 @@
                 "counter_type": "gauge",
                 "counter_unit": "instance",
                 "counter_volume": 1.0,
-                "resource_id": "resource_id",
+                "resource_id": "resource_id"
             },
             "runner": {
                 "type": "constant",
