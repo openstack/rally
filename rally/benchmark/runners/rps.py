@@ -27,8 +27,12 @@ LOG = logging.getLogger(__name__)
 SEND_RESULT_DELAY = 1
 
 
-def worker_process(rps, times, queue, scenario_context, timeout,
-                   worker_id, cls, method_name, args):
+def _worker_thread(queue, args):
+        queue.put(base._run_scenario_once(args))
+
+
+def _worker_process(rps, times, queue, scenario_context, timeout,
+                    worker_id, cls, method_name, args):
     """Start scenario within threads.
 
     Spawn N threads per second. Each thread runs scenario once, and appends
@@ -45,9 +49,6 @@ def worker_process(rps, times, queue, scenario_context, timeout,
     :param args: scenario args
     """
 
-    def worker_thread(args):
-        queue.put(base._run_scenario_once(args))
-
     pool = []
     i = 0
     start = time.time()
@@ -55,9 +56,9 @@ def worker_process(rps, times, queue, scenario_context, timeout,
 
     while times > i:
         i += 1
-        scenario_args = (("%d:%d" % (worker_id, i), cls, method_name,
+        scenario_args = (queue, ("%d:%d" % (worker_id, i), cls, method_name,
                          scenario_context, args),)
-        thread = threading.Thread(target=worker_thread,
+        thread = threading.Thread(target=_worker_thread,
                                   args=scenario_args)
         thread.start()
         pool.append(thread)
@@ -134,7 +135,7 @@ class RPSScenarioRunner(base.ScenarioRunner):
             rest -= 1
             worker_args = (rps_per_worker, times, queue, scenario_context,
                            timeout, i, cls, method_name, args)
-            process = multiprocessing.Process(target=worker_process,
+            process = multiprocessing.Process(target=_worker_process,
                                               args=worker_args)
             process.start()
             process_pool.append(process)
