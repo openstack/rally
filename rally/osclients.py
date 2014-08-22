@@ -17,6 +17,7 @@ import urlparse
 
 from ceilometerclient import client as ceilometer
 from cinderclient import client as cinder
+from designateclient import v1 as designate
 import glanceclient as glance
 from heatclient import client as heat
 from ironicclient import client as ironic
@@ -248,6 +249,19 @@ class Clients(object):
                                project_name=self.endpoint.tenant_name,
                                auth_url=self.endpoint.auth_url)
 
+        return client
+
+    @cached
+    def designate(self):
+        """Return designate client."""
+        kc = self.keystone()
+        dns_api_url = kc.service_catalog.url_for(
+            service_type='dns', endpoint_type='public',
+            region_name=self.endpoint.region_name)
+        client = designate.Client(
+            endpoint=dns_api_url,
+            token=kc.auth_token,
+            insecure=CONF.https_insecure)
         return client
 
     @cached

@@ -41,7 +41,7 @@ class UserCleanup(base.Context):
         "items": {
             "type": "string",
             "enum": ["nova", "glance", "cinder",
-                     "neutron", "ceilometer", "heat", "sahara"]
+                     "neutron", "ceilometer", "heat", "sahara", "designate"]
         },
         "uniqueItems": True
     }
@@ -64,7 +64,9 @@ class UserCleanup(base.Context):
                 "ceilometer": (utils.delete_ceilometer_resources,
                                clients.ceilometer, tenant_id),
                 "heat": (utils.delete_heat_resources, clients.heat),
-                "sahara": (utils.delete_sahara_resources, clients.sahara)
+                "sahara": (utils.delete_sahara_resources, clients.sahara),
+                "designate": (utils.delete_designate_resources,
+                              clients.designate),
             }
 
             for service_name in self.config:
