@@ -154,6 +154,11 @@ def delete_neutron_resources(neutron, project_uuid):
         neutron.delete_network(network["id"])
 
 
+def delete_designate_resources(designate):
+    for domain in designate.domains.list():
+        designate.domains.delete(domain.id)
+
+
 def delete_ceilometer_resources(ceilometer, project_uuid):
     delete_alarms(ceilometer, project_uuid)
 

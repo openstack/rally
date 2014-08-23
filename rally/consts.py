@@ -28,6 +28,7 @@ TEMPEST_TEST_SETS = ("full",
                      "smoke",
                      "baremetal",
                      "compute",
+                     "dns",
                      "data_processing",
                      "identity",
                      "image",
@@ -87,6 +88,7 @@ class _Service(utils.ImmutableMixin, utils.EnumMixin):
     HEAT = "heat"
     KEYSTONE = "keystone"
     NEUTRON = "neutron"
+    DESIGNATE = "designate"
     CEILOMETER = "ceilometer"
     S3 = "s3"
     TROVE = "trove"
@@ -106,6 +108,7 @@ class _ServiceType(utils.ImmutableMixin, utils.EnumMixin):
     COMPUTE = "compute"
     COMPUTEV3 = "computev3"
     NETWORK = "network"
+    DNS = "dns"
     METERING = "metering"
     S3 = "s3"
     DATABASE = "database"
@@ -123,6 +126,7 @@ class _ServiceType(utils.ImmutableMixin, utils.EnumMixin):
             self.ORCHESTRATION: _Service.HEAT,
             self.IDENTITY: _Service.KEYSTONE,
             self.NETWORK: _Service.NEUTRON,
+            self.DNS: _Service.DESIGNATE,
             self.METERING: _Service.CEILOMETER,
             self.S3: _Service.S3,
             self.DATABASE: _Service.TROVE,
