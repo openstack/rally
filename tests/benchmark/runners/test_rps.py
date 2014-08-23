@@ -76,7 +76,6 @@ class RPSScenarioRunnerTestCase(test.TestCase):
 
         self.assertEqual(times, mock_thread_instance.start.call_count)
         self.assertEqual(times, mock_thread_instance.join.call_count)
-        self.assertEqual(times, mock_thread_instance.isAlive.call_count)
 
         for i in range(1, times + 1):
             call = mock.call(args=(mock_queue,
