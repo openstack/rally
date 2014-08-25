@@ -179,6 +179,19 @@ class BenchmarkEngine(object):
                                                      self.admin_endpoint,
                                                      runner)
 
+    def _prepare_context(self, context, name, endpoint):
+        scenario_context = base_scenario.Scenario.meta(name, "context")
+        scenario_context.setdefault("users", {})
+        scenario_context.update(context)
+        context_obj = {
+            "task": self.task,
+            "admin": {"endpoint": endpoint},
+            "scenario_name": name,
+            "config": scenario_context
+        }
+
+        return context_obj
+
     @rutils.log_task_wrapper(LOG.info, _("Benchmarking."))
     def run(self):
         """Run the benchmark according to the test configuration.
@@ -192,17 +205,24 @@ class BenchmarkEngine(object):
         for name in self.config:
             for n, kw in enumerate(self.config[name]):
                 key = {'name': name, 'pos': n, 'kw': kw}
-                LOG.info("Running benchmark with key: %s" % key)
+                LOG.info("Running benchmark with key: \n%s"
+                         % json.dumps(key, indent=2))
                 runner = self._get_runner(kw)
                 is_done = threading.Event()
                 consumer = threading.Thread(
                     target=self.consume_results,
                     args=(key, self.task, runner.result_queue, is_done))
                 consumer.start()
-                self.duration = runner.run(
-                        name, kw.get("context", {}), kw.get("args", {}))
-                is_done.set()
-                consumer.join()
+
+                context_obj = self._prepare_context(kw.get("context", {}),
+                                                    name, self.admin_endpoint)
+                try:
+                    with base_ctx.ContextManager(context_obj):
+                        self.duration = runner.run(name, context_obj,
+                                                   kw.get("args", {}))
+                finally:
+                    is_done.set()
+                    consumer.join()
         self.task.update_status(consts.TaskStatus.FINISHED)
 
     @rutils.log_task_wrapper(LOG.info, _("Check cloud."))
