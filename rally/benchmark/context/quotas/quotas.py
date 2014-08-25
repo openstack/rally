@@ -15,6 +15,7 @@
 
 from rally.benchmark.context import base
 from rally.benchmark.context.quotas import cinder_quotas
+from rally.benchmark.context.quotas import designate_quotas
 from rally.benchmark.context.quotas import neutron_quotas
 from rally.benchmark.context.quotas import nova_quotas
 from rally.openstack.common.gettextutils import _
@@ -40,6 +41,7 @@ class Quotas(base.Context):
         "properties": {
             "nova": nova_quotas.NovaQuotas.QUOTAS_SCHEMA,
             "cinder": cinder_quotas.CinderQuotas.QUOTAS_SCHEMA,
+            "designate": designate_quotas.DesignateQuotas.QUOTAS_SCHEMA,
             "neutron": neutron_quotas.NeutronQuotas.QUOTAS_SCHEMA
         }
     }
@@ -51,6 +53,7 @@ class Quotas(base.Context):
         self.manager = {
             "nova": nova_quotas.NovaQuotas(self.clients),
             "cinder": cinder_quotas.CinderQuotas(self.clients),
+            "designate": designate_quotas.DesignateQuotas(self.clients),
             "neutron": neutron_quotas.NeutronQuotas(self.clients)
         }
 
