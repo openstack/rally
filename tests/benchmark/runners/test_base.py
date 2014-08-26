@@ -197,13 +197,12 @@ class ScenarioRunnerTestCase(test.TestCase):
             __execution_type__ = "new_runner"
 
         task = mock.MagicMock()
-        endpoints = [mock.MagicMock(), mock.MagicMock()]
+        admin = mock.MagicMock()
         config = {"type": "new_runner", "a": 123}
-        runner = base.ScenarioRunner.get_runner(task, endpoints, config)
+        runner = base.ScenarioRunner.get_runner(task, admin, config)
 
         self.assertEqual(runner.task, task)
-        self.assertEqual(runner.endpoints, endpoints)
-        self.assertEqual(runner.admin_user, endpoints[0])
+        self.assertEqual(runner.admin_user, admin)
         self.assertEqual(runner.config, config)
         self.assertIsInstance(runner, NewRunner)
 

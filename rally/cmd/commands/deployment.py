@@ -70,8 +70,8 @@ class DeploymentCommands(object):
 
             config = {
                 "type": "ExistingCloud",
-                "endpoint": {
-                    "auth_url": os.environ['OS_AUTH_URL'],
+                "auth_url": os.environ['OS_AUTH_URL'],
+                "admin": {
                     "username": os.environ['OS_USERNAME'],
                     "password": os.environ['OS_PASSWORD'],
                     "tenant_name": os.environ['OS_TENANT_NAME']
@@ -79,7 +79,7 @@ class DeploymentCommands(object):
             }
             region_name = os.environ.get('OS_REGION_NAME')
             if region_name and region_name != 'None':
-                config['endpoint']['region_name'] = region_name
+                config['region_name'] = region_name
         else:
             if not filename:
                 print("Either --filename or --fromenv is required")
@@ -167,14 +167,19 @@ class DeploymentCommands(object):
                    help='UUID of a deployment.')
     @envutils.with_default_deploy_id
     def endpoint(self, deploy_id=None):
-        """Print endpoint of the deployment.
+        """Print all endpoints of the deployment.
 
         :param deploy_id: a UUID of the deployment
         """
         headers = ['auth_url', 'username', 'password', 'tenant_name',
                    'region_name', 'use_public_urls', 'admin_port']
         table_rows = []
-        endpoints = db.deployment_get(deploy_id)['endpoints']
+
+        deployment = db.deployment_get(deploy_id)
+        users = deployment.get("users", [])
+        admin = deployment.get("admin")
+        endpoints = users + [admin] if admin else users
+
         for ep in endpoints:
             data = [ep.get(m, '') for m in headers]
             table_rows.append(utils.Struct(**dict(zip(headers, data))))
@@ -193,8 +198,9 @@ class DeploymentCommands(object):
         headers = ['services', 'type', 'status']
         table_rows = []
         try:
-            endpoints = db.deployment_get(deploy_id)['endpoints']
-            for endpoint_dict in endpoints:
+            admin = db.deployment_get(deploy_id)['admin']
+            # TODO(boris-42): make this work for users in future
+            for endpoint_dict in [admin]:
                 clients = osclients.Clients(endpoint.Endpoint(**endpoint_dict))
                 client = clients.verified_keystone()
                 print("keystone endpoints are valid and following "

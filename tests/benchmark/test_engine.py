@@ -242,7 +242,7 @@ class BenchmarkEngineTestCase(test.TestCase):
             "b.args": [{"args": {"a": 1}}]
         }
         task = mock.MagicMock()
-        eng = engine.BenchmarkEngine(config, task).bind([{}])
+        eng = engine.BenchmarkEngine(config, task).bind({})
         eng.run()
 
     @mock.patch("rally.benchmark.engine.BenchmarkEngine.consume_results")
@@ -256,7 +256,7 @@ class BenchmarkEngineTestCase(test.TestCase):
             "b.args": [{"runner": {"a": 1}}]
         }
         task = mock.MagicMock()
-        eng = engine.BenchmarkEngine(config, task).bind([{}])
+        eng = engine.BenchmarkEngine(config, task).bind({})
         eng.run()
 
     @mock.patch("rally.benchmark.engine.BenchmarkEngine.consume_results")
@@ -270,7 +270,7 @@ class BenchmarkEngineTestCase(test.TestCase):
             "b.args": [{"context": {"context_b": {"b": 2}}}]
         }
         task = mock.MagicMock()
-        eng = engine.BenchmarkEngine(config, task).bind([{}])
+        eng = engine.BenchmarkEngine(config, task).bind({})
         eng.run()
 
     @mock.patch("rally.benchmark.engine.osclients")
@@ -279,16 +279,16 @@ class BenchmarkEngineTestCase(test.TestCase):
         mock_endpoint.return_value = mock.MagicMock()
         benchmark_engine = engine.BenchmarkEngine(mock.MagicMock(),
                                                   mock.MagicMock())
-        endpoint = {
+        admin = {
             "auth_url": "http://valid.com",
             "username": "user",
             "password": "pwd",
             "tenant_name": "tenant"
         }
 
-        binded_benchmark_engine = benchmark_engine.bind([endpoint])
-        self.assertEqual([mock_endpoint.return_value],
-                         benchmark_engine.endpoints)
+        binded_benchmark_engine = benchmark_engine.bind(admin)
+        self.assertEqual(mock_endpoint.return_value,
+                         benchmark_engine.admin_endpoint)
         self.assertEqual(benchmark_engine, binded_benchmark_engine)
         expected_calls = [
             mock.call.Clients(mock_endpoint.return_value),

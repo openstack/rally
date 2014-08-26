@@ -76,14 +76,11 @@ class Deployment(BASE, RallyBase):
         nullable=False,
     )
 
-    # TODO(akscram): Actually a endpoint of a deployment can be
-    #                represented by a set of parameters are auth_url,
-    #                user, password and project.
-    endpoints = sa.Column(
-        types.PickleType,
-        default=[],
-        nullable=False,
-    )
+    # NOTE(boris-42): This is pickled rally.object.Endpoint object
+    admin = sa.Column(types.PickleType, nullable=True)
+
+    # NOTE(boris-42): This is list of pickled rally.object.Endpoint objects
+    users = sa.Column(types.PickleType, default=[], nullable=False)
 
     status = sa.Column(
         sa.Enum(*consts.DeployStatus),

@@ -25,23 +25,18 @@ from rally import fileutils
 
 class UseCommands(object):
 
-    def _update_openrc_deployment_file(self, deploy_id, endpoints):
+    def _update_openrc_deployment_file(self, deploy_id, endpoint):
         openrc_path = os.path.expanduser('~/.rally/openrc-%s' % deploy_id)
         # NOTE(msdubov): In case of multiple endpoints write the first one.
         with open(openrc_path, 'w+') as env_file:
-            if endpoints[0].get('region_name'):
-                env_file.write('export OS_AUTH_URL=%(auth_url)s\n'
-                               'export OS_USERNAME=%(username)s\n'
-                               'export OS_PASSWORD=%(password)s\n'
-                               'export OS_TENANT_NAME=%(tenant_name)s\n'
-                               'export OS_REGION_NAME=%(region_name)s\n'
-                               % endpoints[0])
-            else:
-                env_file.write('export OS_AUTH_URL=%(auth_url)s\n'
-                               'export OS_USERNAME=%(username)s\n'
-                               'export OS_PASSWORD=%(password)s\n'
-                               'export OS_TENANT_NAME=%(tenant_name)s\n'
-                               % endpoints[0])
+            env_file.write('export OS_AUTH_URL=%(auth_url)s\n'
+                           'export OS_USERNAME=%(username)s\n'
+                           'export OS_PASSWORD=%(password)s\n'
+                           'export OS_TENANT_NAME=%(tenant_name)s\n'
+                           % endpoint)
+            if endpoint.get('region_name'):
+                env_file.write('export OS_REGION_NAME=%(region_name)s\n'
+                               % endpoint)
         expanded_path = os.path.expanduser('~/.rally/openrc')
         if os.path.exists(expanded_path):
             os.remove(expanded_path)
@@ -88,8 +83,8 @@ class UseCommands(object):
             self._ensure_rally_configuration_dir_exists()
             self._update_attribute_in_global_file('RALLY_DEPLOYMENT',
                                                   deploy_id)
-            self._update_openrc_deployment_file(deploy_id,
-                                                deploy['endpoints'])
+            self._update_openrc_deployment_file(
+                deploy_id, deploy.get('admin') or deploy.get('users')[0])
             print ('~/.rally/openrc was updated\n\nHINTS:\n'
                    '* To get your cloud resources, run:\n\t'
                    'rally show [flavors|images|keypairs|networks|secgroups]\n'

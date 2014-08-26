@@ -39,7 +39,7 @@ class ConfigTestCase(test.TestCase):
                          "password": "test",
                          "auth_url": "http://test/v2.0",
                          "permission": "admin"}
-        mock_get.return_value = {"endpoints": [self.endpoint]}
+        mock_get.return_value = {"admin": self.endpoint}
         self.deploy_id = "fake_deploy_id"
         self.conf_generator = config.TempestConf(self.deploy_id)
 
@@ -84,7 +84,7 @@ class ConfigTestCase(test.TestCase):
         self.conf_generator.keystoneclient.auth_ref = {
             "serviceCatalog": [{
                 "name": service,
-                "endpoints": [{"publicURL": url}]
+                "admin": {"publicURL": url}
             }]}
         self.assertEqual(self.conf_generator._get_url(service), url)
 

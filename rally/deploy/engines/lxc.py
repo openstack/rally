@@ -148,7 +148,7 @@ class LxcEngine(engine.EngineFactory):
                 container.ssh.run('/bin/sh -e', stdin=open(start_script, 'rb'))
             if network:
                 network += 1
-        return objects.Endpoint('', '', '', '')
+        return {"admin": objects.Endpoint('', '', '', '')}
 
     def cleanup(self):
         resources = self.deployment.get_resources()

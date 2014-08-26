@@ -103,8 +103,8 @@ class FuelEngineTestCase(test.TestCase):
         engine._get_release_id = mock.Mock()
 
         endpoint = engine.deploy()
-        self.assertEqual(1, len(endpoint))
-        endpoint = endpoint[0]
+        self.assertEqual(["admin"], endpoint.keys())
+        endpoint = endpoint["admin"]
 
         self.assertEqual('user', endpoint.username)
         self.assertEqual('pw', endpoint.password)

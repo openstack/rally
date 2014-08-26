@@ -49,7 +49,7 @@ CONF.register_opts(image_opts, 'image')
 class TempestConf(object):
 
     def __init__(self, deploy_id):
-        self.endpoint = db.deployment_get(deploy_id)['endpoints'][0]
+        self.endpoint = db.deployment_get(deploy_id)['admin']
         self.clients = osclients.Clients(endpoint.Endpoint(**self.endpoint))
         try:
             self.keystoneclient = self.clients.verified_keystone()
@@ -102,7 +102,7 @@ class TempestConf(object):
     def _get_url(self, servicename):
         for service in self.keystoneclient.auth_ref['serviceCatalog']:
             if service['name'] == servicename:
-                return service['endpoints'][0]['publicURL']
+                return service['admin']['publicURL']
 
     def _set_default(self):
         lock_path = os.path.join(self.data_path,

@@ -50,15 +50,15 @@ class DeploymentCommandsTestCase(test.TestCase):
         mock_create.assert_called_once_with(
             {
                 "type": "ExistingCloud",
-                "endpoint": {
-                    "auth_url": 'fake_auth_url',
-                    "username": 'fake_username',
-                    "password": 'fake_password',
-                    "tenant_name": 'fake_tenant_name',
-                    "region_name": 'fake_region_name'
+                "auth_url": 'fake_auth_url',
+                "region_name": "fake_region_name",
+                "admin": {
+                    "username": "fake_username",
+                    "password": "fake_password",
+                    "tenant_name": "fake_tenant_name"
                 }
             },
-            'from_env'
+            "from_env"
         )
 
     @mock.patch('rally.cmd.commands.deployment.DeploymentCommands.list')
@@ -193,15 +193,26 @@ class DeploymentCommandsTestCase(test.TestCase):
     @mock.patch('rally.cmd.commands.deployment.utils.Struct')
     @mock.patch('rally.cmd.commands.deployment.db.deployment_get')
     def test_endpoint(self, mock_deployment, mock_struct, mock_print_list):
-        deploy_id = 'b1a6153e-a314-4cb3-b63b-cf08c1a416c3'
-        value = {'endpoints': [{}]}
+        deploy_id = "b1a6153e-a314-4cb3-b63b-cf08c1a416c3"
+        value = {
+            "admin": {
+                "auth_url": "url",
+                "username": "u",
+                "password": "p",
+                "tenant_name": "t",
+                "region_name": "r",
+                "use_public_urls": "upu",
+                "admin_port": "ap"
+            },
+            "users": []
+        }
         mock_deployment.return_value = value
         self.deployment.endpoint(deploy_id)
         mock_deployment.assert_called_once_with(deploy_id)
 
-        headers = ['auth_url', 'username', 'password', 'tenant_name',
-                   'region_name', 'use_public_urls', 'admin_port']
-        fake_data = ['', '', '', '', '', '', '']
+        headers = ["auth_url", "username", "password", "tenant_name",
+                   "region_name", "use_public_urls", "admin_port"]
+        fake_data = ["url", "u", "p", "t", "r", "upu", "ap"]
         mock_struct.assert_called_once_with(**dict(zip(headers, fake_data)))
         mock_print_list.assert_called_once_with([mock_struct()], headers)
 
