@@ -14,6 +14,7 @@
 #    under the License.
 
 import multiprocessing
+import random
 import threading
 import time
 
@@ -54,6 +55,12 @@ def _worker_process(rps, times, queue, scenario_context, timeout,
     start = time.time()
     sleep = 1.0 / rps
 
+    # Injecting timeout to exclude situations, where start time and
+    # actual time are neglible close
+
+    randsleep_delay = random.randint(int(sleep / 2 * 100), int(sleep * 100))
+    time.sleep(randsleep_delay / 100.0)
+
     while times > i:
         i += 1
         scenario_args = (queue, ("%d:%d" % (worker_id, i), cls, method_name,
@@ -63,8 +70,11 @@ def _worker_process(rps, times, queue, scenario_context, timeout,
         thread.start()
         pool.append(thread)
 
+        time_gap = time.time() - start
+        real_rps = i / time_gap if time_gap else "Infinity"
+
         LOG.debug("Worker: %s rps: %s (requested rps: %s)" % (
-                  worker_id, i / (time.time() - start), rps))
+            worker_id, real_rps, rps))
 
         # try to join latest thread(s) until it finished, or until time to
         # start new thread
