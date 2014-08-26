@@ -13,8 +13,20 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import mock
+from oslo.config import cfg
+
 from rally.cmd import cliutils
+from rally.cmd.commands import deployment
+from rally.cmd.commands import info
+from rally.cmd.commands import show
+from rally.cmd.commands import task
+from rally.cmd.commands import use
+from rally.cmd.commands import verify
+from rally.openstack.common.apiclient import exceptions
 from tests import test
+
+CONF = cfg.CONF
 
 
 class CliUtilsTestCase(test.TestCase):
@@ -45,3 +57,121 @@ class CliUtilsTestCase(test.TestCase):
         return_value = formatter(self)
 
         self.assertEqual(return_value, "n/a")
+
+    def test__methods_of_works(self):
+        class fake_class(object):
+            pass
+
+        def public_callable(self):
+            pass
+
+        def _private_callable(self):
+            pass
+        mock_obj = fake_class()
+        mock_obj.public = public_callable
+        mock_obj._private = _private_callable
+        result = cliutils._methods_of(mock_obj)
+        self.assertEqual(1, len(result))
+        self.assertEqual("public", result[0][0])
+
+    def test__methods_of_empty_result(self):
+        class fake_class():
+            pass
+
+        def public_callable(self):
+            pass
+
+        def _private_callable(self):
+            pass
+
+        mock_obj = fake_class()
+        mock_obj._private = _private_callable
+        mock_obj._private2 = public_callable
+        result = cliutils._methods_of(mock_obj)
+        self.assertEqual(result, [])
+
+    def _unregister_opts(self):
+        CONF.reset()
+        category_opt = cfg.SubCommandOpt('category',
+                                         title='Command categories',
+                                         help='Available categories'
+                                         )
+        CONF.unregister_opt(category_opt)
+
+    @mock.patch('oslo.config.cfg.CONF',
+                side_effect=cfg.ConfigFilesNotFoundError("config_file"))
+    @mock.patch('rally.cmd.cliutils.CONF', config_file=None)
+    def test_run_fails(self, mock_cmd_cliutils_conf, mock_cliutils_conf):
+        categories = {
+                    'deployment': deployment.DeploymentCommands,
+                    'info': info.InfoCommands,
+                    'show': show.ShowCommands,
+                    'task': task.TaskCommands,
+                    'use': use.UseCommands,
+                    'verify': verify.VerifyCommands}
+        ret = cliutils.run(['rally', 'show', 'flavors'], categories)
+        self._unregister_opts()
+        self.assertEqual(ret, 2)
+
+    def test_run_version(self):
+        categories = {
+                    'deployment': deployment.DeploymentCommands,
+                    'info': info.InfoCommands,
+                    'show': show.ShowCommands,
+                    'task': task.TaskCommands,
+                    'use': use.UseCommands,
+                    'verify': verify.VerifyCommands}
+        ret = cliutils.run(['rally', 'version'], categories)
+        self._unregister_opts()
+        self.assertEqual(ret, 0)
+
+    def test_run_bash_completion(self):
+        categories = {
+                    'deployment': deployment.DeploymentCommands,
+                    'info': info.InfoCommands,
+                    'show': show.ShowCommands,
+                    'task': task.TaskCommands,
+                    'use': use.UseCommands,
+                    'verify': verify.VerifyCommands}
+        ret = cliutils.run(['rally', 'bash-completion'], categories)
+        self._unregister_opts()
+        self.assertEqual(ret, 0)
+
+    def test_run_bash_completion_with_query_category(self):
+        categories = {
+                    'deployment': deployment.DeploymentCommands,
+                    'info': info.InfoCommands,
+                    'show': show.ShowCommands,
+                    'task': task.TaskCommands,
+                    'use': use.UseCommands,
+                    'verify': verify.VerifyCommands}
+        ret = cliutils.run(['rally', 'bash-completion', 'info'], categories)
+        self._unregister_opts()
+        self.assertEqual(ret, 0)
+
+    def test_run_show(self):
+        categories = {
+                    'deployment': deployment.DeploymentCommands,
+                    'info': info.InfoCommands,
+                    'show': show.ShowCommands,
+                    'task': task.TaskCommands,
+                    'use': use.UseCommands,
+                    'verify': verify.VerifyCommands}
+        ret = cliutils.run(['rally', 'show', 'keypairs'], categories)
+        self._unregister_opts()
+        self.assertEqual(ret, 1)
+
+    @mock.patch('rally.openstack.common.cliutils.validate_args',
+                side_effect=exceptions.MissingArgs("missing"))
+    def test_run_show_fails(self, mock_validate_args):
+        categories = {
+                    'deployment': deployment.DeploymentCommands,
+                    'info': info.InfoCommands,
+                    'show': show.ShowCommands,
+                    'task': task.TaskCommands,
+                    'use': use.UseCommands,
+                    'verify': verify.VerifyCommands}
+        ret = cliutils.run(['rally', 'show', 'keypairs'], categories)
+        mock_validate_args.assert_called()
+        self._unregister_opts()
+        self.assertEqual(ret, 1)
