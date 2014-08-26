@@ -676,8 +676,8 @@
         detailed: True
       runner:
         type: "constant"
-        times: 1
-        concurrency: 1
+        times: 4
+        concurrency: 4
       context:
         users:
           tenants: 1
@@ -701,7 +701,7 @@
         concurrency: 3
       context:
         users:
-          tenants: 1
+          tenants: 3
           users_per_tenant: 1
       sla:
         max_failure_percent: 0
@@ -728,7 +728,7 @@
         concurrency: 3
       context:
         users:
-          tenants: 1
+          tenants: 3
           users_per_tenant: 1
       sla:
         max_failure_percent: 0
@@ -797,6 +797,22 @@
         image:
             name: "cirros-0.3.2-x86_64-uec"
         auto_assign_nics: false
+      runner:
+        type: "constant"
+        times: 4
+        concurrency: 2
+      context:
+        users:
+          tenants: 3
+          users_per_tenant: 2
+      sla:
+        max_failure_percent: 0
+    -
+      args:
+        flavor:
+            name: "m1.tiny"
+        image:
+            name: "cirros-0.3.2-x86_64-uec"
       runner:
         type: "constant"
         times: 4
