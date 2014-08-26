@@ -271,6 +271,31 @@ List of available Deploy engines (including their description and usage examples
 
 List of available Server providers (including their description and usage examples):  :ref:`Server providers <server_providers>`
 
-..
+You can also learn about different Rally entities without leaving the Command Line Interface. There is a special **search engine** embedded into Rally, which, for a given *search query*, prints documentation for the corresponding benchmark scenario/deploy engine/... as fetched from the source code. This is accomplished by the **rally info find** command:
 
-List of available Benchmark scenarios (including their description and usage examples):  :ref:`Benchmark scenarios <benchmark_scenarios>`
+.. code-block: none
+
+    $ rally info find *create_meter_and_get_stats*
+
+    CeilometerStats.create_meter_and_get_stats (benchmark scenario).
+
+    Test creating a meter and fetching its statistics.
+
+    Meter is first created and then statistics is fetched for the same
+    using GET /v2/meters/(meter_name)/statistics.
+
+    Parameters:
+        - name_length: length of generated (random) part of meter name
+        - kwargs: contains optional arguments to create a meter
+
+    $ rally info find *Authenticate*
+
+    Authenticate (benchmark scenario group).
+
+    This class should contain authentication mechanism.
+
+    For different types of clients like Keystone.
+
+    $ rally info find *some_non_existing_benchmark*
+
+    Failed to find any docs for query: 'some_non_existing_benchmark'
