@@ -72,8 +72,8 @@ class KeystoneScenarioTestCase(test.TestCase):
         result = scenario._user_create()
 
         self.assertEqual(user, result)
-        fake_keystone.users.create.assert_called_once_with(name, name,
-                                                           name + "@rally.me")
+        fake_keystone.users.create.assert_called_once_with(
+                    name, password=name, email=name + "@rally.me")
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        'keystone.create_user')
 
@@ -120,9 +120,9 @@ class KeystoneScenarioTestCase(test.TestCase):
 
         scenario._users_create(tenant, users_per_tenant=1, name_length=10)
 
-        fake_keystone.users.create.assert_called_once_with(name, name,
-                                                           name + "@rally.me",
-                                                           tenant_id=tenant.id)
+        fake_keystone.users.create.assert_called_once_with(
+                    name, password=name, email=name + "@rally.me",
+                    tenant_id=tenant.id)
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        'keystone.create_users')
 
