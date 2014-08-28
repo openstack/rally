@@ -39,8 +39,8 @@ class KeystoneScenario(base.Scenario):
         #                 when we switch to v3.
         password = password or name
         email = email or (name + "@rally.me")
-        return self.admin_clients("keystone").users.create(name, password,
-                                                           email, **kwargs)
+        return self.admin_clients("keystone").users.create(
+                    name, password=password, email=email, **kwargs)
 
     @base.atomic_action_timer('keystone.delete_resource')
     def _resource_delete(self, resource):
@@ -69,8 +69,8 @@ class KeystoneScenario(base.Scenario):
             name = self._generate_random_name(length=name_length)
             password = name
             email = (name + "@rally.me")
-            self.admin_clients("keystone").users.create(name, password, email,
-                                                        tenant_id=tenant.id)
+            self.admin_clients("keystone").users.create(
+                    name, password=password, email=email, tenant_id=tenant.id)
 
     @base.atomic_action_timer('keystone.list_users')
     def _list_users(self):
