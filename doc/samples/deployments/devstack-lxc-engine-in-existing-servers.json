@@ -15,7 +15,7 @@
             "container_name_prefix": "controller",
             "distribution": "ubuntu",
             "host_provider": {
-                "type": "DummyProvider",
+                "type": "ExistingServers",
                 "credentials": [{"user": "root", "host": "localhost"}]
             }
         }
@@ -27,7 +27,7 @@
             "container_name": "devstack-compute",
             "nodes_per_server": 64,
             "provider": {
-                "type": "DummyProvider",
+                "type": "ExistingServers",
                 "credentials": [{"user": "root", "host": "localhost"}]
             },
             "engine": {

@@ -33,12 +33,12 @@ This node should be deployed in lxc container, so we use the LxcProvider::
         "container_name_prefix": "controller",
         "distribution": "ubuntu",
         "host_provider": {
-            "name": "DummyProvider",
+            "name": "ExistingServers",
             "credentials": [{"user": "root", "host": "localhost"}]
         }
     }
 
-DummyProvider is used as sub-provider, because we already have a linux box (localhost).
+ExistingServers is used as sub-provider, because we already have a linux box (localhost).
 
 
 Computes
@@ -54,7 +54,7 @@ compute instance via the devstack engine, then makes N clones using lxc-clone.
     "container_name": "devstack-compute",
     "nodes_per_server": 64,
     "provider": {
-        "type": "DummyProvider",
+        "type": "ExistingServers",
         "credentials": [{"user": "root", "host": "localhost"}]
     },
     "engine": {
@@ -69,7 +69,7 @@ compute instance via the devstack engine, then makes N clones using lxc-clone.
         }
     }
 
-This is very similar to LxcProvider configuration: DummyProvider as sub-provider and DevstackEngine
+This is very similar to LxcProvider configuration: ExistingServers as sub-provider and DevstackEngine
 as sub-engine. Please note controller's ip isn't known at the moment of configuratoin, so
 MultihostEngine will replace {contoller_ip} pattern with actual address after first node is deployed.
 
@@ -111,7 +111,7 @@ Here is an example of a complete configuration file, assembled from the snippets
                 "container_name_prefix": "controller",
                 "distribution": "ubuntu",
                 "host_provider": {
-                    "type": "DummyProvider",
+                    "type": "ExistingServers",
                     "credentials": [{"user": "root", "host": "localhost"}]
                 }
             }
@@ -123,7 +123,7 @@ Here is an example of a complete configuration file, assembled from the snippets
                 "container_name": "devstack-compute",
                 "nodes_per_server": 64,
                 "provider": {
-                    "type": "DummyProvider",
+                    "type": "ExistingServers",
                     "credentials": [{"user": "root", "host": "localhost"}]
                 },
                 "engine": {
