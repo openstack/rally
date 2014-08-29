@@ -1406,15 +1406,38 @@
         failure_rate:
           max: 0
 
-  Requests.check_response:
+  HttpRequests.check_request:
     -
       args:
-          url: "http://www.google.com"
-          response: 200
+        url: "http://www.example.com"
+        method: "GET"
+        status_code: 200
       runner:
         type: "constant"
-        times: 5
-        concurrency: 5
+        times: 2
+        concurrency: 2
+      sla:
+        failure_rate:
+          max: 0
+
+  HttpRequests.check_random_request:
+    -
+      args:
+        requests:
+          -
+            url: "http://www.example.com"
+            method: "GET"
+          -
+            url: "http://www.openstack.org"
+            method: "GET"
+        status_code: 200
+      runner:
+        type: "constant"
+        times: 2
+        concurrency: 2
+      sla:
+        failure_rate:
+          max: 0
 
   NovaSecGroup.create_and_delete_secgroups:
     -

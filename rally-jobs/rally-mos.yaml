@@ -468,15 +468,16 @@
         failure_rate:
           max: 0
 
-  Requests.check_response:
+  HttpRequests.check_request:
     -
       args:
-          url: "http://git.openstack.org/cgit"
-          response: 200
+        url: "http://www.example.com"
+        method: "GET"
+        status_code: 200
       runner:
         type: "constant"
-        times: 1
-        concurrency: 1
+        times: 2
+        concurrency: 2
       sla:
         failure_rate:
           max: 0

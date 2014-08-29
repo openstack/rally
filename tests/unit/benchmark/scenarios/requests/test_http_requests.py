@@ -21,11 +21,18 @@ SCN = "rally.benchmark.scenarios"
 
 class RequestsTestCase(test.TestCase):
 
-    @mock.patch("%s.requests.http_requests.requests" % SCN)
-    def test_check_response(self, mock_requests):
-        mock_requests.head(mock.MagicMock()).status_code = 200
-        Requests = http_requests.Requests()
+    @mock.patch("%s.requests.utils.RequestScenario._check_request" % SCN)
+    def test_check_request(self, mock_check):
+        Requests = http_requests.HttpRequests()
+        Requests.check_request("sample_url", "GET", 200)
+        mock_check.assert_called_once_with("sample_url", "GET", 200)
 
-        self.assertRaises(http_requests.WrongStatusException,
-                          Requests.check_response, url="sample_url",
-                          response=302)
+    @mock.patch("%s.requests.utils.RequestScenario._check_request" % SCN)
+    @mock.patch("%s.requests.http_requests.random.choice" % SCN)
+    def test_check_random_request(self, mock_random_choice, mock_check):
+        mock_random_choice.return_value = {"url": "sample_url"}
+        Requests = http_requests.HttpRequests()
+        Requests.check_random_request(status_code=200,
+                                      requests=[{"url": "sample_url"}])
+        mock_random_choice.assert_called_once_with([{"url": "sample_url"}])
+        mock_check.assert_called_once_with(status_code=200, url="sample_url")
