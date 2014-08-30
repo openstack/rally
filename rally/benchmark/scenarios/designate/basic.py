@@ -22,8 +22,8 @@ from rally import consts
 
 class DesignateBasic(utils.DesignateScenario):
 
-    @base.scenario(context={"cleanup": ["designate"]})
     @validation.required_services(consts.Service.DESIGNATE)
+    @base.scenario(context={"cleanup": ["designate"]})
     def create_and_list_domains(self):
         """Tests creating a domain and listing domains.
 
@@ -39,8 +39,8 @@ class DesignateBasic(utils.DesignateScenario):
         self._create_domain()
         self._list_domains()
 
-    @base.scenario(context={"cleanup": ["designate"]})
     @validation.required_services(consts.Service.DESIGNATE)
+    @base.scenario(context={"cleanup": ["designate"]})
     def list_domains(self):
         """Test the designate domain-list command.
 
@@ -54,8 +54,8 @@ class DesignateBasic(utils.DesignateScenario):
 
         self._list_domains()
 
-    @base.scenario(context={"cleanup": ["designate"]})
     @validation.required_services(consts.Service.DESIGNATE)
+    @base.scenario(context={"cleanup": ["designate"]})
     def create_and_delete_domain(self):
         """Test adds and then deletes domain.
 

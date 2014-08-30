@@ -23,9 +23,9 @@ from rally import consts
 class SaharaNodeGroupTemplates(utils.SaharaScenario):
 
     @types.set(flavor=types.FlavorResourceType)
-    @validation.add(validation.flavor_exists('flavor'))
-    @base.scenario(context={"cleanup": ["sahara"]})
+    @validation.flavor_exists('flavor')
     @validation.required_services(consts.Service.SAHARA)
+    @base.scenario(context={"cleanup": ["sahara"]})
     def create_and_list_node_group_templates(self, flavor,
                                              plugin_name="vanilla",
                                              hadoop_version="1.2.1"):
@@ -57,9 +57,9 @@ class SaharaNodeGroupTemplates(utils.SaharaScenario):
         self._list_node_group_templates()
 
     @types.set(flavor=types.FlavorResourceType)
-    @validation.add(validation.flavor_exists('flavor'))
-    @base.scenario(context={"cleanup": ["sahara"]})
+    @validation.flavor_exists('flavor')
     @validation.required_services(consts.Service.SAHARA)
+    @base.scenario(context={"cleanup": ["sahara"]})
     def create_delete_node_group_templates(self, flavor,
                                            plugin_name="vanilla",
                                            hadoop_version="1.2.1"):

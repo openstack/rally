@@ -33,8 +33,8 @@ class KeystoneBasic(kutils.KeystoneScenario):
     def create_tenant(self, name_length=10, **kwargs):
         self._tenant_create(name_length=name_length, **kwargs)
 
+    @validation.required_parameters("users_per_tenant")
     @base.scenario(admin_only=True, context={"admin_cleanup": ["keystone"]})
-    @validation.add(validation.required_parameters(['users_per_tenant']))
     def create_tenant_with_users(self, users_per_tenant, name_length=10,
                                  **kwargs):
         tenant = self._tenant_create(name_length=name_length, **kwargs)

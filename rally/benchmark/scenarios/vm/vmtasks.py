@@ -31,12 +31,11 @@ class VMTasks(nova_utils.NovaScenario, vm_utils.VMScenario):
 
     @types.set(image=types.ImageResourceType,
                flavor=types.FlavorResourceType)
-    @validation.add(validation.image_valid_on_flavor("flavor", "image"))
-    @validation.add(validation.file_exists("script"))
-    @validation.add(validation.number("port", minval=1, maxval=65535,
-                                      nullable=True, integer_only=True))
-    @validation.add(validation.external_network_exists("floating_network",
-                                                       "use_floatingip"))
+    @validation.image_valid_on_flavor("flavor", "image")
+    @validation.file_exists("script")
+    @validation.number("port", minval=1, maxval=65535, nullable=True,
+                       integer_only=True)
+    @validation.external_network_exists("floating_network", "use_floatingip")
     @base.scenario(
         context={"cleanup": ["nova"], "keypair": {}, "allow_ssh": {}})
     @validation.required_services(consts.Service.NOVA)

@@ -19,8 +19,9 @@ from rally import consts
 
 
 class CeilometerStats(utils.CeilometerScenario):
-    @base.scenario(context={"cleanup": ["ceilometer"]})
+
     @validation.required_services(consts.Service.CEILOMETER)
+    @base.scenario(context={"cleanup": ["ceilometer"]})
     def create_meter_and_get_stats(self, **kwargs):
         """Test creating a meter and fetching its statistics.
 

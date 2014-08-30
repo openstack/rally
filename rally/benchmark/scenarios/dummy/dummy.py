@@ -34,8 +34,8 @@ class Dummy(base.Scenario):
         if sleep:
             time.sleep(sleep)
 
-    @validation.add(validation.number("size_of_message", minval=1,
-                                      integer_only=True, nullable=True))
+    @validation.number("size_of_message",
+                       minval=1, integer_only=True, nullable=True)
     @base.scenario()
     def dummy_exception(self, size_of_message=1):
         """Test if exceptions are processed properly.
@@ -49,9 +49,8 @@ class Dummy(base.Scenario):
 
         raise exceptions.DummyScenarioException("M" * size_of_message)
 
-    @validation.add(validation.number("exception_probability", minval=0,
-                                      maxval=1, integer_only=False,
-                                      nullable=True))
+    @validation.number("exception_probability",
+                       minval=0, maxval=1, integer_only=False, nullable=True)
     @base.scenario()
     def dummy_exception_probability(self, exception_probability=0.5):
         """Test if exceptions are processed properly.

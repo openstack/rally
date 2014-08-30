@@ -23,12 +23,11 @@ class Authenticate(base.Scenario):
     """
 
     @base.scenario()
-    @base.atomic_action_timer('authenticate.keystone')
     def keystone(self, **kwargs):
         self.clients("keystone")
 
+    @validation.required_parameters("repetitions")
     @base.scenario()
-    @validation.add(validation.required_parameters(['repetitions']))
     def validate_glance(self, repetitions):
         """Check Glance Client to ensure validation of token.
 
@@ -41,11 +40,11 @@ class Authenticate(base.Scenario):
         glance_client = self.clients("glance")
         image_name = "__intentionally_non_existent_image___"
         for i in range(repetitions):
-            with base.AtomicAction(self, 'authenticate.validate_glance'):
+            with base.AtomicAction(self, "authenticate.validate_glance"):
                 list(glance_client.images.list(name=image_name))
 
+    @validation.required_parameters("repetitions")
     @base.scenario()
-    @validation.add(validation.required_parameters(['repetitions']))
     def validate_nova(self, repetitions):
         """Check Nova Client to ensure validation of token.
 
@@ -56,11 +55,11 @@ class Authenticate(base.Scenario):
         """
         nova_client = self.clients("nova")
         for i in range(repetitions):
-            with base.AtomicAction(self, 'authenticate.validate_nova'):
+            with base.AtomicAction(self, "authenticate.validate_nova"):
                 nova_client.flavors.list()
 
+    @validation.required_parameters("repetitions")
     @base.scenario()
-    @validation.add(validation.required_parameters(['repetitions']))
     def validate_cinder(self, repetitions):
         """Check Cinder Client to ensure validation of token.
 
@@ -71,11 +70,11 @@ class Authenticate(base.Scenario):
         """
         cinder_client = self.clients("cinder")
         for i in range(repetitions):
-            with base.AtomicAction(self, 'authenticate.validate_cinder'):
+            with base.AtomicAction(self, "authenticate.validate_cinder"):
                 cinder_client.volume_types.list()
 
+    @validation.required_parameters("repetitions")
     @base.scenario()
-    @validation.add(validation.required_parameters(['repetitions']))
     def validate_neutron(self, repetitions):
         """Check Neutron Client to ensure validation of token.
 
@@ -86,11 +85,11 @@ class Authenticate(base.Scenario):
         """
         neutron_client = self.clients("neutron")
         for i in range(repetitions):
-            with base.AtomicAction(self, 'authenticate.validate_neutron'):
+            with base.AtomicAction(self, "authenticate.validate_neutron"):
                 neutron_client.get_auth_info()
 
+    @validation.required_parameters("repetitions")
     @base.scenario()
-    @validation.add(validation.required_parameters(['repetitions']))
     def validate_heat(self, repetitions):
         """Check Heat Client to ensure validation of token.
 
@@ -101,5 +100,5 @@ class Authenticate(base.Scenario):
         """
         heat_client = self.clients("heat")
         for i in range(repetitions):
-            with base.AtomicAction(self, 'authenticate.validate_heat'):
+            with base.AtomicAction(self, "authenticate.validate_heat"):
                 list(heat_client.stacks.list(limit=0))
