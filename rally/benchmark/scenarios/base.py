@@ -73,9 +73,31 @@ class Scenario(object):
     @staticmethod
     def get_by_name(name):
         """Returns Scenario class by name."""
+        # TODO(msdubov): support approximate string matching
+        #                (here and in other base classes).
         for scenario in utils.itersubclasses(Scenario):
             if name == scenario.__name__:
                 return scenario
+        raise exceptions.NoSuchScenario(name=name)
+
+    @staticmethod
+    def get_scenario_by_name(name):
+        """Return benchmark scenario method by name.
+
+        :param name: name of the benchmark scenario being searched for (either
+                     a full name (e.g, 'NovaServers.boot_server') or just
+                     a method name (e.g., 'boot_server')
+        :returns: function object
+        """
+        if "." in name:
+            scenario_group, scenario_name = name.split(".", 1)
+            scenario_cls = Scenario.get_by_name(scenario_group)
+            if hasattr(scenario_cls, scenario_name):
+                return getattr(scenario_cls, scenario_name)
+        else:
+            for scenario_cls in utils.itersubclasses(Scenario):
+                if name in dir(scenario_cls):
+                    return getattr(scenario_cls, name)
         raise exceptions.NoSuchScenario(name=name)
 
     @staticmethod

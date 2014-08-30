@@ -38,8 +38,9 @@ Samples:
 
 from __future__ import print_function
 
+from rally.benchmark.scenarios import base as scenario_base
 from rally.cmd import cliutils
-from rally import searchutils
+from rally import exceptions
 from rally import utils
 
 
@@ -51,31 +52,43 @@ class InfoCommands(object):
 
         :param query: search query.
         """
-        scenario_group = searchutils.find_benchmark_scenario_group(query)
-        if scenario_group:
-            print("%s (benchmark scenario group).\n" % scenario_group.__name__)
-            # TODO(msdubov): Provide all scenario classes with docstrings.
-            doc = utils.format_docstring(scenario_group.__doc__)
-            print(doc)
-            return
+        info = (self._get_scenario_group_info(query) or
+                self._get_scenario_info(query))
 
-        scenario = searchutils.find_benchmark_scenario(query)
-        if scenario:
-            print("%(scenario_group)s.%(scenario_name)s "
-                  "(benchmark scenario).\n" %
-                  {"scenario_group": utils.get_method_class(scenario).__name__,
-                   "scenario_name": scenario.__name__})
+        if info:
+            print(info)
+        else:
+            print("Failed to find any docs for query: '%s'" % query)
+            return 1
+
+    def _get_scenario_group_info(self, query):
+        try:
+            scenario_group = scenario_base.Scenario.get_by_name(query)
+            info = ("%s (benchmark scenario group).\n\n" %
+                    scenario_group.__name__)
+            info += utils.format_docstring(scenario_group.__doc__)
+            return info
+        except exceptions.NoSuchScenario:
+            return None
+
+    def _get_scenario_info(self, query):
+        try:
+            scenario = scenario_base.Scenario.get_scenario_by_name(query)
+            scenario_group_name = utils.get_method_class(scenario).__name__
+            info = ("%(scenario_group)s.%(scenario_name)s "
+                    "(benchmark scenario).\n\n" %
+                    {"scenario_group": scenario_group_name,
+                     "scenario_name": scenario.__name__})
             doc = utils.parse_docstring(scenario.__doc__)
-            print(doc["short_description"] + "\n")
+            info += doc["short_description"] + "\n\n"
             if doc["long_description"]:
-                print(doc["long_description"] + "\n")
+                info += doc["long_description"] + "\n\n"
             if doc["params"]:
-                print("Parameters:")
+                info += "Parameters:\n"
                 for param in doc["params"]:
-                    print("    - %(name)s: %(doc)s" % param)
+                    info += "    - %(name)s: %(doc)s" % param + "\n"
             if doc["returns"]:
-                print("Returns: %s" % doc["returns"])
-            return
-
-        print("Failed to find any docs for query: '%s'" % query)
-        return 1
+                info += "Returns: %s" % doc["returns"]
+            return info
+        except exceptions.NoSuchScenario:
+            return None
