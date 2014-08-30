@@ -19,39 +19,39 @@ from rally import objects
 
 
 class ExistingCloud(engine.EngineFactory):
-    """ExistingCloud doesn't deploy OpenStack it just use existing cloud.
+    """Just use an existing OpenStack deployment without deploying anything.
 
-       To use ExistingCloud you should put in a config endpoint key, e.g:
+    To use ExistingCloud, you should put endpoint information to the config:
 
-            {
-                "type": "ExistingCloud",
-                "auth_url": "http://localhost:5000/v2.0/",
-                "region_name": "RegionOne",
-                "use_public_urls": true,
-                "admin_port": 35357
-                "admin": {
-                    "username": "admin",
-                    "password": "password",
-                    "tenant_name": "demo",
-                }
+        {
+            "type": "ExistingCloud",
+            "auth_url": "http://localhost:5000/v2.0/",
+            "region_name": "RegionOne",
+            "use_public_urls": true,
+            "admin_port": 35357
+            "admin": {
+                "username": "admin",
+                "password": "password",
+                "tenant_name": "demo"
             }
+        }
 
-       Or using keystone v3 API endpoint:
+    Or, using keystone v3 API endpoint:
 
-            {
-                "type": "ExistingCloud",
-                "auth_url": "http://localhost:5000/v3/",
-                "region_name": "RegionOne",
-                "use_public_urls": false,
-                "admin_port": 35357
-                "admin": {
-                    "username": "admin",
-                    "password": "admin",
-                    "user_domain_name": "admin",
-                    "project_name": "admin",
-                    "project_domain_name": "admin",
-                }
+        {
+            "type": "ExistingCloud",
+            "auth_url": "http://localhost:5000/v3/",
+            "region_name": "RegionOne",
+            "use_public_urls": false,
+            "admin_port": 35357
+            "admin": {
+                "username": "admin",
+                "password": "admin",
+                "user_domain_name": "admin",
+                "project_name": "admin",
+                "project_domain_name": "admin",
             }
+        }
     """
 
     CONFIG_SCHEMA = {

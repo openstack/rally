@@ -17,11 +17,15 @@ import mock
 
 from rally.benchmark.scenarios.dummy import dummy
 from rally.cmd.commands import info
+from rally.deploy.engines import existing as existing_cloud
+from rally.deploy.serverprovider.providers import existing as existing_servers
 from rally import exceptions
 from tests import test
 
 
 SCENARIO = "rally.cmd.commands.info.scenario_base.Scenario"
+ENGINE = "rally.cmd.commands.info.deploy.EngineFactory"
+PROVIDER = "rally.cmd.commands.info.serverprovider.ProviderFactory"
 
 
 class InfoCommandsTestCase(test.TestCase):
@@ -52,3 +56,19 @@ class InfoCommandsTestCase(test.TestCase):
         status = self.info.find(query)
         mock_get_scenario_by_name.assert_called_once_with(query)
         self.assertEqual(1, status)
+
+    @mock.patch(ENGINE + ".get_by_name",
+                return_value=existing_cloud.ExistingCloud)
+    def test_find_existing_cloud(self, mock_get_by_name):
+        query = "ExistingCloud"
+        status = self.info.find(query)
+        mock_get_by_name.assert_called_once_with(query)
+        self.assertEqual(None, status)
+
+    @mock.patch(PROVIDER + ".get_by_name",
+                return_value=existing_servers.ExistingServers)
+    def test_find_existing_servers(self, mock_get_by_name):
+        query = "ExistingServers"
+        status = self.info.find(query)
+        mock_get_by_name.assert_called_once_with(query)
+        self.assertEqual(None, status)

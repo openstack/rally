@@ -80,17 +80,25 @@ class EngineFactory(object):
                 self.config['provider'], self.deployment)
 
     @staticmethod
-    def get_engine(name, deployment):
-        """Returns instance of a deploy engine with corresponding name."""
+    def get_by_name(name):
+        """Return Engine class by name."""
         for engine in utils.itersubclasses(EngineFactory):
             if name == engine.__name__:
-                new_engine = engine(deployment)
-                return new_engine
-        LOG.error(_('Deployment %(uuid)s: Deploy engine for %(name)s '
-                    'does not exist.') %
-                  {'uuid': deployment['uuid'], 'name': name})
-        deployment.update_status(consts.DeployStatus.DEPLOY_FAILED)
+                return engine
         raise exceptions.NoSuchEngine(engine_name=name)
+
+    @staticmethod
+    def get_engine(name, deployment):
+        """Returns instance of a deploy engine with corresponding name."""
+        try:
+            engine_cls = EngineFactory.get_by_name(name)
+            return engine_cls(deployment)
+        except exceptions.NoSuchEngine:
+            LOG.error(_('Deployment %(uuid)s: Deploy engine for %(name)s '
+                        'does not exist.') %
+                      {'uuid': deployment['uuid'], 'name': name})
+            deployment.update_status(consts.DeployStatus.DEPLOY_FAILED)
+            raise exceptions.NoSuchEngine(engine_name=name)
 
     @staticmethod
     def get_available_engines():

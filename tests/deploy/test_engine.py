@@ -224,6 +224,16 @@ class EngineFactoryTestCase(test.TestCase):
                                                           deployment)
             self.assertIsInstance(engine_inst, e)
 
+    def test_get_by_name(self):
+        engines = EngineFactoryTestCase.FAKE_ENGINES
+        for e in engines:
+            self.assertEqual(e, deploy.EngineFactory.get_by_name(e.__name__))
+
+    def test_get_by_name_not_found(self):
+        self.assertRaises(exceptions.NoSuchEngine,
+                          deploy.EngineFactory.get_by_name,
+                          "NonExistingEngine")
+
     def test_get_available_engines(self):
         engines = set([e.__name__ for e in EngineFactoryTestCase.FAKE_ENGINES])
         real_engines = set(deploy.EngineFactory.get_available_engines())

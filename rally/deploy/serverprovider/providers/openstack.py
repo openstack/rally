@@ -36,27 +36,26 @@ KEYPAIR_TYPE = 'keypair'
 
 
 class OpenStackProvider(provider.ProviderFactory):
-    """Provides VMs using existing OpenStack cloud.
+    """Provide VMs using an existing OpenStack cloud.
 
     Sample configuration:
 
-    {
-        "type": "OpenStackProvider",
-        "amount": 42
-        "user": "admin",
-        "tenant": "admin",
-        "password": "secret",
-        "auth_url": "http://example.com/",
-        "flavor_id": 2,
-        "image": {
-            "checksum": "75846dd06e9fcfd2b184aba7fa2b2a8d",
-            "url": "http://example.com/disk1.img",
-            "name": "Ubuntu Precise(added by rally)",
-            "format": "qcow2",
-            "userdata": "#cloud-config\r\n disable_root: false"
+        {
+            "type": "OpenStackProvider",
+            "amount": 42
+            "user": "admin",
+            "tenant": "admin",
+            "password": "secret",
+            "auth_url": "http://example.com/",
+            "flavor_id": 2,
+            "image": {
+                "checksum": "75846dd06e9fcfd2b184aba7fa2b2a8d",
+                "url": "http://example.com/disk1.img",
+                "name": "Ubuntu Precise(added by rally)",
+                "format": "qcow2",
+                "userdata": "#cloud-config\r\n disable_root: false"
+            }
         }
-    }
-
     """
 
     CONFIG_SCHEMA = {

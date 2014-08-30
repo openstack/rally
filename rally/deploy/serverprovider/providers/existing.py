@@ -18,7 +18,15 @@ from rally.deploy.serverprovider import provider
 
 
 class ExistingServers(provider.ProviderFactory):
-    """Just return endpoints from own configuration."""
+    """Just return endpoints from its own configuration.
+
+    Sample configuration:
+
+        {
+            "type": "ExistingServers",
+            "credentials": [{"user": "root", "host": "localhost"}]
+        }
+    """
 
     CREDENTIALS_SCHEMA = {
         'type': 'object',

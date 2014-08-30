@@ -27,33 +27,32 @@ class MultihostEngine(engine.EngineFactory):
 
     Sample configuration:
 
-    {
-        "type": "MultihostEngine",
-        "controller": {
-            "type": "DevstackEngine",
-            "provider": {
-                "type": "DummyProvider"
-            }
-        },
-        "nodes": [
-            {"type": "Engine1", "config": "Config1"},
-            {"type": "Engine2", "config": "Config2"},
-            {"type": "Engine3", "config": "Config3"},
-        ]
-    }
+        {
+            "type": "MultihostEngine",
+            "controller": {
+                "type": "DevstackEngine",
+                "provider": {
+                    "type": "DummyProvider"
+                }
+            },
+            "nodes": [
+                {"type": "Engine1", "config": "Config1"},
+                {"type": "Engine2", "config": "Config2"},
+                {"type": "Engine3", "config": "Config3"},
+            ]
+        }
 
     If {controller_ip} is specified in configuration values, it will be
     replaced with controller address taken from endpoint returned by
     controller engine:
 
-    ...
-    "nodes": [
-        {
-            "type": "DevstackEngine",
-            "localrc": {
-                "GLANCE_HOSTPORT": "{controller_ip}:9292",
-    ...
-
+        ...
+        "nodes": [
+            {
+                "type": "DevstackEngine",
+                "localrc": {
+                    "GLANCE_HOSTPORT": "{controller_ip}:9292",
+        ...
     """
 
     def __init__(self, *args, **kwargs):
