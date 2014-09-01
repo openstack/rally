@@ -20,24 +20,13 @@ import pwd
 import shutil
 import subprocess
 import tempfile
-import unittest
 
-import mock
-
-"""Test rally command line interface.
-
-This module is intended for running by OpenStack CI system.
-To start tests manually please use
-
- $ tox -ecli
-
-"""
 
 TEST_ENV = {
-            "OS_USERNAME": "admin",
-            "OS_PASSWORD": "admin",
-            "OS_TENANT_NAME": "admin",
-            "OS_AUTH_URL": "http://fake/",
+    "OS_USERNAME": "admin",
+    "OS_PASSWORD": "admin",
+    "OS_TENANT_NAME": "admin",
+    "OS_AUTH_URL": "http://fake/",
 }
 
 
@@ -94,6 +83,16 @@ class Rally(object):
         subprocess.call(["rally-manage", "--config-file", config_filename,
                          "db", "recreate"])
         self("deployment create --file /tmp/.rd.json --name MAIN")
+        with open("/tmp/.tmp.deployment", "w") as d_conf:
+            d_conf.write(
+                """{
+    "type": "ExistingCloud",
+    "auth_url": "http://fake/",
+    "admin": {
+        "username": "admin",
+        "password": "admin",
+        "tenant_name": "admin"
+    }\n}""")
 
     def __del__(self):
         shutil.rmtree(self.tmp_dir)
@@ -109,60 +108,3 @@ class Rally(object):
             return output
         except subprocess.CalledProcessError as e:
             raise RallyCmdError(e.returncode, e.output)
-
-
-class DeploymentTestCase(unittest.TestCase):
-
-    def test_create_fromenv_list_endpoint(self):
-        rally = Rally()
-        with mock.patch.dict("os.environ", TEST_ENV):
-            rally("deployment create --name t_create --fromenv")
-        self.assertIn("t_create", rally("deployment list"))
-        self.assertIn(TEST_ENV["OS_AUTH_URL"], rally("deployment endpoint"))
-
-
-class SLATestCase(unittest.TestCase):
-
-    def _get_sample_task_config(self, max_seconds_per_iteration=4,
-                                max_failure_percent=0):
-        return {
-            "KeystoneBasic.create_and_list_users": [
-                {
-                    "args": {
-                        "name_length": 10
-                    },
-                    "runner": {
-                        "type": "constant",
-                        "times": 5,
-                        "concurrency": 5
-                    },
-                    "sla": {
-                        "max_seconds_per_iteration": max_seconds_per_iteration,
-                        "max_failure_percent": max_failure_percent,
-                    }
-                }
-            ]
-        }
-
-    def test_sla_fail(self):
-        rally = Rally()
-        cfg = self._get_sample_task_config(max_seconds_per_iteration=0.001)
-        config = TaskConfig(cfg)
-        rally("task start --task %s" % config.filename)
-        self.assertRaises(RallyCmdError, rally, "task sla_check")
-
-    def test_sla_success(self):
-        rally = Rally()
-        config = TaskConfig(self._get_sample_task_config())
-        rally("task start --task %s" % config.filename)
-        rally("task sla_check")
-        expected = [
-                {"benchmark": "KeystoneBasic.create_and_list_users",
-                 "criterion": "max_seconds_per_iteration",
-                 "pos": 0, "success": True},
-                {"benchmark": "KeystoneBasic.create_and_list_users",
-                 "criterion": "max_failure_percent",
-                 "pos": 0, "success": True},
-        ]
-        data = rally("task sla_check --json", getjson=True)
-        self.assertEqual(expected, data)
