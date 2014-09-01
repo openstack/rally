@@ -119,7 +119,7 @@ class BenchmarkEngine(object):
                         jsonschema.ValidationError) as e:
                     raise exceptions.InvalidBenchmarkConfig(
                         name=scenario,
-                        pos=pos, args=kw,
+                        pos=pos, config=kw,
                         reason=six.text_type(e)
                     )
 
