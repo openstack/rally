@@ -101,9 +101,14 @@ class Scenario(object):
     @staticmethod
     def _validate_helper(validators, clients, config, task):
         for validator in validators:
-            result = validator(config, clients=clients, task=task)
-            if not result.is_valid:
-                raise exceptions.InvalidScenarioArgument(message=result.msg)
+            try:
+                result = validator(config, clients=clients, task=task)
+            except Exception as e:
+                raise exceptions.InvalidScenarioArgument(message=e)
+            else:
+                if not result.is_valid:
+                    raise exceptions.InvalidScenarioArgument(
+                        message=result.msg)
 
     @classmethod
     def validate(cls, name, config, admin=None, users=None, task=None):

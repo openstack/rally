@@ -56,6 +56,15 @@ class ScenarioTestCase(test.TestCase):
         for validator in validators:
             validator.assert_called_with(config, clients=clients, task=task)
 
+    def test__validate_helper_somethingwent_wrong(self):
+        validator = mock.MagicMock()
+        validator.side_effect = Exception()
+
+        self.assertRaises(exceptions.InvalidScenarioArgument,
+                          base.Scenario._validate_helper,
+                          [validator], "cl", "config", "task")
+        validator.assert_called_once_with("config", clients="cl", task="task")
+
     def test__validate_helper__no_valid(self):
         validators = [
             mock.MagicMock(return_value=validation.ValidationResult()),
