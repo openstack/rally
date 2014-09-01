@@ -19,8 +19,9 @@ from rally import consts
 
 
 class CeilometerMeters(ceilometerutils.CeilometerScenario):
-    @base.scenario()
+
     @validation.required_services(consts.Service.CEILOMETER)
+    @base.scenario()
     def list_meters(self):
         """Test fetching user's meters."""
         self._list_meters()

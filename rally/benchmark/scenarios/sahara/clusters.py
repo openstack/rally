@@ -26,11 +26,10 @@ LOG = logging.getLogger(__name__)
 class SaharaClusters(utils.SaharaScenario):
 
     @types.set(flavor=types.FlavorResourceType)
-    @validation.add(validation.flavor_exists('flavor'))
+    @validation.flavor_exists('flavor')
     @validation.required_services(consts.Service.SAHARA)
     @validation.required_contexts("users", "sahara_image")
-    @validation.add(validation.number("node_count", minval=2,
-                                      integer_only=True))
+    @validation.number("node_count", minval=2, integer_only=True)
     @base.scenario(context={"cleanup": ["sahara"]})
     def create_and_delete_cluster(self, flavor, node_count,
                                   plugin_name="vanilla",

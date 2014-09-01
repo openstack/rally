@@ -15,10 +15,13 @@
 
 from rally.benchmark.scenarios import base
 from rally.benchmark.scenarios.quotas import utils
+from rally.benchmark import validation
+from rally import consts
 
 
 class Quotas(utils.QuotasScenario):
 
+    @validation.required_services(consts.Service.NOVA)
     @base.scenario(admin_only=True, context={"admin_cleanup": ["quotas"]})
     def nova_update(self, max_quota=1024):
         """Tests updating quotas for nova.
@@ -28,6 +31,7 @@ class Quotas(utils.QuotasScenario):
         tenant_id = self.context()["user"]["tenant_id"]
         self._update_quotas('nova', tenant_id, max_quota)
 
+    @validation.required_services(consts.Service.NOVA)
     @base.scenario(admin_only=True, context={"admin_cleanup": ["quotas"]})
     def nova_update_and_delete(self, max_quota=1024):
         """Tests updating and deleting quotas for nova.
@@ -39,6 +43,7 @@ class Quotas(utils.QuotasScenario):
         self._update_quotas('nova', tenant_id, max_quota)
         self._delete_quotas('nova', tenant_id)
 
+    @validation.required_services(consts.Service.CINDER)
     @base.scenario(admin_only=True, context={"admin_cleanup": ["quotas"]})
     def cinder_update(self, max_quota=1024):
         """Tests updating quotas for cinder.
@@ -48,6 +53,7 @@ class Quotas(utils.QuotasScenario):
         tenant_id = self.context()["user"]["tenant_id"]
         self._update_quotas('cinder', tenant_id, max_quota)
 
+    @validation.required_services(consts.Service.CINDER)
     @base.scenario(admin_only=True, context={"admin_cleanup": ["quotas"]})
     def cinder_update_and_delete(self, max_quota=1024):
         """Tests updating and deleting quotas for cinder.

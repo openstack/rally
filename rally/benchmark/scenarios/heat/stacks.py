@@ -35,9 +35,9 @@ class HeatStacks(utils.HeatScenario):
                               % {"template_path": template_path})
         return template
 
+    @validation.required_services(consts.Service.HEAT)
     @base.scenario(context={"cleanup": ["heat"],
                             "roles": ["heat_stack_owner"]})
-    @validation.required_services(consts.Service.HEAT)
     def create_and_list_stack(self, template_path=None):
         """Test adding an stack and then listing all stacks.
 
@@ -54,9 +54,9 @@ class HeatStacks(utils.HeatScenario):
         self._create_stack(stack_name, template)
         self._list_stacks()
 
+    @validation.required_services(consts.Service.HEAT)
     @base.scenario(context={"cleanup": ["heat"],
                             "roles": ["heat_stack_owner"]})
-    @validation.required_services(consts.Service.HEAT)
     def create_and_delete_stack(self, template_path=None):
         """Test adds and then deletes stack.
 

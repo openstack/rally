@@ -23,7 +23,6 @@ from rally.benchmark import types as types
 from rally.benchmark import validation
 from rally import consts
 from rally import exceptions as rally_exceptions
-from rally.openstack.common.gettextutils import _  # noqa
 from rally.openstack.common import log as logging
 
 
@@ -36,14 +35,11 @@ class NovaServers(utils.NovaScenario,
     RESOURCE_NAME_PREFIX = "rally_novaserver_"
     RESOURCE_NAME_LENGTH = 16
 
-    def __init__(self, *args, **kwargs):
-        super(NovaServers, self).__init__(*args, **kwargs)
-
     @types.set(image=types.ImageResourceType,
                flavor=types.FlavorResourceType)
-    @validation.add(validation.image_valid_on_flavor("flavor", "image"))
-    @base.scenario(context={"cleanup": ["nova"]})
+    @validation.image_valid_on_flavor("flavor", "image")
     @validation.required_services(consts.Service.NOVA)
+    @base.scenario(context={"cleanup": ["nova"]})
     def boot_and_list_server(self, image, flavor,
                              detailed=True, **kwargs):
         """Tests booting an image and then listing servers.
@@ -63,9 +59,9 @@ class NovaServers(utils.NovaScenario,
 
     @types.set(image=types.ImageResourceType,
                flavor=types.FlavorResourceType)
-    @validation.add(validation.image_valid_on_flavor("flavor", "image"))
-    @base.scenario(context={"cleanup": ["nova"]})
+    @validation.image_valid_on_flavor("flavor", "image")
     @validation.required_services(consts.Service.NOVA)
+    @base.scenario(context={"cleanup": ["nova"]})
     def boot_and_delete_server(self, image, flavor,
                                min_sleep=0, max_sleep=0, **kwargs):
         """Tests booting and then deleting an image."""
@@ -76,9 +72,9 @@ class NovaServers(utils.NovaScenario,
 
     @types.set(image=types.ImageResourceType,
                flavor=types.FlavorResourceType)
-    @validation.add(validation.image_valid_on_flavor("flavor", "image"))
-    @base.scenario(context={"cleanup": ["nova", "cinder"]})
+    @validation.image_valid_on_flavor("flavor", "image")
     @validation.required_services(consts.Service.NOVA, consts.Service.CINDER)
+    @base.scenario(context={"cleanup": ["nova", "cinder"]})
     def boot_server_from_volume_and_delete(self, image, flavor,
                                            volume_size,
                                            min_sleep=0, max_sleep=0, **kwargs):
@@ -94,9 +90,9 @@ class NovaServers(utils.NovaScenario,
 
     @types.set(image=types.ImageResourceType,
                flavor=types.FlavorResourceType)
-    @validation.add(validation.image_valid_on_flavor("flavor", "image"))
-    @base.scenario(context={"cleanup": ["nova"]})
+    @validation.image_valid_on_flavor("flavor", "image")
     @validation.required_services(consts.Service.NOVA)
+    @base.scenario(context={"cleanup": ["nova"]})
     def boot_and_bounce_server(self, image, flavor, **kwargs):
         """Test booting a server with further performing specified actions.
 
@@ -120,9 +116,9 @@ class NovaServers(utils.NovaScenario,
 
     @types.set(image=types.ImageResourceType,
                flavor=types.FlavorResourceType)
-    @validation.add(validation.image_valid_on_flavor("flavor", "image"))
-    @base.scenario(context={"cleanup": ["nova", "glance"]})
+    @validation.image_valid_on_flavor("flavor", "image")
     @validation.required_services(consts.Service.NOVA, consts.Service.GLANCE)
+    @base.scenario(context={"cleanup": ["nova", "glance"]})
     def snapshot_server(self, image, flavor, **kwargs):
         """Tests Nova instance snapshotting."""
         server_name = self._generate_random_name()
@@ -137,9 +133,9 @@ class NovaServers(utils.NovaScenario,
 
     @types.set(image=types.ImageResourceType,
                flavor=types.FlavorResourceType)
-    @validation.add(validation.image_valid_on_flavor("flavor", "image"))
-    @base.scenario(context={"cleanup": ["nova"]})
+    @validation.image_valid_on_flavor("flavor", "image")
     @validation.required_services(consts.Service.NOVA)
+    @base.scenario(context={"cleanup": ["nova"]})
     def boot_server(self, image, flavor, auto_assign_nic=False, **kwargs):
         """Test VM boot - assumed clean-up is done elsewhere."""
         server_name = self._generate_random_name()
@@ -148,9 +144,9 @@ class NovaServers(utils.NovaScenario,
 
     @types.set(image=types.ImageResourceType,
                flavor=types.FlavorResourceType)
-    @validation.add(validation.image_valid_on_flavor("flavor", "image"))
-    @base.scenario(context={"cleanup": ["nova", "cinder"]})
+    @validation.image_valid_on_flavor("flavor", "image")
     @validation.required_services(consts.Service.NOVA, consts.Service.CINDER)
+    @base.scenario(context={"cleanup": ["nova", "cinder"]})
     def boot_server_from_volume(self, image, flavor, volume_size,
                                 auto_assign_nic=False, **kwargs):
         """Test VM boot from volume - assumed clean-up is done elsewhere."""
@@ -205,9 +201,9 @@ class NovaServers(utils.NovaScenario,
     @types.set(image=types.ImageResourceType,
                flavor=types.FlavorResourceType,
                to_flavor=types.FlavorResourceType)
-    @validation.add(validation.image_valid_on_flavor("flavor", "image"))
-    @base.scenario(context={"cleanup": ["nova"]})
+    @validation.image_valid_on_flavor("flavor", "image")
     @validation.required_services(consts.Service.NOVA)
+    @base.scenario(context={"cleanup": ["nova"]})
     def resize_server(self, image, flavor, to_flavor, **kwargs):
         """Tests resize serveri."""
         server = self._boot_server(self._generate_random_name(),
