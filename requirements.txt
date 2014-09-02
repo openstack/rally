@@ -20,7 +20,7 @@ python-cinderclient>=1.0.7
 python-heatclient>=0.2.9
 python-ceilometerclient>=1.0.6
 python-ironicclient>=0.2.1
-python-saharaclient>=0.6.0
+python-saharaclient>=0.7.1
 python-subunit>=0.0.18
 requests>=1.2.1
 SQLAlchemy>=0.8.4,<=0.8.99,>=0.9.7,<=0.9.99
