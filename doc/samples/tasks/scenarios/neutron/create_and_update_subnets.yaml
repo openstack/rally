@@ -1,0 +1,23 @@
+---
+  NeutronNetworks.create_and_update_subnets:
+    -
+      args:
+        network_create_args: {}
+        subnet_create_args: {}
+        subnet_cidr_start: "1.4.0.0/16"
+        subnets_per_network: 2
+        subnet_update_args:
+            enable_dhcp: False
+            name: "_subnet_updated"
+      runner:
+        type: "constant"
+        times: 10
+        concurrency: 5
+      context:
+        users:
+          tenants: 5
+          users_per_tenant: 5
+        quotas:
+          neutron:
+            network: -1
+            subnet: -1
