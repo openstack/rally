@@ -59,10 +59,22 @@ class RPSScenarioRunnerTestCase(test.TestCase):
                                                  consts.RunnerType.RPS})
         self.assertIsNotNone(runner)
 
-    @mock.patch("rally.benchmark.runners.rps.time.sleep")
+    @mock.patch("rally.benchmark.runners.rps.LOG")
+    @mock.patch("rally.benchmark.runners.rps.time")
     @mock.patch("rally.benchmark.runners.rps.threading.Thread")
     @mock.patch("rally.benchmark.runners.rps.multiprocessing.Queue")
-    def test__worker_process(self, mock_queue, mock_thread, mock_sleep):
+    def test__worker_process(self, mock_queue, mock_thread, mock_time,
+                             mock_log):
+
+        def time_side():
+            time_side.last += 0.03
+            time_side.count += 1
+            return time_side.last
+        time_side.last = 0
+        time_side.count = 0
+
+        mock_time.time = time_side
+
         mock_thread_instance = mock.MagicMock(
             isAlive=mock.MagicMock(return_value=False))
         mock_thread.return_value = mock_thread_instance
@@ -72,17 +84,20 @@ class RPSScenarioRunnerTestCase(test.TestCase):
         rps._worker_process(10, times, mock_queue, None, 600, 1,
                             "Dummy", "dummy", ())
 
+        self.assertEqual(times, mock_log.debug.call_count)
         self.assertEqual(times, mock_thread.call_count)
 
         self.assertEqual(times, mock_thread_instance.start.call_count)
         self.assertEqual(times, mock_thread_instance.join.call_count)
+        self.assertEqual(3, mock_time.sleep.call_count)
+        self.assertEqual(times, mock_thread_instance.isAlive.call_count)
+        self.assertEqual(15, mock_time.time.count)
 
         for i in range(1, times + 1):
             call = mock.call(args=(mock_queue,
                                    ("1:%d" % i, "Dummy", "dummy",
                                     None, ())),
                              target=rps._worker_thread)
-
             self.assertIn(call, mock_thread.mock_calls)
 
     @mock.patch("rally.benchmark.runners.rps.base",
