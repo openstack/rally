@@ -47,3 +47,47 @@ class DesignateScenario(base.Scenario):
         :param domain: Domain object
         """
         self.clients("designate").domains.delete(domain_id)
+
+    def _create_record(self, domain, record=None, atomic_action=True):
+        """Create a record in a domain.
+
+        :param domain: Domain object
+        :param record: Record object
+        :returns: designate record dict
+        """
+        record = record or {}
+        record.setdefault('type', 'A')
+        record.setdefault('name', '%s.%s' % (self._generate_random_name(),
+                                             domain['name']))
+        record.setdefault('data', '10.0.0.1')
+
+        client = self.clients('designate')
+
+        if atomic_action:
+            with base.AtomicAction(self, 'designate.create_record'):
+                return client.records.create(domain['id'], record)
+
+        return client.records.create(domain['id'], record)
+
+    @base.atomic_action_timer('designate.list_records')
+    def _list_records(self, domain_id):
+        """List records in a domain..
+
+        :param domain_id: Domain ID
+        :returns: domain record list
+        """
+        return self.clients("designate").records.list(domain_id)
+
+    def _delete_record(self, domain_id, record_id, atomic_action=True):
+        """Delete a record in a domain..
+
+        :param domain_id: Domain ID
+        :param record_id: Record ID
+        """
+        client = self.clients('designate')
+
+        if atomic_action:
+            with base.AtomicAction(self, 'designate.delete_record'):
+                client.records.create(domain_id, record_id)
+
+        client.records.delete(domain_id, record_id)

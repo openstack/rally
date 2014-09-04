@@ -64,3 +64,68 @@ class DesignateBasic(utils.DesignateScenario):
         """
         domain = self._create_domain()
         self._delete_domain(domain['id'])
+
+    @validation.required_services(consts.Service.DESIGNATE)
+    @base.scenario(context={"cleanup": ["designate"]})
+    def create_and_delete_records(self, records_per_domain=5):
+        """Test adds and then deletes records.
+
+        This is very useful to measure perfromance of creating and deleting
+        records with different level of load.
+
+        :param records_per_domain: Records to create pr domain.
+        """
+        domain = self._create_domain()
+
+        records = []
+
+        key = "designate.create_%s_records" % records_per_domain
+        with base.AtomicAction(self, key):
+            for i in range(records_per_domain):
+                record = self._create_record(domain, atomic_action=False)
+                records.append(record)
+
+        key = "designate.delete_%s_records" % records_per_domain
+        with base.AtomicAction(self, key):
+            for record in records:
+                self._delete_record(
+                    domain['id'], record['id'], atomic_action=False)
+
+    @validation.required_services(consts.Service.DESIGNATE)
+    @base.scenario(context={"cleanup": ["designate"]})
+    def list_records(self, domain_id):
+        """Test the designate record-list command.
+
+        This simple scenario tests the designate record-list command by listing
+        all the records in a domain.
+
+        Suppose if we have 2 users in context and each has 2 domains
+        uploaded for them we will be able to test the performance of
+        designate record-list command in this case.
+
+        :param domain_id: Domain ID
+        """
+
+        self._list_records(domain_id)
+
+    @validation.required_services(consts.Service.DESIGNATE)
+    @base.scenario(context={"cleanup": ["designate"]})
+    def create_and_list_records(self, records_per_domain=5):
+        """Test adds and then lists records.
+
+        If you have only 1 user in your context, you will
+        add 1 record on every iteration. So you will have more
+        and more records and will be able to measure the
+        performance of the "designate record-list" command depending on
+        the number of domains/records owned by users.
+
+        :param records_per_domain: Records to create pr domain.
+        """
+        domain = self._create_domain()
+
+        key = "designate.create_%s_records" % records_per_domain
+        with base.AtomicAction(self, key):
+            for i in range(records_per_domain):
+                self._create_record(domain, atomic_action=False)
+
+        self._list_records(domain['id'])
