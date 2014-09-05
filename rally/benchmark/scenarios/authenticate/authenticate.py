@@ -22,11 +22,13 @@ class Authenticate(base.Scenario):
     For different types of clients like Keystone.
     """
 
+    @validation.required_openstack(users=True)
     @base.scenario()
     def keystone(self, **kwargs):
         self.clients("keystone")
 
-    @validation.required_parameters("repetitions")
+    @validation.number("repetitions", minval=1)
+    @validation.required_openstack(users=True)
     @base.scenario()
     def validate_glance(self, repetitions):
         """Check Glance Client to ensure validation of token.
@@ -43,7 +45,8 @@ class Authenticate(base.Scenario):
             with base.AtomicAction(self, "authenticate.validate_glance"):
                 list(glance_client.images.list(name=image_name))
 
-    @validation.required_parameters("repetitions")
+    @validation.number("repetitions", minval=1)
+    @validation.required_openstack(users=True)
     @base.scenario()
     def validate_nova(self, repetitions):
         """Check Nova Client to ensure validation of token.
@@ -58,7 +61,8 @@ class Authenticate(base.Scenario):
             with base.AtomicAction(self, "authenticate.validate_nova"):
                 nova_client.flavors.list()
 
-    @validation.required_parameters("repetitions")
+    @validation.number("repetitions", minval=1)
+    @validation.required_openstack(users=True)
     @base.scenario()
     def validate_cinder(self, repetitions):
         """Check Cinder Client to ensure validation of token.
@@ -73,7 +77,8 @@ class Authenticate(base.Scenario):
             with base.AtomicAction(self, "authenticate.validate_cinder"):
                 cinder_client.volume_types.list()
 
-    @validation.required_parameters("repetitions")
+    @validation.number("repetitions", minval=1)
+    @validation.required_openstack(users=True)
     @base.scenario()
     def validate_neutron(self, repetitions):
         """Check Neutron Client to ensure validation of token.
@@ -88,7 +93,8 @@ class Authenticate(base.Scenario):
             with base.AtomicAction(self, "authenticate.validate_neutron"):
                 neutron_client.get_auth_info()
 
-    @validation.required_parameters("repetitions")
+    @validation.number("repetitions", minval=1)
+    @validation.required_openstack(users=True)
     @base.scenario()
     def validate_heat(self, repetitions):
         """Check Heat Client to ensure validation of token.

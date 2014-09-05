@@ -25,17 +25,17 @@ from rally import exceptions
 from rally import utils
 
 
-def scenario(admin_only=False, context=None):
-    """Add extra fields to benchmark scenarios methods.
+def scenario(context=None):
+    """Make from plain python method benchmark.
 
-       This method is used as decorator for the methods of benchmark scenarios
-       and it adds following extra fields to the methods.
-       'is_scenario' is set to True
-       'admin_only' is set to True if a scenario require admin endpoints
+       It sets 2 attributes to function:
+       is_scenario = True # that is used during discovering
+       func.context = context # default context for benchmark
+
+       :param context: Default benchmark context
     """
     def wrapper(func):
         func.is_scenario = True
-        func.admin_only = admin_only
         func.context = context or {}
         return func
     return wrapper

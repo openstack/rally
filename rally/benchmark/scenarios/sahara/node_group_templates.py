@@ -25,6 +25,7 @@ class SaharaNodeGroupTemplates(utils.SaharaScenario):
     @types.set(flavor=types.FlavorResourceType)
     @validation.flavor_exists('flavor')
     @validation.required_services(consts.Service.SAHARA)
+    @validation.required_openstack(users=True)
     @base.scenario(context={"cleanup": ["sahara"]})
     def create_and_list_node_group_templates(self, flavor,
                                              plugin_name="vanilla",
@@ -59,6 +60,7 @@ class SaharaNodeGroupTemplates(utils.SaharaScenario):
     @types.set(flavor=types.FlavorResourceType)
     @validation.flavor_exists('flavor')
     @validation.required_services(consts.Service.SAHARA)
+    @validation.required_openstack(users=True)
     @base.scenario(context={"cleanup": ["sahara"]})
     def create_delete_node_group_templates(self, flavor,
                                            plugin_name="vanilla",

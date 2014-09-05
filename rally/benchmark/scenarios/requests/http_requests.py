@@ -12,7 +12,7 @@
 
 import requests
 
-from rally.benchmark.scenarios import base as scenario_base
+from rally.benchmark.scenarios import base
 from rally import exceptions
 from rally.openstack.common.gettextutils import _
 
@@ -21,10 +21,10 @@ class WrongStatusException(exceptions.RallyException):
     msg_fmt = _("Requests scenario exception: '%(message)s'")
 
 
-class Requests(scenario_base.Scenario):
+class Requests(base.Scenario):
     """This class should contain all the http_request scenarios."""
 
-    @scenario_base.scenario()
+    @base.scenario()
     def check_response(self, url, response=None):
         """Standard way to benchmark web services.
 

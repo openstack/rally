@@ -22,6 +22,7 @@ from novaclient import exceptions as nova_exc
 from rally.benchmark import types as types
 from rally import consts
 from rally import exceptions
+from rally import objects
 from rally.openstack.common.gettextutils import _
 from rally.verification.verifiers.tempest import tempest
 
@@ -376,3 +377,38 @@ def required_contexts(config, clients, task, *context_names):
         return ValidationResult(False, message)
     else:
         return ValidationResult()
+
+
+@validator
+def required_openstack(config, clients, task, admin=False, users=False):
+    """Validator that requires OpenStack admin or (and) users.
+
+    This allows us to create 4 kind of benchmarks:
+    1) not OpenStack related (validator is not specified)
+    2) requires OpenStack admin
+    3) requires OpenStack admin + users
+    4) requires OpenStack users
+
+    :param admin: requires OpenStack admin
+    :param users: requires OpenStack users
+    """
+
+    if not (admin or users):
+        return ValidationResult(
+            False, _("You should specify admin=True or users=True or both."))
+
+    deployment = objects.Deployment.get(task["deployment_uuid"])
+
+    if deployment["admin"] and deployment["users"]:
+        return ValidationResult()
+
+    if deployment["admin"]:
+        if users and not config.get("context", {}).get("users"):
+            return ValidationResult(False,
+                                    _("You should specify 'users' context"))
+        return ValidationResult()
+
+    if deployment["users"] and admin:
+        return ValidationResult(False, _("Admin credentials required"))
+
+    return ValidationResult()

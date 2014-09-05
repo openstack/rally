@@ -23,6 +23,7 @@ from rally import consts
 class DesignateBasic(utils.DesignateScenario):
 
     @validation.required_services(consts.Service.DESIGNATE)
+    @validation.required_openstack(users=True)
     @base.scenario(context={"cleanup": ["designate"]})
     def create_and_list_domains(self):
         """Tests creating a domain and listing domains.
@@ -40,6 +41,7 @@ class DesignateBasic(utils.DesignateScenario):
         self._list_domains()
 
     @validation.required_services(consts.Service.DESIGNATE)
+    @validation.required_openstack(users=True)
     @base.scenario(context={"cleanup": ["designate"]})
     def list_domains(self):
         """Test the designate domain-list command.
@@ -55,6 +57,7 @@ class DesignateBasic(utils.DesignateScenario):
         self._list_domains()
 
     @validation.required_services(consts.Service.DESIGNATE)
+    @validation.required_openstack(users=True)
     @base.scenario(context={"cleanup": ["designate"]})
     def create_and_delete_domain(self):
         """Test adds and then deletes domain.
@@ -66,6 +69,7 @@ class DesignateBasic(utils.DesignateScenario):
         self._delete_domain(domain['id'])
 
     @validation.required_services(consts.Service.DESIGNATE)
+    @validation.required_openstack(users=True)
     @base.scenario(context={"cleanup": ["designate"]})
     def create_and_delete_records(self, records_per_domain=5):
         """Test adds and then deletes records.
@@ -92,6 +96,7 @@ class DesignateBasic(utils.DesignateScenario):
                     domain['id'], record['id'], atomic_action=False)
 
     @validation.required_services(consts.Service.DESIGNATE)
+    @validation.required_openstack(users=True)
     @base.scenario(context={"cleanup": ["designate"]})
     def list_records(self, domain_id):
         """Test the designate record-list command.
@@ -109,6 +114,7 @@ class DesignateBasic(utils.DesignateScenario):
         self._list_records(domain_id)
 
     @validation.required_services(consts.Service.DESIGNATE)
+    @validation.required_openstack(users=True)
     @base.scenario(context={"cleanup": ["designate"]})
     def create_and_list_records(self, records_per_domain=5):
         """Test adds and then lists records.

@@ -20,33 +20,45 @@ from rally.benchmark import validation
 
 class KeystoneBasic(kutils.KeystoneScenario):
 
-    @base.scenario(admin_only=True, context={"admin_cleanup": ["keystone"]})
+    @validation.number("name_length", minval=10)
+    @validation.required_openstack(admin=True)
+    @base.scenario(context={"admin_cleanup": ["keystone"]})
     def create_user(self, name_length=10, **kwargs):
         self._user_create(name_length=name_length, **kwargs)
 
-    @base.scenario(admin_only=True, context={"admin_cleanup": ["keystone"]})
+    @validation.number("name_length", minval=10)
+    @validation.required_openstack(admin=True)
+    @base.scenario(context={"admin_cleanup": ["keystone"]})
     def create_delete_user(self, name_length=10, **kwargs):
         user = self._user_create(name_length=name_length, **kwargs)
         self._resource_delete(user)
 
-    @base.scenario(admin_only=True, context={"admin_cleanup": ["keystone"]})
+    @validation.number("name_length", minval=10)
+    @validation.required_openstack(admin=True)
+    @base.scenario(context={"admin_cleanup": ["keystone"]})
     def create_tenant(self, name_length=10, **kwargs):
         self._tenant_create(name_length=name_length, **kwargs)
 
-    @validation.required_parameters("users_per_tenant")
-    @base.scenario(admin_only=True, context={"admin_cleanup": ["keystone"]})
+    @validation.number("name_length", minval=10)
+    @validation.number("users_per_tenant", minval=1)
+    @validation.required_openstack(admin=True)
+    @base.scenario(context={"admin_cleanup": ["keystone"]})
     def create_tenant_with_users(self, users_per_tenant, name_length=10,
                                  **kwargs):
         tenant = self._tenant_create(name_length=name_length, **kwargs)
         self._users_create(tenant, users_per_tenant=users_per_tenant,
                            name_length=name_length)
 
-    @base.scenario(admin_only=True, context={"admin_cleanup": ["keystone"]})
+    @validation.number("name_length", minval=10)
+    @validation.required_openstack(admin=True)
+    @base.scenario(context={"admin_cleanup": ["keystone"]})
     def create_and_list_users(self, name_length=10, **kwargs):
         self._user_create(name_length=name_length, **kwargs)
         self._list_users()
 
-    @base.scenario(admin_only=True, context={"admin_cleanup": ["keystone"]})
+    @validation.number("name_length", minval=10)
+    @validation.required_openstack(admin=True)
+    @base.scenario(context={"admin_cleanup": ["keystone"]})
     def create_and_list_tenants(self, name_length=10, **kwargs):
         self._tenant_create(name_length=name_length, **kwargs)
         self._list_tenants()

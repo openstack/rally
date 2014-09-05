@@ -23,6 +23,7 @@ from rally import consts
 class CeilometerQueries(ceilometerutils.CeilometerScenario):
 
     @validation.required_services(consts.Service.CEILOMETER)
+    @validation.required_openstack(users=True)
     @base.scenario(context={"cleanup": ["ceilometer"]})
     def create_and_query_alarms(self, meter_name, threshold, filter=None,
                                 orderby=None, limit=None, **kwargs):
@@ -44,6 +45,7 @@ class CeilometerQueries(ceilometerutils.CeilometerScenario):
         self._query_alarms(filter, orderby, limit)
 
     @validation.required_services(consts.Service.CEILOMETER)
+    @validation.required_openstack(users=True)
     @base.scenario(context={"cleanup": ["ceilometer"]})
     def create_and_query_alarm_history(self, meter_name, threshold,
                                        orderby=None, limit=None, **kwargs):
@@ -63,6 +65,7 @@ class CeilometerQueries(ceilometerutils.CeilometerScenario):
         self._query_alarm_history(alarm_filter, orderby, limit)
 
     @validation.required_services(consts.Service.CEILOMETER)
+    @validation.required_openstack(users=True)
     @base.scenario(context={"cleanup": ["ceilometer"]})
     def create_and_query_samples(self, counter_name, counter_type,
                                  counter_unit, counter_volume, resource_id,

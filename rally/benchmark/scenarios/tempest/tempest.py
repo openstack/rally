@@ -22,6 +22,7 @@ from rally import consts
 class TempestScenario(base.Scenario):
 
     @validation.tempest_tests_exists()
+    @validation.required_openstack(admin=True)
     @base.scenario(context={"tempest": {}})
     @utils.tempest_log_wrapper
     def single_test(self, test_name, log_file):
@@ -36,6 +37,7 @@ class TempestScenario(base.Scenario):
 
         self.context()["verifier"].run(test_name, log_file)
 
+    @validation.required_openstack(admin=True)
     @base.scenario(context={"tempest": {}})
     @utils.tempest_log_wrapper
     def all(self, log_file):
@@ -47,6 +49,7 @@ class TempestScenario(base.Scenario):
         self.context()["verifier"].run("", log_file)
 
     @validation.tempest_set_exists()
+    @validation.required_openstack(admin=True)
     @base.scenario(context={"tempest": {}})
     @utils.tempest_log_wrapper
     def set(self, set_name, log_file):
@@ -66,6 +69,7 @@ class TempestScenario(base.Scenario):
         self._context["verifier"].run(testr_arg, log_file)
 
     @validation.tempest_tests_exists()
+    @validation.required_openstack(admin=True)
     @base.scenario(context={"tempest": {}})
     @utils.tempest_log_wrapper
     def list_of_tests(self, test_names, log_file):
@@ -77,6 +81,7 @@ class TempestScenario(base.Scenario):
 
         self._context["verifier"].run(" ".join(test_names), log_file)
 
+    @validation.required_openstack(admin=True)
     @base.scenario(context={"tempest": {}})
     @utils.tempest_log_wrapper
     def specific_regex(self, regex, log_file):

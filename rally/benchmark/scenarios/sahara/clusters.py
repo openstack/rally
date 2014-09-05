@@ -27,9 +27,10 @@ class SaharaClusters(utils.SaharaScenario):
 
     @types.set(flavor=types.FlavorResourceType)
     @validation.flavor_exists('flavor')
-    @validation.required_services(consts.Service.SAHARA)
     @validation.required_contexts("users", "sahara_image")
     @validation.number("node_count", minval=2, integer_only=True)
+    @validation.required_services(consts.Service.SAHARA)
+    @validation.required_openstack(users=True)
     @base.scenario(context={"cleanup": ["sahara"]})
     def create_and_delete_cluster(self, flavor, node_count, plugin_name,
                                   hadoop_version, floating_ip_pool=None,

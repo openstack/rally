@@ -95,6 +95,10 @@
         type: "constant"
         times: 10
         concurrency: 10
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
       sla:
         max_failure_percent: 0
 
@@ -112,6 +116,10 @@
         type: "constant"
         times: 10
         concurrency: 10
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
       sla:
         max_failure_percent: 0
 
@@ -129,6 +137,10 @@
         type: "constant"
         times: 10
         concurrency: 10
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
       sla:
         max_failure_percent: 0
 
@@ -146,6 +158,10 @@
         type: "constant"
         times: 10
         concurrency: 10
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
       sla:
         max_failure_percent: 0
 
@@ -155,6 +171,10 @@
         type: "constant"
         times: 10
         concurrency: 10
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
       sla:
         max_failure_percent: 0
 
@@ -164,6 +184,10 @@
         type: "constant"
         times: 10
         concurrency: 10
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
       sla:
         max_failure_percent: 0
 
@@ -173,6 +197,10 @@
         type: "constant"
         times: 10
         concurrency: 10
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
       sla:
         max_failure_percent: 0
 
@@ -192,9 +220,8 @@
         sleep: 0.001
       runner:
         type: "rps"
-        times: 10000
+        times: 2000
         rps: 200
-        timeout: 600
       sla:
         max_failure_percent: 0
 
@@ -283,6 +310,12 @@
         type: "constant"
         times: 20
         concurrency: 10
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+      sla:
+        max_failure_percent: 0
 
   CeilometerQueries.create_and_query_alarms:
     -
@@ -301,6 +334,10 @@
         type: "constant"
         times: 20
         concurrency: 10
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
       sla:
         max_failure_percent: 0
 
@@ -320,6 +357,10 @@
         type: "constant"
         times: 20
         concurrency: 10
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
       sla:
         max_failure_percent: 0
 
@@ -338,6 +379,12 @@
         type: "constant"
         times: 20
         concurrency: 10
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+      sla:
+        max_failure_percent: 0
 
   HeatStacks.create_and_list_stack:
     -
@@ -609,6 +656,8 @@
         users:
           tenants: 2
           users_per_tenant: 2
+      sla:
+        max_failure_percent: 0
 
   GlanceImages.create_and_delete_image:
     -

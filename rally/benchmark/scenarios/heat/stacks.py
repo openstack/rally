@@ -36,6 +36,7 @@ class HeatStacks(utils.HeatScenario):
         return template
 
     @validation.required_services(consts.Service.HEAT)
+    @validation.required_openstack(users=True)
     @base.scenario(context={"cleanup": ["heat"],
                             "roles": ["heat_stack_owner"]})
     def create_and_list_stack(self, template_path=None):
@@ -55,6 +56,7 @@ class HeatStacks(utils.HeatScenario):
         self._list_stacks()
 
     @validation.required_services(consts.Service.HEAT)
+    @validation.required_openstack(users=True)
     @base.scenario(context={"cleanup": ["heat"],
                             "roles": ["heat_stack_owner"]})
     def create_and_delete_stack(self, template_path=None):

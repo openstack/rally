@@ -21,6 +21,7 @@ from rally import consts
 class CeilometerStats(utils.CeilometerScenario):
 
     @validation.required_services(consts.Service.CEILOMETER)
+    @validation.required_openstack(users=True)
     @base.scenario(context={"cleanup": ["ceilometer"]})
     def create_meter_and_get_stats(self, **kwargs):
         """Test creating a meter and fetching its statistics.

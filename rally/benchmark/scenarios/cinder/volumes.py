@@ -25,6 +25,7 @@ class CinderVolumes(utils.CinderScenario,
                     nova_utils.NovaScenario):
 
     @validation.required_services(consts.Service.CINDER)
+    @validation.required_openstack(users=True)
     @base.scenario(context={"cleanup": ["cinder"]})
     def create_and_list_volume(self, size, detailed=True, **kwargs):
         """Tests creating a volume and listing volumes.
@@ -43,6 +44,7 @@ class CinderVolumes(utils.CinderScenario,
         self._list_volumes(detailed)
 
     @validation.required_services(consts.Service.CINDER)
+    @validation.required_openstack(users=True)
     @base.scenario(context={"cleanup": ["cinder"]})
     def create_and_delete_volume(self, size, min_sleep=0, max_sleep=0,
                                  **kwargs):
@@ -56,6 +58,7 @@ class CinderVolumes(utils.CinderScenario,
         self._delete_volume(volume)
 
     @validation.required_services(consts.Service.CINDER)
+    @validation.required_openstack(users=True)
     @base.scenario(context={"cleanup": ["cinder"]})
     def create_volume(self, size, **kwargs):
         """Test creating volumes perfromance.
@@ -65,9 +68,10 @@ class CinderVolumes(utils.CinderScenario,
         """
         self._create_volume(size, **kwargs)
 
-    @base.scenario(context={"cleanup": ["cinder"]})
     @validation.required_services(consts.Service.CINDER)
     @validation.required_contexts("volumes")
+    @validation.required_openstack(users=True)
+    @base.scenario(context={"cleanup": ["cinder"]})
     def create_and_delete_snapshot(self, force=False, min_sleep=0,
                                    max_sleep=0, **kwargs):
         """Tests creating and then deleting a volume-snapshot."""
@@ -85,6 +89,7 @@ class CinderVolumes(utils.CinderScenario,
                flavor=types.FlavorResourceType)
     @validation.image_valid_on_flavor("flavor", "image")
     @validation.required_services(consts.Service.NOVA, consts.Service.CINDER)
+    @validation.required_openstack(users=True)
     @base.scenario(context={"cleanup": ["cinder", "nova"]})
     def create_and_attach_volume(self, volume_size, image, flavor,
                                  min_sleep=0, max_sleep=0, **kwargs):

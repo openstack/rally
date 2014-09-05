@@ -21,6 +21,7 @@ from rally import consts
 class CeilometerResource(ceilometerutils.CeilometerScenario):
 
     @validation.required_services(consts.Service.CEILOMETER)
+    @validation.required_openstack(users=True)
     @base.scenario()
     def list_resources(self):
         """Test fetching all resources.

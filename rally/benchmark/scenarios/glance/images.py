@@ -27,6 +27,7 @@ class GlanceImages(utils.GlanceScenario, nova_utils.NovaScenario):
     RESOURCE_NAME_LENGTH = 16
 
     @validation.required_services(consts.Service.GLANCE)
+    @validation.required_openstack(users=True)
     @base.scenario(context={"cleanup": ["glance"]})
     def create_and_list_image(self, container_format,
                               image_location, disk_format, **kwargs):
@@ -49,6 +50,7 @@ class GlanceImages(utils.GlanceScenario, nova_utils.NovaScenario):
         self._list_images()
 
     @validation.required_services(consts.Service.GLANCE)
+    @validation.required_openstack(users=True)
     @base.scenario(context={"cleanup": ["glance"]})
     def list_images(self):
         """Test the glance image-list command.
@@ -64,6 +66,7 @@ class GlanceImages(utils.GlanceScenario, nova_utils.NovaScenario):
         self._list_images()
 
     @validation.required_services(consts.Service.GLANCE)
+    @validation.required_openstack(users=True)
     @base.scenario(context={"cleanup": ["glance"]})
     def create_and_delete_image(self, container_format,
                                 image_location, disk_format, **kwargs):
@@ -79,6 +82,7 @@ class GlanceImages(utils.GlanceScenario, nova_utils.NovaScenario):
     @types.set(flavor=types.FlavorResourceType)
     @validation.flavor_exists("flavor")
     @validation.required_services(consts.Service.GLANCE, consts.Service.NOVA)
+    @validation.required_openstack(users=True)
     @base.scenario(context={"cleanup": ["glance", "nova"]})
     def create_image_and_boot_instances(self, container_format,
                                         image_location, disk_format,

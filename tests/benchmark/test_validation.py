@@ -385,3 +385,83 @@ class ValidatorsTestCase(test.TestCase):
         result = validator({"context": {"c1": 1, "c2": 2, "c3": 3, "a": 1}},
                            None, None)
         self.assertTrue(result.is_valid, result.msg)
+
+    @mock.patch("rally.benchmark.validation.objects.Deployment.get")
+    def test_required_openstack_with_admin(self, mock_deploy_get):
+        validator = self._unwrap_validator(validation.required_openstack,
+                                           admin=True)
+
+        # admin presented in deployment
+        task = {"deployment_uuid": mock.MagicMock()}
+        mock_deploy_get.return_value = {"admin": "admin_endpoint", "users": []}
+        self.assertTrue(validator(None, None, task).is_valid)
+        mock_deploy_get.assert_called_once_with(task["deployment_uuid"])
+
+        mock_deploy_get.reset_mock()
+
+        # admin not presented in deployment
+        mock_deploy_get.return_value = {"admin": None, "users": ["u1", "h2"]}
+        self.assertFalse(validator(None, None, task).is_valid)
+        mock_deploy_get.assert_called_once_with(task["deployment_uuid"])
+
+    @mock.patch("rally.benchmark.validation.objects.Deployment.get")
+    def test_required_openstack_with_users(self, mock_deploy_get):
+        validator = self._unwrap_validator(validation.required_openstack,
+                                           users=True)
+
+        # users presented in deployment
+        task = {"deployment_uuid": mock.MagicMock()}
+        mock_deploy_get.return_value = {"admin": None, "users": ["u_endpoint"]}
+        self.assertTrue(validator({}, None, task).is_valid)
+        mock_deploy_get.assert_called_once_with(task["deployment_uuid"])
+
+        mock_deploy_get.reset_mock()
+
+        # admin and users presented in deployment
+        mock_deploy_get.return_value = {"admin": "a", "users": ["u1", "h2"]}
+        self.assertTrue(validator({}, None, task).is_valid)
+        mock_deploy_get.assert_called_once_with(task["deployment_uuid"])
+
+        mock_deploy_get.reset_mock()
+
+        # admin and user context
+        mock_deploy_get.return_value = {"admin": "a", "users": []}
+        context = {"context": {"users": True}}
+        self.assertTrue(validator(context, None, task).is_valid)
+        mock_deploy_get.assert_called_once_with(task["deployment_uuid"])
+
+        mock_deploy_get.reset_mock()
+
+        # just admin presented
+        mock_deploy_get.return_value = {"admin": "a", "users": []}
+        self.assertFalse(validator({}, None, task).is_valid)
+        mock_deploy_get.assert_called_once_with(task["deployment_uuid"])
+
+    @mock.patch("rally.benchmark.validation.objects.Deployment.get")
+    def test_required_openstack_with_admin_and_users(self, mock_deploy_get):
+        validator = self._unwrap_validator(validation.required_openstack,
+                                           admin=True, users=True)
+
+        task = {"deployment_uuid": mock.MagicMock()}
+
+        mock_deploy_get.return_value = {"admin": "a", "users": []}
+        self.assertFalse(validator({}, None, task).is_valid)
+        mock_deploy_get.assert_called_once_with(task["deployment_uuid"])
+
+        mock_deploy_get.reset_mock()
+
+        mock_deploy_get.return_value = {"admin": "a", "users": ["u"]}
+        self.assertTrue(validator({}, None, task).is_valid)
+        mock_deploy_get.assert_called_once_with(task["deployment_uuid"])
+
+        mock_deploy_get.reset_mock()
+
+        # admin and user context
+        mock_deploy_get.return_value = {"admin": "a", "users": []}
+        context = {"context": {"users": True}}
+        self.assertTrue(validator(context, None, task).is_valid)
+        mock_deploy_get.assert_called_once_with(task["deployment_uuid"])
+
+    def test_required_openstack_invalid(self):
+        validator = self._unwrap_validator(validation.required_openstack)
+        self.assertFalse(validator(None, None, None).is_valid)

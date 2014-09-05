@@ -36,9 +36,10 @@ class VMTasks(nova_utils.NovaScenario, vm_utils.VMScenario):
     @validation.number("port", minval=1, maxval=65535, nullable=True,
                        integer_only=True)
     @validation.external_network_exists("floating_network", "use_floatingip")
+    @validation.required_services(consts.Service.NOVA)
+    @validation.required_openstack(users=True)
     @base.scenario(
         context={"cleanup": ["nova"], "keypair": {}, "allow_ssh": {}})
-    @validation.required_services(consts.Service.NOVA)
     def boot_runcommand_delete(self, image, flavor,
                                script, interpreter, username,
                                fixed_network="private",
