@@ -67,6 +67,25 @@ class APITestCase(test.TestCase):
         }
         self.tempest = mock.Mock()
 
+    @mock.patch("rally.orchestrator.api.objects.Task")
+    @mock.patch("rally.orchestrator.api.objects.Deployment.get",
+                return_value={"uuid": "deploy_uuid",
+                              "admin": mock.MagicMock(),
+                              "users": []})
+    @mock.patch("rally.orchestrator.api.engine.BenchmarkEngine")
+    def test_task_validate(self, mock_engine, mock_deployment_get, mock_task):
+        api.task_validate(self.deploy_uuid, "config")
+
+        mock_engine.assert_has_calls([
+            mock.call("config", mock_task.return_value),
+            mock.call().bind(admin=mock_deployment_get.return_value["admin"],
+                             users=[]),
+            mock.call().validate(),
+        ])
+
+        mock_task.assert_called_once_with(deployment_uuid=self.deploy_uuid)
+        mock_deployment_get.assert_called_once_with(self.deploy_uuid)
+
     @mock.patch("rally.objects.Task")
     def test_create_task(self, mock_task):
         deployment_uuid = "b0d9cd6c-2c94-4417-a238-35c7019d0257"

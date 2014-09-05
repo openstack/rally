@@ -84,6 +84,20 @@ def create_task(deploy_uuid, tag):
     return objects.Task(deployment_uuid=deploy_uuid, tag=tag)
 
 
+def task_validate(deploy_uuid, config):
+    """Validate a task config against specified deployment.
+
+    :param deploy_uuid: UUID of the deployment
+    :param config: a dict with a task configuration
+    """
+    deployment = objects.Deployment.get(deploy_uuid)
+    task = objects.Task(deployment_uuid=deploy_uuid)
+    benchmark_engine = engine.BenchmarkEngine(config, task)
+    benchmark_engine.bind(admin=deployment["admin"],
+                          users=deployment["users"])
+    benchmark_engine.validate()
+
+
 def start_task(deploy_uuid, config, task=None):
     """Start a task.
 

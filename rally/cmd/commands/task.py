@@ -44,6 +44,27 @@ class TaskCommands(object):
                    help='UUID of the deployment')
     @cliutils.args('--task', '--filename',
                    help='Path to the file with full configuration of task')
+    @envutils.with_default_deploy_id
+    def validate(self, task, deploy_id=None):
+        """Validate a task file.
+
+        :param task: a file with yaml/json configration
+        :param deploy_id: a UUID of a deployment
+        """
+
+        with open(task, "rb") as task_file:
+            config_dict = yaml.safe_load(task_file.read())
+        try:
+            api.task_validate(deploy_id, config_dict)
+            print("Task config is valid :)")
+        except exceptions.InvalidTaskException as e:
+            print("Task config is invalid: \n")
+            print(e)
+
+    @cliutils.args('--deploy-id', type=str, dest='deploy_id', required=False,
+                   help='UUID of the deployment')
+    @cliutils.args('--task', '--filename',
+                   help='Path to the file with full configuration of task')
     @cliutils.args('--tag',
                    help='Tag for this task')
     @cliutils.args('--no-use', action='store_false', dest='do_use',

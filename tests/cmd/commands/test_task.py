@@ -245,3 +245,11 @@ class TaskCommandsTestCase(test.TestCase):
         retval = self.task.sla_check(task_id='fake_task_id')
         self.assertEqual(1, retval)
         mock_sla.SLA.check_all.assert_called_once_with('fake_task')
+
+    @mock.patch('rally.cmd.commands.task.open',
+                mock.mock_open(read_data='{"some": "json"}'),
+                create=True)
+    @mock.patch('rally.orchestrator.api.task_validate')
+    def test_verify(self, mock_validate):
+        self.task.validate('path_to_config.json', 'fake_id')
+        mock_validate.assert_called_once_with('fake_id', {"some": "json"})
