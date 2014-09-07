@@ -24,44 +24,47 @@ from tests import test
 
 class TestExistingCloud(test.TestCase):
     def setUp(self):
-        self.deployment = {
-            'config': {
-                'type': 'ExistingCloud',
-                'endpoint': {
-                    'auth_url': 'http://example.net:5000/v2.0/',
-                    'username': 'admin',
-                    'password': 'myadminpass',
-                    'tenant_name': 'demo',
-                    'region_name': 'RegionOne',
-                    'use_public_urls': False,
-                    'admin_port': 35357,
-                    'domain_name': None,
-                    'project_domain_name': 'Default',
-                    'user_domain_name': 'Default',
-                },
-            },
-        }
         super(TestExistingCloud, self).setUp()
+        self.deployment = {
+            "config": {
+                "type": "ExistingCloud",
+                "auth_url": "http://example.net:5000/v2.0/",
+                "region_name": "RegionOne",
+                "use_public_urls": False,
+                "admin_port": 35357,
+                "admin": {
+                    "username": "admin",
+                    "password": "myadminpass",
+                    "tenant_name": "demo",
+                    "domain_name": None,
+                    "project_domain_name": "Default",
+                    "user_domain_name": "Default",
+                }
+            }
+        }
 
     def test_init(self):
         existing.ExistingCloud(self.deployment)
 
     def test_init_invalid_config(self):
-        self.deployment['config']['endpoint'] = 42
+        self.deployment["config"]["admin"] = 42
         self.assertRaises(jsonschema.ValidationError,
                           existing.ExistingCloud, self.deployment)
 
     def test_deploy(self):
         engine = existing.ExistingCloud(self.deployment)
         endpoints = engine.deploy()
-        admin_endpoint = self.deployment['config']['endpoint'].copy()
-        self.assertEqual(admin_endpoint, endpoints[0].to_dict())
+        admin_endpoint = self.deployment["config"].copy()
+        admin_endpoint.pop("type")
+        admin_endpoint.update(admin_endpoint.pop("admin"))
+        self.assertEqual(admin_endpoint, endpoints["admin"].to_dict())
+        self.assertEqual([], endpoints["users"])
 
     def test_cleanup(self):
         existing.ExistingCloud(self.deployment).cleanup()
 
     def test_is_in_factory(self):
-        name = self.deployment['config']['type']
+        name = self.deployment["config"]["type"]
         engine = deploy.EngineFactory.get_engine(name,
                                                  self.deployment)
         self.assertIsInstance(engine, existing.ExistingCloud)

@@ -85,7 +85,7 @@ class DevstackEngineTestCase(test.TestCase):
         fake_provider.create_servers.return_value = [server]
         with mock.patch.object(self.engine, 'deployment') as m_d:
             endpoints = self.engine.deploy()
-        self.assertEqual(['fake_endpoint'], endpoints)
+        self.assertEqual({"admin": "fake_endpoint"}, endpoints)
         m_endpoint.assert_called_once_with('http://host:5000/v2.0/', 'admin',
                                            'secret', 'admin', 'admin')
         m_d.add_resource.assert_called_once_with(

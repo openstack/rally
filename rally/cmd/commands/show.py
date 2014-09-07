@@ -17,19 +17,25 @@
 
 from __future__ import print_function
 
-import sys
-
 from rally.cmd import cliutils
 from rally.cmd import envutils
 from rally import db
 from rally import exceptions
 from rally.objects import endpoint
 from rally.openstack.common import cliutils as common_cliutils
+from rally.openstack.common.gettextutils import _
 from rally import osclients
 from rally import utils
 
 
 class ShowCommands(object):
+
+    def _get_endpoints(self, deploy_id):
+        deployment = db.deployment_get(deploy_id)
+        admin = deployment.get("admin")
+        admin = [admin] if admin else []
+
+        return admin + deployment.get("users", [])
 
     @cliutils.args('--deploy-id', dest='deploy_id', type=str, required=False,
                    help='the UUID of a deployment')
@@ -46,22 +52,23 @@ class ShowCommands(object):
         formatters = dict(zip(float_cols,
                               [cliutils.pretty_float_formatter(col)
                                for col in float_cols]))
+
         try:
-            endpoints = db.deployment_get(deploy_id)['endpoints']
-            for endpoint_dict in endpoints:
+            for endpoint_dict in self._get_endpoints(deploy_id):
                 clients = osclients.Clients(endpoint.Endpoint(**endpoint_dict))
                 glance_client = clients.glance()
                 for image in glance_client.images.list():
                     data = [image.id, image.name, image.size]
                     table_rows.append(utils.Struct(**dict(zip(headers, data))))
 
-        except exceptions.InvalidArgumentsException:
-            print(_("Authentication Issues: %s") % sys.exc_info()[1])
+                common_cliutils.print_list(table_rows,
+                                           fields=headers,
+                                           formatters=formatters,
+                                           mixed_case_fields=mixed_case_fields)
+
+        except exceptions.InvalidArgumentsException as e:
+            print(_("Authentication Issues: %s") % e)
             return(1)
-        common_cliutils.print_list(table_rows,
-                                   fields=headers,
-                                   formatters=formatters,
-                                   mixed_case_fields=mixed_case_fields)
 
     @cliutils.args('--deploy-id', dest='deploy_id', type=str, required=False,
                    help='the UUID of a deployment')
@@ -79,8 +86,7 @@ class ShowCommands(object):
                                for col in float_cols]))
         table_rows = []
         try:
-            endpoints = db.deployment_get(deploy_id)['endpoints']
-            for endpoint_dict in endpoints:
+            for endpoint_dict in self._get_endpoints(deploy_id):
                 clients = osclients.Clients(endpoint.Endpoint(**endpoint_dict))
                 nova_client = clients.nova()
                 for flavor in nova_client.flavors.list():
@@ -88,13 +94,14 @@ class ShowCommands(object):
                             flavor.ram, flavor.swap, flavor.disk]
                     table_rows.append(utils.Struct(**dict(zip(headers, data))))
 
-        except exceptions.InvalidArgumentsException:
-            print(_("Authentication Issues: %s") % sys.exc_info()[1])
+                common_cliutils.print_list(table_rows,
+                                           fields=headers,
+                                           formatters=formatters,
+                                           mixed_case_fields=mixed_case_fields)
+
+        except exceptions.InvalidArgumentsException as e:
+            print(_("Authentication Issues: %s") % e)
             return(1)
-        common_cliutils.print_list(table_rows,
-                                   fields=headers,
-                                   formatters=formatters,
-                                   mixed_case_fields=mixed_case_fields)
 
     @cliutils.args('--deploy-id', dest='deploy_id', type=str, required=False,
                    help='the UUID of a deployment')
@@ -104,19 +111,19 @@ class ShowCommands(object):
         mixed_case_fields = ['ID', 'Label', 'CIDR']
         table_rows = []
         try:
-            endpoints = db.deployment_get(deploy_id)['endpoints']
-            for endpoint_dict in endpoints:
+            for endpoint_dict in self._get_endpoints(deploy_id):
                 clients = osclients.Clients(endpoint.Endpoint(**endpoint_dict))
-            nova_client = clients.nova()
-            for network in nova_client.networks.list():
-                data = [network.id, network.label, network.cidr]
-                table_rows.append(utils.Struct(**dict(zip(headers, data))))
-        except exceptions.InvalidArgumentsException:
-            print(_("Authentication Issues: %s") % sys.exc_info()[1])
+                nova_client = clients.nova()
+                for network in nova_client.networks.list():
+                    data = [network.id, network.label, network.cidr]
+                    table_rows.append(utils.Struct(**dict(zip(headers, data))))
+
+                common_cliutils.print_list(table_rows,
+                                           fields=headers,
+                                           mixed_case_fields=mixed_case_fields)
+        except exceptions.InvalidArgumentsException as e:
+            print(_("Authentication Issues: %s") % e)
             return(1)
-        common_cliutils.print_list(table_rows,
-                                   fields=headers,
-                                   mixed_case_fields=mixed_case_fields)
 
     @cliutils.args('--deploy-id', dest='deploy_id', type=str, required=False,
                    help='the UUID of a deployment')
@@ -126,8 +133,7 @@ class ShowCommands(object):
         mixed_case_fields = ['ID', 'Name', 'Description']
         table_rows = []
         try:
-            endpoints = db.deployment_get(deploy_id)['endpoints']
-            for endpoint_dict in endpoints:
+            for endpoint_dict in self._get_endpoints(deploy_id):
                 clients = osclients.Clients(endpoint.Endpoint(**endpoint_dict))
                 nova_client = clients.nova()
                 for secgroup in nova_client.security_groups.list():
@@ -135,12 +141,14 @@ class ShowCommands(object):
                             secgroup.description]
                     table_rows.append(utils.Struct(**dict(zip(headers,
                                                               data))))
-        except exceptions.InvalidArgumentsException:
-            print(_("Authentication Issues: %s") % sys.exc_info()[1])
+                    common_cliutils.print_list(
+                        table_rows,
+                        fields=headers,
+                        mixed_case_fields=mixed_case_fields)
+
+        except exceptions.InvalidArgumentsException as e:
+            print(_("Authentication Issues: %s") % e)
             return(1)
-        common_cliutils.print_list(table_rows,
-                                   fields=headers,
-                                   mixed_case_fields=mixed_case_fields)
 
     @cliutils.args('--deploy-id', dest='deploy_id', type=str, required=False,
                    help='the UUID of a deployment')
@@ -150,16 +158,16 @@ class ShowCommands(object):
         mixed_case_fields = ['Name', 'Fingerprint']
         table_rows = []
         try:
-            endpoints = db.deployment_get(deploy_id)['endpoints']
-            for endpoint_dict in endpoints:
+            for endpoint_dict in self._get_endpoints(deploy_id):
                 clients = osclients.Clients(endpoint.Endpoint(**endpoint_dict))
                 nova_client = clients.nova()
                 for keypair in nova_client.keypairs.list():
                     data = [keypair.name, keypair.fingerprint]
                     table_rows.append(utils.Struct(**dict(zip(headers, data))))
-        except exceptions.InvalidArgumentsException:
-            print(_("Authentication Issues: %s") % sys.exc_info()[1])
+                common_cliutils.print_list(table_rows,
+                                           fields=headers,
+                                           mixed_case_fields=mixed_case_fields)
+
+        except exceptions.InvalidArgumentsException as e:
+            print(_("Authentication Issues: %s") % e)
             return(1)
-        common_cliutils.print_list(table_rows,
-                                   fields=headers,
-                                   mixed_case_fields=mixed_case_fields)

@@ -98,10 +98,11 @@ def start_task(deploy_uuid, config, task=None):
     LOG.info("Benchmark Task %s on Deployment %s" % (task['uuid'],
                                                      deployment['uuid']))
     benchmark_engine = engine.BenchmarkEngine(config, task)
-    endpoint = deployment['endpoints']
+    admin = deployment["admin"]
+    users = deployment["users"]
 
     try:
-        benchmark_engine.bind(endpoint)
+        benchmark_engine.bind(admin=admin, users=users)
         benchmark_engine.validate()
         benchmark_engine.run()
     except exceptions.InvalidTaskException:

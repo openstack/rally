@@ -119,12 +119,35 @@ class DeploymentTestCase(test.TestCase):
     def test_update_endpoints(self, mock_update):
         mock_update.return_value = self.deployment
         deploy = objects.Deployment(deployment=self.deployment)
-        endpoints = [objects.Endpoint("url", "user", "pwd", "tenant",
-                                      consts.EndpointPermission.ADMIN)]
+        endpoints = {
+            "admin": objects.Endpoint("url", "user", "pwd", "tenant",
+                                      consts.EndpointPermission.ADMIN),
+            "users": [
+                objects.Endpoint("url1", "user1", "pwd1", "tenant1",
+                                 consts.EndpointPermission.USER),
+                objects.Endpoint("url2", "user2", "pwd2", "tenant2",
+                                 consts.EndpointPermission.USER),
+            ]
+        }
+
+        expected_users = [u.to_dict(include_permission=True)
+                          for u in endpoints["users"]]
+
         deploy.update_endpoints(endpoints)
         mock_update.assert_called_once_with(
             self.deployment["uuid"],
-            {"endpoints": [endpoints[0].to_dict(include_permission=True)]})
+            {
+                "admin": endpoints["admin"].to_dict(include_permission=True),
+                "users": expected_users
+            })
+
+    @mock.patch('rally.objects.deploy.db.deployment_update')
+    def test_update_empty_endpoints(self, mock_update):
+        mock_update.return_value = self.deployment
+        deploy = objects.Deployment(deployment=self.deployment)
+        deploy.update_endpoints({})
+        mock_update.assert_called_once_with(self.deployment["uuid"],
+                                            {"admin": {}, "users": []})
 
     @mock.patch('rally.objects.deploy.db.resource_create')
     def test_add_resource(self, mock_create):

@@ -40,7 +40,7 @@ class UseCommandsTestCase(test.TestCase):
     @mock.patch(MOD + 'db')
     def test_deployment_use_by_name(self, m_db, m_ercde, m_uaigf, m_uodf):
         fake_deployment = {'uuid': 'fake_uuid',
-                           'endpoints': 'fake_endpoints'}
+                           'admin': 'fake_endpoints'}
         m_db.deployment_list.return_value = [fake_deployment]
         m_db.deployment_get.return_value = fake_deployment
         status = self.use.deployment(name='fake_name')
@@ -58,11 +58,15 @@ class UseCommandsTestCase(test.TestCase):
     def test_deployment(self, mock_env, mock_path, mock_deployment,
                         mock_symlink, mock_remove):
         deploy_id = '593b683c-4b16-4b2b-a56b-e162bd60f10b'
-        endpoints = {'endpoints': [{'auth_url': 'fake_auth_url',
-                                    'username': 'fake_username',
-                                    'password': 'fake_password',
-                                    'tenant_name': 'fake_tenant_name',
-                                    'region_name': None}]}
+        endpoints = {
+            'admin': {
+                'auth_url': 'fake_auth_url',
+                'username': 'fake_username',
+                'password': 'fake_password',
+                'tenant_name': 'fake_tenant_name',
+                'region_name': None
+            }
+        }
         mock_deployment.return_value = endpoints
         with mock.patch('rally.cmd.commands.use.open', mock.mock_open(),
                         create=True) as mock_file:

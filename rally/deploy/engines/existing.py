@@ -19,20 +19,20 @@ from rally import objects
 
 
 class ExistingCloud(engine.EngineFactory):
-    """ExistingCloud doesn't deploy OpenStack it just use existing.
+    """ExistingCloud doesn't deploy OpenStack it just use existing cloud.
 
        To use ExistingCloud you should put in a config endpoint key, e.g:
 
             {
                 "type": "ExistingCloud",
-                "endpoint": {
-                    "auth_url": "http://localhost:5000/v2.0/",
+                "auth_url": "http://localhost:5000/v2.0/",
+                "region_name": "RegionOne",
+                "use_public_urls": true,
+                "admin_port": 35357
+                "admin": {
                     "username": "admin",
                     "password": "password",
                     "tenant_name": "demo",
-                    "region_name": "RegionOne",
-                    "use_public_urls": True,
-                    "admin_port": 35357
                 }
             }
 
@@ -40,83 +40,103 @@ class ExistingCloud(engine.EngineFactory):
 
             {
                 "type": "ExistingCloud",
-                "endpoint": {
-                    "auth_url": "http://localhost:5000/v3/",
-                    "username": "engineer1",
-                    "user_domain_name": "qa",
-                    "project_name": "qa_admin_project",
-                    "project_domain_name": "qa",
-                    "password": "password",
-                    "region_name": "RegionOne",
-                    "use_public_urls": False,
-                    "admin_port": 35357,
+                "auth_url": "http://localhost:5000/v3/",
+                "region_name": "RegionOne",
+                "use_public_urls": false,
+                "admin_port": 35357
+                "admin": {
+                    "username": "admin",
+                    "password": "admin",
+                    "user_domain_name": "admin",
+                    "project_name": "admin",
+                    "project_domain_name": "admin",
                 }
             }
     """
 
     CONFIG_SCHEMA = {
-        'type': 'object',
-        'properties': {
-            'type': {'type': 'string'},
-            'endpoint': {
-                'type': 'object',
-                'properties': {
-                    'auth_url': {'type': 'string'},
-                    'username': {'type': 'string'},
-                    'password': {'type': 'string'},
-                    'region_name': {'type': 'string'},
-                    'use_public_urls': {'type': 'boolean'},
-                    'admin_port': {
-                        'type': 'integer',
-                        'minimum': 2,
-                        'maximum': 65535
-                    },
+        "type": "object",
+
+        "definitions": {
+            "user": {
+                "type": "object",
+                "properties": {
+                    "username": {"type": "string"},
+                    "password": {"type": "string"},
                 },
-                'oneOf': [
+                "oneOf": [
                     {
                         # v2.0 authentication
-                        'properties': {
-                            'tenant_name': {'type': 'string'},
+                        "properties": {
+                            "tenant_name": {"type": "string"},
                         },
-                        'required': ['auth_url', 'username', 'password',
-                                     'tenant_name'],
+                        "required": ["username", "password", "tenant_name"],
                     },
                     {
                         # Authentication in project scope
-                        'properties': {
-                            'user_domain_name': {'type': 'string'},
-                            'project_name': {'type': 'string'},
-                            'project_domain_name': {'type': 'string'},
+                        "properties": {
+                            "user_domain_name": {"type": "string"},
+                            "project_name": {"type": "string"},
+                            "project_domain_name": {"type": "string"},
                         },
-                        'required': ['auth_url', 'username', 'password',
-                                     'project_name'],
-                    },
+                        "required": ["username", "password", "project_name"],
+                    }
                 ]
-            },
+            }
         },
-        'required': ['type', 'endpoint'],
+
+        "properties": {
+            "type": {"type": "string"},
+            "auth_url": {"type": "string"},
+            "region_name": {"type": "string"},
+            "use_public_urls": {"type": "boolean"},
+            "admin_port": {
+                "type": "integer",
+                "minimum": 2,
+                "maximum": 65535
+            }
+        },
+        "anyOf": [
+            {
+                "properties": {
+                    "admin": {"$ref": "#/definitions/user"}
+                },
+                "required": ["type", "auth_url", "admin"]
+            },
+            {
+                "users": {
+                    "type": "array",
+                    "items": {"$ref": "#/definitions/user"}
+                },
+                "required": ["type", "auth_url", "users"]
+            }
+        ]
     }
 
-    def deploy(self):
-        endpoint_dict = self.deployment['config']['endpoint']
-        project_name = endpoint_dict.get('project_name',
-                                         endpoint_dict.get('tenant_name'))
-
-        admin_endpoint = objects.Endpoint(
-            endpoint_dict['auth_url'], endpoint_dict['username'],
-            endpoint_dict['password'],
-            tenant_name=project_name,
-            permission=consts.EndpointPermission.ADMIN,
-            region_name=endpoint_dict.get('region_name'),
-            use_public_urls=endpoint_dict.get('use_public_urls', False),
-            admin_port=endpoint_dict.get('admin_port', 35357),
-            domain_name=endpoint_dict.get('domain_name'),
-            user_domain_name=endpoint_dict.get('user_domain_name',
-                                               'Default'),
-            project_domain_name=endpoint_dict.get('project_domain_name',
-                                                  'Default')
+    def _create_endpoint(self, common, user, permission):
+        return objects.Endpoint(
+            common["auth_url"], user["username"], user["password"],
+            tenant_name=user.get("project_name", user.get("tenant_name")),
+            permission=permission,
+            region_name=common.get("region_name"),
+            use_public_urls=common.get("use_public_urls", False),
+            admin_port=common.get("admin_port", 35357),
+            domain_name=user.get("domain_name"),
+            user_domain_name=user.get("user_domain_name", "Default"),
+            project_domain_name=user.get("project_domain_name", "Default")
         )
-        return [admin_endpoint]
+
+    def deploy(self):
+        permissions = consts.EndpointPermission
+
+        users = [self._create_endpoint(self.config, user, permissions.USER)
+                 for user in self.config.get("users", [])]
+
+        admin = self._create_endpoint(self.config,
+                                      self.config.get("admin"),
+                                      permissions.ADMIN)
+
+        return {"admin": admin, "users": users}
 
     def cleanup(self):
         pass

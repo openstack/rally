@@ -40,39 +40,46 @@ class Deployment(object):
         db.deployment_delete(uuid)
 
     def _update(self, values):
-        self.deployment = db.deployment_update(self.deployment['uuid'], values)
+        self.deployment = db.deployment_update(self.deployment["uuid"], values)
 
     def update_status(self, status):
-        self._update({'status': status})
+        self._update({"status": status})
 
     def update_name(self, name):
-        self._update({'name': name})
+        self._update({"name": name})
 
     def update_config(self, config):
-        self._update({'config': config})
+        self._update({"config": config})
 
     def update_endpoints(self, endpoints):
-        self._update({'endpoints': [e.to_dict(include_permission=True)
-                                    for e in endpoints]})
+        admin = endpoints.get("admin", {})
+        if admin:
+            admin = admin.to_dict(include_permission=True)
+
+        self._update({
+            "admin": admin,
+            "users": [e.to_dict(include_permission=True)
+                      for e in endpoints.get("users", [])]
+        })
 
     def set_started(self):
-        self._update({'started_at': datetime.datetime.now(),
-                      'status': consts.DeployStatus.DEPLOY_STARTED})
+        self._update({"started_at": datetime.datetime.now(),
+                      "status": consts.DeployStatus.DEPLOY_STARTED})
 
     def set_completed(self):
-        self._update({'completed_at': datetime.datetime.now(),
-                      'status': consts.DeployStatus.DEPLOY_FINISHED})
+        self._update({"completed_at": datetime.datetime.now(),
+                      "status": consts.DeployStatus.DEPLOY_FINISHED})
 
     def add_resource(self, provider_name, type=None, info=None):
         return db.resource_create({
-            'deployment_uuid': self.deployment['uuid'],
-            'provider_name': provider_name,
-            'type': type,
-            'info': info,
+            "deployment_uuid": self.deployment["uuid"],
+            "provider_name": provider_name,
+            "type": type,
+            "info": info,
         })
 
     def get_resources(self, provider_name=None, type=None):
-        return db.resource_get_all(self.deployment['uuid'],
+        return db.resource_get_all(self.deployment["uuid"],
                                    provider_name=provider_name, type=type)
 
     @staticmethod
@@ -80,4 +87,4 @@ class Deployment(object):
         db.resource_delete(resource_id)
 
     def delete(self):
-        db.deployment_delete(self.deployment['uuid'])
+        db.deployment_delete(self.deployment["uuid"])

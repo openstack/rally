@@ -82,8 +82,10 @@ class BenchmarkEngine(object):
             ...
             benchmark_engine = BenchmarkEngine(config, task)
             # Deploying the cloud...
-            # endpoint - is a dict with data on endpoint of deployed cloud
-            with benchmark_engine.bind(endpoints):
+            # admin - is an objects.Endpoint that actually presents admin user
+            # users - is a list of objects.Endpoint that actually presents list
+                      of users.
+            with benchmark_engine.bind(admin=admin, users=users):
                 benchmark_engine.run()
     """
 
@@ -173,7 +175,8 @@ class BenchmarkEngine(object):
     def _get_runner(self, config):
         runner = config.get("runner", {})
         runner.setdefault("type", consts.RunnerType.SERIAL)
-        return base_runner.ScenarioRunner.get_runner(self.task, self.endpoints,
+        return base_runner.ScenarioRunner.get_runner(self.task,
+                                                     self.admin_endpoint,
                                                      runner)
 
     @rutils.log_task_wrapper(LOG.info, _("Benchmarking."))
@@ -203,15 +206,17 @@ class BenchmarkEngine(object):
         self.task.update_status(consts.TaskStatus.FINISHED)
 
     @rutils.log_task_wrapper(LOG.info, _("Check cloud."))
-    def bind(self, endpoints):
-        self.endpoints = [endpoint.Endpoint(**endpoint_dict)
-                          for endpoint_dict in endpoints]
-        # NOTE(msdubov): Passing predefined user endpoints hasn't been
-        #                implemented yet, so the scenario runner always gets
-        #                a single admin endpoint here.
-        self.admin_endpoint = self.endpoints[0]
-        self.admin_endpoint.permission = consts.EndpointPermission.ADMIN
-        # Try to access cloud via keystone client
+    def bind(self, admin=None, users=None):
+        """Bind benchmark engine to OpenStack cloud.
+
+        This method will set self.admin_endpoint with passed values,
+        as well it will check that admin user is actually admin.
+
+        :param admin: admin credentials
+        :param users: List of users credentials
+        :returns: self
+        """
+        self.admin_endpoint = endpoint.Endpoint(**admin)
         clients = osclients.Clients(self.admin_endpoint)
         clients.verified_keystone()
         return self

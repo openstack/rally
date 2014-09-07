@@ -154,13 +154,18 @@ class ScenarioRunner(object):
 
     CONFIG_SCHEMA = {}
 
-    def __init__(self, task, endpoints, config):
+    def __init__(self, task, admin, config):
+        """Runner constructor.
+
+        It sets task, admin and config to local variables. Also initialize
+        result_queue, where results will be put by _send_result method.
+
+        :param task: Instance of objects.Task
+        :param admin: Instance of objects.Endpoint
+        :param config: Dict with runner section from benchmark configuration
+        """
         self.task = task
-        self.endpoints = endpoints
-        # NOTE(msdubov): Passing predefined user endpoints hasn't been
-        #                implemented yet, so the scenario runner always gets
-        #                a single admin endpoint here.
-        self.admin_user = endpoints[0]
+        self.admin_user = admin
         self.config = config
         self.result_queue = collections.deque()
 
@@ -172,9 +177,15 @@ class ScenarioRunner(object):
         raise exceptions.NoSuchRunner(type=runner_type)
 
     @staticmethod
-    def get_runner(task, endpoint, config):
-        """Returns instance of a scenario runner for execution type."""
-        return ScenarioRunner._get_cls(config["type"])(task, endpoint, config)
+    def get_runner(task, admin, config):
+        """Returns instance of a scenario runner for execution type.
+
+        :param task: instance of objects.Task corresponding to current task
+        :param admin: endpoint instance with admin credentials.
+        :param config: contents of "runner" section from task configuration
+                       for specific benchmark
+        """
+        return ScenarioRunner._get_cls(config["type"])(task, admin, config)
 
     @staticmethod
     def validate(config):

@@ -62,8 +62,8 @@ function _create_deployment_config() {
     cat >$1 <<EOF
 {
     "type": "ExistingCloud",
-    "endpoint": {
-        "auth_url": "$KEYSTONE_SERVICE_PROTOCOL://$KEYSTONE_SERVICE_HOST:$KEYSTONE_SERVICE_PORT/v$IDENTITY_API_VERSION",
+    "auth_url": "$KEYSTONE_SERVICE_PROTOCOL://$KEYSTONE_SERVICE_HOST:$KEYSTONE_SERVICE_PORT/v$IDENTITY_API_VERSION",
+    "admin": {
         "username": "admin",
         "password": "$ADMIN_PASSWORD",
         "tenant_name": "benchmark"

@@ -116,7 +116,7 @@ class DevstackEngine(engine.EngineFactory):
                                           self.localrc['ADMIN_PASSWORD'],
                                           'admin',
                                           consts.EndpointPermission.ADMIN)
-        return [admin_endpoint]
+        return {"admin": admin_endpoint}
 
     def cleanup(self):
         for resource in self.deployment.get_resources(type='credentials'):
