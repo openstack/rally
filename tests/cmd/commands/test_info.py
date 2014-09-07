@@ -17,7 +17,11 @@ import mock
 
 from rally.benchmark.scenarios.dummy import dummy
 from rally.cmd.commands import info
+from rally import exceptions
 from tests import test
+
+
+SCENARIO = "rally.cmd.commands.info.scenario_base.Scenario"
 
 
 class InfoCommandsTestCase(test.TestCase):
@@ -25,26 +29,26 @@ class InfoCommandsTestCase(test.TestCase):
         super(InfoCommandsTestCase, self).setUp()
         self.info = info.InfoCommands()
 
-    @mock.patch("rally.searchutils.find_benchmark_scenario_group")
-    def test_find_dummy_scenario_group(self, mock_find):
+    @mock.patch(SCENARIO + ".get_by_name",
+                return_value=dummy.Dummy)
+    def test_find_dummy_scenario_group(self, mock_get_by_name):
         query = "Dummy"
-        mock_find.return_value = dummy.Dummy
         status = self.info.find(query)
-        mock_find.assert_called_once_with(query)
+        mock_get_by_name.assert_called_once_with(query)
         self.assertEqual(None, status)
 
-    @mock.patch("rally.searchutils.find_benchmark_scenario")
-    def test_find_dummy_scenario(self, mock_find):
+    @mock.patch(SCENARIO + ".get_scenario_by_name",
+                return_value=dummy.Dummy.dummy)
+    def test_find_dummy_scenario(self, mock_get_scenario_by_name):
         query = "Dummy.dummy"
-        mock_find.return_value = dummy.Dummy.dummy
         status = self.info.find(query)
-        mock_find.assert_called_once_with(query)
+        mock_get_scenario_by_name.assert_called_once_with(query)
         self.assertEqual(None, status)
 
-    @mock.patch("rally.searchutils.find_benchmark_scenario")
-    def test_find_failure_status(self, mock_find):
+    @mock.patch(SCENARIO + ".get_scenario_by_name",
+                side_effect=exceptions.NoSuchScenario)
+    def test_find_failure_status(self, mock_get_scenario_by_name):
         query = "Dummy.non_existing"
-        mock_find.return_value = None
         status = self.info.find(query)
-        mock_find.assert_called_once_with(query)
+        mock_get_scenario_by_name.assert_called_once_with(query)
         self.assertEqual(1, status)

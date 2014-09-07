@@ -19,6 +19,7 @@ import mock
 
 from rally.benchmark.context import base as base_ctx
 from rally.benchmark.scenarios import base
+from rally.benchmark.scenarios.dummy import dummy
 from rally.benchmark import validation
 from rally import consts
 from rally import exceptions
@@ -29,20 +30,35 @@ from tests import test
 class ScenarioTestCase(test.TestCase):
 
     def test_get_by_name(self):
-
-        class Scenario1(base.Scenario):
-            pass
-
-        class Scenario2(base.Scenario):
-            pass
-
-        for s in [Scenario1, Scenario2]:
-            self.assertEqual(s, base.Scenario.get_by_name(s.__name__))
+        self.assertEqual(dummy.Dummy, base.Scenario.get_by_name("Dummy"))
 
     def test_get_by_name_not_found(self):
         self.assertRaises(exceptions.NoSuchScenario,
                           base.Scenario.get_by_name,
                           "non existing scenario")
+
+    def test_get_scenario_by_name(self):
+        scenario_method = base.Scenario.get_scenario_by_name("Dummy.dummy")
+        self.assertEqual(dummy.Dummy.dummy, scenario_method)
+
+    def test_get_scenario_by_name_shortened(self):
+        scenario_method = base.Scenario.get_scenario_by_name("dummy")
+        self.assertEqual(dummy.Dummy.dummy, scenario_method)
+
+    def test_get_scenario_by_name_shortened_not_found(self):
+        self.assertRaises(exceptions.NoSuchScenario,
+                          base.Scenario.get_scenario_by_name,
+                          "dumy")
+
+    def test_get_scenario_by_name_bad_group_name(self):
+        self.assertRaises(exceptions.NoSuchScenario,
+                          base.Scenario.get_scenario_by_name,
+                          "Dumy.dummy")
+
+    def test_get_scenario_by_name_bad_scenario_name(self):
+        self.assertRaises(exceptions.NoSuchScenario,
+                          base.Scenario.get_scenario_by_name,
+                          "Dummy.dumy")
 
     def test__validate_helper(self):
         validators = [
