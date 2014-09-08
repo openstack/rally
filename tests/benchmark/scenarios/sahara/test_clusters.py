@@ -50,7 +50,11 @@ class SaharaNodeGroupTemplatesTestCase(test.TestCase):
             plugin_name="test_plugin",
             hadoop_version="test_version",
             floating_ip_pool=None,
-            neutron_net_id=None)
+            neutron_net_id=None,
+            volumes_per_node=None,
+            volumes_size=None,
+            node_configs=None,
+            cluster_configs=None)
 
         mock_delete_cluster.assert_called_once_with(
             mock_launch_cluster.return_value)

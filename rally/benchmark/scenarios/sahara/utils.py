@@ -134,7 +134,9 @@ class SaharaScenario(base.Scenario):
     @base.atomic_action_timer('sahara.launch_cluster')
     def _launch_cluster(self, plugin_name, hadoop_version, flavor_id,
                         image_id, node_count, floating_ip_pool=None,
-                        neutron_net_id=None, wait_active=True):
+                        neutron_net_id=None, volumes_per_node=None,
+                        volumes_size=None, node_configs=None,
+                        cluster_configs=None, wait_active=True):
         """Creates a cluster and wait until it becomes Active.
 
         The cluster is created with two node groups. The master Node Group is
@@ -151,6 +153,13 @@ class SaharaScenario(base.Scenario):
         IPs will be allocated
         :param neutron_net_id: The network id to allocate Fixed IPs
         from when Neutron is enabled for networking
+        :param volumes_per_node: The number of Cinder volumes that will be
+        attached to every cluster node
+        :param volumes_size: The size of each Cinder volume in GB
+        :param node_configs: The configs dict that will be passed to each Node
+        Group
+        :param cluster_configs: The configs dict that will be passed to the
+        Cluster
         :param wait_active: Wait until a Cluster gets int "Active" state
         :return: The created cluster
         """
@@ -176,6 +185,17 @@ class SaharaScenario(base.Scenario):
             for ng in node_groups:
                 ng["floating_ip_pool"] = floating_ip_pool
 
+        if volumes_per_node:
+            LOG.debug("Adding volumes config to Node Groups")
+            for ng in node_groups:
+                ng["volumes_per_node"] = volumes_per_node
+                ng["volumes_size"] = volumes_size
+
+        if node_configs:
+            LOG.debug("Adding Hadoop configs to Node Groups")
+            for ng in node_groups:
+                ng["node_configs"] = node_configs
+
         name = self._generate_random_name(prefix="sahara-cluster-")
 
         replication_value = min(node_count - 1, 3)
@@ -184,6 +204,17 @@ class SaharaScenario(base.Scenario):
         conf = self.REPLICATION_CONFIGS[plugin_name][hadoop_version]
         LOG.debug("Using replication factor: %s" % replication_value)
 
+        replication_config = {
+            conf["target"]: {
+                conf["config_name"]: replication_value
+            }
+        }
+
+        # The replication factor should be set for small clusters. However the
+        # cluster_configs parameter can override it
+        merged_cluster_configs = self._merge_configs(replication_config,
+                                                     cluster_configs)
+
         cluster_object = self.clients("sahara").clusters.create(
             name=name,
             plugin_name=plugin_name,
@@ -191,9 +222,7 @@ class SaharaScenario(base.Scenario):
             node_groups=node_groups,
             default_image_id=image_id,
             net_id=neutron_net_id,
-            cluster_configs={conf["target"]: {
-                conf["config_name"]: replication_value}
-            }
+            cluster_configs=merged_cluster_configs
         )
 
         if wait_active:
@@ -291,3 +320,20 @@ class SaharaScenario(base.Scenario):
             resource=job_execution.id, is_ready=is_finished,
             timeout=CONF.benchmark.job_execution_timeout,
             check_interval=CONF.benchmark.job_check_interval)
+
+    def _merge_configs(self, *configs):
+        """Merge configs in special format.
+
+        It supports merging of configs in the following format:
+        applicable_target -> config_name -> config_value
+
+        """
+        result = {}
+        for config_dict in configs:
+            if config_dict:
+                for a_target in config_dict:
+                    if a_target not in result or not result[a_target]:
+                        result[a_target] = {}
+                    result[a_target].update(config_dict[a_target])
+
+        return result
