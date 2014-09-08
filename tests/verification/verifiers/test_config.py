@@ -84,7 +84,7 @@ class ConfigTestCase(test.TestCase):
         self.conf_generator.keystoneclient.auth_ref = {
             "serviceCatalog": [{
                 "name": service,
-                "admin": {"publicURL": url}
+                "endpoints": [{"publicURL": url}]
             }]}
         self.assertEqual(self.conf_generator._get_url(service), url)
 
