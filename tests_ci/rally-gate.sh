@@ -43,7 +43,7 @@ rally show keypairs
 rally -v task start --task $SCENARIO
 
 mkdir -p rally-plot/extra
-cp $BASE/new/$PROJECT/tests_ci/rally-gate/index.html rally-plot/extra/index.html
+cp $BASE/new/rally/tests_ci/rally-gate/index.html rally-plot/extra/index.html
 cp $SCENARIO rally-plot/task.txt
 tar -czf rally-plot/plugins.tar.gz -C $PLUGINS_DIR .
 rally task plot2html --out rally-plot/results.html
