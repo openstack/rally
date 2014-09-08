@@ -75,7 +75,8 @@ class NeutronNetworks(utils.NeutronScenario):
             NeutronNetworks.SUBNET_CIDR_START = subnet_cidr_start
         network = self._create_network(network_create_args or {})
         for i in range(subnets_per_network):
-            self._create_subnet(network, subnet_create_args or {})
+            self._create_subnet(network, subnets_per_network,
+                                subnet_create_args or {})
 
         self._list_subnets()
 
@@ -102,7 +103,8 @@ class NeutronNetworks(utils.NeutronScenario):
             NeutronNetworks.SUBNET_CIDR_START = subnet_cidr_start
         network = self._create_network(network_create_args or {})
         for i in range(subnets_per_network):
-            subnet = self._create_subnet(network, subnet_create_args or {})
+            subnet = self._create_subnet(network, subnets_per_network,
+                                         subnet_create_args or {})
             self._delete_subnet(subnet)
 
     @validation.required_parameters("subnets_per_network")
@@ -129,7 +131,8 @@ class NeutronNetworks(utils.NeutronScenario):
             NeutronNetworks.SUBNET_CIDR_START = subnet_cidr_start
         network = self._create_network(network_create_args or {})
         for i in range(subnets_per_network):
-            subnet = self._create_subnet(network, subnet_create_args or {})
+            subnet = self._create_subnet(network, subnets_per_network,
+                                         subnet_create_args or {})
             router = self._create_router(router_create_args or {})
             self.clients("neutron").add_interface_router(
                 router["router"]["id"],

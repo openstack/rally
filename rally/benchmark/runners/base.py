@@ -58,6 +58,7 @@ def _run_scenario_once(args):
     LOG.info("Task %(task)s | ITER: %(iteration)s START" %
              {"task": context["task"]["uuid"], "iteration": iteration})
 
+    context["iteration"] = iteration
     scenario = cls(
             context=context,
             admin_clients=osclients.Clients(context["admin"]["endpoint"]),

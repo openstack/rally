@@ -33,7 +33,7 @@ def _worker_thread(queue, args):
 
 
 def _worker_process(rps, times, queue, scenario_context, timeout,
-                    worker_id, cls, method_name, args):
+                    worker_id, workers, cls, method_name, args):
     """Start scenario within threads.
 
     Spawn N threads per second. Each thread runs scenario once, and appends
@@ -45,6 +45,7 @@ def _worker_process(rps, times, queue, scenario_context, timeout,
     :param scenario_context: scenario context object
     :param timeout: timeout operation
     :param worker_id: id of worker process
+    :param workers: number of total workers
     :param cls: scenario class
     :param method_name: scenario method name
     :param args: scenario args
@@ -63,8 +64,8 @@ def _worker_process(rps, times, queue, scenario_context, timeout,
 
     while times > i:
         i += 1
-        scenario_args = (queue, ("%d:%d" % (worker_id, i), cls, method_name,
-                         scenario_context, args),)
+        scenario_args = (queue, (worker_id + workers * (i - 1), cls,
+                         method_name, scenario_context, args),)
         thread = threading.Thread(target=_worker_thread,
                                   args=scenario_args)
         thread.start()
@@ -130,21 +131,22 @@ class RPSScenarioRunner(base.ScenarioRunner):
         times = self.config["times"]
         timeout = self.config.get("timeout", 600)
         cpu_count = multiprocessing.cpu_count()
-        processes2start = cpu_count if times >= cpu_count else times
-        rps_per_worker = float(self.config["rps"]) / processes2start
+        processes_to_start = min(cpu_count, times)
+        rps_per_worker = float(self.config["rps"]) / processes_to_start
 
         queue = multiprocessing.Queue()
 
         process_pool = []
         scenario_context = base._get_scenario_context(context)
 
-        times_per_worker, rest = divmod(times, processes2start)
+        times_per_worker, rest = divmod(times, processes_to_start)
 
-        for i in range(processes2start):
+        for i in range(processes_to_start):
             times = times_per_worker + int(rest > 0)
             rest -= 1
             worker_args = (rps_per_worker, times, queue, scenario_context,
-                           timeout, i, cls, method_name, args)
+                           timeout, i, processes_to_start, cls,
+                           method_name, args)
             process = multiprocessing.Process(target=_worker_process,
                                               args=worker_args)
             process.start()

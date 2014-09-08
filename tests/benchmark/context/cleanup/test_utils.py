@@ -14,6 +14,8 @@
 #    under the License.
 
 
+import mock
+
 from rally.benchmark.context.cleanup import utils
 from rally.benchmark import scenarios
 from tests import fakes
@@ -25,16 +27,17 @@ class CleanupUtilsTestCase(test.TestCase):
     def test_delete_neutron_resources(self):
         neutron = fakes.FakeClients().neutron()
         scenario = scenarios.neutron.utils.NeutronScenario()
+        scenario.context = mock.Mock(return_value={"iteration": 1})
         scenario.clients = lambda ins: neutron
 
         network1 = scenario._create_network({})
-        subnet1 = scenario._create_subnet(network1, {})
+        subnet1 = scenario._create_subnet(network1, 1, {})
         router1 = scenario._create_router({})
         # This also creates a port
         neutron.add_interface_router(router1["router"]["id"],
                                      {"subnet_id": subnet1["subnet"]["id"]})
         network2 = scenario._create_network({})
-        scenario._create_subnet(network2, {})
+        scenario._create_subnet(network2, 1, {})
         scenario._create_router({})
         scenario._create_port(network2, {})
 
