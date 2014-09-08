@@ -102,7 +102,7 @@ class TempestConf(object):
     def _get_url(self, servicename):
         for service in self.keystoneclient.auth_ref['serviceCatalog']:
             if service['name'] == servicename:
-                return service['admin']['publicURL']
+                return service["endpoints"][0]["publicURL"]
 
     def _set_default(self):
         lock_path = os.path.join(self.data_path,
