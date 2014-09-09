@@ -19,9 +19,12 @@ SCENARIO=$BASE/new/$PROJECT/rally-scenarios/${RALLY_SCENARIO}.yaml
 PLUGINS_DIR=$BASE/new/$PROJECT/rally-scenarios/plugins
 EXTRA_DIR=$BASE/new/$PROJECT/rally-scenarios/extra
 
-if [ -d $PLUGINS_DIR ]; then
- mkdir -p ~/.rally/plugins/scenarios
- cp -r $PLUGINS_DIR/*.py ~/.rally/plugins/scenarios/
+if [ -d $PLUGINS_DIR ];
+    then
+        mkdir -p ~/.rally/plugins/scenarios
+        cp -r $PLUGINS_DIR/*.py ~/.rally/plugins/scenarios/
+    else
+        mkdir -p $PLUGINS_DIR
 fi
 
 if [ -d $EXTRA_DIR ]; then
