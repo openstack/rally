@@ -178,3 +178,12 @@ def run_concurrent(concurrent, cls, fn, fn_args):
     pool.join()
 
     return iterator
+
+
+def check_service_status(client, service_name):
+    """Check if given openstack service is enabled and state is up."""
+    for service in client.services.list():
+        if service_name in str(service):
+            if service.status == 'enabled' and service.state == 'up':
+                return True
+    return False
