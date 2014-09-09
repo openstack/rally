@@ -15,13 +15,11 @@
 
 import abc
 import collections
-import copy
 import random
 
 import jsonschema
 from oslo.config import cfg
 
-from rally.benchmark.context import base as base_ctx
 from rally.benchmark.scenarios import base as scenario_base
 from rally.benchmark import utils
 from rally import consts
@@ -212,27 +210,12 @@ class ScenarioRunner(object):
         cls_name, method_name = name.split(".", 1)
         cls = scenario_base.Scenario.get_by_name(cls_name)
 
-        scenario_context = copy.deepcopy(getattr(cls, method_name).context)
-        # TODO(boris-42): We should keep default behavior for `users` context
-        #                 as a part of work on pre-created users this should be
-        #                 removed.
-        scenario_context.setdefault("users", {})
-        # merge scenario context and task context configuration
-        scenario_context.update(context)
+        # NOTE(boris-42): processing @types decorators
+        args = cls.preprocess(method_name, context, args)
 
-        context_obj = {
-            "task": self.task,
-            "admin": {"endpoint": self.admin_user},
-            "scenario_name": name,
-            "config": scenario_context
-        }
-
-        args = cls.preprocess(method_name, context_obj, args)
-
-        with base_ctx.ContextManager(context_obj):
-            with rutils.Timer() as timer:
-                self._run_scenario(cls, method_name, context_obj, args)
-            return timer.duration()
+        with rutils.Timer() as timer:
+            self._run_scenario(cls, method_name, context, args)
+        return timer.duration()
 
     def _send_result(self, result):
         """Send partial result to consumer.

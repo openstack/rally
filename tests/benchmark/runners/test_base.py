@@ -219,11 +219,9 @@ class ScenarioRunnerTestCase(test.TestCase):
                 config,
                 serial.SerialScenarioRunner.CONFIG_SCHEMA)
 
-    @mock.patch("rally.benchmark.runners.base.rutils.Timer.duration")
-    @mock.patch("rally.benchmark.runners.base.base_ctx.ContextManager.setup")
-    @mock.patch("rally.benchmark.runners.base.base_ctx.ContextManager.cleanup")
-    def test_run(self, mock_setup, mock_cleanup, mock_duration):
-        mock_duration.return_value = 10
+    @mock.patch("rally.benchmark.runners.base.rutils.Timer.duration",
+                return_value=10)
+    def test_run(self, mock_duration):
         runner = serial.SerialScenarioRunner(
             mock.MagicMock(),
             self.fake_endpoints,
@@ -233,13 +231,6 @@ class ScenarioRunnerTestCase(test.TestCase):
 
         scenario_name = "NovaServers.boot_server_from_volume_and_delete"
         config_kwargs = {"image": {"id": 1}, "flavor": {"id": 1}}
-        result = runner.run(scenario_name, {"some_ctx": 2}, config_kwargs)
-
-        self.assertEqual(result, mock_duration.return_value)
-        self.assertEqual(list(runner.result_queue), [])
-
-        cls_name, method_name = scenario_name.split(".", 1)
-        cls = scenario_base.Scenario.get_by_name(cls_name)
 
         context_obj = {
             "task": runner.task,
@@ -249,6 +240,14 @@ class ScenarioRunnerTestCase(test.TestCase):
                 "cleanup": ["nova", "cinder"], "some_ctx": 2, "users": {}
             }
         }
+
+        result = runner.run(scenario_name, context_obj, config_kwargs)
+
+        self.assertEqual(result, mock_duration.return_value)
+        self.assertEqual(list(runner.result_queue), [])
+
+        cls_name, method_name = scenario_name.split(".", 1)
+        cls = scenario_base.Scenario.get_by_name(cls_name)
 
         runner._run_scenario.assert_called_once_with(
             cls, method_name, context_obj, config_kwargs)

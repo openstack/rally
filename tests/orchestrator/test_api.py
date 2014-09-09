@@ -15,15 +15,14 @@
 
 """ Test for orchestrator. """
 
-import collections
 
 import mock
 
-from rally.benchmark.scenarios import base
 from rally import consts
+from rally import exceptions
 from rally.orchestrator import api
-from tests import fakes
 from tests import test
+
 
 FAKE_DEPLOY_CONFIG = {
     # TODO(akscram): A fake engine is more suitable for that.
@@ -43,42 +42,11 @@ FAKE_DEPLOY_CONFIG = {
 }
 
 
-FAKE_TASK_CONFIG = {
-    "FakeScenario.fake": [
-        {
-            "args": {},
-            "runner": {
-                "type": "constant",
-                "timeout": 10000,
-                "times": 3,
-                "concurrency": 2,
-            },
-            "context": {
-                "users": {
-                    "tenants": 5,
-                    "users_per_tenant": 6,
-                }
-            }
-        }
-    ]
-}
-
-
-class FakeScenario(base.Scenario):
-    @classmethod
-    def fake(cls, context):
-        pass
-
-
-# TODO(akscram): The test cases are very superficial because they test
-#                only datascenario_base.operations and actually no more. Each
-#                case in this test should to mock everything external.
 class APITestCase(test.TestCase):
 
     def setUp(self):
         super(APITestCase, self).setUp()
         self.deploy_config = FAKE_DEPLOY_CONFIG
-        self.task_config = FAKE_TASK_CONFIG
         self.deploy_uuid = "599bdf1d-fe77-461a-a810-d59b1490f4e3"
         admin_endpoint = FAKE_DEPLOY_CONFIG.copy()
         admin_endpoint.pop("type")
@@ -107,71 +75,48 @@ class APITestCase(test.TestCase):
         mock_task.assert_called_once_with(deployment_uuid=deployment_uuid,
                                           tag=tag)
 
-    @mock.patch("rally.benchmark.engine.BenchmarkEngine"
-                "._validate_config_semantic")
-    @mock.patch("rally.benchmark.engine.BenchmarkEngine"
-                "._validate_config_syntax")
-    @mock.patch("rally.benchmark.engine.BenchmarkEngine"
-                "._validate_config_scenarios_name")
-    @mock.patch("rally.benchmark.engine.osclients")
-    @mock.patch("rally.benchmark.engine.base_runner.ScenarioRunner.get_runner")
-    @mock.patch("rally.objects.deploy.db.deployment_get")
-    @mock.patch("rally.objects.task.db.task_result_create")
-    @mock.patch("rally.objects.task.db.task_update")
-    @mock.patch("rally.objects.task.db.task_create")
-    def test_start_task(self, mock_task_create, mock_task_update,
-                        mock_task_result_create, mock_deploy_get,
-                        mock_utils_runner, mock_osclients,
-                        mock_validate_names, mock_validate_syntax,
-                        mock_validate_semantic):
-        mock_task_create.return_value = self.task
-        mock_task_update.return_value = self.task
-        mock_deploy_get.return_value = self.deployment
+    @mock.patch("rally.orchestrator.api.objects.Task")
+    @mock.patch("rally.orchestrator.api.objects.Deployment.get",
+                return_value={"uuid": "deploy_uuid",
+                              "admin": mock.MagicMock(),
+                              "users": []})
+    @mock.patch("rally.orchestrator.api.engine.BenchmarkEngine")
+    def test_start_task(self, mock_engine, mock_deployment_get, mock_task):
+        api.start_task(self.deploy_uuid, "config")
 
-        mock_utils_runner.return_value = mock_runner = mock.Mock()
-        mock_runner.result_queue = collections.deque(["fake_result"])
-
-        mock_runner.run.return_value = 42
-        mock_osclients.Clients.return_value = fakes.FakeClients()
-
-        api.start_task(self.deploy_uuid, self.task_config)
-
-        mock_deploy_get.assert_called_once_with(self.deploy_uuid)
-        mock_task_create.assert_called_once_with({
-            "deployment_uuid": self.deploy_uuid,
-        })
-        mock_task_update.assert_has_calls([
-            mock.call(self.task_uuid, {"status": consts.TaskStatus.VERIFYING}),
-            mock.call(self.task_uuid, {"status": consts.TaskStatus.RUNNING}),
-            mock.call(self.task_uuid, {"status": consts.TaskStatus.FINISHED})
+        mock_engine.assert_has_calls([
+            mock.call("config", mock_task.return_value),
+            mock.call().bind(admin=mock_deployment_get.return_value["admin"],
+                             users=[]),
+            mock.call().validate(),
+            mock.call().run(),
         ])
-        # NOTE(akscram): It looks really awful, but checks degradation.
-        mock_task_result_create.assert_called_once_with(
-            self.task_uuid,
-            {
-                "kw": {
-                    "args": {},
-                    "runner": {
-                        "type": "constant",
-                        "timeout": 10000,
-                        "times": 3,
-                        "concurrency": 2,
-                    },
-                    "context": {
-                        "users": {
-                            "tenants": 5,
-                            "users_per_tenant": 6,
-                        }
-                    }
-                },
-                "name": "FakeScenario.fake",
-                "pos": 0,
-            },
-            {
-                "raw": ["fake_result"],
-                "scenario_duration": 42
-            }
-        )
+
+        mock_task.assert_called_once_with(deployment_uuid=self.deploy_uuid)
+        mock_deployment_get.assert_called_once_with(self.deploy_uuid)
+
+    @mock.patch("rally.orchestrator.api.objects.Task")
+    @mock.patch("rally.orchestrator.api.objects.Deployment.get")
+    @mock.patch("rally.orchestrator.api.engine.BenchmarkEngine")
+    def test_start_task_invalid_task_ignored(self, mock_engine,
+                                             mock_deployment_get, mock_task):
+
+        mock_engine().run.side_effect = (
+            exceptions.InvalidTaskException())
+
+        # check that it doesn't raise anything
+        api.start_task("deploy_uuid", "config")
+
+    @mock.patch("rally.orchestrator.api.objects.Task")
+    @mock.patch("rally.orchestrator.api.objects.Deployment.get")
+    @mock.patch("rally.orchestrator.api.engine.BenchmarkEngine")
+    def test_start_task_exception(self, mock_engine, mock_deployment_get,
+                                  mock_task):
+
+        mock_engine().run.side_effect = TypeError
+        self.assertRaises(TypeError, api.start_task, "deploy_uuid", "config")
+        mock_deployment_get().update_status.assert_called_once_with(
+            consts.DeployStatus.DEPLOY_INCONSISTENT)
 
     def test_abort_task(self):
         self.assertRaises(NotImplementedError, api.abort_task,

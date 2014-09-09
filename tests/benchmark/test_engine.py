@@ -15,6 +15,8 @@
 
 """Tests for the Test engine."""
 
+import copy
+
 import jsonschema
 import mock
 
@@ -222,7 +224,15 @@ class BenchmarkEngineTestCase(test.TestCase):
         mock_helper.assert_has_calls(expected_calls, any_order=True)
 
     @mock.patch("rally.benchmark.engine.BenchmarkEngine.consume_results")
-    def test_run__update_status(self, mock_consume):
+    @mock.patch("rally.benchmark.engine.base_ctx.ContextManager.cleanup")
+    @mock.patch("rally.benchmark.engine.base_ctx.ContextManager.setup")
+    @mock.patch("rally.benchmark.engine.base_scenario.Scenario")
+    @mock.patch("rally.benchmark.engine.base_runner.ScenarioRunner")
+    @mock.patch("rally.benchmark.engine.osclients")
+    @mock.patch("rally.benchmark.engine.endpoint.Endpoint")
+    def test_run__update_status(self, mock_endpoint, mock_osclients,
+                                mock_runner, mock_scenario,
+                                mock_setup, mock_cleanup, mock_consume):
         task = mock.MagicMock()
         eng = engine.BenchmarkEngine([], task)
         eng.run()
@@ -232,42 +242,54 @@ class BenchmarkEngineTestCase(test.TestCase):
         ])
 
     @mock.patch("rally.benchmark.engine.BenchmarkEngine.consume_results")
+    @mock.patch("rally.benchmark.engine.base_scenario.Scenario")
     @mock.patch("rally.benchmark.engine.base_runner.ScenarioRunner")
+    @mock.patch("rally.benchmark.engine.base_ctx.ContextManager.cleanup")
+    @mock.patch("rally.benchmark.engine.base_ctx.ContextManager.setup")
     @mock.patch("rally.benchmark.engine.osclients")
     @mock.patch("rally.benchmark.engine.endpoint.Endpoint")
     def test_run__config_has_args(self, mock_endpoint, mock_osclients,
-                                  mock_runner, mock_consume):
+                                  mock_setup, mock_cleanup,
+                                  mock_runner, mock_scenario, mock_consume):
         config = {
-            "a.args": [{"args": {"a": "a", "b": 1}}],
-            "b.args": [{"args": {"a": 1}}]
+            "a.benchmark": [{"args": {"a": "a", "b": 1}}],
+            "b.benchmark": [{"args": {"a": 1}}]
         }
         task = mock.MagicMock()
         eng = engine.BenchmarkEngine(config, task).bind({})
         eng.run()
 
     @mock.patch("rally.benchmark.engine.BenchmarkEngine.consume_results")
+    @mock.patch("rally.benchmark.engine.base_scenario.Scenario")
     @mock.patch("rally.benchmark.engine.base_runner.ScenarioRunner")
+    @mock.patch("rally.benchmark.engine.base_ctx.ContextManager.cleanup")
+    @mock.patch("rally.benchmark.engine.base_ctx.ContextManager.setup")
     @mock.patch("rally.benchmark.engine.osclients")
     @mock.patch("rally.benchmark.engine.endpoint.Endpoint")
     def test_run__config_has_runner(self, mock_endpoint, mock_osclients,
-                                    mock_runner, mock_consume):
+                                    mock_setup, mock_cleanup,
+                                    mock_runner, mock_scenario, mock_consume):
         config = {
-            "a.args": [{"runner": {"type": "a", "b": 1}}],
-            "b.args": [{"runner": {"a": 1}}]
+            "a.benchmark": [{"runner": {"type": "a", "b": 1}}],
+            "b.benchmark": [{"runner": {"a": 1}}]
         }
         task = mock.MagicMock()
         eng = engine.BenchmarkEngine(config, task).bind({})
         eng.run()
 
     @mock.patch("rally.benchmark.engine.BenchmarkEngine.consume_results")
+    @mock.patch("rally.benchmark.engine.base_scenario.Scenario")
     @mock.patch("rally.benchmark.engine.base_runner.ScenarioRunner")
+    @mock.patch("rally.benchmark.engine.base_ctx.ContextManager.cleanup")
+    @mock.patch("rally.benchmark.engine.base_ctx.ContextManager.setup")
     @mock.patch("rally.benchmark.engine.osclients")
     @mock.patch("rally.benchmark.engine.endpoint.Endpoint")
     def test_run__config_has_context(self, mock_endpoint, mock_osclients,
-                                     mock_runner, mock_consume):
+                                     mock_ctx_setup, mock_ctx_cleanup,
+                                     mock_runner, mock_scenario, mock_consume):
         config = {
-            "a.args": [{"context": {"context_a": {"a": 1}}}],
-            "b.args": [{"context": {"context_b": {"b": 2}}}]
+            "a.benchmark": [{"context": {"context_a": {"a": 1}}}],
+            "b.benchmark": [{"context": {"context_b": {"b": 2}}}]
         }
         task = mock.MagicMock()
         eng = engine.BenchmarkEngine(config, task).bind({})
@@ -295,3 +317,28 @@ class BenchmarkEngineTestCase(test.TestCase):
             mock.call.Clients().verified_keystone()
         ]
         mock_osclients.assert_has_calls(expected_calls)
+
+    @mock.patch("rally.benchmark.engine.base_scenario.Scenario.meta")
+    def test__prepare_context(self, mock_meta):
+        default_context = {"a": 1, "b": 2}
+        mock_meta.return_value = default_context
+        task = mock.MagicMock()
+        name = "a.benchmark"
+        context = {"b": 3, "c": 4}
+        endpoint = mock.MagicMock()
+        config = {
+            "a.benchmark": [{"context": {"context_a": {"a": 1}}}],
+        }
+        eng = engine.BenchmarkEngine(config, task)
+        result = eng._prepare_context(context, name, endpoint)
+        expected_context = copy.deepcopy(default_context)
+        expected_context.setdefault("users", {})
+        expected_context.update(context)
+        expected_result = {
+            "task": task,
+            "admin": {"endpoint": endpoint},
+            "scenario_name": name,
+            "config": expected_context
+        }
+        self.assertEqual(result, expected_result)
+        mock_meta.assert_called_once_with(name, "context")

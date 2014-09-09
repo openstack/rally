@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import copy
 import functools
 import itertools
 import random
@@ -168,7 +169,7 @@ class Scenario(object):
             cls_name, method_name = cls.split(".", 1)
             cls = Scenario.get_by_name(cls_name)
         method = getattr(cls, method_name)
-        return getattr(method, attr_name, default)
+        return copy.deepcopy(getattr(method, attr_name, default))
 
     @classmethod
     def preprocess(cls, method_name, context, args):
