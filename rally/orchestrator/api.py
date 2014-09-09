@@ -133,16 +133,18 @@ def delete_task(task_uuid, force=False):
     objects.Task.delete_by_uuid(task_uuid, status=status)
 
 
-def verify(deploy_id, set_name, regex):
+def verify(deploy_id, set_name, regex, tempest_config):
     """Start verifying.
 
     :param deploy_id: a UUID of a deployment.
     :param set_name: Valid name of tempest test set.
     :param regex: Regular expression of test
+    :param tempest_config: User specified Tempest config file
     """
 
     verification = objects.Verification(deployment_uuid=deploy_id)
-    verifier = tempest.Tempest(deploy_id, verification=verification)
+    verifier = tempest.Tempest(deploy_id, verification=verification,
+                               tempest_config=tempest_config)
     if not verifier.is_installed():
         print("Tempest is not installed for specified deployment.")
         print("Installing Tempest for deployment %s" % deploy_id)

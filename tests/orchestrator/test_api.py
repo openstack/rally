@@ -174,7 +174,7 @@ class APITestCase(test.TestCase):
     def test_verify(self, mock_tempest, mock_verification):
         mock_tempest.return_value = self.tempest
         self.tempest.is_installed.return_value = True
-        api.verify(self.deploy_uuid, "smoke", None)
+        api.verify(self.deploy_uuid, "smoke", None, None)
 
         self.tempest.is_installed.assert_called_once_with()
         self.tempest.verify.assert_called_once_with(set_name="smoke",
@@ -186,7 +186,7 @@ class APITestCase(test.TestCase):
                                           mock_verification):
         mock_tempest.return_value = self.tempest
         self.tempest.is_installed.return_value = False
-        api.verify(self.deploy_uuid, "smoke", None)
+        api.verify(self.deploy_uuid, "smoke", None, None)
 
         self.tempest.is_installed.assert_called_once_with()
         self.tempest.install.assert_called_once_with()

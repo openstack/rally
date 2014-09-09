@@ -41,13 +41,18 @@ class VerifyCommands(object):
                    join(consts.TEMPEST_TEST_SETS))
     @cliutils.args("--regex", dest="regex", type=str, required=False,
                    help="Regular expression of test.")
+    @cliutils.args("--tempest-config", dest="tempest_config", type=str,
+                   required=False,
+                   help="User specified Tempest config file location")
     @envutils.with_default_deploy_id
-    def start(self, deploy_id=None, set_name="smoke", regex=None):
+    def start(self, deploy_id=None, set_name="smoke", regex=None,
+              tempest_config=None):
         """Start running tempest tests against a live cloud cluster.
 
         :param deploy_id: a UUID of a deployment
         :param set_name: Name of tempest test set
         :param regex: Regular expression of test
+        :param tempest_config: User specified Tempest config file location
         """
         if regex:
             set_name = "full"
@@ -56,7 +61,7 @@ class VerifyCommands(object):
                   "choose from: %s" % ", ".join(consts.TEMPEST_TEST_SETS))
             return(1)
 
-        api.verify(deploy_id, set_name, regex)
+        api.verify(deploy_id, set_name, regex, tempest_config)
 
     def list(self):
         """Print a result list of verifications."""
