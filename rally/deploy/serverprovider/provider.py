@@ -132,13 +132,18 @@ class ProviderFactory(object):
             jsonschema.validate(self.config, self.CONFIG_SCHEMA)
 
     @staticmethod
-    def get_provider(config, deployment):
-        """Returns instance of vm provider by name."""
-        name = config['type']
+    def get_by_name(name):
+        """Return Server Provider class by type."""
         for provider in utils.itersubclasses(ProviderFactory):
             if name == provider.__name__:
-                return provider(deployment, config)
+                return provider
         raise exceptions.NoSuchVMProvider(vm_provider_name=name)
+
+    @staticmethod
+    def get_provider(config, deployment):
+        """Returns instance of server provider by name."""
+        provider_cls = ProviderFactory.get_by_name(config['type'])
+        return provider_cls(deployment, config)
 
     @staticmethod
     def get_available_providers():

@@ -26,14 +26,15 @@ from rally.deploy.serverprovider import provider
 class VirshProvider(provider.ProviderFactory):
     """Create VMs from prebuilt templates.
 
-    config example:
-        "vm_provider": {
+    Sample configuration:
+
+        {
             "type": "VirshProvider",
             "connection": "alex@performance-01",  # ssh connection to vms host
             "template_name": "stack-01-devstack-template",  # vm image template
             "template_user": "ubuntu",  # vm user to launch devstack
             "template_password": "password" # vm password to launch devstack
-        },
+        }
     """
 
     CONFIG_SCHEMA = {

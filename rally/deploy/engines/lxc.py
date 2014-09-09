@@ -40,22 +40,21 @@ class LxcEngine(engine.EngineFactory):
 
     Sample configuration:
 
-    {
-        "type": "LxcEngine",
-        "provider": {
-            "type": "DummyProvider",
-            "credentials": [{"user": "root", "host": "example.net"}]
-        },
-        "distribution": "ubuntu",
-        "release": "raring",
-        "tunnel_to": ["10.10.10.10", "10.10.10.11"],
-        "start_lxc_network": "10.1.1.0/24",
-        "container_name_prefix": "devstack-node",
-        "containers_per_host": 16,
-        "start_script": "~/start.sh",
-        "engine": { ... }
-    }
-
+        {
+            "type": "LxcEngine",
+            "provider": {
+                "type": "DummyProvider",
+                "credentials": [{"user": "root", "host": "example.net"}]
+            },
+            "distribution": "ubuntu",
+            "release": "raring",
+            "tunnel_to": ["10.10.10.10", "10.10.10.11"],
+            "start_lxc_network": "10.1.1.0/24",
+            "container_name_prefix": "devstack-node",
+            "containers_per_host": 16,
+            "start_script": "~/start.sh",
+            "engine": { ... }
+        }
     """
 
     CONFIG_SCHEMA = {

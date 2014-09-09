@@ -34,12 +34,18 @@ Samples:
     This class should contain authentication mechanism.
 
     For different types of clients like Keystone.
+
+    $ rally info find some_non_existing_benchmark
+
+    Failed to find any docs for query: 'some_non_existing_benchmark'
 """
 
 from __future__ import print_function
 
 from rally.benchmark.scenarios import base as scenario_base
 from rally.cmd import cliutils
+from rally import deploy
+from rally.deploy import serverprovider
 from rally import exceptions
 from rally import utils
 
@@ -53,7 +59,9 @@ class InfoCommands(object):
         :param query: search query.
         """
         info = (self._get_scenario_group_info(query) or
-                self._get_scenario_info(query))
+                self._get_scenario_info(query) or
+                self._get_deploy_engine_info(query) or
+                self._get_server_provider_info(query))
 
         if info:
             print(info)
@@ -91,4 +99,22 @@ class InfoCommands(object):
                 info += "Returns: %s" % doc["returns"]
             return info
         except exceptions.NoSuchScenario:
+            return None
+
+    def _get_deploy_engine_info(self, query):
+        try:
+            deploy_engine = deploy.EngineFactory.get_by_name(query)
+            info = "%s (deploy engine).\n\n" % deploy_engine.__name__
+            info += utils.format_docstring(deploy_engine.__doc__)
+            return info
+        except exceptions.NoSuchEngine:
+            return None
+
+    def _get_server_provider_info(self, query):
+        try:
+            server_provider = serverprovider.ProviderFactory.get_by_name(query)
+            info = "%s (server provider).\n\n" % server_provider.__name__
+            info += utils.format_docstring(server_provider.__doc__)
+            return info
+        except exceptions.NoSuchVMProvider:
             return None

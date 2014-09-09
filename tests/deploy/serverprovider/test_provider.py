@@ -66,6 +66,15 @@ class ProviderTestCase(test.TestCase):
                                                       None)
                 self.assertIsInstance(p_inst, p)
 
+    def test_get_by_name(self):
+        for p in FAKE_PROVIDERS:
+            self.assertEqual(p, ProviderFactory.get_by_name(p.__name__))
+
+    def test_get_by_name_not_found(self):
+        self.assertRaises(exceptions.NoSuchVMProvider,
+                          ProviderFactory.get_by_name,
+                          "NonExistingServers")
+
     def test_get_available_providers(self):
         providers = set([p.__name__ for p in FAKE_PROVIDERS])
         real_providers = set(ProviderFactory.get_available_providers())

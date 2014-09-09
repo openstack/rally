@@ -44,7 +44,8 @@ def get_updated_server(server, **kwargs):
 class DevstackEngine(engine.EngineFactory):
     """Deploy Devstack cloud.
 
-    Sample of a configuration:
+    Sample configuration:
+
         {
             "type": "DevstackEngine",
             "devstack_repo": "https://example.com/devstack/",
