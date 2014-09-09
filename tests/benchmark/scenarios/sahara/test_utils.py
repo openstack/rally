@@ -271,7 +271,8 @@ class SaharaUtilsTestCase(test.TestCase):
                                     cluster_id="test_cluster_id",
                                     input_id="test_input_id",
                                     output_id="test_output_id",
-                                    configs={"k": "v"})
+                                    configs={"k": "v"},
+                                    job_idx=0)
 
         mock_clients("sahara").job_executions.create.assert_called_once_with(
             job_id="test_job_id",
@@ -303,7 +304,8 @@ class SaharaUtilsTestCase(test.TestCase):
                           cluster_id="test_cluster_id",
                           input_id="test_input_id",
                           output_id="test_output_id",
-                          configs={"k": "v"})
+                          configs={"k": "v"},
+                          job_idx=0)
 
         mock_clients("sahara").job_executions.create.assert_called_once_with(
             job_id="test_job_id",
