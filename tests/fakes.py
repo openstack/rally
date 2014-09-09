@@ -830,6 +830,7 @@ class FakeSaharaClient(object):
     def __init__(self):
         self.job_executions = mock.MagicMock()
         self.jobs = mock.MagicMock()
+        self.job_binary_internals = mock.MagicMock()
         self.job_binaries = mock.MagicMock()
         self.data_sources = mock.MagicMock()
 
@@ -847,6 +848,7 @@ class FakeSaharaClient(object):
         # empty after delete.
         self.job_executions.list.side_effect = [[mock_with_id], []]
         self.jobs.list.side_effect = [[mock_with_id], []]
+        self.job_binary_internals.list.side_effect = [[mock_with_id], []]
         self.job_binaries.list.side_effect = [[mock_with_id], []]
         self.data_sources.list.side_effect = [[mock_with_id], []]
 

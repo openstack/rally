@@ -174,6 +174,7 @@ def delete_sahara_resources(sahara):
     # Delete EDP related objects
     delete_job_executions(sahara)
     delete_jobs(sahara)
+    delete_job_binary_internals(sahara)
     delete_job_binaries(sahara)
     delete_data_sources(sahara)
 
@@ -193,6 +194,11 @@ def delete_job_executions(sahara):
 def delete_jobs(sahara):
     for job in sahara.jobs.list():
         sahara.jobs.delete(job.id)
+
+
+def delete_job_binary_internals(sahara):
+    for jbi in sahara.job_binary_internals.list():
+        sahara.job_binary_internals.delete(jbi.id)
 
 
 def delete_job_binaries(sahara):
