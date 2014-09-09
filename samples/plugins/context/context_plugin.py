@@ -55,7 +55,7 @@ class CreateFlavorContext(base.Context):
     }
 
     def setup(self):
-        """This method is called before task start."""
+        """This method is called before the task start."""
         try:
             # use rally.osclients to get nessesary client instance
             nova = osclients.Clients(self.context["admin"]["endpoint"]).nova()
@@ -75,7 +75,7 @@ class CreateFlavorContext(base.Context):
                 LOG.warning(msg)
 
     def cleanup(self):
-        """This method is called after task finish."""
+        """This method is called after the task finish."""
         try:
             nova = osclients.Clients(self.context["admin"]["endpoint"]).nova()
             nova.flavors.delete(self.context["flavor"]["id"])

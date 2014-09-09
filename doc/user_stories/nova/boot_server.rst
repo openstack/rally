@@ -1,8 +1,10 @@
-=========================================================
-Testing how 20 node HA cloud performs on creating 400 VMs
-=========================================================
+==========================================================================================
+Finding a Keystone bug while benchmarking 20 node HA cloud performance at creating 400 VMs
+==========================================================================================
 
-Boot significant amount of servers on a cluster and ensure that we have reasonable performance and there are no errors.
+*(Contributed by Alexander Maretskiy, Mirantis)*
+
+Below we describe how we found a `bug in keystone <https://bugs.launchpad.net/keystone/+bug/1360446>`_ and achieved 2x average performance increase at booting Nova servers after fixing that bug. Our initial goal was to benchmark the booting of a significant amount of servers on a cluster (running on a custom build of `Mirantis OpenStack <https://software.mirantis.com/>`_ v5.1) and to ensure that this operation has reasonable performance and completes with no errors.
 
 Goal
 ----
@@ -37,7 +39,7 @@ Cluster
 This cluster was created via Fuel Dashboard interface.
 
 +----------------------+-----------------------------------------------------------------------------+
-| Deployment           | Custom build of `MirantisOpenStack <https://software.mirantis.com/>`_  v5.1 |
+| Deployment           | Custom build of `Mirantis OpenStack <https://software.mirantis.com/>`_  v5.1 |
 +----------------------+-----------------------------------------------------------------------------+
 | OpenStack release    | Icehouse                                                                    |
 +----------------------+-----------------------------------------------------------------------------+
@@ -65,7 +67,7 @@ https://review.openstack.org/#/c/96300/
 
 **Deployment**
 
-Rally was deployed for cluster using `ExistingCloud <https://github.com/stackforge/rally/blob/master/doc/samples/deployments/existing.json>`_ type of deployment.
+Rally was deployed for cluster using `ExistingCloud <https://github.com/stackforge/rally/blob/master/samples/deployments/existing.json>`_ type of deployment.
 
 **Server flavor** ::
 
@@ -165,7 +167,7 @@ That is how a `bug in keystone <https://bugs.launchpad.net/keystone/+bug/1360446
 
 **Second run, with bugfix:**
 
-After a patch was applied (using RPC instead of neutron client in metadata agent), we got **100% success and 2x improved avg perfomance**:
+After a patch was applied (using RPC instead of neutron client in metadata agent), we got **100% success and 2x improved average perfomance**:
 
 +------------------+-----------+-----------+-----------+---------------+---------------+---------+-------+
 | action           | min (sec) | avg (sec) | max (sec) | 90 percentile | 95 percentile | success | count |

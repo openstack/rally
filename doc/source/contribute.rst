@@ -1,5 +1,5 @@
 ..
-      Copyright 2014 Mirantis Inc. All Rights Reserved.
+      Copyright 2015 Mirantis Inc. All Rights Reserved.
 
       Licensed under the Apache License, Version 2.0 (the "License"); you may
       not use this file except in compliance with the License. You may obtain
@@ -15,31 +15,19 @@
 
 
 
-.. _improve_rally:
+.. _contribute:
 
-Improve Rally
-=============
-
-Main directions of work
------------------------
-
-    * **Benchmarks**. Improvements in the benchmarking engine & developing new benchmark scenarios.
-    * **Deployments**. Making Rally able to support multiple cloud deployment facilities, e.g. Fuel.
-    * **CLI**. Enriching the command line interface for Rally.
-    * **API**. Work around making Rally to be a Benchmark-as-a-Service system & developing rally-pythonclient.
-    * **Incubation**. Efforts to make Rally an integrated project in OpenStack.
-    * **Share system**. Benchmark results visualization and paste.openstack.org-like sharing system.
-    * **Tempest**. Integration of Tempest tests in Rally for deployment verification.
-
+Contribute to Rally
+===================
 
 Where to begin
 --------------
 
-It is extremetly simple to participate in different Rally development lines mentioned above. The **Good for start** section of our `Trello board <https://trello.com/b/DoD8aeZy/rally>`_ contains a wide range of tasks perfectly suited for you to quickly and smoothly start contributing to Rally. As soon as you have chosen a task, just log in to Trello, join the corresponding card and move it to the **In progress** section.
+Please take a look `our Roadmap <https://docs.google.com/a/mirantis.com/spreadsheets/d/16DXpfbqvlzMFaqaXAcJsBzzpowb_XpymaK2aFY2gA2g/edit#gid=0>`_ to get information about our current work directions.
 
-The most Trello cards contain basic descriptions of what is to be done there; in case you have questions or want to share your ideas, be sure to contanct us at the ``#openstack-rally`` IRC channel on **irc.freenode.net**.
+In case you have questions or want to share your ideas, be sure to contact us at the ``#openstack-rally`` IRC channel on **irc.freenode.net**.
 
-If you want to grasp a better understanding of several main design concepts used throughout the Rally code (such as **benchmark scenarios**, **contexts** etc.), please read this :ref:`article <main_concepts>`.
+If you are going to contribute to Rally, you will probably need to grasp a better understanding of several main design concepts used throughout our project (such as **benchmark scenarios**, **contexts** etc.). To do so, please read :ref:`this article <main_concepts>`.
 
 
 How to contribute
@@ -78,15 +66,15 @@ Several Linux distributions (notably Fedora 16 and Ubuntu 12.04) are also starti
 
 7. Start coding
 
-8. Run the test suite locally to make sure nothing broke, e.g.:
+8. Run the test suite locally to make sure nothing broke, e.g. (this will run py26/py27/pep8 tests):
 
 .. code-block:: none
 
     tox
 
-**(NOTE you should have installed tox<=1.6.1 )**
+**(NOTE: you should have installed tox<=1.6.1 )**
 
-If you extend Rally with new functionality, make sure you also have provided unit tests for it.
+If you extend Rally with new functionality, make sure you have also provided unit and/or functional tests for it.
 
 9. Commit your work using:
 
@@ -111,3 +99,80 @@ That is the awesome tool we installed earlier that does a lot of hard work for y
 
 
 (This tutorial is based on: http://www.linuxjedi.co.uk/2012/03/real-way-to-start-hacking-on-openstack.html)
+
+Testing
+-------
+
+Please, don't hesitate to write tests ;)
+
+
+Unit tests
+^^^^^^^^^^
+
+*Files: /tests/unit/**
+
+The goal of unit tests is to ensure that internal parts of the code work properly.
+All internal methods should be fully covered by unit tests with a reasonable mocks usage.
+
+
+About Rally unit tests:
+
+- All `unit tests <http://en.wikipedia.org/wiki/Unit_testing>`_ are located inside /tests/unit/*
+- Tests are written on top of: *testtools*, *fixtures* and *mock* libs
+- `Tox <https://tox.readthedocs.org/en/latest/>`_ is used to run unit tests
+
+
+To run unit tests locally::
+
+  $ pip install tox
+  $ tox
+
+To run py26, py27 or pep8 only::
+
+  $ tox -e <name>
+
+  #NOTE: <name> is one of py26, py27 or pep8
+
+To get test coverage::
+
+  $ tox -e cover
+
+  #NOTE: Results will be in /cover/index.html
+
+To generate docs::
+
+  $ tox -e docs
+
+  #NOTE: Documentation will be in doc/source/_build/html/index.html
+
+Functional tests
+^^^^^^^^^^^^^^^^
+
+*Files: /tests/functional/**
+
+The goal of `functional tests <https://en.wikipedia.org/wiki/Functional_testing>`_ is to check that everything works well together.
+Fuctional tests use Rally API only and check responses without touching internal parts.
+
+To run functional tests locally::
+
+  $ source openrc
+  $ rally deployment create --fromenv --name testing
+  $ tox -e cli
+
+  #NOTE: openrc file with OpenStack admin credentials
+
+Rally CI scripts
+^^^^^^^^^^^^^^^^
+
+*Files: /tests/ci/**
+
+This directory contains scripts and files related to the Rally CI system.
+
+Rally Style Commandments
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+*Files: /tests/hacking/*
+
+This module contains Rally specific hacking rules for checking commandments.
+
+For more information about Style Commandments, read the `OpenStack Style Commandments manual <http://docs.openstack.org/developer/hacking/>`_.
