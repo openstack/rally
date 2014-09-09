@@ -19,12 +19,11 @@ SCENARIO=$BASE/new/$PROJECT/rally-scenarios/${RALLY_SCENARIO}.yaml
 PLUGINS_DIR=$BASE/new/$PROJECT/rally-scenarios/plugins
 EXTRA_DIR=$BASE/new/$PROJECT/rally-scenarios/extra
 
-if [ -d $PLUGINS_DIR ];
-    then
-        mkdir -p ~/.rally/plugins/scenarios
-        cp -r $PLUGINS_DIR/*.py ~/.rally/plugins/scenarios/
-    else
-        mkdir -p $PLUGINS_DIR
+RALLY_PLUGINS_DIR=~/.rally/plugins/scenarios/
+
+mkdir -p $RALLY_PLUGINS_DIR
+if [ -d $PLUGINS_DIR ]; then
+    cp -r $PLUGINS_DIR/*.py $RALLY_PLUGINS_DIR
 fi
 
 if [ -d $EXTRA_DIR ]; then
@@ -48,7 +47,7 @@ rally -v task start --task $SCENARIO
 mkdir -p rally-plot/extra
 cp $BASE/new/rally/tests_ci/rally-gate/index.html rally-plot/extra/index.html
 cp $SCENARIO rally-plot/task.txt
-tar -czf rally-plot/plugins.tar.gz -C $PLUGINS_DIR .
+tar -czf rally-plot/plugins.tar.gz -C $RALLY_PLUGINS_DIR .
 rally task plot2html --out rally-plot/results.html
 gzip -9 rally-plot/results.html
 rally task results | python -m json.tool > rally-plot/results.json
