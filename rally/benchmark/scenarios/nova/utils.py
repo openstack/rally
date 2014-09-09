@@ -465,3 +465,34 @@ class NovaScenario(base.Scenario):
             check_interval=(
                     CONF.benchmark.nova_server_resize_revert_poll_interval)
         )
+
+    @base.atomic_action_timer('nova.attach_volume')
+    def _attach_volume(self, server, volume):
+        server_id = server.id
+        volume_id = volume.id
+        self.clients("nova").volumes.create_server_volume(server_id,
+                                                          volume_id,
+                                                          None)
+        bench_utils.wait_for(
+            volume,
+            is_ready=bench_utils.resource_is("in-use"),
+            update_resource=bench_utils.get_from_manager(),
+            timeout=CONF.benchmark.nova_server_resize_revert_timeout,
+            check_interval=(
+                    CONF.benchmark.nova_server_resize_revert_poll_interval)
+        )
+
+    @base.atomic_action_timer('nova.detach_volume')
+    def _detach_volume(self, server, volume):
+        server_id = server.id
+        volume_id = volume.id
+        self.clients("nova").volumes.delete_server_volume(server_id,
+                                                          volume_id)
+        bench_utils.wait_for(
+            volume,
+            is_ready=bench_utils.resource_is("available"),
+            update_resource=bench_utils.get_from_manager(),
+            timeout=CONF.benchmark.nova_server_resize_revert_timeout,
+            check_interval=(
+                    CONF.benchmark.nova_server_resize_revert_poll_interval)
+        )
