@@ -152,18 +152,16 @@ class ScenarioRunner(object):
 
     CONFIG_SCHEMA = {}
 
-    def __init__(self, task, admin, config):
+    def __init__(self, task, config):
         """Runner constructor.
 
-        It sets task, admin and config to local variables. Also initialize
+        It sets task and config to local variables. Also initialize
         result_queue, where results will be put by _send_result method.
 
         :param task: Instance of objects.Task
-        :param admin: Instance of objects.Endpoint
         :param config: Dict with runner section from benchmark configuration
         """
         self.task = task
-        self.admin_user = admin
         self.config = config
         self.result_queue = collections.deque()
 
@@ -175,15 +173,14 @@ class ScenarioRunner(object):
         raise exceptions.NoSuchRunner(type=runner_type)
 
     @staticmethod
-    def get_runner(task, admin, config):
+    def get_runner(task, config):
         """Returns instance of a scenario runner for execution type.
 
         :param task: instance of objects.Task corresponding to current task
-        :param admin: endpoint instance with admin credentials.
         :param config: contents of "runner" section from task configuration
                        for specific benchmark
         """
-        return ScenarioRunner._get_cls(config["type"])(task, admin, config)
+        return ScenarioRunner._get_cls(config["type"])(task, config)
 
     @staticmethod
     def validate(config):

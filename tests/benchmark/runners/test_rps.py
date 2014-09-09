@@ -27,10 +27,6 @@ class RPSScenarioRunnerTestCase(test.TestCase):
 
     def setUp(self):
         super(RPSScenarioRunnerTestCase, self).setUp()
-        admin_keys = ["username", "password", "tenant_name", "auth_url"]
-        endpoint_dicts = [dict(zip(admin_keys, admin_keys))]
-        endpoint_dicts[0]["permission"] = consts.EndpointPermission.ADMIN
-        self.fake_endpoints = endpoint_dicts
 
     def test_validate(self):
         config = {
@@ -54,7 +50,6 @@ class RPSScenarioRunnerTestCase(test.TestCase):
         mock_osclients.Clients.return_value = fakes.FakeClients()
 
         runner = base.ScenarioRunner.get_runner(mock.MagicMock(),
-                                                self.fake_endpoints,
                                                 {"type":
                                                  consts.RunnerType.RPS})
         self.assertIsNotNone(runner)
@@ -121,7 +116,7 @@ class RPSScenarioRunnerTestCase(test.TestCase):
         context['task'] = {'uuid': 'fake_uuid'}
         config = {"times": 20, "rps": 20, "timeout": 5}
         runner = rps.RPSScenarioRunner(
-                        None, [context["admin"]["endpoint"]], config)
+                        None, config)
 
         runner._run_scenario(fakes.FakeScenario, "do_it", context, {})
 
@@ -137,7 +132,7 @@ class RPSScenarioRunnerTestCase(test.TestCase):
 
         config = {"times": 4, "rps": 10}
         runner = rps.RPSScenarioRunner(
-                        None, [context["admin"]["endpoint"]], config)
+                        None, config)
 
         runner._run_scenario(fakes.FakeScenario,
                              "something_went_wrong", context, {})

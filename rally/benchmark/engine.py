@@ -176,7 +176,6 @@ class BenchmarkEngine(object):
         runner = config.get("runner", {})
         runner.setdefault("type", consts.RunnerType.SERIAL)
         return base_runner.ScenarioRunner.get_runner(self.task,
-                                                     self.admin_endpoint,
                                                      runner)
 
     def _prepare_context(self, context, name, endpoint):

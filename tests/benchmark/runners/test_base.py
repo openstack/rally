@@ -19,7 +19,6 @@ import mock
 from rally.benchmark.runners import base
 from rally.benchmark.runners import serial
 from rally.benchmark.scenarios import base as scenario_base
-from rally import consts
 from rally import exceptions
 from tests import fakes
 from tests import test
@@ -175,10 +174,6 @@ class ScenarioRunnerTestCase(test.TestCase):
 
     def setUp(self):
         super(ScenarioRunnerTestCase, self).setUp()
-        admin_keys = ["username", "password", "tenant_name", "auth_url"]
-        endpoint_dicts = [dict(zip(admin_keys, admin_keys))]
-        endpoint_dicts[0]["permission"] = consts.EndpointPermission.ADMIN
-        self.fake_endpoints = endpoint_dicts
 
     @mock.patch("rally.benchmark.runners.base.jsonschema.validate")
     @mock.patch("rally.benchmark.runners.base.ScenarioRunner._get_cls")
@@ -197,19 +192,17 @@ class ScenarioRunnerTestCase(test.TestCase):
             __execution_type__ = "new_runner"
 
         task = mock.MagicMock()
-        admin = mock.MagicMock()
         config = {"type": "new_runner", "a": 123}
-        runner = base.ScenarioRunner.get_runner(task, admin, config)
+        runner = base.ScenarioRunner.get_runner(task, config)
 
         self.assertEqual(runner.task, task)
-        self.assertEqual(runner.admin_user, admin)
         self.assertEqual(runner.config, config)
         self.assertIsInstance(runner, NewRunner)
 
     def test_get_runner_no_such(self):
         self.assertRaises(exceptions.NoSuchRunner,
                           base.ScenarioRunner.get_runner,
-                          None, None, {"type": "NoSuchRunner"})
+                          None, {"type": "NoSuchRunner"})
 
     @mock.patch("rally.benchmark.runners.base.jsonschema.validate")
     def test_validate_default_runner(self, mock_validate):
@@ -224,7 +217,6 @@ class ScenarioRunnerTestCase(test.TestCase):
     def test_run(self, mock_duration):
         runner = serial.SerialScenarioRunner(
             mock.MagicMock(),
-            self.fake_endpoints,
             mock.MagicMock())
 
         runner._run_scenario = mock.MagicMock()
@@ -234,8 +226,8 @@ class ScenarioRunnerTestCase(test.TestCase):
 
         context_obj = {
             "task": runner.task,
-            "admin": {"endpoint": runner.admin_user},
             "scenario_name": scenario_name,
+            "admin": {"endpoint": mock.MagicMock()},
             "config": {
                 "cleanup": ["nova", "cinder"], "some_ctx": 2, "users": {}
             }
@@ -255,7 +247,6 @@ class ScenarioRunnerTestCase(test.TestCase):
     def test_runner_send_result_exception(self):
         runner = serial.SerialScenarioRunner(
             mock.MagicMock(),
-            self.fake_endpoints,
             mock.MagicMock())
         self.assertRaises(
             jsonschema.ValidationError,

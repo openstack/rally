@@ -47,7 +47,7 @@ class ConstantScenarioRunnerTestCase(test.TestCase):
 
     def test_run_scenario_constantly_for_times(self):
         runner = constant.ConstantScenarioRunner(
-                        None, [self.context["admin"]["endpoint"]], self.config)
+                        None, self.config)
 
         runner._run_scenario(fakes.FakeScenario,
                              "do_it", self.context, self.args)
@@ -57,7 +57,7 @@ class ConstantScenarioRunnerTestCase(test.TestCase):
 
     def test_run_scenario_constantly_for_times_exception(self):
         runner = constant.ConstantScenarioRunner(
-                        None, [self.context["admin"]["endpoint"]], self.config)
+                        None, self.config)
 
         runner._run_scenario(fakes.FakeScenario,
                              "something_went_wrong", self.context, self.args)
@@ -68,7 +68,7 @@ class ConstantScenarioRunnerTestCase(test.TestCase):
 
     def test_run_scenario_constantly_for_times_timeout(self):
         runner = constant.ConstantScenarioRunner(
-                        None, [self.context["admin"]["endpoint"]], self.config)
+                        None, self.config)
 
         runner._run_scenario(fakes.FakeScenario,
                              "raise_timeout", self.context, self.args)
@@ -103,7 +103,7 @@ class ConstantForDurationScenarioRunnerTeestCase(test.TestCase):
 
     def test_run_scenario_constantly_for_duration(self):
         runner = constant.ConstantForDurationScenarioRunner(
-                        None, [self.context["admin"]["endpoint"]], self.config)
+                        None, self.config)
 
         runner._run_scenario(fakes.FakeScenario, "do_it",
                              self.context, self.args)
@@ -115,7 +115,7 @@ class ConstantForDurationScenarioRunnerTeestCase(test.TestCase):
 
     def test_run_scenario_constantly_for_duration_exception(self):
         runner = constant.ConstantForDurationScenarioRunner(
-                        None, [self.context["admin"]["endpoint"]], self.config)
+                        None, self.config)
 
         runner._run_scenario(fakes.FakeScenario,
                              "something_went_wrong", self.context, self.args)
@@ -128,7 +128,7 @@ class ConstantForDurationScenarioRunnerTeestCase(test.TestCase):
 
     def test_run_scenario_constantly_for_duration_timeout(self):
         runner = constant.ConstantForDurationScenarioRunner(
-            None, [self.context["admin"]["endpoint"]], self.config)
+            None, self.config)
 
         runner._run_scenario(fakes.FakeScenario,
                              "raise_timeout", self.context, self.args)

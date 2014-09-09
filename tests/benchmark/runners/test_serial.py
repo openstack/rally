@@ -16,7 +16,6 @@
 import mock
 
 from rally.benchmark.runners import serial
-from rally import consts
 from tests import fakes
 from tests import test
 
@@ -25,10 +24,6 @@ class SerialScenarioRunnerTestCase(test.TestCase):
 
     def setUp(self):
         super(SerialScenarioRunnerTestCase, self).setUp()
-        admin_keys = ["username", "password", "tenant_name", "auth_url"]
-        endpoint_dicts = [dict(zip(admin_keys, admin_keys))]
-        endpoint_dicts[0]["permission"] = consts.EndpointPermission.ADMIN
-        self.fake_endpoints = endpoint_dicts
 
     @mock.patch("rally.benchmark.runners.base._run_scenario_once")
     def test_run_scenario(self, mock_run_once):
@@ -39,7 +34,6 @@ class SerialScenarioRunnerTestCase(test.TestCase):
         expected_results = [result for i in range(times)]
 
         runner = serial.SerialScenarioRunner(mock.MagicMock(),
-                                             self.fake_endpoints,
                                              {"times": times})
         runner._run_scenario(fakes.FakeScenario, "do_it",
                              fakes.FakeUserContext({}).context, {})
