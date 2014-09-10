@@ -121,6 +121,42 @@ class BenchmarkUtilsTestCase(test.TestCase):
         result = utils.run_concurrent_helper(args)
         self.assertEqual(cls.test(), result)
 
+    def test_check_service_status(self):
+        class service():
+            def __init__(self, name):
+                self.status = "enabled"
+                self.state = "up"
+                self.name = name
+
+            def __str__(self):
+                return self.name
+
+        client = mock.MagicMock()
+        client.services.list.return_value = [service('nova-compute'),
+                                             service('nova-network'),
+                                             service('glance-api')]
+        ret = utils.check_service_status(client, 'nova-network')
+        self.assertTrue(ret)
+        client.services.list.assert_called()
+
+    def test_check_service_status_fail(self):
+        class service():
+            def __init__(self, name):
+                self.status = "enabled"
+                self.state = "down"
+                self.name = name
+
+            def __str__(self):
+                return self.name
+
+        client = mock.MagicMock()
+        client.services.list.return_value = [service('nova-compute'),
+                                             service('nova-network'),
+                                             service('glance-api')]
+        ret = utils.check_service_status(client, 'nova-network')
+        self.assertFalse(ret)
+        client.services.list.assert_called()
+
 
 class WaitForTestCase(test.TestCase):
 

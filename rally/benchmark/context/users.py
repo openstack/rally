@@ -137,19 +137,21 @@ class UserGenerator(base.Context):
 
         return ({"id": tenant.id, "name": tenant.name}, users)
 
-    @classmethod
-    def _delete_tenants(cls, args):
-        """Delete given tenants.
-
-        :param args: tuple arguments, for Pool.imap()
-        """
-        admin_endpoint, tenants = args
-        client = keystone.wrap(osclients.Clients(admin_endpoint).keystone())
-
+    @staticmethod
+    def _remove_associated_networks(admin_endpoint, tenants):
+        """Delete associated Nova networks from tenants."""
         # NOTE(rmk): Ugly hack to deal with the fact that Nova Network
         # networks can only be disassociated in an admin context. Discussed
         # with boris-42 before taking this approach [LP-Bug #1350517].
-        nova_admin = osclients.Clients(admin_endpoint).nova()
+        clients = osclients.Clients(admin_endpoint)
+        if consts.Service.NOVA not in clients.services().values():
+            return
+
+        nova_admin = clients.nova()
+
+        if not utils.check_service_status(nova_admin, 'nova-network'):
+            return
+
         for network in nova_admin.networks.list():
             network_tenant_id = nova_admin.networks.get(network).project_id
             for tenant in tenants:
@@ -160,6 +162,17 @@ class UserGenerator(base.Context):
                         LOG.warning("Failed disassociate net: %(tenant_id)s. "
                                     "Exception: %(ex)s" %
                                     {"tenant_id": tenant["id"], "ex": ex})
+
+    @classmethod
+    def _delete_tenants(cls, args):
+        """Delete given tenants.
+
+        :param args: tuple arguments, for Pool.imap()
+        """
+        admin_endpoint, tenants = args
+        cls._remove_associated_networks(admin_endpoint, tenants)
+
+        client = keystone.wrap(osclients.Clients(admin_endpoint).keystone())
 
         for tenant in tenants:
             try:

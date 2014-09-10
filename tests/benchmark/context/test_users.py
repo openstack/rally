@@ -79,6 +79,59 @@ class UserGeneratorTestCase(test.TestCase):
             self.assertIn("id", user)
             self.assertIn("endpoint", user)
 
+    @mock.patch("rally.benchmark.utils.check_service_status",
+                return_value=True)
+    def test_remove_associated_networks(self, mock_check_service_status):
+        def fake_get_network(req_network):
+            for network in networks:
+                if network.project_id == req_network.project_id:
+                    return network
+
+        tenant1 = {'id': 1}
+        tenant2 = {'id': 4}
+        networks = [mock.MagicMock(project_id=1),
+                    mock.MagicMock(project_id=2)]
+        admin_endpoint, tenants = (mock.MagicMock(), [tenant1, tenant2])
+        nova_admin = mock.MagicMock()
+        clients = mock.MagicMock()
+        self.osclients.Clients.return_value = clients
+        clients.services.return_value = {'compute': 'nova'}
+        clients.nova.return_value = nova_admin
+        nova_admin.networks.list.return_value = networks
+        nova_admin.networks.get = fake_get_network
+        users.UserGenerator._remove_associated_networks(admin_endpoint,
+                                                        tenants)
+        mock_check_service_status.assert_called_once_with(mock.ANY,
+                                                          'nova-network')
+        nova_admin.networks.disassociate.assert_called_once_with(networks[0])
+
+    @mock.patch("rally.benchmark.utils.check_service_status",
+                return_value=True)
+    def test_remove_associated_networks_fails(self, mock_check_service_status):
+        def fake_get_network(req_network):
+            for network in networks:
+                if network.project_id == req_network.project_id:
+                    return network
+
+        tenant1 = {'id': 1}
+        tenant2 = {'id': 4}
+        networks = [mock.MagicMock(project_id=1),
+                    mock.MagicMock(project_id=2)]
+        admin_endpoint, tenants = (mock.MagicMock(), [tenant1, tenant2])
+        nova_admin = mock.MagicMock()
+        clients = mock.MagicMock()
+        self.osclients.Clients.return_value = clients
+        clients.services.return_value = {'compute': 'nova'}
+        clients.nova.return_value = nova_admin
+        nova_admin.networks.list.return_value = networks
+        nova_admin.networks.get = fake_get_network
+        nova_admin.networks.disassociate.side_effect = Exception()
+        users.UserGenerator._remove_associated_networks(admin_endpoint,
+                                                        tenants)
+        mock_check_service_status.assert_called_once_with(mock.ANY,
+                                                          'nova-network')
+        nova_admin.networks.disassociate.assert_called_once_with(networks[0])
+
     def test_delete_tenants(self):
         tenant1 = mock.MagicMock()
         tenant2 = mock.MagicMock()
