@@ -1,0 +1,32 @@
+{
+    "SaharaClusters.create_scale_delete_cluster": [
+        {
+            "args": {
+                "flavor": {
+                    "name": "m1.small"
+                },
+                "node_count": 2,
+                "deltas": [1, -1, 1, -1],
+                "plugin_name": "vanilla",
+                "hadoop_version": "2.3.0"
+            },
+            "runner": {
+                "type": "constant",
+                "times": 4,
+                "concurrency": 2
+            },
+            "context": {
+                "users": {
+                    "tenants": 1,
+                    "users_per_tenant": 1
+                },
+                "sahara_image": {
+                    "image_url": "http://sahara-files.mirantis.com/sahara-icehouse-vanilla-2.3.0-ubuntu-13.10.qcow2",
+                    "username": "ubuntu",
+                    "plugin_name": "vanilla",
+                    "hadoop_version": "2.3.0"
+                }
+            }
+        }
+    ]
+}
