@@ -58,16 +58,19 @@ class InfoCommands(object):
 
         :param query: search query.
         """
-        info = (self._get_scenario_group_info(query) or
-                self._get_scenario_info(query) or
-                self._get_deploy_engine_info(query) or
-                self._get_server_provider_info(query))
+        info = self._find_info(query)
 
         if info:
             print(info)
         else:
             print("Failed to find any docs for query: '%s'" % query)
             return 1
+
+    def _find_info(self, query):
+        return (self._get_scenario_group_info(query) or
+                self._get_scenario_info(query) or
+                self._get_deploy_engine_info(query) or
+                self._get_server_provider_info(query))
 
     def _get_scenario_group_info(self, query):
         try:
