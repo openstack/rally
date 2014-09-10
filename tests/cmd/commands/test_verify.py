@@ -13,6 +13,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import tempfile
+
 import mock
 import six
 
@@ -60,7 +62,27 @@ class VerifyCommandsTestCase(test.TestCase):
         default_regex = None
 
         mock_verify.assert_called_once_with(deploy_id,
-                                            default_set_name, default_regex)
+                                            default_set_name, default_regex,
+                                            None)
+
+    @mock.patch('rally.osclients.Clients')
+    @mock.patch('rally.orchestrator.api.verify')
+    def test_start_with_user_specified_tempest_config(self, mock_verify,
+                                                      mock_clients):
+        deploy_id = '0fba91c6-82d5-4ce1-bd00-5d7c989552d9'
+        mock_clients().glance().images.list.return_value = [
+            self.image1, self.image2]
+        mock_clients().nova().flavors.list.return_value = [
+            self.flavor1, self.flavor2]
+        tempest_config = tempfile.NamedTemporaryFile()
+        self.verify.start(deploy_id, tempest_config=tempest_config.name)
+        default_set_name = 'smoke'
+        default_regex = None
+
+        mock_verify.assert_called_once_with(deploy_id,
+                                            default_set_name, default_regex,
+                                            tempest_config.name)
+        tempest_config.close()
 
     @mock.patch('rally.orchestrator.api.verify')
     def test_start_with_wrong_set_name(self, mock_verify):

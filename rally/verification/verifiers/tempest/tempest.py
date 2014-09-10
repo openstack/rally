@@ -35,12 +35,13 @@ class Tempest(object):
     tempest_base_path = os.path.join(os.path.expanduser("~"),
                                      ".rally/tempest/base")
 
-    def __init__(self, deploy_id, verification=None):
+    def __init__(self, deploy_id, verification=None, tempest_config=None):
         self.deploy_id = deploy_id
         self.tempest_path = os.path.join(os.path.expanduser("~"),
                                          ".rally/tempest",
                                          "for-deployment-%s" % deploy_id)
-        self.config_file = os.path.join(self.tempest_path, "tempest.conf")
+        self.config_file = tempest_config or os.path.join(self.tempest_path,
+                                                          "tempest.conf")
         self.log_file_raw = os.path.join(self.tempest_path, "subunit.stream")
         self.venv_wrapper = os.path.join(self.tempest_path,
                                          "tools/with_venv.sh")
@@ -49,7 +50,7 @@ class Tempest(object):
 
     def _generate_env(self):
         env = os.environ.copy()
-        env["TEMPEST_CONFIG_DIR"] = self.tempest_path
+        env["TEMPEST_CONFIG_DIR"] = os.path.split(self.config_file)[0]
         env["TEMPEST_CONFIG"] = os.path.basename(self.config_file)
         env["OS_TEST_PATH"] = os.path.join(self.tempest_path,
                                            "tempest/test_discover")
