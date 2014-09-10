@@ -57,6 +57,7 @@ class CleanupUtilsTestCase(test.TestCase):
 
         sahara.job_executions.delete.assert_called_once_with(42)
         sahara.jobs.delete.assert_called_once_with(42)
+        sahara.job_binary_internals.delete.assert_called_once_with(42)
         sahara.job_binaries.delete.assert_called_once_with(42)
         sahara.data_sources.delete.assert_called_once_with(42)
 
