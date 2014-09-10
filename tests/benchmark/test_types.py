@@ -13,6 +13,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import mock
+
 from rally.benchmark import types
 from rally import exceptions
 from tests import fakes
@@ -165,3 +167,33 @@ class VolumeTypeResourceTypeTestCase(test.TestCase):
         self.assertRaises(exceptions.InvalidScenarioArgument,
                           types.VolumeTypeResourceType.transform,
                           self.clients, resource_config)
+
+
+class PreprocessTestCase(test.TestCase):
+
+    @mock.patch("rally.benchmark.types.base.Scenario.meta")
+    @mock.patch("rally.benchmark.types.osclients")
+    def test_preprocess(self, mock_osclients, mock_meta):
+        cls = "some_class"
+        method_name = "method_name"
+        context = {
+            "a": 1,
+            "b": 2,
+            "admin": {"endpoint": mock.MagicMock()}
+        }
+        args = {"a": 10, "b": 20}
+
+        class Preprocessor(types.ResourceType):
+
+            @classmethod
+            def transform(cls, clients, resource_config):
+                return resource_config * 2
+
+        mock_meta.return_value = {"a": Preprocessor}
+        result = types.preprocess(cls, method_name, context, args)
+        mock_meta.assert_called_once_with(cls, default={},
+                                          method_name=method_name,
+                                          attr_name="preprocessors")
+        mock_osclients.Clients.assert_called_once_with(
+            context["admin"]["endpoint"])
+        self.assertEqual({"a": 20, "b": 20}, result)

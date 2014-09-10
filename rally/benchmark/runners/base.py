@@ -21,6 +21,7 @@ import jsonschema
 from oslo.config import cfg
 
 from rally.benchmark.scenarios import base as scenario_base
+from rally.benchmark import types
 from rally.benchmark import utils
 from rally import consts
 from rally import exceptions
@@ -209,7 +210,7 @@ class ScenarioRunner(object):
         cls = scenario_base.Scenario.get_by_name(cls_name)
 
         # NOTE(boris-42): processing @types decorators
-        args = cls.preprocess(method_name, context, args)
+        args = types.preprocess(cls, method_name, context, args)
 
         with rutils.Timer() as timer:
             self._run_scenario(cls, method_name, context, args)

@@ -14,10 +14,13 @@
 #    under the License.
 
 import abc
+import copy
 import operator
 import re
 
+from rally.benchmark.scenarios import base
 from rally import exceptions
+from rally import osclients
 
 
 def set(**kwargs):
@@ -32,6 +35,31 @@ def set(**kwargs):
         func.preprocessors.update(kwargs)
         return func
     return wrapper
+
+
+def preprocess(cls, method_name, context, args):
+    """Run preprocessor on scenario arguments.
+
+    :param cls: class name of benchmark scenario
+    :param method_name: name of benchmark scenario method
+    :param context: dictionary object that must have admin and endpoint entries
+    :param args: args section of benchmark specification in rally task file
+
+    :returns processed_args: dictionary object with additional client
+                             and resource configuration
+
+    """
+    preprocessors = base.Scenario.meta(cls, method_name=method_name,
+                                       attr_name="preprocessors", default={})
+    clients = osclients.Clients(context["admin"]["endpoint"])
+    processed_args = copy.deepcopy(args)
+
+    for src, preprocessor in preprocessors.items():
+        resource_cfg = processed_args.get(src)
+        if resource_cfg:
+            processed_args[src] = preprocessor.transform(
+                clients=clients, resource_config=resource_cfg)
+    return processed_args
 
 
 class ResourceType(object):

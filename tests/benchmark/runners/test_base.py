@@ -241,8 +241,9 @@ class ScenarioRunnerTestCase(test.TestCase):
         cls_name, method_name = scenario_name.split(".", 1)
         cls = scenario_base.Scenario.get_by_name(cls_name)
 
+        expected_config_kwargs = {"image": 1, "flavor": 1}
         runner._run_scenario.assert_called_once_with(
-            cls, method_name, context_obj, config_kwargs)
+            cls, method_name, context_obj, expected_config_kwargs)
 
     def test_runner_send_result_exception(self):
         runner = serial.SerialScenarioRunner(
