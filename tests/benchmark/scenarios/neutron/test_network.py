@@ -92,6 +92,7 @@ class NeutronNetworksTestCase(test.TestCase):
         mock_create_network.assert_called_once_with({})
         self.assertEqual(mock_create_subnet.mock_calls,
                          [mock.call({"network": {"id": "fake-id"}},
+                                    subnets_per_network,
                                     {})] * subnets_per_network)
         mock_list.assert_called_once_with()
         self.assertEqual(scenario.SUBNET_CIDR_START, "default_cidr")
@@ -110,6 +111,7 @@ class NeutronNetworksTestCase(test.TestCase):
         self.assertEqual(
             mock_create_subnet.mock_calls,
             [mock.call({"network": {"id": "fake-id"}},
+                       subnets_per_network,
                        {"allocation_pools": []})] * subnets_per_network)
         mock_list.assert_called_once_with()
 
@@ -139,6 +141,7 @@ class NeutronNetworksTestCase(test.TestCase):
         mock_create_network.assert_called_once_with({})
         self.assertEqual(mock_create_subnet.mock_calls,
                          [mock.call({"network": {"id": "fake-id"}},
+                                    subnets_per_network,
                                     {})] * subnets_per_network)
         mock_delete.assert_called_once()
         self.assertEqual(scenario.SUBNET_CIDR_START, "default_cidr")
@@ -157,6 +160,7 @@ class NeutronNetworksTestCase(test.TestCase):
         self.assertEqual(
              mock_create_subnet.mock_calls,
              [mock.call({"network": {"id": "fake-id"}},
+                        subnets_per_network,
                         {"allocation_pools": []})] * subnets_per_network)
         mock_delete.assert_called_once()
 
@@ -190,7 +194,7 @@ class NeutronNetworksTestCase(test.TestCase):
         mock_create_network.assert_called_once_with({})
         self.assertEqual(
             mock_create_subnet.mock_calls,
-            [mock.call(net, {})] * subnets_per_network)
+            [mock.call(net, subnets_per_network, {})] * subnets_per_network)
         self.assertEqual(
             mock_create_router.mock_calls,
             [mock.call({})] * subnets_per_network)
@@ -219,6 +223,7 @@ class NeutronNetworksTestCase(test.TestCase):
         self.assertEqual(
             mock_create_subnet.mock_calls, [
                 mock.call({"network": {"id": "network-id"}},
+                          subnets_per_network,
                           subnet_create_args)
             ] * subnets_per_network)
         self.assertEqual(

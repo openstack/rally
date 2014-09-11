@@ -76,7 +76,7 @@ class RPSScenarioRunnerTestCase(test.TestCase):
 
         times = 4
 
-        rps._worker_process(10, times, mock_queue, None, 600, 1,
+        rps._worker_process(10, times, mock_queue, None, 600, 1, 1,
                             "Dummy", "dummy", ())
 
         self.assertEqual(times, mock_log.debug.call_count)
@@ -90,7 +90,7 @@ class RPSScenarioRunnerTestCase(test.TestCase):
 
         for i in range(1, times + 1):
             call = mock.call(args=(mock_queue,
-                                   ("1:%d" % i, "Dummy", "dummy",
+                                   (i, "Dummy", "dummy",
                                     None, ())),
                              target=rps._worker_thread)
             self.assertIn(call, mock_thread.mock_calls)

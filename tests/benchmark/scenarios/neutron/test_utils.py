@@ -107,7 +107,7 @@ class NeutronScenarioTestCase(test.TestCase):
 
         # Default options
         subnet_data = {"network_id": network_id}
-        scenario._create_subnet(network, subnet_data)
+        scenario._create_subnet(network, 1, subnet_data)
         mock_clients("neutron").create_subnet.assert_called_once_with(
             expected_subnet_data)
         self._test_atomic_action_timer(scenario.atomic_actions(),
@@ -119,7 +119,7 @@ class NeutronScenarioTestCase(test.TestCase):
         extras = {"cidr": "192.168.16.0/24", "allocation_pools": []}
         subnet_data.update(extras)
         expected_subnet_data["subnet"].update(extras)
-        scenario._create_subnet(network, subnet_data)
+        scenario._create_subnet(network, 1, subnet_data)
         mock_clients("neutron").create_subnet.assert_called_once_with(
             expected_subnet_data)
 
@@ -135,12 +135,13 @@ class NeutronScenarioTestCase(test.TestCase):
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "neutron.list_subnets")
 
+    @mock.patch(NEUTRON_UTILS + "NeutronScenario._generate_subnet_cidr")
     @mock.patch(NEUTRON_UTILS + 'NeutronScenario.clients')
-    def test_delete_subnet(self, mock_clients):
+    def test_delete_subnet(self, mock_clients, mock_generate_subnet_cidr):
         scenario = utils.NeutronScenario()
 
         network = scenario._create_network({})
-        subnet = scenario._create_subnet(network, {})
+        subnet = scenario._create_subnet(network, 1, {})
         scenario._delete_subnet(subnet)
 
         self._test_atomic_action_timer(scenario.atomic_actions(),
@@ -192,15 +193,14 @@ class NeutronScenarioTestCase(test.TestCase):
 
     def test_generate_subnet_cidr(self):
         scenario = utils.NeutronScenario()
-        network1_id = "fake1"
-        network2_id = "fake2"
-        subnets_num = 300
+        scenario.context = mock.Mock(return_value={"iteration": 1})
+        subnets_num = 30
 
         cidrs1 = map(scenario._generate_subnet_cidr,
-                     [network1_id] * subnets_num)
+                     [subnets_num] * subnets_num)
 
         cidrs2 = map(scenario._generate_subnet_cidr,
-                     [network2_id] * subnets_num)
+                     [subnets_num] * subnets_num)
 
         # All CIDRs must differ
         self.assertEqual(len(cidrs1), len(set(cidrs1)))
