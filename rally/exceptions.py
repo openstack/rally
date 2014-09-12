@@ -180,7 +180,7 @@ class GetResourceNotFound(GetResourceFailure):
 
 
 class GetResourceErrorStatus(GetResourceFailure):
-    msg_fmt = _("Resouce %(resource)s has %(status)s status: %(fault)s")
+    msg_fmt = _("Resource %(resource)s has %(status)s status: %(fault)s")
 
 
 class SSHError(RallyException):
