@@ -22,6 +22,15 @@ from tests import test
 
 class SecGroupContextTestCase(test.TestCase):
 
+    def setUp(self):
+        super(SecGroupContextTestCase, self).setUp()
+        self.users = 2
+        task = mock.MagicMock()
+        self.ctx_without_keys = {
+            "users": [{'endpoint': mock.MagicMock()}] * self.users,
+            "task": task
+        }
+
     @mock.patch('rally.benchmark.context.secgroup.osclients.Clients')
     def test_prep_ssh_sec_group(self, mock_osclients):
         fake_nova = fakes.FakeNovaClient()
@@ -62,3 +71,9 @@ class SecGroupContextTestCase(test.TestCase):
         secgroup._prepare_open_secgroup('endpoint')
         rally_open = fake_nova.security_groups.find(secgroup.SSH_GROUP_NAME)
         self.assertEqual(len(rally_open.rules), 3)
+
+    @mock.patch("rally.benchmark.context.secgroup._prepare_open_secgroup")
+    def test_sec_group_setup(self, mock_prepare_open_secgroup):
+        secgrp_ctx = secgroup.AllowSSH(self.ctx_without_keys)
+        secgrp_ctx.setup()
+        secgrp_ctx.cleanup()

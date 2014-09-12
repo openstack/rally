@@ -67,3 +67,83 @@ class CleanupUtilsTestCase(test.TestCase):
         sahara.clusters.delete.assert_called_once_with(42)
         sahara.cluster_templates.delete.assert_called_once_with(42)
         sahara.node_group_templates.delete.assert_called_once_with(42)
+
+    def test_delete_cinder_resources(self):
+        cinder = fakes.FakeClients().cinder()
+        scenario = scenarios.cinder.utils.CinderScenario()
+        scenario.clients = lambda ins: cinder
+        vol1 = scenario._create_volume(1)
+        scenario._create_snapshot(vol1.id)
+        cinder.transfers.create("dummy")
+        cinder.backups.create("dummy")
+
+        total = lambda cinder: (len(cinder.volumes.list())
+                                + len(cinder.volume_snapshots.list(
+                                ))
+                                + len(cinder.transfers.list())
+                                + len(cinder.backups.list()))
+        self.assertEqual(total(cinder), 4)
+        utils.delete_cinder_resources(cinder)
+        self.assertEqual(total(cinder), 0)
+
+    def test_delete_nova_resources(self):
+        nova = fakes.FakeClients().nova()
+        nova.servers.create("dummy", None, None)
+        nova.keypairs.create("dummy")
+        nova.security_groups.create("dummy")
+        total = lambda nova: (len(nova.servers.list())
+                              + len(nova.keypairs.list())
+                              + len(nova.security_groups.list()))
+        self.assertEqual(total(nova), 4)
+        utils.delete_nova_resources(nova)
+        self.assertEqual(total(nova), 1)
+
+    def test_delete_heat_resources(self):
+        heat = fakes.FakeClients().heat()
+        heat.stacks.create("dummy")
+        total = lambda heat: (len(heat.stacks.list()))
+        self.assertEqual(total(heat), 1)
+        utils.delete_heat_resources(heat)
+        self.assertEqual(total(heat), 0)
+
+    def test_delete_designate_resources(self):
+        designate = fakes.FakeClients().designate()
+        designate.domains.create("dummy")
+        total = lambda designate: (len(designate.domains.list()))
+        self.assertEqual(total(designate), 1)
+        utils.delete_designate_resources(designate)
+        self.assertEqual(total(designate), 0)
+
+    def test_delete_ceilometer_resources(self):
+        ceilometer = fakes.FakeClients().ceilometer()
+        ceilometer.alarms.create()
+        total = lambda ceilometer: (len(ceilometer.alarms.list()))
+        self.assertEqual(total(ceilometer), 1)
+        utils.delete_ceilometer_resources(ceilometer, "dummy")
+        self.assertEqual(total(ceilometer), 0)
+
+    def test_delete_admin_quotas(self):
+        tenant1 = {'id': 1}
+        tenant2 = {'id': 2}
+        client = fakes.FakeClients()
+        utils.delete_admin_quotas(client, [tenant1, tenant2])
+        self.assertFalse(client.nova().quotas.list())
+        self.assertFalse(client.cinder().quotas.list())
+
+    @mock.patch('rally.benchmark.wrappers.keystone.wrap')
+    def test_delete_keystone_resources(self, mock_wrap):
+        keystone = fakes.FakeClients().keystone()
+        mock_wrap.return_value = keystone
+        keystone.users.create("rally_keystone_dummy", None, None, None)
+        total = lambda keystone: (len(keystone.users.list()))
+        self.assertEqual(total(keystone), 1)
+        utils.delete_keystone_resources(keystone)
+        self.assertEqual(total(keystone), 0)
+
+    def test_delete_glance_resources(self):
+        glance = fakes.FakeClients().glance()
+        glance.images.create("dummy", None, None, None)
+        total = lambda glance: (len(glance.images.list()))
+        self.assertEqual(total(glance), 1)
+        utils.delete_glance_resources(glance, "dummy")
+        self.assertEqual(total(glance), 0)

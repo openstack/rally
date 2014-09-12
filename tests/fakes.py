@@ -164,6 +164,14 @@ class FakeKeypair(FakeResource):
     pass
 
 
+class FakeStack(FakeResource):
+    pass
+
+
+class FakeDomain(FakeResource):
+    pass
+
+
 class FakeQuotas(FakeResource):
     pass
 
@@ -301,6 +309,16 @@ class FakeServerManager(FakeManager):
     def remove_floating_ip(self, server, fip):
         pass
 
+    def delete(self, resource):
+        if not isinstance(resource, basestring):
+            resource = resource.id
+
+        cached = self.get(resource)
+        if cached is not None:
+            cached.status = "DELETED"
+            del self.cache[resource]
+            self.resources_order.remove(resource)
+
 
 class FakeFailedServerManager(FakeServerManager):
 
@@ -319,14 +337,26 @@ class FakeImageManager(FakeManager):
             return image
         raise exc.HTTPNotFound("Image %s not found" % (resource_uuid))
 
-    def _create(self, image_class=FakeImage, name=None):
+    def _create(self, image_class=FakeImage, name=None, id=None):
         image = self._cache(image_class(self))
+        image.owner = "dummy"
+        image.id = image.uuid
         if name is not None:
             image.name = name
         return image
 
     def create(self, name, copy_from, container_format, disk_format):
         return self._create(name=name)
+
+    def delete(self, resource):
+        if not isinstance(resource, basestring):
+            resource = resource.id
+
+        cached = self.get(resource)
+        if cached is not None:
+            cached.status = "DELETED"
+            del self.cache[resource]
+            self.resources_order.remove(resource)
 
 
 class FakeFailedImageManager(FakeImageManager):
@@ -375,8 +405,64 @@ class FakeKeypairManager(FakeManager):
         kp.name = name or kp.name
         return self._cache(kp)
 
+    def delete(self, resource):
+        if not isinstance(resource, basestring):
+            resource = resource.id
+
+        cached = self.get(resource)
+        if cached is not None:
+            cached.status = "DELETED"
+            del self.cache[resource]
+            self.resources_order.remove(resource)
+
+
+class FakeStackManager(FakeManager):
+
+    def create(self, name):
+        stack = FakeStack(self)
+        stack.name = name or stack.name
+        return self._cache(stack)
+
+    def delete(self, resource):
+        if not isinstance(resource, basestring):
+            resource = resource.id
+
+        cached = self.get(resource)
+        if cached is not None:
+            cached.status = "DELETE_COMPLETE"
+            del self.cache[resource]
+            self.resources_order.remove(resource)
+
+
+class FakeDomainManager(FakeManager):
+
+    def create(self, name):
+        domain = FakeDomain(self)
+        domain.name = name or domain.name
+        return self._cache(domain)
+
+    def delete(self, resource):
+        if not isinstance(resource, basestring):
+            resource = resource.id
+
+        cached = self.get(resource)
+        if cached is not None:
+            cached.status = "DELETE_COMPLETE"
+            del self.cache[resource]
+            self.resources_order.remove(resource)
+
 
 class FakeNovaQuotasManager(FakeManager):
+
+    def update(self, tenant_id, **kwargs):
+        fq = FakeQuotas(self)
+        return self._cache(fq)
+
+    def delete(self, tenant_id):
+        pass
+
+
+class FakeCinderQuotasManager(FakeManager):
 
     def update(self, tenant_id, **kwargs):
         fq = FakeQuotas(self)
@@ -412,6 +498,16 @@ class FakeSecurityGroupManager(FakeManager):
                 return resource
         raise nova_exceptions.NotFound('Security Group not found')
 
+    def delete(self, resource):
+        if not isinstance(resource, basestring):
+            resource = resource.id
+
+        cached = self.get(resource)
+        if cached is not None:
+            cached.status = "DELETED"
+            del self.cache[resource]
+            self.resources_order.remove(resource)
+
 
 class FakeSecurityGroupRuleManager(FakeManager):
     def __init__(self):
@@ -426,15 +522,38 @@ class FakeSecurityGroupRuleManager(FakeManager):
 class FakeUsersManager(FakeManager):
 
     def create(self, username, password, email, tenant_id):
-        return self._cache(FakeUser(self))
+        user = FakeUser(manager=self, name=username)
+        user.name = username or user.name
+        return self._cache(user)
+
+
+class FakeServicesManager(FakeManager):
+
+    def list(self):
+        return []
 
 
 class FakeVolumeManager(FakeManager):
+    def __init__(self):
+        super(FakeVolumeManager, self).__init__()
+        self.__volumes = {}
+        self.__tenant_id = generate_uuid()
 
-    def create(self, name=None):
+    def create(self, size=None, **kwargs):
         volume = FakeVolume(self)
-        volume.name = name or volume.name
+        volume.size = size or 1
+        volume.name = kwargs.get('display_name', volume.name)
+        volume.status = "available"
+        volume.tenant_id = self.__tenant_id
+        self.__volumes[volume.id] = volume
         return self._cache(volume)
+
+    def list(self):
+        return self.__volumes.values()
+
+    def delete(self, resource):
+        super(FakeVolumeManager, self).delete(resource.id)
+        del self.__volumes[resource.id]
 
 
 class FakeVolumeTypeManager(FakeManager):
@@ -446,27 +565,64 @@ class FakeVolumeTypeManager(FakeManager):
 
 
 class FakeVolumeTransferManager(FakeManager):
+    def __init__(self):
+        super(FakeVolumeTransferManager, self).__init__()
+        self.__volume_transfers = {}
+
+    def list(self):
+        return self.__volume_transfers.values()
 
     def create(self, name):
         transfer = FakeVolumeTransfer(self)
         transfer.name = name or transfer.name
+        self.__volume_transfers[transfer.id] = transfer
         return self._cache(transfer)
+
+    def delete(self, resource):
+        super(FakeVolumeTransferManager, self).delete(resource.id)
+        del self.__volume_transfers[resource.id]
 
 
 class FakeVolumeSnapshotManager(FakeManager):
+    def __init__(self):
+        super(FakeVolumeSnapshotManager, self).__init__()
+        self.__snapshots = {}
+        self.__tenant_id = generate_uuid()
 
-    def create(self, name):
+    def create(self, name, force=False, display_name=None):
         snapshot = FakeVolumeSnapshot(self)
         snapshot.name = name or snapshot.name
+        snapshot.status = "available"
+        snapshot.tenant_id = self.__tenant_id
+        self.__snapshots[snapshot.id] = snapshot
         return self._cache(snapshot)
+
+    def list(self):
+        return self.__snapshots.values()
+
+    def delete(self, resource):
+        super(FakeVolumeSnapshotManager, self).delete(resource.id)
+        del self.__snapshots[resource.id]
 
 
 class FakeVolumeBackupManager(FakeManager):
+    def __init__(self):
+        super(FakeVolumeBackupManager, self).__init__()
+        self.__backups = {}
+        self.__tenant_id = generate_uuid()
 
     def create(self, name):
         backup = FakeVolumeBackup(self)
         backup.name = name or backup.name
+        self.__backups[backup.id] = backup
         return self._cache(backup)
+
+    def list(self):
+        return self.__backups.values()
+
+    def delete(self, resource):
+        super(FakeVolumeBackupManager, self).delete(resource.id)
+        del self.__backups[resource.id]
 
 
 class FakeRolesManager(FakeManager):
@@ -567,6 +723,7 @@ class FakeCinderClient(object):
         self.transfers = FakeVolumeTransferManager()
         self.volume_snapshots = FakeVolumeSnapshotManager()
         self.backups = FakeVolumeBackupManager()
+        self.quotas = FakeCinderQuotasManager()
 
 
 class FakeNovaClient(object):
@@ -589,6 +746,18 @@ class FakeNovaClient(object):
         self.set_management_url = mock.MagicMock()
 
 
+class FakeHeatClient(object):
+
+    def __init__(self):
+        self.stacks = FakeStackManager()
+
+
+class FakeDesignateClient(object):
+
+    def __init__(self):
+        self.domains = FakeDomainManager()
+
+
 class FakeKeystoneClient(object):
 
     def __init__(self):
@@ -601,6 +770,7 @@ class FakeKeystoneClient(object):
         self.auth_user_id = generate_uuid()
         self.auth_tenant_id = generate_uuid()
         self.service_catalog = FakeServiceCatalog()
+        self.services = FakeServicesManager()
         self.region_name = 'RegionOne'
         self.auth_ref = mock.Mock()
         self.auth_ref.role_names = ['admin']
@@ -610,6 +780,21 @@ class FakeKeystoneClient(object):
 
     def authenticate(self):
         return True
+
+    def list_users(self):
+        return self.users.list()
+
+    def list_projects(self):
+        return self.tenants.list()
+
+    def list_services(self):
+        return self.services.list()
+
+    def list_roles(self):
+        return self.roles.list()
+
+    def delete_user(self, uuid):
+        return self.users.delete(uuid)
 
 
 class FakeCeilometerClient(object):
@@ -866,6 +1051,9 @@ class FakeClients(object):
         self._cinder = None
         self._neutron = None
         self._sahara = None
+        self._heat = None
+        self._designate = None
+        self._ceilometer = None
         self._endpoint = endpoint_ or endpoint.Endpoint(
             "http://fake.example.org:5000/v2.0/",
             "fake_username",
@@ -904,6 +1092,21 @@ class FakeClients(object):
         if not self._sahara:
             self._sahara = FakeSaharaClient()
         return self._sahara
+
+    def heat(self):
+        if not self._heat:
+            self._heat = FakeHeatClient()
+        return self._heat
+
+    def designate(self):
+        if not self._designate:
+            self._designate = FakeDesignateClient()
+        return self._designate
+
+    def ceilometer(self):
+        if not self._ceilometer:
+            self._ceilometer = FakeCeilometerClient()
+        return self._ceilometer
 
 
 class FakeRunner(object):
