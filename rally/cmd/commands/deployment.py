@@ -22,6 +22,7 @@ import os
 import pprint
 import sys
 
+import jsonschema
 import yaml
 
 from rally.cmd import cliutils
@@ -88,7 +89,12 @@ class DeploymentCommands(object):
             with open(filename, 'rb') as deploy_file:
                 config = yaml.safe_load(deploy_file.read())
 
-        deployment = api.create_deploy(config, name)
+        try:
+            deployment = api.create_deploy(config, name)
+        except jsonschema.ValidationError:
+            print(_("Config schema validation error: %s.") % sys.exc_info()[1])
+            return(1)
+
         self.list(deployment_list=[deployment])
         if do_use:
             use.UseCommands().deployment(deployment['uuid'])

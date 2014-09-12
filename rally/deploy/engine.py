@@ -66,7 +66,6 @@ class EngineFactory(object):
     def __init__(self, deployment):
         self.deployment = deployment
         self.config = deployment['config']
-        self.validate()
 
     def validate(self):
         # TODO(sskripnick): remove this checking when config schema

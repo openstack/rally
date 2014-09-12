@@ -47,8 +47,9 @@ class DevstackEngineTestCase(test.TestCase):
     def test_invalid_config(self):
         self.deployment = SAMPLE_CONFIG.copy()
         self.deployment['config'] = {'type': 42}
+        engine = devstack.DevstackEngine(self.deployment)
         self.assertRaises(jsonschema.ValidationError,
-                          devstack.DevstackEngine, self.deployment)
+                          engine.validate)
 
     def test_construct(self):
         self.assertEqual(self.engine.localrc['ADMIN_PASSWORD'], 'secret')

@@ -51,8 +51,9 @@ class FuelEngineTestCase(test.TestCase):
         config = SAMPLE_CONFIG.copy()
         config['nodes'].pop('cinder+compute')
         deployment = {'config': config}
+        engine = fuel.FuelEngine(deployment)
         self.assertRaises(exceptions.ValidationError,
-                          fuel.FuelEngine, deployment)
+                          engine.validate)
 
     def test__get_nodes(self):
         engine = fuel.FuelEngine(self.deployment)
