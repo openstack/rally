@@ -176,3 +176,59 @@ class SaharaJobTestCase(test.TestCase):
                 configs={"conf_key2": "conf_val2"},
                 job_idx=1)]
         )
+
+    @mock.patch(SAHARA_UTILS + '.SaharaScenario._generate_random_name',
+                return_value="job_42")
+    @mock.patch(SAHARA_JOB + "._run_job_execution")
+    @mock.patch(SAHARA_JOB + "._scale_cluster")
+    @mock.patch(SAHARA_UTILS + '.SaharaScenario.clients')
+    def test_create_launch_job_sequence_with_scaling(self, mock_osclients,
+                                                     mock_scale,
+                                                     mock_run_execution,
+                                                     mock_random_name):
+
+        mock_sahara = mock_osclients("sahara")
+        mock_sahara.jobs.create.return_value = mock.MagicMock(id="42")
+        mock_sahara.clusters.get.return_value = mock.MagicMock(
+            id="cl_42",
+            status="active")
+
+        jobs_scenario = jobs.SaharaJob()
+
+        jobs_scenario.clients("keystone").tenant_id = "test_tenant"
+        jobs_scenario.context = mock.MagicMock(return_value={
+            "sahara_images": {"test_tenant": "test_image"},
+            "sahara_mains": {"test_tenant": ["main_42"]},
+            "sahara_libs": {"test_tenant": ["lib_42"]},
+            "sahara_clusters": {"test_tenant": "cl_42"},
+            "sahara_inputs": {"test_tenant": "in_42"}}
+        )
+        jobs_scenario.create_launch_job_sequence_with_scaling(
+            jobs=[
+                {
+                    "job_type": "java",
+                    "configs": {"conf_key": "conf_val"}
+                }, {
+                    "job_type": "java",
+                    "configs": {"conf_key2": "conf_val2"}
+                }],
+            deltas=[1, -1])
+
+        jobs_create_call = mock.call(
+            name=mock_random_name.return_value,
+            type="java",
+            description="",
+            mains=["main_42"],
+            libs=["lib_42"])
+
+        mock_sahara.jobs.create.assert_has_calls([jobs_create_call,
+                                                  jobs_create_call])
+
+        je_0 = mock.call(job_id="42", cluster_id="cl_42", input_id=None,
+                         output_id=None, configs={"conf_key": "conf_val"},
+                         job_idx=0)
+        je_1 = mock.call(job_id="42", cluster_id="cl_42", input_id=None,
+                         output_id=None,
+                         configs={"conf_key2": "conf_val2"}, job_idx=1)
+        mock_run_execution.assert_has_calls([je_0, je_1, je_0, je_1, je_0,
+                                             je_1])
