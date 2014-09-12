@@ -33,7 +33,7 @@ class NeutronScenario(base.Scenario):
     def _generate_subnet_cidr(self, subnets_per_network):
         """Generate next subnet CIDR for network, without IP overlapping.
 
-        We should know total number of subnets for proper aloocation
+        We should know total number of subnets for proper allocation
         non-overlapped subnets
 
         :param subnets_per_networks: total number of subnets to be allocated

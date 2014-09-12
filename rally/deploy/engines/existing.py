@@ -28,7 +28,7 @@ class ExistingCloud(engine.EngineFactory):
             "auth_url": "http://localhost:5000/v2.0/",
             "region_name": "RegionOne",
             "use_public_urls": true,
-            "admin_port": 35357
+            "admin_port": 35357,
             "admin": {
                 "username": "admin",
                 "password": "password",
@@ -43,7 +43,7 @@ class ExistingCloud(engine.EngineFactory):
             "auth_url": "http://localhost:5000/v3/",
             "region_name": "RegionOne",
             "use_public_urls": false,
-            "admin_port": 35357
+            "admin_port": 35357,
             "admin": {
                 "username": "admin",
                 "password": "admin",
