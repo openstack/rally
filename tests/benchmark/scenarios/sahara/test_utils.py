@@ -17,6 +17,7 @@ import mock
 from saharaclient.api import base as sahara_base
 
 from rally.benchmark.scenarios.sahara import utils
+from rally import exceptions
 from tests.benchmark.scenarios import test_base
 from tests import test
 
@@ -201,3 +202,41 @@ class SaharaNodeGroupTemplatesScenarioTestCase(test.TestCase):
 
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        'sahara.delete_cluster')
+
+    @mock.patch(SAHARA_UTILS + '.SaharaScenario._generate_random_name',
+                return_value="42")
+    @mock.patch(SAHARA_UTILS + '.SaharaScenario.clients')
+    def test_create_output_ds(self, mock_clients, mock_random_name):
+
+        ctxt = {
+            "sahara_output_conf": {
+                "output_type": "hdfs",
+                "output_url_prefix": "hdfs://test_out/"
+            }
+        }
+
+        scenario = utils.SaharaScenario(ctxt)
+        scenario._create_output_ds()
+
+        mock_clients("sahara").data_sources.create.assert_called_once_with(
+            name="42",
+            description="",
+            data_source_type="hdfs",
+            url="hdfs://test_out/42"
+        )
+
+    @mock.patch(SAHARA_UTILS + '.SaharaScenario._generate_random_name',
+                return_value="42")
+    @mock.patch(SAHARA_UTILS + '.SaharaScenario.clients')
+    def test_create_output_ds_swift(self, mock_clients, mock_random_name):
+
+        ctxt = {
+            "sahara_output_conf": {
+                "output_type": "swift",
+                "output_url_prefix": "swift://test_out/"
+            }
+        }
+
+        scenario = utils.SaharaScenario(ctxt)
+        self.assertRaises(exceptions.RallyException,
+                          scenario._create_output_ds)

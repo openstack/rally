@@ -14,11 +14,12 @@
 
 import mock
 
-from rally.benchmark.context import sahara_image
+from rally.benchmark.context.sahara import sahara_image
 from rally import exceptions
 from tests import test
 
-CTX = "rally.benchmark.context"
+BASE_CTX = "rally.benchmark.context"
+CTX = "rally.benchmark.context.sahara"
 SCN = "rally.benchmark.scenarios"
 
 
@@ -60,7 +61,7 @@ class SaharaImageTestCase(test.TestCase):
     @mock.patch("%s.glance.utils.GlanceScenario._create_image" % SCN,
                 return_value=mock.MagicMock(id=42))
     @mock.patch("%s.sahara_image.osclients" % CTX)
-    @mock.patch("%s.cleanup.utils.delete_glance_resources" % CTX)
+    @mock.patch("%s.cleanup.utils.delete_glance_resources" % BASE_CTX)
     def test_setup_and_cleanup(self, mock_image_remover, mock_osclients,
                                mock_image_generator, mock_uuid):
 

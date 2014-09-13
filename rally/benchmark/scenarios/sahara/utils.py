@@ -18,6 +18,7 @@ from saharaclient.api import base as sahara_base
 
 from rally.benchmark.scenarios import base
 from rally.benchmark import utils as bench_utils
+from rally import exceptions
 from rally.openstack.common import log as logging
 
 LOG = logging.getLogger(__name__)
@@ -42,11 +43,12 @@ class SaharaScenario(base.Scenario):
     NODE_PROCESSES = {
         "vanilla": {
             "1.2.1": {
-                "master": ["namenode", "jobtracker"],
+                "master": ["namenode", "jobtracker", "oozie"],
                 "worker": ["datanode", "tasktracker"]
             },
             "2.3.0": {
-                "master": ["namenode", "resourcemanager", "historyserver"],
+                "master": ["namenode", "resourcemanager", "historyserver",
+                           "oozie"],
                 "worker": ["datanode", "nodemanager"]
             }
         }
@@ -128,7 +130,7 @@ class SaharaScenario(base.Scenario):
     @base.atomic_action_timer('sahara.launch_cluster')
     def _launch_cluster(self, plugin_name, hadoop_version, flavor_id,
                         image_id, node_count, floating_ip_pool=None,
-                        neutron_net_id=None):
+                        neutron_net_id=None, wait_active=True):
         """Creates a cluster and wait until it becomes Active.
 
         The cluster is created with two node groups. The master Node Group is
@@ -145,6 +147,7 @@ class SaharaScenario(base.Scenario):
         IPs will be allocated
         :param neutron_net_id: The network id to allocate Fixed IPs
         from when Neutron is enabled for networking
+        :param wait_active: Wait until a Cluster gets int "Active" state
         :return: The created cluster
         """
 
@@ -189,14 +192,15 @@ class SaharaScenario(base.Scenario):
             }
         )
 
-        def is_active(cluster_id):
-            return self.clients("sahara").clusters.get(
-                cluster_id).status.lower() == "active"
+        if wait_active:
+            def is_active(cluster_id):
+                return self.clients("sahara").clusters.get(
+                    cluster_id).status.lower() == "active"
 
-        bench_utils.wait_for(
-            resource=cluster_object.id, is_ready=is_active,
-            timeout=CONF.benchmark.cluster_create_timeout,
-            check_interval=CONF.benchmark.cluster_check_interval)
+            bench_utils.wait_for(
+                resource=cluster_object.id, is_ready=is_active,
+                timeout=CONF.benchmark.cluster_create_timeout,
+                check_interval=CONF.benchmark.cluster_check_interval)
 
         return self.clients("sahara").clusters.get(cluster_object.id)
 
@@ -218,3 +222,25 @@ class SaharaScenario(base.Scenario):
                 return True
 
         bench_utils.wait_for(resource=cluster.id, is_ready=is_deleted)
+
+    def _create_output_ds(self):
+        """Creates an output Data Source based on EDP context
+
+        :return: The created Data Source
+        """
+
+        ds_type = self.context()["sahara_output_conf"]["output_type"]
+        url_prefix = self.context()["sahara_output_conf"]["output_url_prefix"]
+
+        if ds_type == "swift":
+            raise exceptions.RallyException(
+                _("Swift Data Sources are not implemented yet"))
+
+        url = (url_prefix.rstrip("/") + "/%s" %
+               self._generate_random_name(length=10))
+
+        return self.clients("sahara").data_sources.create(
+            name=self._generate_random_name(prefix="out_"),
+            description="",
+            data_source_type=ds_type,
+            url=url)
