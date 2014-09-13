@@ -10,12 +10,12 @@ Currently supported criteria:
 
 
 max_failure_percent
-===================
+-------------------
 
 Maximum allowed failure rate in percent.
 
 
 max_seconds_per_iteration
-=========================
+-------------------------
 
 Maximum time in seconds per one iteration.
