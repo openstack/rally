@@ -714,7 +714,7 @@
         concurrency: 4
       context:
         users:
-          tenants: 1
+          tenants: 4
           users_per_tenant: 1
       sla:
         max_failure_percent: 0
@@ -735,7 +735,7 @@
         concurrency: 3
       context:
         users:
-          tenants: 3
+          tenants: 4
           users_per_tenant: 1
       sla:
         max_failure_percent: 0
@@ -762,7 +762,7 @@
         concurrency: 3
       context:
         users:
-          tenants: 3
+          tenants: 4
           users_per_tenant: 1
       sla:
         max_failure_percent: 0
@@ -781,7 +781,7 @@
         concurrency: 3
       context:
         users:
-          tenants: 1
+          tenants: 3
           users_per_tenant: 3
       sla:
         max_failure_percent: 0
