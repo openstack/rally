@@ -35,6 +35,7 @@ class NovaScenarioTestCase(test.TestCase):
         super(NovaScenarioTestCase, self).setUp()
         self.server = mock.Mock()
         self.server1 = mock.Mock()
+        self.volume = mock.Mock()
         self.floating_ip = mock.Mock()
         self.image = mock.Mock()
         self.res_is = mockpatch.Patch(BM_UTILS + ".resource_is")
@@ -476,3 +477,19 @@ class NovaScenarioTestCase(test.TestCase):
         nova_scenario._resize_revert(self.server)
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        'nova.resize_revert')
+
+    @mock.patch(NOVA_UTILS + '.NovaScenario.clients')
+    def test__attach_volume(self, mock_clients):
+        mock_clients("nova").volumes.create_server_volume.return_value = None
+        nova_scenario = utils.NovaScenario()
+        nova_scenario._attach_volume(self.server, self.volume)
+        self._test_atomic_action_timer(nova_scenario.atomic_actions(),
+                                       'nova.attach_volume')
+
+    @mock.patch(NOVA_UTILS + '.NovaScenario.clients')
+    def test__detach_volume(self, mock_clients):
+        mock_clients("nova").volumes.delete_server_volume.return_value = None
+        nova_scenario = utils.NovaScenario()
+        nova_scenario._detach_volume(self.server, self.volume)
+        self._test_atomic_action_timer(nova_scenario.atomic_actions(),
+                                       'nova.detach_volume')
