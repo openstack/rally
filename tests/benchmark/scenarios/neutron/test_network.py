@@ -54,7 +54,7 @@ class NeutronNetworksTestCase(test.TestCase):
         network_create_args = {}
         neutron_scenario.create_and_delete_networks()
         mock_create.assert_called_once_with(network_create_args)
-        mock_delete.assert_called_once()
+        self.assertEqual(1, mock_delete.call_count)
 
         mock_create.reset_mock()
         mock_delete.reset_mock()
@@ -64,7 +64,7 @@ class NeutronNetworksTestCase(test.TestCase):
         neutron_scenario.create_and_delete_networks(
                                     network_create_args=network_create_args)
         mock_create.assert_called_once_with(network_create_args)
-        mock_delete.assert_called_once()
+        self.assertEqual(1, mock_delete.call_count)
 
     @mock.patch(NEUTRON_NETWORKS + "._list_subnets")
     @mock.patch(NEUTRON_NETWORKS + "._create_subnet")
@@ -143,7 +143,9 @@ class NeutronNetworksTestCase(test.TestCase):
                          [mock.call({"network": {"id": "fake-id"}},
                                     subnets_per_network,
                                     {})] * subnets_per_network)
-        mock_delete.assert_called_once()
+        self.assertEqual(
+            mock_delete.mock_calls,
+            [mock.call(mock_create_subnet())] * subnets_per_network)
         self.assertEqual(scenario.SUBNET_CIDR_START, "default_cidr")
 
         mock_create_network.reset_mock()
@@ -158,11 +160,14 @@ class NeutronNetworksTestCase(test.TestCase):
         self.assertEqual(scenario.SUBNET_CIDR_START, "custom_cidr")
         mock_create_network.assert_called_once_with({})
         self.assertEqual(
-             mock_create_subnet.mock_calls,
-             [mock.call({"network": {"id": "fake-id"}},
-                        subnets_per_network,
-                        {"allocation_pools": []})] * subnets_per_network)
-        mock_delete.assert_called_once()
+            mock_create_subnet.mock_calls,
+            [mock.call({"network": {"id": "fake-id"}},
+                       subnets_per_network,
+                       {"allocation_pools": []})] * subnets_per_network)
+
+        self.assertEqual(
+            mock_delete.mock_calls,
+            [mock.call(mock_create_subnet())] * subnets_per_network)
 
     @mock.patch(NEUTRON_NETWORKS + "._list_routers")
     @mock.patch(NEUTRON_NETWORKS + "._create_router")
@@ -303,11 +308,12 @@ class NeutronNetworksTestCase(test.TestCase):
         mock_create_network.assert_called_once_with({})
         self.assertEqual(mock_create_port.mock_calls,
                          [mock.call(net, {})] * ports_per_network)
-        mock_delete.assert_called_once()
+        self.assertEqual(mock_delete.mock_calls,
+                         [mock.call(mock_create_port())] * ports_per_network)
 
         mock_create_network.reset_mock()
         mock_create_port.reset_mock()
-        mock_delete.reset()
+        mock_delete.reset_mock()
 
         # Custom options
         scenario.create_and_delete_ports(
@@ -318,4 +324,5 @@ class NeutronNetworksTestCase(test.TestCase):
         self.assertEqual(
             mock_create_port.mock_calls,
             [mock.call(net, {"allocation_pools": []})] * ports_per_network)
-        mock_delete.assert_called_once()
+        self.assertEqual(mock_delete.mock_calls,
+                         [mock.call(mock_create_port())] * ports_per_network)

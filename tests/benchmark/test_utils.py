@@ -137,7 +137,7 @@ class BenchmarkUtilsTestCase(test.TestCase):
                                              service('glance-api')]
         ret = utils.check_service_status(client, 'nova-network')
         self.assertTrue(ret)
-        client.services.list.assert_called()
+        self.assertTrue(client.services.list.called)
 
     def test_check_service_status_fail(self):
         class service():
@@ -155,7 +155,7 @@ class BenchmarkUtilsTestCase(test.TestCase):
                                              service('glance-api')]
         ret = utils.check_service_status(client, 'nova-network')
         self.assertFalse(ret)
-        client.services.list.assert_called()
+        self.assertTrue(client.services.list.called)
 
 
 class WaitForTestCase(test.TestCase):

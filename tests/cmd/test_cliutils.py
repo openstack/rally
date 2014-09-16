@@ -172,6 +172,6 @@ class CliUtilsTestCase(test.TestCase):
                     'use': use.UseCommands,
                     'verify': verify.VerifyCommands}
         ret = cliutils.run(['rally', 'show', 'keypairs'], categories)
-        mock_validate_args.assert_called()
+        self.assertTrue(mock_validate_args.called)
         self._unregister_opts()
         self.assertEqual(ret, 1)
