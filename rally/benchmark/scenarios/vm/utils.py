@@ -15,6 +15,7 @@
 
 
 import subprocess
+import sys
 
 from rally.benchmark.scenarios import base
 from rally.benchmark import utils as bench_utils
@@ -80,7 +81,11 @@ class VMScenario(base.Scenario):
 
     @staticmethod
     def ping_ip_address(host, should_succeed=True):
-        cmd = ['ping', '-c1', '-w1', host]
+        if sys.platform.startswith('linux'):
+            cmd = ['ping', '-c1', '-w1', host]
+        else:
+            cmd = ['ping', '-c1', host]
+
         proc = subprocess.Popen(cmd,
                                 stdout=subprocess.PIPE,
                                 stderr=subprocess.PIPE)
