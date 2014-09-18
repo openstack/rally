@@ -104,7 +104,7 @@ class RPSScenarioRunnerTestCase(test.TestCase):
 
         rps._worker_thread(mock_queue, args)
 
-        mock_queue.put.assert_called_once()
+        self.assertEqual(1, mock_queue.put.call_count)
 
         expected_calls = [mock.call(("some_args",))]
         self.assertEqual(expected_calls,

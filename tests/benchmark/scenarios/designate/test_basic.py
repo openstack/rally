@@ -104,8 +104,6 @@ class DesignateBasicTestCase(test.TestCase):
                          [mock.call(domain['id'], "321", atomic_action=False)]
                          * records_per_domain)
 
-        mock_delete.assert_called_once()
-
     @mock.patch(DESIGNATE_BASIC + "._list_records")
     def test_list_records(self, mock_list):
         scenario = basic.DesignateBasic()

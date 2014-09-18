@@ -103,7 +103,7 @@ class VerifyCommandsTestCase(test.TestCase):
         verifications = {'dummy': []}
         mock_db_verification_list.return_value = verifications
         self.verify.list()
-        mock_db_verification_list.assert_called_once()
+        mock_db_verification_list.assert_called_once_with()
         mock_print_list.assert_called_once_with(verifications, fields,
                                                 sortby_index=fields.index(
                                                     'Created at'))
@@ -199,13 +199,14 @@ class VerifyCommandsTestCase(test.TestCase):
                                                       mock_open):
         mock_open.return_value = mock.MagicMock()
         verification_uuid = '7140dd59-3a7b-41fd-a3ef-5e3e615d7dfa'
-        results = {'data': {}}
+        fake_data = {}
+        results = {'data': fake_data}
         mock_db_result_get.return_value = results
         self.verify.results(verification_uuid, output_html=True,
                             output_file='results')
 
         mock_db_result_get.assert_called_once_with(verification_uuid)
-        mock_json2html_main.assert_called_once()
+        mock_json2html_main.assert_called_once_with(fake_data)
         mock_open.assert_called_once_with('results', 'wb')
         fake_file = mock_open.return_value.__enter__.return_value
         fake_file.write.assert_called_once_with('')

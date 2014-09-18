@@ -137,7 +137,7 @@ class UserGeneratorTestCase(test.TestCase):
         tenant2 = mock.MagicMock()
         args = (mock.MagicMock(), [tenant1, tenant2])
         users.UserGenerator._delete_tenants(args)
-        self.keystone_wrapper.wrap.assert_called_once()
+        self.assertEqual(1, self.keystone_wrapper.wrap.call_count)
         self.wrapped_keystone.delete_project.assert_has_calls([
             mock.call(tenant1["id"]),
             mock.call(tenant2["id"])])
