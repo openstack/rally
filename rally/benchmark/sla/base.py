@@ -94,7 +94,7 @@ class FailureRate(SLA):
         else:
             success = True
         msg = (_("Maximum failure percent %s%% failures, actually %s%%") %
-                (criterion_value, errors * 100.0 / len(result)))
+                (criterion_value * 100.0, errors * 100.0 / len(result)))
         return SLAResult(success, msg)
 
 
@@ -109,10 +109,10 @@ class IterationTime(SLA):
         duration = 0
         success = True
         for i in result:
-            duration = i['duration']
+            if i['duration'] >= duration:
+                duration = i['duration']
             if i['duration'] > criterion_value:
                 success = False
-                break
-        msg = (_("Maximum seconds per iteration %is, actually %is") %
+        msg = (_("Maximum seconds per iteration %ss, found with %ss") %
                 (criterion_value, duration))
         return SLAResult(success, msg)
