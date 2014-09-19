@@ -210,6 +210,29 @@ class OSClientsTestCase(test.TestCase):
         mock_sahara.Client.assert_called_once_with("1.1", **kw)
         self.assertEqual(self.clients.cache["sahara"], fake_sahara)
 
+    @mock.patch("rally.osclients.zaqar")
+    def test_zaqar(self, mock_zaqar):
+        fake_zaqar = fakes.FakeZaqarClient()
+        mock_zaqar.Client = mock.MagicMock(return_value=fake_zaqar)
+        self.assertTrue("zaqar" not in self.clients.cache)
+        client = self.clients.zaqar()
+        self.assertEqual(client, fake_zaqar)
+        self.service_catalog.url_for.assert_called_once_with(
+            service_type='messaging', endpoint_type='public',
+            region_name=self.endpoint.region_name)
+        fake_zaqar_url = self.service_catalog.url_for.return_value
+        conf = {'auth_opts': {'backend': 'keystone', 'options': {
+            'os_username': self.endpoint.username,
+            'os_password': self.endpoint.password,
+            'os_project_name': self.endpoint.tenant_name,
+            'os_auth_url': self.endpoint.auth_url,
+            'insecure': cfg.CONF.https_insecure,
+        }}}
+        mock_zaqar.Client.assert_called_once_with(url=fake_zaqar_url,
+                                                  version="1.1",
+                                                  conf=conf)
+        self.assertEqual(self.clients.cache["zaqar"], fake_zaqar)
+
     @mock.patch("rally.osclients.Clients.keystone")
     def test_services(self, mock_keystone):
         available_services = {consts.ServiceType.IDENTITY: {},

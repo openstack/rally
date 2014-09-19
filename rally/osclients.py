@@ -29,6 +29,7 @@ from neutronclient.neutron import client as neutron
 from novaclient import client as nova
 from oslo.config import cfg
 from saharaclient import client as sahara
+from zaqarclient.queues import client as zaqar
 
 from rally import consts
 from rally import exceptions
@@ -51,6 +52,7 @@ nova._adapter_pool = lambda x: nova.adapters.HTTPAdapter()
 
 def cached(func):
     """Cache client handles."""
+
     def wrapper(self, *args, **kwargs):
         key = '{0}{1}{2}'.format(func.__name__,
                                  str(args) if args else '',
@@ -60,6 +62,7 @@ def cached(func):
             return self.cache[key]
         self.cache[key] = func(self, *args, **kwargs)
         return self.cache[key]
+
     return wrapper
 
 
@@ -249,6 +252,25 @@ class Clients(object):
                                project_name=self.endpoint.tenant_name,
                                auth_url=self.endpoint.auth_url)
 
+        return client
+
+    @cached
+    def zaqar(self):
+        """Return Zaqar client."""
+        kc = self.keystone()
+        messaging_api_url = kc.service_catalog.url_for(
+            service_type='messaging', endpoint_type='public',
+            region_name=self.endpoint.region_name)
+        conf = {'auth_opts': {'backend': 'keystone', 'options': {
+            'os_username': self.endpoint.username,
+            'os_password': self.endpoint.password,
+            'os_project_name': self.endpoint.tenant_name,
+            'os_auth_url': self.endpoint.auth_url,
+            'insecure': CONF.https_insecure,
+        }}}
+        client = zaqar.Client(url=messaging_api_url,
+                              version='1.1',
+                              conf=conf)
         return client
 
     @cached

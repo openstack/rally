@@ -1042,6 +1042,12 @@ class FakeSaharaClient(object):
         self.node_group_templates.list.side_effect = [[mock_with_id], []]
 
 
+class FakeZaqarClient(object):
+
+    def __init__(self):
+        pass
+
+
 class FakeClients(object):
 
     def __init__(self, endpoint_=None):
@@ -1054,6 +1060,7 @@ class FakeClients(object):
         self._heat = None
         self._designate = None
         self._ceilometer = None
+        self._zaqar = None
         self._endpoint = endpoint_ or endpoint.Endpoint(
             "http://fake.example.org:5000/v2.0/",
             "fake_username",
@@ -1107,6 +1114,11 @@ class FakeClients(object):
         if not self._ceilometer:
             self._ceilometer = FakeCeilometerClient()
         return self._ceilometer
+
+    def zaqar(self):
+        if not self._zaqar:
+            self._zaqar = FakeZaqarClient()
+        return self._zaqar
 
 
 class FakeRunner(object):
