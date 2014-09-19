@@ -91,6 +91,8 @@ class InfoCommands(object):
                     {"scenario_group": scenario_group_name,
                      "scenario_name": scenario.__name__})
             doc = utils.parse_docstring(scenario.__doc__)
+            if not doc["short_description"]:
+                return None
             info += doc["short_description"] + "\n\n"
             if doc["long_description"]:
                 info += doc["long_description"] + "\n\n"
