@@ -9,5 +9,5 @@ mock>=1.0
 testrepository>=0.0.18
 testtools>=0.9.34
 
-oslosphinx>=2.2.0.0a2
-oslotest>=1.1.0.0a2
+oslosphinx>=2.2.0  # Apache-2.0
+oslotest>=1.1.0  # Apache-2.0
