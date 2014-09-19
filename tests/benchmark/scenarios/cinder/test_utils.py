@@ -56,6 +56,37 @@ class CinderScenarioTestCase(test.TestCase):
                                        'cinder.list_volumes')
 
     @mock.patch(CINDER_UTILS + '.CinderScenario.clients')
+    def test__create_volume(self, mock_clients):
+        CONF = cfg.CONF
+        volume = mock.Mock()
+        mock_clients('cinder').volumes.create.return_value = volume
+        return_volume = self.scenario._create_volume(1)
+        self.wait_for.mock.assert_called_once_with(
+            volume,
+            is_ready=self.res_is.mock(),
+            update_resource=self.gfm(),
+            timeout=CONF.benchmark.cinder_volume_create_timeout,
+            check_interval=CONF.benchmark.cinder_volume_create_poll_interval
+        )
+        self.res_is.mock.assert_has_calls(mock.call('available'))
+        self.assertEqual(self.wait_for.mock(), return_volume)
+        self._test_atomic_action_timer(self.scenario.atomic_actions(),
+                                       'cinder.create_volume')
+
+    def test__delete_volume(self):
+        cinder = mock.Mock()
+        self.scenario._delete_volume(cinder)
+        cinder.delete.assert_called_once_with()
+        self.wait_for_delete.mock.assert_called_once_with(
+            cinder,
+            update_resource=self.gfm(),
+            timeout=cfg.CONF.benchmark.cinder_volume_create_timeout,
+            check_interval=cfg.CONF.benchmark
+            .cinder_volume_create_poll_interval)
+        self._test_atomic_action_timer(self.scenario.atomic_actions(),
+                                       'cinder.delete_volume')
+
+    @mock.patch(CINDER_UTILS + '.CinderScenario.clients')
     def test__create_snapshot(self, mock_clients):
         snapshot = mock.Mock()
         mock_clients("cinder").volume_snapshots.create.return_value = snapshot

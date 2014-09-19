@@ -33,6 +33,25 @@ class BenchmarkUtilsTestCase(test.TestCase):
         self.assertEqual(utils.chunks(data, 5),
                          [[1, 2, 3, 4, 5], [6, 7, 8, 9, 10], [11, 12]])
 
+    def test_wait_for_delete(self):
+        def update_resource(self):
+            raise exceptions.GetResourceNotFound()
+
+        resource = mock.MagicMock()
+        utils.wait_for_delete(resource, update_resource=update_resource)
+
+    @mock.patch("time.sleep")
+    @mock.patch("time.time")
+    def test_wait_for_delete_fails(self, mock_time, mock_sleep):
+        def update_resource(self):
+            pass
+
+        mock_time.side_effect = [1, 2, 3, 4]
+        resource = mock.MagicMock()
+        self.assertRaises(exceptions.TimeoutException, utils.wait_for_delete,
+                          resource, update_resource=update_resource,
+                          timeout=1)
+
     def test_resource_is(self):
         is_active = utils.resource_is("ACTIVE")
         self.assertTrue(is_active(fakes.FakeResource(status="active")))

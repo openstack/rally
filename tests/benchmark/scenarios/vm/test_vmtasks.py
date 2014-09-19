@@ -16,6 +16,7 @@
 import mock
 
 from rally.benchmark.scenarios.vm import vmtasks
+from rally import exceptions
 from tests import fakes
 from tests import test
 
@@ -79,6 +80,115 @@ class VMTasksTestCase(test.TestCase):
         scenario._release_server_floating_ip.assert_called_once_with(
             fake_server, fake_floating_ip)
         scenario._delete_server.assert_called_once_with(fake_server)
+
+    @mock.patch("json.loads")
+    def test_boot_runcommand_delete_fails(self, mock_json_loads):
+        # Setup mocks
+        scenario = vmtasks.VMTasks()
+        fake_server = fakes.FakeServer()
+        fake_server.addresses = dict(
+            private=[dict(
+                version=4,
+                addr="1.2.3.4"
+            )]
+        )
+
+        scenario._boot_server = mock.MagicMock(return_value=fake_server)
+
+        scenario._generate_random_name = mock.MagicMock(return_value="name")
+
+        fake_floating_ip = fakes.FakeFloatingIP()
+        fake_floating_ip.ip = "4.3.2.1"
+        scenario._create_floating_ip = mock.MagicMock(
+            return_value=fake_floating_ip)
+        scenario._associate_floating_ip = mock.MagicMock()
+        scenario._release_server_floating_ip = mock.MagicMock()
+
+        fake_floating_ip_pool = fakes.FakeFloatingIPPool()
+        fake_floating_ip_pool.name = "public"
+        scenario._list_floating_ip_pools = mock.MagicMock(
+            return_value=[fake_floating_ip_pool])
+
+        scenario.run_command = mock.MagicMock()
+        scenario.run_command.return_value = (1, 'stdout', 'stderr')
+        scenario._delete_server = mock.MagicMock()
+
+        # Run scenario
+        self.assertRaises(exceptions.ScriptError,
+                          scenario.boot_runcommand_delete,
+                          "image_id", "flavour_id", "script_path",
+                          "interpreter", fixed_network='private',
+                          floating_network='public', username="username",
+                          ip_version=4, port=22, use_floatingip=True,
+                          fakearg="f")
+
+        # Assertions
+        scenario._boot_server.assert_called_once_with(
+            'name', 'image_id', "flavour_id", key_name="rally_ssh_key",
+            fakearg="f")
+
+        scenario._create_floating_ip.assert_called_once_with(
+            fake_floating_ip_pool.name)
+        scenario._associate_floating_ip.assert_called_once_with(
+            fake_server, fake_floating_ip)
+        scenario.run_command.assert_called_once_with(
+            fake_floating_ip.ip, 22, 'username',
+            "interpreter", "script_path")
+
+    @mock.patch("json.loads")
+    def test_boot_runcommand_delete_valueerror_fails(self, mock_json_loads):
+        # Setup mocks
+        scenario = vmtasks.VMTasks()
+        fake_server = fakes.FakeServer()
+        fake_server.addresses = dict(
+            private=[dict(
+                version=4,
+                addr="1.2.3.4"
+            )]
+        )
+
+        mock_json_loads.side_effect = ValueError
+        scenario._boot_server = mock.MagicMock(return_value=fake_server)
+
+        scenario._generate_random_name = mock.MagicMock(return_value="name")
+
+        fake_floating_ip = fakes.FakeFloatingIP()
+        fake_floating_ip.ip = "4.3.2.1"
+        scenario._create_floating_ip = mock.MagicMock(
+            return_value=fake_floating_ip)
+        scenario._associate_floating_ip = mock.MagicMock()
+        scenario._release_server_floating_ip = mock.MagicMock()
+
+        fake_floating_ip_pool = fakes.FakeFloatingIPPool()
+        fake_floating_ip_pool.name = "public"
+        scenario._list_floating_ip_pools = mock.MagicMock(
+            return_value=[fake_floating_ip_pool])
+
+        scenario.run_command = mock.MagicMock()
+        scenario.run_command.return_value = (0, 'stdout', 'stderr')
+        scenario._delete_server = mock.MagicMock()
+
+        # Run scenario
+        self.assertRaises(exceptions.ScriptError,
+                          scenario.boot_runcommand_delete,
+                          "image_id", "flavour_id", "script_path",
+                          "interpreter", fixed_network='private',
+                          floating_network='public', username="username",
+                          ip_version=4, port=22, use_floatingip=True,
+                          fakearg="f")
+
+        # Assertions
+        scenario._boot_server.assert_called_once_with(
+            'name', 'image_id', "flavour_id", key_name="rally_ssh_key",
+            fakearg="f")
+
+        scenario._create_floating_ip.assert_called_once_with(
+            fake_floating_ip_pool.name)
+        scenario._associate_floating_ip.assert_called_once_with(
+            fake_server, fake_floating_ip)
+        scenario.run_command.assert_called_once_with(
+            fake_floating_ip.ip, 22, 'username',
+            "interpreter", "script_path")
 
     @mock.patch("json.loads")
     def test_boot_runcommand_delete_no_floating_ip(self, mock_json_loads):
