@@ -330,15 +330,46 @@
 # Server image_delete poll interval (floating point value)
 #nova_server_image_delete_poll_interval=2.0
 
+# Time to sleep after resize before polling for status
+# (floating point value)
+#nova_server_resize_prepoll_delay=2.0
+
+# Server resize timeout (floating point value)
+#nova_server_resize_timeout=400.0
+
+# Server resize poll interval (floating point value)
+#nova_server_resize_poll_interval=5.0
+
+# Time to sleep after resize_confirm before polling for status
+# (floating point value)
+#nova_server_resize_confirm_prepoll_delay=0.0
+
+# Server resize_confirm timeout (floating point value)
+#nova_server_resize_confirm_timeout=200.0
+
+# Server resize_confirm poll interval (floating point value)
+#nova_server_resize_confirm_poll_interval=2.0
+
+# Time to sleep after resize_revert before polling for status
+# (floating point value)
+#nova_server_resize_revert_prepoll_delay=0.0
+
+# Server resize_revert timeout (floating point value)
+#nova_server_resize_revert_timeout=200.0
+
+# Server resize_revert poll interval (floating point value)
+#nova_server_resize_revert_poll_interval=2.0
+
 
 #
 # Options defined in rally.benchmark.scenarios.sahara.utils
 #
 
-# A timeout in seconds for a cluster create operation
+# A timeout in seconds for a cluster create operation (integer
+# value)
 #cluster_create_timeout=600
 
-# Cluster status polling interval in seconds
+# Cluster status polling interval in seconds (integer value)
 #cluster_check_interval=5
 
 
@@ -484,5 +515,12 @@
 # How many concurrent threads use for serving users context
 # (integer value)
 #concurrent=30
+
+# ID of domain in which projects will be created. (string
+# value)
+#project_domain=default
+
+# ID of domain in which users will be created. (string value)
+#user_domain=default
 
 
