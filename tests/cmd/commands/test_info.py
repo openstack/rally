@@ -20,6 +20,7 @@ from rally.cmd.commands import info
 from rally.deploy.engines import existing as existing_cloud
 from rally.deploy.serverprovider.providers import existing as existing_servers
 from rally import exceptions
+from tests import fakes
 from tests import test
 
 
@@ -53,6 +54,14 @@ class InfoCommandsTestCase(test.TestCase):
                 side_effect=exceptions.NoSuchScenario)
     def test_find_failure_status(self, mock_get_scenario_by_name):
         query = "Dummy.non_existing"
+        status = self.info.find(query)
+        mock_get_scenario_by_name.assert_called_once_with(query)
+        self.assertEqual(1, status)
+
+    @mock.patch(SCENARIO + ".get_scenario_by_name",
+                return_value=fakes.FakeScenario.do_it)
+    def test_find_scenario_with_empty_docs(self, mock_get_scenario_by_name):
+        query = "FakeScenario.do_it"
         status = self.info.find(query)
         mock_get_scenario_by_name.assert_called_once_with(query)
         self.assertEqual(1, status)
