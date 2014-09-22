@@ -18,7 +18,6 @@ from oslotest import mockpatch
 from rally.benchmark.scenarios.glance import utils
 from rally.benchmark import utils as butils
 from rally import exceptions as rally_exceptions
-from tests.benchmark.scenarios import test_base
 from tests import fakes
 from tests import test
 
@@ -53,8 +52,7 @@ class GlanceScenarioTestCase(test.TestCase):
                           image_manager.create('fails', 'url', 'cf', 'df'))
 
     def _test_atomic_action_timer(self, atomic_actions, name):
-        action_duration = test_base.get_atomic_action_timer_value_by_name(
-            atomic_actions, name)
+        action_duration = atomic_actions.get(name)
         self.assertIsNotNone(action_duration)
         self.assertIsInstance(action_duration, float)
 

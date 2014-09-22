@@ -39,13 +39,9 @@ def _prepare_data(data, reduce_rows=1000):
         for k, v in d1.iteritems():
             v[-1] = (v[-1] + d2[k]) / 2.0
 
-    zero_atomic_actions = {}
-    for row in data["result"]:
-        # find first non-error result to get atomic actions names
-        if not row["error"] and "atomic_actions" in row:
-            zero_atomic_actions = dict([(a["action"], 0)
-                                        for a in row["atomic_actions"]])
-            break
+    atomic_action_names = (data["result"][0]["atomic_actions"].keys()
+                           if data["result"] else [])
+    zero_atomic_actions = dict([(a, 0) for a in atomic_action_names])
 
     total_durations = {"duration": [], "idle_duration": []}
     atomic_durations = dict([(a, []) for a in zero_atomic_actions])
@@ -74,8 +70,9 @@ def _prepare_data(data, reduce_rows=1000):
                 "duration": row["duration"],
                 "idle_duration": row["idle_duration"],
             }
-            new_row_atomic = dict([(a["action"], a["duration"])
-                                   for a in row["atomic_actions"]])
+            new_row_atomic = {}
+            for k, v in row["atomic_actions"].iteritems():
+                new_row_atomic[k] = v if v else 0
         if store < 1:
             _append(total_durations, new_row_total)
             _append(atomic_durations, new_row_atomic)
@@ -136,10 +133,11 @@ def _process_atomic(result, data):
 
     # NOTE(boris-42): In our result["result"] we have next structure:
     #                 {"error": NoneOrDict,
-    #                  "atomic_actions": [
-    #                       {"action": String, "duration": Float},
-    #                       ...
-    #                   ]}
+    #                  "atomic_actions": {
+    #                       "action1": <duration>,
+    #                       "action2": <duration>
+    #                   }
+    #                 }
     #                 Our goal is to get next structure:
     #                 [{"key": $atomic_actions.action,
     #                   "values": [[order, $atomic_actions.duration
@@ -149,12 +147,9 @@ def _process_atomic(result, data):
     #                 all iteration. So we should take first non "error"
     #                 iteration. And get in atomitc_iter list:
     #                 [{"key": "action", "values":[]}]
-    stacked_area = []
-    for r in result["result"]:
-        if not r["error"]:
-            for action in r["atomic_actions"]:
-                stacked_area.append({"key": action["action"], "values": []})
-            break
+    stacked_area = ([{"key": a, "values": []}
+                     for a in result["result"][0]["atomic_actions"]]
+                    if result["result"] else [])
 
     # NOTE(boris-42): pie is similiar to stacked_area, only difference is in
     #                 structure of values. In case of $error we shouldn't put
@@ -173,9 +168,15 @@ def _process_atomic(result, data):
                 continue
 
             # in case of non error put real durations to pie and stacked area
-            for j, action in enumerate(res["atomic_actions"]):
-                pie[j]["values"].append(action["duration"])
-                histogram_data[j]["values"].append(action["duration"])
+            for j, action in enumerate(res["atomic_actions"].keys()):
+                # in case any single atomic action failed, put 0
+                action_duration = res["atomic_actions"][action] or 0.0
+                pie[j]["values"].append(action_duration)
+                histogram_data[j]["values"].append(action_duration)
+
+    # filter out empty action lists in pie / histogram to avoid errors
+    pie = filter(lambda x: x["values"], pie)
+    histogram_data = filter(lambda x: x["values"], histogram_data)
 
     histograms = [[] for atomic_action in range(len(histogram_data))]
     for i, atomic_action in enumerate(histogram_data):
@@ -211,28 +212,10 @@ def _process_atomic(result, data):
 
 def _get_atomic_action_durations(result):
     raw = result.get('result', [])
-    atomic_actions_names = []
-    for r in raw:
-        if 'atomic_actions' in r:
-            for a in r['atomic_actions']:
-                atomic_actions_names.append(a["action"])
-            break
-    action_durations = {}
-    for atomic_action in atomic_actions_names:
-        action_durations[atomic_action] = utils.get_durations(
-            raw,
-            lambda r: next(a["duration"] for a in r["atomic_actions"]
-                           if a["action"] == atomic_action),
-            lambda r: any((a["action"] == atomic_action)
-                          for a in r["atomic_actions"]))
-
+    actions_data = utils.get_atomic_actions_data(raw)
     table = []
-    actions_list = action_durations.keys()
-    action_durations["total"] = utils.get_durations(
-            raw, lambda x: x["duration"], lambda r: not r["error"])
-    actions_list.append("total")
-    for action in actions_list:
-        durations = action_durations[action]
+    for action in actions_data:
+        durations = actions_data[action]
         if durations:
             data = [action,
                     round(min(durations), 3),

@@ -90,17 +90,20 @@ class PlotTestCase(test.TestCase):
                 {
                     "error": [],
                     "duration": 1,
-                    "idle_duration": 2
+                    "idle_duration": 2,
+                    "atomic_actions": {}
                 },
                 {
                     "error": True,
                     "duration": 1,
-                    "idle_duration": 1
+                    "idle_duration": 1,
+                    "atomic_actions": {}
                 },
                 {
                     "error": [],
                     "duration": 2,
-                    "idle_duration": 3
+                    "idle_duration": 3,
+                    "atomic_actions": {}
                 }
             ]
         }
@@ -153,24 +156,24 @@ class PlotTestCase(test.TestCase):
             "result": [
                 {
                     "error": [],
-                    "atomic_actions": [
-                        {"action": "action1", "duration": 1},
-                        {"action": "action2", "duration": 2}
-                    ]
+                    "atomic_actions": {
+                        "action1": 1,
+                        "action2": 2
+                    }
                 },
                 {
                     "error": ["some", "error", "occurred"],
-                    "atomic_actions": [
-                        {"action": "action1", "duration": 1},
-                        {"action": "action2", "duration": 2}
-                    ]
+                    "atomic_actions": {
+                        "action1": 1,
+                        "action2": 2
+                    }
                 },
                 {
                     "error": [],
-                    "atomic_actions": [
-                        {"action": "action1", "duration": 3},
-                        {"action": "action2", "duration": 4}
-                    ]
+                    "atomic_actions": {
+                        "action1": 3,
+                        "action2": 4
+                    }
                 }
             ]
         }
@@ -262,10 +265,10 @@ class PlotTestCase(test.TestCase):
 
         data = []
         for i in range(100):
-            atomic_actions = [
-                    {"action": "a1", "duration": i + 0.1},
-                    {"action": "a2", "duration": i + 0.8},
-            ]
+            atomic_actions = {
+                "a1": i + 0.1,
+                "a2": i + 0.8
+            }
             row = {
                     "duration": i * 3.14,
                     "idle_duration": i * 0.2,

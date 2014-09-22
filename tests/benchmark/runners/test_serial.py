@@ -29,7 +29,7 @@ class SerialScenarioRunnerTestCase(test.TestCase):
     def test_run_scenario(self, mock_run_once):
         times = 5
         result = {"duration": 10, "idle_duration": 0, "error": [],
-                  "scenario_output": {}, "atomic_actions": []}
+                  "scenario_output": {}, "atomic_actions": {}}
         mock_run_once.return_value = result
         expected_results = [result for i in range(times)]
 

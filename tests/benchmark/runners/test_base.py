@@ -34,7 +34,7 @@ class ScenarioHelpersTestCase(test.TestCase):
             "duration": 100,
             "idle_duration": 0,
             "scenario_output": {"errors": "", "data": {}},
-            "atomic_actions": [],
+            "atomic_actions": {},
             "error": mock_format_exc.return_value
         }
 
@@ -94,7 +94,7 @@ class ScenarioHelpersTestCase(test.TestCase):
             "idle_duration": 0,
             "error": [],
             "scenario_output": {"errors": "", "data": {}},
-            "atomic_actions": []
+            "atomic_actions": {}
         }
         self.assertEqual(expected_result, result)
 
@@ -112,7 +112,7 @@ class ScenarioHelpersTestCase(test.TestCase):
             "idle_duration": 0,
             "error": [],
             "scenario_output": fakes.FakeScenario().with_output(),
-            "atomic_actions": []
+            "atomic_actions": {}
         }
         self.assertEqual(expected_result, result)
 
@@ -128,7 +128,7 @@ class ScenarioHelpersTestCase(test.TestCase):
             "duration": fakes.FakeTimer().duration(),
             "idle_duration": 0,
             "scenario_output": {"errors": "", "data": {}},
-            "atomic_actions": []
+            "atomic_actions": {}
         }
         self.assertEqual(expected_result, result)
         self.assertEqual(expected_error[:2],
@@ -146,7 +146,7 @@ class ScenarioRunnerResultTestCase(test.TestCase):
                     "data": {"test": 1.0},
                     "errors": "test error string 1"
                 },
-                "atomic_actions": [{"action": "test1", "duration": 1.0}],
+                "atomic_actions": {"test1": 1.0},
                 "error": []
             },
             {
@@ -156,7 +156,7 @@ class ScenarioRunnerResultTestCase(test.TestCase):
                     "data": {"test": 2.0},
                     "errors": "test error string 2"
                 },
-                "atomic_actions": [{"action": "test2", "duration": 2.0}],
+                "atomic_actions": {"test2": 2.0},
                 "error": ["a", "b", "c"]
             }
         ]

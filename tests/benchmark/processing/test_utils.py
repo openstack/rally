@@ -18,7 +18,7 @@ from rally import exceptions
 from tests import test
 
 
-class ProcessingUtilsTestCase(test.TestCase):
+class MathTestCase(test.TestCase):
 
     def test_percentile(self):
         lst = range(1, 101)
@@ -43,3 +43,43 @@ class ProcessingUtilsTestCase(test.TestCase):
         lst = []
         self.assertRaises(exceptions.InvalidArgumentsException,
                           utils.mean, lst)
+
+
+class AtomicActionsDataTestCase(test.TestCase):
+
+    def test_get_atomic_actions_data(self):
+        raw_data = [
+            {
+                "error": [],
+                "duration": 3,
+                "atomic_actions": {
+                    "action1": 1,
+                    "action2": 2
+                }
+            },
+            {
+                "error": ["some", "error", "occurred"],
+                "duration": 1.9,
+                "atomic_actions": {
+                    "action1": 0.5,
+                    "action2": 1.4
+                }
+            },
+            {
+                "error": [],
+                "duration": 8,
+                "atomic_actions": {
+                    "action1": 4,
+                    "action2": 4
+                }
+            }
+        ]
+
+        atomic_actions_data = {
+            "action1": [1, 0.5, 4],
+            "action2": [2, 1.4, 4],
+            "total": [3, 8]
+        }
+
+        output = utils.get_atomic_actions_data(raw_data)
+        self.assertEqual(output, atomic_actions_data)

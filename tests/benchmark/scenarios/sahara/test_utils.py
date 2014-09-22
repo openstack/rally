@@ -18,7 +18,6 @@ from saharaclient.api import base as sahara_base
 
 from rally.benchmark.scenarios.sahara import utils
 from rally import exceptions
-from tests.benchmark.scenarios import test_base
 from tests import test
 
 
@@ -28,8 +27,7 @@ SAHARA_UTILS = 'rally.benchmark.scenarios.sahara.utils'
 class SaharaNodeGroupTemplatesScenarioTestCase(test.TestCase):
 
     def _test_atomic_action_timer(self, atomic_actions, name):
-        action_duration = test_base.get_atomic_action_timer_value_by_name(
-            atomic_actions, name)
+        action_duration = atomic_actions.get(name)
         self.assertIsNotNone(action_duration)
         self.assertIsInstance(action_duration, float)
 

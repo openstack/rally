@@ -55,7 +55,7 @@ class Scenario(object):
         self._admin_clients = admin_clients
         self._clients = clients
         self._idle_duration = 0
-        self._atomic_actions = []
+        self._atomic_actions = {}
 
     # TODO(amaretskiy): consider about prefix part of benchmark uuid
     @classmethod
@@ -217,10 +217,17 @@ class Scenario(object):
         """Returns duration of all sleep_between."""
         return self._idle_duration
 
+    def _register_atomic_action(self, name):
+        """Registers an atomic action by its name."""
+        self._atomic_actions[name] = None
+
+    def _atomic_action_registered(self, name):
+        """Checks whether an atomic action has been already registered."""
+        return name in self._atomic_actions
+
     def _add_atomic_actions(self, name, duration):
-        """Adds the duration of an atomic action by its 'name'."""
-        self._atomic_actions.append(
-            {'action': name, 'duration': duration})
+        """Adds the duration of an atomic action by its name."""
+        self._atomic_actions[name] = duration
 
     def atomic_actions(self):
         """Returns the content of each atomic action."""
@@ -236,9 +243,8 @@ def atomic_action_timer(name):
     def wrap(func):
         @functools.wraps(func)
         def func_atomic_actions(self, *args, **kwargs):
-            with utils.Timer() as timer:
+            with AtomicAction(self, name):
                 f = func(self, *args, **kwargs)
-            self._add_atomic_actions(name, timer.duration())
             return f
         return func_atomic_actions
     return wrap
@@ -264,8 +270,25 @@ class AtomicAction(utils.Timer):
         """
         super(AtomicAction, self).__init__()
         self.scenario_instance = scenario_instance
-        self.name = name
+        self.name = self._get_atomic_action_name(name)
+        self.scenario_instance._register_atomic_action(self.name)
+
+    def _get_atomic_action_name(self, name):
+        if not self.scenario_instance._atomic_action_registered(name):
+            return name
+        else:
+            name_template = name + " (%i)"
+            atomic_action_iteration = 2
+            with open("1.txt", "a") as f:
+                f.write("Enter\n")
+                f.write(str(dir(self.scenario_instance)) + "\n")
+            while self.scenario_instance._atomic_action_registered(
+                                    name_template % atomic_action_iteration):
+                atomic_action_iteration += 1
+            return name_template % atomic_action_iteration
 
     def __exit__(self, type, value, tb):
         super(AtomicAction, self).__exit__(type, value, tb)
-        self.scenario_instance._add_atomic_actions(self.name, self.duration())
+        if type is None:
+            self.scenario_instance._add_atomic_actions(self.name,
+                                                       self.duration())
