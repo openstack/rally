@@ -24,15 +24,19 @@ from rally.openstack.common import log as logging
 LOG = logging.getLogger(__name__)
 CONF = cfg.CONF
 
-CREATE_CLUSTER_OPTS = [
+TIMEOUT_OPTS = [
     cfg.IntOpt("cluster_create_timeout", default=600,
                help="A timeout in seconds for a cluster create operation"),
     cfg.IntOpt("cluster_check_interval", default=5,
+               help="Cluster status polling interval in seconds"),
+    cfg.IntOpt("job_execution_timeout", default=600,
+               help="A timeout in seconds for a cluster create operation"),
+    cfg.IntOpt("job_check_interval", default=5,
                help="Cluster status polling interval in seconds")
 ]
 
 benchmark_group = cfg.OptGroup(name='benchmark', title='benchmark options')
-CONF.register_opts(CREATE_CLUSTER_OPTS, group=benchmark_group)
+CONF.register_opts(TIMEOUT_OPTS, group=benchmark_group)
 
 
 class SaharaScenario(base.Scenario):
@@ -244,3 +248,46 @@ class SaharaScenario(base.Scenario):
             description="",
             data_source_type=ds_type,
             url=url)
+
+    @base.atomic_action_timer('sahara.job_execution')
+    def _run_job_execution(self, job_id, cluster_id, input_id, output_id,
+                           configs):
+        """Runs a Job Execution and waits until it completes or fails.
+
+        The Job Execution is accepted as successful when Oozie reports
+        "success" or "succeeded" status. The failure statuses are "failed" and
+        "killed".
+
+        The timeout and the polling interval may be configured through
+        "job_execution_timeout" and "job_check_interval" parameters under the
+        "benchmark" section.
+
+        :param job_id: The Job id that will be executed
+        :param cluster_id: The Cluster id which will execute the Job
+        :param input_id: The input Data Source id
+        :param output_id: The output Data Source id
+        :param configs: The config dict that will be passed as Job Execution's
+        parameters.
+
+        """
+        job_execution = self.clients("sahara").job_executions.create(
+            job_id=job_id,
+            cluster_id=cluster_id,
+            input_id=input_id,
+            output_id=output_id,
+            configs=configs)
+
+        def is_finished(je_id):
+            status = self.clients("sahara").job_executions.get(je_id).info[
+                'status']
+            if status.lower() in ("success", "succeeded"):
+                return True
+            elif status.lower() in ("failed", "killed"):
+                raise exceptions.RallyException("Job execution %s has failed"
+                                                % je_id)
+            return False
+
+        bench_utils.wait_for(
+            resource=job_execution.id, is_ready=is_finished,
+            timeout=CONF.benchmark.job_execution_timeout,
+            check_interval=CONF.benchmark.job_check_interval)

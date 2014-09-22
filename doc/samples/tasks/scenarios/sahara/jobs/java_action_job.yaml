@@ -1,0 +1,38 @@
+---
+  SaharaJob.create_launch_job:
+    -
+      args:
+        job_type: "Java"
+        configs:
+          configs:
+            edp.java.main_class: "org.apache.hadoop.examples.PiEstimator"
+          args:
+           - "10"
+           - "10"
+      runner:
+        type: "constant"
+        times: 4
+        concurrency: 2
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+        sahara_image:
+          image_url: "http://sahara-files.mirantis.com/sahara-icehouse-vanilla-1.2.1-ubuntu-13.10.qcow2"
+          username: "ubuntu"
+          plugin_name: "vanilla"
+          hadoop_version: "1.2.1"
+        sahara_edp:
+          input_type: "hdfs"
+          output_type: "hdfs"
+          input_url: "/"
+          output_url_prefix: "/out_"
+          libs:
+            -
+              name: "examples.jar"
+              download_url: "http://repo1.maven.org/maven2/org/apache/hadoop/hadoop-examples/1.2.1/hadoop-examples-1.2.1.jar"
+        sahara_cluster:
+          flavor_id: "2"
+          node_count: 2
+          plugin_name: "vanilla"
+          hadoop_version: "1.2.1"
