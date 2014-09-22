@@ -42,7 +42,7 @@ class Histogram:
 
     def _calculate_bin_width(self):
         """Calculate the bin width using a given number of bins."""
-        return (self.max_data - self.min_data) / self.number_of_bins
+        return (self.max_data - self.min_data) // self.number_of_bins
 
     def _calculate_x_axis(self):
         """Return a list with the values of the x axis."""

@@ -38,7 +38,7 @@ def format_result_on_timeout(exc, timeout):
         "duration": timeout,
         "idle_duration": 0,
         "scenario_output": {"errors": "", "data": {}},
-        "atomic_actions": [],
+        "atomic_actions": {},
         "error": utils.format_exc(exc)
     }
 
@@ -117,14 +117,9 @@ class ScenarioRunnerResult(dict):
                 "additionalProperties": False
             },
             "atomic_actions": {
-                "type": "array",
-                "items": {
-                    "type": "object",
-                    "properties": {
-                        "action": {"type": "string"},
-                        "duration": {"type": "number"}
-                    },
-                    "additionalProperties": False
+                "type": "object",
+                "patternProperties": {
+                    ".*": {"type": ["number", "null"]}
                 }
             },
             "error": {

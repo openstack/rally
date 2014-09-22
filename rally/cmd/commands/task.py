@@ -143,23 +143,6 @@ class TaskCommands(object):
                                        formatters=formatters)
             print()
 
-        def _get_atomic_action_durations(raw):
-            atomic_actions_names = []
-            for r in raw:
-                if 'atomic_actions' in r:
-                    for a in r['atomic_actions']:
-                        atomic_actions_names.append(a["action"])
-                    break
-            result = {}
-            for atomic_action in atomic_actions_names:
-                result[atomic_action] = utils.get_durations(
-                    raw,
-                    lambda r: next(a["duration"] for a in r["atomic_actions"]
-                                   if a["action"] == atomic_action),
-                    lambda r: any((a["action"] == atomic_action)
-                                  for a in r["atomic_actions"]))
-            return result
-
         if task_id == "last":
             task = db.task_get_detailed_last()
             task_id = task.uuid
@@ -210,13 +193,9 @@ class TaskCommands(object):
                                    for col in float_cols]))
             table_rows = []
 
-            action_durations = _get_atomic_action_durations(raw)
-            actions_list = action_durations.keys()
-            action_durations["total"] = utils.get_durations(
-                        raw, lambda x: x["duration"], lambda r: not r["error"])
-            actions_list.append("total")
-            for action in actions_list:
-                durations = action_durations[action]
+            actions_data = utils.get_atomic_actions_data(raw)
+            for action in actions_data:
+                durations = actions_data[action]
                 if durations:
                     data = [action,
                             min(durations),

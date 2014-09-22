@@ -52,16 +52,20 @@ def percentile(values, percent):
     return (d0 + d1)
 
 
-def get_durations(raw_data, get_duration, is_successful):
-    """Retrieve the benchmark duration data from a list of records.
+def get_atomic_actions_data(raw_data):
+    """Retrieve detailed (by atomic actions & total runtime) benchmark data.
 
-    :parameter raw_data: list of records
-    :parameter get_duration: function that retrieves the duration data from
-                             a given record
-    :parameter is_successful: function that returns True if the record contains
-                              a successful benchmark result, False otherwise
+    :parameter raw_data: list of raw records (scenario runner output)
 
-    :returns: list of float values corresponding to benchmark durations
+    :returns: dictionary containing atomic action + total duration lists
+              for all atomic action keys
     """
-    data = [get_duration(run) for run in raw_data if is_successful(run)]
-    return data
+    atomic_actions = raw_data[0]["atomic_actions"].keys() if raw_data else []
+    actions_data = {}
+    for atomic_action in atomic_actions:
+        actions_data[atomic_action] = [
+            r["atomic_actions"][atomic_action]
+            for r in raw_data
+            if r["atomic_actions"][atomic_action] is not None]
+    actions_data["total"] = [r["duration"] for r in raw_data if not r["error"]]
+    return actions_data

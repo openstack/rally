@@ -15,7 +15,6 @@
 import mock
 
 from rally.benchmark.scenarios.ceilometer import utils
-from tests.benchmark.scenarios import test_base
 from tests import fakes
 from tests import test
 
@@ -30,8 +29,7 @@ class CeilometerScenarioTestCase(test.TestCase):
             return_value=fakes.FakeCeilometerClient())
 
     def _test_atomic_action_timer(self, atomic_actions_time, name):
-        action_duration = test_base.get_atomic_action_timer_value_by_name(
-            atomic_actions_time, name)
+        action_duration = atomic_actions_time.get(name)
         self.assertIsNotNone(action_duration)
         self.assertIsInstance(action_duration, float)
 
