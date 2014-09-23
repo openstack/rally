@@ -60,12 +60,16 @@ def get_atomic_actions_data(raw_data):
     :returns: dictionary containing atomic action + total duration lists
               for all atomic action keys
     """
-    atomic_actions = raw_data[0]["atomic_actions"].keys() if raw_data else []
+    atomic_actions = []
+    for row in raw_data:
+        # find first non-error result to get atomic actions names
+        if not row["error"] and "atomic_actions" in row:
+            atomic_actions = row["atomic_actions"].keys()
     actions_data = {}
     for atomic_action in atomic_actions:
         actions_data[atomic_action] = [
             r["atomic_actions"][atomic_action]
             for r in raw_data
-            if r["atomic_actions"][atomic_action] is not None]
+            if r["atomic_actions"].get(atomic_action) is not None]
     actions_data["total"] = [r["duration"] for r in raw_data if not r["error"]]
     return actions_data

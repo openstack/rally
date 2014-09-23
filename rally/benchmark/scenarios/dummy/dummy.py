@@ -76,3 +76,13 @@ class Dummy(base.Scenario):
         }
         err = ""
         return {"data": out, "errors": err}
+
+    @base.atomic_action_timer("dummy_fail_test")
+    def _random_fail_emitter(self, exception_probability):
+        if random.random() < exception_probability:
+            raise KeyError("Dummy test exception")
+
+    @base.scenario()
+    def dummy_random_fail_in_atomic(self, exception_probability=0.5):
+        self._random_fail_emitter(exception_probability)
+        self._random_fail_emitter(exception_probability)

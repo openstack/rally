@@ -131,13 +131,18 @@ class TaskCommands(object):
         :param iterations_data: print detailed results for each iteration
         Prints detailed information of task.
         """
-        def _print_iterations_data(raw):
-            headers = ['iteration', "full duration"]
-            float_cols = ['full duration']
-            for i in range(0, len(raw)):
-                if raw[i]['atomic_actions']:
-                    for (c, a) in enumerate(raw[i]['atomic_actions'], 1):
-                        action = str(c) + "-" + a['action']
+        def _print_iterations_data(raw_data):
+            headers = ["iteration", "full duration"]
+            float_cols = ["full duration"]
+            atomic_actions = []
+            for row in raw_data:
+                # find first non-error result to get atomic actions names
+                if not row["error"] and "atomic_actions" in row:
+                    atomic_actions = row["atomic_actions"].keys()
+            for row in raw_data:
+                if row["atomic_actions"]:
+                    for (c, a) in enumerate(atomic_actions, 1):
+                        action = "%(no)i. %(action)s" % {"no": c, "action": a}
                         headers.append(action)
                         float_cols.append(action)
                     break
@@ -145,18 +150,16 @@ class TaskCommands(object):
             formatters = dict(zip(float_cols,
                                   [cliutils.pretty_float_formatter(col, 3)
                                    for col in float_cols]))
-            for (c, r) in enumerate(raw, 1):
+            for (c, r) in enumerate(raw_data, 1):
                 dlist = [c]
-                d = []
-                if r['atomic_actions']:
-                    for l in r['atomic_actions']:
-                        d.append(l['duration'])
-                    dlist.append(sum(d))
-                    dlist = dlist + d
+                if r["atomic_actions"]:
+                    dlist.append(r["duration"])
+                    for action in atomic_actions:
+                        dlist.append(r["atomic_actions"].get(action) or 0)
                     table_rows.append(rutils.Struct(**dict(zip(headers,
                                                                dlist))))
                 else:
-                    data = dlist + ["N/A" for i in range(1, len(headers))]
+                    data = dlist + [None for i in range(1, len(headers))]
                     table_rows.append(rutils.Struct(**dict(zip(headers,
                                                                data))))
             common_cliutils.print_list(table_rows,
@@ -227,7 +230,8 @@ class TaskCommands(object):
                             "%.1f%%" % (len(durations) * 100.0 / len(raw)),
                             len(raw)]
                 else:
-                    data = [action, None, None, None, None, None, 0, len(raw)]
+                    data = [action, None, None, None, None, None,
+                            "0.0%", len(raw)]
                 table_rows.append(rutils.Struct(**dict(zip(table_cols, data))))
 
             common_cliutils.print_list(table_rows, fields=table_cols,

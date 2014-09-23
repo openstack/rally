@@ -24,14 +24,14 @@ class TaskTestCase(unittest.TestCase):
 
     def _get_sample_task_config(self):
         return {
-            "KeystoneBasic.create_and_list_users": [
+            "Dummy.dummy_random_fail_in_atomic": [
                 {
                     "args": {
                         "name_length": 10
                     },
                     "runner": {
                         "type": "constant",
-                        "times": 5,
+                        "times": 100,
                         "concurrency": 5
                     }
                 }
@@ -50,8 +50,11 @@ class TaskTestCase(unittest.TestCase):
         cfg = self._get_sample_task_config()
         config = utils.TaskConfig(cfg)
         rally("task start --task %s" % config.filename)
-        self.assertIn("KeystoneBasic.create_and_list_users",
-                      rally("task detailed"))
+        detailed = rally("task detailed")
+        self.assertIn("Dummy.dummy_random_fail_in_atomic", detailed)
+        self.assertIn("dummy_fail_test (2)", detailed)
+        detailed_iterations_data = rally("task detailed --iterations-data")
+        self.assertIn("2. dummy_fail_test (2)", detailed_iterations_data)
 
     def test_results(self):
         rally = utils.Rally()
