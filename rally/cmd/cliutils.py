@@ -183,6 +183,11 @@ def run(argv, categories):
     try:
         ret = fn(*fn_args, **fn_kwargs)
         return(ret)
+    except IOError as e:
+        if CONF.debug:
+            raise
+        print(e)
+        return 1
     except Exception:
         print(_("Command failed, please check log for more info"))
         raise

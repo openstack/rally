@@ -31,6 +31,10 @@ CONF = cfg.CONF
 
 class CliUtilsTestCase(test.TestCase):
 
+    def tearDown(self):
+        self._unregister_opts()
+        super(CliUtilsTestCase, self).tearDown()
+
     def test_pretty_float_formatter_rounding(self):
         test_table_rows = {"test_header": 6.56565}
         self.__dict__.update(**test_table_rows)
@@ -92,86 +96,91 @@ class CliUtilsTestCase(test.TestCase):
 
     def _unregister_opts(self):
         CONF.reset()
-        category_opt = cfg.SubCommandOpt('category',
-                                         title='Command categories',
-                                         help='Available categories'
+        category_opt = cfg.SubCommandOpt("category",
+                                         title="Command categories",
+                                         help="Available categories"
                                          )
         CONF.unregister_opt(category_opt)
 
-    @mock.patch('oslo.config.cfg.CONF',
+    @mock.patch("oslo.config.cfg.CONF",
                 side_effect=cfg.ConfigFilesNotFoundError("config_file"))
-    @mock.patch('rally.cmd.cliutils.CONF', config_file=None)
+    @mock.patch("rally.cmd.cliutils.CONF", config_file=None)
     def test_run_fails(self, mock_cmd_cliutils_conf, mock_cliutils_conf):
         categories = {
-                    'deployment': deployment.DeploymentCommands,
-                    'info': info.InfoCommands,
-                    'show': show.ShowCommands,
-                    'task': task.TaskCommands,
-                    'use': use.UseCommands,
-                    'verify': verify.VerifyCommands}
-        ret = cliutils.run(['rally', 'show', 'flavors'], categories)
-        self._unregister_opts()
+                    "deployment": deployment.DeploymentCommands,
+                    "info": info.InfoCommands,
+                    "show": show.ShowCommands,
+                    "task": task.TaskCommands,
+                    "use": use.UseCommands,
+                    "verify": verify.VerifyCommands}
+        ret = cliutils.run(["rally", "show", "flavors"], categories)
         self.assertEqual(ret, 2)
 
     def test_run_version(self):
         categories = {
-                    'deployment': deployment.DeploymentCommands,
-                    'info': info.InfoCommands,
-                    'show': show.ShowCommands,
-                    'task': task.TaskCommands,
-                    'use': use.UseCommands,
-                    'verify': verify.VerifyCommands}
-        ret = cliutils.run(['rally', 'version'], categories)
-        self._unregister_opts()
+                    "deployment": deployment.DeploymentCommands,
+                    "info": info.InfoCommands,
+                    "show": show.ShowCommands,
+                    "task": task.TaskCommands,
+                    "use": use.UseCommands,
+                    "verify": verify.VerifyCommands}
+        ret = cliutils.run(["rally", "version"], categories)
         self.assertEqual(ret, 0)
 
     def test_run_bash_completion(self):
         categories = {
-                    'deployment': deployment.DeploymentCommands,
-                    'info': info.InfoCommands,
-                    'show': show.ShowCommands,
-                    'task': task.TaskCommands,
-                    'use': use.UseCommands,
-                    'verify': verify.VerifyCommands}
-        ret = cliutils.run(['rally', 'bash-completion'], categories)
-        self._unregister_opts()
+                    "deployment": deployment.DeploymentCommands,
+                    "info": info.InfoCommands,
+                    "show": show.ShowCommands,
+                    "task": task.TaskCommands,
+                    "use": use.UseCommands,
+                    "verify": verify.VerifyCommands}
+        ret = cliutils.run(["rally", "bash-completion"], categories)
         self.assertEqual(ret, 0)
 
     def test_run_bash_completion_with_query_category(self):
         categories = {
-                    'deployment': deployment.DeploymentCommands,
-                    'info': info.InfoCommands,
-                    'show': show.ShowCommands,
-                    'task': task.TaskCommands,
-                    'use': use.UseCommands,
-                    'verify': verify.VerifyCommands}
-        ret = cliutils.run(['rally', 'bash-completion', 'info'], categories)
-        self._unregister_opts()
+                    "deployment": deployment.DeploymentCommands,
+                    "info": info.InfoCommands,
+                    "show": show.ShowCommands,
+                    "task": task.TaskCommands,
+                    "use": use.UseCommands,
+                    "verify": verify.VerifyCommands}
+        ret = cliutils.run(["rally", "bash-completion", "info"], categories)
         self.assertEqual(ret, 0)
 
     def test_run_show(self):
         categories = {
-                    'deployment': deployment.DeploymentCommands,
-                    'info': info.InfoCommands,
-                    'show': show.ShowCommands,
-                    'task': task.TaskCommands,
-                    'use': use.UseCommands,
-                    'verify': verify.VerifyCommands}
-        ret = cliutils.run(['rally', 'show', 'keypairs'], categories)
-        self._unregister_opts()
+                    "deployment": deployment.DeploymentCommands,
+                    "info": info.InfoCommands,
+                    "show": show.ShowCommands,
+                    "task": task.TaskCommands,
+                    "use": use.UseCommands,
+                    "verify": verify.VerifyCommands}
+        ret = cliutils.run(["rally", "show", "keypairs"], categories)
         self.assertEqual(ret, 1)
 
-    @mock.patch('rally.openstack.common.cliutils.validate_args',
+    @mock.patch("rally.openstack.common.cliutils.validate_args",
                 side_effect=exceptions.MissingArgs("missing"))
     def test_run_show_fails(self, mock_validate_args):
         categories = {
-                    'deployment': deployment.DeploymentCommands,
-                    'info': info.InfoCommands,
-                    'show': show.ShowCommands,
-                    'task': task.TaskCommands,
-                    'use': use.UseCommands,
-                    'verify': verify.VerifyCommands}
-        ret = cliutils.run(['rally', 'show', 'keypairs'], categories)
+                    "deployment": deployment.DeploymentCommands,
+                    "info": info.InfoCommands,
+                    "show": show.ShowCommands,
+                    "task": task.TaskCommands,
+                    "use": use.UseCommands,
+                    "verify": verify.VerifyCommands}
+        ret = cliutils.run(["rally", "show", "keypairs"], categories)
         self.assertTrue(mock_validate_args.called)
-        self._unregister_opts()
         self.assertEqual(ret, 1)
+
+    def test_run_failed_to_open_file(self):
+
+        class FailuresCommands(object):
+
+            def failed_to_open_file(self):
+                raise IOError("No such file")
+
+        ret = cliutils.run(["rally", "failure", "failed_to_open_file"],
+                           {"failure": FailuresCommands})
+        self.assertEqual(1, ret)
