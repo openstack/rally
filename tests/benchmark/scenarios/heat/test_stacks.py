@@ -13,6 +13,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import tempfile
+
 import mock
 
 from rally.benchmark.scenarios.heat import stacks
@@ -28,11 +30,23 @@ class HeatStacksTestCase(test.TestCase):
     @mock.patch(HEAT_STACKS + "._create_stack")
     def test_create_and_list_stack(self, mock_create, mock_list,
                                    mock_random_name):
+        template_file = tempfile.NamedTemporaryFile()
         heat_scenario = stacks.HeatStacks()
         mock_random_name.return_value = "test-rally-stack"
-        heat_scenario.create_and_list_stack()
+        heat_scenario.create_and_list_stack(template_path=template_file.name)
         self.assertEqual(1, mock_create.called)
         mock_list.assert_called_once_with()
+
+    @mock.patch(HEAT_STACKS + "._generate_random_name")
+    @mock.patch(HEAT_STACKS + "._list_stacks")
+    @mock.patch(HEAT_STACKS + "._create_stack")
+    def test_create_and_list_stack_fails(self, mock_create, mock_list,
+                                         mock_random_name):
+        heat_scenario = stacks.HeatStacks()
+        mock_random_name.return_value = "test-rally-stack"
+        self.assertRaises(IOError,
+                          heat_scenario.create_and_list_stack,
+                          template_path="/tmp/dummy")
 
     @mock.patch(HEAT_STACKS + "._generate_random_name")
     @mock.patch(HEAT_STACKS + "._delete_stack")

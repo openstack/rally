@@ -33,6 +33,11 @@ class KeystoneWrapperTestBase(object):
         self.assertEqual('Foobar', result[0].name)
         self.assertFalse(hasattr(result[0], 'extra_field'))
 
+    def test_wrap(self):
+        client = mock.MagicMock()
+        client.version = "dummy"
+        self.assertRaises(NotImplementedError, keystone.wrap, client)
+
     def test_delete_service(self):
         self.wrapped_client.delete_service('fake_id')
         self.client.services.delete.assert_called_once_with('fake_id')

@@ -211,5 +211,5 @@ def wrap(client):
     elif client.version == 'v3':
         return KeystoneV3Wrapper(client)
     else:
-        raise NotImplemented(
+        raise NotImplementedError(
             'Wrapper for version %s is not implemented.' % client.version)

@@ -12,6 +12,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import tempfile
+
 import mock
 from oslotest import mockpatch
 
@@ -68,11 +70,30 @@ class GlanceScenarioTestCase(test.TestCase):
 
     @mock.patch(GLANCE_UTILS + '.GlanceScenario.clients')
     def test_create_image(self, mock_clients):
+        image_location = tempfile.NamedTemporaryFile()
         mock_clients("glance").images.create.return_value = self.image
         scenario = utils.GlanceScenario()
         return_image = scenario._create_image('image_name',
-                                              'image_location',
                                               'container_format',
+                                              image_location.name,
+                                              'disk_format')
+        self.wait_for.mock.assert_called_once_with(self.image,
+                                                   update_resource=self.gfm(),
+                                                   is_ready=self.res_is.mock(),
+                                                   check_interval=1,
+                                                   timeout=120)
+        self.res_is.mock.assert_has_calls(mock.call('active'))
+        self.assertEqual(self.wait_for.mock(), return_image)
+        self._test_atomic_action_timer(scenario.atomic_actions(),
+                                       'glance.create_image')
+
+    @mock.patch(GLANCE_UTILS + '.GlanceScenario.clients')
+    def test_create_image_with_location(self, mock_clients):
+        mock_clients("glance").images.create.return_value = self.image
+        scenario = utils.GlanceScenario()
+        return_image = scenario._create_image('image_name',
+                                              'container_format',
+                                              'image_location',
                                               'disk_format')
         self.wait_for.mock.assert_called_once_with(self.image,
                                                    update_resource=self.gfm(),
