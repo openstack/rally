@@ -226,16 +226,16 @@ class SaharaScenario(base.Scenario):
         )
 
         if wait_active:
-            def is_active(cluster_id):
-                return self.clients("sahara").clusters.get(
-                    cluster_id).status.lower() == "active"
-
             bench_utils.wait_for(
-                resource=cluster_object.id, is_ready=is_active,
+                resource=cluster_object.id, is_ready=self._is_cluster_active,
                 timeout=CONF.benchmark.cluster_create_timeout,
                 check_interval=CONF.benchmark.cluster_check_interval)
 
         return self.clients("sahara").clusters.get(cluster_object.id)
+
+    def _is_cluster_active(self, cluster_id):
+        return self.clients("sahara").clusters.get(
+            cluster_id).status.lower() == "active"
 
     @base.atomic_action_timer('sahara.delete_cluster')
     def _delete_cluster(self, cluster):
@@ -247,14 +247,15 @@ class SaharaScenario(base.Scenario):
 
         self.clients("sahara").clusters.delete(cluster.id)
 
-        def is_deleted(cl_id):
-            try:
-                self.clients("sahara").clusters.get(cl_id)
-                return False
-            except sahara_base.APIException:
-                return True
+        bench_utils.wait_for(resource=cluster.id,
+                             is_ready=self._is_cluster_deleted)
 
-        bench_utils.wait_for(resource=cluster.id, is_ready=is_deleted)
+    def _is_cluster_deleted(self, cl_id):
+        try:
+            self.clients("sahara").clusters.get(cl_id)
+            return False
+        except sahara_base.APIException:
+            return True
 
     def _create_output_ds(self):
         """Creates an output Data Source based on EDP context
@@ -278,9 +279,8 @@ class SaharaScenario(base.Scenario):
             data_source_type=ds_type,
             url=url)
 
-    @base.atomic_action_timer('sahara.job_execution')
     def _run_job_execution(self, job_id, cluster_id, input_id, output_id,
-                           configs):
+                           configs, job_idx):
         """Runs a Job Execution and waits until it completes or fails.
 
         The Job Execution is accepted as successful when Oozie reports
@@ -297,29 +297,36 @@ class SaharaScenario(base.Scenario):
         :param output_id: The output Data Source id
         :param configs: The config dict that will be passed as Job Execution's
         parameters.
+        :param job_idx: The index of a job in a sequence
 
         """
-        job_execution = self.clients("sahara").job_executions.create(
-            job_id=job_id,
-            cluster_id=cluster_id,
-            input_id=input_id,
-            output_id=output_id,
-            configs=configs)
 
-        def is_finished(je_id):
-            status = self.clients("sahara").job_executions.get(je_id).info[
-                'status']
-            if status.lower() in ("success", "succeeded"):
-                return True
-            elif status.lower() in ("failed", "killed"):
-                raise exceptions.RallyException("Job execution %s has failed"
-                                                % je_id)
-            return False
+        @base.atomic_action_timer('sahara.job_execution_%s' % job_idx)
+        def run(self):
+            job_execution = self.clients("sahara").job_executions.create(
+                job_id=job_id,
+                cluster_id=cluster_id,
+                input_id=input_id,
+                output_id=output_id,
+                configs=configs)
 
-        bench_utils.wait_for(
-            resource=job_execution.id, is_ready=is_finished,
-            timeout=CONF.benchmark.job_execution_timeout,
-            check_interval=CONF.benchmark.job_check_interval)
+            bench_utils.wait_for(
+                resource=job_execution.id,
+                is_ready=self._job_execution_is_finished,
+                timeout=CONF.benchmark.job_execution_timeout,
+                check_interval=CONF.benchmark.job_check_interval)
+
+        run(self)
+
+    def _job_execution_is_finished(self, je_id):
+        status = self.clients("sahara").job_executions.get(je_id).info[
+            'status']
+        if status.lower() in ("success", "succeeded"):
+            return True
+        elif status.lower() in ("failed", "killed"):
+            raise exceptions.RallyException(
+                "Job execution %s has failed" % je_id)
+        return False
 
     def _merge_configs(self, *configs):
         """Merge configs in special format.

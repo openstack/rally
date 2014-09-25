@@ -28,11 +28,13 @@ class SaharaJob(utils.SaharaScenario):
     @validation.required_contexts("users", "sahara_image", "sahara_edp",
                                   "sahara_cluster")
     @base.scenario(context={"cleanup": ["sahara"]})
-    def create_launch_job(self, job_type, configs):
+    def create_launch_job(self, job_type, configs, job_idx=0):
         """Test the Sahara EDP Job execution.
 
         :param job_type: The type of the Data Processing Job
         :param configs: The configs dict that will be passed to a Job Execution
+        :param job_idx: The index of a job in a sequence. This index will be
+        used to create different atomic actions for each job in a sequence
 
         This scenario Creates a Job entity and launches an execution on a
         Cluster.
@@ -63,4 +65,22 @@ class SaharaJob(utils.SaharaScenario):
                                 cluster_id=cluster_id,
                                 input_id=input_id,
                                 output_id=output_id,
-                                configs=configs)
+                                configs=configs,
+                                job_idx=job_idx)
+
+    @validation.required_services(consts.Service.SAHARA)
+    @validation.required_contexts("users", "sahara_image", "sahara_edp",
+                                  "sahara_cluster")
+    @base.scenario(context={"cleanup": ["sahara"]})
+    def create_launch_job_sequence(self, jobs):
+        """Test the Sahara EDP Job sequence execution.
+
+        :param jobs: The list of jobs that should be executed in one context
+
+        This scenario Creates a Job entity and launches an execution on a
+        Cluster for every job object provided.
+
+        """
+
+        for idx, job in enumerate(jobs):
+            self.create_launch_job(job["job_type"], job["configs"], idx)

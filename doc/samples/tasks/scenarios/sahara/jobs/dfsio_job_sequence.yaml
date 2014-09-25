@@ -1,17 +1,30 @@
 ---
-  SaharaJob.create_launch_job:
+  SaharaJob.create_launch_job_sequence:
     -
       args:
-        job_type: "Java"
-        configs:
-          configs:
-            edp.java.main_class: "org.apache.hadoop.fs.TestDFSIO"
-          args:
-           - "-write"
-           - "-nrFiles"
-           - "10"
-           - "fileSize"
-           - "100"
+        jobs:
+          -
+            job_type: "Java"
+            configs:
+              configs:
+                edp.java.main_class: "org.apache.hadoop.fs.TestDFSIO"
+              args:
+               - "-write"
+               - "-nrFiles"
+               - "10"
+               - "fileSize"
+               - "100"
+          -
+            job_type: "Java"
+            configs:
+              configs:
+                edp.java.main_class: "org.apache.hadoop.fs.TestDFSIO"
+              args:
+               - "-read"
+               - "-nrFiles"
+               - "10"
+               - "fileSize"
+               - "100"
       runner:
         type: "constant"
         times: 4
