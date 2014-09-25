@@ -20,6 +20,7 @@ from novaclient import exceptions as nova_exc
 from rally.benchmark import validation
 from rally import consts
 from rally import exceptions
+from rally import objects
 from tests import test
 
 
@@ -291,15 +292,22 @@ class ValidatorsTestCase(test.TestCase):
         self.assertFalse(result.is_valid, result.msg)
 
     @mock.patch("rally.benchmark.validation.tempest.Tempest")
-    def test_tempest_tests_exists(self, mock_tempest):
-        task = mock.MagicMock()
-        task.deployment_uuid = "uuid"
-
+    @mock.patch("rally.objects.task.db.task_create")
+    def test_tempest_tests_exists(self, mock_create, mock_tempest):
+        mock_create.return_value = {
+            'status': 'init',
+            'deployment_uuid': 'deployment-uuid',
+            'verification_log': '',
+            'uuid': 'task-uuid',
+            'created_at': '',
+            'failed': False,
+            'tag': '',
+            'id': 42}
         mock_tempest().is_installed.return_value = False
         mock_tempest().is_configured.return_value = False
         mock_tempest().discover_tests.return_value = set([
             "tempest.api.a", "tempest.api.b", "tempest.api.c"])
-
+        task = objects.Task(deployment_uuid='deployment-uuid')
         validator = self._unwrap_validator(validation.tempest_tests_exists)
 
         result = validator({"args": {"test_name": "a"}}, None, task)
