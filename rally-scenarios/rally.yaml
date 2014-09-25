@@ -289,6 +289,15 @@
       sla:
         max_failure_percent: 0
 
+  Dummy.dummy_random_fail_in_atomic:
+    -
+      args:
+        exception_probability: 0.5
+      runner:
+        type: "constant"
+        times: 50
+        concurrency: 10
+
   FakePlugin.testplugin:
     -
       runner:

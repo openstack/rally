@@ -57,3 +57,14 @@ class DummyTestCase(test.TestCase):
         # Since the data is generated in random,
         # checking for not None
         self.assertNotEqual(result['data'], None)
+
+    def test_dummy_random_fail_in_atomic(self):
+        scenario = dummy.Dummy()
+
+        for i in range(10):
+            scenario.dummy_random_fail_in_atomic(exception_probability=0)
+
+        for i in range(10):
+            self.assertRaises(KeyError,
+                              scenario.dummy_random_fail_in_atomic,
+                              {'exception_probability': 1})

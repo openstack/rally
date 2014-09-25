@@ -54,4 +54,6 @@ rally task results | python -m json.tool > rally-plot/results.json
 gzip -9 rally-plot/results.json
 rally task detailed > rally-plot/detailed.txt
 gzip -9 rally-plot/detailed.txt
+rally task detailed --iterations-data > rally-plot/detailed_with_iterations.txt
+gzip -9 rally-plot/detailed_with_iterations.txt
 rally task sla_check | tee rally-plot/sla.txt

@@ -279,9 +279,6 @@ class AtomicAction(utils.Timer):
         else:
             name_template = name + " (%i)"
             atomic_action_iteration = 2
-            with open("1.txt", "a") as f:
-                f.write("Enter\n")
-                f.write(str(dir(self.scenario_instance)) + "\n")
             while self.scenario_instance._atomic_action_registered(
                                     name_template % atomic_action_iteration):
                 atomic_action_iteration += 1

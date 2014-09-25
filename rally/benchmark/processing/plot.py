@@ -39,9 +39,13 @@ def _prepare_data(data, reduce_rows=1000):
         for k, v in d1.iteritems():
             v[-1] = (v[-1] + d2[k]) / 2.0
 
-    atomic_action_names = (data["result"][0]["atomic_actions"].keys()
-                           if data["result"] else [])
-    zero_atomic_actions = dict([(a, 0) for a in atomic_action_names])
+    atomic_actions = []
+    for row in data["result"]:
+        # find first non-error result to get atomic actions names
+        if not row["error"] and "atomic_actions" in row:
+            atomic_actions = row["atomic_actions"].keys()
+            break
+    zero_atomic_actions = dict([(a, 0) for a in atomic_actions])
 
     total_durations = {"duration": [], "idle_duration": []}
     atomic_durations = dict([(a, []) for a in zero_atomic_actions])
@@ -147,9 +151,12 @@ def _process_atomic(result, data):
     #                 all iteration. So we should take first non "error"
     #                 iteration. And get in atomitc_iter list:
     #                 [{"key": "action", "values":[]}]
-    stacked_area = ([{"key": a, "values": []}
-                     for a in result["result"][0]["atomic_actions"]]
-                    if result["result"] else [])
+    stacked_area = []
+    for row in result["result"]:
+        if not row["error"] and "atomic_actions" in row:
+            stacked_area = [{"key": a, "values": []}
+                            for a in row["atomic_actions"]]
+            break
 
     # NOTE(boris-42): pie is similiar to stacked_area, only difference is in
     #                 structure of values. In case of $error we shouldn't put
