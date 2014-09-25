@@ -24,6 +24,11 @@ from rally import fileutils
 
 
 class UseCommands(object):
+    """Set of commands that allow you to set an active deployment and task.
+
+    Active deployment and task allow you not to specify deployment UUID and
+    task UUID in the commands requiring this parameter.
+    """
 
     def _update_openrc_deployment_file(self, deploy_id, endpoint):
         openrc_path = os.path.expanduser('~/.rally/openrc-%s' % deploy_id)
@@ -55,10 +60,11 @@ class UseCommands(object):
     @cliutils.args('--name', type=str, dest='name', required=False,
                    help='Name of the deployment')
     def deployment(self, deploy_id=None, name=None):
-        """Set the RALLY_DEPLOYMENT env var to be used by all CLI commands
+        """Set active deployment.
 
         :param deploy_id: a UUID of a deployment
         """
+
         if not (name or deploy_id):
             print('You should specify --name or --uuid of deployment')
             return 1
@@ -99,14 +105,9 @@ class UseCommands(object):
     @cliutils.args('--uuid', type=str, dest='task_id', required=False,
                    help='UUID of the task')
     def task(self, task_id):
-        """Set the RALLY_TASK env var.
+        """Set active task.
 
-        Is used to allow the user not to specify a task UUID in the command
-        requiring this parameter.
-        If the task uuid specified in parameter by the user does not exist,
-        a TaskNotFound will be raised by task_get().
-
-        :param task_id: a UUID of a task
+        :param task_id: a UUID of task
         """
         print('Using task: %s' % task_id)
         self._ensure_rally_configuration_dir_exists()

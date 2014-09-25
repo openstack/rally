@@ -51,6 +51,11 @@ from rally import utils
 
 
 class InfoCommands(object):
+    """This command allows you to get quick doc of some rally entities.
+
+    Available for scenario groups, scenarios, deployment engines and
+    server providers.
+    """
 
     @cliutils.args("--query", dest="query", type=str, help="Search query.")
     def find(self, query):
@@ -58,6 +63,7 @@ class InfoCommands(object):
 
         :param query: search query.
         """
+
         info = self._find_info(query)
 
         if info:

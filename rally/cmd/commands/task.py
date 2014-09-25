@@ -38,6 +38,10 @@ from rally import utils as rutils
 
 
 class TaskCommands(object):
+    """Task management.
+
+    Set of commands that allow you to manage benchmarking tasks and results.
+    """
 
     @cliutils.args('--deploy-id', type=str, dest='deploy_id', required=False,
                    help='UUID of the deployment')
@@ -45,7 +49,10 @@ class TaskCommands(object):
                    help='Path to the file with full configuration of task')
     @envutils.with_default_deploy_id
     def validate(self, task, deploy_id=None):
-        """Validate a task file.
+        """Validate a task configuration file.
+
+        This will check that task configuration file has valid syntax and
+        all required options of scenarios, contexts, SLA and runners are set.
 
         :param task: a file with yaml/json configration
         :param deploy_id: a UUID of a deployment
@@ -71,7 +78,7 @@ class TaskCommands(object):
                    help='Don\'t set new task as default for future operations')
     @envutils.with_default_deploy_id
     def start(self, task, deploy_id=None, tag=None, do_use=False):
-        """Run a benchmark task.
+        """Start benchmark task.
 
         :param task: a file with yaml/json configration
         :param deploy_id: a UUID of a deployment
@@ -99,20 +106,22 @@ class TaskCommands(object):
     @cliutils.args('--uuid', type=str, dest='task_id', help='UUID of task')
     @envutils.with_default_task_id
     def abort(self, task_id=None):
-        """Force abort task
+        """Abort started benchmarking task.
 
         :param task_id: Task uuid
         """
+
         api.abort_task(task_id)
 
     @cliutils.args('--uuid', type=str, dest='task_id', help='UUID of task')
     @envutils.with_default_task_id
     def status(self, task_id=None):
-        """Get status of task
+        """Display current status of task.
 
         :param task_id: Task uuid
         Returns current status of task
         """
+
         task = db.task_get(task_id)
         print(_("Task %(task_id)s is %(status)s.")
               % {'task_id': task_id, 'status': task['status']})
@@ -126,12 +135,13 @@ class TaskCommands(object):
                    help='print detailed results for each iteration')
     @envutils.with_default_task_id
     def detailed(self, task_id=None, iterations_data=False):
-        """Get detailed information about task
+        """Display results table.
 
         :param task_id: Task uuid
         :param iterations_data: print detailed results for each iteration
         Prints detailed information of task.
         """
+
         def _print_iterations_data(raw_data):
             headers = ["iteration", "full duration"]
             float_cols = ["full duration"]
@@ -300,12 +310,15 @@ class TaskCommands(object):
                    help=('Output in json format(default)'))
     @envutils.with_default_task_id
     def results(self, task_id=None, output_pprint=None, output_json=None):
-        """Print raw results of task.
+        """Diplay raw task results.
+
+        This will produce a lot of output data about every iteration.
 
         :param task_id: Task uuid
         :param output_pprint: Output in pretty print format
         :param output_json: Output in json format (Default)
         """
+
         results = map(lambda x: {"key": x["key"], 'result': x['data']['raw'],
                                  "sla": x["data"]["sla"]},
                       db.task_result_get_all_by_uuid(task_id))
@@ -325,7 +338,8 @@ class TaskCommands(object):
             return(1)
 
     def list(self, task_list=None):
-        """Print a list of all tasks."""
+        """List all tasks, started and finished."""
+
         headers = ['uuid', 'created_at', 'status', 'failed', 'tag']
         task_list = task_list or db.task_list()
         if task_list:
@@ -380,11 +394,12 @@ class TaskCommands(object):
                    help='uuid of task or a list of task uuids')
     @envutils.with_default_task_id
     def delete(self, task_id=None, force=False):
-        """Delete a specific task and related results.
+        """Delete task and its results.
 
         :param task_id: Task uuid or a list of task uuids
         :param force: Force delete or not
         """
+
         if isinstance(task_id, list):
             for tid in task_id:
                 api.delete_task(tid, force=force)
@@ -397,7 +412,7 @@ class TaskCommands(object):
                    help="output in json format")
     @envutils.with_default_task_id
     def sla_check(self, task_id=None, tojson=False):
-        """Check if task was succeded according to SLA.
+        """Display SLA check results table.
 
         :param task_id: Task uuid.
         :returns: Number of failed criteria.

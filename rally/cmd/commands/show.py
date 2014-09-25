@@ -29,6 +29,11 @@ from rally import utils
 
 
 class ShowCommands(object):
+    """Show resources.
+
+    Set of commands that allow you to view resourses, provided by OpenStack
+    cloud represented by deployment.
+    """
 
     def _get_endpoints(self, deploy_id):
         deployment = db.deployment_get(deploy_id)
@@ -41,10 +46,11 @@ class ShowCommands(object):
                    help='the UUID of a deployment')
     @envutils.with_default_deploy_id
     def images(self, deploy_id=None):
-        """Show the images that are available in a deployment.
+        """Display available images.
 
         :param deploy_id: the UUID of a deployment
         """
+
         headers = ['UUID', 'Name', 'Size (B)']
         mixed_case_fields = ['UUID', 'Name']
         float_cols = ["Size (B)"]
@@ -74,10 +80,11 @@ class ShowCommands(object):
                    help='the UUID of a deployment')
     @envutils.with_default_deploy_id
     def flavors(self, deploy_id=None):
-        """Show the flavors that are available in a deployment.
+        """Display available flavors.
 
         :param deploy_id: the UUID of a deployment
         """
+
         headers = ['ID', 'Name', 'vCPUs', 'RAM (MB)', 'Swap (MB)', 'Disk (GB)']
         mixed_case_fields = ['ID', 'Name', 'vCPUs']
         float_cols = ['RAM (MB)', 'Swap (MB)', 'Disk (GB)']
@@ -107,6 +114,8 @@ class ShowCommands(object):
                    help='the UUID of a deployment')
     @envutils.with_default_deploy_id
     def networks(self, deploy_id=None):
+        """Display configured networks."""
+
         headers = ['ID', 'Label', 'CIDR']
         mixed_case_fields = ['ID', 'Label', 'CIDR']
         table_rows = []
@@ -129,6 +138,8 @@ class ShowCommands(object):
                    help='the UUID of a deployment')
     @envutils.with_default_deploy_id
     def secgroups(self, deploy_id=None):
+        """Display security groups."""
+
         headers = ['ID', 'Name', 'Description']
         mixed_case_fields = ['ID', 'Name', 'Description']
         table_rows = []
@@ -154,6 +165,8 @@ class ShowCommands(object):
                    help='the UUID of a deployment')
     @envutils.with_default_deploy_id
     def keypairs(self, deploy_id=None):
+        """Display available ssh keypairs."""
+
         headers = ['Name', 'Fingerprint']
         mixed_case_fields = ['Name', 'Fingerprint']
         table_rows = []
