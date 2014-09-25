@@ -34,7 +34,9 @@ class SaharaClusters(utils.SaharaScenario):
     @base.scenario(context={"cleanup": ["sahara"]})
     def create_and_delete_cluster(self, flavor, node_count, plugin_name,
                                   hadoop_version, floating_ip_pool=None,
-                                  neutron_net_id=None):
+                                  neutron_net_id=None, volumes_per_node=None,
+                                  volumes_size=None, node_configs=None,
+                                  cluster_configs=None):
         """Test the Sahara Cluster launch and delete commands.
 
         This scenario launches a Hadoop cluster, waits until it becomes
@@ -50,9 +52,16 @@ class SaharaClusters(utils.SaharaScenario):
         IPs will be allocated. Sahara will determine automatically how to treat
         this depending on it's own configurations. Defaults to None because in
         some cases Sahara may work w/o Floating IPs.
-        :param neutron_management_network: The id of a Neutron network that
+        :param neutron_net_id: The id of a Neutron network that
         will be used for fixed IPs. This parameter is ignored when Nova Network
         is set up.
+        :param volumes_per_node: The number of Cinder volumes that will be
+        attached to every cluster node
+        :param volumes_size: The size of each Cinder volume in GB
+        :param node_configs: The configs dict that will be passed to each Node
+        Group
+        :param cluster_configs: The configs dict that will be passed to the
+        Cluster
         """
 
         tenant_id = self.clients("keystone").tenant_id
@@ -67,6 +76,10 @@ class SaharaClusters(utils.SaharaScenario):
             plugin_name=plugin_name,
             hadoop_version=hadoop_version,
             floating_ip_pool=floating_ip_pool,
-            neutron_net_id=neutron_net_id)
+            neutron_net_id=neutron_net_id,
+            volumes_per_node=volumes_per_node,
+            volumes_size=volumes_size,
+            node_configs=node_configs,
+            cluster_configs=cluster_configs)
 
         self._delete_cluster(cluster)

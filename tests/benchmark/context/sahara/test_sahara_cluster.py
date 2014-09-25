@@ -85,6 +85,10 @@ class SaharaClusterTestCase(test.TestCase):
                 image_id=ctx["sahara_images"][i],
                 floating_ip_pool=None,
                 neutron_net_id=None,
+                volumes_per_node=None,
+                volumes_size=1,
+                node_configs=None,
+                cluster_configs=None,
                 wait_active=False
             ))
 

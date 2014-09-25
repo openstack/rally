@@ -147,13 +147,19 @@ class SaharaUtilsTestCase(test.TestCase):
                 "flavor_id": "test_flavor",
                 "node_processes": ["p1"],
                 "floating_ip_pool": "test_pool",
-                "count": 1
+                "volumes_per_node": 5,
+                "volumes_size": 10,
+                "count": 1,
+                "node_configs": {"HDFS": {"local_config": "local_value"}}
             }, {
                 "name": "worker-ng",
                 "flavor_id": "test_flavor",
                 "node_processes": ["p2"],
                 "floating_ip_pool": "test_pool",
-                "count": 41
+                "volumes_per_node": 5,
+                "volumes_size": 10,
+                "count": 41,
+                "node_configs": {"HDFS": {"local_config": "local_value"}}
             }
         ]
 
@@ -172,7 +178,10 @@ class SaharaUtilsTestCase(test.TestCase):
             flavor_id="test_flavor",
             image_id="test_image",
             floating_ip_pool="test_pool",
-            node_count=42
+            volumes_per_node=5,
+            volumes_size=10,
+            node_count=42,
+            node_configs={"HDFS": {"local_config": "local_value"}}
         )
 
         mock_clients("sahara").clusters.create.assert_called_once_with(

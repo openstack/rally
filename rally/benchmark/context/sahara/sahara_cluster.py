@@ -58,6 +58,20 @@ class SaharaCluster(base.Context):
             "neutron_net_id": {
                 "type": "string",
             },
+            "volumes_per_node": {
+                "type": "integer",
+                "minimum": 1
+            },
+            "volumes_size": {
+                "type": "integer",
+                "minimum": 1
+            },
+            "node_configs": {
+                "type": "object"
+            },
+            "cluster_configs": {
+                "type": "object"
+            }
         },
         "additionalProperties": False,
         "required": ["plugin_name", "hadoop_version", "node_count",
@@ -91,6 +105,10 @@ class SaharaCluster(base.Context):
                         image_id=image_id,
                         floating_ip_pool=self.config.get("floating_ip_pool"),
                         neutron_net_id=self.config.get("neutron_net_id"),
+                        volumes_per_node=self.config.get("volumes_per_node"),
+                        volumes_size=self.config.get("volumes_size", 1),
+                        node_configs=self.config.get("node_configs"),
+                        cluster_configs=self.config.get("cluster_configs"),
                         wait_active=False)
 
                 self.context["sahara_clusters"][tenant_id] = cluster.id
