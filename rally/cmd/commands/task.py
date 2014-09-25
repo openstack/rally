@@ -26,7 +26,6 @@ import yaml
 
 from rally.benchmark.processing import plot
 from rally.benchmark.processing import utils
-from rally.benchmark.sla import base as base_sla
 from rally.cmd import cliutils
 from rally.cmd.commands import use
 from rally.cmd import envutils
@@ -305,7 +304,8 @@ class TaskCommands(object):
         :param output_pprint: Output in pretty print format
         :param output_json: Output in json format (Default)
         """
-        results = map(lambda x: {"key": x["key"], 'result': x['data']['raw']},
+        results = map(lambda x: {"key": x["key"], 'result': x['data']['raw'],
+                                 "sla": x["data"]["sla"]},
                       db.task_result_get_all_by_uuid(task_id))
 
         if results:
@@ -382,16 +382,20 @@ class TaskCommands(object):
         :param task_id: Task uuid.
         :returns: Number of failed criteria.
         """
-        task = db.task_get_detailed(task_id)
+        task = db.task_result_get_all_by_uuid(task_id)
         failed_criteria = 0
-        rows = []
-        for row in base_sla.SLA.check_all(task):
-            failed_criteria += 0 if row['success'] else 1
-            rows.append(row if tojson else rutils.Struct(**row))
+        results = []
+        for result in task:
+            key = result["key"]
+            for sla in result["data"]["sla"]:
+                sla["benchmark"] = key["name"]
+                sla["pos"] = key["pos"]
+                failed_criteria += 0 if sla['success'] else 1
+                results.append(sla if tojson else rutils.Struct(**sla))
         if tojson:
-            print(json.dumps(rows))
+            print(json.dumps(results))
         else:
-            common_cliutils.print_list(rows, ('benchmark', 'pos',
-                                              'criterion', 'success',
-                                              'detail'))
+            common_cliutils.print_list(results, ('benchmark', 'pos',
+                                                 'criterion', 'success',
+                                                 'detail'))
         return failed_criteria

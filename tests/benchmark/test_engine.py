@@ -15,6 +15,7 @@
 
 """Tests for the Test engine."""
 
+import collections
 import copy
 
 import jsonschema
@@ -342,3 +343,17 @@ class BenchmarkEngineTestCase(test.TestCase):
         }
         self.assertEqual(result, expected_result)
         mock_meta.assert_called_once_with(name, "context")
+
+    @mock.patch("rally.benchmark.sla.base.SLA.check_all")
+    def test_consume_results(self, mock_check_all):
+        key = {"kw": {"fake": 2}, "name": "fake", "pos": 0}
+        task = mock.MagicMock()
+        config = {
+            "a.benchmark": [{"context": {"context_a": {"a": 1}}}],
+        }
+        is_done = mock.MagicMock()
+        is_done.isSet.side_effect = [False, False, True]
+        eng = engine.BenchmarkEngine(config, task)
+        eng.duration = 1
+        eng.consume_results(key, task, collections.deque([1, 2]), is_done)
+        mock_check_all.assert_called_once_with({"fake": 2}, [1, 2])

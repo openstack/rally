@@ -61,26 +61,24 @@ class SLA(object):
         """
 
     @staticmethod
-    def check_all(task):
+    def check_all(config, result):
         """Check all SLA criteria.
 
-        :param task: Task object
-        :returns: Generator
+        :param config: sla related config for a task
+        :param result: Result of a task
+        :returns: A list of sla results
         """
 
+        results = []
         opt_name_map = dict([(c.OPTION_NAME, c)
                              for c in utils.itersubclasses(SLA)])
 
-        for result in task.results:
-            config = result['key']['kw'].get('sla', None)
-            if config:
-                for name, criterion in config.iteritems():
-                    check_result = opt_name_map[name].check(criterion, result)
-                    yield {'benchmark': result['key']['name'],
-                           'pos': result['key']['pos'],
-                           'criterion': name,
-                           'success': check_result.success,
-                           'detail': check_result.msg}
+        for name, criterion in config.get("sla", {}).iteritems():
+            check_result = opt_name_map[name].check(criterion, result)
+            results.append({'criterion': name,
+                            'success': check_result.success,
+                            'detail': check_result.msg})
+        return results
 
 
 class FailureRate(SLA):
@@ -90,14 +88,13 @@ class FailureRate(SLA):
 
     @staticmethod
     def check(criterion_value, result):
-        raw = result['data']['raw']
-        errors = len(filter(lambda x: x['error'], raw))
-        if criterion_value < errors * 100.0 / len(raw):
+        errors = len(filter(lambda x: x['error'], result))
+        if criterion_value < errors * 100.0 / len(result):
             success = False
         else:
             success = True
         msg = (_("Maximum failure percent %s%% failures, actually %s%%") %
-                (criterion_value, errors * 100.0 / len(raw)))
+                (criterion_value, errors * 100.0 / len(result)))
         return SLAResult(success, msg)
 
 
@@ -111,7 +108,7 @@ class IterationTime(SLA):
     def check(criterion_value, result):
         duration = 0
         success = True
-        for i in result['data']['raw']:
+        for i in result:
             duration = i['duration']
             if i['duration'] > criterion_value:
                 success = False
