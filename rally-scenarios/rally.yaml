@@ -254,6 +254,20 @@
       sla:
         max_failure_percent: 0
 
+    -
+      args:
+        sleep: 0.01
+      runner:
+        type: "constant"
+        times: 1
+        concurrency: 1
+      context:
+          users:
+            tenants: 30
+            users_per_tenant: 15
+      sla:
+        max_failure_percent: 0
+
   Dummy.dummy_exception:
     -
       args:

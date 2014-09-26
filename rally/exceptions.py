@@ -215,6 +215,10 @@ class BenchmarkSetupFailure(RallyException):
     msg_fmt = _("Unable to setup benchmark: '%(message)s'")
 
 
+class ContextSetupFailure(RallyException):
+    msg_fmt = _("Unable to setup context '%(ctx_name)s': '%(msg)s'")
+
+
 class ValidationError(RallyException):
     msg_fmt = _("Validation error: %(message)s")
 
