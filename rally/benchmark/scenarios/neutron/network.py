@@ -44,6 +44,22 @@ class NeutronNetworks(utils.NeutronScenario):
     @validation.required_services(consts.Service.NEUTRON)
     @validation.required_openstack(users=True)
     @base.scenario(context={"cleanup": ["neutron"]})
+    def create_and_update_networks(self,
+                                   network_update_args,
+                                   network_create_args=None):
+        """Create a network and then update network.
+
+        This scenario is a very useful tool to measure
+        the "neutron net-create and net-update" command performance.
+
+        :param network_update_args: dict, PUT /v2.0/networks update request
+        :param network_create_args: dict, POST /v2.0/networks request options
+        """
+        network = self._create_network(network_create_args or {})
+        self._update_network(network, network_update_args)
+
+    @validation.required_services(consts.Service.NEUTRON)
+    @base.scenario(context={"cleanup": ["neutron"]})
     def create_and_delete_networks(self, network_create_args=None):
         """Create a network and then deleting it.
 
@@ -74,18 +90,45 @@ class NeutronNetworks(utils.NeutronScenario):
         :param subnet_cidr_start: str, start value for subnets CIDR
         :param subnets_per_network: int, number of subnets for one network
         """
-        if subnet_cidr_start:
-            NeutronNetworks.SUBNET_CIDR_START = subnet_cidr_start
-        network = self._create_network(network_create_args or {})
-        for i in range(subnets_per_network):
-            self._create_subnet(network, subnets_per_network,
-                                subnet_create_args or {})
-
+        self._create_network_and_subnets(network_create_args or {},
+                                         subnet_create_args or {},
+                                         subnets_per_network,
+                                         subnet_cidr_start)
         self._list_subnets()
 
     @validation.number("subnets_per_network", minval=1, integer_only=True)
     @validation.required_services(consts.Service.NEUTRON)
     @validation.required_openstack(users=True)
+    @base.scenario(context={"cleanup": ["neutron"]})
+    def create_and_update_subnets(self,
+                                  subnet_update_args,
+                                  network_create_args=None,
+                                  subnet_create_args=None,
+                                  subnet_cidr_start=None,
+                                  subnets_per_network=None):
+        """Create a subnet and then update subnet.
+
+        The scenario creates a network, a given number of subnets
+        and then updates the subnet. This scenario measure the
+        "neutron subnet-update" command performance.
+
+        :param subnet_update_args: dict, PUT /v2.0/subnets update options
+        :param network_create_args: dict, POST /v2.0/networks request options
+        :param subnet_create_args: dict, POST /v2.0/subnets request options
+        :param subnet_cidr_start: str, start value for subnets CIDR
+        :param subnets_per_network: int, number of subnets for one network
+        """
+        network, subnets = self._create_network_and_subnets(
+                              network_create_args or {},
+                              subnet_create_args or {},
+                              subnets_per_network,
+                              subnet_cidr_start)
+
+        for subnet in subnets:
+            self._update_subnet(subnet, subnet_update_args)
+
+    @validation.required_parameters("subnets_per_network")
+    @validation.required_services(consts.Service.NEUTRON)
     @base.scenario(context={"cleanup": ["neutron"]})
     def create_and_delete_subnets(self,
                                   network_create_args=None,
@@ -102,13 +145,13 @@ class NeutronNetworks(utils.NeutronScenario):
         :param subnet_cidr_start: str, start value for subnets CIDR
         :param subnets_per_network: int, number of subnets for one network
         """
+        network, subnets = self._create_network_and_subnets(
+                              network_create_args or {},
+                              subnet_create_args or {},
+                              subnets_per_network,
+                              subnet_cidr_start)
 
-        if subnet_cidr_start:
-            NeutronNetworks.SUBNET_CIDR_START = subnet_cidr_start
-        network = self._create_network(network_create_args or {})
-        for i in range(subnets_per_network):
-            subnet = self._create_subnet(network, subnets_per_network,
-                                         subnet_create_args or {})
+        for subnet in subnets:
             self._delete_subnet(subnet)
 
     @validation.number("subnets_per_network", minval=1, integer_only=True)

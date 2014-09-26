@@ -17,6 +17,7 @@ import mock
 import netaddr
 
 from rally.benchmark.scenarios.neutron import utils
+from tests import fakes
 from tests import test
 
 
@@ -72,6 +73,27 @@ class NeutronScenarioTestCase(test.TestCase):
         self.assertEqual(networks_list, return_networks_list)
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        'neutron.list_networks')
+
+    @mock.patch(NEUTRON_UTILS + 'NeutronScenario.clients')
+    def test_update_network(self, mock_clients):
+        scenario = utils.NeutronScenario()
+        expected_network = {
+            "network": {
+                "name": "network-name_updated",
+                "admin_state_up": False
+            }
+        }
+        mock_clients("neutron").update_network.return_value = expected_network
+
+        network = {"network": {"name": "network-name", "id": "network-id"}}
+        network_update_args = {"name": "_updated", "admin_state_up": False}
+
+        result_network = scenario._update_network(network, network_update_args)
+        mock_clients("neutron").update_network.assert_called_once_with(
+                                network["network"]["id"], expected_network)
+        self.assertEqual(result_network, expected_network)
+        self._test_atomic_action_timer(scenario.atomic_actions(),
+                                       'neutron.update_network')
 
     @mock.patch(NEUTRON_UTILS + 'NeutronScenario.clients')
     def test_delete_network(self, mock_clients):
@@ -132,6 +154,27 @@ class NeutronScenarioTestCase(test.TestCase):
         self.assertEqual(subnets, result)
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "neutron.list_subnets")
+
+    @mock.patch(NEUTRON_UTILS + 'NeutronScenario.clients')
+    def test_update_subnet(self, mock_clients):
+        scenario = utils.NeutronScenario()
+        expected_subnet = {
+            "subnet": {
+                "name": "subnet-name_updated",
+                "enable_dhcp": False
+            }
+        }
+        mock_clients("neutron").update_subnet.return_value = expected_subnet
+
+        subnet = {"subnet": {"name": "subnet-name", "id": "subnet-id"}}
+        subnet_update_args = {"name": "_updated", "enable_dhcp": False}
+
+        result_subnet = scenario._update_subnet(subnet, subnet_update_args)
+        mock_clients("neutron").update_subnet.assert_called_once_with(
+                                subnet["subnet"]["id"], expected_subnet)
+        self.assertEqual(result_subnet, expected_subnet)
+        self._test_atomic_action_timer(scenario.atomic_actions(),
+                                       'neutron.update_subnet')
 
     @mock.patch(NEUTRON_UTILS + "NeutronScenario._generate_subnet_cidr")
     @mock.patch(NEUTRON_UTILS + 'NeutronScenario.clients')
@@ -259,3 +302,87 @@ class NeutronScenarioTestCase(test.TestCase):
 
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "neutron.create_port")
+
+    @mock.patch(NEUTRON_UTILS + "NeutronScenario._create_subnet",
+                return_value={
+                    "subnet": {
+                        "name": "subnet-name",
+                        "id": "subnet-id",
+                        "enable_dhcp": False
+                    }
+                })
+    @mock.patch(NEUTRON_UTILS + "NeutronScenario._create_network",
+                return_value={
+                    "network": {
+                        "id": "fake-id"
+                    }
+                })
+    @mock.patch(NEUTRON_UTILS + "NeutronScenario.SUBNET_CIDR_START",
+                new_callable=mock.PropertyMock(return_value="default_cidr"))
+    def test_create_network_and_subnets(self,
+                                        mock_cidr_start,
+                                        mock_create_network,
+                                        mock_create_subnet):
+        scenario = utils.NeutronScenario()
+        network_create_args = {}
+        subnet_create_args = {}
+        subnets_per_network = 4
+
+        mock_create_network.reset_mock()
+        mock_create_subnet.reset_mock()
+
+        # Default options
+        scenario._create_network_and_subnets(
+            network_create_args=network_create_args,
+            subnet_create_args=subnet_create_args,
+            subnet_cidr_start=scenario.SUBNET_CIDR_START,
+            subnets_per_network=subnets_per_network)
+
+        mock_create_network.assert_called_once_with({})
+        mock_create_subnet.assert_has_calls(
+            [mock.call({"network": {"id": "fake-id"}},
+                       subnets_per_network,
+                       {})] * subnets_per_network)
+
+        self.assertEqual(scenario.SUBNET_CIDR_START, "default_cidr")
+
+        mock_create_network.reset_mock()
+        mock_create_subnet.reset_mock()
+
+        # Custom options
+        scenario._create_network_and_subnets(
+            network_create_args=network_create_args,
+            subnet_create_args={"allocation_pools": []},
+            subnet_cidr_start="custom_cidr",
+            subnets_per_network=subnets_per_network)
+
+        self.assertEqual(scenario.SUBNET_CIDR_START, "custom_cidr")
+        mock_create_network.assert_called_once_with({})
+        mock_create_subnet.assert_has_calls(
+            [mock.call({"network": {"id": "fake-id"}},
+                       subnets_per_network,
+                       {"allocation_pools": []})] * subnets_per_network)
+
+    def test_functional_create_network_and_subnets(self):
+        scenario = utils.NeutronScenario(clients=fakes.FakeClients())
+        network_create_args = {"name": "foo_network"}
+        subnet_create_args = {}
+        subnets_per_network = 5
+        subnet_cidr_start = None
+
+        cidrs = sorted(["1.1.1.%d/30" % i
+                        for i in range(subnets_per_network)])
+        _cidrs = cidrs[:]
+        scenario._generate_subnet_cidr = lambda i: _cidrs.pop()
+
+        network, subnets = scenario._create_network_and_subnets(
+            network_create_args,
+            subnet_create_args,
+            subnets_per_network,
+            subnet_cidr_start)
+
+        self.assertEqual(network["network"]["name"], "foo_network")
+
+        # This checks both data (cidrs seem to be enough) and subnets number
+        result_cidrs = sorted([s["subnet"]["cidr"] for s in subnets])
+        self.assertEqual(cidrs, result_cidrs)

@@ -54,13 +54,36 @@ class NeutronScenario(base.Scenario):
         :returns: neutron network dict
         """
         network_create_args.setdefault("name", self._generate_random_name())
-        return self.clients("neutron"
-                            ).create_network({"network": network_create_args})
+        return self.clients("neutron").create_network(
+            {"network": network_create_args})
 
     @base.atomic_action_timer('neutron.list_networks')
     def _list_networks(self):
         """Return user networks list."""
         return self.clients("neutron").list_networks()['networks']
+
+    @base.atomic_action_timer('neutron.update_network')
+    def _update_network(self, network, network_update_args):
+        """Update the network name and admin state.
+
+        This atomic function updates network name by
+        appending the existing name and admin state with network_update_args.
+
+        :param network: Network object
+        :param network_update_args: dict, POST /v2.0/networks update options
+        :returns: updated neutron network dict
+        """
+        suffix = network_update_args.get(
+                    "name", self._generate_random_name("_"))
+        admin_state_up = network_update_args.get("admin_state_up", True)
+        body = {
+            "network": {
+                "name": network["network"]["name"] + suffix,
+                "admin_state_up": admin_state_up
+            }
+        }
+        return self.clients("neutron").update_network(
+            network["network"]["id"], body)
 
     @base.atomic_action_timer('neutron.delete_network')
     def _delete_network(self, network):
@@ -99,6 +122,29 @@ class NeutronScenario(base.Scenario):
         """Returns user subnetworks list."""
         return self.clients("neutron").list_subnets()["subnets"]
 
+    @base.atomic_action_timer('neutron.update_subnet')
+    def _update_subnet(self, subnet, subnet_update_args):
+        """Update the neutron subnet name and DHCP status.
+
+        This atomic function updates subnet name by
+        appending the existing name and DHCP status with subnet_update_args.
+
+        :param subnet: Subnet object
+        :param subnet_update_args: dict, PUT /v2.0/subnets update options
+        :returns: updated neutron subnet dict
+        """
+        suffix = subnet_update_args.get(
+                    "name", self._generate_random_name("_"))
+        enable_dhcp = subnet_update_args.get("enable_dhcp", True)
+        body = {
+            "subnet": {
+                "name": subnet["subnet"]["name"] + suffix,
+                "enable_dhcp": enable_dhcp
+            }
+        }
+        return self.clients("neutron").update_subnet(
+            subnet["subnet"]["id"], body)
+
     @base.atomic_action_timer('neutron.delete_subnet')
     def _delete_subnet(self, subnet):
         """Delete neutron subnet
@@ -116,8 +162,8 @@ class NeutronScenario(base.Scenario):
         """
         router_create_args.setdefault(
             "name", self._generate_random_name("rally_router_"))
-        return self.clients("neutron"
-                            ).create_router({"router": router_create_args})
+        return self.clients("neutron").create_router(
+            {"router": router_create_args})
 
     @base.atomic_action_timer('neutron.list_routers')
     def _list_routers(self):
@@ -149,3 +195,28 @@ class NeutronScenario(base.Scenario):
         :param port: Port object
         """
         self.clients("neutron").delete_port(port['port']['id'])
+
+    def _create_network_and_subnets(self,
+                                    network_create_args,
+                                    subnet_create_args,
+                                    subnets_per_network,
+                                    subnet_cidr_start):
+        """Create network and subnets.
+
+        :parm network_create_args: dict, POST /v2.0/networks request options
+        :parm subnet_create_args: dict, POST /v2.0/subnets request options
+        :parm subnets_per_network: int, number of subnets for one network
+        :parm subnet_cidr_start: str, start value for subnets CIDR
+        :returns: tuple of result network and subnets list
+        """
+        subnets = []
+
+        if subnet_cidr_start:
+            self.SUBNET_CIDR_START = subnet_cidr_start
+        network = self._create_network(network_create_args or {})
+
+        for i in range(subnets_per_network):
+            subnet = self._create_subnet(network, subnets_per_network,
+                                         subnet_create_args or {})
+            subnets.append(subnet)
+        return network, subnets

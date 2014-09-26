@@ -925,6 +925,16 @@ class FakeNeutronClient(object):
         self.__subnets[subnet_id] = subnet
         return {"subnet": subnet}
 
+    def update_network(self, network_id, data):
+        if network_id not in self.__networks:
+            raise neutron_exceptions.NeutronClientException
+        self.__networks[network_id].update(data)
+
+    def update_subnet(self, subnet_id, data):
+        if subnet_id not in self.__subnets:
+            raise neutron_exceptions.NeutronClientException
+        self.__subnets[subnet_id].update(data)
+
     def delete_network(self, network_id):
         if network_id not in self.__networks:
             raise neutron_exceptions.NeutronClientException
