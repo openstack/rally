@@ -66,7 +66,7 @@ class Rally(object):
 
     """
 
-    def __init__(self):
+    def __init__(self, fake=False):
         # NOTE(sskripnick): we shoud change home dir to avoid races
         # and do not touch any user files in ~/.rally
         os.environ["HOME"] = pwd.getpwuid(os.getuid()).pw_dir
@@ -83,16 +83,6 @@ class Rally(object):
         subprocess.call(["rally-manage", "--config-file", config_filename,
                          "db", "recreate"])
         self("deployment create --file /tmp/.rd.json --name MAIN")
-        with open("/tmp/.tmp.deployment", "w") as d_conf:
-            d_conf.write(
-                """{
-    "type": "ExistingCloud",
-    "auth_url": "http://fake/",
-    "admin": {
-        "username": "admin",
-        "password": "admin",
-        "tenant_name": "admin"
-    }\n}""")
 
     def __del__(self):
         shutil.rmtree(self.tmp_dir)

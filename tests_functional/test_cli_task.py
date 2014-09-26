@@ -17,6 +17,7 @@
 import os
 import unittest
 
+import mock
 import test_cli_utils as utils
 
 
@@ -26,9 +27,6 @@ class TaskTestCase(unittest.TestCase):
         return {
             "Dummy.dummy_random_fail_in_atomic": [
                 {
-                    "args": {
-                        "name_length": 10
-                    },
                     "runner": {
                         "type": "constant",
                         "times": 100,
@@ -125,9 +123,11 @@ class SLATestCase(unittest.TestCase):
         expected = [
                 {"benchmark": "KeystoneBasic.create_and_list_users",
                  "criterion": "max_seconds_per_iteration",
+                 "detail": mock.ANY,
                  "pos": 0, "success": True},
                 {"benchmark": "KeystoneBasic.create_and_list_users",
                  "criterion": "max_failure_percent",
+                 "detail": mock.ANY,
                  "pos": 0, "success": True},
         ]
         data = rally("task sla_check --json", getjson=True)
