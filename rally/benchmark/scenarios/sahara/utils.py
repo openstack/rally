@@ -54,6 +54,29 @@ class SaharaScenario(base.Scenario):
                 "master": ["namenode", "resourcemanager", "historyserver",
                            "oozie"],
                 "worker": ["datanode", "nodemanager"]
+            },
+            "2.4.1": {
+                "master": ["namenode", "resourcemanager", "historyserver",
+                           "oozie"],
+                "worker": ["datanode", "nodemanager"]
+            }
+        },
+        "hdp": {
+            "1.3.2": {
+                "master": ['JOBTRACKER', 'NAMENODE', 'SECONDARY_NAMENODE',
+                           'GANGLIA_SERVER', 'NAGIOS_SERVER',
+                           'AMBARI_SERVER', 'OOZIE_SERVER'],
+                "worker": ['TASKTRACKER', 'DATANODE', 'HDFS_CLIENT',
+                           'MAPREDUCE_CLIENT', 'OOZIE_CLIENT', 'PIG']
+            },
+            "2.0.6": {
+                "master": ['NAMENODE', 'SECONDARY_NAMENODE',
+                           'ZOOKEEPER_SERVER', 'AMBARI_SERVER',
+                           'HISTORYSERVER', 'RESOURCEMANAGER',
+                           'GANGLIA_SERVER', 'NAGIOS_SERVER', 'OOZIE_SERVER'],
+                "worker": ['HDFS_CLIENT', 'DATANODE', 'ZOOKEEPER_CLIENT',
+                           'MAPREDUCE2_CLIENT', 'YARN_CLIENT', 'NODEMANAGER',
+                           'PIG', 'OOZIE_CLIENT']
             }
         }
     }
@@ -65,6 +88,20 @@ class SaharaScenario(base.Scenario):
                 "config_name": "dfs.replication"
             },
             "2.3.0": {
+                "target": "HDFS",
+                "config_name": "dfs.replication"
+            },
+            "2.4.1": {
+                "target": "HDFS",
+                "config_name": "dfs.replication"
+            }
+        },
+        "hdp": {
+            "1.3.2": {
+                "target": "HDFS",
+                "config_name": "dfs.replication"
+            },
+            "2.0.6": {
                 "target": "HDFS",
                 "config_name": "dfs.replication"
             }
