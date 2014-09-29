@@ -1,0 +1,35 @@
+{
+    "NeutronNetworks.create_and_update_routers": [
+        {
+            "args": {
+                "network_create_args": {},
+                "subnet_create_args": {},
+                "subnet_cidr_start": "1.1.0.0/30",
+                "subnets_per_network": 2,
+                "router_create_args": {},
+                "router_update_args": {
+                    "admin_state_up": false,
+                    "name": "_router_updated"
+                }
+            },
+            "runner": {
+                "type": "constant",
+                "times": 10,
+                "concurrency": 5
+            },
+            "context": {
+                "users": {
+                    "tenants": 1,
+                    "users_per_tenant": 1
+                },
+                "quotas": {
+                    "neutron": {
+                        "network": -1,
+                        "subnet": -1,
+                        "router": -1
+                    }
+                }
+            }
+        }
+    ]
+}

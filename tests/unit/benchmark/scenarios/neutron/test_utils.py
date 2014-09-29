@@ -224,6 +224,33 @@ class NeutronScenarioTestCase(test.TestCase):
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        'neutron.list_routers')
 
+    @mock.patch(NEUTRON_UTILS + 'NeutronScenario.clients')
+    def test_update_router(self, mock_clients):
+        scenario = utils.NeutronScenario()
+        expected_router = {
+            "router": {
+                "name": "router-name_updated",
+                'admin_state_up': False
+            }
+        }
+        mock_clients("neutron").update_router.return_value = expected_router
+
+        router = {
+            "router": {
+                "id": "router-id",
+                "name": "router-name",
+                'admin_state_up': True
+            }
+        }
+        router_update_args = {"name": "_updated", "admin_state_up": False}
+
+        result_router = scenario._update_router(router, router_update_args)
+        mock_clients("neutron").update_router.assert_called_once_with(
+                                 router['router']['id'], expected_router)
+        self.assertEqual(result_router, expected_router)
+        self._test_atomic_action_timer(scenario.atomic_actions(),
+                                       'neutron.update_router')
+
     def test_SUBNET_IP_VERSION(self):
         """Curent NeutronScenario implementation supports only IPv4."""
         self.assertEqual(utils.NeutronScenario.SUBNET_IP_VERSION, 4)
@@ -291,6 +318,40 @@ class NeutronScenarioTestCase(test.TestCase):
         self.assertEqual(ports, scenario._list_ports())
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "neutron.list_ports")
+
+    @mock.patch(NEUTRON_UTILS + 'NeutronScenario.clients')
+    def test_update_port(self, mock_clients):
+        scenario = utils.NeutronScenario()
+        expected_port = {
+            "port": {
+                "name": "port-name_updated",
+                "admin_state_up": False,
+                "device_id": "dummy_id",
+                "device_owner": "dummy_owner"
+            }
+        }
+        mock_clients("neutron").update_port.return_value = expected_port
+
+        port = {
+            "port": {
+                "id": "port-id",
+                "name": "port-name",
+                "admin_state_up": True
+            }
+        }
+        port_update_args = {
+            "name": "_updated",
+            "admin_state_up": False,
+            "device_id": "dummy_id",
+            "device_owner": "dummy_owner"
+        }
+
+        result_port = scenario._update_port(port, port_update_args)
+        mock_clients("neutron").update_port.assert_called_once_with(
+                                 port['port']['id'], expected_port)
+        self.assertEqual(result_port, expected_port)
+        self._test_atomic_action_timer(scenario.atomic_actions(),
+                                       'neutron.update_port')
 
     @mock.patch(NEUTRON_UTILS + 'NeutronScenario.clients')
     def test_delete_port(self, mock_clients):

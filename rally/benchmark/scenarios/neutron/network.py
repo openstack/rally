@@ -175,18 +175,55 @@ class NeutronNetworks(utils.NeutronScenario):
         :param subnets_per_network: int, number of subnets for one network
         :param router_create_args: dict, POST /v2.0/routers request options
         """
-        if subnet_cidr_start:
-            NeutronNetworks.SUBNET_CIDR_START = subnet_cidr_start
-        network = self._create_network(network_create_args or {})
-        for i in range(subnets_per_network):
-            subnet = self._create_subnet(network, subnets_per_network,
-                                         subnet_create_args or {})
+        network, subnets = self._create_network_and_subnets(
+                              network_create_args or {},
+                              subnet_create_args or {},
+                              subnets_per_network,
+                              subnet_cidr_start)
+
+        for subnet in subnets:
             router = self._create_router(router_create_args or {})
             self.clients("neutron").add_interface_router(
                 router["router"]["id"],
                 {"subnet_id": subnet["subnet"]["id"]})
 
         self._list_routers()
+
+    @validation.number("subnets_per_network", minval=1, integer_only=True)
+    @validation.required_parameters("subnets_per_network")
+    @validation.required_services(consts.Service.NEUTRON)
+    @base.scenario(context={"cleanup": ["neutron"]})
+    def create_and_update_routers(self,
+                                  router_update_args,
+                                  network_create_args=None,
+                                  subnet_create_args=None,
+                                  subnet_cidr_start=None,
+                                  subnets_per_network=None,
+                                  router_create_args=None):
+        """Test creating and updating a given number of routers.
+
+        Create a network, a given number of subnets and routers
+        and then updating all routers.
+
+        :param router_update_args: dict, PUT /v2.0/routers update options
+        :param network_create_args: dict, POST /v2.0/networks request options
+        :param subnet_create_args: dict, POST /v2.0/subnets request options
+        :param subnet_cidr_start: str, start value for subnets CIDR
+        :param subnets_per_network: int, number of subnets for one network
+        :param router_create_args: dict, POST /v2.0/routers request options
+        """
+        network, subnets = self._create_network_and_subnets(
+                              network_create_args or {},
+                              subnet_create_args or {},
+                              subnets_per_network,
+                              subnet_cidr_start)
+
+        for subnet in subnets:
+            router = self._create_router(router_create_args or {})
+            self.clients("neutron").add_interface_router(
+                router["router"]["id"],
+                {"subnet_id": subnet["subnet"]["id"]})
+            self._update_router(router, router_update_args)
 
     @validation.number("ports_per_network", minval=1, integer_only=True)
     @validation.required_services(consts.Service.NEUTRON)
@@ -211,6 +248,30 @@ class NeutronNetworks(utils.NeutronScenario):
     @validation.number("ports_per_network", minval=1, integer_only=True)
     @validation.required_services(consts.Service.NEUTRON)
     @validation.required_openstack(users=True)
+    @base.scenario(context={"cleanup": ["neutron"]})
+    def create_and_update_ports(self,
+                                port_update_args,
+                                network_create_args=None,
+                                port_create_args=None,
+                                ports_per_network=None):
+        """Test creating and updating a given number of ports.
+
+        This scenario is a very useful tool to measure
+        the "neutron port-create" and
+        "neutron port-update" command performance.
+
+        :param port_update_args: dict, PUT /v2.0/ports update request options
+        :param network_create_args: dict, POST /v2.0/networks request options
+        :param port_create_args: dict, POST /v2.0/ports request options
+        :param ports_per_network: int, number of ports for one network
+        """
+        network = self._create_network(network_create_args or {})
+        for i in range(ports_per_network):
+            port = self._create_port(network, port_create_args or {})
+            self._update_port(port, port_update_args)
+
+    @validation.required_parameters("ports_per_network")
+    @validation.required_services(consts.Service.NEUTRON)
     @base.scenario(context={"cleanup": ["neutron"]})
     def create_and_delete_ports(self,
                                 network_create_args=None,

@@ -990,6 +990,16 @@ class FakeNeutronClient(object):
             raise neutron_exceptions.NeutronClientException
         self.__subnets[subnet_id].update(data)
 
+    def update_port(self, port_id, data):
+        if port_id not in self.__ports:
+            raise neutron_exceptions.NeutronClientException
+        self.__ports[port_id].update(data)
+
+    def update_router(self, router_id, data):
+        if router_id not in self.__routers:
+            raise neutron_exceptions.NeutronClientException
+        self.__routers[router_id].update(data)
+
     def delete_network(self, network_id):
         if network_id not in self.__networks:
             raise neutron_exceptions.NeutronClientException

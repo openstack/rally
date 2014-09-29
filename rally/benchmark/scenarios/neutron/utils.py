@@ -17,6 +17,7 @@ import netaddr
 
 from rally.benchmark.scenarios import base
 from rally.openstack.common import log as logging
+from rally.openstack.common import uuidutils as uid
 
 
 LOG = logging.getLogger(__name__)
@@ -170,6 +171,29 @@ class NeutronScenario(base.Scenario):
         """Returns user routers list."""
         return self.clients("neutron").list_routers()["routers"]
 
+    @base.atomic_action_timer('neutron.update_router')
+    def _update_router(self, router, router_update_args):
+        """Update the neutron router name and admin state.
+
+        This atomic function updates router name by
+        appending the existing name and admin state with router_update_args.
+
+        :param router: dict, neutron router
+        :param router_update_args: dict, PUT /v2.0/routers update options
+        :returns: updated neutron router dict
+        """
+        suffix = router_update_args.get(
+                    "name", self._generate_random_name("_"))
+        admin_state = router_update_args.get("admin_state_up", True)
+        body = {
+            "router": {
+                "name": router["router"]["name"] + suffix,
+                "admin_state_up": admin_state
+            }
+        }
+        return self.clients("neutron").update_router(
+            router["router"]["id"], body)
+
     @base.atomic_action_timer('neutron.create_port')
     def _create_port(self, network, port_create_args):
         """Create neutron port.
@@ -187,6 +211,33 @@ class NeutronScenario(base.Scenario):
     def _list_ports(self):
         """Return user ports list."""
         return self.clients("neutron").list_ports()["ports"]
+
+    @base.atomic_action_timer('neutron.update_port')
+    def _update_port(self, port, port_update_args):
+        """Update the neutron port name, admin state, device id and owner.
+
+        This atomic function updates port name by
+        appending the existing name, admin state, device id and
+        device owner with port_update_args.
+
+        :param port: dict, neutron port
+        :param port_update_args: dict, PUT /v2.0/ports update options
+        :returns: updated neutron port dict
+        """
+        suffix = port_update_args.get(
+                    "name", self._generate_random_name("_"))
+        admin_state = port_update_args.get("admin_state_up", True)
+        device_owner = port_update_args.get("device_owner", "compute:nova")
+        device_id = port_update_args.get("device_id", uid.generate_uuid())
+        body = {
+            "port": {
+                "name": port["port"]["name"] + suffix,
+                "admin_state_up": admin_state,
+                "device_id": device_id,
+                "device_owner": device_owner
+            }
+        }
+        return self.clients("neutron").update_port(port["port"]["id"], body)
 
     @base.atomic_action_timer('neutron.delete_port')
     def _delete_port(self, port):
