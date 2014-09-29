@@ -294,8 +294,7 @@ def tempest_tests_exists(config, clients, task):
         return ValidationResult(False,
                                 "Parameter 'test_name' or 'test_names' should "
                                 "be specified.")
-
-    verifier = tempest.Tempest(task.deployment_uuid)
+    verifier = tempest.Tempest(task["deployment_uuid"])
     if not verifier.is_installed():
         verifier.install()
     if not verifier.is_configured():
