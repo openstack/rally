@@ -114,10 +114,6 @@ class InvalidBenchmarkConfig(InvalidTaskException):
                 "\n\tBenchmark configuration: %(config)s")
 
 
-class TestException(RallyException):
-    msg_fmt = _("Test failed: %(test_message)s")
-
-
 class NotFoundException(RallyException):
     msg_fmt = _("Not found.")
 
@@ -181,10 +177,6 @@ class GetResourceNotFound(GetResourceFailure):
 
 class GetResourceErrorStatus(GetResourceFailure):
     msg_fmt = _("Resource %(resource)s has %(status)s status: %(fault)s")
-
-
-class SSHError(RallyException):
-    msg_fmt = _("Remote command failed.")
 
 
 class ScriptError(RallyException):
