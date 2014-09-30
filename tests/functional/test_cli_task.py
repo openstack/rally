@@ -61,15 +61,16 @@ class TaskTestCase(unittest.TestCase):
         rally("task start --task %s" % config.filename)
         self.assertIn("result", rally("task results"))
 
-    def test_plot2html(self):
+    def test_report(self):
         rally = utils.Rally()
         cfg = self._get_sample_task_config()
         config = utils.TaskConfig(cfg)
+        html_file = "/tmp/test_plot.html"
         rally("task start --task %s" % config.filename)
-        if os.path.exists("/tmp/test_plot.html"):
-            os.remove("/tmp/test_plot.html")
-        rally("task plot2html /tmp/test_plot")
-        self.assertTrue(os.path.exists("/tmp/test_plot.html"))
+        if os.path.exists(html_file):
+            os.remove(html_file)
+        rally("task report /tmp/test_plot")
+        self.assertTrue(os.path.exists(html_file))
 
     def test_delete(self):
         rally = utils.Rally()

@@ -256,23 +256,30 @@ def _process_results(results):
         config = {}
         config[info["name"]] = [info["kw"]]
         data = _prepare_data(result)
+        name = info["name"]
+        cls = name.split(".")[0]
+        met = name.split(".")[1]
+        pos = int(info["pos"])
+
         output.append({
-            "name": "%s (task #%d)" % (info["name"], info["pos"]),
-            "config": config,
+            "cls": cls,
+            "met": met,
+            "pos": pos,
+            "name": "%s%s" % (met, (pos and " [%d]" % (pos + 1) or "")),
+            "config": json.dumps(config, indent=2),
             "duration": _process_main_duration(result, data),
             "atomic": _process_atomic(result, data),
             "table_rows": table_rows,
             "table_cols": table_cols
         })
-    output = sorted(output, key=lambda r: r["name"])
-    return output
+    return sorted(output, key=lambda r: "%s%s" % (r["cls"], r["name"]))
 
 
 def plot(results):
-    results = _process_results(results)
+    data = _process_results(results)
 
-    abspath = os.path.dirname(__file__)
-    with open("%s/src/index.mako" % abspath) as index:
+    template_file = os.path.join(os.path.dirname(__file__),
+                                 "src", "index.mako")
+    with open(template_file) as index:
         template = mako.template.Template(index.read())
-        return template.render(data=json.dumps(results),
-                               tasks=map(lambda r: r["name"], results))
+        return template.render(data=json.dumps(data))

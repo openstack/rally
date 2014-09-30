@@ -22,7 +22,6 @@ from tests.unit import test
 
 
 class PlotTestCase(test.TestCase):
-
     @mock.patch("rally.benchmark.processing.plot.open", create=True)
     @mock.patch("rally.benchmark.processing.plot.mako.template.Template")
     @mock.patch("rally.benchmark.processing.plot.os.path.dirname")
@@ -43,8 +42,7 @@ class PlotTestCase(test.TestCase):
 
         self.assertEqual(result, templ.render.return_value)
         templ.render.assert_called_once_with(
-                data=json.dumps(mock_proc_results.return_value),
-                tasks=map(lambda r: r["name"], mock_proc_results.return_value)
+            data=json.dumps(mock_proc_results.return_value)
         )
         mock_template.assert_called_once_with(mock_open.read.return_value)
         mock_open.assert_called_once_with("%s/src/index.mako"
@@ -56,8 +54,9 @@ class PlotTestCase(test.TestCase):
     def test__process_results(self, mock_main_duration, mock_atomic,
                               mock_prepare):
         results = [
-            {"key": {"name": "n1", "pos": 1, "kw": "config1"}},
-            {"key": {"name": "n2", "pos": 2, "kw": "config2"}}
+            {"key": {"name": "Klass.method_foo", "pos": 0, "kw": "config1"}},
+            {"key": {"name": "Klass.method_foo", "pos": 1, "kw": "config2"}},
+            {"key": {"name": "Klass.method_bar", "pos": 0, "kw": "config3"}}
         ]
         table_cols = [
                 {"title": "action", "class": "center"},
@@ -74,10 +73,21 @@ class PlotTestCase(test.TestCase):
 
         output = plot._process_results(results)
 
+        results = sorted(results, key=lambda r: "%s%s" % (r["key"]["name"],
+                                                          r["key"]["pos"]))
+
         for i, r in enumerate(results):
+            config = json.dumps({r["key"]["name"]: [r["key"]["kw"]]}, indent=2)
+            pos = int(r["key"]["pos"])
+            cls = r["key"]["name"].split(".")[0]
+            met = r["key"]["name"].split(".")[1]
+            name = "%s%s" % (met, (pos and " [%d]" % (pos + 1) or ""))
             self.assertEqual(output[i], {
-                "name": "%s (task #%d)" % (r["key"]["name"], r["key"]["pos"]),
-                "config": {r["key"]["name"]: [r["key"]["kw"]]},
+                "cls": cls,
+                "pos": r["key"]["pos"],
+                "met": met,
+                "name": name,
+                "config": config,
                 "duration": mock_main_duration.return_value,
                 "atomic": mock_atomic.return_value,
                 "table_cols": table_cols,

@@ -84,8 +84,10 @@ def _add_command_parsers(categories, subparsers):
 
         category_subparsers = parser.add_subparsers(dest='action')
 
-        for (action, action_fn) in _methods_of(command_object):
-            parser = category_subparsers.add_parser(action)
+        for action, action_fn in _methods_of(command_object):
+            kwargs = {"help": action_fn.__doc__,
+                      "description": action_fn.__doc__}
+            parser = category_subparsers.add_parser(action, **kwargs)
 
             action_kwargs = []
             for args, kwargs in getattr(action_fn, 'args', []):

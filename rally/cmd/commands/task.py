@@ -288,7 +288,7 @@ class TaskCommands(object):
         print()
         print("HINTS:")
         print(_("* To plot HTML graphics with this data, run:"))
-        print("\trally task plot2html %s --out output.html" % task["uuid"])
+        print("\trally task report %s --out output.html" % task["uuid"])
         print()
         print(_("* To get raw JSON output of task results, run:"))
         print("\trally task results %s\n" % task["uuid"])
@@ -342,13 +342,16 @@ class TaskCommands(object):
     @cliutils.args('--open', dest='open_it', action='store_true',
                    help='Open it in browser.')
     @envutils.with_default_task_id
-    def plot2html(self, task_id=None, out=None, open_it=False):
-        results = map(lambda x: {
-                                 "key": x["key"],
-                                 'result': x['data']['raw']
-                                },
-                      db.task_result_get_all_by_uuid(task_id))
+    def report(self, task_id=None, out=None, open_it=False):
+        """Generate HTML report file for specified task.
 
+        :param task_id: int, task identifier
+        :param out: str, output html file name
+        :param open_it: bool, whether to open output file in web browser
+        """
+        results = map(lambda x: {"key": x["key"],
+                                 "result": x["data"]["raw"]},
+                      db.task_result_get_all_by_uuid(task_id))
         if out:
             out = os.path.expanduser(out)
         output_file = out or ("%s.html" % task_id)
@@ -357,6 +360,19 @@ class TaskCommands(object):
 
         if open_it:
             webbrowser.open_new_tab("file://" + os.path.realpath(output_file))
+
+    # NOTE(maretskiy): plot2html is deprecated by `report'
+    #                  and should be removed later
+    @cliutils.args('--uuid', type=str, dest='task_id', help='uuid of task')
+    @cliutils.args('--out', type=str, dest='out', required=False,
+                   help='Path to output file.')
+    @cliutils.args('--open', dest='open_it', action='store_true',
+                   help='Open it in browser.')
+    @envutils.with_default_task_id
+    def plot2html(self, task_id=None, out=None, open_it=False):
+        """Deprecated, use `task report' instead."""
+        print(self.plot2html.__doc__)
+        return self.report(task_id=task_id, out=out, open_it=open_it)
 
     @cliutils.args('--force', action='store_true', help='force delete')
     @cliutils.args('--uuid', type=str, dest='task_id', nargs="*",
