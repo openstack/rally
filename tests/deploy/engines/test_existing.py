@@ -17,6 +17,7 @@
 
 import jsonschema
 
+from rally import consts
 from rally import deploy
 from rally.deploy.engines import existing
 from tests import test
@@ -30,7 +31,7 @@ class TestExistingCloud(test.TestCase):
                 "type": "ExistingCloud",
                 "auth_url": "http://example.net:5000/v2.0/",
                 "region_name": "RegionOne",
-                "use_public_urls": False,
+                "endpoint_type": consts.EndpointType.INTERNAL,
                 "admin_port": 35357,
                 "admin": {
                     "username": "admin",

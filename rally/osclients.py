@@ -97,7 +97,7 @@ class Clients(object):
             "insecure": CONF.https_insecure, "cacert": CONF.https_cacert
         }
         kw = dict(self.endpoint.to_dict().items() + new_kw.items())
-        if kw["use_public_urls"]:
+        if kw["endpoint_type"] == consts.EndpointType.PUBLIC:
             mgmt_url = urlparse.urlparse(kw["auth_url"])
             if mgmt_url.port != kw["admin_port"]:
                 kw["endpoint"] = "{0}://{1}:{2}{3}".format(
@@ -136,7 +136,8 @@ class Clients(object):
         """Return nova client."""
         kc = self.keystone()
         compute_api_url = kc.service_catalog.url_for(
-            service_type='compute', endpoint_type='public',
+            service_type='compute',
+            endpoint_type=self.endpoint.endpoint_type,
             region_name=self.endpoint.region_name)
         client = nova.Client(version,
                              auth_token=kc.auth_token,
@@ -152,7 +153,8 @@ class Clients(object):
         """Return neutron client."""
         kc = self.keystone()
         network_api_url = kc.service_catalog.url_for(
-            service_type='network', endpoint_type='public',
+            service_type='network',
+            endpoint_type=self.endpoint.endpoint_type,
             region_name=self.endpoint.region_name)
         client = neutron.Client(version,
                                 token=kc.auth_token,
@@ -167,7 +169,8 @@ class Clients(object):
         """Return glance client."""
         kc = self.keystone()
         image_api_url = kc.service_catalog.url_for(
-            service_type='image', endpoint_type='public',
+            service_type='image',
+            endpoint_type=self.endpoint.endpoint_type,
             region_name=self.endpoint.region_name)
         client = glance.Client(version,
                                endpoint=image_api_url,
@@ -182,7 +185,8 @@ class Clients(object):
         """Return heat client."""
         kc = self.keystone()
         orchestration_api_url = kc.service_catalog.url_for(
-            service_type='orchestration', endpoint_type='public',
+            service_type='orchestration',
+            endpoint_type=self.endpoint.endpoint_type,
             region_name=self.endpoint.region_name)
         client = heat.Client(version,
                              endpoint=orchestration_api_url,
@@ -202,7 +206,8 @@ class Clients(object):
                                cacert=CONF.https_cacert)
         kc = self.keystone()
         volume_api_url = kc.service_catalog.url_for(
-            service_type='volume', endpoint_type='public',
+            service_type='volume',
+            endpoint_type=self.endpoint.endpoint_type,
             region_name=self.endpoint.region_name)
         client.client.management_url = volume_api_url
         client.client.auth_token = kc.auth_token
@@ -213,7 +218,8 @@ class Clients(object):
         """Return ceilometer client."""
         kc = self.keystone()
         metering_api_url = kc.service_catalog.url_for(
-            service_type='metering', endpoint_type='public',
+            service_type='metering',
+            endpoint_type=self.endpoint.endpoint_type,
             region_name=self.endpoint.region_name)
         auth_token = kc.auth_token
         if not hasattr(auth_token, '__call__'):
@@ -233,7 +239,8 @@ class Clients(object):
         """Return Ironic client."""
         kc = self.keystone()
         baremetal_api_url = kc.service_catalog.url_for(
-            service_type='baremetal', endpoint_type='public',
+            service_type='baremetal',
+            endpoint_type=self.endpoint.endpoint_type,
             region_name=self.endpoint.region_name)
         client = ironic.get_client(version,
                                    os_auth_token=kc.auth_token,
@@ -259,7 +266,8 @@ class Clients(object):
         """Return Zaqar client."""
         kc = self.keystone()
         messaging_api_url = kc.service_catalog.url_for(
-            service_type='messaging', endpoint_type='public',
+            service_type='messaging',
+            endpoint_type=self.endpoint.endpoint_type,
             region_name=self.endpoint.region_name)
         conf = {'auth_opts': {'backend': 'keystone', 'options': {
             'os_username': self.endpoint.username,
@@ -278,7 +286,8 @@ class Clients(object):
         """Return designate client."""
         kc = self.keystone()
         dns_api_url = kc.service_catalog.url_for(
-            service_type='dns', endpoint_type='public',
+            service_type='dns',
+            endpoint_type=self.endpoint.endpoint_type,
             region_name=self.endpoint.region_name)
         client = designate.Client(
             endpoint=dns_api_url,

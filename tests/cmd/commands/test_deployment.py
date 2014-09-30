@@ -18,6 +18,7 @@ import os
 import mock
 
 from rally.cmd.commands import deployment
+from rally import consts
 from rally import exceptions
 from tests import test
 
@@ -201,7 +202,7 @@ class DeploymentCommandsTestCase(test.TestCase):
                 "password": "p",
                 "tenant_name": "t",
                 "region_name": "r",
-                "use_public_urls": "upu",
+                "endpoint_type": consts.EndpointType.INTERNAL,
                 "admin_port": "ap"
             },
             "users": []
@@ -211,8 +212,9 @@ class DeploymentCommandsTestCase(test.TestCase):
         mock_deployment.assert_called_once_with(deploy_id)
 
         headers = ["auth_url", "username", "password", "tenant_name",
-                   "region_name", "use_public_urls", "admin_port"]
-        fake_data = ["url", "u", "p", "t", "r", "upu", "ap"]
+                   "region_name", "endpoint_type", "admin_port"]
+        fake_data = ["url", "u", "p", "t", "r", consts.EndpointType.INTERNAL,
+                     "ap"]
         mock_struct.assert_called_once_with(**dict(zip(headers, fake_data)))
         mock_print_list.assert_called_once_with([mock_struct()], headers)
 

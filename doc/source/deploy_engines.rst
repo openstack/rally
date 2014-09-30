@@ -62,7 +62,7 @@ This engine in fact does not deploy anything, but uses an existing OpenStack ins
             "username": "admin",
             "password": "password",
             "tenant_name": "admin",
-            "use_public_urls": True
+            "endpoint_type": "internal"
        }
    }
 
@@ -80,14 +80,14 @@ Or using keystone v3 API endpoint:
             "project_domain_name": "qa,
             "password": "password,
             "region_name": "RegionOne,
-            "use_public_urls": False,
+            "endpoint_type": "internal",
             "admin_port": 35357
         }
     }
 ..
 
-  *use_public_urls*  option will be used later for switching access method to the cloud.
-    Because in some use-cases cloud may be accessible only by public endpoints.
+  *endpoint_type*  option will be used later for selecting access method to the cloud.
+  Users can select from "public", "internal", "admin" access methods.
 
 
 

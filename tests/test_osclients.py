@@ -85,7 +85,8 @@ class OSClientsTestCase(test.TestCase):
             client = self.clients.nova()
             self.assertEqual(client, fake_nova)
             self.service_catalog.url_for.assert_called_once_with(
-                service_type='compute', endpoint_type='public',
+                service_type='compute',
+                endpoint_type=consts.EndpointType.INTERNAL,
                 region_name=self.endpoint.region_name)
             mock_nova.Client.assert_called_once_with(
                 "2",
@@ -112,7 +113,7 @@ class OSClientsTestCase(test.TestCase):
             "ca_cert": cfg.CONF.https_cacert
         }
         self.service_catalog.url_for.assert_called_once_with(
-            service_type='network', endpoint_type='public',
+            service_type='network', endpoint_type=consts.EndpointType.INTERNAL,
             region_name=self.endpoint.region_name)
         mock_neutron.Client.assert_called_once_with("2.0", **kw)
         self.assertEqual(self.clients.cache["neutron"], fake_neutron)
@@ -129,7 +130,8 @@ class OSClientsTestCase(test.TestCase):
                   "timeout": cfg.CONF.openstack_client_http_timeout,
                   "insecure": False, "cacert": None}
             self.service_catalog.url_for.assert_called_once_with(
-                service_type='image', endpoint_type='public',
+                service_type='image',
+                endpoint_type=consts.EndpointType.INTERNAL,
                 region_name=self.endpoint.region_name)
             mock_glance.Client.assert_called_once_with("1", **kw)
             self.assertEqual(self.clients.cache["glance"], fake_glance)
@@ -143,7 +145,8 @@ class OSClientsTestCase(test.TestCase):
             client = self.clients.cinder()
             self.assertEqual(client, fake_cinder)
             self.service_catalog.url_for.assert_called_once_with(
-                service_type='volume', endpoint_type='public',
+                service_type='volume',
+                endpoint_type=consts.EndpointType.INTERNAL,
                 region_name=self.endpoint.region_name)
             mock_cinder.Client.assert_called_once_with(
                 "1", None, None, http_log_debug=False,
@@ -164,7 +167,8 @@ class OSClientsTestCase(test.TestCase):
             client = self.clients.ceilometer()
             self.assertEqual(client, fake_ceilometer)
             self.service_catalog.url_for.assert_called_once_with(
-                service_type='metering', endpoint_type='public',
+                service_type='metering',
+                endpoint_type=consts.EndpointType.INTERNAL,
                 region_name=self.endpoint.region_name)
             kw = {"endpoint": self.service_catalog.url_for.return_value,
                   "token": self.fake_keystone.auth_token,
@@ -182,7 +186,8 @@ class OSClientsTestCase(test.TestCase):
         client = self.clients.ironic()
         self.assertEqual(client, fake_ironic)
         self.service_catalog.url_for.assert_called_once_with(
-            service_type='baremetal', endpoint_type='public',
+            service_type='baremetal',
+            endpoint_type=consts.EndpointType.INTERNAL,
             region_name=self.endpoint.region_name)
         kw = {
             "os_auth_token": self.fake_keystone.auth_token,
@@ -218,7 +223,8 @@ class OSClientsTestCase(test.TestCase):
         client = self.clients.zaqar()
         self.assertEqual(client, fake_zaqar)
         self.service_catalog.url_for.assert_called_once_with(
-            service_type='messaging', endpoint_type='public',
+            service_type='messaging',
+            endpoint_type=consts.EndpointType.INTERNAL,
             region_name=self.endpoint.region_name)
         fake_zaqar_url = self.service_catalog.url_for.return_value
         conf = {'auth_opts': {'backend': 'keystone', 'options': {

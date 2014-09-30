@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from rally import consts
 from rally import objects
 from tests import test
 
@@ -25,7 +26,8 @@ class EndpointTestCase(test.TestCase):
                          {"auth_url": "url", "username": "user",
                           "password": "pwd", "tenant_name": "tenant",
                           "region_name": None, "permission": "admin",
-                          "domain_name": None, "use_public_urls": False,
+                          "domain_name": None,
+                          "endpoint_type": consts.EndpointType.INTERNAL,
                           "project_domain_name": "Default",
                           "user_domain_name": "Default",
                           'admin_port': 35357})

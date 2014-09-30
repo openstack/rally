@@ -68,6 +68,12 @@ class _EndpointPermission(utils.ImmutableMixin, utils.EnumMixin):
     USER = "user"
 
 
+class _EndpointType(utils.ImmutableMixin, utils.EnumMixin):
+    INTERNAL = "internal"
+    ADMIN = "admin"
+    PUBLIC = "public"
+
+
 class _RunnerType(utils.ImmutableMixin, utils.EnumMixin):
     SERIAL = "serial"
     CONSTANT = "constant"
@@ -148,3 +154,4 @@ EndpointPermission = _EndpointPermission()
 RunnerType = _RunnerType()
 ServiceType = _ServiceType()
 Service = _Service()
+EndpointType = _EndpointType()

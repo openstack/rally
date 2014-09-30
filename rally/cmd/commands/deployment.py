@@ -172,7 +172,7 @@ class DeploymentCommands(object):
         :param deploy_id: a UUID of the deployment
         """
         headers = ['auth_url', 'username', 'password', 'tenant_name',
-                   'region_name', 'use_public_urls', 'admin_port']
+                   'region_name', 'endpoint_type', 'admin_port']
         table_rows = []
 
         deployment = db.deployment_get(deploy_id)

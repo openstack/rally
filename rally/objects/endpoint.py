@@ -20,8 +20,9 @@ class Endpoint(object):
 
     def __init__(self, auth_url, username, password, tenant_name=None,
                  permission=consts.EndpointPermission.USER,
-                 region_name=None, use_public_urls=False, admin_port=35357,
-                 domain_name=None, user_domain_name='Default',
+                 region_name=None, endpoint_type=consts.EndpointType.INTERNAL,
+                 admin_port=35357, domain_name=None,
+                 user_domain_name='Default',
                  project_domain_name='Default'):
         self.auth_url = auth_url
         self.username = username
@@ -29,7 +30,7 @@ class Endpoint(object):
         self.tenant_name = tenant_name
         self.permission = permission
         self.region_name = region_name
-        self.use_public_urls = use_public_urls
+        self.endpoint_type = endpoint_type
         self.admin_port = admin_port
         self.domain_name = domain_name
         self.user_domain_name = user_domain_name
@@ -39,7 +40,7 @@ class Endpoint(object):
         dct = {"auth_url": self.auth_url, "username": self.username,
                "password": self.password, "tenant_name": self.tenant_name,
                "region_name": self.region_name,
-               "use_public_urls": self.use_public_urls,
+               "endpoint_type": self.endpoint_type,
                "admin_port": self.admin_port,
                "domain_name": self.domain_name,
                "user_domain_name": self.user_domain_name,
