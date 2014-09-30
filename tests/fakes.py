@@ -242,6 +242,24 @@ class FakeRole(FakeResource):
     pass
 
 
+class FakeQueue(FakeResource):
+    def __init__(self, manager=None, name='myqueue'):
+        super(FakeQueue, self).__init__(manager, name)
+        self.queue_name = name
+        self.messages = FakeMessagesManager(name)
+
+    def post_message(self, messages):
+        for msg in messages:
+            self.messages.create(**msg)
+
+
+class FakeMessage(FakeResource):
+    def __init__(self, manager=None, **kwargs):
+        super(FakeMessage, self).__init__(manager)
+        self.body = kwargs.get('body', 'fake-body')
+        self.ttl = kwargs.get('ttl', 100)
+
+
 class FakeManager(object):
 
     def __init__(self):
@@ -697,6 +715,43 @@ class FakeQueryManager(FakeManager):
         return ['fake-query-result']
 
 
+class FakeQueuesManager(FakeManager):
+    def __init__(self):
+        super(FakeQueuesManager, self).__init__()
+        self.__queues = {}
+
+    def create(self, name):
+        queue = FakeQueue(self, name)
+        self.__queues[queue.name] = queue
+        return self._cache(queue)
+
+    def list(self):
+        return self.__queues.values()
+
+    def delete(self, queue):
+        super(FakeQueuesManager, self).delete(queue.name)
+        del self.__queues[queue.name]
+
+
+class FakeMessagesManager(FakeManager):
+    def __init__(self, queue='myqueue'):
+        super(FakeMessagesManager, self).__init__()
+        self.__queue = queue
+        self.__messages = {}
+
+    def create(self, **kwargs):
+        message = FakeMessage(self, **kwargs)
+        self.__messages[message.id] = message
+        return self._cache(message)
+
+    def list(self):
+        return self.__messages.values()
+
+    def delete(self, message):
+        super(FakeMessagesManager, self).delete(message.id)
+        del self.__messages[message.id]
+
+
 class FakeServiceCatalog(object):
     def get_endpoints(self):
         return {'image': [{'publicURL': 'http://fake.to'}],
@@ -1055,7 +1110,10 @@ class FakeSaharaClient(object):
 class FakeZaqarClient(object):
 
     def __init__(self):
-        pass
+        self.queues = FakeQueuesManager()
+
+    def create_queue(self):
+        return self.queues.create("fizbit")
 
 
 class FakeClients(object):

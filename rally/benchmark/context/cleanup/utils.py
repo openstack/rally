@@ -228,6 +228,17 @@ def delete_node_group_templates(sahara):
         sahara.node_group_templates.delete(ngt.id)
 
 
+def delete_zaqar_resources(zaqar):
+    # delete messages
+    for queue in zaqar.queues.list():
+        for msg in queue.messages.list():
+            msg.delete()
+
+    # delete queues
+    for queue in zaqar.queues.list():
+        queue.delete()
+
+
 def _wait_for_empty_list(mgr, timeout=10, check_interval=1):
     _wait_for_list_size(mgr, sizes=[0], timeout=timeout,
                         check_interval=check_interval)

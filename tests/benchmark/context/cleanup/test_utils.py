@@ -147,3 +147,16 @@ class CleanupUtilsTestCase(test.TestCase):
         self.assertEqual(total(glance), 1)
         utils.delete_glance_resources(glance, "dummy")
         self.assertEqual(total(glance), 0)
+
+    def test_delete_zaqar_resources(self):
+        zaqar = fakes.FakeClients().zaqar()
+        messages = [{'body': {'id': idx}, 'ttl': 360} for idx in range(20)]
+        queue = zaqar.create_queue()
+        queue.post_message(messages)
+        messages_no = lambda queue: (len(queue.messages.list()))
+        queues_no = lambda zaqar: (len(zaqar.queues.list()))
+        self.assertEqual(messages_no(queue), 20)
+        self.assertEqual(queues_no(zaqar), 1)
+        utils.delete_zaqar_resources(zaqar)
+        self.assertEqual(messages_no(queue), 0)
+        self.assertEqual(queues_no(zaqar), 0)
