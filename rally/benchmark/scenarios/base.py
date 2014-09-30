@@ -92,11 +92,11 @@ class Scenario(object):
         if "." in name:
             scenario_group, scenario_name = name.split(".", 1)
             scenario_cls = Scenario.get_by_name(scenario_group)
-            if hasattr(scenario_cls, scenario_name):
+            if Scenario.is_scenario(scenario_cls, scenario_name):
                 return getattr(scenario_cls, scenario_name)
         else:
             for scenario_cls in utils.itersubclasses(Scenario):
-                if name in dir(scenario_cls):
+                if Scenario.is_scenario(scenario_cls, name):
                     return getattr(scenario_cls, name)
         raise exceptions.NoSuchScenario(name=name)
 
@@ -110,10 +110,8 @@ class Scenario(object):
         :returns: List of strings
         """
         benchmark_scenarios = [
-            ["%s.%s" % (scenario.__name__, method)
-             for method in dir(scenario)
-                if Scenario.meta(scenario, method_name=method,
-                                 attr_name="is_scenario", default=False)]
+            ["%s.%s" % (scenario.__name__, func)
+             for func in dir(scenario) if Scenario.is_scenario(scenario, func)]
             for scenario in utils.itersubclasses(Scenario)
         ]
         benchmark_scenarios_flattened = list(itertools.chain.from_iterable(
@@ -169,6 +167,17 @@ class Scenario(object):
             cls = Scenario.get_by_name(cls_name)
         method = getattr(cls, method_name)
         return copy.deepcopy(getattr(method, attr_name, default))
+
+    @staticmethod
+    def is_scenario(cls, method_name):
+        """Check whether a given method in scenario class is a scenario.
+
+        :param cls: scenario class
+        :param method_name: method name
+        :returns: True if the method is a benchmark scenario, False otherwise
+        """
+        return (hasattr(cls, method_name) and
+                Scenario.meta(cls, "is_scenario", method_name, default=False))
 
     def context(self):
         """Returns the context of the current benchmark scenario."""

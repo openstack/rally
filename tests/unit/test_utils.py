@@ -309,3 +309,26 @@ description.
             "returns": "Return value description."
         }
         self.assertEqual(dct, expected)
+
+
+class EditDistanceTestCase(test.TestCase):
+
+    def test_distance_empty_strings(self):
+        dist = utils.distance("", "")
+        self.assertEqual(0, dist)
+
+    def test_distance_equal_strings(self):
+        dist = utils.distance("abcde", "abcde")
+        self.assertEqual(0, dist)
+
+    def test_distance_replacement(self):
+        dist = utils.distance("abcde", "__cde")
+        self.assertEqual(2, dist)
+
+    def test_distance_insertion(self):
+        dist = utils.distance("abcde", "ab__cde")
+        self.assertEqual(2, dist)
+
+    def test_distance_deletion(self):
+        dist = utils.distance("abcde", "abc")
+        self.assertEqual(2, dist)

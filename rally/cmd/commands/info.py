@@ -64,6 +64,10 @@ class InfoCommands(object):
             print(info)
         else:
             print("Failed to find any docs for query: '%s'" % query)
+            substitutions = self._find_substitution(query)
+            if substitutions:
+                print("Did you mean one of these?\n\t%s" %
+                      "\n\t".join(substitutions))
             return 1
 
     def _find_info(self, query):
@@ -71,6 +75,25 @@ class InfoCommands(object):
                 self._get_scenario_info(query) or
                 self._get_deploy_engine_info(query) or
                 self._get_server_provider_info(query))
+
+    def _find_substitution(self, query):
+        max_distance = min(3, len(query) / 4)
+        scenarios = scenario_base.Scenario.list_benchmark_scenarios()
+        scenario_groups = list(set(s.split(".")[0] for s in scenarios))
+        scenario_methods = list(set(s.split(".")[1] for s in scenarios))
+        deploy_engines = [cls.__name__ for cls in utils.itersubclasses(
+                          deploy.EngineFactory)]
+        server_providers = [cls.__name__ for cls in utils.itersubclasses(
+                            serverprovider.ProviderFactory)]
+        candidates = (scenarios + scenario_groups + scenario_methods +
+                      deploy_engines + server_providers)
+        suggestions = []
+        # NOTE(msdubov): Incorrect query may either have typos or be truncated.
+        for candidate in candidates:
+            if ((utils.distance(query, candidate) <= max_distance or
+                 candidate.startswith(query))):
+                suggestions.append(candidate)
+        return suggestions
 
     def _get_scenario_group_info(self, query):
         try:
