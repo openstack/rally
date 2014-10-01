@@ -20,6 +20,7 @@ from rally.benchmark.context.cleanup import utils as cleanup_utils
 from rally.benchmark.scenarios.sahara import utils
 from rally.benchmark import types
 from rally.benchmark import utils as bench_utils
+from rally import exceptions
 from rally.openstack.common import log as logging
 from rally import osclients
 from rally import utils as rutils
@@ -133,20 +134,33 @@ class SaharaCluster(base.Context):
                 self.context["sahara_clusters"][tenant_id] = cluster.id
 
                 # Need to save the client instance to poll for active status
-                wait_dict[cluster.id] = clients.sahara()
-
-        def all_active(dct):
-            for cl_id, client in dct.items():
-                cl = client.clusters.get(cl_id)
-                if cl.status.lower() != "active":
-                    return False
-            return True
+                wait_dict[cluster] = clients.sahara()
 
         bench_utils.wait_for(
             resource=wait_dict,
-            is_ready=all_active,
+            update_resource=self.update_clusters_dict,
+            is_ready=self.all_clusters_active,
             timeout=CONF.benchmark.cluster_create_timeout,
             check_interval=CONF.benchmark.cluster_check_interval)
+
+    def update_clusters_dict(self, dct):
+        new_dct = dict()
+        for cluster, client in dct.items():
+            new_cl = client.clusters.get(cluster.id)
+            new_dct[new_cl] = client
+
+        return new_dct
+
+    def all_clusters_active(self, dct):
+        for cluster, client in dct.items():
+            cluster_status = cluster.status.lower()
+            if cluster_status == "error":
+                raise exceptions.SaharaClusterFailure(
+                    name=cluster.name, action="start",
+                    reason=cluster.status_description)
+            elif cluster_status != "active":
+                return False
+        return True
 
     @rutils.log_task_wrapper(LOG.info, _("Exit context: `Sahara Cluster`"))
     def cleanup(self):

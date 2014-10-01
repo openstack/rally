@@ -16,6 +16,7 @@ import mock
 from oslo.config import cfg
 
 from rally.benchmark.context.sahara import sahara_cluster
+from rally import exceptions
 from tests.unit import test
 
 CONF = cfg.CONF
@@ -102,3 +103,39 @@ class SaharaClusterTestCase(test.TestCase):
         self.assertEqual(
             self.tenants_num,
             len(mock_cleanup_utils.delete_clusters.mock_calls))
+
+    @mock.patch("%s.sahara_cluster.cleanup_utils" % CTX)
+    @mock.patch("%s.sahara_cluster.utils.SaharaScenario._launch_cluster" % CTX,
+                return_value=mock.MagicMock(id=42))
+    @mock.patch("%s.sahara_cluster.osclients" % CTX)
+    def test_setup_and_cleanup_error(self, mock_osclients,
+                                     mock_launch, mock_cleanup_utils):
+
+        mock_sahara = mock_osclients.Clients(mock.MagicMock()).sahara()
+
+        ctx = self.context_without_cluster_keys
+        sahara_ctx = sahara_cluster.SaharaCluster(ctx)
+
+        launch_cluster_calls = []
+
+        for i in range(self.tenants_num):
+            launch_cluster_calls.append(mock.call(
+                plugin_name="test_plugin",
+                hadoop_version="test_version",
+                flavor_id="test_flavor",
+                node_count=2,
+                image_id=ctx["sahara_images"][i],
+                floating_ip_pool=None,
+                neutron_net_id=None,
+                volumes_per_node=None,
+                volumes_size=1,
+                node_configs=None,
+                cluster_configs=None,
+                wait_active=False
+            ))
+
+        mock_sahara.clusters.get.side_effect = [
+            mock.MagicMock(status="not-active"),
+            mock.MagicMock(status="error")]
+
+        self.assertRaises(exceptions.SaharaClusterFailure, sahara_ctx.setup)
