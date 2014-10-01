@@ -170,7 +170,7 @@ class BenchmarkEngine(object):
         except Exception as e:
             log = [str(type(e)), str(e), json.dumps(traceback.format_exc())]
             self.task.set_failed(log=log)
-            raise exceptions.InvalidTaskException(message=str(e))
+            raise exceptions.InvalidTaskException(str(e))
 
     def _get_runner(self, config):
         runner = config.get("runner", {})

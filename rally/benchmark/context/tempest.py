@@ -23,6 +23,7 @@ from rally import exceptions
 from rally.openstack.common.gettextutils import _
 from rally.openstack.common import log as logging
 from rally import utils
+from rally.verification.verifiers.tempest import config
 from rally.verification.verifiers.tempest import tempest
 
 LOG = logging.getLogger(__name__)
@@ -48,11 +49,11 @@ class Tempest(base.Context):
                 self.verifier.install()
             if not self.verifier.is_configured():
                 self.verifier.generate_config_file()
-        except exceptions.TempestSetupFailure:
+        except tempest.TempestSetupFailure:
             msg = _("Failing to install tempest.")
             LOG.error(msg)
             raise exceptions.BenchmarkSetupFailure(msg)
-        except exceptions.TempestConfigCreationFailure:
+        except config.TempestConfigCreationFailure:
             msg = _("Failing to configure tempest.")
             LOG.error(msg)
             raise exceptions.BenchmarkSetupFailure(msg)

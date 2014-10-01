@@ -111,4 +111,4 @@ class ImageGenerator(base.Context):
             message = _(
                 "The image service is unavailable, Reason: %(reason)s") % {
                       "reason": six.text_type(e)}
-            raise exceptions.InvalidScenarioArgument(message=message)
+            raise exceptions.InvalidScenarioArgument(message)

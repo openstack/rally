@@ -19,6 +19,8 @@ import mock
 
 from rally.benchmark.context import tempest
 from rally import exceptions
+from rally.verification.verifiers.tempest import config
+from rally.verification.verifiers.tempest import tempest as tempest_verifier
 from tests.unit import test
 
 
@@ -55,7 +57,7 @@ class TempestContextTestCase(test.TestCase):
     @mock.patch(TEMPEST + ".Tempest.install")
     def test_setup_failure_on_tempest_installation(
             self, mock_install, mock_is_installed, mock_is_cfg, mock_mkdir):
-        mock_install.side_effect = exceptions.TempestSetupFailure()
+        mock_install.side_effect = tempest_verifier.TempestSetupFailure()
 
         benchmark = tempest.Tempest(self.context)
 
@@ -68,7 +70,7 @@ class TempestContextTestCase(test.TestCase):
     @mock.patch(TEMPEST + ".Tempest.generate_config_file")
     def test_setup_failure_on_tempest_configuration(
             self, mock_gen, mock_is_installed, mock_is_cfg, mock_mkdir):
-        mock_gen.side_effect = exceptions.TempestConfigCreationFailure()
+        mock_gen.side_effect = config.TempestConfigCreationFailure()
 
         benchmark = tempest.Tempest(self.context)
 

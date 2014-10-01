@@ -46,27 +46,29 @@ class RallyException(Exception):
     def __init__(self, message=None, **kwargs):
         self.kwargs = kwargs
 
-        if 'code' not in self.kwargs:
+        if "code" not in self.kwargs:
             try:
-                self.kwargs['code'] = self.code
+                self.kwargs["code"] = self.code
             except AttributeError:
                 pass
 
-        if not message:
-            try:
-                message = self.msg_fmt % kwargs
-            except KeyError:
-                exc_info = sys.exc_info()
-                # kwargs doesn't match a variable in the message
-                # log the issue and the kwargs
-                msg = "kwargs don't match in string format operation: %s"
-                LOG.debug(msg % kwargs, exc_info=exc_info)
+        if "%(message)s" in self.msg_fmt:
+            kwargs = dict(kwargs.items() + {"message": message}.items())
 
-                if CONF.fatal_exception_format_errors:
-                    raise exc_info[0], exc_info[1], exc_info[2]
-                else:
-                    # at least get the core message out if something happened
-                    message = self.msg_fmt
+        try:
+            message = self.msg_fmt % kwargs
+        except KeyError:
+            exc_info = sys.exc_info()
+            # kwargs doesn't match a variable in the message
+            # log the issue and the kwargs
+            msg = "kwargs don't match in string format operation: %s"
+            LOG.debug(msg % kwargs, exc_info=exc_info)
+
+            if CONF.fatal_exception_format_errors:
+                raise exc_info[0], exc_info[1], exc_info[2]
+            else:
+                # at least get the core message out if something happened
+                message = message or self.msg_fmt
 
         super(RallyException, self).__init__(message)
 
@@ -96,10 +98,6 @@ class InvalidRunnerResult(RallyException):
 
 class InvalidTaskException(InvalidConfigException):
     msg_fmt = _("This config is invalid: `%(message)s`")
-
-
-class InvalidTaskConfigException(InvalidTaskException):
-    msg_fmt = _("This config has invalid schema: `%(message)s`")
 
 
 class NotFoundScenarios(InvalidTaskException):
@@ -209,24 +207,8 @@ class InvalidScenarioArgument(RallyException):
     msg_fmt = _("Invalid scenario argument: '%(message)s'")
 
 
-class TempestConfigCreationFailure(RallyException):
-    msg_fmt = _("Unable create tempest.conf: '%(message)s'")
-
-
-class TempestSetupFailure(RallyException):
-    msg_fmt = _("Unable to setup tempest: '%(message)s'")
-
-
-class TempestBenchmarkFailure(RallyException):
-    msg_fmt = _("Failed tempest test(s): '%(message)s'")
-
-
 class BenchmarkSetupFailure(RallyException):
     msg_fmt = _("Unable to setup benchmark: '%(message)s'")
-
-
-class DummyScenarioException(RallyException):
-    msg_fmt = _("Dummy scenario expected exception: '%(message)s'")
 
 
 class ValidationError(RallyException):

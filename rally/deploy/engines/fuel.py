@@ -140,7 +140,7 @@ class FuelEngine(engine.EngineFactory):
         if 'compute' not in self.config['nodes']:
             if 'cinder+compute' not in self.config['nodes']:
                 raise exceptions.ValidationError(
-                    message=_('At least one compute is required.'))
+                    _('At least one compute is required.'))
 
     def _get_nodes(self, key):
         if key not in self.config['nodes']:

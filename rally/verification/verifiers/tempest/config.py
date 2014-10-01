@@ -46,6 +46,10 @@ CONF = cfg.CONF
 CONF.register_opts(image_opts, 'image')
 
 
+class TempestConfigCreationFailure(exceptions.RallyException):
+    msg_fmt = _("Unable create tempest.conf: '%(message)s'")
+
+
 class TempestConf(object):
 
     def __init__(self, deploy_id):
@@ -57,7 +61,7 @@ class TempestConf(object):
             msg = (_("Admin permission is required to generate tempest "
                      "configuration file. User %s doesn't have admin role.") %
                    self.endpoint['username'])
-            raise exceptions.TempestConfigCreationFailure(message=msg)
+            raise TempestConfigCreationFailure(msg)
         self.available_services = [service['name'] for service in
                                    self.keystoneclient.
                                    service_catalog.get_data()]
@@ -82,7 +86,7 @@ class TempestConf(object):
         except requests.ConnectionError as err:
             msg = _('Error on downloading cirros image, possibly'
                     ' no connection to Internet with message %s') % str(err)
-            raise exceptions.TempestConfigCreationFailure(message=msg)
+            raise TempestConfigCreationFailure(msg)
         if response.status_code == 200:
             with open(self.img_path + '.tmp', 'wb') as img_file:
                 for chunk in response.iter_content(chunk_size=1024):
@@ -97,7 +101,7 @@ class TempestConf(object):
             else:
                 msg = _('Error on downloading cirros image, '
                         'HTTP error code %s') % response.getcode()
-            raise exceptions.TempestConfigCreationFailure(message=msg)
+            raise TempestConfigCreationFailure(msg)
 
     def _get_url(self, servicename):
         for service in self.keystoneclient.auth_ref['serviceCatalog']:
@@ -138,7 +142,7 @@ class TempestConf(object):
                 msg = _('There are no desired images (cirros) or only one and '
                         'new image could not be created.\n'
                         'Reason: %s') % e.message
-                raise exceptions.TempestConfigCreationFailure(message=msg)
+                raise TempestConfigCreationFailure(msg)
         self.conf.set(section_name, 'image_ref', image_list[0].id)
         self.conf.set(section_name, 'image_ref_alt', image_list[1].id)
 
@@ -157,7 +161,7 @@ class TempestConf(object):
                 msg = _('There are no desired flavors or only one and '
                         'new flavor could not be created.\n'
                         'Reason: %s') % e.message
-                raise exceptions.TempestConfigCreationFailure(message=msg)
+                raise TempestConfigCreationFailure(msg)
         self.conf.set(section_name, 'flavor_ref', flavor_list[0].id)
         self.conf.set(section_name, 'flavor_ref_alt', flavor_list[1].id)
 
