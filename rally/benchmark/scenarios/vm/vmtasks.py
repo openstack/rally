@@ -16,6 +16,7 @@
 import json
 
 from rally.benchmark.scenarios import base
+from rally.benchmark.scenarios.cinder import utils as cinder_utils
 from rally.benchmark.scenarios.nova import utils as nova_utils
 from rally.benchmark.scenarios.vm import utils as vm_utils
 from rally.benchmark import types as types
@@ -24,7 +25,8 @@ from rally import consts
 from rally import exceptions
 
 
-class VMTasks(nova_utils.NovaScenario, vm_utils.VMScenario):
+class VMTasks(nova_utils.NovaScenario, vm_utils.VMScenario,
+              cinder_utils.CinderScenario):
 
     def __init__(self, *args, **kwargs):
         super(VMTasks, self).__init__(*args, **kwargs)
@@ -36,22 +38,26 @@ class VMTasks(nova_utils.NovaScenario, vm_utils.VMScenario):
     @validation.number("port", minval=1, maxval=65535, nullable=True,
                        integer_only=True)
     @validation.external_network_exists("floating_network", "use_floatingip")
-    @validation.required_services(consts.Service.NOVA)
+    @validation.required_services(consts.Service.NOVA, consts.Service.CINDER)
     @validation.required_openstack(users=True)
-    @base.scenario(
-        context={"cleanup": ["nova"], "keypair": {}, "allow_ssh": {}})
+    @base.scenario(context={"cleanup": ["nova", "cinder"],
+                            "keypair": {}, "allow_ssh": {}})
     def boot_runcommand_delete(self, image, flavor,
                                script, interpreter, username,
+                               volume_args=None,
                                fixed_network="private",
                                floating_network="public",
                                ip_version=4, port=22,
                                use_floatingip=True, **kwargs):
         """Boot server, run a script that outputs JSON, delete server.
 
+        :param image: glance image name to use for the vm
+        :param flavor: VM flavor name
         :param script: script to run on the server, must output JSON mapping
                 metric names to values. See sample script below.
         :param interpreter: The shell interpreter to use when running script
         :param username: User to SSH to instance as
+        :param volume_args: volume args when boot VM from volume
         :param fixed_network: Network where instance is part of
         :param floating_network: External network used to get floating ip from
         :param ip_version: Version of ip protocol to use for connection
@@ -66,6 +72,10 @@ class VMTasks(nova_utils.NovaScenario, vm_utils.VMScenario):
 
         Example Script in doc/samples/tasks/support/instance_dd_test.sh
         """
+        if volume_args:
+            volume = self._create_volume(volume_args['size'], imageRef=None)
+            kwargs['block_device_mapping'] = {'vda': '%s:::1' % volume.id}
+
         server = None
         floating_ip = None
         try:
