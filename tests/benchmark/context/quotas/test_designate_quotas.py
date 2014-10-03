@@ -39,5 +39,5 @@ class DesignateQuotasTestCase(test.TestCase):
         quotas = designate_quotas.DesignateQuotas(client_mock)
         tenant_id = mock.MagicMock()
         quotas.delete(tenant_id)
-        client_mock.designate().quotas.delete.assert_called_once_with(
+        client_mock.designate().quotas.reset.assert_called_once_with(
             tenant_id)

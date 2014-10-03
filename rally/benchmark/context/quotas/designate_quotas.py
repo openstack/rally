@@ -51,4 +51,4 @@ class DesignateQuotas(object):
         self.clients.designate().quotas.update(tenant_id, kwargs)
 
     def delete(self, tenant_id):
-        self.clients.designate().quotas.delete(tenant_id)
+        self.clients.designate().quotas.reset(tenant_id)
