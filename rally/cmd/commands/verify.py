@@ -16,6 +16,7 @@
 """ Rally command: verify """
 
 import json
+import os
 import pprint
 
 import six
@@ -117,6 +118,7 @@ class VerifyCommands(object):
             result = json.dumps(results)
 
         if output_file:
+            output_file = os.path.expanduser(output_file)
             with open(output_file, 'wb') as f:
                 f.write(result)
         else:

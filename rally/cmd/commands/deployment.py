@@ -84,6 +84,7 @@ class DeploymentCommands(object):
             if not filename:
                 print("Either --filename or --fromenv is required")
                 return(1)
+            filename = os.path.expanduser(filename)
             with open(filename, 'rb') as deploy_file:
                 config = yaml.safe_load(deploy_file.read())
 

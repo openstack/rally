@@ -51,6 +51,7 @@ class TaskCommands(object):
         :param deploy_id: a UUID of a deployment
         """
 
+        task = os.path.expanduser(task)
         with open(task, "rb") as task_file:
             config_dict = yaml.safe_load(task_file.read())
         try:
@@ -76,6 +77,7 @@ class TaskCommands(object):
         :param deploy_id: a UUID of a deployment
         :param tag: optional tag for this task
         """
+        task = os.path.expanduser(task)
         with open(task, 'rb') as task_file:
             config_dict = yaml.safe_load(task_file.read())
             try:
@@ -347,6 +349,8 @@ class TaskCommands(object):
                                 },
                       db.task_result_get_all_by_uuid(task_id))
 
+        if out:
+            out = os.path.expanduser(out)
         output_file = out or ("%s.html" % task_id)
         with open(output_file, "w+") as f:
             f.write(plot.plot(results))
