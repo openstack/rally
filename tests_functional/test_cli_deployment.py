@@ -35,18 +35,26 @@ class DeploymentTestCase(unittest.TestCase):
                       self.rally("deployment endpoint"))
 
     def test_create_fromfile(self):
-        fake_d_conf = "/tmp/.tmp.deployment"
-        self.rally("deployment create --name t_create_file --filename %s"
-                   % fake_d_conf)
+        with mock.patch.dict("os.environ", utils.TEST_ENV):
+            self.rally("deployment create --name t_create_env --fromenv")
+        with open("/tmp/.tmp.deployment", "w") as f:
+            f.write(self.rally("deployment config"))
+        self.rally("deployment create --name t_create_file "
+                   "--filename /tmp/.tmp.deployment")
         self.assertIn("t_create_file", self.rally("deployment list"))
 
     def test_config(self):
-        fake_d_conf = "/tmp/.tmp.deployment"
-        self.rally("deployment create --name t_create_file --filename %s"
-                   % fake_d_conf)
-        with open(fake_d_conf, "r") as conf:
-            self.assertDictEqual(json.loads(conf.read()),
-                                 json.loads(self.rally("deployment config")))
+        with mock.patch.dict("os.environ", utils.TEST_ENV):
+            self.rally("deployment create --name t_create_env --fromenv")
+        config = json.loads(self.rally("deployment config"))
+        self.assertEqual(utils.TEST_ENV["OS_USERNAME"],
+                         config["admin"]["username"])
+        self.assertEqual(utils.TEST_ENV["OS_PASSWORD"],
+                         config["admin"]["password"])
+        self.assertEqual(utils.TEST_ENV["OS_TENANT_NAME"],
+                         config["admin"]["tenant_name"])
+        self.assertEqual(utils.TEST_ENV["OS_AUTH_URL"],
+                         config["auth_url"])
 
     def test_destroy(self):
         with mock.patch.dict("os.environ", utils.TEST_ENV):
