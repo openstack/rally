@@ -946,6 +946,31 @@
           name: "m1.tiny"
         image:
           name: "cirros-0.3.2-x86_64-uec"
+        volume_args:
+            size: 2
+        fixed_network: "private"
+        floating_network: "public"
+        use_floatingip: true
+        script: "/home/jenkins/.rally/extra/instance_dd_test.sh"
+        interpreter: "/bin/sh"
+        username: "cirros"
+      runner:
+        type: "constant"
+        times: 2
+        concurrency: 2
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+      sla:
+        max_failure_percent: 0
+
+    -
+      args:
+        flavor:
+          name: "m1.tiny"
+        image:
+          name: "cirros-0.3.2-x86_64-uec"
         fixed_network: "private"
         use_floatingip: false
         script: "/home/jenkins/.rally/extra/instance_dd_test.sh"

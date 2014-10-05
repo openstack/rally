@@ -37,6 +37,10 @@ class VMTasksTestCase(test.TestCase):
 
         scenario._boot_server = mock.MagicMock(return_value=fake_server)
 
+        fake_volume = fakes.FakeVolumeManager().create()
+        fake_volume.id = "volume_id"
+        scenario._create_volume = mock.MagicMock(return_value=fake_volume)
+
         scenario._generate_random_name = mock.MagicMock(return_value="name")
 
         fake_floating_ip = fakes.FakeFloatingIP()
@@ -59,14 +63,15 @@ class VMTasksTestCase(test.TestCase):
         scenario.boot_runcommand_delete(
             "image_id", "flavour_id", "script_path", "interpreter",
             fixed_network='private', floating_network='public',
-            username="username", ip_version=4,
+            volume_args={'size': 10}, username="username", ip_version=4,
             port=22, use_floatingip=True, fakearg="f")
 
         # Assertions
         scenario._boot_server.assert_called_once_with(
             'name', 'image_id', "flavour_id", key_name="rally_ssh_key",
-            fakearg="f")
+            fakearg="f", block_device_mapping={'vda': 'volume_id:::1'})
 
+        scenario._create_volume.assert_called_once_with(10, imageRef=None)
         scenario._create_floating_ip.assert_called_once_with(
             fake_floating_ip_pool.name)
         scenario._associate_floating_ip.assert_called_once_with(
