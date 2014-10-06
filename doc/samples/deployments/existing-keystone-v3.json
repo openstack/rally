@@ -2,7 +2,7 @@
     "type": "ExistingCloud",
     "auth_url": "http://example.net:5000/v3/",
     "region_name": "RegionOne",
-    "endpoint_type": "internal",
+    "endpoint_type": "public",
     "admin_port": 35357,
     "admin": {
         "username": "admin",
