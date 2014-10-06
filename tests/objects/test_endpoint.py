@@ -27,7 +27,7 @@ class EndpointTestCase(test.TestCase):
                           "password": "pwd", "tenant_name": "tenant",
                           "region_name": None, "permission": "admin",
                           "domain_name": None,
-                          "endpoint_type": consts.EndpointType.INTERNAL,
+                          "endpoint_type": consts.EndpointType.PUBLIC,
                           "project_domain_name": "Default",
                           "user_domain_name": "Default",
                           'admin_port': 35357})

@@ -20,7 +20,7 @@ class Endpoint(object):
 
     def __init__(self, auth_url, username, password, tenant_name=None,
                  permission=consts.EndpointPermission.USER,
-                 region_name=None, endpoint_type=consts.EndpointType.INTERNAL,
+                 region_name=None, endpoint_type=consts.EndpointType.PUBLIC,
                  admin_port=35357, domain_name=None,
                  user_domain_name='Default',
                  project_domain_name='Default'):

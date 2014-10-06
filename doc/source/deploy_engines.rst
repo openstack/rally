@@ -57,12 +57,12 @@ This engine in fact does not deploy anything, but uses an existing OpenStack ins
 
    {
        "type": "ExistingCloud",
-       "endpoint": {
-            "auth_url": "http://192.168.122.22:5000/v2.0/",
+       "auth_url": "http://192.168.122.22:5000/v2.0/",
+       "endpoint_type": "public",
+       "admin": {
             "username": "admin",
             "password": "password",
             "tenant_name": "admin",
-            "endpoint_type": "internal"
        }
    }
 
@@ -71,17 +71,17 @@ Or using keystone v3 API endpoint:
 .. code-block:: none
 
     {
-        "type": "ExistingCloud,
-        "endpoint": {
-            "auth_url": "http://localhost:5000/v3/,
-            "username": "engineer1,
-            "user_domain_name": "qa,
-            "project_name": "qa_admin_project,
-            "project_domain_name": "qa,
-            "password": "password,
-            "region_name": "RegionOne,
-            "endpoint_type": "internal",
-            "admin_port": 35357
+        "type": "ExistingCloud",
+        "auth_url": "http://localhost:5000/v3/",
+        "endpoint_type": "public",
+        "admin_port": 35357,
+        "admin": {
+            "username": "engineer1",
+            "user_domain_name": "qa",
+            "project_name": "qa_admin_project",
+            "project_domain_name": "qa",
+            "password": "password",
+            "region_name": "RegionOne",
         }
     }
 ..

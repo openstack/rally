@@ -13,6 +13,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import urlparse
+
 from keystoneclient import exceptions as keystone_exceptions
 import mock
 from oslo.config import cfg
@@ -50,8 +52,14 @@ class OSClientsTestCase(test.TestCase):
         self.assertTrue("keystone" not in self.clients.cache)
         client = self.clients.keystone()
         self.assertEqual(client, self.fake_keystone)
+        mgmt_url = urlparse.urlparse(self.endpoint.auth_url)
+        auth_url = "{0}://{1}:{2}{3}".format(mgmt_url.scheme,
+                                             mgmt_url.hostname,
+                                             self.endpoint.admin_port,
+                                             mgmt_url.path)
         endpoint = {"timeout": cfg.CONF.openstack_client_http_timeout,
-                    "insecure": False, "cacert": None}
+                    "insecure": False, "cacert": None,
+                    "endpoint": auth_url}
         kwargs = dict(self.endpoint.to_dict().items() + endpoint.items())
         self.mock_create_keystone_client.assert_called_once_with(kwargs)
         self.assertEqual(self.clients.cache["keystone"], self.fake_keystone)
@@ -86,7 +94,7 @@ class OSClientsTestCase(test.TestCase):
             self.assertEqual(client, fake_nova)
             self.service_catalog.url_for.assert_called_once_with(
                 service_type='compute',
-                endpoint_type=consts.EndpointType.INTERNAL,
+                endpoint_type=consts.EndpointType.PUBLIC,
                 region_name=self.endpoint.region_name)
             mock_nova.Client.assert_called_once_with(
                 "2",
@@ -113,7 +121,7 @@ class OSClientsTestCase(test.TestCase):
             "ca_cert": cfg.CONF.https_cacert
         }
         self.service_catalog.url_for.assert_called_once_with(
-            service_type='network', endpoint_type=consts.EndpointType.INTERNAL,
+            service_type='network', endpoint_type=consts.EndpointType.PUBLIC,
             region_name=self.endpoint.region_name)
         mock_neutron.Client.assert_called_once_with("2.0", **kw)
         self.assertEqual(self.clients.cache["neutron"], fake_neutron)
@@ -131,7 +139,7 @@ class OSClientsTestCase(test.TestCase):
                   "insecure": False, "cacert": None}
             self.service_catalog.url_for.assert_called_once_with(
                 service_type='image',
-                endpoint_type=consts.EndpointType.INTERNAL,
+                endpoint_type=consts.EndpointType.PUBLIC,
                 region_name=self.endpoint.region_name)
             mock_glance.Client.assert_called_once_with("1", **kw)
             self.assertEqual(self.clients.cache["glance"], fake_glance)
@@ -146,7 +154,7 @@ class OSClientsTestCase(test.TestCase):
             self.assertEqual(client, fake_cinder)
             self.service_catalog.url_for.assert_called_once_with(
                 service_type='volume',
-                endpoint_type=consts.EndpointType.INTERNAL,
+                endpoint_type=consts.EndpointType.PUBLIC,
                 region_name=self.endpoint.region_name)
             mock_cinder.Client.assert_called_once_with(
                 "1", None, None, http_log_debug=False,
@@ -168,7 +176,7 @@ class OSClientsTestCase(test.TestCase):
             self.assertEqual(client, fake_ceilometer)
             self.service_catalog.url_for.assert_called_once_with(
                 service_type='metering',
-                endpoint_type=consts.EndpointType.INTERNAL,
+                endpoint_type=consts.EndpointType.PUBLIC,
                 region_name=self.endpoint.region_name)
             kw = {"endpoint": self.service_catalog.url_for.return_value,
                   "token": self.fake_keystone.auth_token,
@@ -187,7 +195,7 @@ class OSClientsTestCase(test.TestCase):
         self.assertEqual(client, fake_ironic)
         self.service_catalog.url_for.assert_called_once_with(
             service_type='baremetal',
-            endpoint_type=consts.EndpointType.INTERNAL,
+            endpoint_type=consts.EndpointType.PUBLIC,
             region_name=self.endpoint.region_name)
         kw = {
             "os_auth_token": self.fake_keystone.auth_token,
@@ -224,7 +232,7 @@ class OSClientsTestCase(test.TestCase):
         self.assertEqual(client, fake_zaqar)
         self.service_catalog.url_for.assert_called_once_with(
             service_type='messaging',
-            endpoint_type=consts.EndpointType.INTERNAL,
+            endpoint_type=consts.EndpointType.PUBLIC,
             region_name=self.endpoint.region_name)
         fake_zaqar_url = self.service_catalog.url_for.return_value
         conf = {'auth_opts': {'backend': 'keystone', 'options': {
