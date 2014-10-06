@@ -16,6 +16,7 @@
 from __future__ import print_function
 
 import argparse
+import inspect
 import os
 import sys
 
@@ -31,6 +32,10 @@ from rally import version
 
 CONF = cfg.CONF
 LOG = logging.getLogger(__name__)
+
+
+# Some CLI-specific constants
+MARGIN = 3
 
 
 class CategoryParser(argparse.ArgumentParser):
@@ -99,16 +104,27 @@ def args(*args, **kwargs):
     return _decorator
 
 
-def _methods_of(obj):
-    """Get all callable methods of an object that don't start with underscore
+def _get_doc(cls):
+    """Get the dynamic docstring of a class.
 
-    returns a list of tuples of the form (method_name, method)
+    Return the usual docstring stored in __doc__ if no dynamic one exists.
+
+    :returns: docstring
     """
-    result = []
-    for i in dir(obj):
-        if callable(getattr(obj, i)) and not i.startswith('_'):
-            result.append((i, getattr(obj, i)))
-    return result
+    if hasattr(cls, "__get__doc__"):
+        return cls().__get__doc__()
+    else:
+        return cls.__doc__
+
+
+def _methods_of(cls):
+    """Get all callable methods of a class that don't start with underscore.
+
+    :returns: a list of tuples of the form (method_name, method)
+    """
+    methods = [m for m in inspect.getmembers(cls, predicate=inspect.ismethod)
+               if not m[0].startswith('_')]
+    return methods
 
 
 def _compose_category_description(category):
@@ -116,12 +132,13 @@ def _compose_category_description(category):
     descr_pairs = _methods_of(category)
 
     description = ""
-    if category.__doc__:
-        description = category.__doc__.strip()
+    doc = _get_doc(category)
+    if doc:
+        description = doc.strip()
     if descr_pairs:
         description += "\n\nCommands:\n"
         sublen = lambda item: len(item[0])
-        first_column_len = max(map(sublen, descr_pairs)) + 3
+        first_column_len = max(map(sublen, descr_pairs)) + MARGIN
         for item in descr_pairs:
             name = item[0]
             if item[1].__doc__:
@@ -199,7 +216,7 @@ def run(argv, categories):
     CONF.register_cli_opt(category_opt)
 
     try:
-        cfg.CONF(argv[1:], project='rally', version=version.version_string())
+        CONF(argv[1:], project='rally', version=version.version_string())
         logging.setup("rally")
         if not CONF.get('log_config_append'):
             # The below two lines are to disable noise from request module. The

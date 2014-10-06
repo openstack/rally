@@ -26,8 +26,14 @@ class InfoTestCase(unittest.TestCase):
         self.rally = utils.Rally()
 
     def test_find_scenario_group(self):
-        self.assertIn("(benchmark scenario group)",
-                      self.rally("info find Dummy"))
+        output = self.rally("info find Dummy")
+        self.assertIn("(benchmark scenario group)", output)
+        self.assertIn("Dummy.dummy_exception", output)
+        self.assertIn("Dummy.dummy_random_fail_in_atomic", output)
+
+    def test_find_scenario_group_base_class(self):
+        output = self.rally("info find CeilometerScenario")
+        self.assertIn("(benchmark scenario group)", output)
 
     def test_find_scenario(self):
         self.assertIn("(benchmark scenario)", self.rally("info find dummy"))
@@ -57,3 +63,23 @@ class InfoTestCase(unittest.TestCase):
             self.rally("info find boot_and_delete")
         except utils.RallyCmdError as e:
             self.assertIn(marker_string, e.output)
+
+    def test_list(self):
+        output = self.rally("info list")
+        self.assertIn("Benchmark scenario groups:", output)
+        self.assertIn("NovaServers", output)
+        self.assertIn("Deploy engines:", output)
+        self.assertIn("ExistingCloud", output)
+        self.assertIn("Server providers:", output)
+        self.assertIn("ExistingServers", output)
+
+    def test_list_shorthand(self):
+        try:
+            self.rally("info")
+        except utils.RallyCmdError as e:
+            self.assertIn("Benchmark scenario groups:", e.output)
+            self.assertIn("NovaServers", e.output)
+            self.assertIn("Deploy engines:", e.output)
+            self.assertIn("ExistingCloud", e.output)
+            self.assertIn("Server providers:", e.output)
+            self.assertIn("ExistingServers", e.output)
