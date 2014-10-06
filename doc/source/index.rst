@@ -42,6 +42,7 @@ Deeper in Rally:
    verify
    installation
    usage
+   testing
    feature_requests
    user_stories
 

@@ -1,6 +1,6 @@
 
-User stories:
-=============
+User stories
+============
 
 .. toctree::
    :glob:
