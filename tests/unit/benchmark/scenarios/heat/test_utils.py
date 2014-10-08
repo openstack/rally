@@ -17,6 +17,7 @@ import mock
 from oslotest import mockpatch
 
 from rally.benchmark.scenarios.heat import utils
+from rally import exceptions
 from tests.unit import test
 
 BM_UTILS = 'rally.benchmark.utils'
@@ -90,3 +91,29 @@ class HeatScenarioTestCase(test.TestCase):
         stack = {'stack_status': 'CREATE_COMPLETED'}
         status_fn = utils.heat_resource_is('CREATE_COMPLETED')
         status_fn(stack)
+
+
+class HeatScenarioNegativeTestCase(test.TestCase):
+
+    @mock.patch(HEAT_UTILS + '.HeatScenario.clients')
+    @mock.patch(HEAT_UTILS + '.CONF.benchmark')
+    def test_failed_create_stack(self, mock_bench, mock_clients):
+        mock_bench.heat_stack_create_prepoll_delay = 2
+        mock_bench.heat_stack_create_timeout = 1
+        mock_bench.benchmark.heat_stack_create_poll_interval = 1
+
+        mock_clients("heat").stacks.create.return_value = {
+            'stack': {'id': 'test_id'}
+        }
+        stack = mock.Mock()
+        resource = mock.Mock()
+        resource.stack_status = "CREATE_FAILED"
+        stack.manager.get.return_value = resource
+        mock_clients("heat").stacks.get.return_value = stack
+        scenario = utils.HeatScenario()
+        try:
+            ex = self.assertRaises(exceptions.GetResourceErrorStatus,
+                                   scenario._create_stack, 'stack_name')
+            self.assertIn('has CREATE_FAILED status', str(ex))
+        except exceptions.TimeoutException:
+            raise self.fail('Unrecognized error status')
