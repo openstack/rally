@@ -189,7 +189,7 @@ class SaharaScenario(base.Scenario):
         :param floating_ip_pool: The floating ip pool name from which Floating
         IPs will be allocated
         :param neutron_net_id: The network id to allocate Fixed IPs
-        from when Neutron is enabled for networking
+        from, when Neutron is enabled for networking
         :param volumes_per_node: The number of Cinder volumes that will be
         attached to every cluster node
         :param volumes_size: The size of each Cinder volume in GB
@@ -251,7 +251,6 @@ class SaharaScenario(base.Scenario):
         # cluster_configs parameter can override it
         merged_cluster_configs = self._merge_configs(replication_config,
                                                      cluster_configs)
-
         cluster_object = self.clients("sahara").clusters.create(
             name=name,
             plugin_name=plugin_name,

@@ -177,3 +177,28 @@ class VolumeTypeResourceType(ResourceType):
                                         volume_types.list(),
                                         typename='volume_type')
         return resource_id
+
+
+class NeutronNetworkResourceType(ResourceType):
+
+    @classmethod
+    def transform(cls, clients, resource_config):
+        """Transform the resource config to id.
+
+        :param clients: openstack admin client handles
+        :param resource_config: scenario config with `id`, `name` or `regex`
+
+        :returns: id matching resource
+        """
+        resource_id = resource_config.get('id')
+        if resource_id:
+            return resource_id
+        else:
+            neutronclient = clients.neutron()
+            for net in neutronclient.list_networks()["networks"]:
+                if net["name"] == resource_config.get("name"):
+                    return net["id"]
+
+        raise exceptions.InvalidScenarioArgument(
+            "Neutron network with name '{name}' not found".format(
+                name=resource_config.get("name")))

@@ -25,7 +25,9 @@ LOG = logging.getLogger(__name__)
 
 class SaharaClusters(utils.SaharaScenario):
 
-    @types.set(flavor=types.FlavorResourceType)
+    @types.set(flavor=types.FlavorResourceType,
+               neutron_net=types.NeutronNetworkResourceType,
+               floating_ip_pool=types.NeutronNetworkResourceType)
     @validation.flavor_exists('flavor')
     @validation.required_contexts("users", "sahara_image")
     @validation.number("node_count", minval=2, integer_only=True)
@@ -34,7 +36,7 @@ class SaharaClusters(utils.SaharaScenario):
     @base.scenario(context={"cleanup": ["sahara"]})
     def create_and_delete_cluster(self, flavor, node_count, plugin_name,
                                   hadoop_version, floating_ip_pool=None,
-                                  neutron_net_id=None, volumes_per_node=None,
+                                  neutron_net=None, volumes_per_node=None,
                                   volumes_size=None, node_configs=None,
                                   cluster_configs=None):
         """Test the Sahara Cluster launch and delete commands.
@@ -52,7 +54,7 @@ class SaharaClusters(utils.SaharaScenario):
         IPs will be allocated. Sahara will determine automatically how to treat
         this depending on it's own configurations. Defaults to None because in
         some cases Sahara may work w/o Floating IPs.
-        :param neutron_net_id: The id of a Neutron network that
+        :param neutron_net: The id or name of a Neutron network that
         will be used for fixed IPs. This parameter is ignored when Nova Network
         is set up.
         :param volumes_per_node: The number of Cinder volumes that will be
@@ -76,7 +78,7 @@ class SaharaClusters(utils.SaharaScenario):
             plugin_name=plugin_name,
             hadoop_version=hadoop_version,
             floating_ip_pool=floating_ip_pool,
-            neutron_net_id=neutron_net_id,
+            neutron_net_id=neutron_net,
             volumes_per_node=volumes_per_node,
             volumes_size=volumes_size,
             node_configs=node_configs,

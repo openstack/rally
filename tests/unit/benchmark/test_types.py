@@ -169,6 +169,38 @@ class VolumeTypeResourceTypeTestCase(test.TestCase):
                           self.clients, resource_config)
 
 
+class NeutronNetworkResourceTypeTestCase(test.TestCase):
+
+    def setUp(self):
+        super(NeutronNetworkResourceTypeTestCase, self).setUp()
+        self.clients = fakes.FakeClients()
+        net1_data = {"network": {
+            "name": "net1"
+        }}
+        network1 = self.clients.neutron().create_network(net1_data)
+        self.net1_id = network1["network"]["id"]
+
+    def test_transform_by_id(self):
+        resource_config = {"id": self.net1_id}
+        network_id = types.NeutronNetworkResourceType.transform(
+            clients=self.clients,
+            resource_config=resource_config)
+        self.assertEqual(network_id, self.net1_id)
+
+    def test_transform_by_name(self):
+        resource_config = {"name": "net1"}
+        network_id = types.NeutronNetworkResourceType.transform(
+            clients=self.clients,
+            resource_config=resource_config)
+        self.assertEqual(network_id, self.net1_id)
+
+    def test_transform_by_name_no_match(self):
+        resource_config = {"name": "nomatch-1"}
+        self.assertRaises(exceptions.InvalidScenarioArgument,
+                          types.NeutronNetworkResourceType.transform,
+                          self.clients, resource_config)
+
+
 class PreprocessTestCase(test.TestCase):
 
     @mock.patch("rally.benchmark.types.base.Scenario.meta")
