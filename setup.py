@@ -27,4 +27,5 @@ except ImportError:
 
 setuptools.setup(
     setup_requires=['pbr'],
+    data_files=[('/etc/bash_completion.d', ['tools/rally.bash_completion'])],
     pbr=True)

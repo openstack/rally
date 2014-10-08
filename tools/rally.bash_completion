@@ -1,0 +1,18 @@
+_rally_opts="" # lazy init
+_rally_flags="" # lazy init
+_rally_opts_exp="" # lazy init
+_rally()
+{
+	local cur prev rbc cflags
+	COMPREPLY=()
+	cur="${COMP_WORDS[COMP_CWORD]}"
+	prev="${COMP_WORDS[COMP_CWORD-1]}"
+    base_opts="`rally bash-completion`"
+    if [ $prev == "rally" ] && [ $COMP_CWORD == "1" ] ; then
+		COMPREPLY=($(compgen -W "${base_opts}" -- ${cur}))
+    else
+		COMPREPLY=($(compgen -W "`rally bash-completion $prev `" -- ${cur}))
+    fi
+	return 0
+}
+complete -F _rally rally
