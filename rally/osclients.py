@@ -109,7 +109,8 @@ class Clients(object):
             else:
                 kw["endpoint"] = kw["auth_url"]
         client = create_keystone_client(kw)
-        client.authenticate()
+        if client.auth_ref is None:
+            client.authenticate()
         return client
 
     def verified_keystone(self):
