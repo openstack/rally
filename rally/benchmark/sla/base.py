@@ -102,7 +102,7 @@ class IterationTime(SLA):
     """Maximum time for one iteration in seconds."""
     OPTION_NAME = "max_seconds_per_iteration"
     CONFIG_SCHEMA = {"type": "number", "minimum": 0.0,
-                     "exclusuveMinimum": True}
+                     "exclusiveMinimum": True}
 
     @staticmethod
     def check(criterion_value, result):

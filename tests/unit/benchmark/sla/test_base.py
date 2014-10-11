@@ -76,6 +76,13 @@ class FailureRateTestCase(test.TestCase):
 
 
 class IterationTimeTestCase(test.TestCase):
+    def test_config_schema(self):
+        properties = {
+            "max_seconds_per_iteration": 0
+        }
+        self.assertRaises(jsonschema.ValidationError,
+                          base.IterationTime.validate, properties)
+
     def test_check(self):
         result = [
                 {"duration": 3.14},
