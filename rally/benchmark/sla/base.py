@@ -24,6 +24,7 @@ import abc
 import jsonschema
 import six
 
+from rally.benchmark.processing import utils as putils
 from rally.openstack.common.gettextutils import _
 from rally import utils
 
@@ -115,4 +116,20 @@ class IterationTime(SLA):
                 success = False
         msg = (_("Maximum seconds per iteration %ss, found with %ss") %
                 (criterion_value, duration))
+        return SLAResult(success, msg)
+
+
+class MaxAverageDuration(SLA):
+    """Maximum average duration for one iteration in seconds."""
+    OPTION_NAME = "max_avg_duration"
+    CONFIG_SCHEMA = {"type": "number", "minimum": 0.0,
+                     "exclusiveMinimum": True}
+
+    @staticmethod
+    def check(criterion_value, result):
+        durations = [r["duration"] for r in result if not r.get("error")]
+        avg = putils.mean(durations)
+        success = avg < criterion_value
+        msg = (_("Maximum average duration per iteration %ss, found with %ss")
+               % (criterion_value, avg))
         return SLAResult(success, msg)
