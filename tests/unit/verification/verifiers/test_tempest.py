@@ -104,8 +104,9 @@ class TempestTestCase(test.TestCase):
     @mock.patch('rally.db.deployment_get')
     @mock.patch('rally.osclients.Clients')
     @mock.patch('rally.objects.endpoint.Endpoint')
-    def test_verify(self, mock_endpoint, mock_osclients, mock_get, mock_conf,
-                    mock_run, mock_testr_init, mock_discover, mock_os):
+    def test_verify(self, mock_endpoint, mock_osclients,
+                    mock_get, mock_conf, mock_run, mock_testr_init,
+                    mock_discover, mock_os):
         self.verifier.verify("smoke", None)
         mock_conf().generate.assert_called_once_with(self.verifier.config_file)
         mock_run.assert_called_once_with("smoke")

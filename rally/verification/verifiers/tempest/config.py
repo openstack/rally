@@ -62,9 +62,9 @@ class TempestConf(object):
                      "configuration file. User %s doesn't have admin role.") %
                    self.endpoint['username'])
             raise TempestConfigCreationFailure(msg)
-        self.available_services = [service['name'] for service in
-                                   self.keystoneclient.
-                                   service_catalog.get_data()]
+
+        self.available_services = self.clients.services().values()
+
         self.conf = configparser.ConfigParser()
         self.conf.read(os.path.join(os.path.dirname(__file__), 'config.ini'))
         self.deploy_id = deploy_id
@@ -104,8 +104,9 @@ class TempestConf(object):
             raise TempestConfigCreationFailure(msg)
 
     def _get_url(self, servicename):
+        services_type2name_map = self.clients.services()
         for service in self.keystoneclient.auth_ref['serviceCatalog']:
-            if service['name'] == servicename:
+            if services_type2name_map[service['type']] == servicename:
                 return service["endpoints"][0]["publicURL"]
 
     def _set_default(self):
