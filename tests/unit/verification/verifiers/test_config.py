@@ -18,7 +18,6 @@ import os
 import mock
 from oslo.config import cfg
 
-from rally import exceptions
 from rally.verification.verifiers.tempest import config
 from tests.unit import fakes
 from tests.unit import test
@@ -74,7 +73,7 @@ class ConfigTestCase(test.TestCase):
         mock_result = mock.MagicMock()
         mock_result.status_code = 404
         mock_requests.get.return_value = mock_result
-        self.assertRaises(exceptions.TempestConfigCreationFailure,
+        self.assertRaises(config.TempestConfigCreationFailure,
                           self.conf_generator._load_img)
 
     def test__get_url(self):
@@ -149,7 +148,7 @@ class ConfigTestCase(test.TestCase):
         mock_novaclient.flavors.list.return_value = []
         mock_novaclient.flavors.create.side_effect = Exception()
         mock_nova.Client.return_value = mock_novaclient
-        self.assertRaises(exceptions.TempestConfigCreationFailure,
+        self.assertRaises(config.TempestConfigCreationFailure,
                           self.conf_generator._set_compute_flavors)
 
     @mock.patch("rally.osclients.glance")
@@ -186,7 +185,7 @@ class ConfigTestCase(test.TestCase):
         mock_glanceclient.images.list.return_value = []
         mock_glanceclient.images.create.side_effect = Exception()
         mock_glance.Client.return_value = mock_glanceclient
-        self.assertRaises(exceptions.TempestConfigCreationFailure,
+        self.assertRaises(config.TempestConfigCreationFailure,
                           self.conf_generator._set_compute_images)
 
     def test__set_compute_ssh_connect_method_if_neutron(self):

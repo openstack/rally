@@ -30,6 +30,10 @@ from rally.verification.verifiers.tempest import subunit2json
 LOG = logging.getLogger(__name__)
 
 
+class TempestSetupFailure(exceptions.RallyException):
+    msg_fmt = _("Unable to setup tempest: '%(message)s'")
+
+
 class Tempest(object):
 
     tempest_base_path = os.path.join(os.path.expanduser("~"),
@@ -130,7 +134,7 @@ class Tempest(object):
                 self._initialize_testr()
             except subprocess.CalledProcessError as e:
                 self.uninstall()
-                raise exceptions.TempestSetupFailure("failed cmd: '%s'", e.cmd)
+                raise TempestSetupFailure("failed cmd: '%s'" % e.cmd)
             else:
                 print("Tempest has been successfully installed!")
 

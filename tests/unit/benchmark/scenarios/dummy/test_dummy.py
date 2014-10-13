@@ -14,7 +14,6 @@
 import mock
 
 from rally.benchmark.scenarios.dummy import dummy
-from rally import exceptions
 from tests.unit import test
 
 
@@ -34,7 +33,7 @@ class DummyTestCase(test.TestCase):
         scenario = dummy.Dummy()
 
         size_of_message = 5
-        self.assertRaises(exceptions.DummyScenarioException,
+        self.assertRaises(dummy.DummyScenarioException,
                           scenario.dummy_exception, size_of_message)
 
     def test_dummy_exception_probability(self):
@@ -46,7 +45,7 @@ class DummyTestCase(test.TestCase):
 
         # should always raise an exception as probability is 1
         for i in range(100):
-            self.assertRaises(exceptions.DummyScenarioException,
+            self.assertRaises(dummy.DummyScenarioException,
                               scenario.dummy_exception_probability,
                               {'exception_probability': 1})
 

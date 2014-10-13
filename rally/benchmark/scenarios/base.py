@@ -126,11 +126,10 @@ class Scenario(object):
             try:
                 result = validator(config, clients=clients, task=task)
             except Exception as e:
-                raise exceptions.InvalidScenarioArgument(message=e)
+                raise exceptions.InvalidScenarioArgument(e)
             else:
                 if not result.is_valid:
-                    raise exceptions.InvalidScenarioArgument(
-                        message=result.msg)
+                    raise exceptions.InvalidScenarioArgument(result.msg)
 
     @classmethod
     def validate(cls, name, config, admin=None, users=None, task=None):
@@ -207,7 +206,7 @@ class Scenario(object):
         """
         if not 0 <= min_sleep <= max_sleep:
             raise exceptions.InvalidArgumentsException(
-                                        message="0 <= min_sleep <= max_sleep")
+                                        "0 <= min_sleep <= max_sleep")
 
         sleep_time = random.uniform(min_sleep, max_sleep)
         time.sleep(sleep_time)

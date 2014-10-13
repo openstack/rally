@@ -24,6 +24,10 @@ from rally import exceptions
 from rally.openstack.common.gettextutils import _
 
 
+class TempestBenchmarkFailure(exceptions.RallyException):
+    msg_fmt = _("Failed tempest test(s): '%(message)s'")
+
+
 def tempest_log_wrapper(func):
     @functools.wraps(func)
     def inner_func(scenario_obj, *args, **kwargs):
@@ -46,10 +50,10 @@ def tempest_log_wrapper(func):
             scenario_obj._add_atomic_actions("test_execution",
                                              total.get("time"))
             if total.get("errors") or total.get("failures"):
-                raise exceptions.TempestBenchmarkFailure([
+                raise TempestBenchmarkFailure([
                     test for test in six.itervalues(tests)
                     if test["status"] == "FAIL"])
         else:
-            raise exceptions.TempestBenchmarkFailure(_("No information"))
+            raise TempestBenchmarkFailure(_("No information"))
 
     return inner_func

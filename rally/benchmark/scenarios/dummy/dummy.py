@@ -18,6 +18,10 @@ from rally.benchmark import validation
 from rally import exceptions
 
 
+class DummyScenarioException(exceptions.RallyException):
+    msg_fmt = _("Dummy scenario expected exception: '%(msg)s'")
+
+
 class Dummy(base.Scenario):
     """Benchmarks for testing Rally benchmark engine at scale."""
 
@@ -47,7 +51,7 @@ class Dummy(base.Scenario):
         :param size_of_message: the size of the message.
         """
 
-        raise exceptions.DummyScenarioException("M" * size_of_message)
+        raise DummyScenarioException("M" * size_of_message)
 
     @validation.number("exception_probability",
                        minval=0, maxval=1, integer_only=False, nullable=True)
@@ -63,7 +67,7 @@ class Dummy(base.Scenario):
         """
 
         if random.random() < exception_probability:
-            raise exceptions.DummyScenarioException(
+            raise DummyScenarioException(
                 "Dummy Scenario Exception: Probability: %s"
                 % exception_probability
             )
