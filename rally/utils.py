@@ -305,3 +305,22 @@ def parse_docstring(docstring):
             "params": [],
             "returns": None
         }
+
+
+def distance(s1, s2):
+    """Computes the edit distance between two strings.
+
+    The edit distance is the Levenshtein distance. The larger the return value,
+    the more edits are required to transform one string into the other.
+
+    :param s1: First string to compare
+    :param s2: Second string to compare
+    :returns: Integer distance between two strings
+    """
+    n = range(0, len(s1) + 1)
+    for y in range(1, len(s2) + 1):
+        l, n = n, [y]
+        for x in xrange(1, len(s1) + 1):
+            n.append(min(l[x] + 1, n[-1] + 1, l[x - 1] +
+                     ((s2[y - 1] != s1[x - 1]) and 1 or 0)))
+    return n[-1]

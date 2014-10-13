@@ -179,30 +179,37 @@ class ScenarioTestCase(test.TestCase):
         MyFakeScenario.do_it.__dict__[attr_name] = preprocessors
 
         scenario = MyFakeScenario()
-        self.assertEqual(scenario.meta(cls=MyFakeScenario, method_name="do_it",
+        self.assertEqual(scenario.meta(cls=fakes.FakeScenario,
+                                       method_name="do_it",
                                        attr_name=attr_name), preprocessors)
 
     def test_meta_string_returns_empty_list(self):
-
-        class MyFakeScenario(fakes.FakeScenario):
-            pass
-
         empty_list = []
-        scenario = MyFakeScenario()
-        self.assertEqual(scenario.meta(cls="MyFakeScenario.do_it",
+        scenario = fakes.FakeScenario()
+        self.assertEqual(scenario.meta(cls="FakeScenario.do_it",
                                        attr_name="foo", default=empty_list),
                          empty_list)
 
     def test_meta_class_returns_empty_list(self):
-
-        class MyFakeScenario(fakes.FakeScenario):
-            pass
-
         empty_list = []
-        scenario = MyFakeScenario()
-        self.assertEqual(scenario.meta(cls=MyFakeScenario, method_name="do_it",
-                                       attr_name="foo", default=empty_list),
+        scenario = fakes.FakeScenario()
+        self.assertEqual(scenario.meta(cls=fakes.FakeScenario,
+                                       method_name="do_it", attr_name="foo",
+                                       default=empty_list),
                          empty_list)
+
+    def test_is_scenario_success(self):
+        scenario = dummy.Dummy()
+        self.assertTrue(base.Scenario.is_scenario(scenario, "dummy"))
+
+    def test_is_scenario_not_scenario(self):
+        scenario = dummy.Dummy()
+        self.assertFalse(base.Scenario.is_scenario(scenario,
+                                                   "_random_fail_emitter"))
+
+    def test_is_scenario_non_existing(self):
+        scenario = dummy.Dummy()
+        self.assertFalse(base.Scenario.is_scenario(scenario, "non_existing"))
 
     def test_sleep_between_invalid_args(self):
         scenario = base.Scenario()
