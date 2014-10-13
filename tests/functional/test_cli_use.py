@@ -1,4 +1,4 @@
-# Copyright 2013: Mirantis Inc.
+# Copyright 2014: Mirantis Inc.
 # All Rights Reserved.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -13,34 +13,18 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-
 import unittest
 
 from tests.functional import utils
 
 
-class ShowTestCase(unittest.TestCase):
+class CliUtilsTestCase(unittest.TestCase):
 
     def setUp(self):
-        super(ShowTestCase, self).setUp()
+        super(CliUtilsTestCase, self).setUp()
         self.rally = utils.Rally()
 
-    def test_show_images(self):
-        res = self.rally("show images")
-        self.assertIn("cirros", res)
-
-    def test_show_flavors(self):
-        res = self.rally("show flavors")
-        self.assertIn("m1.tiny", res)
-
-    def test_show_networks(self):
-        res = self.rally("show networks")
-        self.assertIn("private", res)
-
-    def test_show_secgroups(self):
-        res = self.rally("show secgroups")
-        self.assertIn("default", res)
-
-    # TODO(oanufriev): implement after bp/add-rally-create-cli-command
-    def test_show_keypairs(self):
-        pass
+    def test_missing_argument(self):
+        with self.assertRaises(utils.RallyCmdError) as e:
+            self.rally("use task")
+        self.assertIn("--uuid", e.exception.output)

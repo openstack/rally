@@ -13,12 +13,12 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-
 import os
 import unittest
 
 import mock
-import test_cli_utils as utils
+
+from tests.functional import utils
 
 
 class TaskTestCase(unittest.TestCase):
