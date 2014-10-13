@@ -21,16 +21,18 @@ from rally import consts
 
 
 class CeilometerQueries(ceilometerutils.CeilometerScenario):
+    """Benchmark scenarios for Ceilometer Queries API."""
 
     @validation.required_services(consts.Service.CEILOMETER)
     @validation.required_openstack(users=True)
     @base.scenario(context={"cleanup": ["ceilometer"]})
     def create_and_query_alarms(self, meter_name, threshold, filter=None,
                                 orderby=None, limit=None, **kwargs):
-        """Creates an alarm and then queries it with specific parameters.
+        """Create an alarm and then query it with specific parameters.
 
         This scenario tests POST /v2/query/alarms
-        An alarm is first created and then fetched using the input query
+        An alarm is first created and then fetched using the input query.
+
         :param meter_name: specifies meter name of alarm
         :param threshold: specifies alarm threshold
         :param filter: optional filter query dictionary
@@ -49,11 +51,12 @@ class CeilometerQueries(ceilometerutils.CeilometerScenario):
     @base.scenario(context={"cleanup": ["ceilometer"]})
     def create_and_query_alarm_history(self, meter_name, threshold,
                                        orderby=None, limit=None, **kwargs):
-        """Creates an alarm and then queries for its history
+        """Create an alarm and then query for its history.
 
         This scenario tests POST /v2/query/alarms/history
         An alarm is first created and then its alarm_id is used to fetch the
-        history of that specific alarm
+        history of that specific alarm.
+
         :param meter_name: specifies meter name of alarm
         :param threshold: specifies alarm threshold
         :param orderby: optional param for specifying ordering of results
@@ -71,10 +74,11 @@ class CeilometerQueries(ceilometerutils.CeilometerScenario):
                                  counter_unit, counter_volume, resource_id,
                                  filter=None, orderby=None, limit=None,
                                  **kwargs):
-        """Creates a sample and then queries it with specific parameters
+        """Create a sample and then query it with specific parameters.
 
         This scenario tests POST /v2/query/samples
-        A sample is first created and then fetched using the input query
+        A sample is first created and then fetched using the input query.
+
         :param counter_name: specifies name of the counter
         :param counter_type: specifies type of the counter
         :param counter_unit: specifies name of the counter

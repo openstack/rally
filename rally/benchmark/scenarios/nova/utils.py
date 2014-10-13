@@ -70,17 +70,17 @@ CONF.register_opts(nova_benchmark_opts, group=benchmark_group)
 
 
 class NovaScenario(base.Scenario):
+    """Base class for Nova scenarios with basic atomic actions."""
 
     @base.atomic_action_timer('nova.list_servers')
     def _list_servers(self, detailed=True):
         """Returns user servers list."""
-
         return self.clients("nova").servers.list(detailed)
 
     @base.atomic_action_timer("nova.boot_server")
     def _boot_server(self, server_name, image_id, flavor_id,
                      auto_assign_nic=False, **kwargs):
-        """Boots a server.
+        """Boot a server.
 
         Returns when the server is actually booted and in "ACTIVE" state.
 
@@ -91,7 +91,7 @@ class NovaScenario(base.Scenario):
         :param image_id: int, image ID for server creation
         :param flavor_id: int, flavor ID for server creation
         :param auto_assign_nic: bool, whether or not to auto assign NICs
-        :param **kwargs: other optional parameters to initialize the server
+        :param kwargs: other optional parameters to initialize the server
         :returns: nova Server instance
         """
         allow_ssh_secgroup = self.context.get("allow_ssh")
@@ -139,7 +139,7 @@ class NovaScenario(base.Scenario):
 
     @base.atomic_action_timer('nova.soft_reboot_server')
     def _soft_reboot_server(self, server):
-        """Reboots the given server using soft reboot.
+        """Reboot a server with soft reboot.
 
         A soft reboot will be issued on the given server upon which time
         this method will wait for the server to become active.
@@ -150,7 +150,7 @@ class NovaScenario(base.Scenario):
 
     @base.atomic_action_timer('nova.reboot_server')
     def _reboot_server(self, server):
-        """Reboots the given server using hard reboot.
+        """Reboot a server with hard reboot.
 
         A reboot will be issued on the given server upon which time
         this method will wait for the server to become active.
@@ -161,7 +161,7 @@ class NovaScenario(base.Scenario):
 
     @base.atomic_action_timer('nova.start_server')
     def _start_server(self, server):
-        """Starts the given server.
+        """Start the given server.
 
         A start will be issued for the given server upon which time
         this method will wait for it to become ACTIVE.
@@ -247,7 +247,7 @@ class NovaScenario(base.Scenario):
         )
 
     def _delete_server(self, server, force=False):
-        """Deletes the given server.
+        """Delete the given server.
 
         Returns when the server is actually deleted.
 
@@ -269,7 +269,7 @@ class NovaScenario(base.Scenario):
             )
 
     def _delete_all_servers(self, force=False):
-        """Deletes all servers in current tenant.
+        """Delete all servers in the current tenant.
 
         :param force: If True, force_delete will be used instead of delete.
         """
@@ -282,7 +282,7 @@ class NovaScenario(base.Scenario):
 
     @base.atomic_action_timer('nova.delete_image')
     def _delete_image(self, image):
-        """Deletes the given image.
+        """Delete the given image.
 
         Returns when the image is actually deleted.
 
@@ -299,7 +299,7 @@ class NovaScenario(base.Scenario):
 
     @base.atomic_action_timer('nova.create_image')
     def _create_image(self, server):
-        """Creates an image of the given server
+        """Create an image from the given server
 
         Uses the server name to name the created image. Returns when the image
         is actually created and is in the "Active" state.
@@ -324,7 +324,7 @@ class NovaScenario(base.Scenario):
     @base.atomic_action_timer('nova.boot_servers')
     def _boot_servers(self, name_prefix, image_id, flavor_id,
                       requests, instances_amount=1, **kwargs):
-        """Boots multiple servers.
+        """Boot multiple servers.
 
         Returns when all the servers are actually booted and are in the
         "Active" state.
@@ -362,12 +362,12 @@ class NovaScenario(base.Scenario):
 
     @base.atomic_action_timer('nova.list_floating_ip_pools')
     def _list_floating_ip_pools(self):
-        """Returns user floating ip pools list."""
+        """Return user floating ip pools list."""
         return self.clients("nova").floating_ip_pools.list()
 
     @base.atomic_action_timer('nova.list_floating_ips')
     def _list_floating_ips(self):
-        """Returns user floating ips list."""
+        """Return user floating ips list."""
         return self.clients("nova").floating_ips.list()
 
     @base.atomic_action_timer('nova.create_floating_ip')
@@ -440,7 +440,7 @@ class NovaScenario(base.Scenario):
 
     @base.atomic_action_timer('nova.list_networks')
     def _list_networks(self):
-        """Returns user networks list."""
+        """Return user networks list."""
         return self.clients("nova").networks.list()
 
     @base.atomic_action_timer('nova.resize')
@@ -512,12 +512,12 @@ class NovaScenario(base.Scenario):
     @base.atomic_action_timer('nova.live_migrate')
     def _live_migrate(self, server, target_host, block_migration=False,
                       disk_over_commit=False, skip_host_check=False):
-        """Live Migration of an specified server(Instance).
+        """Run live migration of the given server.
 
         :param server: Server object
         :param target_host: Specifies the target compute node to migrate
         :param block_migration: Specifies the migration type
-        :Param disk_over_commit: Specifies whether to overcommit migrated
+        :param disk_over_commit: Specifies whether to overcommit migrated
                                  instance or not
         :param skip_host_check: Specifies whether to verify the targeted host
                                 availability
@@ -544,7 +544,7 @@ class NovaScenario(base.Scenario):
 
     @base.atomic_action_timer('nova.find_host_to_migrate')
     def _find_host_to_migrate(self, server):
-        """Finds a compute node for live migration.
+        """Find a compute node for live migration.
 
         :param server: Server object
         """
@@ -600,7 +600,6 @@ class NovaScenario(base.Scenario):
                 self.clients("nova").security_groups.delete(sg.id)
 
     def _list_security_groups(self):
-        """Returns security groups list."""
-
+        """Return security groups list."""
         with base.AtomicAction(self, "nova.list_security_groups"):
             return self.clients("nova").security_groups.list()

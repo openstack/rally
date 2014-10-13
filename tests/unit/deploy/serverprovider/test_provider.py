@@ -35,14 +35,26 @@ class ProviderMixIn(object):
 
 
 class ProviderA(ProviderMixIn, ProviderFactory):
+    """Fake server provider.
+
+    Used for tests.
+    """
     pass
 
 
 class ProviderB(ProviderMixIn, ProviderFactory):
+    """Fake server provider.
+
+    Used for tests.
+    """
     pass
 
 
 class ProviderC(ProviderB):
+    """Fake server provider.
+
+    Used for tests.
+    """
     pass
 
 

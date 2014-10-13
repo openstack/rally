@@ -24,7 +24,7 @@ def setup_app(config):
     This is a generic interface method of an application.
 
     :param config: An instance of :class:`pecan.Config`.
-    :return: A normal WSGI application, an instance of
+    :returns: A normal WSGI application, an instance of
              :class:`pecan.Pecan`.
     """
     app = pecan.Pecan(config.app.root, debug=logging.is_debug())
@@ -32,6 +32,7 @@ def setup_app(config):
 
 
 def make_app():
+    """Load Pecan application."""
     config = {
         "app": {
             "root": "rally.aas.rest.controllers.root.RootController",

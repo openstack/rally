@@ -382,12 +382,12 @@ def distance(s1, s2):
 
 
 def retry(times, func, *args, **kwargs):
-    """Tries to execute multiple times function mitigating exceptions.
+    """Try to execute multiple times function mitigating exceptions.
 
     :param times: Amount of attempts to execute function
     :param func: Function that should be executed
-    :param *args: *args that are passed to func
-    :param **kwargs: **kwargs that are passed to func
+    :param args: *args that are passed to func
+    :param kwargs: **kwargs that are passed to func
 
     :raises: Raise any exception that can raise func
     :returns: Result of func(*args, **kwargs)

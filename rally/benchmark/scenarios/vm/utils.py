@@ -23,12 +23,18 @@ from rally import sshutils
 
 
 class VMScenario(base.Scenario):
+    """Base class for VM scenarios with basic atomic actions.
+
+    VM scenarios are scenarios executed inside some launched VM instance.
+    """
 
     @base.atomic_action_timer('vm.run_command')
     def run_action(self, ssh, interpreter, script):
         """Run command inside an instance.
 
-        This is a separate function so that only script execution is timed
+        This is a separate function so that only script execution is timed.
+
+        :returns: tuple (exit_status, stdout, stderr)
         """
         return ssh.execute(interpreter, stdin=open(script, "rb"))
 
@@ -64,7 +70,7 @@ class VMScenario(base.Scenario):
         """Check if a server is attached to the specified network.
 
         :param server: The server object to consider
-        :param network: The name of the network to search for.
+        :param network: The name of the network to search for
 
         :raises: `ValueError` if server is not attached to network.
         """

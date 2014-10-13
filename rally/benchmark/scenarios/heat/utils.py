@@ -55,6 +55,7 @@ def heat_resource_is(status):
 
 
 class HeatScenario(base.Scenario):
+    """Base class for Heat scenarios with basic atomic actions."""
 
     default_template = "HeatTemplateFormatVersion: '2012-12-12'"
 
@@ -71,7 +72,7 @@ class HeatScenario(base.Scenario):
         :param stack_name: string. Name for created stack.
         :param template: optional parameter. Template with stack description.
 
-        returns: object of stack
+        :returns: object of stack
         """
         template = template or self.default_template
 
@@ -102,7 +103,7 @@ class HeatScenario(base.Scenario):
 
     @base.atomic_action_timer('heat.delete_stack')
     def _delete_stack(self, stack):
-        """Delete the given stack.
+        """Delete given stack.
 
         Returns when the stack is actually deleted.
 

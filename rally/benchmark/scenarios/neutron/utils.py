@@ -22,7 +22,7 @@ LOG = logging.getLogger(__name__)
 
 
 class NeutronScenario(base.Scenario):
-    """This class should contain base operations for benchmarking neutron."""
+    """Base class for Neutron scenarios with basic atomic actions."""
 
     RESOURCE_NAME_PREFIX = "rally_net_"
     RESOURCE_NAME_LENGTH = 16

@@ -40,8 +40,7 @@ class NovaServersTestCase(test.TestCase):
         scenario._delete_server = mock.MagicMock()
 
         scenario.boot_and_bounce_server("img", 1, actions=actions)
-        scenario._boot_server.assert_called_once_with("name", "img", 1,
-                                                      actions=actions)
+        scenario._boot_server.assert_called_once_with("name", "img", 1)
         server_calls = []
         for i in range(5):
             server_calls.append(mock.call(fake_server))
@@ -66,8 +65,7 @@ class NovaServersTestCase(test.TestCase):
 
         scenario.boot_and_bounce_server("img", 1, actions=actions)
 
-        scenario._boot_server.assert_called_once_with("name", "img", 1,
-                                                      actions=actions)
+        scenario._boot_server.assert_called_once_with("name", "img", 1)
         server_calls = []
         for i in range(5):
             server_calls.append(mock.call(fake_server))
@@ -92,8 +90,7 @@ class NovaServersTestCase(test.TestCase):
         scenario._generate_random_name = mock.MagicMock(return_value='name')
 
         scenario.boot_and_bounce_server("img", 1, actions=actions)
-        scenario._boot_server.assert_called_once_with("name", "img", 1,
-                                                      actions=actions)
+        scenario._boot_server.assert_called_once_with("name", "img", 1)
         server_calls = []
         for i in range(5):
             server_calls.append(mock.call(fake_server))
@@ -146,8 +143,7 @@ class NovaServersTestCase(test.TestCase):
 
         scenario.boot_and_bounce_server("img", 1, actions=actions)
 
-        scenario._boot_server.assert_called_once_with("name", "img", 1,
-                                                      actions=actions)
+        scenario._boot_server.assert_called_once_with("name", "img", 1)
         server_calls = []
         for i in range(5):
             server_calls.append(mock.call(fake_server))

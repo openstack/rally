@@ -19,17 +19,19 @@ from rally import consts
 
 
 class CeilometerAlarms(ceilometerutils.CeilometerScenario):
+    """Benchmark scenarios for Ceilometer Alarms API."""
 
     @validation.required_services(consts.Service.CEILOMETER)
     @validation.required_openstack(users=True)
     @base.scenario(context={"cleanup": ["ceilometer"]})
     def create_alarm(self, meter_name, threshold, **kwargs):
-        """Test creating an alarm.
+        """Create an alarm.
 
         This scenarios test POST /v2/alarms.
         meter_name and threshold are required parameters for alarm creation.
         kwargs stores other optional parameters like 'ok_actions',
-        'project_id' etc that may be passed while creating alarm.
+        'project_id' etc that may be passed while creating an alarm.
+
         :param meter_name: specifies meter name of the alarm
         :param threshold: specifies alarm threshold
         :param kwargs: specifies optional arguments for alarm creation.
@@ -40,7 +42,7 @@ class CeilometerAlarms(ceilometerutils.CeilometerScenario):
     @validation.required_openstack(users=True)
     @base.scenario()
     def list_alarms(self):
-        """Test fetching all alarms.
+        """Fetch all alarms.
 
         This scenario fetches list of all alarms using GET /v2/alarms.
         """
@@ -50,13 +52,15 @@ class CeilometerAlarms(ceilometerutils.CeilometerScenario):
     @validation.required_openstack(users=True)
     @base.scenario(context={"cleanup": ["ceilometer"]})
     def create_and_list_alarm(self, meter_name, threshold, **kwargs):
-        """Test creating and getting newly created alarm.
+        """Create and get the newly created alarm.
 
         This scenarios test GET /v2/alarms/(alarm_id)
         Initially alarm is created and then the created alarm is fetched using
         its alarm_id. meter_name and threshold are required parameters
         for alarm creation. kwargs stores other optional parameters like
-        'ok_actions', 'project_id' etc. that may be passed while creating alarm
+        'ok_actions', 'project_id' etc. that may be passed while creating
+        an alarm.
+
         :param meter_name: specifies meter name of the alarm
         :param threshold: specifies alarm threshold
         :param kwargs: specifies optional arguments for alarm creation.
@@ -68,13 +72,14 @@ class CeilometerAlarms(ceilometerutils.CeilometerScenario):
     @validation.required_openstack(users=True)
     @base.scenario(context={"cleanup": ["ceilometer"]})
     def create_and_update_alarm(self, meter_name, threshold, **kwargs):
-        """Test creating and updating the newly created alarm.
+        """Create and update the newly created alarm.
 
         This scenarios test PUT /v2/alarms/(alarm_id)
         Initially alarm is created and then the created alarm is updated using
         its alarm_id. meter_name and threshold are required parameters
         for alarm creation. kwargs stores other optional parameters like
         'ok_actions', 'project_id' etc that may be passed while alarm creation.
+
         :param meter_name: specifies meter name of the alarm
         :param threshold: specifies alarm threshold
         :param kwargs: specifies optional arguments for alarm creation.
@@ -87,13 +92,14 @@ class CeilometerAlarms(ceilometerutils.CeilometerScenario):
     @validation.required_openstack(users=True)
     @base.scenario(context={"cleanup": ["ceilometer"]})
     def create_and_delete_alarm(self, meter_name, threshold, **kwargs):
-        """Test creating and deleting the newly created alarm.
+        """Create and delete the newly created alarm.
 
         This scenarios test DELETE /v2/alarms/(alarm_id)
         Initially alarm is created and then the created alarm is deleted using
         its alarm_id. meter_name and threshold are required parameters
         for alarm creation. kwargs stores other optional parameters like
         'ok_actions', 'project_id' etc that may be passed while alarm creation.
+
         :param meter_name: specifies meter name of the alarm
         :param threshold: specifies alarm threshold
         :param kwargs: specifies optional arguments for alarm creation.

@@ -22,7 +22,7 @@ class WrongStatusException(exceptions.RallyException):
 
 
 class Requests(base.Scenario):
-    """This class should contain all the http_request scenarios."""
+    """Benchmark scenarios for HTTP requests."""
 
     @base.scenario()
     def check_response(self, url, response=None):
@@ -32,7 +32,7 @@ class Requests(base.Scenario):
         Response.
 
         :param url: URL to be fetched
-        :param response: Expected Response Code
+        :param response: expected response code
         """
         resp = requests.head(url)
         if response and response != resp.status_code:

@@ -22,6 +22,7 @@ from rally import consts
 
 
 class GlanceImages(utils.GlanceScenario, nova_utils.NovaScenario):
+    """Benchmark scenarios for Glance images."""
 
     RESOURCE_NAME_PREFIX = "rally_image_"
     RESOURCE_NAME_LENGTH = 16
@@ -31,16 +32,22 @@ class GlanceImages(utils.GlanceScenario, nova_utils.NovaScenario):
     @base.scenario(context={"cleanup": ["glance"]})
     def create_and_list_image(self, container_format,
                               image_location, disk_format, **kwargs):
-        """Test adding an image and then listing all images.
+        """Add an image and then list all images.
 
-        This scenario is a very useful tool to measure
-        the "glance image-list" command performance.
+        Measure the "glance image-list" command performance.
 
         If you have only 1 user in your context, you will
         add 1 image on every iteration. So you will have more
         and more images and will be able to measure the
         performance of the "glance image-list" command depending on
         the number of images owned by users.
+
+        :param container_format: container format of image. Acceptable
+                                 formats: ami, ari, aki, bare, and ovf
+        :param image_location: image file location
+        :param disk_format: disk format of image. Acceptable formats:
+                            ami, ari, aki, vhd, vmdk, raw, qcow2, vdi, and iso
+        :param kwargs: optional parameters to create image
         """
         self._create_image(self._generate_random_name(),
                            container_format,
@@ -53,7 +60,7 @@ class GlanceImages(utils.GlanceScenario, nova_utils.NovaScenario):
     @validation.required_openstack(users=True)
     @base.scenario(context={"cleanup": ["glance"]})
     def list_images(self):
-        """Test the glance image-list command.
+        """List all images.
 
         This simple scenario tests the glance image-list command by listing
         all the images.
@@ -70,7 +77,15 @@ class GlanceImages(utils.GlanceScenario, nova_utils.NovaScenario):
     @base.scenario(context={"cleanup": ["glance"]})
     def create_and_delete_image(self, container_format,
                                 image_location, disk_format, **kwargs):
-        """Test adds and then deletes image."""
+        """Add and then delete an image.
+
+        :param container_format: container format of image. Acceptable
+                                 formats: ami, ari, aki, bare, and ovf
+        :param image_location: image file location
+        :param disk_format: disk format of image. Acceptable formats:
+                            ami, ari, aki, vhd, vmdk, raw, qcow2, vdi, and iso
+        :param kwargs: optional parameters to create image
+        """
         image_name = self._generate_random_name()
         image = self._create_image(image_name,
                                    container_format,
@@ -88,7 +103,17 @@ class GlanceImages(utils.GlanceScenario, nova_utils.NovaScenario):
                                         image_location, disk_format,
                                         flavor, number_instances,
                                         **kwargs):
-        """Test adds image, boots instance from it and then deletes them."""
+        """Add an image and boot several instances from it.
+
+        :param container_format: container format of image. Acceptable
+                                 formats: ami, ari, aki, bare, and ovf
+        :param image_location: image file location
+        :param disk_format: disk format of image. Acceptable formats:
+                            ami, ari, aki, vhd, vmdk, raw, qcow2, vdi, and iso
+        :param flavor: Nova flavor to be used to launch an instance
+        :param number_instances: number of Nova servers to boot
+        :param kwargs: optional parameters to create image / server
+        """
         image_name = self._generate_random_name()
         image = self._create_image(image_name,
                                    container_format,

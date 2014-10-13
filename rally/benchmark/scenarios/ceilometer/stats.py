@@ -19,16 +19,17 @@ from rally import consts
 
 
 class CeilometerStats(utils.CeilometerScenario):
+    """Benchmark scenarios for Ceilometer Stats API."""
 
     @validation.required_services(consts.Service.CEILOMETER)
     @validation.required_openstack(users=True)
     @base.scenario(context={"cleanup": ["ceilometer"]})
     def create_meter_and_get_stats(self, **kwargs):
-        """Test creating a meter and fetching its statistics.
+        """Create a meter and fetch its statistics.
 
         Meter is first created and then statistics is fetched for the same
         using GET /v2/meters/(meter_name)/statistics.
-        :param name_length: length of generated (random) part of meter name
+
         :param kwargs: contains optional arguments to create a meter
         """
         meter = self._create_meter(**kwargs)

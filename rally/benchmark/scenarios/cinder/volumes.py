@@ -28,23 +28,27 @@ LOG = logging.getLogger(__name__)
 
 class CinderVolumes(utils.CinderScenario,
                     nova_utils.NovaScenario):
+    """Benchmark scenarios for Cinder Volumes."""
 
     @validation.required_services(consts.Service.CINDER)
     @validation.required_openstack(users=True)
     @base.scenario(context={"cleanup": ["cinder"]})
     def create_and_list_volume(self, size, detailed=True, **kwargs):
-        """Tests creating a volume and listing volumes.
+        """Create a volume and list all volumes.
 
-           This scenario is a very useful tool to measure
-           the "cinder volume-list" command performance.
+        Measure the "cinder volume-list" command performance.
 
-           If you have only 1 user in your context, you will
-           add 1 volume on every iteration. So you will have more
-           and more volumes and will be able to measure the
-           performance of the "cinder volume-list" command depending on
-           the number of images owned by users.
+        If you have only 1 user in your context, you will
+        add 1 volume on every iteration. So you will have more
+        and more volumes and will be able to measure the
+        performance of the "cinder volume-list" command depending on
+        the number of images owned by users.
+
+        :param size: volume size (in GB)
+        :param detailed: determines whether the volume listing should contain
+                         detailed information about all of them
+        :param kwargs: optional args to create a volume
         """
-
         self._create_volume(size, **kwargs)
         self._list_volumes(detailed)
 
@@ -53,11 +57,20 @@ class CinderVolumes(utils.CinderScenario,
     @base.scenario(context={"cleanup": ["cinder"]})
     def create_and_delete_volume(self, size, min_sleep=0, max_sleep=0,
                                  **kwargs):
-        """Tests creating and then deleting a volume.
+        """Create and then delete a volume.
 
-        Good for testing a maximal bandwidth of cloud.
+        Good for testing a maximal bandwidth of cloud. Optional 'min_sleep'
+        and 'max_sleep' parameters allow the scenario to simulate a pause
+        between volume creation and deletion (of random duration from
+        [min_sleep, max_sleep]).
+
+        :param size: volume size (in GB)
+        :param min_sleep: minimum sleep time between volume creation and
+                          deletion (in seconds)
+        :param max_sleep: maximum sleep time between volume creation and
+                          deletion (in seconds)
+        :param kwargs: optional args to create a volume
         """
-
         volume = self._create_volume(size, **kwargs)
         self.sleep_between(min_sleep, max_sleep)
         self._delete_volume(volume)
@@ -66,10 +79,13 @@ class CinderVolumes(utils.CinderScenario,
     @validation.required_openstack(users=True)
     @base.scenario(context={"cleanup": ["cinder"]})
     def create_volume(self, size, **kwargs):
-        """Test creating volumes perfromance.
+        """Create a volume.
 
         Good test to check how influence amount of active volumes on
         performance of creating new.
+
+        :param size: volume size (in GB)
+        :param kwargs: optional args to create a volume
         """
         self._create_volume(size, **kwargs)
 
@@ -79,9 +95,21 @@ class CinderVolumes(utils.CinderScenario,
     @base.scenario(context={"cleanup": ["cinder"]})
     def create_and_delete_snapshot(self, force=False, min_sleep=0,
                                    max_sleep=0, **kwargs):
-        """Tests creating and then deleting a volume-snapshot."""
-        volume_id = self.context["tenant"]["volume"]
+        """Create and then delete a volume-snapshot.
 
+        Optional 'min_sleep' and 'max_sleep' parameters allow the scenario
+        to simulate a pause between snapshot creation and deletion
+        (of random duration from [min_sleep, max_sleep]).
+
+        :param force: when set to True, allows snapshot of a volume when
+                      the volume is attached to an instance
+        :param min_sleep: minimum sleep time between snapshot creation and
+                          deletion (in seconds)
+        :param max_sleep: maximum sleep time between snapshot creation and
+                          deletion (in seconds)
+        :param kwargs: optional args to create a shapshot
+        """
+        volume_id = self.context["tenant"]["volume"]
         snapshot = self._create_snapshot(volume_id, force=force, **kwargs)
         self.sleep_between(min_sleep, max_sleep)
         self._delete_snapshot(snapshot)
@@ -92,23 +120,26 @@ class CinderVolumes(utils.CinderScenario,
     @validation.required_services(consts.Service.NOVA, consts.Service.CINDER)
     @validation.required_openstack(users=True)
     @base.scenario(context={"cleanup": ["cinder", "nova"]})
-    def create_and_attach_volume(self, volume_size, image, flavor,
-                                 min_sleep=0, max_sleep=0, **kwargs):
+    def create_and_attach_volume(self, size, image, flavor, **kwargs):
+        """Create a VM and attach a volume to it.
 
-        """Tests creating a VM and attaching a volume.
+        Simple test to create a VM and attach a volume, then
+        detach the volume and delete volume/VM.
 
-        Simple test to create a vm and attach a volume, then
-        detach the volume and cleanup.
-
-        :param volume_size: The size of the volume to create
-        :param image: The glance image name to use for the vm
-        :param flavor: the VM flavor name
-
+        :param size: volume size (in GB)
+        :param image: Glance image name to use for the VM
+        :param flavor: VM flavor name
+        :param kwargs: optional arguments for VM/volume creation
         """
+        if "volume_size" in kwargs:
+            import warnings
+            warnings.warn("'volume_size' argument is deprecated. You should "
+                          "use 'size' instead.")
+            size = kwargs["volume_size"]
 
         server = self._boot_server(
             self._generate_random_name(), image, flavor, **kwargs)
-        volume = self._create_volume(volume_size, **kwargs)
+        volume = self._create_volume(size, **kwargs)
 
         self._attach_volume(server, volume)
         self._detach_volume(server, volume)
@@ -121,30 +152,35 @@ class CinderVolumes(utils.CinderScenario,
     @validation.required_openstack(users=True)
     @base.scenario(context={"cleanup": ["cinder", "nova"]})
     def create_snapshot_and_attach_volume(self, volume_type=False,
-                                          volume_size=None, **kwargs):
+                                          size=None, **kwargs):
 
-        """Tests volume create, snapshot create and volume attach/detach
+        """Create volume, snapshot and attach/detach volume.
 
         This scenario is based off of the standalone qaStressTest.py
         (https://github.com/WaltHP/cinder-stress).
 
         :param volume_type: Whether or not to specify volume type when creating
-            volumes.
-        :param volume_size: Volume size - dictionary, contains two values
-        min - minimum size volumes will be created as.
-        max - maximum size volumes will be created as.
-            default values: {"min": 1, "max": 5}
+                            volumes.
+        :param size: Volume size - dictionary, contains two values:
+                        min - minimum size volumes will be created as;
+                        max - maximum size volumes will be created as.
+                     default values: {"min": 1, "max": 5}
         :param kwargs: Optional parameters used during volume
                        snapshot creation.
-
         """
-        if "min_volume_size" in kwargs or "max_volume_size" in kwargs:
+        if "min_size" in kwargs or "max_size" in kwargs:
             import warnings
-            warnings.warn("'min_volume_size' and 'max_volume_size' arguments "
-                          "are deprecated. You should use 'volume_size', with "
+            warnings.warn("'min_size' and 'max_size' arguments "
+                          "are deprecated. You should use 'size', with "
                           "keys 'min' and 'max' instead.")
-        if volume_size is None:
-            volume_size = {"min": 1, "max": 5}
+        if "volume_size" in kwargs:
+            import warnings
+            warnings.warn("'volume_size' argument is deprecated. You should "
+                          "use 'size' instead.")
+            size = kwargs["volume_size"]
+
+        if size is None:
+            size = {"min": 1, "max": 5}
         selected_type = None
         volume_types = [None]
 
@@ -154,9 +190,9 @@ class CinderVolumes(utils.CinderScenario,
                 volume_types.append(s.name)
             selected_type = random.choice(volume_types)
 
-        volume_size = random.randint(volume_size['min'], volume_size['max'])
+        size = random.randint(size['min'], size['max'])
 
-        volume = self._create_volume(volume_size, volume_type=selected_type)
+        volume = self._create_volume(size, volume_type=selected_type)
         snapshot = self._create_snapshot(volume.id, False, **kwargs)
 
         server = self.get_random_server()
@@ -171,47 +207,53 @@ class CinderVolumes(utils.CinderScenario,
     @validation.required_openstack(users=True)
     @base.scenario(context={"cleanup": ["cinder", "nova"]})
     def create_nested_snapshots_and_attach_volume(self,
-                                                  volume_size=None,
+                                                  size=None,
                                                   nested_level=None,
                                                   **kwargs):
 
-        """Tests volume create from snapshot and volume attach/detach
+        """Create a volume from snapshot and attach/detach the volume
 
         This scenario create volume, create it's snapshot, attach volume,
         then create new volume from existing snapshot and so on,
-        with defined nested level, after all detach and delete them .
+        with defined nested level, after all detach and delete them.
         volume->snapshot->volume->snapshot->volume ...
 
-        :param volume_size: Volume size - dictionary, contains two values
-        min - minimum size volumes will be created as.
-        max - maximum size volumes will be created as.
-            default values: {"min": 1, "max": 5}
-        :param nested_level: Nested level - dictionary, contains two values
-        min - minimum number of volumes will be create from snapshot
-        max - maximum number of volumes will be create from snapshot
-            default values: {"min": 5, "max": 10}
+        :param size: Volume size - dictionary, contains two values:
+                        min - minimum size volumes will be created as;
+                        max - maximum size volumes will be created as.
+                     default values: {"min": 1, "max": 5}
+        :param nested_level: Nested level - dictionary, contains two values:
+                               min - minimum number of volumes will be created
+                                     from snapshot;
+                               max - maximum number of volumes will be created
+                                     from snapshot.
+                             default values: {"min": 5, "max": 10}
         :param kwargs: Optional parameters used during volume
-        snapshot creation.
-
+                       snapshot creation.
         """
+        if "volume_size" in kwargs:
+            import warnings
+            warnings.warn("'volume_size' argument is deprecated. You should "
+                          "use 'size' instead.")
+            size = kwargs["volume_size"]
 
-        if volume_size is None:
-            volume_size = {"min": 1, "max": 5}
+        if size is None:
+            size = {"min": 1, "max": 5}
         if nested_level is None:
             nested_level = {"min": 5, "max": 10}
 
-        volume_size = random.randint(volume_size['min'], volume_size['max'])
+        size = random.randint(size['min'], size['max'])
         nested_level = random.randint(nested_level['min'], nested_level['max'])
 
         servers = [self.get_random_server()]
-        volumes = [self._create_volume(volume_size)]
+        volumes = [self._create_volume(size)]
         snapshots = [self._create_snapshot(volumes[0].id, False, **kwargs)]
 
         self._attach_volume(servers[0], volumes[0])
 
         snapshot = snapshots[0]
         for i in range(nested_level - 1):
-            volume = self._create_volume(volume_size, snapshot_id=snapshot.id)
+            volume = self._create_volume(size, snapshot_id=snapshot.id)
             snapshot = self._create_snapshot(volume.id, False, **kwargs)
             server = self.get_random_server()
 

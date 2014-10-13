@@ -23,22 +23,23 @@ LOG = logging.getLogger(__name__)
 
 
 class SaharaJob(utils.SaharaScenario):
+    """Benchmark scenarios for Sahara jobs."""
 
     @validation.required_services(consts.Service.SAHARA)
     @validation.required_contexts("users", "sahara_image", "sahara_edp",
                                   "sahara_cluster")
     @base.scenario(context={"cleanup": ["sahara"]})
     def create_launch_job(self, job_type, configs, job_idx=0):
-        """Test the Sahara EDP Job execution.
-
-        :param job_type: The type of the Data Processing Job
-        :param configs: The configs dict that will be passed to a Job Execution
-        :param job_idx: The index of a job in a sequence. This index will be
-        used to create different atomic actions for each job in a sequence
+        """Create and execute a Sahara EDP Job.
 
         This scenario Creates a Job entity and launches an execution on a
         Cluster.
 
+        :param job_type: type of the Data Processing Job
+        :param configs: config dict that will be passed to a Job Execution
+        :param job_idx: index of a job in a sequence. This index will be
+                        used to create different atomic actions for each job
+                        in a sequence
         """
 
         mains = self.context["tenant"]["sahara_mains"]
@@ -72,13 +73,12 @@ class SaharaJob(utils.SaharaScenario):
                                   "sahara_cluster")
     @base.scenario(context={"cleanup": ["sahara"]})
     def create_launch_job_sequence(self, jobs):
-        """Test the Sahara EDP Job sequence execution.
-
-        :param jobs: The list of jobs that should be executed in one context
+        """Create and execute a sequence of the Sahara EDP Jobs.
 
         This scenario Creates a Job entity and launches an execution on a
         Cluster for every job object provided.
 
+        :param jobs: list of jobs that should be executed in one context
         """
 
         for idx, job in enumerate(jobs):
@@ -90,16 +90,15 @@ class SaharaJob(utils.SaharaScenario):
                                   "sahara_cluster")
     @base.scenario(context={"cleanup": ["sahara"]})
     def create_launch_job_sequence_with_scaling(self, jobs, deltas):
-        """Test the Sahara EDP Job sequence execution on a scaling Cluster.
-
-        :param jobs: The list of jobs that should be executed in one context
-        :param deltas: The list of integers which will be used to add or
-        remove worker nodes from the cluster
+        """Create and execute Sahara EDP Jobs on a scaling Cluster.
 
         This scenario Creates a Job entity and launches an execution on a
         Cluster for every job object provided. The Cluster is scaled according
-        to the deltas values and the sequence is launched again
+        to the deltas values and the sequence is launched again.
 
+        :param jobs: list of jobs that should be executed in one context
+        :param deltas: list of integers which will be used to add or
+                       remove worker nodes from the cluster
         """
 
         cluster_id = self.context["tenant"]["sahara_cluster"]

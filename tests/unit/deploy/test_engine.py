@@ -56,6 +56,10 @@ class FakeDeployment(object):
 
 
 class FakeEngine(deploy.EngineFactory):
+    """Fake deployment engine.
+
+    Used for tests.
+    """
     deployed = False
     cleanuped = False
 
@@ -80,14 +84,26 @@ class EngineMixIn(object):
 
 
 class EngineFake1(EngineMixIn, deploy.EngineFactory):
+    """Fake deployment engine.
+
+    Used for tests.
+    """
     pass
 
 
 class EngineFake2(EngineMixIn, deploy.EngineFactory):
+    """Fake deployment engine.
+
+    Used for tests.
+    """
     pass
 
 
 class EngineFake3(EngineFake2):
+    """Fake deployment engine.
+
+    Used for tests.
+    """
     pass
 
 

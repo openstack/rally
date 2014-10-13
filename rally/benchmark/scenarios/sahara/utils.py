@@ -40,6 +40,7 @@ CONF.register_opts(TIMEOUT_OPTS, group=benchmark_group)
 
 
 class SaharaScenario(base.Scenario):
+    """Base class for Sahara scenarios with basic atomic actions."""
 
     RESOURCE_NAME_LENGTH = 20
 
@@ -110,22 +111,20 @@ class SaharaScenario(base.Scenario):
 
     @base.atomic_action_timer('sahara.list_node_group_templates')
     def _list_node_group_templates(self):
-        """Returns user Node Group Templates list."""
-
+        """Return user Node Group Templates list."""
         return self.clients("sahara").node_group_templates.list()
 
     @base.atomic_action_timer('sahara.create_master_node_group_template')
     def _create_master_node_group_template(self, flavor_id, plugin_name,
                                            hadoop_version):
-        """Creates a master Node Group Template with a random name.
+        """Create a master Node Group Template with a random name.
 
         :param flavor_id: The required argument for the Template
         :param plugin_name: Sahara provisioning plugin name
         :param hadoop_version: The version of Hadoop distribution supported by
-            the plugin
-        :return: The created Template
+                               the plugin
+        :returns: The created Template
         """
-
         name = self._generate_random_name(prefix="master-ngt-")
 
         return self.clients("sahara").node_group_templates.create(
@@ -139,15 +138,14 @@ class SaharaScenario(base.Scenario):
     @base.atomic_action_timer('sahara.create_worker_node_group_template')
     def _create_worker_node_group_template(self, flavor_id, plugin_name,
                                            hadoop_version):
-        """Creates a worker Node Group Template with a random name.
+        """Create a worker Node Group Template with a random name.
 
         :param flavor_id: The required argument for the Template
         :param plugin_name: Sahara provisioning plugin name
         :param hadoop_version: The version of Hadoop distribution supported by
-            the plugin
-        :return: The created Template
+                               the plugin
+        :returns: The created Template
         """
-
         name = self._generate_random_name(prefix="worker-ngt-")
 
         return self.clients("sahara").node_group_templates.create(
@@ -160,12 +158,10 @@ class SaharaScenario(base.Scenario):
 
     @base.atomic_action_timer('sahara.delete_node_group_template')
     def _delete_node_group_template(self, node_group):
-        """Deletes a Node Group Template by id.
+        """Delete a Node Group Template by id.
 
         :param node_group: The Node Group Template to be deleted
-        :return:
         """
-
         self.clients("sahara").node_group_templates.delete(node_group.id)
 
     def _wait_active(self, cluster_object):
@@ -182,39 +178,38 @@ class SaharaScenario(base.Scenario):
                         volumes_size=None, auto_security_group=None,
                         security_groups=None, node_configs=None,
                         cluster_configs=None, wait_active=True):
-        """Creates a cluster and wait until it becomes Active.
+        """Create a cluster and wait until it becomes Active.
 
         The cluster is created with two node groups. The master Node Group is
         created with one instance. The worker node group contains
         node_count - 1 instances.
 
-        :param plugin_name: The provisioning plugin name
+        :param plugin_name: provisioning plugin name
         :param hadoop_version: Hadoop version supported by the plugin
-        :param flavor_id: The flavor which will be used to create instances
-        :param image_id: The image id that will be used to boot instances
-        :param node_count: The total number of instances. 1 master node, others
-        for the workers
-        :param floating_ip_pool: The floating ip pool name from which Floating
-        IPs will be allocated
-        :param neutron_net_id: The network id to allocate Fixed IPs
-        from, when Neutron is enabled for networking
-        :param volumes_per_node: The number of Cinder volumes that will be
-        attached to every cluster node
-        :param volumes_size: The size of each Cinder volume in GB
-        :param auto_security_group: Boolean value. If set to True Sahara will
-        create a Security Group for each Node Group in the Cluster
-        automatically.
-        :param security_groups: The list of security groups that will be used
-        while creating VMs. If auto_security_group is set to True this list
-        can be left empty.
-        :param node_configs: The configs dict that will be passed to each Node
-        Group
-        :param cluster_configs: The configs dict that will be passed to the
-        Cluster
+        :param flavor_id: flavor which will be used to create instances
+        :param image_id: image id that will be used to boot instances
+        :param node_count: total number of instances. 1 master node, others
+                           for the workers
+        :param floating_ip_pool: floating ip pool name from which Floating
+                                 IPs will be allocated
+        :param neutron_net_id: network id to allocate Fixed IPs
+                               from, when Neutron is enabled for networking
+        :param volumes_per_node: number of Cinder volumes that will be
+                                 attached to every cluster node
+        :param volumes_size: size of each Cinder volume in GB
+        :param auto_security_group: boolean value. If set to True Sahara will
+                                    create a Security Group for each Node Group
+                                    in the Cluster automatically.
+        :param security_groups: list of security groups that will be used
+                                while creating VMs. If auto_security_group is
+                                set to True, this list can be left empty.
+        :param node_configs: configs dict that will be passed to each Node
+                             Group
+        :param cluster_configs: configs dict that will be passed to the
+                                Cluster
         :param wait_active: Wait until a Cluster gets int "Active" state
-        :return: The created cluster
+        :returns: created cluster
         """
-
         node_groups = [
             {
                 "name": "master-ng",
@@ -313,7 +308,6 @@ class SaharaScenario(base.Scenario):
         There two specific scaling methods of up and down scaling which have
         different atomic timers.
         """
-
         worker_node_group = [g for g in cluster.node_groups
                              if "worker" in g["name"]][0]
         scale_object = {
@@ -330,34 +324,30 @@ class SaharaScenario(base.Scenario):
 
     @base.atomic_action_timer('sahara.scale_up')
     def _scale_cluster_up(self, cluster, delta):
-        """Adds a given number of worker nodes to the cluster.
+        """Add a given number of worker nodes to the cluster.
 
         :param cluster: The cluster to be scaled
         :param delta: The number of workers to be added. (A positive number is
-        expected here)
+                      expected here)
         """
-
         self._scale_cluster(cluster, delta)
 
     @base.atomic_action_timer('sahara.scale_down')
     def _scale_cluster_down(self, cluster, delta):
-        """Removes a given number of worker nodes from the cluster.
+        """Remove a given number of worker nodes from the cluster.
 
         :param cluster: The cluster to be scaled
         :param delta: The number of workers to be removed. (A negative number
-        is expected here)
+                      is expected here)
         """
-
         self._scale_cluster(cluster, delta)
 
     @base.atomic_action_timer('sahara.delete_cluster')
     def _delete_cluster(self, cluster):
-        """Calls a Cluster delete by id and waits for complete deletion.
+        """Delete cluster.
 
-        :param cluster: The Cluster to be deleted
-        :return:
+        :param cluster: cluster to delete
         """
-
         self.clients("sahara").clusters.delete(cluster.id)
 
         bench_utils.wait_for(resource=cluster.id,
@@ -371,11 +361,10 @@ class SaharaScenario(base.Scenario):
             return True
 
     def _create_output_ds(self):
-        """Creates an output Data Source based on EDP context
+        """Create an output Data Source based on EDP context
 
         :return: The created Data Source
         """
-
         ds_type = self.context["sahara_output_conf"]["output_type"]
         url_prefix = self.context["sahara_output_conf"]["output_url_prefix"]
 
@@ -394,7 +383,7 @@ class SaharaScenario(base.Scenario):
 
     def _run_job_execution(self, job_id, cluster_id, input_id, output_id,
                            configs, job_idx):
-        """Runs a Job Execution and waits until it completes or fails.
+        """Run a Job Execution and wait until it completes or fails.
 
         The Job Execution is accepted as successful when Oozie reports
         "success" or "succeeded" status. The failure statuses are "failed" and
@@ -409,11 +398,10 @@ class SaharaScenario(base.Scenario):
         :param input_id: The input Data Source id
         :param output_id: The output Data Source id
         :param configs: The config dict that will be passed as Job Execution's
-        parameters.
+                        parameters.
         :param job_idx: The index of a job in a sequence
 
         """
-
         @base.atomic_action_timer('sahara.job_execution_%s' % job_idx)
         def run(self):
             job_execution = self.clients("sahara").job_executions.create(

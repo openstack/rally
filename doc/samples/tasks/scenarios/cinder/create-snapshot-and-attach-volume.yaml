@@ -3,7 +3,7 @@
     -
       args:
           volume_type: false
-          volume_size:
+          size:
               min: 1
               max: 5
       runner:
@@ -23,7 +23,7 @@
     -
       args:
           volume_type: true
-          volume_size:
+          size:
               min: 1
               max: 5
       runner:

@@ -21,6 +21,7 @@ from rally.benchmark.scenarios import base
 
 
 class FakePlugin(base.Scenario):
+    """Fake plugin with a scenario."""
 
     @base.atomic_action_timer("test1")
     def _test1(self, factor):
@@ -32,5 +33,9 @@ class FakePlugin(base.Scenario):
 
     @base.scenario()
     def testplugin(self, factor=1):
+        """Fake scenario.
+
+        :param factor: influences the argument value for a time.sleep() call
+        """
         self._test1(factor)
         self._test2(factor)

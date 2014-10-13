@@ -21,6 +21,7 @@ from tests.unit import test
 
 
 class TestCriterion(base.SLA):
+    """Test SLA."""
     OPTION_NAME = "test_criterion"
     CONFIG_SCHEMA = {"type": "integer"}
 

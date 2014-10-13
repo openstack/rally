@@ -23,6 +23,8 @@ def is_temporary(resource):
 
 
 class KeystoneScenario(base.Scenario):
+    """Base class for Keystone scenarios with basic atomic actions."""
+
     RESOURCE_NAME_PREFIX = "rally_keystone_"
 
     @base.atomic_action_timer('keystone.create_user')
@@ -30,9 +32,9 @@ class KeystoneScenario(base.Scenario):
         """Creates keystone user with random name.
 
         :param name_length: length of generated (random) part of name
-        :param **kwargs: Other optional parameters to create users like
+        :param kwargs: Other optional parameters to create users like
                         "tenant_id", "enabled".
-        :return: keystone user instance
+        :returns: keystone user instance
         """
         name = self._generate_random_name(length=name_length)
         # NOTE(boris-42): password and email parameters are required by
@@ -54,8 +56,8 @@ class KeystoneScenario(base.Scenario):
         """Creates keystone tenant with random name.
 
         :param name_length: length of generated (random) part of name
-        :param **kwargs: Other optional parameters
-        :return: keystone tenant instance
+        :param kwargs: Other optional parameters
+        :returns: keystone tenant instance
         """
         name = self._generate_random_name(length=name_length)
         return self.admin_clients("keystone").tenants.create(name, **kwargs)
@@ -64,6 +66,7 @@ class KeystoneScenario(base.Scenario):
     def _users_create(self, tenant, users_per_tenant, name_length=10):
         """Adds users to a tenant.
 
+        :param tenant: tenant object
         :param users_per_tenant: number of users in per tenant
         :param name_length: length of generated (random) part of name for user
         """
@@ -76,10 +79,10 @@ class KeystoneScenario(base.Scenario):
 
     @base.atomic_action_timer('keystone.list_users')
     def _list_users(self):
-        """list users."""
+        """List users."""
         return self.admin_clients("keystone").users.list()
 
     @base.atomic_action_timer('keystone.list_tenants')
     def _list_tenants(self):
-        """list tenants."""
+        """List tenants."""
         return self.admin_clients("keystone").tenants.list()

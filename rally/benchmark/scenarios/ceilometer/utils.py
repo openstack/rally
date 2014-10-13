@@ -16,10 +16,12 @@ from rally.benchmark.scenarios import base
 
 
 class CeilometerScenario(base.Scenario):
+    """Base class for Ceilometer scenarios with basic atomic actions."""
+
     RESOURCE_NAME_PREFIX = "rally_ceilometer_"
 
     def _get_alarm_dict(self, **kwargs):
-        """Prepares and returns alarm dictionary for creating an alarm.
+        """Prepare and return an alarm dict for creating an alarm.
 
         :param kwargs: optional parameters to create alarm
         :returns: alarm dictionary used to create an alarm
@@ -38,6 +40,7 @@ class CeilometerScenario(base.Scenario):
 
         List alarm matching alarm_id. It fetches all alarms
         if alarm_id is None.
+
         :param alarm_id: specifies id of the alarm
         :returns: list of alarms
         """
@@ -63,7 +66,7 @@ class CeilometerScenario(base.Scenario):
 
     @base.atomic_action_timer('ceilometer.delete_alarm')
     def _delete_alarm(self, alarm_id):
-        """Deletes an alarm.
+        """Delete an alarm.
 
         :param alarm_id: specifies id of the alarm
         """
@@ -71,7 +74,7 @@ class CeilometerScenario(base.Scenario):
 
     @base.atomic_action_timer('ceilometer.update_alarm')
     def _update_alarm(self, alarm_id, alarm_dict_delta):
-        """Updates an alarm.
+        """Update an alarm.
 
         :param alarm_id: specifies id of the alarm
         :param alarm_dict_delta: features of alarm to be updated
@@ -116,7 +119,9 @@ class CeilometerScenario(base.Scenario):
     def _query_alarms(self, filter, orderby, limit):
         """Query alarms with specific parameters.
 
-        If no input params are provided, it returns all the results in database
+        If no input params are provided, it returns all the results
+        in the database.
+
         :param limit: optional param for maximum number of results returned
         :param orderby: optional param for specifying ordering of results
         :param filter: optional filter query
@@ -129,7 +134,9 @@ class CeilometerScenario(base.Scenario):
     def _query_alarm_history(self, filter, orderby, limit):
         """Query history of an alarm.
 
-        If no input params are provided, it returns all the results in database
+        If no input params are provided, it returns all the results
+        in the database.
+
         :param limit: optional param for maximum number of results returned
         :param orderby: optional param for specifying ordering of results
         :param filter: optional filter query
@@ -141,7 +148,7 @@ class CeilometerScenario(base.Scenario):
     @base.atomic_action_timer('ceilometer.create_sample')
     def _create_sample(self, counter_name, counter_type, counter_unit,
                        counter_volume, resource_id, **kwargs):
-        """Creates a Sample with specified parameters.
+        """Create a Sample with specified parameters.
 
         :param counter_name: specifies name of the counter
         :param counter_type: specifies type of the counter
@@ -162,7 +169,9 @@ class CeilometerScenario(base.Scenario):
     def _query_samples(self, filter, orderby, limit):
         """Query samples with specified parameters.
 
-        If no input params are provided, it returns all the results in database
+        If no input params are provided, it returns all the results
+        in the database.
+
         :param limit: optional param for maximum number of results returned
         :param orderby: optional param for specifying ordering of results
         :param filter: optional filter query

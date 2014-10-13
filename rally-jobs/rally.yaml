@@ -734,7 +734,7 @@
   CinderVolumes.create_and_attach_volume:
     -
       args:
-        volume_size: 1
+        size: 1
         image:
           name: "^cirros.*uec$"
         flavor:
@@ -755,7 +755,7 @@
     -
       args:
           volume_type: false
-          volume_size:
+          size:
               min: 1
               max: 2
       runner:
@@ -778,7 +778,7 @@
     -
       args:
           volume_type: true
-          volume_size:
+          size:
               min: 1
               max: 2
       runner:
@@ -803,7 +803,7 @@
   CinderVolumes.create_nested_snapshots_and_attach_volume:
     -
       args:
-          volume_size:
+          size:
               min: 1
               max: 2
           nested_level:

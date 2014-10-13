@@ -2,7 +2,7 @@
     "CinderVolumes.create_and_attach_volume": [
         {
             "args": {
-                "volume_size": 10,
+                "size": 10,
                 "image": {
                     "name": "^cirros.*uec$"
                 },

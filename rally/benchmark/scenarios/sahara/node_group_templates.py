@@ -21,6 +21,7 @@ from rally import consts
 
 
 class SaharaNodeGroupTemplates(utils.SaharaScenario):
+    """Benchmark scenarios for Sahara node group templates."""
 
     @types.set(flavor=types.FlavorResourceType)
     @validation.flavor_exists('flavor')
@@ -30,7 +31,7 @@ class SaharaNodeGroupTemplates(utils.SaharaScenario):
     def create_and_list_node_group_templates(self, flavor,
                                              plugin_name="vanilla",
                                              hadoop_version="1.2.1"):
-        """Test the sahara Node Group Templates create and list commands.
+        """Create and list Sahara Node Group Templates.
 
         This scenario creates two Node Group Templates with different set of
         node processes. The master Node Group Template contains Hadoop's
@@ -42,11 +43,11 @@ class SaharaNodeGroupTemplates(utils.SaharaScenario):
 
         After the templates are created the list operation is called.
 
-        :param flavor: The Nova flavor that will be for nodes in the
-        created node groups
-        :param plugin_name: The name of a provisioning plugin
-        :param hadoop_version: The version of Hadoop distribution supported by
-        the specified plugin.
+        :param flavor: Nova flavor that will be for nodes in the
+                       created node groups
+        :param plugin_name: name of a provisioning plugin
+        :param hadoop_version: version of Hadoop distribution supported by
+                               the specified plugin.
         """
 
         self._create_master_node_group_template(flavor_id=flavor,
@@ -65,7 +66,7 @@ class SaharaNodeGroupTemplates(utils.SaharaScenario):
     def create_delete_node_group_templates(self, flavor,
                                            plugin_name="vanilla",
                                            hadoop_version="1.2.1"):
-        """Test create and delete commands.
+        """Create and delete Sahara Node Group Templates.
 
         This scenario creates and deletes two most common types of
         Node Group Templates.
@@ -73,11 +74,11 @@ class SaharaNodeGroupTemplates(utils.SaharaScenario):
         By default the templates are created for the vanilla Hadoop
         provisioning plugin using the version 1.2.1
 
-        :param flavor: The Nova flavor that will be for nodes in the
-        created node groups
-        :param plugin_name: The name of a provisioning plugin
-        :param hadoop_version: The version of Hadoop distribution supported by
-        the specified plugin.
+        :param flavor: Nova flavor that will be for nodes in the
+                       created node groups
+        :param plugin_name: name of a provisioning plugin
+        :param hadoop_version: version of Hadoop distribution supported by
+                               the specified plugin.
         """
 
         master_ngt = self._create_master_node_group_template(

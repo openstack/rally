@@ -27,6 +27,7 @@ from rally import exceptions
 
 class VMTasks(nova_utils.NovaScenario, vm_utils.VMScenario,
               cinder_utils.CinderScenario):
+    """Benchmark scenarios that are to be run inside VM instances."""
 
     def __init__(self, *args, **kwargs):
         super(VMTasks, self).__init__(*args, **kwargs)
@@ -51,12 +52,14 @@ class VMTasks(nova_utils.NovaScenario, vm_utils.VMScenario,
                                use_floatingip=True,
                                force_delete=False,
                                **kwargs):
-        """Boot server, run a script that outputs JSON, delete server.
+        """Boot a server, run a script that outputs JSON, delete the server.
+
+        Example Script in doc/samples/tasks/support/instance_dd_test.sh
 
         :param image: glance image name to use for the vm
         :param flavor: VM flavor name
         :param script: script to run on the server, must output JSON mapping
-                metric names to values. See sample script below.
+                       metric names to values (see the sample script below)
         :param interpreter: The shell interpreter to use when running script
         :param username: User to SSH to instance as
         :param volume_args: volume args when boot VM from volume
@@ -65,15 +68,12 @@ class VMTasks(nova_utils.NovaScenario, vm_utils.VMScenario,
         :param ip_version: Version of ip protocol to use for connection
         :param port: Port to use for SSH connection
         :param use_floatingip: Whether to associate a floating ip for
-                connection
+                               connection
         :param force_delete: Whether to use force_delete for instances
 
         :returns: Dictionary containing two keys, data and errors. Data is JSON
-                 data output by the script. Errors is raw data from the
-                 script's standard error stream.
-
-
-        Example Script in doc/samples/tasks/support/instance_dd_test.sh
+                  data output by the script. Errors is raw data from the
+                  script's standard error stream.
         """
         if volume_args:
             volume = self._create_volume(volume_args['size'], imageRef=None)

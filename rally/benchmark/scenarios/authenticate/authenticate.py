@@ -17,14 +17,16 @@ from rally.benchmark import validation
 
 
 class Authenticate(base.Scenario):
-    """This class should contain authentication mechanism.
+    """Benchmark scenarios for the authentication mechanism.
 
-    For different types of clients like Keystone.
+    Benchmark scenarios for different types of OpenStack clients like Keystone,
+    Nova etc.
     """
 
     @validation.required_openstack(users=True)
     @base.scenario()
     def keystone(self):
+        """Check Keystone Client."""
         self.clients("keystone")
 
     @validation.number("repetitions", minval=1)

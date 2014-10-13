@@ -23,17 +23,17 @@ class DummyScenarioException(exceptions.RallyException):
 
 
 class Dummy(base.Scenario):
-    """Benchmarks for testing Rally benchmark engine at scale."""
+    """Dummy benchmarks for testing Rally benchmark engine at scale."""
 
     @base.scenario()
     def dummy(self, sleep=0):
-        """Test the performance of ScenarioRunners.
+        """Do nothing and sleep for the given number of seconds (0 by default).
 
         Dummy.dummy can be used for testing performance of different
-        ScenarioRunners and ability of rally to store a large
+        ScenarioRunners and of the ability of rally to store a large
         amount of results.
 
-        :param sleep: Idle time of method.
+        :param sleep: idle time of method (in seconds).
         """
         if sleep:
             time.sleep(sleep)
@@ -42,13 +42,14 @@ class Dummy(base.Scenario):
                        minval=1, integer_only=True, nullable=True)
     @base.scenario()
     def dummy_exception(self, size_of_message=1):
-        """Test if exceptions are processed properly.
+        """Throw an exception.
 
-        Dummy.dummy_exception can be used for test if Exceptions are processed
+        Dummy.dummy_exception can be used for test if exceptions are processed
         properly by ScenarioRunners and benchmark and analyze rally
         results storing process.
 
-        :param size_of_message: the size of the message.
+        :param size_of_message: int size of the exception message
+        :raises: DummyScenarioException
         """
 
         raise DummyScenarioException("M" * size_of_message)
@@ -57,9 +58,11 @@ class Dummy(base.Scenario):
                        minval=0, maxval=1, integer_only=False, nullable=True)
     @base.scenario()
     def dummy_exception_probability(self, exception_probability=0.5):
-        """Test if exceptions are processed properly.
+        """Throw an exception with given probability.
 
-        This scenario will throw an exception sometimes.
+        Dummy.dummy_exception_probability can be used to test if exceptions
+        are processed properly by ScenarioRunners. This scenario will throw
+        an exception sometimes, depending on the given exception probability.
 
         :param exception_probability: Sets how likely it is that an exception
                                       will be thrown. Float between 0 and 1
@@ -74,6 +77,11 @@ class Dummy(base.Scenario):
 
     @base.scenario()
     def dummy_with_scenario_output(self):
+        """Return a dummy scenario output.
+
+        Dummy.dummy_with_scenario_output can be used to test the scenario
+        output processing.
+        """
         out = {
             'value_1': random.randint(1, 100),
             'value_2': random.random()
@@ -83,10 +91,22 @@ class Dummy(base.Scenario):
 
     @base.atomic_action_timer("dummy_fail_test")
     def _random_fail_emitter(self, exception_probability):
+        """Throw an exception with given probability.
+
+        :raises: KeyError
+        """
         if random.random() < exception_probability:
             raise KeyError("Dummy test exception")
 
     @base.scenario()
     def dummy_random_fail_in_atomic(self, exception_probability=0.5):
+        """Randomly throw exceptions in atomic actions.
+
+        Dummy.dummy_random_fail_in_atomic can be used to test atomic actions
+        failures processing.
+
+        :param exception_probability: Probability with which atomic actions
+                                      fail in this dummy scenario (0 <= p <= 1)
+        """
         self._random_fail_emitter(exception_probability)
         self._random_fail_emitter(exception_probability)

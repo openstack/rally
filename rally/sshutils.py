@@ -92,7 +92,6 @@ class SSH(object):
         :param pkey: RSA or DSS private key string or file object
         :param key_filename: private key filename
         :param password: password
-
         """
 
         self.user = user
@@ -234,8 +233,7 @@ class SSH(object):
         :param stdin:   Open file to be sent on process stdin.
         :param timeout: Timeout for execution of the command.
 
-        Return tuple (exit_status, stdout, stderr)
-
+        :returns: tuple (exit_status, stdout, stderr)
         """
         stdout = StringIO.StringIO()
         stderr = StringIO.StringIO()

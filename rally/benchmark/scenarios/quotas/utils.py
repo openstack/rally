@@ -19,10 +19,11 @@ from rally.benchmark.scenarios import base
 
 
 class QuotasScenario(base.Scenario):
+    """Base class for quotas scenarios with basic atomic actions."""
 
     @base.atomic_action_timer('quotas.update_quotas')
     def _update_quotas(self, component, tenant_id, max_quota=1024):
-        """Updates quotas.
+        """Update quotas.
 
         :param component: Component for the quotas.
         :param tenant_id: The project_id for the quotas to be updated.
@@ -35,7 +36,7 @@ class QuotasScenario(base.Scenario):
 
     @base.atomic_action_timer('quotas.delete_quotas')
     def _delete_quotas(self, component, tenant_id):
-        """Deletes quotas.
+        """Delete quotas.
 
         :param component: Component for the quotas.
         :param tenant_id: The project_id for the quotas to be updated.

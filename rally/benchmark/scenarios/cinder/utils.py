@@ -49,6 +49,7 @@ CONF.register_opts(cinder_benchmark_opts, group=benchmark_group)
 
 
 class CinderScenario(base.Scenario):
+    """Base class for Cinder scenarios with basic atomic actions."""
 
     RESOURCE_NAME_PREFIX = "rally_volume_"
 
@@ -60,14 +61,13 @@ class CinderScenario(base.Scenario):
 
     @base.atomic_action_timer('cinder.create_volume')
     def _create_volume(self, size, **kwargs):
-        """create one volume.
+        """Create one volume.
 
         Returns when the volume is actually created and is in the "Available"
         state.
 
         :param size: int be size of volume in GB
-        :param **kwargs: Other optional parameters to initialize the volume
-
+        :param kwargs: Other optional parameters to initialize the volume
         :returns: Created volume object
         """
         kwargs["display_name"] = kwargs.get("display_name",
@@ -111,8 +111,7 @@ class CinderScenario(base.Scenario):
         :param volume_id: volume uuid for creating snapshot
         :param force: flag to indicate whether to snapshot a volume even if
                       it's attached to an instance
-        :param **kwargs: Other optional parameters to initialize the volume
-
+        :param kwargs: Other optional parameters to initialize the volume
         :returns: Created snapshot object
         """
         kwargs["display_name"] = kwargs.get("display_name",

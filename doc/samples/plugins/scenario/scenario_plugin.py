@@ -2,7 +2,7 @@ from rally.benchmark.scenarios import base
 
 
 class ScenarioPlugin(base.Scenario):
-    """Sample of plugin which lists flavors"""
+    """Sample plugin which lists flavors."""
 
     @base.atomic_action_timer("list_flavors")
     def _list_flavors(self):
@@ -19,5 +19,6 @@ class ScenarioPlugin(base.Scenario):
 
     @base.scenario()
     def list_flavors(self):
+        """List flavors."""
         self._list_flavors()
         self._list_flavors_as_admin()

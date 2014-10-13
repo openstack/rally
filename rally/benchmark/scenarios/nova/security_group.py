@@ -27,6 +27,7 @@ class NovaSecurityGroupException(exceptions.RallyException):
 
 
 class NovaSecGroup(utils.NovaScenario):
+    """Benchmark scenarios for Nova security groups."""
 
     RESOURCE_NAME_PREFIX = "rally_novasecgrp_"
 
@@ -37,7 +38,7 @@ class NovaSecGroup(utils.NovaScenario):
     @base.scenario(context={"cleanup": ["nova"]})
     def create_and_delete_secgroups(self, security_group_count,
                                     rules_per_security_group):
-        """Tests creating and deleting security groups.
+        """Create and delete security groups.
 
         This scenario creates N security groups with M rules per group and then
         deletes them.
@@ -61,7 +62,7 @@ class NovaSecGroup(utils.NovaScenario):
     @base.scenario(context={"cleanup": ["nova"]})
     def create_and_list_secgroups(self, security_group_count,
                                   rules_per_security_group):
-        """Tests creating and listing security groups.
+        """Create and list security groups.
 
         This scenario creates N security groups with M rules per group and then
         lists them.
@@ -89,7 +90,7 @@ class NovaSecGroup(utils.NovaScenario):
     def boot_and_delete_server_with_secgroups(self, image, flavor,
                                               security_group_count,
                                               rules_per_security_group):
-        """Tests booting an image with security groups attached.
+        """Boot and delete server with security groups attached.
 
         Plan of this scenario:
          - create N security groups with M rules per group

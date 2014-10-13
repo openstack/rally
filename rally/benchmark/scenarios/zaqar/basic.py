@@ -20,38 +20,38 @@ from rally.benchmark import validation
 
 
 class ZaqarBasic(zutils.ZaqarScenario):
+    """Benchmark scenarios for Zaqar."""
 
     @validation.number("name_length", minval=10)
     @base.scenario(context={"cleanup": ["zaqar"]})
     def create_queue(self, name_length=10, **kwargs):
-        """Creates Zaqar queue with random name
+        """Create a Zaqar queue with a random name.
 
         :param name_length: length of generated (random) part of name
         :param kwargs: other optional parameters to create queues like
                        "metadata"
         """
-
         self._queue_create(name_length=name_length, **kwargs)
 
     @validation.number("name_length", minval=10)
     @base.scenario(context={"cleanup": ["zaqar"]})
     def producer_consumer(self, name_length=10,
                           min_msg_count=50, max_msg_count=200, **kwargs):
-        """Serial producer/consumer
+        """Serial message producer/consumer.
 
         Creates a Zaqar queue with random name, sends a set of messages
-        and then retrieves an iterator containing those
+        and then retrieves an iterator containing those.
 
         :param name_length: length of generated (random) part of name
         :param min_msg_count: min number of messages to be posted
         :param max_msg_count: max number of messages to be posted
         :param kwargs: other optional parameters to create queues like
-                       'metadata'
+                       "metadata"
         """
 
         queue = self._queue_create(name_length=name_length, **kwargs)
         msg_count = random.randint(min_msg_count, max_msg_count)
-        messages = [{'body': {'id': idx}, 'ttl': 360} for idx
+        messages = [{"body": {"id": idx}, "ttl": 360} for idx
                     in range(msg_count)]
         self._messages_post(queue, messages, min_msg_count, max_msg_count)
         self._messages_list(queue)

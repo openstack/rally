@@ -31,6 +31,7 @@ LOG = logging.getLogger(__name__)
 
 class NovaServers(utils.NovaScenario,
                   cinder_utils.CinderScenario):
+    """Benchmark scenarios for Nova servers."""
 
     RESOURCE_NAME_PREFIX = "rally_novaserver_"
     RESOURCE_NAME_LENGTH = 16
@@ -43,16 +44,21 @@ class NovaServers(utils.NovaScenario,
     @base.scenario(context={"cleanup": ["nova"]})
     def boot_and_list_server(self, image, flavor,
                              detailed=True, **kwargs):
-        """Tests booting an image and then listing servers.
+        """Boot a server from an image and then list all servers.
 
-           This scenario is a very useful tool to measure
-           the "nova list" command performance.
+        Measure the "nova list" command performance.
 
-           If you have only 1 user in your context, you will
-           add 1 server on every iteration. So you will have more
-           and more servers and will be able to measure the
-           performance of the "nova list" command depending on
-           the number of servers owned by users.
+        If you have only 1 user in your context, you will
+        add 1 server on every iteration. So you will have more
+        and more servers and will be able to measure the
+        performance of the "nova list" command depending on
+        the number of servers owned by users.
+
+        :param image: image to be used to boot an instance
+        :param flavor: flavor to be used to boot an instance
+        :param detailed: True if the server listing should contain
+                         detailed information about all of them
+        :param kwargs: Optional additional arguments for server creation
         """
         self._boot_server(
             self._generate_random_name(), image, flavor, **kwargs)
@@ -62,7 +68,7 @@ class NovaServers(utils.NovaScenario,
     @validation.required_openstack(users=True)
     @base.scenario(context={"cleanup": ["nova"]})
     def list_servers(self, detailed=True):
-        """Test the nova list command.
+        """List all servers.
 
         This simple scenario test the nova list command by listing
         all the servers.
@@ -81,7 +87,19 @@ class NovaServers(utils.NovaScenario,
     def boot_and_delete_server(self, image, flavor,
                                min_sleep=0, max_sleep=0,
                                force_delete=False, **kwargs):
-        """Tests booting and then deleting an image."""
+        """Boot and delete a server.
+
+        Optional 'min_sleep' and 'max_sleep' parameters allow the scenario
+        to simulate a pause between volume creation and deletion
+        (of random duration from [min_sleep, max_sleep]).
+
+        :param image: image to be used to boot an instance
+        :param flavor: flavor to be used to boot an instance
+        :param min_sleep: Minimum sleep time in seconds (non-negative)
+        :param max_sleep: Maximum sleep time in seconds (non-negative)
+        :param force_delete: True if force_delete should be used
+        :param kwargs: Optional additional arguments for server creation
+        """
         server = self._boot_server(
             self._generate_random_name(), image, flavor, **kwargs)
         self.sleep_between(min_sleep, max_sleep)
@@ -97,7 +115,21 @@ class NovaServers(utils.NovaScenario,
                                            volume_size,
                                            min_sleep=0, max_sleep=0,
                                            force_delete=False, **kwargs):
-        """Tests booting from volume and then deleting an image and volume."""
+        """Boot a server from volume and then delete it.
+
+        The scenario first creates a volume and then a server.
+        Optional 'min_sleep' and 'max_sleep' parameters allow the scenario
+        to simulate a pause between volume creation and deletion
+        (of random duration from [min_sleep, max_sleep]).
+
+        :param image: image to be used to boot an instance
+        :param flavor: flavor to be used to boot an instance
+        :param volume_size: volume size (in GB)
+        :param min_sleep: Minimum sleep time in seconds (non-negative)
+        :param max_sleep: Maximum sleep time in seconds (non-negative)
+        :param force_delete: True if force_delete should be used
+        :param kwargs: Optional additional arguments for server creation
+        """
         volume = self._create_volume(volume_size, imageRef=image)
         block_device_mapping = {'vda': '%s:::1' % volume.id}
         server = self._boot_server(self._generate_random_name(),
@@ -114,15 +146,24 @@ class NovaServers(utils.NovaScenario,
     @validation.required_openstack(users=True)
     @base.scenario(context={"cleanup": ["nova"]})
     def boot_and_bounce_server(self, image, flavor,
-                               force_delete=False, **kwargs):
-        """Test booting a server with further performing specified actions.
+                               force_delete=False, actions=None, **kwargs):
+        """Boot a server and run specified actions against it.
 
-        Actions should be passed into kwargs. Available actions are
-        'hard_reboot', 'soft_reboot', 'stop_start' and 'rescue_unrescue'.
-        Delete server after all actions.
+        Actions should be passed into the actions parameter. Available actions
+        are 'hard_reboot', 'soft_reboot', 'stop_start' and 'rescue_unrescue'.
+        Delete server after all actions were completed.
+
+        :param image: image to be used to boot an instance
+        :param flavor: flavor to be used to boot an instance
+        :param force_delete: True if force_delete should be used
+        :param actions: list of action dictionaries, where each action
+                        dictionary speicifes an action to be performed
+                        in the following format:
+                        {"action_name": <no_of_iterations>}
+        :param kwargs: Optional additional arguments for server creation
         """
         action_builder = self._bind_actions()
-        actions = kwargs.get('actions', [])
+        actions = actions or []
         try:
             action_builder.validate(actions)
         except jsonschema.exceptions.ValidationError as error:
@@ -143,7 +184,13 @@ class NovaServers(utils.NovaScenario,
     @base.scenario(context={"cleanup": ["nova", "glance"]})
     def snapshot_server(self, image, flavor,
                         force_delete=False, **kwargs):
-        """Tests Nova instance snapshotting."""
+        """Boot a server, make its snapshot and delete both.
+
+        :param image: image to be used to boot an instance
+        :param flavor: flavor to be used to boot an instance
+        :param force_delete: True if force_delete should be used
+        :param kwargs: Optional additional arguments for server creation
+        """
         server_name = self._generate_random_name()
 
         server = self._boot_server(server_name, image, flavor, **kwargs)
@@ -161,7 +208,15 @@ class NovaServers(utils.NovaScenario,
     @validation.required_openstack(users=True)
     @base.scenario(context={"cleanup": ["nova"]})
     def boot_server(self, image, flavor, auto_assign_nic=False, **kwargs):
-        """Test VM boot - assumed clean-up is done elsewhere."""
+        """Boot a server.
+
+        Assumes that cleanup is done elsewhere.
+
+        :param image: image to be used to boot an instance
+        :param flavor: flavor to be used to boot an instance
+        :param auto_assign_nic: True if NICs should be assigned
+        :param kwargs: Optional additional arguments for server creation
+        """
         server_name = self._generate_random_name()
         self._boot_server(server_name, image, flavor, auto_assign_nic,
                           **kwargs)
@@ -174,7 +229,17 @@ class NovaServers(utils.NovaScenario,
     @base.scenario(context={"cleanup": ["nova", "cinder"]})
     def boot_server_from_volume(self, image, flavor, volume_size,
                                 auto_assign_nic=False, **kwargs):
-        """Test VM boot from volume - assumed clean-up is done elsewhere."""
+        """Boot a server from volume.
+
+        The scenario first creates a volume and then a server.
+        Assumes that cleanup is done elsewhere.
+
+        :param image: image to be used to boot an instance
+        :param flavor: flavor to be used to boot an instance
+        :param volume_size: volume size (in GB)
+        :param auto_assign_nic: True if NICs should be assigned
+        :param kwargs: Optional additional arguments for server creation
+        """
         volume = self._create_volume(volume_size, imageRef=image)
         block_device_mapping = {'vda': '%s:::1' % volume.id}
         self._boot_server(self._generate_random_name(),
@@ -232,7 +297,17 @@ class NovaServers(utils.NovaScenario,
     @base.scenario(context={"cleanup": ["nova"]})
     def resize_server(self, image, flavor, to_flavor,
                       force_delete=False, **kwargs):
-        """Tests resize serveri."""
+        """Boot a server, then resize and delete it.
+
+        The scenario first creates a volume and then a server.
+        Assumes that cleanup is done elsewhere.
+
+        :param image: image to be used to boot an instance
+        :param flavor: flavor to be used to boot an instance
+        :param to_flavor: flavor to be used to resize the booted instance
+        :param force_delete: True if force_delete should be used
+        :param kwargs: Optional additional arguments for server creation
+        """
         server = self._boot_server(self._generate_random_name(),
                                    image, flavor, **kwargs)
         self._resize(server, to_flavor)
@@ -253,17 +328,18 @@ class NovaServers(utils.NovaScenario,
     def boot_and_live_migrate_server(self, image,
                                      flavor, block_migration=False,
                                      disk_over_commit=False, **kwargs):
-        """Tests VM Live Migration.
+        """Live Migrate a server.
 
         This scenario launches a VM on a compute node available in
         the availability zone and then migrates the VM to another
         compute node on the same availability zone.
 
-        :param image: Glance image to be used to launch an instance
-        :param flavor: Nova flavor to be used to launch an instance
+        :param image: image to be used to boot an instance
+        :param flavor: flavor to be used to boot an instance
         :param block_migration: Specifies the migration type
         :param disk_over_commit: Specifies whether to allow overcommit
                                  on migrated instance or not
+        :param kwargs: Optional additional arguments for server creation
         """
         server = self._boot_server(self._generate_random_name(),
                                    image, flavor, **kwargs)

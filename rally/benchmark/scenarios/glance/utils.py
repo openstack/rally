@@ -50,11 +50,11 @@ CONF.register_opts(glance_benchmark_opts, group=benchmark_group)
 
 
 class GlanceScenario(base.Scenario):
+    """Base class for Glance scenarios with basic atomic actions."""
 
     @base.atomic_action_timer('glance.list_images')
     def _list_images(self):
         """Returns user images list."""
-
         return list(self.clients("glance").images.list())
 
     @base.atomic_action_timer('glance.create_image')
@@ -62,17 +62,16 @@ class GlanceScenario(base.Scenario):
                       image_location, disk_format, **kwargs):
         """Create a new image.
 
-        :param image_name: String used to name the image
-        :param container_format: Container format of image.
-        Acceptable formats: ami, ari, aki, bare, and ovf.
-        :param image_location: image file location used to upload
-        :param disk_format: Disk format of image. Acceptable formats:
-        ami, ari, aki, vhd, vmdk, raw, qcow2, vdi, and iso.
-        :param **kwargs:  optional parameters to create image
+        :param image_name: string used to name the image
+        :param container_format: container format of image. Acceptable
+                                 formats: ami, ari, aki, bare, and ovf
+        :param image_location: image file location
+        :param disk_format: disk format of image. Acceptable formats:
+                            ami, ari, aki, vhd, vmdk, raw, qcow2, vdi, and iso
+        :param kwargs: optional parameters to create image
 
-        returns: object of image
+        :returns: image object
         """
-
         kw = {
             "name": image_name,
             "container_format": container_format,
@@ -107,7 +106,7 @@ class GlanceScenario(base.Scenario):
 
     @base.atomic_action_timer('glance.delete_image')
     def _delete_image(self, image):
-        """Deletes the given image.
+        """Deletes given image.
 
         Returns when the image is actually deleted.
 

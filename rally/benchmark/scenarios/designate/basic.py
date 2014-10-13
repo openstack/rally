@@ -21,15 +21,15 @@ from rally import consts
 
 
 class DesignateBasic(utils.DesignateScenario):
+    """Basic benchmark scenarios for Designate."""
 
     @validation.required_services(consts.Service.DESIGNATE)
     @validation.required_openstack(users=True)
     @base.scenario(context={"cleanup": ["designate"]})
     def create_and_list_domains(self):
-        """Tests creating a domain and listing domains.
+        """Create a domain and list all domains.
 
-        This scenario is a very useful tool to measure
-        the "designate domain-list" command performance.
+        Measure the "designate domain-list" command performance.
 
         If you have only 1 user in your context, you will
         add 1 domain on every iteration. So you will have more
@@ -44,7 +44,7 @@ class DesignateBasic(utils.DesignateScenario):
     @validation.required_openstack(users=True)
     @base.scenario(context={"cleanup": ["designate"]})
     def list_domains(self):
-        """Test the designate domain-list command.
+        """List Designate domains.
 
         This simple scenario tests the designate domain-list command by listing
         all the domains.
@@ -60,10 +60,10 @@ class DesignateBasic(utils.DesignateScenario):
     @validation.required_openstack(users=True)
     @base.scenario(context={"cleanup": ["designate"]})
     def create_and_delete_domain(self):
-        """Test adds and then deletes domain.
+        """Add and then delete a domain.
 
-        This is very useful to measure perfromance of creating and deleting
-        domains with different level of load.
+        Measure the performance of creating and deleting domains
+        with different level of load.
         """
         domain = self._create_domain()
         self._delete_domain(domain['id'])
@@ -72,10 +72,10 @@ class DesignateBasic(utils.DesignateScenario):
     @validation.required_openstack(users=True)
     @base.scenario(context={"cleanup": ["designate"]})
     def create_and_delete_records(self, records_per_domain=5):
-        """Test adds and then deletes records.
+        """Add and then delete records.
 
-        This is very useful to measure perfromance of creating and deleting
-        records with different level of load.
+        Measure the performance of creating and deleting records
+        with different level of load.
 
         :param records_per_domain: Records to create pr domain.
         """
@@ -99,7 +99,7 @@ class DesignateBasic(utils.DesignateScenario):
     @validation.required_openstack(users=True)
     @base.scenario(context={"cleanup": ["designate"]})
     def list_records(self, domain_id):
-        """Test the designate record-list command.
+        """List Designate records.
 
         This simple scenario tests the designate record-list command by listing
         all the records in a domain.
@@ -117,7 +117,7 @@ class DesignateBasic(utils.DesignateScenario):
     @validation.required_openstack(users=True)
     @base.scenario(context={"cleanup": ["designate"]})
     def create_and_list_records(self, records_per_domain=5):
-        """Test adds and then lists records.
+        """Add and then list records.
 
         If you have only 1 user in your context, you will
         add 1 record on every iteration. So you will have more

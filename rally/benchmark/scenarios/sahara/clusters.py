@@ -24,6 +24,7 @@ LOG = logging.getLogger(__name__)
 
 
 class SaharaClusters(utils.SaharaScenario):
+    """Benchmark scenarios for Sahara clusters."""
 
     @types.set(flavor=types.FlavorResourceType,
                neutron_net=types.NeutronNetworkResourceType,
@@ -40,37 +41,39 @@ class SaharaClusters(utils.SaharaScenario):
                                   volumes_size=None, auto_security_group=None,
                                   security_groups=None, node_configs=None,
                                   cluster_configs=None):
-        """Test the Sahara Cluster launch and delete commands.
+        """Launch and delete a Sahara Cluster.
 
         This scenario launches a Hadoop cluster, waits until it becomes
         'Active' and deletes it.
 
-        :param flavor: The Nova flavor that will be for nodes in the
-        created node groups
-        :param node_count: The total number of instances in a cluster (>= 2)
-        :param plugin_name: The name of a provisioning plugin
-        :param hadoop_version: The version of Hadoop distribution supported by
-        the specified plugin.
-        :param floating_ip_pool: The floating ip pool name from which Floating
-        IPs will be allocated. Sahara will determine automatically how to treat
-        this depending on it's own configurations. Defaults to None because in
-        some cases Sahara may work w/o Floating IPs.
-        :param neutron_net: The id or name of a Neutron network that
-        will be used for fixed IPs. This parameter is ignored when Nova Network
-        is set up.
-        :param volumes_per_node: The number of Cinder volumes that will be
-        attached to every cluster node
-        :param volumes_size: The size of each Cinder volume in GB
-        :param auto_security_group: Boolean value. If set to True Sahara will
-        create a Security Group for each Node Group in the Cluster
-        automatically.
-        :param security_groups: The list of security groups that will be used
-        while creating VMs. If auto_security_group is set to True this list
-        can be left empty.
-        :param node_configs: The configs dict that will be passed to each Node
-        Group
-        :param cluster_configs: The configs dict that will be passed to the
-        Cluster
+        :param flavor: Nova flavor that will be for nodes in the
+                       created node groups
+        :param node_count: total number of instances in a cluster (>= 2)
+        :param plugin_name: name of a provisioning plugin
+        :param hadoop_version: version of Hadoop distribution supported by
+                               the specified plugin.
+        :param floating_ip_pool: floating ip pool name from which Floating
+                                 IPs will be allocated. Sahara will determine
+                                 automatically how to treat this depending on
+                                 it's own configurations. Defaults to None
+                                 because in some cases Sahara may work w/o
+                                 Floating IPs.
+        :param neutron_net: id or name of a Neutron network that
+                            will be used for fixed IPs. This parameter is
+                            ignored when Nova Network is set up.
+        :param volumes_per_node: number of Cinder volumes that will be
+                                 attached to every cluster node
+        :param volumes_size: size of each Cinder volume in GB
+        :param auto_security_group: boolean value. If set to True Sahara will
+                                    create a Security Group for each Node Group
+                                    in the Cluster automatically.
+        :param security_groups: list of security groups that will be used
+                                while creating VMs. If auto_security_group
+                                is set to True, this list can be left empty.
+        :param node_configs: config dict that will be passed to each Node
+                             Group
+        :param cluster_configs: config dict that will be passed to the
+                                Cluster
         """
 
         image_id = self.context["tenant"]["sahara_image"]
@@ -107,7 +110,7 @@ class SaharaClusters(utils.SaharaScenario):
                                     auto_security_group=None,
                                     security_groups=None, node_configs=None,
                                     cluster_configs=None):
-        """Test the Sahara Cluster launch, scale and delete commands.
+        """Launch, scale and delete a Sahara Cluster.
 
         This scenario launches a Hadoop cluster, waits until it becomes
         'Active'. Then a series of scale operations is applied. The scaling
@@ -115,34 +118,36 @@ class SaharaClusters(utils.SaharaScenario):
         deltas is set to [2, -2] it means that the first scaling operation will
         add 2 worker nodes to the cluster and the second will remove two.
 
-        :param flavor: The Nova flavor that will be for nodes in the
-        created node groups
-        :param node_count: The total number of instances in a cluster (>= 2)
-        :param plugin_name: The name of a provisioning plugin
-        :param hadoop_version: The version of Hadoop distribution supported by
-        the specified plugin.
-        :param deltas: The list of integers which will be used to add or
-        remove worker nodes from the cluster
-        :param floating_ip_pool: The floating ip pool name from which Floating
-        IPs will be allocated. Sahara will determine automatically how to treat
-        this depending on it's own configurations. Defaults to None because in
-        some cases Sahara may work w/o Floating IPs.
-        :param neutron_net_id: The id of a Neutron network that
-        will be used for fixed IPs. This parameter is ignored when Nova Network
-        is set up.
-        :param volumes_per_node: The number of Cinder volumes that will be
-        attached to every cluster node
-        :param volumes_size: The size of each Cinder volume in GB
-        :param auto_security_group: Boolean value. If set to True Sahara will
-        create a Security Group for each Node Group in the Cluster
-        automatically.
-        :param security_groups: The list of security groups that will be used
-        while creating VMs. If auto_security_group is set to True this list
-        can be left empty.
-        :param node_configs: The configs dict that will be passed to each Node
-        Group
-        :param cluster_configs: The configs dict that will be passed to the
-        Cluster
+        :param flavor: Nova flavor that will be for nodes in the
+                       created node groups
+        :param node_count: total number of instances in a cluster (>= 2)
+        :param plugin_name: name of a provisioning plugin
+        :param hadoop_version: version of Hadoop distribution supported by
+                               the specified plugin.
+        :param deltas: list of integers which will be used to add or
+                       remove worker nodes from the cluster
+        :param floating_ip_pool: floating ip pool name from which Floating
+                                 IPs will be allocated. Sahara will determine
+                                 automatically how to treat this depending on
+                                 it's own configurations. Defaults to None
+                                 because in some cases Sahara may work w/o
+                                 Floating IPs.
+        :param neutron_net_id: id of a Neutron network that will be used
+                               for fixed IPs. This parameter is ignored when
+                               Nova Network is set up.
+        :param volumes_per_node: number of Cinder volumes that will be
+                                 attached to every cluster node
+        :param volumes_size: size of each Cinder volume in GB
+        :param auto_security_group: boolean value. If set to True Sahara will
+                                    create a Security Group for each Node Group
+                                    in the Cluster automatically.
+        :param security_groups: list of security groups that will be used
+                                while creating VMs. If auto_security_group
+                                is set to True this list can be left empty.
+        :param node_configs: configs dict that will be passed to each Node
+                             Group
+        :param cluster_configs: configs dict that will be passed to the
+                                Cluster
         """
 
         image_id = self.context["tenant"]["sahara_image"]

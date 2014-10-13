@@ -19,17 +19,30 @@ from rally.benchmark import validation
 
 
 class KeystoneBasic(kutils.KeystoneScenario):
+    """Basic benchmark scenarios for Keystone."""
 
     @validation.number("name_length", minval=10)
     @validation.required_openstack(admin=True)
     @base.scenario(context={"admin_cleanup": ["keystone"]})
     def create_user(self, name_length=10, **kwargs):
+        """Create a keystone user with random name.
+
+        :param name_length: length of the random part of user name
+        :param kwargs: Other optional parameters to create users like
+                         "tenant_id", "enabled".
+        """
         self._user_create(name_length=name_length, **kwargs)
 
     @validation.number("name_length", minval=10)
     @validation.required_openstack(admin=True)
     @base.scenario(context={"admin_cleanup": ["keystone"]})
     def create_delete_user(self, name_length=10, **kwargs):
+        """Create a keystone user with random name and then delete it.
+
+        :param name_length: length of the random part of user name
+        :param kwargs: Other optional parameters to create users like
+                         "tenant_id", "enabled".
+        """
         user = self._user_create(name_length=name_length, **kwargs)
         self._resource_delete(user)
 
@@ -37,6 +50,11 @@ class KeystoneBasic(kutils.KeystoneScenario):
     @validation.required_openstack(admin=True)
     @base.scenario(context={"admin_cleanup": ["keystone"]})
     def create_tenant(self, name_length=10, **kwargs):
+        """Create a keystone tenant with random name.
+
+        :param name_length: length of the random part of tenant name
+        :param kwargs: Other optional parameters
+        """
         self._tenant_create(name_length=name_length, **kwargs)
 
     @validation.number("name_length", minval=10)
@@ -45,6 +63,13 @@ class KeystoneBasic(kutils.KeystoneScenario):
     @base.scenario(context={"admin_cleanup": ["keystone"]})
     def create_tenant_with_users(self, users_per_tenant, name_length=10,
                                  **kwargs):
+        """Create a keystone tenant and several users belonging to it.
+
+        :param name_length: length of the random part of tenant/user name
+        :param users_per_tenant: number of users to create for the tenant
+        :param kwargs: Other optional parameters for tenant creation
+        :returns: keystone tenant instance
+        """
         tenant = self._tenant_create(name_length=name_length, **kwargs)
         self._users_create(tenant, users_per_tenant=users_per_tenant,
                            name_length=name_length)
@@ -53,6 +78,12 @@ class KeystoneBasic(kutils.KeystoneScenario):
     @validation.required_openstack(admin=True)
     @base.scenario(context={"admin_cleanup": ["keystone"]})
     def create_and_list_users(self, name_length=10, **kwargs):
+        """Create a keystone user with random name and list all users.
+
+        :param name_length: length of the random part of user name
+        :param kwargs: Other optional parameters to create users like
+                         "tenant_id", "enabled".
+        """
         self._user_create(name_length=name_length, **kwargs)
         self._list_users()
 
@@ -60,5 +91,10 @@ class KeystoneBasic(kutils.KeystoneScenario):
     @validation.required_openstack(admin=True)
     @base.scenario(context={"admin_cleanup": ["keystone"]})
     def create_and_list_tenants(self, name_length=10, **kwargs):
+        """Create a keystone tenant with random name and list all tenants.
+
+        :param name_length: length of the random part of tenant name
+        :param kwargs: Other optional parameters
+        """
         self._tenant_create(name_length=name_length, **kwargs)
         self._list_tenants()

@@ -19,10 +19,11 @@ from rally import consts
 
 
 class CeilometerMeters(ceilometerutils.CeilometerScenario):
+    """Benchmark scenarios for Ceilometer Meters API."""
 
     @validation.required_services(consts.Service.CEILOMETER)
     @validation.required_openstack(users=True)
     @base.scenario()
     def list_meters(self):
-        """Test fetching user's meters."""
+        """Fetch user's meters."""
         self._list_meters()

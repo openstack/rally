@@ -18,7 +18,7 @@ from rally.benchmark.scenarios import base
 
 
 class DesignateScenario(base.Scenario):
-    """This class should contain base operations for benchmarking designate."""
+    """Base class for Designate scenarios with basic atomic actions."""
 
     RESOURCE_NAME_PREFIX = "rally_"
 
@@ -44,16 +44,18 @@ class DesignateScenario(base.Scenario):
     def _delete_domain(self, domain_id):
         """Delete designate zone.
 
-        :param domain: Domain object
+        :param domain_id: domain ID
         """
         self.clients("designate").domains.delete(domain_id)
 
     def _create_record(self, domain, record=None, atomic_action=True):
         """Create a record in a domain.
 
-        :param domain: Domain object
-        :param record: Record object
-        :returns: designate record dict
+        :param domain: domain dict
+        :param record: record dict
+        :param atomic_action: True if the record creation should be tracked
+                              as an atomic action
+        :returns: Designate record dict
         """
         record = record or {}
         record.setdefault('type', 'A')
@@ -71,18 +73,20 @@ class DesignateScenario(base.Scenario):
 
     @base.atomic_action_timer('designate.list_records')
     def _list_records(self, domain_id):
-        """List records in a domain..
+        """List domain records.
 
-        :param domain_id: Domain ID
-        :returns: domain record list
+        :param domain_id: domain ID
+        :returns: domain records list
         """
         return self.clients("designate").records.list(domain_id)
 
     def _delete_record(self, domain_id, record_id, atomic_action=True):
-        """Delete a record in a domain..
+        """Delete a domain record.
 
-        :param domain_id: Domain ID
-        :param record_id: Record ID
+        :param domain_id: domain ID
+        :param record_id: record ID
+        :param atomic_action: True if the record creation should be tracked
+                              as an atomic action
         """
         client = self.clients('designate')
 

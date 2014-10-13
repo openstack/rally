@@ -20,12 +20,13 @@ from rally import consts
 
 
 class Quotas(utils.QuotasScenario):
+    """Benchmark scenarios for quotas."""
 
     @validation.required_services(consts.Service.NOVA)
     @validation.required_openstack(admin=True, users=True)
     @base.scenario(context={"admin_cleanup": ["nova.quotas"]})
     def nova_update(self, max_quota=1024):
-        """Tests updating quotas for nova.
+        """Update quotas for Nova.
 
         :param max_quota: Max value to be updated for quota.
         """
@@ -36,7 +37,7 @@ class Quotas(utils.QuotasScenario):
     @validation.required_openstack(admin=True, users=True)
     @base.scenario(context={"admin_cleanup": ["nova.quotas"]})
     def nova_update_and_delete(self, max_quota=1024):
-        """Tests updating and deleting quotas for nova.
+        """Update and delete quotas for Nova.
 
         :param max_quota: Max value to be updated for quota.
         """
@@ -49,7 +50,7 @@ class Quotas(utils.QuotasScenario):
     @validation.required_openstack(admin=True, users=True)
     @base.scenario(context={"admin_cleanup": ["cinder.quotas"]})
     def cinder_update(self, max_quota=1024):
-        """Tests updating quotas for cinder.
+        """Update quotas for Cinder.
 
         :param max_quota: Max value to be updated for quota.
         """
@@ -60,7 +61,7 @@ class Quotas(utils.QuotasScenario):
     @validation.required_openstack(admin=True, users=True)
     @base.scenario(context={"admin_cleanup": ["cinder.quotas"]})
     def cinder_update_and_delete(self, max_quota=1024):
-        """Tests updating and deleting quotas for cinder.
+        """Update and Delete quotas for Cinder.
 
         :param max_quota: Max value to be updated for quota.
         """

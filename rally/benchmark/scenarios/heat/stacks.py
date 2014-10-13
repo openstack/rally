@@ -20,6 +20,7 @@ from rally import consts
 
 
 class HeatStacks(utils.HeatScenario):
+    """Benchmark scenarios for Heat stacks."""
 
     RESOURCE_NAME_PREFIX = "rally_stack_"
     RESOURCE_NAME_LENGTH = 7
@@ -39,13 +40,13 @@ class HeatStacks(utils.HeatScenario):
     @validation.required_openstack(users=True)
     @base.scenario(context={"cleanup": ["heat"]})
     def create_and_list_stack(self, template_path=None):
-        """Test adding an stack and then listing all stacks.
+        """Add a stack and then list all stacks.
 
-        This scenario is a very useful tool to measure
-        the "heat stack-create" and "heat stack-list" command performance.
+        Mesure the "heat stack-create" and "heat stack-list" commands
+        performance.
 
-        :param template_path: path to template file. if it's None or incorrect,
-                              will be used default empty template.
+        :param template_path: path to template file. If None or incorrect,
+                              then default empty template will be used.
         """
 
         stack_name = self._generate_random_name()
@@ -58,13 +59,13 @@ class HeatStacks(utils.HeatScenario):
     @validation.required_openstack(users=True)
     @base.scenario(context={"cleanup": ["heat"]})
     def create_and_delete_stack(self, template_path=None):
-        """Test adds and then deletes stack.
+        """Add and then delete a stack.
 
-        This scenario is a very useful tool to measure
-        the "heat stack-create" and "heat stack-delete" command performance.
+        Measure the "heat stack-create" and "heat stack-delete" commands
+        performance.
 
-        :param template_path: path to template file. if it's None or incorrect,
-                              will be used default empty template.
+        :param template_path: path to template file. If None or incorrect,
+                              then default empty template will be used.
         """
         stack_name = self._generate_random_name()
         template = self._get_template_from_file(template_path)

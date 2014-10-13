@@ -19,12 +19,13 @@ from rally import consts
 
 
 class CeilometerResource(ceilometerutils.CeilometerScenario):
+    """Benchmark scenarios for Ceilometer Resource API."""
 
     @validation.required_services(consts.Service.CEILOMETER)
     @validation.required_openstack(users=True)
     @base.scenario()
     def list_resources(self):
-        """Test fetching all resources.
+        """Fetch all resources.
 
         This scenario fetches list of all resources using GET /v2/resources.
         """

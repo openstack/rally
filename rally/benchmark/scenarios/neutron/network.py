@@ -20,15 +20,15 @@ from rally import consts
 
 
 class NeutronNetworks(utils.NeutronScenario):
+    """Benchmark scenarios for Neutron."""
 
     @validation.required_services(consts.Service.NEUTRON)
     @validation.required_openstack(users=True)
     @base.scenario(context={"cleanup": ["neutron"]})
     def create_and_list_networks(self, network_create_args=None):
-        """Create a network and then listing all networks.
+        """Create a network and then list all networks.
 
-        This scenario is a very useful tool to measure
-        the "neutron net-list" command performance.
+        Measure the "neutron net-list" command performance.
 
         If you have only 1 user in your context, you will
         add 1 network on every iteration. So you will have more
@@ -47,10 +47,9 @@ class NeutronNetworks(utils.NeutronScenario):
     def create_and_update_networks(self,
                                    network_update_args,
                                    network_create_args=None):
-        """Create a network and then update network.
+        """Create and update a network.
 
-        This scenario is a very useful tool to measure
-        the "neutron net-create and net-update" command performance.
+        Measure the "neutron net-create and net-update" command performance.
 
         :param network_update_args: dict, PUT /v2.0/networks update request
         :param network_create_args: dict, POST /v2.0/networks request options
@@ -61,12 +60,11 @@ class NeutronNetworks(utils.NeutronScenario):
     @validation.required_services(consts.Service.NEUTRON)
     @base.scenario(context={"cleanup": ["neutron"]})
     def create_and_delete_networks(self, network_create_args=None):
-        """Create a network and then deleting it.
+        """Create and delete a network.
 
-        This scenario is a very useful tool to measure
-        the "neutron net-create" and "net-delete" command performance.
+        Measure the "neutron net-create" and "net-delete" command performance.
 
-        :param network_create_agrs: dict, POST /v2.0/networks request options
+        :param network_create_args: dict, POST /v2.0/networks request options
         """
         network = self._create_network(network_create_args or {})
         self._delete_network(network['network'])
@@ -80,7 +78,7 @@ class NeutronNetworks(utils.NeutronScenario):
                                 subnet_create_args=None,
                                 subnet_cidr_start=None,
                                 subnets_per_network=None):
-        """Test creating and listing a given number of subnets.
+        """Create and a given number of subnets and list all subnets.
 
         The scenario creates a network, a given number of subnets and then
         lists subnets.
@@ -106,10 +104,10 @@ class NeutronNetworks(utils.NeutronScenario):
                                   subnet_create_args=None,
                                   subnet_cidr_start=None,
                                   subnets_per_network=None):
-        """Create a subnet and then update subnet.
+        """Create and update a subnet.
 
         The scenario creates a network, a given number of subnets
-        and then updates the subnet. This scenario measure the
+        and then updates the subnet. This scenario measures the
         "neutron subnet-update" command performance.
 
         :param subnet_update_args: dict, PUT /v2.0/subnets update options
@@ -135,7 +133,7 @@ class NeutronNetworks(utils.NeutronScenario):
                                   subnet_create_args=None,
                                   subnet_cidr_start=None,
                                   subnets_per_network=None):
-        """Test creating and deleting a given number of subnets.
+        """Create and delete a given number of subnets.
 
         The scenario creates a network, a given number of subnets and then
         deletes subnets.
@@ -164,7 +162,7 @@ class NeutronNetworks(utils.NeutronScenario):
                                 subnet_cidr_start=None,
                                 subnets_per_network=None,
                                 router_create_args=None):
-        """Test creating and listing a given number of routers.
+        """Create and a given number of routers and list all routers.
 
         Create a network, a given number of subnets and routers
         and then list all routers.
@@ -200,7 +198,7 @@ class NeutronNetworks(utils.NeutronScenario):
                                   subnet_cidr_start=None,
                                   subnets_per_network=None,
                                   router_create_args=None):
-        """Test creating and updating a given number of routers.
+        """Create and update a given number of routers.
 
         Create a network, a given number of subnets and routers
         and then updating all routers.
@@ -233,7 +231,7 @@ class NeutronNetworks(utils.NeutronScenario):
                               network_create_args=None,
                               port_create_args=None,
                               ports_per_network=None):
-        """Test creating and listing a given number of ports.
+        """Create and a given number of ports and list all ports.
 
         :param network_create_args: dict, POST /v2.0/networks request options
         :param port_create_args: dict, POST /v2.0/ports request options
@@ -254,11 +252,10 @@ class NeutronNetworks(utils.NeutronScenario):
                                 network_create_args=None,
                                 port_create_args=None,
                                 ports_per_network=None):
-        """Test creating and updating a given number of ports.
+        """Create and update a given number of ports.
 
-        This scenario is a very useful tool to measure
-        the "neutron port-create" and
-        "neutron port-update" command performance.
+        Measure the "neutron port-create" and "neutron port-update" commands
+        performance.
 
         :param port_update_args: dict, PUT /v2.0/ports update request options
         :param network_create_args: dict, POST /v2.0/networks request options
@@ -277,11 +274,10 @@ class NeutronNetworks(utils.NeutronScenario):
                                 network_create_args=None,
                                 port_create_args=None,
                                 ports_per_network=None):
-        """Create a port and then deleting it.
+        """Create and delete a port.
 
-        This scenario is a very useful tool to measure
-        the "neutron port-create" and
-        "neutron port-delete" command performance.
+        Measure the "neutron port-create" and "neutron port-delete" commands
+        performance.
 
         :param network_create_args: dict, POST /v2.0/networks request options
         :param port_create_args: dict, POST /v2.0/ports request options
