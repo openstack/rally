@@ -178,7 +178,12 @@ def run(argv, categories):
         # if you just got a single arg wrong.
         print(fn.__doc__)
         CONF.print_help()
-        print(e)
+        print("Missing arguments:")
+        for missing in e.missing:
+            for arg in fn.args:
+                if arg[1].get('dest', '').endswith(missing):
+                    print(" " + arg[0][0])
+                    break
         return(1)
     try:
         ret = fn(*fn_args, **fn_kwargs)

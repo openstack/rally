@@ -16,7 +16,7 @@
 
 import unittest
 
-import test_cli_utils as utils
+from tests.functional import utils
 
 
 class InfoTestCase(unittest.TestCase):
