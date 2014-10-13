@@ -94,7 +94,7 @@ class HeatScenario(base.Scenario):
         stack = bench_utils.wait_for(
             stack,
             is_ready=heat_resource_is("CREATE_COMPLETE"),
-            update_resource=bench_utils.get_from_manager("CREATE_FAILED"),
+            update_resource=bench_utils.get_from_manager(["CREATE_FAILED"]),
             timeout=CONF.benchmark.heat_stack_create_timeout,
             check_interval=CONF.benchmark.heat_stack_create_poll_interval)
 
