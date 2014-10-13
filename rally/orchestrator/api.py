@@ -13,6 +13,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import jsonschema
+
 from rally.benchmark import engine
 from rally import consts
 from rally import deploy
@@ -33,6 +35,14 @@ def create_deploy(config, name):
     deployment = objects.Deployment(name=name, config=config)
     deployer = deploy.EngineFactory.get_engine(deployment['config']['type'],
                                                deployment)
+    try:
+        deployer.validate()
+    except jsonschema.ValidationError:
+        LOG.error(_('Deployment %(uuid)s: Schema validation error.') %
+                  {'uuid': deployment['uuid']})
+        deployment.update_status(consts.DeployStatus.DEPLOY_FAILED)
+        raise
+
     with deployer:
         endpoints = deployer.make_deploy()
         deployment.update_endpoints(endpoints)

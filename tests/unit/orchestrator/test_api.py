@@ -16,6 +16,7 @@
 """ Test for orchestrator. """
 
 
+import jsonschema
 import mock
 
 from rally import consts
@@ -155,7 +156,8 @@ class APITestCase(test.TestCase):
 
     @mock.patch("rally.objects.deploy.db.deployment_update")
     @mock.patch("rally.objects.deploy.db.deployment_create")
-    def test_create_deploy(self, mock_create, mock_update):
+    @mock.patch("rally.deploy.engine.EngineFactory.validate")
+    def test_create_deploy(self, mock_validate, mock_create, mock_update):
         mock_create.return_value = self.deployment
         mock_update.return_value = self.deployment
         api.create_deploy(self.deploy_config, "fake_deploy")
@@ -163,9 +165,24 @@ class APITestCase(test.TestCase):
             "name": "fake_deploy",
             "config": self.deploy_config,
         })
+        mock_validate.assert_called_with()
         mock_update.assert_has_calls([
             mock.call(self.deploy_uuid, self.endpoints)
         ])
+
+    @mock.patch("rally.objects.deploy.db.deployment_update")
+    @mock.patch("rally.objects.deploy.db.deployment_create")
+    @mock.patch("rally.deploy.engine.EngineFactory.validate",
+                side_effect=jsonschema.ValidationError('ValidationError'))
+    def test_create_deploy_validation_error(self, mock_validate, mock_create,
+                                            mock_update):
+        mock_create.return_value = self.deployment
+        self.assertRaises(jsonschema.ValidationError,
+                          api.create_deploy,
+                          self.deploy_config, "fake_deploy")
+        mock_update.assert_called_once_with(
+            self.deploy_uuid,
+            {'status': consts.DeployStatus.DEPLOY_FAILED})
 
     @mock.patch("rally.objects.deploy.db.deployment_delete")
     @mock.patch("rally.objects.deploy.db.deployment_update")

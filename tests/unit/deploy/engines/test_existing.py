@@ -47,10 +47,11 @@ class TestExistingCloud(test.TestCase):
     def test_init(self):
         existing.ExistingCloud(self.deployment)
 
-    def test_init_invalid_config(self):
+    def test_invalid_config(self):
         self.deployment["config"]["admin"] = 42
+        engine = existing.ExistingCloud(self.deployment)
         self.assertRaises(jsonschema.ValidationError,
-                          existing.ExistingCloud, self.deployment)
+                          engine.validate)
 
     def test_deploy(self):
         engine = existing.ExistingCloud(self.deployment)

@@ -43,7 +43,7 @@ class FakeDeployment(object):
         return self._values[name]
 
     def update_status(self, status):
-        pass
+        self._values["status"] = status
 
     def set_started(self):
         pass
@@ -94,19 +94,13 @@ class EngineFake3(EngineFake2):
 class EngineFactoryTestCase(test.TestCase):
     FAKE_ENGINES = [EngineFake1, EngineFake2, EngineFake3]
 
-    @mock.patch.object(FakeEngine, 'validate')
-    def test_init(self, fake_validate):
-        FakeEngine({'config': {}})
-        fake_validate.assert_called_once_with()
-
-    @mock.patch.object(FakeDeployment, 'update_status')
-    def test_get_engine_not_found(self, mock_update_status):
+    def test_get_engine_not_found(self):
         deployment = make_fake_deployment()
         self.assertRaises(exceptions.NoSuchEngine,
                           deploy.EngineFactory.get_engine,
                           "non_existing_engine", deployment)
-        mock_update_status.assert_called_once_with(
-            consts.DeployStatus.DEPLOY_FAILED)
+        self.assertEqual(consts.DeployStatus.DEPLOY_FAILED,
+                         deployment['status'])
 
     @mock.patch.object(FakeDeployment, 'set_completed')
     @mock.patch.object(FakeDeployment, 'set_started')
