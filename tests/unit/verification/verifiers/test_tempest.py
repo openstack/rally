@@ -17,10 +17,10 @@ import os
 import sys
 
 import mock
+from oslo.serialization import jsonutils
 import testtools
 
 from rally import exceptions
-from rally.openstack.common import jsonutils
 from rally.verification.verifiers.tempest import subunit2json
 from rally.verification.verifiers.tempest import tempest
 from tests.unit import test

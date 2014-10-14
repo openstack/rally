@@ -20,9 +20,10 @@ import shutil
 import subprocess
 import sys
 
+from oslo.serialization import jsonutils
+
 from rally import exceptions
 from rally.openstack.common.gettextutils import _
-from rally.openstack.common import jsonutils
 from rally import utils
 from rally.verification.verifiers.tempest import config
 from rally.verification.verifiers.tempest import subunit2json
