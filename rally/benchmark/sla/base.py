@@ -25,7 +25,7 @@ import jsonschema
 import six
 
 from rally.benchmark.processing import utils as putils
-from rally.openstack.common.gettextutils import _
+from rally.i18n import _
 from rally import utils
 
 

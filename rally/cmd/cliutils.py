@@ -21,9 +21,9 @@ import sys
 
 from oslo.config import cfg
 
+from rally.i18n import _
 from rally.openstack.common.apiclient import exceptions
 from rally.openstack.common import cliutils
-from rally.openstack.common.gettextutils import _
 from rally.openstack.common import log as logging
 from rally import utils
 from rally import version

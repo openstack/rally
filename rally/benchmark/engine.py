@@ -28,8 +28,8 @@ from rally.benchmark.scenarios import base as base_scenario
 from rally.benchmark.sla import base as base_sla
 from rally import consts
 from rally import exceptions
+from rally.i18n import _
 from rally.objects import endpoint
-from rally.openstack.common.gettextutils import _
 from rally.openstack.common import log as logging
 from rally import osclients
 from rally import utils as rutils

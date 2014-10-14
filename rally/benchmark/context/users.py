@@ -19,8 +19,8 @@ from rally.benchmark.context import base
 from rally.benchmark import utils
 from rally.benchmark.wrappers import keystone
 from rally import consts
+from rally.i18n import _
 from rally.objects import endpoint
-from rally.openstack.common.gettextutils import _
 from rally.openstack.common import log as logging
 from rally import osclients
 from rally import utils as rutils

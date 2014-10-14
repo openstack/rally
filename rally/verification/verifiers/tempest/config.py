@@ -26,8 +26,8 @@ from six.moves import configparser
 
 from rally import db
 from rally import exceptions
+from rally.i18n import _
 from rally.objects import endpoint
-from rally.openstack.common.gettextutils import _
 from rally import osclients
 
 

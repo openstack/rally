@@ -28,7 +28,7 @@ import six
 from sphinx.util import docstrings
 
 from rally import exceptions
-from rally.openstack.common.gettextutils import _
+from rally.i18n import _
 from rally.openstack.common import log as logging
 
 LOG = logging.getLogger(__name__)

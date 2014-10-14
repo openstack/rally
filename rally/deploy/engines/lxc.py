@@ -21,8 +21,8 @@ from rally.deploy import engine
 from rally.deploy.serverprovider import provider
 from rally.deploy.serverprovider.providers import lxc
 from rally import exceptions
+from rally.i18n import _
 from rally import objects
-from rally.openstack.common.gettextutils import _  # noqa
 from rally.openstack.common import log as logging
 from rally import utils
 

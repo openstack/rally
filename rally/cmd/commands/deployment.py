@@ -30,9 +30,9 @@ from rally.cmd.commands import use
 from rally.cmd import envutils
 from rally import db
 from rally import exceptions
+from rally.i18n import _
 from rally.objects import endpoint
 from rally.openstack.common import cliutils as common_cliutils
-from rally.openstack.common.gettextutils import _
 from rally.orchestrator import api
 from rally import osclients
 from rally import utils

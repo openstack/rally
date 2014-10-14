@@ -23,7 +23,7 @@ import sys
 from oslo.serialization import jsonutils
 
 from rally import exceptions
-from rally.openstack.common.gettextutils import _
+from rally.i18n import _
 from rally import utils
 from rally.verification.verifiers.tempest import config
 from rally.verification.verifiers.tempest import subunit2json

@@ -22,8 +22,8 @@ from novaclient import exceptions as nova_exc
 from rally.benchmark import types as types
 from rally import consts
 from rally import exceptions
+from rally.i18n import _
 from rally import objects
-from rally.openstack.common.gettextutils import _
 from rally.verification.verifiers.tempest import tempest
 
 

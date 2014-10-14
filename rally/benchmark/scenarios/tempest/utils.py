@@ -21,7 +21,7 @@ import tempfile
 import six
 
 from rally import exceptions
-from rally.openstack.common.gettextutils import _
+from rally.i18n import _
 
 
 class TempestBenchmarkFailure(exceptions.RallyException):

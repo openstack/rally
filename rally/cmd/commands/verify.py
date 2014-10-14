@@ -26,9 +26,9 @@ from rally.cmd import envutils
 from rally import consts
 from rally import db
 from rally import exceptions
+from rally.i18n import _
 from rally import objects
 from rally.openstack.common import cliutils as common_cliutils
-from rally.openstack.common.gettextutils import _
 from rally.orchestrator import api
 from rally.verification.verifiers.tempest import json2html
 

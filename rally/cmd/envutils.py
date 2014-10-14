@@ -19,7 +19,7 @@ import decorator
 
 from rally import exceptions
 from rally import fileutils
-from rally.openstack.common.gettextutils import _
+from rally.i18n import _
 
 ENV_DEPLOYMENT = 'RALLY_DEPLOYMENT'
 ENV_TASK = 'RALLY_TASK'

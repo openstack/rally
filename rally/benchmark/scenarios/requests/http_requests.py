@@ -14,7 +14,7 @@ import requests
 
 from rally.benchmark.scenarios import base
 from rally import exceptions
-from rally.openstack.common.gettextutils import _
+from rally.i18n import _
 
 
 class WrongStatusException(exceptions.RallyException):

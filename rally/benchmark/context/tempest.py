@@ -20,7 +20,7 @@ import tempfile
 
 from rally.benchmark.context import base
 from rally import exceptions
-from rally.openstack.common.gettextutils import _
+from rally.i18n import _
 from rally.openstack.common import log as logging
 from rally import utils
 from rally.verification.verifiers.tempest import config

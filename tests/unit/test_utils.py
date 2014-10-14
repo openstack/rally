@@ -22,7 +22,7 @@ import time
 import mock
 
 from rally import exceptions
-from rally.openstack.common.gettextutils import _
+from rally.i18n import _
 from rally import utils
 from tests.unit import test
 

@@ -14,7 +14,7 @@
 #    under the License.
 
 from rally.benchmark.context import base
-from rally.openstack.common.gettextutils import _
+from rally.i18n import _
 from rally.openstack.common import log as logging
 from rally import osclients
 from rally import utils

@@ -17,8 +17,8 @@ from rally import consts
 from rally.deploy import engine
 from rally.deploy.fuel import fuelclient
 from rally import exceptions
+from rally.i18n import _
 from rally import objects
-from rally.openstack.common.gettextutils import _  # noqa
 
 
 FILTER_SCHEMA = {

@@ -22,8 +22,8 @@ import novaclient.exceptions
 from rally.benchmark import utils as benchmark_utils
 from rally.deploy.serverprovider import provider
 from rally import exceptions
+from rally.i18n import _
 from rally.objects import endpoint
-from rally.openstack.common.gettextutils import _
 from rally.openstack.common import log as logging
 from rally import osclients
 
