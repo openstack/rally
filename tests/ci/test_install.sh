@@ -18,3 +18,6 @@
 
 sudo ./install_rally.sh
 rally deployment list
+
+sudo ./install_rally.sh
+rally deployment list

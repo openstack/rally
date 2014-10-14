@@ -122,6 +122,27 @@ setup_virtualenv() {
   source ${RALLY_VIRTUALENV_DIR}/bin/activate
 }
 
+remove_old_rally() {
+  cd ~
+  if [ $(which rally) ] ; then
+    RALLY=$(which rally)
+  fi
+  if [ $(which rally-manage) ] ; then
+    RALLYM=$(which rally-manage)
+  fi
+  rm -rf ${TMP}/rally.egg-info/ ${TMP}/build/ $RALLY $RALLYM
+  if [ ${RALLY_PATH=$(python -c "
+import os,sys,imp;
+print(
+os.path.realpath(os.path.dirname(imp.find_module('rally',sys.path[1:])[1]
+)))")} ] ; then
+    if [ -d "$RALLY_PATH/rally" ]; then
+      echo "Cleaning up $RALLY_PATH/rally..."
+      rm -rf $RALLY_PATH/rally
+    fi
+  fi
+}
+
 install_rally_requirements() {
   pip install pbr
   pip install 'tox<=1.6.1'
@@ -169,6 +190,7 @@ main() {
   install_system_requirements
   if [ "${scope}" = "isolated" ]; then setup_virtualenv; fi
   install_rally_requirements
+  remove_old_rally
   install_rally
   configure_rally
   if [ "${scope}" = "isolated" ]; then print_virtualenv_notice; fi
