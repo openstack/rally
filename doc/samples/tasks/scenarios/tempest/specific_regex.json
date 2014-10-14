@@ -1,7 +1,8 @@
 {
     "TempestScenario.specific_regex": [
         {
-            "args": {"regex": "^tempest.*image.*Server.*$"},
+            "args": {"tempest_conf": "/etc/tempest/tempest.conf",
+                     "regex": "^tempest.*image.*Server.*$"},
             "runner": {
                 "type": "constant",
                 "times": 1,

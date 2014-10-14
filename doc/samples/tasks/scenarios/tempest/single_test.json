@@ -1,7 +1,8 @@
 {
     "TempestScenario.single_test": [
         {
-            "args": {"test_name": "tempest.api.image.v2.test_images.ListImagesTest.test_index_no_params"},
+            "args": {"tempest_conf": "/etc/tempest/tempest.conf",
+                     "test_name": "tempest.api.image.v2.test_images.ListImagesTest.test_index_no_params"},
             "runner": {
                 "type": "constant",
                 "times": 10,

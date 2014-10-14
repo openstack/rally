@@ -25,38 +25,41 @@ class TempestScenario(base.Scenario):
     @validation.required_openstack(admin=True)
     @base.scenario(context={"tempest": {}})
     @utils.tempest_log_wrapper
-    def single_test(self, test_name, log_file):
+    def single_test(self, test_name, log_file, tempest_conf=None):
         """Launch a single test
 
         :param test_name: name of tempest scenario for launching
         :param log_file: name of file for junitxml results
+        :param tempest_conf: User specified tempest.conf location
         """
         if (not test_name.startswith("tempest.api.")
                 and test_name.split('.')[0] in consts.TEMPEST_TEST_SETS):
             test_name = "tempest.api." + test_name
 
-        self.context()["verifier"].run(test_name, log_file)
+        self.context()["verifier"].run(tempest_conf, test_name, log_file)
 
     @validation.required_openstack(admin=True)
     @base.scenario(context={"tempest": {}})
     @utils.tempest_log_wrapper
-    def all(self, log_file):
+    def all(self, log_file, tempest_conf=None):
         """Launch all discovered tests
 
         :param log_file: name of file for junitxml results
+        :param tempest_conf: User specified tempest.conf location
         """
 
-        self.context()["verifier"].run("", log_file)
+        self.context()["verifier"].run(tempest_conf, "", log_file)
 
     @validation.tempest_set_exists()
     @validation.required_openstack(admin=True)
     @base.scenario(context={"tempest": {}})
     @utils.tempest_log_wrapper
-    def set(self, set_name, log_file):
+    def set(self, set_name, log_file, tempest_conf=None):
         """Launch one by one methods from the set
 
         :param set_name: set name of tempest scenarios for launching
         :param log_file: name of file for junitxml results
+        :param tempest_conf: User specified tempest.conf location
         """
 
         if set_name == "full":
@@ -66,28 +69,31 @@ class TempestScenario(base.Scenario):
         else:
             testr_arg = "tempest.api.%s" % set_name
 
-        self._context["verifier"].run(testr_arg, log_file)
+        self._context["verifier"].run(tempest_conf, testr_arg, log_file)
 
     @validation.tempest_tests_exists()
     @validation.required_openstack(admin=True)
     @base.scenario(context={"tempest": {}})
     @utils.tempest_log_wrapper
-    def list_of_tests(self, test_names, log_file):
+    def list_of_tests(self, test_names, log_file, tempest_conf=None):
         """Launch all tests from given list
 
         :param test_names: list of tempest scenarios for launching
         :param log_file: name of file for junitxml results
+        :param tempest_conf: User specified tempest.conf location
         """
 
-        self._context["verifier"].run(" ".join(test_names), log_file)
+        self._context["verifier"].run(tempest_conf,
+                                      " ".join(test_names), log_file)
 
     @validation.required_openstack(admin=True)
     @base.scenario(context={"tempest": {}})
     @utils.tempest_log_wrapper
-    def specific_regex(self, regex, log_file):
+    def specific_regex(self, regex, log_file, tempest_conf=None):
         """Launch all tests which match given regex
 
         :param log_file: name of file for junitxml results
+        :param tempest_conf: User specified tempest.conf location
         """
 
-        self._context["verifier"].run(regex, log_file)
+        self._context["verifier"].run(tempest_conf, regex, log_file)

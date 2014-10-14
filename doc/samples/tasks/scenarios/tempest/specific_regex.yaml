@@ -2,6 +2,7 @@
   TempestScenario.specific_regex:
     -
       args:
+        "tempest_conf": "/etc/tempest/tempest.conf"
         "regex": "^tempest.*image.*Server.*$"
       runner:
         type: "constant"

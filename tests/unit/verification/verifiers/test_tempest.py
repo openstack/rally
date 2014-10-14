@@ -84,7 +84,7 @@ class TempestTestCase(test.TestCase):
     @mock.patch(TEMPEST_PATH + '.tempest.Tempest.env')
     @mock.patch(TEMPEST_PATH + '.tempest.subprocess')
     def test_run(self, mock_sp, mock_env):
-        self.verifier.run('tempest.api.image')
+        self.verifier.run(testr_arg='tempest.api.image')
         fake_call = (
             '%(venv)s testr run --parallel --subunit tempest.api.image '
             '| tee %(tempest_path)s/subunit.stream '
