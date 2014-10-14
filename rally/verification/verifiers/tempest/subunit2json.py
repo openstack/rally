@@ -19,8 +19,9 @@ import os
 import tempfile
 import traceback
 
+from oslo.utils import timeutils
+
 from rally.openstack.common import jsonutils
-from rally.openstack.common import timeutils
 
 import subunit
 import testtools

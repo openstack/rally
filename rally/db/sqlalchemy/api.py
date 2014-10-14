@@ -19,13 +19,13 @@ SQLAlchemy implementation for DB.API
 from oslo.config import cfg
 from oslo.db import exception as db_exc
 from oslo.db.sqlalchemy import session as db_session
+from oslo.utils import timeutils
 import sqlalchemy as sa
 from sqlalchemy.orm.exc import NoResultFound
 
 from rally.db.sqlalchemy import models
 from rally import exceptions
 from rally.openstack.common.gettextutils import _
-from rally.openstack.common import timeutils
 
 
 CONF = cfg.CONF
