@@ -28,10 +28,13 @@ CONF = cfg.CONF
 class ConfigTestCase(test.TestCase):
 
     @mock.patch("rally.objects.deploy.db.deployment_get")
+    @mock.patch("rally.osclients.Clients.services",
+                return_value={"test_service_type": "test_service"})
     @mock.patch("rally.osclients.Clients.verified_keystone")
     @mock.patch("rally.verification.verifiers.tempest.config.os.path.isfile",
                 return_value=True)
-    def setUp(self, mock_isfile, mock_verified_keystone, mock_get):
+    def setUp(self, mock_isfile, mock_verified_keystone, mock_services,
+              mock_get):
         super(ConfigTestCase, self).setUp()
         self.endpoint = {"username": "test",
                          "tenant_name": "test",
@@ -41,6 +44,7 @@ class ConfigTestCase(test.TestCase):
         mock_get.return_value = {"admin": self.endpoint}
         self.deploy_id = "fake_deploy_id"
         self.conf_generator = config.TempestConf(self.deploy_id)
+        self.conf_generator.clients.services = mock_services
 
         keystone_patcher = mock.patch("rally.osclients.create_keystone_client")
         keystone_patcher.start()
@@ -78,11 +82,13 @@ class ConfigTestCase(test.TestCase):
 
     def test__get_url(self):
         service = "test_service"
+        service_type = "test_service_type"
         url = "test_url"
         # mocked at setUp
         self.conf_generator.keystoneclient.auth_ref = {
             "serviceCatalog": [{
                 "name": service,
+                "type": service_type,
                 "endpoints": [{"publicURL": url}]
             }]}
         self.assertEqual(self.conf_generator._get_url(service), url)

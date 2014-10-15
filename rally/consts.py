@@ -85,6 +85,7 @@ class _Service(utils.ImmutableMixin, utils.EnumMixin):
     """OpenStack services names, by rally convention."""
 
     NOVA = "nova"
+    NOVAV21 = "novav21"
     NOVAV3 = "novav3"
     CINDER = "cinder"
     CINDERV2 = "cinderv2"
@@ -112,6 +113,7 @@ class _ServiceType(utils.ImmutableMixin, utils.EnumMixin):
     ORCHESTRATION = "orchestration"
     IDENTITY = "identity"
     COMPUTE = "compute"
+    COMPUTEV21 = "computev21"
     COMPUTEV3 = "computev3"
     NETWORK = "network"
     DNS = "dns"
@@ -123,6 +125,7 @@ class _ServiceType(utils.ImmutableMixin, utils.EnumMixin):
     def __init__(self):
         self.__names = {
             self.COMPUTE: _Service.NOVA,
+            self.COMPUTEV21: _Service.NOVAV21,
             self.COMPUTEV3: _Service.NOVAV3,
             self.VOLUME: _Service.CINDER,
             self.VOLUMEV2: _Service.CINDER,
