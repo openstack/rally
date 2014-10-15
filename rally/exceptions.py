@@ -255,3 +255,11 @@ class WorkerAlreadyRegistered(RallyException):
 class SaharaClusterFailure(RallyException):
     msg_fmt = _("Sahara cluster %(name)s has failed to %(action)s. "
                 "Reason: '%(reason)s'")
+
+
+class LiveMigrateException(RallyException):
+    msg_fmt = _("Live Migration failed: %(message)s")
+
+
+class InvalidHostException(RallyException):
+    msg_fmt = _("Live Migration failed: %(message)s")

@@ -13,12 +13,14 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import random
 import time
 
 from oslo.config import cfg
 
 from rally.benchmark.scenarios import base
 from rally.benchmark import utils as bench_utils
+from rally import exceptions
 
 
 nova_benchmark_opts = []
@@ -37,6 +39,7 @@ option_names_and_defaults = [
     ('resize', 2, 400, 5),
     ('resize_confirm', 0, 200, 2),
     ('resize_revert', 0, 200, 2),
+    ('live_migrate', 1, 400, 2),
 ]
 
 for action, prepoll, timeout, poll in option_names_and_defaults:
@@ -112,7 +115,6 @@ class NovaScenario(base.Scenario):
                 if net.label not in fip_pool:
                     kwargs['nics'] = [{'net-id': net.id}]
                     break
-
         server = self.clients("nova").servers.create(server_name, image_id,
                                                      flavor_id, **kwargs)
 
@@ -507,3 +509,60 @@ class NovaScenario(base.Scenario):
             check_interval=(
                     CONF.benchmark.nova_server_resize_revert_poll_interval)
         )
+
+    @base.atomic_action_timer('nova.live_migrate')
+    def _live_migrate(self, server, target_host, block_migration=False,
+                      disk_over_commit=False, skip_host_check=False):
+        """Live Migration of an specified server(Instance).
+
+        :param server: Server object
+        :param target_host: Specifies the target compute node to migrate
+        :param block_migration: Specifies the migration type
+        :Param disk_over_commit: Specifies whether to overcommit migrated
+                                 instance or not
+        :param skip_host_check: Specifies whether to verify the targeted host
+                                availability
+        """
+        server_admin = self.admin_clients("nova").servers.get(server.id)
+        host_pre_migrate = getattr(server_admin, "OS-EXT-SRV-ATTR:host")
+        server_admin.live_migrate(target_host,
+                                  block_migration=block_migration,
+                                  disk_over_commit=disk_over_commit)
+        bench_utils.wait_for(
+            server,
+            is_ready=bench_utils.resource_is("ACTIVE"),
+            update_resource=bench_utils.get_from_manager(),
+            timeout=CONF.benchmark.nova_server_live_migrate_timeout,
+            check_interval=(
+                CONF.benchmark.nova_server_live_migrate_poll_interval)
+        )
+        server_admin = self.admin_clients("nova").servers.get(server.id)
+        if (host_pre_migrate == getattr(server_admin, "OS-EXT-SRV-ATTR:host")
+                and not skip_host_check):
+            raise exceptions.LiveMigrateException(
+                "Migration complete but instance did not change host: %s" %
+                host_pre_migrate)
+
+    @base.atomic_action_timer('nova.find_host_to_migrate')
+    def _find_host_to_migrate(self, server):
+        """Finds a compute node for live migration.
+
+        :param server: Server object
+        """
+        server_admin = self.admin_clients("nova").servers.get(server.id)
+        host = getattr(server_admin, "OS-EXT-SRV-ATTR:host")
+        az_name = getattr(server_admin, "OS-EXT-AZ:availability_zone")
+        az = None
+        for a in self.admin_clients("nova").availability_zones.list():
+            if az_name == a.zoneName:
+                az = a
+                break
+        try:
+            new_host = random.choice(
+                            [key for key, value in az.hosts.iteritems()
+                             if key != host and
+                             value["nova-compute"]["available"] is True])
+            return new_host
+        except IndexError:
+            raise exceptions.InvalidHostException(
+                "No valid host found to migrate")

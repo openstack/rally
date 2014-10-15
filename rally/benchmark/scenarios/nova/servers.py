@@ -229,3 +229,33 @@ class NovaServers(utils.NovaScenario,
         else:
             self._resize_revert(server)
         self._delete_server(server, force=force_delete)
+
+    @types.set(image=types.ImageResourceType,
+               flavor=types.FlavorResourceType)
+    @validation.image_valid_on_flavor("flavor", "image")
+    @validation.required_services(consts.Service.NOVA)
+    @validation.required_openstack(admin=True, users=True)
+    @base.scenario(context={"cleanup": ["nova"]})
+    def boot_and_live_migrate_server(self, image,
+                                     flavor, block_migration=False,
+                                     disk_over_commit=False, **kwargs):
+        """Tests VM Live Migration.
+
+        This scenario launches a VM on a compute node available in
+        the availability zone and then migrates the VM to another
+        compute node on the same availability zone.
+
+        :param image: Glance image to be used to launch an instance
+        :param flavor: Nova flavor to be used to launch an instance
+        :param block_migration: Specifies the migration type
+        :param disk_over_commit: Specifies whether to allow overcommit
+                                 on migrated instance or not
+        """
+        server = self._boot_server(self._generate_random_name(),
+                                   image, flavor, **kwargs)
+
+        new_host = self._find_host_to_migrate(server)
+        self._live_migrate(server, new_host,
+                           block_migration, disk_over_commit)
+
+        self._delete_server(server)

@@ -260,6 +260,14 @@ class FakeMessage(FakeResource):
         self.ttl = kwargs.get('ttl', 100)
 
 
+class FakeAvailabilityZone(FakeResource):
+    def __init__(self, manager=None):
+        super(FakeAvailabilityZone, self).__init__(manager)
+        self.zoneName = mock.MagicMock()
+        self.zoneState = mock.MagicMock()
+        self.hosts = mock.MagicMock()
+
+
 class FakeManager(object):
 
     def __init__(self):
@@ -752,6 +760,15 @@ class FakeMessagesManager(FakeManager):
         del self.__messages[message.id]
 
 
+class FakeAvailabilityZonesManager(FakeManager):
+    def __init__(self):
+        super(FakeAvailabilityZonesManager, self).__init__()
+        self.zones = FakeAvailabilityZone()
+
+    def list(self):
+        return [self.zones]
+
+
 class FakeServiceCatalog(object):
     def get_endpoints(self):
         return {'image': [{'publicURL': 'http://fake.to'}],
@@ -799,6 +816,7 @@ class FakeNovaClient(object):
             rule_manager=self.security_group_rules)
         self.quotas = FakeNovaQuotasManager()
         self.set_management_url = mock.MagicMock()
+        self.availability_zones = FakeAvailabilityZonesManager()
 
 
 class FakeHeatClient(object):

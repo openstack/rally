@@ -325,3 +325,26 @@ class NovaServersTestCase(test.TestCase):
 
     def test_resize_with_revert(self):
         self._test_resize(confirm=False)
+
+    def test_boot_and_live_migrate_server(self):
+        fake_server = mock.MagicMock()
+
+        scenario = servers.NovaServers()
+        scenario._generate_random_name = mock.MagicMock(return_value="name")
+        scenario._boot_server = mock.MagicMock(return_value=fake_server)
+        scenario._find_host_to_migrate = mock.MagicMock(
+                                         return_value="host_name")
+        scenario._live_migrate = mock.MagicMock()
+        scenario._delete_server = mock.MagicMock()
+
+        scenario.boot_and_live_migrate_server("img", 0, fakearg="fakearg")
+
+        scenario._boot_server.assert_called_once_with("name", "img", 0,
+                                                      fakearg="fakearg")
+
+        scenario._find_host_to_migrate.assert_called_once_with(fake_server)
+
+        scenario._live_migrate.assert_called_once_with(fake_server,
+                                                       "host_name",
+                                                       False, False)
+        scenario._delete_server.assert_called_once_with(fake_server)

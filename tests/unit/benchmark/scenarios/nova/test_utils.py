@@ -526,3 +526,47 @@ class NovaScenarioTestCase(test.TestCase):
         nova_scenario._detach_volume(self.server, self.volume)
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        'nova.detach_volume')
+
+    @mock.patch(NOVA_UTILS + '.NovaScenario.clients')
+    def test__live_migrate_server(self, mock_clients):
+        fake_host = mock.MagicMock()
+        mock_clients("nova").servers.get(return_value=self.server)
+        nova_scenario = utils.NovaScenario(admin_clients=mock_clients)
+        nova_scenario._live_migrate(self.server,
+                                    fake_host,
+                                    block_migration=False,
+                                    disk_over_commit=False,
+                                    skip_host_check=True)
+
+        self._test_assert_called_once_with(
+            self.wait_for.mock, self.server,
+            CONF.benchmark.nova_server_live_migrate_poll_interval,
+            CONF.benchmark.nova_server_live_migrate_timeout)
+        self.res_is.mock.assert_has_calls(mock.call('ACTIVE'))
+        self._test_atomic_action_timer(nova_scenario.atomic_actions(),
+                                       'nova.live_migrate')
+
+    @mock.patch(NOVA_UTILS + '.NovaScenario.admin_clients')
+    def test__find_host_to_migrate(self, mock_clients):
+        fake_server = self.server
+        fake_host = {"nova-compute": {"available": True}}
+        nova_client = mock.MagicMock()
+        mock_clients.return_value = nova_client
+        nova_client.servers.get.return_value = fake_server
+        nova_client.availability_zones.list.return_value = [
+            mock.MagicMock(zoneName="a",
+                           hosts={"a1": fake_host, "a2": fake_host,
+                                  "a3": fake_host}),
+            mock.MagicMock(zoneName="b",
+                           hosts={"b1": fake_host, "b2": fake_host,
+                                  "b3": fake_host}),
+            mock.MagicMock(zoneName="c",
+                           hosts={"c1": fake_host,
+                                  "c2": fake_host, "c3": fake_host})
+        ]
+        setattr(fake_server, "OS-EXT-SRV-ATTR:host", "b2")
+        setattr(fake_server, "OS-EXT-AZ:availability_zone", "b")
+        nova_scenario = utils.NovaScenario(admin_clients=fakes.FakeClients())
+
+        self.assertIn(
+                nova_scenario._find_host_to_migrate(fake_server), ["b1", "b3"])
