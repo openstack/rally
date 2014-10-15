@@ -18,6 +18,7 @@ from oslo.config import cfg
 from rally.benchmark.context import base
 from rally.benchmark.context.cleanup import utils as cleanup_utils
 from rally.benchmark.scenarios.sahara import utils
+from rally.benchmark import types
 from rally.benchmark import utils as bench_utils
 from rally.openstack.common import log as logging
 from rally import osclients
@@ -43,7 +44,7 @@ class SaharaCluster(base.Context):
                 "type": "string"
             },
             "hadoop_version": {
-                "enum": ["1.2.1", "2.3.0", "2.4.1"]
+                "type": "string",
             },
             "node_count": {
                 "type": "integer",
@@ -55,7 +56,7 @@ class SaharaCluster(base.Context):
             "floating_ip_pool": {
                 "type": "string",
             },
-            "neutron_net_id": {
+            "neutron_net": {
                 "type": "string",
             },
             "volumes_per_node": {
@@ -96,6 +97,24 @@ class SaharaCluster(base.Context):
 
                 image_id = self.context["sahara_images"][tenant_id]
 
+                neutron_net = self.config.get("neutron_net")
+                if not neutron_net:
+                    # Skipping fixed network config
+                    neutron_net_id = None
+                else:
+                    network_cfg = {"name": neutron_net}
+                    neutron_net_id = (types.NeutronNetworkResourceType
+                                      .transform(clients, network_cfg))
+
+                floating_ip_pool = self.config.get("floating_ip_pool")
+                if not floating_ip_pool:
+                    # Skipping floating network config
+                    floating_ip_pool_id = None
+                else:
+                    network_cfg = {"name": floating_ip_pool}
+                    floating_ip_pool_id = (types.NeutronNetworkResourceType
+                                           .transform(clients, network_cfg))
+
                 cluster = utils.SaharaScenario(
                     context=self.context, clients=clients)._launch_cluster(
                         plugin_name=self.config["plugin_name"],
@@ -103,8 +122,8 @@ class SaharaCluster(base.Context):
                         flavor_id=self.config["flavor_id"],
                         node_count=self.config["node_count"],
                         image_id=image_id,
-                        floating_ip_pool=self.config.get("floating_ip_pool"),
-                        neutron_net_id=self.config.get("neutron_net_id"),
+                        floating_ip_pool=floating_ip_pool_id,
+                        neutron_net_id=neutron_net_id,
                         volumes_per_node=self.config.get("volumes_per_node"),
                         volumes_size=self.config.get("volumes_size", 1),
                         node_configs=self.config.get("node_configs"),

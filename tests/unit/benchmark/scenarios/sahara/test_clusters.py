@@ -22,7 +22,7 @@ SAHARA_CLUSTERS = "rally.benchmark.scenarios.sahara.clusters.SaharaClusters"
 SAHARA_UTILS = 'rally.benchmark.scenarios.sahara.utils'
 
 
-class SaharaNodeGroupTemplatesTestCase(test.TestCase):
+class SaharaClustersTestCase(test.TestCase):
 
     @mock.patch(SAHARA_CLUSTERS + "._delete_cluster")
     @mock.patch(SAHARA_CLUSTERS + "._launch_cluster",
