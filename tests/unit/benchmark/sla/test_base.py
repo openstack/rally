@@ -90,3 +90,20 @@ class IterationTimeTestCase(test.TestCase):
         ]
         self.assertTrue(base.IterationTime.check(42, result).success)
         self.assertFalse(base.IterationTime.check(3.62, result).success)
+
+
+class MaxAverageDurationTestCase(test.TestCase):
+    def test_config_schema(self):
+        properties = {
+            "max_avg_duration": 0
+        }
+        self.assertRaises(jsonschema.ValidationError,
+                          base.MaxAverageDuration.validate, properties)
+
+    def test_check(self):
+        result = [
+                {"duration": 3.14},
+                {"duration": 6.28},
+        ]
+        self.assertTrue(base.MaxAverageDuration.check(42, result).success)
+        self.assertFalse(base.MaxAverageDuration.check(3.62, result).success)
