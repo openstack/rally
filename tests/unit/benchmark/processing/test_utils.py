@@ -44,6 +44,60 @@ class MathTestCase(test.TestCase):
         self.assertRaises(exceptions.InvalidArgumentsException,
                           utils.mean, lst)
 
+    def _compare_items_lists(self, list1, list2):
+        """Items lists comparison, compatible with Python 2.6/2.7.
+
+        :param list1: items list [(a1, b1), (a2, b2) ...]
+        :param list2: items list [(a1, b1), (a2, b2) ...]
+        """
+        compare_float = lambda f1, f2: abs(f2 - f2) < 0.1
+        for a, b in zip(list1, list2):
+            a1, a2, b1, b2 = (a + b)
+            self.assertEqual(a1, b1)
+            if type(a2) is float:
+                # Float representation is defferent in Python 2.6/2.7,
+                # so we need to be sure that values are close to each other
+                self.assertTrue(compare_float(a2, b2))
+            else:
+                self.assertEqual(a2, b2)
+
+    def test_compress(self):
+        data64 = range(64)
+        data4 = [4, 2, 1, 3]
+        mixed = [2, "5", None, 0.5]
+        alt_normalize = str
+        alt_merge = lambda a, b: str(a) + str(b)
+        compress = lambda lst: [(k + 1, float(v)) for k, v in enumerate(lst)]
+
+        # Long list
+        self.assertEqual(utils.compress(data64), compress(data64))
+        self._compare_items_lists(
+            utils.compress(data64, limit=4),
+            [(17, 15.0), (33, 31.01), (49, 47.0), (64, 62.0)])
+        self.assertEqual(
+            utils.compress(data64, limit=4,
+                           normalize=alt_normalize, merge=alt_merge),
+            [(17, '012345678910111213141516'),
+             (33, '17181920212223242526272829303132'),
+             (49, '33343536373839404142434445464748'),
+             (64, '495051525354555657585960616263')])
+
+        # Short list
+        self.assertEqual(utils.compress(data4, limit=2),
+                         [(3, 2.0), (4, 3.0)])
+        self.assertEqual(utils.compress(data4, normalize=alt_normalize),
+                         [(1, '4'), (2, '2'), (3, '1'), (4, '3')])
+
+        # List with mixed data types
+        self.assertEqual(utils.compress(mixed),
+                         [(1, 2.0), (2, 5.0), (3, 0.0), (4, 0.5)])
+        self.assertEqual(utils.compress(mixed, normalize=str),
+                         [(1, '2'), (2, '5'), (3, 'None'), (4, '0.5')])
+        self.assertRaises(TypeError, utils.compress, mixed, normalize=int)
+        self.assertEqual(
+            utils.compress(mixed, normalize=alt_normalize, merge=alt_merge),
+            [(1, '2'), (2, '5'), (3, 'None'), (4, '0.5')])
+
 
 class AtomicActionsDataTestCase(test.TestCase):
 

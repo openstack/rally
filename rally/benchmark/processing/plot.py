@@ -24,70 +24,34 @@ from rally.benchmark.processing import utils
 
 
 def _prepare_data(data, reduce_rows=1000):
-    """Prepare data to be displayed.
-
-      * replace errors with zero values
-      * reduce number of rows if necessary
-      * count errors
-    """
-
-    def _append(d1, d2):
-        for k, v in d1.iteritems():
-            v.append(d2[k])
-
-    def _merge(d1, d2):
-        for k, v in d1.iteritems():
-            v[-1] = (v[-1] + d2[k]) / 2.0
-
-    atomic_actions = []
-    for row in data["result"]:
-        # find first non-error result to get atomic actions names
-        if not row["error"] and "atomic_actions" in row:
-            atomic_actions = row["atomic_actions"].keys()
-            break
-    zero_atomic_actions = dict([(a, 0) for a in atomic_actions])
-
-    total_durations = {"duration": [], "idle_duration": []}
-    atomic_durations = dict([(a, []) for a in zero_atomic_actions])
+    durations = []
+    idle_durations = []
+    atomic_durations = {}
     num_errors = 0
 
-    # For determining which rows should be merged we are using "factor"
-    # e.g if we have 100 rows and should reduce it to 75 then we should
-    # delete (merge with previous) every 4th row.
-    # If we increment "store" to 0.25 in each iteration then we
-    # get store >= 1 every 4th iteration.
+    for i in data["result"]:
+        # TODO(maretskiy): store error value and scenario output
 
-    data_size = len(data["result"])
-    factor = (data_size - reduce_rows + 1) / float(data_size)
-    if factor < 0:
-        factor = 0.0
-    store = 0.0
-
-    for row in data["result"]:
-        row.setdefault("atomic_actions", zero_atomic_actions)
-        if row["error"]:
-            new_row_total = {"duration": 0, "idle_duration": 0}
-            new_row_atomic = zero_atomic_actions
+        if i["error"]:
             num_errors += 1
-        else:
-            new_row_total = {
-                "duration": row["duration"],
-                "idle_duration": row["idle_duration"],
-            }
-            new_row_atomic = {}
-            for k, v in row["atomic_actions"].iteritems():
-                new_row_atomic[k] = v if v else 0
-        if store < 1:
-            _append(total_durations, new_row_total)
-            _append(atomic_durations, new_row_atomic)
-        else:
-            _merge(total_durations, new_row_total)
-            _merge(atomic_durations, new_row_atomic)
-            store -= 1
-        store += factor
+
+        durations.append(i["duration"])
+        idle_durations.append(i["idle_duration"])
+
+        for met, duration in i["atomic_actions"].items():
+            try:
+                atomic_durations[met].append(duration)
+            except KeyError:
+                atomic_durations[met] = [duration]
+
+    for k, v in atomic_durations.items():
+        atomic_durations[k] = utils.compress(v, limit=reduce_rows)
 
     return {
-        "total_durations": total_durations,
+        "total_durations": {
+            "duration": utils.compress(durations, limit=reduce_rows),
+            "idle_duration": utils.compress(idle_durations,
+                                            limit=reduce_rows)},
         "atomic_durations": atomic_durations,
         "num_errors": num_errors,
     }
@@ -108,8 +72,8 @@ def _process_main_duration(result, data):
     for key in "duration", "idle_duration":
         stacked_area.append({
             "key": key,
-            "values": list(enumerate([round(d, 2) for d in
-                                      data["total_durations"][key]], start=1)),
+            "values": [(i, round(d, 2))
+                       for i, d in data["total_durations"][key]],
         })
 
     return {
@@ -122,7 +86,7 @@ def _process_main_duration(result, data):
             {
                 "key": "task",
                 "method": histogram.method,
-                "values": [{"x": round(x, 2), "y": y}
+                "values": [{"x": round(x, 2), "y": float(y)}
                            for x, y in zip(histogram.x_axis, histogram.y_axis)]
             } for histogram in histograms
         ],
@@ -197,8 +161,7 @@ def _process_atomic(result, data):
     for name, durations in data["atomic_durations"].iteritems():
         stacked_area.append({
             "key": name,
-            "values": list(enumerate([round(d, 2) for d in durations],
-                           start=1)),
+            "values": [(i, round(d, 2)) for i, d in durations],
         })
 
     return {
@@ -221,6 +184,7 @@ def _get_atomic_action_durations(result):
     raw = result.get('result', [])
     actions_data = utils.get_atomic_actions_data(raw)
     table = []
+    total = []
     for action in actions_data:
         durations = actions_data[action]
         if durations:
@@ -234,7 +198,15 @@ def _get_atomic_action_durations(result):
                     len(raw)]
         else:
             data = [action, None, None, None, None, None, 0, len(raw)]
+
+        # Save `total' - it must be appended last
+        if action == "total":
+            total = data
+            continue
         table.append(data)
+
+    if total:
+        table.append(total)
 
     return table
 
@@ -242,35 +214,31 @@ def _get_atomic_action_durations(result):
 def _process_results(results):
     output = []
     for result in results:
-        table_cols = [
-                {"title": "action", "class": "center"},
-                {"title": "min (sec)", "class": "center"},
-                {"title": "avg (sec)", "class": "center"},
-                {"title": "max (sec)", "class": "center"},
-                {"title": "90 percentile", "class": "center"},
-                {"title": "95 percentile", "class": "center"},
-                {"title": "success", "class": "center"},
-                {"title": "count", "class": "center"}]
+        table_cols = ["action",
+                      "min (sec)",
+                      "avg (sec)",
+                      "max (sec)",
+                      "90 percentile",
+                      "95 percentile",
+                      "success",
+                      "count"]
         table_rows = _get_atomic_action_durations(result)
-        info = result["key"]
-        config = {}
-        config[info["name"]] = [info["kw"]]
+        name, kw, pos = (result["key"]["name"],
+                         result["key"]["kw"], result["key"]["pos"])
         data = _prepare_data(result)
-        name = info["name"]
         cls = name.split(".")[0]
         met = name.split(".")[1]
-        pos = int(info["pos"])
 
         output.append({
             "cls": cls,
             "met": met,
-            "pos": pos,
-            "name": "%s%s" % (met, (pos and " [%d]" % (pos + 1) or "")),
-            "config": json.dumps(config, indent=2),
+            "pos": int(pos),
+            "name": "%s%s" % (met, (pos and " [%d]" % (int(pos) + 1) or "")),
+            "config": json.dumps({name: kw}, indent=2),
             "duration": _process_main_duration(result, data),
             "atomic": _process_atomic(result, data),
+            "table_cols": table_cols,
             "table_rows": table_rows,
-            "table_cols": table_cols
         })
     return sorted(output, key=lambda r: "%s%s" % (r["cls"], r["name"]))
 
