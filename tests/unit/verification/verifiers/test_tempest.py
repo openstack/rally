@@ -81,35 +81,41 @@ class TempestTestCase(test.TestCase):
         self.verifier.uninstall()
         mock_shutil.rmtree.assert_called_once_with(self.verifier.tempest_path)
 
-    @mock.patch(TEMPEST_PATH + '.tempest.Tempest.env')
-    @mock.patch(TEMPEST_PATH + '.tempest.subprocess')
-    def test_run(self, mock_sp, mock_env):
-        self.verifier.run(testr_arg='tempest.api.image')
-        fake_call = (
-            '%(venv)s testr run --parallel --subunit tempest.api.image '
-            '| tee %(tempest_path)s/subunit.stream '
-            '| %(venv)s subunit-2to1 '
-            '| %(venv)s %(tempest_path)s/tools/colorizer.py' % {
-                'venv': self.verifier.venv_wrapper,
-                'tempest_path': self.verifier.tempest_path})
-        mock_sp.check_call.assert_called_once_with(
-            fake_call, env=mock_env, cwd=self.verifier.tempest_path,
-            shell=True)
-
     @mock.patch(TEMPEST_PATH + '.tempest.os.remove')
-    @mock.patch(TEMPEST_PATH + '.tempest.Tempest.discover_tests')
     @mock.patch(TEMPEST_PATH + '.tempest.Tempest._initialize_testr')
     @mock.patch(TEMPEST_PATH + '.tempest.Tempest.run')
     @mock.patch(TEMPEST_PATH + '.config.TempestConf')
-    @mock.patch('rally.db.deployment_get')
-    @mock.patch('rally.osclients.Clients')
-    @mock.patch('rally.objects.endpoint.Endpoint')
-    def test_verify(self, mock_endpoint, mock_osclients,
-                    mock_get, mock_conf, mock_run, mock_testr_init,
-                    mock_discover, mock_os):
+    def test_verify(self, mock_conf, mock_run, mock_testr_init, mock_os):
         self.verifier.verify("smoke", None)
         mock_conf().generate.assert_called_once_with(self.verifier.config_file)
         mock_run.assert_called_once_with("smoke")
+
+    @mock.patch(TEMPEST_PATH + '.tempest.Tempest.env')
+    @mock.patch(TEMPEST_PATH + '.tempest.subprocess')
+    @mock.patch(TEMPEST_PATH + '.config.TempestConf')
+    @mock.patch(TEMPEST_PATH + '.tempest.Tempest.is_configured',
+                return_value=False)
+    def test_verify_complex(self, mock_is_configured, mock_conf,
+                            mock_sp, mock_env):
+        set_name = "compute"
+        fake_call = (
+            "%(venv)s testr run --parallel --subunit tempest.api.%(testr_arg)s"
+            " | tee %(tempest_path)s/subunit.stream"
+            " | %(venv)s subunit-2to1"
+            " | %(venv)s %(tempest_path)s/tools/colorizer.py" % {
+                "venv": self.verifier.venv_wrapper,
+                "testr_arg": set_name,
+                "tempest_path": self.verifier.tempest_path})
+
+        self.verifier.verify(set_name, None)
+        mock_conf.assert_called_once_with(self.verifier.deploy_id)
+        mock_conf().generate.assert_called_once_with(self.verifier.config_file)
+        self.verifier.verification.start_verifying.assert_called_once_with(
+            set_name)
+
+        mock_sp.check_call.assert_called_once_with(
+            fake_call, env=mock_env, cwd=self.verifier.tempest_path,
+            shell=True)
 
     @mock.patch('os.environ')
     def test__generate_env(self, mock_env):

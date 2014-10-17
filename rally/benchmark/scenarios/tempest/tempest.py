@@ -36,7 +36,8 @@ class TempestScenario(base.Scenario):
                 and test_name.split('.')[0] in consts.TEMPEST_TEST_SETS):
             test_name = "tempest.api." + test_name
 
-        self.context()["verifier"].run(tempest_conf, test_name, log_file)
+        self.context()["verifier"].run(test_name, log_file=log_file,
+                                       tempest_conf=tempest_conf)
 
     @validation.required_openstack(admin=True)
     @base.scenario(context={"tempest": {}})
@@ -48,7 +49,8 @@ class TempestScenario(base.Scenario):
         :param tempest_conf: User specified tempest.conf location
         """
 
-        self.context()["verifier"].run(tempest_conf, "", log_file)
+        self.context()["verifier"].run("", log_file=log_file,
+                                       tempest_conf=tempest_conf)
 
     @validation.tempest_set_exists()
     @validation.required_openstack(admin=True)
@@ -69,7 +71,8 @@ class TempestScenario(base.Scenario):
         else:
             testr_arg = "tempest.api.%s" % set_name
 
-        self._context["verifier"].run(tempest_conf, testr_arg, log_file)
+        self.context()["verifier"].run(testr_arg, log_file=log_file,
+                                       tempest_conf=tempest_conf)
 
     @validation.tempest_tests_exists()
     @validation.required_openstack(admin=True)
@@ -83,8 +86,8 @@ class TempestScenario(base.Scenario):
         :param tempest_conf: User specified tempest.conf location
         """
 
-        self._context["verifier"].run(tempest_conf,
-                                      " ".join(test_names), log_file)
+        self.context()["verifier"].run(" ".join(test_names), log_file=log_file,
+                                       tempest_conf=tempest_conf)
 
     @validation.required_openstack(admin=True)
     @base.scenario(context={"tempest": {}})
@@ -96,4 +99,5 @@ class TempestScenario(base.Scenario):
         :param tempest_conf: User specified tempest.conf location
         """
 
-        self._context["verifier"].run(tempest_conf, regex, log_file)
+        self.context()["verifier"].run(regex, log_file=log_file,
+                                       tempest_conf=tempest_conf)

@@ -169,16 +169,17 @@ class Tempest(object):
             print("Test set %s has been finished with error. "
                   "Check log for details" % set_name)
 
-    def run(self, tempest_conf=None, testr_arg=None, log_file=None):
+    def run(self, testr_arg=None, log_file=None, tempest_conf=None):
         """Launch tempest with given arguments
 
-        :param tempest_conf: User specified tempest.conf location
         :param testr_arg: argument which will be transmitted into testr
         :type testr_arg: str
         :param log_file: file name for raw subunit results of tests. If not
                          specified, value from "self.log_file_raw"
                          will be chosen.
-        :type testr_arg: str
+        :type log_file: str
+        :param tempest_conf: User specified tempest.conf location
+        :type tempest_conf: str
 
         :raises: :class:`subprocess.CalledProcessError` if tests has been
                  finished with error.
@@ -186,7 +187,6 @@ class Tempest(object):
 
         if tempest_conf and os.path.isfile(tempest_conf):
             self.config_file = tempest_conf
-            self._generate_env()
 
         test_cmd = (
             "%(venv)s testr run --parallel --subunit %(arg)s "
