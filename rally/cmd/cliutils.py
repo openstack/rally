@@ -181,12 +181,8 @@ def _add_command_parsers(categories, subparsers):
                 # FIXME(markmc): hack to assume dest is the arg name without
                 # the leading hyphens if no dest is supplied
                 kwargs.setdefault('dest', args[0][2:])
-                if kwargs['dest'].startswith('action_kwarg_'):
-                    action_kwargs.append(kwargs['dest'][len('action_kwarg_'):])
-                else:
-                    action_kwargs.append(kwargs['dest'])
-                    kwargs['dest'] = 'action_kwarg_' + kwargs['dest']
-
+                action_kwargs.append(kwargs['dest'])
+                kwargs['dest'] = 'action_kwarg_' + kwargs['dest']
                 parser.add_argument(*args, **kwargs)
 
             parser.set_defaults(action_fn=action_fn)
@@ -236,13 +232,7 @@ def run(argv, categories):
         return(0)
 
     if CONF.category.name == "bash-completion":
-        if not CONF.category.query_category:
-            print(" ".join(categories.keys()))
-        elif CONF.category.query_category in categories:
-            fn = categories[CONF.category.query_category]
-            command_object = fn()
-            actions = _methods_of(command_object)
-            print(" ".join([k for (k, v) in actions]))
+        print(_generate_bash_completion_script())
         return(0)
 
     fn = CONF.category.action_fn
@@ -284,3 +274,55 @@ def run(argv, categories):
     except Exception:
         print(_("Command failed, please check log for more info"))
         raise
+
+
+def _generate_bash_completion_script():
+    from rally.cmd import main
+    bash_data = """
+#!/bin/bash
+
+_rally()
+{
+    declare -A SUBCOMMANDS
+    declare -A OPTS
+
+%(data)s
+
+    for OPT in ${!OPTS[*]} ; do
+        CMDSUB=(${OPT//_/ })
+        SUBCOMMANDS[${CMDSUB[0]}]+="${CMDSUB[1]} "
+    done
+
+    COMMANDS="${!SUBCOMMANDS[*]}"
+    COMPREPLY=()
+
+    local cur="${COMP_WORDS[COMP_CWORD]}"
+    local prev="${COMP_WORDS[COMP_CWORD-1]}"
+
+    if [[ $cur =~ (\.|\~|\/).* ]] ; then
+        _filedir
+    elif [ $COMP_CWORD == "1" ] ; then
+        COMPREPLY=($(compgen -W "$COMMANDS" -- ${cur}))
+    elif [ $COMP_CWORD == "2" ] ; then
+        COMPREPLY=($(compgen -W "${SUBCOMMANDS[${prev}]}" -- ${cur}))
+    else
+        if [ $prev == "--filename" ] ; then
+            _filedir '@(json|ya?ml)'
+        elif [ $prev == "--output-file" ] || [ $prev == "--out" ]; then
+            _filedir
+        else
+            COMMAND="${COMP_WORDS[1]}_${COMP_WORDS[2]}"
+            COMPREPLY=($(compgen -W "${OPTS[$COMMAND]}" -- ${cur}))
+        fi
+    fi
+    return 0
+}
+complete -F _rally rally
+"""
+    completion = ""
+    for category, cmds in main.categories.items():
+        for name, command in _methods_of(cmds):
+            args = ' '.join(arg[0][0] for arg in getattr(command, 'args', []))
+            completion += """    OPTS["{cat}_{cmd}"]="{args}"\n""".format(
+                    cat=category, cmd=name, args=args)
+    return bash_data % {"data": completion}

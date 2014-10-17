@@ -1,18 +1,71 @@
-_rally_opts="" # lazy init
-_rally_flags="" # lazy init
-_rally_opts_exp="" # lazy init
+
+#!/bin/bash
+
 _rally()
 {
-	local cur prev rbc cflags
-	COMPREPLY=()
-	cur="${COMP_WORDS[COMP_CWORD]}"
-	prev="${COMP_WORDS[COMP_CWORD-1]}"
-    base_opts="`rally bash-completion`"
-    if [ $prev == "rally" ] && [ $COMP_CWORD == "1" ] ; then
-		COMPREPLY=($(compgen -W "${base_opts}" -- ${cur}))
+    declare -A SUBCOMMANDS
+    declare -A OPTS
+
+    OPTS["info_find"]="--query"
+    OPTS["use_deployment"]="--uuid --name"
+    OPTS["use_task"]="--uuid"
+    OPTS["task_abort"]="--uuid"
+    OPTS["task_delete"]="--force --uuid"
+    OPTS["task_detailed"]="--uuid --iterations-data"
+    OPTS["task_list"]=""
+    OPTS["task_plot2html"]="--uuid --out --open"
+    OPTS["task_report"]="--uuid --out --open"
+    OPTS["task_results"]="--uuid --pprint --json"
+    OPTS["task_sla_check"]="--uuid --json"
+    OPTS["task_start"]="--deploy-id --task --tag --no-use"
+    OPTS["task_status"]="--uuid"
+    OPTS["task_validate"]="--deploy-id --task"
+    OPTS["show_flavors"]="--deploy-id"
+    OPTS["show_images"]="--deploy-id"
+    OPTS["show_keypairs"]="--deploy-id"
+    OPTS["show_networks"]="--deploy-id"
+    OPTS["show_secgroups"]="--deploy-id"
+    OPTS["verify_detailed"]="--uuid --sort-by"
+    OPTS["verify_list"]=""
+    OPTS["verify_results"]="--uuid --html --json --pprint --output-file"
+    OPTS["verify_show"]="--uuid --sort-by --detailed"
+    OPTS["verify_start"]="--deploy-id --set --regex --tempest-config"
+    OPTS["deployment_check"]="--uuid"
+    OPTS["deployment_config"]="--uuid --json --pprint"
+    OPTS["deployment_create"]="--name --fromenv --filename --no-use"
+    OPTS["deployment_destroy"]="--uuid"
+    OPTS["deployment_endpoint"]="--uuid"
+    OPTS["deployment_list"]=""
+    OPTS["deployment_recreate"]="--uuid"
+
+
+    for OPT in ${!OPTS[*]} ; do
+        CMDSUB=(${OPT//_/ })
+        SUBCOMMANDS[${CMDSUB[0]}]+="${CMDSUB[1]} "
+    done
+
+    COMMANDS="${!SUBCOMMANDS[*]}"
+    COMPREPLY=()
+
+    local cur="${COMP_WORDS[COMP_CWORD]}"
+    local prev="${COMP_WORDS[COMP_CWORD-1]}"
+
+    if [[ $cur =~ (\.|\~|\/).* ]] ; then
+        _filedir
+    elif [ $COMP_CWORD == "1" ] ; then
+        COMPREPLY=($(compgen -W "$COMMANDS" -- ${cur}))
+    elif [ $COMP_CWORD == "2" ] ; then
+        COMPREPLY=($(compgen -W "${SUBCOMMANDS[${prev}]}" -- ${cur}))
     else
-		COMPREPLY=($(compgen -W "`rally bash-completion $prev `" -- ${cur}))
+        if [ $prev == "--filename" ] ; then
+            _filedir '@(json|ya?ml)'
+        elif [ $prev == "--output-file" ] || [ $prev == "--out" ]; then
+            _filedir
+        else
+            COMMAND="${COMP_WORDS[1]}_${COMP_WORDS[2]}"
+            COMPREPLY=($(compgen -W "${OPTS[$COMMAND]}" -- ${cur}))
+        fi
     fi
-	return 0
+    return 0
 }
 complete -F _rally rally
