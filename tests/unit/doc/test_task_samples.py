@@ -62,7 +62,11 @@ class TaskSampleTestCase(test.TestCase):
         # TODO(boris-42): We should refactor scenarios framework add "_" to
         #                 all non-benchmark methods.. Then this test will pass.
         missing = set(base.Scenario.list_benchmark_scenarios()) - scenarios
-        self.assertEqual(missing, set([]),
+        # check missing scenario is not from plugin
+        missing = [scenario for scenario in list(missing) if
+                   base.Scenario.get_by_name(scenario.split(".")[0]).
+                   __module__.startswith("rally")]
+        self.assertEqual(missing, [],
                          "These scenarios don't have samples: %s" % missing)
 
     def test_json_correct_syntax(self):

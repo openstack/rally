@@ -1,0 +1,10 @@
+---
+  ScenarioPlugin.list_flavors:
+    -
+      runner:
+        type: "serial"
+        times: 5
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1

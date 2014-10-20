@@ -172,31 +172,26 @@ class LogTestCase(test.TestCase):
 class LoadExtraModulesTestCase(test.TestCase):
 
     @mock.patch("rally.utils.imp.load_module")
-    @mock.patch("rally.utils.imp.find_module")
+    @mock.patch("rally.utils.imp.find_module", return_value=(mock.MagicMock(),
+                                                             None, None))
+    @mock.patch("rally.utils.os.walk", return_value=[
+        ('/somewhere', ('/subdir', ), ('plugin1.py', )),
+        ('/somewhere/subdir', ('/subsubdir', ), ('plugin2.py',
+                                                 'withoutextension')),
+        ('/somewhere/subdir/subsubdir', [], ('plugin3.py', ))])
     @mock.patch("rally.utils.os.path.exists", return_value=True)
-    @mock.patch("rally.utils.os.path.isfile")
-    @mock.patch("rally.utils.os.listdir")
-    def test_load_plugins_successfull(self, mock_listdir, mock_isfile,
-                                      mock_exists, mock_find_module,
+    def test_load_plugins_successfull(self, mock_exists,
+                                      mock_oswalk, mock_find_module,
                                       mock_load_module):
-        mock_listdir.return_value = ["plugin1.py", "plugin2.py",
-                                     "somethingnotpythonmodule",
-                                     "somestrangedir.py"]
-
-        # check we don't try to load something that is not file
-        def isfile_side_effect(*args):
-            return args[0] != "/somewhere/somestrangedir.py"
-        mock_isfile.side_effect = isfile_side_effect
-
-        mock_find_module.return_value = (mock.MagicMock(), None, None)
         test_path = "/somewhere"
         utils.load_plugins(test_path)
         expected = [
             mock.call("plugin1", ["/somewhere"]),
-            mock.call("plugin2", ["/somewhere"])
+            mock.call("plugin2", ["/somewhere/subdir"]),
+            mock.call("plugin3", ["/somewhere/subdir/subsubdir"])
         ]
         self.assertEqual(mock_find_module.mock_calls, expected)
-        self.assertEqual(len(mock_load_module.mock_calls), 2)
+        self.assertEqual(len(mock_load_module.mock_calls), 3)
 
     @mock.patch("rally.utils.os")
     def test_load_plugins_from_nonexisting_and_empty_dir(self, mock_os):
@@ -205,17 +200,16 @@ class LoadExtraModulesTestCase(test.TestCase):
         utils.load_plugins("/somewhere")
         # test no fails for empty directory
         mock_os.path.exists.return_value = True
-        mock_os.listdir.return_value = []
+        mock_os.walk.return_value = []
         utils.load_plugins("/somewhere")
 
-    @mock.patch("rally.utils.imp.load_module")
+    @mock.patch("rally.utils.imp.load_module", side_effect=Exception())
     @mock.patch("rally.utils.imp.find_module")
-    @mock.patch("rally.utils.os.path.exists", return_value=True)
-    @mock.patch("rally.utils.os.listdir")
-    def test_load_plugins_fails(self, mock_oslistdir, mock_ospath,
+    @mock.patch("rally.utils.os.path", return_value=True)
+    @mock.patch("rally.utils.os.walk", return_value=[('/etc/.rally/plugins',
+                                                      [], ('load_it.py', ))])
+    def test_load_plugins_fails(self, mock_oswalk, mock_ospath,
                                 mock_load_module, mock_find_module):
-        mock_oslistdir.return_value = ["somebrokenplugin.py", ]
-        mock_load_module.side_effect = Exception()
         # test no fails if module is broken
         # TODO(olkonami): check exception is handled correct
         utils.load_plugins("/somwhere")

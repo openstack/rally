@@ -19,7 +19,7 @@ SCENARIO=$BASE/new/$PROJECT/rally-scenarios/${RALLY_SCENARIO}.yaml
 PLUGINS_DIR=$BASE/new/$PROJECT/rally-scenarios/plugins
 EXTRA_DIR=$BASE/new/$PROJECT/rally-scenarios/extra
 
-RALLY_PLUGINS_DIR=~/.rally/plugins/scenarios/
+RALLY_PLUGINS_DIR=~/.rally/plugins
 
 mkdir -p $RALLY_PLUGINS_DIR
 if [ -d $PLUGINS_DIR ]; then
