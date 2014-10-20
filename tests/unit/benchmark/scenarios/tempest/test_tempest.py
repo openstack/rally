@@ -44,7 +44,7 @@ class TempestScenarioTestCase(test.TestCase):
                 "| %(venv)s %(tempest_path)s/tools/colorizer.py" %
                 {
                     "venv": self.verifier.venv_wrapper,
-                    "tempest_path": self.verifier.tempest_path,
+                    "tempest_path": self.verifier.path(),
                     "tests": " ".join(tests)
                 })
 
@@ -58,7 +58,7 @@ class TempestScenarioTestCase(test.TestCase):
 
         expected_call = self.get_tests_launcher_cmd([fake_test])
         mock_sp.check_call.assert_called_once_with(
-            expected_call, cwd=self.verifier.tempest_path,
+            expected_call, cwd=self.verifier.path(),
             env=self.verifier.env, shell=True)
 
     @mock.patch(TS + ".utils.tempfile")
@@ -71,7 +71,7 @@ class TempestScenarioTestCase(test.TestCase):
 
         expected_call = self.get_tests_launcher_cmd([fake_test])
         mock_sp.check_call.assert_called_once_with(
-            expected_call, cwd=self.verifier.tempest_path,
+            expected_call, cwd=self.verifier.path(),
             env=self.verifier.env, shell=True)
 
     @mock.patch(TS + ".utils.tempfile")
@@ -83,7 +83,7 @@ class TempestScenarioTestCase(test.TestCase):
 
         expected_call = self.get_tests_launcher_cmd(["tempest.api.network"])
         mock_sp.check_call.assert_called_once_with(
-            expected_call, cwd=self.verifier.tempest_path,
+            expected_call, cwd=self.verifier.path(),
             env=self.verifier.env, shell=True)
 
     @mock.patch(TS + ".utils.tempfile")
@@ -95,7 +95,7 @@ class TempestScenarioTestCase(test.TestCase):
 
         expected_call = self.get_tests_launcher_cmd([])
         mock_sp.check_call.assert_called_once_with(
-            expected_call, cwd=self.verifier.tempest_path,
+            expected_call, cwd=self.verifier.path(),
             env=self.verifier.env, shell=True)
 
     @mock.patch(TS + ".utils.tempfile")
@@ -107,7 +107,7 @@ class TempestScenarioTestCase(test.TestCase):
 
         expected_call = self.get_tests_launcher_cmd(["smoke"])
         mock_sp.check_call.assert_called_once_with(
-            expected_call, cwd=self.verifier.tempest_path,
+            expected_call, cwd=self.verifier.path(),
             env=self.verifier.env, shell=True)
 
     @mock.patch(TS + ".utils.tempfile")
@@ -119,7 +119,7 @@ class TempestScenarioTestCase(test.TestCase):
 
         expected_call = self.get_tests_launcher_cmd([])
         mock_sp.check_call.assert_called_once_with(
-            expected_call, cwd=self.verifier.tempest_path,
+            expected_call, cwd=self.verifier.path(),
             env=self.verifier.env, shell=True)
 
     @mock.patch(TS + ".utils.tempfile")
@@ -137,7 +137,7 @@ class TempestScenarioTestCase(test.TestCase):
 
                 expected_call = self.get_tests_launcher_cmd([fake_test])
                 mock_sp.check_call.assert_called_once_with(
-                    expected_call, cwd=self.verifier.tempest_path,
+                    expected_call, cwd=self.verifier.path(),
                     env=self.verifier.env, shell=True)
 
     @mock.patch(TS + ".utils.tempfile")
@@ -149,7 +149,7 @@ class TempestScenarioTestCase(test.TestCase):
 
         expected_call = self.get_tests_launcher_cmd(["tempest.api.network"])
         mock_sp.check_call.assert_called_once_with(
-            expected_call, cwd=self.verifier.tempest_path,
+            expected_call, cwd=self.verifier.path(),
             env=self.verifier.env, shell=True)
 
     @mock.patch(TS + ".utils.tempfile")
@@ -162,7 +162,7 @@ class TempestScenarioTestCase(test.TestCase):
 
         expected_call = self.get_tests_launcher_cmd(fake_tests)
         mock_sp.check_call.assert_called_once_with(
-            expected_call, cwd=self.verifier.tempest_path,
+            expected_call, cwd=self.verifier.path(),
             env=self.verifier.env, shell=True)
 
     @mock.patch(TS + ".utils.tempfile")
@@ -175,5 +175,5 @@ class TempestScenarioTestCase(test.TestCase):
 
         expected_call = self.get_tests_launcher_cmd([regex])
         mock_sp.check_call.assert_called_once_with(
-            expected_call, cwd=self.verifier.tempest_path,
+            expected_call, cwd=self.verifier.path(),
             env=self.verifier.env, shell=True)

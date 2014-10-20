@@ -113,3 +113,16 @@ class UseCommands(object):
         self._ensure_rally_configuration_dir_exists()
         db.task_get(task_id)
         self._update_attribute_in_global_file('RALLY_TASK', task_id)
+
+    @cliutils.args("--uuid", type=str, dest="verification_id", required=False,
+                   help="UUID of the verification")
+    def verification(self, verification_id):
+        """Set active verification.
+
+        :param verification_id: a UUID of verification
+        """
+        print('Verification UUID: %s' % verification_id)
+        self._ensure_rally_configuration_dir_exists()
+        db.verification_get(verification_id)
+        self._update_attribute_in_global_file('RALLY_VERIFICATION',
+                                              verification_id)

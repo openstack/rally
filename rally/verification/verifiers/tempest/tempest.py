@@ -35,30 +35,33 @@ class TempestSetupFailure(exceptions.RallyException):
     msg_fmt = _("Unable to setup tempest: '%(message)s'")
 
 
+def check_output(*args, **kwargs):
+    output = subprocess.check_output(*args, **kwargs)
+
+    if LOG.getEffectiveLevel() <= logging.DEBUG:
+        print(output)
+
+
 class Tempest(object):
 
-    tempest_base_path = os.path.join(os.path.expanduser("~"),
-                                     ".rally/tempest/base")
+    base_repo = os.path.join(os.path.expanduser("~"), ".rally/tempest/base")
 
     def __init__(self, deploy_id, verification=None, tempest_config=None):
         self.deploy_id = deploy_id
-        self.tempest_path = os.path.join(os.path.expanduser("~"),
-                                         ".rally/tempest",
-                                         "for-deployment-%s" % deploy_id)
-        self.config_file = tempest_config or os.path.join(self.tempest_path,
-                                                          "tempest.conf")
-        self.log_file_raw = os.path.join(self.tempest_path, "subunit.stream")
-        self.venv_wrapper = os.path.join(self.tempest_path,
-                                         "tools/with_venv.sh")
+        self._path = os.path.join(os.path.expanduser("~"),
+                                  ".rally/tempest",
+                                  "for-deployment-%s" % deploy_id)
+        self.config_file = tempest_config or self.path("tempest.conf")
+        self.log_file_raw = self.path("subunit.stream")
+        self.venv_wrapper = self.path("tools/with_venv.sh")
         self.verification = verification
         self._env = None
 
     def _generate_env(self):
         env = os.environ.copy()
-        env["TEMPEST_CONFIG_DIR"] = os.path.split(self.config_file)[0]
+        env["TEMPEST_CONFIG_DIR"] = os.path.dirname(self.config_file)
         env["TEMPEST_CONFIG"] = os.path.basename(self.config_file)
-        env["OS_TEST_PATH"] = os.path.join(self.tempest_path,
-                                           "tempest/test_discover")
+        env["OS_TEST_PATH"] = self.path("tempest/test_discover")
         LOG.debug("Generated environ: %s" % env)
         self._env = env
 
@@ -68,18 +71,22 @@ class Tempest(object):
             self._generate_env()
         return self._env
 
+    def path(self, *inner_path):
+        if inner_path:
+            return os.path.join(self._path, *inner_path)
+        return self._path
+
     def _install_venv(self):
-        if not os.path.isdir(os.path.join(self.tempest_path, '.venv')):
-            LOG.info('Validating python environment')
+        path_to_venv = self.path(".venv")
+
+        if not os.path.isdir(path_to_venv):
             self.validate_env()
-            LOG.info("No virtual environment found...Install the virtualenv.")
-            LOG.debug("Virtual environment directory: %s" %
-                      os.path.join(self.tempest_path, ".venv"))
-            subprocess.check_call("python ./tools/install_venv.py", shell=True,
-                                  cwd=self.tempest_path)
-            subprocess.check_call(
-                "%s python setup.py install" % self.venv_wrapper,
-                shell=True, cwd=self.tempest_path)
+            print("No virtual environment found...Install the virtualenv.")
+            LOG.debug("Virtual environment directory: %s" % path_to_venv)
+            check_output("python ./tools/install_venv.py", shell=True,
+                         cwd=self.path())
+            check_output("%s python setup.py install" % self.venv_wrapper,
+                         shell=True, cwd=self.path())
 
     def is_configured(self):
         return os.path.isfile(self.config_file)
@@ -98,16 +105,15 @@ class Tempest(object):
             LOG.info("Tempest is already configured.")
 
     def _initialize_testr(self):
-        if not os.path.isdir(os.path.join(self.tempest_path,
-                                          ".testrepository")):
+        if not os.path.isdir(self.path(".testrepository")):
             msg = _("Test Repository initialization.")
             LOG.info(_("Starting: ") + msg)
             subprocess.check_call("%s testr init" % self.venv_wrapper,
-                                  shell=True, cwd=self.tempest_path)
+                                  shell=True, cwd=self.path())
             LOG.info(_("Completed: ") + msg)
 
     def is_installed(self):
-        return os.path.exists(os.path.join(self.tempest_path, ".venv"))
+        return os.path.exists(self.path(".venv"))
 
     @staticmethod
     def _clone():
@@ -115,22 +121,19 @@ class Tempest(object):
               "This could take a few minutes...")
         subprocess.check_call(["git", "clone",
                                "https://github.com/openstack/tempest",
-                               Tempest.tempest_base_path])
+                               Tempest.base_repo])
 
     def install(self):
         if not self.is_installed():
             try:
-                if not os.path.exists(Tempest.tempest_base_path):
+                if not os.path.exists(Tempest.base_repo):
                     Tempest._clone()
 
-                if not os.path.exists(self.tempest_path):
-                    shutil.copytree(Tempest.tempest_base_path,
-                                    self.tempest_path)
+                if not os.path.exists(self.path()):
+                    shutil.copytree(Tempest.base_repo, self.path())
                     subprocess.check_call("git checkout master; "
-                                          "git remote update; "
                                           "git pull", shell=True,
-                                          cwd=os.path.join(self.tempest_path,
-                                                           "tempest"))
+                                          cwd=self.path("tempest"))
                 self._install_venv()
                 self._initialize_testr()
             except subprocess.CalledProcessError as e:
@@ -143,8 +146,8 @@ class Tempest(object):
             print("Tempest is already installed")
 
     def uninstall(self):
-        if os.path.exists(self.tempest_path):
-            shutil.rmtree(self.tempest_path)
+        if os.path.exists(self.path()):
+            shutil.rmtree(self.path())
 
     @utils.log_verification_wrapper(LOG.info, _("Run verification."))
     def _prepare_and_run(self, set_name, regex):
@@ -167,7 +170,7 @@ class Tempest(object):
         try:
             self.run(testr_arg)
         except subprocess.CalledProcessError:
-            print("Test set %s has been finished with error. "
+            print("Test set '%s' has been finished with error. "
                   "Check log for details" % set_name)
 
     def run(self, testr_arg=None, log_file=None, tempest_conf=None):
@@ -197,11 +200,11 @@ class Tempest(object):
             {
                 "venv": self.venv_wrapper,
                 "arg": testr_arg,
-                "tempest_path": self.tempest_path,
+                "tempest_path": self.path(),
                 "log_file": log_file or self.log_file_raw
             })
         LOG.debug("Test(s) started by the command: %s" % test_cmd)
-        subprocess.check_call(test_cmd, cwd=self.tempest_path,
+        subprocess.check_call(test_cmd, cwd=self.path(),
                               env=self.env, shell=True)
 
     def discover_tests(self, pattern=""):
@@ -211,7 +214,7 @@ class Tempest(object):
             "venv": self.venv_wrapper,
             "pattern": pattern}
         raw_results = subprocess.Popen(
-            cmd, shell=True, cwd=self.tempest_path, env=self.env,
+            cmd, shell=True, cwd=self.path(), env=self.env,
             stdout=subprocess.PIPE).communicate()[0]
 
         tests = set()
@@ -225,10 +228,9 @@ class Tempest(object):
 
         return tests
 
-    @staticmethod
-    def parse_results(log_file_raw):
+    def parse_results(self, log_file=None):
         """Parse subunit raw log file."""
-
+        log_file_raw = log_file or self.log_file_raw
         if os.path.isfile(log_file_raw):
             data = jsonutils.loads(subunit2json.main(log_file_raw))
             return data['total'], data['test_cases']
@@ -239,10 +241,12 @@ class Tempest(object):
     @utils.log_verification_wrapper(
         LOG.info, _("Saving verification results."))
     def _save_results(self):
-        total, test_cases = self.parse_results(self.log_file_raw)
+        total, test_cases = self.parse_results()
         if total and test_cases and self.verification:
             self.verification.finish_verification(total=total,
                                                   test_cases=test_cases)
+        else:
+            self.verification.set_failed()
 
     def validate_env(self):
         """Validate environment parameters required for running tempest.
@@ -252,7 +256,7 @@ class Tempest(object):
 
         if sys.version_info < (2, 7):
             raise exceptions.IncompatiblePythonVersion(
-                                                    version=sys.version_info)
+                version=sys.version_info)
 
     def verify(self, set_name, regex):
         self._prepare_and_run(set_name, regex)

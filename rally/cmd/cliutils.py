@@ -38,7 +38,7 @@ class CategoryParser(argparse.ArgumentParser):
     """Customized arguments parser
 
     We need this one to override hardcoded behavior.
-    So, we want to print item's help instead of 'error: too fiew arguments'.
+    So, we want to print item's help instead of 'error: too few arguments'.
     Also, we want not to print positional arguments in help messge.
     """
 

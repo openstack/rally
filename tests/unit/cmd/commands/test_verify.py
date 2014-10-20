@@ -29,10 +29,6 @@ class VerifyCommandsTestCase(test.TestCase):
     def setUp(self):
         super(VerifyCommandsTestCase, self).setUp()
         self.verify = verify.VerifyCommands()
-        self.endpoint = {'endpoints': [{'auth_url': 'fake_auth_url',
-                                        'username': 'fake_username',
-                                        'password': 'fake_password',
-                                        'tenant_name': 'fake_tenant_name'}]}
 
         self.image1 = mock.Mock()
         self.image1.name = 'cirros-1'
@@ -57,7 +53,7 @@ class VerifyCommandsTestCase(test.TestCase):
         mock_clients().nova().flavors.list.return_value = [
             self.flavor1, self.flavor2]
 
-        self.verify.start(deploy_id)
+        self.verify.start(deploy_id=deploy_id)
         default_set_name = 'smoke'
         default_regex = None
 
@@ -75,7 +71,8 @@ class VerifyCommandsTestCase(test.TestCase):
         mock_clients().nova().flavors.list.return_value = [
             self.flavor1, self.flavor2]
         tempest_config = tempfile.NamedTemporaryFile()
-        self.verify.start(deploy_id, tempest_config=tempest_config.name)
+        self.verify.start(deploy_id=deploy_id,
+                          tempest_config=tempest_config.name)
         default_set_name = 'smoke'
         default_regex = None
 

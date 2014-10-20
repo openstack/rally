@@ -21,9 +21,10 @@ from rally import exceptions
 from rally import fileutils
 from rally.i18n import _
 
-ENV_DEPLOYMENT = 'RALLY_DEPLOYMENT'
-ENV_TASK = 'RALLY_TASK'
-ENVVARS = [ENV_DEPLOYMENT, ENV_TASK]
+ENV_DEPLOYMENT = "RALLY_DEPLOYMENT"
+ENV_TASK = "RALLY_TASK"
+ENV_VERIFICATION = "RALLY_VERIFICATION"
+ENVVARS = [ENV_DEPLOYMENT, ENV_TASK, ENV_VERIFICATION]
 
 MSG_MISSING_ARG = _("Missing argument: --%(arg_name)s")
 
@@ -68,3 +69,5 @@ with_default_deploy_id = default_from_global('deploy_id', ENV_DEPLOYMENT,
                                              "uuid")
 with_default_task_id = default_from_global('task_id', ENV_TASK,
                                            "uuid")
+with_default_verification_id = default_from_global(
+    "verification_uuid", ENV_VERIFICATION, "uuid")

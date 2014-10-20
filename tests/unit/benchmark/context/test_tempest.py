@@ -102,8 +102,8 @@ class TempestContextTestCase(test.TestCase):
 
         mock_sp.check_call.assert_called_once_with(
             "cd %s && %s python tempest/stress/tools/cleanup.py" %
-            (benchmark.verifier.tempest_path, benchmark.verifier.venv_wrapper),
-            shell=True, cwd=benchmark.verifier.tempest_path,
+            (benchmark.verifier.path, benchmark.verifier.venv_wrapper),
+            shell=True, cwd=benchmark.verifier.path,
             env=benchmark.verifier.env)
         mock_shutil.rmtree.assert_called_once_with("/tmp/path")
 

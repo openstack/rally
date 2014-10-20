@@ -177,3 +177,5 @@ def verify(deploy_id, set_name, regex, tempest_config):
 
     verification.set_running()
     verifier.verify(set_name=set_name, regex=regex)
+
+    return verification

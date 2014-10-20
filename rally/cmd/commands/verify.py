@@ -22,6 +22,7 @@ import pprint
 import six
 
 from rally.cmd import cliutils
+from rally.cmd.commands import use
 from rally.cmd import envutils
 from rally import consts
 from rally import db
@@ -50,13 +51,15 @@ class VerifyCommands(object):
     @cliutils.args("--tempest-config", dest="tempest_config", type=str,
                    required=False,
                    help="User specified Tempest config file location")
+    @cliutils.args("--no-use", action="store_false", dest="do_use",
+                   help="Don't set new task as default for future operations")
     @envutils.with_default_deploy_id
-    def start(self, deploy_id=None, set_name="smoke", regex=None,
-              tempest_config=None):
+    def start(self, set_name="smoke", deploy_id=None, regex=None,
+              tempest_config=None, do_use=False):
         """Start set of tests.
 
-        :param deploy_id: a UUID of a deployment
         :param set_name: Name of tempest test set
+        :param deploy_id: a UUID of a deployment
         :param regex: Regular expression of test
         :param tempest_config: User specified Tempest config file location
         """
@@ -66,9 +69,10 @@ class VerifyCommands(object):
         if set_name not in consts.TEMPEST_TEST_SETS:
             print("Sorry, but there are no desired tempest test set. Please "
                   "choose from: %s" % ", ".join(consts.TEMPEST_TEST_SETS))
-            return(1)
-
-        api.verify(deploy_id, set_name, regex, tempest_config)
+            return (1)
+        verification = api.verify(deploy_id, set_name, regex, tempest_config)
+        if do_use:
+            use.UseCommands().verification(verification['uuid'])
 
     def list(self):
         """Display all verifications table, started and finished."""
@@ -94,8 +98,9 @@ class VerifyCommands(object):
     @cliutils.args('--output-file', type=str, required=False,
                    dest='output_file',
                    help='If specified, output will be saved to given file')
-    def results(self, verification_uuid, output_file=None, output_html=None,
-                output_json=None, output_pprint=None):
+    @envutils.with_default_verification_id
+    def results(self, verification_uuid=None, output_file=None,
+                output_html=None, output_json=None, output_pprint=None):
         """Get raw results of the verification.
 
         :param verification_uuid: Verification UUID
@@ -139,7 +144,8 @@ class VerifyCommands(object):
                    help='Tests can be sorted by "name" or "duration"')
     @cliutils.args('--detailed', dest='detailed', action='store_true',
                    required=False, help='Prints traceback of failed tests')
-    def show(self, verification_uuid, sort_by='name', detailed=False):
+    @envutils.with_default_verification_id
+    def show(self, verification_uuid=None, sort_by='name', detailed=False):
         """Display results table of the verification."""
 
         try:
@@ -191,7 +197,8 @@ class VerifyCommands(object):
                    help='UUID of a verification')
     @cliutils.args('--sort-by', dest='sort_by', type=str, required=False,
                    help='Tests can be sorted by "name" or "duration"')
-    def detailed(self, verification_uuid, sort_by='name'):
+    @envutils.with_default_verification_id
+    def detailed(self, verification_uuid=None, sort_by='name'):
         """Display results table of verification with detailed errors."""
 
         self.show(verification_uuid, sort_by, True)
