@@ -39,6 +39,7 @@ from rally import utils
 
 
 class DeploymentCommands(object):
+    """Set of commands that allow you to manage deployments."""
 
     @cliutils.args('--name', type=str, required=True,
                    help='A name of the deployment.')
@@ -51,7 +52,30 @@ class DeploymentCommands(object):
                    help='Don\'t set new deployment as default for'
                         ' future operations')
     def create(self, name, fromenv=False, filename=None, do_use=False):
-        """Create a new deployment on the basis of configuration file.
+        """Create new deployment.
+
+        This command will create new deployment record in rally database.
+        In case of ExistingCloud deployment engine it will use cloud,
+        represented in config.
+        In cases when cloud doesn't exists Rally will deploy new one
+        for you with Devstack or Fuel. For this purposes different deployment
+        engines are developed.
+
+        If you use ExistionCloud deployment engine you can pass deployment
+        config by environment variables:
+            OS_USERNAME
+            OS_PASSWORD
+            OS_AUTH_URL
+            OS_TENANT_NAME
+
+        All other deployment engines need more complex configuration data, so
+        it should be stored in configuration file.
+
+        You can use physical servers, lxc containers, KVM virtual machines
+        or virtual machines in OpenStack for deploying the cloud in.
+        Except physical servers, Rally can create cluster nodes for you.
+        Interaction with virtualisation software, OpenStack
+        cloud or physical servers is provided by server providers.
 
         :param fromenv: boolean, read environment instead of config file
         :param filename: a path to the configuration file
@@ -105,6 +129,9 @@ class DeploymentCommands(object):
     def recreate(self, deploy_id=None):
         """Destroy and create an existing deployment.
 
+        Unlike 'deployment destroy' command deployment database record will
+        not be deleted, so deployment's UUID stay same.
+
         :param deploy_id: a UUID of the deployment
         """
         api.recreate_deploy(deploy_id)
@@ -113,17 +140,19 @@ class DeploymentCommands(object):
                    help='UUID of a deployment.')
     @envutils.with_default_deploy_id
     def destroy(self, deploy_id=None):
-        """Destroy the deployment.
+        """Destroy existing deployment.
 
-        Release resources that are allocated for the deployment. The
-        Deployment, related tasks and their results are also deleted.
+        This will delete all containers, virtual machines, OpenStack instances
+        or Fuel clusters created during Rally deployment creation. Also it will
+        remove deployment record from Rally database.
 
         :param deploy_id: a UUID of the deployment
         """
         api.destroy_deploy(deploy_id)
 
     def list(self, deployment_list=None):
-        """Print list of deployments."""
+        """List existing deployments."""
+
         headers = ['uuid', 'created_at', 'name', 'status', 'active']
         current_deploy_id = envutils.get_global('RALLY_DEPLOYMENT')
         deployment_list = deployment_list or db.deployment_list()
@@ -150,9 +179,9 @@ class DeploymentCommands(object):
                    help='Output in pretty print format')
     @envutils.with_default_deploy_id
     def config(self, deploy_id=None, output_json=None, output_pprint=None):
-        """Print on stdout a config of the deployment.
+        """Display configuration of the deployment.
 
-            Output can JSON or Pretty print format.
+        Output can JSON or Pretty print format.
 
         :param deploy_id: a UUID of the deployment
         :param output_json: Output in json format (Default)
@@ -174,10 +203,11 @@ class DeploymentCommands(object):
                    help='UUID of a deployment.')
     @envutils.with_default_deploy_id
     def endpoint(self, deploy_id=None):
-        """Print all endpoints of the deployment.
+        """Display all endpoints of the deployment.
 
         :param deploy_id: a UUID of the deployment
         """
+
         headers = ['auth_url', 'username', 'password', 'tenant_name',
                    'region_name', 'endpoint_type', 'admin_port']
         table_rows = []
@@ -196,12 +226,11 @@ class DeploymentCommands(object):
                    help='UUID of a deployment.')
     @envutils.with_default_deploy_id
     def check(self, deploy_id=None):
-        """Check the deployment.
-
-        Check keystone authentication and list all available services.
+        """Check keystone authentication and list all available services.
 
         :param deploy_id: a UUID of the deployment
         """
+
         headers = ['services', 'type', 'status']
         table_rows = []
         try:

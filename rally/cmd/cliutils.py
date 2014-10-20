@@ -15,6 +15,7 @@
 
 from __future__ import print_function
 
+import argparse
 import os
 import sys
 
@@ -24,10 +25,50 @@ from rally.openstack.common.apiclient import exceptions
 from rally.openstack.common import cliutils
 from rally.openstack.common.gettextutils import _
 from rally.openstack.common import log as logging
+from rally import utils
 from rally import version
+
 
 CONF = cfg.CONF
 LOG = logging.getLogger(__name__)
+
+
+class CategoryParser(argparse.ArgumentParser):
+
+    """Customized arguments parser
+
+    We need this one to override hardcoded behavior.
+    So, we want to print item's help instead of 'error: too fiew arguments'.
+    Also, we want not to print positional arguments in help messge.
+    """
+
+    def format_help(self):
+        formatter = self._get_formatter()
+
+        # usage
+        formatter.add_usage(self.usage, self._actions,
+                            self._mutually_exclusive_groups)
+
+        # description
+        formatter.add_text(self.description)
+
+        # positionals, optionals and user-defined groups
+        # INFO(oanufriev) _action_groups[0] contains positional arguments.
+        for action_group in self._action_groups[1:]:
+            formatter.start_section(action_group.title)
+            formatter.add_text(action_group.description)
+            formatter.add_arguments(action_group._group_actions)
+            formatter.end_section()
+
+        # epilog
+        formatter.add_text(self.epilog)
+
+        # determine help from format above
+        return formatter.format_help()
+
+    def error(self, message):
+        self.print_help(sys.stderr)
+        sys.exit(2)
 
 
 def pretty_float_formatter(field, ndigits=None):
@@ -70,7 +111,49 @@ def _methods_of(obj):
     return result
 
 
+def _compose_category_description(category):
+
+    descr_pairs = _methods_of(category)
+
+    description = ""
+    if category.__doc__:
+        description = category.__doc__.strip()
+    if descr_pairs:
+        description += "\n\nCommands:\n"
+        sublen = lambda item: len(item[0])
+        first_column_len = max(map(sublen, descr_pairs)) + 3
+        for item in descr_pairs:
+            name = item[0]
+            if item[1].__doc__:
+                doc = utils.parse_docstring(
+                    item[1].__doc__)["short_description"]
+            else:
+                doc = ""
+            name += " " * (first_column_len - len(name))
+            description += "   %s%s\n" % (name, doc)
+
+    return description
+
+
+def _compose_action_description(action_fn):
+    description = ""
+    if action_fn.__doc__:
+        parsed_doc = utils.parse_docstring(action_fn.__doc__)
+        short = parsed_doc.get("short_description")
+        long = parsed_doc.get("long_description")
+
+        description = "%s\n\n%s" % (short, long) if long else short
+
+    return description
+
+
 def _add_command_parsers(categories, subparsers):
+
+    # INFO(oanufriev) This monkey patching makes our custom parser class to be
+    # used instead of native.  This affects all subparsers down from
+    # 'subparsers' parameter of this function (categories and actions).
+    subparsers._parser_class = CategoryParser
+
     parser = subparsers.add_parser('version')
 
     parser = subparsers.add_parser('bash-completion')
@@ -78,16 +161,20 @@ def _add_command_parsers(categories, subparsers):
 
     for category in categories:
         command_object = categories[category]()
-
-        parser = subparsers.add_parser(category)
+        descr = _compose_category_description(categories[category])
+        parser = subparsers.add_parser(
+            category, description=descr,
+            formatter_class=argparse.RawDescriptionHelpFormatter)
         parser.set_defaults(command_object=command_object)
 
         category_subparsers = parser.add_subparsers(dest='action')
 
         for action, action_fn in _methods_of(command_object):
-            kwargs = {"help": action_fn.__doc__,
-                      "description": action_fn.__doc__}
-            parser = category_subparsers.add_parser(action, **kwargs)
+            descr = _compose_action_description(action_fn)
+            parser = category_subparsers.add_parser(
+                    action,
+                    formatter_class=argparse.RawDescriptionHelpFormatter,
+                    description=descr, help=descr)
 
             action_kwargs = []
             for args, kwargs in getattr(action_fn, 'args', []):
@@ -104,7 +191,6 @@ def _add_command_parsers(categories, subparsers):
 
             parser.set_defaults(action_fn=action_fn)
             parser.set_defaults(action_kwargs=action_kwargs)
-
             parser.add_argument('action_args', nargs='*')
 
 

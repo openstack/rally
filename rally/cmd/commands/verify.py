@@ -34,6 +34,11 @@ from rally.verification.verifiers.tempest import json2html
 
 
 class VerifyCommands(object):
+    """Test cloud with Tempest
+
+    Set of commands that allow you to perform Tempest tests of
+    OpenStack live cloud.
+    """
 
     @cliutils.args("--deploy-id", dest="deploy_id", type=str, required=False,
                    help="UUID of a deployment.")
@@ -48,13 +53,14 @@ class VerifyCommands(object):
     @envutils.with_default_deploy_id
     def start(self, deploy_id=None, set_name="smoke", regex=None,
               tempest_config=None):
-        """Start running tempest tests against a live cloud cluster.
+        """Start set of tests.
 
         :param deploy_id: a UUID of a deployment
         :param set_name: Name of tempest test set
         :param regex: Regular expression of test
         :param tempest_config: User specified Tempest config file location
         """
+
         if regex:
             set_name = "full"
         if set_name not in consts.TEMPEST_TEST_SETS:
@@ -65,7 +71,8 @@ class VerifyCommands(object):
         api.verify(deploy_id, set_name, regex, tempest_config)
 
     def list(self):
-        """Print a result list of verifications."""
+        """Display all verifications table, started and finished."""
+
         fields = ['UUID', 'Deployment UUID', 'Set name', 'Tests', 'Failures',
                   'Created at', 'Status']
         verifications = db.verification_list()
@@ -89,7 +96,7 @@ class VerifyCommands(object):
                    help='If specified, output will be saved to given file')
     def results(self, verification_uuid, output_file=None, output_html=None,
                 output_json=None, output_pprint=None):
-        """Print raw results of verification.
+        """Get raw results of the verification.
 
         :param verification_uuid: Verification UUID
         :param output_file: If specified, output will be saved to given file
@@ -99,6 +106,7 @@ class VerifyCommands(object):
         :param output_pprint: Save results in pprint format to the
                               specified file
         """
+
         try:
             results = db.verification_result_get(verification_uuid)['data']
         except exceptions.NotFoundException as e:
@@ -132,6 +140,8 @@ class VerifyCommands(object):
     @cliutils.args('--detailed', dest='detailed', action='store_true',
                    required=False, help='Prints traceback of failed tests')
     def show(self, verification_uuid, sort_by='name', detailed=False):
+        """Display results table of the verification."""
+
         try:
             sortby_index = ('name', 'duration').index(sort_by)
         except ValueError:
@@ -182,4 +192,6 @@ class VerifyCommands(object):
     @cliutils.args('--sort-by', dest='sort_by', type=str, required=False,
                    help='Tests can be sorted by "name" or "duration"')
     def detailed(self, verification_uuid, sort_by='name'):
+        """Display results table of verification with detailed errors."""
+
         self.show(verification_uuid, sort_by, True)
