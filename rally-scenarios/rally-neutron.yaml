@@ -442,3 +442,18 @@
           users_per_tenant: 2
       sla:
         max_failure_percent: 0
+
+  HeatStacks.create_and_delete_stack:
+    -
+      args:
+        template_path: '/home/jenkins/.rally/extra/server_with_ports.yaml.template'
+      runner:
+        type: "constant"
+        times: 4
+        concurrency: 2
+      context:
+        users:
+          tenants: 2
+          users_per_tenant: 2
+      sla:
+        max_failure_percent: 0
