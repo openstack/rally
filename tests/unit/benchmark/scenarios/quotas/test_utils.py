@@ -61,14 +61,14 @@ class QuotasScenarioTestCase(test.TestCase):
         scenario = utils.QuotasScenario(admin_clients=fakes.FakeClients())
         quotas = scenario._generate_quota_values(max_quota, "nova")
         for k, v in quotas.iteritems():
-            self.assertTrue(-1 < v <= max_quota)
+            self.assertTrue(-1 <= v <= max_quota)
 
     def test__generate_quota_values_cinder(self):
         max_quota = 1024
         scenario = utils.QuotasScenario(admin_clients=fakes.FakeClients())
         quotas = scenario._generate_quota_values(max_quota, "cinder")
         for k, v in quotas.iteritems():
-            self.assertTrue(-1 < v <= max_quota)
+            self.assertTrue(-1 <= v <= max_quota)
 
     def test__delete_quotas(self):
         tenant_id = 'fake_tenant'
