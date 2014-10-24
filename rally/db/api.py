@@ -114,14 +114,17 @@ def task_update(uuid, values):
     return IMPL.task_update(uuid, values)
 
 
-def task_list(status=None):
+def task_list(status=None, deployment=None):
     """Get a list of tasks.
 
     :param status: Task status to filter the returned list on. If set to
                    None, all the tasks will be returned.
+    :param deployment_id: deployment UUID to filter the returned list on.
+                      if set to None tasks from all deployments well be
+                      returned.
     :returns: A list of dicts with data on the tasks.
     """
-    return IMPL.task_list(status=status)
+    return IMPL.task_list(status=status, deployment=deployment)
 
 
 def task_delete(uuid, status=None):

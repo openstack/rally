@@ -22,6 +22,7 @@ import sys
 
 from oslo.config import cfg
 
+from rally import exceptions
 from rally.i18n import _
 from rally import log as logging
 from rally.openstack.common import cliutils
@@ -296,7 +297,7 @@ def run(argv, categories):
         validate_deprecated_args(argv, fn)
         ret = fn(*fn_args, **fn_kwargs)
         return(ret)
-    except (IOError, TypeError) as e:
+    except (IOError, TypeError, exceptions.DeploymentNotFound) as e:
         if CONF.debug:
             raise
         print(e)

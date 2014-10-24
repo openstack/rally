@@ -136,6 +136,8 @@ class Task(BASE, RallyBase):
     __tablename__ = "tasks"
     __table_args__ = (
         sa.Index("task_uuid", "uuid", unique=True),
+        sa.Index("task_status", "status"),
+        sa.Index("task_deployment", "deployment_uuid"),
     )
 
     id = sa.Column(sa.Integer, primary_key=True, autoincrement=True)
@@ -153,6 +155,7 @@ class Task(BASE, RallyBase):
         sa.ForeignKey(Deployment.uuid),
         nullable=False,
     )
+
     deployment = sa.orm.relationship(
         Deployment,
         backref=sa.orm.backref("tasks"),

@@ -83,6 +83,21 @@ class TaskTestCase(test.TestCase):
         mock_delete.assert_called_once_with(self.task['uuid'],
                                             status=consts.TaskStatus.FINISHED)
 
+    @mock.patch("rally.objects.task.db.task_list",
+                return_value=[{"uuid": "a",
+                               "created_at": "b",
+                               "status": "c",
+                               "failed": True,
+                               "tag": "d",
+                               "deployment_name": "some_name"}])
+    def list(self, mock_db_task_list):
+        tasks = objects.Task.list(status="somestatus")
+        mock_db_task_list.assert_called_once_with("somestatus", None)
+        self.assertIs(type(tasks), list)
+        self.assertIsInstance(tasks[0], objects.Task)
+        self.assertEqual(mock_db_task_list.return_value["uuis"],
+                         tasks[0]["uuid"])
+
     @mock.patch('rally.objects.deploy.db.task_update')
     @mock.patch('rally.objects.task.db.task_create')
     def test_update(self, mock_create, mock_update):

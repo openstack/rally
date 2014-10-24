@@ -31,9 +31,19 @@ class Task(object):
     def __getitem__(self, key):
         return self.task[key]
 
+    def to_dict(self):
+        db_task = self.task
+        deployment_name = db.deployment_get(self.task.deployment_uuid)["name"]
+        db_task["deployment_name"] = deployment_name
+        return db_task
+
     @staticmethod
     def get(uuid):
         return Task(db.task_get(uuid))
+
+    @staticmethod
+    def list(status=None, deployment=None):
+        return [Task(db_task) for db_task in db.task_list(status, deployment)]
 
     @staticmethod
     def delete_by_uuid(uuid, status=None):

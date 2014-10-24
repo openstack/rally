@@ -17,6 +17,7 @@ import mock
 
 from rally.cmd.commands import task
 from rally import exceptions
+from tests.unit import fakes
 from tests.unit import test
 
 
@@ -135,7 +136,7 @@ class TaskCommandsTestCase(test.TestCase):
         mock_db.task_get_detailed.assert_called_once_with(test_uuid)
 
     @mock.patch("json.dumps")
-    @mock.patch("rally.cmd.commands.task.task.Task.get")
+    @mock.patch("rally.cmd.commands.task.objects.Task.get")
     def test_results(self, mock_get, mock_json):
         task_id = "foo_task_id"
         data = [
@@ -151,7 +152,7 @@ class TaskCommandsTestCase(test.TestCase):
         mock_json.assert_called_once_with(result, sort_keys=True, indent=4)
         mock_get.assert_called_once_with(task_id)
 
-    @mock.patch("rally.cmd.commands.task.task.Task.get")
+    @mock.patch("rally.cmd.commands.task.objects.Task.get")
     def test_invalid_results(self, mock_get):
         task_id = "foo_task_id"
         data = []
@@ -167,7 +168,7 @@ class TaskCommandsTestCase(test.TestCase):
     @mock.patch("rally.cmd.commands.task.open", create=True)
     @mock.patch("rally.cmd.commands.task.plot")
     @mock.patch("rally.cmd.commands.task.webbrowser")
-    @mock.patch("rally.cmd.commands.task.task.Task.get")
+    @mock.patch("rally.cmd.commands.task.objects.Task.get")
     def test_report(self, mock_get, mock_web, mock_plot, mock_open, mock_os):
         task_id = "foo_task_id"
         data = [
@@ -213,28 +214,26 @@ class TaskCommandsTestCase(test.TestCase):
             "file://realpath_spam.html")
 
     @mock.patch('rally.cmd.commands.task.common_cliutils.print_list')
-    @mock.patch('rally.cmd.commands.task.envutils.get_global')
-    @mock.patch("rally.cmd.commands.task.db")
-    def test_list(self, mock_db, mock_default, mock_print_list):
-        mock_default.side_effect = exceptions.InvalidArgumentsException
-        self.assertRaises(exceptions.InvalidArgumentsException,
-                          self.task.results, None)
+    @mock.patch('rally.cmd.commands.task.envutils.get_global',
+                return_value='123456789')
+    @mock.patch("rally.cmd.commands.task.objects.Task.list",
+                return_value=[fakes.FakeTask(uuid="a",
+                                             created_at="b",
+                                             status="c",
+                                             failed=True,
+                                             tag="d",
+                                             deployment_name="some_name")])
+    def test_list(self, mock_objects_list, mock_default, mock_print_list):
 
-        db_response = [
-                {'uuid': 'a',
-                 'created_at': 'b',
-                 'status': 'c',
-                 'failed': True,
-                 'tag': 'd'}
-        ]
-        mock_db.task_list = mock.MagicMock(return_value=db_response)
         self.task.list()
-        mock_db.task_list.assert_called_once_with()
+        mock_objects_list.assert_called_once_with(
+            deployment=mock_default.return_value)
 
-        headers = ['uuid', 'created_at', 'status', 'failed', 'tag']
-        mock_print_list.assert_called_once_with(db_response, headers,
-                                                sortby_index=headers.index(
-                                                    'created_at'))
+        headers = ["uuid", "deployment_name", "created_at", "status",
+                   "failed", "tag"]
+        mock_print_list.assert_called_once_with(
+            mock_objects_list.return_value, headers,
+            sortby_index=headers.index('created_at'))
 
     def test_delete(self):
         task_uuid = '8dcb9c5e-d60b-4022-8975-b5987c7833f7'

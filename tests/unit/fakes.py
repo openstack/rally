@@ -1313,3 +1313,9 @@ class FakeUserContext(FakeContext):
 
 class FakeDeployment(dict):
     update_status = mock.Mock()
+
+
+class FakeTask(dict):
+
+    def to_dict(self):
+        return self

@@ -81,6 +81,19 @@ class TaskTestCase(unittest.TestCase):
         rally("task delete")
         self.assertNotIn("finishe", rally("task list"))
 
+    def test_list(self):
+        rally = utils.Rally()
+        cfg = self._get_sample_task_config()
+        config = utils.TaskConfig(cfg)
+        rally("task start --task %s" % config.filename)
+        self.assertIn("finished", rally("task list --deployment MAIN"))
+        self.assertIn("There are no tasks",
+                      rally("task list --status failed"))
+        self.assertIn("finished", rally("task list --status finished"))
+        self.assertIn("deployment_name", rally("task list --all-deployments"))
+        self.assertRaises(utils.RallyCmdError,
+                          rally, "task list --status not_existing_status")
+
     # NOTE(oanufriev): Not implemented
     def test_abort(self):
         pass

@@ -29,10 +29,11 @@ from rally.benchmark.processing import utils
 from rally.cmd import cliutils
 from rally.cmd.commands import use
 from rally.cmd import envutils
+from rally import consts
 from rally import db
 from rally import exceptions
 from rally.i18n import _
-from rally.objects import task
+from rally import objects
 from rally.openstack.common import cliutils as common_cliutils
 from rally.orchestrator import api
 from rally import utils as rutils
@@ -322,7 +323,7 @@ class TaskCommands(object):
 
         results = map(lambda x: {"key": x["key"], "result": x["data"]["raw"],
                                  "sla": x["data"]["sla"]},
-                      task.Task.get(task_id).get_results())
+                      objects.Task.get(task_id).get_results())
 
         if results:
             print(json.dumps(results, sort_keys=True, indent=4))
@@ -330,18 +331,58 @@ class TaskCommands(object):
             print(_("The task %s can not be found") % task_id)
             return(1)
 
-    def list(self, task_list=None):
-        """List all tasks, started and finished."""
+    @cliutils.args('--deployment', type=str, dest='deployment',
+                   help='List tasks from specified deployment.'
+                   'By default tasks listed from active deployment.')
+    @cliutils.args('--all-deployments', action='store_true',
+                   dest='all_deployments',
+                   help='List tasks from all deployments.')
+    @cliutils.args('--status', type=str, dest='status',
+                   help='List tasks with specified status.'
+                   ' Available statuses: %s' % ', '.join(consts.TaskStatus))
+    @envutils.with_default_deployment
+    def list(self, deployment=None, all_deployments=False, status=None):
+        """List tasks, started and finished.
 
-        headers = ['uuid', 'created_at', 'status', 'failed', 'tag']
-        task_list = task_list or db.task_list()
+        Displayed tasks could be filtered by status or deployment.
+        By default 'rally task list' will display tasks from active deployment
+        without filtering by status.
+        :param deployment: UUID or name of deployment
+        :param status: task status to filter by.
+            Available task statuses are in rally.consts.TaskStatus
+        :param all_deployments: display tasks from all deployments
+        """
+
+        filters = dict()
+        headers = ["uuid", "deployment_name", "created_at", "status",
+                   "failed", "tag"]
+
+        if status in consts.TaskStatus:
+            filters.setdefault("status", status)
+        elif status is not None:
+            print(_("Error: Invalid task status '%s'.\n"
+                    "Available statuses: %s") % (
+                  status, ", ".join(consts.TaskStatus)))
+            return(1)
+
+        if not all_deployments:
+            filters.setdefault("deployment", deployment)
+
+        task_list = objects.Task.list(**filters)
+
         if task_list:
-            common_cliutils.print_list(task_list, headers,
+            common_cliutils.print_list(map(lambda x: x.to_dict(), task_list),
+                                       headers,
                                        sortby_index=headers.index(
                                            'created_at'))
         else:
-            print(_("There are no tasks. To run a new task, use:"
-                    "\nrally task start"))
+            if status:
+                print(_("There are no tasks in '%s' status. "
+                        "To run a new task, use:"
+                        "\trally task start") % status)
+            else:
+                print(_("There are no tasks. To run a new task, use:"
+                        "\trally task start"))
 
     @cliutils.args('--uuid', type=str, dest='task_id', help='uuid of task')
     @cliutils.args('--out', type=str, dest='out', required=False,
@@ -361,7 +402,7 @@ class TaskCommands(object):
                                  "result": x["data"]["raw"],
                                  "load_duration": x["data"]["load_duration"],
                                  "full_duration": x["data"]["full_duration"]},
-                      task.Task.get(task_id).get_results())
+                      objects.Task.get(task_id).get_results())
         if out:
             out = os.path.expanduser(out)
         output_file = out or ("%s.html" % task_id)
@@ -413,7 +454,7 @@ class TaskCommands(object):
         :param task_id: Task uuid.
         :returns: Number of failed criteria.
         """
-        results = task.Task.get(task_id).get_results()
+        results = objects.Task.get(task_id).get_results()
         failed_criteria = 0
         data = []
         STATUS_PASS = "PASS"

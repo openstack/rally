@@ -14,6 +14,7 @@
 #    under the License.
 
 """Tests for db.api layer."""
+import uuid
 
 from rally import consts
 from rally import db
@@ -75,22 +76,28 @@ class TasksTestCase(test.DBTestCase):
         self.assertEqual([], db.task_list())
 
     def test_task_list(self):
+        fake_deploy_uuid = str(uuid.uuid4())
         INIT = consts.TaskStatus.INIT
         task_init = sorted(self._create_task()['uuid'] for i in xrange(3))
         FINISHED = consts.TaskStatus.FINISHED
-        task_finished = sorted(self._create_task({'status': FINISHED})['uuid']
+        task_finished = sorted(self._create_task(
+            {'status': FINISHED,
+             'deployment_uuid': fake_deploy_uuid})[
+             'uuid']
                                for i in xrange(3))
 
         task_all = sorted(task_init + task_finished)
 
-        def get_uuids(status):
-            tasks = db.task_list(status=status)
+        def get_uuids(status=None, deployment=None):
+            tasks = db.task_list(status=status, deployment=deployment)
             return sorted(task['uuid'] for task in tasks)
 
         self.assertEqual(task_all, get_uuids(None))
 
-        self.assertEqual(task_init, get_uuids(INIT))
-        self.assertEqual(task_finished, get_uuids(FINISHED))
+        self.assertEqual(task_init, get_uuids(status=INIT))
+        self.assertEqual(task_finished, get_uuids(status=FINISHED))
+        self.assertRaises(exceptions.DeploymentNotFound,
+                          get_uuids, deployment=fake_deploy_uuid)
 
         deleted_task_uuid = task_finished.pop()
         db.task_delete(deleted_task_uuid)

@@ -19,7 +19,7 @@ _rally()
     OPTS["task_abort"]="--uuid"
     OPTS["task_delete"]="--force --uuid"
     OPTS["task_detailed"]="--uuid --iterations-data"
-    OPTS["task_list"]=""
+    OPTS["task_list"]="--deployment --all-deployments --status"
     OPTS["task_plot2html"]="--uuid --out --open"
     OPTS["task_report"]="--uuid --out --open"
     OPTS["task_results"]="--uuid"

@@ -127,10 +127,18 @@ class Connection(object):
             task.update(values)
         return task
 
-    def task_list(self, status=None):
+    def task_list(self, status=None, deployment=None):
         query = self.model_query(models.Task)
+
+        filters = {}
         if status is not None:
-            query = query.filter_by(status=status)
+            filters['status'] = status
+        if deployment is not None:
+            filters['deployment_uuid'] = self.deployment_get(
+                deployment)["uuid"]
+
+        if filters:
+            query = query.filter_by(**filters)
         return query.all()
 
     def task_delete(self, uuid, status=None):
