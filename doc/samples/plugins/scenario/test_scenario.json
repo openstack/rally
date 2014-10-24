@@ -1,0 +1,15 @@
+{
+    "ScenarioPlugin.list_flavors": [
+        {
+            "runner": {
+                "type": "serial",
+                "times": 5,
+            },
+            "context": {
+                "create_flavor": {
+                    "ram": 512,
+                }
+            }
+        }
+    ]
+}

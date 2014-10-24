@@ -183,10 +183,11 @@ def log_verification_wrapper(log, msg, **kw):
 
 def load_plugins(directory):
     if os.path.exists(directory):
-        plugins = (pl[:-3] for pl in os.listdir(directory)
-                   if pl.endswith(".py") and
-                   os.path.isfile(os.path.join(directory, pl)))
-        for plugin in plugins:
+        to_load = []
+        for root, dirs, files in os.walk(directory):
+            to_load.extend((plugin[:-3], root)
+                           for plugin in files if plugin.endswith(".py"))
+        for plugin, directory in to_load:
             fullpath = os.path.join(directory, plugin)
             try:
                 fp, pathname, descr = imp.find_module(plugin, [directory])

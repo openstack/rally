@@ -30,7 +30,7 @@ The concept of **benchmark scenarios** is a central one in Rally. Benchmark scen
 User's view
 ^^^^^^^^^^^
 
-From user's point of view, Rally launches different benchmark scenarios while performing some benchmark task. **Benchmark task** is essentially a set of benchmark scenarios run against some OpenStack deployment in a specific (and customizable) manner by the CLI command:
+From the user's point of view, Rally launches different benchmark scenarios while performing some benchmark task. **Benchmark task** is essentially a set of benchmark scenarios run against some OpenStack deployment in a specific (and customizable) manner by the CLI command:
 
 **rally task start --task=<task_config.json>**
 
@@ -74,10 +74,11 @@ In this example, the task configuration file specifies two benchmarks to be run,
 Note that inside each scenario configuration, the benchmark scenario is actually launched **3 times** (that is specified in the **"runner"** field). It can be specified in **"runner"** in more detail how exactly the benchmark scenario should be launched; we elaborate on that in the *"Sceario Runners"* section below.
 
 
+.. _ScenariosDevelopment:
 Developer's  view
 ^^^^^^^^^^^^^^^^^
 
-From developer's prospective, a benchmark scenario is a method marked by a **@scenario** decorator and placed in a class that inherits from the base `Scenario <https://github.com/stackforge/rally/blob/master/rally/benchmark/scenarios/base.py#L40>`_ class and located in some subpackage of `rally.benchmark.scenarios <https://github.com/stackforge/rally/tree/master/rally/benchmark/scenarios>`_. There may be arbitrary many benchmark scenarios in a scenario class; each of them should be referenced to (in the task configuration file) as *ScenarioClassName.method_name*.
+From the developer's perspective, a benchmark scenario is a method marked by a **@scenario** decorator and placed in a class that inherits from the base `Scenario <https://github.com/stackforge/rally/blob/master/rally/benchmark/scenarios/base.py#L40>`_ class and located in some subpackage of `rally.benchmark.scenarios <https://github.com/stackforge/rally/tree/master/rally/benchmark/scenarios>`_. There may be arbitrary many benchmark scenarios in a scenario class; each of them should be referenced to (in the task configuration file) as *ScenarioClassName.method_name*.
 
 In a toy example below, we define a scenario class *MyScenario* with one benchmark scenario *MyScenario.scenario*. This benchmark scenario tests the performance of a sequence of 2 actions, implemented via private methods in the same class. Both methods are marked with the **@atomic_action_timer** decorator. This allows Rally to handle those actions in a special way and, after benchmarks complete, show runtime statistics not only for the whole scenarios, but for separate actions as well.
 
@@ -160,6 +161,7 @@ The scenario running strategy is specified by its **type** and also by some type
 Also, all scenario runners can be provided (again, through the **"runner"** section in the config file) with an optional *"timeout"* parameter, which specifies the timeout for each single benchmark scenario run (in seconds).
 
 
+.. _RunnersDevelopment:
 Developer's  view
 ^^^^^^^^^^^^^^^^^
 
@@ -220,7 +222,7 @@ The notion of **contexts** in Rally is essentially used to define different type
 User's view
 ^^^^^^^^^^^
 
-From user's prospective, contexts in Rally are manageable via the **task configuration files**. In a typical configuration file, each benchmark scenario to be run is not only supplied by the information about its arguments and how many times it should be launched, but also with a special **"context"** section. In this section, the user may configure a number of contexts he needs his scenarios to be run within.
+From the user's prospective, contexts in Rally are manageable via the **task configuration files**. In a typical configuration file, each benchmark scenario to be run is not only supplied by the information about its arguments and how many times it should be launched, but also with a special **"context"** section. In this section, the user may configure a number of contexts he needs his scenarios to be run within.
 
 In the example below, the **"users" context** specifies that the *"NovaServers.boot_server"* scenario should be run from **1 tenant** having **3 users** in it. Bearing in mind that the default quota for the number of instances is 10 instances pro tenant, it is also reasonable to extend it to, say, **20 instances** in the **"quotas" context**. Otherwise the scenario would eventually fail, since it tries to boot a server 15 times from a single tenant.
 
@@ -254,10 +256,11 @@ In the example below, the **"users" context** specifies that the *"NovaServers.b
     }
 
 
+.. _ContextDevelopment:
 Developer's view
 ^^^^^^^^^^^^^^^^
 
-From developer's view, contexts management is implemented via **Context classes**. Each context type that can be specified in the task configuration file corresponds to a certain subclass of the base [https://github.com/stackforge/rally/blob/master/rally/benchmark/context/base.py **Context**] class, located in the [https://github.com/stackforge/rally/tree/master/rally/benchmark/context **rally.benchmark.context**] module. Every context class should implement a fairly simple **interface**:
+From the developer's view, contexts management is implemented via **Context classes**. Each context type that can be specified in the task configuration file corresponds to a certain subclass of the base [https://github.com/stackforge/rally/blob/master/rally/benchmark/context/base.py **Context**] class, located in the [https://github.com/stackforge/rally/tree/master/rally/benchmark/context **rally.benchmark.context**] module. Every context class should implement a fairly simple **interface**:
 
 .. parsed-literal::
 
@@ -316,92 +319,25 @@ The *__ctx_hidden__* attribute defines whether the context should be a *hidden* 
 If you want to dive deeper, also see the context manager (:mod:`rally.benchmark.context.base`) class that actually implements the algorithm described above.
 
 
-Scenarios Plugins
------------------
+Plugins
+-------
 
-Rally provides an opportunity to create and use a custom benchmark scenario as
-a plugin. The plugins mechanism can be used to simplify some experiments with
-new scenarios and to facilitate their creation by users who don't want to edit
-the actual Rally code.
+Rally provides an opportunity to create and use a custom benchmark scenario, runner or context as a plugin. The plugins mechanism can be used to simplify some experiments with new scenarios and to facilitate their creation by users who don't want to edit the actual Rally code.
 
 Placement
 ^^^^^^^^^
 
-Put the plugin into the **/etc/rally/plugins/scenarios** or
-**~/.rally/plugins/scenarios** directory and it will be autoloaded (they are
-not created automatically, you should create them manually). The corresponding
-module should have ".py" extension.
+Put the plugin into the **/opt/rally/plugins** or **~/.rally/plugins** directory  or it's subdirectories and it will be autoloaded. The corresponding module should have ".py" extension. Directories are not created automatically, you should create them by hand or you can use script **unpack_plugins_samles.sh** from **doc/samples/plugins** which will internally create directory **~/.rally/plugins** (see more about this script into **Samples** section).
 
 Creation
 ^^^^^^^^
 
-Inherit a class containing the scenario method(s) from
-`rally.benchmark.scenarios.base.Scenario` or its subclasses.
-Place every atomic action in separate function and wrap it with decorator
-**atomic_action_timer** from `rally.benchmark.scenarios.utils`. Pass
-action name as a string argument to decorator. This name should be unique for
-every atomic action. It also will be used to show and store results.
-Combine atomic actions into your benchmark method and wrap it with the
-**scenario** decorator from `rally.benchmark.scenarios.base`.
+Inherit a class for you plugin from base class for scenario, runner or context depends on what type of plugin you want create.
 
-Sample
-~~~~~~
-You can run this sample to test whether the plugin has been loaded and
-benchmark scenario results have been stored correctly.
+See more information about `scenarios <ScenariosDevelopment>`_, `runnres <RunnersDevelopment>`_ and `contexts <ContextDevelopment>`_ creation.
 
-::
-
-    import random
-    import time
-
-    from rally.benchmark.scenarios import base
-
-
-    class PluginClass(base.Scenario):
-
-        @base.atomic_action_timer("test1")
-        def _test1(self, factor):
-            time.sleep(random.random() * factor)
-
-        @base.atomic_action_timer("test2")
-        def _test2(self, factor):
-            time.sleep(random.random() * factor * 10)
-
-        @base.scenario()
-        def testplugin(self, factor=1):
-            self._test1(factor)
-            self._test2(factor)
 
 Usage
 ^^^^^
 
-Specify the class and the benchmark method of your plugin at the top level of
-the benchmark task configuration file.
-If you need to pass some arguments to the benchmark method, place it in the
-**args** section of the task configuration file.
-
-Sample
-~~~~~~
-
-::
-
-    {
-        "PluginClass.testplugin": [
-            {
-                "args": {
-                    "factor": 2
-                },
-                "runner": {
-                    "type": "constant",
-                    "times": 3,
-                    "concurrency": 1
-                },
-                "context": {
-                    "users": {
-                        "tenants": 1,
-                        "users_per_tenant": 1
-                    }
-                }
-            }
-        ]
-    }
+Specify your plugin's information into a task configuration file. See `how to work with task configuration file <https://github.com/stackforge/rally/blob/master/doc/samples/tasks/README.rst>`_. You can find samples of configuration files for different types of plugins in corresponded folders `here <https://github.com/stackforge/rally/tree/master/doc/samples/plugins>`_.

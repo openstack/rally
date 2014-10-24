@@ -264,6 +264,8 @@ def run(argv, categories):
                     break
         return(1)
     try:
+        utils.load_plugins("/opt/rally/plugins/")
+        utils.load_plugins(os.path.expanduser("~/.rally/plugins/"))
         ret = fn(*fn_args, **fn_kwargs)
         return(ret)
     except IOError as e:
