@@ -8,4 +8,5 @@
         times: 100
         concurrency: 10
       sla:
-        max_failure_percent: 0
+        failure_rate:
+          max: 0

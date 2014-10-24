@@ -63,20 +63,62 @@ class BaseSLATestCase(test.TestCase):
         self.assertEqual(expected, results)
 
 
-class FailureRateTestCase(test.TestCase):
+class FailureRateDeprecatedTestCase(test.TestCase):
     def test_check(self):
         result = [
                 {"error": ["error"]},
                 {"error": []},
         ]  # one error and one success. 50% success rate
         # 50% < 75.0%
-        self.assertTrue(base.FailureRate.check(75.0, result).success)
+        self.assertTrue(base.FailureRateDeprecated.check(75.0, result).success)
         # 50% > 25%
-        self.assertFalse(base.FailureRate.check(25, result).success)
+        self.assertFalse(base.FailureRateDeprecated.check(25, result).success)
 
     def test_check_with_no_results(self):
         result = []
-        self.assertFalse(base.FailureRate.check(10.0, result).success)
+        self.assertFalse(base.FailureRateDeprecated.check(10, result).success)
+
+
+class FailureRateTestCase(test.TestCase):
+
+    def test_config_schema(self):
+        self.assertRaises(jsonschema.ValidationError,
+                          base.IterationTime.validate,
+                          {"failure_rate": {"min": -1}})
+        self.assertRaises(jsonschema.ValidationError,
+                          base.IterationTime.validate,
+                          {"failure_rate": {"min": 100.1}})
+        self.assertRaises(jsonschema.ValidationError,
+                          base.IterationTime.validate,
+                          {"failure_rate": {"max": -0.1}})
+        self.assertRaises(jsonschema.ValidationError,
+                          base.IterationTime.validate,
+                          {"failure_rate": {"max": 101}})
+
+    def test_check_min(self):
+        result = [{"error": ["error"]}, {"error": []}, {"error": ["error"]},
+                  {"error": ["error"]}, ]  # 75% failure rate
+        self.assertFalse(base.FailureRate.check({"min": 80}, result).success)
+        self.assertTrue(base.FailureRate.check({"min": 60.5}, result).success)
+
+    def test_check_max(self):
+        result = [{"error": ["error"]}, {"error": []}]  # 50% failure rate
+        self.assertFalse(base.FailureRate.check({"max": 25}, result).success)
+        self.assertTrue(base.FailureRate.check({"max": 75.0}, result).success)
+
+    def test_check_min_max(self):
+        result = [{"error": ["error"]}, {"error": []}, {"error": []},
+                  {"error": []}]  # 25% failure rate
+        self.assertFalse(base.FailureRate.check({"min": 50, "max": 90}, result)
+                         .success)
+        self.assertFalse(base.FailureRate.check({"min": 5, "max": 20}, result)
+                         .success)
+        self.assertTrue(base.FailureRate.check({"min": 24.9, "max": 25.1},
+                                               result).success)
+
+    def test_check_empty_result(self):
+        result = []
+        self.assertFalse(base.FailureRate.check({"max": 10.0}, result).success)
 
 
 class IterationTimeTestCase(test.TestCase):

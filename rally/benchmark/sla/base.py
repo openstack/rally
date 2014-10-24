@@ -91,7 +91,7 @@ class SLA(object):
         raise exceptions.NoSuchSLA(name=name)
 
 
-class FailureRate(SLA):
+class FailureRateDeprecated(SLA):
     """Failure rate in percents."""
     OPTION_NAME = "max_failure_percent"
     CONFIG_SCHEMA = {"type": "number", "minimum": 0.0, "maximum": 100.0}
@@ -106,6 +106,34 @@ class FailureRate(SLA):
             success = True
         msg = (_("Maximum failure percent %s%% failures, actually %s%%") %
                 (criterion_value * 100.0, error_rate))
+        return SLAResult(success, msg)
+
+
+class FailureRate(SLA):
+    """Failure rate minimum and maximum in percents."""
+    OPTION_NAME = "failure_rate"
+    CONFIG_SCHEMA = {
+        "type": "object",
+        "$schema": utils.JSON_SCHEMA,
+        "properties": {
+            "min": {"type": "number", "minimum": 0.0, "maximum": 100.0},
+            "max": {"type": "number", "minimum": 0.0, "maximum": 100.0}
+        }
+    }
+
+    @staticmethod
+    def check(criterion_value, result):
+        min_percent = criterion_value.get("min", 0)
+        max_percent = criterion_value.get("max", 100)
+        errors = len(filter(lambda x: x['error'], result))
+        error_rate = errors * 100.0 / len(result) if len(result) > 0 else 100.0
+
+        success = min_percent <= error_rate <= max_percent
+
+        msg = (_("Maximum failure rate percent %s%% failures, minimum failure "
+               "rate percent %s%% failures, actually %s%%") %
+               (max_percent, min_percent, error_rate))
+
         return SLAResult(success, msg)
 
 

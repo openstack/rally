@@ -9,7 +9,8 @@
         times: 10
         concurrency: 10
       sla:
-        max_failure_percent: 0
+        failure_rate:
+          max: 0
 
   KeystoneBasic.create_delete_user:
     -
@@ -20,7 +21,8 @@
         times: 10
         concurrency: 10
       sla:
-        max_failure_percent: 0
+        failure_rate:
+          max: 0
 
   KeystoneBasic.create_and_list_tenants:
     -
@@ -31,7 +33,8 @@
         times: 10
         concurrency: 10
       sla:
-        max_failure_percent: 0
+        failure_rate:
+          max: 0
 
   KeystoneBasic.create_and_list_users:
     -
@@ -42,7 +45,8 @@
         times: 10
         concurrency: 10
       sla:
-        max_failure_percent: 0
+        failure_rate:
+          max: 0
 
   KeystoneBasic.create_tenant:
     -
@@ -53,7 +57,8 @@
         times: 10
         concurrency: 10
       sla:
-        max_failure_percent: 0
+        failure_rate:
+          max: 0
 
   KeystoneBasic.create_tenant_with_users:
     -
@@ -68,7 +73,8 @@
         users:
           tenants: 3
       sla:
-        max_failure_percent: 0
+        failure_rate:
+          max: 0
 
   KeystoneBasic.create_delete_user:
     -
@@ -79,7 +85,8 @@
         times: 10
         concurrency: 10
       sla:
-        max_failure_percent: 0
+        failure_rate:
+          max: 0
 
   CeilometerAlarms.create_alarm:
     -
@@ -100,7 +107,8 @@
           tenants: 1
           users_per_tenant: 1
       sla:
-        max_failure_percent: 0
+        failure_rate:
+          max: 0
 
   CeilometerAlarms.create_and_delete_alarm:
     -
@@ -121,7 +129,8 @@
           tenants: 1
           users_per_tenant: 1
       sla:
-        max_failure_percent: 0
+        failure_rate:
+          max: 0
 
   CeilometerAlarms.create_and_list_alarm:
     -
@@ -142,7 +151,8 @@
           tenants: 1
           users_per_tenant: 1
       sla:
-        max_failure_percent: 0
+        failure_rate:
+          max: 0
 
   CeilometerAlarms.create_and_update_alarm:
     -
@@ -163,7 +173,8 @@
           tenants: 1
           users_per_tenant: 1
       sla:
-        max_failure_percent: 0
+        failure_rate:
+          max: 0
 
   CeilometerAlarms.list_alarms:
     -
@@ -176,7 +187,8 @@
           tenants: 1
           users_per_tenant: 1
       sla:
-        max_failure_percent: 0
+        failure_rate:
+          max: 0
 
   CeilometerMeters.list_meters:
     -
@@ -189,7 +201,8 @@
           tenants: 1
           users_per_tenant: 1
       sla:
-        max_failure_percent: 0
+        failure_rate:
+          max: 0
 
   CeilometerResource.list_resources:
     -
@@ -202,7 +215,8 @@
           tenants: 1
           users_per_tenant: 1
       sla:
-        max_failure_percent: 0
+        failure_rate:
+          max: 0
 
   Dummy.dummy:
     -
@@ -213,7 +227,8 @@
         times: 20
         concurrency: 5
       sla:
-        max_failure_percent: 0
+        failure_rate:
+          max: 0
 
     -
       args:
@@ -223,7 +238,8 @@
         times: 2000
         rps: 200
       sla:
-        max_failure_percent: 0
+        failure_rate:
+          max: 0
 
     -
       args:
@@ -252,7 +268,8 @@
             snapshots: -1
             volumes: -1
       sla:
-        max_failure_percent: 0
+        failure_rate:
+          max: 0
 
     -
       args:
@@ -266,7 +283,8 @@
             tenants: 30
             users_per_tenant: 15
       sla:
-        max_failure_percent: 0
+        failure_rate:
+          max: 0
 
   Dummy.dummy_exception:
     -
@@ -294,6 +312,18 @@
         times: 2042
         concurrency: 1
 
+    -
+      args:
+        exception_probability: 0.5
+      runner:
+        type: "constant"
+        times: 100
+        concurrency: 1
+      sla:
+        failure_rate:
+          min: 20
+          max: 80
+
   Dummy.dummy_with_scenario_output:
     -
       runner:
@@ -301,7 +331,8 @@
         times: 20
         concurrency: 10
       sla:
-        max_failure_percent: 0
+        failure_rate:
+          max: 0
 
   Dummy.dummy_random_fail_in_atomic:
     -
@@ -319,7 +350,8 @@
         times: 4
         concurrency: 4
       sla:
-        max_failure_percent: 0
+        failure_rate:
+          max: 0
 
   CeilometerStats.create_meter_and_get_stats:
    -
@@ -338,7 +370,8 @@
           tenants: 1
           users_per_tenant: 1
       sla:
-        max_failure_percent: 0
+        failure_rate:
+          max: 0
 
   CeilometerQueries.create_and_query_alarms:
     -
@@ -362,7 +395,8 @@
           tenants: 1
           users_per_tenant: 1
       sla:
-        max_failure_percent: 0
+        failure_rate:
+          max: 0
 
   CeilometerQueries.create_and_query_alarm_history:
     -
@@ -385,7 +419,8 @@
           tenants: 1
           users_per_tenant: 1
       sla:
-        max_failure_percent: 0
+        failure_rate:
+          max: 0
 
   CeilometerQueries.create_and_query_samples:
     -
@@ -407,7 +442,8 @@
           tenants: 1
           users_per_tenant: 1
       sla:
-        max_failure_percent: 0
+        failure_rate:
+          max: 0
 
   HeatStacks.create_and_list_stack:
     -
@@ -420,7 +456,8 @@
           tenants: 1
           users_per_tenant: 1
       sla:
-        max_failure_percent: 0
+        failure_rate:
+          max: 0
 
   HeatStacks.create_and_delete_stack:
     -
@@ -433,7 +470,8 @@
           tenants: 2
           users_per_tenant: 3
       sla:
-        max_failure_percent: 0
+        failure_rate:
+          max: 0
 
     -
       args:
@@ -447,7 +485,8 @@
           tenants: 2
           users_per_tenant: 2
       sla:
-        max_failure_percent: 0
+        failure_rate:
+          max: 0
 
   Authenticate.keystone:
     -
@@ -460,7 +499,8 @@
           tenants: 2
           users_per_tenant: 10
       sla:
-        max_failure_percent: 0
+        failure_rate:
+          max: 0
 
   SaharaNodeGroupTemplates.create_and_list_node_group_templates:
     -
@@ -476,7 +516,8 @@
           tenants: 1
           users_per_tenant: 1
       sla:
-        max_failure_percent: 0
+        failure_rate:
+          max: 0
 
   SaharaNodeGroupTemplates.create_delete_node_group_templates:
     -
@@ -492,7 +533,8 @@
           tenants: 1
           users_per_tenant: 1
       sla:
-        max_failure_percent: 0
+        failure_rate:
+          max: 0
 
   Authenticate.validate_cinder:
     -
@@ -507,7 +549,8 @@
           tenants: 3
           users_per_tenant: 5
       sla:
-        max_failure_percent: 0
+        failure_rate:
+          max: 0
 
   Authenticate.validate_glance:
     -
@@ -522,7 +565,8 @@
           tenants: 3
           users_per_tenant: 5
       sla:
-        max_failure_percent: 0
+        failure_rate:
+          max: 0
 
   Authenticate.validate_heat:
     -
@@ -537,7 +581,8 @@
           tenants: 3
           users_per_tenant: 5
       sla:
-        max_failure_percent: 0
+        failure_rate:
+          max: 0
 
   Authenticate.validate_nova:
     -
@@ -552,7 +597,8 @@
           tenants: 3
           users_per_tenant: 5
       sla:
-        max_failure_percent: 0
+        failure_rate:
+          max: 0
 
   Quotas.cinder_update_and_delete:
     -
@@ -567,7 +613,8 @@
           tenants: 3
           users_per_tenant: 2
       sla:
-        max_failure_percent: 0
+        failure_rate:
+          max: 0
 
   Quotas.cinder_update:
     -
@@ -582,7 +629,8 @@
           tenants: 3
           users_per_tenant: 2
       sla:
-        max_failure_percent: 0
+        failure_rate:
+          max: 0
 
   Quotas.nova_update_and_delete:
     -
@@ -597,7 +645,8 @@
           tenants: 3
           users_per_tenant: 2
       sla:
-        max_failure_percent: 0
+        failure_rate:
+          max: 0
 
   Quotas.nova_update:
     -
@@ -612,7 +661,8 @@
           tenants: 3
           users_per_tenant: 2
       sla:
-        max_failure_percent: 0
+        failure_rate:
+          max: 0
 
   CinderVolumes.create_and_delete_volume:
     -
@@ -627,7 +677,8 @@
           tenants: 2
           users_per_tenant: 2
       sla:
-        max_failure_percent: 0
+        failure_rate:
+          max: 0
 
   CinderVolumes.create_and_list_volume:
     -
@@ -643,7 +694,8 @@
           tenants: 1
           users_per_tenant: 1
       sla:
-        max_failure_percent: 0
+        failure_rate:
+          max: 0
 
   CinderVolumes.create_volume:
     -
@@ -658,7 +710,8 @@
           tenants: 2
           users_per_tenant: 2
       sla:
-        max_failure_percent: 0
+        failure_rate:
+          max: 0
 
   CinderVolumes.create_and_delete_snapshot:
     -
@@ -675,7 +728,8 @@
         volumes:
           size: 1
       sla:
-        max_failure_percent: 0
+        failure_rate:
+          max: 0
 
   CinderVolumes.create_and_attach_volume:
     -
@@ -694,7 +748,8 @@
           tenants: 2
           users_per_tenant: 2
       sla:
-        max_failure_percent: 0
+        failure_rate:
+          max: 0
 
   GlanceImages.create_and_delete_image:
     -
@@ -711,7 +766,8 @@
           tenants: 2
           users_per_tenant: 3
       sla:
-        max_failure_percent: 0
+        failure_rate:
+          max: 0
 
   GlanceImages.create_and_list_image:
     -
@@ -728,7 +784,8 @@
           tenants: 1
           users_per_tenant: 1
       sla:
-        max_failure_percent: 0
+        failure_rate:
+          max: 0
 
   GlanceImages.create_image_and_boot_instances:
     -
@@ -748,7 +805,8 @@
           tenants: 3
           users_per_tenant: 1
       sla:
-        max_failure_percent: 0
+        failure_rate:
+          max: 0
 
   GlanceImages.list_images:
     -
@@ -766,7 +824,8 @@
           image_container: "bare"
           images_per_tenant: 2
       sla:
-        max_failure_percent: 0
+        failure_rate:
+          max: 0
 
   NovaServers.boot_and_delete_server:
     -
@@ -802,7 +861,8 @@
           tenants: 3
           users_per_tenant: 2
       sla:
-        max_failure_percent: 0
+        failure_rate:
+          max: 0
 
   NovaServers.boot_and_list_server:
     -
@@ -821,7 +881,8 @@
           tenants: 4
           users_per_tenant: 1
       sla:
-        max_failure_percent: 0
+        failure_rate:
+          max: 0
 
   NovaServers.resize_server:
     -
@@ -842,7 +903,8 @@
           tenants: 4
           users_per_tenant: 1
       sla:
-        max_failure_percent: 0
+        failure_rate:
+          max: 0
 
   NovaServers.boot_and_bounce_server:
     -
@@ -869,7 +931,8 @@
           tenants: 4
           users_per_tenant: 1
       sla:
-        max_failure_percent: 0
+        failure_rate:
+          max: 0
 
   NovaServers.boot_server_from_volume_and_delete:
     -
@@ -888,7 +951,8 @@
           tenants: 3
           users_per_tenant: 3
       sla:
-        max_failure_percent: 0
+        failure_rate:
+          max: 0
 
   NovaServers.boot_server_from_volume:
     -
@@ -907,7 +971,8 @@
           tenants: 2
           users_per_tenant: 2
       sla:
-        max_failure_percent: 0
+        failure_rate:
+          max: 0
 
   NovaServers.snapshot_server:
     -
@@ -925,7 +990,8 @@
           tenants: 3
           users_per_tenant: 2
       sla:
-        max_failure_percent: 0
+        failure_rate:
+          max: 0
 
   NovaServers.boot_server:
     -
@@ -944,7 +1010,8 @@
           tenants: 3
           users_per_tenant: 2
       sla:
-        max_failure_percent: 0
+        failure_rate:
+          max: 0
     -
       args:
         flavor:
@@ -960,7 +1027,8 @@
           tenants: 3
           users_per_tenant: 2
       sla:
-        max_failure_percent: 0
+        failure_rate:
+          max: 0
 
   VMTasks.boot_runcommand_delete:
     -
@@ -984,7 +1052,8 @@
           tenants: 1
           users_per_tenant: 1
       sla:
-        max_failure_percent: 0
+        failure_rate:
+          max: 0
 
     -
       args:
@@ -1009,7 +1078,8 @@
           tenants: 1
           users_per_tenant: 1
       sla:
-        max_failure_percent: 0
+        failure_rate:
+          max: 0
 
     -
       args:
@@ -1031,7 +1101,8 @@
           tenants: 1
           users_per_tenant: 1
       sla:
-        max_failure_percent: 0
+        failure_rate:
+          max: 0
 
   Requests.check_response:
     -

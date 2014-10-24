@@ -34,7 +34,8 @@
             security_group: -1
             security_group_rule: -1
       sla:
-        max_failure_percent: 0
+        failure_rate:
+          max: 0
 
   NeutronNetworks.create_and_list_networks:
     -
@@ -52,7 +53,8 @@
           neutron:
              network: -1
       sla:
-        max_failure_percent: 0
+        failure_rate:
+          max: 0
 
   NeutronNetworks.create_and_list_subnets:
     -
@@ -74,7 +76,8 @@
              network: -1
              subnet: -1
       sla:
-        max_failure_percent: 0
+        failure_rate:
+          max: 0
 
   NeutronNetworks.create_and_list_routers:
     -
@@ -98,7 +101,8 @@
              subnet: -1
              router: -1
       sla:
-        max_failure_percent: 0
+        failure_rate:
+          max: 0
 
   NeutronNetworks.create_and_list_ports:
     -
@@ -121,7 +125,8 @@
              router: -1
              port: -1
       sla:
-        max_failure_percent: 0
+        failure_rate:
+          max: 0
 
   NeutronNetworks.create_and_update_networks:
     -
@@ -142,7 +147,8 @@
           neutron:
             network: -1
       sla:
-        max_failure_percent: 0
+        failure_rate:
+          max: 0
 
   NeutronNetworks.create_and_update_subnets:
     -
@@ -167,7 +173,8 @@
             network: -1
             subnet: -1
       sla:
-        max_failure_percent: 0
+        failure_rate:
+          max: 0
 
   NeutronNetworks.create_and_update_routers:
     -
@@ -194,7 +201,8 @@
             subnet: -1
             router: -1
       sla:
-        max_failure_percent: 0
+        failure_rate:
+          max: 0
 
   NeutronNetworks.create_and_update_ports:
     -
@@ -220,7 +228,8 @@
             network: -1
             port: -1
       sla:
-        max_failure_percent: 0
+        failure_rate:
+          max: 0
 
   NeutronNetworks.create_and_delete_networks:
     -
@@ -239,7 +248,8 @@
             network: -1
             subnet: -1
       sla:
-        max_failure_percent: 0
+        failure_rate:
+          max: 0
 
   NeutronNetworks.create_and_delete_subnets:
     -
@@ -261,7 +271,8 @@
             network: -1
             subnet: -1
       sla:
-         max_failure_percent: 0
+        failure_rate:
+          max: 0
 
   NeutronNetworks.create_and_delete_ports:
     -
@@ -282,7 +293,8 @@
             network: -1
             port: -1
       sla:
-          max_failure_percent: 0
+        failure_rate:
+          max: 0
 
   NovaServers.boot_server:
     -
@@ -300,7 +312,8 @@
           tenants: 3
           users_per_tenant: 2
       sla:
-        max_failure_percent: 0
+        failure_rate:
+          max: 0
 
   NovaServers.boot_and_delete_server:
     -
@@ -318,7 +331,8 @@
           tenants: 3
           users_per_tenant: 2
       sla:
-        max_failure_percent: 0
+        failure_rate:
+          max: 0
 
   NovaServers.boot_and_list_server:
     -
@@ -337,7 +351,8 @@
           tenants: 3
           users_per_tenant: 1
       sla:
-        max_failure_percent: 0
+        failure_rate:
+          max: 0
 
   NovaServers.boot_and_bounce_server:
     -
@@ -364,7 +379,8 @@
           tenants: 2
           users_per_tenant: 2
       sla:
-        max_failure_percent: 0
+        failure_rate:
+          max: 0
 
   NovaServers.boot_server_from_volume_and_delete:
     -
@@ -383,7 +399,8 @@
           tenants: 2
           users_per_tenant: 2
       sla:
-        max_failure_percent: 0
+        failure_rate:
+          max: 0
 
   NovaServers.boot_server_from_volume:
     -
@@ -402,7 +419,8 @@
           tenants: 2
           users_per_tenant: 2
       sla:
-        max_failure_percent: 0
+        failure_rate:
+          max: 0
 
   NovaServers.snapshot_server:
     -
@@ -420,7 +438,8 @@
           tenants: 3
           users_per_tenant: 2
       sla:
-        max_failure_percent: 0
+        failure_rate:
+          max: 0
 
   NovaServers.resize_server:
     -
@@ -441,7 +460,8 @@
           tenants: 2
           users_per_tenant: 2
       sla:
-        max_failure_percent: 0
+        failure_rate:
+          max: 0
 
   HeatStacks.create_and_delete_stack:
     -
@@ -456,4 +476,5 @@
           tenants: 2
           users_per_tenant: 2
       sla:
-        max_failure_percent: 0
+        failure_rate:
+          max: 0

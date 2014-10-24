@@ -10,7 +10,8 @@
           tenants: 2
           users_per_tenant: 2
       sla:
-        max_failure_percent: 0
+        failure_rate:
+          max: 0
 
   DesignateBasic.create_and_delete_records:
     -
@@ -25,7 +26,8 @@
           tenants: 2
           users_per_tenant: 2
       sla:
-        max_failure_percent: 0
+        failure_rate:
+          max: 0
 
   DesignateBasic.create_and_list_domains:
     -
@@ -38,7 +40,8 @@
           tenants: 2
           users_per_tenant: 2
       sla:
-        max_failure_percent: 0
+        failure_rate:
+          max: 0
 
   DesignateBasic.create_and_list_records:
     -
@@ -53,7 +56,8 @@
           tenants: 2
           users_per_tenant: 2
       sla:
-        max_failure_percent: 0
+        failure_rate:
+          max: 0
 
   DesignateBasic.list_domains:
     -
@@ -66,4 +70,5 @@
           tenants: 2
           users_per_tenant: 2
       sla:
-        max_failure_percent: 0
+        failure_rate:
+          max: 0
