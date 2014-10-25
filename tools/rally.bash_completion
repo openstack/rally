@@ -27,6 +27,7 @@ _rally()
     OPTS["show_keypairs"]="--deploy-id"
     OPTS["show_networks"]="--deploy-id"
     OPTS["show_secgroups"]="--deploy-id"
+    OPTS["verify_compare"]="--uuid-1 --uuid-2 --csv --html --json --output-file --threshold"
     OPTS["verify_detailed"]="--uuid --sort-by"
     OPTS["verify_list"]=""
     OPTS["verify_results"]="--uuid --html --json --output-file"
