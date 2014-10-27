@@ -22,6 +22,10 @@ from tests.unit import test
 CINDER_VOLUMES = "rally.benchmark.scenarios.cinder.volumes.CinderVolumes"
 
 
+class fake_type(object):
+    name = "fake"
+
+
 class CinderServersTestCase(test.TestCase):
 
     def test_create_and_list_volume(self):
@@ -91,3 +95,86 @@ class CinderServersTestCase(test.TestCase):
 
         scenario._delete_volume.assert_called_once_with(fake_volume)
         scenario._delete_server.assert_called_once_with(fake_server)
+
+    def test_create_snapshot_and_attach_volume(self):
+        fake_volume = mock.MagicMock()
+        fake_snapshot = mock.MagicMock()
+        fake_server = mock.MagicMock()
+        scenario = volumes.CinderVolumes(
+            context={"user": {"tenant_id": "fake"},
+                     "users": [{"tenant_id": "fake", "users_per_tenant": 1}],
+                     "servers": [{"image": {"name": "fake"},
+                                  "flavor": {"name": "small"},
+                                  "servers_per_tenant": 1,
+                                  "tenant_id": "fake",
+                                  "server_ids": [1]}]})
+
+        scenario._attach_volume = mock.MagicMock()
+        scenario._detach_volume = mock.MagicMock()
+        scenario._boot_server = mock.MagicMock(return_value=fake_server)
+        scenario._delete_server = mock.MagicMock()
+        scenario._create_volume = mock.MagicMock(return_value=fake_volume)
+        scenario._delete_volume = mock.MagicMock()
+        scenario._create_snapshot = mock.MagicMock(return_value=fake_snapshot)
+        scenario._delete_snapshot = mock.MagicMock()
+
+        scenario.clients = mock.MagicMock()
+        scenario.clients("nova").servers.get = mock.MagicMock(
+            return_value=fake_server)
+
+        scenario.create_snapshot_and_attach_volume()
+
+        self.assertTrue(scenario._create_volume.called)
+        scenario._create_snapshot.assert_called_once_with(fake_volume.id,
+                                                          False)
+        scenario._delete_snapshot.assert_called_once_with(fake_snapshot)
+        scenario._attach_volume.assert_called_once_with(fake_server,
+                                                        fake_volume)
+        scenario._detach_volume.assert_called_once_with(fake_server,
+                                                        fake_volume)
+        scenario._delete_volume.assert_called_once_with(fake_volume)
+
+    def test_create_snapshot_and_attach_volume_use_volume_type(self):
+        fake_volume = mock.MagicMock()
+        fake_snapshot = mock.MagicMock()
+        fake_server = mock.MagicMock()
+        scenario = volumes.CinderVolumes(
+            context={"user": {"tenant_id": "fake"},
+                     "users": [{"tenant_id": "fake", "users_per_tenant": 1}],
+                     "servers": [{"image": {"name": "fake"},
+                                  "flavor": {"name": "small"},
+                                  "servers_per_tenant": 1,
+                                  "tenant_id": "fake",
+                                  "server_ids": [1]}]})
+
+        scenario._attach_volume = mock.MagicMock()
+        scenario._detach_volume = mock.MagicMock()
+        scenario._boot_server = mock.MagicMock(return_value=fake_server)
+        scenario._delete_server = mock.MagicMock()
+        scenario._create_volume = mock.MagicMock(return_value=fake_volume)
+        scenario._delete_volume = mock.MagicMock()
+        scenario._create_snapshot = mock.MagicMock(return_value=fake_snapshot)
+        scenario._delete_snapshot = mock.MagicMock()
+        fake = fake_type()
+
+        scenario.clients = mock.MagicMock()
+        scenario.clients("cinder").volume_types.list = mock.MagicMock(
+            return_value=[fake])
+        scenario.clients("nova").servers.get = mock.MagicMock(
+            return_value=fake_server)
+
+        scenario.create_snapshot_and_attach_volume(volume_type=True)
+
+        # Make sure create volume's second arg was the correct volume type.
+        # fake or none (randomly selected)
+        self.assertTrue(scenario._create_volume.called)
+        vol_type = scenario._create_volume.call_args_list[0][1]['volume_type']
+        self.assertTrue(vol_type is fake.name or vol_type is None)
+        scenario._create_snapshot.assert_called_once_with(fake_volume.id,
+                                                          False)
+        scenario._delete_snapshot.assert_called_once_with(fake_snapshot)
+        scenario._attach_volume.assert_called_once_with(fake_server,
+                                                        fake_volume)
+        scenario._detach_volume.assert_called_once_with(fake_server,
+                                                        fake_volume)
+        scenario._delete_volume.assert_called_once_with(fake_volume)

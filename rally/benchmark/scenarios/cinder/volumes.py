@@ -19,6 +19,11 @@ from rally.benchmark.scenarios.nova import utils as nova_utils
 from rally.benchmark import types as types
 from rally.benchmark import validation
 from rally import consts
+from rally import log as logging
+
+import random
+
+LOG = logging.getLogger(__name__)
 
 
 class CinderVolumes(utils.CinderScenario,
@@ -114,3 +119,53 @@ class CinderVolumes(utils.CinderScenario,
 
         self._delete_volume(volume)
         self._delete_server(server)
+
+    @validation.volume_type_exists("volume_type")
+    @validation.required_services(consts.Service.NOVA, consts.Service.CINDER)
+    @validation.required_openstack(users=True)
+    @base.scenario(context={"cleanup": ["cinder", "nova"]})
+    def create_snapshot_and_attach_volume(self, volume_type=False,
+                                          min_volume_size=1, max_volume_size=5,
+                                          **kwargs):
+
+        """Tests volume create, snapshot create and volume attach/detach
+
+        This scenario is based off of the standalone qaStressTest.py
+        (https://github.com/WaltHP/cinder-stress).
+
+        :param volume_type: Whether or not to specify volume type when creating
+            volumes.
+        :param min_volume_size: The minimum size volumes will be created as.
+        :param max_volume_size: The maximum size volumes will be created as.
+        :param kwargs: Optional parameters used during volume
+                       snapshot creation.
+
+        """
+        selected_type = None
+        volume_types = [None]
+
+        if volume_type:
+            volume_types_list = self.clients("cinder").volume_types.list()
+            for s in volume_types_list:
+                volume_types.append(s.name)
+            selected_type = random.choice(volume_types)
+
+        volume_size = random.randint(min_volume_size, max_volume_size)
+
+        volume = self._create_volume(volume_size, volume_type=selected_type)
+        snapshot = self._create_snapshot(volume.id, False, **kwargs)
+
+        tenant_id = self.context()["user"]["tenant_id"]
+        servers = self.context()["servers"]
+        current_servers = []
+        for server in servers:
+            if tenant_id == server["tenant_id"]:
+                current_servers = server["server_ids"]
+        server_id = random.choice(current_servers)
+        server = self.clients("nova").servers.get(server_id)
+
+        self._attach_volume(server, volume)
+        self._detach_volume(server, volume)
+
+        self._delete_snapshot(snapshot)
+        self._delete_volume(volume)
