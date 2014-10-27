@@ -83,4 +83,46 @@ class SaharaJob(utils.SaharaScenario):
         """
 
         for idx, job in enumerate(jobs):
+            LOG.debug("Launching Job. Sequence #%d" % idx)
             self.create_launch_job(job["job_type"], job["configs"], idx)
+
+    @validation.required_services(consts.Service.SAHARA)
+    @validation.required_contexts("users", "sahara_image", "sahara_edp",
+                                  "sahara_cluster")
+    @base.scenario(context={"cleanup": ["sahara"]})
+    def create_launch_job_sequence_with_scaling(self, jobs, deltas):
+        """Test the Sahara EDP Job sequence execution on a scaling Cluster.
+
+        :param jobs: The list of jobs that should be executed in one context
+        :param deltas: The list of integers which will be used to add or
+        remove worker nodes from the cluster
+
+        This scenario Creates a Job entity and launches an execution on a
+        Cluster for every job object provided. The Cluster is scaled according
+        to the deltas values and the sequence is launched again
+
+        """
+
+        tenant_id = self.clients("keystone").tenant_id
+        cluster_id = self.context()["sahara_clusters"][tenant_id]
+
+        # Executing the sequence before the first scaling
+        self.create_launch_job_sequence(jobs)
+
+        for delta in deltas:
+            # The Cluster is fetched every time so that its node groups have
+            # correct 'count' values.
+            cluster = self.clients("sahara").clusters.get(cluster_id)
+
+            LOG.debug("Scaling cluster %s with delta %d" %
+                      (cluster.name, delta))
+            if delta == 0:
+                # Zero scaling makes no sense.
+                continue
+            elif delta > 0:
+                self._scale_cluster_up(cluster, delta)
+            elif delta < 0:
+                self._scale_cluster_down(cluster, delta)
+
+            LOG.debug("Starting Job sequence")
+            self.create_launch_job_sequence(jobs)
