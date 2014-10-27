@@ -151,7 +151,7 @@ class CleanupUtilsTestCase(test.TestCase):
     def test_delete_zaqar_resources(self):
         zaqar = fakes.FakeClients().zaqar()
         messages = [{'body': {'id': idx}, 'ttl': 360} for idx in range(20)]
-        queue = zaqar.create_queue()
+        queue = zaqar.queue("fizbit")
         queue.post_message(messages)
         messages_no = lambda queue: (len(queue.messages.list()))
         queues_no = lambda zaqar: (len(zaqar.queues.list()))

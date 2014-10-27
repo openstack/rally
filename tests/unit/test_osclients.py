@@ -243,7 +243,7 @@ class OSClientsTestCase(test.TestCase):
             'insecure': cfg.CONF.https_insecure,
         }}}
         mock_zaqar.Client.assert_called_once_with(url=fake_zaqar_url,
-                                                  version="1.1",
+                                                  version=1.1,
                                                   conf=conf)
         self.assertEqual(self.clients.cache["zaqar"], fake_zaqar)
 

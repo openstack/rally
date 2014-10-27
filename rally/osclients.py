@@ -263,7 +263,7 @@ class Clients(object):
         return client
 
     @cached
-    def zaqar(self):
+    def zaqar(self, version=1.1):
         """Return Zaqar client."""
         kc = self.keystone()
         messaging_api_url = kc.service_catalog.url_for(
@@ -278,7 +278,7 @@ class Clients(object):
             'insecure': CONF.https_insecure,
         }}}
         client = zaqar.Client(url=messaging_api_url,
-                              version='1.1',
+                              version=version,
                               conf=conf)
         return client
 

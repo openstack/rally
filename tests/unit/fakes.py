@@ -1122,8 +1122,8 @@ class FakeZaqarClient(object):
     def __init__(self):
         self.queues = FakeQueuesManager()
 
-    def create_queue(self):
-        return self.queues.create("fizbit")
+    def queue(self, name, **kwargs):
+        return self.queues.create(name, **kwargs)
 
 
 class FakeClients(object):
