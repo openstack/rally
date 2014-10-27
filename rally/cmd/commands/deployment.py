@@ -117,50 +117,53 @@ class DeploymentCommands(object):
         except jsonschema.ValidationError:
             print(_("Config schema validation error: %s.") % sys.exc_info()[1])
             return(1)
+        except exceptions.DeploymentNameExists:
+            print(_("Error: %s") % sys.exc_info()[1])
+            return(1)
 
         self.list(deployment_list=[deployment])
         if do_use:
             use.UseCommands().deployment(deployment['uuid'])
 
-    @cliutils.args('--uuid', dest='deploy_id', type=str, required=False,
-                   help='UUID of a deployment.')
-    @envutils.with_default_deploy_id
-    def recreate(self, deploy_id=None):
+    @cliutils.args('--deployment', dest='deployment', type=str,
+                   required=False, help='UUID or name of a deployment.')
+    @envutils.with_default_deployment
+    def recreate(self, deployment=None):
         """Destroy and create an existing deployment.
 
         Unlike 'deployment destroy' command deployment database record will
         not be deleted, so deployment's UUID stay same.
 
-        :param deploy_id: a UUID of the deployment
+        :param deployment: a UUID or name of the deployment
         """
-        api.recreate_deploy(deploy_id)
+        api.recreate_deploy(deployment)
 
-    @cliutils.args('--uuid', dest='deploy_id', type=str, required=False,
-                   help='UUID of a deployment.')
-    @envutils.with_default_deploy_id
-    def destroy(self, deploy_id=None):
+    @cliutils.args('--deployment', dest='deployment', type=str,
+                   required=False, help='UUID or name of a deployment.')
+    @envutils.with_default_deployment
+    def destroy(self, deployment=None):
         """Destroy existing deployment.
 
         This will delete all containers, virtual machines, OpenStack instances
         or Fuel clusters created during Rally deployment creation. Also it will
         remove deployment record from Rally database.
 
-        :param deploy_id: a UUID of the deployment
+        :param deployment: a UUID or name of the deployment
         """
-        api.destroy_deploy(deploy_id)
+        api.destroy_deploy(deployment)
 
     def list(self, deployment_list=None):
         """List existing deployments."""
 
         headers = ['uuid', 'created_at', 'name', 'status', 'active']
-        current_deploy_id = envutils.get_global('RALLY_DEPLOYMENT')
+        current_deployment = envutils.get_global('RALLY_DEPLOYMENT')
         deployment_list = deployment_list or db.deployment_list()
 
         table_rows = []
         if deployment_list:
             for t in deployment_list:
                 r = [str(t[column]) for column in headers[:-1]]
-                r.append("" if t["uuid"] != current_deploy_id else "*")
+                r.append("" if t["uuid"] != current_deployment else "*")
                 table_rows.append(utils.Struct(**dict(zip(headers, r))))
             common_cliutils.print_list(table_rows, headers,
                                        sortby_index=headers.index(
@@ -170,35 +173,35 @@ class DeploymentCommands(object):
                     "To create a new deployment, use:"
                     "\nrally deployment create"))
 
-    @cliutils.args('--uuid', dest='deploy_id', type=str, required=False,
-                   help='UUID of a deployment.')
-    @envutils.with_default_deploy_id
-    def config(self, deploy_id=None):
+    @cliutils.args('--deployment', dest='deployment', type=str,
+                   required=False, help='UUID or name of a deployment.')
+    @envutils.with_default_deployment
+    def config(self, deployment=None):
         """Display configuration of the deployment.
 
         Output is the configuration of the deployment in a
         pretty-printed JSON format.
 
-        :param deploy_id: a UUID of the deployment
+        :param deployment: a UUID or name of the deployment
         """
-        deploy = db.deployment_get(deploy_id)
-        result = deploy['config']
+        deploy = db.deployment_get(deployment)
+        result = deploy["config"]
         print(json.dumps(result, sort_keys=True, indent=4))
 
-    @cliutils.args('--uuid', dest='deploy_id', type=str, required=False,
-                   help='UUID of a deployment.')
-    @envutils.with_default_deploy_id
-    def show(self, deploy_id=None):
+    @cliutils.args('--deployment', dest='deployment', type=str,
+                   required=False, help='UUID or name of a deployment.')
+    @envutils.with_default_deployment
+    def show(self, deployment=None):
         """Show the endpoints of the deployment.
 
-        :param deploy_id: a UUID of the deployment
+        :param deployment: a UUID or name of the deployment
         """
 
         headers = ['auth_url', 'username', 'password', 'tenant_name',
                    'region_name', 'endpoint_type', 'admin_port']
         table_rows = []
 
-        deployment = db.deployment_get(deploy_id)
+        deployment = db.deployment_get(deployment)
         users = deployment.get("users", [])
         admin = deployment.get("admin")
         endpoints = users + [admin] if admin else users
@@ -208,19 +211,19 @@ class DeploymentCommands(object):
             table_rows.append(utils.Struct(**dict(zip(headers, data))))
         common_cliutils.print_list(table_rows, headers)
 
-    @cliutils.args('--uuid', dest='deploy_id', type=str, required=False,
-                   help='UUID of a deployment.')
-    @envutils.with_default_deploy_id
-    def check(self, deploy_id=None):
+    @cliutils.args('--deployment', dest='deployment', type=str,
+                   required=False, help='UUID or name of a deployment.')
+    @envutils.with_default_deployment
+    def check(self, deployment=None):
         """Check keystone authentication and list all available services.
 
-        :param deploy_id: a UUID of the deployment
+        :param deployment: a UUID or name of the deployment
         """
 
         headers = ['services', 'type', 'status']
         table_rows = []
         try:
-            admin = db.deployment_get(deploy_id)['admin']
+            admin = db.deployment_get(deployment)['admin']
             # TODO(boris-42): make this work for users in future
             for endpoint_dict in [admin]:
                 clients = osclients.Clients(endpoint.Endpoint(**endpoint_dict))

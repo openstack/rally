@@ -42,8 +42,8 @@ class VerifyCommands(object):
     OpenStack live cloud.
     """
 
-    @cliutils.args("--deploy-id", dest="deploy_id", type=str, required=False,
-                   help="UUID of a deployment.")
+    @cliutils.args("--deployment", dest="deployment", type=str,
+                   required=False, help="UUID or name of a deployment.")
     @cliutils.args("--set", dest="set_name", type=str, required=False,
                    help="Name of tempest test set. Available sets: %s" % ", ".
                    join(consts.TEMPEST_TEST_SETS))
@@ -54,13 +54,13 @@ class VerifyCommands(object):
                    help="User specified Tempest config file location")
     @cliutils.args("--no-use", action="store_false", dest="do_use",
                    help="Don't set new task as default for future operations")
-    @envutils.with_default_deploy_id
-    def start(self, set_name="smoke", deploy_id=None, regex=None,
+    @envutils.with_default_deployment
+    def start(self, set_name="smoke", deployment=None, regex=None,
               tempest_config=None, do_use=False):
         """Start set of tests.
 
         :param set_name: Name of tempest test set
-        :param deploy_id: a UUID of a deployment
+        :param deployment: UUID or name of a deployment
         :param regex: Regular expression of test
         :param tempest_config: User specified Tempest config file location
         """
@@ -71,7 +71,8 @@ class VerifyCommands(object):
             print("Sorry, but there are no desired tempest test set. Please "
                   "choose from: %s" % ", ".join(consts.TEMPEST_TEST_SETS))
             return (1)
-        verification = api.verify(deploy_id, set_name, regex, tempest_config)
+        verification = api.verify(deployment, set_name, regex,
+                                  tempest_config)
         if do_use:
             use.UseCommands().verification(verification["uuid"])
 

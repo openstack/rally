@@ -28,7 +28,7 @@ class DeploymentCommandsTestCase(test.TestCase):
         super(DeploymentCommandsTestCase, self).setUp()
         self.deployment = deployment.DeploymentCommands()
 
-    @mock.patch.dict(os.environ, {'RALLY_DEPLOYMENT': 'my_deploy_id'})
+    @mock.patch.dict(os.environ, {'RALLY_DEPLOYMENT': 'my_deployment_id'})
     @mock.patch('rally.cmd.commands.deployment.DeploymentCommands.list')
     @mock.patch('rally.cmd.commands.deployment.api.create_deploy')
     @mock.patch('rally.cmd.commands.deployment.open',
@@ -78,24 +78,24 @@ class DeploymentCommandsTestCase(test.TestCase):
 
     @mock.patch('rally.cmd.commands.deployment.api.recreate_deploy')
     def test_recreate(self, mock_recreate):
-        deploy_id = '43924f8b-9371-4152-af9f-4cf02b4eced4'
-        self.deployment.recreate(deploy_id)
-        mock_recreate.assert_called_once_with(deploy_id)
+        deployment_id = '43924f8b-9371-4152-af9f-4cf02b4eced4'
+        self.deployment.recreate(deployment_id)
+        mock_recreate.assert_called_once_with(deployment_id)
 
     @mock.patch('rally.cmd.commands.deployment.envutils.get_global')
-    def test_recreate_no_deploy_id(self, mock_default):
+    def test_recreate_no_deployment_id(self, mock_default):
         mock_default.side_effect = exceptions.InvalidArgumentsException
         self.assertRaises(exceptions.InvalidArgumentsException,
                           self.deployment.recreate, None)
 
     @mock.patch('rally.cmd.commands.deployment.api.destroy_deploy')
     def test_destroy(self, mock_destroy):
-        deploy_id = '53fd0273-60ce-42e5-a759-36f1a683103e'
-        self.deployment.destroy(deploy_id)
-        mock_destroy.assert_called_once_with(deploy_id)
+        deployment_id = '53fd0273-60ce-42e5-a759-36f1a683103e'
+        self.deployment.destroy(deployment_id)
+        mock_destroy.assert_called_once_with(deployment_id)
 
     @mock.patch('rally.cmd.commands.deployment.envutils.get_global')
-    def test_destroy_no_deploy_id(self, mock_default):
+    def test_destroy_no_deployment_id(self, mock_default):
         mock_default.side_effect = exceptions.InvalidArgumentsException
         self.assertRaises(exceptions.InvalidArgumentsException,
                           self.deployment.destroy, None)
@@ -104,11 +104,11 @@ class DeploymentCommandsTestCase(test.TestCase):
     @mock.patch('rally.cmd.commands.deployment.utils.Struct')
     @mock.patch('rally.cmd.commands.deployment.envutils.get_global')
     @mock.patch('rally.cmd.commands.deployment.db.deployment_list')
-    def test_list_different_deploy_id(self, mock_deployments,
-                                      mock_default, mock_struct,
-                                      mock_print_list):
-        current_deploy_id = '26a3ce76-0efa-40e4-86e5-514574bd1ff6'
-        mock_default.return_value = current_deploy_id
+    def test_list_different_deployment_id(self, mock_deployments,
+                                          mock_default, mock_struct,
+                                          mock_print_list):
+        current_deployment_id = '26a3ce76-0efa-40e4-86e5-514574bd1ff6'
+        mock_default.return_value = current_deployment_id
         fake_deployment_list = [
                             {'uuid': 'fa34aea2-ae2e-4cf7-a072-b08d67466e3e',
                              'created_at': '03-12-2014',
@@ -132,12 +132,12 @@ class DeploymentCommandsTestCase(test.TestCase):
     @mock.patch('rally.cmd.commands.deployment.utils.Struct')
     @mock.patch('rally.cmd.commands.deployment.envutils.get_global')
     @mock.patch('rally.cmd.commands.deployment.db.deployment_list')
-    def test_list_current_deploy_id(self, mock_deployments,
-                                    mock_default, mock_struct,
-                                    mock_print_list):
-        current_deploy_id = '64258e84-ffa1-4011-9e4c-aba07bdbcc6b'
-        mock_default.return_value = current_deploy_id
-        fake_deployment_list = [{'uuid': current_deploy_id,
+    def test_list_current_deployment_id(self, mock_deployments,
+                                        mock_default, mock_struct,
+                                        mock_print_list):
+        current_deployment_id = '64258e84-ffa1-4011-9e4c-aba07bdbcc6b'
+        mock_default.return_value = current_deployment_id
+        fake_deployment_list = [{'uuid': current_deployment_id,
                                  'created_at': '13-12-2014',
                                  'name': 'dep2',
                                  'status': 'deploy->finished',
@@ -157,16 +157,16 @@ class DeploymentCommandsTestCase(test.TestCase):
     @mock.patch('rally.cmd.commands.deployment.db.deployment_get')
     @mock.patch('json.dumps')
     def test_config(self, mock_json_dumps, mock_deployment):
-        deploy_id = 'fa4a423e-f15d-4d83-971a-89574f892999'
+        deployment_id = 'fa4a423e-f15d-4d83-971a-89574f892999'
         value = {'config': 'config'}
         mock_deployment.return_value = value
-        self.deployment.config(deploy_id)
+        self.deployment.config(deployment_id)
         mock_json_dumps.assert_called_once_with(value['config'],
                                                 sort_keys=True, indent=4)
-        mock_deployment.assert_called_once_with(deploy_id)
+        mock_deployment.assert_called_once_with(deployment_id)
 
     @mock.patch('rally.cmd.commands.deployment.envutils.get_global')
-    def test_config_no_deploy_id(self, mock_default):
+    def test_config_no_deployment_id(self, mock_default):
         mock_default.side_effect = exceptions.InvalidArgumentsException
         self.assertRaises(exceptions.InvalidArgumentsException,
                           self.deployment.config, None)
@@ -175,7 +175,7 @@ class DeploymentCommandsTestCase(test.TestCase):
     @mock.patch('rally.cmd.commands.deployment.utils.Struct')
     @mock.patch('rally.cmd.commands.deployment.db.deployment_get')
     def test_show(self, mock_deployment, mock_struct, mock_print_list):
-        deploy_id = "b1a6153e-a314-4cb3-b63b-cf08c1a416c3"
+        deployment_id = "b1a6153e-a314-4cb3-b63b-cf08c1a416c3"
         value = {
             "admin": {
                 "auth_url": "url",
@@ -189,8 +189,8 @@ class DeploymentCommandsTestCase(test.TestCase):
             "users": []
         }
         mock_deployment.return_value = value
-        self.deployment.show(deploy_id)
-        mock_deployment.assert_called_once_with(deploy_id)
+        self.deployment.show(deployment_id)
+        mock_deployment.assert_called_once_with(deployment_id)
 
         headers = ["auth_url", "username", "password", "tenant_name",
                    "region_name", "endpoint_type", "admin_port"]
@@ -200,7 +200,7 @@ class DeploymentCommandsTestCase(test.TestCase):
         mock_print_list.assert_called_once_with([mock_struct()], headers)
 
     @mock.patch('rally.cmd.commands.deployment.envutils.get_global')
-    def test_deploy_no_deploy_id(self, mock_default):
+    def test_deploy_no_deployment_id(self, mock_default):
         mock_default.side_effect = exceptions.InvalidArgumentsException
         self.assertRaises(exceptions.InvalidArgumentsException,
                           self.deployment.show, None)

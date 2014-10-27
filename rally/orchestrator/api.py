@@ -14,15 +14,18 @@
 #    under the License.
 
 import jsonschema
+from oslo.config import cfg
 
 from rally.benchmark import engine
 from rally import consts
 from rally import deploy
 from rally import exceptions
+from rally.i18n import _
 from rally import log as logging
 from rally import objects
 from rally.verification.verifiers.tempest import tempest
 
+CONF = cfg.CONF
 LOG = logging.getLogger(__name__)
 
 
@@ -32,7 +35,14 @@ def create_deploy(config, name):
     :param config: a dict with deployment configuration
     :param name: a str represents a name of the deployment
     """
-    deployment = objects.Deployment(name=name, config=config)
+
+    try:
+        deployment = objects.Deployment(name=name, config=config)
+    except exceptions.DeploymentNameExists as e:
+        if CONF.debug:
+            LOG.exception(e)
+        raise
+
     deployer = deploy.EngineFactory.get_engine(deployment['config']['type'],
                                                deployment)
     try:
@@ -49,31 +59,31 @@ def create_deploy(config, name):
         return deployment
 
 
-def destroy_deploy(deploy_uuid):
+def destroy_deploy(deployment):
     """Destroy the deployment.
 
-    :param deploy_uuid: UUID of the deployment
+    :param deployment: UUID or name of the deployment
     """
     # TODO(akscram): We have to be sure that there are no running
     #                tasks for this deployment.
     # TODO(akscram): Check that the deployment have got a status that
     #                is equal to "*->finished" or "deploy->inconsistent".
-    deployment = objects.Deployment.get(deploy_uuid)
+    deployment = objects.Deployment.get(deployment)
     deployer = deploy.EngineFactory.get_engine(deployment['config']['type'],
                                                deployment)
     with deployer:
         deployer.make_cleanup()
         deployment.delete()
 
-    tempest.Tempest(deploy_uuid).uninstall()
+    tempest.Tempest(deployment['uuid']).uninstall()
 
 
-def recreate_deploy(deploy_uuid):
+def recreate_deploy(deployment):
     """Performs a clean up and then start to deploy.
 
-    :param deploy_uuid: UUID of the deployment
+    :param deployment: UUID or name of the deployment
     """
-    deployment = objects.Deployment.get(deploy_uuid)
+    deployment = objects.Deployment.get(deployment)
     deployer = deploy.EngineFactory.get_engine(deployment['config']['type'],
                                                deployment)
     with deployer:
@@ -82,43 +92,45 @@ def recreate_deploy(deploy_uuid):
         deployment.update_endpoints(endpoints)
 
 
-def create_task(deploy_uuid, tag):
+def create_task(deployment, tag):
     """Create a task without starting it.
 
     Task is a list of benchmarks that will be called one by one, results of
     execution will be stored in DB.
 
-    :param deploy_uuid: UUID of the deployment
+    :param deployment: UUID or name of the deployment
     :param tag: tag for this task
     """
-    return objects.Task(deployment_uuid=deploy_uuid, tag=tag)
+
+    deployment_uuid = objects.Deployment.get(deployment)['uuid']
+    return objects.Task(deployment_uuid=deployment_uuid, tag=tag)
 
 
-def task_validate(deploy_uuid, config):
+def task_validate(deployment, config):
     """Validate a task config against specified deployment.
 
-    :param deploy_uuid: UUID of the deployment
+    :param deployment: UUID or name of the deployment
     :param config: a dict with a task configuration
     """
-    deployment = objects.Deployment.get(deploy_uuid)
-    task = objects.Task(deployment_uuid=deploy_uuid)
+    deployment = objects.Deployment.get(deployment)
+    task = objects.Task(deployment_uuid=deployment['uuid'])
     benchmark_engine = engine.BenchmarkEngine(config, task)
     benchmark_engine.bind(admin=deployment["admin"],
                           users=deployment["users"])
     benchmark_engine.validate()
 
 
-def start_task(deploy_uuid, config, task=None):
+def start_task(deployment, config, task=None):
     """Start a task.
 
     Task is a list of benchmarks that will be called one by one, results of
     execution will be stored in DB.
 
-    :param deploy_uuid: UUID of the deployment
+    :param deployment: UUID or name of the deployment
     :param config: a dict with a task configuration
     """
-    deployment = objects.Deployment.get(deploy_uuid)
-    task = task or objects.Task(deployment_uuid=deploy_uuid)
+    deployment = objects.Deployment.get(deployment)
+    task = task or objects.Task(deployment_uuid=deployment['uuid'])
     LOG.info("Benchmark Task %s on Deployment %s" % (task['uuid'],
                                                      deployment['uuid']))
     benchmark_engine = engine.BenchmarkEngine(config, task)
@@ -157,23 +169,25 @@ def delete_task(task_uuid, force=False):
     objects.Task.delete_by_uuid(task_uuid, status=status)
 
 
-def verify(deploy_id, set_name, regex, tempest_config):
+def verify(deployment, set_name, regex, tempest_config):
     """Start verifying.
 
-    :param deploy_id: a UUID of a deployment.
+    :param deployment: UUID or name of a deployment.
     :param set_name: Valid name of tempest test set.
     :param regex: Regular expression of test
     :param tempest_config: User specified Tempest config file
     """
 
-    verification = objects.Verification(deployment_uuid=deploy_id)
-    verifier = tempest.Tempest(deploy_id, verification=verification,
+    deployment_uuid = objects.Deployment.get(deployment)["uuid"]
+
+    verification = objects.Verification(deployment_uuid=deployment_uuid)
+    verifier = tempest.Tempest(deployment_uuid, verification=verification,
                                tempest_config=tempest_config)
     if not verifier.is_installed():
         print("Tempest is not installed for specified deployment.")
-        print("Installing Tempest for deployment %s" % deploy_id)
+        print("Installing Tempest for deployment %s" % deploy)
         verifier.install()
-    LOG.info("Starting verification of deployment: %s" % deploy_id)
+    LOG.info("Starting verification of deployment: %s" % deploy)
 
     verification.set_running()
     verifier.verify(set_name=set_name, regex=regex)

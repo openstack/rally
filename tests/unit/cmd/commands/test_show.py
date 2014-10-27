@@ -29,7 +29,7 @@ class ShowCommandsTestCase(test.TestCase):
                               'password': 'fake_password',
                               'tenant_name': 'fake_tenant_name',
                               'auth_url': 'http://fake.auth.url'}
-        self.fake_deploy_id = '7f6e88e0-897e-45c0-947c-595ce2437bee'
+        self.fake_deployment_id = '7f6e88e0-897e-45c0-947c-595ce2437bee'
         self.fake_clients = fakes.FakeClients()
         self.fake_glance_client = fakes.FakeGlanceClient()
         self.fake_nova_client = fakes.FakeNovaClient()
@@ -46,8 +46,8 @@ class ShowCommandsTestCase(test.TestCase):
         fake_image.size = 1
         mock_get_glance.return_value = self.fake_glance_client
         mock_deployment_get.return_value = {'admin': self.fake_endpoint}
-        self.show.images(self.fake_deploy_id)
-        mock_deployment_get.assert_called_once_with(self.fake_deploy_id)
+        self.show.images(self.fake_deployment_id)
+        mock_deployment_get.assert_called_once_with(self.fake_deployment_id)
         mock_get_glance.assert_called_once_with()
 
         headers = ['UUID', 'Name', 'Size (B)']
@@ -75,8 +75,8 @@ class ShowCommandsTestCase(test.TestCase):
         fake_flavor.ram, fake_flavor.swap, fake_flavor.disk = 1024, 128, 10
         mock_get_nova.return_value = self.fake_nova_client
         mock_deployment_get.return_value = {'admin': self.fake_endpoint}
-        self.show.flavors(self.fake_deploy_id)
-        mock_deployment_get.assert_called_once_with(self.fake_deploy_id)
+        self.show.flavors(self.fake_deployment_id)
+        mock_deployment_get.assert_called_once_with(self.fake_deployment_id)
         mock_get_nova.assert_called_once_with()
 
         headers = ['ID', 'Name', 'vCPUs', 'RAM (MB)', 'Swap (MB)', 'Disk (GB)']
@@ -106,8 +106,8 @@ class ShowCommandsTestCase(test.TestCase):
         fake_network.cidr = '10.0.0.0/24'
         mock_get_nova.return_value = self.fake_nova_client
         mock_deployment_get.return_value = {'admin': self.fake_endpoint}
-        self.show.networks(self.fake_deploy_id)
-        mock_deployment_get.assert_called_once_with(self.fake_deploy_id)
+        self.show.networks(self.fake_deployment_id)
+        mock_deployment_get.assert_called_once_with(self.fake_deployment_id)
         mock_get_nova.assert_called_once_with()
 
         headers = ['ID', 'Label', 'CIDR']
@@ -130,8 +130,8 @@ class ShowCommandsTestCase(test.TestCase):
         fake_secgroup.id = 0
         mock_get_nova.return_value = self.fake_nova_client
         mock_deployment_get.return_value = {'admin': self.fake_endpoint}
-        self.show.secgroups(self.fake_deploy_id)
-        mock_deployment_get.assert_called_once_with(self.fake_deploy_id)
+        self.show.secgroups(self.fake_deployment_id)
+        mock_deployment_get.assert_called_once_with(self.fake_deployment_id)
         mock_get_nova.assert_called_once_with()
 
         headers = ['ID', 'Name', 'Description']
@@ -155,8 +155,8 @@ class ShowCommandsTestCase(test.TestCase):
         fake_keypair.fingerprint = '84:87:58'
         mock_get_nova.return_value = self.fake_nova_client
         mock_deployment_get.return_value = {'admin': self.fake_endpoint}
-        self.show.keypairs(self.fake_deploy_id)
-        mock_deployment_get.assert_called_once_with(self.fake_deploy_id)
+        self.show.keypairs(self.fake_deployment_id)
+        mock_deployment_get.assert_called_once_with(self.fake_deployment_id)
         mock_get_nova.assert_called_once_with()
 
         headers = ['Name', 'Fingerprint']

@@ -42,8 +42,8 @@ class ConfigTestCase(test.TestCase):
                          "auth_url": "http://test/v2.0",
                          "permission": "admin"}
         mock_get.return_value = {"admin": self.endpoint}
-        self.deploy_id = "fake_deploy_id"
-        self.conf_generator = config.TempestConf(self.deploy_id)
+        self.deployment = "fake_deployment"
+        self.conf_generator = config.TempestConf(self.deployment)
         self.conf_generator.clients.services = mock_services
 
         keystone_patcher = mock.patch("rally.osclients.create_keystone_client")
@@ -212,7 +212,7 @@ class ConfigTestCase(test.TestCase):
     def test__set_default(self, mock_makedirs, mock_exists):
         self.conf_generator._set_default()
         lock_path = os.path.join(self.conf_generator.data_path, "lock_files_%s"
-                                 % self.deploy_id)
+                                 % self.deployment)
         mock_makedirs.assert_called_once_with(lock_path)
         expected = (("debug", "True"), ("log_file", "tempest.log"),
                     ("use_stderr", "False"),

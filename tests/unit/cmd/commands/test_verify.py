@@ -47,17 +47,17 @@ class VerifyCommandsTestCase(test.TestCase):
     @mock.patch("rally.osclients.Clients")
     @mock.patch("rally.orchestrator.api.verify")
     def test_start(self, mock_verify, mock_clients):
-        deploy_id = "0fba91c6-82d5-4ce1-bd00-5d7c989552d9"
+        deployment_id = "0fba91c6-82d5-4ce1-bd00-5d7c989552d9"
         mock_clients().glance().images.list.return_value = [
             self.image1, self.image2]
         mock_clients().nova().flavors.list.return_value = [
             self.flavor1, self.flavor2]
 
-        self.verify.start(deploy_id=deploy_id)
+        self.verify.start(deployment=deployment_id)
         default_set_name = "smoke"
         default_regex = None
 
-        mock_verify.assert_called_once_with(deploy_id,
+        mock_verify.assert_called_once_with(deployment_id,
                                             default_set_name, default_regex,
                                             None)
 
@@ -65,29 +65,29 @@ class VerifyCommandsTestCase(test.TestCase):
     @mock.patch("rally.orchestrator.api.verify")
     def test_start_with_user_specified_tempest_config(self, mock_verify,
                                                       mock_clients):
-        deploy_id = "0fba91c6-82d5-4ce1-bd00-5d7c989552d9"
+        deployment_id = "0fba91c6-82d5-4ce1-bd00-5d7c989552d9"
         mock_clients().glance().images.list.return_value = [
             self.image1, self.image2]
         mock_clients().nova().flavors.list.return_value = [
             self.flavor1, self.flavor2]
         tempest_config = tempfile.NamedTemporaryFile()
-        self.verify.start(deploy_id=deploy_id,
+        self.verify.start(deployment=deployment_id,
                           tempest_config=tempest_config.name)
         default_set_name = "smoke"
         default_regex = None
 
-        mock_verify.assert_called_once_with(deploy_id,
+        mock_verify.assert_called_once_with(deployment_id,
                                             default_set_name, default_regex,
                                             tempest_config.name)
         tempest_config.close()
 
     @mock.patch("rally.orchestrator.api.verify")
     def test_start_with_wrong_set_name(self, mock_verify):
-        deploy_id = "f2009aae-6ef3-468e-96b2-3c987d584010"
+        deployment_id = "f2009aae-6ef3-468e-96b2-3c987d584010"
 
         wrong_set_name = "unexpected_value"
 
-        self.verify.start(deploy_id, wrong_set_name)
+        self.verify.start(deployment_id, wrong_set_name)
 
         self.assertNotIn(wrong_set_name, consts.TEMPEST_TEST_SETS)
         self.assertFalse(mock_verify.called)

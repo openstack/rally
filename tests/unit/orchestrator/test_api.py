@@ -22,6 +22,7 @@ import mock
 from rally import consts
 from rally import exceptions
 from rally.orchestrator import api
+from tests.unit import fakes
 from tests.unit import test
 
 
@@ -70,12 +71,12 @@ class APITestCase(test.TestCase):
 
     @mock.patch("rally.orchestrator.api.objects.Task")
     @mock.patch("rally.orchestrator.api.objects.Deployment.get",
-                return_value={"uuid": "deploy_uuid",
-                              "admin": mock.MagicMock(),
-                              "users": []})
+                return_value=fakes.FakeDeployment(uuid="deploy_uuid",
+                                                  admin=mock.MagicMock(),
+                                                  users=[]))
     @mock.patch("rally.orchestrator.api.engine.BenchmarkEngine")
     def test_task_validate(self, mock_engine, mock_deployment_get, mock_task):
-        api.task_validate(self.deploy_uuid, "config")
+        api.task_validate(mock_deployment_get.return_value['uuid'], "config")
 
         mock_engine.assert_has_calls([
             mock.call("config", mock_task.return_value),
@@ -84,25 +85,29 @@ class APITestCase(test.TestCase):
             mock.call().validate(),
         ])
 
-        mock_task.assert_called_once_with(deployment_uuid=self.deploy_uuid)
-        mock_deployment_get.assert_called_once_with(self.deploy_uuid)
+        mock_task.assert_called_once_with(
+            deployment_uuid=mock_deployment_get.return_value["uuid"])
+        mock_deployment_get.assert_called_once_with(
+            mock_deployment_get.return_value["uuid"])
 
+    @mock.patch("rally.objects.Deployment.get",
+                return_value={'uuid': 'b0d9cd6c-2c94-4417-a238-35c7019d0257'})
     @mock.patch("rally.objects.Task")
-    def test_create_task(self, mock_task):
-        deployment_uuid = "b0d9cd6c-2c94-4417-a238-35c7019d0257"
+    def test_create_task(self, mock_task, mock_d_get):
         tag = "a"
-        api.create_task(deployment_uuid, tag)
-        mock_task.assert_called_once_with(deployment_uuid=deployment_uuid,
-                                          tag=tag)
+        api.create_task(mock_d_get.return_value["uuid"], tag)
+        mock_task.assert_called_once_with(
+            deployment_uuid=mock_d_get.return_value["uuid"], tag=tag)
 
     @mock.patch("rally.orchestrator.api.objects.Task")
     @mock.patch("rally.orchestrator.api.objects.Deployment.get",
-                return_value={"uuid": "deploy_uuid",
-                              "admin": mock.MagicMock(),
-                              "users": []})
+                return_value=fakes.FakeDeployment(uuid="deploy_uuid",
+                                                  admin=mock.MagicMock(),
+                                                  users=[]))
     @mock.patch("rally.orchestrator.api.engine.BenchmarkEngine")
     def test_start_task(self, mock_engine, mock_deployment_get, mock_task):
-        api.start_task(self.deploy_uuid, "config")
+
+        api.start_task(mock_deployment_get.return_value["uuid"], "config")
 
         mock_engine.assert_has_calls([
             mock.call("config", mock_task.return_value),
@@ -112,8 +117,10 @@ class APITestCase(test.TestCase):
             mock.call().run(),
         ])
 
-        mock_task.assert_called_once_with(deployment_uuid=self.deploy_uuid)
-        mock_deployment_get.assert_called_once_with(self.deploy_uuid)
+        mock_task.assert_called_once_with(
+            deployment_uuid=mock_deployment_get.return_value["uuid"])
+        mock_deployment_get.assert_called_once_with(
+            mock_deployment_get.return_value["uuid"])
 
     @mock.patch("rally.orchestrator.api.objects.Task")
     @mock.patch("rally.orchestrator.api.objects.Deployment.get")
@@ -184,6 +191,16 @@ class APITestCase(test.TestCase):
             self.deploy_uuid,
             {'status': consts.DeployStatus.DEPLOY_FAILED})
 
+    @mock.patch("rally.orchestrator.api.LOG")
+    @mock.patch("rally.objects.deploy.db.deployment_create",
+                side_effect=exceptions.DeploymentNameExists(
+                    deployment='fake_deploy'))
+    def test_create_deploy_duplication_error(self, mock_d_create,
+                                             mock_log):
+
+        self.assertRaises(exceptions.DeploymentNameExists,
+                          api.create_deploy, self.deploy_config, "fake_deploy")
+
     @mock.patch("rally.objects.deploy.db.deployment_delete")
     @mock.patch("rally.objects.deploy.db.deployment_update")
     @mock.patch("rally.objects.deploy.db.deployment_get")
@@ -205,9 +222,12 @@ class APITestCase(test.TestCase):
             mock.call(self.deploy_uuid, self.endpoints)
         ])
 
+    @mock.patch("rally.objects.Deployment.get")
     @mock.patch("rally.orchestrator.api.objects.Verification")
     @mock.patch("rally.verification.verifiers.tempest.tempest.Tempest")
-    def test_verify(self, mock_tempest, mock_verification):
+    def test_verify(self, mock_tempest, mock_verification, mock_d_get):
+        mock_d_get.return_value = {"uuid": self.deploy_uuid}
+
         mock_tempest.return_value = self.tempest
         self.tempest.is_installed.return_value = True
         api.verify(self.deploy_uuid, "smoke", None, None)
@@ -216,10 +236,12 @@ class APITestCase(test.TestCase):
         self.tempest.verify.assert_called_once_with(set_name="smoke",
                                                     regex=None)
 
+    @mock.patch("rally.orchestrator.api.objects.Deployment.get")
     @mock.patch("rally.orchestrator.api.objects.Verification")
     @mock.patch("rally.verification.verifiers.tempest.tempest.Tempest")
     def test_verify_tempest_not_installed(self, mock_tempest,
-                                          mock_verification):
+                                          mock_verification, mock_d_get):
+        mock_d_get.return_value = {"uuid": self.deploy_uuid}
         mock_tempest.return_value = self.tempest
         self.tempest.is_installed.return_value = False
         api.verify(self.deploy_uuid, "smoke", None, None)

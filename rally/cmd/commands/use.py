@@ -30,8 +30,8 @@ class UseCommands(object):
     task UUID in the commands requiring this parameter.
     """
 
-    def _update_openrc_deployment_file(self, deploy_id, endpoint):
-        openrc_path = os.path.expanduser('~/.rally/openrc-%s' % deploy_id)
+    def _update_openrc_deployment_file(self, deployment, endpoint):
+        openrc_path = os.path.expanduser('~/.rally/openrc-%s' % deployment)
         # NOTE(msdubov): In case of multiple endpoints write the first one.
         with open(openrc_path, 'w+') as env_file:
             env_file.write('export OS_AUTH_URL=%(auth_url)s\n'
@@ -55,42 +55,22 @@ class UseCommands(object):
         if not os.path.exists(os.path.expanduser('~/.rally/')):
             os.makedirs(os.path.expanduser('~/.rally/'))
 
-    @cliutils.args('--uuid', type=str, dest='deploy_id', required=False,
-                   help='UUID of the deployment')
-    @cliutils.args('--name', type=str, dest='name', required=False,
-                   help='Name of the deployment')
-    def deployment(self, deploy_id=None, name=None):
+    @cliutils.args('--deployment', type=str, dest='deployment',
+                   help='UUID or name of the deployment')
+    def deployment(self, deployment=None):
         """Set active deployment.
 
-        :param deploy_id: a UUID of a deployment
+        :param deployment: UUID or name of a deployment
         """
 
-        if not (name or deploy_id):
-            print('You should specify --name or --uuid of deployment')
-            return 1
-
-        deploy = None
-
-        if name:
-            deployments = db.deployment_list(name=name)
-            if len(deployments) > 1:
-                print("Multiple deployments found by name: `%s`" % name)
-                return 1
-            elif not deployments:
-                print("There is no `%s` deployment" % name)
-                return 1
-            else:
-                deploy = deployments[0]
-                deploy_id = deploy["uuid"]
-
         try:
-            deploy = deploy or db.deployment_get(deploy_id)
-            print('Using deployment: %s' % deploy_id)
+            deploy = db.deployment_get(deployment)
+            print('Using deployment: %s' % deploy['uuid'])
             self._ensure_rally_configuration_dir_exists()
             self._update_attribute_in_global_file('RALLY_DEPLOYMENT',
-                                                  deploy_id)
+                                                  deploy['uuid'])
             self._update_openrc_deployment_file(
-                deploy_id, deploy.get('admin') or deploy.get('users')[0])
+                deploy['uuid'], deploy.get('admin') or deploy.get('users')[0])
             print ('~/.rally/openrc was updated\n\nHINTS:\n'
                    '* To get your cloud resources, run:\n\t'
                    'rally show [flavors|images|keypairs|networks|secgroups]\n'
@@ -99,7 +79,7 @@ class UseCommands(object):
                    '  OpenStack clients are now configured, e.g run:\n\t'
                    'glance image-list')
         except exceptions.DeploymentNotFound:
-            print('Deployment %s is not found.' % deploy_id)
+            print('Deployment %s is not found.' % deployment)
             return 1
 
     @cliutils.args('--uuid', type=str, dest='task_id', required=False,

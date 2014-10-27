@@ -52,8 +52,8 @@ class TempestConfigCreationFailure(exceptions.RallyException):
 
 class TempestConf(object):
 
-    def __init__(self, deploy_id):
-        self.endpoint = db.deployment_get(deploy_id)['admin']
+    def __init__(self, deployment):
+        self.endpoint = db.deployment_get(deployment)['admin']
         self.clients = osclients.Clients(endpoint.Endpoint(**self.endpoint))
         try:
             self.keystoneclient = self.clients.verified_keystone()
@@ -67,7 +67,7 @@ class TempestConf(object):
 
         self.conf = configparser.ConfigParser()
         self.conf.read(os.path.join(os.path.dirname(__file__), 'config.ini'))
-        self.deploy_id = deploy_id
+        self.deployment = deployment
         self.data_path = os.path.join(os.path.expanduser('~'), '.rally',
                                       'tempest', 'data')
         if not os.path.exists(self.data_path):
@@ -111,7 +111,7 @@ class TempestConf(object):
 
     def _set_default(self):
         lock_path = os.path.join(self.data_path,
-                                 'lock_files_%s' % self.deploy_id)
+                                 'lock_files_%s' % self.deployment)
         if not os.path.exists(lock_path):
             os.makedirs(lock_path)
         self.conf.set('DEFAULT', 'lock_path', lock_path)

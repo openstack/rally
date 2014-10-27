@@ -43,57 +43,57 @@ class TaskCommands(object):
     Set of commands that allow you to manage benchmarking tasks and results.
     """
 
-    @cliutils.args('--deploy-id', type=str, dest='deploy_id', required=False,
-                   help='UUID of the deployment')
+    @cliutils.args('--deployment', type=str, dest='deployment',
+                   required=False, help='UUID or name of the deployment')
     @cliutils.args('--task', '--filename',
                    help='Path to the file with full configuration of task')
-    @envutils.with_default_deploy_id
-    def validate(self, task, deploy_id=None):
+    @envutils.with_default_deployment
+    def validate(self, task, deployment=None):
         """Validate a task configuration file.
 
         This will check that task configuration file has valid syntax and
         all required options of scenarios, contexts, SLA and runners are set.
 
         :param task: a file with yaml/json configration
-        :param deploy_id: a UUID of a deployment
+        :param deployment: UUID or name of a deployment
         """
 
         task = os.path.expanduser(task)
         with open(task, "rb") as task_file:
             config_dict = yaml.safe_load(task_file.read())
         try:
-            api.task_validate(deploy_id, config_dict)
+            api.task_validate(deployment, config_dict)
             print("Task config is valid :)")
         except exceptions.InvalidTaskException as e:
             print("Task config is invalid: \n")
             print(e)
 
-    @cliutils.args('--deploy-id', type=str, dest='deploy_id', required=False,
-                   help='UUID of the deployment')
+    @cliutils.args('--deployment', type=str, dest='deployment',
+                   required=False, help='UUID or name of the deployment')
     @cliutils.args('--task', '--filename',
                    help='Path to the file with full configuration of task')
     @cliutils.args('--tag',
                    help='Tag for this task')
     @cliutils.args('--no-use', action='store_false', dest='do_use',
                    help='Don\'t set new task as default for future operations')
-    @envutils.with_default_deploy_id
-    def start(self, task, deploy_id=None, tag=None, do_use=False):
+    @envutils.with_default_deployment
+    def start(self, task, deployment=None, tag=None, do_use=False):
         """Start benchmark task.
 
         :param task: a file with yaml/json configration
-        :param deploy_id: a UUID of a deployment
+        :param deployment: UUID or name of a deployment
         :param tag: optional tag for this task
         """
         task = os.path.expanduser(task)
         with open(task, 'rb') as task_file:
             config_dict = yaml.safe_load(task_file.read())
             try:
-                task = api.create_task(deploy_id, tag)
+                task = api.create_task(deployment, tag)
                 print("=" * 80)
                 print(_("Task %(tag)s %(uuid)s is started")
                       % {"uuid": task["uuid"], "tag": task["tag"]})
                 print("-" * 80)
-                api.start_task(deploy_id, config_dict, task=task)
+                api.start_task(deployment, config_dict, task=task)
                 self.detailed(task_id=task['uuid'])
                 if do_use:
                     use.UseCommands().task(task['uuid'])

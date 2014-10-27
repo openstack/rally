@@ -40,11 +40,11 @@ class EnvUtilsTestCase(test.TestCase):
                              "Missing argument: --test_missing_arg\n")
 
     @mock.patch.dict(os.environ,
-                     values={envutils.ENV_DEPLOYMENT: 'my_deploy_id'},
+                     values={envutils.ENV_DEPLOYMENT: 'my_deployment_id'},
                      clear=True)
     def test_get_deployment_id_in_env(self):
-        deploy_id = envutils.get_global(envutils.ENV_DEPLOYMENT)
-        self.assertEqual('my_deploy_id', deploy_id)
+        deployment_id = envutils.get_global(envutils.ENV_DEPLOYMENT)
+        self.assertEqual('my_deployment_id', deployment_id)
 
     @mock.patch.dict(os.environ, values={}, clear=True)
     @mock.patch('rally.cmd.envutils.fileutils.load_env_file')
