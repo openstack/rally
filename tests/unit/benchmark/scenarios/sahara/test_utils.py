@@ -198,6 +198,32 @@ class SaharaUtilsTestCase(test.TestCase):
                                        'sahara.launch_cluster')
 
     @mock.patch(SAHARA_UTILS + '.SaharaScenario.clients')
+    def test_scale_cluster(self, mock_clients):
+
+        scenario = utils.SaharaScenario()
+        cluster = mock.MagicMock(id=42, node_groups=[{
+            "name": "random_master",
+            "count": 1
+        }, {
+            "name": "random_worker",
+            "count": 41
+        }])
+        mock_clients("sahara").clusters.get.return_value = mock.MagicMock(
+            id=42,
+            status="active")
+
+        expected_scale_object = {
+            "resize_node_groups": [{
+                "name": "random_worker",
+                "count": 42
+            }]
+        }
+
+        scenario._scale_cluster(cluster, 1)
+        mock_clients("sahara").clusters.scale.assert_called_once_with(
+            42, expected_scale_object)
+
+    @mock.patch(SAHARA_UTILS + '.SaharaScenario.clients')
     def test_delete_cluster(self, mock_clients):
 
         scenario = utils.SaharaScenario()

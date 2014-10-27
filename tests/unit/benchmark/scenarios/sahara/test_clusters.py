@@ -58,3 +58,52 @@ class SaharaClustersTestCase(test.TestCase):
 
         mock_delete_cluster.assert_called_once_with(
             mock_launch_cluster.return_value)
+
+    @mock.patch(SAHARA_CLUSTERS + "._delete_cluster")
+    @mock.patch(SAHARA_CLUSTERS + "._scale_cluster")
+    @mock.patch(SAHARA_CLUSTERS + "._launch_cluster",
+                return_value=mock.MagicMock(id=42))
+    @mock.patch(SAHARA_UTILS + '.SaharaScenario.clients')
+    def test_create_scale_delete_cluster(self, mock_clients,
+                                         mock_launch_cluster,
+                                         mock_scale_cluster,
+                                         mock_delete_cluster):
+
+        mock_sahara = mock_clients("sahara")
+        mock_sahara.clusters.get.return_value = mock.MagicMock(
+            id=42, status="active"
+        )
+        clusters_scenario = clusters.SaharaClusters()
+
+        clusters_scenario.clients("keystone").tenant_id = "test_tenant"
+        clusters_scenario.context = mock.MagicMock(return_value={
+            "sahara_images": {"test_tenant": "test_image"}}
+        )
+
+        clusters_scenario.create_scale_delete_cluster(
+            flavor="test_flavor",
+            node_count=5,
+            deltas=[1, -1],
+            plugin_name="test_plugin",
+            hadoop_version="test_version")
+
+        mock_launch_cluster.assert_called_once_with(
+            flavor_id="test_flavor",
+            image_id="test_image",
+            node_count=5,
+            plugin_name="test_plugin",
+            hadoop_version="test_version",
+            floating_ip_pool=None,
+            neutron_net_id=None,
+            volumes_per_node=None,
+            volumes_size=None,
+            node_configs=None,
+            cluster_configs=None)
+
+        mock_scale_cluster.assert_has_calls([
+            mock.call(mock_sahara.clusters.get.return_value, 1),
+            mock.call(mock_sahara.clusters.get.return_value, -1),
+        ])
+
+        mock_delete_cluster.assert_called_once_with(
+            mock_sahara.clusters.get.return_value)

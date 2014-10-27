@@ -85,3 +85,79 @@ class SaharaClusters(utils.SaharaScenario):
             cluster_configs=cluster_configs)
 
         self._delete_cluster(cluster)
+
+    @types.set(flavor=types.FlavorResourceType)
+    @validation.flavor_exists('flavor')
+    @validation.required_services(consts.Service.SAHARA)
+    @validation.required_contexts("users", "sahara_image")
+    @validation.number("node_count", minval=2, integer_only=True)
+    @base.scenario(context={"cleanup": ["sahara"]})
+    def create_scale_delete_cluster(self, flavor, node_count, plugin_name,
+                                    hadoop_version, deltas,
+                                    floating_ip_pool=None, neutron_net_id=None,
+                                    volumes_per_node=None, volumes_size=None,
+                                    node_configs=None, cluster_configs=None):
+        """Test the Sahara Cluster launch, scale and delete commands.
+
+        This scenario launches a Hadoop cluster, waits until it becomes
+        'Active'. Then a series of scale operations is applied. The scaling
+        happens according to numbers listed in :param deltas. Ex. if
+        deltas is set to [2, -2] it means that the first scaling operation will
+        add 2 worker nodes to the cluster and the second will remove two.
+
+        :param flavor: The Nova flavor that will be for nodes in the
+        created node groups
+        :param node_count: The total number of instances in a cluster (>= 2)
+        :param plugin_name: The name of a provisioning plugin
+        :param hadoop_version: The version of Hadoop distribution supported by
+        the specified plugin.
+        :param deltas: The list of integers which will be used to add or
+        remove worker nodes from the cluster
+        :param floating_ip_pool: The floating ip pool name from which Floating
+        IPs will be allocated. Sahara will determine automatically how to treat
+        this depending on it's own configurations. Defaults to None because in
+        some cases Sahara may work w/o Floating IPs.
+        :param neutron_net_id: The id of a Neutron network that
+        will be used for fixed IPs. This parameter is ignored when Nova Network
+        is set up.
+        :param volumes_per_node: The number of Cinder volumes that will be
+        attached to every cluster node
+        :param volumes_size: The size of each Cinder volume in GB
+        :param node_configs: The configs dict that will be passed to each Node
+        Group
+        :param cluster_configs: The configs dict that will be passed to the
+        Cluster
+        """
+
+        tenant_id = self.clients("keystone").tenant_id
+        image_id = self.context()["sahara_images"][tenant_id]
+
+        LOG.debug("Using Image: %s" % image_id)
+
+        cluster = self._launch_cluster(
+            flavor_id=flavor,
+            image_id=image_id,
+            node_count=node_count,
+            plugin_name=plugin_name,
+            hadoop_version=hadoop_version,
+            floating_ip_pool=floating_ip_pool,
+            neutron_net_id=neutron_net_id,
+            volumes_per_node=volumes_per_node,
+            volumes_size=volumes_size,
+            node_configs=node_configs,
+            cluster_configs=cluster_configs)
+
+        for delta in deltas:
+            # The Cluster is fetched every time so that its node groups have
+            # correct 'count' values.
+            cluster = self.clients("sahara").clusters.get(cluster.id)
+
+            if delta == 0:
+                # Zero scaling makes no sense.
+                continue
+            elif delta > 0:
+                self._scale_cluster_up(cluster, delta)
+            elif delta < 0:
+                self._scale_cluster_down(cluster, delta)
+
+        self._delete_cluster(cluster)

@@ -168,6 +168,12 @@ class SaharaScenario(base.Scenario):
 
         self.clients("sahara").node_group_templates.delete(node_group.id)
 
+    def _wait_active(self, cluster_object):
+        bench_utils.wait_for(
+            resource=cluster_object.id, is_ready=self._is_cluster_active,
+            timeout=CONF.benchmark.cluster_create_timeout,
+            check_interval=CONF.benchmark.cluster_check_interval)
+
     @base.atomic_action_timer('sahara.launch_cluster')
     def _launch_cluster(self, plugin_name, hadoop_version, flavor_id,
                         image_id, node_count, floating_ip_pool=None,
@@ -262,16 +268,61 @@ class SaharaScenario(base.Scenario):
         )
 
         if wait_active:
-            bench_utils.wait_for(
-                resource=cluster_object.id, is_ready=self._is_cluster_active,
-                timeout=CONF.benchmark.cluster_create_timeout,
-                check_interval=CONF.benchmark.cluster_check_interval)
+            self._wait_active(cluster_object)
 
         return self.clients("sahara").clusters.get(cluster_object.id)
 
     def _is_cluster_active(self, cluster_id):
         return self.clients("sahara").clusters.get(
             cluster_id).status.lower() == "active"
+
+    def _scale_cluster(self, cluster, delta):
+        """The scaling helper.
+
+        This method finds the worker node group in a cluster, builds a
+        scale_object required by Sahara API and waits for the scaling to
+        complete.
+
+        NOTE: This method is not meant to be called directly in benchmarks.
+        There two specific scaling methods of up and down scaling which have
+        different atomic timers.
+        """
+
+        worker_node_group = [g for g in cluster.node_groups
+                             if "worker" in g["name"]][0]
+        scale_object = {
+            "resize_node_groups": [
+                {
+                    "name": worker_node_group["name"],
+                    "count": worker_node_group["count"] + delta
+                }
+            ]
+        }
+        self.clients("sahara").clusters.scale(cluster.id, scale_object)
+
+        self._wait_active(cluster)
+
+    @base.atomic_action_timer('sahara.scale_up')
+    def _scale_cluster_up(self, cluster, delta):
+        """Adds a given number of worker nodes to the cluster.
+
+        :param cluster: The cluster to be scaled
+        :param delta: The number of workers to be added. (A positive number is
+        expected here)
+        """
+
+        self._scale_cluster(cluster, delta)
+
+    @base.atomic_action_timer('sahara.scale_down')
+    def _scale_cluster_down(self, cluster, delta):
+        """Removes a given number of worker nodes from the cluster.
+
+        :param cluster: The cluster to be scaled
+        :param delta: The number of workers to be removed. (A negative number
+        is expected here)
+        """
+
+        self._scale_cluster(cluster, delta)
 
     @base.atomic_action_timer('sahara.delete_cluster')
     def _delete_cluster(self, cluster):
