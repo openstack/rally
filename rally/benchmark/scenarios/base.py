@@ -100,19 +100,22 @@ class Scenario(object):
                     return getattr(scenario_cls, name)
         raise exceptions.NoSuchScenario(name=name)
 
-    @staticmethod
-    def list_benchmark_scenarios():
-        """Lists all the existing methods in the benchmark scenario classes.
+    @classmethod
+    def list_benchmark_scenarios(scenario_cls):
+        """List all scenarios in the benchmark scenario class & its subclasses.
 
         Returns the method names in format <Class name>.<Method name>, which
         is used in the test config.
 
+        :param scenario_cls: the base class for searching scenarios in
         :returns: List of strings
         """
+        scenario_classes = (list(utils.itersubclasses(scenario_cls)) +
+                            [scenario_cls])
         benchmark_scenarios = [
             ["%s.%s" % (scenario.__name__, func)
              for func in dir(scenario) if Scenario.is_scenario(scenario, func)]
-            for scenario in utils.itersubclasses(Scenario)
+            for scenario in scenario_classes
         ]
         benchmark_scenarios_flattened = list(itertools.chain.from_iterable(
                                                         benchmark_scenarios))

@@ -33,7 +33,14 @@ Samples:
 
     This class should contain authentication mechanism.
 
-    For different types of clients like Keystone.
+    Benchmark scenarios:
+    ---------------------------------------------------------
+     Name                            Description
+    ---------------------------------------------------------
+     Authenticate.keystone
+     Authenticate.validate_cinder    Check Cinder Client ...
+     Authenticate.validate_glance    Check Glance Client ...
+     Authenticate.validate_heat      Check Heat Client ...
 
     $ rally info find some_non_existing_benchmark
 
@@ -57,6 +64,11 @@ class InfoCommands(object):
     server providers.
     """
 
+    def __get__doc__(self):
+        doc = "Usage:\n\n    $ rally info find <query>\n\n"
+        doc += "Possible queries:\n\n" + self._list()
+        return doc
+
     @cliutils.args("--query", dest="query", type=str, help="Search query.")
     def find(self, query):
         """Search for an entity that matches the query and print info about it.
@@ -75,6 +87,38 @@ class InfoCommands(object):
                 print("Did you mean one of these?\n\t%s" %
                       "\n\t".join(substitutions))
             return 1
+
+    def list(self):
+        """List main entities in Rally for which rally info find works.
+
+        Lists benchmark scenario groups, deploy engines and server providers.
+        """
+        print(self._list())
+
+    def _list(self):
+        base_classes = {"scenario_groups": scenario_base.Scenario,
+                        "deploy_engines": deploy.EngineFactory,
+                        "server_providers": serverprovider.ProviderFactory}
+        descriptions = {"scenario_groups": [],
+                        "deploy_engines": [],
+                        "server_providers": []}
+        for entity_type in base_classes:
+            for entity in utils.itersubclasses(base_classes[entity_type]):
+                name = entity.__name__
+                doc = utils.parse_docstring(entity.__doc__)
+                description = doc["short_description"] or ""
+                descriptions[entity_type].append((name, description))
+
+        info = self._compose_table("Benchmark scenario groups",
+                                   descriptions["scenario_groups"])
+        info += ("  To get information about benchmark scenarios inside "
+                 "each scenario group, run:\n"
+                 "      $ rally info find <ScenarioGroupName>\n\n")
+        info += self._compose_table("Deploy engines",
+                                    descriptions["deploy_engines"])
+        info += self._compose_table("Server providers",
+                                    descriptions["server_providers"])
+        return info
 
     def _find_info(self, query):
         return (self._get_scenario_group_info(query) or
@@ -107,6 +151,27 @@ class InfoCommands(object):
             info = ("%s (benchmark scenario group).\n\n" %
                     scenario_group.__name__)
             info += utils.format_docstring(scenario_group.__doc__)
+            info += "\nBenchmark scenarios:\n"
+            scenarios = scenario_group.list_benchmark_scenarios()
+            first_column_len = max(map(len, scenarios)) + cliutils.MARGIN
+            second_column_len = len("Description") + cliutils.MARGIN
+            table = ""
+            for scenario_name in scenarios:
+                cls, method_name = scenario_name.split(".")
+                if hasattr(scenario_group, method_name):
+                    scenario = getattr(scenario_group, method_name)
+                    doc = utils.parse_docstring(scenario.__doc__)
+                    descr = doc["short_description"] or ""
+                    second_column_len = max(second_column_len,
+                                            len(descr) + cliutils.MARGIN)
+                    table += " " + scenario_name
+                    table += " " * (first_column_len - len(scenario_name))
+                    table += descr + "\n"
+            info += "-" * (first_column_len + second_column_len + 1) + "\n"
+            info += (" Name" + " " * (first_column_len - len("Name")) +
+                     "Description\n")
+            info += "-" * (first_column_len + second_column_len + 1) + "\n"
+            info += table
             return info
         except exceptions.NoSuchScenario:
             return None
@@ -152,3 +217,20 @@ class InfoCommands(object):
             return info
         except exceptions.NoSuchVMProvider:
             return None
+
+    def _compose_table(self, title, descriptions):
+        table = title + ":\n"
+        len0 = lambda x: len(x[0])
+        len1 = lambda x: len(x[1])
+        first_column_len = max(map(len0, descriptions)) + cliutils.MARGIN
+        second_column_len = max(map(len1, descriptions)) + cliutils.MARGIN
+        table += "-" * (first_column_len + second_column_len + 1) + "\n"
+        table += (" Name" + " " * (first_column_len - len("Name")) +
+                  "Description\n")
+        table += "-" * (first_column_len + second_column_len + 1) + "\n"
+        for (name, descr) in descriptions:
+            table += " " + name
+            table += " " * (first_column_len - len(name))
+            table += descr + "\n"
+        table += "\n"
+        return table

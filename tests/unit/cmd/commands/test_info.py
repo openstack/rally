@@ -15,9 +15,12 @@
 
 import mock
 
+from rally.benchmark.scenarios import base as scenario_base
 from rally.benchmark.scenarios.dummy import dummy
 from rally.cmd.commands import info
+from rally import deploy
 from rally.deploy.engines import existing as existing_cloud
+from rally.deploy import serverprovider
 from rally.deploy.serverprovider.providers import existing as existing_servers
 from rally import exceptions
 from tests.unit import test
@@ -26,7 +29,7 @@ from tests.unit import test
 SCENARIO = "rally.cmd.commands.info.scenario_base.Scenario"
 ENGINE = "rally.cmd.commands.info.deploy.EngineFactory"
 PROVIDER = "rally.cmd.commands.info.serverprovider.ProviderFactory"
-DUMMY = "rally.benchmark.scenarios.dummy.dummy.Dummy"
+UTILS = "rally.cmd.commands.info.utils"
 
 
 class InfoCommandsTestCase(test.TestCase):
@@ -72,4 +75,13 @@ class InfoCommandsTestCase(test.TestCase):
         query = "ExistingServers"
         status = self.info.find(query)
         mock_get_by_name.assert_called_once_with(query)
+        self.assertEqual(None, status)
+
+    @mock.patch(UTILS + ".itersubclasses", return_value=[dummy.Dummy])
+    def test_list(self, mock_itersubclasses):
+        status = self.info.list()
+        mock_itersubclasses.assert_has_calls([
+            mock.call(scenario_base.Scenario),
+            mock.call(deploy.EngineFactory),
+            mock.call(serverprovider.ProviderFactory)])
         self.assertEqual(None, status)

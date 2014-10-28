@@ -7,6 +7,7 @@ _rally()
     declare -A OPTS
 
     OPTS["info_find"]="--query"
+    OPTS["info_list"]=""
     OPTS["use_deployment"]="--uuid --name"
     OPTS["use_task"]="--uuid"
     OPTS["use_verification"]="--uuid"
