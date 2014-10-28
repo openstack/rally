@@ -17,7 +17,6 @@
 
 import json
 import os
-import pprint
 
 import six
 
@@ -90,26 +89,21 @@ class VerifyCommands(object):
     @cliutils.args('--uuid', type=str, dest='verification_uuid',
                    help='UUID of the verification')
     @cliutils.args('--html', action='store_true', dest='output_html',
-                   help=('Save results in html format to specified file'))
+                   help=('Results will be in html format'))
     @cliutils.args('--json', action='store_true', dest='output_json',
-                   help=('Save results in json format to specified file'))
-    @cliutils.args('--pprint', action='store_true', dest='output_pprint',
-                   help=('Save results in pprint format to specified file'))
+                   help=('Results will be in json format'))
     @cliutils.args('--output-file', type=str, required=False,
                    dest='output_file',
                    help='If specified, output will be saved to given file')
     @envutils.with_default_verification_id
     def results(self, verification_uuid=None, output_file=None,
-                output_html=None, output_json=None, output_pprint=None):
+                output_html=None, output_json=None):
         """Get raw results of the verification.
 
         :param verification_uuid: Verification UUID
         :param output_file: If specified, output will be saved to given file
-        :param output_html: Save results in html format to the specified file
-        :param output_json: Save results in json format to the specified file
-                            (Default)
-        :param output_pprint: Save results in pprint format to the
-                              specified file
+        :param output_html: The output will be in HTML format
+        :param output_json: The output will be in JSON format (Default)
         """
 
         try:
@@ -119,16 +113,12 @@ class VerifyCommands(object):
             return 1
 
         result = ''
-        if len(filter(lambda x: bool(x), [output_json, output_pprint,
-                                          output_html])) > 1:
-            print("Please specify only on output format")
-            return 1
-        elif output_pprint:
-            result = pprint.pformat(results)
+        if len(filter(lambda x: bool(x), [output_json, output_html])) > 1:
+            print("Please specify only one output format.")
         elif output_html:
             result = json2html.main(results)
         else:
-            result = json.dumps(results)
+            result = json.dumps(results, sort_keys=True, indent=4)
 
         if output_file:
             output_file = os.path.expanduser(output_file)

@@ -19,7 +19,6 @@ from __future__ import print_function
 
 import json
 import os
-import pprint
 import sys
 
 import jsonschema
@@ -173,37 +172,24 @@ class DeploymentCommands(object):
 
     @cliutils.args('--uuid', dest='deploy_id', type=str, required=False,
                    help='UUID of a deployment.')
-    @cliutils.args('--json', dest='output_json', action='store_true',
-                   help='Output in json format(default)')
-    @cliutils.args('--pprint', dest='output_pprint', action='store_true',
-                   help='Output in pretty print format')
     @envutils.with_default_deploy_id
-    def config(self, deploy_id=None, output_json=None, output_pprint=None):
+    def config(self, deploy_id=None):
         """Display configuration of the deployment.
 
-        Output can JSON or Pretty print format.
+        Output is the configuration of the deployment in a
+        pretty-printed JSON format.
 
         :param deploy_id: a UUID of the deployment
-        :param output_json: Output in json format (Default)
-        :param output_pprint: Output in pretty print format
         """
         deploy = db.deployment_get(deploy_id)
         result = deploy['config']
-        if all([output_json, output_pprint]):
-            print(_('Please select only one output format'))
-            return 1
-        elif output_pprint:
-            print()
-            pprint.pprint(result)
-            print()
-        else:
-            print(json.dumps(result))
+        print(json.dumps(result, sort_keys=True, indent=4))
 
     @cliutils.args('--uuid', dest='deploy_id', type=str, required=False,
                    help='UUID of a deployment.')
     @envutils.with_default_deploy_id
-    def endpoint(self, deploy_id=None):
-        """Display all endpoints of the deployment.
+    def show(self, deploy_id=None):
+        """Show the endpoints of the deployment.
 
         :param deploy_id: a UUID of the deployment
         """

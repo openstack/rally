@@ -146,7 +146,7 @@ class VerifyCommandsTestCase(test.TestCase):
         self.verify.results(verification_uuid, output_json=True)
 
         mock_db_result_get.assert_called_once_with(verification_uuid)
-        mock_json_dumps.assert_called_once_with({})
+        mock_json_dumps.assert_called_once_with({}, sort_keys=True, indent=4)
 
     @mock.patch('rally.db.verification_result_get')
     def test_results_verification_not_found(self, mock_db_result_get):
@@ -165,21 +165,6 @@ class VerifyCommandsTestCase(test.TestCase):
         verification_uuid = '94615cd4-ff45-4123-86bd-4b0741541d09'
         self.verify.results(verification_uuid, output_file='results',
                             output_json=True)
-
-        mock_db_result_get.assert_called_once_with(verification_uuid)
-        mock_open.assert_called_once_with('results', 'wb')
-        fake_file = mock_open.return_value.__enter__.return_value
-        fake_file.write.assert_called_once_with('{}')
-
-    @mock.patch('rally.cmd.commands.verify.open', create=True)
-    @mock.patch('rally.db.verification_result_get', return_value={'data': {}})
-    def test_results_with_output_pprint_and_output_file(self,
-                                                        mock_db_result_get,
-                                                        mock_open):
-        mock_open.return_value = mock.MagicMock()
-        verification_uuid = 'fa882ccc-153e-4a6e-9001-91fecda6a75c'
-        self.verify.results(verification_uuid, output_pprint=True,
-                            output_file='results')
 
         mock_db_result_get.assert_called_once_with(verification_uuid)
         mock_open.assert_called_once_with('results', 'wb')

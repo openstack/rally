@@ -136,7 +136,7 @@ class TaskCommandsTestCase(test.TestCase):
 
     @mock.patch('rally.cmd.commands.task.db')
     @mock.patch('json.dumps')
-    def test_results_default(self, mock_json, mock_db):
+    def test_results(self, mock_json, mock_db):
         test_uuid = 'aa808c14-69cc-4faf-a906-97e05f5aebbd'
         value = [
             {'key': 'key', 'data': {'raw': 'raw', 'sla': []}}
@@ -146,38 +146,7 @@ class TaskCommandsTestCase(test.TestCase):
                                 "sla": x["data"]["sla"]}, value)
         mock_db.task_result_get_all_by_uuid.return_value = value
         self.task.results(test_uuid)
-        mock_json.assert_called_once_with(result)
-        mock_db.task_result_get_all_by_uuid.assert_called_once_with(test_uuid)
-
-    @mock.patch('rally.cmd.commands.task.db')
-    @mock.patch('json.dumps')
-    def test_results_json(self, mock_json, mock_db):
-        test_uuid = 'e87dd629-cd3d-4a1e-b377-7b93c19226fb'
-        value = [
-            {'key': 'key', 'data': {'raw': 'raw', 'sla': []}}
-        ]
-        result = map(lambda x: {"key": x["key"],
-                                "result": x["data"]["raw"],
-                                "sla": x["data"]["sla"]}, value)
-
-        mock_db.task_result_get_all_by_uuid.return_value = value
-        self.task.results(test_uuid, output_json=True)
-        mock_json.assert_called_once_with(result)
-        mock_db.task_result_get_all_by_uuid.assert_called_once_with(test_uuid)
-
-    @mock.patch('rally.cmd.commands.task.db')
-    @mock.patch('pprint.pprint')
-    def test_results_pprint(self, mock_pprint, mock_db):
-        test_uuid = 'c1e4bc59-a8fd-458c-9abb-c922d8df4285'
-        value = [
-            {'key': 'key', 'data': {'raw': 'raw', 'sla': []}}
-        ]
-        result = map(lambda x: {"key": x["key"],
-                                "result": x["data"]["raw"],
-                                "sla": x["data"]["sla"]}, value)
-        mock_db.task_result_get_all_by_uuid.return_value = value
-        self.task.results(test_uuid, output_pprint=True)
-        mock_pprint.assert_called_once_with(result)
+        mock_json.assert_called_once_with(result, sort_keys=True, indent=4)
         mock_db.task_result_get_all_by_uuid.assert_called_once_with(test_uuid)
 
     @mock.patch('rally.cmd.commands.task.db')

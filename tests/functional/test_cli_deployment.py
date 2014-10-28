@@ -27,12 +27,12 @@ class DeploymentTestCase(unittest.TestCase):
         super(DeploymentTestCase, self).setUp()
         self.rally = utils.Rally()
 
-    def test_create_fromenv_list_endpoint(self):
+    def test_create_fromenv_list_show(self):
         with mock.patch.dict("os.environ", utils.TEST_ENV):
             self.rally("deployment create --name t_create_env --fromenv")
         self.assertIn("t_create_env", self.rally("deployment list"))
         self.assertIn(utils.TEST_ENV["OS_AUTH_URL"],
-                      self.rally("deployment endpoint"))
+                      self.rally("deployment show"))
 
     def test_create_fromfile(self):
         with mock.patch.dict("os.environ", utils.TEST_ENV):

@@ -304,19 +304,13 @@ class TaskCommands(object):
         print("\trally task results %s\n" % task["uuid"])
 
     @cliutils.args('--uuid', type=str, dest='task_id', help='uuid of task')
-    @cliutils.args('--pprint', action='store_true', dest='output_pprint',
-                   help=('Output in pretty print format'))
-    @cliutils.args('--json', action='store_true', dest='output_json',
-                   help=('Output in json format(default)'))
     @envutils.with_default_task_id
-    def results(self, task_id=None, output_pprint=None, output_json=None):
-        """Diplay raw task results.
+    def results(self, task_id=None):
+        """Display raw task results.
 
         This will produce a lot of output data about every iteration.
 
         :param task_id: Task uuid
-        :param output_pprint: Output in pretty print format
-        :param output_json: Output in json format (Default)
         """
 
         results = map(lambda x: {"key": x["key"], 'result': x['data']['raw'],
@@ -324,15 +318,7 @@ class TaskCommands(object):
                       db.task_result_get_all_by_uuid(task_id))
 
         if results:
-            if all([output_pprint, output_json]):
-                print(_('Please select only one output format'))
-                return 1
-            elif output_pprint:
-                print()
-                pprint.pprint(results)
-                print()
-            else:
-                print(json.dumps(results))
+            print(json.dumps(results, sort_keys=True, indent=4))
         else:
             print(_("The task %s can not be found") % task_id)
             return(1)

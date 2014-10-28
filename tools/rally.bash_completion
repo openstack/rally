@@ -17,7 +17,7 @@ _rally()
     OPTS["task_list"]=""
     OPTS["task_plot2html"]="--uuid --out --open"
     OPTS["task_report"]="--uuid --out --open"
-    OPTS["task_results"]="--uuid --pprint --json"
+    OPTS["task_results"]="--uuid"
     OPTS["task_sla_check"]="--uuid --json"
     OPTS["task_start"]="--deploy-id --task --tag --no-use"
     OPTS["task_status"]="--uuid"
@@ -29,16 +29,16 @@ _rally()
     OPTS["show_secgroups"]="--deploy-id"
     OPTS["verify_detailed"]="--uuid --sort-by"
     OPTS["verify_list"]=""
-    OPTS["verify_results"]="--uuid --html --json --pprint --output-file"
+    OPTS["verify_results"]="--uuid --html --json --output-file"
     OPTS["verify_show"]="--uuid --sort-by --detailed"
     OPTS["verify_start"]="--deploy-id --set --regex --tempest-config --no-use"
     OPTS["deployment_check"]="--uuid"
-    OPTS["deployment_config"]="--uuid --json --pprint"
+    OPTS["deployment_config"]="--uuid"
     OPTS["deployment_create"]="--name --fromenv --filename --no-use"
     OPTS["deployment_destroy"]="--uuid"
-    OPTS["deployment_endpoint"]="--uuid"
     OPTS["deployment_list"]=""
     OPTS["deployment_recreate"]="--uuid"
+    OPTS["deployment_show"]="--uuid"
 
 
     for OPT in ${!OPTS[*]} ; do

@@ -156,32 +156,13 @@ class DeploymentCommandsTestCase(test.TestCase):
 
     @mock.patch('rally.cmd.commands.deployment.db.deployment_get')
     @mock.patch('json.dumps')
-    def test_config_default(self, mock_json_dumps, mock_deployment):
+    def test_config(self, mock_json_dumps, mock_deployment):
         deploy_id = 'fa4a423e-f15d-4d83-971a-89574f892999'
         value = {'config': 'config'}
         mock_deployment.return_value = value
         self.deployment.config(deploy_id)
-        mock_json_dumps.assert_called_once_with(value['config'])
-        mock_deployment.assert_called_once_with(deploy_id)
-
-    @mock.patch('rally.cmd.commands.deployment.db.deployment_get')
-    @mock.patch('json.dumps')
-    def test_config_json(self, mock_json_dumps, mock_deployment):
-        deploy_id = '25c5f6d3-56ce-4273-834c-1ae5e1c2599c'
-        value = {'config': 'config'}
-        mock_deployment.return_value = value
-        self.deployment.config(deploy_id, output_json=True)
-        mock_json_dumps.assert_called_once_with(value['config'])
-        mock_deployment.assert_called_once_with(deploy_id)
-
-    @mock.patch('rally.cmd.commands.deployment.db.deployment_get')
-    @mock.patch('pprint.pprint')
-    def test_config_pprint(self, mock_pprint, mock_deployment):
-        deploy_id = '840a0144-4634-46fd-8cf8-b84caa0dba67'
-        value = {'config': 'config'}
-        mock_deployment.return_value = value
-        self.deployment.config(deploy_id, output_pprint=True)
-        mock_pprint.assert_called_once_with(value['config'])
+        mock_json_dumps.assert_called_once_with(value['config'],
+                                                sort_keys=True, indent=4)
         mock_deployment.assert_called_once_with(deploy_id)
 
     @mock.patch('rally.cmd.commands.deployment.envutils.get_global')
@@ -193,7 +174,7 @@ class DeploymentCommandsTestCase(test.TestCase):
     @mock.patch('rally.cmd.commands.deployment.common_cliutils.print_list')
     @mock.patch('rally.cmd.commands.deployment.utils.Struct')
     @mock.patch('rally.cmd.commands.deployment.db.deployment_get')
-    def test_endpoint(self, mock_deployment, mock_struct, mock_print_list):
+    def test_show(self, mock_deployment, mock_struct, mock_print_list):
         deploy_id = "b1a6153e-a314-4cb3-b63b-cf08c1a416c3"
         value = {
             "admin": {
@@ -208,7 +189,7 @@ class DeploymentCommandsTestCase(test.TestCase):
             "users": []
         }
         mock_deployment.return_value = value
-        self.deployment.endpoint(deploy_id)
+        self.deployment.show(deploy_id)
         mock_deployment.assert_called_once_with(deploy_id)
 
         headers = ["auth_url", "username", "password", "tenant_name",
@@ -222,4 +203,4 @@ class DeploymentCommandsTestCase(test.TestCase):
     def test_deploy_no_deploy_id(self, mock_default):
         mock_default.side_effect = exceptions.InvalidArgumentsException
         self.assertRaises(exceptions.InvalidArgumentsException,
-                          self.deployment.endpoint, None)
+                          self.deployment.show, None)
