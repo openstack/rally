@@ -104,19 +104,6 @@ def args(*args, **kwargs):
     return _decorator
 
 
-def _get_doc(cls):
-    """Get the dynamic docstring of a class.
-
-    Return the usual docstring stored in __doc__ if no dynamic one exists.
-
-    :returns: docstring
-    """
-    if hasattr(cls, "__get__doc__"):
-        return cls().__get__doc__()
-    else:
-        return cls.__doc__
-
-
 def _methods_of(cls):
     """Get all callable methods of a class that don't start with underscore.
 
@@ -132,7 +119,7 @@ def _compose_category_description(category):
     descr_pairs = _methods_of(category)
 
     description = ""
-    doc = _get_doc(category)
+    doc = category.__doc__
     if doc:
         description = doc.strip()
     if descr_pairs:

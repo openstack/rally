@@ -136,6 +136,10 @@ class NoSuchContext(NotFoundException):
     msg_fmt = _("There is no benchmark context with name `%(name)s`.")
 
 
+class NoSuchSLA(NotFoundException):
+    msg_fmt = _("There is no SLA with name `%(name)s`.")
+
+
 class NoSuchConfigField(NotFoundException):
     msg_fmt = _("There is no field in the task config with name `%(name)s`.")
 

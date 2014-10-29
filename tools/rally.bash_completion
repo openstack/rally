@@ -6,6 +6,10 @@ _rally()
     declare -A SUBCOMMANDS
     declare -A OPTS
 
+    OPTS["info_BenchmarkScenarios"]=""
+    OPTS["info_DeployEngines"]=""
+    OPTS["info_SLA"]=""
+    OPTS["info_ServerProviders"]=""
     OPTS["info_find"]="--query"
     OPTS["info_list"]=""
     OPTS["use_deployment"]="--uuid --name"

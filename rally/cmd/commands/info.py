@@ -50,6 +50,7 @@ Samples:
 from __future__ import print_function
 
 from rally.benchmark.scenarios import base as scenario_base
+from rally.benchmark.sla import base as sla_base
 from rally.cmd import cliutils
 from rally import deploy
 from rally.deploy import serverprovider
@@ -60,14 +61,18 @@ from rally import utils
 class InfoCommands(object):
     """This command allows you to get quick doc of some rally entities.
 
-    Available for scenario groups, scenarios, deployment engines and
+    Available for scenario groups, scenarios, SLA, deploy engines and
     server providers.
-    """
 
-    def __get__doc__(self):
-        doc = "Usage:\n\n    $ rally info find <query>\n\n"
-        doc += "Possible queries:\n\n" + self._list()
-        return doc
+    Usage:
+        $ rally info find <query>
+
+    To see lists of entities you can query docs for, type one of the following:
+        $ rally info BenchmarkScenarios
+        $ rally info SLA
+        $ rally info DeployEngines
+        $ rally info ServerProviders
+    """
 
     @cliutils.args("--query", dest="query", type=str, help="Search query.")
     def find(self, query):
@@ -81,8 +86,8 @@ class InfoCommands(object):
         if info:
             print(info)
         else:
-            print("Failed to find any docs for query: '%s'" % query)
             substitutions = self._find_substitution(query)
+            print("Failed to find any docs for query: '%s'" % query)
             if substitutions:
                 print("Did you mean one of these?\n\t%s" %
                       "\n\t".join(substitutions))
@@ -93,36 +98,51 @@ class InfoCommands(object):
 
         Lists benchmark scenario groups, deploy engines and server providers.
         """
-        print(self._list())
+        self.BenchmarkScenarios()
+        self.SLA()
+        self.DeployEngines()
+        self.ServerProviders()
 
-    def _list(self):
-        base_classes = {"scenario_groups": scenario_base.Scenario,
-                        "deploy_engines": deploy.EngineFactory,
-                        "server_providers": serverprovider.ProviderFactory}
-        descriptions = {"scenario_groups": [],
-                        "deploy_engines": [],
-                        "server_providers": []}
-        for entity_type in base_classes:
-            for entity in utils.itersubclasses(base_classes[entity_type]):
-                name = entity.__name__
-                doc = utils.parse_docstring(entity.__doc__)
-                description = doc["short_description"] or ""
-                descriptions[entity_type].append((name, description))
-
-        info = self._compose_table("Benchmark scenario groups",
-                                   descriptions["scenario_groups"])
+    def BenchmarkScenarios(self):
+        """List benchmark scenarios available in Rally."""
+        scenarios = self._get_descriptions(scenario_base.Scenario)
+        info = self._compose_table("Benchmark scenario groups", scenarios)
         info += ("  To get information about benchmark scenarios inside "
                  "each scenario group, run:\n"
                  "      $ rally info find <ScenarioGroupName>\n\n")
-        info += self._compose_table("Deploy engines",
-                                    descriptions["deploy_engines"])
-        info += self._compose_table("Server providers",
-                                    descriptions["server_providers"])
-        return info
+        print(info)
+
+    def SLA(self):
+        """List server providers available in Rally."""
+        sla = self._get_descriptions(sla_base.SLA)
+        info = self._compose_table("SLA", sla)
+        print(info)
+
+    def DeployEngines(self):
+        """List deploy engines available in Rally."""
+        engines = self._get_descriptions(deploy.EngineFactory)
+        info = self._compose_table("Deploy engines", engines)
+        print(info)
+
+    def ServerProviders(self):
+        """List server providers available in Rally."""
+        providers = self._get_descriptions(serverprovider.ProviderFactory)
+        info = self._compose_table("Server providers", providers)
+        print(info)
+
+    def _get_descriptions(self, base_cls):
+        descriptions = []
+        for entity in utils.itersubclasses(base_cls):
+            name = entity.__name__
+            doc = utils.parse_docstring(entity.__doc__)
+            description = doc["short_description"] or ""
+            descriptions.append((name, description))
+        return descriptions
 
     def _find_info(self, query):
         return (self._get_scenario_group_info(query) or
                 self._get_scenario_info(query) or
+                self._get_sla_info(query) or
                 self._get_deploy_engine_info(query) or
                 self._get_server_provider_info(query))
 
@@ -198,6 +218,15 @@ class InfoCommands(object):
                 info += "Returns: %s" % doc["returns"]
             return info
         except exceptions.NoSuchScenario:
+            return None
+
+    def _get_sla_info(self, query):
+        try:
+            sla = sla_base.SLA.get_by_name(query)
+            info = "%s (SLA).\n\n" % sla.__name__
+            info += utils.format_docstring(sla.__doc__)
+            return info
+        except exceptions.NoSuchSLA:
             return None
 
     def _get_deploy_engine_info(self, query):
