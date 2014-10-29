@@ -13,14 +13,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import os
-
 from rally import utils as rutils
 
 
 rutils.import_modules_from_package("rally.benchmark.context")
 rutils.import_modules_from_package("rally.benchmark.runners")
 rutils.import_modules_from_package("rally.benchmark.scenarios")
-
-rutils.load_plugins("/opt/rally/plugins/")
-rutils.load_plugins(os.path.expanduser("~/.rally/plugins/"))

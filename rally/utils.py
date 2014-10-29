@@ -23,14 +23,15 @@ import StringIO
 import sys
 import time
 
+from oslo.config import cfg
 from oslo.utils import importutils
-import six
 from sphinx.util import docstrings
 
 from rally import exceptions
 from rally.i18n import _
 from rally.openstack.common import log as logging
 
+CONF = cfg.CONF
 LOG = logging.getLogger(__name__)
 
 JSON_SCHEMA = 'http://json-schema.org/draft-04/schema'
@@ -183,6 +184,8 @@ def log_verification_wrapper(log, msg, **kw):
 
 def load_plugins(directory):
     if os.path.exists(directory):
+        LOG.info("Loading plugins from directories %s/*" % directory)
+
         to_load = []
         for root, dirs, files in os.walk(directory):
             to_load.extend((plugin[:-3], root)
@@ -193,10 +196,13 @@ def load_plugins(directory):
                 fp, pathname, descr = imp.find_module(plugin, [directory])
                 imp.load_module(plugin, fp, pathname, descr)
                 fp.close()
-                LOG.debug("Load plugin from file %s" % fullpath)
+                LOG.info("\t Loaded module with plugins: %s.py" % fullpath)
             except Exception as e:
-                LOG.error(_("Couldn't load module from %(path)s: %(msg)s") %
-                          {"path": fullpath, "msg": six.text_type(e)})
+                LOG.warning(
+                    "\t Failed to load module with plugins %(path)s.py: %(e)s"
+                    % {"path": fullpath, "e": e})
+                if CONF.debug:
+                    LOG.exception(e)
 
 
 def get_method_class(func):
