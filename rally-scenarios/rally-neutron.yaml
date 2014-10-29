@@ -290,7 +290,7 @@
         flavor:
             name: "m1.tiny"
         image:
-            name: "cirros-0.3.2-x86_64-uec"
+            name: "^cirros.*uec$"
       runner:
         type: "constant"
         times: 6
@@ -308,7 +308,7 @@
         flavor:
             name: "m1.tiny"
         image:
-            name: "cirros-0.3.2-x86_64-uec"
+            name: "^cirros.*uec$"
       runner:
         type: "constant"
         times: 6
@@ -326,7 +326,7 @@
         flavor:
             name: "m1.tiny"
         image:
-            name: "cirros-0.3.2-x86_64-uec"
+            name: "^cirros.*uec$"
         detailed: True
       runner:
         type: "constant"
@@ -345,7 +345,7 @@
         flavor:
             name: "m1.tiny"
         image:
-            name: "cirros-0.3.2-x86_64-uec"
+            name: "^cirros.*uec$"
         actions:
           -
             hard_reboot: 1
@@ -372,7 +372,7 @@
         flavor:
             name: "m1.tiny"
         image:
-            name: "cirros-0.3.2-x86_64-uec"
+            name: "^cirros.*uec$"
         volume_size: 1
       runner:
         type: "constant"
@@ -391,7 +391,7 @@
         flavor:
             name: "m1.tiny"
         image:
-            name: "cirros-0.3.2-x86_64-uec"
+            name: "^cirros.*uec$"
         volume_size: 1
       runner:
         type: "constant"
@@ -410,7 +410,7 @@
         flavor:
             name: "m1.tiny"
         image:
-            name: "cirros-0.3.2-x86_64-uec"
+            name: "^cirros.*uec$"
       runner:
         type: "constant"
         times: 2
@@ -428,7 +428,7 @@
         flavor:
             name: "m1.tiny"
         image:
-            name: "cirros-0.3.2-x86_64-uec"
+            name: "^cirros.*uec$"
         to_flavor:
             name: "m1.small"
         confirm: true

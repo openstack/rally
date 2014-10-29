@@ -4,7 +4,7 @@
             "args": {
                 "volume_size": 10,
                 "image": {
-                    "name": "cirros-0.3.2-x86_64-uec"
+                    "name": "^cirros.*uec$"
                 },
                 "flavor": {
                     "name": "m1.nano"

@@ -79,8 +79,8 @@ class ResourceType(object):
 def _id_from_name(resource_config, resources, typename):
     """Return the id of the resource whose name matches the pattern.
 
-    When resource_config contains `name`, an exact match is used.
-    When resource_config contains `regex`, a pattern match is used.
+    resource_config has to contain `name`, as it is used to lookup an id.
+    Value of the name will be treated as regexp.
 
     An `InvalidScenarioArgument` is thrown if the pattern does
     not match unambiguously.
@@ -91,10 +91,25 @@ def _id_from_name(resource_config, resources, typename):
 
     :returns: resource id uniquely mapped to `name` or `regex`
     """
-    if resource_config.get('name'):
-        patternstr = "^{0}$".format(resource_config.get('name'))
-    elif resource_config.get('regex'):
-        patternstr = resource_config.get('regex')
+    if "name" in resource_config:
+        # In a case of pattern string exactly maches resource name
+        matching_exact = filter(lambda r: r.name == resource_config["name"],
+                                resources)
+        if len(matching_exact) == 1:
+            return matching_exact[0].id
+        elif len(matching_exact) > 1:
+            raise exceptions.InvalidScenarioArgument(
+                "{typename} with name '{pattern}' "
+                "is ambiguous, possible matches "
+                "by id: {ids}".format(typename=typename.title(),
+                                      pattern=resource_config["name"],
+                                      ids=", ".join(map(
+                                                    operator.attrgetter("id"),
+                                                    matching_exact))))
+        # Else look up as regex
+        patternstr = resource_config["name"]
+    elif "regex" in resource_config:
+        patternstr = resource_config["regex"]
     else:
         raise exceptions.InvalidScenarioArgument(
             "{typename} 'id', 'name', or 'regex' not found "
@@ -153,7 +168,8 @@ class ImageResourceType(ResourceType):
         if not resource_id:
             glanceclient = clients.glance()
             resource_id = _id_from_name(resource_config=resource_config,
-                                        resources=glanceclient.images.list(),
+                                        resources=list(
+                                            glanceclient.images.list()),
                                         typename='image')
         return resource_id
 

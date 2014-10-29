@@ -6,7 +6,7 @@
                     "name": "m1.nano"
                 },
                 "image": {
-                    "name": "cirros-0.3.1-x86_64-uec"
+                    "name": "^cirros.*uec$"
                 },
                 "detailed": true
             },
