@@ -35,8 +35,8 @@ more about runners configurations, see samples in `doc/samples/tasks/runners
 <https://github.com/stackforge/rally/tree/master/doc/samples/tasks/runners>`_.
 
 Section "context" defines different types of environments in which task can
-be launched. Look at `doc/samples/tasks/context
-<https://github.com/stackforge/rally/tree/master/doc/samples/tasks/context>`_
+be launched. Look at `doc/samples/tasks/contexts
+<https://github.com/stackforge/rally/tree/master/doc/samples/tasks/contexts>`_
 for samples.
 
 Section "sla" defines details for determining compliance with contracted values
@@ -46,4 +46,4 @@ Look at `doc/samples/tasks/sla
 samples.
 
 See a `detailed description of benchmark scenarios, contexts & runners
-<https://github.com/stackforge/rally/tree/master/doc/source/benchmark.rst>`_.
+<https://github.com/stackforge/rally/tree/master/doc/source/concepts.rst>`_.

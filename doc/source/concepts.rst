@@ -224,7 +224,7 @@ User's view
 
 From the user's prospective, contexts in Rally are manageable via the **task configuration files**. In a typical configuration file, each benchmark scenario to be run is not only supplied by the information about its arguments and how many times it should be launched, but also with a special **"context"** section. In this section, the user may configure a number of contexts he needs his scenarios to be run within.
 
-In the example below, the **"users" context** specifies that the *"NovaServers.boot_server"* scenario should be run from **1 tenant** having **3 users** in it. Bearing in mind that the default quota for the number of instances is 10 instances pro tenant, it is also reasonable to extend it to, say, **20 instances** in the **"quotas" context**. Otherwise the scenario would eventually fail, since it tries to boot a server 15 times from a single tenant.
+In the example below, the **"users" context** specifies that the *"NovaServers.boot_server"* scenario should be run from **1 tenant** having **3 users** in it. Bearing in mind that the default quota for the number of instances is 10 instances per tenant, it is also reasonable to extend it to, say, **20 instances** in the **"quotas" context**. Otherwise the scenario would eventually fail, since it tries to boot a server 15 times from a single tenant.
 
 .. parsed-literal::
 
@@ -332,7 +332,7 @@ Put the plugin into the **/opt/rally/plugins** or **~/.rally/plugins** directory
 Creation
 ^^^^^^^^
 
-Inherit a class for you plugin from base class for scenario, runner or context depends on what type of plugin you want create.
+Inherit a class for your plugin from base class for scenario, runner or context depends on what type of plugin you want create.
 
 See more information about `scenarios <ScenariosDevelopment>`_, `runnres <RunnersDevelopment>`_ and `contexts <ContextDevelopment>`_ creation.
 
