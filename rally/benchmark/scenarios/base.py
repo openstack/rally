@@ -73,8 +73,6 @@ class Scenario(object):
     @staticmethod
     def get_by_name(name):
         """Returns Scenario class by name."""
-        # TODO(msdubov): support approximate string matching
-        #                (here and in other base classes).
         for scenario in utils.itersubclasses(Scenario):
             if name == scenario.__name__:
                 return scenario

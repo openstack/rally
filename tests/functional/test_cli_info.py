@@ -38,6 +38,9 @@ class InfoTestCase(unittest.TestCase):
     def test_find_scenario(self):
         self.assertIn("(benchmark scenario)", self.rally("info find dummy"))
 
+    def test_find_sla(self):
+        self.assertIn("(SLA)", self.rally("info find FailureRate"))
+
     def test_find_deployment_engine(self):
         marker_string = "ExistingCloud (deploy engine)."
         self.assertIn(marker_string, self.rally("info find ExistingCloud"))
@@ -68,18 +71,29 @@ class InfoTestCase(unittest.TestCase):
         output = self.rally("info list")
         self.assertIn("Benchmark scenario groups:", output)
         self.assertIn("NovaServers", output)
+        self.assertIn("SLA:", output)
+        self.assertIn("FailureRate", output)
         self.assertIn("Deploy engines:", output)
         self.assertIn("ExistingCloud", output)
         self.assertIn("Server providers:", output)
         self.assertIn("ExistingServers", output)
 
-    def test_list_shorthand(self):
-        try:
-            self.rally("info")
-        except utils.RallyCmdError as e:
-            self.assertIn("Benchmark scenario groups:", e.output)
-            self.assertIn("NovaServers", e.output)
-            self.assertIn("Deploy engines:", e.output)
-            self.assertIn("ExistingCloud", e.output)
-            self.assertIn("Server providers:", e.output)
-            self.assertIn("ExistingServers", e.output)
+    def test_BenchmarkScenarios(self):
+        output = self.rally("info BenchmarkScenarios")
+        self.assertIn("Benchmark scenario groups:", output)
+        self.assertIn("NovaServers", output)
+
+    def test_SLA(self):
+        output = self.rally("info SLA")
+        self.assertIn("SLA:", output)
+        self.assertIn("FailureRate", output)
+
+    def test_DeployEngines(self):
+        output = self.rally("info DeployEngines")
+        self.assertIn("Deploy engines:", output)
+        self.assertIn("ExistingCloud", output)
+
+    def test_ServerProviders(self):
+        output = self.rally("info ServerProviders")
+        self.assertIn("Server providers:", output)
+        self.assertIn("ExistingServers", output)

@@ -25,6 +25,7 @@ import jsonschema
 import six
 
 from rally.benchmark.processing import utils as putils
+from rally import exceptions
 from rally.i18n import _
 from rally import utils
 
@@ -80,6 +81,14 @@ class SLA(object):
                             'success': check_result.success,
                             'detail': check_result.msg})
         return results
+
+    @staticmethod
+    def get_by_name(name):
+        """Returns SLA by name."""
+        for sla in utils.itersubclasses(SLA):
+            if name == sla.__name__:
+                return sla
+        raise exceptions.NoSuchSLA(name=name)
 
 
 class FailureRate(SLA):
