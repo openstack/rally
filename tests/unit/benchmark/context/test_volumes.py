@@ -80,8 +80,8 @@ class VolumeGeneratorTestCase(test.TestCase):
         self.assertEqual(new_context, real_context)
 
     @mock.patch("%s.volumes.osclients" % CTX)
-    @mock.patch("%s.cleanup.utils.delete_cinder_resources" % CTX)
-    def test_cleanup(self, mock_cinder_remover, mock_osclients):
+    @mock.patch("%s.volumes.resource_manager.cleanup" % CTX)
+    def test_cleanup(self, mock_cleanup, mock_osclients):
         ctx_volumes = [
             {'volume_id': 'uuid', 'endpoint': mock.MagicMock(), 'tenant_id': i}
             for i in range(2)]
@@ -111,38 +111,5 @@ class VolumeGeneratorTestCase(test.TestCase):
         volumes_ctx = volumes.VolumeGenerator(context)
         volumes_ctx.cleanup()
 
-        self.assertEqual(2, len(mock_cinder_remover.mock_calls))
-
-    @mock.patch("%s.volumes.osclients" % CTX)
-    @mock.patch("%s.cleanup.utils.delete_cinder_resources" % CTX)
-    def test_cleanup_exception(self, mock_cinder_remover, mock_osclients):
-        ctx_volumes = [
-            {'volume_id': 'uuid', 'endpoint': mock.MagicMock(), 'tenant_id': i}
-            for i in range(2)]
-        user_key = [{'id': i, 'tenant_id': j, 'endpoint': 'endpoint'}
-                    for j in range(2)
-                    for i in range(5)]
-
-        context = {
-            "config": {
-                "users": {
-                    "tenants": 2,
-                    "users_per_tenant": 5,
-                    "concurrent": 10,
-                },
-                "volumes": {
-                    "size": 1,
-                }
-            },
-            "admin": {
-                "endpoint": mock.MagicMock()
-            },
-            "task": mock.MagicMock(),
-            "users": user_key,
-            "volumes": ctx_volumes,
-        }
-
-        mock_cinder_remover.side_effect = Exception()
-        volumes_ctx = volumes.VolumeGenerator(context)
-        volumes_ctx.cleanup()
-        self.assertEqual(2, len(mock_cinder_remover.mock_calls))
+        mock_cleanup.assert_called_once_with(names=["cinder.volumes"],
+                                             users=context["users"])

@@ -102,8 +102,8 @@ class ImageGeneratorTestCase(test.TestCase):
         self.assertEqual(new_context, real_context)
 
     @mock.patch("%s.images.osclients" % CTX)
-    @mock.patch("%s.cleanup.utils.delete_glance_resources" % CTX)
-    def test_cleanup(self, mock_image_remover, mock_osclients):
+    @mock.patch("%s.images.resource_manager.cleanup" % CTX)
+    def test_cleanup(self, mock_cleanup, mock_osclients):
         image_list = ["uuid"] * 5
         image_key = [{'image_id': image_list, 'endpoint': 'endpoint',
                       'tenant_id': i} for i in range(2)]
@@ -135,11 +135,8 @@ class ImageGeneratorTestCase(test.TestCase):
 
         images_ctx = images.ImageGenerator(context)
         images_ctx.cleanup()
-
-        self.assertEqual(2, len(mock_image_remover.mock_calls))
-
-        mock_image_remover.side_effect = Exception('failed_deletion')
-        self.assertRaises(exceptions.ImageCleanUpException, images_ctx.cleanup)
+        mock_cleanup.assert_called_once_with(names=["glance.images"],
+                                             users=context["users"])
 
     def test_validate_semantic(self):
         users = [fakes.FakeClients()]

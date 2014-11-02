@@ -15,8 +15,8 @@
 import mock
 
 from rally.benchmark.context.sahara import sahara_image
-from rally import exceptions
 from tests.unit import test
+
 
 BASE_CTX = "rally.benchmark.context"
 CTX = "rally.benchmark.context.sahara"
@@ -61,8 +61,8 @@ class SaharaImageTestCase(test.TestCase):
     @mock.patch("%s.glance.utils.GlanceScenario._create_image" % SCN,
                 return_value=mock.MagicMock(id=42))
     @mock.patch("%s.sahara_image.osclients" % CTX)
-    @mock.patch("%s.cleanup.utils.delete_glance_resources" % BASE_CTX)
-    def test_setup_and_cleanup(self, mock_image_remover, mock_osclients,
+    @mock.patch("%s.sahara_image.resource_manager.cleanup" % CTX)
+    def test_setup_and_cleanup(self, mock_cleanup, mock_osclients,
                                mock_image_generator, mock_uuid):
 
         ctx = self.context_without_images_key
@@ -97,7 +97,5 @@ class SaharaImageTestCase(test.TestCase):
             sahara_update_tags_calls)
 
         sahara_ctx.cleanup()
-        self.assertEqual(self.tenants_num, len(mock_image_remover.mock_calls))
-
-        mock_image_remover.side_effect = Exception('failed_deletion')
-        self.assertRaises(exceptions.ImageCleanUpException, sahara_ctx.cleanup)
+        mock_cleanup.assert_called_once_with(names=["glance.images"],
+                                             users=ctx["users"])

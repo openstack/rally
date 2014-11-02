@@ -16,11 +16,12 @@
 from oslo.config import cfg
 
 from rally.benchmark.context import base
-from rally.benchmark.context.cleanup import utils as cleanup_utils
+from rally.benchmark.context.cleanup import manager as resource_manager
 from rally.benchmark.scenarios.sahara import utils
 from rally.benchmark import types
 from rally.benchmark import utils as bench_utils
 from rally import exceptions
+from rally.i18n import _
 from rally.openstack.common import log as logging
 from rally import osclients
 from rally import utils as rutils
@@ -164,11 +165,7 @@ class SaharaCluster(base.Context):
 
     @rutils.log_task_wrapper(LOG.info, _("Exit context: `Sahara Cluster`"))
     def cleanup(self):
-        clean_tenants = set()
-        for user in self.context.get("users", []):
-            tenant_id = user["tenant_id"]
-            if tenant_id not in clean_tenants:
-                clean_tenants.add(tenant_id)
 
-                sahara = osclients.Clients(user["endpoint"]).sahara()
-                cleanup_utils.delete_clusters(sahara)
+        # TODO(boris-42): Delete only resources created by this context
+        resource_manager.cleanup(names=["sahara.clusters"],
+                                 users=self.context.get("users", []))

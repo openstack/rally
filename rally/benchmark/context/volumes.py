@@ -13,8 +13,9 @@
 # under the License.
 
 from rally.benchmark.context import base
-from rally.benchmark.context.cleanup import utils as cleanup_utils
+from rally.benchmark.context.cleanup import manager as resource_manager
 from rally.benchmark.scenarios.cinder import utils as cinder_utils
+from rally.i18n import _
 from rally.openstack.common import log as logging
 from rally import osclients
 from rally import utils as rutils
@@ -65,14 +66,6 @@ class VolumeGenerator(base.Context):
 
     @rutils.log_task_wrapper(LOG.info, _("Exit context: `Volumes`"))
     def cleanup(self):
-        for volume in self.context["volumes"]:
-            try:
-                cinder = osclients.Clients(volume["endpoint"]).cinder()
-                cleanup_utils.delete_cinder_resources(cinder)
-            except Exception as ex:
-                LOG.warning("Failed to remove volume: %(volume_id)s for user "
-                            "%(tenant)s/%(user)s. Exception: %(ex)s" %
-                            {"volume_id": volume["volume_id"],
-                             "tenant": volume["endpoint"].tenant_name,
-                             "user": volume["endpoint"].username,
-                             "ex": ex})
+        # TODO(boris-42): Delete only resources created by this context
+        resource_manager.cleanup(names=["cinder.volumes"],
+                                 users=self.context.get("users", []))

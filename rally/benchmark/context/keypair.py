@@ -14,9 +14,9 @@
 #    under the License.
 
 import novaclient.exceptions
-import six
 
 from rally.benchmark.context import base
+from rally.benchmark.context.cleanup import manager as resource_manager
 from rally.i18n import _
 from rally.openstack.common import log as logging
 from rally import osclients
@@ -33,23 +33,17 @@ class Keypair(base.Context):
 
     KEYPAIR_NAME = "rally_ssh_key"
 
-    def _get_nova_client(self, endpoint):
-        return osclients.Clients(endpoint).nova()
-
-    def _keypair_safe_remove(self, nova):
-        try:
-            nova.keypairs.delete(self.KEYPAIR_NAME)
-        except novaclient.exceptions.NotFound:
-            pass
-
     def _generate_keypair(self, endpoint):
-        nova = self._get_nova_client(endpoint)
+        nova_client = osclients.Clients(endpoint).nova()
 
         # NOTE(hughsaunders): If keypair exists, it must be deleted as we can't
         # retrieve the private key
-        self._keypair_safe_remove(nova)
+        try:
+            nova_client.keypairs.delete(self.KEYPAIR_NAME)
+        except novaclient.exceptions.NotFound:
+            pass
 
-        keypair = nova.keypairs.create(self.KEYPAIR_NAME)
+        keypair = nova_client.keypairs.create(self.KEYPAIR_NAME)
         return {"private": keypair.private_key,
                 "public": keypair.public_key}
 
@@ -61,15 +55,6 @@ class Keypair(base.Context):
 
     @utils.log_task_wrapper(LOG.info, _("Exit context: `keypair`"))
     def cleanup(self):
-        for user in self.context["users"]:
-            endpoint = user['endpoint']
-            try:
-                nova = self._get_nova_client(endpoint)
-                self._keypair_safe_remove(nova)
-            except Exception as e:
-                LOG.warning("Unable to delete keypair: %(kpname)s for user "
-                            "%(tenant)s/%(user)s: %(message)s"
-                            % {'kpname': self.KEYPAIR_NAME,
-                               'tenant': endpoint.tenant_name,
-                               'user': endpoint.username,
-                               'message': six.text_type(e)})
+        # TODO(boris-42): Delete only resources created by this context
+        resource_manager.cleanup(names=["nova.keypairs"],
+                                 users=self.context.get("users", []))
