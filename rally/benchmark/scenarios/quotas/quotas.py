@@ -23,7 +23,7 @@ class Quotas(utils.QuotasScenario):
 
     @validation.required_services(consts.Service.NOVA)
     @validation.required_openstack(admin=True, users=True)
-    @base.scenario(context={"admin_cleanup": ["quotas"]})
+    @base.scenario(context={"admin_cleanup": ["nova.quotas"]})
     def nova_update(self, max_quota=1024):
         """Tests updating quotas for nova.
 
@@ -34,7 +34,7 @@ class Quotas(utils.QuotasScenario):
 
     @validation.required_services(consts.Service.NOVA)
     @validation.required_openstack(admin=True, users=True)
-    @base.scenario(context={"admin_cleanup": ["quotas"]})
+    @base.scenario(context={"admin_cleanup": ["nova.quotas"]})
     def nova_update_and_delete(self, max_quota=1024):
         """Tests updating and deleting quotas for nova.
 
@@ -47,7 +47,7 @@ class Quotas(utils.QuotasScenario):
 
     @validation.required_services(consts.Service.CINDER)
     @validation.required_openstack(admin=True, users=True)
-    @base.scenario(context={"admin_cleanup": ["quotas"]})
+    @base.scenario(context={"admin_cleanup": ["cinder.quotas"]})
     def cinder_update(self, max_quota=1024):
         """Tests updating quotas for cinder.
 
@@ -58,7 +58,7 @@ class Quotas(utils.QuotasScenario):
 
     @validation.required_services(consts.Service.CINDER)
     @validation.required_openstack(admin=True, users=True)
-    @base.scenario(context={"admin_cleanup": ["quotas"]})
+    @base.scenario(context={"admin_cleanup": ["cinder.quotas"]})
     def cinder_update_and_delete(self, max_quota=1024):
         """Tests updating and deleting quotas for cinder.
 

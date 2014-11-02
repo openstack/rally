@@ -26,7 +26,7 @@ class CeilometerScenario(base.Scenario):
         """
         alarm_id = self._generate_random_name()
         alarm = {"alarm_id": alarm_id,
-                 "name": "TestAlarm-%s" % alarm_id,
+                 "name": alarm_id,
                  "description": "Test Alarm"}
 
         alarm.update(kwargs)
