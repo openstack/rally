@@ -42,6 +42,11 @@ def _consumer(consume, queue, is_published):
         if queue:
             try:
                 consume(cache, queue.popleft())
+            except IndexError:
+                # NOTE(boris-42): queue is accessed from multiple threads so
+                #                 it's quite possible to have 2 queue accessing
+                #                 at the same point queue with only 1 element
+                pass
             except Exception as e:
                 LOG.warning(_("Failed to consume a task from the queue: "
                               "%s") % e)
