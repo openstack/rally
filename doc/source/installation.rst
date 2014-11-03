@@ -155,6 +155,52 @@ After the installation step has been completed, you need to create the Rally dat
 And finally you are able to :ref:`use Rally <usage>`!
 
 
+Rally & Docker
+^^^^^^^^^^^^^^
+
+There is an image on dokerhub with rally installed. To pull this image just execute:
+
+.. code-block: none
+
+    docker pull rallyforge/rally
+
+Or you may want to build rally image from source:
+
+.. code-block: none
+
+    # first cd to rally source root dir
+    docker build -t myrally .
+
+Since rally stores local settings in user's home dir and the database in /var/lib/rally/database,
+you may want to keep this directories outside of container. This may be done by the following steps:
+
+.. code-block: none
+
+    cd ~  #go to your home directory
+    mkdir rally_home rally_db
+    docker run -t -i -v ~/rally_home:/home/rally -v ~/rally_db:/var/lib/rally/database rallyforge/rally
+
+You may want to save last command as an alias:
+
+.. code-block: none
+
+    echo 'alias dock_rally="docker run -t -i -v ~/rally_home:/home/rally -v ~/rally_db:/var/lib/rally/database rallyforge/rally"' >> ~.bashrc
+
+After executing ``dock_rally`` alias, or ``docker run`` you got bash running inside container with
+rally installed. You may do anytnig with rally, but you need to create db first:
+
+.. code-block: none
+
+    user@box:~/rally$ dock_rally
+    rally@1cc98e0b5941:~$ rally-manage db recreate
+    rally@1cc98e0b5941:~$ rally deployment list
+    There are no deployments. To create a new deployment, use:
+    rally deployment create
+    rally@1cc98e0b5941:~$
+
+More about docker: `https://www.docker.com/ <https://www.docker.com/>`_
+
+
 Running Rally's Unit Tests
 --------------------------
 
