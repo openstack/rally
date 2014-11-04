@@ -17,7 +17,7 @@ from rally.benchmark.context.cleanup import manager as resource_manager
 from rally.benchmark.scenarios import base as scenarios_base
 from rally.benchmark.scenarios.glance import utils as glance_utils
 from rally.i18n import _
-from rally.openstack.common import log as logging
+from rally import log as logging
 from rally import osclients
 from rally import utils as rutils
 

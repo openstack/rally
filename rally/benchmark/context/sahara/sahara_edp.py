@@ -19,7 +19,7 @@ from rally.benchmark.context import base
 from rally.benchmark.context.cleanup import manager as resource_manager
 from rally import exceptions
 from rally.i18n import _
-from rally.openstack.common import log as logging
+from rally import log as logging
 from rally import osclients
 from rally import utils as rutils
 

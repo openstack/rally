@@ -29,7 +29,7 @@ from sphinx.util import docstrings
 
 from rally import exceptions
 from rally.i18n import _
-from rally.openstack.common import log as logging
+from rally import log as logging
 
 CONF = cfg.CONF
 LOG = logging.getLogger(__name__)

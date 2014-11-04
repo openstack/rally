@@ -19,7 +19,7 @@ import time
 
 import requests
 
-from rally.openstack.common import log as logging
+from rally import log as logging
 
 LOG = logging.getLogger(__name__)
 

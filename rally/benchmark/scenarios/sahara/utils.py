@@ -19,7 +19,7 @@ from saharaclient.api import base as sahara_base
 from rally.benchmark.scenarios import base
 from rally.benchmark import utils as bench_utils
 from rally import exceptions
-from rally.openstack.common import log as logging
+from rally import log as logging
 
 LOG = logging.getLogger(__name__)
 CONF = cfg.CONF

@@ -20,7 +20,7 @@ import time
 
 from rally.benchmark.runners import base
 from rally import consts
-from rally.openstack.common import log as logging
+from rally import log as logging
 from rally import utils as rutils
 
 

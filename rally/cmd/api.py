@@ -24,7 +24,7 @@ from oslo.config import cfg
 
 from rally.aas.rest import app as rally_app
 from rally.i18n import _
-from rally.openstack.common import log
+from rally import log
 
 
 CONF = cfg.CONF

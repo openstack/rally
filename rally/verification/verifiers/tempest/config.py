@@ -15,7 +15,6 @@
 
 import datetime
 import inspect
-import logging
 import os
 import time
 import urlparse
@@ -27,6 +26,7 @@ from six.moves import configparser
 from rally import db
 from rally import exceptions
 from rally.i18n import _
+from rally import log as logging
 from rally.objects import endpoint
 from rally import osclients
 

@@ -22,7 +22,7 @@ from rally import consts
 from rally.deploy.serverprovider import provider
 from rally import exceptions
 from rally.i18n import _
-from rally.openstack.common import log as logging
+from rally import log as logging
 from rally import utils
 
 

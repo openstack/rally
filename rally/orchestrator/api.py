@@ -19,8 +19,8 @@ from rally.benchmark import engine
 from rally import consts
 from rally import deploy
 from rally import exceptions
+from rally import log as logging
 from rally import objects
-from rally.openstack.common import log as logging
 from rally.verification.verifiers.tempest import tempest
 
 LOG = logging.getLogger(__name__)

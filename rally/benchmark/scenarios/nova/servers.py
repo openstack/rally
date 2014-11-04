@@ -23,7 +23,7 @@ from rally.benchmark import types as types
 from rally.benchmark import validation
 from rally import consts
 from rally import exceptions as rally_exceptions
-from rally.openstack.common import log as logging
+from rally import log as logging
 
 
 LOG = logging.getLogger(__name__)

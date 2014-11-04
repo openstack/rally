@@ -25,7 +25,7 @@ from rally.benchmark import types
 from rally.benchmark import utils
 from rally import consts
 from rally import exceptions
-from rally.openstack.common import log as logging
+from rally import log as logging
 from rally import osclients
 from rally import utils as rutils
 

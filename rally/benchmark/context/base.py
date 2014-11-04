@@ -19,7 +19,7 @@ import jsonschema
 import six
 
 from rally import exceptions
-from rally.openstack.common import log as logging
+from rally import log as logging
 from rally import utils
 
 LOG = logging.getLogger(__name__)

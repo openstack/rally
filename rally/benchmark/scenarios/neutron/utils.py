@@ -16,7 +16,7 @@
 import netaddr
 
 from rally.benchmark.scenarios import base
-from rally.openstack.common import log as logging
+from rally import log as logging
 from rally.openstack.common import uuidutils as uid
 
 
