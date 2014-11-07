@@ -15,6 +15,7 @@
 
 """ Rally command: verify """
 
+import csv
 import json
 import os
 
@@ -30,6 +31,7 @@ from rally.i18n import _
 from rally import objects
 from rally.openstack.common import cliutils as common_cliutils
 from rally.orchestrator import api
+from rally.verification.verifiers.tempest import diff
 from rally.verification.verifiers.tempest import json2html
 
 
@@ -71,30 +73,30 @@ class VerifyCommands(object):
             return (1)
         verification = api.verify(deploy_id, set_name, regex, tempest_config)
         if do_use:
-            use.UseCommands().verification(verification['uuid'])
+            use.UseCommands().verification(verification["uuid"])
 
     def list(self):
         """Display all verifications table, started and finished."""
 
-        fields = ['UUID', 'Deployment UUID', 'Set name', 'Tests', 'Failures',
-                  'Created at', 'Status']
+        fields = ["UUID", "Deployment UUID", "Set name", "Tests", "Failures",
+                  "Created at", "Status"]
         verifications = db.verification_list()
         if verifications:
             common_cliutils.print_list(verifications, fields,
-                                       sortby_index=fields.index('Created at'))
+                                       sortby_index=fields.index("Created at"))
         else:
             print(_("There are no results from verifier. To run a verifier, "
                     "use:\nrally verify start"))
 
-    @cliutils.args('--uuid', type=str, dest='verification_uuid',
-                   help='UUID of the verification')
-    @cliutils.args('--html', action='store_true', dest='output_html',
-                   help=('Results will be in html format'))
-    @cliutils.args('--json', action='store_true', dest='output_json',
-                   help=('Results will be in json format'))
-    @cliutils.args('--output-file', type=str, required=False,
-                   dest='output_file',
-                   help='If specified, output will be saved to given file')
+    @cliutils.args("--uuid", type=str, dest="verification_uuid",
+                   help="UUID of the verification")
+    @cliutils.args("--html", action="store_true", dest="output_html",
+                   help=("Results will be in html format"))
+    @cliutils.args("--json", action="store_true", dest="output_json",
+                   help=("Results will be in json format"))
+    @cliutils.args("--output-file", type=str, required=False,
+                   dest="output_file",
+                   help="If specified, output will be saved to given file")
     @envutils.with_default_verification_id
     def results(self, verification_uuid=None, output_file=None,
                 output_html=None, output_json=None):
@@ -107,13 +109,13 @@ class VerifyCommands(object):
         """
 
         try:
-            results = db.verification_result_get(verification_uuid)['data']
+            results = db.verification_result_get(verification_uuid)["data"]
         except exceptions.NotFoundException as e:
             print(six.text_type(e))
             return 1
 
-        result = ''
-        if len(filter(lambda x: bool(x), [output_json, output_html])) > 1:
+        result = ""
+        if output_json + output_html > 1:
             print("Please specify only one output format.")
         elif output_html:
             result = json2html.main(results)
@@ -122,24 +124,24 @@ class VerifyCommands(object):
 
         if output_file:
             output_file = os.path.expanduser(output_file)
-            with open(output_file, 'wb') as f:
+            with open(output_file, "wb") as f:
                 f.write(result)
         else:
             print(result)
 
-    @cliutils.args('--uuid', dest='verification_uuid', type=str,
+    @cliutils.args("--uuid", dest="verification_uuid", type=str,
                    required=False,
-                   help='UUID of a verification')
-    @cliutils.args('--sort-by', dest='sort_by', type=str, required=False,
-                   help='Tests can be sorted by "name" or "duration"')
-    @cliutils.args('--detailed', dest='detailed', action='store_true',
-                   required=False, help='Prints traceback of failed tests')
+                   help="UUID of a verification")
+    @cliutils.args("--sort-by", dest="sort_by", type=str, required=False,
+                   help="Tests can be sorted by 'name' or 'duration'")
+    @cliutils.args("--detailed", dest="detailed", action="store_true",
+                   required=False, help="Prints traceback of failed tests")
     @envutils.with_default_verification_id
-    def show(self, verification_uuid=None, sort_by='name', detailed=False):
+    def show(self, verification_uuid=None, sort_by="name", detailed=False):
         """Display results table of the verification."""
 
         try:
-            sortby_index = ('name', 'duration').index(sort_by)
+            sortby_index = ("name", "duration").index(sort_by)
         except ValueError:
             print("Sorry, but verification results can't be sorted "
                   "by '%s'." % sort_by)
@@ -153,42 +155,104 @@ class VerifyCommands(object):
             return 1
 
         print ("Total results of verification:\n")
-        total_fields = ['UUID', 'Deployment UUID', 'Set name', 'Tests',
-                        'Failures', 'Created at', 'Status']
+        total_fields = ["UUID", "Deployment UUID", "Set name", "Tests",
+                        "Failures", "Created at", "Status"]
         common_cliutils.print_list([verification], fields=total_fields)
 
         print ("\nTests:\n")
-        fields = ['name', 'time', 'status']
+        fields = ["name", "time", "status"]
 
         values = map(objects.Verification,
-                     six.itervalues(tests.data['test_cases']))
+                     six.itervalues(tests.data["test_cases"]))
         common_cliutils.print_list(values, fields, sortby_index=sortby_index)
 
         if detailed:
-            for test in six.itervalues(tests.data['test_cases']):
-                if test['status'] == 'FAIL':
+            for test in six.itervalues(tests.data["test_cases"]):
+                if test["status"] == "FAIL":
                     formatted_test = (
-                        '====================================================='
-                        '=================\n'
-                        'FAIL: %(name)s\n'
-                        'Time: %(time)s\n'
-                        'Type: %(type)s\n'
-                        '-----------------------------------------------------'
-                        '-----------------\n'
-                        '%(log)s\n'
+                        "====================================================="
+                        "=================\n"
+                        "FAIL: %(name)s\n"
+                        "Time: %(time)s\n"
+                        "Type: %(type)s\n"
+                        "-----------------------------------------------------"
+                        "-----------------\n"
+                        "%(log)s\n"
                     ) % {
-                        'name': test['name'], 'time': test['time'],
-                        'type': test['failure']['type'],
-                        'log': test['failure']['log']}
+                        "name": test["name"], "time": test["time"],
+                        "type": test["failure"]["type"],
+                        "log": test["failure"]["log"]}
                     print (formatted_test)
 
-    @cliutils.args('--uuid', dest='verification_uuid', type=str,
+    @cliutils.args("--uuid", dest="verification_uuid", type=str,
                    required=False,
-                   help='UUID of a verification')
-    @cliutils.args('--sort-by', dest='sort_by', type=str, required=False,
-                   help='Tests can be sorted by "name" or "duration"')
+                   help="UUID of a verification")
+    @cliutils.args("--sort-by", dest="sort_by", type=str, required=False,
+                   help="Tests can be sorted by 'name' or 'duration'")
     @envutils.with_default_verification_id
-    def detailed(self, verification_uuid=None, sort_by='name'):
+    def detailed(self, verification_uuid=None, sort_by="name"):
         """Display results table of verification with detailed errors."""
 
         self.show(verification_uuid, sort_by, True)
+
+    @cliutils.args("--uuid-1", type=str, dest="uuid1",
+                   help="UUID of the first verification")
+    @cliutils.args("--uuid-2", type=str, dest="uuid2",
+                   help="UUID of the second verification")
+    @cliutils.args("--csv", action="store_true", dest="output_csv",
+                   help=("Save results in csv format to specified file"))
+    @cliutils.args("--html", action="store_true", dest="output_html",
+                   help=("Save results in html format to specified file"))
+    @cliutils.args("--json", action="store_true", dest="output_json",
+                   help=("Save results in json format to specified file"))
+    @cliutils.args("--output-file", type=str, required=False,
+                   dest="output_file",
+                   help="If specified, output will be saved to given file")
+    @cliutils.args("--threshold", type=int, required=False,
+                   dest="threshold", default=0,
+                   help="If specified, timing differences must exceed this "
+                   "percentage threshold to be included in output")
+    def compare(self, uuid1=None, uuid2=None,
+                output_file=None, output_csv=None, output_html=None,
+                output_json=None, threshold=0):
+        """Compare two verification results.
+
+        :param uuid1: First Verification UUID
+        :param uuid2: Second Verification UUID
+        :param output_file: If specified, output will be saved to given file
+        :param output_csv: Save results in csv format to the specified file
+        :param output_html: Save results in html format to the specified file
+        :param output_json: Save results in json format to the specified file
+                            (Default)
+        :param threshold: Timing difference threshold percentage
+        """
+
+        try:
+            results1 = db.verification_result_get(uuid1)["data"]["test_cases"]
+            results2 = db.verification_result_get(uuid2)["data"]["test_cases"]
+            _diff = diff.Diff(results1, results2, threshold)
+        except exceptions.NotFoundException as e:
+            print(six.text_type(e))
+            return 1
+
+        result = ""
+        if output_json + output_html + output_csv > 1:
+            print("Please specify only one output format, either --json, "
+                  "--html or --csv.")
+            return 1
+        elif output_html:
+            result = _diff.to_html()
+        elif output_csv:
+            result = _diff.to_csv()
+        else:
+            result = _diff.to_json()
+
+        if output_file:
+            with open(output_file, "wb") as f:
+                if output_csv:
+                    writer = csv.writer(f, dialect="excel")
+                    writer.writerows(result)
+                else:
+                    f.write(result)
+        else:
+            print(result)

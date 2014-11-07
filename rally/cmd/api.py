@@ -32,7 +32,7 @@ LOG = log.getLogger(__name__)
 
 
 def main():
-    # Initialize configuation and logging.
+    # Initialize configuration and logging.
     CONF(sys.argv[1:], project='rally')
     log.setup('rally')
     # Prepare application and bind to the service socket.
