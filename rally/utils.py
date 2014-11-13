@@ -331,3 +331,23 @@ def distance(s1, s2):
             n.append(min(l[x] + 1, n[-1] + 1,
                          l[x - 1] + (s2[y - 1] != s1[x - 1])))
     return n[-1]
+
+
+def retry(times, func, *args, **kwargs):
+    """Tries to execute multiple times function mitigating exceptions.
+
+    :param times: Amount of attempts to execute function
+    :param func: Function that should be executed
+    :param *args: *args that are passed to func
+    :param **kwargs: **kwargs that are passed to func
+
+    :raises: Raise any exception that can raise func
+    :returns: Result of func(*args, **kwargs)
+    """
+
+    for i in range(times):
+        try:
+            return func(*args, **kwargs)
+        except Exception:
+            if i == times - 1:
+                raise
