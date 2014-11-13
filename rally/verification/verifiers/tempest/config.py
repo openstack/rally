@@ -213,7 +213,7 @@ class TempestConf(object):
                     # TODO(akurilin): create public subnet
                     LOG.warn('No public subnet is found.')
             else:
-                subnets = neutron.list_subnets()
+                subnets = neutron.list_subnets()['subnets']
                 if subnets:
                     subnet = subnets[0]
                 else:
