@@ -25,14 +25,6 @@ from tests.unit import test
 
 class BenchmarkUtilsTestCase(test.TestCase):
 
-    def test_chunks(self):
-        data = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
-
-        self.assertEqual(utils.chunks(data, 3),
-                         [[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12]])
-        self.assertEqual(utils.chunks(data, 5),
-                         [[1, 2, 3, 4, 5], [6, 7, 8, 9, 10], [11, 12]])
-
     def test_wait_for_delete(self):
         def update_resource(self):
             raise exceptions.GetResourceNotFound()
@@ -133,12 +125,6 @@ class BenchmarkUtilsTestCase(test.TestCase):
         manager.get = mock.MagicMock(side_effect=HTTPException)
         self.assertRaises(exceptions.GetResourceFailure,
                           get_from_manager, resource)
-
-    def test_run_concurrent_helper(self):
-        cls = mock.MagicMock()
-        args = (cls, "test", {})
-        result = utils.run_concurrent_helper(args)
-        self.assertEqual(cls.test(), result)
 
     def test_check_service_status(self):
         class service():

@@ -13,26 +13,19 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import itertools
-
 import mock
 
 from rally.benchmark.context import users
-from rally.benchmark import utils
+from rally import exceptions
 from tests.unit import test
 
 
-run_concurrent = (lambda dummy, cls, f, args: list(
-    itertools.imap(getattr(cls, f), args)))
-
-
-@mock.patch.object(utils, "run_concurrent", run_concurrent)
 class UserGeneratorTestCase(test.TestCase):
 
     tenants_num = 10
     users_per_tenant = 5
     users_num = tenants_num * users_per_tenant
-    concurrent = 10
+    threads = 10
 
     @property
     def context(self):
@@ -41,7 +34,7 @@ class UserGeneratorTestCase(test.TestCase):
                 "users": {
                     "tenants": self.tenants_num,
                     "users_per_tenant": self.users_per_tenant,
-                    "concurrent": self.concurrent,
+                    "resource_management_workers": self.threads,
                 }
             },
             "admin": {"endpoint": mock.MagicMock()},
@@ -54,34 +47,13 @@ class UserGeneratorTestCase(test.TestCase):
             "rally.benchmark.context.users.osclients")
         self.osclients = self.osclients_patcher.start()
 
-        self.keystone_wrapper_patcher = mock.patch(
-            "rally.benchmark.context.users.keystone")
-        self.keystone_wrapper = self.keystone_wrapper_patcher.start()
-        self.wrapped_keystone = self.keystone_wrapper.wrap.return_value
-
     def tearDown(self):
-        self.keystone_wrapper_patcher.stop()
         self.osclients_patcher.stop()
         super(UserGeneratorTestCase, self).tearDown()
 
-    def test_create_tenant_users(self):
-        users_num = 5
-        args = (mock.MagicMock(), users_num, 'default', 'default',
-                'ad325aec-f7b4-4a62-832a-bb718e465bb7', 1)
-        result = users.UserGenerator._create_tenant_users(args)
-
-        self.assertEqual(len(result), 2)
-        tenant, users_ = result
-        self.assertIn("id", tenant)
-        self.assertIn("name", tenant)
-        self.assertEqual(len(users_), users_num)
-        for user in users_:
-            self.assertIn("id", user)
-            self.assertIn("endpoint", user)
-
     @mock.patch("rally.benchmark.utils.check_service_status",
                 return_value=True)
-    def test_remove_associated_networks(self, mock_check_service_status):
+    def test__remove_associated_networks(self, mock_check_service_status):
         def fake_get_network(req_network):
             for network in networks:
                 if network.project_id == req_network.project_id:
@@ -91,7 +63,6 @@ class UserGeneratorTestCase(test.TestCase):
         tenant2 = {'id': 4}
         networks = [mock.MagicMock(project_id=1),
                     mock.MagicMock(project_id=2)]
-        admin_endpoint, tenants = (mock.MagicMock(), [tenant1, tenant2])
         nova_admin = mock.MagicMock()
         clients = mock.MagicMock()
         self.osclients.Clients.return_value = clients
@@ -99,15 +70,19 @@ class UserGeneratorTestCase(test.TestCase):
         clients.nova.return_value = nova_admin
         nova_admin.networks.list.return_value = networks
         nova_admin.networks.get = fake_get_network
-        users.UserGenerator._remove_associated_networks(admin_endpoint,
-                                                        tenants)
+        context = {"admin": {"endpoint": mock.MagicMock()},
+                   "task": mock.MagicMock()}
+        user_generator = users.UserGenerator(context)
+        user_generator.context["tenants"] = [tenant1, tenant2]
+        user_generator._remove_associated_networks()
         mock_check_service_status.assert_called_once_with(mock.ANY,
                                                           'nova-network')
         nova_admin.networks.disassociate.assert_called_once_with(networks[0])
 
     @mock.patch("rally.benchmark.utils.check_service_status",
                 return_value=True)
-    def test_remove_associated_networks_fails(self, mock_check_service_status):
+    def test__remove_associated_networks_failure(self,
+                                                 mock_check_service_status):
         def fake_get_network(req_network):
             for network in networks:
                 if network.project_id == req_network.project_id:
@@ -117,7 +92,6 @@ class UserGeneratorTestCase(test.TestCase):
         tenant2 = {'id': 4}
         networks = [mock.MagicMock(project_id=1),
                     mock.MagicMock(project_id=2)]
-        admin_endpoint, tenants = (mock.MagicMock(), [tenant1, tenant2])
         nova_admin = mock.MagicMock()
         clients = mock.MagicMock()
         self.osclients.Clients.return_value = clients
@@ -126,61 +100,123 @@ class UserGeneratorTestCase(test.TestCase):
         nova_admin.networks.list.return_value = networks
         nova_admin.networks.get = fake_get_network
         nova_admin.networks.disassociate.side_effect = Exception()
-        users.UserGenerator._remove_associated_networks(admin_endpoint,
-                                                        tenants)
+        context = {"admin": {"endpoint": mock.MagicMock()},
+                   "task": mock.MagicMock()}
+        user_generator = users.UserGenerator(context)
+        user_generator.context["tenants"] = [tenant1, tenant2]
+        user_generator._remove_associated_networks()
         mock_check_service_status.assert_called_once_with(mock.ANY,
                                                           'nova-network')
         nova_admin.networks.disassociate.assert_called_once_with(networks[0])
 
-    def test_delete_tenants(self):
+    @mock.patch("rally.benchmark.context.users.broker.time.sleep")
+    @mock.patch("rally.benchmark.context.users.keystone")
+    def test__create_tenants(self, mock_keystone, mock_sleep):
+        context = {"admin": {"endpoint": mock.MagicMock()},
+                   "task": mock.MagicMock()}
+        user_generator = users.UserGenerator(context)
+        user_generator.config["tenants"] = 2
+        tenants = user_generator._create_tenants()
+        self.assertEqual(2, len(tenants))
+        for tenant in tenants:
+            self.assertIn("id", tenant)
+            self.assertIn("name", tenant)
+
+    @mock.patch("rally.benchmark.context.users.broker.time.sleep")
+    @mock.patch("rally.benchmark.context.users.keystone")
+    def test__create_users(self, mock_keystone, mock_sleep):
+        context = {"admin": {"endpoint": mock.MagicMock()},
+                   "task": mock.MagicMock()}
+        user_generator = users.UserGenerator(context)
         tenant1 = mock.MagicMock()
         tenant2 = mock.MagicMock()
-        args = (mock.MagicMock(), [tenant1, tenant2])
-        users.UserGenerator._delete_tenants(args)
-        self.assertEqual(1, self.keystone_wrapper.wrap.call_count)
-        self.wrapped_keystone.delete_project.assert_has_calls([
-            mock.call(tenant1["id"]),
-            mock.call(tenant2["id"])])
+        user_generator.context["tenants"] = [tenant1, tenant2]
+        user_generator.config["users_per_tenant"] = 2
+        users_ = user_generator._create_users()
+        self.assertEqual(4, len(users_))
+        for user in users_:
+            self.assertIn("id", user)
+            self.assertIn("endpoint", user)
 
-    def test_delete_users(self):
+    @mock.patch("rally.benchmark.context.users.keystone")
+    def test__delete_tenants(self, mock_keystone):
+        context = {"admin": {"endpoint": mock.MagicMock()},
+                   "task": mock.MagicMock()}
+        user_generator = users.UserGenerator(context)
+        tenant1 = mock.MagicMock()
+        tenant2 = mock.MagicMock()
+        user_generator.context["tenants"] = [tenant1, tenant2]
+        user_generator._delete_tenants()
+        self.assertEqual(len(user_generator.context["tenants"]), 0)
+
+    @mock.patch("rally.benchmark.context.users.keystone")
+    def test__delete_tenants_failure(self, mock_keystone):
+        wrapped_keystone = mock_keystone.wrap.return_value
+        wrapped_keystone.delete_project.side_effect = Exception()
+        context = {"admin": {"endpoint": mock.MagicMock()},
+                   "task": mock.MagicMock()}
+        user_generator = users.UserGenerator(context)
+        tenant1 = mock.MagicMock()
+        tenant2 = mock.MagicMock()
+        user_generator.context["tenants"] = [tenant1, tenant2]
+        user_generator._delete_tenants()
+        self.assertEqual(len(user_generator.context["tenants"]), 0)
+
+    @mock.patch("rally.benchmark.context.users.keystone")
+    def test__delete_users(self, mock_keystone):
+        context = {"admin": {"endpoint": mock.MagicMock()},
+                   "task": mock.MagicMock()}
+        user_generator = users.UserGenerator(context)
         user1 = mock.MagicMock()
         user2 = mock.MagicMock()
-        args = (mock.MagicMock(), [user1, user2])
-        users.UserGenerator._delete_users(args)
-        self.wrapped_keystone.delete_user.assert_has_calls([
-            mock.call(user1["id"]),
-            mock.call(user2["id"])])
+        user_generator.context["users"] = [user1, user2]
+        user_generator._delete_users()
+        self.assertEqual(len(user_generator.context["users"]), 0)
 
-    def test_setup_and_cleanup(self):
+    @mock.patch("rally.benchmark.context.users.keystone")
+    def test__delete_users_failure(self, mock_keystone):
+        wrapped_keystone = mock_keystone.wrap.return_value
+        wrapped_keystone.delete_user.side_effect = Exception()
+        context = {"admin": {"endpoint": mock.MagicMock()},
+                   "task": mock.MagicMock()}
+        user_generator = users.UserGenerator(context)
+        user1 = mock.MagicMock()
+        user2 = mock.MagicMock()
+        user_generator.context["users"] = [user1, user2]
+        user_generator._delete_users()
+        self.assertEqual(len(user_generator.context["users"]), 0)
+
+    @mock.patch("rally.benchmark.context.users.keystone")
+    def test_setup_and_cleanup(self, mock_keystone):
+        wrapped_keystone = mock.MagicMock()
+        mock_keystone.wrap.return_value = wrapped_keystone
         with users.UserGenerator(self.context) as ctx:
-            self.assertEqual(self.wrapped_keystone.create_user.call_count, 0)
-            self.assertEqual(self.wrapped_keystone.create_project.call_count,
-                             0)
 
             ctx.setup()
 
             self.assertEqual(len(ctx.context["users"]),
                              self.users_num)
-            self.assertEqual(self.wrapped_keystone.create_user.call_count,
-                             self.users_num)
             self.assertEqual(len(ctx.context["tenants"]),
                              self.tenants_num)
-            self.assertEqual(self.wrapped_keystone.create_project.call_count,
-                             self.tenants_num)
-
-            # Assert nothing is deleted yet
-            self.assertEqual(self.wrapped_keystone.delete_user.call_count,
-                             0)
-            self.assertEqual(self.wrapped_keystone.delete_project.call_count,
-                             0)
 
         # Cleanup (called by content manager)
-        self.assertEqual(self.wrapped_keystone.delete_user.call_count,
-                         self.users_num)
-        self.assertEqual(self.wrapped_keystone.delete_project.call_count,
-                         self.tenants_num)
+        self.assertEqual(len(ctx.context["users"]), 0)
+        self.assertEqual(len(ctx.context["tenants"]), 0)
 
-    def test_users_and_tenants_in_context(self):
+    @mock.patch("rally.benchmark.context.users.keystone")
+    def test_setup_and_cleanup_failure(self, mock_keystone):
+        wrapped_keystone = mock_keystone.wrap.return_value
+        wrapped_keystone.create_user.side_effect = Exception()
+        with users.UserGenerator(self.context) as ctx:
+            self.assertRaises(exceptions.ContextSetupFailure, ctx.setup)
+
+        # Ensure that tenants get deleted anyway
+        self.assertEqual(len(ctx.context["tenants"]), 0)
+
+    @mock.patch("rally.benchmark.context.users.keystone")
+    def test_users_and_tenants_in_context(self, mock_keystone):
+        wrapped_keystone = mock.MagicMock()
+        mock_keystone.wrap.return_value = wrapped_keystone
         task = {"uuid": "abcdef"}
 
         config = {
@@ -188,7 +224,7 @@ class UserGeneratorTestCase(test.TestCase):
                 "users": {
                     "tenants": 2,
                     "users_per_tenant": 2,
-                    "concurrent": 1
+                    "resource_management_workers": 1
                 }
             },
             "admin": {"endpoint": mock.MagicMock()},
@@ -197,7 +233,7 @@ class UserGeneratorTestCase(test.TestCase):
 
         user_list = [mock.MagicMock(id='id_%d' % i)
                      for i in range(self.users_num)]
-        self.wrapped_keystone.create_user.side_effect = user_list
+        wrapped_keystone.create_user.side_effect = user_list
 
         with users.UserGenerator(config) as ctx:
             ctx.setup()
@@ -208,9 +244,6 @@ class UserGeneratorTestCase(test.TestCase):
                 create_tenant_calls.append(
                     mock.call(pattern % {"task_id": task["uuid"], "iter": i},
                               ctx.config["project_domain"]))
-
-            self.wrapped_keystone.create_project.assert_has_calls(
-                create_tenant_calls, any_order=True)
 
             for user in ctx.context["users"]:
                 self.assertEqual(set(["id", "endpoint", "tenant_id"]),

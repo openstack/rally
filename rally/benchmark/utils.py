@@ -15,7 +15,6 @@
 
 import itertools
 import logging
-import multiprocessing
 import time
 import traceback
 
@@ -25,19 +24,6 @@ from rally import exceptions
 
 
 LOG = logging.getLogger(__name__)
-
-
-def chunks(data, step):
-    """Split collection into chunks.
-
-    :param data: collection to split, only list or tuple are allowed
-    :param step: int chunk size
-    :returns: list of collection chunks
-
-    >>> chunks([1,2,3,4,5,6,7,8,9,10], 3)
-    [[1, 2, 3], [4, 5, 6], [7, 8, 9], [10]]
-    """
-    return [data[x:x + step] for x in xrange(0, len(data), step)]
 
 
 def resource_is(status):
@@ -154,30 +140,6 @@ def format_exc(exc):
 def infinite_run_args_generator(args_func):
     for i in itertools.count():
         yield args_func(i)
-
-
-def run_concurrent_helper(args):
-    cls, method, fn_args = args
-    return getattr(cls, method)(fn_args)
-
-
-def run_concurrent(concurrent, cls, fn, fn_args):
-    """Run given function using pool of threads.
-
-    :param concurrent: number of threads in the pool
-    :param cls: class to be called in the pool
-    :param fn: class method to be called in the pool
-    :param fn_args: list of arguments for function fn() in the pool
-    :returns: iterator from Pool.imap()
-    """
-
-    pool = multiprocessing.Pool(concurrent)
-    iterator = pool.imap(run_concurrent_helper,
-                         [(cls, fn, args) for args in fn_args])
-    pool.close()
-    pool.join()
-
-    return iterator
 
 
 def check_service_status(client, service_name):
