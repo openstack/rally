@@ -246,7 +246,7 @@ class SaharaNodeGroup(SynchronizedDeletion, base.ResourceManager):
 # CEILOMETER
 
 @base.resource("ceilometer", "alarms", order=700, tenant_resource=True)
-class CeliometerAlarms(SynchronizedDeletion, base.ResourceManager):
+class CeilometerAlarms(SynchronizedDeletion, base.ResourceManager):
 
     def id(self):
         return self.raw_resource.alarm_id

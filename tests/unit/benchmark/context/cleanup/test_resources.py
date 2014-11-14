@@ -184,17 +184,17 @@ class GlanceImageTestCase(test.TestCase):
         mock_manager().list.assert_called_once_with(owner=glance.tenant_uuid)
 
 
-class CeliometerTestCase(test.TestCase):
+class CeilometerTestCase(test.TestCase):
 
     def test_id(self):
-        ceil = resources.CeliometerAlarms()
+        ceil = resources.CeilometerAlarms()
         ceil.raw_resource = mock.MagicMock()
         self.assertEqual(ceil.raw_resource.alarm_id, ceil.id())
 
-    @mock.patch("%s.CeliometerAlarms._manager" % BASE)
+    @mock.patch("%s.CeilometerAlarms._manager" % BASE)
     def test_list(self, mock_manager):
 
-        ceil = resources.CeliometerAlarms()
+        ceil = resources.CeilometerAlarms()
         ceil.tenant_uuid = mock.MagicMock()
         mock_manager().list.return_value = ["a", "b", "c"]
         mock_manager.reset_mock()
