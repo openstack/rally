@@ -246,3 +246,8 @@ class WorkerNotFound(NotFoundException):
 
 class WorkerAlreadyRegistered(RallyException):
     msg_fmt = _("Worker %(worker)s already registered")
+
+
+class SaharaClusterFailure(RallyException):
+    msg_fmt = _("Sahara cluster %(name)s has failed to %(action)s. "
+                "Reason: '%(reason)s'")

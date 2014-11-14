@@ -170,7 +170,8 @@ class SaharaScenario(base.Scenario):
 
     def _wait_active(self, cluster_object):
         bench_utils.wait_for(
-            resource=cluster_object.id, is_ready=self._is_cluster_active,
+            resource=cluster_object, is_ready=self._is_cluster_active,
+            update_resource=self._update_cluster,
             timeout=CONF.benchmark.cluster_create_timeout,
             check_interval=CONF.benchmark.cluster_check_interval)
 
@@ -272,9 +273,19 @@ class SaharaScenario(base.Scenario):
 
         return self.clients("sahara").clusters.get(cluster_object.id)
 
-    def _is_cluster_active(self, cluster_id):
-        return self.clients("sahara").clusters.get(
-            cluster_id).status.lower() == "active"
+    def _update_cluster(self, cluster):
+        return self.clients("sahara").clusters.get(cluster.id)
+
+    def _is_cluster_active(self, cluster):
+        cluster_status = cluster.status.lower()
+
+        if cluster_status == "error":
+            raise exceptions.SaharaClusterFailure(
+                name=cluster.name,
+                action="start",
+                reason=cluster.status_description)
+
+        return cluster_status == "active"
 
     def _scale_cluster(self, cluster, delta):
         """The scaling helper.

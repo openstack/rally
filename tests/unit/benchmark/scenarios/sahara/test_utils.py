@@ -197,6 +197,52 @@ class SaharaUtilsTestCase(test.TestCase):
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        'sahara.launch_cluster')
 
+    @mock.patch(SAHARA_UTILS + '.SaharaScenario._generate_random_name',
+                return_value="random_name")
+    @mock.patch(SAHARA_UTILS + '.SaharaScenario.clients')
+    def test_launch_cluster_error(self, mock_clients, mock_random_name):
+
+        scenario = utils.SaharaScenario()
+        mock_processes = {
+            "test_plugin": {
+                "test_version": {
+                    "master": ["p1"],
+                    "worker": ["p2"]
+                }
+            }
+        }
+
+        mock_configs = {
+            "test_plugin": {
+                "test_version": {
+                    "target": "HDFS",
+                    "config_name": "dfs.replication"
+                }
+            }
+        }
+
+        scenario.NODE_PROCESSES = mock_processes
+        scenario.REPLICATION_CONFIGS = mock_configs
+
+        mock_clients("sahara").clusters.create.return_value = mock.MagicMock(
+            id="test_cluster_id")
+
+        mock_clients("sahara").clusters.get.return_value = mock.MagicMock(
+            status="error")
+
+        self.assertRaises(exceptions.SaharaClusterFailure,
+                          scenario._launch_cluster,
+                          plugin_name="test_plugin",
+                          hadoop_version="test_version",
+                          flavor_id="test_flavor",
+                          image_id="test_image",
+                          floating_ip_pool="test_pool",
+                          volumes_per_node=5,
+                          volumes_size=10,
+                          node_count=42,
+                          node_configs={"HDFS": {"local_config":
+                                                 "local_value"}})
+
     @mock.patch(SAHARA_UTILS + '.SaharaScenario.clients')
     def test_scale_cluster(self, mock_clients):
 
