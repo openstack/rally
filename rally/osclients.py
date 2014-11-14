@@ -274,6 +274,7 @@ class Clients(object):
             'os_username': self.endpoint.username,
             'os_password': self.endpoint.password,
             'os_project_name': self.endpoint.tenant_name,
+            'os_project_id': kc.auth_tenant_id,
             'os_auth_url': self.endpoint.auth_url,
             'insecure': CONF.https_insecure,
         }}}
