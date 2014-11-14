@@ -296,7 +296,7 @@ def run(argv, categories):
         validate_deprecated_args(argv, fn)
         ret = fn(*fn_args, **fn_kwargs)
         return(ret)
-    except IOError as e:
+    except (IOError, TypeError) as e:
         if CONF.debug:
             raise
         print(e)

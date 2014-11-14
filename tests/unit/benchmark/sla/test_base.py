@@ -32,6 +32,13 @@ class TestCriterion(base.SLA):
 
 class BaseSLATestCase(test.TestCase):
 
+    def test_get_by_name(self):
+        self.assertEqual(base.FailureRate, base.SLA.get_by_name("FailureRate"))
+
+    def test_get_by_name_by_config_option(self):
+        self.assertEqual(base.FailureRate,
+                         base.SLA.get_by_name("failure_rate"))
+
     def test_validate(self):
         cnf = {"test_criterion": 42}
         base.SLA.validate(cnf)

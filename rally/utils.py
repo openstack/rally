@@ -258,30 +258,41 @@ def parse_docstring(docstring):
     """
 
     if docstring:
-        docstring_lines = docstrings.prepare_docstring(docstring)
-        docstring_lines = filter(lambda line: line != "", docstring_lines)
+        lines = docstrings.prepare_docstring(docstring)
+        lines = filter(lambda line: line != "", lines)
     else:
-        docstring_lines = []
+        lines = []
 
-    if docstring_lines:
+    if lines:
+        short_description = lines[0]
 
-        short_description = docstring_lines[0]
-
-        param_lines_start = first_index(docstring_lines,
-                                        lambda line: line.startswith(":param")
-                                        or line.startswith(":returns"))
-        if param_lines_start:
-            long_description = "\n".join(docstring_lines[1:param_lines_start])
+        param_start = first_index(lines, lambda l: l.startswith(":param"))
+        returns_start = first_index(lines, lambda l: l.startswith(":returns"))
+        if param_start or returns_start:
+            description_end = param_start or returns_start
+            long_description = "\n".join(lines[1:description_end])
         else:
-            long_description = "\n".join(docstring_lines[1:])
+            long_description = "\n".join(lines[1:])
 
         if not long_description:
             long_description = None
 
+        param_lines = []
+        if param_start:
+            current_line = lines[param_start]
+            current_line_index = param_start + 1
+            while current_line_index < (returns_start or len(lines)):
+                if lines[current_line_index].startswith(":param"):
+                    param_lines.append(current_line)
+                    current_line = lines[current_line_index]
+                else:
+                    continuation_line = lines[current_line_index].strip()
+                    current_line += " " + continuation_line
+                current_line_index += 1
+            param_lines.append(current_line)
         params = []
         param_regex = re.compile("^:param (?P<name>\w+): (?P<doc>.*)$")
-        for param_line in filter(lambda line: line.startswith(":param"),
-                                 docstring_lines):
+        for param_line in param_lines:
             match = param_regex.match(param_line)
             if match:
                 params.append({
@@ -290,11 +301,10 @@ def parse_docstring(docstring):
                 })
 
         returns = None
-        returns_line = filter(lambda line: line.startswith(":returns"),
-                              docstring_lines)
-        if returns_line:
+        if returns_start:
+            returns_line = " ".join([l.strip() for l in lines[returns_start:]])
             returns_regex = re.compile("^:returns: (?P<doc>.*)$")
-            match = returns_regex.match(returns_line[0])
+            match = returns_regex.match(returns_line)
             if match:
                 returns = match.group("doc")
 

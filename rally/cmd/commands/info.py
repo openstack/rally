@@ -67,10 +67,11 @@ class InfoCommands(object):
     Usage:
         $ rally info find <query>
 
-    To see lists of entities you can query docs for, type one of the following:
+    To get information about main concepts of Rally as well as to list entities
+    you can query docs for, type one of the following:
         $ rally info BenchmarkScenarios
         $ rally info SLA
-        $ rally info DeployEngines
+        $ rally info DeploymentEngines
         $ rally info ServerProviders
     """
 
@@ -103,43 +104,154 @@ class InfoCommands(object):
         """
         self.BenchmarkScenarios()
         self.SLA()
-        self.DeployEngines()
+        self.DeploymentEngines()
         self.ServerProviders()
 
     def BenchmarkScenarios(self):
-        """List benchmark scenarios available in Rally."""
-        scenarios = self._get_descriptions(scenario_base.Scenario)
-        info = self._compose_table("Benchmark scenario groups", scenarios)
-        info += ("  To get information about benchmark scenarios inside "
-                 "each scenario group, run:\n"
-                 "      $ rally info find <ScenarioGroupName>\n\n")
+        """Get information about benchmark scenarios available in Rally."""
+        def scenarios_filter(scenario_cls):
+            return any(scenario_base.Scenario.is_scenario(scenario_cls, m)
+                       for m in dir(scenario_cls))
+        scenarios = self._get_descriptions(scenario_base.Scenario,
+                                           scenarios_filter)
+        info = (self._make_header("Rally - Benchmark scenarios") +
+                "\n\n"
+                "Benchmark scenarios are what Rally actually uses to test "
+                "the performance of an OpenStack deployment.\nEach Benchmark "
+                "scenario implements a sequence of atomic operations "
+                "(server calls) to simulate\ninteresing user/operator/"
+                "client activity in some typical use case, usually that of "
+                "a specific OpenStack\nproject. Iterative execution of this "
+                "sequence produces some kind of load on the target cloud.\n"
+                "Benchmark scenarios play the role of building blocks in "
+                "benchmark task configuration files."
+                "\n\n"
+                "Scenarios in Rally are put together in groups. Each "
+                "scenario group is concentrated on some specific \nOpenStack "
+                'functionality. For example, the "NovaServers" scenario '
+                "group contains scenarios that employ\nseveral basic "
+                "operations available in Nova."
+                "\n\n" +
+                self._compose_table("List of Benchmark scenario groups",
+                                    scenarios) +
+                "To get information about benchmark scenarios inside "
+                "each scenario group, run:\n"
+                "  $ rally info find <ScenarioGroupName>\n\n")
         print(info)
 
     def SLA(self):
-        """List server providers available in Rally."""
+        """Get information about SLA available in Rally."""
         sla = self._get_descriptions(sla_base.SLA)
-        info = self._compose_table("SLA", sla)
+        # NOTE(msdubov): Add config option names to the "Name" column
+        for i in range(len(sla)):
+            description = sla[i]
+            sla_cls = sla_base.SLA.get_by_name(description[0])
+            sla[i] = (sla_cls.OPTION_NAME, description[1])
+        info = (self._make_header("Rally - SLA checks "
+                                  "(Service-Level Agreements)") +
+                "\n\n"
+                "SLA in Rally enable quick and easy checks of "
+                "whether the results of a particular\nbenchmark task have "
+                "passed certain success criteria."
+                "\n\n"
+                "SLA checks can be configured in the 'sla' section of "
+                "benchmark task configuration\nfiles, used to launch new "
+                "tasks by the 'rally task start <config_file>' command.\n"
+                "For each SLA check you would like to use, you should put "
+                "its name as a key and the\ntarget check parameter as an "
+                "assosiated value, e.g.:\n\n"
+                "  sla:\n"
+                "    max_seconds_per_iteration: 4\n"
+                "    max_failure_percent: 1"
+                "\n\n" +
+                self._compose_table("List of SLA checks", sla) +
+                "To get information about specific SLA checks, run:\n"
+                "  $ rally info find <sla_check_name>\n")
+        print(info)
+
+    def DeploymentEngines(self):
+        """Get information about deploy engines available in Rally."""
+        engines = self._get_descriptions(deploy.EngineFactory)
+        info = (self._make_header("Rally - Deployment engines") +
+                "\n\n"
+                "Rally is an OpenStack benchmarking system. Before starting "
+                "benchmarking with Rally,\nyou obviously have either to "
+                "deploy a new OpenStack cloud or to register an existing\n"
+                "one in Rally. Deployment engines in Rally are essentially "
+                "plugins that control the\nprocess of deploying some "
+                "OpenStack distribution, say, with DevStack or FUEL, and\n"
+                "register these deployments in Rally before any benchmarking "
+                "procedures against them\ncan take place."
+                "\n\n"
+                "A typical use case in Rally would be when you first "
+                "register a deployment using the\n'rally deployment create' "
+                "command and then reference this deployment by uuid "
+                "when\nstarting a benchmark task with 'rally task start'. "
+                "The 'rally deployment create'\ncommand awaits a deployment "
+                "configuration file as its parameter. This file may look "
+                "like:\n"
+                "{\n"
+                '  "type": "ExistingCloud",\n'
+                '  "auth_url": "http://example.net:5000/v2.0/",\n'
+                '  "admin": { <credentials> },\n'
+                "  ...\n"
+                "}"
+                "\n\n" +
+                self._compose_table("List of Deployment engines", engines) +
+                "To get information about specific Deployment engines, run:\n"
+                "  $ rally info find <DeploymentEngineName>\n")
         print(info)
 
     def DeployEngines(self):
-        """List deploy engines available in Rally."""
-        engines = self._get_descriptions(deploy.EngineFactory)
-        info = self._compose_table("Deploy engines", engines)
-        print(info)
+        """Get information about deploy engines available in Rally."""
+        # NOTE(msdubov): This alias should be removed as soon as we rename
+        #                DeployEngines to DeploymentEngines (which is more
+        #                grammatically correct).
+        self.DeploymentEngines()
 
     def ServerProviders(self):
-        """List server providers available in Rally."""
+        """Get information about server providers available in Rally."""
         providers = self._get_descriptions(serverprovider.ProviderFactory)
-        info = self._compose_table("Server providers", providers)
+        info = (self._make_header("Rally - Server providers") +
+                "\n\n"
+                "Rally is an OpenStack benchmarking system. Before starting "
+                "benchmarking with Rally,\nyou obviously have either to "
+                "deploy a new OpenStack cloud or to register an existing\n"
+                "one in Rally with one of the Deployment engines. These "
+                "deployment engines, in turn,\nmay need Server "
+                "providers to manage virtual machines used for "
+                "OpenStack deployment\nand its following benchmarking. The "
+                "key feature of server providers is that they\nprovide a "
+                "unified interface for interacting with different "
+                "virtualization\ntechnologies (LXS, Virsh etc.)."
+                "\n\n"
+                "Server providers are usually referenced in deployment "
+                "configuration files\npassed to the 'rally deployment create'"
+                " command, e.g.:\n"
+                "{\n"
+                '  "type": "DevstackEngine",\n'
+                '  "provider": {\n'
+                '    "type": "ExistingServers",\n'
+                '    "credentials": [{"user": "root", "host": "10.2.0.8"}]\n'
+                "  }\n"
+                "}"
+                "\n\n" +
+                self._compose_table("List of Server providers", providers) +
+                "To get information about specific Server providers, run:\n"
+                "  $ rally info find <ServerProviderName>\n")
         print(info)
 
-    def _get_descriptions(self, base_cls):
+    def _get_descriptions(self, base_cls, subclass_filter=None):
         descriptions = []
-        for entity in utils.itersubclasses(base_cls):
+        subclasses = utils.itersubclasses(base_cls)
+        if subclass_filter:
+            subclasses = filter(subclass_filter, subclasses)
+        for entity in subclasses:
             name = entity.__name__
             doc = utils.parse_docstring(entity.__doc__)
             description = doc["short_description"] or ""
             descriptions.append((name, description))
+        descriptions.sort(key=lambda d: d[0])
         return descriptions
 
     def _find_info(self, query):
@@ -171,30 +283,23 @@ class InfoCommands(object):
     def _get_scenario_group_info(self, query):
         try:
             scenario_group = scenario_base.Scenario.get_by_name(query)
-            info = ("%s (benchmark scenario group).\n\n" %
-                    scenario_group.__name__)
+            if not any(scenario_base.Scenario.is_scenario(scenario_group, m)
+                       for m in dir(scenario_group)):
+                return None
+            info = self._make_header("%s (benchmark scenario group)" %
+                                     scenario_group.__name__)
+            info += "\n\n"
             info += utils.format_docstring(scenario_group.__doc__)
-            info += "\nBenchmark scenarios:\n"
             scenarios = scenario_group.list_benchmark_scenarios()
-            first_column_len = max(map(len, scenarios)) + cliutils.MARGIN
-            second_column_len = len("Description") + cliutils.MARGIN
-            table = ""
+            descriptions = []
             for scenario_name in scenarios:
                 cls, method_name = scenario_name.split(".")
                 if hasattr(scenario_group, method_name):
                     scenario = getattr(scenario_group, method_name)
                     doc = utils.parse_docstring(scenario.__doc__)
                     descr = doc["short_description"] or ""
-                    second_column_len = max(second_column_len,
-                                            len(descr) + cliutils.MARGIN)
-                    table += " " + scenario_name
-                    table += " " * (first_column_len - len(scenario_name))
-                    table += descr + "\n"
-            info += "-" * (first_column_len + second_column_len + 1) + "\n"
-            info += (" Name" + " " * (first_column_len - len("Name")) +
-                     "Description\n")
-            info += "-" * (first_column_len + second_column_len + 1) + "\n"
-            info += table
+                    descriptions.append((scenario_name, descr))
+            info += self._compose_table("Benchmark scenarios", descriptions)
             return info
         except exceptions.NoSuchScenario:
             return None
@@ -203,10 +308,12 @@ class InfoCommands(object):
         try:
             scenario = scenario_base.Scenario.get_scenario_by_name(query)
             scenario_group_name = utils.get_method_class(scenario).__name__
-            info = ("%(scenario_group)s.%(scenario_name)s "
-                    "(benchmark scenario).\n\n" %
-                    {"scenario_group": scenario_group_name,
-                     "scenario_name": scenario.__name__})
+            header = ("%(scenario_group)s.%(scenario_name)s "
+                      "(benchmark scenario)" %
+                      {"scenario_group": scenario_group_name,
+                       "scenario_name": scenario.__name__})
+            info = self._make_header(header)
+            info += "\n\n"
             doc = utils.parse_docstring(scenario.__doc__)
             if not doc["short_description"]:
                 return None
@@ -226,8 +333,10 @@ class InfoCommands(object):
     def _get_sla_info(self, query):
         try:
             sla = sla_base.SLA.get_by_name(query)
-            info = "%s (SLA).\n\n" % sla.__name__
-            info += utils.format_docstring(sla.__doc__)
+            header = "%s (SLA)" % sla.OPTION_NAME
+            info = self._make_header(header)
+            info += "\n\n"
+            info += utils.format_docstring(sla.__doc__) + "\n"
             return info
         except exceptions.NoSuchSLA:
             return None
@@ -235,7 +344,9 @@ class InfoCommands(object):
     def _get_deploy_engine_info(self, query):
         try:
             deploy_engine = deploy.EngineFactory.get_by_name(query)
-            info = "%s (deploy engine).\n\n" % deploy_engine.__name__
+            header = "%s (deploy engine)" % deploy_engine.__name__
+            info = self._make_header(header)
+            info += "\n\n"
             info += utils.format_docstring(deploy_engine.__doc__)
             return info
         except exceptions.NoSuchEngine:
@@ -244,14 +355,22 @@ class InfoCommands(object):
     def _get_server_provider_info(self, query):
         try:
             server_provider = serverprovider.ProviderFactory.get_by_name(query)
-            info = "%s (server provider).\n\n" % server_provider.__name__
+            header = "%s (server provider)" % server_provider.__name__
+            info = self._make_header(header)
+            info += "\n\n"
             info += utils.format_docstring(server_provider.__doc__)
             return info
         except exceptions.NoSuchVMProvider:
             return None
 
+    def _make_header(self, string):
+        header = "-" * (len(string) + 2) + "\n"
+        header += " " + string + " \n"
+        header += "-" * (len(string) + 2)
+        return header
+
     def _compose_table(self, title, descriptions):
-        table = title + ":\n"
+        table = " " + title + ":\n"
         len0 = lambda x: len(x[0])
         len1 = lambda x: len(x[1])
         first_column_len = max(map(len0, descriptions)) + cliutils.MARGIN
@@ -264,5 +383,6 @@ class InfoCommands(object):
             table += " " + name
             table += " " * (first_column_len - len(name))
             table += descr + "\n"
+        table += "-" * (first_column_len + second_column_len + 1) + "\n"
         table += "\n"
         return table
