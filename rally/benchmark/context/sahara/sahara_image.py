@@ -13,10 +13,10 @@
 # under the License.
 
 from rally.benchmark.context import base
-from rally.benchmark.context.cleanup import utils as cleanup_utils
+from rally.benchmark.context.cleanup import manager as resource_manager
 from rally.benchmark.scenarios import base as scenarios_base
 from rally.benchmark.scenarios.glance import utils as glance_utils
-from rally import exceptions
+from rally.i18n import _
 from rally.openstack.common import log as logging
 from rally import osclients
 from rally import utils as rutils
@@ -91,16 +91,7 @@ class SaharaImage(base.Context):
 
     @rutils.log_task_wrapper(LOG.info, _("Exit context: `Sahara Image`"))
     def cleanup(self):
-        clean_tenants = set([])
-        for user in self.context.get("users", []):
-            tenant_id = user["tenant_id"]
-            if tenant_id not in clean_tenants:
-                clean_tenants.add(tenant_id)
 
-                try:
-                    glance = osclients.Clients(user["endpoint"]).glance()
-                    cleanup_utils.delete_glance_resources(glance,
-                                                          user["tenant_id"])
-                except Exception as e:
-                    LOG.error(e)
-                    raise exceptions.ImageCleanUpException()
+        # TODO(boris-42): Delete only resources created by this context
+        resource_manager.cleanup(names=["glance.images"],
+                                 users=self.context.get("users", []))

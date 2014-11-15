@@ -11,14 +11,23 @@ Rally should delete in any case all resources that it created during benchmark.
 Problem Description
 -------------------
 
-* Deletion rate limit
+* (implemented) Deletion rate limit
 
   You can kill cloud by deleting too many objects simultaneously, so deletion
   rate limit is required
 
-* Retry on failures
+* (implemented) Retry on failures
 
   There should be few attempts to delete resource in case of failures
+
+* (implemented) Log resources that failed to be deleted 
+
+  We should log warnings about all non deleted resources. This information
+  should include UUID of resource, it's type and project.
+
+* (implemented) Pluggable
+
+  It should be simple to add new cleanups adding just plugins somewhere.
 
 * Disaster recovery
 

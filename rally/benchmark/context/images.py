@@ -15,10 +15,11 @@
 import six
 
 from rally.benchmark.context import base
-from rally.benchmark.context.cleanup import utils as cleanup_utils
+from rally.benchmark.context.cleanup import manager as resource_manager
 from rally.benchmark.scenarios import base as scenario_base
 from rally.benchmark.scenarios.glance import utils as glance_utils
 from rally import exceptions
+from rally.i18n import _
 from rally.openstack.common import log as logging
 from rally import osclients
 from rally import utils as rutils
@@ -93,13 +94,9 @@ class ImageGenerator(base.Context):
 
     @rutils.log_task_wrapper(LOG.info, _("Exit context: `Images`"))
     def cleanup(self):
-        for images in self.context["images"]:
-            try:
-                glance = osclients.Clients(images["endpoint"]).glance()
-                cleanup_utils.delete_glance_resources(glance,
-                                                      images["tenant_id"])
-            except Exception:
-                raise exceptions.ImageCleanUpException()
+        # TODO(boris-42): Delete only resources created by this context
+        resource_manager.cleanup(names=["glance.images"],
+                                 users=self.context.get("users", []))
 
     @classmethod
     def validate_semantic(cls, config, admin, users, task):

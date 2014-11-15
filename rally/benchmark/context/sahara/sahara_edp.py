@@ -16,8 +16,9 @@
 import urllib2
 
 from rally.benchmark.context import base
-from rally.benchmark.context.cleanup import utils as cleanup_utils
+from rally.benchmark.context.cleanup import manager as resource_manager
 from rally import exceptions
+from rally.i18n import _
 from rally.openstack.common import log as logging
 from rally import osclients
 from rally import utils as rutils
@@ -167,16 +168,10 @@ class SaharaEDP(base.Context):
 
     @rutils.log_task_wrapper(LOG.info, _("Exit context: `Sahara EDP`"))
     def cleanup(self):
-        clean_tenants = set()
-        for user in self.context.get("users", []):
-            tenant_id = user["tenant_id"]
-            if tenant_id not in clean_tenants:
-                clean_tenants.add(tenant_id)
+        resources = ["job_executions", "jobs", "job_binary_internals",
+                     "job_binaries", "data_sources"]
 
-                sahara = osclients.Clients(user["endpoint"]).sahara()
-
-                cleanup_utils.delete_job_executions(sahara)
-                cleanup_utils.delete_jobs(sahara)
-                cleanup_utils.delete_job_binary_internals(sahara)
-                cleanup_utils.delete_job_binaries(sahara)
-                cleanup_utils.delete_data_sources(sahara)
+        # TODO(boris-42): Delete only resources created by this context
+        resource_manager.cleanup(
+            names=map(lambda r: "sahara.%s" % r, resources),
+            users=self.context.get("users", []))

@@ -45,36 +45,19 @@ class KeyPairContextTestCase(test.TestCase):
         keypair_ctx.setup()
         self.assertEqual(self.ctx_without_keys, self.ctx_with_keys)
 
-    @mock.patch('rally.osclients.Clients')
-    @mock.patch("%s.keypair.Keypair._keypair_safe_remove" % CTX)
-    def test_keypair_cleanup(self, mock_safe_remove, mock_osclients):
+    @mock.patch("%s.keypair.resource_manager.cleanup" % CTX)
+    def test_keypair_cleanup(self, mock_cleanup):
         keypair_ctx = keypair.Keypair(self.ctx_with_keys)
         keypair_ctx.cleanup()
-        mock_clients = mock_osclients.return_value
-        mock_nova = mock_clients.nova.return_value
-        self.assertEqual(
-            [mock.call(mock_nova)]
-            * self.users,
-            mock_safe_remove.mock_calls
-        )
+        mock_cleanup.assert_called_once_with(names=["nova.keypairs"],
+                                             users=self.ctx_with_keys["users"])
 
-    @mock.patch("%s.keypair.Keypair._keypair_safe_remove" % CTX)
-    @mock.patch('rally.osclients.Clients')
-    def test_keypair_generate(self, mock_osclients, mock_safe_remove):
+    @mock.patch("rally.osclients.Clients")
+    def test_keypair_generate(self, mock_osclients):
         keypair_ctx = keypair.Keypair(self.ctx_without_keys)
-        keypair_ctx._generate_keypair('endpoint')
-        mock_clients = mock_osclients.return_value
-        mock_nova = mock_clients.nova.return_value
-        self.assertIn(
-            mock.call().nova().keypairs.create('rally_ssh_key'),
-            mock_osclients.mock_calls
-        )
-        mock_safe_remove.assert_called_once_with(mock_nova)
+        keypair_ctx._generate_keypair("endpoint")
 
-    def test_keypair_safe_remove(self):
-        mock_nova = mock.MagicMock()
-        keypair_ctx = keypair.Keypair(self.ctx_without_keys)
-        keypair_ctx._keypair_safe_remove(mock_nova)
-        self.assertEqual(
-            [mock.call.delete('rally_ssh_key')],
-            mock_nova.keypairs.mock_calls)
+        mock_osclients.assert_has_calls([
+            mock.call().nova().keypairs.delete("rally_ssh_key"),
+            mock.call().nova().keypairs.create("rally_ssh_key"),
+        ])

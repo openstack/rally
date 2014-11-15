@@ -61,11 +61,11 @@ class SaharaEDPTestCase(test.TestCase):
             "users": self.user_key,
         }
 
-    @mock.patch("%s.sahara_edp.cleanup_utils" % CTX)
+    @mock.patch("%s.sahara_edp.resource_manager.cleanup" % CTX)
     @mock.patch("%s.sahara_edp.urllib2" % CTX)
     @mock.patch("%s.sahara_edp.osclients" % CTX)
     def test_setup_and_cleanup(self, mock_osclients, mock_urllib,
-                               mock_cleanup_utils):
+                               mock_cleanup):
 
         mock_sahara = mock_osclients.Clients(mock.MagicMock()).sahara()
         mock_sahara.data_sources.create.return_value = mock.MagicMock(id=42)
@@ -106,22 +106,9 @@ class SaharaEDPTestCase(test.TestCase):
         mock_sahara.job_binaries.create.assert_has_calls(job_binaries_calls)
 
         sahara_ctx.cleanup()
-        self.assertEqual(
-            self.tenants_num,
-            len(mock_cleanup_utils.delete_job_executions.mock_calls))
 
-        self.assertEqual(
-            self.tenants_num,
-            len(mock_cleanup_utils.delete_jobs.mock_calls))
-
-        self.assertEqual(
-            self.tenants_num,
-            len(mock_cleanup_utils.delete_job_binary_internals.mock_calls))
-
-        self.assertEqual(
-            self.tenants_num,
-            len(mock_cleanup_utils.delete_job_binaries.mock_calls))
-
-        self.assertEqual(
-            self.tenants_num,
-            len(mock_cleanup_utils.delete_data_sources.mock_calls))
+        mock_cleanup.assert_called_once_with(
+            names=["sahara.job_executions", "sahara.jobs",
+                   "sahara.job_binary_internals", "sahara.job_binaries",
+                   "sahara.data_sources"],
+            users=ctx["users"])
