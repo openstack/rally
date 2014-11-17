@@ -1,7 +1,7 @@
 from oslo.config import cfg
 
 from rally.benchmark.context import base
-from rally.openstack.common import log as logging
+from rally import log as logging
 from rally import osclients
 from rally import utils
 

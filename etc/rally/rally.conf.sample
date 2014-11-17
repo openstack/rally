@@ -9,6 +9,15 @@
 
 
 #
+# Options defined in rally.log
+#
+
+# Print debugging output only for Rally. Off-site components
+# stay quiet. (boolean value)
+#rally_debug=false
+
+
+#
 # Options defined in rally.openstack.common.eventlet_backdoor
 #
 
@@ -372,6 +381,13 @@
 # Cluster status polling interval in seconds (integer value)
 #cluster_check_interval=5
 
+# A timeout in seconds for a cluster create operation (integer
+# value)
+#job_execution_timeout=600
+
+# Cluster status polling interval in seconds (integer value)
+#job_check_interval=5
+
 
 [database]
 
@@ -514,7 +530,7 @@
 
 # How many concurrent threads use for serving users context
 # (integer value)
-#concurrent=30
+#resource_management_workers=30
 
 # ID of domain in which projects will be created. (string
 # value)

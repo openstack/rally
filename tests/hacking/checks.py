@@ -79,5 +79,22 @@ def check_assert_methods_from_mock(logical_line, filename):
                     "custom_msg": custom_msg})
 
 
+def check_import_of_logging(logical_line, filename):
+    """Check correctness import of logging module N310."""
+
+    excluded_files = ["./rally/log.py"]
+
+    forbidden_imports = ["from rally.openstack.common import log",
+                         "import rally.openstack.common.log"
+                         "import logging"]
+
+    if filename not in excluded_files:
+        for forbidden_import in forbidden_imports:
+            if logical_line.startswith(forbidden_import):
+                yield (0, "N310 Wrong module for logging is imported. Please "
+                          "use `rally.log` instead.")
+
+
 def factory(register):
     register(check_assert_methods_from_mock)
+    register(check_import_of_logging)
