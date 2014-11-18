@@ -45,6 +45,3 @@ class VerifyTestCase(unittest.TestCase):
 
     def test_image_set(self):
         self._verify_start_and_get_results_in_json("image")
-
-    def test_smoke_set(self):
-        self._verify_start_and_get_results_in_json("smoke")
