@@ -15,37 +15,90 @@ import mock
 from rally.verification.verifiers.tempest import json2html
 from tests.unit import test
 
+BASE = "rally.verification.verifiers.tempest"
 
-class Json2HtmlTestCase(test.TestCase):
 
-    def test_main(self):
+class HtmlOutputTestCase(test.TestCase):
 
-        data = {'tests': 4, 'skipped': 1, 'errors': 1, 'failures': 1,
-                'success': 1, 'time': 22,
-                'test_cases': {
-                    'tp': {'name': 'tp', 'time': 2, 'status': 'OK',
-                           'output': 'tp_ok'},
-                    'ts': {'name': 'ts', 'time': 4, 'status': 'SKIP',
-                           'output': 'ts_skip'},
-                    'tf': {'name': 'tf', 'time': 6, 'status': 'FAIL',
-                           'output': 'tf_fail',
-                           'failure': {'type': 'tf', 'log': 'fail_log'}},
-                    'te': {'name': 'te', 'time': 2, 'status': 'ERROR',
-                           'output': 'te_error',
-                           'failure': {'type': 'te', 'log': 'error+log'}}}}
+    results = {
+        "time": 22,
+        "tests": 4,
+        "errors": 1,
+        "success": 1,
+        "skipped": 1,
+        "failures": 1,
+        "test_cases": {
+            "tp": {"name": "tp",
+                   "status": "OK",
+                   "output": "tp_ok",
+                   "time": 2},
+            "ts": {"name": "ts",
+                   "status": "SKIP",
+                   "output": "ts_skip",
+                   "time": 4},
+            "tf": {"name": "tf",
+                   "status": "FAIL",
+                   "output": "tf_fail",
+                   "time": 6,
+                   "failure": {"type": "tf", "log": "fail_log"}},
+            "te": {"name": "te",
+                   "time": 2,
+                   "status": "ERROR",
+                   "output": "te_error",
+                   "failure": {"type": "te", "log": "error+log"}}}}
 
-        obj = json2html.HtmlOutput(data)
-        self.assertEqual(obj.success_count, data['success'])
-        self.assertEqual(obj.failure_count, data['failures'])
-        self.assertEqual(obj.skip_count, data['skipped'])
-        self.assertEqual(obj.error_count, data['errors'])
+    def test__init(self):
+        obj = json2html.HtmlOutput(self.results)
+        self.assertEqual(obj.num_passed, self.results["success"])
+        self.assertEqual(obj.num_failed, self.results["failures"])
+        self.assertEqual(obj.num_skipped, self.results["skipped"])
+        self.assertEqual(obj.num_errors, self.results["errors"])
+        self.assertEqual(obj.num_total, self.results["tests"])
+        self.assertEqual(obj.results, self.results["test_cases"])
 
-        report_attrs = obj._getReportAttributes()
-        generator = 'json2html %s' % json2html.__version__
-        heading = obj._generate_heading(report_attrs)
+    def test__generate_report(self):
+
+        obj = json2html.HtmlOutput(self.results)
+        expected_report = {
+            "errors": 1,
+            "failed": 1,
+            "passed": 1,
+            "skipped": 1,
+            "total": 4,
+            "tests": [{"desc": "te",
+                       "id": 0,
+                       "output": "te_errorerror+log",
+                       "status": "error",
+                       "time": 2},
+                      {"desc": "tf",
+                       "id": 1,
+                       "output": "tf_failfail_log",
+                       "status": "fail",
+                       "time": 6},
+                      {"desc": "tp",
+                       "id": 2,
+                       "output": "tp_ok",
+                       "status": "pass",
+                       "time": 2},
+                      {"desc": "ts",
+                       "id": 3,
+                       "output": "ts_skip",
+                       "status": "skip",
+                       "time": 4}]}
+
         report = obj._generate_report()
-        with mock.patch('mako.template.Template') as mock_mako:
-            obj.create_report()
-            mock_mako().render.assert_called_once_with(
-                title=json2html.DEFAULT_TITLE, generator=generator,
-                heading=heading, report=report)
+        self.assertEqual(report, expected_report)
+
+    @mock.patch(BASE + ".json2html.ui_utils.get_template")
+    @mock.patch(BASE + ".json2html.HtmlOutput._generate_report",
+                return_value="report_data")
+    def test_create_report(self, mock_generate, mock_get):
+        obj = json2html.HtmlOutput(self.results)
+        mock_render = mock.Mock(return_value="html_report")
+        mock_get().render = mock_render
+        mock_get.reset_mock()
+
+        html_report = obj.create_report()
+        self.assertEqual(html_report, "html_report")
+        mock_get.assert_called_once_with("verification/report.mako")
+        mock_render.assert_called_once_with(report="report_data")

@@ -175,10 +175,9 @@ class VerifyCommandsTestCase(test.TestCase):
 
     @mock.patch("rally.cmd.commands.verify.open", create=True)
     @mock.patch("rally.db.verification_result_get")
-    @mock.patch("rally.verification.verifiers.tempest.json2html.main",
-                return_value="")
+    @mock.patch("rally.verification.verifiers.tempest.json2html.HtmlOutput")
     def test_results_with_output_html_and_output_file(self,
-                                                      mock_json2html_main,
+                                                      mock_html,
                                                       mock_db_result_get,
                                                       mock_open):
         mock_open.return_value = mock.MagicMock()
@@ -186,14 +185,16 @@ class VerifyCommandsTestCase(test.TestCase):
         fake_data = {}
         results = {"data": fake_data}
         mock_db_result_get.return_value = results
+        mock_create = mock.Mock(return_value="html_report")
+        mock_html.return_value = mock.Mock(create_report=mock_create)
         self.verify.results(verification_uuid, output_html=True,
                             output_json=False, output_file="results")
 
         mock_db_result_get.assert_called_once_with(verification_uuid)
-        mock_json2html_main.assert_called_once_with(fake_data)
+        mock_html.assert_called_once_with(fake_data)
         mock_open.assert_called_once_with("results", "wb")
         fake_file = mock_open.return_value.__enter__.return_value
-        fake_file.write.assert_called_once_with("")
+        fake_file.write.assert_called_once_with("html_report")
 
     @mock.patch("rally.db.verification_result_get",
                 return_value={"data": {"test_cases": {}}})

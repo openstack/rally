@@ -25,6 +25,12 @@ import subunit
 import testtools
 
 
+STATUS_PASS = "OK"
+STATUS_SKIP = "SKIP"
+STATUS_FAIL = "FAIL"
+STATUS_ERROR = "ERROR"
+
+
 class JsonOutput(testtools.TestResult):
     """Output test results in Json."""
 
@@ -39,10 +45,15 @@ class JsonOutput(testtools.TestResult):
         self.results_file = results_file
 
     def _format_result(self, name, time, status, output, failure=None):
-        self.test_cases[name] = {'name': name, 'time': time,
-                                 'status': status, 'output': output}
+        if status == STATUS_SKIP:
+            # We do not need `setUpClass' in skipped test name
+            if name[:12] == "setUpClass (" and name[-1] == ")":
+                name = name[12:-1]
+
+        self.test_cases[name] = {"name": name, "status": status,
+                                 "time": time, "output": output}
         if failure:
-            self.test_cases[name].update({'failure': failure})
+            self.test_cases[name].update({"failure": failure})
 
     def _test_time(self, before, after):
         return timeutils.delta_seconds(before, after)
@@ -55,7 +66,7 @@ class JsonOutput(testtools.TestResult):
         output = test.shortDescription()
         if output is None:
             output = test.id()
-        self._format_result(test.id(), test_time, 'OK', output)
+        self._format_result(test.id(), test_time, STATUS_PASS, output)
 
     def addSkip(self, test, err):
         output = test.shortDescription()
@@ -66,7 +77,7 @@ class JsonOutput(testtools.TestResult):
         if output is None:
             output = test.id()
         self.skip_count += 1
-        self._format_result(test.id(), test_time, 'SKIP', output)
+        self._format_result(test.id(), test_time, STATUS_SKIP, output)
 
     def addError(self, test, err):
         output = test.shortDescription()
@@ -79,7 +90,7 @@ class JsonOutput(testtools.TestResult):
             self.error_count += 1
             _exc_str = self.formatErr(err)
             failure_type = "%s.%s" % (err[0].__module__, err[1].__name__)
-            self._format_result(test.id(), test_time, 'ERROR', output,
+            self._format_result(test.id(), test_time, STATUS_ERROR, output,
                                 failure={'type': failure_type,
                                          'log': _exc_str})
 
@@ -93,7 +104,7 @@ class JsonOutput(testtools.TestResult):
         if output is None:
             output = test.id()
         failure_type = "%s.%s" % (err[0].__module__, err[0].__name__)
-        self._format_result(test.id(), test_time, 'FAIL', output,
+        self._format_result(test.id(), test_time, STATUS_FAIL, output,
                             failure={'type': failure_type, 'log': _exc_str})
 
     def formatErr(self, err):
