@@ -114,6 +114,14 @@ class TaskTestCase(test.TestCase):
             {'verification_log': json.dumps({"a": "fake"})}
         )
 
+    @mock.patch("rally.objects.task.db.task_result_get_all_by_uuid",
+                return_value="foo_results")
+    def test_get_results(self, mock_get):
+        task = objects.Task(task=self.task)
+        results = task.get_results()
+        mock_get.assert_called_once_with(self.task["uuid"])
+        self.assertEqual(results, "foo_results")
+
     @mock.patch('rally.objects.task.db.task_result_create')
     def test_append_results(self, mock_append_results):
         task = objects.Task(task=self.task)

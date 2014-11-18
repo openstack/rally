@@ -132,7 +132,7 @@ class ScenarioHelpersTestCase(test.TestCase):
         }
         self.assertEqual(expected_result, result)
         self.assertEqual(expected_error[:2],
-                         [str(Exception), "Something went wrong"])
+                         ["Exception", "Something went wrong"])
 
 
 class ScenarioRunnerResultTestCase(test.TestCase):

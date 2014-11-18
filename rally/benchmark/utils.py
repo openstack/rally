@@ -134,7 +134,7 @@ def wait_for_delete(resource, update_resource=None, timeout=60,
 
 
 def format_exc(exc):
-    return [str(type(exc)), str(exc), traceback.format_exc()]
+    return [exc.__class__.__name__, str(exc), traceback.format_exc()]
 
 
 def infinite_run_args_generator(args_func):

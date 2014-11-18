@@ -69,7 +69,7 @@ class TaskTestCase(unittest.TestCase):
         rally("task start --task %s" % config.filename)
         if os.path.exists(html_file):
             os.remove(html_file)
-        rally("task report /tmp/test_plot")
+        rally("task report --out %s" % html_file)
         self.assertTrue(os.path.exists(html_file))
 
     def test_delete(self):

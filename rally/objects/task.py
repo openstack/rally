@@ -53,6 +53,9 @@ class Task(object):
                       'status': consts.TaskStatus.FAILED,
                       'verification_log': json.dumps(log)})
 
+    def get_results(self):
+        return db.task_result_get_all_by_uuid(self.task["uuid"])
+
     def append_results(self, key, value):
         db.task_result_create(self.task['uuid'], key, value)
 

@@ -45,7 +45,8 @@ rally show keypairs
 rally -v task start --task $SCENARIO
 
 mkdir -p rally-plot/extra
-cp $BASE/new/rally/tests/ci/rally-gate/index.html rally-plot/extra/index.html
+python $BASE/new/rally/rally/ui/utils.py render\
+    tests/ci/rally-gate/index.mako > rally-plot/extra/index.html
 cp $SCENARIO rally-plot/task.txt
 tar -czf rally-plot/plugins.tar.gz -C $RALLY_PLUGINS_DIR .
 rally task report --out rally-plot/results.html

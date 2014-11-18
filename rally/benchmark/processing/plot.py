@@ -15,45 +15,82 @@
 
 import copy
 import json
-import os
-
-import mako.template
 
 from rally.benchmark.processing.charts import histogram as histo
 from rally.benchmark.processing import utils
+from rally.ui import utils as ui_utils
 
 
-def _prepare_data(data, reduce_rows=1000):
+def _prepare_data(data):
     durations = []
     idle_durations = []
     atomic_durations = {}
-    num_errors = 0
+    output = {}
+    output_errors = []
+    output_stacked = []
+    errors = []
 
-    for i in data["result"]:
-        # TODO(maretskiy): store error value and scenario output
+    # NOTE(maretskiy): We need this extra iteration
+    # to determine something that we should know about the data
+    # before starting its processing.
+    atomic_names = set()
+    output_names = set()
+    for r in data["result"]:
+        atomic_names.update(r["atomic_actions"].keys())
+        output_names.update(r["scenario_output"]["data"].keys())
 
-        if i["error"]:
-            num_errors += 1
+    for idx, r in enumerate(data["result"]):
+        # NOTE(maretskiy): Sometimes we miss iteration data.
+        # So we care about data integrity by setting zero values
+        if len(r["atomic_actions"]) < len(atomic_names):
+            for atomic_name in atomic_names:
+                r["atomic_actions"].setdefault(atomic_name, 0)
 
-        durations.append(i["duration"])
-        idle_durations.append(i["idle_duration"])
+        if len(r["scenario_output"]["data"]) < len(output_names):
+            for output_name in output_names:
+                r["scenario_output"]["data"].setdefault(output_name, 0)
 
-        for met, duration in i["atomic_actions"].items():
+        if r["scenario_output"]["errors"]:
+            output_errors.append((idx, r["scenario_output"]["errors"]))
+
+        for param, value in r["scenario_output"]["data"].items():
+            try:
+                output[param].append(value)
+            except KeyError:
+                output[param] = [value]
+
+        if r["error"]:
+            type_, message, traceback = r["error"]
+            errors.append({"iteration": idx,
+                           "type": type_,
+                           "message": message,
+                           "traceback": traceback})
+
+        durations.append(r["duration"])
+        idle_durations.append(r["idle_duration"])
+
+        for met, duration in r["atomic_actions"].items():
             try:
                 atomic_durations[met].append(duration)
             except KeyError:
                 atomic_durations[met] = [duration]
 
-    for k, v in atomic_durations.items():
-        atomic_durations[k] = utils.compress(v, limit=reduce_rows)
+    for k, v in output.iteritems():
+        output_stacked.append({"key": k, "values": utils.compress(v)})
+
+    for k, v in atomic_durations.iteritems():
+        atomic_durations[k] = utils.compress(v)
 
     return {
         "total_durations": {
-            "duration": utils.compress(durations, limit=reduce_rows),
-            "idle_duration": utils.compress(idle_durations,
-                                            limit=reduce_rows)},
+            "duration": utils.compress(durations),
+            "idle_duration": utils.compress(idle_durations)},
         "atomic_durations": atomic_durations,
-        "num_errors": num_errors,
+        "output": output_stacked,
+        "output_errors": output_errors,
+        "errors": errors,
+        "sla": data["sla"],
+        "duration": data["duration"],
     }
 
 
@@ -79,7 +116,7 @@ def _process_main_duration(result, data):
     return {
         "pie": [
             {"key": "success", "value": len(histogram_data)},
-            {"key": "errors", "value": data["num_errors"]},
+            {"key": "errors", "value": len(data["errors"])},
         ],
         "iter": stacked_area,
         "histogram": [
@@ -214,14 +251,14 @@ def _get_atomic_action_durations(result):
 def _process_results(results):
     output = []
     for result in results:
-        table_cols = ["action",
-                      "min (sec)",
-                      "avg (sec)",
-                      "max (sec)",
+        table_cols = ["Action",
+                      "Min (sec)",
+                      "Avg (sec)",
+                      "Max (sec)",
                       "90 percentile",
                       "95 percentile",
-                      "success",
-                      "count"]
+                      "Success",
+                      "Count"]
         table_rows = _get_atomic_action_durations(result)
         name, kw, pos = (result["key"]["name"],
                          result["key"]["kw"], result["key"]["pos"])
@@ -239,15 +276,16 @@ def _process_results(results):
             "atomic": _process_atomic(result, data),
             "table_cols": table_cols,
             "table_rows": table_rows,
+            "output": data["output"],
+            "output_errors": data["output_errors"],
+            "errors": data["errors"],
+            "total_duration": data["duration"],
+            "sla": data["sla"],
         })
     return sorted(output, key=lambda r: "%s%s" % (r["cls"], r["name"]))
 
 
 def plot(results):
     data = _process_results(results)
-
-    template_file = os.path.join(os.path.dirname(__file__),
-                                 "src", "index.mako")
-    with open(template_file) as index:
-        template = mako.template.Template(index.read())
-        return template.render(data=json.dumps(data))
+    template = ui_utils.get_template("task/report.mako")
+    return template.render(data=json.dumps(data))

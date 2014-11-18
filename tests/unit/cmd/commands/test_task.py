@@ -134,28 +134,81 @@ class TaskCommandsTestCase(test.TestCase):
         self.task.detailed(test_uuid)
         mock_db.task_get_detailed.assert_called_once_with(test_uuid)
 
-    @mock.patch('rally.cmd.commands.task.db')
-    @mock.patch('json.dumps')
-    def test_results(self, mock_json, mock_db):
-        test_uuid = 'aa808c14-69cc-4faf-a906-97e05f5aebbd'
-        value = [
-            {'key': 'key', 'data': {'raw': 'raw', 'sla': []}}
+    @mock.patch("json.dumps")
+    @mock.patch("rally.cmd.commands.task.task.Task.get")
+    def test_results(self, mock_get, mock_json):
+        task_id = "foo_task_id"
+        data = [
+            {"key": "foo_key", "data": {"raw": "foo_raw", "sla": []}}
         ]
         result = map(lambda x: {"key": x["key"],
                                 "result": x["data"]["raw"],
-                                "sla": x["data"]["sla"]}, value)
-        mock_db.task_result_get_all_by_uuid.return_value = value
-        self.task.results(test_uuid)
-        mock_json.assert_called_once_with(result, sort_keys=True, indent=4)
-        mock_db.task_result_get_all_by_uuid.assert_called_once_with(test_uuid)
+                                "sla": x["data"]["sla"]}, data)
+        mock_results = mock.Mock(return_value=data)
+        mock_get.return_value = mock.Mock(get_results=mock_results)
 
-    @mock.patch('rally.cmd.commands.task.db')
-    def test_invalid_results(self, mock_db):
-        test_uuid = 'd1f58069-d221-4577-b6ba-5c635027765a'
-        mock_db.task_result_get_all_by_uuid.return_value = []
-        return_value = self.task.results(test_uuid)
-        mock_db.task_result_get_all_by_uuid.assert_called_once_with(test_uuid)
-        self.assertEqual(1, return_value)
+        self.task.results(task_id)
+        mock_json.assert_called_once_with(result, sort_keys=True, indent=4)
+        mock_get.assert_called_once_with(task_id)
+
+    @mock.patch("rally.cmd.commands.task.task.Task.get")
+    def test_invalid_results(self, mock_get):
+        task_id = "foo_task_id"
+        data = []
+        mock_results = mock.Mock(return_value=data)
+        mock_get.return_value = mock.Mock(get_results=mock_results)
+
+        result = self.task.results(task_id)
+        mock_get.assert_called_once_with(task_id)
+        self.assertEqual(1, result)
+
+    @mock.patch("rally.cmd.commands.task.os.path.realpath",
+                side_effect=lambda p: "realpath_%s" % p)
+    @mock.patch("rally.cmd.commands.task.open", create=True)
+    @mock.patch("rally.cmd.commands.task.plot")
+    @mock.patch("rally.cmd.commands.task.webbrowser")
+    @mock.patch("rally.cmd.commands.task.task.Task.get")
+    def test_report(self, mock_get, mock_web, mock_plot, mock_open, mock_os):
+        task_id = "foo_task_id"
+        data = [
+            {"key": "foo_key", "data": {"raw": "foo_raw", "sla": "foo_sla",
+                                        "scenario_duration": "foo_duration"}},
+            {"key": "bar_key", "data": {"raw": "bar_raw", "sla": "bar_sla",
+                                        "scenario_duration": "bar_duration"}},
+        ]
+        results = map(lambda x: {"key": x["key"],
+                                 "result": x["data"]["raw"],
+                                 "sla": x["data"]["sla"],
+                                 "duration": x["data"]["scenario_duration"]},
+                      data)
+        mock_results = mock.Mock(return_value=data)
+        mock_get.return_value = mock.Mock(get_results=mock_results)
+        mock_plot.plot.return_value = "html_report"
+        mock_write = mock.Mock()
+        mock_open.return_value.__enter__.return_value = (
+            mock.Mock(write=mock_write))
+
+        def reset_mocks():
+            for m in mock_get, mock_web, mock_plot, mock_open:
+                m.reset_mock()
+
+        self.task.report(task_id)
+        mock_open.assert_called_once_with(task_id + ".html", "w+")
+        mock_plot.plot.assert_called_once_with(results)
+        mock_write.assert_called_once_with("html_report")
+        mock_get.assert_called_once_with(task_id)
+
+        reset_mocks()
+        self.task.report(task_id, out="bar.html")
+        mock_open.assert_called_once_with("bar.html", "w+")
+        mock_plot.plot.assert_called_once_with(results)
+        mock_write.assert_called_once_with("html_report")
+        mock_get.assert_called_once_with(task_id)
+
+        reset_mocks()
+        self.task.report(task_id, out="spam.html", open_it=True)
+        mock_web.open_new_tab.assert_called_once_with(
+            "file://realpath_spam.html")
 
     @mock.patch('rally.cmd.commands.task.common_cliutils.print_list')
     @mock.patch('rally.cmd.commands.task.envutils.get_global')
@@ -206,7 +259,7 @@ class TaskCommandsTestCase(test.TestCase):
 
     @mock.patch('rally.cmd.commands.task.common_cliutils.print_list')
     @mock.patch("rally.cmd.commands.task.db")
-    def test_sla_check(self, mock_db, mock_print_list):
+    def _test_sla_check(self, mock_db, mock_print_list):
         value = [{
                     "key": {
                         "name": "fake_name",
