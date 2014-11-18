@@ -18,6 +18,7 @@ import logging
 import time
 import traceback
 
+from novaclient import exceptions as nova_exc
 from novaclient.v1_1 import servers
 
 from rally import exceptions
@@ -144,8 +145,13 @@ def infinite_run_args_generator(args_func):
 
 def check_service_status(client, service_name):
     """Check if given openstack service is enabled and state is up."""
-    for service in client.services.list():
-        if service_name in str(service):
-            if service.status == 'enabled' and service.state == 'up':
-                return True
+    try:
+        for service in client.services.list():
+            if service_name in str(service):
+                if service.status == 'enabled' and service.state == 'up':
+                    return True
+    except nova_exc.NotFound:
+        LOG.warning(_("Unable to retrieve a list of available services from "
+                      "nova. Pre-Grizzly OpenStack deployment?"))
+        return False
     return False
