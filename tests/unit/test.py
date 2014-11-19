@@ -14,13 +14,13 @@
 #    under the License.
 
 import mock
+from oslo.config import fixture
 from oslotest import base
 
 from rally import db
-from rally.openstack.common.fixture import config
 
 
-class DatabaseFixture(config.Config):
+class DatabaseFixture(fixture.Config):
     """Create clean DB before starting test."""
     def setUp(self):
         super(DatabaseFixture, self).setUp()
