@@ -22,31 +22,22 @@ from tests.unit import test
 
 
 class PlotTestCase(test.TestCase):
-    @mock.patch("rally.benchmark.processing.plot.open", create=True)
-    @mock.patch("rally.benchmark.processing.plot.mako.template.Template")
-    @mock.patch("rally.benchmark.processing.plot.os.path.dirname")
+    @mock.patch("rally.benchmark.processing.plot.ui_utils")
     @mock.patch("rally.benchmark.processing.plot._process_results")
-    def test_plot(self, mock_proc_results, mock_dirname, mock_template,
-                  mock_open):
-        mock_dirname.return_value = "abspath"
-        mock_open.return_value = mock_open
-        mock_open.__enter__.return_value = mock_open
-        mock_open.read.return_value = "some_template"
+    def test_plot(self, mock_proc_results, mock_utils):
+        mock_render = mock.Mock(return_value="plot_html")
+        mock_utils.get_template = mock.Mock(
+            return_value=mock.Mock(render=mock_render))
 
-        templ = mock.MagicMock()
-        templ.render.return_value = "output"
-        mock_template.return_value = templ
         mock_proc_results.return_value = [{"name": "a"}, {"name": "b"}]
 
         result = plot.plot(["abc"])
 
-        self.assertEqual(result, templ.render.return_value)
-        templ.render.assert_called_once_with(
+        self.assertEqual(result, "plot_html")
+        mock_render.assert_called_once_with(
             data=json.dumps(mock_proc_results.return_value)
         )
-        mock_template.assert_called_once_with(mock_open.read.return_value)
-        mock_open.assert_called_once_with("%s/src/index.mako"
-                                          % mock_dirname.return_value)
+        mock_utils.get_template.assert_called_once_with("task/report.mako")
 
     @mock.patch("rally.benchmark.processing.plot._prepare_data")
     @mock.patch("rally.benchmark.processing.plot._process_atomic")
@@ -58,15 +49,20 @@ class PlotTestCase(test.TestCase):
             {"key": {"name": "Klass.method_foo", "pos": 1, "kw": "config2"}},
             {"key": {"name": "Klass.method_bar", "pos": 0, "kw": "config3"}}
         ]
-        table_cols = ["action",
-                      "min (sec)",
-                      "avg (sec)",
-                      "max (sec)",
+        table_cols = ["Action",
+                      "Min (sec)",
+                      "Avg (sec)",
+                      "Max (sec)",
                       "90 percentile",
                       "95 percentile",
-                      "success",
-                      "count"]
+                      "Success",
+                      "Count"]
 
+        mock_prepare.side_effect = lambda i: {"errors": "errors_list",
+                                              "output": [],
+                                              "output_errors": [],
+                                              "sla": "foo_sla",
+                                              "duration": 12345.67}
         mock_main_duration.return_value = "main_duration"
         mock_atomic.return_value = "main_atomic"
 
@@ -90,7 +86,12 @@ class PlotTestCase(test.TestCase):
                 "duration": mock_main_duration.return_value,
                 "atomic": mock_atomic.return_value,
                 "table_cols": table_cols,
-                "table_rows": [['total', None, None, None, None, None, 0, 0]]
+                "table_rows": [["total", None, None, None, None, None, 0, 0]],
+                "errors": "errors_list",
+                "output": [],
+                "output_errors": [],
+                "sla": "foo_sla",
+                "total_duration": 12345.67
             })
 
     def test__process_main_time(self):
@@ -100,21 +101,26 @@ class PlotTestCase(test.TestCase):
                     "error": [],
                     "duration": 1,
                     "idle_duration": 2,
-                    "atomic_actions": {}
+                    "atomic_actions": {},
+                    "scenario_output": {"errors": [], "data": {}}
                 },
                 {
-                    "error": True,
+                    "error": ["some", "error", "occurred"],
                     "duration": 1,
                     "idle_duration": 1,
-                    "atomic_actions": {}
+                    "atomic_actions": {},
+                    "scenario_output": {"errors": [], "data": {}}
                 },
                 {
                     "error": [],
                     "duration": 2,
                     "idle_duration": 3,
-                    "atomic_actions": {}
+                    "atomic_actions": {},
+                    "scenario_output": {"errors": [], "data": {}}
                 }
-            ]
+            ],
+            "sla": "foo_sla",
+            "duration": 12345.67
         }
 
         output = plot._process_main_duration(result,
@@ -168,28 +174,32 @@ class PlotTestCase(test.TestCase):
                     "atomic_actions": {
                         "action1": 1,
                         "action2": 2
-                    }
+                    },
+                    "scenario_output": {"errors": [], "data": {}}
                 },
                 {
                     "error": ["some", "error", "occurred"],
                     "atomic_actions": {
                         "action1": 1,
                         "action2": 2
-                    }
+                    },
+                    "scenario_output": {"errors": [], "data": {}}
                 },
                 {
                     "error": [],
                     "atomic_actions": {
                         "action1": 3,
                         "action2": 4
-                    }
+                    },
+                    "scenario_output": {"errors": [], "data": {}}
                 }
             ]
         }
 
-        data = {"atomic_durations": {
-            "action1": [(1, 1.0), (2, 0.0), (3, 3.0)],
-            "action2": [(1, 2.0), (2, 0.0), (3, 4.0)]}}
+        data = {
+            "atomic_durations": {
+                "action1": [(1, 1.0), (2, 0.0), (3, 3.0)],
+                "action2": [(1, 2.0), (2, 0.0), (3, 4.0)]}}
 
         output = plot._process_atomic(result, data)
 
@@ -270,11 +280,11 @@ class PlotTestCase(test.TestCase):
     def test__prepare_data(self, mock_compress):
 
         mock_compress.side_effect = lambda i, **kv: i
-        rows_range = 100
-        limit = 10
-
+        rows_num = 100
+        total_duration = 12345.67
+        sla = [{"foo": "bar"}]
         data = []
-        for i in range(rows_range):
+        for i in range(rows_num):
             atomic_actions = {
                 "a1": i + 0.1,
                 "a2": i + 0.8,
@@ -284,32 +294,50 @@ class PlotTestCase(test.TestCase):
                 "idle_duration": i * 0.2,
                 "error": [],
                 "atomic_actions": atomic_actions,
+                "scenario_output": {"errors": ["err"],
+                                    "data": {"out_key": "out_value"}}
             }
             data.append(row)
 
-        data[42]["error"] = "foo error"
-        data[52]["error"] = "bar error"
+        data[42]["error"] = ["foo", "bar", "spam"]
+        data[52]["error"] = ["spam", "bar", "foo"]
 
-        values_atomic_a1 = [i + 0.1 for i in range(rows_range)]
-        values_atomic_a2 = [i + 0.8 for i in range(rows_range)]
-        values_duration = [i * 3.1 for i in range(rows_range)]
-        values_idle = [i * 0.2 for i in range(rows_range)]
-        num_errors = 2
+        values_atomic_a1 = [i + 0.1 for i in range(rows_num)]
+        values_atomic_a2 = [i + 0.8 for i in range(rows_num)]
+        values_duration = [i * 3.1 for i in range(rows_num)]
+        values_idle = [i * 0.2 for i in range(rows_num)]
 
-        prepared_data = plot._prepare_data({"result": data},
-                                           reduce_rows=limit)
-        self.assertEqual(num_errors, prepared_data["num_errors"])
+        prepared_data = plot._prepare_data({"result": data,
+                                            "duration": total_duration,
+                                            "sla": sla,
+                                            "key": "foo_key"})
+        self.assertEqual(2, len(prepared_data["errors"]))
 
-        calls = [mock.call(values_atomic_a1, limit=limit),
-                 mock.call(values_atomic_a2, limit=limit),
-                 mock.call(values_duration, limit=limit),
-                 mock.call(values_idle, limit=limit)]
+        calls = [mock.call(values_atomic_a1),
+                 mock.call(values_atomic_a2),
+                 mock.call(values_duration),
+                 mock.call(values_idle)]
         mock_compress.assert_has_calls(calls)
 
+        expected_output = [{"key": "out_key",
+                            "values": ["out_value"] * rows_num}]
+        expected_output_errors = [(i, [e])
+                                  for i, e in enumerate(["err"] * rows_num)]
         self.assertEqual({
             "total_durations": {"duration": values_duration,
                                 "idle_duration": values_idle},
             "atomic_durations": {"a1": values_atomic_a1,
                                  "a2": values_atomic_a2},
-            "num_errors": num_errors
+            "errors": [{"iteration": 42,
+                        "message": "bar",
+                        "traceback": "spam",
+                        "type": "foo"},
+                       {"iteration": 52,
+                        "message": "bar",
+                        "traceback": "foo",
+                        "type": "spam"}],
+            "output": expected_output,
+            "output_errors": expected_output_errors,
+            "duration": total_duration,
+            "sla": sla,
         }, prepared_data)

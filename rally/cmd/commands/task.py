@@ -32,6 +32,7 @@ from rally.cmd import envutils
 from rally import db
 from rally import exceptions
 from rally.i18n import _
+from rally.objects import task
 from rally.openstack.common import cliutils as common_cliutils
 from rally.orchestrator import api
 from rally import utils as rutils
@@ -313,9 +314,9 @@ class TaskCommands(object):
         :param task_id: Task uuid
         """
 
-        results = map(lambda x: {"key": x["key"], 'result': x['data']['raw'],
+        results = map(lambda x: {"key": x["key"], "result": x["data"]["raw"],
                                  "sla": x["data"]["sla"]},
-                      db.task_result_get_all_by_uuid(task_id))
+                      task.Task.get(task_id).get_results())
 
         if results:
             print(json.dumps(results, sort_keys=True, indent=4))
@@ -350,8 +351,10 @@ class TaskCommands(object):
         :param open_it: bool, whether to open output file in web browser
         """
         results = map(lambda x: {"key": x["key"],
-                                 "result": x["data"]["raw"]},
-                      db.task_result_get_all_by_uuid(task_id))
+                                 "sla": x["data"]["sla"],
+                                 "result": x["data"]["raw"],
+                                 "duration": x["data"]["scenario_duration"]},
+                      task.Task.get(task_id).get_results())
         if out:
             out = os.path.expanduser(out)
         output_file = out or ("%s.html" % task_id)
@@ -403,20 +406,19 @@ class TaskCommands(object):
         :param task_id: Task uuid.
         :returns: Number of failed criteria.
         """
-        task = db.task_result_get_all_by_uuid(task_id)
+        results = task.Task.get(task_id).get_results()
         failed_criteria = 0
-        results = []
-        for result in task:
+        data = []
+        for result in results:
             key = result["key"]
             for sla in result["data"]["sla"]:
                 sla["benchmark"] = key["name"]
                 sla["pos"] = key["pos"]
                 failed_criteria += 0 if sla['success'] else 1
-                results.append(sla if tojson else rutils.Struct(**sla))
+                data.append(sla if tojson else rutils.Struct(**sla))
         if tojson:
-            print(json.dumps(results))
+            print(json.dumps(data))
         else:
-            common_cliutils.print_list(results, ('benchmark', 'pos',
-                                                 'criterion', 'success',
-                                                 'detail'))
+            common_cliutils.print_list(data, ("benchmark", "pos", "criterion",
+                                              "success", "detail"))
         return failed_criteria
