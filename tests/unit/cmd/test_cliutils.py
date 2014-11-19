@@ -23,7 +23,7 @@ from rally.cmd.commands import show
 from rally.cmd.commands import task
 from rally.cmd.commands import use
 from rally.cmd.commands import verify
-from rally.openstack.common.apiclient import exceptions
+from rally.openstack.common import cliutils as common_cliutils
 from tests.unit import test
 
 CONF = cfg.CONF
@@ -139,7 +139,7 @@ class CliUtilsTestCase(test.TestCase):
         self.assertEqual(ret, 1)
 
     @mock.patch("rally.openstack.common.cliutils.validate_args",
-                side_effect=exceptions.MissingArgs("missing"))
+                side_effect=common_cliutils.MissingArgs("missing"))
     def test_run_show_fails(self, mock_validate_args):
         ret = cliutils.run(["rally", "show", "keypairs"], self.categories)
         self.assertTrue(mock_validate_args.called)
