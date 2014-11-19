@@ -60,3 +60,25 @@ class HackingTestCase(test.TestCase):
             fake_method, 'tests/fake/test'))
         self.assertEqual(4, actual_number)
         self.assertTrue(actual_msg.startswith('N303'))
+
+    def test_check_wrong_logging_import(self):
+        fake_imports = ["from rally.openstack.common import log",
+                        "import rally.openstack.common.log"
+                        "import logging"]
+        good_imports = ["from rally import log",
+                        "from rally.log",
+                        "import rally.log"]
+
+        for fake_import in fake_imports:
+            checkres = checks.check_import_of_logging(fake_import, "fakefile")
+            self.assertIsNotNone(next(checkres))
+
+        for fake_import in fake_imports:
+            checkres = checks.check_import_of_logging(fake_import,
+                                                      "./rally/log.py")
+            self.assertEqual([], list(checkres))
+
+        for fake_import in good_imports:
+            checkres = checks.check_import_of_logging(fake_import,
+                                                      "fakefile")
+            self.assertEqual([], list(checkres))
