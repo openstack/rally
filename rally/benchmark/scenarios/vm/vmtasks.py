@@ -48,7 +48,9 @@ class VMTasks(nova_utils.NovaScenario, vm_utils.VMScenario,
                                fixed_network="private",
                                floating_network="public",
                                ip_version=4, port=22,
-                               use_floatingip=True, **kwargs):
+                               use_floatingip=True,
+                               force_delete=False,
+                               **kwargs):
         """Boot server, run a script that outputs JSON, delete server.
 
         :param image: glance image name to use for the vm
@@ -64,6 +66,7 @@ class VMTasks(nova_utils.NovaScenario, vm_utils.VMScenario,
         :param port: Port to use for SSH connection
         :param use_floatingip: Whether to associate a floating ip for
                 connection
+        :param force_delete: Whether to use force_delete for instances
 
         :returns: Dictionary containing two keys, data and errors. Data is JSON
                  data output by the script. Errors is raw data from the
@@ -123,7 +126,7 @@ class VMTasks(nova_utils.NovaScenario, vm_utils.VMScenario,
             if use_floatingip:
                 self._release_server_floating_ip(server, floating_ip)
             if server:
-                self._delete_server(server)
+                self._delete_server(server, force=force_delete)
 
         return {"data": out, "errors": err}
 

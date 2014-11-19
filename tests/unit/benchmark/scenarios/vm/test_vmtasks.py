@@ -64,7 +64,7 @@ class VMTasksTestCase(test.TestCase):
             "image_id", "flavour_id", "script_path", "interpreter",
             fixed_network='private', floating_network='public',
             volume_args={'size': 10}, username="username", ip_version=4,
-            port=22, use_floatingip=True, fakearg="f")
+            port=22, use_floatingip=True, force_delete=False, fakearg="f")
 
         # Assertions
         scenario._boot_server.assert_called_once_with(
@@ -84,7 +84,8 @@ class VMTasksTestCase(test.TestCase):
 
         scenario._release_server_floating_ip.assert_called_once_with(
             fake_server, fake_floating_ip)
-        scenario._delete_server.assert_called_once_with(fake_server)
+        scenario._delete_server.assert_called_once_with(fake_server,
+                                                        force=False)
 
     @mock.patch("json.loads")
     def test_boot_runcommand_delete_fails(self, mock_json_loads):
@@ -125,7 +126,7 @@ class VMTasksTestCase(test.TestCase):
                           "interpreter", fixed_network='private',
                           floating_network='public', username="username",
                           ip_version=4, port=22, use_floatingip=True,
-                          fakearg="f")
+                          force_delete=False, fakearg="f")
 
         # Assertions
         scenario._boot_server.assert_called_once_with(
@@ -180,7 +181,7 @@ class VMTasksTestCase(test.TestCase):
                           "interpreter", fixed_network='private',
                           floating_network='public', username="username",
                           ip_version=4, port=22, use_floatingip=True,
-                          fakearg="f")
+                          force_delete=False, fakearg="f")
 
         # Assertions
         scenario._boot_server.assert_called_once_with(
@@ -220,7 +221,7 @@ class VMTasksTestCase(test.TestCase):
             "image_id", "flavour_id", "script_path", "interpreter",
             fixed_network='private', floating_network='public',
             username="username", ip_version=4,
-            port=22, use_floatingip=False, fakearg="f")
+            port=22, use_floatingip=False, force_delete=False, fakearg="f")
 
         # Assertions
         scenario._boot_server.assert_called_once_with(
@@ -233,7 +234,8 @@ class VMTasksTestCase(test.TestCase):
 
         mock_json_loads.assert_called_once_with('stdout')
 
-        scenario._delete_server.assert_called_once_with(fake_server)
+        scenario._delete_server.assert_called_once_with(fake_server,
+                                                        force=False)
 
     def test__release_server_floating_ip(self):
         scenario = vmtasks.VMTasks()

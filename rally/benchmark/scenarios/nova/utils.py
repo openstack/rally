@@ -245,28 +245,39 @@ class NovaScenario(base.Scenario):
             check_interval=CONF.benchmark.nova_server_suspend_poll_interval
         )
 
-    @base.atomic_action_timer('nova.delete_server')
-    def _delete_server(self, server):
+    def _delete_server(self, server, force=False):
         """Deletes the given server.
 
         Returns when the server is actually deleted.
 
         :param server: Server object
+        :param force: If True, force_delete will be used instead of delete.
         """
-        server.delete()
-        bench_utils.wait_for_delete(
-            server,
-            update_resource=bench_utils.get_from_manager(),
-            timeout=CONF.benchmark.nova_server_delete_timeout,
-            check_interval=CONF.benchmark.nova_server_delete_poll_interval
-        )
+        atomic_name = ('nova.%sdelete_server') % (force and "force_" or "")
+        with base.AtomicAction(self, atomic_name):
+            if force:
+                server.force_delete()
+            else:
+                server.delete()
 
-    @base.atomic_action_timer('nova.delete_all_servers')
-    def _delete_all_servers(self):
-        """Deletes all servers in current tenant."""
-        servers = self.clients("nova").servers.list()
-        for server in servers:
-            self._delete_server(server)
+            bench_utils.wait_for_delete(
+                server,
+                update_resource=bench_utils.get_from_manager(),
+                timeout=CONF.benchmark.nova_server_delete_timeout,
+                check_interval=CONF.benchmark.nova_server_delete_poll_interval
+            )
+
+    def _delete_all_servers(self, force=False):
+        """Deletes all servers in current tenant.
+
+        :param force: If True, force_delete will be used instead of delete.
+        """
+        atomic_name = ('nova.%sdelete_all_servers') % (force
+                                                       and "force_" or "")
+        with base.AtomicAction(self, atomic_name):
+            servers = self.clients("nova").servers.list()
+            for server in servers:
+                self._delete_server(server, force)
 
     @base.atomic_action_timer('nova.delete_image')
     def _delete_image(self, image):

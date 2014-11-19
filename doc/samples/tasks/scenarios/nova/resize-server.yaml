@@ -9,6 +9,7 @@
         to_flavor:
             name: "m1.small"
         confirm: true
+        force_delete: false
       runner:
         type: "constant"
         times: 10

@@ -8,7 +8,8 @@
                 "image": {
                     "name": "^cirros.*uec$"
                 },
-                "volume_size": 10
+                "volume_size": 10,
+                "force_delete": false
             },
             "runner": {
                 "type": "constant",

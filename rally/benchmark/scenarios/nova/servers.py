@@ -65,12 +65,13 @@ class NovaServers(utils.NovaScenario,
     @validation.required_openstack(users=True)
     @base.scenario(context={"cleanup": ["nova"]})
     def boot_and_delete_server(self, image, flavor,
-                               min_sleep=0, max_sleep=0, **kwargs):
+                               min_sleep=0, max_sleep=0,
+                               force_delete=False, **kwargs):
         """Tests booting and then deleting an image."""
         server = self._boot_server(
             self._generate_random_name(), image, flavor, **kwargs)
         self.sleep_between(min_sleep, max_sleep)
-        self._delete_server(server)
+        self._delete_server(server, force=force_delete)
 
     @types.set(image=types.ImageResourceType,
                flavor=types.FlavorResourceType)
@@ -80,7 +81,8 @@ class NovaServers(utils.NovaScenario,
     @base.scenario(context={"cleanup": ["nova", "cinder"]})
     def boot_server_from_volume_and_delete(self, image, flavor,
                                            volume_size,
-                                           min_sleep=0, max_sleep=0, **kwargs):
+                                           min_sleep=0, max_sleep=0,
+                                           force_delete=False, **kwargs):
         """Tests booting from volume and then deleting an image and volume."""
         volume = self._create_volume(volume_size, imageRef=image)
         block_device_mapping = {'vda': '%s:::1' % volume.id}
@@ -89,7 +91,7 @@ class NovaServers(utils.NovaScenario,
                                    block_device_mapping=block_device_mapping,
                                    **kwargs)
         self.sleep_between(min_sleep, max_sleep)
-        self._delete_server(server)
+        self._delete_server(server, force=force_delete)
 
     @types.set(image=types.ImageResourceType,
                flavor=types.FlavorResourceType)
@@ -97,7 +99,8 @@ class NovaServers(utils.NovaScenario,
     @validation.required_services(consts.Service.NOVA)
     @validation.required_openstack(users=True)
     @base.scenario(context={"cleanup": ["nova"]})
-    def boot_and_bounce_server(self, image, flavor, **kwargs):
+    def boot_and_bounce_server(self, image, flavor,
+                               force_delete=False, **kwargs):
         """Test booting a server with further performing specified actions.
 
         Actions should be passed into kwargs. Available actions are
@@ -116,7 +119,7 @@ class NovaServers(utils.NovaScenario,
                                    image, flavor, **kwargs)
         for action in action_builder.build_actions(actions, server):
             action()
-        self._delete_server(server)
+        self._delete_server(server, force=force_delete)
 
     @types.set(image=types.ImageResourceType,
                flavor=types.FlavorResourceType)
@@ -124,16 +127,17 @@ class NovaServers(utils.NovaScenario,
     @validation.required_services(consts.Service.NOVA, consts.Service.GLANCE)
     @validation.required_openstack(users=True)
     @base.scenario(context={"cleanup": ["nova", "glance"]})
-    def snapshot_server(self, image, flavor, **kwargs):
+    def snapshot_server(self, image, flavor,
+                        force_delete=False, **kwargs):
         """Tests Nova instance snapshotting."""
         server_name = self._generate_random_name()
 
         server = self._boot_server(server_name, image, flavor, **kwargs)
         image = self._create_image(server)
-        self._delete_server(server)
+        self._delete_server(server, force=force_delete)
 
         server = self._boot_server(server_name, image.id, flavor, **kwargs)
-        self._delete_server(server)
+        self._delete_server(server, force=force_delete)
         self._delete_image(image)
 
     @types.set(image=types.ImageResourceType,
@@ -212,7 +216,8 @@ class NovaServers(utils.NovaScenario,
     @validation.required_services(consts.Service.NOVA)
     @validation.required_openstack(users=True)
     @base.scenario(context={"cleanup": ["nova"]})
-    def resize_server(self, image, flavor, to_flavor, **kwargs):
+    def resize_server(self, image, flavor, to_flavor,
+                      force_delete=False, **kwargs):
         """Tests resize serveri."""
         server = self._boot_server(self._generate_random_name(),
                                    image, flavor, **kwargs)
@@ -223,4 +228,4 @@ class NovaServers(utils.NovaScenario,
             self._resize_confirm(server)
         else:
             self._resize_revert(server)
-        self._delete_server(server)
+        self._delete_server(server, force=force_delete)

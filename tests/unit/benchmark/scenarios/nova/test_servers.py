@@ -51,7 +51,8 @@ class NovaServersTestCase(test.TestCase):
                          "Unrescue not called 5 times")
         scenario._rescue_server.assert_has_calls(server_calls)
         scenario._unrescue_server.assert_has_calls(server_calls)
-        scenario._delete_server.assert_called_once_with(fake_server)
+        scenario._delete_server.assert_called_once_with(fake_server,
+                                                        force=False)
 
     def test_boot_stop_start(self):
         actions = [{'stop_start': 5}]
@@ -76,7 +77,8 @@ class NovaServersTestCase(test.TestCase):
                          "Start not called 5 times")
         scenario._stop_server.assert_has_calls(server_calls)
         scenario._start_server.assert_has_calls(server_calls)
-        scenario._delete_server.assert_called_once_with(fake_server)
+        scenario._delete_server.assert_called_once_with(fake_server,
+                                                        force=False)
 
     def test_multiple_bounce_actions(self):
         actions = [{'hard_reboot': 5}, {'stop_start': 8}]
@@ -104,7 +106,8 @@ class NovaServersTestCase(test.TestCase):
         self.assertEqual(8, scenario._stop_and_start_server.call_count,
                          "Stop/Start not called 8 times")
         scenario._stop_and_start_server.assert_has_calls(server_calls)
-        scenario._delete_server.assert_called_once_with(fake_server)
+        scenario._delete_server.assert_called_once_with(fake_server,
+                                                        force=False)
 
     def test_validate_actions(self):
         actions = [{"hardd_reboot": 6}]
@@ -156,7 +159,8 @@ class NovaServersTestCase(test.TestCase):
             self.assertEqual(5, scenario._reboot_server.call_count,
                              "Reboot not called 5 times")
             scenario._reboot_server.assert_has_calls(server_calls)
-        scenario._delete_server.assert_called_once_with(fake_server)
+        scenario._delete_server.assert_called_once_with(fake_server,
+                                                        force=False)
 
     def test_boot_soft_reboot(self):
         self._verify_reboot(soft=True)
@@ -178,7 +182,8 @@ class NovaServersTestCase(test.TestCase):
         scenario._boot_server.assert_called_once_with("name", "img", 0,
                                                       fakearg="fakearg")
         scenario.sleep_between.assert_called_once_with(10, 20)
-        scenario._delete_server.assert_called_once_with(fake_server)
+        scenario._delete_server.assert_called_once_with(fake_server,
+                                                        force=False)
 
     def test_boot_and_list_server(self):
         scenario = servers.NovaServers()
@@ -213,7 +218,8 @@ class NovaServersTestCase(test.TestCase):
             block_device_mapping={'vda': 'volume_id:::1'},
             fakearg="f")
         scenario.sleep_between.assert_called_once_with(10, 20)
-        scenario._delete_server.assert_called_once_with(fake_server)
+        scenario._delete_server.assert_called_once_with(fake_server,
+                                                        force=False)
 
     def _prepare_boot(self, mock_osclients, nic=None, assert_nic=False):
         fake_server = mock.MagicMock()
@@ -285,8 +291,8 @@ class NovaServersTestCase(test.TestCase):
             mock.call("name", "image_id", 0, fakearg=2)])
         scenario._create_image.assert_called_once_with(fake_server)
         scenario._delete_server.assert_has_calls([
-            mock.call(fake_server),
-            mock.call(fake_server)])
+            mock.call(fake_server, force=False),
+            mock.call(fake_server, force=False)])
         scenario._delete_image.assert_called_once_with(fake_image)
 
     def _test_resize(self, confirm=False):
