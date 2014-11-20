@@ -682,7 +682,7 @@
       args:
         volume_size: 1
         image:
-          name: "cirros-0.3.2-x86_64-uec"
+          name: "^cirros.*uec$"
         flavor:
           name: "m1.tiny"
       runner:
@@ -774,7 +774,7 @@
         flavor:
             name: "m1.tiny"
         image:
-            name: "cirros-0.3.2-x86_64-uec"
+            name: "^cirros.*uec$"
       runner:
         type: "constant"
         times: 4
@@ -792,7 +792,7 @@
         flavor:
             name: "m1.tiny"
         image:
-            name: "cirros-0.3.2-x86_64-uec"
+            name: "^cirros.*uec$"
         detailed: True
       runner:
         type: "constant"
@@ -811,7 +811,7 @@
         flavor:
             name: "m1.tiny"
         image:
-            name: "cirros-0.3.2-x86_64-uec"
+            name: "^cirros.*uec$"
         to_flavor:
             name: "m1.small"
         confirm: true
@@ -832,7 +832,7 @@
         flavor:
             name: "m1.tiny"
         image:
-            name: "cirros-0.3.2-x86_64-uec"
+            name: "^cirros.*uec$"
         actions:
           -
             hard_reboot: 1
@@ -859,7 +859,7 @@
         flavor:
             name: "m1.tiny"
         image:
-            name: "cirros-0.3.2-x86_64-uec"
+            name: "^cirros.*uec$"
         volume_size: 1
       runner:
         type: "constant"
@@ -878,7 +878,7 @@
         flavor:
             name: "m1.tiny"
         image:
-            name: "cirros-0.3.2-x86_64-uec"
+            name: "^cirros.*uec$"
         volume_size: 1
       runner:
         type: "constant"
@@ -897,7 +897,7 @@
         flavor:
             name: "m1.tiny"
         image:
-            name: "cirros-0.3.2-x86_64-uec"
+            name: "^cirros.*uec$"
       runner:
         type: "constant"
         times: 2
@@ -915,7 +915,7 @@
         flavor:
             name: "m1.tiny"
         image:
-            name: "cirros-0.3.2-x86_64-uec"
+            name: "^cirros.*uec$"
         auto_assign_nics: false
       runner:
         type: "constant"
@@ -932,7 +932,7 @@
         flavor:
             name: "m1.tiny"
         image:
-            name: "cirros-0.3.2-x86_64-uec"
+            name: "^cirros.*uec$"
       runner:
         type: "constant"
         times: 4
@@ -950,7 +950,7 @@
         flavor:
           name: "m1.tiny"
         image:
-          name: "cirros-0.3.2-x86_64-uec"
+          name: "^cirros.*uec$"
         fixed_network: "private"
         floating_network: "public"
         use_floatingip: true
@@ -973,7 +973,7 @@
         flavor:
           name: "m1.tiny"
         image:
-          name: "cirros-0.3.2-x86_64-uec"
+          name: "^cirros.*uec$"
         volume_args:
             size: 2
         fixed_network: "private"
@@ -998,7 +998,7 @@
         flavor:
           name: "m1.tiny"
         image:
-          name: "cirros-0.3.2-x86_64-uec"
+          name: "^cirros.*uec$"
         fixed_network: "private"
         use_floatingip: false
         script: "/home/jenkins/.rally/extra/instance_dd_test.sh"

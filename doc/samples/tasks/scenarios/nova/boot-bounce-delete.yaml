@@ -5,7 +5,7 @@
         flavor:
             name: "m1.nano"
         image:
-            name: "cirros-0.3.1-x86_64-uec"
+            name: "^cirros.*uec$"
         actions:
           -
             hard_reboot: 1
