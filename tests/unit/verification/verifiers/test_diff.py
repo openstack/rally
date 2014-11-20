@@ -9,7 +9,6 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-
 from rally.verification.verifiers.tempest import diff
 from tests.unit import test
 
@@ -21,6 +20,10 @@ class DiffTestCase(test.TestCase):
                                   'output': 'test.NONE',
                                   'status': 'SKIPPED',
                                   'time': 0.000},
+                    'test.zerofive': {'name': 'test.zerofive',
+                                      'output': 'test.zerofive',
+                                      'status': 'FAILED',
+                                      'time': 0.05},
                     'test.one': {'name': 'test.one',
                                  'output': 'test.one',
                                  'status': 'OK',
@@ -66,11 +69,21 @@ class DiffTestCase(test.TestCase):
                     'test.six': {'name': 'test.six',
                                  'output': 'test.six',
                                  'status': 'OK',
-                                 'time': 0.666}
+                                 'time': 0.666},
+                    'test.seven': {'name': 'test.seven',
+                                   'output': 'test.seven',
+                                   'status': 'OK',
+                                   'time': 0.777}
                     }
 
         diff_ = diff.Diff(results1, results2, 0)
-        assert len(diff_.diffs) == 8
+        assert len(diff_.diffs) == 10
+        assert len([test for test in diff_.diffs
+                   if test['type'] == 'removed_test']) == 2
+        assert len([test for test in diff_.diffs
+                   if test['type'] == 'new_test']) == 2
+        assert len([test for test in diff_.diffs
+                   if test['type'] == 'value_changed']) == 6
         assert diff_.to_csv() != ''
         assert diff_.to_html() != ''
         assert diff_.to_json() != ''

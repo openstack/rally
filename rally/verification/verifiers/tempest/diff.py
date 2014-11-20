@@ -51,25 +51,20 @@ class Diff(object):
                 "time": 0.0
             }
         """
-        names1 = sorted(tc1)
-        names2 = sorted(tc2)
-
         diffs = []
-        i = j = 0
-        while i < len(names1) and j < len(names2):
-            name1 = names1[i] if i < len(names1) else None
-            name2 = names2[j] if j < len(names2) else None
-            if name1 and name2 and name1 == name2:
-                diffs.extend(self._diff_values(name1, tc1[name1], tc2[name2]))
-                i += 1
-                j += 1
+        names1 = set(tc1.keys())
+        names2 = set(tc2.keys())
 
-            elif (not name1) or (name1 > name2):
-                diffs.append({"type": "new_test", "test_name": name2})
-                j += 1
-            else:
-                diffs.append({"type": "removed_test", "test_name": name1})
-                i += 1
+        common_tests = list(names1.intersection(names2))
+        removed_tests = list(names1.difference(common_tests))
+        new_tests = list(names2.difference(common_tests))
+
+        for name in removed_tests:
+            diffs.append({"type": "removed_test", "test_name": name})
+        for name in new_tests:
+            diffs.append({"type": "new_test", "test_name": name})
+        for name in common_tests:
+                diffs.extend(self._diff_values(name, tc1[name], tc2[name]))
 
         return diffs
 
