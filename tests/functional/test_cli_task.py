@@ -125,11 +125,11 @@ class SLATestCase(unittest.TestCase):
                 {"benchmark": "KeystoneBasic.create_and_list_users",
                  "criterion": "max_seconds_per_iteration",
                  "detail": mock.ANY,
-                 "pos": 0, "success": True},
+                 "pos": 0, "status": "PASS"},
                 {"benchmark": "KeystoneBasic.create_and_list_users",
                  "criterion": "max_failure_percent",
                  "detail": mock.ANY,
-                 "pos": 0, "success": True},
+                 "pos": 0, "status": "PASS"},
         ]
         data = rally("task sla_check --json", getjson=True)
         self.assertEqual(expected, data)

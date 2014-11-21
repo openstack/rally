@@ -66,6 +66,10 @@ def _prepare_data(data):
                            "message": message,
                            "traceback": traceback})
 
+            # NOTE(maretskiy): Reset failed durations (no sense to display)
+            r["duration"] = 0
+            r["idle_duration"] = 0
+
         durations.append(r["duration"])
         idle_durations.append(r["idle_duration"])
 
@@ -90,7 +94,8 @@ def _prepare_data(data):
         "output_errors": output_errors,
         "errors": errors,
         "sla": data["sla"],
-        "duration": data["duration"],
+        "load_duration": data["load_duration"],
+        "full_duration": data["full_duration"],
     }
 
 
@@ -218,7 +223,7 @@ def _process_atomic(result, data):
 
 
 def _get_atomic_action_durations(result):
-    raw = result.get('result', [])
+    raw = result.get("result", [])
     actions_data = utils.get_atomic_actions_data(raw)
     table = []
     total = []
@@ -248,8 +253,31 @@ def _get_atomic_action_durations(result):
     return table
 
 
+def _task_json(source_dict):
+    """Generate task input file in JSON format.
+
+    :param source_dict: dict with input task data, in format:
+                        {
+                            scenario_name: [
+                                {scenario config},
+                                ...
+                            ],
+                            ...
+                        }
+    :returns: str JSON, ready for usage as task input file data
+    """
+    source_list = []
+    indent = 2
+    for name, conf in sorted(source_dict.items()):
+        conf_str = '"%s": %s' % (name, json.dumps(conf, indent=indent))
+        source_list.append("\n".join(["%s%s" % (" " * indent, line)
+                                      for line in conf_str.split("\n")]))
+    return "{\n%s\n}" % ",\n".join(source_list)
+
+
 def _process_results(results):
     output = []
+    source_dict = {}
     for result in results:
         table_cols = ["Action",
                       "Min (sec)",
@@ -260,32 +288,44 @@ def _process_results(results):
                       "Success",
                       "Count"]
         table_rows = _get_atomic_action_durations(result)
-        name, kw, pos = (result["key"]["name"],
-                         result["key"]["kw"], result["key"]["pos"])
+        scenario_name, kw, pos = (result["key"]["name"],
+                                  result["key"]["kw"], result["key"]["pos"])
         data = _prepare_data(result)
-        cls = name.split(".")[0]
-        met = name.split(".")[1]
+        cls = scenario_name.split(".")[0]
+        met = scenario_name.split(".")[1]
+        name = "%s%s" % (met, (pos and " [%d]" % (int(pos) + 1) or ""))
 
+        try:
+            source_dict[scenario_name].append(kw)
+        except KeyError:
+            source_dict[scenario_name] = [kw]
         output.append({
             "cls": cls,
             "met": met,
             "pos": int(pos),
-            "name": "%s%s" % (met, (pos and " [%d]" % (int(pos) + 1) or "")),
-            "config": json.dumps({name: kw}, indent=2),
-            "duration": _process_main_duration(result, data),
+            "name": name,
+            "runner": kw["runner"]["type"],
+            "config": json.dumps({scenario_name: kw}, indent=2),
+            "iterations": _process_main_duration(result, data),
             "atomic": _process_atomic(result, data),
             "table_cols": table_cols,
             "table_rows": table_rows,
             "output": data["output"],
             "output_errors": data["output_errors"],
             "errors": data["errors"],
-            "total_duration": data["duration"],
+            "load_duration": data["load_duration"],
+            "full_duration": data["full_duration"],
             "sla": data["sla"],
+            "sla_success": all([sla["success"] for sla in data["sla"]]),
+            "iterations_num": len(result["result"]),
         })
-    return sorted(output, key=lambda r: "%s%s" % (r["cls"], r["name"]))
+    source = _task_json(source_dict)
+    scenarios = sorted(output, key=lambda r: "%s%s" % (r["cls"], r["name"]))
+    return source, scenarios
 
 
 def plot(results):
-    data = _process_results(results)
     template = ui_utils.get_template("task/report.mako")
-    return template.render(data=json.dumps(data))
+    source, scenarios = _process_results(results)
+    return template.render(data=json.dumps(scenarios),
+                           source=json.dumps(source))

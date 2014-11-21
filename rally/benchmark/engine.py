@@ -224,20 +224,19 @@ class BenchmarkEngine(object):
                     target=self.consume_results,
                     args=(key, self.task, runner.result_queue, is_done))
                 consumer.start()
-
                 context_obj = self._prepare_context(kw.get("context", {}),
                                                     name, self.admin)
-
-                # NOTE(boris-42): reset duration, in case of failures during
-                #                 context creation
                 self.duration = 0
+                self.full_duration = 0
                 try:
-                    with base_ctx.ContextManager(context_obj):
-                        self.duration = runner.run(name, context_obj,
-                                                   kw.get("args", {}))
+                    with rutils.Timer() as timer:
+                        with base_ctx.ContextManager(context_obj):
+                            self.duration = runner.run(name, context_obj,
+                                                       kw.get("args", {}))
                 except Exception as e:
                     LOG.exception(e)
                 finally:
+                    self.full_duration = timer.duration()
                     is_done.set()
                     consumer.join()
         self.task.update_status(consts.TaskStatus.FINISHED)
@@ -264,7 +263,8 @@ class BenchmarkEngine(object):
             else:
                 time.sleep(0.1)
 
-        sla = base_sla.SLA.check_all(key['kw'], results)
+        sla = base_sla.SLA.check_all(key["kw"], results)
         task.append_results(key, {"raw": results,
-                                  "scenario_duration": self.duration,
+                                  "load_duration": self.duration,
+                                  "full_duration": self.full_duration,
                                   "sla": sla})

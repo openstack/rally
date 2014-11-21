@@ -223,7 +223,7 @@ class TaskCommands(object):
             print("args values:")
             pprint.pprint(key["kw"])
 
-            scenario_time = result["data"]["scenario_duration"]
+            scenario_time = result["data"]["load_duration"]
             raw = result["data"]["raw"]
             table_cols = ["action", "min (sec)", "avg (sec)", "max (sec)",
                           "90 percentile", "95 percentile", "success",
@@ -359,7 +359,8 @@ class TaskCommands(object):
         results = map(lambda x: {"key": x["key"],
                                  "sla": x["data"]["sla"],
                                  "result": x["data"]["raw"],
-                                 "duration": x["data"]["scenario_duration"]},
+                                 "load_duration": x["data"]["load_duration"],
+                                 "full_duration": x["data"]["full_duration"]},
                       task.Task.get(task_id).get_results())
         if out:
             out = os.path.expanduser(out)
@@ -415,16 +416,20 @@ class TaskCommands(object):
         results = task.Task.get(task_id).get_results()
         failed_criteria = 0
         data = []
+        STATUS_PASS = "PASS"
+        STATUS_FAIL = "FAIL"
         for result in results:
             key = result["key"]
             for sla in result["data"]["sla"]:
+                success = sla.pop("success")
+                sla["status"] = success and STATUS_PASS or STATUS_FAIL
                 sla["benchmark"] = key["name"]
                 sla["pos"] = key["pos"]
-                failed_criteria += 0 if sla['success'] else 1
+                failed_criteria += int(not success)
                 data.append(sla if tojson else rutils.Struct(**sla))
         if tojson:
             print(json.dumps(data))
         else:
             common_cliutils.print_list(data, ("benchmark", "pos", "criterion",
-                                              "success", "detail"))
+                                              "status", "detail"))
         return failed_criteria
