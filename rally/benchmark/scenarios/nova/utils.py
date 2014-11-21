@@ -566,3 +566,42 @@ class NovaScenario(base.Scenario):
         except IndexError:
             raise exceptions.InvalidHostException(
                 "No valid host found to migrate")
+
+    def _create_security_groups(self, security_group_count):
+        security_groups = []
+        with base.AtomicAction(self, "nova.create_%s_security_groups" %
+                               security_group_count):
+            for i in range(security_group_count):
+                sg_name = self._generate_random_name()
+                sg = self.clients("nova").security_groups.create(sg_name,
+                                                                 sg_name)
+                security_groups.append(sg)
+
+        return security_groups
+
+    def _create_rules_for_security_group(self, security_groups,
+                                         rules_per_security_group,
+                                         ip_protocol='tcp', cidr="0.0.0.0/0"):
+        action_name = ("nova.create_%s_rules_in_every_of_%s_security_group" %
+                       (rules_per_security_group, len(security_groups)))
+        with base.AtomicAction(self, action_name):
+            for i in range(len(security_groups)):
+                for j in range(rules_per_security_group):
+                        self.clients("nova").security_group_rules.create(
+                            security_groups[i].id,
+                            from_port=(i * rules_per_security_group + j + 1),
+                            to_port=(i * rules_per_security_group + j + 1),
+                            ip_protocol=ip_protocol,
+                            cidr=cidr)
+
+    def _delete_security_groups(self, security_group):
+        with base.AtomicAction(self, "nova.delete_%s_security_groups" %
+                               len(security_group)):
+            for sg in security_group:
+                self.clients("nova").security_groups.delete(sg.id)
+
+    def _list_security_groups(self):
+        """Returns security groups list."""
+
+        with base.AtomicAction(self, "nova.list_security_groups"):
+            return self.clients("nova").security_groups.list()
