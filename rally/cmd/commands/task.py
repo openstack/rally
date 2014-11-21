@@ -44,6 +44,9 @@ class TaskCommands(object):
     Set of commands that allow you to manage benchmarking tasks and results.
     """
 
+    @cliutils.deprecated_args(
+        "--deploy-id", dest="deployment", type=str,
+        required=False, help="UUID of the deployment.")
     @cliutils.args('--deployment', type=str, dest='deployment',
                    required=False, help='UUID or name of the deployment')
     @cliutils.args('--task', '--filename',
@@ -69,6 +72,9 @@ class TaskCommands(object):
             print("Task config is invalid: \n")
             print(e)
 
+    @cliutils.deprecated_args(
+        "--deploy-id", dest="deployment", type=str,
+        required=False, help="UUID of the deployment.")
     @cliutils.args('--deployment', type=str, dest='deployment',
                    required=False, help='UUID or name of the deployment')
     @cliutils.args('--task', '--filename',

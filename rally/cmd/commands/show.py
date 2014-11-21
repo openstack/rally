@@ -42,6 +42,9 @@ class ShowCommands(object):
 
         return admin + deployment.get("users", [])
 
+    @cliutils.deprecated_args(
+        "--deploy-id", dest="deployment", type=str,
+        required=False, help="UUID of the deployment.")
     @cliutils.args('--deployment', dest='deployment', type=str,
                    required=False, help='UUID or name of a deployment')
     @envutils.with_default_deployment
@@ -76,6 +79,9 @@ class ShowCommands(object):
             print(_("Authentication Issues: %s") % e)
             return(1)
 
+    @cliutils.deprecated_args(
+        "--deploy-id", dest="deployment", type=str,
+        required=False, help="UUID of the deployment.")
     @cliutils.args('--deployment', dest='deployment', type=str,
                    required=False, help='UUID or name of a deployment')
     @envutils.with_default_deployment
@@ -110,6 +116,9 @@ class ShowCommands(object):
             print(_("Authentication Issues: %s") % e)
             return(1)
 
+    @cliutils.deprecated_args(
+        "--deploy-id", dest="deployment", type=str,
+        required=False, help="UUID of the deployment.")
     @cliutils.args('--deployment', dest='deployment', type=str,
                    required=False, help='UUID or name of a deployment')
     @envutils.with_default_deployment
@@ -134,6 +143,9 @@ class ShowCommands(object):
             print(_("Authentication Issues: %s") % e)
             return(1)
 
+    @cliutils.deprecated_args(
+        "--deploy-id", dest="deployment", type=str,
+        required=False, help="UUID of the deployment.")
     @cliutils.args('--deployment', dest='deployment', type=str,
                    required=False, help='UUID or name of a deployment')
     @envutils.with_default_deployment
@@ -161,6 +173,9 @@ class ShowCommands(object):
             print(_("Authentication Issues: %s") % e)
             return(1)
 
+    @cliutils.deprecated_args(
+        "--deploy-id", dest="deployment", type=str,
+        required=False, help="UUID of the deployment.")
     @cliutils.args('--deployment', dest='deployment', type=str,
                    required=False, help='UUID or name of a deployment')
     @envutils.with_default_deployment

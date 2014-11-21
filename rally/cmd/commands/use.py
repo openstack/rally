@@ -55,6 +55,12 @@ class UseCommands(object):
         if not os.path.exists(os.path.expanduser('~/.rally/')):
             os.makedirs(os.path.expanduser('~/.rally/'))
 
+    @cliutils.deprecated_args(
+        "--uuid", dest="deployment", type=str,
+        required=False, help="UUID of the deployment.")
+    @cliutils.deprecated_args(
+        "--name", dest="deployment", type=str,
+        required=False, help="Name of the deployment.")
     @cliutils.args('--deployment', type=str, dest='deployment',
                    help='UUID or name of the deployment')
     def deployment(self, deployment=None):

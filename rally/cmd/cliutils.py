@@ -103,6 +103,18 @@ def args(*args, **kwargs):
     return _decorator
 
 
+def deprecated_args(*args, **kwargs):
+    def _decorator(func):
+        func.__dict__.setdefault("args", []).insert(0, (args, kwargs))
+        func.__dict__.setdefault("deprecated_args", [])
+        func.deprecated_args.append(args[0])
+        if "help" in kwargs.keys():
+            warn_message = "DEPRECATED!"
+            kwargs["help"] = " ".join([warn_message, kwargs["help"]])
+        return func
+    return _decorator
+
+
 def _methods_of(cls):
     """Get all callable methods of a class that don't start with underscore.
 
@@ -193,12 +205,22 @@ def _add_command_parsers(categories, subparsers):
             parser.add_argument('action_args', nargs='*')
 
 
+def validate_deprecated_args(argv, fn):
+    if len(argv) > 3 and argv[2] == fn.func_name and not getattr(
+                                        fn, "deprecated_args", []) == list():
+        for item in fn.deprecated_args:
+            if item in argv[3:]:
+                LOG.warning("Deprecated argument %s for %s." % (item,
+                                                                fn.func_name))
+
+
 def run(argv, categories):
     parser = lambda subparsers: _add_command_parsers(categories, subparsers)
     category_opt = cfg.SubCommandOpt('category',
                                      title='Command categories',
                                      help='Available categories',
                                      handler=parser)
+
     CONF.register_cli_opt(category_opt)
 
     try:
@@ -266,9 +288,12 @@ def run(argv, categories):
                     print(" " + arg[0][0])
                     break
         return(1)
+
     try:
         utils.load_plugins("/opt/rally/plugins/")
         utils.load_plugins(os.path.expanduser("~/.rally/plugins/"))
+
+        validate_deprecated_args(argv, fn)
         ret = fn(*fn_args, **fn_kwargs)
         return(ret)
     except IOError as e:
@@ -327,7 +352,15 @@ complete -F _rally rally
     completion = ""
     for category, cmds in main.categories.items():
         for name, command in _methods_of(cmds):
-            args = ' '.join(arg[0][0] for arg in getattr(command, 'args', []))
+            args_list = list()
+            for arg in getattr(command, "args", []):
+                if getattr(command, "deprecated_args", []):
+                    if arg[0][0] not in command.deprecated_args:
+                        args_list.append(arg[0][0])
+                else:
+                    args_list.append(arg[0][0])
+            args = " ".join(args_list)
+
             completion += """    OPTS["{cat}_{cmd}"]="{args}"\n""".format(
                     cat=category, cmd=name, args=args)
     return bash_data % {"data": completion}
