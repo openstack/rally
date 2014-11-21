@@ -82,10 +82,10 @@ def check_assert_methods_from_mock(logical_line, filename):
 def check_import_of_logging(logical_line, filename):
     """Check correctness import of logging module N310."""
 
-    excluded_files = ["./rally/log.py"]
+    excluded_files = ["./rally/log.py", "./tests/unit/test_log.py"]
 
     forbidden_imports = ["from rally.openstack.common import log",
-                         "import rally.openstack.common.log"
+                         "import rally.openstack.common.log",
                          "import logging"]
 
     if filename not in excluded_files:

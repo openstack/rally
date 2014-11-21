@@ -100,10 +100,10 @@ class TempestUtilsTestCase(BaseTestCase):
         mock_isdir.assert_called_once_with(self.verifier.path(".venv"))
         mock_sp.assert_has_calls([
             mock.call("python ./tools/install_venv.py", shell=True,
-                      cwd=self.verifier.path()),
+                      cwd=self.verifier.path(), stderr=subprocess.STDOUT),
             mock.call("%s python setup.py install" %
                       self.verifier.venv_wrapper, shell=True,
-                      cwd=self.verifier.path())])
+                      cwd=self.verifier.path(), stderr=subprocess.STDOUT)])
 
     @mock.patch("os.path.isdir", return_value=False)
     @testtools.skipIf(sys.version_info >= (2, 7),
@@ -124,8 +124,9 @@ class TempestUtilsTestCase(BaseTestCase):
             self.verifier.path(".testrepository"))
         self.assertFalse(mock_sp.called)
 
+    @testtools.skipIf(sys.version_info < (2, 7), "Incompatible Python Version")
     @mock.patch("os.path.isdir", return_value=False)
-    @mock.patch(TEMPEST_PATH + ".tempest.subprocess.check_call")
+    @mock.patch(TEMPEST_PATH + ".tempest.subprocess.check_output")
     def test__initialize_testr_when_testr_not_initialized(
             self, mock_sp, mock_isdir):
         self.verifier._initialize_testr()
@@ -134,7 +135,7 @@ class TempestUtilsTestCase(BaseTestCase):
             self.verifier.path(".testrepository"))
         mock_sp.assert_called_once_with(
             '%s testr init' % self.verifier.venv_wrapper, shell=True,
-            cwd=self.verifier.path())
+            cwd=self.verifier.path(), stderr=subprocess.STDOUT)
 
     @mock.patch.object(subunit2json, 'main')
     @mock.patch('os.path.isfile', return_value=False)

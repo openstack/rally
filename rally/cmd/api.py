@@ -15,7 +15,6 @@
 
 """ The Rally Service API. """
 
-import logging
 import os
 import sys
 from wsgiref import simple_server
@@ -24,17 +23,17 @@ from oslo.config import cfg
 
 from rally.aas.rest import app as rally_app
 from rally.i18n import _
-from rally import log
+from rally import log as logging
 
 
 CONF = cfg.CONF
-LOG = log.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 
 
 def main():
     # Initialize configuration and logging.
     CONF(sys.argv[1:], project='rally')
-    log.setup('rally')
+    logging.setup('rally')
     # Prepare application and bind to the service socket.
     host = CONF.rest.host
     port = CONF.rest.port
@@ -43,7 +42,7 @@ def main():
     # Start application.
     LOG.info(_('Starting server in PID %s') % os.getpid())
     LOG.info(_("Configuration:"))
-    CONF.log_opt_values(LOG, logging.INFO)
+    CONF.log_opt_values(LOG, logging.logging.INFO)
     try:
         server.serve_forever()
     except KeyboardInterrupt:
