@@ -46,11 +46,11 @@ class Tempest(object):
 
     base_repo = os.path.join(os.path.expanduser("~"), ".rally/tempest/base")
 
-    def __init__(self, deploy_id, verification=None, tempest_config=None):
-        self.deploy_id = deploy_id
+    def __init__(self, deployment, verification=None, tempest_config=None):
+        self.deployment = deployment
         self._path = os.path.join(os.path.expanduser("~"),
                                   ".rally/tempest",
-                                  "for-deployment-%s" % deploy_id)
+                                  "for-deployment-%s" % deployment)
         self.config_file = tempest_config or self.path("tempest.conf")
         self.log_file_raw = self.path("subunit.stream")
         self.venv_wrapper = self.path("tools/with_venv.sh")
@@ -99,7 +99,7 @@ class Tempest(object):
             msg = _("Creation of configuration file for tempest.")
             LOG.info(_("Starting: ") + msg)
 
-            config.TempestConf(self.deploy_id).generate(self.config_file)
+            config.TempestConf(self.deployment).generate(self.config_file)
             LOG.info(_("Completed: ") + msg)
         else:
             LOG.info("Tempest is already configured.")

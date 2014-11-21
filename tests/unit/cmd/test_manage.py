@@ -51,9 +51,11 @@ class TempestCommandsTestCase(test.TestCase):
         self.tempest_commands = manage.TempestCommands()
         self.tempest = mock.Mock()
 
-    @mock.patch('rally.verification.verifiers.tempest.tempest.Tempest')
-    def test_install(self, mock_tempest):
-        deploy_id = 'e24b5af0-0e2a-4a70-9443-b30a88ab152e'
+    @mock.patch("rally.cmd.manage.db.deployment_get",
+                return_value={"uuid": "e24b5af0-0e2a-4a70-9443-b30a88ab152e"})
+    @mock.patch("rally.verification.verifiers.tempest.tempest.Tempest")
+    def test_install(self, mock_tempest, mock_d_get):
+        deployment_id = mock_d_get.return_value["uuid"]
         mock_tempest.return_value = self.tempest
-        self.tempest_commands.install(deploy_id)
+        self.tempest_commands.install(deployment_id)
         self.tempest.install.assert_called_once_with()

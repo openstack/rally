@@ -37,12 +37,14 @@ class DBCommands(object):
 class TempestCommands(object):
     """Commands for Tempest management."""
 
-    @cliutils.args('--deploy-id', type=str, dest='deploy_id', required=False,
-                   help='UUID of the deployment')
-    @envutils.with_default_deploy_id
-    def install(self, deploy_id=None):
+    @cliutils.args("--deployment", type=str, dest="deployment",
+                   required=False, help="UUID or name of the deployment")
+    @envutils.with_default_deployment
+    def install(self, deployment=None):
         """Install tempest."""
-        verifier = tempest.Tempest(deploy_id)
+
+        deployment_uuid = db.deployment_get(deployment)['uuid']
+        verifier = tempest.Tempest(deployment_uuid)
         verifier.install()
 
 

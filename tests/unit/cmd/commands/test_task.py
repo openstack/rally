@@ -38,13 +38,13 @@ class TaskCommandsTestCase(test.TestCase):
             dict(uuid='fc1a9bbe-1ead-4740-92b5-0feecf421634',
                  created_at='2014-01-14 09:14:45.395822',
                  status='init', failed=False, tag=None))
-        deploy_id = 'e0617de9-77d1-4875-9b49-9d5789e29f20'
-        self.task.start('path_to_config.json', deploy_id)
-        mock_api.assert_called_once_with(deploy_id, {u'some': u'json'},
+        deployment_id = 'e0617de9-77d1-4875-9b49-9d5789e29f20'
+        self.task.start('path_to_config.json', deployment_id)
+        mock_api.assert_called_once_with(deployment_id, {u'some': u'json'},
                                          task=mock_create_task.return_value)
 
     @mock.patch('rally.cmd.commands.task.envutils.get_global')
-    def test_start_no_deploy_id(self, mock_default):
+    def test_start_no_deployment_id(self, mock_default):
         mock_default.side_effect = exceptions.InvalidArgumentsException
         self.assertRaises(exceptions.InvalidArgumentsException,
                           self.task.start, 'path_to_config.json', None)
@@ -62,9 +62,9 @@ class TaskCommandsTestCase(test.TestCase):
                  created_at='2014-01-14 09:14:45.395822',
                  status='init', failed=False, tag=None))
         mock_api.start_task.side_effect = KeyboardInterrupt
-        deploy_id = 'f586dcd7-8473-4c2e-a4d4-22be26371c10'
+        deployment_id = 'f586dcd7-8473-4c2e-a4d4-22be26371c10'
         self.assertRaises(KeyboardInterrupt, self.task.start,
-                          'path_to_config.json', deploy_id)
+                          'path_to_config.json', deployment_id)
         mock_api.abort_task.assert_called_once_with(
             mock_api.create_task.return_value['uuid'])
 

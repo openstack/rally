@@ -65,8 +65,8 @@ def default_from_global(arg_name, env_name,
         return f(*args, **kwargs)
     return decorator.decorator(default_from_global)
 
-with_default_deploy_id = default_from_global('deploy_id', ENV_DEPLOYMENT,
-                                             "uuid")
+with_default_deployment = default_from_global(
+    "deployment", ENV_DEPLOYMENT, "uuid")
 with_default_task_id = default_from_global('task_id', ENV_TASK,
                                            "uuid")
 with_default_verification_id = default_from_global(

@@ -232,9 +232,9 @@ class OpenStackProvider(provider.ProviderFactory):
             except exceptions.ResourceNotFound:
                 LOG.warning(
                     'Instance resource record not found in DB, not removing.'
-                    ' Deployment: %(deploy_id)s Instance ID:%(id)s'
+                    ' Deployment: %(deployment)s Instance ID:%(id)s'
                     ' Instance Nova UUID:%(uuid)s' %
-                    dict(deploy_id=resource.deployment_uuid,
+                    dict(deployment=resource.deployment_uuid,
                          id=resource.id,
                          uuid=resource['info']['id']
                          )
@@ -252,9 +252,9 @@ class OpenStackProvider(provider.ProviderFactory):
             except exceptions.ResourceNotFound:
                 LOG.warning(
                     'Keypair resource record not found in DB, not removing.'
-                    ' Deployment: %(deploy_id)s Keypair ID:%(id)s'
+                    ' Deployment: %(deployment)s Keypair ID:%(id)s'
                     ' Keypair Name:%(name)s' %
-                    dict(deploy_id=resource.deployment_uuid,
+                    dict(deployment=resource.deployment_uuid,
                          id=resource.id,
                          name=resource['info']['id']
                          )

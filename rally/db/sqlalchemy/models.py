@@ -63,7 +63,7 @@ class Deployment(BASE, RallyBase):
         sa.ForeignKey(uuid, use_alter=True, name='fk_parent_uuid'),
         default=None,
     )
-    name = sa.Column(sa.String(255))
+    name = sa.Column(sa.String(255), unique=True)
     started_at = sa.Column(sa.DateTime)
     completed_at = sa.Column(sa.DateTime)
     # XXX(akscram): Do we need to explicitly store a name of the

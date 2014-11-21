@@ -180,15 +180,15 @@ def deployment_delete(uuid):
     return IMPL.deployment_delete(uuid)
 
 
-def deployment_get(uuid):
+def deployment_get(deployment):
     """Get a deployment by UUID.
 
-    :param uuid: UUID of the deployment.
+    :param deployment: UUID or name of the deployment.
     :raises: :class:`rally.exceptions.DeploymentNotFound` if the deployment
              does not exist.
     :returns: a dict with data on the deployment.
     """
-    return IMPL.deployment_get(uuid)
+    return IMPL.deployment_get(deployment)
 
 
 def deployment_update(uuid, values):

@@ -59,8 +59,8 @@ Note the last line in the output. It says that the just created deployment is no
 
 .. code-block:: none
 
-   $ rally use deployment --deploy-id=<Another deployment UUID>
-   Using deployment : <Another deployment UUID>
+   $ rally use deployment <Another deployment name or UUID>
+   Using deployment : <Another deployment name or UUID>
 
 
 Finally, the **deployment check** command enables you to verify that your current deployment is healthy and ready to be benchmarked:

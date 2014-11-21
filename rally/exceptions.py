@@ -153,7 +153,11 @@ class TaskNotFound(NotFoundException):
 
 
 class DeploymentNotFound(NotFoundException):
-    msg_fmt = _("Deployment with uuid=%(uuid)s not found.")
+    msg_fmt = _("Deployment %(deployment)s not found.")
+
+
+class DeploymentNameExists(RallyException):
+    msg_fmt = _("Deployment name '%(deployment)s' already registered.")
 
 
 class DeploymentIsBusy(RallyException):

@@ -164,17 +164,26 @@ class Connection(object):
         return (self.model_query(models.TaskResult).
                 filter_by(task_uuid=uuid).all())
 
-    def _deployment_get(self, uuid, session=None):
-        deploy = (self.model_query(models.Deployment, session=session).
-                  filter_by(uuid=uuid).first())
-        if not deploy:
-            raise exceptions.DeploymentNotFound(uuid=uuid)
-        return deploy
+    def _deployment_get(self, deployment, session=None):
+        stored_deployment = self.model_query(
+            models.Deployment,
+            session=session).filter_by(name=deployment).first()
+        if not stored_deployment:
+            stored_deployment = self.model_query(
+                models.Deployment,
+                session=session).filter_by(uuid=deployment).first()
+
+        if not stored_deployment:
+            raise exceptions.DeploymentNotFound(deployment=deployment)
+        return stored_deployment
 
     def deployment_create(self, values):
         deployment = models.Deployment()
-        deployment.update(values)
-        deployment.save()
+        try:
+            deployment.update(values)
+            deployment.save()
+        except db_exc.DBDuplicateEntry:
+            raise exceptions.DeploymentNameExists(deployment=values["name"])
         return deployment
 
     def deployment_delete(self, uuid):
@@ -190,16 +199,16 @@ class Connection(object):
             if not count:
                 raise exceptions.DeploymentNotFound(uuid=uuid)
 
-    def deployment_get(self, uuid):
-        return self._deployment_get(uuid)
+    def deployment_get(self, deployment):
+        return self._deployment_get(deployment)
 
-    def deployment_update(self, uuid, values):
+    def deployment_update(self, deployment, values):
         session = get_session()
         values.pop('uuid', None)
         with session.begin():
-            deploy = self._deployment_get(uuid, session=session)
-            deploy.update(values)
-        return deploy
+            dpl = self._deployment_get(deployment, session=session)
+            dpl.update(values)
+        return dpl
 
     def deployment_list(self, status=None, parent_uuid=None, name=None):
         query = (self.model_query(models.Deployment).

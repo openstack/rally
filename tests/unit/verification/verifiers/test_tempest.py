@@ -34,7 +34,7 @@ TEMPEST_PATH = "rally.verification.verifiers.tempest"
 class BaseTestCase(test.TestCase):
     def setUp(self):
         super(BaseTestCase, self).setUp()
-        self.verifier = tempest.Tempest('fake_deploy_id',
+        self.verifier = tempest.Tempest('fake_deployment_id',
                                         verification=mock.MagicMock())
 
         self.verifier._path = "/tmp"
@@ -268,7 +268,7 @@ class TempestVerifyTestCase(BaseTestCase):
         self.verifier.verify(set_name, None)
 
         self.assertEqual(2, mock_is_configured.call_count)
-        mock_conf.assert_called_once_with(self.verifier.deploy_id)
+        mock_conf.assert_called_once_with(self.verifier.deployment)
         mock_conf().generate.assert_called_once_with(self.verifier.config_file)
         self.verifier.verification.start_verifying.assert_called_once_with(
             set_name)

@@ -35,20 +35,20 @@ class ShowCommands(object):
     cloud represented by deployment.
     """
 
-    def _get_endpoints(self, deploy_id):
-        deployment = db.deployment_get(deploy_id)
+    def _get_endpoints(self, deployment):
+        deployment = db.deployment_get(deployment)
         admin = deployment.get("admin")
         admin = [admin] if admin else []
 
         return admin + deployment.get("users", [])
 
-    @cliutils.args('--deploy-id', dest='deploy_id', type=str, required=False,
-                   help='the UUID of a deployment')
-    @envutils.with_default_deploy_id
-    def images(self, deploy_id=None):
+    @cliutils.args('--deployment', dest='deployment', type=str,
+                   required=False, help='UUID or name of a deployment')
+    @envutils.with_default_deployment
+    def images(self, deployment=None):
         """Display available images.
 
-        :param deploy_id: the UUID of a deployment
+        :param deployment: UUID or name of a deployment
         """
 
         headers = ['UUID', 'Name', 'Size (B)']
@@ -60,7 +60,7 @@ class ShowCommands(object):
                                for col in float_cols]))
 
         try:
-            for endpoint_dict in self._get_endpoints(deploy_id):
+            for endpoint_dict in self._get_endpoints(deployment):
                 clients = osclients.Clients(endpoint.Endpoint(**endpoint_dict))
                 glance_client = clients.glance()
                 for image in glance_client.images.list():
@@ -76,13 +76,13 @@ class ShowCommands(object):
             print(_("Authentication Issues: %s") % e)
             return(1)
 
-    @cliutils.args('--deploy-id', dest='deploy_id', type=str, required=False,
-                   help='the UUID of a deployment')
-    @envutils.with_default_deploy_id
-    def flavors(self, deploy_id=None):
+    @cliutils.args('--deployment', dest='deployment', type=str,
+                   required=False, help='UUID or name of a deployment')
+    @envutils.with_default_deployment
+    def flavors(self, deployment=None):
         """Display available flavors.
 
-        :param deploy_id: the UUID of a deployment
+        :param deployment: UUID or name of a deployment
         """
 
         headers = ['ID', 'Name', 'vCPUs', 'RAM (MB)', 'Swap (MB)', 'Disk (GB)']
@@ -93,7 +93,7 @@ class ShowCommands(object):
                                for col in float_cols]))
         table_rows = []
         try:
-            for endpoint_dict in self._get_endpoints(deploy_id):
+            for endpoint_dict in self._get_endpoints(deployment):
                 clients = osclients.Clients(endpoint.Endpoint(**endpoint_dict))
                 nova_client = clients.nova()
                 for flavor in nova_client.flavors.list():
@@ -110,17 +110,17 @@ class ShowCommands(object):
             print(_("Authentication Issues: %s") % e)
             return(1)
 
-    @cliutils.args('--deploy-id', dest='deploy_id', type=str, required=False,
-                   help='the UUID of a deployment')
-    @envutils.with_default_deploy_id
-    def networks(self, deploy_id=None):
+    @cliutils.args('--deployment', dest='deployment', type=str,
+                   required=False, help='UUID or name of a deployment')
+    @envutils.with_default_deployment
+    def networks(self, deployment=None):
         """Display configured networks."""
 
         headers = ['ID', 'Label', 'CIDR']
         mixed_case_fields = ['ID', 'Label', 'CIDR']
         table_rows = []
         try:
-            for endpoint_dict in self._get_endpoints(deploy_id):
+            for endpoint_dict in self._get_endpoints(deployment):
                 clients = osclients.Clients(endpoint.Endpoint(**endpoint_dict))
                 nova_client = clients.nova()
                 for network in nova_client.networks.list():
@@ -134,17 +134,17 @@ class ShowCommands(object):
             print(_("Authentication Issues: %s") % e)
             return(1)
 
-    @cliutils.args('--deploy-id', dest='deploy_id', type=str, required=False,
-                   help='the UUID of a deployment')
-    @envutils.with_default_deploy_id
-    def secgroups(self, deploy_id=None):
+    @cliutils.args('--deployment', dest='deployment', type=str,
+                   required=False, help='UUID or name of a deployment')
+    @envutils.with_default_deployment
+    def secgroups(self, deployment=None):
         """Display security groups."""
 
         headers = ['ID', 'Name', 'Description']
         mixed_case_fields = ['ID', 'Name', 'Description']
         table_rows = []
         try:
-            for endpoint_dict in self._get_endpoints(deploy_id):
+            for endpoint_dict in self._get_endpoints(deployment):
                 clients = osclients.Clients(endpoint.Endpoint(**endpoint_dict))
                 nova_client = clients.nova()
                 for secgroup in nova_client.security_groups.list():
@@ -161,17 +161,17 @@ class ShowCommands(object):
             print(_("Authentication Issues: %s") % e)
             return(1)
 
-    @cliutils.args('--deploy-id', dest='deploy_id', type=str, required=False,
-                   help='the UUID of a deployment')
-    @envutils.with_default_deploy_id
-    def keypairs(self, deploy_id=None):
+    @cliutils.args('--deployment', dest='deployment', type=str,
+                   required=False, help='UUID or name of a deployment')
+    @envutils.with_default_deployment
+    def keypairs(self, deployment=None):
         """Display available ssh keypairs."""
 
         headers = ['Name', 'Fingerprint']
         mixed_case_fields = ['Name', 'Fingerprint']
         table_rows = []
         try:
-            for endpoint_dict in self._get_endpoints(deploy_id):
+            for endpoint_dict in self._get_endpoints(deployment):
                 clients = osclients.Clients(endpoint.Endpoint(**endpoint_dict))
                 nova_client = clients.nova()
                 for keypair in nova_client.keypairs.list():

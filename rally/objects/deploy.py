@@ -32,8 +32,8 @@ class Deployment(object):
         return self.deployment[key]
 
     @staticmethod
-    def get(uuid):
-        return Deployment(db.deployment_get(uuid))
+    def get(deploy):
+        return Deployment(db.deployment_get(deploy))
 
     @staticmethod
     def delete_by_uuid(uuid):
