@@ -23,17 +23,18 @@ import rally.utils as rutils
 from tests.unit import test
 
 
-class ScenarioTestCase(test.TestCase):
-    rally_scenarios_path = os.path.join(
-        os.path.dirname(__file__), "..", "..", "..", "rally-scenarios")
+class RallyJobsTestCase(test.TestCase):
+    rally_jobs_path = os.path.join(
+        os.path.dirname(__file__), "..", "..", "..", "rally-jobs")
 
     @mock.patch("rally.benchmark.engine.BenchmarkEngine"
                 "._validate_config_semantic")
     def test_schema_is_valid(self, mock_validate):
-        rutils.load_plugins(os.path.join(self.rally_scenarios_path, "plugins"))
+        rutils.load_plugins(os.path.join(self.rally_jobs_path, "plugins"))
 
-        for filename in ["rally.yaml", "rally-neutron.yaml"]:
-            full_path = os.path.join(self.rally_scenarios_path, filename)
+        for filename in ["rally.yaml", "rally-neutron.yaml",
+                         "rally-zaqar.yaml", "rally-designate.yaml"]:
+            full_path = os.path.join(self.rally_jobs_path, filename)
 
             with open(full_path) as task_file:
                 try:
@@ -43,4 +44,4 @@ class ScenarioTestCase(test.TestCase):
                     eng.validate()
                 except Exception:
                     print(traceback.format_exc())
-                    self.fail("Wrong scenario config %s" % full_path)
+                    self.fail("Wrong task input file: %s" % full_path)
