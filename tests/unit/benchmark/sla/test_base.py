@@ -74,6 +74,10 @@ class FailureRateTestCase(test.TestCase):
         # 50% > 25%
         self.assertFalse(base.FailureRate.check(25, result).success)
 
+    def test_check_with_no_results(self):
+        result = []
+        self.assertFalse(base.FailureRate.check(10.0, result).success)
+
 
 class IterationTimeTestCase(test.TestCase):
     def test_config_schema(self):

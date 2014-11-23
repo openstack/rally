@@ -99,12 +99,13 @@ class FailureRate(SLA):
     @staticmethod
     def check(criterion_value, result):
         errors = len(filter(lambda x: x['error'], result))
-        if criterion_value < errors * 100.0 / len(result):
+        error_rate = errors * 100.0 / len(result) if len(result) > 0 else 100.0
+        if criterion_value < error_rate:
             success = False
         else:
             success = True
         msg = (_("Maximum failure percent %s%% failures, actually %s%%") %
-                (criterion_value * 100.0, errors * 100.0 / len(result)))
+                (criterion_value * 100.0, error_rate))
         return SLAResult(success, msg)
 
 
