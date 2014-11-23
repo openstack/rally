@@ -23,10 +23,13 @@ from rally.cmd.commands import show
 from rally.cmd.commands import task
 from rally.cmd.commands import use
 from rally.cmd.commands import verify
+from rally import exceptions
 from rally.openstack.common import cliutils as common_cliutils
 from tests.unit import test
 
 CONF = cfg.CONF
+
+FAKE_TASK_UUID = 'bb0f621c-29bd-495c-9d7a-d844335ed0fa'
 
 
 class CliUtilsTestCase(test.TestCase):
@@ -136,6 +139,14 @@ class CliUtilsTestCase(test.TestCase):
 
     def test_run_show(self):
         ret = cliutils.run(["rally", "show", "keypairs"], self.categories)
+        self.assertEqual(ret, 1)
+
+    @mock.patch("rally.db.task_get",
+                side_effect=exceptions.TaskNotFound(FAKE_TASK_UUID))
+    def test_run_task_not_found(self, mock_task_get):
+        ret = cliutils.run(["rally", "task", "status", "%s" % FAKE_TASK_UUID],
+                           self.categories)
+        self.assertTrue(mock_task_get.called)
         self.assertEqual(ret, 1)
 
     @mock.patch("rally.openstack.common.cliutils.validate_args",

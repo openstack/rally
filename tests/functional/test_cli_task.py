@@ -21,6 +21,9 @@ import mock
 from tests.functional import utils
 
 
+FAKE_TASK_UUID = '87ab639d-4968-4638-b9a1-07774c32484a'
+
+
 class TaskTestCase(unittest.TestCase):
 
     def _get_sample_task_config(self):
@@ -61,6 +64,46 @@ class TaskTestCase(unittest.TestCase):
         rally("task start --task %s" % config.filename)
         self.assertIn("result", rally("task results"))
 
+    def test_results_with_wrong_task_id(self):
+        rally = utils.Rally()
+        self.assertRaises(utils.RallyCmdError,
+                          rally, "task results --uuid %s" % FAKE_TASK_UUID)
+
+    def test_abort_with_wrong_task_id(self):
+        rally = utils.Rally()
+        self.assertRaises(utils.RallyCmdError,
+                          rally, "task abort --uuid %s" % FAKE_TASK_UUID)
+
+    def test_delete_with_wrong_task_id(self):
+        rally = utils.Rally()
+        self.assertRaises(utils.RallyCmdError,
+                          rally, "task delete --uuid %s" % FAKE_TASK_UUID)
+
+    def test_detailed_with_wrong_task_id(self):
+        rally = utils.Rally()
+        self.assertRaises(utils.RallyCmdError,
+                          rally, "task detailed --uuid %s" % FAKE_TASK_UUID)
+
+    def test_plot2html_with_wrong_task_id(self):
+        rally = utils.Rally()
+        self.assertRaises(utils.RallyCmdError,
+                          rally, "task plot2html --uuid %s" % FAKE_TASK_UUID)
+
+    def test_report_with_wrong_task_id(self):
+        rally = utils.Rally()
+        self.assertRaises(utils.RallyCmdError,
+                          rally, "task report --uuid %s" % FAKE_TASK_UUID)
+
+    def test_sla_check_with_wrong_task_id(self):
+        rally = utils.Rally()
+        self.assertRaises(utils.RallyCmdError,
+                          rally, "task sla_check --uuid %s" % FAKE_TASK_UUID)
+
+    def test_status_with_wrong_task_id(self):
+        rally = utils.Rally()
+        self.assertRaises(utils.RallyCmdError,
+                          rally, "task status --uuid %s" % FAKE_TASK_UUID)
+
     def test_report(self):
         rally = utils.Rally()
         cfg = self._get_sample_task_config()
@@ -71,6 +114,8 @@ class TaskTestCase(unittest.TestCase):
             os.remove(html_file)
         rally("task report --out %s" % html_file)
         self.assertTrue(os.path.exists(html_file))
+        self.assertRaises(utils.RallyCmdError,
+                          rally, "task report --uuid %s" % FAKE_TASK_UUID)
 
     def test_delete(self):
         rally = utils.Rally()
