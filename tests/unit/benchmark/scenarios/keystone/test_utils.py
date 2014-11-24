@@ -82,8 +82,8 @@ class KeystoneScenarioTestCase(test.TestCase):
         scenario = utils.KeystoneScenario()
         scenario._resource_delete(resource)
         resource.delete.assert_called_once_with()
-        self._test_atomic_action_timer(scenario.atomic_actions(),
-                                       'keystone.delete_resource')
+        r = "keystone.delete_%s" % resource.__class__.__name__.lower()
+        self._test_atomic_action_timer(scenario.atomic_actions(), r)
 
     @mock.patch(UTILS + "KeystoneScenario._generate_random_name")
     def test_tenant_create(self, mock_gen_name):
