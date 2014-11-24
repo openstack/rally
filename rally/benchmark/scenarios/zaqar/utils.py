@@ -1,14 +1,16 @@
-#    Licensed under the Apache License, Version 2.0 (the "License"); you may
-#    not use this file except in compliance with the License. You may obtain
-#    a copy of the License at
+# Copyright (c) 2014 Red Hat, Inc.
 #
-#         http://www.apache.org/licenses/LICENSE-2.0
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
 #
-#    Unless required by applicable law or agreed to in writing, software
-#    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-#    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
-#    License for the specific language governing permissions and limitations
-#    under the License.
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
 
 from rally.benchmark.scenarios import base
 
@@ -17,13 +19,42 @@ class ZaqarScenario(base.Scenario):
 
     @base.atomic_action_timer('zaqar.create_queue')
     def _queue_create(self, name_length=10, **kwargs):
-        """Creates Zaqar queue with random name.
+        """Creates Zaqar queue with random name
 
         :param name_length: length of generated (random) part of name
-        :param **kwargs: Other optional parameters to create queues like
-                        "metadata".
-        :returns: zaqar queue instance
+        :param **kwargs: other optional parameters to create queues like
+                         "metadata"
+        :returns: Zaqar queue instance
         """
 
         name = self._generate_random_name(length=name_length)
         return self.clients("zaqar").queue(name, **kwargs)
+
+    @base.atomic_action_timer('zaqar.delete_queue')
+    def _queue_delete(self, queue):
+        """Removes a Zaqar queue
+
+        :param queue: queue to remove
+        """
+
+        queue.delete()
+
+    def _messages_post(self, queue, messages, min_msg_count, max_msg_count):
+        """Post a list of messages to a given Zaqar queue
+
+        :param queue: post the messages to queue
+        :param messages: messages to post
+        """
+        with base.AtomicAction(self, 'zaqar.post_between_%s_and_%s_messages' %
+                               (min_msg_count, max_msg_count)):
+            queue.post(messages)
+
+    @base.atomic_action_timer('zaqar.list_messages')
+    def _messages_list(self, queue):
+        """Gets messages from a given Zaqar queue
+
+        :param queue: get messages from queue
+        :return: messages iterator
+        """
+
+        return queue.messages()

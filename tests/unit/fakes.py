@@ -248,9 +248,12 @@ class FakeQueue(FakeResource):
         self.queue_name = name
         self.messages = FakeMessagesManager(name)
 
-    def post_message(self, messages):
+    def post(self, messages):
         for msg in messages:
             self.messages.create(**msg)
+
+    def messages(self):
+        return self.messages.list()
 
 
 class FakeDbInstance(FakeResource):

@@ -1,0 +1,16 @@
+{
+    "ZaqarBasic.producer_consumer": [
+        {
+            "args": {
+                "name_length": 10,
+                "min_msg_count": 50,
+                "max_msg_count": 200
+            },
+            "runner": {
+                "type": "constant",
+                "times": 100,
+                "concurrency": 10
+            }
+        }
+    ]
+}
