@@ -14,7 +14,6 @@
 #    under the License.
 
 import itertools
-import logging
 import time
 import traceback
 
@@ -22,6 +21,7 @@ from novaclient import exceptions as nova_exc
 from novaclient.v1_1 import servers
 
 from rally import exceptions
+from rally import log as logging
 
 
 LOG = logging.getLogger(__name__)

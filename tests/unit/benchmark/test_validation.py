@@ -21,6 +21,7 @@ from rally.benchmark import validation
 from rally import consts
 from rally import exceptions
 from rally import objects
+from rally.verification.verifiers.tempest import tempest
 from tests.unit import test
 
 
@@ -333,6 +334,29 @@ class ValidatorsTestCase(test.TestCase):
         result = validator({"args": {"test_names": ["tempest.api.j", "e"]}},
                            None, task)
         self.assertFalse(result.is_valid, result.msg)
+
+    @mock.patch("rally.benchmark.validation.tempest.Tempest")
+    @mock.patch("rally.objects.task.db.task_create")
+    def test_tempest_tests_exists_tempest_installation_failed(
+            self, mock_create, mock_tempest):
+        mock_create.return_value = {
+            'status': 'init',
+            'deployment_uuid': 'deployment-uuid',
+            'verification_log': '',
+            'uuid': 'task-uuid',
+            'created_at': '',
+            'failed': False,
+            'tag': '',
+            'id': 42}
+        mock_tempest().is_installed.return_value = False
+        mock_tempest().install.side_effect = tempest.TempestSetupFailure
+
+        task = objects.Task(deployment_uuid='deployment-uuid')
+        validator = self._unwrap_validator(validation.tempest_tests_exists)
+
+        result = validator({"args": {"test_name": "a"}}, None, task)
+        self.assertFalse(result.is_valid, result.msg)
+        mock_tempest().is_installed.assert_called_once_with()
 
     def test_tempest_set_exists_missing_args(self):
         validator = self._unwrap_validator(validation.tempest_set_exists)

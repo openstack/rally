@@ -292,11 +292,14 @@ def tempest_tests_exists(config, clients, task):
 
     if not tests:
         return ValidationResult(False,
-                                "Parameter 'test_name' or 'test_names' should "
-                                "be specified.")
+                                _("Parameter 'test_name' or 'test_names' "
+                                  "should be specified."))
     verifier = tempest.Tempest(task["deployment_uuid"])
     if not verifier.is_installed():
-        verifier.install()
+        try:
+            verifier.install()
+        except tempest.TempestSetupFailure as e:
+            return ValidationResult(False, e)
     if not verifier.is_configured():
         verifier.generate_config_file()
 

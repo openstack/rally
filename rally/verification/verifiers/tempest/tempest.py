@@ -14,16 +14,17 @@
 #    under the License.
 
 
-import logging
 import os
 import shutil
 import subprocess
 import sys
 
+from oslo.config import cfg
 from oslo.serialization import jsonutils
 
 from rally import exceptions
 from rally.i18n import _
+from rally import log as logging
 from rally import utils
 from rally.verification.verifiers.tempest import config
 from rally.verification.verifiers.tempest import subunit2json
@@ -32,13 +33,19 @@ LOG = logging.getLogger(__name__)
 
 
 class TempestSetupFailure(exceptions.RallyException):
-    msg_fmt = _("Unable to setup tempest: '%(message)s'")
+    msg_fmt = _("Unable to setup tempest: '%(message)s'.")
 
 
 def check_output(*args, **kwargs):
-    output = subprocess.check_output(*args, **kwargs)
+    kwargs["stderr"] = subprocess.STDOUT
+    try:
+        output = subprocess.check_output(*args, **kwargs)
+    except subprocess.CalledProcessError as e:
+        LOG.debug("failed cmd: '%s'" % e.cmd)
+        LOG.debug("error output: '%s'" % e.output)
+        raise
 
-    if LOG.getEffectiveLevel() <= logging.DEBUG:
+    if cfg.CONF.rally_debug:
         print(output)
 
 
@@ -83,10 +90,15 @@ class Tempest(object):
             self.validate_env()
             print("No virtual environment found...Install the virtualenv.")
             LOG.debug("Virtual environment directory: %s" % path_to_venv)
-            check_output("python ./tools/install_venv.py", shell=True,
-                         cwd=self.path())
-            check_output("%s python setup.py install" % self.venv_wrapper,
-                         shell=True, cwd=self.path())
+            try:
+                check_output("python ./tools/install_venv.py", shell=True,
+                             cwd=self.path())
+                check_output("%s python setup.py install" % self.venv_wrapper,
+                             shell=True, cwd=self.path())
+            except subprocess.CalledProcessError:
+                if os.path.exists(self.path(".venv")):
+                    shutil.rmtree(self.path(".venv"))
+                raise TempestSetupFailure(_("failed to install virtualenv"))
 
     def is_configured(self):
         return os.path.isfile(self.config_file)
@@ -106,11 +118,14 @@ class Tempest(object):
 
     def _initialize_testr(self):
         if not os.path.isdir(self.path(".testrepository")):
-            msg = _("Test Repository initialization.")
-            LOG.info(_("Starting: ") + msg)
-            subprocess.check_call("%s testr init" % self.venv_wrapper,
-                                  shell=True, cwd=self.path())
-            LOG.info(_("Completed: ") + msg)
+            print(_("Test Repository initialization."))
+            try:
+                check_output("%s testr init" % self.venv_wrapper,
+                             shell=True, cwd=self.path())
+            except subprocess.CalledProcessError:
+                if os.path.exists(self.path(".testrepository")):
+                    shutil.rmtree(self.path(".testrepository"))
+                raise TempestSetupFailure(_("failed to initialize testr"))
 
     def is_installed(self):
         return os.path.exists(self.path(".venv"))
