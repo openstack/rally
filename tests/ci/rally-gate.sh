@@ -15,9 +15,15 @@
 # This script is executed by post_test_hook function in desvstack gate.
 
 PROJECT=`echo $ZUUL_PROJECT | cut -d \/ -f 2`
-SCENARIO=$BASE/new/$PROJECT/rally-scenarios/${RALLY_SCENARIO}.yaml
-PLUGINS_DIR=$BASE/new/$PROJECT/rally-scenarios/plugins
-EXTRA_DIR=$BASE/new/$PROJECT/rally-scenarios/extra
+
+RALLY_JOB_DIR=$BASE/new/$PROJECT/rally-scenarios
+if [ ! -d $RALLY_JOB_DIR ]; then
+    RALLY_JOB_DIR=$BASE/new/$PROJECT/rally-jobs
+fi
+
+SCENARIO=${RALLY_JOB_DIR}/${RALLY_SCENARIO}.yaml
+PLUGINS_DIR=${RALLY_JOB_DIR}/plugins
+EXTRA_DIR=${RALLY_JOB_DIR}/extra
 
 RALLY_PLUGINS_DIR=~/.rally/plugins
 
