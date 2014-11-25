@@ -8,6 +8,7 @@
                 "image": {
                     "name": "^cirros.*uec$"
                 },
+                "force_delete": false,
                 "actions": [
                     {"hard_reboot": 1},
                     {"soft_reboot": 1},

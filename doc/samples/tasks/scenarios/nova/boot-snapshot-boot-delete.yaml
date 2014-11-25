@@ -6,6 +6,7 @@
             name: "m1.nano"
         image:
             name: "^cirros.*uec$"
+        force_delete: false
       runner:
         type: "constant"
         times: 10
