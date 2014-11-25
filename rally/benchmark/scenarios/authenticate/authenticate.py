@@ -24,7 +24,7 @@ class Authenticate(base.Scenario):
 
     @validation.required_openstack(users=True)
     @base.scenario()
-    def keystone(self, **kwargs):
+    def keystone(self):
         self.clients("keystone")
 
     @validation.number("repetitions", minval=1)
