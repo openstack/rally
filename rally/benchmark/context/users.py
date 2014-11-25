@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import collections
 import uuid
 
 from oslo.config import cfg
@@ -134,7 +135,7 @@ class UserGenerator(base.Context):
     def _create_tenants(self):
         threads = self.config["resource_management_workers"]
 
-        tenants = []
+        tenants = collections.deque()
 
         def publish(queue):
             for i in range(self.config["tenants"]):
@@ -153,14 +154,14 @@ class UserGenerator(base.Context):
 
         # NOTE(msdubov): cosume() will fill the tenants list in the closure.
         broker.run(publish, consume, threads)
-        return tenants
+        return list(tenants)
 
     def _create_users(self):
         # NOTE(msdubov): This should be called after _create_tenants().
         threads = self.config["resource_management_workers"]
         users_per_tenant = self.config["users_per_tenant"]
 
-        users = []
+        users = collections.deque()
 
         def publish(queue):
             for tenant in self.context["tenants"]:
@@ -191,7 +192,7 @@ class UserGenerator(base.Context):
 
         # NOTE(msdubov): cosume() will fill the users list in the closure.
         broker.run(publish, consume, threads)
-        return users
+        return list(users)
 
     def _delete_tenants(self):
         threads = self.config["resource_management_workers"]

@@ -38,7 +38,7 @@ class UserGeneratorTestCase(test.TestCase):
                 }
             },
             "admin": {"endpoint": mock.MagicMock()},
-            "task": mock.MagicMock()
+            "task": {"uuid": "task_id"}
         }
 
     def setUp(self):
@@ -70,9 +70,7 @@ class UserGeneratorTestCase(test.TestCase):
         clients.nova.return_value = nova_admin
         nova_admin.networks.list.return_value = networks
         nova_admin.networks.get = fake_get_network
-        context = {"admin": {"endpoint": mock.MagicMock()},
-                   "task": mock.MagicMock()}
-        user_generator = users.UserGenerator(context)
+        user_generator = users.UserGenerator(self.context)
         user_generator.context["tenants"] = [tenant1, tenant2]
         user_generator._remove_associated_networks()
         mock_check_service_status.assert_called_once_with(mock.ANY,
@@ -100,9 +98,7 @@ class UserGeneratorTestCase(test.TestCase):
         nova_admin.networks.list.return_value = networks
         nova_admin.networks.get = fake_get_network
         nova_admin.networks.disassociate.side_effect = Exception()
-        context = {"admin": {"endpoint": mock.MagicMock()},
-                   "task": mock.MagicMock()}
-        user_generator = users.UserGenerator(context)
+        user_generator = users.UserGenerator(self.context)
         user_generator.context["tenants"] = [tenant1, tenant2]
         user_generator._remove_associated_networks()
         mock_check_service_status.assert_called_once_with(mock.ANY,
@@ -112,9 +108,7 @@ class UserGeneratorTestCase(test.TestCase):
     @mock.patch("rally.benchmark.context.users.broker.time.sleep")
     @mock.patch("rally.benchmark.context.users.keystone")
     def test__create_tenants(self, mock_keystone, mock_sleep):
-        context = {"admin": {"endpoint": mock.MagicMock()},
-                   "task": mock.MagicMock()}
-        user_generator = users.UserGenerator(context)
+        user_generator = users.UserGenerator(self.context)
         user_generator.config["tenants"] = 2
         tenants = user_generator._create_tenants()
         self.assertEqual(2, len(tenants))
@@ -125,9 +119,7 @@ class UserGeneratorTestCase(test.TestCase):
     @mock.patch("rally.benchmark.context.users.broker.time.sleep")
     @mock.patch("rally.benchmark.context.users.keystone")
     def test__create_users(self, mock_keystone, mock_sleep):
-        context = {"admin": {"endpoint": mock.MagicMock()},
-                   "task": mock.MagicMock()}
-        user_generator = users.UserGenerator(context)
+        user_generator = users.UserGenerator(self.context)
         tenant1 = mock.MagicMock()
         tenant2 = mock.MagicMock()
         user_generator.context["tenants"] = [tenant1, tenant2]
@@ -140,9 +132,7 @@ class UserGeneratorTestCase(test.TestCase):
 
     @mock.patch("rally.benchmark.context.users.keystone")
     def test__delete_tenants(self, mock_keystone):
-        context = {"admin": {"endpoint": mock.MagicMock()},
-                   "task": mock.MagicMock()}
-        user_generator = users.UserGenerator(context)
+        user_generator = users.UserGenerator(self.context)
         tenant1 = mock.MagicMock()
         tenant2 = mock.MagicMock()
         user_generator.context["tenants"] = [tenant1, tenant2]
@@ -153,9 +143,7 @@ class UserGeneratorTestCase(test.TestCase):
     def test__delete_tenants_failure(self, mock_keystone):
         wrapped_keystone = mock_keystone.wrap.return_value
         wrapped_keystone.delete_project.side_effect = Exception()
-        context = {"admin": {"endpoint": mock.MagicMock()},
-                   "task": mock.MagicMock()}
-        user_generator = users.UserGenerator(context)
+        user_generator = users.UserGenerator(self.context)
         tenant1 = mock.MagicMock()
         tenant2 = mock.MagicMock()
         user_generator.context["tenants"] = [tenant1, tenant2]
@@ -164,9 +152,7 @@ class UserGeneratorTestCase(test.TestCase):
 
     @mock.patch("rally.benchmark.context.users.keystone")
     def test__delete_users(self, mock_keystone):
-        context = {"admin": {"endpoint": mock.MagicMock()},
-                   "task": mock.MagicMock()}
-        user_generator = users.UserGenerator(context)
+        user_generator = users.UserGenerator(self.context)
         user1 = mock.MagicMock()
         user2 = mock.MagicMock()
         user_generator.context["users"] = [user1, user2]
@@ -177,9 +163,7 @@ class UserGeneratorTestCase(test.TestCase):
     def test__delete_users_failure(self, mock_keystone):
         wrapped_keystone = mock_keystone.wrap.return_value
         wrapped_keystone.delete_user.side_effect = Exception()
-        context = {"admin": {"endpoint": mock.MagicMock()},
-                   "task": mock.MagicMock()}
-        user_generator = users.UserGenerator(context)
+        user_generator = users.UserGenerator(self.context)
         user1 = mock.MagicMock()
         user2 = mock.MagicMock()
         user_generator.context["users"] = [user1, user2]
