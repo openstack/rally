@@ -76,13 +76,13 @@ class APITestCase(test.TestCase):
                                                   users=[]))
     @mock.patch("rally.orchestrator.api.engine.BenchmarkEngine")
     def test_task_validate(self, mock_engine, mock_deployment_get, mock_task):
-        api.task_validate(mock_deployment_get.return_value['uuid'], "config")
+        api.task_validate(mock_deployment_get.return_value["uuid"], "config")
 
         mock_engine.assert_has_calls([
-            mock.call("config", mock_task.return_value),
-            mock.call().bind(admin=mock_deployment_get.return_value["admin"],
-                             users=[]),
-            mock.call().validate(),
+            mock.call("config", mock_task.return_value,
+                      admin=mock_deployment_get.return_value["admin"],
+                      users=[]),
+            mock.call().validate()
         ])
 
         mock_task.assert_called_once_with(
@@ -110,9 +110,9 @@ class APITestCase(test.TestCase):
         api.start_task(mock_deployment_get.return_value["uuid"], "config")
 
         mock_engine.assert_has_calls([
-            mock.call("config", mock_task.return_value),
-            mock.call().bind(admin=mock_deployment_get.return_value["admin"],
-                             users=[]),
+            mock.call("config", mock_task.return_value,
+                      admin=mock_deployment_get.return_value["admin"],
+                      users=[]),
             mock.call().validate(),
             mock.call().run(),
         ])

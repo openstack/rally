@@ -71,11 +71,11 @@ def destroy_deploy(deployment):
     deployment = objects.Deployment.get(deployment)
     deployer = deploy.EngineFactory.get_engine(deployment['config']['type'],
                                                deployment)
+
+    tempest.Tempest(deployment['uuid']).uninstall()
     with deployer:
         deployer.make_cleanup()
         deployment.delete()
-
-    tempest.Tempest(deployment['uuid']).uninstall()
 
 
 def recreate_deploy(deployment):
@@ -114,9 +114,8 @@ def task_validate(deployment, config):
     """
     deployment = objects.Deployment.get(deployment)
     task = objects.Task(deployment_uuid=deployment['uuid'])
-    benchmark_engine = engine.BenchmarkEngine(config, task)
-    benchmark_engine.bind(admin=deployment["admin"],
-                          users=deployment["users"])
+    benchmark_engine = engine.BenchmarkEngine(
+        config, task, admin=deployment["admin"], users=deployment["users"])
     benchmark_engine.validate()
 
 
@@ -133,12 +132,10 @@ def start_task(deployment, config, task=None):
     task = task or objects.Task(deployment_uuid=deployment['uuid'])
     LOG.info("Benchmark Task %s on Deployment %s" % (task['uuid'],
                                                      deployment['uuid']))
-    benchmark_engine = engine.BenchmarkEngine(config, task)
-    admin = deployment["admin"]
-    users = deployment["users"]
+    benchmark_engine = engine.BenchmarkEngine(
+        config, task, admin=deployment["admin"], users=deployment["users"])
 
     try:
-        benchmark_engine.bind(admin=admin, users=users)
         benchmark_engine.validate()
         benchmark_engine.run()
     except exceptions.InvalidTaskException:
