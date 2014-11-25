@@ -42,10 +42,11 @@ class KeystoneScenario(base.Scenario):
         return self.admin_clients("keystone").users.create(
                     name, password=password, email=email, **kwargs)
 
-    @base.atomic_action_timer('keystone.delete_resource')
     def _resource_delete(self, resource):
         """"Delete keystone resource."""
-        resource.delete()
+        r = "keystone.delete_%s" % resource.__class__.__name__.lower()
+        with base.AtomicAction(self, r):
+            resource.delete()
 
     @base.atomic_action_timer('keystone.create_tenant')
     def _tenant_create(self, name_length=10, **kwargs):
