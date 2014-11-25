@@ -74,29 +74,42 @@ CONFIG_SCHEMA = {
 class BenchmarkEngine(object):
     """The Benchmark engine class is used to execute benchmark scenarios.
 
-    An instance of class is initialized by the Orchestrator with the benchmarks
-    configuration and then is used to execute all specified scenarios.
+    An instance of this class is initialized by the API with the benchmarks
+    configuration and then is used to validate and execute all specified
+    in config benchmarks.
+
     .. note::
 
         Typical usage:
             ...
-            benchmark_engine = BenchmarkEngine(config, task)
-            # Deploying the cloud...
-            # admin - is an objects.Endpoint that actually presents admin user
-            # users - is a list of objects.Endpoint that actually presents list
-                      of users.
-            with benchmark_engine.bind(admin=admin, users=users):
-                benchmark_engine.run()
+            admin = ....  # contains dict representations of objects.Endpoint
+                          # with OpenStack admin credentials
+
+            users = ....  # contains a list of dicts of representations of
+                          # objects.Endpoint with OpenStack users credentials.
+
+            engine = BenchmarkEngine(config, task, admin=admin, users=users)
+            engine.validate()   # to test config
+            engine.run()        # to run config
     """
 
-    def __init__(self, config, task):
+    def __init__(self, config, task, admin=None, users=None):
         """BenchmarkEngine constructor.
 
         :param config: The configuration with specified benchmark scenarios
         :param task: The current task which is being performed
+        :param admin: Dict with admin credentials
+        :param users: List of dicts with user credentials
         """
         self.config = config
         self.task = task
+        self.admin = admin and endpoint.Endpoint(**admin) or None
+        self.users = map(lambda u: endpoint.Endpoint(**u), users or [])
+
+    @rutils.log_task_wrapper(LOG.info, _("Task validation check cloud."))
+    def _check_cloud(self):
+        clients = osclients.Clients(self.admin)
+        clients.verified_keystone()
 
     @rutils.log_task_wrapper(LOG.info,
                              _("Task validation of scenarios names."))
@@ -141,15 +154,14 @@ class BenchmarkEngine(object):
 
     @rutils.log_task_wrapper(LOG.info, _("Task validation of semantic."))
     def _validate_config_semantic(self, config):
+        self._check_cloud()
+
         # NOTE(boris-42): In future we will have more complex context, because
         #                 we will have pre-created users mode as well.
-        context = {
-            "task": self.task,
-            "admin": {"endpoint": self.admin_endpoint}
-        }
+        context = {"task": self.task, "admin": {"endpoint": self.admin}}
         with users_ctx.UserGenerator(context) as ctx:
             ctx.setup()
-            admin = osclients.Clients(self.admin_endpoint)
+            admin = osclients.Clients(self.admin)
             user = osclients.Clients(context["users"][0]["endpoint"])
 
             for name, values in config.iteritems():
@@ -214,7 +226,11 @@ class BenchmarkEngine(object):
                 consumer.start()
 
                 context_obj = self._prepare_context(kw.get("context", {}),
-                                                    name, self.admin_endpoint)
+                                                    name, self.admin)
+
+                # NOTE(boris-42): reset duration, in case of failures during
+                #                 context creation
+                self.duration = 0
                 try:
                     with base_ctx.ContextManager(context_obj):
                         self.duration = runner.run(name, context_obj,
@@ -223,22 +239,6 @@ class BenchmarkEngine(object):
                     is_done.set()
                     consumer.join()
         self.task.update_status(consts.TaskStatus.FINISHED)
-
-    @rutils.log_task_wrapper(LOG.info, _("Check cloud."))
-    def bind(self, admin=None, users=None):
-        """Bind benchmark engine to OpenStack cloud.
-
-        This method will set self.admin_endpoint with passed values,
-        as well it will check that admin user is actually admin.
-
-        :param admin: admin credentials
-        :param users: List of users credentials
-        :returns: self
-        """
-        self.admin_endpoint = endpoint.Endpoint(**admin)
-        clients = osclients.Clients(self.admin_endpoint)
-        clients.verified_keystone()
-        return self
 
     def consume_results(self, key, task, result_queue, is_done):
         """Consume scenario runner results from queue and send them to db.
