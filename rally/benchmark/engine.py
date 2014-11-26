@@ -235,6 +235,8 @@ class BenchmarkEngine(object):
                     with base_ctx.ContextManager(context_obj):
                         self.duration = runner.run(name, context_obj,
                                                    kw.get("args", {}))
+                except Exception as e:
+                    LOG.exception(e)
                 finally:
                     is_done.set()
                     consumer.join()
