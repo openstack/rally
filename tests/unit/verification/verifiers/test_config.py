@@ -108,7 +108,7 @@ class ConfigTestCase(test.TestCase):
                     ("ssh_user", "cirros"),
                     ("s3_materials_path",
                      os.path.join(self.conf_generator.data_path,
-                                  "s3matherials")))
+                                  "s3materials")))
         results = self._remove_default_section(
             self.conf_generator.conf.items("boto"))
         self.assertEqual(sorted(expected), sorted(results))

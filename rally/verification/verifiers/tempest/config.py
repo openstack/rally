@@ -119,8 +119,8 @@ class TempestConf(object):
     def _set_boto(self, section_name='boto'):
         self.conf.set(section_name, 'ec2_url', self._get_url('ec2'))
         self.conf.set(section_name, 's3_url', self._get_url('s3'))
-        matherials_path = os.path.join(self.data_path, 's3matherials')
-        self.conf.set(section_name, 's3_materials_path', matherials_path)
+        materials_path = os.path.join(self.data_path, 's3materials')
+        self.conf.set(section_name, 's3_materials_path', materials_path)
         # TODO(olkonami): find out how can we get ami, ari, aki manifest files
 
     def _set_compute_images(self, section_name='compute'):
