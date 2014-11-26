@@ -31,6 +31,16 @@ CONF.register_cli_opts(common_cli_opts)
 logging.RDEBUG = logging.DEBUG + 1
 logging.addLevelName(logging.RDEBUG, "RALLYDEBUG")
 
+CRITICAL = logging.CRITICAL
+DEBUG = logging.DEBUG
+ERROR = logging.ERROR
+FATAL = logging.FATAL
+INFO = logging.INFO
+NOTSET = logging.NOTSET
+RDEBUG = logging.RDEBUG
+WARN = logging.WARN
+WARNING = logging.WARNING
+
 
 def setup(product_name, version="unknown"):
     dbg_color = oslogging.ColorHandler.LEVEL_COLORS[logging.DEBUG]

@@ -236,9 +236,9 @@ def run(argv, categories):
             # interface.
             LOG.debug("INFO logs from urllib3 and requests module are hide.")
             requests_log = logging.getLogger("requests").logger
-            requests_log.setLevel(logging.logging.WARNING)
+            requests_log.setLevel(logging.WARNING)
             urllib3_log = logging.getLogger("urllib3").logger
-            urllib3_log.setLevel(logging.logging.WARNING)
+            urllib3_log.setLevel(logging.WARNING)
     except cfg.ConfigFilesNotFoundError:
         cfgfile = CONF.config_file[-1] if CONF.config_file else None
         if cfgfile and not os.access(cfgfile, os.R_OK):
