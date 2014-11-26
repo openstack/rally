@@ -42,7 +42,7 @@ def main():
     # Start application.
     LOG.info(_('Starting server in PID %s') % os.getpid())
     LOG.info(_("Configuration:"))
-    CONF.log_opt_values(LOG, logging.logging.INFO)
+    CONF.log_opt_values(LOG, logging.INFO)
     try:
         server.serve_forever()
     except KeyboardInterrupt:
