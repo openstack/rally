@@ -26,11 +26,8 @@ from rally import utils
 LOG = logging.getLogger(__name__)
 
 
+@base.context(name="keypair", order=301)
 class Keypair(base.Context):
-    __ctx_name__ = "keypair"
-    __ctx_order__ = 300
-    __ctx_hidden__ = True
-
     KEYPAIR_NAME = "rally_ssh_key"
 
     def _generate_keypair(self, endpoint):

@@ -43,12 +43,9 @@ class CleanupMixin(object):
         pass
 
 
+@base.context(name="admin_cleanup", order=200, hidden=True)
 class AdminCleanup(CleanupMixin, base.Context):
     """Context class for admin resources cleanup."""
-
-    __ctx_hidden__ = True
-    __ctx_name__ = "admin_cleanup"
-    __ctx_order__ = 200
 
     @classmethod
     def validate(cls, config, non_hidden=False):
@@ -70,12 +67,9 @@ class AdminCleanup(CleanupMixin, base.Context):
                         users=self.context.get("users", []))
 
 
+@base.context(name="cleanup", order=201, hidden=True)
 class UserCleanup(CleanupMixin, base.Context):
     """Context class for user resources cleanup."""
-
-    __ctx_hidden__ = True
-    __ctx_name__ = "cleanup"
-    __ctx_order__ = 201
 
     @classmethod
     def validate(cls, config, non_hidden=False):

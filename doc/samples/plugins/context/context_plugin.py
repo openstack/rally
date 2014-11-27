@@ -9,6 +9,7 @@ LOG = logging.getLogger(__name__)
 CONF = cfg.CONF
 
 
+@base.context(name="create_flavor", order=1000)
 class CreateFlavorContext(base.Context):
     """This sample create flavor with specified options before task starts and
     delete it after task completion.
@@ -16,10 +17,6 @@ class CreateFlavorContext(base.Context):
     To create your own context plugin, inherit it from
     rally.benchmark.context.base.Context
     """
-
-    __ctx_name__ = "create_flavor"
-    __ctx_order__ = 1000
-    __ctx_hidden__ = False
 
     CONFIG_SCHEMA = {
         "type": "object",

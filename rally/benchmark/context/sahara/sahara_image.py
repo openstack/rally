@@ -25,12 +25,9 @@ from rally import utils as rutils
 LOG = logging.getLogger(__name__)
 
 
+@base.context(name="sahara_image", order=440)
 class SaharaImage(base.Context):
     """Context class for adding and tagging Sahara images."""
-
-    __ctx_name__ = "sahara_image"
-    __ctx_order__ = 412
-    __ctx_hidden__ = False
 
     CONFIG_SCHEMA = {
         "type": "object",

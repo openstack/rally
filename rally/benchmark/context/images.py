@@ -28,12 +28,9 @@ from rally import utils as rutils
 LOG = logging.getLogger(__name__)
 
 
+@base.context(name="images", order=410)
 class ImageGenerator(base.Context):
     """Context class for adding images to each user for benchmarks."""
-
-    __ctx_name__ = "images"
-    __ctx_order__ = 411
-    __ctx_hidden__ = False
 
     CONFIG_SCHEMA = {
         "type": "object",

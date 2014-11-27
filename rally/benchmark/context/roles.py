@@ -24,12 +24,9 @@ from rally import utils as rutils
 LOG = logging.getLogger(__name__)
 
 
+@base.context(name="roles", order=303)
 class RoleGenerator(base.Context):
     """Context class for adding temporary roles for benchmarks."""
-
-    __ctx_name__ = "roles"
-    __ctx_order__ = 101
-    __ctx_hidden__ = False
 
     CONFIG_SCHEMA = {
         "type": "array",

@@ -52,12 +52,9 @@ CONF.register_opts(context_opts,
                                       title='benchmark context options'))
 
 
+@base.context(name="users", order=100)
 class UserGenerator(base.Context):
     """Context class for generating temporary users/tenants for benchmarks."""
-
-    __ctx_name__ = "users"
-    __ctx_order__ = 100
-    __ctx_hidden__ = False
 
     CONFIG_SCHEMA = {
         "type": "object",
@@ -239,7 +236,7 @@ class UserGenerator(base.Context):
 
         if len(self.context["tenants"]) < self.config["tenants"]:
             raise exceptions.ContextSetupFailure(
-                    ctx_name=self.__ctx_name__,
+                    ctx_name=self.get_name(),
                     msg=_("Failed to create the requested number of tenants."))
 
         users_num = self.config["users_per_tenant"] * self.config["tenants"]
@@ -249,7 +246,7 @@ class UserGenerator(base.Context):
 
         if len(self.context["users"]) < users_num:
             raise exceptions.ContextSetupFailure(
-                    ctx_name=self.__ctx_name__,
+                    ctx_name=self.get_name(),
                     msg=_("Failed to create the requested number of users."))
 
     @rutils.log_task_wrapper(LOG.info, _("Exit context: `users`"))
