@@ -65,8 +65,8 @@
         subnets_per_network: 2
       runner:
         type: "constant"
-        times: 40
-        concurrency: 20
+        times: 30
+        concurrency: 30
       context:
         users:
           tenants: 1
@@ -89,8 +89,8 @@
         router_create_args:
       runner:
         type: "constant"
-        times: 40
-        concurrency: 20
+        times: 15
+        concurrency: 15
       context:
         users:
           tenants: 1
@@ -109,10 +109,10 @@
       args:
         network_create_args:
         port_create_args:
-        ports_per_network: 5
+        ports_per_network: 4
       runner:
         type: "constant"
-        times: 40
+        times: 20
         concurrency: 20
       context:
         users:
@@ -189,7 +189,7 @@
             name: "_router_updated"
       runner:
         type: "constant"
-        times: 10
+        times: 5
         concurrency: 5
       context:
         users:
@@ -282,8 +282,8 @@
         ports_per_network: 10
       runner:
         type: "constant"
-        times: 40
-        concurrency: 20
+        times: 15
+        concurrency: 15
       context:
         users:
           tenants: 1
@@ -305,8 +305,8 @@
             name: "^cirros.*uec$"
       runner:
         type: "constant"
-        times: 6
-        concurrency: 3
+        times: 4
+        concurrency: 4
       context:
         users:
           tenants: 3
@@ -324,8 +324,8 @@
             name: "^cirros.*uec$"
       runner:
         type: "constant"
-        times: 6
-        concurrency: 3
+        times: 4
+        concurrency: 4
       context:
         users:
           tenants: 3
@@ -344,8 +344,8 @@
         detailed: True
       runner:
         type: "constant"
-        times: 6
-        concurrency: 3
+        times: 4
+        concurrency: 4
       context:
         users:
           tenants: 3
@@ -431,8 +431,8 @@
             name: "^cirros.*uec$"
       runner:
         type: "constant"
-        times: 2
-        concurrency: 4
+        times: 3
+        concurrency: 3
       context:
         users:
           tenants: 3
@@ -469,8 +469,8 @@
         template_path: '/home/jenkins/.rally/extra/server_with_ports.yaml.template'
       runner:
         type: "constant"
-        times: 4
-        concurrency: 2
+        times: 3
+        concurrency: 3
       context:
         users:
           tenants: 2

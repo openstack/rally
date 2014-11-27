@@ -478,7 +478,7 @@
         template_path: '/home/jenkins/.rally/extra/server_with_volume.yaml.template'
       runner:
         type: "constant"
-        times: 4
+        times: 2
         concurrency: 2
       context:
         users:
@@ -671,7 +671,7 @@
       runner:
         type: "constant"
         times: 3
-        concurrency: 2
+        concurrency: 3
       context:
         users:
           tenants: 2
@@ -720,7 +720,7 @@
       runner:
         type: "constant"
         times: 3
-        concurrency: 2
+        concurrency: 3
       context:
         users:
           tenants: 2
@@ -742,7 +742,7 @@
       runner:
         type: "constant"
         times: 3
-        concurrency: 2
+        concurrency: 3
       context:
         users:
           tenants: 2
@@ -756,11 +756,11 @@
       args:
           volume_type: false
           min_volume_size: 1
-          max_volume_size: 5
+          max_volume_size: 2
       runner:
         type: "constant"
-        times: 4
-        concurrency: 2
+        times: 3
+        concurrency: 3
       context:
         users:
           tenants: 2
@@ -778,21 +778,21 @@
       args:
           volume_type: true
           min_volume_size: 1
-          max_volume_size: 5
+          max_volume_size: 2
       runner:
         type: "constant"
-        times: 4
-        concurrency: 2
+        times: 3
+        concurrency: 3
       context:
         users:
-          tenants: 2
+          tenants: 1
           users_per_tenant: 1
         servers:
           image:
             name: "^cirros.*uec$"
           flavor:
             name: "m1.tiny"
-          servers_per_tenant: 2
+          servers_per_tenant: 1
       sla:
           failure_rate:
             max: 0
@@ -806,8 +806,8 @@
         disk_format: "qcow2"
       runner:
         type: "constant"
-        times: 6
-        concurrency: 6
+        times: 5
+        concurrency: 5
       context:
         users:
           tenants: 2
@@ -845,8 +845,8 @@
         number_instances: 2
       runner:
         type: "constant"
-        times: 4
-        concurrency: 2
+        times: 3
+        concurrency: 3
       context:
         users:
           tenants: 3
@@ -859,8 +859,8 @@
     -
       runner:
         type: "constant"
-        times: 5
-        concurrency: 5
+        times: 4
+        concurrency: 4
       context:
         users:
           tenants: 2
@@ -883,8 +883,8 @@
             name: "^cirros.*uec$"
       runner:
         type: "constant"
-        times: 4
-        concurrency: 2
+        times: 3
+        concurrency: 3
       context:
         users:
           tenants: 3
@@ -901,8 +901,8 @@
         force_delete: true
       runner:
         type: "constant"
-        times: 4
-        concurrency: 2
+        times: 3
+        concurrency: 3
       context:
         users:
           tenants: 3
@@ -921,11 +921,11 @@
         detailed: True
       runner:
         type: "constant"
-        times: 4
-        concurrency: 4
+        times: 3
+        concurrency: 3
       context:
         users:
-          tenants: 4
+          tenants: 3
           users_per_tenant: 1
       sla:
         failure_rate:
@@ -943,11 +943,11 @@
         confirm: true
       runner:
         type: "constant"
-        times: 3
-        concurrency: 3
+        times: 2
+        concurrency: 2
       context:
         users:
-          tenants: 4
+          tenants: 2
           users_per_tenant: 1
       sla:
         failure_rate:
@@ -964,18 +964,16 @@
           -
             hard_reboot: 1
           -
-            soft_reboot: 1
-          -
             stop_start: 1
           -
             rescue_unrescue: 1
       runner:
         type: "constant"
-        times: 3
-        concurrency: 3
+        times: 2
+        concurrency: 2
       context:
         users:
-          tenants: 4
+          tenants: 2
           users_per_tenant: 1
       sla:
         failure_rate:
@@ -1011,8 +1009,8 @@
         volume_size: 1
       runner:
         type: "constant"
-        times: 4
-        concurrency: 2
+        times: 3
+        concurrency: 3
       context:
         users:
           tenants: 2
@@ -1034,7 +1032,7 @@
         concurrency: 2
       context:
         users:
-          tenants: 3
+          tenants: 2
           users_per_tenant: 2
       sla:
         failure_rate:
@@ -1050,8 +1048,8 @@
         auto_assign_nics: false
       runner:
         type: "constant"
-        times: 4
-        concurrency: 2
+        times: 3
+        concurrency: 3
       context:
         users:
           tenants: 3
@@ -1067,8 +1065,8 @@
             name: "^cirros.*uec$"
       runner:
         type: "constant"
-        times: 4
-        concurrency: 2
+        times: 3
+        concurrency: 3
       context:
         users:
           tenants: 3
@@ -1155,8 +1153,8 @@
     -
       args:
           url: "http://www.google.com"
-          response: 302
+          response: 200
       runner:
         type: "constant"
-        times: 10
+        times: 5
         concurrency: 5

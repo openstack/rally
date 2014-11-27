@@ -24,11 +24,11 @@ class FakePlugin(base.Scenario):
 
     @base.atomic_action_timer("test1")
     def _test1(self, factor):
-        time.sleep(random.random())
+        time.sleep(random.random() * 0.1)
 
     @base.atomic_action_timer("test2")
     def _test2(self, factor):
-        time.sleep(random.random() * factor * 10)
+        time.sleep(random.random() * factor)
 
     @base.scenario()
     def testplugin(self, factor=1):
