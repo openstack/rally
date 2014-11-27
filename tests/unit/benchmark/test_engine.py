@@ -319,6 +319,7 @@ class BenchmarkEngineTestCase(test.TestCase):
         is_done = mock.MagicMock()
         is_done.isSet.side_effect = [False, False, True]
         eng = engine.BenchmarkEngine(config, task)
-        eng.duration = 1
+        eng.duration = 123
+        eng.full_duration = 456
         eng.consume_results(key, task, collections.deque([1, 2]), is_done)
         mock_check_all.assert_called_once_with({"fake": 2}, [1, 2])

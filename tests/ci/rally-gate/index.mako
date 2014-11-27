@@ -26,8 +26,7 @@
 <%block name="content">
     <h2>Logs and files</h2>
     <ul class="columns">
-      <li><a href="rally-plot/task.txt" class="rich">Rally input task</a>
-      <li><a href="console.html">Benchmarking logs</a> <code>console.html</code>
+      <li><a href="console.html" class="rich">Benchmarking logs</a> <code>console.html</code>
       <li><a href="logs/">Logs of all services</a> <code>logs/</code>
       <li><a href="rally-plot/">Rally files</a> <code>rally-plot/</code>
     </ul>
@@ -37,7 +36,7 @@
       <li><a href="rally-plot/results.html.gz" class="rich">HTML report</a> <code>$ rally task report</code>
       <li><a href="rally-plot/detailed.txt.gz">Text report</a> <code>$ rally task detailed</code>
       <li><a href="rally-plot/detailed_with_iterations.txt.gz">Text report detailed</a> <code>$ rally task detailed --iterations-data</code>
-      <li><a href="rally-plot/sla.txt" class="rich">Success criteria (SLA)</a> <code>$ rally task sla_check</code>
+      <li><a href="rally-plot/sla.txt">Success criteria (SLA)</a> <code>$ rally task sla_check</code>
       <li><a href="rally-plot/results.json.gz">Raw results (JSON)</a> <code>$ rally task results</code>
     </ul>
 

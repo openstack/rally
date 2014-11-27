@@ -110,7 +110,7 @@ class TaskCommandsTestCase(test.TestCase):
                         "kw": "fake_kw"
                     },
                     "data": {
-                        "scenario_duration": 1.0,
+                        "load_duration": 1.0,
                         "raw": []
                     }
                 }
@@ -121,7 +121,7 @@ class TaskCommandsTestCase(test.TestCase):
         self.task.detailed(test_uuid)
         mock_db.task_get_detailed.assert_called_once_with(test_uuid)
 
-    @mock.patch('rally.cmd.commands.task.envutils.get_global')
+    @mock.patch("rally.cmd.commands.task.envutils.get_global")
     def test_detailed_no_task_id(self, mock_default):
         mock_default.side_effect = exceptions.InvalidArgumentsException
         self.assertRaises(exceptions.InvalidArgumentsException,
@@ -172,14 +172,16 @@ class TaskCommandsTestCase(test.TestCase):
         task_id = "foo_task_id"
         data = [
             {"key": "foo_key", "data": {"raw": "foo_raw", "sla": "foo_sla",
-                                        "scenario_duration": "foo_duration"}},
+                                        "load_duration": 1.1,
+                                        "full_duration": 1.2}},
             {"key": "bar_key", "data": {"raw": "bar_raw", "sla": "bar_sla",
-                                        "scenario_duration": "bar_duration"}},
-        ]
+                                        "load_duration": 2.1,
+                                        "full_duration": 2.2}}]
         results = map(lambda x: {"key": x["key"],
                                  "result": x["data"]["raw"],
                                  "sla": x["data"]["sla"],
-                                 "duration": x["data"]["scenario_duration"]},
+                                 "load_duration": x["data"]["load_duration"],
+                                 "full_duration": x["data"]["full_duration"]},
                       data)
         mock_results = mock.Mock(return_value=data)
         mock_get.return_value = mock.Mock(get_results=mock_results)
@@ -257,33 +259,27 @@ class TaskCommandsTestCase(test.TestCase):
                           in task_uuids]
         self.assertTrue(mock_api.delete_task.mock_calls == expected_calls)
 
-    @mock.patch('rally.cmd.commands.task.common_cliutils.print_list')
+    @mock.patch("rally.cmd.commands.task.common_cliutils.print_list")
     @mock.patch("rally.cmd.commands.task.db")
     def _test_sla_check(self, mock_db, mock_print_list):
-        value = [{
-                    "key": {
-                        "name": "fake_name",
-                        "pos": "fake_pos",
-                        "kw": "fake_kw"
-                    },
-                    "data": {
-                        "scenario_duration": 1.0,
-                        "raw": [],
-                        "sla":
-                        [{"benchmark": "KeystoneBasic.create_user",
-                          "criterion": "max_seconds_per_iteration",
-                          "pos": 0, "success": False, "detail":
-                          "Maximum seconds per iteration 4s, actually 5s"}]
-                    }
-                }]
-        mock_db.task_result_get_all_by_uuid.return_value = value
-        retval = self.task.sla_check(task_id='fake_task_id')
-        self.assertEqual(1, retval)
+        data = [{"key": {"name": "fake_name",
+                         "pos": "fake_pos",
+                         "kw": "fake_kw"},
+                 "data": {"scenario_duration": 42.0,
+                          "raw": [],
+                          "sla": [{"benchmark": "KeystoneBasic.create_user",
+                                   "criterion": "max_seconds_per_iteration",
+                                   "pos": 0,
+                                   "success": False,
+                                   "detail": "Max foo, actually bar"}]}}]
+        mock_db.task_result_get_all_by_uuid.return_value = data
+        result = self.task.sla_check(task_id="fake_task_id")
+        self.assertEqual(1, result)
 
-    @mock.patch('rally.cmd.commands.task.open',
+    @mock.patch("rally.cmd.commands.task.open",
                 mock.mock_open(read_data='{"some": "json"}'),
                 create=True)
-    @mock.patch('rally.orchestrator.api.task_validate')
+    @mock.patch("rally.orchestrator.api.task_validate")
     def test_verify(self, mock_validate):
-        self.task.validate('path_to_config.json', 'fake_id')
-        mock_validate.assert_called_once_with('fake_id', {"some": "json"})
+        self.task.validate("path_to_config.json", "fake_id")
+        mock_validate.assert_called_once_with("fake_id", {"some": "json"})

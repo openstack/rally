@@ -20,35 +20,56 @@ import mock
 from rally.benchmark.processing import plot
 from tests.unit import test
 
+PLOT = "rally.benchmark.processing.plot."
+
 
 class PlotTestCase(test.TestCase):
-    @mock.patch("rally.benchmark.processing.plot.ui_utils")
-    @mock.patch("rally.benchmark.processing.plot._process_results")
+    @mock.patch(PLOT + "ui_utils")
+    @mock.patch(PLOT + "_process_results")
     def test_plot(self, mock_proc_results, mock_utils):
         mock_render = mock.Mock(return_value="plot_html")
         mock_utils.get_template = mock.Mock(
             return_value=mock.Mock(render=mock_render))
-
-        mock_proc_results.return_value = [{"name": "a"}, {"name": "b"}]
+        task_data = [{"name": "a"}, {"name": "b"}]
+        task_source = "JSON"
+        mock_proc_results.return_value = (task_source, task_data)
 
         result = plot.plot(["abc"])
 
         self.assertEqual(result, "plot_html")
         mock_render.assert_called_once_with(
-            data=json.dumps(mock_proc_results.return_value)
+            data=json.dumps(task_data),
+            source=json.dumps(task_source)
         )
         mock_utils.get_template.assert_called_once_with("task/report.mako")
 
-    @mock.patch("rally.benchmark.processing.plot._prepare_data")
-    @mock.patch("rally.benchmark.processing.plot._process_atomic")
-    @mock.patch("rally.benchmark.processing.plot._process_main_duration")
-    def test__process_results(self, mock_main_duration, mock_atomic,
-                              mock_prepare):
-        results = [
-            {"key": {"name": "Klass.method_foo", "pos": 0, "kw": "config1"}},
-            {"key": {"name": "Klass.method_foo", "pos": 1, "kw": "config2"}},
-            {"key": {"name": "Klass.method_bar", "pos": 0, "kw": "config3"}}
-        ]
+    def test__task_json(self):
+        self.assertRaises(TypeError, plot._task_json)
+        self.assertRaises(AttributeError, plot._task_json, [])
+        self.assertEqual(plot._task_json({"foo": ["a", "b"]}),
+                         '{\n  "foo": [\n    "a", \n    "b"\n  ]\n}')
+        self.assertEqual(plot._task_json({"foo": ["a", "b"], "bar": ["c"]}),
+                         ('{\n  "bar": [\n    "c"\n  ],'
+                          '\n  "foo": [\n    "a", \n    "b"\n  ]\n}'))
+
+    @mock.patch(PLOT + "_task_json")
+    @mock.patch(PLOT + "_prepare_data")
+    @mock.patch(PLOT + "_process_atomic")
+    @mock.patch(PLOT + "_get_atomic_action_durations")
+    @mock.patch(PLOT + "_process_main_duration")
+    def test__process_results(self, mock_main_duration, mock_get_atomic,
+                              mock_atomic, mock_prepare, mock_task_json):
+        sla = [{"success": True}]
+        result = ["iter_1", "iter_2"]
+        iterations = len(result)
+        kw = {"runner": {"type": "foo_runner"}}
+        result_ = lambda i: {
+            "key": {"pos": i,
+                    "name": "Class.method",
+                    "kw": kw},
+            "result": result,
+            "sla": sla}
+        results = [result_(i) for i in 0, 1, 2]
         table_cols = ["Action",
                       "Min (sec)",
                       "Avg (sec)",
@@ -57,41 +78,51 @@ class PlotTestCase(test.TestCase):
                       "95 percentile",
                       "Success",
                       "Count"]
-
+        atomic_durations = [["atomic_1"], ["atomic_2"]]
         mock_prepare.side_effect = lambda i: {"errors": "errors_list",
                                               "output": [],
                                               "output_errors": [],
-                                              "sla": "foo_sla",
-                                              "duration": 12345.67}
+                                              "sla": i["sla"],
+                                              "load_duration": 1234.5,
+                                              "full_duration": 6789.1}
         mock_main_duration.return_value = "main_duration"
+        mock_get_atomic.return_value = atomic_durations
         mock_atomic.return_value = "main_atomic"
+        mock_task_json.return_value = "JSON"
 
-        output = plot._process_results(results)
+        source, scenarios = plot._process_results(results)
+
+        source_dict = {"Class.method": [kw] * len(results)}
+        mock_task_json.assert_called_with(source_dict)
+        self.assertEqual(source, "JSON")
 
         results = sorted(results, key=lambda r: "%s%s" % (r["key"]["name"],
                                                           r["key"]["pos"]))
-
         for i, r in enumerate(results):
             config = json.dumps({r["key"]["name"]: r["key"]["kw"]}, indent=2)
             pos = int(r["key"]["pos"])
             cls = r["key"]["name"].split(".")[0]
             met = r["key"]["name"].split(".")[1]
             name = "%s%s" % (met, (pos and " [%d]" % (pos + 1) or ""))
-            self.assertEqual(output[i], {
+            self.assertEqual(scenarios[i], {
                 "cls": cls,
                 "pos": r["key"]["pos"],
                 "met": met,
                 "name": name,
                 "config": config,
-                "duration": mock_main_duration.return_value,
+                "iterations": mock_main_duration.return_value,
                 "atomic": mock_atomic.return_value,
                 "table_cols": table_cols,
-                "table_rows": [["total", None, None, None, None, None, 0, 0]],
+                "table_rows": atomic_durations,
                 "errors": "errors_list",
                 "output": [],
                 "output_errors": [],
-                "sla": "foo_sla",
-                "total_duration": 12345.67
+                "runner": "foo_runner",
+                "sla": sla,
+                "sla_success": True,
+                "iterations_num": iterations,
+                "load_duration": 1234.5,
+                "full_duration": 6789.1
             })
 
     def test__process_main_time(self):
@@ -120,7 +151,8 @@ class PlotTestCase(test.TestCase):
                 }
             ],
             "sla": "foo_sla",
-            "duration": 12345.67
+            "load_duration": 1234.5,
+            "full_duration": 6789.1
         }
 
         output = plot._process_main_duration(result,
@@ -134,11 +166,11 @@ class PlotTestCase(test.TestCase):
             "iter": [
                 {
                     "key": "duration",
-                    "values": [(1, 1.0), (2, 1.0), (3, 2.0)]
+                    "values": [(1, 1.0), (2, 0), (3, 2.0)]
                 },
                 {
                     "key": "idle_duration",
-                    "values": [(1, 2.0), (2, 1.0), (3, 3.0)]
+                    "values": [(1, 2.0), (2, 0), (3, 3.0)]
                 }
             ],
             "histogram": [
@@ -281,7 +313,8 @@ class PlotTestCase(test.TestCase):
 
         mock_compress.side_effect = lambda i, **kv: i
         rows_num = 100
-        total_duration = 12345.67
+        load_duration = 1234.5
+        full_duration = 6789.1
         sla = [{"foo": "bar"}]
         data = []
         for i in range(rows_num):
@@ -305,10 +338,15 @@ class PlotTestCase(test.TestCase):
         values_atomic_a1 = [i + 0.1 for i in range(rows_num)]
         values_atomic_a2 = [i + 0.8 for i in range(rows_num)]
         values_duration = [i * 3.1 for i in range(rows_num)]
+        values_duration[42] = 0
+        values_duration[52] = 0
         values_idle = [i * 0.2 for i in range(rows_num)]
+        values_idle[42] = 0
+        values_idle[52] = 0
 
         prepared_data = plot._prepare_data({"result": data,
-                                            "duration": total_duration,
+                                            "load_duration": load_duration,
+                                            "full_duration": full_duration,
                                             "sla": sla,
                                             "key": "foo_key"})
         self.assertEqual(2, len(prepared_data["errors"]))
@@ -338,6 +376,7 @@ class PlotTestCase(test.TestCase):
                         "type": "spam"}],
             "output": expected_output,
             "output_errors": expected_output_errors,
-            "duration": total_duration,
+            "load_duration": load_duration,
+            "full_duration": full_duration,
             "sla": sla,
         }, prepared_data)
