@@ -58,8 +58,9 @@ class RPSScenarioRunnerTestCase(test.TestCase):
     @mock.patch("rally.benchmark.runners.rps.time")
     @mock.patch("rally.benchmark.runners.rps.threading.Thread")
     @mock.patch("rally.benchmark.runners.rps.multiprocessing.Queue")
-    def test__worker_process(self, mock_queue, mock_thread, mock_time,
-                             mock_log):
+    @mock.patch("rally.benchmark.runners.rps.base")
+    def test__worker_process(self, mock_base, mock_queue, mock_thread,
+                             mock_time, mock_log):
 
         def time_side():
             time_side.last += 0.03
@@ -76,7 +77,10 @@ class RPSScenarioRunnerTestCase(test.TestCase):
 
         times = 4
 
-        rps._worker_process(10, times, mock_queue, None, 600, 1, 1,
+        context = {'users': [{'tenant_id': 't1', 'endpoint': 'e1',
+                              'id': 'uuid1'}]}
+
+        rps._worker_process(10, times, mock_queue, context, 600, 1, 1,
                             "Dummy", "dummy", ())
 
         self.assertEqual(times, mock_log.debug.call_count)
@@ -84,14 +88,16 @@ class RPSScenarioRunnerTestCase(test.TestCase):
 
         self.assertEqual(times, mock_thread_instance.start.call_count)
         self.assertEqual(times, mock_thread_instance.join.call_count)
-        self.assertEqual(3, mock_time.sleep.call_count)
+        self.assertEqual(times - 1, mock_time.sleep.call_count)
         self.assertEqual(times, mock_thread_instance.isAlive.call_count)
-        self.assertEqual(15, mock_time.time.count)
+        self.assertEqual(times * 4 - 1, mock_time.time.count)
+        self.assertEqual(times, mock_base._get_scenario_context.call_count)
 
         for i in range(1, times + 1):
+            scenario_context = mock_base._get_scenario_context(context)
             call = mock.call(args=(mock_queue,
                                    (i, "Dummy", "dummy",
-                                    None, ())),
+                                    scenario_context, ())),
                              target=rps._worker_thread)
             self.assertIn(call, mock_thread.mock_calls)
 
