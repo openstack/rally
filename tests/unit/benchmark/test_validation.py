@@ -497,3 +497,44 @@ class ValidatorsTestCase(test.TestCase):
     def test_required_openstack_invalid(self):
         validator = self._unwrap_validator(validation.required_openstack)
         self.assertFalse(validator(None, None, None).is_valid)
+
+    def test_volume_type_exists(self):
+        validator = self._unwrap_validator(validation.volume_type_exists,
+                                           param_name="volume_type")
+
+        task = {"deployment_uuid": mock.MagicMock()}
+
+        clients = mock.MagicMock()
+        clients.cinder().volume_type.list.return_value = []
+
+        context = {"args": {"volume_type": False}}
+
+        result = validator(context, clients, task)
+        self.assertTrue(result.is_valid, result.msg)
+
+    def test_volume_type_exists_check_types(self):
+        validator = self._unwrap_validator(validation.volume_type_exists,
+                                           param_name="volume_type")
+        task = {"deployment_uuid": mock.MagicMock()}
+
+        clients = mock.MagicMock()
+        clients.cinder().volume_types.list.return_value = ["type"]
+
+        context = {"args": {"volume_type": True}}
+
+        result = validator(context, clients, task)
+        self.assertTrue(result.is_valid, result.msg)
+
+    def test_volume_type_exists_check_types_no_types_exist(self):
+        validator = self._unwrap_validator(validation.volume_type_exists,
+                                           param_name="volume_type")
+
+        task = {"deployment_uuid": mock.MagicMock()}
+
+        clients = mock.MagicMock()
+        clients().cinder().volume_type.list.return_value = []
+
+        context = {"args": {"volume_type": True}}
+
+        result = validator(context, clients, task)
+        self.assertFalse(result.is_valid, result.msg)

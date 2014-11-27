@@ -751,6 +751,53 @@
         failure_rate:
           max: 0
 
+  CinderVolumes.create_snapshot_and_attach_volume:
+    -
+      args:
+          volume_type: false
+          min_volume_size: 1
+          max_volume_size: 5
+      runner:
+        type: "constant"
+        times: 4
+        concurrency: 2
+      context:
+        users:
+          tenants: 2
+          users_per_tenant: 1
+        servers:
+          image:
+            name: "^cirros.*uec$"
+          flavor:
+            name: "m1.tiny"
+          servers_per_tenant: 2
+      sla:
+          failure_rate:
+            max: 0
+    -
+      args:
+          volume_type: true
+          min_volume_size: 1
+          max_volume_size: 5
+      runner:
+        type: "constant"
+        times: 4
+        concurrency: 2
+      context:
+        users:
+          tenants: 2
+          users_per_tenant: 1
+        servers:
+          image:
+            name: "^cirros.*uec$"
+          flavor:
+            name: "m1.tiny"
+          servers_per_tenant: 2
+      sla:
+          failure_rate:
+            max: 0
+
+
   GlanceImages.create_and_delete_image:
     -
       args:

@@ -478,12 +478,12 @@ class NovaScenario(base.Scenario):
         )
 
     @base.atomic_action_timer('nova.attach_volume')
-    def _attach_volume(self, server, volume):
+    def _attach_volume(self, server, volume, device=None):
         server_id = server.id
         volume_id = volume.id
         self.clients("nova").volumes.create_server_volume(server_id,
                                                           volume_id,
-                                                          None)
+                                                          device)
         bench_utils.wait_for(
             volume,
             is_ready=bench_utils.resource_is("in-use"),

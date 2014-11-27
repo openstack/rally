@@ -414,3 +414,20 @@ def required_openstack(config, clients, task, admin=False, users=False):
         return ValidationResult(False, _("Admin credentials required"))
 
     return ValidationResult()
+
+
+@validator
+def volume_type_exists(config, clients, task, param_name):
+    """Returns validator for volume types.
+
+       check_types: defines variable to be used as the flag to determine if
+                    volume types should be checked for existence.
+    """
+    val = config.get("args", {}).get(param_name)
+    if val:
+        volume_types_list = clients.cinder().volume_types.list()
+        if len(volume_types_list) < 1:
+            message = (_("Must have at least one volume type created "
+                         "when specifying use of volume types."))
+            return ValidationResult(False, message)
+    return ValidationResult()
