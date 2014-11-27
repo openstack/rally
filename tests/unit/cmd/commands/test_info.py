@@ -45,7 +45,7 @@ class InfoCommandsTestCase(test.TestCase):
         query = "Dummy"
         status = self.info.find(query)
         mock_get_by_name.assert_called_once_with(query)
-        self.assertEqual(None, status)
+        self.assertIsNone(status)
 
     @mock.patch(SCENARIO + ".get_scenario_by_name",
                 return_value=dummy.Dummy.dummy)
@@ -53,7 +53,7 @@ class InfoCommandsTestCase(test.TestCase):
         query = "Dummy.dummy"
         status = self.info.find(query)
         mock_get_scenario_by_name.assert_called_once_with(query)
-        self.assertEqual(None, status)
+        self.assertIsNone(status)
 
     @mock.patch(SCENARIO + ".get_scenario_by_name",
                 side_effect=exceptions.NoSuchScenario)
@@ -68,7 +68,7 @@ class InfoCommandsTestCase(test.TestCase):
         query = "FailureRate"
         status = self.info.find(query)
         mock_get_by_name.assert_called_once_with(query)
-        self.assertEqual(None, status)
+        self.assertIsNone(status)
 
     @mock.patch(ENGINE + ".get_by_name",
                 return_value=existing_cloud.ExistingCloud)
@@ -76,7 +76,7 @@ class InfoCommandsTestCase(test.TestCase):
         query = "ExistingCloud"
         status = self.info.find(query)
         mock_get_by_name.assert_called_once_with(query)
-        self.assertEqual(None, status)
+        self.assertIsNone(status)
 
     @mock.patch(PROVIDER + ".get_by_name",
                 return_value=existing_servers.ExistingServers)
@@ -84,7 +84,7 @@ class InfoCommandsTestCase(test.TestCase):
         query = "ExistingServers"
         status = self.info.find(query)
         mock_get_by_name.assert_called_once_with(query)
-        self.assertEqual(None, status)
+        self.assertIsNone(status)
 
     @mock.patch(UTILS + ".itersubclasses", return_value=[dummy.Dummy])
     def test_list(self, mock_itersubclasses):
@@ -94,29 +94,29 @@ class InfoCommandsTestCase(test.TestCase):
             mock.call(sla_base.SLA),
             mock.call(deploy.EngineFactory),
             mock.call(serverprovider.ProviderFactory)])
-        self.assertEqual(None, status)
+        self.assertIsNone(status)
 
     @mock.patch(UTILS + ".itersubclasses", return_value=[dummy.Dummy])
     def test_BenchmarkScenarios(self, mock_itersubclasses):
         status = self.info.BenchmarkScenarios()
         mock_itersubclasses.assert_called_once_with(scenario_base.Scenario)
-        self.assertEqual(None, status)
+        self.assertIsNone(status)
 
     @mock.patch(UTILS + ".itersubclasses", return_value=[dummy.Dummy])
     def test_SLA(self, mock_itersubclasses):
         status = self.info.SLA()
         mock_itersubclasses.assert_called_once_with(sla_base.SLA)
-        self.assertEqual(None, status)
+        self.assertIsNone(status)
 
     @mock.patch(UTILS + ".itersubclasses", return_value=[dummy.Dummy])
     def test_DeployEngines(self, mock_itersubclasses):
         status = self.info.DeployEngines()
         mock_itersubclasses.assert_called_once_with(deploy.EngineFactory)
-        self.assertEqual(None, status)
+        self.assertIsNone(status)
 
     @mock.patch(UTILS + ".itersubclasses", return_value=[dummy.Dummy])
     def test_ServerProviders(self, mock_itersubclasses):
         status = self.info.ServerProviders()
         mock_itersubclasses.assert_called_once_with(
                                             serverprovider.ProviderFactory)
-        self.assertEqual(None, status)
+        self.assertIsNone(status)

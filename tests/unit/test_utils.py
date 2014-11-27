@@ -128,7 +128,7 @@ class ImportModulesTestCase(test.TestCase):
     def test_try_append_module_into_sys_modules(self):
         modules = {}
         utils.try_append_module('rally.version', modules)
-        self.assertTrue('rally.version' in modules)
+        self.assertIn('rally.version', modules)
 
     def test_try_append_broken_module(self):
         modules = {}
@@ -139,8 +139,8 @@ class ImportModulesTestCase(test.TestCase):
 
     def test_import_modules_from_package(self):
         utils.import_modules_from_package('tests.unit.fixtures.import.package')
-        self.assertTrue('tests.unit.fixtures.import.package.a' in sys.modules)
-        self.assertTrue('tests.unit.fixtures.import.package.b' in sys.modules)
+        self.assertIn('tests.unit.fixtures.import.package.a', sys.modules)
+        self.assertIn('tests.unit.fixtures.import.package.b', sys.modules)
 
 
 class LogTestCase(test.TestCase):
@@ -241,7 +241,7 @@ class FirstIndexTestCase(test.TestCase):
 
     def test_list_with_non_existing_matching_element(self):
         lst = [1, 3, 5, 7]
-        self.assertEqual(utils.first_index(lst, lambda e: e == 2), None)
+        self.assertIsNone(utils.first_index(lst, lambda e: e == 2))
 
 
 class DocstringTestCase(test.TestCase):

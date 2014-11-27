@@ -63,7 +63,7 @@ class VirshProviderTestCase(test.TestCase):
         mock_ipaddress.assert_called_once_with('10.0.0.1')
         self.assertEqual(server.host, '10.0.0.2')
         self.assertEqual(server.user, 'user')
-        self.assertEqual(server.key, None)
+        self.assertIsNone(server.key)
         self.assertEqual(server.password, 'password')
         self.provider.resources.create.assert_called_once_with({
             'name': 'name',

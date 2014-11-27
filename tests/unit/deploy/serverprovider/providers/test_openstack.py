@@ -93,7 +93,7 @@ class OpenStackProviderTestCase(test.TestCase):
         mock_clients.return_value.glance.side_effect = KeyError('image')
         cfg = self._get_valid_config()
         provider = OSProvider(mock.MagicMock(), cfg)
-        self.assertEqual(provider.glance, None)
+        self.assertIsNone(provider.glance)
 
     @mock.patch("rally.deploy.serverprovider.providers.openstack.osclients")
     def test_openstack_provider_init_with_invalid_conf_no_user(self,

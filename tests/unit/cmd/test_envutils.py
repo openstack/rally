@@ -57,7 +57,7 @@ class EnvUtilsTestCase(test.TestCase):
     @mock.patch.dict(os.environ, values={}, clear=True)
     @mock.patch('rally.cmd.envutils.fileutils.load_env_file')
     def test_get_deployment_id_with_none(self, mock_file):
-        self.assertEqual(None, envutils.get_global(envutils.ENV_DEPLOYMENT))
+        self.assertIsNone(envutils.get_global(envutils.ENV_DEPLOYMENT))
         mock_file.assert_called_once_with(os.path.expanduser(
             '~/.rally/globals'))
 
@@ -77,7 +77,7 @@ class EnvUtilsTestCase(test.TestCase):
     @mock.patch.dict(os.environ, values={}, clear=True)
     @mock.patch('rally.cmd.envutils.fileutils.load_env_file')
     def test_get_task_id_with_none(self, mock_file):
-        self.assertEqual(None, envutils.get_global('RALLY_TASK'))
+        self.assertIsNone(envutils.get_global('RALLY_TASK'))
         mock_file.assert_called_once_with(os.path.expanduser(
             '~/.rally/globals'))
 

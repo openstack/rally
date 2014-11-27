@@ -278,12 +278,10 @@ class ScenarioTestCase(test.TestCase):
                                 "Scenario `%s` has wrong context" % scenario)
 
     def test_RESOURCE_NAME_PREFIX(self):
-        self.assertTrue(isinstance(base.Scenario.RESOURCE_NAME_PREFIX,
-                                   basestring))
+        self.assertIsInstance(base.Scenario.RESOURCE_NAME_PREFIX, basestring)
 
     def test_RESOURCE_NAME_LENGTH(self):
-        self.assertTrue(
-            isinstance(base.Scenario.RESOURCE_NAME_LENGTH, int))
+        self.assertIsInstance(base.Scenario.RESOURCE_NAME_LENGTH, int)
         self.assertTrue(base.Scenario.RESOURCE_NAME_LENGTH > 4)
 
     @mock.patch(

@@ -92,7 +92,8 @@ class TempestUtilsTestCase(BaseTestCase):
         self.assertFalse(mock_sp.check_output.called)
 
     @mock.patch("os.path.isdir", return_value=False)
-    @mock.patch(TEMPEST_PATH + ".tempest.subprocess.check_output")
+    @mock.patch("%s.tempest.subprocess.check_output" % TEMPEST_PATH,
+                return_value="some_output")
     @testtools.skipIf(sys.version_info < (2, 7), "Incompatible Python Version")
     def test__venv_install_when_venv_not_exist(self, mock_sp, mock_isdir):
         self.verifier._install_venv()

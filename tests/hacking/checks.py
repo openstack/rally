@@ -24,6 +24,24 @@ Guidelines for writing new hacking checks
 
 """
 
+import re
+
+
+re_assert_true_instance = re.compile(
+    r"(.)*assertTrue\(isinstance\((\w|\.|\'|\"|\[|\])+, "
+    r"(\w|\.|\'|\"|\[|\])+\)\)")
+re_assert_equal_type = re.compile(
+    r"(.)*assertEqual\(type\((\w|\.|\'|\"|\[|\])+\), "
+    r"(\w|\.|\'|\"|\[|\])+\)")
+re_assert_equal_end_with_none = re.compile(r"assertEqual\(.*?,\s+None\)$")
+re_assert_equal_start_with_none = re.compile(r"assertEqual\(None,")
+re_assert_true_false_with_in_or_not_in = re.compile(
+    r"assert(True|False)\("
+    r"(\w|[][.'\"])+( not)? in (\w|[][.'\",])+(, .*)?\)")
+re_assert_true_false_with_in_or_not_in_spaces = re.compile(
+    r"assert(True|False)\((\w|[][.'\"])+( not)? in [\[|'|\"](\w|[][.'\", ])+"
+    r"[\[|'|\"](, .*)?\)")
+
 
 def _parse_assert_mock_str(line):
     point = line.find('.assert_')
@@ -45,8 +63,9 @@ def check_assert_methods_from_mock(logical_line, filename):
 
     correct_names = ["assert_any_call", "assert_called_once_with",
                      "assert_called_with", "assert_has_calls"]
+    ignored_files = ["./tests/unit/test_hacking.py"]
 
-    if 'tests/' in filename:
+    if filename.startswith("./tests") and filename not in ignored_files:
         pos, method_name, obj_name = _parse_assert_mock_str(logical_line)
 
         if pos:
@@ -80,7 +99,10 @@ def check_assert_methods_from_mock(logical_line, filename):
 
 
 def check_import_of_logging(logical_line, filename):
-    """Check correctness import of logging module N310."""
+    """Check correctness import of logging module
+
+    N310
+    """
 
     excluded_files = ["./rally/log.py", "./tests/unit/test_log.py"]
 
@@ -95,6 +117,78 @@ def check_import_of_logging(logical_line, filename):
                           "use `rally.log` instead.")
 
 
+def no_translate_debug_logs(logical_line):
+    """Check for 'LOG.debug(_('
+
+    As per our translation policy,
+    https://wiki.openstack.org/wiki/LoggingStandards#Log_Translation
+    we shouldn't translate debug level logs.
+
+    * This check assumes that 'LOG' is a logger.
+    * Use filename so we can start enforcing this in specific folders instead
+      of needing to do so all at once.
+
+    N311
+    """
+    if logical_line.startswith("LOG.debug(_("):
+        yield(0, "N311 Don't translate debug level logs")
+
+
+def assert_true_instance(logical_line):
+    """Check for assertTrue(isinstance(a, b)) sentences
+
+    N320
+    """
+    if re_assert_true_instance.match(logical_line):
+        yield (0, "N320 assertTrue(isinstance(a, b)) sentences not allowed, "
+                  "you should use assertIsInstance(a, b) instead.")
+
+
+def assert_equal_type(logical_line):
+    """Check for assertEqual(type(A), B) sentences
+
+    N321
+    """
+    if re_assert_equal_type.match(logical_line):
+        yield (0, "N321 assertEqual(type(A), B) sentences not allowed, "
+                  "you should use assertIsInstance(a, b) instead.")
+
+
+def assert_equal_none(logical_line):
+    """Check for assertEqual(A, None) or assertEqual(None, A) sentences
+
+    N322
+    """
+    res = (re_assert_equal_start_with_none.search(logical_line) or
+           re_assert_equal_end_with_none.search(logical_line))
+    if res:
+        yield (0, "N322 assertEqual(A, None) or assertEqual(None, A) "
+                  "sentences not allowed, you should use assertIsNone(A) "
+                  "instead.")
+
+
+def assert_true_or_false_with_in(logical_line):
+    """Check assertTrue/False(A in/not in B) with collection contents
+
+    Check for assertTrue/False(A in B), assertTrue/False(A not in B),
+    assertTrue/False(A in B, message) or assertTrue/False(A not in B, message)
+    sentences.
+
+    N323
+    """
+    res = (re_assert_true_false_with_in_or_not_in.search(logical_line) or
+           re_assert_true_false_with_in_or_not_in_spaces.search(logical_line))
+    if res:
+        yield (0, "N323 assertTrue/assertFalse(A in/not in B)sentences not "
+                  "allowed, you should use assertIn(A, B) or assertNotIn(A, B)"
+                  " instead.")
+
+
 def factory(register):
     register(check_assert_methods_from_mock)
     register(check_import_of_logging)
+    register(no_translate_debug_logs)
+    register(assert_true_instance)
+    register(assert_equal_type)
+    register(assert_equal_none)
+    register(assert_true_or_false_with_in)
