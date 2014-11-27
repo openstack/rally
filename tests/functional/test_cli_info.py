@@ -54,18 +54,13 @@ class InfoTestCase(unittest.TestCase):
                           ("info find NonExistingStuff"))
 
     def test_find_misspelling_typos(self):
-        marker_string = "ExistingServers"
-        try:
-            self.rally("info find ExistinfServert")
-        except utils.RallyCmdError as e:
-            self.assertIn(marker_string, e.output)
+        marker_string = "ExistingServers (server provider)."
+        self.assertIn(marker_string, self.rally("info find ExistinfServert"))
 
     def test_find_misspelling_truncated(self):
-        marker_string = "boot_and_delete_server"
-        try:
-            self.rally("info find boot_and_delete")
-        except utils.RallyCmdError as e:
-            self.assertIn(marker_string, e.output)
+        marker_string = ("NovaServers.boot_and_delete_server "
+                         "(benchmark scenario).")
+        self.assertIn(marker_string, self.rally("info find boot_and_delete"))
 
     def test_list(self):
         output = self.rally("info list")

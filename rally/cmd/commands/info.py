@@ -87,11 +87,14 @@ class InfoCommands(object):
             print(info)
         else:
             substitutions = self._find_substitution(query)
-            print("Failed to find any docs for query: '%s'" % query)
-            if substitutions:
-                print("Did you mean one of these?\n\t%s" %
-                      "\n\t".join(substitutions))
-            return 1
+            if len(substitutions) == 1:
+                print(self._find_info(substitutions[0]))
+            else:
+                print("Failed to find any docs for query: '%s'" % query)
+                if substitutions:
+                    print("Did you mean one of these?\n\t%s" %
+                          "\n\t".join(substitutions))
+                return 1
 
     def list(self):
         """List main entities in Rally for which rally info find works.
