@@ -27,12 +27,9 @@ from rally import utils as rutils
 LOG = logging.getLogger(__name__)
 
 
+@base.context(name="sahara_edp", order=442)
 class SaharaEDP(base.Context):
     """Context class for setting up the environment for an EDP job."""
-
-    __ctx_name__ = "sahara_edp"
-    __ctx_order__ = 414
-    __ctx_hidden__ = False
 
     CONFIG_SCHEMA = {
         "type": "object",

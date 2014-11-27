@@ -25,14 +25,12 @@ from rally import utils as rutils
 LOG = logging.getLogger(__name__)
 
 
+@base.context(name="servers", order=430)
 class ServerGenerator(base.Context):
     """Context class for adding temporary servers for benchmarks.
 
         Servers are added for each tenant.
     """
-    __ctx_name__ = "servers"
-    __ctx_order__ = 412
-    __ctx_hidden__ = False
 
     CONFIG_SCHEMA = {
         "type": "object",
@@ -75,6 +73,13 @@ class ServerGenerator(base.Context):
         servers_per_tenant = self.config["servers_per_tenant"]
 
         current_tenants = []
+
+        clients = osclients.Clients(self.context["users"][0]["endpoint"])
+        image_id = types.ImageResourceType.transform(clients=clients,
+                                                     resource_config=image)
+        flavor_id = types.FlavorResourceType.transform(clients=clients,
+                                                       resource_config=flavor)
+
         for user in self.context["users"]:
             if user["tenant_id"] not in current_tenants:
                 LOG.debug("Booting servers for user tenant %s "
@@ -82,11 +87,6 @@ class ServerGenerator(base.Context):
                 current_tenants.append(user["tenant_id"])
                 clients = osclients.Clients(user["endpoint"])
                 nova_scenario = nova_utils.NovaScenario(clients=clients)
-                image_id = types.ImageResourceType.transform(
-                    clients=clients, resource_config=image)
-                flavor_id = types.FlavorResourceType.transform(
-                    clients=clients, resource_config=flavor)
-
                 server_name_prefix = nova_scenario._generate_random_name()
 
                 LOG.debug("Calling _boot_servers with server_name_prefix=%s "
@@ -97,8 +97,7 @@ class ServerGenerator(base.Context):
                 current_servers = []
 
                 servers = nova_scenario._boot_servers(
-                    server_name_prefix, image_id,
-                    flavor_id,
+                    server_name_prefix, image_id, flavor_id,
                     servers_per_tenant)
 
                 for server in servers:
@@ -107,11 +106,11 @@ class ServerGenerator(base.Context):
                 LOG.debug("Adding booted servers %s to context"
                           % current_servers)
 
-                self.context["servers"].append(
-                    {"server_ids": current_servers,
-                     "endpoint": user["endpoint"],
-                     "tenant_id": user["tenant_id"]}
-                )
+                self.context["servers"].append({
+                    "server_ids": current_servers,
+                    "endpoint": user["endpoint"],
+                    "tenant_id": user["tenant_id"]
+                })
 
     @rutils.log_task_wrapper(LOG.info, _("Exit context: `Servers`"))
     def cleanup(self):

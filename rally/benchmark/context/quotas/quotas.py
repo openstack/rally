@@ -27,12 +27,9 @@ from rally import utils
 LOG = logging.getLogger(__name__)
 
 
+@base.context(name="quotas", order=300)
 class Quotas(base.Context):
     """Context class for updating benchmarks' tenants quotas."""
-
-    __ctx_name__ = "quotas"
-    __ctx_order__ = 210
-    __ctx_hidden__ = False
 
     CONFIG_SCHEMA = {
         "type": "object",

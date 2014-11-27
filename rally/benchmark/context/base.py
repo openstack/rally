@@ -25,7 +25,31 @@ from rally import utils
 LOG = logging.getLogger(__name__)
 
 
+def context(name, order, hidden=False):
+    """Context class wrapper.
+
+    Each context class has to be wrapped by context() wrapper. It
+    sets essential configuration of context classes. Actually this wrapper just
+    adds attributes to the class.
+
+    :param name: Name of the class, used in the input task
+    :param order: As far as we can use multiple context classes that sometimes
+                  depend on each other we have to specify order of execution.
+                  Contexts with smaller order are run first
+    :param hidden: If it is true you won't be able to specify context via
+                   task config
+    """
+    def wrapper(cls):
+        cls._ctx_name = name
+        cls._ctx_order = order
+        cls._ctx_hidden = hidden
+        return cls
+
+    return wrapper
+
+
 @six.add_metaclass(abc.ABCMeta)
+@context(name="base", order=0, hidden=True)
 class Context(object):
     """This class is a factory for context classes.
 
@@ -39,14 +63,10 @@ class Context(object):
         4) Order of context creation
 
     """
-    __ctx_name__ = "base"
-    __ctx_order__ = 0
-    __ctx_hidden__ = True
-
     CONFIG_SCHEMA = {}
 
     def __init__(self, context):
-        self.config = context.get("config", {}).get(self.__ctx_name__, {})
+        self.config = context.get("config", {}).get(self.get_name(), {})
         self.context = context
         self.task = context["task"]
 
@@ -61,8 +81,8 @@ class Context(object):
 
     @classmethod
     def validate(cls, config, non_hidden=False):
-        if non_hidden and cls.__ctx_hidden__:
-            raise exceptions.NoSuchContext(name=cls.__ctx_name__)
+        if non_hidden and cls._ctx_hidden:
+            raise exceptions.NoSuchContext(name=cls.get_name())
         jsonschema.validate(config, cls.CONFIG_SCHEMA)
 
     @classmethod
@@ -71,17 +91,17 @@ class Context(object):
 
     @classmethod
     def get_name(cls):
-        return cls.__ctx_name__
+        return cls._ctx_name
 
     @classmethod
     def get_order(cls):
-        return cls.__ctx_order__
+        return cls._ctx_order
 
     @staticmethod
     def get_by_name(name):
         """Return Context class by name."""
         for context in utils.itersubclasses(Context):
-            if name == context.__ctx_name__:
+            if name == context.get_name():
                 return context
         raise exceptions.NoSuchContext(name=name)
 

@@ -19,7 +19,6 @@ import mock
 
 from rally.benchmark.context import base
 from rally import exceptions
-from rally import utils
 from tests.unit import fakes
 from tests.unit import test
 
@@ -58,14 +57,19 @@ class BaseContextTestCase(test.TestCase):
 
     @mock.patch("rally.benchmark.context.base.utils.itersubclasses")
     def test_get_by_name(self, mock_itersubclasses):
-        A = mock.MagicMock()
-        A.__ctx_name__ = "a"
-        B = mock.MagicMock()
-        B.__ctx_name__ = "b"
-        mock_itersubclasses.return_value = [A, B]
 
-        self.assertEqual(A, base.Context.get_by_name("a"))
-        self.assertEqual(B, base.Context.get_by_name("b"))
+        @base.context(name="some_fake1", order=1)
+        class SomeFake1(base.Context):
+            pass
+
+        @base.context(name="some_fake2", order=1)
+        class SomeFake2(base.Context):
+            pass
+
+        mock_itersubclasses.return_value = [SomeFake1, SomeFake2]
+
+        self.assertEqual(SomeFake1, base.Context.get_by_name("some_fake1"))
+        self.assertEqual(SomeFake2, base.Context.get_by_name("some_fake2"))
 
     @mock.patch("rally.benchmark.context.base.utils.itersubclasses")
     def test_get_by_name_non_existing(self, mock_itersubclasses):
@@ -107,18 +111,11 @@ class BaseContextTestCase(test.TestCase):
 
         ctx.cleanup.assert_called_once_with()
 
-    def test_all_context_have_ctxt_order(self):
-        for cls in utils.itersubclasses(base.Context):
-            self.assertNotEqual(cls.get_order(), 0, str(cls))
-
-    def test_all_context_have_ctxt_name(self):
-        for cls in utils.itersubclasses(base.Context):
-            self.assertNotEqual(cls.get_name(), "base", str(cls))
-
     def test_lt(self):
 
+        @base.context(name="fake_lt", order=fakes.FakeContext.get_order() - 1)
         class FakeLowerContext(fakes.FakeContext):
-            __ctx_order__ = fakes.FakeContext.get_order() - 1
+            pass
 
         ctx = mock.MagicMock()
         self.assertTrue(FakeLowerContext(ctx) < fakes.FakeContext(ctx))
@@ -127,8 +124,9 @@ class BaseContextTestCase(test.TestCase):
 
     def test_gt(self):
 
+        @base.context(name="fake_gt", order=fakes.FakeContext.get_order() + 1)
         class FakeBiggerContext(fakes.FakeContext):
-            __ctx_order__ = fakes.FakeContext.get_order() + 1
+            pass
 
         ctx = mock.MagicMock()
         self.assertTrue(FakeBiggerContext(ctx) > fakes.FakeContext(ctx))
@@ -137,8 +135,9 @@ class BaseContextTestCase(test.TestCase):
 
     def test_eq(self):
 
+        @base.context(name="fake2", order=fakes.FakeContext.get_order() + 1)
         class FakeOtherContext(fakes.FakeContext):
-            __ctx_order__ = fakes.FakeContext.get_order() + 1
+            pass
 
         ctx = mock.MagicMock()
         self.assertFalse(FakeOtherContext(ctx) == fakes.FakeContext(ctx))

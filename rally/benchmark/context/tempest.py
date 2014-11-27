@@ -29,11 +29,8 @@ from rally.verification.verifiers.tempest import tempest
 LOG = logging.getLogger(__name__)
 
 
+@base.context(name="tempest", order=666, hidden=True)
 class Tempest(base.Context):
-    __ctx_name__ = "tempest"
-    __ctx_order__ = 666
-    __ctx_hidden__ = True
-
     @utils.log_task_wrapper(LOG.info, _("Enter context: `tempest`"))
     def setup(self):
         self.verifier = tempest.Tempest(self.task.task.deployment_uuid)

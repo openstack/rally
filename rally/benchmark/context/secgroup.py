@@ -77,10 +77,8 @@ def _prepare_open_secgroup(endpoint):
     return rally_open
 
 
+@base.context(name="allow_ssh", order=302)
 class AllowSSH(base.Context):
-    __ctx_name__ = "allow_ssh"
-    __ctx_order__ = 301
-    __ctx_hidden__ = True
 
     def __init__(self, context):
         super(AllowSSH, self).__init__(context)

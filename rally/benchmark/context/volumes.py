@@ -24,12 +24,9 @@ from rally import utils as rutils
 LOG = logging.getLogger(__name__)
 
 
+@base.context(name="volumes", order=420)
 class VolumeGenerator(base.Context):
     """Context class for adding volumes to each user for benchmarks."""
-
-    __ctx_name__ = "volumes"
-    __ctx_order__ = 500
-    __ctx_hidden__ = False
 
     CONFIG_SCHEMA = {
         "type": "object",

@@ -264,14 +264,13 @@ From the developer's view, contexts management is implemented via **Context clas
 
 .. parsed-literal::
 
-    from rally import utils
+    from rally.benchmark.context import base
 
+    @base.context(name="your_context", *# Corresponds to the context field name in task configuration files*
+                  order=100500,        *# a number specifying the priority with which the context should be set up*
+                  hidden=False)        *# True if the context cannot be configured through the input task file*
     class YourContext(base.Context):
         *"""Yet another context class."""*
-
-        __ctx_name__ = "your_context"  *# Corresponds to the context field name in task configuration files*
-        __ctx_order__ = xxx            *# a 3-digit number specifying the priority with which the context should be set up*
-        __ctx_hidden__ = False         *# True if the context cannot be configured through the task configuration file*
 
         *# The schema of the context configuration format*
         CONFIG_SCHEMA = {
@@ -312,9 +311,10 @@ Consequently, the algorithm of initiating the contexts can be roughly seen as fo
     context2.cleanup()
     context1.cleanup()
 
-- where the order of contexts in which they are set up depends on the value of their *__ctx_order__* attribute. Contexts with lower *__ctx_order__* have higher priority: *1xx* contexts are reserved for users-related stuff (e.g. users/tenants creation, roles assignment etc.), *2xx* - for quotas etc.
+- where the order of contexts in which they are set up depends on the value of their *order* attribute. Contexts with lower *order* have higher priority: *1xx* contexts are reserved for users-related stuff (e.g. users/tenants creation, roles assignment etc.), *2xx* - for quotas etc.
 
-The *__ctx_hidden__* attribute defines whether the context should be a *hidden* one. **Hidden contexts** cannot be configured by end-users through the task configuration file as shown above, but should be specified by a benchmark scenario developer through a special *@base.scenario(context={...})* decorator. Hidden contexts are typically needed to satisfy some specific benchmark scenario-specific needs, which don't require the end-user's attention. For example, the hidden **"allow_ssh" context** (:mod:`rally.benchmark.context.secgroup`) is used in the **VMTasks.boot_runcommand_delete benchmark scenario** (:mod:`rally.benchmark.scenarios.vm.vmtasks`) to enable the SSH access to the servers. The fact that end-users do not have to worry about such details about SSH while launching this benchmark scenarios obviously makes their life easier and shows why hiddent contexts are of great importance in Rally.
+The *hidden* attribute defines whether the context should be a *hidden* one. **Hidden contexts** cannot be configured by end-users through the task configuration file as shown above, but should be specified by a benchmark scenario developer through a special *@base.scenario(context={...})* decorator. Hidden contexts are typically needed to satisfy some specific benchmark scenario-specific needs, which don't require the end-user's attention. For example, the hidden **"cleanup" context** (:mod:`rally.benchmark.context.cleanup.context`) is used to make generic cleanup after running benchmark. So user can't change
+it configuration via task and break his cloud.
 
 If you want to dive deeper, also see the context manager (:mod:`rally.benchmark.context.base`) class that actually implements the algorithm described above.
 
