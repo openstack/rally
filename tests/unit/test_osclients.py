@@ -33,7 +33,10 @@ class OSClientsTestCase(test.TestCase):
         super(OSClientsTestCase, self).setUp()
         self.endpoint = endpoint.Endpoint("http://auth_url", "use", "pass",
                                           "tenant")
+        self.endpoint_https = endpoint.Endpoint("https://auth_url/v2.0/admin",
+                                                "use", "pass", "tenant")
         self.clients = osclients.Clients(self.endpoint)
+        self.clients_https = osclients.Clients(self.endpoint_https)
 
         self.fake_keystone = fakes.FakeKeystoneClient()
         self.fake_keystone.auth_token = mock.MagicMock()
@@ -63,6 +66,18 @@ class OSClientsTestCase(test.TestCase):
         kwargs = dict(self.endpoint.to_dict().items() + endpoint.items())
         self.mock_create_keystone_client.assert_called_once_with(kwargs)
         self.assertEqual(self.clients.cache["keystone"], self.fake_keystone)
+
+    def test_keystone_with_https_auth_url(self):
+        self.assertNotIn("keystone", self.clients_https.cache)
+        client = self.clients_https.keystone()
+        self.assertEqual(client, self.fake_keystone)
+        endpoint = {"timeout": cfg.CONF.openstack_client_http_timeout,
+                    "insecure": False, "cacert": None,
+                    "endpoint": self.endpoint_https.auth_url}
+        kwargs = dict(self.endpoint_https.to_dict().items() + endpoint.items())
+        self.mock_create_keystone_client.assert_called_once_with(kwargs)
+        self.assertEqual(self.clients_https.cache["keystone"],
+                         self.fake_keystone)
 
     @mock.patch("rally.osclients.Clients.keystone")
     def test_verified_keystone_user_not_admin(self, mock_keystone):

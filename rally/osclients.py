@@ -99,7 +99,8 @@ class Clients(object):
         kw = dict(self.endpoint.to_dict().items() + new_kw.items())
         if kw["endpoint_type"] == consts.EndpointType.PUBLIC:
             mgmt_url = urlparse.urlparse(kw["auth_url"])
-            if mgmt_url.port != kw["admin_port"]:
+            if (mgmt_url.port != kw["admin_port"] and
+                    mgmt_url.scheme != "https"):
                 kw["endpoint"] = "{0}://{1}:{2}{3}".format(
                     mgmt_url.scheme,
                     mgmt_url.hostname,
