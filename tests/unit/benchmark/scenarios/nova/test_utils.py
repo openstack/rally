@@ -570,3 +570,77 @@ class NovaScenarioTestCase(test.TestCase):
 
         self.assertIn(
                 nova_scenario._find_host_to_migrate(fake_server), ["b1", "b3"])
+
+    def test__create_security_groups(self):
+        clients = mock.MagicMock()
+        nova_scenario = utils.NovaScenario()
+        nova_scenario.clients = clients
+        nova_scenario._generate_random_name = mock.MagicMock()
+
+        security_group_count = 5
+
+        sec_groups = nova_scenario._create_security_groups(
+            security_group_count)
+
+        self.assertEqual(security_group_count, clients.call_count)
+        self.assertEqual(security_group_count, len(sec_groups))
+        self.assertEqual(security_group_count,
+                         nova_scenario._generate_random_name.call_count)
+        self.assertEqual(security_group_count,
+                         clients().security_groups.create.call_count)
+        self._test_atomic_action_timer(
+            nova_scenario.atomic_actions(),
+            'nova.create_%s_security_groups' % security_group_count)
+
+    def test__create_rules_for_security_group(self):
+        clients = mock.MagicMock()
+        nova_scenario = utils.NovaScenario()
+        nova_scenario.clients = clients
+
+        fake_secgroups = [fakes.FakeSecurityGroup(None, None, 1, "uuid1"),
+                          fakes.FakeSecurityGroup(None, None, 2, "uuid2")]
+        rules_per_security_group = 10
+
+        nova_scenario._create_rules_for_security_group(
+            fake_secgroups, rules_per_security_group)
+
+        self.assertEqual(len(fake_secgroups) * rules_per_security_group,
+                         clients.call_count)
+        self.assertEqual(len(fake_secgroups) * rules_per_security_group,
+                         clients().security_group_rules.create.call_count)
+        self._test_atomic_action_timer(
+            nova_scenario.atomic_actions(),
+            "nova.create_%s_rules_in_every_of_%s_security_group" %
+            (rules_per_security_group, len(fake_secgroups)))
+
+    def test__delete_security_groups(self):
+        clients = mock.MagicMock()
+        nova_scenario = utils.NovaScenario()
+        nova_scenario.clients = clients
+
+        fake_secgroups = [fakes.FakeSecurityGroup(None, None, 1, "uuid1"),
+                          fakes.FakeSecurityGroup(None, None, 2, "uuid2")]
+
+        nova_scenario._delete_security_groups(fake_secgroups)
+
+        self.assertEqual(len(fake_secgroups), clients.call_count)
+
+        self.assertEqual(
+            map(lambda x: mock.call(x.id), fake_secgroups),
+            clients().security_groups.delete.call_args_list)
+        self._test_atomic_action_timer(
+            nova_scenario.atomic_actions(),
+            'nova.delete_%s_security_groups' % len(fake_secgroups))
+
+    def test__list_security_groups(self):
+        clients = mock.MagicMock()
+        nova_scenario = utils.NovaScenario()
+        nova_scenario.clients = clients
+
+        nova_scenario._list_security_groups()
+
+        clients.assert_called_once_with("nova")
+        clients().security_groups.list.assert_called_once_with()
+
+        self._test_atomic_action_timer(nova_scenario.atomic_actions(),
+                                       "nova.list_security_groups")

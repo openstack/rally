@@ -178,8 +178,8 @@ class FakeQuotas(FakeResource):
 
 class FakeSecurityGroup(FakeResource):
 
-    def __init__(self, manager=None, rule_manager=None):
-        super(FakeSecurityGroup, self).__init__(manager)
+    def __init__(self, manager=None, rule_manager=None, id=None, name=None):
+        super(FakeSecurityGroup, self).__init__(manager, id=id, name=name)
         self.rule_manager = rule_manager
 
     @property
