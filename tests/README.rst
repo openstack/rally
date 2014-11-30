@@ -54,7 +54,7 @@ Fuctional tests use Rally API only and check responses without touching internal
 To run functional tests locally::
 
   $ source openrc
-  $ rally deployment create --from-env --name testing
+  $ rally deployment create --fromenv --name testing
   $ tox -e cli
 
   #NOTE: openrc file with OpenStack admin credentials
