@@ -49,7 +49,7 @@ class OSClientsTestCase(test.TestCase):
         super(OSClientsTestCase, self).tearDown()
 
     def test_keystone(self):
-        self.assertTrue("keystone" not in self.clients.cache)
+        self.assertNotIn("keystone", self.clients.cache)
         client = self.clients.keystone()
         self.assertEqual(client, self.fake_keystone)
         mgmt_url = urlparse.urlparse(self.endpoint.auth_url)
@@ -89,7 +89,7 @@ class OSClientsTestCase(test.TestCase):
         with mock.patch("rally.osclients.nova") as mock_nova:
             fake_nova = fakes.FakeNovaClient()
             mock_nova.Client = mock.MagicMock(return_value=fake_nova)
-            self.assertTrue("nova" not in self.clients.cache)
+            self.assertNotIn("nova", self.clients.cache)
             client = self.clients.nova()
             self.assertEqual(client, fake_nova)
             self.service_catalog.url_for.assert_called_once_with(
@@ -110,7 +110,7 @@ class OSClientsTestCase(test.TestCase):
     def test_neutron(self, mock_neutron):
         fake_neutron = fakes.FakeNeutronClient()
         mock_neutron.Client = mock.MagicMock(return_value=fake_neutron)
-        self.assertTrue("neutron" not in self.clients.cache)
+        self.assertNotIn("neutron", self.clients.cache)
         client = self.clients.neutron()
         self.assertEqual(client, fake_neutron)
         kw = {
@@ -130,7 +130,7 @@ class OSClientsTestCase(test.TestCase):
         with mock.patch("rally.osclients.glance") as mock_glance:
             fake_glance = fakes.FakeGlanceClient()
             mock_glance.Client = mock.MagicMock(return_value=fake_glance)
-            self.assertTrue("glance" not in self.clients.cache)
+            self.assertNotIn("glance", self.clients.cache)
             client = self.clients.glance()
             self.assertEqual(client, fake_glance)
             kw = {"endpoint": self.service_catalog.url_for.return_value,
@@ -149,7 +149,7 @@ class OSClientsTestCase(test.TestCase):
             fake_cinder = fakes.FakeCinderClient()
             fake_cinder.client = mock.MagicMock()
             mock_cinder.Client = mock.MagicMock(return_value=fake_cinder)
-            self.assertTrue("cinder" not in self.clients.cache)
+            self.assertNotIn("cinder", self.clients.cache)
             client = self.clients.cinder()
             self.assertEqual(client, fake_cinder)
             self.service_catalog.url_for.assert_called_once_with(
@@ -171,7 +171,7 @@ class OSClientsTestCase(test.TestCase):
             fake_ceilometer = fakes.FakeCeilometerClient()
             mock_ceilometer.Client = mock.MagicMock(
                 return_value=fake_ceilometer)
-            self.assertTrue("ceilometer" not in self.clients.cache)
+            self.assertNotIn("ceilometer", self.clients.cache)
             client = self.clients.ceilometer()
             self.assertEqual(client, fake_ceilometer)
             self.service_catalog.url_for.assert_called_once_with(
@@ -190,7 +190,7 @@ class OSClientsTestCase(test.TestCase):
     def test_ironic(self, mock_ironic):
         fake_ironic = fakes.FakeIronicClient()
         mock_ironic.get_client = mock.MagicMock(return_value=fake_ironic)
-        self.assertTrue("ironic" not in self.clients.cache)
+        self.assertNotIn("ironic", self.clients.cache)
         client = self.clients.ironic()
         self.assertEqual(client, fake_ironic)
         self.service_catalog.url_for.assert_called_once_with(
@@ -211,7 +211,7 @@ class OSClientsTestCase(test.TestCase):
     def test_sahara(self, mock_sahara):
         fake_sahara = fakes.FakeSaharaClient()
         mock_sahara.Client = mock.MagicMock(return_value=fake_sahara)
-        self.assertTrue("sahara" not in self.clients.cache)
+        self.assertNotIn("sahara", self.clients.cache)
         client = self.clients.sahara()
         self.assertEqual(client, fake_sahara)
         kw = {
@@ -227,7 +227,7 @@ class OSClientsTestCase(test.TestCase):
     def test_zaqar(self, mock_zaqar):
         fake_zaqar = fakes.FakeZaqarClient()
         mock_zaqar.Client = mock.MagicMock(return_value=fake_zaqar)
-        self.assertTrue("zaqar" not in self.clients.cache)
+        self.assertNotIn("zaqar", self.clients.cache)
         client = self.clients.zaqar()
         self.assertEqual(client, fake_zaqar)
         self.service_catalog.url_for.assert_called_once_with(

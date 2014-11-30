@@ -7,8 +7,15 @@ Rally Style Commandments
 
 Rally Specific Commandments
 ---------------------------
-
-- [N301] Ensure that ``assert_*`` methods from ``mock`` library is used correctly
-- [N302] Sub-error of N301, related to nonexistent "assert_called"
-- [N303] Sub-error of N301, related to nonexistent "assert_called_once"
-- [N310] Ensure that ``rally.log`` is used instead of ``rally.openstack.common.log``
+* [N30x] - Reserved for rules related to ``mock`` library
+ * [N301] - Ensure that ``assert_*`` methods from ``mock`` library is used correctly
+ * [N302] - Ensure that nonexistent "assert_called" is not used
+ * [N303] - Ensure that  nonexistent "assert_called_once" is not used
+* [N310-N314] - Reserved for rules related to logging
+ * [N310] - Ensure that ``rally.log`` is used instead of ``rally.openstack.common.log``
+ * [N311] - Validate that debug level logs are not translated
+* [N32x] - Reserved for rules related to assert* methods
+ * [N320] - Ensure that ``assertTrue(isinstance(A, B))``  is not used
+ * [N321] - Ensure that ``assertEqual(type(A), B)`` is not used
+ * [N322] - Ensure that ``assertEqual(A, None)`` and ``assertEqual(None, A)`` are not used
+ * [N323] - Ensure that ``assertTrue/assertFalse(A in/not in B)`` are not used with collection contents

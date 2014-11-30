@@ -35,13 +35,13 @@ class HackingTestCase(test.TestCase):
         for name in correct_method_names:
             self.assertEqual(0, len(
                 list(checks.check_assert_methods_from_mock(
-                    'some_mock.%s(asd)' % name, 'tests/fake/test'))))
+                    'some_mock.%s(asd)' % name, './tests/fake/test'))))
 
     def test_wrong_usage_of_broad_assert_from_mock(self):
         fake_method = 'rtfm.assert_something()'
 
         actual_number, actual_msg = next(checks.check_assert_methods_from_mock(
-            fake_method, 'tests/fake/test'))
+            fake_method, './tests/fake/test'))
         self.assertEqual(4, actual_number)
         self.assertTrue(actual_msg.startswith('N301'))
 
@@ -49,7 +49,7 @@ class HackingTestCase(test.TestCase):
         fake_method = 'rtfm.assert_called()'
 
         actual_number, actual_msg = next(checks.check_assert_methods_from_mock(
-            fake_method, 'tests/fake/test'))
+            fake_method, './tests/fake/test'))
         self.assertEqual(4, actual_number)
         self.assertTrue(actual_msg.startswith('N302'))
 
@@ -57,7 +57,7 @@ class HackingTestCase(test.TestCase):
         fake_method = 'rtfm.assert_called_once()'
 
         actual_number, actual_msg = next(checks.check_assert_methods_from_mock(
-            fake_method, 'tests/fake/test'))
+            fake_method, './tests/fake/test'))
         self.assertEqual(4, actual_number)
         self.assertTrue(actual_msg.startswith('N303'))
 
@@ -82,3 +82,84 @@ class HackingTestCase(test.TestCase):
             checkres = checks.check_import_of_logging(fake_import,
                                                       "fakefile")
             self.assertEqual([], list(checkres))
+
+    def test_no_translate_debug_logs(self):
+        self.assertEqual(len(list(checks.no_translate_debug_logs(
+            "LOG.debug(_('foo'))"))), 1)
+
+        self.assertEqual(len(list(checks.no_translate_debug_logs(
+            "LOG.debug('foo')"))), 0)
+
+        self.assertEqual(len(list(checks.no_translate_debug_logs(
+            "LOG.info(_('foo'))"))), 0)
+
+    def test_assert_true_instance(self):
+        self.assertEqual(len(list(checks.assert_true_instance(
+            "self.assertTrue(isinstance(e, "
+            "exception.BuildAbortException))"))), 1)
+
+        self.assertEqual(
+            len(list(checks.assert_true_instance("self.assertTrue()"))), 0)
+
+    def test_assert_equal_type(self):
+        self.assertEqual(len(list(checks.assert_equal_type(
+            "self.assertEqual(type(als['QuicAssist']), list)"))), 1)
+
+        self.assertEqual(
+            len(list(checks.assert_equal_type("self.assertTrue()"))), 0)
+
+    def test_assert_equal_none(self):
+        self.assertEqual(len(list(checks.assert_equal_none(
+            "self.assertEqual(A, None)"))), 1)
+
+        self.assertEqual(len(list(checks.assert_equal_none(
+            "self.assertEqual(None, A)"))), 1)
+
+        self.assertEqual(
+            len(list(checks.assert_equal_none("self.assertIsNone()"))), 0)
+
+    def test_assert_true_or_false_with_in_or_not_in(self):
+        self.assertEqual(len(list(checks.assert_true_or_false_with_in(
+            "self.assertTrue(A in B)"))), 1)
+
+        self.assertEqual(len(list(checks.assert_true_or_false_with_in(
+            "self.assertFalse(A in B)"))), 1)
+
+        self.assertEqual(len(list(checks.assert_true_or_false_with_in(
+            "self.assertTrue(A not in B)"))), 1)
+
+        self.assertEqual(len(list(checks.assert_true_or_false_with_in(
+            "self.assertFalse(A not in B)"))), 1)
+
+        self.assertEqual(len(list(checks.assert_true_or_false_with_in(
+            "self.assertTrue(A in B, 'some message')"))), 1)
+
+        self.assertEqual(len(list(checks.assert_true_or_false_with_in(
+            "self.assertFalse(A in B, 'some message')"))), 1)
+
+        self.assertEqual(len(list(checks.assert_true_or_false_with_in(
+            "self.assertTrue(A not in B, 'some message')"))), 1)
+
+        self.assertEqual(len(list(checks.assert_true_or_false_with_in(
+            "self.assertFalse(A not in B, 'some message')"))), 1)
+
+        self.assertEqual(len(list(checks.assert_true_or_false_with_in(
+            "self.assertTrue(A in 'some string with spaces')"))), 1)
+
+        self.assertEqual(len(list(checks.assert_true_or_false_with_in(
+            "self.assertTrue(A in 'some string with spaces')"))), 1)
+
+        self.assertEqual(len(list(checks.assert_true_or_false_with_in(
+            "self.assertTrue(A in ['1', '2', '3'])"))), 1)
+
+        self.assertEqual(len(list(checks.assert_true_or_false_with_in(
+            "self.assertTrue(A in [1, 2, 3])"))), 1)
+
+        self.assertEqual(len(list(checks.assert_true_or_false_with_in(
+            "self.assertTrue(any(A > 5 for A in B))"))), 0)
+
+        self.assertEqual(len(list(checks.assert_true_or_false_with_in(
+            "self.assertTrue(any(A > 5 for A in B), 'some message')"))), 0)
+
+        self.assertEqual(len(list(checks.assert_true_or_false_with_in(
+            "self.assertFalse(some in list1 and some2 in list2)"))), 0)

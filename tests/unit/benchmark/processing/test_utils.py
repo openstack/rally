@@ -27,7 +27,7 @@ class MathTestCase(test.TestCase):
 
     def test_percentile_value_none(self):
         result = utils.percentile(None, 0.1)
-        self.assertEqual(result, None)
+        self.assertIsNone(result)
 
     def test_percentile_equal(self):
         lst = range(1, 101)

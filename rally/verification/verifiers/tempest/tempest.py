@@ -19,7 +19,6 @@ import shutil
 import subprocess
 import sys
 
-from oslo.config import cfg
 from oslo.serialization import jsonutils
 
 from rally import exceptions
@@ -45,8 +44,7 @@ def check_output(*args, **kwargs):
         LOG.debug("error output: '%s'" % e.output)
         raise
 
-    if cfg.CONF.rally_debug:
-        print(output)
+    LOG.debug(output)
 
 
 class Tempest(object):
