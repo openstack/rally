@@ -32,7 +32,7 @@ def _worker_thread(queue, args):
         queue.put(base._run_scenario_once(args))
 
 
-def _worker_process(rps, times, queue, scenario_context, timeout,
+def _worker_process(rps, times, queue, context, timeout,
                     worker_id, workers, cls, method_name, args):
     """Start scenario within threads.
 
@@ -42,7 +42,7 @@ def _worker_process(rps, times, queue, scenario_context, timeout,
     :param rps: runs per second
     :param times: number of threads to be run
     :param queue: queue object to append results
-    :param scenario_context: scenario context object
+    :param context: scenario context object
     :param timeout: timeout operation
     :param worker_id: id of worker process
     :param workers: number of total workers
@@ -63,6 +63,7 @@ def _worker_process(rps, times, queue, scenario_context, timeout,
     time.sleep(randsleep_delay / 100.0)
 
     while times > i:
+        scenario_context = base._get_scenario_context(context)
         i += 1
         scenario_args = (queue, (worker_id + workers * (i - 1), cls,
                          method_name, scenario_context, args),)
@@ -137,14 +138,13 @@ class RPSScenarioRunner(base.ScenarioRunner):
         queue = multiprocessing.Queue()
 
         process_pool = []
-        scenario_context = base._get_scenario_context(context)
 
         times_per_worker, rest = divmod(times, processes_to_start)
 
         for i in range(processes_to_start):
             times = times_per_worker + int(rest > 0)
             rest -= 1
-            worker_args = (rps_per_worker, times, queue, scenario_context,
+            worker_args = (rps_per_worker, times, queue, context,
                            timeout, i, processes_to_start, cls,
                            method_name, args)
             process = multiprocessing.Process(target=_worker_process,
