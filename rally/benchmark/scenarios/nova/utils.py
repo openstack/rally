@@ -582,8 +582,8 @@ class NovaScenario(base.Scenario):
     def _create_rules_for_security_group(self, security_groups,
                                          rules_per_security_group,
                                          ip_protocol='tcp', cidr="0.0.0.0/0"):
-        action_name = ("nova.create_%s_rules_in_every_of_%s_security_group" %
-                       (rules_per_security_group, len(security_groups)))
+        action_name = ("nova.create_%s_rules" % (rules_per_security_group *
+                                                 len(security_groups)))
         with base.AtomicAction(self, action_name):
             for i in range(len(security_groups)):
                 for j in range(rules_per_security_group):

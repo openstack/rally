@@ -610,8 +610,8 @@ class NovaScenarioTestCase(test.TestCase):
                          clients().security_group_rules.create.call_count)
         self._test_atomic_action_timer(
             nova_scenario.atomic_actions(),
-            "nova.create_%s_rules_in_every_of_%s_security_group" %
-            (rules_per_security_group, len(fake_secgroups)))
+            "nova.create_%s_rules" %
+            (rules_per_security_group * len(fake_secgroups)))
 
     def test__delete_security_groups(self):
         clients = mock.MagicMock()
