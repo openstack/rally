@@ -71,3 +71,9 @@ class DeploymentTestCase(unittest.TestCase):
             self.rally("deployment create --name t_create_env --fromenv")
         self.assertRaises(utils.RallyCmdError, self.rally,
                           ("deployment check"))
+
+    def test_recreate(self):
+        with mock.patch.dict("os.environ", utils.TEST_ENV):
+            self.rally("deployment create --name t_create_env --fromenv")
+        self.rally("deployment recreate --deployment t_create_env")
+        self.assertIn("t_create_env", self.rally("deployment list"))
