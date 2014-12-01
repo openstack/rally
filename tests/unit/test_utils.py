@@ -254,8 +254,10 @@ line-
 description.
 
 :param p1: Param 1 description.
-:param p2: Param 2 description.
-:returns: Return value description.
+:param p2: Param 2
+           description.
+:returns: Return value
+          description.
 """
 
         dct = utils.parse_docstring(docstring)
@@ -272,7 +274,8 @@ description.
         docstring = """One-line description.
 
 :param p1: Param 1 description.
-:param p2: Param 2 description.
+:param p2: Param 2
+           description.
 """
 
         dct = utils.parse_docstring(docstring)
@@ -292,7 +295,8 @@ Multi-
 line-
 description.
 
-:returns: Return value description.
+:returns: Return value
+          description.
 """
 
         dct = utils.parse_docstring(docstring)

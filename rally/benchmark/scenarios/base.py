@@ -176,8 +176,11 @@ class Scenario(object):
         :param method_name: method name
         :returns: True if the method is a benchmark scenario, False otherwise
         """
-        return (hasattr(cls, method_name) and
-                Scenario.meta(cls, "is_scenario", method_name, default=False))
+        try:
+            getattr(cls, method_name)
+        except Exception:
+            return False
+        return Scenario.meta(cls, "is_scenario", method_name, default=False)
 
     def context(self):
         """Returns the context of the current benchmark scenario."""

@@ -84,15 +84,15 @@ class SLA(object):
 
     @staticmethod
     def get_by_name(name):
-        """Returns SLA by name."""
+        """Returns SLA by name or config option name."""
         for sla in utils.itersubclasses(SLA):
-            if name == sla.__name__:
+            if name == sla.__name__ or name == sla.OPTION_NAME:
                 return sla
         raise exceptions.NoSuchSLA(name=name)
 
 
 class FailureRateDeprecated(SLA):
-    """Failure rate in percents."""
+    """[Deprecated] Failure rate in percents."""
     OPTION_NAME = "max_failure_percent"
     CONFIG_SCHEMA = {"type": "number", "minimum": 0.0, "maximum": 100.0}
 
