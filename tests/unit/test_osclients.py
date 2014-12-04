@@ -263,6 +263,26 @@ class OSClientsTestCase(test.TestCase):
                                                   conf=conf)
         self.assertEqual(self.clients.cache["zaqar"], fake_zaqar)
 
+    @mock.patch("rally.osclients.trove")
+    def test_trove(self, mock_trove):
+        fake_trove = fakes.FakeTroveClient()
+        mock_trove.Client = mock.MagicMock(return_value=fake_trove)
+        self.assertNotIn("trove", self.clients.cache)
+        client = self.clients.trove()
+        self.assertEqual(client, fake_trove)
+        kw = {
+            "username": self.endpoint.username,
+            "api_key": self.endpoint.password,
+            "project_id": self.endpoint.tenant_name,
+            "auth_url": self.endpoint.auth_url,
+            "region_name": self.endpoint.region_name,
+            "timeout": cfg.CONF.openstack_client_http_timeout,
+            "insecure": cfg.CONF.https_insecure,
+            "cacert": cfg.CONF.https_cacert
+        }
+        mock_trove.Client.assert_called_once_with("1.0", **kw)
+        self.assertEqual(self.clients.cache["trove"], fake_trove)
+
     @mock.patch("rally.osclients.Clients.keystone")
     def test_services(self, mock_keystone):
         available_services = {consts.ServiceType.IDENTITY: {},
