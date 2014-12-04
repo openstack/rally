@@ -1,0 +1,24 @@
+---
+  CinderVolumes.create_nested_snapshots_and_attach_volume:
+    -
+      args:
+          volume_size:
+              min: 1
+              max: 5
+          nested_level:
+              min: 5
+              max: 10
+      runner:
+        type: "constant"
+        times: 1
+        concurrency: 1
+      context:
+        users:
+          tenants: 2
+          users_per_tenant: 1
+        servers:
+          image:
+            name: "^cirros.*uec$"
+          flavor:
+            name: "m1.tiny"
+          servers_per_tenant: 2

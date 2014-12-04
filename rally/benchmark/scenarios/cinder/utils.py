@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import random
 import time
 
 from oslo.config import cfg
@@ -144,3 +145,12 @@ class CinderScenario(base.Scenario):
             timeout=CONF.benchmark.cinder_volume_delete_timeout,
             check_interval=CONF.benchmark.cinder_volume_delete_poll_interval
         )
+
+    def get_random_server(self):
+        tenant_id = self.context()["user"]["tenant_id"]
+        current_servers = [server["server_ids"]
+                           for server in self.context()["servers"]
+                           if tenant_id == server["tenant_id"]]
+        servers = random.choice(current_servers)
+        server_id = random.choice(servers)
+        return self.clients("nova").servers.get(server_id)

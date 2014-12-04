@@ -16,8 +16,8 @@
 import mock
 
 from rally.benchmark.scenarios.cinder import volumes
+from tests.unit import fakes
 from tests.unit import test
-
 
 CINDER_VOLUMES = "rally.benchmark.scenarios.cinder.volumes.CinderVolumes"
 
@@ -178,3 +178,37 @@ class CinderServersTestCase(test.TestCase):
         scenario._detach_volume.assert_called_once_with(fake_server,
                                                         fake_volume)
         scenario._delete_volume.assert_called_once_with(fake_volume)
+
+    def test_create_nested_snapshots_and_attach_volume(self):
+        fake_volume = mock.MagicMock()
+        fake_snapshot = mock.MagicMock()
+        fake_clients = fakes.FakeClients()
+        fake_server = fake_clients.nova().servers.create("test_server",
+                                                         "image_id_01",
+                                                         "flavor_id_01")
+        scenario = volumes.CinderVolumes(
+            context={"user": {"tenant_id": "fake"},
+                     "users": [{"tenant_id": "fake", "users_per_tenant": 1}],
+                     "servers": [{"servers_per_tenant": 2,
+                                  "tenant_id": "fake",
+                                  "server_ids": [fake_server.uuid, ]}]})
+
+        scenario._attach_volume = mock.MagicMock()
+        scenario._detach_volume = mock.MagicMock()
+        scenario._delete_server = mock.MagicMock()
+        scenario._create_volume = mock.MagicMock(return_value=fake_volume)
+        scenario._delete_volume = mock.MagicMock()
+        scenario._create_snapshot = mock.MagicMock(return_value=fake_snapshot)
+        scenario._delete_snapshot = mock.MagicMock()
+
+        scenario._clients = fake_clients
+
+        scenario.create_nested_snapshots_and_attach_volume()
+
+        volume_count = scenario._create_volume.call_count
+        snapshots_count = scenario._create_snapshot.call_count
+        attached_count = scenario._attach_volume.call_count
+
+        self.assertEqual(scenario._delete_volume.call_count, volume_count)
+        self.assertEqual(scenario._delete_snapshot.call_count, snapshots_count)
+        self.assertEqual(scenario._detach_volume.call_count, attached_count)

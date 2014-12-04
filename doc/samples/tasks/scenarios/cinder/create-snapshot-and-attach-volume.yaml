@@ -3,8 +3,9 @@
     -
       args:
           volume_type: false
-          min_volume_size: 1
-          max_volume_size: 5
+          volume_size:
+              min: 1
+              max: 5
       runner:
         type: "constant"
         times: 4
@@ -22,8 +23,9 @@
     -
       args:
           volume_type: true
-          min_volume_size: 1
-          max_volume_size: 5
+          volume_size:
+              min: 1
+              max: 5
       runner:
         type: "constant"
         times: 4
