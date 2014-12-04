@@ -45,10 +45,9 @@ class JsonOutput(testtools.TestResult):
         self.results_file = results_file
 
     def _format_result(self, name, time, status, output, failure=None):
-        if status == STATUS_SKIP:
-            # We do not need `setUpClass' in skipped test name
-            if name[:12] == "setUpClass (" and name[-1] == ")":
-                name = name[12:-1]
+        # We do not need `setUpClass' in test name
+        if name[:12] == "setUpClass (" and name[-1] == ")":
+            name = name[12:-1]
 
         self.test_cases[name] = {"name": name, "status": status,
                                  "time": time, "output": output}

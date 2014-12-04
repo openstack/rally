@@ -17,13 +17,10 @@ import collections
 import threading
 import time
 
-from oslo.config import cfg
-
 from rally.i18n import _
 from rally import log as logging
 
 
-CONF = cfg.CONF
 LOG = logging.getLogger(__name__)
 
 
@@ -50,7 +47,7 @@ def _consumer(consume, queue, is_published):
             except Exception as e:
                 LOG.warning(_("Failed to consume a task from the queue: "
                               "%s") % e)
-                if CONF.debug:
+                if logging.is_debug():
                     LOG.exception(e)
         elif is_published.isSet():
             break
@@ -73,7 +70,7 @@ def _publisher(publish, queue, is_published):
         publish(queue)
     except Exception as e:
         LOG.warning(_("Failed to publish a task to the queue: %s") % e)
-        if CONF.debug:
+        if logging.is_debug():
             LOG.exception(e)
     finally:
         is_published.set()

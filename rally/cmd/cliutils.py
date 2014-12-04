@@ -298,12 +298,12 @@ def run(argv, categories):
         ret = fn(*fn_args, **fn_kwargs)
         return(ret)
     except (IOError, TypeError, exceptions.DeploymentNotFound) as e:
-        if CONF.debug:
+        if logging.is_debug():
             raise
         print(e)
         return 1
     except exceptions.TaskNotFound as e:
-        if CONF.debug:
+        if logging.is_debug():
             LOG.exception(e)
         print(e)
         return 1

@@ -1,4 +1,3 @@
-from oslo.config import cfg
 
 from rally.benchmark.context import base
 from rally import log as logging
@@ -6,7 +5,6 @@ from rally import osclients
 from rally import utils
 
 LOG = logging.getLogger(__name__)
-CONF = cfg.CONF
 
 
 @base.context(name="create_flavor", order=1000)
@@ -56,7 +54,7 @@ class CreateFlavorContext(base.Context):
             LOG.debug("Flavor with id '%s'" % self.context["flavor"]["id"])
         except Exception as e:
             msg = "Can't create flavor: %s" % e.message
-            if CONF.debug:
+            if logging.is_debug():
                 LOG.exception(msg)
             else:
                 LOG.warning(msg)
@@ -69,7 +67,7 @@ class CreateFlavorContext(base.Context):
             LOG.debug("Flavor '%s' deleted" % self.context["flavor"]["id"])
         except Exception as e:
             msg = "Can't delete flavor: %s" % e.message
-            if CONF.debug:
+            if logging.is_debug():
                 LOG.exception(msg)
             else:
                 LOG.warning(msg)

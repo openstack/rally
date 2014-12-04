@@ -138,6 +138,24 @@ def no_translate_debug_logs(logical_line):
         yield(0, "N311 Don't translate debug level logs")
 
 
+def no_use_conf_debug_check(logical_line, filename):
+    """Check for 'cfg.CONF.debug'
+
+    Rally has two DEBUG level:
+     - Full DEBUG, which include all debug-messages from all OpenStack services
+     - Rally DEBUG, which include only Rally debug-messages
+    so we should use custom check to know debug-mode, instead of CONF.debug
+
+    N312
+    """
+    excluded_files = ["./rally/log.py"]
+
+    point = logical_line.find("CONF.debug")
+    if point != -1 and filename not in excluded_files:
+        yield(point, "N312 Don't use `CONF.debug`. "
+                     "Function `rally.log.is_debug` should be used instead.")
+
+
 def assert_true_instance(logical_line):
     """Check for assertTrue(isinstance(a, b)) sentences
 
@@ -209,6 +227,7 @@ def factory(register):
     register(check_assert_methods_from_mock)
     register(check_import_of_logging)
     register(no_translate_debug_logs)
+    register(no_use_conf_debug_check)
     register(assert_true_instance)
     register(assert_equal_type)
     register(assert_equal_none)

@@ -34,6 +34,7 @@ from zaqarclient.queues import client as zaqar
 
 from rally import consts
 from rally import exceptions
+from rally import log as logging
 
 
 CONF = cfg.CONF
@@ -144,7 +145,7 @@ class Clients(object):
             region_name=self.endpoint.region_name)
         client = nova.Client(version,
                              auth_token=kc.auth_token,
-                             http_log_debug=CONF.debug,
+                             http_log_debug=logging.is_debug(),
                              timeout=CONF.openstack_client_http_timeout,
                              insecure=CONF.https_insecure,
                              cacert=CONF.https_cacert)
@@ -203,7 +204,7 @@ class Clients(object):
     def cinder(self, version='1'):
         """Return cinder client."""
         client = cinder.Client(version, None, None,
-                               http_log_debug=CONF.debug,
+                               http_log_debug=logging.is_debug(),
                                timeout=CONF.openstack_client_http_timeout,
                                insecure=CONF.https_insecure,
                                cacert=CONF.https_cacert)

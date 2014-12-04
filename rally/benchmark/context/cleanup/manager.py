@@ -15,8 +15,6 @@
 
 import time
 
-from oslo.config import cfg
-
 from rally.benchmark.context.cleanup import base
 from rally import broker
 from rally.i18n import _
@@ -25,7 +23,6 @@ from rally import osclients
 from rally import utils as rutils
 
 
-CONF = cfg.CONF
 LOG = logging.getLogger(__name__)
 
 
@@ -87,7 +84,7 @@ class SeekAndDestroy(object):
                 _("Resource deletion failed, max retries exceeded for "
                   "%(service)s.%(resource)s: %(uuid)s. Reason: %(reason)s")
                 % msg_kw)
-            if CONF.debug:
+            if logging.is_debug():
                 LOG.exception(e)
         else:
             started = time.time()
