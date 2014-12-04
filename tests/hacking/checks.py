@@ -41,6 +41,10 @@ re_assert_true_false_with_in_or_not_in = re.compile(
 re_assert_true_false_with_in_or_not_in_spaces = re.compile(
     r"assert(True|False)\((\w|[][.'\"])+( not)? in [\[|'|\"](\w|[][.'\", ])+"
     r"[\[|'|\"](, .*)?\)")
+re_assert_equal_in_end_with_true_or_false = re.compile(
+    r"assertEqual\((\w|[][.'\"])+( not)? in (\w|[][.'\", ])+, (True|False)\)")
+re_assert_equal_in_start_with_true_or_false = re.compile(
+    r"assertEqual\((True|False), (\w|[][.'\"])+( not)? in (\w|[][.'\", ])+\)")
 
 
 def _parse_assert_mock_str(line):
@@ -184,6 +188,23 @@ def assert_true_or_false_with_in(logical_line):
                   " instead.")
 
 
+def assert_equal_in(logical_line):
+    """Check assertEqual(A in/not in B, True/False) with collection contents
+
+    Check for assertEqual(A in B, True/False), assertEqual(True/False, A in B),
+    assertEqual(A not in B, True/False) or assertEqual(True/False, A not in B)
+    sentences.
+
+    N324
+    """
+    res = (re_assert_equal_in_end_with_true_or_false.search(logical_line) or
+           re_assert_equal_in_start_with_true_or_false.search(logical_line))
+    if res:
+        yield (0, "N324: Use assertIn/NotIn(A, B) rather than "
+                  "assertEqual(A in/not in B, True/False) when checking "
+                  "collection contents.")
+
+
 def factory(register):
     register(check_assert_methods_from_mock)
     register(check_import_of_logging)
@@ -192,3 +213,4 @@ def factory(register):
     register(assert_equal_type)
     register(assert_equal_none)
     register(assert_true_or_false_with_in)
+    register(assert_equal_in)

@@ -19,3 +19,4 @@ Rally Specific Commandments
  * [N321] - Ensure that ``assertEqual(type(A), B)`` is not used
  * [N322] - Ensure that ``assertEqual(A, None)`` and ``assertEqual(None, A)`` are not used
  * [N323] - Ensure that ``assertTrue/assertFalse(A in/not in B)`` are not used with collection contents
+ * [N324] - Ensure that ``assertEqual(A in/not in B, True/False)`` and ``assertEqual(True/False, A in/not in B)`` are not used with collection contents
