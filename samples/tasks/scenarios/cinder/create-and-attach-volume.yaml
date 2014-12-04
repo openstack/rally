@@ -6,7 +6,7 @@
           image:
             name: "^cirros.*uec$"
           flavor:
-            name: "m1.nano"
+            name: "m1.tiny"
       runner:
         type: "constant"
         times: 5

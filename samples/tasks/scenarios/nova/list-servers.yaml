@@ -13,7 +13,7 @@
           users_per_tenant: 1
         servers:
           flavor:
-              name: "m1.nano"
+              name: "m1.tiny"
           image:
               name: "^cirros.*uec$"
           servers_per_tenant: 2

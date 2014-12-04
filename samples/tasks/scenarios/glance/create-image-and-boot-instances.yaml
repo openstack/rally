@@ -6,7 +6,7 @@
         container_format: "bare"
         disk_format: "qcow2"
         flavor:
-            name: "m1.nano"
+            name: "m1.tiny"
         number_instances: 2
       runner:
         type: "constant"
