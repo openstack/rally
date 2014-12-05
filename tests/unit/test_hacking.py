@@ -163,3 +163,64 @@ class HackingTestCase(test.TestCase):
 
         self.assertEqual(len(list(checks.assert_true_or_false_with_in(
             "self.assertFalse(some in list1 and some2 in list2)"))), 0)
+
+    def test_assert_equal_in(self):
+        self.assertEqual(len(list(checks.assert_equal_in(
+            "self.assertEqual(a in b, True)"))), 1)
+
+        self.assertEqual(len(list(checks.assert_equal_in(
+            "self.assertEqual(a not in b, True)"))), 1)
+
+        self.assertEqual(len(list(checks.assert_equal_in(
+            "self.assertEqual('str' in 'string', True)"))), 1)
+
+        self.assertEqual(len(list(checks.assert_equal_in(
+            "self.assertEqual('str' not in 'string', True)"))), 1)
+
+        self.assertEqual(len(list(checks.assert_equal_in(
+            "self.assertEqual(any(a==1 for a in b), True)"))), 0)
+
+        self.assertEqual(len(list(checks.assert_equal_in(
+            "self.assertEqual(True, a in b)"))), 1)
+
+        self.assertEqual(len(list(checks.assert_equal_in(
+            "self.assertEqual(True, a not in b)"))), 1)
+
+        self.assertEqual(len(list(checks.assert_equal_in(
+            "self.assertEqual(True, 'str' in 'string')"))), 1)
+
+        self.assertEqual(len(list(checks.assert_equal_in(
+            "self.assertEqual(True, 'str' not in 'string')"))), 1)
+
+        self.assertEqual(len(list(checks.assert_equal_in(
+            "self.assertEqual(True, any(a==1 for a in b))"))), 0)
+
+        self.assertEqual(len(list(checks.assert_equal_in(
+            "self.assertEqual(a in b, False)"))), 1)
+
+        self.assertEqual(len(list(checks.assert_equal_in(
+            "self.assertEqual(a not in b, False)"))), 1)
+
+        self.assertEqual(len(list(checks.assert_equal_in(
+            "self.assertEqual('str' in 'string', False)"))), 1)
+
+        self.assertEqual(len(list(checks.assert_equal_in(
+            "self.assertEqual('str' not in 'string', False)"))), 1)
+
+        self.assertEqual(len(list(checks.assert_equal_in(
+            "self.assertEqual(any(a==1 for a in b), False)"))), 0)
+
+        self.assertEqual(len(list(checks.assert_equal_in(
+            "self.assertEqual(False, a in b)"))), 1)
+
+        self.assertEqual(len(list(checks.assert_equal_in(
+            "self.assertEqual(False, a not in b)"))), 1)
+
+        self.assertEqual(len(list(checks.assert_equal_in(
+            "self.assertEqual(False, 'str' in 'string')"))), 1)
+
+        self.assertEqual(len(list(checks.assert_equal_in(
+            "self.assertEqual(False, 'str' not in 'string')"))), 1)
+
+        self.assertEqual(len(list(checks.assert_equal_in(
+            "self.assertEqual(False, any(a==1 for a in b))"))), 0)
