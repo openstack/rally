@@ -29,6 +29,7 @@ from neutronclient.neutron import client as neutron
 from novaclient import client as nova
 from oslo.config import cfg
 from saharaclient import client as sahara
+from troveclient import client as trove
 from zaqarclient.queues import client as zaqar
 
 from rally import consts
@@ -296,6 +297,20 @@ class Clients(object):
             endpoint=dns_api_url,
             token=kc.auth_token,
             insecure=CONF.https_insecure)
+        return client
+
+    @cached
+    def trove(self, version='1.0'):
+        """Returns trove client."""
+        client = trove.Client(version,
+                              username=self.endpoint.username,
+                              api_key=self.endpoint.password,
+                              project_id=self.endpoint.tenant_name,
+                              auth_url=self.endpoint.auth_url,
+                              region_name=self.endpoint.region_name,
+                              timeout=CONF.openstack_client_http_timeout,
+                              insecure=CONF.https_insecure,
+                              cacert=CONF.https_cacert)
         return client
 
     @cached

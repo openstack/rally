@@ -253,6 +253,10 @@ class FakeQueue(FakeResource):
             self.messages.create(**msg)
 
 
+class FakeDbInstance(FakeResource):
+    pass
+
+
 class FakeMessage(FakeResource):
     def __init__(self, manager=None, **kwargs):
         super(FakeMessage, self).__init__(manager)
@@ -741,6 +745,32 @@ class FakeQueuesManager(FakeManager):
         del self.__queues[queue.name]
 
 
+class FakeDbInstanceManager(FakeManager):
+    def __init__(self):
+        super(FakeDbInstanceManager, self).__init__()
+        self.__db_instances = {}
+
+    def create(self, name, flavor_id, size):
+        instance = FakeDbInstance(self)
+        instance.name = name or instance.name
+        instance.flavor_id = flavor_id
+        instance.size = size
+        return self._cache(instance)
+
+    def list(self):
+        return self.__db_instances.values()
+
+    def delete(self, resource):
+        if not isinstance(resource, basestring):
+            resource = resource.id
+
+        cached = self.get(resource)
+        if cached is not None:
+            cached.status = "DELETE_COMPLETE"
+            del self.cache[resource]
+            self.resources_order.remove(resource)
+
+
 class FakeMessagesManager(FakeManager):
     def __init__(self, queue='myqueue'):
         super(FakeMessagesManager, self).__init__()
@@ -1144,6 +1174,12 @@ class FakeZaqarClient(object):
         return self.queues.create(name, **kwargs)
 
 
+class FakeTroveClient(object):
+
+    def __init__(self):
+        self.instances = FakeDbInstanceManager()
+
+
 class FakeClients(object):
 
     def __init__(self, endpoint_=None):
@@ -1157,6 +1193,7 @@ class FakeClients(object):
         self._designate = None
         self._ceilometer = None
         self._zaqar = None
+        self._trove = None
         self._endpoint = endpoint_ or endpoint.Endpoint(
             "http://fake.example.org:5000/v2.0/",
             "fake_username",
@@ -1215,6 +1252,11 @@ class FakeClients(object):
         if not self._zaqar:
             self._zaqar = FakeZaqarClient()
         return self._zaqar
+
+    def trove(self):
+        if not self._trove:
+            self._trove = FakeTroveClient()
+        return self._trove
 
 
 class FakeRunner(object):
