@@ -25,7 +25,7 @@ from rally import utils
 
 
 LOG = logging.getLogger(__name__)
-DEVSTACK_REPO = 'https://github.com/openstack-dev/devstack.git'
+DEVSTACK_REPO = 'https://git.openstack.org/cgit/openstack-dev/devstack.git'
 DEVSTACK_BRANCH = 'master'
 DEVSTACK_USER = 'rally'
 
