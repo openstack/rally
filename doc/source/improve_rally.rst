@@ -47,7 +47,7 @@ How to contribute
 
 1. You need a `Launchpad <https://launchpad.net/>`_ account and need to be joined to the `Openstack team <https://launchpad.net/openstack>`_. You can also join the `Rally team <https://launchpad.net/rally>`_ if you want to. Make sure Launchpad has your SSH key, Gerrit (the code review system) uses this.
 
-2. Sign the CLA as outlined in section 3 of the `How To Contribute wiki page <https://wiki.openstack.org/wiki/HowToContribute#If_you.27re_a_developer>`_.
+2. Sign the CLA as outlined in the `account setup <http://docs.openstack.org/infra/manual/developers.html#development-workflow>`_ section of the developer guide.
 
 3. Tell git your details:
 

@@ -66,7 +66,7 @@ To install Rally with DevStack, you should first clone the corresponding reposit
 
 .. code-block:: none
 
-   git clone https://github.com/openstack-dev/devstack
+   git clone https://git.openstack.org/cgit/openstack-dev/devstack
    git clone https://github.com/stackforge/rally
 
 To configure DevStack to run Rally:
