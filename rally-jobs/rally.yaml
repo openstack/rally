@@ -890,7 +890,8 @@
           tenants: 3
           users_per_tenant: 2
       sla:
-        max_failure_percent: 0
+        failure_rate:
+          max: 0
 
     -
       args:
@@ -1177,7 +1178,8 @@
             security_groups: -1
             security_group_rules: -1
       sla:
-        max_failure_percent: 0
+        failure_rate:
+          max: 0
 
   NovaSecGroup.create_and_list_secgroups:
     -
@@ -1197,4 +1199,31 @@
             security_groups: -1
             security_group_rules: -1
       sla:
-        max_failure_percent: 0
+        failure_rate:
+          max: 0
+
+
+  NovaSecGroup.boot_and_delete_server_with_secgroups:
+    -
+      args:
+        flavor:
+          name: "m1.tiny"
+        image:
+          name: "^cirros.*uec$"
+        security_group_count: 5
+        rules_per_security_group: 5
+      runner:
+        type: "constant"
+        times: 4
+        concurrency: 4
+      context:
+        users:
+          tenants: 3
+          users_per_tenant: 2
+        quotas:
+          nova:
+            security_groups: -1
+            security_group_rules: -1
+      sla:
+        failure_rate:
+          max: 25

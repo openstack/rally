@@ -14,13 +14,39 @@
 #    under the License.
 
 from rally.benchmark.scenarios import base
+from rally.benchmark.scenarios.neutron import utils as neutron_utils
 from rally.benchmark.scenarios.nova import utils
+from rally.benchmark import types
 from rally.benchmark import validation
 from rally import consts
-from rally import log as logging
+from rally import exceptions
+from rally.i18n import _
 
 
-LOG = logging.getLogger()
+class NovaSecurityGroupException(exceptions.RallyException):
+    msg_fmt = _("%(message)s")
+
+
+# FIXME(akurilin): remove this wrapper, when NetworkContext will be finished
+class NeutronNetwork(neutron_utils.NeutronScenario):
+    # NOTE(akurilin): NovaSecGroup scenarios should work for both environment
+    # (nova-network and neutron), but no security groups will be attached to
+    # vm in neutron environment, if tenant doesn't have at least one network.
+    def __init__(self, clients, context):
+        super(NeutronNetwork, self).__init__(context=context, clients=clients)
+
+    def __enter__(self):
+        if consts.Service.NEUTRON in self.clients("services").values():
+            self._net, subnet = self._create_network_and_subnets(
+                network_create_args=None, subnet_create_args=None,
+                subnets_per_network=1, subnet_cidr_start=None)
+            return {"nics": [{"net-id": self._net["network"]["id"]}]}
+        return {}
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if (consts.Service.NEUTRON in self.clients("services").values() and
+                hasattr(self, "_net")):
+            self._delete_network(self._net["network"])
 
 
 class NovaSecGroup(utils.NovaScenario):
@@ -73,3 +99,65 @@ class NovaSecGroup(utils.NovaScenario):
         self._create_rules_for_security_group(security_groups,
                                               rules_per_security_group)
         self._list_security_groups()
+
+    @types.set(image=types.ImageResourceType,
+               flavor=types.FlavorResourceType)
+    @validation.image_valid_on_flavor("flavor", "image")
+    @validation.required_parameters("security_group_count",
+                                    "rules_per_security_group")
+    @validation.required_services(consts.Service.NOVA)
+    @validation.required_openstack(users=True)
+    @base.scenario(context={"cleanup": ["nova"]})
+    def boot_and_delete_server_with_secgroups(self, image, flavor,
+                                              security_group_count,
+                                              rules_per_security_group):
+        """Tests booting an image with security groups attached.
+
+        Plan of this scenario:
+         - create N security groups with M rules per group
+         - [neutron-specific]: create network with 1 subnet(required to boot
+           vm with security groups)
+         - boot a VM with created security groups
+         - get list of attached security groups to server
+         - delete server
+         - delete all security groups
+         - [neutron-specific]: delete created network
+         - check that all groups were attached to server
+
+        :param image: ID of the image to be used for server creation
+        :param flavor: ID of the flavor to be used for server creation
+        :param security_group_count: Number of security groups
+        :param rules_per_security_group: Number of rules per security group
+        """
+
+        security_groups = self._create_security_groups(
+            security_group_count)
+        self._create_rules_for_security_group(security_groups,
+                                              rules_per_security_group)
+
+        boot_kwargs = {"security_groups": [sg.name for sg in security_groups]}
+        with NeutronNetwork(self._clients, self._context) as net_kwargs:
+            boot_kwargs.update(net_kwargs)
+            server = self._boot_server(self._generate_random_name(),
+                                       image, flavor, **boot_kwargs)
+
+            action_name = "nova.get_attached_security_groups"
+            with base.AtomicAction(self, action_name):
+                attached_security_groups = server.list_security_group()
+
+            self._delete_server(server)
+            try:
+                self._delete_security_groups(security_groups)
+            except Exception as e:
+                if hasattr(e, "http_status") and e.http_status == 400:
+                    raise NovaSecurityGroupException(e.message)
+                raise
+
+        if sorted([sg.id for sg in security_groups]) != sorted(
+                [sg.id for sg in attached_security_groups]):
+            raise NovaSecurityGroupException(
+                "%(attached)s from %(all)s security groups were attached "
+                "to server %(server)s." % {
+                    "attached": len(attached_security_groups),
+                    "all": len(security_groups),
+                    "server": server})

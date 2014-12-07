@@ -65,9 +65,10 @@ class InfoTestCase(unittest.TestCase):
         self.assertIn(marker_string, self.rally("info find ExistinfServert"))
 
     def test_find_misspelling_truncated(self):
-        marker_string = ("NovaServers.boot_and_delete_server "
+        marker_string = ("NovaServers.boot_and_list_server "
                          "(benchmark scenario)")
-        self.assertIn(marker_string, self.rally("info find boot_and_delete"))
+        self.assertIn(marker_string,
+                      self.rally("info find boot_and_list"))
 
     def test_find_misspelling_truncated_many_substitutions(self):
         try:
