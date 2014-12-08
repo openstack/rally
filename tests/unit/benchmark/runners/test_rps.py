@@ -37,6 +37,7 @@ class RPSScenarioRunnerTestCase(test.TestCase):
             "type": consts.RunnerType.RPS,
             "times": 1,
             "rps": 100,
+            "max_concurrency": 50,
             "timeout": 1
         }
         rps.RPSScenarioRunner.validate(config)
@@ -83,6 +84,7 @@ class RPSScenarioRunnerTestCase(test.TestCase):
             is_set=mock.MagicMock(return_value=False))
 
         times = 4
+        max_concurrent = 3
 
         fake_ram_int = iter(range(10))
 
@@ -90,7 +92,8 @@ class RPSScenarioRunnerTestCase(test.TestCase):
                               "id": "uuid1"}]}
 
         rps._worker_process(mock_queue, fake_ram_int, 1, 10, times,
-                            context, "Dummy", "dummy", (), mock_event)
+                            max_concurrent, context, "Dummy", "dummy",
+                            (), mock_event)
 
         self.assertEqual(times, mock_log.debug.call_count)
         self.assertEqual(times, mock_thread.call_count)
@@ -127,7 +130,7 @@ class RPSScenarioRunnerTestCase(test.TestCase):
         context = fakes.FakeUserContext({}).context
         context["task"] = {"uuid": "fake_uuid"}
 
-        config = {"times": 20, "rps": 20, "timeout": 5}
+        config = {"times": 20, "rps": 20, "timeout": 5, "max_concurrency": 15}
         runner = rps.RPSScenarioRunner(self.task, config)
 
         runner._run_scenario(fakes.FakeScenario, "do_it", context, {})
