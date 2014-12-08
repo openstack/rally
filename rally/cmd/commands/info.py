@@ -266,12 +266,16 @@ class InfoCommands(object):
         scenarios = scenario_base.Scenario.list_benchmark_scenarios()
         scenario_groups = list(set(s.split(".")[0] for s in scenarios))
         scenario_methods = list(set(s.split(".")[1] for s in scenarios))
+        sla_info = [cls.__name__ for cls in utils.itersubclasses(
+            sla_base.SLA)]
+        sla_info.extend([cls.OPTION_NAME for cls in utils.itersubclasses(
+            sla_base.SLA)])
         deploy_engines = [cls.__name__ for cls in utils.itersubclasses(
-                          deploy.EngineFactory)]
+            deploy.EngineFactory)]
         server_providers = [cls.__name__ for cls in utils.itersubclasses(
-                            serverprovider.ProviderFactory)]
+            serverprovider.ProviderFactory)]
         candidates = (scenarios + scenario_groups + scenario_methods +
-                      deploy_engines + server_providers)
+                      sla_info + deploy_engines + server_providers)
         suggestions = []
         # NOTE(msdubov): Incorrect query may either have typos or be truncated.
         for candidate in candidates:

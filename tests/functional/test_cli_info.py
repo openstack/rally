@@ -40,29 +40,44 @@ class InfoTestCase(unittest.TestCase):
     def test_find_scenario(self):
         self.assertIn("(benchmark scenario)", self.rally("info find dummy"))
 
+    def test_find_scenario_misspelling_typos(self):
+        self.assertIn("(benchmark scenario)", self.rally("info find dummi"))
+
     def test_find_sla(self):
         expected = "failure_rate (SLA)"
         self.assertIn(expected, self.rally("info find failure_rate"))
+
+    def test_find_sla_misspelling_typos(self):
+        expected = "failure_rate (SLA)"
+        self.assertIn(expected, self.rally("info find failure_rte"))
 
     def test_find_sla_by_class_name(self):
         expected = "failure_rate (SLA)"
         self.assertIn(expected, self.rally("info find FailureRate"))
 
+    def test_find_sla_by_class_name_misspelling_typos(self):
+        expected = "failure_rate (SLA)"
+        self.assertIn(expected, self.rally("info find FailureRte"))
+
     def test_find_deployment_engine(self):
         marker_string = "ExistingCloud (deploy engine)"
         self.assertIn(marker_string, self.rally("info find ExistingCloud"))
+
+    def test_find_deployment_engine_misspelling_typos(self):
+        marker_string = "ExistingCloud (deploy engine)"
+        self.assertIn(marker_string, self.rally("info find ExistinCloud"))
 
     def test_find_server_provider(self):
         marker_string = "ExistingServers (server provider)"
         self.assertIn(marker_string, self.rally("info find ExistingServers"))
 
+    def test_find_server_provider_misspelling_typos(self):
+        marker_string = "ExistingServers (server provider)"
+        self.assertIn(marker_string, self.rally("info find ExistingServer"))
+
     def test_find_fails(self):
         self.assertRaises(utils.RallyCmdError, self.rally,
                           ("info find NonExistingStuff"))
-
-    def test_find_misspelling_typos(self):
-        marker_string = "ExistingServers (server provider)"
-        self.assertIn(marker_string, self.rally("info find ExistinfServert"))
 
     def test_find_misspelling_truncated(self):
         marker_string = ("NovaServers.boot_and_list_server "
