@@ -62,7 +62,9 @@ class CinderServersTestCase(test.TestCase):
         fake_snapshot = mock.MagicMock()
         scenario = volumes.CinderVolumes(
             context={"user": {"tenant_id": "fake"},
-                     "volumes": [{"tenant_id": "fake", "volume_id": "uuid"}]})
+                     "tenant": {"id": "fake", "name": "fake",
+                                "volume": "uuid"}})
+
         scenario._create_snapshot = mock.MagicMock(return_value=fake_snapshot)
         scenario.sleep_between = mock.MagicMock()
         scenario._delete_snapshot = mock.MagicMock()
@@ -100,14 +102,12 @@ class CinderServersTestCase(test.TestCase):
         fake_volume = mock.MagicMock()
         fake_snapshot = mock.MagicMock()
         fake_server = mock.MagicMock()
-        scenario = volumes.CinderVolumes(
-            context={"user": {"tenant_id": "fake"},
-                     "users": [{"tenant_id": "fake", "users_per_tenant": 1}],
-                     "servers": [{"image": {"name": "fake"},
-                                  "flavor": {"name": "small"},
-                                  "servers_per_tenant": 1,
-                                  "tenant_id": "fake",
-                                  "server_ids": [1]}]})
+
+        context = {"user": {"tenant_id": "fake"},
+                   "users": [{"tenant_id": "fake", "users_per_tenant": 1}],
+                   "tenant": {"id": "fake", "name": "fake", "servers": [1]}}
+
+        scenario = volumes.CinderVolumes(context)
 
         scenario._attach_volume = mock.MagicMock()
         scenario._detach_volume = mock.MagicMock()
@@ -138,14 +138,11 @@ class CinderServersTestCase(test.TestCase):
         fake_volume = mock.MagicMock()
         fake_snapshot = mock.MagicMock()
         fake_server = mock.MagicMock()
-        scenario = volumes.CinderVolumes(
-            context={"user": {"tenant_id": "fake"},
-                     "users": [{"tenant_id": "fake", "users_per_tenant": 1}],
-                     "servers": [{"image": {"name": "fake"},
-                                  "flavor": {"name": "small"},
-                                  "servers_per_tenant": 1,
-                                  "tenant_id": "fake",
-                                  "server_ids": [1]}]})
+        context = {"user": {"tenant_id": "fake"},
+                   "users": [{"tenant_id": "fake", "users_per_tenant": 1}],
+                   "tenant": {"id": "fake", "name": "fake", "servers": [1]}}
+
+        scenario = volumes.CinderVolumes(context)
 
         scenario._attach_volume = mock.MagicMock()
         scenario._detach_volume = mock.MagicMock()
@@ -187,11 +184,11 @@ class CinderServersTestCase(test.TestCase):
                                                          "image_id_01",
                                                          "flavor_id_01")
         scenario = volumes.CinderVolumes(
+
             context={"user": {"tenant_id": "fake"},
                      "users": [{"tenant_id": "fake", "users_per_tenant": 1}],
-                     "servers": [{"servers_per_tenant": 2,
-                                  "tenant_id": "fake",
-                                  "server_ids": [fake_server.uuid, ]}]})
+                     "tenant": {"id": "fake", "name": "fake",
+                                "servers": [fake_server.uuid]}})
 
         scenario._attach_volume = mock.MagicMock()
         scenario._detach_volume = mock.MagicMock()

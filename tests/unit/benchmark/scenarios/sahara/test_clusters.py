@@ -33,9 +33,9 @@ class SaharaClustersTestCase(test.TestCase):
 
         clusters_scenario = clusters.SaharaClusters()
 
-        clusters_scenario.clients("keystone").tenant_id = "test_tenant"
         clusters_scenario.context = mock.MagicMock(return_value={
-            "sahara_images": {"test_tenant": "test_image"}}
+            "tenant": {
+                "sahara_image": "test_image"}}
         )
         clusters_scenario.create_and_delete_cluster(
             flavor="test_flavor",
@@ -75,9 +75,9 @@ class SaharaClustersTestCase(test.TestCase):
         )
         clusters_scenario = clusters.SaharaClusters()
 
-        clusters_scenario.clients("keystone").tenant_id = "test_tenant"
         clusters_scenario.context = mock.MagicMock(return_value={
-            "sahara_images": {"test_tenant": "test_image"}}
+            "tenant": {
+                "sahara_image": "test_image"}}
         )
 
         clusters_scenario.create_scale_delete_cluster(

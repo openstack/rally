@@ -1338,9 +1338,10 @@ class FakeUserContext(FakeContext):
     }
     user = {
         "id": "uuid",
-        "endpoint": endpoint.Endpoint("url", "name", "pwd", "tenant")
+        "endpoint": endpoint.Endpoint("url", "name", "pwd", "tenant"),
+        "tenant_id": "uuid"
     }
-    tenant = {"id": "uuid", "nema": "tenant"}
+    tenants = {"uuid": {"name": "tenant"}}
 
     def __init__(self, context):
         context.setdefault("task", mock.MagicMock())
@@ -1348,7 +1349,7 @@ class FakeUserContext(FakeContext):
 
         context.setdefault("admin", FakeUserContext.admin)
         context.setdefault("users", [FakeUserContext.user])
-        context.setdefault("tenants", [FakeUserContext.tenant])
+        context.setdefault("tenants", FakeUserContext.tenants)
         context.setdefault("scenario_name",
                            'NovaServers.boot_server_from_volume_and_delete')
 

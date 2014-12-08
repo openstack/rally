@@ -361,3 +361,11 @@ def retry(times, func, *args, **kwargs):
         except Exception:
             if i == times - 1:
                 raise
+
+
+def iterate_per_tenants(users):
+    processed_tenants = list()
+    for user in users:
+        if user["tenant_id"] not in processed_tenants:
+            processed_tenants.append(user["tenant_id"])
+            yield (user, user["tenant_id"])

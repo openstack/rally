@@ -27,7 +27,9 @@ class SecGroupContextTestCase(test.TestCase):
         self.users = 2
         task = mock.MagicMock()
         self.ctx_without_keys = {
-            "users": [{'endpoint': mock.MagicMock()}] * self.users,
+            "users": [{"tenant_id": "uuid1",
+                       "endpoint": mock.MagicMock()}] * self.users,
+            "tenants": {"uuid1": {"id": "uuid1", "name": "uuid1"}},
             "task": task
         }
 

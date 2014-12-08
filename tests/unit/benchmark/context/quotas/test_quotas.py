@@ -31,10 +31,9 @@ class QuotasTestCase(test.TestCase):
         self.context = {
             "config": {
             },
-            "tenants": [
-                {"endpoint": mock.MagicMock(), "id": mock.MagicMock()},
-                {"endpoint": mock.MagicMock(), "id": mock.MagicMock()}
-            ],
+            "tenants": {
+                "t1": {"endpoint": mock.MagicMock()},
+                "t2": {"endpoint": mock.MagicMock()}},
             "admin": {"endpoint": mock.MagicMock()},
             "task": mock.MagicMock()
         }
@@ -151,14 +150,14 @@ class QuotasTestCase(test.TestCase):
             expected_setup_calls = []
             for tenant in tenants:
                 expected_setup_calls.append(mock.call()
-                                                .update(tenant["id"],
+                                                .update(tenant,
                                                         **cinder_quotas))
             mock_quotas.assert_has_calls(expected_setup_calls, any_order=True)
             mock_quotas.reset_mock()
 
         expected_cleanup_calls = []
         for tenant in tenants:
-            expected_cleanup_calls.append(mock.call().delete(tenant["id"]))
+            expected_cleanup_calls.append(mock.call().delete(tenant))
         mock_quotas.assert_has_calls(expected_cleanup_calls, any_order=True)
 
     @mock.patch("rally.benchmark.context.quotas.quotas.osclients.Clients")
@@ -183,21 +182,20 @@ class QuotasTestCase(test.TestCase):
             }
         }
 
-        tenants = ctx["tenants"]
         nova_quotas = ctx["config"]["quotas"]["nova"]
         with quotas.Quotas(ctx) as quotas_ctx:
             quotas_ctx.setup()
             expected_setup_calls = []
-            for tenant in tenants:
+            for tenant in ctx["tenants"]:
                 expected_setup_calls.append(mock.call()
-                                                .update(tenant["id"],
+                                                .update(tenant,
                                                         **nova_quotas))
             mock_quotas.assert_has_calls(expected_setup_calls, any_order=True)
             mock_quotas.reset_mock()
 
         expected_cleanup_calls = []
-        for tenant in tenants:
-            expected_cleanup_calls.append(mock.call().delete(tenant["id"]))
+        for tenant in ctx["tenants"]:
+            expected_cleanup_calls.append(mock.call().delete(tenant))
         mock_quotas.assert_has_calls(expected_cleanup_calls, any_order=True)
 
     @mock.patch("rally.benchmark.context.quotas.quotas.osclients.Clients")
@@ -217,21 +215,20 @@ class QuotasTestCase(test.TestCase):
             }
         }
 
-        tenants = ctx["tenants"]
         neutron_quotas = ctx["config"]["quotas"]["neutron"]
         with quotas.Quotas(ctx) as quotas_ctx:
             quotas_ctx.setup()
             expected_setup_calls = []
-            for tenant in tenants:
+            for tenant in ctx["tenants"]:
                 expected_setup_calls.append(mock.call()
-                                                .update(tenant["id"],
+                                                .update(tenant,
                                                         **neutron_quotas))
             mock_quotas.assert_has_calls(expected_setup_calls, any_order=True)
             mock_quotas.reset_mock()
 
         expected_cleanup_calls = []
-        for tenant in tenants:
-            expected_cleanup_calls.append(mock.call().delete(tenant["id"]))
+        for tenant in ctx["tenants"]:
+            expected_cleanup_calls.append(mock.call().delete(tenant))
         mock_quotas.assert_has_calls(expected_cleanup_calls, any_order=True)
 
     @mock.patch("rally.benchmark.context.quotas.quotas.osclients.Clients")

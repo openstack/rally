@@ -84,55 +84,51 @@ class SaharaCluster(base.Context):
 
     @rutils.log_task_wrapper(LOG.info, _("Enter context: `Sahara Cluster`"))
     def setup(self):
-        ready_tenants = set()
         wait_dict = dict()
 
-        for user in self.context.get("users", []):
-            tenant_id = user["tenant_id"]
-            if tenant_id not in ready_tenants:
-                ready_tenants.add(tenant_id)
+        for user, tenant_id in rutils.iterate_per_tenants(
+                self.context["users"]):
+            clients = osclients.Clients(user["endpoint"])
 
-                clients = osclients.Clients(user["endpoint"])
+            image_id = self.context["tenants"][tenant_id]["sahara_image"]
 
-                image_id = self.context["sahara_images"][tenant_id]
+            neutron_net = self.config.get("neutron_net")
+            if not neutron_net:
+                # Skipping fixed network config
+                neutron_net_id = None
+            else:
+                network_cfg = {"name": neutron_net}
+                neutron_net_id = (types.NeutronNetworkResourceType
+                                  .transform(clients, network_cfg))
 
-                neutron_net = self.config.get("neutron_net")
-                if not neutron_net:
-                    # Skipping fixed network config
-                    neutron_net_id = None
-                else:
-                    network_cfg = {"name": neutron_net}
-                    neutron_net_id = (types.NeutronNetworkResourceType
-                                      .transform(clients, network_cfg))
+            floating_ip_pool = self.config.get("floating_ip_pool")
+            if not floating_ip_pool:
+                # Skipping floating network config
+                floating_ip_pool_id = None
+            else:
+                network_cfg = {"name": floating_ip_pool}
+                floating_ip_pool_id = (types.NeutronNetworkResourceType
+                                       .transform(clients, network_cfg))
 
-                floating_ip_pool = self.config.get("floating_ip_pool")
-                if not floating_ip_pool:
-                    # Skipping floating network config
-                    floating_ip_pool_id = None
-                else:
-                    network_cfg = {"name": floating_ip_pool}
-                    floating_ip_pool_id = (types.NeutronNetworkResourceType
-                                           .transform(clients, network_cfg))
+            cluster = utils.SaharaScenario(
+                context=self.context, clients=clients)._launch_cluster(
+                    plugin_name=self.config["plugin_name"],
+                    hadoop_version=self.config["hadoop_version"],
+                    flavor_id=self.config["flavor_id"],
+                    node_count=self.config["node_count"],
+                    image_id=image_id,
+                    floating_ip_pool=floating_ip_pool_id,
+                    neutron_net_id=neutron_net_id,
+                    volumes_per_node=self.config.get("volumes_per_node"),
+                    volumes_size=self.config.get("volumes_size", 1),
+                    node_configs=self.config.get("node_configs"),
+                    cluster_configs=self.config.get("cluster_configs"),
+                    wait_active=False)
 
-                cluster = utils.SaharaScenario(
-                    context=self.context, clients=clients)._launch_cluster(
-                        plugin_name=self.config["plugin_name"],
-                        hadoop_version=self.config["hadoop_version"],
-                        flavor_id=self.config["flavor_id"],
-                        node_count=self.config["node_count"],
-                        image_id=image_id,
-                        floating_ip_pool=floating_ip_pool_id,
-                        neutron_net_id=neutron_net_id,
-                        volumes_per_node=self.config.get("volumes_per_node"),
-                        volumes_size=self.config.get("volumes_size", 1),
-                        node_configs=self.config.get("node_configs"),
-                        cluster_configs=self.config.get("cluster_configs"),
-                        wait_active=False)
+            self.context["tenants"][tenant_id]["sahara_cluster"] = cluster.id
 
-                self.context["sahara_clusters"][tenant_id] = cluster.id
-
-                # Need to save the client instance to poll for active status
-                wait_dict[cluster] = clients.sahara()
+            # Need to save the client instance to poll for active status
+            wait_dict[cluster] = clients.sahara()
 
         bench_utils.wait_for(
             resource=wait_dict,

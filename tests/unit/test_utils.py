@@ -330,3 +330,22 @@ class EditDistanceTestCase(test.TestCase):
     def test_distance_deletion(self):
         dist = utils.distance("abcde", "abc")
         self.assertEqual(2, dist)
+
+
+class TenantIteratorTestCase(test.TestCase):
+
+    def test_iterate_per_tenant(self):
+        users = list()
+        tenants_count = 2
+        users_per_tenant = 5
+        for tenant_id in range(tenants_count):
+            for user_id in range(users_per_tenant):
+                users.append({"id": str(user_id),
+                              "tenant_id": str(tenant_id)})
+
+        expected_result = [
+            ({"id": "0", "tenant_id": str(i)}, str(i)) for i in range(
+                tenants_count)]
+        real_result = [i for i in utils.iterate_per_tenants(users)]
+
+        self.assertEqual(expected_result, real_result)

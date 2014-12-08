@@ -42,21 +42,33 @@ class ScenarioHelpersTestCase(test.TestCase):
                          expected)
         mock_format_exc.assert_called_once_with(mock_exc)
 
-    @mock.patch("rally.benchmark.runners.base.random")
+    @mock.patch("rally.benchmark.runners.base.random.choice",
+                side_effect=lambda x: x[1])
     def test_get_scenario_context(self, mock_random):
-        mock_random.choice = lambda x: x[1]
+
+        users = list()
+        tenants = dict()
+
+        for i in range(2):
+            tenants[str(i)] = dict(name=str(i))
+            for j in range(3):
+                users.append({"id": "%s_%s" % (i, j),
+                              "tenant_id": str(i), "endpoint": "endpoint"})
 
         context = {
             "admin": mock.MagicMock(),
-            "users": [mock.MagicMock(), mock.MagicMock(), mock.MagicMock()],
+            "users": users,
+            "tenants": tenants,
             "some_random_key": {
                 "nested": mock.MagicMock(),
                 "one_more": 10
             }
         }
+        chosen_tenant = context["tenants"][context["users"][1]["tenant_id"]]
         expected_context = {
             "admin": context["admin"],
             "user": context["users"][1],
+            "tenant": chosen_tenant,
             "some_random_key": context["some_random_key"]
         }
 
@@ -80,11 +92,11 @@ class ScenarioHelpersTestCase(test.TestCase):
         ]
         scenario_cls.assert_has_calls(expected_calls, any_order=True)
 
-    @mock.patch("rally.benchmark.runners.base.rutils")
+    @mock.patch("rally.benchmark.runners.base.rutils.Timer",
+                side_effect=fakes.FakeTimer)
     @mock.patch("rally.benchmark.runners.base.osclients")
     def test_run_scenario_once_without_scenario_output(self, mock_clients,
-                                                       mock_rutils):
-        mock_rutils.Timer = fakes.FakeTimer
+                                                       mock_rtimer):
         context = base._get_scenario_context(fakes.FakeUserContext({}).context)
         args = (1, fakes.FakeScenario, "do_it", context, {})
         result = base._run_scenario_once(args)
@@ -98,11 +110,11 @@ class ScenarioHelpersTestCase(test.TestCase):
         }
         self.assertEqual(expected_result, result)
 
-    @mock.patch("rally.benchmark.runners.base.rutils")
+    @mock.patch("rally.benchmark.runners.base.rutils.Timer",
+                side_effect=fakes.FakeTimer)
     @mock.patch("rally.benchmark.runners.base.osclients")
     def test_run_scenario_once_with_scenario_output(self, mock_clients,
-                                                    mock_rutils):
-        mock_rutils.Timer = fakes.FakeTimer
+                                                    mock_rtimer):
         context = base._get_scenario_context(fakes.FakeUserContext({}).context)
         args = (1, fakes.FakeScenario, "with_output", context, {})
         result = base._run_scenario_once(args)
@@ -116,10 +128,10 @@ class ScenarioHelpersTestCase(test.TestCase):
         }
         self.assertEqual(expected_result, result)
 
-    @mock.patch("rally.benchmark.runners.base.rutils")
+    @mock.patch("rally.benchmark.runners.base.rutils.Timer",
+                side_effect=fakes.FakeTimer)
     @mock.patch("rally.benchmark.runners.base.osclients")
-    def test_run_scenario_once_exception(self, mock_clients, mock_rutils):
-        mock_rutils.Timer = fakes.FakeTimer
+    def test_run_scenario_once_exception(self, mock_clients, mock_rtimer):
         context = base._get_scenario_context(fakes.FakeUserContext({}).context)
         args = (1, fakes.FakeScenario, "something_went_wrong", context, {})
         result = base._run_scenario_once(args)

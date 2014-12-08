@@ -87,7 +87,6 @@ class SaharaEDP(base.Context):
 
     def __init__(self, context):
         super(SaharaEDP, self).__init__(context)
-        self.context["sahara_inputs"] = {}
         self.context["sahara_output_conf"] = {
             "output_type": self.config["output_type"],
             "output_url_prefix": self.config["output_url_prefix"]
@@ -103,36 +102,32 @@ class SaharaEDP(base.Context):
         mains = self.config.get("mains", [])
         libs = self.config.get("libs", [])
 
-        ready_tenants = set()
+        for user, tenant_id in rutils.iterate_per_tenants(
+                self.context["users"]):
 
-        for user in self.context.get("users", []):
-            tenant_id = user["tenant_id"]
-            if tenant_id not in ready_tenants:
-                ready_tenants.add(tenant_id)
+            clients = osclients.Clients(user["endpoint"])
+            sahara = clients.sahara()
 
-                clients = osclients.Clients(user["endpoint"])
-                sahara = clients.sahara()
+            self.setup_inputs(sahara, tenant_id, input_type, input_url)
 
-                self.setup_inputs(sahara, tenant_id, input_type, input_url)
+            self.context["tenants"][tenant_id]["sahara_mains"] = []
+            self.context["tenants"][tenant_id]["sahara_libs"] = []
 
-                self.context["sahara_mains"][tenant_id] = []
-                self.context["sahara_libs"][tenant_id] = []
+            for main in mains:
+                self.download_and_save_lib(
+                    sahara=sahara,
+                    lib_type="sahara_mains",
+                    name=main["name"],
+                    download_url=main["download_url"],
+                    tenant_id=tenant_id)
 
-                for main in mains:
-                    self.download_and_save_lib(
-                        sahara=sahara,
-                        lib_type="sahara_mains",
-                        name=main["name"],
-                        download_url=main["download_url"],
-                        tenant_id=tenant_id)
-
-                for lib in libs:
-                    self.download_and_save_lib(
-                        sahara=sahara,
-                        lib_type="sahara_libs",
-                        name=lib["name"],
-                        download_url=lib["download_url"],
-                        tenant_id=tenant_id)
+            for lib in libs:
+                self.download_and_save_lib(
+                    sahara=sahara,
+                    lib_type="sahara_libs",
+                    name=lib["name"],
+                    download_url=lib["download_url"],
+                    tenant_id=tenant_id)
 
     def setup_inputs(self, sahara, tenant_id, input_type, input_url):
         if input_type == "swift":
@@ -145,7 +140,7 @@ class SaharaEDP(base.Context):
             data_source_type=input_type,
             url=input_url)
 
-        self.context["sahara_inputs"][tenant_id] = input_ds.id
+        self.context["tenants"][tenant_id]["sahara_input"] = input_ds.id
 
     def download_and_save_lib(self, sahara, lib_type, name, download_url,
                               tenant_id):
@@ -161,7 +156,7 @@ class SaharaEDP(base.Context):
                                                 description="",
                                                 extra={})
 
-        self.context[lib_type][tenant_id].append(job_binary.id)
+        self.context["tenants"][tenant_id][lib_type].append(job_binary.id)
 
     @rutils.log_task_wrapper(LOG.info, _("Exit context: `Sahara EDP`"))
     def cleanup(self):

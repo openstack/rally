@@ -46,13 +46,13 @@ class SaharaJobTestCase(test.TestCase):
 
         jobs_scenario = jobs.SaharaJob()
 
-        jobs_scenario.clients("keystone").tenant_id = "test_tenant"
         jobs_scenario.context = mock.MagicMock(return_value={
-            "sahara_images": {"test_tenant": "test_image"},
-            "sahara_mains": {"test_tenant": ["main_42"]},
-            "sahara_libs": {"test_tenant": ["lib_42"]},
-            "sahara_clusters": {"test_tenant": "cl_42"},
-            "sahara_inputs": {"test_tenant": "in_42"}}
+            "tenant": {
+                "sahara_image": "test_image",
+                "sahara_mains": ["main_42"],
+                "sahara_libs": ["lib_42"],
+                "sahara_cluster": "cl_42",
+                "sahara_input": "in_42"}}
         )
         jobs_scenario.create_launch_job(
             job_type="java",
@@ -90,13 +90,13 @@ class SaharaJobTestCase(test.TestCase):
 
         jobs_scenario = jobs.SaharaJob()
 
-        jobs_scenario.clients("keystone").tenant_id = "test_tenant"
         jobs_scenario.context = mock.MagicMock(return_value={
-            "sahara_images": {"test_tenant": "test_image"},
-            "sahara_mains": {"test_tenant": ["main_42"]},
-            "sahara_libs": {"test_tenant": ["lib_42"]},
-            "sahara_clusters": {"test_tenant": "cl_42"},
-            "sahara_inputs": {"test_tenant": "in_42"}}
+            "tenant": {
+                "sahara_image": "test_image",
+                "sahara_mains": ["main_42"],
+                "sahara_libs": ["lib_42"],
+                "sahara_cluster": "cl_42",
+                "sahara_input": "in_42"}}
         )
         jobs_scenario.create_launch_job(
             job_type="pig",
@@ -132,13 +132,13 @@ class SaharaJobTestCase(test.TestCase):
 
         jobs_scenario = jobs.SaharaJob()
 
-        jobs_scenario.clients("keystone").tenant_id = "test_tenant"
         jobs_scenario.context = mock.MagicMock(return_value={
-            "sahara_images": {"test_tenant": "test_image"},
-            "sahara_mains": {"test_tenant": ["main_42"]},
-            "sahara_libs": {"test_tenant": ["lib_42"]},
-            "sahara_clusters": {"test_tenant": "cl_42"},
-            "sahara_inputs": {"test_tenant": "in_42"}}
+            "tenant": {
+                "sahara_image": "test_image",
+                "sahara_mains": ["main_42"],
+                "sahara_libs": ["lib_42"],
+                "sahara_cluster": "cl_42",
+                "sahara_input": "in_42"}}
         )
         jobs_scenario.create_launch_job_sequence(
             jobs=[
@@ -195,13 +195,13 @@ class SaharaJobTestCase(test.TestCase):
 
         jobs_scenario = jobs.SaharaJob()
 
-        jobs_scenario.clients("keystone").tenant_id = "test_tenant"
         jobs_scenario.context = mock.MagicMock(return_value={
-            "sahara_images": {"test_tenant": "test_image"},
-            "sahara_mains": {"test_tenant": ["main_42"]},
-            "sahara_libs": {"test_tenant": ["lib_42"]},
-            "sahara_clusters": {"test_tenant": "cl_42"},
-            "sahara_inputs": {"test_tenant": "in_42"}}
+            "tenant": {
+                "sahara_image": "test_image",
+                "sahara_mains": ["main_42"],
+                "sahara_libs": ["lib_42"],
+                "sahara_cluster": "cl_42",
+                "sahara_input": "in_42"}}
         )
         jobs_scenario.create_launch_job_sequence_with_scaling(
             jobs=[

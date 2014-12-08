@@ -58,7 +58,6 @@ class ImageGenerator(base.Context):
 
     def __init__(self, context):
         super(ImageGenerator, self).__init__(context)
-        self.context.setdefault("images", [])
 
     @rutils.log_task_wrapper(LOG.info, _("Enter context: `Images`"))
     def setup(self):
@@ -66,28 +65,23 @@ class ImageGenerator(base.Context):
         image_type = self.config["image_type"]
         image_container = self.config["image_container"]
         images_per_tenant = self.config["images_per_tenant"]
-        current_tenants = []
 
-        for user in self.context["users"]:
-            if user["tenant_id"] not in current_tenants:
-                current_tenants.append(user["tenant_id"])
-                current_images = []
+        for user, tenant_id in rutils.iterate_per_tenants(
+                self.context["users"]):
+            current_images = []
+            clients = osclients.Clients(user["endpoint"])
+            glance_util_class = glance_utils.GlanceScenario(
+                                clients=clients)
+            for i in range(images_per_tenant):
+                rnd_name = scenario_base.Scenario._generate_random_name()
 
-                clients = osclients.Clients(user["endpoint"])
-                glance_util_class = glance_utils.GlanceScenario(
-                                        clients=clients)
-                for i in range(images_per_tenant):
-                    rnd_name = scenario_base.Scenario._generate_random_name()
+                image = glance_util_class._create_image(rnd_name,
+                                                        image_container,
+                                                        image_url,
+                                                        image_type)
+                current_images.append(image.id)
 
-                    image = glance_util_class._create_image(rnd_name,
-                                                            image_container,
-                                                            image_url,
-                                                            image_type)
-                    current_images.append(image.id)
-
-                self.context["images"].append({"image_id": current_images,
-                                               "endpoint": user["endpoint"],
-                                               "tenant_id": user["tenant_id"]})
+            self.context["tenants"][tenant_id]["images"] = current_images
 
     @rutils.log_task_wrapper(LOG.info, _("Exit context: `Images`"))
     def cleanup(self):

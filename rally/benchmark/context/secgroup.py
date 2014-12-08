@@ -87,14 +87,11 @@ class AllowSSH(base.Context):
 
     @utils.log_task_wrapper(LOG.info, _("Enter context: `allow_ssh`"))
     def setup(self):
-        used_tenants = []
-        for user in self.context['users']:
-            endpoint = user['endpoint']
-            tenant = endpoint.tenant_name
-            if tenant not in used_tenants:
-                secgroup = _prepare_open_secgroup(endpoint)
-                self.secgroup.append(secgroup)
-                used_tenants.append(tenant)
+        for user, tenant_id in utils.iterate_per_tenants(
+                self.context["users"]):
+            endpoint = user["endpoint"]
+            secgroup = _prepare_open_secgroup(endpoint)
+            self.secgroup.append(secgroup)
 
     @utils.log_task_wrapper(LOG.info, _("Exit context: `allow_ssh`"))
     def cleanup(self):
