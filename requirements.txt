@@ -31,7 +31,7 @@ python-troveclient>=1.0.7
 python-zaqarclient>=0.0.3
 python-subunit>=0.0.18
 requests>=2.2.0,!=2.4.0
-SQLAlchemy>=0.8.4,<=0.8.99,>=0.9.7,<=0.9.99
+SQLAlchemy>=0.9.7,<=0.9.99
 sphinx>=1.1.2,!=1.2.0,!=1.3b1,<1.3
 six>=1.7.0
 WSME>=0.6
