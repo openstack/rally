@@ -117,3 +117,22 @@ class CinderScenarioTestCase(test.TestCase):
             .cinder_volume_create_poll_interval)
         self._test_atomic_action_timer(self.scenario.atomic_actions(),
                                        'cinder.delete_snapshot')
+
+    def test__get_random_server(self):
+        servers = [1, 2, 3]
+        context = {"user": {"tenant_id": "fake"},
+                   "users": [{"tenant_id": "fake",
+                              "users_per_tenant": 1}],
+                   "servers": [{"image": {"name": "fake"},
+                                "flavor": {"name": "small"},
+                                "servers_per_tenant": 1,
+                                "tenant_id": "fake",
+                                "server_ids": servers}]}
+        self.scenario._context = context
+        self.scenario.clients = mock.Mock()
+        self.scenario.clients('nova').servers.get = mock.Mock(
+            side_effect=lambda arg: arg)
+
+        server_id = self.scenario.get_random_server()
+
+        self.assertIn(server_id, servers)
