@@ -4,7 +4,7 @@
 <%block name="title_text">Tempest report</%block>
 
 <%block name="libs">
-  <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+  <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
 </%block>
 
 <%block name="css">
