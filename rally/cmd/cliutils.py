@@ -302,6 +302,11 @@ def run(argv, categories):
             raise
         print(e)
         return 1
+    except exceptions.TaskNotFound as e:
+        if CONF.debug:
+            LOG.exception(e)
+        print(e)
+        return 1
     except Exception:
         print(_("Command failed, please check log for more info"))
         raise
