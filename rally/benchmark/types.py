@@ -76,10 +76,10 @@ class ResourceType(object):
         """
 
 
-def _id_from_name(resource_config, resources, typename):
-    """Return the id of the resource whose name matches the pattern.
+def obj_from_name(resource_config, resources, typename):
+    """Return the resource whose name matches the pattern.
 
-    resource_config has to contain `name`, as it is used to lookup an id.
+    resource_config has to contain `name`, as it is used to lookup a resource.
     Value of the name will be treated as regexp.
 
     An `InvalidScenarioArgument` is thrown if the pattern does
@@ -89,14 +89,14 @@ def _id_from_name(resource_config, resources, typename):
     :param resources: iterable containing all resources
     :param typename: name which describes the type of resource
 
-    :returns: resource id uniquely mapped to `name` or `regex`
+    :returns: resource object uniquely mapped to `name` or `regex`
     """
     if "name" in resource_config:
         # In a case of pattern string exactly maches resource name
         matching_exact = filter(lambda r: r.name == resource_config["name"],
                                 resources)
         if len(matching_exact) == 1:
-            return matching_exact[0].id
+            return matching_exact[0]
         elif len(matching_exact) > 1:
             raise exceptions.InvalidScenarioArgument(
                 "{typename} with name '{pattern}' "
@@ -130,7 +130,25 @@ def _id_from_name(resource_config, resources, typename):
                                   pattern=pattern.pattern,
                                   ids=", ".join(map(operator.attrgetter("id"),
                                                     matching))))
-    return matching[0].id
+    return matching[0]
+
+
+def _id_from_name(resource_config, resources, typename):
+    """Return the id of the resource whose name matches the pattern.
+
+    resource_config has to contain `name`, as it is used to lookup an id.
+    Value of the name will be treated as regexp.
+
+    An `InvalidScenarioArgument` is thrown if the pattern does
+    not match unambiguously.
+
+    :param resource_config: resource to be transformed
+    :param resources: iterable containing all resources
+    :param typename: name which describes the type of resource
+
+    :returns: resource id uniquely mapped to `name` or `regex`
+    """
+    return obj_from_name(resource_config, resources, typename).id
 
 
 class FlavorResourceType(ResourceType):

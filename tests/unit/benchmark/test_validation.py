@@ -185,6 +185,46 @@ class ValidatorsTestCase(test.TestCase):
                                                   clients, "a")
         self.assertFalse(result[0].is_valid, result[0].msg)
 
+    @mock.patch("rally.benchmark.validation.types.FlavorResourceType."
+                "transform")
+    def test__get_validated_flavor_from_context(self, mock_transform):
+        clients = mock.MagicMock()
+        clients.nova().flavors.get.side_effect = nova_exc.NotFound("")
+        config = {
+            "args": {"flavor": {"name": "test"}},
+            "context": {
+                "flavors": [{
+                    "name": "test",
+                    "ram": 32,
+                }]
+            }
+        }
+        result = validation._get_validated_flavor(config, clients, "flavor")
+        self.assertTrue(result[0].is_valid, result[0].msg)
+
+    @mock.patch("rally.benchmark.validation.types.FlavorResourceType."
+                "transform")
+    def test__get_validated_flavor_from_context_failed(self, mock_transform):
+        clients = mock.MagicMock()
+        clients.nova().flavors.get.side_effect = nova_exc.NotFound("")
+        config = {
+            "args": {"flavor": {"name": "test"}},
+            "context": {
+                "flavors": [{
+                    "name": "othername",
+                    "ram": 32,
+                }]
+            }
+        }
+        result = validation._get_validated_flavor(config, clients, "flavor")
+        self.assertFalse(result[0].is_valid, result[0].msg)
+
+        config = {
+            "args": {"flavor": {"name": "test"}},
+        }
+        result = validation._get_validated_flavor(config, clients, "flavor")
+        self.assertFalse(result[0].is_valid, result[0].msg)
+
     def test_image_exists(self):
         validator = self._unwrap_validator(validation.image_exists, "param")
         result = validator({}, "clients", "deployment")
@@ -241,6 +281,39 @@ class ValidatorsTestCase(test.TestCase):
         image.min_disk = flavor.disk / 4
         image.size = 1000
         result = validator(None, None, None)
+        self.assertFalse(result.is_valid, result.msg)
+
+    @mock.patch("rally.benchmark.validation.types.FlavorResourceType."
+                "transform")
+    @mock.patch("rally.benchmark.validation._get_validated_image")
+    def test_image_valid_on_flavor_context(self, mock_get_image,
+                                           mock_transform):
+        clients = mock.MagicMock()
+        clients.nova().flavors.get.side_effect = nova_exc.NotFound("")
+
+        image = mock.MagicMock()
+        success = validation.ValidationResult()
+        mock_get_image.return_value = (success, image)
+
+        validator = self._unwrap_validator(validation.image_valid_on_flavor,
+                                           "flavor", "image")
+        config = {
+            "args": {"flavor": {"name": "test"}},
+            "context": {
+                "flavors": [{
+                    "name": "test",
+                    "ram": 32,
+                }]
+            }
+        }
+
+        # test ram
+        image.min_ram = None
+        result = validator(config, clients, None)
+        self.assertTrue(result.is_valid, result.msg)
+
+        image.min_ram = 64
+        result = validator(config, clients, None)
         self.assertFalse(result.is_valid, result.msg)
 
     def test_network_exists(self):

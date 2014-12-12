@@ -1,0 +1,20 @@
+---
+  NovaServers.boot_server:
+    -
+      args:
+        flavor:
+            name: "^ram64$"
+        image:
+            name: "^cirros.*uec$"
+      runner:
+        type: "constant"
+        times: 10
+        concurrency: 2
+      context:
+        users:
+          tenants: 3
+          users_per_tenant: 2
+        flavors:
+          -
+            name: "ram64"
+            ram: 64

@@ -952,7 +952,7 @@
     -
       args:
         flavor:
-            name: "m1.tiny"
+            name: "^ram64$"
         image:
             name: "^cirros.*uec$"
         auto_assign_nics: false
@@ -964,6 +964,10 @@
         users:
           tenants: 3
           users_per_tenant: 2
+        flavors:
+          -
+            name: "ram64"
+            ram: 64
       sla:
         failure_rate:
           max: 0

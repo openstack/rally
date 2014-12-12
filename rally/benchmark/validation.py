@@ -20,6 +20,7 @@ import os
 from glanceclient import exc as glance_exc
 from novaclient import exceptions as nova_exc
 
+from rally.benchmark.context import flavors as flavors_ctx
 from rally.benchmark import types as types
 from rally.common.i18n import _
 from rally import consts
@@ -166,6 +167,19 @@ def _get_validated_image(config, clients, param_name):
         return (ValidationResult(False, message), None)
 
 
+def _get_flavor_from_context(config, flavor_value):
+    if "flavors" not in config.get("context", {}):
+        raise exceptions.InvalidScenarioArgument("No flavors context")
+
+    flavors = [flavors_ctx.FlavorConfig(**f)
+               for f in config["context"]["flavors"]]
+    resource = types.obj_from_name(resource_config=flavor_value,
+                                   resources=flavors, typename="flavor")
+    flavor = flavors_ctx.FlavorConfig(**resource)
+    flavor.id = "<context flavor: %s>" % flavor.name
+    return (ValidationResult(), flavor)
+
+
 def _get_validated_flavor(config, clients, param_name):
     flavor_value = config.get("args", {}).get(param_name)
     if not flavor_value:
@@ -177,6 +191,10 @@ def _get_validated_flavor(config, clients, param_name):
         flavor = clients.nova().flavors.get(flavor=flavor_id)
         return (ValidationResult(), flavor)
     except (nova_exc.NotFound, exceptions.InvalidScenarioArgument):
+        try:
+            return _get_flavor_from_context(config, flavor_value)
+        except exceptions.InvalidScenarioArgument:
+            pass
         message = _("Flavor '%s' not found") % flavor_value
         return (ValidationResult(False, message), None)
 
