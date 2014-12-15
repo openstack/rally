@@ -55,11 +55,10 @@ class KeystoneScenarioTestCase(test.TestCase):
         self.assertIsNotNone(action_duration)
         self.assertIsInstance(action_duration, float)
 
-    @mock.patch(UTILS + "KeystoneScenario._generate_random_name")
-    def test_user_create(self, mock_gen_name):
-        name = "abc"
-        mock_gen_name.return_value = name
-
+    @mock.patch(UTILS + "uuid.uuid4", return_value="pwd")
+    @mock.patch(UTILS + "KeystoneScenario._generate_random_name",
+                return_value="abc")
+    def test_user_create(self, mock_gen_name, mock_uuid4):
         user = {}
         fake_keystone = fakes.FakeKeystoneClient()
         fake_keystone.users.create = mock.MagicMock(return_value=user)
@@ -71,7 +70,10 @@ class KeystoneScenarioTestCase(test.TestCase):
 
         self.assertEqual(user, result)
         fake_keystone.users.create.assert_called_once_with(
-                    name, password=name, email=name + "@rally.me")
+                    mock_gen_name.return_value,
+                    password=mock_uuid4.return_value,
+                    email=mock_gen_name.return_value + "@rally.me")
+        mock_uuid4.assert_called_with()
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        'keystone.create_user')
 

@@ -13,6 +13,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import uuid
+
 from rally.benchmark.scenarios import base
 
 
@@ -24,8 +26,7 @@ class KeystoneScenario(base.Scenario):
     RESOURCE_NAME_PREFIX = "rally_keystone_"
 
     @base.atomic_action_timer('keystone.create_user')
-    def _user_create(self, name_length=10, password=None, email=None,
-                     **kwargs):
+    def _user_create(self, name_length=10, email=None, **kwargs):
         """Creates keystone user with random name.
 
         :param name_length: length of generated (random) part of name
@@ -37,7 +38,7 @@ class KeystoneScenario(base.Scenario):
         # NOTE(boris-42): password and email parameters are required by
         #                 keystone client v2.0. This should be cleanuped
         #                 when we switch to v3.
-        password = password or name
+        password = kwargs.pop("password", str(uuid.uuid4()))
         email = email or (name + "@rally.me")
         return self.admin_clients("keystone").users.create(
                     name, password=password, email=email, **kwargs)
