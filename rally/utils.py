@@ -23,7 +23,6 @@ import StringIO
 import sys
 import time
 
-from oslo.config import cfg
 from oslo.utils import importutils
 from sphinx.util import docstrings
 
@@ -31,7 +30,6 @@ from rally import exceptions
 from rally.i18n import _
 from rally import log as logging
 
-CONF = cfg.CONF
 LOG = logging.getLogger(__name__)
 
 JSON_SCHEMA = 'http://json-schema.org/draft-04/schema'
@@ -201,7 +199,7 @@ def load_plugins(directory):
                 LOG.warning(
                     "\t Failed to load module with plugins %(path)s.py: %(e)s"
                     % {"path": fullpath, "e": e})
-                if CONF.debug:
+                if logging.is_debug():
                     LOG.exception(e)
 
 

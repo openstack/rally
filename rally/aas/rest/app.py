@@ -13,11 +13,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from oslo.config import cfg
 import pecan
 
-
-CONF = cfg.CONF
+from rally import log as logging
 
 
 def setup_app(config):
@@ -29,19 +27,19 @@ def setup_app(config):
     :return: A normal WSGI application, an instance of
              :class:`pecan.Pecan`.
     """
-    app = pecan.Pecan(config.app.root, debug=CONF.debug)
+    app = pecan.Pecan(config.app.root, debug=logging.is_debug())
     return app
 
 
 def make_app():
     config = {
-        'app': {
-            'root': 'rally.aas.rest.controllers.root.RootController',
-            'modules': ['rally.aas.rest'],
-            'debug': CONF.debug,
+        "app": {
+            "root": "rally.aas.rest.controllers.root.RootController",
+            "modules": ["rally.aas.rest"],
+            "debug": logging.is_debug(),
         },
-        'wsme': {
-            'debug': CONF.debug,
+        "wsme": {
+            "debug": logging.is_debug(),
         },
     }
     app = pecan.load_app(config)

@@ -18,7 +18,6 @@ import collections
 import random
 
 import jsonschema
-from oslo.config import cfg
 
 from rally.benchmark.scenarios import base as scenario_base
 from rally.benchmark import types
@@ -73,7 +72,7 @@ def _run_scenario_once(args):
                                       method_name)(**kwargs) or scenario_output
     except Exception as e:
         error = utils.format_exc(e)
-        if cfg.CONF.debug:
+        if logging.is_debug():
             LOG.exception(e)
     finally:
         status = "Error %s: %s" % tuple(error[0:2]) if error else "OK"

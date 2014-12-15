@@ -35,10 +35,15 @@ def get_template(template_path):
 
 
 def main(*args):
-    if len(args) != 2 or args[0] != "render":
-        exit("Usage: utils.py render <lookup/path/to/template.mako>")
+    if len(args) < 2 or args[0] != "render":
+        exit("Usage: \n\t"
+             "utils.py render <lookup/path/to/template.mako> "
+             "<key-1>=<value-1> <key-2>=<value-2>\n"
+             "where key-1,value-1 and key-2,value-2 are key pairs of template")
     try:
-        print(get_template(sys.argv[2]).render())
+        render_kwargs = dict([arg.split("=") for arg in args[2:]])
+
+        print(get_template(sys.argv[2]).render(**render_kwargs))
     except mako.exceptions.TopLevelLookupException as e:
         exit(e)
 

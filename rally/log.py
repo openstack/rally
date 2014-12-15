@@ -65,3 +65,7 @@ class RallyContextAdapter(oslogging.ContextAdapter):
 
     def debug(self, msg, *args, **kwargs):
         self.log(logging.RDEBUG, msg, *args, **kwargs)
+
+
+def is_debug():
+    return CONF.debug or CONF.rally_debug

@@ -14,6 +14,7 @@ Rally Specific Commandments
 * [N310-N314] - Reserved for rules related to logging
  * [N310] - Ensure that ``rally.log`` is used instead of ``rally.openstack.common.log``
  * [N311] - Validate that debug level logs are not translated
+ * [N312] - Validate correctness of debug on check.
 * [N32x] - Reserved for rules related to assert* methods
  * [N320] - Ensure that ``assertTrue(isinstance(A, B))``  is not used
  * [N321] - Ensure that ``assertEqual(type(A), B)`` is not used

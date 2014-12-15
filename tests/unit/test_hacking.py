@@ -93,6 +93,16 @@ class HackingTestCase(test.TestCase):
         self.assertEqual(len(list(checks.no_translate_debug_logs(
             "LOG.info(_('foo'))"))), 0)
 
+    def test_no_use_conf_debug_check(self):
+        self.assertEqual(len(list(checks.no_use_conf_debug_check(
+            "if CONF.debug:", "fakefile"))), 1)
+
+        self.assertEqual(len(list(checks.no_use_conf_debug_check(
+            "if cfg.CONF.debug", "fakefile"))), 1)
+
+        self.assertEqual(len(list(checks.no_use_conf_debug_check(
+            "if logging.is_debug()", "fakefile"))), 0)
+
     def test_assert_true_instance(self):
         self.assertEqual(len(list(checks.assert_true_instance(
             "self.assertTrue(isinstance(e, "

@@ -14,7 +14,6 @@
 #    under the License.
 
 import jsonschema
-from oslo.config import cfg
 
 from rally.benchmark import engine
 from rally import consts
@@ -25,7 +24,6 @@ from rally import log as logging
 from rally import objects
 from rally.verification.verifiers.tempest import tempest
 
-CONF = cfg.CONF
 LOG = logging.getLogger(__name__)
 
 
@@ -39,7 +37,7 @@ def create_deploy(config, name):
     try:
         deployment = objects.Deployment(name=name, config=config)
     except exceptions.DeploymentNameExists as e:
-        if CONF.debug:
+        if logging.is_debug():
             LOG.exception(e)
         raise
 

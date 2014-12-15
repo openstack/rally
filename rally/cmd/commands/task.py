@@ -21,7 +21,6 @@ import os
 import pprint
 import webbrowser
 
-from oslo.config import cfg
 import yaml
 
 from rally.benchmark.processing import plot
@@ -33,6 +32,7 @@ from rally import consts
 from rally import db
 from rally import exceptions
 from rally.i18n import _
+from rally import log as logging
 from rally import objects
 from rally.openstack.common import cliutils as common_cliutils
 from rally.orchestrator import api
@@ -205,7 +205,7 @@ class TaskCommands(object):
             print("-" * 80)
             verification = yaml.safe_load(task["verification_log"])
 
-            if not cfg.CONF.debug:
+            if not logging.is_debug():
                 print(verification[0])
                 print(verification[1])
                 print()

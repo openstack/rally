@@ -44,7 +44,8 @@ def check_output(*args, **kwargs):
         LOG.debug("error output: '%s'" % e.output)
         raise
 
-    LOG.debug(output)
+    if logging.is_debug():
+        print(output)
 
 
 class Tempest(object):
