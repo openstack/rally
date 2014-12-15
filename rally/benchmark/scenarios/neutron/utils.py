@@ -13,10 +13,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from oslo.utils import uuidutils as uid
+
 from rally.benchmark.scenarios import base
 from rally.benchmark.wrappers import network as network_wrapper
 from rally import log as logging
-from rally.openstack.common import uuidutils as uid
 
 LOG = logging.getLogger(__name__)
 
