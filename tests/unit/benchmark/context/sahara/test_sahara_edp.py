@@ -31,6 +31,17 @@ class SaharaEDPTestCase(test.TestCase):
         self.users = self.tenants_num * self.users_per_tenant
         self.task = mock.MagicMock()
 
+        self.tenants = dict()
+        self.users_key = list()
+
+        for i in range(self.tenants_num):
+            self.tenants[str(i)] = {"id": str(i), "name": str(i),
+                                    "sahara_image": "42"}
+            for j in range(self.users_per_tenant):
+                self.users_key.append({"id": "%s_%s" % (str(i), str(j)),
+                                       "tenant_id": str(i),
+                                       "endpoint": "endpoint"})
+
         self.user_key = [{'id': i, 'tenant_id': j, 'endpoint': 'endpoint'}
                          for j in range(self.tenants_num)
                          for i in range(self.users_per_tenant)]
@@ -58,7 +69,8 @@ class SaharaEDPTestCase(test.TestCase):
             },
             "admin": {"endpoint": mock.MagicMock()},
             "task": mock.MagicMock(),
-            "users": self.user_key,
+            "users": self.users_key,
+            "tenants": self.tenants
         }
 
     @mock.patch("%s.sahara_edp.resource_manager.cleanup" % CTX)

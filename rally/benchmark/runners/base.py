@@ -45,10 +45,14 @@ def format_result_on_timeout(exc, timeout):
 def _get_scenario_context(context):
     scenario_ctx = {}
     for key, value in context.iteritems():
-        if key != "users":
+        if key not in ["users", "tenants"]:
             scenario_ctx[key] = value
-        else:
-            scenario_ctx["user"] = random.choice(value)
+
+    if "users" in context:
+        user = random.choice(context["users"])
+        tenant = context["tenants"][user["tenant_id"]]
+        scenario_ctx["user"], scenario_ctx["tenant"] = user, tenant
+
     return scenario_ctx
 
 

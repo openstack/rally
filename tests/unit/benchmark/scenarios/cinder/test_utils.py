@@ -123,11 +123,7 @@ class CinderScenarioTestCase(test.TestCase):
         context = {"user": {"tenant_id": "fake"},
                    "users": [{"tenant_id": "fake",
                               "users_per_tenant": 1}],
-                   "servers": [{"image": {"name": "fake"},
-                                "flavor": {"name": "small"},
-                                "servers_per_tenant": 1,
-                                "tenant_id": "fake",
-                                "server_ids": servers}]}
+                   "tenant": {"id": "fake", "servers": servers}}
         self.scenario._context = context
         self.scenario.clients = mock.Mock()
         self.scenario.clients('nova').servers.get = mock.Mock(

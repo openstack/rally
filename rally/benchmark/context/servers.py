@@ -64,7 +64,6 @@ class ServerGenerator(base.Context):
     def __init__(self, context):
         super(ServerGenerator, self).__init__(context)
         self.config.setdefault("servers_per_tenant", 5)
-        self.context.setdefault("servers", [])
 
     @rutils.log_task_wrapper(LOG.info, _("Enter context: `Servers`"))
     def setup(self):
@@ -72,45 +71,36 @@ class ServerGenerator(base.Context):
         flavor = self.config["flavor"]
         servers_per_tenant = self.config["servers_per_tenant"]
 
-        current_tenants = []
-
         clients = osclients.Clients(self.context["users"][0]["endpoint"])
         image_id = types.ImageResourceType.transform(clients=clients,
                                                      resource_config=image)
         flavor_id = types.FlavorResourceType.transform(clients=clients,
                                                        resource_config=flavor)
 
-        for user in self.context["users"]:
-            if user["tenant_id"] not in current_tenants:
-                LOG.debug("Booting servers for user tenant %s "
-                          % (user["tenant_id"]))
-                current_tenants.append(user["tenant_id"])
-                clients = osclients.Clients(user["endpoint"])
-                nova_scenario = nova_utils.NovaScenario(clients=clients)
-                server_name_prefix = nova_scenario._generate_random_name()
+        for user, tenant_id in rutils.iterate_per_tenants(
+                self.context["users"]):
+            LOG.debug("Booting servers for user tenant %s "
+                      % (user["tenant_id"]))
+            clients = osclients.Clients(user["endpoint"])
+            nova_scenario = nova_utils.NovaScenario(clients=clients)
+            server_name_prefix = nova_scenario._generate_random_name()
 
-                LOG.debug("Calling _boot_servers with server_name_prefix=%s "
-                          "image_id=%s flavor_id=%s servers_per_tenant=%s"
-                          % (server_name_prefix, image_id,
-                             flavor_id, flavor_id))
+            LOG.debug("Calling _boot_servers with server_name_prefix=%s "
+                      "image_id=%s flavor_id=%s servers_per_tenant=%s"
+                      % (server_name_prefix, image_id,
+                         flavor_id, flavor_id))
 
-                current_servers = []
+            servers = nova_scenario._boot_servers(
+                server_name_prefix, image_id, flavor_id,
+                servers_per_tenant)
 
-                servers = nova_scenario._boot_servers(
-                    server_name_prefix, image_id, flavor_id,
-                    servers_per_tenant)
+            current_servers = [server.id for server in servers]
 
-                for server in servers:
-                    current_servers.append(server.id)
+            LOG.debug("Adding booted servers %s to context"
+                      % current_servers)
 
-                LOG.debug("Adding booted servers %s to context"
-                          % current_servers)
-
-                self.context["servers"].append({
-                    "server_ids": current_servers,
-                    "endpoint": user["endpoint"],
-                    "tenant_id": user["tenant_id"]
-                })
+            self.context["tenants"][tenant_id][
+                "servers"] = current_servers
 
     @rutils.log_task_wrapper(LOG.info, _("Exit context: `Servers`"))
     def cleanup(self):

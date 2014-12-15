@@ -43,23 +43,18 @@ class VolumeGenerator(base.Context):
 
     def __init__(self, context):
         super(VolumeGenerator, self).__init__(context)
-        self.context.setdefault("volumes", [])
 
     @rutils.log_task_wrapper(LOG.info, _("Enter context: `Volumes`"))
     def setup(self):
         size = self.config["size"]
-        current_tenants = []
 
-        for user in self.context["users"]:
-            if user["tenant_id"] not in current_tenants:
-                current_tenants.append(user["tenant_id"])
-                clients = osclients.Clients(user["endpoint"])
-                cinder_util = cinder_utils.CinderScenario(clients=clients)
-                volume = cinder_util._create_volume(size)
-                self.context["volumes"].append({"volume_id": volume.id,
-                                                "endpoint": user["endpoint"],
-                                                "tenant_id": user[
-                                                    "tenant_id"]})
+        for user, tenant_id in rutils.iterate_per_tenants(
+                self.context["users"]):
+            clients = osclients.Clients(user["endpoint"])
+            cinder_util = cinder_utils.CinderScenario(clients=clients)
+            volume = cinder_util._create_volume(size)
+
+            self.context["tenants"][tenant_id]["volume"] = volume.id
 
     @rutils.log_task_wrapper(LOG.info, _("Exit context: `Volumes`"))
     def cleanup(self):

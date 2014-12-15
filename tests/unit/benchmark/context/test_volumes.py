@@ -26,6 +26,13 @@ SCN = "rally.benchmark.scenarios"
 
 
 class VolumeGeneratorTestCase(test.TestCase):
+
+    def _gen_tenants(self, count):
+        tenants = dict()
+        for id in range(count):
+            tenants[str(id)] = dict(name=str(id))
+        return tenants
+
     def test_init(self):
         context = {}
         context["task"] = mock.MagicMock()
@@ -35,10 +42,8 @@ class VolumeGeneratorTestCase(test.TestCase):
             }
         }
 
-        new_context = copy.deepcopy(context)
-        new_context["volumes"] = []
-        volumes.VolumeGenerator(context)
-        self.assertEqual(new_context, context)
+        inst = volumes.VolumeGenerator(context)
+        self.assertEqual(inst.config, context["config"]["volumes"])
 
     @mock.patch("%s.cinder.utils.CinderScenario._create_volume" % SCN,
                 return_value=fakes.FakeVolume(id="uuid"))
@@ -47,12 +52,15 @@ class VolumeGeneratorTestCase(test.TestCase):
         fc = fakes.FakeClients()
         mock_osclients.Clients.return_value = fc
 
-        ctx_volumes = [
-            {'volume_id': 'uuid', 'endpoint': 'endpoint', 'tenant_id': i}
-            for i in range(2)]
-        user_key = [{'id': i, 'tenant_id': j, 'endpoint': 'endpoint'}
-                    for j in range(2)
-                    for i in range(5)]
+        tenants_count = 2
+        users_per_tenant = 5
+
+        tenants = self._gen_tenants(tenants_count)
+        users = list()
+        for id in tenants.keys():
+            for i in range(users_per_tenant):
+                users.append({"id": i, "tenant_id": id,
+                              "endpoint": "endpoint"})
 
         real_context = {
             "config": {
@@ -69,11 +77,13 @@ class VolumeGeneratorTestCase(test.TestCase):
                 "endpoint": mock.MagicMock()
             },
             "task": mock.MagicMock(),
-            "users": user_key,
+            "users": users,
+            "tenants": tenants
         }
 
         new_context = copy.deepcopy(real_context)
-        new_context["volumes"] = ctx_volumes
+        for id in tenants.keys():
+            new_context["tenants"][id]["volume"] = "uuid"
 
         volumes_ctx = volumes.VolumeGenerator(real_context)
         volumes_ctx.setup()
@@ -82,12 +92,17 @@ class VolumeGeneratorTestCase(test.TestCase):
     @mock.patch("%s.volumes.osclients" % CTX)
     @mock.patch("%s.volumes.resource_manager.cleanup" % CTX)
     def test_cleanup(self, mock_cleanup, mock_osclients):
-        ctx_volumes = [
-            {'volume_id': 'uuid', 'endpoint': mock.MagicMock(), 'tenant_id': i}
-            for i in range(2)]
-        user_key = [{'id': i, 'tenant_id': j, 'endpoint': 'endpoint'}
-                    for j in range(2)
-                    for i in range(5)]
+
+        tenants_count = 2
+        users_per_tenant = 5
+
+        tenants = self._gen_tenants(tenants_count)
+        users = list()
+        for id in tenants.keys():
+            for i in range(users_per_tenant):
+                users.append({"id": i, "tenant_id": id,
+                              "endpoint": "endpoint"})
+            tenants[id]["volume"] = "uuid"
 
         context = {
             "config": {
@@ -104,8 +119,8 @@ class VolumeGeneratorTestCase(test.TestCase):
                 "endpoint": mock.MagicMock()
             },
             "task": mock.MagicMock(),
-            "users": user_key,
-            "volumes": ctx_volumes,
+            "users": users,
+            "tenants": tenants
         }
 
         volumes_ctx = volumes.VolumeGenerator(context)

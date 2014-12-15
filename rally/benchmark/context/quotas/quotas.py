@@ -59,22 +59,22 @@ class Quotas(base.Context):
 
     @utils.log_task_wrapper(LOG.info, _("Enter context: `quotas`"))
     def setup(self):
-        for tenant in self.context["tenants"]:
+        for tenant_id in self.context["tenants"]:
             for service in self.manager:
                 if self._service_has_quotas(service):
-                    self.manager[service].update(tenant["id"],
+                    self.manager[service].update(tenant_id,
                                                  **self.config[service])
 
     @utils.log_task_wrapper(LOG.info, _("Exit context: `quotas`"))
     def cleanup(self):
         for service in self.manager:
             if self._service_has_quotas(service):
-                for tenant in self.context["tenants"]:
+                for tenant_id in self.context["tenants"]:
                     try:
-                        self.manager[service].delete(tenant["id"])
+                        self.manager[service].delete(tenant_id)
                     except Exception as e:
                         LOG.warning("Failed to remove quotas for tenant "
                                     "%(tenant_id)s in service %(service)s "
                                     "\n reason: %(exc)s"
-                                    % {"tenant_id": tenant["id"],
+                                    % {"tenant_id": tenant_id,
                                        "service": service, "exc": e})

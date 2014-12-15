@@ -22,7 +22,7 @@ from tests.unit import test
 
 class UserGeneratorTestCase(test.TestCase):
 
-    tenants_num = 10
+    tenants_num = 1
     users_per_tenant = 5
     users_num = tenants_num * users_per_tenant
     threads = 10
@@ -59,10 +59,8 @@ class UserGeneratorTestCase(test.TestCase):
                 if network.project_id == req_network.project_id:
                     return network
 
-        tenant1 = {'id': 1}
-        tenant2 = {'id': 4}
-        networks = [mock.MagicMock(project_id=1),
-                    mock.MagicMock(project_id=2)]
+        networks = [mock.MagicMock(project_id="t1"),
+                    mock.MagicMock(project_id="t4")]
         nova_admin = mock.MagicMock()
         clients = mock.MagicMock()
         self.osclients.Clients.return_value = clients
@@ -71,7 +69,8 @@ class UserGeneratorTestCase(test.TestCase):
         nova_admin.networks.list.return_value = networks
         nova_admin.networks.get = fake_get_network
         user_generator = users.UserGenerator(self.context)
-        user_generator.context["tenants"] = [tenant1, tenant2]
+        user_generator.context["tenants"] = {"t1": dict(id="t1", name="t1"),
+                                             "t2": dict(id="t2", name="t2")}
         user_generator._remove_associated_networks()
         mock_check_service_status.assert_called_once_with(mock.ANY,
                                                           'nova-network')
@@ -86,10 +85,8 @@ class UserGeneratorTestCase(test.TestCase):
                 if network.project_id == req_network.project_id:
                     return network
 
-        tenant1 = {'id': 1}
-        tenant2 = {'id': 4}
-        networks = [mock.MagicMock(project_id=1),
-                    mock.MagicMock(project_id=2)]
+        networks = [mock.MagicMock(project_id="t1"),
+                    mock.MagicMock(project_id="t4")]
         nova_admin = mock.MagicMock()
         clients = mock.MagicMock()
         self.osclients.Clients.return_value = clients
@@ -99,7 +96,8 @@ class UserGeneratorTestCase(test.TestCase):
         nova_admin.networks.get = fake_get_network
         nova_admin.networks.disassociate.side_effect = Exception()
         user_generator = users.UserGenerator(self.context)
-        user_generator.context["tenants"] = [tenant1, tenant2]
+        user_generator.context["tenants"] = {"t1": dict(id="t1", name="t1"),
+                                             "t2": dict(id="t2", name="t2")}
         user_generator._remove_associated_networks()
         mock_check_service_status.assert_called_once_with(mock.ANY,
                                                           'nova-network')
@@ -109,20 +107,18 @@ class UserGeneratorTestCase(test.TestCase):
     @mock.patch("rally.benchmark.context.users.keystone")
     def test__create_tenants(self, mock_keystone, mock_sleep):
         user_generator = users.UserGenerator(self.context)
-        user_generator.config["tenants"] = 2
+        user_generator.config["tenants"] = 1
         tenants = user_generator._create_tenants()
-        self.assertEqual(2, len(tenants))
-        for tenant in tenants:
-            self.assertIn("id", tenant)
-            self.assertIn("name", tenant)
+        self.assertEqual(1, len(tenants))
+        id, tenant = tenants.popitem()
+        self.assertIn("name", tenant)
 
     @mock.patch("rally.benchmark.context.users.broker.time.sleep")
     @mock.patch("rally.benchmark.context.users.keystone")
     def test__create_users(self, mock_keystone, mock_sleep):
         user_generator = users.UserGenerator(self.context)
-        tenant1 = mock.MagicMock()
-        tenant2 = mock.MagicMock()
-        user_generator.context["tenants"] = [tenant1, tenant2]
+        user_generator.context["tenants"] = {"t1": dict(id="t1", name="t1"),
+                                             "t2": dict(id="t2", name="t2")}
         user_generator.config["users_per_tenant"] = 2
         users_ = user_generator._create_users()
         self.assertEqual(4, len(users_))
@@ -133,9 +129,8 @@ class UserGeneratorTestCase(test.TestCase):
     @mock.patch("rally.benchmark.context.users.keystone")
     def test__delete_tenants(self, mock_keystone):
         user_generator = users.UserGenerator(self.context)
-        tenant1 = mock.MagicMock()
-        tenant2 = mock.MagicMock()
-        user_generator.context["tenants"] = [tenant1, tenant2]
+        user_generator.context["tenants"] = {"t1": dict(id="t1", name="t1"),
+                                             "t2": dict(id="t2", name="t2")}
         user_generator._delete_tenants()
         self.assertEqual(len(user_generator.context["tenants"]), 0)
 
@@ -144,9 +139,8 @@ class UserGeneratorTestCase(test.TestCase):
         wrapped_keystone = mock_keystone.wrap.return_value
         wrapped_keystone.delete_project.side_effect = Exception()
         user_generator = users.UserGenerator(self.context)
-        tenant1 = mock.MagicMock()
-        tenant2 = mock.MagicMock()
-        user_generator.context["tenants"] = [tenant1, tenant2]
+        user_generator.context["tenants"] = {"t1": dict(id="t1", name="t1"),
+                                             "t2": dict(id="t2", name="t2")}
         user_generator._delete_tenants()
         self.assertEqual(len(user_generator.context["tenants"]), 0)
 
@@ -206,7 +200,7 @@ class UserGeneratorTestCase(test.TestCase):
         config = {
             "config": {
                 "users": {
-                    "tenants": 2,
+                    "tenants": 1,
                     "users_per_tenant": 2,
                     "resource_management_workers": 1
                 }
@@ -234,8 +228,8 @@ class UserGeneratorTestCase(test.TestCase):
                                  set(user.keys()))
 
             tenants_ids = []
-            for t in ctx.context["tenants"]:
-                tenants_ids.extend([t["id"], t["id"]])
+            for t in ctx.context["tenants"].keys():
+                tenants_ids.append(t)
 
             for (user, tenant_id, orig_user) in zip(ctx.context["users"],
                                                     tenants_ids, user_list):

@@ -35,10 +35,16 @@ class SaharaClusterTestCase(test.TestCase):
         self.users = self.tenants_num * self.users_per_tenant
         self.task = mock.MagicMock()
 
-        self.user_key = [{'id': i, 'tenant_id': j, 'endpoint': 'endpoint'}
-                         for j in range(self.tenants_num)
-                         for i in range(self.users_per_tenant)]
-        self.images = dict((i, "42") for i in range(self.tenants_num))
+        self.tenants = dict()
+        self.users_key = list()
+
+        for i in range(self.tenants_num):
+            self.tenants[str(i)] = {"id": str(i), "name": str(i),
+                                    "sahara_image": "42"}
+            for j in range(self.users_per_tenant):
+                self.users_key.append({"id": "%s_%s" % (str(i), str(j)),
+                                       "tenant_id": str(i),
+                                       "endpoint": "endpoint"})
 
         CONF.set_override("cluster_check_interval", 0, "benchmark")
 
@@ -59,8 +65,8 @@ class SaharaClusterTestCase(test.TestCase):
             },
             "admin": {"endpoint": mock.MagicMock()},
             "task": mock.MagicMock(),
-            "users": self.user_key,
-            "sahara_images": self.images
+            "users": self.users_key,
+            "tenants": self.tenants
         }
 
     @mock.patch("%s.sahara_cluster.resource_manager.cleanup" % CTX)
@@ -77,13 +83,13 @@ class SaharaClusterTestCase(test.TestCase):
 
         launch_cluster_calls = []
 
-        for i in range(self.tenants_num):
+        for i in self.tenants:
             launch_cluster_calls.append(mock.call(
                 plugin_name="test_plugin",
                 hadoop_version="test_version",
                 flavor_id="test_flavor",
                 node_count=2,
-                image_id=ctx["sahara_images"][i],
+                image_id=ctx["tenants"][i]["sahara_image"],
                 floating_ip_pool=None,
                 neutron_net_id=None,
                 volumes_per_node=None,
@@ -115,13 +121,13 @@ class SaharaClusterTestCase(test.TestCase):
 
         launch_cluster_calls = []
 
-        for i in range(self.tenants_num):
+        for i in self.tenants:
             launch_cluster_calls.append(mock.call(
                 plugin_name="test_plugin",
                 hadoop_version="test_version",
                 flavor_id="test_flavor",
                 node_count=2,
-                image_id=ctx["sahara_images"][i],
+                image_id=ctx["tenants"][i]["sahara_image"],
                 floating_ip_pool=None,
                 neutron_net_id=None,
                 volumes_per_node=None,

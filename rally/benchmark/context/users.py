@@ -96,7 +96,7 @@ class UserGenerator(base.Context):
         self.config.setdefault("user_domain",
                                cfg.CONF.users_context.user_domain)
         self.context["users"] = []
-        self.context["tenants"] = []
+        self.context["tenants"] = dict()
         self.endpoint = self.context["admin"]["endpoint"]
         # NOTE(boris-42): I think this is the best place for adding logic when
         #                 we are using pre created users or temporary. So we
@@ -120,14 +120,13 @@ class UserGenerator(base.Context):
 
         for network in nova_admin.networks.list():
             network_tenant_id = nova_admin.networks.get(network).project_id
-            for tenant in self.context["tenants"]:
-                if tenant["id"] == network_tenant_id:
-                    try:
-                        nova_admin.networks.disassociate(network)
-                    except Exception as ex:
-                        LOG.warning("Failed disassociate net: %(tenant_id)s. "
-                                    "Exception: %(ex)s" %
-                                    {"tenant_id": tenant["id"], "ex": ex})
+            if network_tenant_id in self.context["tenants"]:
+                try:
+                    nova_admin.networks.disassociate(network)
+                except Exception as ex:
+                    LOG.warning("Failed disassociate net: %(tenant_id)s. "
+                                "Exception: %(ex)s" %
+                                {"tenant_id": network_tenant_id, "ex": ex})
 
     def _create_tenants(self):
         threads = self.config["resource_management_workers"]
@@ -151,7 +150,11 @@ class UserGenerator(base.Context):
 
         # NOTE(msdubov): cosume() will fill the tenants list in the closure.
         broker.run(publish, consume, threads)
-        return list(tenants)
+        tenants_dict = dict()
+        for t in tenants:
+            tenants_dict[t["id"]] = t
+
+        return tenants_dict
 
     def _create_users(self):
         # NOTE(msdubov): This should be called after _create_tenants().
@@ -161,31 +164,32 @@ class UserGenerator(base.Context):
         users = collections.deque()
 
         def publish(queue):
-            for tenant in self.context["tenants"]:
+            for tenant_id in self.context["tenants"]:
                 for user_id in range(users_per_tenant):
-                    username = self.PATTERN_USER % {"tenant_id": tenant["id"],
+                    username = self.PATTERN_USER % {"tenant_id": tenant_id,
                                                     "uid": user_id}
                     password = str(uuid.uuid4())
                     args = (username, password, self.config["project_domain"],
-                            self.config["user_domain"], tenant)
+                            self.config["user_domain"], tenant_id)
                     queue.append(args)
 
         def consume(cache, args):
-            username, password, project_dom, user_dom, tenant = args
+            username, password, project_dom, user_dom, tenant_id = args
             if "client" not in cache:
                 clients = osclients.Clients(self.endpoint)
                 cache["client"] = keystone.wrap(clients.keystone())
             client = cache["client"]
             user = client.create_user(username, password,
                                       "%s@email.me" % username,
-                                      tenant["id"], user_dom)
+                                      tenant_id, user_dom)
             user_endpoint = endpoint.Endpoint(
-                    client.auth_url, user.name, password, tenant["name"],
+                    client.auth_url, user.name, password,
+                    self.context["tenants"][tenant_id]["name"],
                     consts.EndpointPermission.USER, client.region_name,
                     project_domain_name=project_dom, user_domain_name=user_dom)
             users.append({"id": user.id,
                           "endpoint": user_endpoint,
-                          "tenant_id": tenant["id"]})
+                          "tenant_id": tenant_id})
 
         # NOTE(msdubov): cosume() will fill the users list in the closure.
         broker.run(publish, consume, threads)
@@ -197,8 +201,8 @@ class UserGenerator(base.Context):
         self._remove_associated_networks()
 
         def publish(queue):
-            for tenant in self.context["tenants"]:
-                queue.append(tenant["id"])
+            for tenant_id in self.context["tenants"]:
+                queue.append(tenant_id)
 
         def consume(cache, tenant_id):
             if "client" not in cache:
@@ -207,7 +211,7 @@ class UserGenerator(base.Context):
             cache["client"].delete_project(tenant_id)
 
         broker.run(publish, consume, threads)
-        self.context["tenants"] = []
+        self.context["tenants"] = dict()
 
     def _delete_users(self):
         threads = self.config["resource_management_workers"]

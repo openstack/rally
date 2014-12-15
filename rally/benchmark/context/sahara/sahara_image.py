@@ -61,30 +61,29 @@ class SaharaImage(base.Context):
         hadoop_version = self.config["hadoop_version"]
         user_name = self.config["username"]
 
-        for user in self.context.get("users", []):
-            tenant_id = user["tenant_id"]
-            if tenant_id not in self.context["sahara_images"]:
+        for user, tenant_id in rutils.iterate_per_tenants(
+                self.context["users"]):
 
-                clients = osclients.Clients(user["endpoint"])
-                glance_util_class = glance_utils.GlanceScenario(
-                    clients=clients)
+            clients = osclients.Clients(user["endpoint"])
+            glance_util_class = glance_utils.GlanceScenario(
+                clients=clients)
 
-                image_name = scenarios_base.Scenario._generate_random_name(
-                    prefix="sahara_image_", length=15)
-                image = glance_util_class._create_image(image_name,
-                                                        "bare",
-                                                        image_url,
-                                                        "qcow2")
+            image_name = scenarios_base.Scenario._generate_random_name(
+                prefix="sahara_image_", length=15)
+            image = glance_util_class._create_image(image_name,
+                                                    "bare",
+                                                    image_url,
+                                                    "qcow2")
 
-                clients.sahara().images.update_image(image_id=image.id,
-                                                     user_name=user_name,
-                                                     desc="")
+            clients.sahara().images.update_image(image_id=image.id,
+                                                 user_name=user_name,
+                                                 desc="")
 
-                clients.sahara().images.update_tags(image_id=image.id,
-                                                    new_tags=[plugin_name,
-                                                              hadoop_version])
+            clients.sahara().images.update_tags(image_id=image.id,
+                                                new_tags=[plugin_name,
+                                                          hadoop_version])
 
-                self.context["sahara_images"][tenant_id] = image.id
+            self.context["tenants"][tenant_id]["sahara_image"] = image.id
 
     @rutils.log_task_wrapper(LOG.info, _("Exit context: `Sahara Image`"))
     def cleanup(self):

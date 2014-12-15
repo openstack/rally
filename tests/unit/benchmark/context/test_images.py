@@ -29,7 +29,14 @@ SCN = "rally.benchmark.scenarios"
 
 class ImageGeneratorTestCase(test.TestCase):
 
-    def test_init(self):
+    def _gen_tenants(self, count):
+        tenants = dict()
+        for id_ in range(count):
+            tenants[str(id_)] = dict(name=str(id_))
+        return tenants
+
+    @mock.patch("rally.benchmark.context.images.base.Context.__init__")
+    def test_init(self, mock_base_context_init):
         context = {}
         context["task"] = mock.MagicMock()
         context["config"] = {
@@ -41,10 +48,8 @@ class ImageGeneratorTestCase(test.TestCase):
             }
         }
 
-        new_context = copy.deepcopy(context)
-        new_context["images"] = []
         images.ImageGenerator(context)
-        self.assertEqual(new_context, context)
+        mock_base_context_init.assert_called_once_with(context)
 
     def test_init_validation(self):
         context = {}
@@ -63,39 +68,47 @@ class ImageGeneratorTestCase(test.TestCase):
     @mock.patch("%s.images.osclients" % CTX)
     def test_setup(self, mock_osclients, mock_image_create):
 
+        tenants_count = 2
+        users_per_tenant = 5
+        images_per_tenant = 5
+
         fc = fakes.FakeClients()
         mock_osclients.Clients.return_value = fc
 
-        image_list = ["uuid"] * 5
-        image_key = [{'image_id': image_list, 'endpoint': 'endpoint',
-                      'tenant_id': i} for i in range(2)]
-        user_key = [{'id': i, 'tenant_id': j, 'endpoint': 'endpoint'}
-                    for j in range(2)
-                    for i in range(5)]
+        tenants = self._gen_tenants(tenants_count)
+        users = list()
+        for id in tenants.iterkeys():
+            for i in range(users_per_tenant):
+                users.append({"id": i, "tenant_id": id,
+                              "endpoint": "endpoint"})
 
         real_context = {
             "config": {
                 "users": {
-                    "tenants": 2,
-                    "users_per_tenant": 5,
+                    "tenants": tenants_count,
+                    "users_per_tenant": users_per_tenant,
                     "concurrent": 10,
                 },
                 "images": {
                     "image_url": "mock_url",
                     "image_type": "qcow2",
                     "image_container": "bare",
-                    "images_per_tenant": 5,
+                    "images_per_tenant": images_per_tenant,
                 }
             },
             "admin": {
                 "endpoint": mock.MagicMock()
             },
             "task": mock.MagicMock(),
-            "users": user_key,
+            "users": users,
+            "tenants": tenants
         }
 
         new_context = copy.deepcopy(real_context)
-        new_context["images"] = image_key
+        for id in new_context["tenants"].keys():
+            new_context["tenants"][id].setdefault("images", list())
+            for j in range(images_per_tenant):
+                new_context["tenants"][id]["images"].append("uuid")
 
         images_ctx = images.ImageGenerator(real_context)
         images_ctx.setup()
@@ -104,12 +117,20 @@ class ImageGeneratorTestCase(test.TestCase):
     @mock.patch("%s.images.osclients" % CTX)
     @mock.patch("%s.images.resource_manager.cleanup" % CTX)
     def test_cleanup(self, mock_cleanup, mock_osclients):
-        image_list = ["uuid"] * 5
-        image_key = [{'image_id': image_list, 'endpoint': 'endpoint',
-                      'tenant_id': i} for i in range(2)]
-        user_key = [{'id': i, 'tenant_id': j, 'endpoint': 'endpoint'}
-                    for j in range(2)
-                    for i in range(5)]
+
+        tenants_count = 2
+        users_per_tenant = 5
+        images_per_tenant = 5
+
+        tenants = self._gen_tenants(tenants_count)
+        users = list()
+        for id_ in tenants.iterkeys():
+            for i in range(users_per_tenant):
+                users.append({"id": i, "tenant_id": id_,
+                              "endpoint": "endpoint"})
+            tenants[id_].setdefault("images", list())
+            for j in range(images_per_tenant):
+                tenants[id_]["images"].append("uuid")
 
         context = {
             "config": {
@@ -129,8 +150,8 @@ class ImageGeneratorTestCase(test.TestCase):
                 "endpoint": mock.MagicMock()
             },
             "task": mock.MagicMock(),
-            "users": user_key,
-            "images": image_key,
+            "users": users,
+            "tenants": tenants
         }
 
         images_ctx = images.ImageGenerator(context)
