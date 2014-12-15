@@ -297,12 +297,8 @@ def run(argv, categories):
         validate_deprecated_args(argv, fn)
         ret = fn(*fn_args, **fn_kwargs)
         return(ret)
-    except (IOError, TypeError, exceptions.DeploymentNotFound) as e:
-        if logging.is_debug():
-            raise
-        print(e)
-        return 1
-    except exceptions.TaskNotFound as e:
+    except (IOError, TypeError, exceptions.DeploymentNotFound,
+            exceptions.TaskNotFound) as e:
         if logging.is_debug():
             LOG.exception(e)
         print(e)
