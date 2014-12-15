@@ -14,10 +14,12 @@
 #    under the License.
 
 import os
+import re
 import unittest
 
 import mock
 
+from rally.cmd import envutils
 from tests.functional import utils
 
 
@@ -38,6 +40,11 @@ class TaskTestCase(unittest.TestCase):
                 }
             ]
         }
+
+    def _get_deployment_uuid(self, output):
+        return re.search(
+            r"Using deployment: (?P<uuid>[0-9a-f\-]{36})",
+            output).group("uuid")
 
     def test_status(self):
         rally = utils.Rally()
@@ -138,6 +145,39 @@ class TaskTestCase(unittest.TestCase):
         self.assertIn("deployment_name", rally("task list --all-deployments"))
         self.assertRaises(utils.RallyCmdError,
                           rally, "task list --status not_existing_status")
+
+    def test_validate_is_valid(self):
+        rally = utils.Rally()
+        cfg = self._get_sample_task_config()
+        config = utils.TaskConfig(cfg)
+        output = rally("task validate --task %s" % config.filename)
+        self.assertIn("Task config is valid", output)
+
+    def test_validate_is_invalid(self):
+        rally = utils.Rally()
+        with mock.patch.dict("os.environ", utils.TEST_ENV):
+            deployment_id = envutils.get_global("RALLY_DEPLOYMENT")
+        cfg = {"invalid": "config"}
+        config = utils.TaskConfig(cfg)
+        output = rally(("task validate --task %(task_file)s "
+                        "--deployment %(deployment_id)s") %
+                       {"task_file": config.filename,
+                        "deployment_id": deployment_id})
+        self.assertIn("Task config is invalid", output)
+
+    def test_start(self):
+        rally = utils.Rally()
+        with mock.patch.dict("os.environ", utils.TEST_ENV):
+            deployment_id = envutils.get_global("RALLY_DEPLOYMENT")
+            cfg = self._get_sample_task_config()
+            config = utils.TaskConfig(cfg)
+            output = rally(("task start --task %(task_file)s "
+                            "--deployment %(deployment_id)s") %
+                           {"task_file": config.filename,
+                            "deployment_id": deployment_id})
+        result = re.search(
+            r"(?P<task_id>[0-9a-f\-]{36}) is started", output)
+        self.assertIsNotNone(result)
 
     # NOTE(oanufriev): Not implemented
     def test_abort(self):

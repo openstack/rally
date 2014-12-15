@@ -41,6 +41,5 @@ class ShowTestCase(unittest.TestCase):
         res = self.rally("show secgroups")
         self.assertIn("default", res)
 
-    # TODO(oanufriev): implement after bp/add-rally-create-cli-command
     def test_show_keypairs(self):
-        pass
+        self.rally("show keypairs")
