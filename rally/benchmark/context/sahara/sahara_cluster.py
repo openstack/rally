@@ -66,6 +66,15 @@ class SaharaCluster(base.Context):
                 "type": "integer",
                 "minimum": 1
             },
+            "auto_security_group": {
+                "type": "boolean",
+            },
+            "security_groups": {
+                "type": "array",
+                "items": {
+                    "type": "string"
+                }
+            },
             "node_configs": {
                 "type": "object"
             },
@@ -121,6 +130,9 @@ class SaharaCluster(base.Context):
                     neutron_net_id=neutron_net_id,
                     volumes_per_node=self.config.get("volumes_per_node"),
                     volumes_size=self.config.get("volumes_size", 1),
+                    auto_security_group=self.config.get("auto_security_group",
+                                                        True),
+                    security_groups=self.config.get("security_groups"),
                     node_configs=self.config.get("node_configs"),
                     cluster_configs=self.config.get("cluster_configs"),
                     wait_active=False)

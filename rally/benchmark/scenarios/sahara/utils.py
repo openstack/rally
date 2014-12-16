@@ -179,7 +179,8 @@ class SaharaScenario(base.Scenario):
     def _launch_cluster(self, plugin_name, hadoop_version, flavor_id,
                         image_id, node_count, floating_ip_pool=None,
                         neutron_net_id=None, volumes_per_node=None,
-                        volumes_size=None, node_configs=None,
+                        volumes_size=None, auto_security_group=None,
+                        security_groups=None, node_configs=None,
                         cluster_configs=None, wait_active=True):
         """Creates a cluster and wait until it becomes Active.
 
@@ -200,6 +201,12 @@ class SaharaScenario(base.Scenario):
         :param volumes_per_node: The number of Cinder volumes that will be
         attached to every cluster node
         :param volumes_size: The size of each Cinder volume in GB
+        :param auto_security_group: Boolean value. If set to True Sahara will
+        create a Security Group for each Node Group in the Cluster
+        automatically.
+        :param security_groups: The list of security groups that will be used
+        while creating VMs. If auto_security_group is set to True this list
+        can be left empty.
         :param node_configs: The configs dict that will be passed to each Node
         Group
         :param cluster_configs: The configs dict that will be passed to the
@@ -234,6 +241,14 @@ class SaharaScenario(base.Scenario):
             for ng in node_groups:
                 ng["volumes_per_node"] = volumes_per_node
                 ng["volumes_size"] = volumes_size
+
+        if auto_security_group:
+            for ng in node_groups:
+                ng["auto_security_group"] = auto_security_group
+
+        if security_groups:
+            for ng in node_groups:
+                ng["security_groups"] = security_groups
 
         if node_configs:
             LOG.debug("Adding Hadoop configs to Node Groups")

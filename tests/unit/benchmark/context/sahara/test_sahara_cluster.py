@@ -94,6 +94,8 @@ class SaharaClusterTestCase(test.TestCase):
                 neutron_net_id=None,
                 volumes_per_node=None,
                 volumes_size=1,
+                auto_security_group=True,
+                security_groups=None,
                 node_configs=None,
                 cluster_configs=None,
                 wait_active=False
@@ -132,6 +134,8 @@ class SaharaClusterTestCase(test.TestCase):
                 neutron_net_id=None,
                 volumes_per_node=None,
                 volumes_size=1,
+                auto_security_groups=True,
+                security_groups=None,
                 node_configs=None,
                 cluster_configs=None,
                 wait_active=False

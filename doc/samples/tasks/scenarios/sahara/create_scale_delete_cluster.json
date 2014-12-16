@@ -8,7 +8,8 @@
                 "node_count": 2,
                 "deltas": [1, -1, 1, -1],
                 "plugin_name": "vanilla",
-                "hadoop_version": "2.3.0"
+                "hadoop_version": "2.3.0",
+                "auto_security_group": true
             },
             "runner": {
                 "type": "constant",

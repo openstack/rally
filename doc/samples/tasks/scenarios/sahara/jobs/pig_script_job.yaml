@@ -35,3 +35,4 @@
           node_count: 2
           plugin_name: "vanilla"
           hadoop_version: "1.2.1"
+          auto_security_group: True
