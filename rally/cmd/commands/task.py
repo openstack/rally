@@ -23,6 +23,7 @@ import webbrowser
 
 import yaml
 
+from rally import api
 from rally.benchmark.processing import plot
 from rally.benchmark.processing import utils
 from rally.cmd import cliutils
@@ -35,7 +36,6 @@ from rally.i18n import _
 from rally import log as logging
 from rally import objects
 from rally.openstack.common import cliutils as common_cliutils
-from rally.orchestrator import api
 from rally import utils as rutils
 
 

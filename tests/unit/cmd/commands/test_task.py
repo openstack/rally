@@ -28,7 +28,7 @@ class TaskCommandsTestCase(test.TestCase):
         self.task = task.TaskCommands()
 
     @mock.patch('rally.cmd.commands.task.TaskCommands.detailed')
-    @mock.patch('rally.orchestrator.api.create_task')
+    @mock.patch('rally.api.create_task')
     @mock.patch('rally.cmd.commands.task.api.start_task')
     @mock.patch('rally.cmd.commands.task.open',
                 mock.mock_open(read_data='{"some": "json"}'),
@@ -51,7 +51,7 @@ class TaskCommandsTestCase(test.TestCase):
                           self.task.start, 'path_to_config.json', None)
 
     @mock.patch('rally.cmd.commands.task.TaskCommands.detailed')
-    @mock.patch('rally.orchestrator.api.create_task')
+    @mock.patch('rally.api.create_task')
     @mock.patch('rally.cmd.commands.task.api')
     @mock.patch('rally.cmd.commands.task.open',
                 mock.mock_open(read_data='{"some": "json"}'),
@@ -278,7 +278,7 @@ class TaskCommandsTestCase(test.TestCase):
     @mock.patch("rally.cmd.commands.task.open",
                 mock.mock_open(read_data='{"some": "json"}'),
                 create=True)
-    @mock.patch("rally.orchestrator.api.task_validate")
+    @mock.patch("rally.api.task_validate")
     def test_verify(self, mock_validate):
         self.task.validate("path_to_config.json", "fake_id")
         mock_validate.assert_called_once_with("fake_id", {"some": "json"})

@@ -101,14 +101,14 @@ class TestMultihostEngine(test.TestCase):
         self.deployment.update_status.assert_called_once_with(
             consts._DeployStatus.DEPLOY_SUBDEPLOY)
 
-    @mock.patch(MOD + 'orchestrator')
+    @mock.patch('rally.api')
     @mock.patch(MOD + 'db')
-    def test_cleanup(self, m_db, m_orc):
+    def test_cleanup(self, m_db, m_api):
         m_db.deployment_list.return_value = [{'uuid': 'uuid1'},
                                              {'uuid': 'uuid2'}]
         self.engine.cleanup()
         api_calls = [
-            mock.call.api.destroy_deploy('uuid1'),
-            mock.call.api.destroy_deploy('uuid2'),
+            mock.call.destroy_deploy('uuid1'),
+            mock.call.destroy_deploy('uuid2'),
         ]
-        self.assertEqual(api_calls, m_orc.mock_calls)
+        self.assertEqual(api_calls, m_api.mock_calls)

@@ -15,11 +15,11 @@
 
 import urlparse
 
+import rally
 from rally import consts
 from rally import db
 from rally.deploy import engine
 from rally import objects
-from rally import orchestrator
 
 
 class MultihostEngine(engine.EngineFactory):
@@ -95,4 +95,4 @@ class MultihostEngine(engine.EngineFactory):
     def cleanup(self):
         subdeploys = db.deployment_list(parent_uuid=self.deployment['uuid'])
         for subdeploy in subdeploys:
-            orchestrator.api.destroy_deploy(subdeploy['uuid'])
+            rally.api.destroy_deploy(subdeploy['uuid'])
