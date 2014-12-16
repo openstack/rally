@@ -361,8 +361,8 @@ class SaharaScenario(base.Scenario):
         :return: The created Data Source
         """
 
-        ds_type = self.context()["sahara_output_conf"]["output_type"]
-        url_prefix = self.context()["sahara_output_conf"]["output_url_prefix"]
+        ds_type = self.context["sahara_output_conf"]["output_type"]
+        url_prefix = self.context["sahara_output_conf"]["output_url_prefix"]
 
         if ds_type == "swift":
             raise exceptions.RallyException(

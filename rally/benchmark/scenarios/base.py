@@ -51,7 +51,7 @@ class Scenario(object):
     RESOURCE_NAME_LENGTH = 10
 
     def __init__(self, context=None, admin_clients=None, clients=None):
-        self._context = context
+        self.context = context
         self._admin_clients = admin_clients
         self._clients = clients
         self._idle_duration = 0
@@ -181,10 +181,6 @@ class Scenario(object):
         except Exception:
             return False
         return Scenario.meta(cls, "is_scenario", method_name, default=False)
-
-    def context(self):
-        """Returns the context of the current benchmark scenario."""
-        return self._context
 
     def clients(self, client_type):
         """Returns a python openstack client of the requested type.

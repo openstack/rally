@@ -147,5 +147,5 @@ class CinderScenario(base.Scenario):
         )
 
     def get_random_server(self):
-        server_id = random.choice(self.context()["tenant"]["servers"])
+        server_id = random.choice(self.context["tenant"]["servers"])
         return self.clients("nova").servers.get(server_id)

@@ -54,7 +54,7 @@ class VMScenario(base.Scenario):
         """
         self.wait_for_ping(server_ip)
         ssh = sshutils.SSH(username, server_ip, port=port,
-                           pkey=self.context()["user"]["keypair"]["private"])
+                           pkey=self.context["user"]["keypair"]["private"])
 
         self.wait_for_ssh(ssh)
         return self.run_action(ssh, interpreter, script)

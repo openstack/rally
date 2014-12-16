@@ -40,7 +40,7 @@ class NeutronScenario(base.Scenario):
         :param subnets_per_networks: total number of subnets to be allocated
         :returns: str, next available subnet CIDR
         """
-        i = self.context()["iteration"]
+        i = self.context["iteration"]
         cidr = netaddr.IPNetwork(self.SUBNET_CIDR_START)
         cidr = str(cidr.next(subnets_per_network * i + self._cidr))
         LOG.debug("CIDR generated: %s" % cidr)

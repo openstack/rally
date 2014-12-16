@@ -136,7 +136,7 @@ class NovaSecGroup(utils.NovaScenario):
                                               rules_per_security_group)
 
         boot_kwargs = {"security_groups": [sg.name for sg in security_groups]}
-        with NeutronNetwork(self._clients, self._context) as net_kwargs:
+        with NeutronNetwork(self._clients, self.context) as net_kwargs:
             boot_kwargs.update(net_kwargs)
             server = self._boot_server(self._generate_random_name(),
                                        image, flavor, **boot_kwargs)

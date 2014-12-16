@@ -245,9 +245,9 @@ class ScenarioTestCase(test.TestCase):
         self.assertEqual(scenario.idle_duration(), mock_uniform.return_value)
 
     def test_context(self):
-        context = mock.MagicMock()
+        context = {}
         scenario = base.Scenario(context=context)
-        self.assertEqual(context, scenario.context())
+        self.assertEqual(context, scenario.context)
 
     def test_clients(self):
         clients = fakes.FakeClients()

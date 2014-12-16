@@ -261,7 +261,7 @@ class NeutronScenarioTestCase(test.TestCase):
 
     def test_generate_subnet_cidr(self):
         scenario = utils.NeutronScenario()
-        scenario.context = mock.Mock(return_value={"iteration": 1})
+        scenario.context = {"iteration": 1}
         subnets_num = 30
 
         cidrs1 = map(scenario._generate_subnet_cidr,

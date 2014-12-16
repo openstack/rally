@@ -41,8 +41,8 @@ class SaharaJob(utils.SaharaScenario):
 
         """
 
-        mains = self.context()["tenant"]["sahara_mains"]
-        libs = self.context()["tenant"]["sahara_libs"]
+        mains = self.context["tenant"]["sahara_mains"]
+        libs = self.context["tenant"]["sahara_libs"]
 
         name = self._generate_random_name(prefix="job_")
         job = self.clients("sahara").jobs.create(name=name,
@@ -51,13 +51,13 @@ class SaharaJob(utils.SaharaScenario):
                                                  mains=mains,
                                                  libs=libs)
 
-        cluster_id = self.context()["tenant"]["sahara_cluster"]
+        cluster_id = self.context["tenant"]["sahara_cluster"]
 
         if job_type.lower() == "java":
             input_id = None
             output_id = None
         else:
-            input_id = self.context()["tenant"]["sahara_input"]
+            input_id = self.context["tenant"]["sahara_input"]
             output_id = self._create_output_ds().id
 
         self._run_job_execution(job_id=job.id,
@@ -102,7 +102,7 @@ class SaharaJob(utils.SaharaScenario):
 
         """
 
-        cluster_id = self.context()["tenant"]["sahara_cluster"]
+        cluster_id = self.context["tenant"]["sahara_cluster"]
 
         # Executing the sequence before the first scaling
         self.create_launch_job_sequence(jobs)
