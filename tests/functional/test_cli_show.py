@@ -27,7 +27,9 @@ class ShowTestCase(unittest.TestCase):
 
     def test_show_images(self):
         res = self.rally("show images")
-        self.assertIn("cirros", res)
+        cirros = "cirros" in res
+        testvm = "TestVM" in res
+        self.assertTrue(cirros or testvm)
 
     def test_show_flavors(self):
         res = self.rally("show flavors")
@@ -35,7 +37,9 @@ class ShowTestCase(unittest.TestCase):
 
     def test_show_networks(self):
         res = self.rally("show networks")
-        self.assertIn("private", res)
+        private = "private" in res
+        novanetwork = "novanetwork" in res
+        self.assertTrue(private or novanetwork)
 
     def test_show_secgroups(self):
         res = self.rally("show secgroups")
