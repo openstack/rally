@@ -18,6 +18,7 @@ import collections
 import random
 
 import jsonschema
+import six
 
 from rally.benchmark.scenarios import base as scenario_base
 from rally.benchmark import types
@@ -44,7 +45,7 @@ def format_result_on_timeout(exc, timeout):
 
 def _get_scenario_context(context):
     scenario_ctx = {}
-    for key, value in context.iteritems():
+    for key, value in six.iteritems(context):
         if key not in ["users", "tenants"]:
             scenario_ctx[key] = value
 

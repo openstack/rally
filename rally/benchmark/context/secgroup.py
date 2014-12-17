@@ -13,6 +13,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import six
+
 from rally.benchmark.context import base
 from rally.i18n import _
 from rally import log as logging
@@ -62,7 +64,7 @@ def _prepare_open_secgroup(endpoint):
 
     def rule_match(criteria, existing_rule):
         return all(existing_rule[key] == value
-                   for key, value in criteria.iteritems())
+                   for key, value in six.iteritems(criteria))
 
     for new_rule in rules_to_add:
         if not any(rule_match(new_rule, existing_rule) for existing_rule

@@ -16,6 +16,8 @@
 import copy
 import json
 
+import six
+
 from rally.benchmark.processing.charts import histogram as histo
 from rally.benchmark.processing import utils
 from rally.ui import utils as ui_utils
@@ -79,10 +81,10 @@ def _prepare_data(data):
             except KeyError:
                 atomic_durations[met] = [duration]
 
-    for k, v in output.iteritems():
+    for k, v in six.iteritems(output):
         output_stacked.append({"key": k, "values": utils.compress(v)})
 
-    for k, v in atomic_durations.iteritems():
+    for k, v in six.iteritems(atomic_durations):
         atomic_durations[k] = utils.compress(v)
 
     return {
@@ -200,7 +202,7 @@ def _process_atomic(result, data):
                                                  hvariety[v]['method'],
                                                  atomic_action['key']))
     stacked_area = []
-    for name, durations in data["atomic_durations"].iteritems():
+    for name, durations in six.iteritems(data["atomic_durations"]):
         stacked_area.append({
             "key": name,
             "values": [(i, round(d, 2)) for i, d in durations],

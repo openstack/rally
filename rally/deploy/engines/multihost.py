@@ -15,6 +15,8 @@
 
 import urlparse
 
+import six
+
 import rally
 from rally import consts
 from rally import db
@@ -70,7 +72,7 @@ class MultihostEngine(engine.EngineFactory):
 
     def _update_controller_ip(self, obj):
         if isinstance(obj, dict):
-            keyval = obj.iteritems()
+            keyval = six.iteritems(obj)
         elif isinstance(obj, list):
             keyval = enumerate(obj)
 

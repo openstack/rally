@@ -24,6 +24,7 @@ from glanceclient import exc
 import mock
 from neutronclient.common import exceptions as neutron_exceptions
 from novaclient import exceptions as nova_exceptions
+import six
 
 from rally.benchmark.context import base as base_ctx
 from rally.benchmark.scenarios import base
@@ -683,7 +684,7 @@ class FakeAlarmManager(FakeManager):
 
     def update(self, alarm_id, **fake_alarm_dict_diff):
         alarm = self.get(alarm_id)[0]
-        for attr, value in fake_alarm_dict_diff.iteritems():
+        for attr, value in six.iteritems(fake_alarm_dict_diff):
             setattr(alarm, attr, value)
         return alarm
 

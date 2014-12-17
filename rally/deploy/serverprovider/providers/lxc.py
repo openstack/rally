@@ -19,6 +19,7 @@ import StringIO
 import time
 
 import netaddr
+import six
 
 from rally.deploy.serverprovider import provider
 from rally import exceptions
@@ -97,7 +98,7 @@ class LxcHost(object):
                 'LXC_DHCP_MAX': self.network.size - 3,
             }
             config = StringIO.StringIO()
-            for name, value in values.iteritems():
+            for name, value in six.iteritems(values):
                 config.write('%(name)s="%(value)s"\n' % {'name': name,
                                                          'value': value})
             config.seek(0)

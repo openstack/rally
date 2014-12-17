@@ -17,6 +17,7 @@ import random
 import time
 
 from oslo.config import cfg
+import six
 
 from rally.benchmark.scenarios import base
 from rally.benchmark import utils as bench_utils
@@ -559,7 +560,7 @@ class NovaScenario(base.Scenario):
                 break
         try:
             new_host = random.choice(
-                            [key for key, value in az.hosts.iteritems()
+                            [key for key, value in six.iteritems(az.hosts)
                              if key != host and
                              value["nova-compute"]["available"] is True])
             return new_host

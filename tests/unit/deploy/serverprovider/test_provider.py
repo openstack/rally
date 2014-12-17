@@ -15,6 +15,7 @@
 """Test for vm providers."""
 
 import mock
+import six
 
 from rally.deploy import serverprovider
 from rally import exceptions
@@ -92,7 +93,7 @@ class ServerTestCase(test.TestCase):
 
     def test_init_server_dto(self):
         server = serverprovider.Server(*self.vals)
-        for k, v in dict(zip(self.keys, self.vals)).iteritems():
+        for k, v in six.iteritems(dict(zip(self.keys, self.vals))):
             self.assertEqual(getattr(server, k), v)
         self.assertIsInstance(server.ssh, sshutils.SSH)
 
