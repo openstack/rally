@@ -106,7 +106,7 @@ class TempestConf(object):
     def _get_url(self, servicename):
         services_type2name_map = self.clients.services()
         for service in self.keystoneclient.auth_ref['serviceCatalog']:
-            if services_type2name_map[service['type']] == servicename:
+            if services_type2name_map.get(service['type']) == servicename:
                 return service["endpoints"][0]["publicURL"]
 
     def _set_default(self):

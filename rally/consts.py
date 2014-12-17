@@ -100,6 +100,7 @@ class _Service(utils.ImmutableMixin, utils.EnumMixin):
     S3 = "s3"
     TROVE = "trove"
     SAHARA = "sahara"
+    SWIFT = "swift"
 
 
 class _ServiceType(utils.ImmutableMixin, utils.EnumMixin):
@@ -121,6 +122,7 @@ class _ServiceType(utils.ImmutableMixin, utils.EnumMixin):
     S3 = "s3"
     DATABASE = "database"
     DATA_PROCESSING = "data_processing"
+    OBJECT_STORE = "object-store"
 
     def __init__(self):
         self.__names = {
@@ -139,7 +141,8 @@ class _ServiceType(utils.ImmutableMixin, utils.EnumMixin):
             self.METERING: _Service.CEILOMETER,
             self.S3: _Service.S3,
             self.DATABASE: _Service.TROVE,
-            self.DATA_PROCESSING: _Service.SAHARA
+            self.DATA_PROCESSING: _Service.SAHARA,
+            self.OBJECT_STORE: _Service.SWIFT
         }
 
     def __getitem__(self, service_type):
