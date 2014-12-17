@@ -118,6 +118,16 @@ class HackingTestCase(test.TestCase):
         self.assertEqual(
             len(list(checks.assert_equal_type("self.assertTrue()"))), 0)
 
+    def test_check_iteritems_method(self):
+        self.assertEqual(len(list(checks.check_iteritems_method(
+            "dict.iteritems()"))), 1)
+
+        self.assertEqual(len(list(checks.check_iteritems_method(
+            "iteritems(dict)"))), 0)
+
+        self.assertEqual(len(list(checks.check_iteritems_method(
+            "dict.items()"))), 0)
+
     def test_assert_equal_none(self):
         self.assertEqual(len(list(checks.assert_equal_none(
             "self.assertEqual(A, None)"))), 1)

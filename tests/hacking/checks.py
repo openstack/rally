@@ -45,6 +45,7 @@ re_assert_equal_in_end_with_true_or_false = re.compile(
     r"assertEqual\((\w|[][.'\"])+( not)? in (\w|[][.'\", ])+, (True|False)\)")
 re_assert_equal_in_start_with_true_or_false = re.compile(
     r"assertEqual\((True|False), (\w|[][.'\"])+( not)? in (\w|[][.'\", ])+\)")
+re_iteritems_method = re.compile(r"\.iteritems\(\)")
 
 
 def _parse_assert_mock_str(line):
@@ -223,6 +224,21 @@ def assert_equal_in(logical_line):
                   "collection contents.")
 
 
+def check_iteritems_method(logical_line):
+    """Check if iteritems is properly called for compatibility with Python 3
+
+    The correct form is six.iteritems(dict) or dict.items(), instead of
+    dict.iteritems()
+
+    N330
+    """
+
+    res = re_iteritems_method.search(logical_line)
+    if res:
+        yield (0, "N330: Use six.iteritems(dict) or dict.items() rather than "
+                  "dict.iteritems() to iterate a collection.")
+
+
 def factory(register):
     register(check_assert_methods_from_mock)
     register(check_import_of_logging)
@@ -233,3 +249,4 @@ def factory(register):
     register(assert_equal_none)
     register(assert_true_or_false_with_in)
     register(assert_equal_in)
+    register(check_iteritems_method)
