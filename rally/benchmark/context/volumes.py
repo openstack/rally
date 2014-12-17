@@ -14,6 +14,7 @@
 
 from rally.benchmark.context import base
 from rally.benchmark.context.cleanup import manager as resource_manager
+from rally.benchmark.scenarios import base as scenario_base
 from rally.benchmark.scenarios.cinder import utils as cinder_utils
 from rally.common.i18n import _
 from rally.common import utils as rutils
@@ -37,6 +38,10 @@ class VolumeGenerator(base.Context):
                 "type": "integer",
                 "minimum": 1
             },
+            "volumes_per_tenant": {
+                "type": "integer",
+                "minimum": 1
+            }
         },
         'required': ['size'],
         "additionalProperties": False
@@ -44,18 +49,23 @@ class VolumeGenerator(base.Context):
 
     def __init__(self, context):
         super(VolumeGenerator, self).__init__(context)
+        self.config.setdefault("volumes_per_tenant", 1)
 
     @rutils.log_task_wrapper(LOG.info, _("Enter context: `Volumes`"))
     def setup(self):
         size = self.config["size"]
+        volumes_per_tenant = self.config["volumes_per_tenant"]
 
         for user, tenant_id in rutils.iterate_per_tenants(
                 self.context["users"]):
+            self.context["tenants"][tenant_id].setdefault("volumes", list())
             clients = osclients.Clients(user["endpoint"])
             cinder_util = cinder_utils.CinderScenario(clients=clients)
-            volume = cinder_util._create_volume(size)
-
-            self.context["tenants"][tenant_id]["volume"] = volume.id
+            for i in range(volumes_per_tenant):
+                rnd_name = scenario_base.Scenario._generate_random_name(
+                                                    prefix="ctx_rally_volume_")
+                vol = cinder_util._create_volume(size, display_name=rnd_name)
+                self.context["tenants"][tenant_id]["volumes"].append(vol._info)
 
     @rutils.log_task_wrapper(LOG.info, _("Exit context: `Volumes`"))
     def cleanup(self):

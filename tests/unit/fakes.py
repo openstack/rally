@@ -221,7 +221,9 @@ class FakeSample(FakeResource):
 
 
 class FakeVolume(FakeResource):
-    pass
+    @property
+    def _info(self):
+        return {"id": "uuid"}
 
 
 class FakeVolumeType(FakeResource):

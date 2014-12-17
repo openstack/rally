@@ -36,6 +36,12 @@ class CinderServersTestCase(test.TestCase):
         scenario._create_volume.assert_called_once_with(1, fakearg="f")
         scenario._list_volumes.assert_called_once_with(True)
 
+    def test_list_volumes(self):
+        scenario = volumes.CinderVolumes()
+        scenario._list_volumes = mock.MagicMock()
+        scenario.list_volumes(True)
+        scenario._list_volumes.assert_called_once_with(True)
+
     def test_create_and_delete_volume(self):
         fake_volume = mock.MagicMock()
 
@@ -63,7 +69,7 @@ class CinderServersTestCase(test.TestCase):
         scenario = volumes.CinderVolumes(
             context={"user": {"tenant_id": "fake"},
                      "tenant": {"id": "fake", "name": "fake",
-                                "volume": "uuid"}})
+                                "volumes": [{"id": "uuid"}]}})
 
         scenario._create_snapshot = mock.MagicMock(return_value=fake_snapshot)
         scenario.sleep_between = mock.MagicMock()

@@ -1,0 +1,16 @@
+---
+  CinderVolumes.list_volumes:
+    -
+      args:
+        detailed: True
+      runner:
+        type: "constant"
+        times: 100
+        concurrency: 1
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+        volumes:
+          size: 1
+          volumes_per_tenant: 4

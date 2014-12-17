@@ -39,6 +39,7 @@ class VolumeGeneratorTestCase(test.TestCase):
         context["config"] = {
             "volumes": {
                 "size": 1,
+                "volumes_per_tenant": 5,
             }
         }
 
@@ -54,6 +55,7 @@ class VolumeGeneratorTestCase(test.TestCase):
 
         tenants_count = 2
         users_per_tenant = 5
+        volumes_per_tenant = 5
 
         tenants = self._gen_tenants(tenants_count)
         users = list()
@@ -71,6 +73,7 @@ class VolumeGeneratorTestCase(test.TestCase):
                 },
                 "volumes": {
                     "size": 1,
+                    "volumes_per_tenant": 5,
                 }
             },
             "admin": {
@@ -83,7 +86,9 @@ class VolumeGeneratorTestCase(test.TestCase):
 
         new_context = copy.deepcopy(real_context)
         for id in tenants.keys():
-            new_context["tenants"][id]["volume"] = "uuid"
+            new_context["tenants"][id].setdefault("volumes", list())
+            for i in range(volumes_per_tenant):
+                new_context["tenants"][id]["volumes"].append({"id": "uuid"})
 
         volumes_ctx = volumes.VolumeGenerator(real_context)
         volumes_ctx.setup()
@@ -95,6 +100,7 @@ class VolumeGeneratorTestCase(test.TestCase):
 
         tenants_count = 2
         users_per_tenant = 5
+        volumes_per_tenant = 5
 
         tenants = self._gen_tenants(tenants_count)
         users = list()
@@ -102,7 +108,9 @@ class VolumeGeneratorTestCase(test.TestCase):
             for i in range(users_per_tenant):
                 users.append({"id": i, "tenant_id": id,
                               "endpoint": "endpoint"})
-            tenants[id]["volume"] = "uuid"
+            tenants[id].setdefault("volumes", list())
+            for j in range(volumes_per_tenant):
+                tenants[id]["volumes"].append({"id": "uuid"})
 
         context = {
             "config": {
@@ -113,6 +121,7 @@ class VolumeGeneratorTestCase(test.TestCase):
                 },
                 "volumes": {
                     "size": 1,
+                    "volumes_per_tenant": 5,
                 }
             },
             "admin": {

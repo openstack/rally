@@ -55,6 +55,21 @@ class CinderVolumes(utils.CinderScenario,
     @validation.required_services(consts.Service.CINDER)
     @validation.required_openstack(users=True)
     @base.scenario(context={"cleanup": ["cinder"]})
+    def list_volumes(self, detailed=True):
+        """List all volumes.
+
+        This simple scenario tests the cinder list command by listing
+        all the volumes.
+
+        :param detailed: True if detailed information about volumes
+                         should be listed
+        """
+
+        self._list_volumes(detailed)
+
+    @validation.required_services(consts.Service.CINDER)
+    @validation.required_openstack(users=True)
+    @base.scenario(context={"cleanup": ["cinder"]})
     def create_and_delete_volume(self, size, min_sleep=0, max_sleep=0,
                                  **kwargs):
         """Create and then delete a volume.
@@ -109,8 +124,8 @@ class CinderVolumes(utils.CinderScenario,
                           deletion (in seconds)
         :param kwargs: optional args to create a shapshot
         """
-        volume_id = self.context["tenant"]["volume"]
-        snapshot = self._create_snapshot(volume_id, force=force, **kwargs)
+        volume = random.choice(self.context["tenant"]["volumes"])
+        snapshot = self._create_snapshot(volume["id"], force=force, **kwargs)
         self.sleep_between(min_sleep, max_sleep)
         self._delete_snapshot(snapshot)
 
