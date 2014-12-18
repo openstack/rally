@@ -123,7 +123,7 @@ class BenchmarkEngine(object):
 
     @rutils.log_task_wrapper(LOG.info, _("Task validation of syntax."))
     def _validate_config_syntax(self, config):
-        for scenario, values in config.iteritems():
+        for scenario, values in six.iteritems(config):
             for pos, kw in enumerate(values):
                 try:
                     base_runner.ScenarioRunner.validate(kw.get("runner", {}))
@@ -164,7 +164,7 @@ class BenchmarkEngine(object):
             admin = osclients.Clients(self.admin)
             user = osclients.Clients(context["users"][0]["endpoint"])
 
-            for name, values in config.iteritems():
+            for name, values in six.iteritems(config):
                 for pos, kwargs in enumerate(values):
                     self._validate_config_semantic_helper(admin, user, name,
                                                           pos, self.task,

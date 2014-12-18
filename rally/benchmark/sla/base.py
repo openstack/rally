@@ -75,7 +75,7 @@ class SLA(object):
         opt_name_map = dict([(c.OPTION_NAME, c)
                              for c in utils.itersubclasses(SLA)])
 
-        for name, criterion in config.get("sla", {}).iteritems():
+        for name, criterion in six.iteritems(config.get("sla", {})):
             check_result = opt_name_map[name].check(criterion, result)
             results.append({'criterion': name,
                             'success': check_result.success,

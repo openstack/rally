@@ -14,6 +14,7 @@
 #    under the License.
 
 import mock
+import six
 
 from rally.benchmark.scenarios.quotas import utils
 from tests.unit import fakes
@@ -60,14 +61,14 @@ class QuotasScenarioTestCase(test.TestCase):
         max_quota = 1024
         scenario = utils.QuotasScenario(admin_clients=fakes.FakeClients())
         quotas = scenario._generate_quota_values(max_quota, "nova")
-        for k, v in quotas.iteritems():
+        for k, v in six.iteritems(quotas):
             self.assertTrue(-1 <= v <= max_quota)
 
     def test__generate_quota_values_cinder(self):
         max_quota = 1024
         scenario = utils.QuotasScenario(admin_clients=fakes.FakeClients())
         quotas = scenario._generate_quota_values(max_quota, "cinder")
-        for k, v in quotas.iteritems():
+        for k, v in six.iteritems(quotas):
             self.assertTrue(-1 <= v <= max_quota)
 
     def test__delete_quotas(self):

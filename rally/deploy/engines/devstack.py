@@ -15,6 +15,8 @@
 
 import os
 
+import six
+
 from rally import consts
 from rally.deploy import engine
 from rally.deploy.serverprovider import provider
@@ -99,7 +101,7 @@ class DevstackEngine(engine.EngineFactory):
         devstack_repo = self.config.get('devstack_repo', DEVSTACK_REPO)
         devstack_branch = self.config.get('devstack_branch', DEVSTACK_BRANCH)
         localrc = ''
-        for k, v in self.localrc.iteritems():
+        for k, v in six.iteritems(self.localrc):
             localrc += '%s=%s\n' % (k, v)
 
         for server in self.servers:

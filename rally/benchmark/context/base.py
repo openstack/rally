@@ -129,12 +129,12 @@ class ContextManager(object):
 
     @staticmethod
     def validate(context, non_hidden=False):
-        for name, config in context.iteritems():
+        for name, config in six.iteritems(context):
             Context.get_by_name(name).validate(config, non_hidden=non_hidden)
 
     @staticmethod
     def validate_semantic(context, admin=None, users=None, task=None):
-        for name, config in context.iteritems():
+        for name, config in six.iteritems(context):
             Context.get_by_name(name).validate_semantic(config, admin=admin,
                                                         users=users, task=task)
 

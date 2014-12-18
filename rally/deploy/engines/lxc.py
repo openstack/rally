@@ -16,6 +16,7 @@
 import os
 
 import netaddr
+import six
 
 from rally.deploy import engine
 from rally.deploy.serverprovider import provider
@@ -91,7 +92,8 @@ class LxcEngine(engine.EngineFactory):
         lxc_host.prepare()
         lxc_host.create_container(name, distribution, release)
         lxc_host.start_containers()
-        items = lxc_host.get_server_object(name).get_credentials().iteritems()
+        items = six.iteritems(
+            lxc_host.get_server_object(name).get_credentials())
         # filter out all keys where value is None
         credentials = dict(filter(lambda x: x[1] is not None, items))
         engine_config = self.config['engine'].copy()
