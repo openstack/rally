@@ -334,6 +334,28 @@
         failure_rate:
           max: 0
 
+    -
+      args:
+        auto_assign_nic: True
+        flavor:
+            name: "m1.tiny"
+        image:
+            name: "^cirros.*uec$"
+      runner:
+        type: "constant"
+        times: 4
+        concurrency: 4
+      context:
+        users:
+          tenants: 3
+          users_per_tenant: 2
+        network:
+          start_cidr: "100.1.0.0/26"
+          networks_per_tenant: 2
+      sla:
+        failure_rate:
+          max: 0
+
   NovaServers.boot_and_list_server:
     -
       args:

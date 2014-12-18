@@ -14,7 +14,6 @@
 #    under the License.
 
 import mock
-import netaddr
 
 from rally.benchmark.scenarios.neutron import utils
 from tests.unit import fakes
@@ -105,29 +104,27 @@ class NeutronScenarioTestCase(test.TestCase):
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        'neutron.delete_network')
 
-    @mock.patch(NEUTRON_UTILS + 'NeutronScenario._generate_random_name')
-    @mock.patch(NEUTRON_UTILS + "NeutronScenario._generate_subnet_cidr")
-    @mock.patch(NEUTRON_UTILS + "NeutronScenario.clients")
-    def test_create_subnet(self, mock_clients, mock_cidr, mock_random_name):
+    @mock.patch(NEUTRON_UTILS + 'NeutronScenario._generate_random_name',
+                return_value='test_subnet')
+    @mock.patch(NEUTRON_UTILS + 'NeutronScenario.clients')
+    def test_create_subnet(self, mock_clients, mock_random_name):
         scenario = utils.NeutronScenario()
-        network_id = "fake-id"
-        subnet_cidr = "192.168.0.0/24"
-        mock_cidr.return_value = subnet_cidr
-        mock_random_name.return_value = "fake-name"
+        network_id = 'fake-id'
+        start_cidr = '192.168.0.0/24'
 
-        network = {"network": {"id": network_id}}
+        network = {'network': {'id': network_id}}
         expected_subnet_data = {
-            "subnet": {
-                "network_id": network_id,
-                "cidr": subnet_cidr,
-                "ip_version": scenario.SUBNET_IP_VERSION,
-                "name": "fake-name"
+            'subnet': {
+                'network_id': network_id,
+                'cidr': start_cidr,
+                'ip_version': scenario.SUBNET_IP_VERSION,
+                'name': mock_random_name.return_value
             }
         }
 
         # Default options
         subnet_data = {"network_id": network_id}
-        scenario._create_subnet(network, 1, subnet_data)
+        scenario._create_subnet(network, subnet_data, start_cidr)
         mock_clients("neutron").create_subnet.assert_called_once_with(
             expected_subnet_data)
         self._test_atomic_action_timer(scenario.atomic_actions(),
@@ -136,10 +133,10 @@ class NeutronScenarioTestCase(test.TestCase):
         mock_clients("neutron").create_subnet.reset_mock()
 
         # Custom options
-        extras = {"cidr": "192.168.16.0/24", "allocation_pools": []}
+        extras = {'cidr': '192.168.16.0/24', 'allocation_pools': []}
         subnet_data.update(extras)
         expected_subnet_data["subnet"].update(extras)
-        scenario._create_subnet(network, 1, subnet_data)
+        scenario._create_subnet(network, subnet_data)
         mock_clients("neutron").create_subnet.assert_called_once_with(
             expected_subnet_data)
 
@@ -176,13 +173,12 @@ class NeutronScenarioTestCase(test.TestCase):
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        'neutron.update_subnet')
 
-    @mock.patch(NEUTRON_UTILS + "NeutronScenario._generate_subnet_cidr")
     @mock.patch(NEUTRON_UTILS + 'NeutronScenario.clients')
-    def test_delete_subnet(self, mock_clients, mock_generate_subnet_cidr):
+    def test_delete_subnet(self, mock_clients):
         scenario = utils.NeutronScenario()
 
         network = scenario._create_network({})
-        subnet = scenario._create_subnet(network, 1, {})
+        subnet = scenario._create_subnet(network, {})
         scenario._delete_subnet(subnet)
 
         self._test_atomic_action_timer(scenario.atomic_actions(),
@@ -254,28 +250,6 @@ class NeutronScenarioTestCase(test.TestCase):
     def test_SUBNET_IP_VERSION(self):
         """Curent NeutronScenario implementation supports only IPv4."""
         self.assertEqual(utils.NeutronScenario.SUBNET_IP_VERSION, 4)
-
-    def test_SUBNET_CIDR_START(self):
-        """Valid default CIDR to generate first subnet."""
-        netaddr.IPNetwork(utils.NeutronScenario.SUBNET_CIDR_START)
-
-    def test_generate_subnet_cidr(self):
-        scenario = utils.NeutronScenario()
-        scenario.context = {"iteration": 1}
-        subnets_num = 30
-
-        cidrs1 = map(scenario._generate_subnet_cidr,
-                     [subnets_num] * subnets_num)
-
-        cidrs2 = map(scenario._generate_subnet_cidr,
-                     [subnets_num] * subnets_num)
-
-        # All CIDRs must differ
-        self.assertEqual(len(cidrs1), len(set(cidrs1)))
-        self.assertEqual(len(cidrs2), len(set(cidrs2)))
-
-        # All CIDRs must be valid
-        map(netaddr.IPNetwork, cidrs1 + cidrs2)
 
     @mock.patch(NEUTRON_UTILS + "NeutronScenario._generate_random_name")
     @mock.patch(NEUTRON_UTILS + "NeutronScenario.clients")
@@ -378,10 +352,7 @@ class NeutronScenarioTestCase(test.TestCase):
                         "id": "fake-id"
                     }
                 })
-    @mock.patch(NEUTRON_UTILS + "NeutronScenario.SUBNET_CIDR_START",
-                new_callable=mock.PropertyMock(return_value="default_cidr"))
     def test_create_network_and_subnets(self,
-                                        mock_cidr_start,
                                         mock_create_network,
                                         mock_create_subnet):
         scenario = utils.NeutronScenario()
@@ -396,16 +367,12 @@ class NeutronScenarioTestCase(test.TestCase):
         scenario._create_network_and_subnets(
             network_create_args=network_create_args,
             subnet_create_args=subnet_create_args,
-            subnet_cidr_start=scenario.SUBNET_CIDR_START,
             subnets_per_network=subnets_per_network)
 
         mock_create_network.assert_called_once_with({})
         mock_create_subnet.assert_has_calls(
             [mock.call({"network": {"id": "fake-id"}},
-                       subnets_per_network,
-                       {})] * subnets_per_network)
-
-        self.assertEqual(scenario.SUBNET_CIDR_START, "default_cidr")
+                       {}, "1.0.0.0/24")] * subnets_per_network)
 
         mock_create_network.reset_mock()
         mock_create_subnet.reset_mock()
@@ -414,27 +381,26 @@ class NeutronScenarioTestCase(test.TestCase):
         scenario._create_network_and_subnets(
             network_create_args=network_create_args,
             subnet_create_args={"allocation_pools": []},
-            subnet_cidr_start="custom_cidr",
+            subnet_cidr_start="10.10.10.0/24",
             subnets_per_network=subnets_per_network)
 
-        self.assertEqual(scenario.SUBNET_CIDR_START, "custom_cidr")
         mock_create_network.assert_called_once_with({})
         mock_create_subnet.assert_has_calls(
             [mock.call({"network": {"id": "fake-id"}},
-                       subnets_per_network,
-                       {"allocation_pools": []})] * subnets_per_network)
+                       {"allocation_pools": []},
+                       "10.10.10.0/24")] * subnets_per_network)
 
-    def test_functional_create_network_and_subnets(self):
+    @mock.patch(NEUTRON_UTILS + "network_wrapper.generate_cidr")
+    def test_functional_create_network_and_subnets(self, mock_generate_cidr):
         scenario = utils.NeutronScenario(clients=fakes.FakeClients())
         network_create_args = {"name": "foo_network"}
         subnet_create_args = {}
         subnets_per_network = 5
-        subnet_cidr_start = None
+        subnet_cidr_start = "1.1.1.0/24"
 
-        cidrs = sorted(["1.1.1.%d/30" % i
-                        for i in range(subnets_per_network)])
-        _cidrs = cidrs[:]
-        scenario._generate_subnet_cidr = lambda i: _cidrs.pop()
+        cidrs = ["1.1.%d.0/24" % i for i in range(subnets_per_network)]
+        cidrs_ = iter(cidrs)
+        mock_generate_cidr.side_effect = lambda **kw: cidrs_.next()
 
         network, subnets = scenario._create_network_and_subnets(
             network_create_args,

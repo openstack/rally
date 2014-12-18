@@ -1002,6 +1002,7 @@ class FakeNeutronClient(object):
     def create_router(self, data):
         router = setup_dict(data["router"],
                             defaults={"name": generate_name("router_"),
+                                      "external_gateway_info": None,
                                       "admin_state_up": True})
         router_id = generate_uuid()
         router.update({"id": router_id,

@@ -17,8 +17,11 @@ import functools
 import imp
 import inspect
 import itertools
+import multiprocessing
 import os
+import random
 import re
+import string
 import StringIO
 import sys
 import time
@@ -96,6 +99,43 @@ class Timer(object):
 class Struct(object):
     def __init__(self, **entries):
         self.__dict__.update(entries)
+
+
+class RAMInt(object):
+    """Share RAM integer, for IPC.
+
+    This class represents iterable which refers directly to an integer value
+    stored in RAM. Being a true system-level singletone, this allows safely
+    share integer among processes and threads.
+    """
+
+    def __init__(self):
+        self.__lock = multiprocessing.Lock()
+        self.__int = multiprocessing.Value("I", 0)
+
+    def __int__(self):
+        return self.__int.value
+
+    def __str__(self):
+        return str(self.__int.value)
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        with self.__lock:
+            value = self.__int.value
+            self.__int.value += 1
+            if self.__int.value > value:
+                return value
+            raise StopIteration
+
+    def next(self):
+        return self.__next__()
+
+    def reset(self):
+        with self.__lock:
+            self.__int.value = 0
 
 
 def itersubclasses(cls, _seen=None):
@@ -367,3 +407,15 @@ def iterate_per_tenants(users):
         if user["tenant_id"] not in processed_tenants:
             processed_tenants.append(user["tenant_id"])
             yield (user, user["tenant_id"])
+
+
+def generate_random_name(prefix="", length=16, choice=string.ascii_lowercase):
+    """Generates pseudo random name.
+
+    :param prefix: str, custom prefix for random name
+    :param length: int, length of random name
+    :param choice: str, chars for random choice
+    :returns: str, pseudo random name
+    """
+    rand_part = "".join(random.choice(choice) for i in range(length))
+    return prefix + rand_part

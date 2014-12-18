@@ -1,0 +1,75 @@
+# Copyright 2014: Mirantis Inc.
+# All Rights Reserved.
+#
+#    Licensed under the Apache License, Version 2.0 (the "License"); you may
+#    not use this file except in compliance with the License. You may obtain
+#    a copy of the License at
+#
+#         http://www.apache.org/licenses/LICENSE-2.0
+#
+#    Unless required by applicable law or agreed to in writing, software
+#    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+#    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+#    License for the specific language governing permissions and limitations
+#    under the License.
+
+from rally.benchmark.context import base
+from rally.benchmark.wrappers import network as network_wrapper
+from rally.i18n import _
+from rally import log as logging
+from rally import osclients
+from rally import utils
+
+
+LOG = logging.getLogger(__name__)
+
+
+@base.context(name="network", order=350)
+class Network(base.Context):
+    CONFIG_SCHEMA = {
+        "type": "object",
+        "$schema": utils.JSON_SCHEMA,
+        "properties": {
+            "start_cidr": {
+                "type": "string"
+            },
+            "networks_per_tenant": {
+                "type": "integer",
+                "minimum": 1
+            }
+        },
+        "additionalProperties": False
+    }
+    START_CIDR_DFLT = "100.1.0.0/26"
+
+    def __init__(self, context):
+        super(Network, self).__init__(context)
+        self.config.setdefault("start_cidr", self.START_CIDR_DFLT)
+        self.config.setdefault("networks_per_tenant", 1)
+        self.net_wrapper = network_wrapper.wrap(
+            osclients.Clients(context["admin"]["endpoint"]),
+            self.config)
+
+    @utils.log_task_wrapper(LOG.info, _("Enter context: `network`"))
+    def setup(self):
+        for user, tenant_id in (utils.iterate_per_tenants(
+                self.context.get("users", []))):
+            self.context["tenants"][tenant_id]["networks"] = []
+            for i in range(self.config["networks_per_tenant"]):
+                # NOTE(amaretskiy): add_router and subnets_num take effect
+                #                   for Neutron only.
+                # NOTE(amaretskiy): Do we need neutron subnets_num > 1 ?
+                network = self.net_wrapper.create_network(tenant_id,
+                                                          add_router=True,
+                                                          subnets_num=1)
+                self.context["tenants"][tenant_id]["networks"].append(network)
+
+    @utils.log_task_wrapper(LOG.info, _("Exit context: `network`"))
+    def cleanup(self):
+        for tenant_id, tenant_ctx in self.context["tenants"].iteritems():
+            for network in tenant_ctx.get("networks", []):
+                try:
+                    self.net_wrapper.delete_network(network)
+                except Exception as e:
+                    LOG.error("Failed to delete network for tenant %s\n"
+                              " reason: %s" % (tenant_id, e))
