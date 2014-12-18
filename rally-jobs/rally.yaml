@@ -1270,6 +1270,8 @@
         users:
           tenants: 3
           users_per_tenant: 2
+        network:
+          start_cidr: "100.1.0.0/26"
         quotas:
           nova:
             security_groups: -1
