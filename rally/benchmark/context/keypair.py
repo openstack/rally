@@ -26,7 +26,7 @@ from rally import utils
 LOG = logging.getLogger(__name__)
 
 
-@base.context(name="keypair", order=301)
+@base.context(name="keypair", order=310)
 class Keypair(base.Context):
     KEYPAIR_NAME = "rally_ssh_key"
 

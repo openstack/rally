@@ -13,6 +13,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import sys
+
 from rally.benchmark.context import base
 from rally.benchmark.context.cleanup import manager
 from rally import exceptions
@@ -43,7 +45,8 @@ class CleanupMixin(object):
         pass
 
 
-@base.context(name="admin_cleanup", order=200, hidden=True)
+# NOTE(amaretskiy): Set order to run this just before UserCleanup
+@base.context(name="admin_cleanup", order=(sys.maxint - 1), hidden=True)
 class AdminCleanup(CleanupMixin, base.Context):
     """Context class for admin resources cleanup."""
 
@@ -67,7 +70,8 @@ class AdminCleanup(CleanupMixin, base.Context):
                         users=self.context.get("users", []))
 
 
-@base.context(name="cleanup", order=201, hidden=True)
+# NOTE(amaretskiy): Set maximum order to run this last
+@base.context(name="cleanup", order=sys.maxint, hidden=True)
 class UserCleanup(CleanupMixin, base.Context):
     """Context class for user resources cleanup."""
 
