@@ -58,6 +58,20 @@ class NovaServers(utils.NovaScenario,
             self._generate_random_name(), image, flavor, **kwargs)
         self._list_servers(detailed)
 
+    @validation.required_services(consts.Service.NOVA)
+    @validation.required_openstack(users=True)
+    @base.scenario(context={"cleanup": ["nova"]})
+    def list_servers(self, detailed=True):
+        """Test the nova list command.
+
+        This simple scenario test the nova list command by listing
+        all the servers.
+
+        :param detailed: True if detailed information about servers
+                         should be listed
+        """
+        self._list_servers(detailed)
+
     @types.set(image=types.ImageResourceType,
                flavor=types.FlavorResourceType)
     @validation.image_valid_on_flavor("flavor", "image")
