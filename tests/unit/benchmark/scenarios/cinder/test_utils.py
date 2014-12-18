@@ -124,7 +124,7 @@ class CinderScenarioTestCase(test.TestCase):
                    "users": [{"tenant_id": "fake",
                               "users_per_tenant": 1}],
                    "tenant": {"id": "fake", "servers": servers}}
-        self.scenario._context = context
+        self.scenario.context = context
         self.scenario.clients = mock.Mock()
         self.scenario.clients('nova').servers.get = mock.Mock(
             side_effect=lambda arg: arg)

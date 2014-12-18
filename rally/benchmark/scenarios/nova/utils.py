@@ -96,7 +96,7 @@ class NovaScenario(base.Scenario):
 
         :returns: Created server object
         """
-        allow_ssh_secgroup = self.context().get("allow_ssh")
+        allow_ssh_secgroup = self.context.get("allow_ssh")
         if allow_ssh_secgroup:
             if 'security_groups' not in kwargs:
                 kwargs['security_groups'] = [allow_ssh_secgroup]

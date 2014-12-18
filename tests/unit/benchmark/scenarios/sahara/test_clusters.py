@@ -33,10 +33,11 @@ class SaharaClustersTestCase(test.TestCase):
 
         clusters_scenario = clusters.SaharaClusters()
 
-        clusters_scenario.context = mock.MagicMock(return_value={
+        clusters_scenario.context = {
             "tenant": {
-                "sahara_image": "test_image"}}
-        )
+                "sahara_image": "test_image"
+            }
+        }
         clusters_scenario.create_and_delete_cluster(
             flavor="test_flavor",
             node_count=5,
@@ -75,10 +76,11 @@ class SaharaClustersTestCase(test.TestCase):
         )
         clusters_scenario = clusters.SaharaClusters()
 
-        clusters_scenario.context = mock.MagicMock(return_value={
+        clusters_scenario.context = {
             "tenant": {
-                "sahara_image": "test_image"}}
-        )
+                "sahara_image": "test_image"
+            }
+        }
 
         clusters_scenario.create_scale_delete_cluster(
             flavor="test_flavor",

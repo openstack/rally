@@ -34,7 +34,7 @@ def tempest_log_wrapper(func):
         if "log_file" not in kwargs:
             # set temporary log file
             kwargs["log_file"] = os.path.join(
-                scenario_obj.context()["tmp_results_dir"],
+                scenario_obj.context["tmp_results_dir"],
                 os.path.basename(tempfile.NamedTemporaryFile().name))
 
         # run target scenario
@@ -44,7 +44,7 @@ def tempest_log_wrapper(func):
             pass
 
         # parse and save results
-        total, tests = scenario_obj.context()["verifier"].parse_results(
+        total, tests = scenario_obj.context["verifier"].parse_results(
             kwargs["log_file"])
         if total and tests:
             scenario_obj._add_atomic_actions("test_execution",

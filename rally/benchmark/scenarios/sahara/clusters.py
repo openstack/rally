@@ -66,7 +66,7 @@ class SaharaClusters(utils.SaharaScenario):
         Cluster
         """
 
-        image_id = self.context()["tenant"]["sahara_image"]
+        image_id = self.context["tenant"]["sahara_image"]
 
         LOG.debug("Using Image: %s" % image_id)
 
@@ -128,7 +128,7 @@ class SaharaClusters(utils.SaharaScenario):
         Cluster
         """
 
-        image_id = self.context()["tenant"]["sahara_image"]
+        image_id = self.context["tenant"]["sahara_image"]
 
         LOG.debug("Using Image: %s" % image_id)
 

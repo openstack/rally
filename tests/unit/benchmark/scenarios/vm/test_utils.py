@@ -69,7 +69,7 @@ class VMScenarioTestCase(test.TestCase):
         mock_ssh_class.return_value = mock_ssh_instance
 
         vm_scenario = utils.VMScenario()
-        vm_scenario._context = {"user": {"keypair": {"private": "ssh"}}}
+        vm_scenario.context = {"user": {"keypair": {"private": "ssh"}}}
         vm_scenario.run_command("1.2.3.4", 22, "username", "int", "script")
 
         mock_wait_ping.assert_called_once_with("1.2.3.4")

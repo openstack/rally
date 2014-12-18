@@ -46,14 +46,15 @@ class SaharaJobTestCase(test.TestCase):
 
         jobs_scenario = jobs.SaharaJob()
 
-        jobs_scenario.context = mock.MagicMock(return_value={
+        jobs_scenario.context = {
             "tenant": {
                 "sahara_image": "test_image",
                 "sahara_mains": ["main_42"],
                 "sahara_libs": ["lib_42"],
                 "sahara_cluster": "cl_42",
-                "sahara_input": "in_42"}}
-        )
+                "sahara_input": "in_42"
+            }
+        }
         jobs_scenario.create_launch_job(
             job_type="java",
             configs={"conf_key": "conf_val"},
@@ -90,14 +91,15 @@ class SaharaJobTestCase(test.TestCase):
 
         jobs_scenario = jobs.SaharaJob()
 
-        jobs_scenario.context = mock.MagicMock(return_value={
+        jobs_scenario.context = {
             "tenant": {
                 "sahara_image": "test_image",
                 "sahara_mains": ["main_42"],
                 "sahara_libs": ["lib_42"],
                 "sahara_cluster": "cl_42",
-                "sahara_input": "in_42"}}
-        )
+                "sahara_input": "in_42"
+            }
+        }
         jobs_scenario.create_launch_job(
             job_type="pig",
             configs={"conf_key": "conf_val"},
@@ -132,14 +134,15 @@ class SaharaJobTestCase(test.TestCase):
 
         jobs_scenario = jobs.SaharaJob()
 
-        jobs_scenario.context = mock.MagicMock(return_value={
+        jobs_scenario.context = {
             "tenant": {
                 "sahara_image": "test_image",
                 "sahara_mains": ["main_42"],
                 "sahara_libs": ["lib_42"],
                 "sahara_cluster": "cl_42",
-                "sahara_input": "in_42"}}
-        )
+                "sahara_input": "in_42"
+            }
+        }
         jobs_scenario.create_launch_job_sequence(
             jobs=[
                 {
@@ -195,14 +198,15 @@ class SaharaJobTestCase(test.TestCase):
 
         jobs_scenario = jobs.SaharaJob()
 
-        jobs_scenario.context = mock.MagicMock(return_value={
+        jobs_scenario.context = {
             "tenant": {
                 "sahara_image": "test_image",
                 "sahara_mains": ["main_42"],
                 "sahara_libs": ["lib_42"],
                 "sahara_cluster": "cl_42",
-                "sahara_input": "in_42"}}
-        )
+                "sahara_input": "in_42"
+            }
+        }
         jobs_scenario.create_launch_job_sequence_with_scaling(
             jobs=[
                 {
