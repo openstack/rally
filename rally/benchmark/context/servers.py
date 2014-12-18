@@ -83,7 +83,8 @@ class ServerGenerator(base.Context):
                       % (user["tenant_id"]))
             clients = osclients.Clients(user["endpoint"])
             nova_scenario = nova_utils.NovaScenario(clients=clients)
-            server_name_prefix = nova_scenario._generate_random_name()
+            server_name_prefix = nova_scenario._generate_random_name(
+                                                prefix="ctx_rally_server_")
 
             LOG.debug("Calling _boot_servers with server_name_prefix=%s "
                       "image_id=%s flavor_id=%s servers_per_tenant=%s"

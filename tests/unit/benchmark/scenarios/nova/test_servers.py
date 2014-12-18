@@ -197,6 +197,12 @@ class NovaServersTestCase(test.TestCase):
                                                       fakearg="fakearg")
         scenario._list_servers.assert_called_once_with(True)
 
+    def test_list_servers(self):
+        scenario = servers.NovaServers()
+        scenario._list_servers = mock.MagicMock()
+        scenario.list_servers(True)
+        scenario._list_servers.assert_called_once_with(True)
+
     def test_boot_server_from_volume_and_delete(self):
         fake_server = object()
         scenario = servers.NovaServers()

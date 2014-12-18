@@ -1,0 +1,29 @@
+{
+    "NovaServers.list_servers": [
+        {
+            "args": {
+                "detailed": true
+            },
+            "runner": {
+                "type": "constant",
+                "times": 1,
+                "concurrency": 1
+            },
+            "context": {
+                "users": {
+                    "tenants": 1,
+                    "users_per_tenant": 1
+                },
+                "servers": {
+                    "flavor": {
+                        "name": "m1.nano"
+                    },
+                    "image": {
+                        "name": "^cirros.*uec$"
+                    },
+                    "servers_per_tenant": 2
+                }
+            }
+        }
+    ]
+}
