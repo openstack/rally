@@ -1253,6 +1253,3 @@
           nova:
             security_groups: -1
             security_group_rules: -1
-      sla:
-        failure_rate:
-          max: 25

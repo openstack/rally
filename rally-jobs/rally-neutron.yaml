@@ -542,6 +542,3 @@
           neutron:
             security_group: -1
             security_group_rule: -1
-      sla:
-        failure_rate:
-          max: 25
