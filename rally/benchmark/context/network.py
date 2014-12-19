@@ -13,6 +13,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import six
+
 from rally.benchmark.context import base
 from rally.benchmark.wrappers import network as network_wrapper
 from rally.i18n import _
@@ -66,7 +68,7 @@ class Network(base.Context):
 
     @utils.log_task_wrapper(LOG.info, _("Exit context: `network`"))
     def cleanup(self):
-        for tenant_id, tenant_ctx in self.context["tenants"].iteritems():
+        for tenant_id, tenant_ctx in six.iteritems(self.context["tenants"]):
             for network in tenant_ctx.get("networks", []):
                 try:
                     self.net_wrapper.delete_network(network)
