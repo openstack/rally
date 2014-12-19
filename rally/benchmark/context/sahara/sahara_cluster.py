@@ -111,13 +111,6 @@ class SaharaCluster(base.Context):
                                   .transform(clients, network_cfg))
 
             floating_ip_pool = self.config.get("floating_ip_pool")
-            if not floating_ip_pool:
-                # Skipping floating network config
-                floating_ip_pool_id = None
-            else:
-                network_cfg = {"name": floating_ip_pool}
-                floating_ip_pool_id = (types.NeutronNetworkResourceType
-                                       .transform(clients, network_cfg))
 
             cluster = utils.SaharaScenario(
                 context=self.context, clients=clients)._launch_cluster(
@@ -126,7 +119,7 @@ class SaharaCluster(base.Context):
                     flavor_id=self.config["flavor_id"],
                     node_count=self.config["node_count"],
                     image_id=image_id,
-                    floating_ip_pool=floating_ip_pool_id,
+                    floating_ip_pool=floating_ip_pool,
                     neutron_net_id=neutron_net_id,
                     volumes_per_node=self.config.get("volumes_per_node"),
                     volumes_size=self.config.get("volumes_size", 1),
