@@ -37,7 +37,8 @@ class SaharaClusters(utils.SaharaScenario):
     def create_and_delete_cluster(self, flavor, node_count, plugin_name,
                                   hadoop_version, floating_ip_pool=None,
                                   neutron_net=None, volumes_per_node=None,
-                                  volumes_size=None, node_configs=None,
+                                  volumes_size=None, auto_security_group=None,
+                                  security_groups=None, node_configs=None,
                                   cluster_configs=None):
         """Test the Sahara Cluster launch and delete commands.
 
@@ -60,6 +61,12 @@ class SaharaClusters(utils.SaharaScenario):
         :param volumes_per_node: The number of Cinder volumes that will be
         attached to every cluster node
         :param volumes_size: The size of each Cinder volume in GB
+        :param auto_security_group: Boolean value. If set to True Sahara will
+        create a Security Group for each Node Group in the Cluster
+        automatically.
+        :param security_groups: The list of security groups that will be used
+        while creating VMs. If auto_security_group is set to True this list
+        can be left empty.
         :param node_configs: The configs dict that will be passed to each Node
         Group
         :param cluster_configs: The configs dict that will be passed to the
@@ -80,6 +87,8 @@ class SaharaClusters(utils.SaharaScenario):
             neutron_net_id=neutron_net,
             volumes_per_node=volumes_per_node,
             volumes_size=volumes_size,
+            auto_security_group=auto_security_group,
+            security_groups=security_groups,
             node_configs=node_configs,
             cluster_configs=cluster_configs)
 
@@ -95,7 +104,9 @@ class SaharaClusters(utils.SaharaScenario):
                                     hadoop_version, deltas,
                                     floating_ip_pool=None, neutron_net_id=None,
                                     volumes_per_node=None, volumes_size=None,
-                                    node_configs=None, cluster_configs=None):
+                                    auto_security_group=None,
+                                    security_groups=None, node_configs=None,
+                                    cluster_configs=None):
         """Test the Sahara Cluster launch, scale and delete commands.
 
         This scenario launches a Hadoop cluster, waits until it becomes
@@ -122,6 +133,12 @@ class SaharaClusters(utils.SaharaScenario):
         :param volumes_per_node: The number of Cinder volumes that will be
         attached to every cluster node
         :param volumes_size: The size of each Cinder volume in GB
+        :param auto_security_group: Boolean value. If set to True Sahara will
+        create a Security Group for each Node Group in the Cluster
+        automatically.
+        :param security_groups: The list of security groups that will be used
+        while creating VMs. If auto_security_group is set to True this list
+        can be left empty.
         :param node_configs: The configs dict that will be passed to each Node
         Group
         :param cluster_configs: The configs dict that will be passed to the
@@ -142,6 +159,8 @@ class SaharaClusters(utils.SaharaScenario):
             neutron_net_id=neutron_net_id,
             volumes_per_node=volumes_per_node,
             volumes_size=volumes_size,
+            auto_security_group=auto_security_group,
+            security_groups=security_groups,
             node_configs=node_configs,
             cluster_configs=cluster_configs)
 

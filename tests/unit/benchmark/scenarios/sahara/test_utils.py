@@ -150,7 +150,9 @@ class SaharaUtilsTestCase(test.TestCase):
                 "volumes_per_node": 5,
                 "volumes_size": 10,
                 "count": 1,
-                "node_configs": {"HDFS": {"local_config": "local_value"}}
+                "auto_security_group": True,
+                "security_groups": ["g1", "g2"],
+                "node_configs": {"HDFS": {"local_config": "local_value"}},
             }, {
                 "name": "worker-ng",
                 "flavor_id": "test_flavor",
@@ -159,7 +161,9 @@ class SaharaUtilsTestCase(test.TestCase):
                 "volumes_per_node": 5,
                 "volumes_size": 10,
                 "count": 41,
-                "node_configs": {"HDFS": {"local_config": "local_value"}}
+                "auto_security_group": True,
+                "security_groups": ["g1", "g2"],
+                "node_configs": {"HDFS": {"local_config": "local_value"}},
             }
         ]
 
@@ -180,6 +184,8 @@ class SaharaUtilsTestCase(test.TestCase):
             floating_ip_pool="test_pool",
             volumes_per_node=5,
             volumes_size=10,
+            auto_security_group=True,
+            security_groups=["g1", "g2"],
             node_count=42,
             node_configs={"HDFS": {"local_config": "local_value"}}
         )

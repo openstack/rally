@@ -12,6 +12,7 @@
           - -1
         plugin_name: "vanilla"
         hadoop_version: "2.3.0"
+        auto_security_group: True
       runner:
         type: "constant"
         times: 4
