@@ -20,26 +20,8 @@ from sqlalchemy.ext import mutable
 from sqlalchemy import types as sa_types
 
 
-class BigText(sa_types.TypeDecorator):
-    """An SQLAlchemy type that uses bigger text type in mysql.
-
-       MySql can store only 64kb in Text type, and for example in psql or
-       sqlite we are able to store more then 1GB. In some cases, like storing
-       results of task 64kb is not enough. So this type uses for MySql
-       LONGTEXT that allows us to store 4GiB.
-    """
-
-    impl = sa_types.Text
-
-    def load_dialect_impl(self, dialect):
-        if dialect.name == 'mysql':
-            return dialect.type_descriptor(mysql_types.LONGTEXT)
-        else:
-            return dialect.type_descriptor(sa_types.Text)
-
-
 class JSONEncodedDict(sa_types.TypeDecorator):
-    "Represents an immutable structure as a json-encoded string."
+    """Represents an immutable structure as a json-encoded string."""
 
     impl = sa_types.Text
 
@@ -55,14 +37,25 @@ class JSONEncodedDict(sa_types.TypeDecorator):
 
 
 class BigJSONEncodedDict(JSONEncodedDict):
-    "Represents an immutable structure as a json-encoded string."
-    impl = BigText
+    """Represents an immutable structure as a json-encoded string.
+
+       MySql can store only 64kb in Text type, and for example in psql or
+       sqlite we are able to store more then 1GB. In some cases, like storing
+       results of task 64kb is not enough. So this type uses for MySql
+       LONGTEXT that allows us to store 4GiB.
+    """
+
+    def load_dialect_impl(self, dialect):
+        if dialect.name == "mysql":
+            return dialect.type_descriptor(mysql_types.LONGTEXT)
+        else:
+            return dialect.type_descriptor(sa_types.Text)
 
 
 class MutableDict(mutable.Mutable, dict):
     @classmethod
     def coerce(cls, key, value):
-        "Convert plain dictionaries to MutableDict."
+        """Convert plain dictionaries to MutableDict."""
 
         if not isinstance(value, MutableDict):
             if isinstance(value, dict):
