@@ -128,8 +128,8 @@ class IterSubclassesTestCase(test.TestCase):
 class ImportModulesTestCase(test.TestCase):
     def test_try_append_module_into_sys_modules(self):
         modules = {}
-        utils.try_append_module('rally.version', modules)
-        self.assertIn('rally.version', modules)
+        utils.try_append_module('rally.common.version', modules)
+        self.assertIn('rally.common.version', modules)
 
     def test_try_append_broken_module(self):
         modules = {}

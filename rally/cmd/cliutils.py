@@ -22,12 +22,12 @@ import sys
 
 from oslo.config import cfg
 
+from rally.common import version
 from rally import exceptions
 from rally.i18n import _
 from rally import log as logging
 from rally.openstack.common import cliutils
 from rally import utils
-from rally import version
 
 
 CONF = cfg.CONF

@@ -18,8 +18,8 @@ import abc
 import jsonschema
 import six
 
+from rally.common import sshutils
 from rally import exceptions
-from rally import sshutils
 from rally import utils
 
 

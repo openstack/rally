@@ -17,7 +17,7 @@ import collections
 
 import mock
 
-from rally import broker
+from rally.common import broker
 from tests.unit import test
 
 
