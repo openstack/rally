@@ -14,9 +14,9 @@
 #    under the License.
 
 import os
-import StringIO
 
 import mock
+from six import moves
 
 from rally.cmd import envutils
 from rally import exceptions
@@ -34,7 +34,7 @@ class EnvUtilsTestCase(test.TestCase):
             pass
 
         with mock.patch("sys.stdout",
-                        new_callable=StringIO.StringIO) as mock_stdout:
+                        new_callable=moves.StringIO) as mock_stdout:
             test_function()
             self.assertEqual(mock_stdout.getvalue(),
                              "Missing argument: --test_missing_arg\n")

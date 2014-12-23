@@ -38,7 +38,7 @@ class HelperFunctionsTestCase(test.TestCase):
         self.assertEqual('rb', mode)
 
     @mock.patch(MOD_NAME + '_get_script', return_value='fake_script')
-    @mock.patch(MOD_NAME + 'StringIO.StringIO')
+    @mock.patch(MOD_NAME + 'moves.StringIO')
     def test__get_script_from_template(self, m_sio, m_gs):
         m_gs.return_value = fake_script = mock.Mock()
         fake_script.read.return_value = 'fake_data {k1} {k2}'
@@ -79,7 +79,7 @@ class LxcHostTestCase(test.TestCase):
         self.server.ssh.execute.return_value = [-1, '', '']
         self.assertEqual('', self.host.backingstore)
 
-    @mock.patch(MOD_NAME + 'StringIO.StringIO')
+    @mock.patch(MOD_NAME + 'moves.StringIO')
     @mock.patch(MOD_NAME + '_get_script', return_value='fake_script')
     def test_prepare(self, m_gs, m_sio):
         m_sio.return_value = fake_conf = mock.Mock()

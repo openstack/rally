@@ -59,7 +59,6 @@ Eventlet:
 
 import select
 import socket
-import StringIO
 import time
 
 import paramiko
@@ -105,7 +104,7 @@ class SSH(object):
 
     def _get_pkey(self, key):
         if isinstance(key, six.string_types):
-            key = StringIO.StringIO(key)
+            key = six.moves.StringIO(key)
         errors = []
         for key_class in (paramiko.rsakey.RSAKey, paramiko.dsskey.DSSKey):
             try:
@@ -153,7 +152,7 @@ class SSH(object):
         client = self._get_client()
 
         if isinstance(stdin, six.string_types):
-            stdin = StringIO.StringIO(stdin)
+            stdin = six.moves.StringIO(stdin)
 
         return self._run(client, cmd, stdin=stdin, stdout=stdout,
                          stderr=stderr, raise_on_error=raise_on_error,
@@ -236,8 +235,8 @@ class SSH(object):
 
         :returns: tuple (exit_status, stdout, stderr)
         """
-        stdout = StringIO.StringIO()
-        stderr = StringIO.StringIO()
+        stdout = six.moves.StringIO()
+        stderr = six.moves.StringIO()
 
         exit_status = self.run(cmd, stderr=stderr,
                                stdout=stdout, stdin=stdin,

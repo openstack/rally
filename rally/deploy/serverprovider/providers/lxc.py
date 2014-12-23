@@ -15,11 +15,11 @@
 
 import os
 import re
-import StringIO
 import time
 
 import netaddr
 import six
+from six import moves
 
 from rally.common.i18n import _
 from rally.deploy.serverprovider import provider
@@ -43,7 +43,7 @@ def _get_script(filename):
 
 def _get_script_from_template(template_filename, **kwargs):
     template = _get_script(template_filename).read()
-    return StringIO.StringIO(template.format(**kwargs))
+    return moves.StringIO(template.format(**kwargs))
 
 
 class LxcHost(object):
@@ -97,7 +97,7 @@ class LxcHost(object):
                 'LXC_DHCP_RANGE': dhcp_range,
                 'LXC_DHCP_MAX': self.network.size - 3,
             }
-            config = StringIO.StringIO()
+            config = moves.StringIO()
             for name, value in six.iteritems(values):
                 config.write('%(name)s="%(value)s"\n' % {'name': name,
                                                          'value': value})

@@ -22,11 +22,11 @@ import os
 import random
 import re
 import string
-import StringIO
 import sys
 import time
 
 from oslo.utils import importutils
+from six import moves
 from sphinx.util import docstrings
 
 from rally.common.i18n import _
@@ -62,7 +62,7 @@ class StdOutCapture(object):
         self.stdout = sys.stdout
 
     def __enter__(self):
-        sys.stdout = StringIO.StringIO()
+        sys.stdout = moves.StringIO()
         return sys.stdout
 
     def __exit__(self, type, value, traceback):
@@ -74,7 +74,7 @@ class StdErrCapture(object):
         self.stderr = sys.stderr
 
     def __enter__(self):
-        sys.stderr = StringIO.StringIO()
+        sys.stderr = moves.StringIO()
         return sys.stderr
 
     def __exit__(self, type, value, traceback):

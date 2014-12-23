@@ -24,3 +24,4 @@ Rally Specific Commandments
 * [N33x] - Reserved for rules related to Python 3 compatibility
  * [N330] - Ensure that ``dict.iteritems()`` is not used
  * [N331] - Ensure that ``basestring`` is not used
+ * [N332] - Ensure that ``StringIO.StringIO`` is not used

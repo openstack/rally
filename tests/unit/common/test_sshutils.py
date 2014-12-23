@@ -60,7 +60,7 @@ class SSHTestCase(test.TestCase):
         dss.from_private_key.side_effect = m_paramiko.SSHException
         self.assertRaises(sshutils.SSHError, self.ssh._get_pkey, 'key')
 
-    @mock.patch('rally.common.sshutils.StringIO')
+    @mock.patch('rally.common.sshutils.six.moves')
     @mock.patch('rally.common.sshutils.paramiko')
     def test__get_pkey_dss(self, m_paramiko, m_stringio):
         m_paramiko.SSHException = FakeParamikoException
@@ -74,7 +74,7 @@ class SSHTestCase(test.TestCase):
         self.assertEqual(key, 'dss_key')
         m_stringio.StringIO.assert_called_once_with('key')
 
-    @mock.patch('rally.common.sshutils.StringIO')
+    @mock.patch('rally.common.sshutils.six.moves')
     @mock.patch('rally.common.sshutils.paramiko')
     def test__get_pkey_rsa(self, m_paramiko, m_stringio):
         m_paramiko.SSHException = FakeParamikoException
@@ -114,7 +114,7 @@ class SSHTestCase(test.TestCase):
         m_client.close.assert_called_once_with()
         self.assertFalse(self.ssh._client)
 
-    @mock.patch('rally.common.sshutils.StringIO')
+    @mock.patch('rally.common.sshutils.six.moves')
     def test_execute(self, m_stringio):
         m_stringio.StringIO.side_effect = stdio = [mock.Mock(), mock.Mock()]
         stdio[0].read.return_value = 'stdout fake data'

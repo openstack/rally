@@ -47,6 +47,7 @@ re_assert_equal_in_start_with_true_or_false = re.compile(
     r"assertEqual\((True|False), (\w|[][.'\"])+( not)? in (\w|[][.'\", ])+\)")
 re_iteritems_method = re.compile(r"\.iteritems\(\)")
 re_basestring_method = re.compile(r"(^|[\s,(\[=])basestring([\s,)\]]|$)")
+re_StringIO_method = re.compile(r"StringIO\.StringIO\(")
 
 
 def _parse_assert_mock_str(line):
@@ -252,6 +253,20 @@ def check_basestring_method(logical_line):
         yield (0, "N331: Use six.string_types rather than basestring.")
 
 
+def check_StringIO_method(logical_line):
+    """Check if StringIO is properly called for compatibility with Python 3
+
+    In Python 3, StringIO module is gone. The correct form is
+    six.moves.StringIO instead of StringIO.StringIO.
+
+    N332
+    """
+    res = re_StringIO_method.search(logical_line)
+    if res:
+        yield (0, "N332: Use six.moves.StringIO "
+                  "rather than StringIO.StringIO.")
+
+
 def factory(register):
     register(check_assert_methods_from_mock)
     register(check_import_of_logging)
@@ -264,3 +279,4 @@ def factory(register):
     register(assert_equal_in)
     register(check_iteritems_method)
     register(check_basestring_method)
+    register(check_StringIO_method)
