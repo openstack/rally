@@ -140,10 +140,14 @@ class TaskCommandsTestCase(test.TestCase):
     def test_results(self, mock_get, mock_json):
         task_id = "foo_task_id"
         data = [
-            {"key": "foo_key", "data": {"raw": "foo_raw", "sla": []}}
+            {"key": "foo_key", "data": {"raw": "foo_raw", "sla": [],
+                                        "load_duration": "lo_duration",
+                                        "full_duration": "fu_duration"}}
         ]
         result = map(lambda x: {"key": x["key"],
                                 "result": x["data"]["raw"],
+                                "load_duration": x["data"]["load_duration"],
+                                "full_duration": x["data"]["full_duration"],
                                 "sla": x["data"]["sla"]}, data)
         mock_results = mock.Mock(return_value=data)
         mock_get.return_value = mock.Mock(get_results=mock_results)
@@ -163,21 +167,27 @@ class TaskCommandsTestCase(test.TestCase):
         mock_get.assert_called_once_with(task_id)
         self.assertEqual(1, result)
 
+    @mock.patch("rally.cmd.commands.task.jsonschema.validate",
+                return_value=None)
     @mock.patch("rally.cmd.commands.task.os.path.realpath",
                 side_effect=lambda p: "realpath_%s" % p)
     @mock.patch("rally.cmd.commands.task.open", create=True)
     @mock.patch("rally.cmd.commands.task.plot")
     @mock.patch("rally.cmd.commands.task.webbrowser")
     @mock.patch("rally.cmd.commands.task.objects.Task.get")
-    def test_report(self, mock_get, mock_web, mock_plot, mock_open, mock_os):
-        task_id = "foo_task_id"
+    def test_report_one_uuid(self, mock_get, mock_web, mock_plot, mock_open,
+                             mock_os, mock_validate):
+        task_id = "eb290c30-38d8-4c8f-bbcc-fc8f74b004ae"
         data = [
-            {"key": "foo_key", "data": {"raw": "foo_raw", "sla": "foo_sla",
-                                        "load_duration": 1.1,
-                                        "full_duration": 1.2}},
-            {"key": "bar_key", "data": {"raw": "bar_raw", "sla": "bar_sla",
-                                        "load_duration": 2.1,
-                                        "full_duration": 2.2}}]
+            {"key": {"name": "test", "pos": 0},
+             "data": {"raw": "foo_raw", "sla": "foo_sla",
+                      "load_duration": 0.1,
+                      "full_duration": 1.2}},
+            {"key": {"name": "test", "pos": 0},
+             "data": {"raw": "bar_raw", "sla": "bar_sla",
+                      "load_duration": 2.1,
+                      "full_duration": 2.2}}]
+
         results = map(lambda x: {"key": x["key"],
                                  "result": x["data"]["raw"],
                                  "sla": x["data"]["sla"],
@@ -194,17 +204,10 @@ class TaskCommandsTestCase(test.TestCase):
         def reset_mocks():
             for m in mock_get, mock_web, mock_plot, mock_open:
                 m.reset_mock()
-
-        self.task.report(task_id)
-        mock_open.assert_called_once_with(task_id + ".html", "w+")
+        self.task.report(tasks=task_id, out="/tmp/%s.html" % task_id)
+        mock_open.assert_called_once_with("/tmp/%s.html" % task_id, "w+")
         mock_plot.plot.assert_called_once_with(results)
-        mock_write.assert_called_once_with("html_report")
-        mock_get.assert_called_once_with(task_id)
 
-        reset_mocks()
-        self.task.report(task_id, out="bar.html")
-        mock_open.assert_called_once_with("bar.html", "w+")
-        mock_plot.plot.assert_called_once_with(results)
         mock_write.assert_called_once_with("html_report")
         mock_get.assert_called_once_with(task_id)
 
@@ -212,6 +215,133 @@ class TaskCommandsTestCase(test.TestCase):
         self.task.report(task_id, out="spam.html", open_it=True)
         mock_web.open_new_tab.assert_called_once_with(
             "file://realpath_spam.html")
+
+    @mock.patch("rally.cmd.commands.task.jsonschema.validate",
+                return_value=None)
+    @mock.patch("rally.cmd.commands.task.os.path.realpath",
+                side_effect=lambda p: "realpath_%s" % p)
+    @mock.patch("rally.cmd.commands.task.open", create=True)
+    @mock.patch("rally.cmd.commands.task.plot")
+    @mock.patch("rally.cmd.commands.task.webbrowser")
+    @mock.patch("rally.cmd.commands.task.objects.Task.get")
+    def test_report_bunch_uuids(self, mock_get, mock_web, mock_plot, mock_open,
+                                mock_os, mock_validate):
+        tasks = ["eb290c30-38d8-4c8f-bbcc-fc8f74b004ae",
+                 "eb290c30-38d8-4c8f-bbcc-fc8f74b004af"]
+        data = [
+            {"key": {"name": "test", "pos": 0},
+             "data": {"raw": "foo_raw", "sla": "foo_sla",
+                      "load_duration": 0.1,
+                      "full_duration": 1.2}},
+            {"key": {"name": "test", "pos": 0},
+             "data": {"raw": "bar_raw", "sla": "bar_sla",
+                      "load_duration": 2.1,
+                      "full_duration": 2.2}}]
+
+        results = list()
+        for task_uuid in tasks:
+            results.extend(map(lambda x: {"key": x["key"],
+                                          "result": x["data"]["raw"],
+                                          "sla": x["data"]["sla"],
+                                          "load_duration": x[
+                                            "data"]["load_duration"],
+                                          "full_duration": x[
+                                            "data"]["full_duration"]},
+                               data))
+
+        mock_results = mock.Mock(return_value=data)
+        mock_get.return_value = mock.Mock(get_results=mock_results)
+        mock_plot.plot.return_value = "html_report"
+        mock_write = mock.Mock()
+        mock_open.return_value.__enter__.return_value = (
+            mock.Mock(write=mock_write))
+
+        def reset_mocks():
+            for m in mock_get, mock_web, mock_plot, mock_open:
+                m.reset_mock()
+        self.task.report(tasks=tasks, out="/tmp/1_test.html")
+        mock_open.assert_called_once_with("/tmp/1_test.html", "w+")
+        mock_plot.plot.assert_called_once_with(results)
+
+        mock_write.assert_called_once_with("html_report")
+        expected_get_calls = [mock.call(task) for task in tasks]
+        mock_get.assert_has_calls(expected_get_calls, any_order=True)
+
+    @mock.patch("rally.cmd.commands.task.json.load")
+    @mock.patch("rally.cmd.commands.task.os.path.exists", return_value=True)
+    @mock.patch("rally.cmd.commands.task.jsonschema.validate",
+                return_value=None)
+    @mock.patch("rally.cmd.commands.task.os.path.realpath",
+                side_effect=lambda p: "realpath_%s" % p)
+    @mock.patch("rally.cmd.commands.task.open", create=True)
+    @mock.patch("rally.cmd.commands.task.plot")
+    def test_report_one_file(self, mock_plot, mock_open, mock_os,
+                             mock_validate, mock_path_exists, mock_json_load):
+
+        task_file = "/tmp/some_file.json"
+        data = [
+            {"key": {"name": "test", "pos": 0},
+             "data": {"raw": "foo_raw", "sla": "foo_sla",
+                      "load_duration": 0.1,
+                      "full_duration": 1.2}},
+            {"key": {"name": "test", "pos": 1},
+             "data": {"raw": "bar_raw", "sla": "bar_sla",
+                      "load_duration": 2.1,
+                      "full_duration": 2.2}}]
+
+        results = map(lambda x: {"key": x["key"],
+                                 "result": x["data"]["raw"],
+                                 "sla": x["data"]["sla"],
+                                 "load_duration": x["data"]["load_duration"],
+                                 "full_duration": x["data"]["full_duration"]},
+                      data)
+
+        mock_plot.plot.return_value = "html_report"
+        mock_write = mock.Mock()
+        mock_read = mock.MagicMock(return_value=results)
+        mock_json_load.return_value = results
+        mock_open.return_value.__enter__.return_value = (
+            mock.Mock(write=mock_write, read=mock_read))
+
+        def reset_mocks():
+            for m in mock_plot, mock_open, mock_json_load, mock_validate:
+                m.reset_mock()
+        self.task.report(tasks=task_file, out="/tmp/1_test.html")
+        expected_open_calls = [mock.call(task_file, "r"),
+                               mock.call("/tmp/1_test.html", "w+")]
+        mock_open.assert_has_calls(expected_open_calls, any_order=True)
+        mock_plot.plot.assert_called_once_with(results)
+
+        mock_write.assert_called_once_with("html_report")
+
+    @mock.patch("rally.cmd.commands.task.os.path.exists", return_value=True)
+    @mock.patch("rally.cmd.commands.task.json.load")
+    @mock.patch("rally.cmd.commands.task.open", create=True)
+    def test_report_exceptions(self, mock_open, mock_json_load,
+                               mock_path_exists):
+
+        results = [
+            {"key": {"name": "test", "pos": 0},
+             "data": {"raw": "foo_raw", "sla": "foo_sla",
+                      "load_duration": 0.1,
+                      "full_duration": 1.2}}]
+
+        mock_write = mock.Mock()
+        mock_read = mock.MagicMock(return_value=results)
+        mock_json_load.return_value = results
+        mock_open.return_value.__enter__.return_value = (
+            mock.Mock(write=mock_write, read=mock_read))
+
+        ret = self.task.report(tasks="/tmp/task.json",
+                               out="/tmp/tmp.hsml")
+
+        self.assertEqual(ret, 1)
+        for m in mock_open, mock_json_load:
+            m.reset_mock()
+        mock_path_exists.return_value = False
+        ret = self.task.report(tasks="/tmp/task.json",
+                               out="/tmp/tmp.hsml")
+        self.assertEqual(ret, 1)
 
     @mock.patch('rally.cmd.commands.task.common_cliutils.print_list')
     @mock.patch('rally.cmd.commands.task.envutils.get_global',

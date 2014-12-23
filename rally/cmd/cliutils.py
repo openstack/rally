@@ -20,6 +20,7 @@ import inspect
 import os
 import sys
 
+import jsonschema
 from oslo.config import cfg
 import six
 
@@ -298,8 +299,8 @@ def run(argv, categories):
         validate_deprecated_args(argv, fn)
         ret = fn(*fn_args, **fn_kwargs)
         return(ret)
-    except (IOError, TypeError, exceptions.DeploymentNotFound,
-            exceptions.TaskNotFound) as e:
+    except (IOError, TypeError, ValueError, exceptions.DeploymentNotFound,
+            exceptions.TaskNotFound, jsonschema.ValidationError) as e:
         if logging.is_debug():
             LOG.exception(e)
         print(e)
