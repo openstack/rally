@@ -1288,7 +1288,6 @@ class FakeRunner(object):
 
 
 class FakeScenario(base.Scenario):
-    """Fake Scenario class."""
 
     def idle_time(self):
         return 0

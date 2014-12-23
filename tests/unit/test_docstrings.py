@@ -23,9 +23,28 @@ from tests.unit import test
 
 class DocstringsTestCase(test.TestCase):
 
+    def _assert_class_has_docstrings(self, obj, long_description=True):
+        if not obj.__module__.startswith("rally."):
+            return
+
+        self.assertIsNotNone(obj.__doc__,
+                             "%s doesn't have a class-level docstring." %
+                             obj)
+        doc = utils.parse_docstring(obj.__doc__)
+        self.assertIsNotNone(
+            doc["short_description"],
+            "Docstring for %s should have a one-line description." % obj)
+        if long_description:
+            self.assertIsNotNone(
+                doc["long_description"],
+                "Docstring for %s should have a multi-line description." % obj)
+
     def test_all_scenarios_have_docstrings(self):
         ignored_params = ["self", "scenario_obj"]
         for scenario_group in utils.itersubclasses(base.Scenario):
+            if scenario_group.__module__.startswith("tests."):
+                continue
+
             for method in dir(scenario_group):
                 if base.Scenario.is_scenario(scenario_group, method):
                     scenario = getattr(scenario_group, method)
@@ -57,46 +76,17 @@ class DocstringsTestCase(test.TestCase):
 
     def test_all_scenario_groups_have_docstrings(self):
         for scenario_group in utils.itersubclasses(base.Scenario):
-            scenario_group_name = scenario_group.__name__
-            self.assertIsNotNone(scenario_group.__doc__,
-                                 "%s doesn't have a class-level docstring." %
-                                 scenario_group_name)
-            doc = utils.parse_docstring(scenario_group.__doc__)
-            msg = ("Docstring for %s should have a one-line description." %
-                   scenario_group_name)
-            self.assertIsNotNone(doc["short_description"], msg)
+            self._assert_class_has_docstrings(scenario_group,
+                                              long_description=False)
 
     def test_all_deploy_engines_have_docstrings(self):
         for deploy_engine in utils.itersubclasses(deploy.EngineFactory):
-            deploy_engine_name = deploy_engine.__name__
-            self.assertIsNotNone(deploy_engine.__doc__,
-                                 "%s doesn't have a class-level docstring." %
-                                 deploy_engine_name)
-            doc = utils.parse_docstring(deploy_engine.__doc__)
-            msg = ("Docstring for %s should have a one-line description "
-                   "and a detailed description." % deploy_engine_name)
-            self.assertIsNotNone(doc["short_description"], msg)
-            self.assertIsNotNone(doc["long_description"], msg)
+            self._assert_class_has_docstrings(deploy_engine)
 
     def test_all_server_providers_have_docstrings(self):
         for provider in utils.itersubclasses(serverprovider.ProviderFactory):
-            provider_name = provider.__name__
-            self.assertIsNotNone(provider.__doc__,
-                                 "%s doesn't have a class-level docstring." %
-                                 provider_name)
-            doc = utils.parse_docstring(provider.__doc__)
-            msg = ("Docstring for %s should have a one-line description "
-                   "and a detailed description." % provider_name)
-            self.assertIsNotNone(doc["short_description"], msg)
-            self.assertIsNotNone(doc["long_description"], msg)
+            self._assert_class_has_docstrings(provider)
 
     def test_all_SLA_have_docstrings(self):
         for sla in utils.itersubclasses(sla_base.SLA):
-            sla_name = sla.OPTION_NAME
-            self.assertIsNotNone(sla.__doc__,
-                                 "%s doesn't have a class-level docstring." %
-                                 sla_name)
-            doc = utils.parse_docstring(sla.__doc__)
-            self.assertIsNotNone(doc["short_description"],
-                                 "Docstring for %s should have a "
-                                 "one-line description." % sla_name)
+            self._assert_class_has_docstrings(sla, long_description=False)
