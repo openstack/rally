@@ -77,7 +77,7 @@ class MultihostEngine(engine.EngineFactory):
             keyval = enumerate(obj)
 
         for key, value in keyval:
-            if isinstance(value, basestring):
+            if isinstance(value, six.string_types):
                 obj[key] = value.format(controller_ip=self.controller_ip)
             elif type(value) in (dict, list):
                 self._update_controller_ip(value)

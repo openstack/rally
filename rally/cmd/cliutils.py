@@ -21,6 +21,7 @@ import os
 import sys
 
 from oslo.config import cfg
+import six
 
 from rally.common import version
 from rally import exceptions
@@ -268,7 +269,7 @@ def run(argv, categories):
         v = getattr(CONF.category, 'action_kwarg_' + k)
         if v is None:
             continue
-        if isinstance(v, basestring):
+        if isinstance(v, six.string_types):
             v = v.decode('utf-8')
         fn_kwargs[k] = v
 

@@ -128,6 +128,13 @@ class HackingTestCase(test.TestCase):
         self.assertEqual(len(list(checks.check_iteritems_method(
             "dict.items()"))), 0)
 
+    def test_check_basestring_method(self):
+        self.assertEqual(len(list(checks.check_basestring_method(
+            "basestring"))), 1)
+
+        self.assertEqual(len(list(checks.check_basestring_method(
+            "six.string_types"))), 0)
+
     def test_assert_equal_none(self):
         self.assertEqual(len(list(checks.assert_equal_none(
             "self.assertEqual(A, None)"))), 1)
