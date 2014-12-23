@@ -18,7 +18,6 @@ from oslo.config import cfg
 from rally.benchmark.context import base
 from rally.benchmark.context.cleanup import manager as resource_manager
 from rally.benchmark.scenarios.sahara import utils
-from rally.benchmark import types
 from rally.benchmark import utils as bench_utils
 from rally.common.i18n import _
 from rally.common import log as logging
@@ -54,9 +53,6 @@ class SaharaCluster(base.Context):
                 "type": "string",
             },
             "floating_ip_pool": {
-                "type": "string",
-            },
-            "neutron_net": {
                 "type": "string",
             },
             "volumes_per_node": {
@@ -102,26 +98,17 @@ class SaharaCluster(base.Context):
 
             image_id = self.context["tenants"][tenant_id]["sahara_image"]
 
-            neutron_net = self.config.get("neutron_net")
-            if not neutron_net:
-                # Skipping fixed network config
-                neutron_net_id = None
-            else:
-                network_cfg = {"name": neutron_net}
-                neutron_net_id = (types.NeutronNetworkResourceType
-                                  .transform(clients, network_cfg))
-
             floating_ip_pool = self.config.get("floating_ip_pool")
 
+            temporary_context = {"tenant": self.context["tenants"][tenant_id]}
             cluster = utils.SaharaScenario(
-                context=self.context, clients=clients)._launch_cluster(
+                context=temporary_context, clients=clients)._launch_cluster(
                     plugin_name=self.config["plugin_name"],
                     hadoop_version=self.config["hadoop_version"],
                     flavor_id=self.config["flavor_id"],
                     node_count=self.config["node_count"],
                     image_id=image_id,
                     floating_ip_pool=floating_ip_pool,
-                    neutron_net_id=neutron_net_id,
                     volumes_per_node=self.config.get("volumes_per_node"),
                     volumes_size=self.config.get("volumes_size", 1),
                     auto_security_group=self.config.get("auto_security_group",
