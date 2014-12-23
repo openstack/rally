@@ -22,7 +22,7 @@ from rally.cmd import envutils
 from rally.common.i18n import _
 from rally import db
 from rally import exceptions
-from rally.objects import endpoint
+from rally import objects
 from rally.openstack.common import cliutils as common_cliutils
 from rally import osclients
 from rally import utils
@@ -64,7 +64,7 @@ class ShowCommands(object):
 
         try:
             for endpoint_dict in self._get_endpoints(deployment):
-                clients = osclients.Clients(endpoint.Endpoint(**endpoint_dict))
+                clients = osclients.Clients(objects.Endpoint(**endpoint_dict))
                 glance_client = clients.glance()
                 for image in glance_client.images.list():
                     data = [image.id, image.name, image.size]
@@ -100,7 +100,7 @@ class ShowCommands(object):
         table_rows = []
         try:
             for endpoint_dict in self._get_endpoints(deployment):
-                clients = osclients.Clients(endpoint.Endpoint(**endpoint_dict))
+                clients = osclients.Clients(objects.Endpoint(**endpoint_dict))
                 nova_client = clients.nova()
                 for flavor in nova_client.flavors.list():
                     data = [flavor.id, flavor.name, flavor.vcpus,
@@ -130,7 +130,7 @@ class ShowCommands(object):
         table_rows = []
         try:
             for endpoint_dict in self._get_endpoints(deployment):
-                clients = osclients.Clients(endpoint.Endpoint(**endpoint_dict))
+                clients = osclients.Clients(objects.Endpoint(**endpoint_dict))
                 nova_client = clients.nova()
                 for network in nova_client.networks.list():
                     data = [network.id, network.label, network.cidr]
@@ -157,7 +157,7 @@ class ShowCommands(object):
         table_rows = []
         try:
             for endpoint_dict in self._get_endpoints(deployment):
-                clients = osclients.Clients(endpoint.Endpoint(**endpoint_dict))
+                clients = osclients.Clients(objects.Endpoint(**endpoint_dict))
                 nova_client = clients.nova()
                 for secgroup in nova_client.security_groups.list():
                     data = [secgroup.id, secgroup.name,
@@ -187,7 +187,7 @@ class ShowCommands(object):
         table_rows = []
         try:
             for endpoint_dict in self._get_endpoints(deployment):
-                clients = osclients.Clients(endpoint.Endpoint(**endpoint_dict))
+                clients = osclients.Clients(objects.Endpoint(**endpoint_dict))
                 nova_client = clients.nova()
                 for keypair in nova_client.keypairs.list():
                     data = [keypair.name, keypair.fingerprint]

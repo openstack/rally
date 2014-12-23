@@ -31,7 +31,7 @@ from rally.cmd import envutils
 from rally.common.i18n import _
 from rally import db
 from rally import exceptions
-from rally.objects import endpoint
+from rally import objects
 from rally.openstack.common import cliutils as common_cliutils
 from rally import osclients
 from rally import utils
@@ -241,7 +241,7 @@ class DeploymentCommands(object):
             admin = db.deployment_get(deployment)['admin']
             # TODO(boris-42): make this work for users in future
             for endpoint_dict in [admin]:
-                clients = osclients.Clients(endpoint.Endpoint(**endpoint_dict))
+                clients = osclients.Clients(objects.Endpoint(**endpoint_dict))
                 client = clients.verified_keystone()
                 print("keystone endpoints are valid and following "
                       "services are available:")

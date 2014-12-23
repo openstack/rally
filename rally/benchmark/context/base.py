@@ -86,10 +86,6 @@ class Context(object):
         jsonschema.validate(config, cls.CONFIG_SCHEMA)
 
     @classmethod
-    def validate_semantic(cls, config, admin=None, users=None, task=None):
-        """Context semantic validation towards the deployment."""
-
-    @classmethod
     def get_name(cls):
         return cls._ctx_name
 
@@ -131,12 +127,6 @@ class ContextManager(object):
     def validate(context, non_hidden=False):
         for name, config in six.iteritems(context):
             Context.get_by_name(name).validate(config, non_hidden=non_hidden)
-
-    @staticmethod
-    def validate_semantic(context, admin=None, users=None, task=None):
-        for name, config in six.iteritems(context):
-            Context.get_by_name(name).validate_semantic(config, admin=admin,
-                                                        users=users, task=task)
 
     def _get_sorted_context_lst(self):
         ctxlst = map(Context.get_by_name, self.context_obj["config"])

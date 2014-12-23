@@ -20,7 +20,6 @@ from novaclient import exceptions as nova_exc
 from rally.benchmark import validation
 from rally import consts
 from rally import exceptions
-from rally import objects
 from rally.verification.verifiers.tempest import tempest
 from tests.unit import test
 
@@ -188,12 +187,12 @@ class ValidatorsTestCase(test.TestCase):
 
     def test_image_exists(self):
         validator = self._unwrap_validator(validation.image_exists, "param")
-        result = validator({}, "clients", "task")
+        result = validator({}, "clients", "deployment")
         self.assertFalse(result.is_valid, result.msg)
 
     def test_flavor_exists(self):
         validator = self._unwrap_validator(validation.flavor_exists, "param")
-        result = validator({}, "clients", "task")
+        result = validator({}, "clients", "deployment")
         self.assertFalse(result.is_valid, result.msg)
 
     def test_image_valid_on_flavor_flavor_or_image_not_specified(self):
@@ -293,68 +292,49 @@ class ValidatorsTestCase(test.TestCase):
         self.assertFalse(result.is_valid, result.msg)
 
     @mock.patch("rally.benchmark.validation.tempest.Tempest")
-    @mock.patch("rally.objects.task.db.task_create")
-    def test_tempest_tests_exists(self, mock_create, mock_tempest):
-        mock_create.return_value = {
-            'status': 'init',
-            'deployment_uuid': 'deployment-uuid',
-            'verification_log': '',
-            'uuid': 'task-uuid',
-            'created_at': '',
-            'failed': False,
-            'tag': '',
-            'id': 42}
+    def test_tempest_tests_exists(self, mock_tempest):
         mock_tempest().is_installed.return_value = False
         mock_tempest().is_configured.return_value = False
         mock_tempest().discover_tests.return_value = set([
             "tempest.api.a", "tempest.api.b", "tempest.api.c"])
-        task = objects.Task(deployment_uuid='deployment-uuid')
+
+        deployment = {"uuid": "someuuid"}
         validator = self._unwrap_validator(validation.tempest_tests_exists)
 
-        result = validator({"args": {"test_name": "a"}}, None, task)
+        result = validator({"args": {"test_name": "a"}}, None, deployment)
         self.assertTrue(result.is_valid, result.msg)
         mock_tempest().is_installed.assert_called_once_with()
         mock_tempest().is_configured.assert_called_once_with()
         mock_tempest().discover_tests.assert_called_once_with()
 
-        result = validator({"args": {"test_name": "d"}}, None, task)
+        result = validator({"args": {"test_name": "d"}}, None, deployment)
         self.assertFalse(result.is_valid, result.msg)
 
         result = validator({"args": {"test_name": "tempest.api.a"}}, None,
-                           task)
+                           deployment)
         self.assertTrue(result.is_valid, result.msg)
         result = validator({"args": {"test_name": "tempest.api.d"}}, None,
-                           task)
+                           deployment)
         self.assertFalse(result.is_valid, result.msg)
 
         result = validator({"args": {"test_names": ["tempest.api.a", "b"]}},
-                           None, task)
+                           None, deployment)
         self.assertTrue(result.is_valid, result.msg)
 
         result = validator({"args": {"test_names": ["tempest.api.j", "e"]}},
-                           None, task)
+                           None, deployment)
         self.assertFalse(result.is_valid, result.msg)
 
     @mock.patch("rally.benchmark.validation.tempest.Tempest")
-    @mock.patch("rally.objects.task.db.task_create")
-    def test_tempest_tests_exists_tempest_installation_failed(
-            self, mock_create, mock_tempest):
-        mock_create.return_value = {
-            'status': 'init',
-            'deployment_uuid': 'deployment-uuid',
-            'verification_log': '',
-            'uuid': 'task-uuid',
-            'created_at': '',
-            'failed': False,
-            'tag': '',
-            'id': 42}
+    def test_tempest_tests_exists_tempest_installation_failed(self,
+                                                              mock_tempest):
         mock_tempest().is_installed.return_value = False
         mock_tempest().install.side_effect = tempest.TempestSetupFailure
 
-        task = objects.Task(deployment_uuid='deployment-uuid')
+        deployment = {"uuid": "someuuid"}
         validator = self._unwrap_validator(validation.tempest_tests_exists)
 
-        result = validator({"args": {"test_name": "a"}}, None, task)
+        result = validator({"args": {"test_name": "a"}}, None, deployment)
         self.assertFalse(result.is_valid, result.msg)
         mock_tempest().is_installed.assert_called_once_with()
 
@@ -418,81 +398,53 @@ class ValidatorsTestCase(test.TestCase):
                            None, None)
         self.assertTrue(result.is_valid, result.msg)
 
-    @mock.patch("rally.benchmark.validation.objects.Deployment.get")
-    def test_required_openstack_with_admin(self, mock_deploy_get):
+    def test_required_openstack_with_admin(self):
         validator = self._unwrap_validator(validation.required_openstack,
                                            admin=True)
 
         # admin presented in deployment
-        task = {"deployment_uuid": mock.MagicMock()}
-        mock_deploy_get.return_value = {"admin": "admin_endpoint", "users": []}
-        self.assertTrue(validator(None, None, task).is_valid)
-        mock_deploy_get.assert_called_once_with(task["deployment_uuid"])
-
-        mock_deploy_get.reset_mock()
+        fake_deployment = {"admin": "admin_endpoint", "users": []}
+        self.assertTrue(validator(None, None, fake_deployment).is_valid)
 
         # admin not presented in deployment
-        mock_deploy_get.return_value = {"admin": None, "users": ["u1", "h2"]}
-        self.assertFalse(validator(None, None, task).is_valid)
-        mock_deploy_get.assert_called_once_with(task["deployment_uuid"])
+        fake_deployment = {"admin": None, "users": ["u1", "h2"]}
+        self.assertFalse(validator(None, None, fake_deployment).is_valid)
 
-    @mock.patch("rally.benchmark.validation.objects.Deployment.get")
-    def test_required_openstack_with_users(self, mock_deploy_get):
+    def test_required_openstack_with_users(self):
         validator = self._unwrap_validator(validation.required_openstack,
                                            users=True)
 
         # users presented in deployment
-        task = {"deployment_uuid": mock.MagicMock()}
-        mock_deploy_get.return_value = {"admin": None, "users": ["u_endpoint"]}
-        self.assertTrue(validator({}, None, task).is_valid)
-        mock_deploy_get.assert_called_once_with(task["deployment_uuid"])
-
-        mock_deploy_get.reset_mock()
+        fake_deployment = {"admin": None, "users": ["u_endpoint"]}
+        self.assertTrue(validator({}, None, fake_deployment).is_valid)
 
         # admin and users presented in deployment
-        mock_deploy_get.return_value = {"admin": "a", "users": ["u1", "h2"]}
-        self.assertTrue(validator({}, None, task).is_valid)
-        mock_deploy_get.assert_called_once_with(task["deployment_uuid"])
-
-        mock_deploy_get.reset_mock()
+        fake_deployment = {"admin": "a", "users": ["u1", "h2"]}
+        self.assertTrue(validator({}, None, fake_deployment).is_valid)
 
         # admin and user context
-        mock_deploy_get.return_value = {"admin": "a", "users": []}
+        fake_deployment = {"admin": "a", "users": []}
         context = {"context": {"users": True}}
-        self.assertTrue(validator(context, None, task).is_valid)
-        mock_deploy_get.assert_called_once_with(task["deployment_uuid"])
-
-        mock_deploy_get.reset_mock()
+        self.assertTrue(validator(context, None, fake_deployment).is_valid)
 
         # just admin presented
-        mock_deploy_get.return_value = {"admin": "a", "users": []}
-        self.assertFalse(validator({}, None, task).is_valid)
-        mock_deploy_get.assert_called_once_with(task["deployment_uuid"])
+        fake_deployment = {"admin": "a", "users": []}
+        self.assertFalse(validator({}, None, fake_deployment).is_valid)
 
-    @mock.patch("rally.benchmark.validation.objects.Deployment.get")
-    def test_required_openstack_with_admin_and_users(self, mock_deploy_get):
+    def test_required_openstack_with_admin_and_users(self):
         validator = self._unwrap_validator(validation.required_openstack,
                                            admin=True, users=True)
 
-        task = {"deployment_uuid": mock.MagicMock()}
+        fake_deployment = {"admin": "a", "users": []}
+        self.assertFalse(validator({}, None, fake_deployment).is_valid)
 
-        mock_deploy_get.return_value = {"admin": "a", "users": []}
-        self.assertFalse(validator({}, None, task).is_valid)
-        mock_deploy_get.assert_called_once_with(task["deployment_uuid"])
-
-        mock_deploy_get.reset_mock()
-
-        mock_deploy_get.return_value = {"admin": "a", "users": ["u"]}
-        self.assertTrue(validator({}, None, task).is_valid)
-        mock_deploy_get.assert_called_once_with(task["deployment_uuid"])
-
-        mock_deploy_get.reset_mock()
+        fake_deployment = {"admin": "a", "users": ["u"]}
+        self.assertTrue(validator({}, None, fake_deployment).is_valid)
 
         # admin and user context
-        mock_deploy_get.return_value = {"admin": "a", "users": []}
+        fake_deployment = {"admin": "a", "users": []}
         context = {"context": {"users": True}}
-        self.assertTrue(validator(context, None, task).is_valid)
-        mock_deploy_get.assert_called_once_with(task["deployment_uuid"])
+        self.assertTrue(validator(context, None, fake_deployment).is_valid)
 
     def test_required_openstack_invalid(self):
         validator = self._unwrap_validator(validation.required_openstack)
@@ -502,39 +454,34 @@ class ValidatorsTestCase(test.TestCase):
         validator = self._unwrap_validator(validation.volume_type_exists,
                                            param_name="volume_type")
 
-        task = {"deployment_uuid": mock.MagicMock()}
-
         clients = mock.MagicMock()
         clients.cinder().volume_type.list.return_value = []
 
         context = {"args": {"volume_type": False}}
 
-        result = validator(context, clients, task)
+        result = validator(context, clients, mock.MagicMock())
         self.assertTrue(result.is_valid, result.msg)
 
     def test_volume_type_exists_check_types(self):
         validator = self._unwrap_validator(validation.volume_type_exists,
                                            param_name="volume_type")
-        task = {"deployment_uuid": mock.MagicMock()}
 
         clients = mock.MagicMock()
         clients.cinder().volume_types.list.return_value = ["type"]
 
         context = {"args": {"volume_type": True}}
 
-        result = validator(context, clients, task)
+        result = validator(context, clients, mock.MagicMock())
         self.assertTrue(result.is_valid, result.msg)
 
     def test_volume_type_exists_check_types_no_types_exist(self):
         validator = self._unwrap_validator(validation.volume_type_exists,
                                            param_name="volume_type")
 
-        task = {"deployment_uuid": mock.MagicMock()}
-
         clients = mock.MagicMock()
         clients().cinder().volume_type.list.return_value = []
 
         context = {"args": {"volume_type": True}}
 
-        result = validator(context, clients, task)
+        result = validator(context, clients, mock.MagicMock())
         self.assertFalse(result.is_valid, result.msg)

@@ -26,7 +26,7 @@ from rally.common.i18n import _
 from rally import consts
 from rally import exceptions
 from rally import log as logging
-from rally.objects import endpoint
+from rally import objects
 from rally import osclients
 from rally import utils as rutils
 
@@ -182,7 +182,7 @@ class UserGenerator(base.Context):
             user = client.create_user(username, password,
                                       "%s@email.me" % username,
                                       tenant_id, user_dom)
-            user_endpoint = endpoint.Endpoint(
+            user_endpoint = objects.Endpoint(
                     client.auth_url, user.name, password,
                     self.context["tenants"][tenant_id]["name"],
                     consts.EndpointPermission.USER, client.region_name,

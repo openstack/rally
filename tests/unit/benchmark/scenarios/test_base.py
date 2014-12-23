@@ -68,10 +68,11 @@ class ScenarioTestCase(test.TestCase):
         ]
         clients = mock.MagicMock()
         config = {"a": 1, "b": 2}
-        task = mock.MagicMock()
-        base.Scenario._validate_helper(validators, clients, config, task)
+        deployment = mock.MagicMock()
+        base.Scenario._validate_helper(validators, clients, config, deployment)
         for validator in validators:
-            validator.assert_called_with(config, clients=clients, task=task)
+            validator.assert_called_with(config, clients=clients,
+                                         deployment=deployment)
 
     def test__validate_helper_somethingwent_wrong(self):
         validator = mock.MagicMock()
@@ -79,8 +80,9 @@ class ScenarioTestCase(test.TestCase):
 
         self.assertRaises(exceptions.InvalidScenarioArgument,
                           base.Scenario._validate_helper,
-                          [validator], "cl", "config", "task")
-        validator.assert_called_once_with("config", clients="cl", task="task")
+                          [validator], "cl", "config", "deployment")
+        validator.assert_called_once_with("config", clients="cl",
+                                          deployment="deployment")
 
     def test__validate_helper__no_valid(self):
         validators = [
@@ -125,12 +127,12 @@ class ScenarioTestCase(test.TestCase):
             validator.permission = consts.EndpointPermission.ADMIN
 
         FakeScenario.do_it.validators = validators
-        task = mock.MagicMock()
+        deployment = mock.MagicMock()
         args = {"a": 1, "b": 2}
         base.Scenario.validate(
-            "FakeScenario.do_it", args, admin="admin", task=task)
+            "FakeScenario.do_it", args, admin="admin", deployment=deployment)
         mock_validate_helper.assert_called_once_with(validators, "admin", args,
-                                                     task)
+                                                     deployment)
 
     @mock.patch("rally.benchmark.scenarios.base.Scenario._validate_helper")
     @mock.patch("rally.benchmark.scenarios.base.Scenario.get_by_name")

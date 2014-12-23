@@ -27,7 +27,7 @@ from rally.common.i18n import _
 from rally import db
 from rally import exceptions
 from rally import log as logging
-from rally.objects import endpoint
+from rally import objects
 from rally import osclients
 
 
@@ -54,7 +54,7 @@ class TempestConf(object):
 
     def __init__(self, deployment):
         self.endpoint = db.deployment_get(deployment)['admin']
-        self.clients = osclients.Clients(endpoint.Endpoint(**self.endpoint))
+        self.clients = osclients.Clients(objects.Endpoint(**self.endpoint))
         try:
             self.keystoneclient = self.clients.verified_keystone()
         except exceptions.InvalidAdminException:

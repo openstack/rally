@@ -267,6 +267,23 @@ def check_StringIO_method(logical_line):
                   "rather than StringIO.StringIO.")
 
 
+def check_no_direct_rally_objects_import(logical_line, filename):
+    """Check if rally.objects are properly imported.
+
+    If you import "from rally import objects" you are able to use objects
+    directly like objects.Task.
+
+    N340
+    """
+    if filename == "./rally/objects/__init__.py":
+        return
+
+    if (logical_line.startswith("from rally.objects")
+       or logical_line.startswith("import rally.objects.")):
+        yield (0, "N340: Import objects module: `from rally import objects`. "
+                  "After that you can use directly objects e.g. objects.Task")
+
+
 def factory(register):
     register(check_assert_methods_from_mock)
     register(check_import_of_logging)
@@ -280,3 +297,4 @@ def factory(register):
     register(check_iteritems_method)
     register(check_basestring_method)
     register(check_StringIO_method)
+    register(check_no_direct_rally_objects_import)

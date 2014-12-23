@@ -17,7 +17,7 @@ import mock
 
 from rally.benchmark.scenarios.glance import images
 from rally.benchmark.scenarios.nova import servers
-from rally.objects import endpoint
+from rally import objects
 from rally import osclients
 from tests.unit import fakes
 from tests.unit import test
@@ -79,7 +79,7 @@ class GlanceImagesTestCase(test.TestCase):
         fc.glance = lambda: fake_glance
         fake_nova = fakes.FakeNovaClient()
         fc.nova = lambda: fake_nova
-        user_endpoint = endpoint.Endpoint("url", "user", "password", "tenant")
+        user_endpoint = objects.Endpoint("url", "user", "password", "tenant")
         nova_scenario._clients = osclients.Clients(user_endpoint)
         fake_image = fakes.FakeImage()
         fake_servers = [object() for i in range(5)]

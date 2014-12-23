@@ -19,7 +19,6 @@ import jsonschema
 import mock
 
 from rally.benchmark.context import images
-from rally import exceptions
 from tests.unit import fakes
 from tests.unit import test
 
@@ -158,14 +157,3 @@ class ImageGeneratorTestCase(test.TestCase):
         images_ctx.cleanup()
         mock_cleanup.assert_called_once_with(names=["glance.images"],
                                              users=context["users"])
-
-    def test_validate_semantic(self):
-        users = [fakes.FakeClients()]
-        images.ImageGenerator.validate_semantic(None, None, users, None)
-
-    @mock.patch("%s.images.osclients.Clients.glance" % CTX)
-    def test_validate_semantic_unavailabe(self, mock_glance):
-        mock_glance.side_effect = Exception("list error")
-        self.assertRaises(exceptions.InvalidScenarioArgument,
-                          images.ImageGenerator.validate_semantic, None, None,
-                          None, None)
