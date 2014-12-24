@@ -141,7 +141,7 @@ class NeutronWrapper(NetworkWrapper):
                     "name": utils.generate_random_name("rally_ctx_router_")}}
             for net in self.list_networks():
                 if net.get("router:external"):
-                    router_args["external_gateway_info"] = {
+                    router_args["router"]["external_gateway_info"] = {
                         "network_id": net["id"],
                         "enable_snat": True}
                     break

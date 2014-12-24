@@ -205,9 +205,9 @@ class NeutronWrapperTestCase(test.TestCase):
                                "router_id": "foo_router",
                                "subnets": []})
         service.client.create_router.assert_called_once_with(
-            {"router": {"tenant_id": "foo_tenant", "name": "foo_name"},
-             "external_gateway_info": {"network_id": "bar_id",
-                                       "enable_snat": True}})
+            {"router": {"tenant_id": "foo_tenant", "name": "foo_name",
+                        "external_gateway_info": {"network_id": "bar_id",
+                                                  "enable_snat": True}}})
 
     @mock.patch("rally.utils.generate_random_name")
     def test_create_network_with_router_and_subnets(self, mock_name):
