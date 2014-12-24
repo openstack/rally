@@ -344,7 +344,7 @@ class FakeServerManager(FakeManager):
         pass
 
     def delete(self, resource):
-        if not isinstance(resource, basestring):
+        if not isinstance(resource, six.string_types):
             resource = resource.id
 
         cached = self.get(resource)
@@ -383,7 +383,7 @@ class FakeImageManager(FakeManager):
         return self._create(name=name)
 
     def delete(self, resource):
-        if not isinstance(resource, basestring):
+        if not isinstance(resource, six.string_types):
             resource = resource.id
 
         cached = self.get(resource)
@@ -440,7 +440,7 @@ class FakeKeypairManager(FakeManager):
         return self._cache(kp)
 
     def delete(self, resource):
-        if not isinstance(resource, basestring):
+        if not isinstance(resource, six.string_types):
             resource = resource.id
 
         cached = self.get(resource)
@@ -458,7 +458,7 @@ class FakeStackManager(FakeManager):
         return self._cache(stack)
 
     def delete(self, resource):
-        if not isinstance(resource, basestring):
+        if not isinstance(resource, six.string_types):
             resource = resource.id
 
         cached = self.get(resource)
@@ -476,7 +476,7 @@ class FakeDomainManager(FakeManager):
         return self._cache(domain)
 
     def delete(self, resource):
-        if not isinstance(resource, basestring):
+        if not isinstance(resource, six.string_types):
             resource = resource.id
 
         cached = self.get(resource)
@@ -533,7 +533,7 @@ class FakeSecurityGroupManager(FakeManager):
         raise nova_exceptions.NotFound('Security Group not found')
 
     def delete(self, resource):
-        if not isinstance(resource, basestring):
+        if not isinstance(resource, six.string_types):
             resource = resource.id
 
         cached = self.get(resource)
@@ -765,7 +765,7 @@ class FakeDbInstanceManager(FakeManager):
         return self.__db_instances.values()
 
     def delete(self, resource):
-        if not isinstance(resource, basestring):
+        if not isinstance(resource, six.string_types):
             resource = resource.id
 
         cached = self.get(resource)

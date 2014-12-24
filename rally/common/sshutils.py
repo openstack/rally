@@ -63,6 +63,7 @@ import StringIO
 import time
 
 import paramiko
+import six
 
 from rally.common.i18n import _
 from rally import log as logging
@@ -103,7 +104,7 @@ class SSH(object):
         self._client = False
 
     def _get_pkey(self, key):
-        if isinstance(key, basestring):
+        if isinstance(key, six.string_types):
             key = StringIO.StringIO(key)
         errors = []
         for key_class in (paramiko.rsakey.RSAKey, paramiko.dsskey.DSSKey):
@@ -151,7 +152,7 @@ class SSH(object):
 
         client = self._get_client()
 
-        if isinstance(stdin, basestring):
+        if isinstance(stdin, six.string_types):
             stdin = StringIO.StringIO(stdin)
 
         return self._run(client, cmd, stdin=stdin, stdout=stdout,

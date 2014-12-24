@@ -19,6 +19,7 @@ import traceback
 
 from novaclient import exceptions as nova_exc
 from novaclient.v1_1 import servers
+import six
 
 from rally import exceptions
 from rally import log as logging
@@ -34,7 +35,7 @@ def resource_is(status):
 def get_status(resource):
     # workaround for heat resources - using stack_status instead of status
     if ((hasattr(resource, "stack_status") and
-         isinstance(resource.stack_status, basestring))):
+         isinstance(resource.stack_status, six.string_types))):
         return resource.stack_status.upper()
     return resource.status.upper()
 

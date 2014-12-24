@@ -16,6 +16,7 @@
 import traceback
 
 import mock
+import six
 
 from rally.benchmark.context import base as base_ctx
 from rally.benchmark.scenarios import base
@@ -278,7 +279,8 @@ class ScenarioTestCase(test.TestCase):
                                 "Scenario `%s` has wrong context" % scenario)
 
     def test_RESOURCE_NAME_PREFIX(self):
-        self.assertIsInstance(base.Scenario.RESOURCE_NAME_PREFIX, basestring)
+        self.assertIsInstance(base.Scenario.RESOURCE_NAME_PREFIX,
+                              six.string_types)
 
     def test_RESOURCE_NAME_LENGTH(self):
         self.assertIsInstance(base.Scenario.RESOURCE_NAME_LENGTH, int)

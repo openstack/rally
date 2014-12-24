@@ -46,6 +46,7 @@ re_assert_equal_in_end_with_true_or_false = re.compile(
 re_assert_equal_in_start_with_true_or_false = re.compile(
     r"assertEqual\((True|False), (\w|[][.'\"])+( not)? in (\w|[][.'\", ])+\)")
 re_iteritems_method = re.compile(r"\.iteritems\(\)")
+re_basestring_method = re.compile(r"(^|[\s,(\[=])basestring([\s,)\]]|$)")
 
 
 def _parse_assert_mock_str(line):
@@ -232,11 +233,23 @@ def check_iteritems_method(logical_line):
 
     N330
     """
-
     res = re_iteritems_method.search(logical_line)
     if res:
         yield (0, "N330: Use six.iteritems(dict) or dict.items() rather than "
                   "dict.iteritems() to iterate a collection.")
+
+
+def check_basestring_method(logical_line):
+    """Check if basestring is properly called for compatibility with Python 3
+
+    There is no global variable "basestring" in Python 3.The correct form
+    is six.string_types, instead of basestring.
+
+    N331
+    """
+    res = re_basestring_method.search(logical_line)
+    if res:
+        yield (0, "N331: Use six.string_types rather than basestring.")
 
 
 def factory(register):
@@ -250,3 +263,4 @@ def factory(register):
     register(assert_true_or_false_with_in)
     register(assert_equal_in)
     register(check_iteritems_method)
+    register(check_basestring_method)

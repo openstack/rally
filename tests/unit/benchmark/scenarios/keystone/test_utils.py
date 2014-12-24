@@ -14,6 +14,7 @@
 #    under the License.
 
 import mock
+import six
 
 from rally.benchmark.scenarios.keystone import utils
 from tests.unit import fakes
@@ -26,7 +27,7 @@ class KeystoneUtilsTestCase(test.TestCase):
 
     def test_RESOURCE_NAME_PREFIX(self):
         self.assertIsInstance(utils.KeystoneScenario.RESOURCE_NAME_PREFIX,
-                              basestring)
+                              six.string_types)
         # Prefix must be long enough to guarantee that resource
         # to be recognized as created by rally
         self.assertTrue(
