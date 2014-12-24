@@ -23,9 +23,9 @@ from oslo.config import cfg
 import requests
 from six.moves import configparser
 
+from rally.common.i18n import _
 from rally import db
 from rally import exceptions
-from rally.i18n import _
 from rally import log as logging
 from rally.objects import endpoint
 from rally import osclients

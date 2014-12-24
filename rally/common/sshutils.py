@@ -64,7 +64,7 @@ import time
 
 import paramiko
 
-from rally.i18n import _
+from rally.common.i18n import _
 from rally import log as logging
 
 

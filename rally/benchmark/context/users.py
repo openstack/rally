@@ -22,9 +22,9 @@ from rally.benchmark.context import base
 from rally.benchmark import utils
 from rally.benchmark.wrappers import keystone
 from rally.common import broker
+from rally.common.i18n import _
 from rally import consts
 from rally import exceptions
-from rally.i18n import _
 from rally import log as logging
 from rally.objects import endpoint
 from rally import osclients

@@ -18,7 +18,7 @@ from rally.benchmark.context.quotas import cinder_quotas
 from rally.benchmark.context.quotas import designate_quotas
 from rally.benchmark.context.quotas import neutron_quotas
 from rally.benchmark.context.quotas import nova_quotas
-from rally.i18n import _
+from rally.common.i18n import _
 from rally import log as logging
 from rally import osclients
 from rally import utils

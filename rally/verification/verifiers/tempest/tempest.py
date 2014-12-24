@@ -21,8 +21,8 @@ import sys
 
 from oslo.serialization import jsonutils
 
+from rally.common.i18n import _
 from rally import exceptions
-from rally.i18n import _
 from rally import log as logging
 from rally import utils
 from rally.verification.verifiers.tempest import config

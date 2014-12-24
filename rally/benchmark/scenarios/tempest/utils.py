@@ -20,8 +20,8 @@ import tempfile
 
 import six
 
+from rally.common.i18n import _
 from rally import exceptions
-from rally.i18n import _
 
 
 class TempestBenchmarkFailure(exceptions.RallyException):

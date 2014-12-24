@@ -25,10 +25,10 @@ from rally import api
 from rally.cmd import cliutils
 from rally.cmd.commands import use
 from rally.cmd import envutils
+from rally.common.i18n import _
 from rally import consts
 from rally import db
 from rally import exceptions
-from rally.i18n import _
 from rally import objects
 from rally.openstack.common import cliutils as common_cliutils
 from rally.verification.verifiers.tempest import diff

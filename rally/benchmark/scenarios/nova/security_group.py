@@ -17,9 +17,9 @@ from rally.benchmark.scenarios import base
 from rally.benchmark.scenarios.nova import utils
 from rally.benchmark import types
 from rally.benchmark import validation
+from rally.common.i18n import _
 from rally import consts
 from rally import exceptions
-from rally.i18n import _
 
 
 class NovaSecurityGroupException(exceptions.RallyException):

@@ -15,7 +15,7 @@
 from rally.benchmark.context import base
 from rally.benchmark.context.cleanup import manager as resource_manager
 from rally.benchmark.scenarios.cinder import utils as cinder_utils
-from rally.i18n import _
+from rally.common.i18n import _
 from rally import log as logging
 from rally import osclients
 from rally import utils as rutils

@@ -19,9 +19,9 @@ from __future__ import print_function
 
 from rally.cmd import cliutils
 from rally.cmd import envutils
+from rally.common.i18n import _
 from rally import db
 from rally import exceptions
-from rally.i18n import _
 from rally.objects import endpoint
 from rally.openstack.common import cliutils as common_cliutils
 from rally import osclients

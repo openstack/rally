@@ -22,8 +22,8 @@ import time
 
 import mock
 
+from rally.common.i18n import _
 from rally import exceptions
-from rally.i18n import _
 from rally import utils
 from tests.unit import test
 

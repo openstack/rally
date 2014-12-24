@@ -22,7 +22,7 @@ from wsgiref import simple_server
 from oslo.config import cfg
 
 from rally.aas.rest import app as rally_app
-from rally.i18n import _
+from rally.common.i18n import _
 from rally import log as logging
 
 

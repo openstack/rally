@@ -23,9 +23,9 @@ from oslo.utils import timeutils
 import sqlalchemy as sa
 from sqlalchemy.orm.exc import NoResultFound
 
+from rally.common.i18n import _
 from rally.db.sqlalchemy import models
 from rally import exceptions
-from rally.i18n import _
 
 
 CONF = cfg.CONF

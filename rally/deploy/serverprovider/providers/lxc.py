@@ -21,9 +21,9 @@ import time
 import netaddr
 import six
 
+from rally.common.i18n import _
 from rally.deploy.serverprovider import provider
 from rally import exceptions
-from rally.i18n import _
 from rally import log as logging
 from rally import utils
 

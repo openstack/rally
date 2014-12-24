@@ -20,8 +20,8 @@ from rally.benchmark.context.cleanup import manager as resource_manager
 from rally.benchmark.scenarios.sahara import utils
 from rally.benchmark import types
 from rally.benchmark import utils as bench_utils
+from rally.common.i18n import _
 from rally import exceptions
-from rally.i18n import _
 from rally import log as logging
 from rally import osclients
 from rally import utils as rutils

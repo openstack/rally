@@ -16,7 +16,7 @@
 import six
 
 from rally.benchmark.context import base
-from rally.i18n import _
+from rally.common.i18n import _
 from rally import log as logging
 from rally import osclients
 from rally import utils

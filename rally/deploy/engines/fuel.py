@@ -13,11 +13,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from rally.common.i18n import _
 from rally import consts
 from rally.deploy import engine
 from rally.deploy.fuel import fuelclient
 from rally import exceptions
-from rally.i18n import _
 from rally import objects
 
 

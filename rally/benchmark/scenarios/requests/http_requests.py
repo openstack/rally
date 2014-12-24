@@ -13,8 +13,8 @@
 import requests
 
 from rally.benchmark.scenarios import base
+from rally.common.i18n import _
 from rally import exceptions
-from rally.i18n import _
 
 
 class WrongStatusException(exceptions.RallyException):
