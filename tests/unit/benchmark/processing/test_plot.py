@@ -69,7 +69,7 @@ class PlotTestCase(test.TestCase):
                     "kw": kw},
             "result": result,
             "sla": sla}
-        results = [result_(i) for i in 0, 1, 2]
+        results = [result_(i) for i in (0, 1, 2)]
         table_cols = ["Action",
                       "Min (sec)",
                       "Avg (sec)",
