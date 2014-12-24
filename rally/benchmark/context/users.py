@@ -21,7 +21,7 @@ from oslo.config import cfg
 from rally.benchmark.context import base
 from rally.benchmark import utils
 from rally.benchmark.wrappers import keystone
-from rally import broker
+from rally.common import broker
 from rally import consts
 from rally import exceptions
 from rally.i18n import _

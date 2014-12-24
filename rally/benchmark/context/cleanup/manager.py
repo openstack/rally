@@ -16,7 +16,7 @@
 import time
 
 from rally.benchmark.context.cleanup import base
-from rally import broker
+from rally.common import broker
 from rally.i18n import _
 from rally import log as logging
 from rally import osclients

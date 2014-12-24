@@ -17,8 +17,8 @@ import os
 
 import decorator
 
+from rally.common import fileutils
 from rally import exceptions
-from rally import fileutils
 from rally.i18n import _
 
 ENV_DEPLOYMENT = "RALLY_DEPLOYMENT"

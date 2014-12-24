@@ -19,7 +19,7 @@ import sys
 
 from rally.benchmark.scenarios import base
 from rally.benchmark import utils as bench_utils
-from rally import sshutils
+from rally.common import sshutils
 
 
 class VMScenario(base.Scenario):

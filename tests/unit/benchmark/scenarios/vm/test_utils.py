@@ -62,7 +62,7 @@ class VMScenarioTestCase(test.TestCase):
 
     @mock.patch(VMTASKS_UTILS + ".VMScenario.run_action")
     @mock.patch(VMTASKS_UTILS + ".VMScenario.wait_for_ping")
-    @mock.patch("rally.sshutils.SSH")
+    @mock.patch("rally.common.sshutils.SSH")
     def test_run_command(self, mock_ssh_class, mock_wait_ping,
                          mock_run_action):
         mock_ssh_instance = mock.MagicMock()

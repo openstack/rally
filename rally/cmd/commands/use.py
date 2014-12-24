@@ -18,9 +18,9 @@
 import os
 
 from rally.cmd import cliutils
+from rally.common import fileutils
 from rally import db
 from rally import exceptions
-from rally import fileutils
 
 
 class UseCommands(object):
