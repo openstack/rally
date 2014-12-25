@@ -21,7 +21,7 @@ so to avoid copy paste or dirrect usage of enums values we create singltons
 for each enum. (e.g TaskStatus)
 """
 
-from rally import utils
+from rally.common import utils
 
 
 TEMPEST_TEST_SETS = ("full",

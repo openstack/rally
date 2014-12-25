@@ -15,9 +15,9 @@
 
 from rally.benchmark.scenarios import base
 from rally.benchmark.sla import base as sla_base
+from rally.common import utils
 from rally import deploy
 from rally.deploy import serverprovider
-from rally import utils
 from tests.unit import test
 
 

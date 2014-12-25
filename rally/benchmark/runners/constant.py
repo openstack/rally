@@ -21,9 +21,9 @@ from six import moves
 
 from rally.benchmark.runners import base
 from rally.benchmark import utils
+from rally.common import utils as rutils
 from rally import consts
 from rally import log as logging
-from rally import utils as rutils
 
 
 LOG = logging.getLogger(__name__)

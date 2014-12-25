@@ -170,7 +170,7 @@ It is possible to extend Rally with new Scenario Runner types, if needed. Basica
 .. parsed-literal::
 
     from rally.benchmark.runners import base
-    from rally import utils
+    from rally.common import utils
 
     class MyScenarioRunner(base.ScenarioRunner):
         *"""My scenario runner."""*

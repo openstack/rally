@@ -19,9 +19,9 @@ import threading
 import time
 
 from rally.benchmark.runners import base
+from rally.common import utils as rutils
 from rally import consts
 from rally import log as logging
-from rally import utils as rutils
 
 
 LOG = logging.getLogger(__name__)

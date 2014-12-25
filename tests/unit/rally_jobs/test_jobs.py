@@ -19,7 +19,7 @@ import mock
 import yaml
 
 from rally.benchmark import engine
-import rally.utils as rutils
+import rally.common.utils as rutils
 from tests.unit import test
 
 

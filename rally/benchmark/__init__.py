@@ -13,7 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from rally import utils as rutils
+from rally.common import utils as rutils
 
 
 rutils.import_modules_from_package("rally.benchmark.context")

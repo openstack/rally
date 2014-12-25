@@ -18,9 +18,9 @@ import six
 from rally.benchmark.context import base
 from rally.benchmark.wrappers import network as network_wrapper
 from rally.common.i18n import _
+from rally.common import utils
 from rally import log as logging
 from rally import osclients
-from rally import utils
 
 
 LOG = logging.getLogger(__name__)

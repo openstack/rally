@@ -28,6 +28,7 @@ from oslo.utils import importutils
 from six import moves
 from sphinx.util import docstrings
 
+import rally
 from rally.common.i18n import _
 from rally import exceptions
 from rally import log as logging
@@ -166,7 +167,7 @@ def import_modules_from_package(package):
 
     :param: package - Full package name. For example: rally.deploy.engines
     """
-    path = [os.path.dirname(__file__), '..'] + package.split('.')
+    path = [os.path.dirname(rally.__file__), '..'] + package.split('.')
     path = os.path.join(*path)
     for root, dirs, files in os.walk(path):
         for filename in files:

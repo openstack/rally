@@ -18,9 +18,9 @@ import abc
 import netaddr
 import six
 
+from rally.common import utils
 from rally import consts
 from rally import log as logging
-from rally import utils
 
 
 LOG = logging.getLogger(__name__)

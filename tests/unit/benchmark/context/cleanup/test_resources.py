@@ -19,7 +19,7 @@ from neutronclient.common import exceptions as neutron_exceptions
 from rally.benchmark.context.cleanup import base
 from rally.benchmark.context.cleanup import resources
 from rally.benchmark.scenarios.keystone import utils as keystone_utils
-from rally import utils
+from rally.common import utils
 from tests.unit import test
 
 BASE = "rally.benchmark.context.cleanup.resources"

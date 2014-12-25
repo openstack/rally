@@ -14,7 +14,7 @@
 
 import jsonschema
 
-from rally import utils
+from rally.common import utils
 
 
 class ActionBuilder(object):

@@ -18,9 +18,9 @@ import time
 from rally.benchmark.context.cleanup import base
 from rally.common import broker
 from rally.common.i18n import _
+from rally.common import utils as rutils
 from rally import log as logging
 from rally import osclients
-from rally import utils as rutils
 
 
 LOG = logging.getLogger(__name__)

@@ -345,7 +345,7 @@ class AtomicActionTestCase(test.TestCase):
         self.assertEqual(c.name, 'asdf')
 
     @mock.patch('tests.unit.fakes.FakeScenario._add_atomic_actions')
-    @mock.patch('rally.utils.time')
+    @mock.patch('rally.common.utils.time')
     def test__exit__(self, mock_time, mock__add_atomic_actions):
         fake_scenario_instance = fakes.FakeScenario()
         self.start = mock_time.time()

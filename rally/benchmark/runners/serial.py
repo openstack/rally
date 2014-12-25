@@ -14,8 +14,8 @@
 #    under the License.
 
 from rally.benchmark.runners import base
+from rally.common import utils
 from rally import consts
-from rally import utils
 
 
 class SerialScenarioRunner(base.ScenarioRunner):

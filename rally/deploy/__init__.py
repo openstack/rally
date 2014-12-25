@@ -14,7 +14,7 @@
 #    under the License.
 
 from rally.deploy.engine import *  # noqa
-from rally import utils
+from rally.common import utils
 
 
 utils.import_modules_from_package('rally.deploy.engines')

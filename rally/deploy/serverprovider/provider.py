@@ -19,8 +19,8 @@ import jsonschema
 import six
 
 from rally.common import sshutils
+from rally.common import utils
 from rally import exceptions
-from rally import utils
 
 
 class Server(utils.ImmutableMixin):

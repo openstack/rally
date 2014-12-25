@@ -23,8 +23,8 @@ import time
 import mock
 
 from rally.common.i18n import _
+from rally.common import utils
 from rally import exceptions
-from rally import utils
 from tests.unit import test
 
 
@@ -89,7 +89,7 @@ class TimerTestCase(test.TestCase):
         start_time = time.time()
         end_time = time.time()
 
-        with mock.patch('rally.utils.time') as mock_time:
+        with mock.patch('rally.common.utils.time') as mock_time:
             mock_time.time = mock.MagicMock(return_value=start_time)
             with utils.Timer() as timer:
                 mock_time.time = mock.MagicMock(return_value=end_time)
@@ -172,15 +172,15 @@ class LogTestCase(test.TestCase):
 
 class LoadExtraModulesTestCase(test.TestCase):
 
-    @mock.patch("rally.utils.imp.load_module")
-    @mock.patch("rally.utils.imp.find_module", return_value=(mock.MagicMock(),
-                                                             None, None))
-    @mock.patch("rally.utils.os.walk", return_value=[
+    @mock.patch("rally.common.utils.imp.load_module")
+    @mock.patch("rally.common.utils.imp.find_module",
+                return_value=(mock.MagicMock(), None, None))
+    @mock.patch("rally.common.utils.os.walk", return_value=[
         ('/somewhere', ('/subdir', ), ('plugin1.py', )),
         ('/somewhere/subdir', ('/subsubdir', ), ('plugin2.py',
                                                  'withoutextension')),
         ('/somewhere/subdir/subsubdir', [], ('plugin3.py', ))])
-    @mock.patch("rally.utils.os.path.exists", return_value=True)
+    @mock.patch("rally.common.utils.os.path.exists", return_value=True)
     def test_load_plugins_successfull(self, mock_exists,
                                       mock_oswalk, mock_find_module,
                                       mock_load_module):
@@ -194,7 +194,7 @@ class LoadExtraModulesTestCase(test.TestCase):
         self.assertEqual(mock_find_module.mock_calls, expected)
         self.assertEqual(len(mock_load_module.mock_calls), 3)
 
-    @mock.patch("rally.utils.os")
+    @mock.patch("rally.common.utils.os")
     def test_load_plugins_from_nonexisting_and_empty_dir(self, mock_os):
         # test no fails for nonexisting directory
         mock_os.path.exists.return_value = False
@@ -204,11 +204,11 @@ class LoadExtraModulesTestCase(test.TestCase):
         mock_os.walk.return_value = []
         utils.load_plugins("/somewhere")
 
-    @mock.patch("rally.utils.imp.load_module", side_effect=Exception())
-    @mock.patch("rally.utils.imp.find_module")
-    @mock.patch("rally.utils.os.path", return_value=True)
-    @mock.patch("rally.utils.os.walk", return_value=[('/etc/.rally/plugins',
-                                                      [], ('load_it.py', ))])
+    @mock.patch("rally.common.utils.imp.load_module", side_effect=Exception())
+    @mock.patch("rally.common.utils.imp.find_module")
+    @mock.patch("rally.common.utils.os.path", return_value=True)
+    @mock.patch("rally.common.utils.os.walk",
+                return_value=[('/etc/.rally/plugins', [], ('load_it.py', ))])
     def test_load_plugins_fails(self, mock_oswalk, mock_ospath,
                                 mock_load_module, mock_find_module):
         # test no fails if module is broken
@@ -354,28 +354,28 @@ class TenantIteratorTestCase(test.TestCase):
 
 class RAMIntTestCase(test.TestCase):
 
-    @mock.patch("rally.utils.multiprocessing")
+    @mock.patch("rally.common.utils.multiprocessing")
     def test__init__(self, mock_multi):
         utils.RAMInt()
         mock_multi.Lock.assert_called_once_with()
         mock_multi.Value.assert_called_once_with("I", 0)
 
-    @mock.patch("rally.utils.multiprocessing")
+    @mock.patch("rally.common.utils.multiprocessing")
     def test__int__(self, mock_multi):
         mock_multi.Value.return_value = mock.Mock(value=42)
         self.assertEqual(int(utils.RAMInt()), 42)
 
-    @mock.patch("rally.utils.multiprocessing")
+    @mock.patch("rally.common.utils.multiprocessing")
     def test__str__(self, mock_multi):
         mock_multi.Value.return_value = mock.Mock(value=42)
         self.assertEqual(str(utils.RAMInt()), "42")
 
-    @mock.patch("rally.utils.multiprocessing")
+    @mock.patch("rally.common.utils.multiprocessing")
     def test__iter__(self, mock_multi):
         ram_int = utils.RAMInt()
         self.assertEqual(iter(ram_int), ram_int)
 
-    @mock.patch("rally.utils.multiprocessing")
+    @mock.patch("rally.common.utils.multiprocessing")
     def test__next__(self, mock_multi):
         class MemInt(int):
             THRESHOLD = 5
@@ -396,13 +396,14 @@ class RAMIntTestCase(test.TestCase):
                          [mock.call()] * MemInt.THRESHOLD)
         self.assertEqual(len(mock_lock.__exit__.mock_calls), MemInt.THRESHOLD)
 
-    @mock.patch("rally.utils.RAMInt.__next__", return_value="next_value")
-    @mock.patch("rally.utils.multiprocessing")
+    @mock.patch("rally.common.utils.RAMInt.__next__",
+                return_value="next_value")
+    @mock.patch("rally.common.utils.multiprocessing")
     def test_next(self, mock_multi, mock_next):
         self.assertEqual(utils.RAMInt().next(), "next_value")
         mock_next.assert_called_once_with()
 
-    @mock.patch("rally.utils.multiprocessing")
+    @mock.patch("rally.common.utils.multiprocessing")
     def test_reset(self, mock_multi):
         ram_int = utils.RAMInt()
         self.assertRaises(TypeError, int, ram_int)
@@ -412,7 +413,7 @@ class RAMIntTestCase(test.TestCase):
 
 class GenerateRandomTestCase(test.TestCase):
 
-    @mock.patch("rally.utils.random")
+    @mock.patch("rally.common.utils.random")
     def test_generate_random_name(self, mock_random):
         choice = "foobarspamchoicestring"
 

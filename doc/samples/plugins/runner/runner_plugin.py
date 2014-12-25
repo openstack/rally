@@ -1,7 +1,7 @@
 import random
 
 from rally.benchmark.runners import base
-from rally import utils
+from rally.common import utils
 
 
 class RandomTimesScenarioRunner(base.ScenarioRunner):

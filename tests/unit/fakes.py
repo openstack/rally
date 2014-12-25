@@ -28,8 +28,8 @@ import six
 
 from rally.benchmark.context import base as base_ctx
 from rally.benchmark.scenarios import base
+from rally.common import utils as rally_utils
 from rally import objects
-from rally import utils as rally_utils
 
 
 def generate_uuid():

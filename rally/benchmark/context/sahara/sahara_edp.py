@@ -18,10 +18,10 @@ import urllib2
 from rally.benchmark.context import base
 from rally.benchmark.context.cleanup import manager as resource_manager
 from rally.common.i18n import _
+from rally.common import utils as rutils
 from rally import exceptions
 from rally import log as logging
 from rally import osclients
-from rally import utils as rutils
 
 
 LOG = logging.getLogger(__name__)

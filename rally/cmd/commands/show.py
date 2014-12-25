@@ -20,12 +20,12 @@ from __future__ import print_function
 from rally.cmd import cliutils
 from rally.cmd import envutils
 from rally.common.i18n import _
+from rally.common import utils
 from rally import db
 from rally import exceptions
 from rally import objects
 from rally.openstack.common import cliutils as common_cliutils
 from rally import osclients
-from rally import utils
 
 
 class ShowCommands(object):

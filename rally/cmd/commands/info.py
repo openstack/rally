@@ -52,10 +52,10 @@ from __future__ import print_function
 from rally.benchmark.scenarios import base as scenario_base
 from rally.benchmark.sla import base as sla_base
 from rally.cmd import cliutils
+from rally.common import utils
 from rally import deploy
 from rally.deploy import serverprovider
 from rally import exceptions
-from rally import utils
 
 
 class InfoCommands(object):

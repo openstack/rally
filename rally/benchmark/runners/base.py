@@ -23,11 +23,11 @@ import six
 from rally.benchmark.scenarios import base as scenario_base
 from rally.benchmark import types
 from rally.benchmark import utils
+from rally.common import utils as rutils
 from rally import consts
 from rally import exceptions
 from rally import log as logging
 from rally import osclients
-from rally import utils as rutils
 
 
 LOG = logging.getLogger(__name__)

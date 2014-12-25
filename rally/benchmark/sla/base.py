@@ -26,8 +26,8 @@ import six
 
 from rally.benchmark.processing import utils as putils
 from rally.common.i18n import _
+from rally.common import utils
 from rally import exceptions
-from rally import utils
 
 
 class SLAResult(object):
