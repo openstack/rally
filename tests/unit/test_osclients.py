@@ -21,7 +21,7 @@ from oslo.config import cfg
 
 from rally import consts
 from rally import exceptions
-from rally.objects import endpoint
+from rally import objects
 from rally import osclients
 from tests.unit import fakes
 from tests.unit import test
@@ -31,10 +31,10 @@ class OSClientsTestCase(test.TestCase):
 
     def setUp(self):
         super(OSClientsTestCase, self).setUp()
-        self.endpoint = endpoint.Endpoint("http://auth_url", "use", "pass",
-                                          "tenant")
-        self.endpoint_https = endpoint.Endpoint("https://auth_url/v2.0/admin",
-                                                "use", "pass", "tenant")
+        self.endpoint = objects.Endpoint("http://auth_url", "use", "pass",
+                                         "tenant")
+        self.endpoint_https = objects.Endpoint("https://auth_url/v2.0/admin",
+                                               "use", "pass", "tenant")
         self.clients = osclients.Clients(self.endpoint)
         self.clients_https = osclients.Clients(self.endpoint_https)
 

@@ -14,6 +14,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import functools
 import os
 
 from glanceclient import exc as glance_exc
@@ -23,7 +24,6 @@ from rally.benchmark import types as types
 from rally.common.i18n import _
 from rally import consts
 from rally import exceptions
-from rally import objects
 from rally.verification.verifiers.tempest import tempest
 
 
@@ -50,9 +50,11 @@ def validator(fn):
         :param kwargs: the keyword arguments of the decorator of the scenario
         ex. @my_decorator(kwarg1="kwarg1"), then kwargs = {"kwarg1": "kwarg1"}
         """
-        def wrap_validator(config, clients, task):
+
+        @functools.wraps(fn)
+        def wrap_validator(config, clients, deployment):
             # NOTE(amaretskiy): validator is successful by default
-            return (fn(config, clients, task, *args, **kwargs) or
+            return (fn(config, clients, deployment, *args, **kwargs) or
                     ValidationResult())
 
         def wrap_scenario(scenario):
@@ -70,7 +72,7 @@ def validator(fn):
 
 
 @validator
-def number(config, clients, task, param_name, minval=None, maxval=None,
+def number(config, clients, deployment, param_name, minval=None, maxval=None,
            nullable=False, integer_only=False):
     """Checks that parameter is number that pass specified condition.
 
@@ -123,7 +125,7 @@ def number(config, clients, task, param_name, minval=None, maxval=None,
 
 
 @validator
-def file_exists(config, clients, task, param_name, mode=os.R_OK):
+def file_exists(config, clients, deployment, param_name, mode=os.R_OK):
     """Validator checks parameter is proper path to file with proper mode.
 
     Ensure a file exists and can be accessed with the specified mode.
@@ -180,7 +182,7 @@ def _get_validated_flavor(config, clients, param_name):
 
 
 @validator
-def image_exists(config, clients, task, param_name):
+def image_exists(config, clients, deployment, param_name):
     """Returns validator for image_id
 
     :param param_name: defines which variable should be used
@@ -190,7 +192,7 @@ def image_exists(config, clients, task, param_name):
 
 
 @validator
-def flavor_exists(config, clients, task, param_name):
+def flavor_exists(config, clients, deployment, param_name):
     """Returns validator for flavor
 
     :param param_name: defines which variable should be used
@@ -200,7 +202,8 @@ def flavor_exists(config, clients, task, param_name):
 
 
 @validator
-def image_valid_on_flavor(config, clients, task, flavor_name, image_name):
+def image_valid_on_flavor(config, clients, deployment, flavor_name,
+                          image_name):
     """Returns validator for image could be used for current flavor
 
     :param flavor_name: defines which variable should be used
@@ -236,7 +239,7 @@ def image_valid_on_flavor(config, clients, task, flavor_name, image_name):
 
 
 @validator
-def network_exists(config, clients, task, network_name):
+def network_exists(config, clients, deployment, network_name):
     """Validator checks that network with network_name exist."""
 
     network = config.get("args", {}).get(network_name, "private")
@@ -255,7 +258,7 @@ def network_exists(config, clients, task, network_name):
 
 
 @validator
-def external_network_exists(config, clients, task, network_name,
+def external_network_exists(config, clients, deployment, network_name,
                             use_external_network):
     """Validator checks that externatl network with network_name exist."""
 
@@ -281,7 +284,7 @@ def external_network_exists(config, clients, task, network_name,
 
 
 @validator
-def tempest_tests_exists(config, clients, task):
+def tempest_tests_exists(config, clients, deployment):
     """Validator checks that specified test exists."""
     args = config.get("args", {})
 
@@ -294,7 +297,7 @@ def tempest_tests_exists(config, clients, task):
         return ValidationResult(False,
                                 _("Parameter 'test_name' or 'test_names' "
                                   "should be specified."))
-    verifier = tempest.Tempest(task["deployment_uuid"])
+    verifier = tempest.Tempest(deployment["uuid"])
     if not verifier.is_installed():
         try:
             verifier.install()
@@ -320,7 +323,7 @@ def tempest_tests_exists(config, clients, task):
 
 
 @validator
-def tempest_set_exists(config, clients, task):
+def tempest_set_exists(config, clients, deployment):
     """Validator that check that tempest set_name is valid."""
     set_name = config.get("args", {}).get("set_name")
 
@@ -335,7 +338,7 @@ def tempest_set_exists(config, clients, task):
 
 
 @validator
-def required_parameters(config, clients, task, *required_params):
+def required_parameters(config, clients, deployment, *required_params):
     """Validtor for checking required parameters are specified.
 
     :param *required_params: list of required parameters
@@ -349,7 +352,7 @@ def required_parameters(config, clients, task, *required_params):
 
 
 @validator
-def required_services(config, clients, task, *required_services):
+def required_services(config, clients, deployment, *required_services):
     """Validator checks if specified OpenStack services are available.
 
     :param *required_services: list of services names
@@ -366,7 +369,7 @@ def required_services(config, clients, task, *required_services):
 
 
 @validator
-def required_contexts(config, clients, task, *context_names):
+def required_contexts(config, clients, deployment, *context_names):
     """Validator hecks if required benchmark contexts are specified.
 
     :param *context_names: list of context names that should be specified
@@ -382,7 +385,7 @@ def required_contexts(config, clients, task, *context_names):
 
 
 @validator
-def required_openstack(config, clients, task, admin=False, users=False):
+def required_openstack(config, clients, deployment, admin=False, users=False):
     """Validator that requires OpenStack admin or (and) users.
 
     This allows us to create 4 kind of benchmarks:
@@ -398,8 +401,6 @@ def required_openstack(config, clients, task, admin=False, users=False):
     if not (admin or users):
         return ValidationResult(
             False, _("You should specify admin=True or users=True or both."))
-
-    deployment = objects.Deployment.get(task["deployment_uuid"])
 
     if deployment["admin"] and deployment["users"]:
         return ValidationResult()
@@ -417,7 +418,7 @@ def required_openstack(config, clients, task, admin=False, users=False):
 
 
 @validator
-def volume_type_exists(config, clients, task, param_name):
+def volume_type_exists(config, clients, deployment, param_name):
     """Returns validator for volume types.
 
        check_types: defines variable to be used as the flag to determine if

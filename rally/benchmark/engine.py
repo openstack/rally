@@ -30,7 +30,7 @@ from rally.common.i18n import _
 from rally import consts
 from rally import exceptions
 from rally import log as logging
-from rally.objects import endpoint
+from rally import objects
 from rally import osclients
 from rally import utils as rutils
 
@@ -103,8 +103,8 @@ class BenchmarkEngine(object):
         """
         self.config = config
         self.task = task
-        self.admin = admin and endpoint.Endpoint(**admin) or None
-        self.users = map(lambda u: endpoint.Endpoint(**u), users or [])
+        self.admin = admin and objects.Endpoint(**admin) or None
+        self.users = map(lambda u: objects.Endpoint(**u), users or [])
 
     @rutils.log_task_wrapper(LOG.info, _("Task validation check cloud."))
     def _check_cloud(self):
@@ -139,14 +139,11 @@ class BenchmarkEngine(object):
                     )
 
     def _validate_config_semantic_helper(self, admin, user, name, pos,
-                                         task, kwargs):
-        context = {} if not kwargs else kwargs.get("context", {})
-
+                                         deployment, kwargs):
         try:
             base_scenario.Scenario.validate(name, kwargs, admin=admin,
-                                            users=[user], task=task)
-            base_ctx.ContextManager.validate_semantic(context, admin=admin,
-                                                      users=[user], task=task)
+                                            users=[user],
+                                            deployment=deployment)
         except exceptions.InvalidScenarioArgument as e:
             kw = {"name": name, "pos": pos,
                   "config": kwargs, "reason": six.text_type(e)}
@@ -159,6 +156,8 @@ class BenchmarkEngine(object):
         # NOTE(boris-42): In future we will have more complex context, because
         #                 we will have pre-created users mode as well.
         context = {"task": self.task, "admin": {"endpoint": self.admin}}
+        deployment = objects.Deployment.get(self.task["deployment_uuid"])
+
         with users_ctx.UserGenerator(context) as ctx:
             ctx.setup()
             admin = osclients.Clients(self.admin)
@@ -167,7 +166,7 @@ class BenchmarkEngine(object):
             for name, values in six.iteritems(config):
                 for pos, kwargs in enumerate(values):
                     self._validate_config_semantic_helper(admin, user, name,
-                                                          pos, self.task,
+                                                          pos, deployment,
                                                           kwargs)
 
     @rutils.log_task_wrapper(LOG.info, _("Task validation."))

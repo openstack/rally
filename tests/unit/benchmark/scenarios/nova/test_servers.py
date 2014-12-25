@@ -17,7 +17,7 @@ import mock
 
 from rally.benchmark.scenarios.nova import servers
 from rally import exceptions as rally_exceptions
-from rally.objects import endpoint
+from rally import objects
 from rally import osclients
 from tests.unit import fakes
 from tests.unit import test
@@ -231,7 +231,7 @@ class NovaServersTestCase(test.TestCase):
         nova = fakes.FakeNovaClient()
         fc.nova = lambda: nova
 
-        user_endpoint = endpoint.Endpoint("url", "user", "password", "tenant")
+        user_endpoint = objects.Endpoint("url", "user", "password", "tenant")
         clients = osclients.Clients(user_endpoint)
         scenario = servers.NovaServers(clients=clients)
 

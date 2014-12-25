@@ -161,12 +161,13 @@ class BenchmarkEngineTestCase(test.TestCase):
 
     @mock.patch("rally.benchmark.engine.base_scenario.Scenario.validate")
     def test__validate_config_semantic_helper(self, mock_validate):
-        task = mock.MagicMock()
+        deployment = mock.MagicMock()
         eng = engine.BenchmarkEngine(mock.MagicMock(), mock.MagicMock())
         eng._validate_config_semantic_helper("admin", "user", "name", "pos",
-                                             task, {"args": "args"})
-        mock_validate.assert_called_once_with(
-            "name", {"args": "args"}, admin="admin", users=["user"], task=task)
+                                             deployment, {"args": "args"})
+        mock_validate.assert_called_once_with("name", {"args": "args"},
+                                              admin="admin", users=["user"],
+                                              deployment=deployment)
 
     @mock.patch("rally.benchmark.engine.base_scenario.Scenario.validate")
     def test__validate_config_semanitc_helper_invalid_arg(self, mock_validate):
@@ -177,24 +178,14 @@ class BenchmarkEngineTestCase(test.TestCase):
                           eng._validate_config_semantic_helper, "a", "u", "n",
                           "p", mock.MagicMock(), {})
 
-    @mock.patch("rally.benchmark.engine.base_scenario.Scenario")
-    @mock.patch(
-        "rally.benchmark.engine.base_ctx.ContextManager.validate_semantic")
-    def test__validate_config_semanitc_helper_invalid_context(self,
-                                                              mock_validate_sm,
-                                                              mock_scenario):
-        mock_validate_sm.side_effect = exceptions.InvalidScenarioArgument()
-        eng = engine.BenchmarkEngine(mock.MagicMock(), mock.MagicMock())
-
-        self.assertRaises(exceptions.InvalidBenchmarkConfig,
-                          eng._validate_config_semantic_helper, "a", "u", "n",
-                          "p", mock.MagicMock(), {})
-
     @mock.patch("rally.benchmark.engine.osclients.Clients")
     @mock.patch("rally.benchmark.engine.users_ctx")
     @mock.patch("rally.benchmark.engine.BenchmarkEngine"
                 "._validate_config_semantic_helper")
-    def test__validate_config_semantic(self, mock_helper, mock_userctx,
+    @mock.patch("rally.benchmark.engine.objects.Deployment.get",
+                return_value="FakeDeployment")
+    def test__validate_config_semantic(self, mock_deployment_get,
+                                       mock_helper, mock_userctx,
                                        mock_osclients):
         mock_userctx.UserGenerator = fakes.FakeUserContext
         mock_osclients.return_value = mock.MagicMock()
@@ -216,11 +207,14 @@ class BenchmarkEngineTestCase(test.TestCase):
         ]
         mock_osclients.assert_has_calls(expected_calls)
 
+        mock_deployment_get.assert_called_once_with(fake_task["uuid"])
+
         admin = user = mock_osclients.return_value
+        fake_deployment = mock_deployment_get.return_value
         expected_calls = [
-            mock.call(admin, user, "a", 0, fake_task, config["a"][0]),
-            mock.call(admin, user, "a", 1, fake_task, config["a"][1]),
-            mock.call(admin, user, "b", 0, fake_task, config["b"][0])
+            mock.call(admin, user, "a", 0, fake_deployment, config["a"][0]),
+            mock.call(admin, user, "a", 1, fake_deployment, config["a"][1]),
+            mock.call(admin, user, "b", 0, fake_deployment, config["b"][0])
         ]
         mock_helper.assert_has_calls(expected_calls, any_order=True)
 

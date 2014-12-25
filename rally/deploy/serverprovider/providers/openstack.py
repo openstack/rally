@@ -24,7 +24,7 @@ from rally.common.i18n import _
 from rally.deploy.serverprovider import provider
 from rally import exceptions
 from rally import log as logging
-from rally.objects import endpoint
+from rally import objects
 from rally import osclients
 
 
@@ -104,8 +104,8 @@ class OpenStackProvider(provider.ProviderFactory):
 
     def __init__(self, deployment, config):
         super(OpenStackProvider, self).__init__(deployment, config)
-        user_endpoint = endpoint.Endpoint(config['auth_url'], config['user'],
-                                          config['password'], config['tenant'])
+        user_endpoint = objects.Endpoint(config['auth_url'], config['user'],
+                                         config['password'], config['tenant'])
         clients = osclients.Clients(user_endpoint)
         self.nova = clients.nova()
         try:

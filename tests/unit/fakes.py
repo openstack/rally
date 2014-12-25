@@ -28,7 +28,7 @@ import six
 
 from rally.benchmark.context import base as base_ctx
 from rally.benchmark.scenarios import base
-from rally.objects import endpoint
+from rally import objects
 from rally import utils as rally_utils
 
 
@@ -1199,7 +1199,7 @@ class FakeClients(object):
         self._ceilometer = None
         self._zaqar = None
         self._trove = None
-        self._endpoint = endpoint_ or endpoint.Endpoint(
+        self._endpoint = endpoint_ or objects.Endpoint(
             "http://fake.example.org:5000/v2.0/",
             "fake_username",
             "fake_password",
@@ -1339,11 +1339,11 @@ class FakeUserContext(FakeContext):
 
     admin = {
         "id": "adminuuid",
-        "endpoint": endpoint.Endpoint("aurl", "aname", "apwd", "atenant")
+        "endpoint": objects.Endpoint("aurl", "aname", "apwd", "atenant")
     }
     user = {
         "id": "uuid",
-        "endpoint": endpoint.Endpoint("url", "name", "pwd", "tenant"),
+        "endpoint": objects.Endpoint("url", "name", "pwd", "tenant"),
         "tenant_id": "uuid"
     }
     tenants = {"uuid": {"name": "tenant"}}

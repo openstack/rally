@@ -62,24 +62,24 @@ class HackingTestCase(test.TestCase):
         self.assertTrue(actual_msg.startswith('N303'))
 
     def test_check_wrong_logging_import(self):
-        fake_imports = ["from rally.openstack.common import log",
-                        "import rally.openstack.common.log"
-                        "import logging"]
+        bad_imports = ["from rally.openstack.common import log",
+                       "import rally.openstack.common.log",
+                       "import logging"]
         good_imports = ["from rally import log",
                         "from rally.log",
                         "import rally.log"]
 
-        for fake_import in fake_imports:
-            checkres = checks.check_import_of_logging(fake_import, "fakefile")
+        for bad_import in bad_imports:
+            checkres = checks.check_import_of_logging(bad_import, "fakefile")
             self.assertIsNotNone(next(checkres))
 
-        for fake_import in fake_imports:
-            checkres = checks.check_import_of_logging(fake_import,
+        for bad_import in bad_imports:
+            checkres = checks.check_import_of_logging(bad_import,
                                                       "./rally/log.py")
             self.assertEqual([], list(checkres))
 
-        for fake_import in good_imports:
-            checkres = checks.check_import_of_logging(fake_import,
+        for good_import in good_imports:
+            checkres = checks.check_import_of_logging(good_import,
                                                       "fakefile")
             self.assertEqual([], list(checkres))
 
@@ -258,3 +258,24 @@ class HackingTestCase(test.TestCase):
 
         self.assertEqual(len(list(checks.assert_equal_in(
             "self.assertEqual(False, any(a==1 for a in b))"))), 0)
+
+    def test_check_no_direct_rally_objects_import(self):
+
+        bad_imports = ["from rally.objects import task",
+                       "import rally.objects.task"]
+
+        good_import = "from rally import objects"
+
+        for bad_import in bad_imports:
+            checkres = checks.check_no_direct_rally_objects_import(bad_import,
+                                                                   "fakefile")
+            self.assertIsNotNone(next(checkres))
+
+        for bad_import in bad_imports:
+            checkres = checks.check_no_direct_rally_objects_import(
+                bad_import, "./rally/objects/__init__.py")
+            self.assertEqual([], list(checkres))
+
+        checkres = checks.check_no_direct_rally_objects_import(good_import,
+                                                               "fakefile")
+        self.assertEqual([], list(checkres))
