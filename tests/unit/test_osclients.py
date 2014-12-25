@@ -13,11 +13,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import urlparse
 
 from keystoneclient import exceptions as keystone_exceptions
 import mock
 from oslo.config import cfg
+from six.moves.urllib import parse
 
 from rally import consts
 from rally import exceptions
@@ -55,7 +55,7 @@ class OSClientsTestCase(test.TestCase):
         self.assertNotIn("keystone", self.clients.cache)
         client = self.clients.keystone()
         self.assertEqual(client, self.fake_keystone)
-        mgmt_url = urlparse.urlparse(self.endpoint.auth_url)
+        mgmt_url = parse.urlparse(self.endpoint.auth_url)
         auth_url = "{0}://{1}:{2}{3}".format(mgmt_url.scheme,
                                              mgmt_url.hostname,
                                              self.endpoint.admin_port,

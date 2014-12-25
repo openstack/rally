@@ -13,8 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import urlparse
-
 from ceilometerclient import client as ceilometer
 from cinderclient import client as cinder
 from designateclient import v1 as designate
@@ -29,6 +27,7 @@ from neutronclient.neutron import client as neutron
 from novaclient import client as nova
 from oslo.config import cfg
 from saharaclient import client as sahara
+from six.moves.urllib import parse
 from troveclient import client as trove
 from zaqarclient.queues import client as zaqar
 
@@ -100,7 +99,7 @@ class Clients(object):
         }
         kw = dict(self.endpoint.to_dict().items() + new_kw.items())
         if kw["endpoint_type"] == consts.EndpointType.PUBLIC:
-            mgmt_url = urlparse.urlparse(kw["auth_url"])
+            mgmt_url = parse.urlparse(kw["auth_url"])
             if (mgmt_url.port != kw["admin_port"] and
                     mgmt_url.scheme != "https"):
                 kw["endpoint"] = "{0}://{1}:{2}{3}".format(

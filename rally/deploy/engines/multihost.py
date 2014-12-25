@@ -13,9 +13,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import urlparse
 
 import six
+from six.moves.urllib import parse
 
 import rally
 from rally import consts
@@ -87,7 +87,7 @@ class MultihostEngine(engine.EngineFactory):
         self.controller, self.endpoints = self._deploy_node(
             self.config['controller'])
         endpoint = self.endpoints[0]
-        self.controller_ip = urlparse.urlparse(endpoint.auth_url).hostname
+        self.controller_ip = parse.urlparse(endpoint.auth_url).hostname
 
         for node_config in self.config['nodes']:
             self._update_controller_ip(node_config)

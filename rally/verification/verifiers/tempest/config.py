@@ -17,11 +17,11 @@ import datetime
 import inspect
 import os
 import time
-import urlparse
 
 from oslo.config import cfg
 import requests
 from six.moves import configparser
+from six.moves.urllib import parse
 
 from rally.common.i18n import _
 from rally import db
@@ -231,7 +231,7 @@ class TempestConf(object):
             self.conf.set(section_name, service,
                           str(service in self.available_services))
         horizon_url = ('http://' +
-                       urlparse.urlparse(self.endpoint['auth_url']).hostname)
+                       parse.urlparse(self.endpoint['auth_url']).hostname)
         horizon_availability = (requests.get(horizon_url).status_code == 200)
         # convert boolean to string because ConfigParser fails
         # on attempt to get option with boolean value

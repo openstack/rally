@@ -48,6 +48,7 @@ re_assert_equal_in_start_with_true_or_false = re.compile(
 re_iteritems_method = re.compile(r"\.iteritems\(\)")
 re_basestring_method = re.compile(r"(^|[\s,(\[=])basestring([\s,)\]]|$)")
 re_StringIO_method = re.compile(r"StringIO\.StringIO\(")
+re_urlparse_method = re.compile(r"(^|[\s=])urlparse\.")
 
 
 def _parse_assert_mock_str(line):
@@ -267,6 +268,18 @@ def check_StringIO_method(logical_line):
                   "rather than StringIO.StringIO.")
 
 
+def check_urlparse_method(logical_line):
+    """Check if urlparse is properly called for compatibility with Python 3
+
+    The correct form is six.moves.urllib.parse instead of "urlparse".
+
+    N333
+    """
+    res = re_urlparse_method.search(logical_line)
+    if res:
+        yield (0, "N333: Use six.moves.urllib.parse rather than urlparse.")
+
+
 def check_no_direct_rally_objects_import(logical_line, filename):
     """Check if rally.objects are properly imported.
 
@@ -297,4 +310,5 @@ def factory(register):
     register(check_iteritems_method)
     register(check_basestring_method)
     register(check_StringIO_method)
+    register(check_urlparse_method)
     register(check_no_direct_rally_objects_import)

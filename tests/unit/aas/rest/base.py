@@ -19,7 +19,7 @@
 
 import pecan
 import pecan.testing
-from requests import utils
+from six.moves.urllib import parse
 
 from tests.unit import test
 
@@ -208,14 +208,14 @@ class PecanControllerTest(test.TestCase):
     def validate_link(self, link, bookmark=False):
         """Check if the given link can get correct data."""
         # removes the scheme and net location parts of the link
-        url_parts = list(utils.urlparse.urlparse(link))
+        url_parts = list(parse.urlparse(link))
         url_parts[0] = url_parts[1] = ''
 
         # bookmark link should not have the version in the URL
         if bookmark and url_parts[2].startswith(PATH_PREFIX):
             return False
 
-        full_path = utils.urlparse.urlunparse(url_parts)
+        full_path = parse.urlunparse(url_parts)
         try:
             self.get_json(full_path, path_prefix='')
             return True

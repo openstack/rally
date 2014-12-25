@@ -25,4 +25,5 @@ Rally Specific Commandments
  * [N330] - Ensure that ``dict.iteritems()`` is not used
  * [N331] - Ensure that ``basestring`` is not used
  * [N332] - Ensure that ``StringIO.StringIO`` is not used
+ * [N333] - Ensure that ``urlparse`` is not used
 * [N340] - Ensure that we are importing always ``from rally import objects``

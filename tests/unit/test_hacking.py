@@ -139,8 +139,15 @@ class HackingTestCase(test.TestCase):
         self.assertEqual(len(list(checks.check_StringIO_method(
             "StringIO.StringIO()"))), 1)
 
-        self.assertEqual(len(list(checks.check_basestring_method(
+        self.assertEqual(len(list(checks.check_StringIO_method(
             "six.moves.StringIO()"))), 0)
+
+    def test_check_urlparse_method(self):
+        self.assertEqual(len(list(checks.check_urlparse_method(
+            "urlparse.urlparse(url)"))), 1)
+
+        self.assertEqual(len(list(checks.check_urlparse_method(
+            "six.moves.urllib.parse.urlparse(url)"))), 0)
 
     def test_assert_equal_none(self):
         self.assertEqual(len(list(checks.assert_equal_none(
