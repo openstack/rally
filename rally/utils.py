@@ -16,7 +16,6 @@
 import functools
 import imp
 import inspect
-import itertools
 import multiprocessing
 import os
 import random
@@ -52,7 +51,7 @@ class ImmutableMixin(object):
 
 class EnumMixin(object):
     def __iter__(self):
-        for k, v in itertools.imap(lambda x: (x, getattr(self, x)), dir(self)):
+        for k, v in moves.map(lambda x: (x, getattr(self, x)), dir(self)):
             if not k.startswith('_'):
                 yield v
 
