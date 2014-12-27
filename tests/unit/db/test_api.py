@@ -16,6 +16,8 @@
 """Tests for db.api layer."""
 import uuid
 
+from six import moves
+
 from rally import consts
 from rally import db
 from rally import exceptions
@@ -78,13 +80,13 @@ class TasksTestCase(test.DBTestCase):
     def test_task_list(self):
         fake_deploy_uuid = str(uuid.uuid4())
         INIT = consts.TaskStatus.INIT
-        task_init = sorted(self._create_task()['uuid'] for i in xrange(3))
+        task_init = sorted(self._create_task()['uuid'] for i in moves.range(3))
         FINISHED = consts.TaskStatus.FINISHED
         task_finished = sorted(self._create_task(
             {'status': FINISHED,
              'deployment_uuid': fake_deploy_uuid})[
              'uuid']
-                               for i in xrange(3))
+                               for i in moves.range(3))
 
         task_all = sorted(task_init + task_finished)
 

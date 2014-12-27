@@ -156,6 +156,13 @@ class HackingTestCase(test.TestCase):
         self.assertEqual(len(list(checks.check_itertools_imap_method(
             "six.moves.map()"))), 0)
 
+    def test_check_xrange_imap_method(self):
+        self.assertEqual(len(list(checks.check_xrange_method(
+            "xrange()"))), 1)
+
+        self.assertEqual(len(list(checks.check_xrange_method(
+            "six.moves.range()"))), 0)
+
     def test_assert_equal_none(self):
         self.assertEqual(len(list(checks.assert_equal_none(
             "self.assertEqual(A, None)"))), 1)
