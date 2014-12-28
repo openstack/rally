@@ -50,6 +50,7 @@ re_basestring_method = re.compile(r"(^|[\s,(\[=])basestring([\s,)\]]|$)")
 re_StringIO_method = re.compile(r"StringIO\.StringIO\(")
 re_urlparse_method = re.compile(r"(^|[\s=])urlparse\.")
 re_itertools_imap_method = re.compile(r"(^|[\s=])itertools\.imap\(")
+re_xrange_method = re.compile(r"(^|[\s=])xrange\(")
 
 
 def _parse_assert_mock_str(line):
@@ -293,6 +294,18 @@ def check_itertools_imap_method(logical_line):
         yield (0, "N334: Use six.moves.map rather than itertools.imap.")
 
 
+def check_xrange_method(logical_line):
+    """Check if xrange is properly called for compatibility with Python 3
+
+    The correct form is six.moves.range instead of xrange.
+
+    N335
+    """
+    res = re_xrange_method.search(logical_line)
+    if res:
+        yield (0, "N335: Use six.moves.range rather than xrange.")
+
+
 def check_no_direct_rally_objects_import(logical_line, filename):
     """Check if rally.objects are properly imported.
 
@@ -325,4 +338,5 @@ def factory(register):
     register(check_StringIO_method)
     register(check_urlparse_method)
     register(check_itertools_imap_method)
+    register(check_xrange_method)
     register(check_no_direct_rally_objects_import)

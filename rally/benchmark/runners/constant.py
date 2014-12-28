@@ -17,6 +17,8 @@
 import multiprocessing
 import time
 
+from six import moves
+
 from rally.benchmark.runners import base
 from rally.benchmark import utils
 from rally import consts
@@ -68,7 +70,7 @@ class ConstantScenarioRunner(base.ScenarioRunner):
 
     @staticmethod
     def _iter_scenario_args(cls, method, ctx, args, times):
-        for i in xrange(times):
+        for i in moves.range(times):
             yield (i, cls, method, base._get_scenario_context(ctx), args)
 
     def _run_scenario(self, cls, method, context, args):

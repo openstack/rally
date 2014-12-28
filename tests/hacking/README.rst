@@ -27,4 +27,5 @@ Rally Specific Commandments
  * [N332] - Ensure that ``StringIO.StringIO`` is not used
  * [N333] - Ensure that ``urlparse`` is not used
  * [N334] - Ensure that ``itertools.imap`` is not used
+ * [N335] - Ensure that ``xrange`` is not used
 * [N340] - Ensure that we are importing always ``from rally import objects``
