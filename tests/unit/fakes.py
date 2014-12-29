@@ -36,7 +36,7 @@ def generate_uuid():
     return str(uuid.uuid4())
 
 
-def generate_name(prefix="", length=12, choices=string.lowercase):
+def generate_name(prefix="", length=12, choices=string.ascii_lowercase):
     """Generate pseudo-random name.
 
     :param prefix: str, custom prefix for genertated name

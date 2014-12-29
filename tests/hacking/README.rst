@@ -28,4 +28,5 @@ Rally Specific Commandments
  * [N333] - Ensure that ``urlparse`` is not used
  * [N334] - Ensure that ``itertools.imap`` is not used
  * [N335] - Ensure that ``xrange`` is not used
+ * [N336] - Ensure that ``string.lowercase`` and ``string.uppercase`` are not used
 * [N340] - Ensure that we are importing always ``from rally import objects``

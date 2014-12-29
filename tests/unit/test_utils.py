@@ -418,12 +418,13 @@ class GenerateRandomTestCase(test.TestCase):
 
         idx = iter(range(100))
         mock_random.choice.side_effect = lambda choice: choice[idx.next()]
-        self.assertEqual(utils.generate_random_name(), string.lowercase[:16])
+        self.assertEqual(utils.generate_random_name(),
+                         string.ascii_lowercase[:16])
 
         idx = iter(range(100))
         mock_random.choice.side_effect = lambda choice: choice[idx.next()]
         self.assertEqual(utils.generate_random_name(length=10),
-                         string.lowercase[:10])
+                         string.ascii_lowercase[:10])
 
         idx = iter(range(100))
         mock_random.choice.side_effect = lambda choice: choice[idx.next()]
@@ -439,7 +440,7 @@ class GenerateRandomTestCase(test.TestCase):
         mock_random.choice.side_effect = lambda choice: choice[idx.next()]
         self.assertEqual(
             utils.generate_random_name(prefix="foo_", length=10),
-            "foo_" + string.lowercase[:10])
+            "foo_" + string.ascii_lowercase[:10])
 
         idx = iter(range(100))
         mock_random.choice.side_effect = lambda choice: choice[idx.next()]

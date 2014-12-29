@@ -51,6 +51,8 @@ re_StringIO_method = re.compile(r"StringIO\.StringIO\(")
 re_urlparse_method = re.compile(r"(^|[\s=])urlparse\.")
 re_itertools_imap_method = re.compile(r"(^|[\s=])itertools\.imap\(")
 re_xrange_method = re.compile(r"(^|[\s=])xrange\(")
+re_string_lower_upper_case_method = re.compile(
+    r"(^|[(,\s=])string\.(lower|upper)case([)\[,\s]|$)")
 
 
 def _parse_assert_mock_str(line):
@@ -306,6 +308,20 @@ def check_xrange_method(logical_line):
         yield (0, "N335: Use six.moves.range rather than xrange.")
 
 
+def check_string_lower_upper_case_method(logical_line):
+    """Check if string.lowercase and string.uppercase are properly called
+
+    In Python 3, string.lowercase and string.uppercase are gone.
+    The correct form is "string.ascii_lowercase" and "string.ascii_uppercase".
+
+    N336
+    """
+    res = re_string_lower_upper_case_method.search(logical_line)
+    if res:
+        yield (0, "N336: Use string.ascii_lowercase or string.ascii_uppercase "
+                  "rather than string.lowercase or string.uppercase.")
+
+
 def check_no_direct_rally_objects_import(logical_line, filename):
     """Check if rally.objects are properly imported.
 
@@ -339,4 +355,5 @@ def factory(register):
     register(check_urlparse_method)
     register(check_itertools_imap_method)
     register(check_xrange_method)
+    register(check_string_lower_upper_case_method)
     register(check_no_direct_rally_objects_import)
