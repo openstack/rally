@@ -377,6 +377,23 @@ def required_services(config, clients, deployment, *required_services):
 
 
 @validator
+def required_clients(config, clients, task, *components):
+    """Validator checks if specified OpenStack clients are available.
+
+    :param *components: list of client components names
+    """
+    for client_component in components:
+        try:
+            getattr(clients, client_component)()
+        except ImportError:
+            return ValidationResult(
+                False,
+                _("Client for %s is not installed. To install it run "
+                  "`pip install -r"
+                  " optional-requirements.txt`") % client_component)
+
+
+@validator
 def required_contexts(config, clients, deployment, *context_names):
     """Validator hecks if required benchmark contexts are specified.
 

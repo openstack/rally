@@ -302,6 +302,23 @@ class Clients(object):
         return client
 
     @cached
+    def mistral(self):
+        """Return Mistral client."""
+        from mistralclient.api import client
+        kc = self.keystone()
+
+        mistral_url = kc.service_catalog.url_for(
+            service_type="workflowv2",
+            endpoint_type=self.endpoint.endpoint_type,
+            region_name=self.endpoint.region_name)
+
+        client = client.client(mistral_url=mistral_url,
+                               service_type="workflowv2",
+                               auth_token=kc.auth_token)
+
+        return client
+
+    @cached
     def services(self):
         """Return available services names and types.
 

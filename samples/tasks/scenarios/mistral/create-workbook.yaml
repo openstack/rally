@@ -1,0 +1,14 @@
+---
+  MistralWorkbooks.create_workbook:
+    -
+      args:
+        definition: rally-jobs/extra/mistral_wb.yaml
+      runner:
+        type: "constant"
+        times: 50
+        concurrency: 10
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+

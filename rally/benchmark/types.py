@@ -236,3 +236,19 @@ class NeutronNetworkResourceType(ResourceType):
         raise exceptions.InvalidScenarioArgument(
             "Neutron network with name '{name}' not found".format(
                 name=resource_config.get("name")))
+
+
+class FileType(ResourceType):
+
+    @classmethod
+    def transform(cls, clients, resource_config):
+        """Returns content of the file by its path.
+
+        :param clients: openstack admin client handles
+        :param resource_config: path to file
+
+        :returns: content of the file
+        """
+
+        with open(resource_config, "r") as f:
+            return f.read()

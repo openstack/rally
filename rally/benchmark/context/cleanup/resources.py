@@ -284,6 +284,14 @@ class DesignateServer(SynchronizedDeletion, base.ResourceManager):
     pass
 
 
+# MISTRAL
+
+@base.resource("mistral", "workbooks", order=1100, tenant_resource=True)
+class MistralWorkbooks(SynchronizedDeletion, base.ResourceManager):
+    def delete(self):
+        self._manager().delete(self.raw_resource.name)
+
+
 # KEYSTONE
 
 _keystone_order = get_order(9000)

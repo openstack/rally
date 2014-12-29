@@ -279,6 +279,12 @@ class FakeAvailabilityZone(FakeResource):
         self.hosts = mock.MagicMock()
 
 
+class FakeWorkbook(FakeResource):
+    def __init__(self, manager=None):
+        super(FakeWorkbook, self).__init__(manager)
+        self.workbook = mock.MagicMock()
+
+
 class FakeManager(object):
 
     def __init__(self):
@@ -806,6 +812,15 @@ class FakeAvailabilityZonesManager(FakeManager):
         return [self.zones]
 
 
+class FakeWorkbookManager(FakeManager):
+    def __init__(self):
+        super(FakeWorkbookManager, self).__init__()
+        self.workbook = FakeWorkbook()
+
+    def list(self):
+        return [self.workbook]
+
+
 class FakeServiceCatalog(object):
     def get_endpoints(self):
         return {"image": [{"publicURL": "http://fake.to"}],
@@ -1188,6 +1203,12 @@ class FakeTroveClient(object):
         self.instances = FakeDbInstanceManager()
 
 
+class FakeMistralClient(object):
+
+    def __init__(self):
+        self.workbook = FakeWorkbookManager()
+
+
 class FakeClients(object):
 
     def __init__(self, endpoint_=None):
@@ -1202,6 +1223,7 @@ class FakeClients(object):
         self._ceilometer = None
         self._zaqar = None
         self._trove = None
+        self._mistral = None
         self._endpoint = endpoint_ or objects.Endpoint(
             "http://fake.example.org:5000/v2.0/",
             "fake_username",
@@ -1265,6 +1287,11 @@ class FakeClients(object):
         if not self._trove:
             self._trove = FakeTroveClient()
         return self._trove
+
+    def mistral(self):
+        if not self._mistral:
+            self._mistral = FakeMistralClient()
+        return self._mistral
 
 
 class FakeRunner(object):

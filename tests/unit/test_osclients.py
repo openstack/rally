@@ -262,6 +262,30 @@ class OSClientsTestCase(test.TestCase):
         mock_trove.Client.assert_called_once_with("1.0", **kw)
         self.assertEqual(self.clients.cache["trove"], fake_trove)
 
+    def test_mistral(self):
+        fake_mistral = fakes.FakeMistralClient()
+        mock_mistral = mock.Mock()
+        mock_mistral.client.client.return_value = fake_mistral
+
+        self.assertNotIn("mistral", self.clients.cache)
+        with mock.patch.dict(
+                "sys.modules", {"mistralclient": mock_mistral,
+                                "mistralclient.api": mock_mistral}):
+            client = self.clients.mistral()
+            self.assertEqual(fake_mistral, client)
+            self.service_catalog.url_for.assert_called_once_with(
+                service_type="workflowv2",
+                endpoint_type=consts.EndpointType.PUBLIC,
+                region_name=self.endpoint.region_name
+            )
+            fake_mistral_url = self.service_catalog.url_for.return_value
+            mock_mistral.client.client.assert_called_once_with(
+                 mistral_url=fake_mistral_url,
+                 service_type="workflowv2",
+                 auth_token=self.fake_keystone.auth_token
+            )
+            self.assertEqual(fake_mistral, self.clients.cache["mistral"])
+
     @mock.patch("rally.osclients.Clients.keystone")
     def test_services(self, mock_keystone):
         available_services = {consts.ServiceType.IDENTITY: {},

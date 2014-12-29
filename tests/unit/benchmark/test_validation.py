@@ -566,3 +566,17 @@ class ValidatorsTestCase(test.TestCase):
 
         result = validator(context, clients, mock.MagicMock())
         self.assertFalse(result.is_valid, result.msg)
+
+    def test_required_clients(self):
+        validator = self._unwrap_validator(validation.required_clients,
+                                           "keystone", "nova")
+
+        clients = mock.MagicMock()
+        clients.keystone.return_value = "keystone"
+        clients.nova.return_value = "nova"
+        result = validator({}, clients, None)
+        self.assertTrue(result.is_valid, result.msg)
+
+        clients.nova.side_effect = ImportError
+        result = validator({}, clients, None)
+        self.assertFalse(result.is_valid, result.msg)
