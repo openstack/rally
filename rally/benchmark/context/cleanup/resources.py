@@ -197,7 +197,7 @@ _sahara_order = get_order(600)
 
 @base.resource("sahara", "job_executions", order=_sahara_order.next(),
                tenant_resource=True)
-class SaharaJobExecution(base.ResourceManager):
+class SaharaJobExecution(SynchronizedDeletion, base.ResourceManager):
     pass
 
 
