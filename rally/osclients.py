@@ -27,7 +27,6 @@ from neutronclient.neutron import client as neutron
 from novaclient import client as nova
 from oslo.config import cfg
 from saharaclient import client as sahara
-from six.moves.urllib import parse
 from troveclient import client as trove
 from zaqarclient.queues import client as zaqar
 
@@ -99,18 +98,6 @@ class Clients(object):
         }
         kw = self.endpoint.to_dict()
         kw.update(new_kw)
-        if kw["endpoint_type"] == consts.EndpointType.PUBLIC:
-            mgmt_url = parse.urlparse(kw["auth_url"])
-            if (mgmt_url.port != kw["admin_port"] and
-                    mgmt_url.scheme != "https"):
-                kw["endpoint"] = "{0}://{1}:{2}{3}".format(
-                    mgmt_url.scheme,
-                    mgmt_url.hostname,
-                    kw["admin_port"],
-                    mgmt_url.path
-                )
-            else:
-                kw["endpoint"] = kw["auth_url"]
         client = create_keystone_client(kw)
         if client.auth_ref is None:
             client.authenticate()

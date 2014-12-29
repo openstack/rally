@@ -32,7 +32,6 @@ class TestExistingCloud(test.TestCase):
                 "auth_url": "http://example.net:5000/v2.0/",
                 "region_name": "RegionOne",
                 "endpoint_type": consts.EndpointType.INTERNAL,
-                "admin_port": 35357,
                 "admin": {
                     "username": "admin",
                     "password": "myadminpass",

@@ -74,7 +74,6 @@ Or using keystone v3 API endpoint:
         "type": "ExistingCloud",
         "auth_url": "http://localhost:5000/v3/",
         "endpoint_type": "public",
-        "admin_port": 35357,
         "admin": {
             "username": "engineer1",
             "user_domain_name": "qa",

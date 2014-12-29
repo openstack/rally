@@ -40,7 +40,6 @@ FAKE_DEPLOY_CONFIG = {
     },
     "region_name": "RegionOne",
     "endpoint_type": consts.EndpointType.INTERNAL,
-    "admin_port": 35357
 }
 
 

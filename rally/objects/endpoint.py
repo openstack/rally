@@ -21,9 +21,8 @@ class Endpoint(object):
     def __init__(self, auth_url, username, password, tenant_name=None,
                  permission=consts.EndpointPermission.USER,
                  region_name=None, endpoint_type=consts.EndpointType.PUBLIC,
-                 admin_port=35357, domain_name=None,
-                 user_domain_name='Default',
-                 project_domain_name='Default'):
+                 admin_port=None, domain_name=None,
+                 user_domain_name='Default', project_domain_name='Default'):
         self.auth_url = auth_url
         self.username = username
         self.password = password
@@ -31,17 +30,19 @@ class Endpoint(object):
         self.permission = permission
         self.region_name = region_name
         self.endpoint_type = endpoint_type
-        self.admin_port = admin_port
         self.domain_name = domain_name
         self.user_domain_name = user_domain_name
         self.project_domain_name = project_domain_name
+        if admin_port:
+            import warnings
+            warnings.warn("'admin_port' argument is deprecated and will "
+                          "be ignored.")
 
     def to_dict(self, include_permission=False):
         dct = {"auth_url": self.auth_url, "username": self.username,
                "password": self.password, "tenant_name": self.tenant_name,
                "region_name": self.region_name,
                "endpoint_type": self.endpoint_type,
-               "admin_port": self.admin_port,
                "domain_name": self.domain_name,
                "user_domain_name": self.user_domain_name,
                "project_domain_name": self.project_domain_name}

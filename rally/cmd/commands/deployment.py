@@ -210,7 +210,7 @@ class DeploymentCommands(object):
         """
 
         headers = ['auth_url', 'username', 'password', 'tenant_name',
-                   'region_name', 'endpoint_type', 'admin_port']
+                   'region_name', 'endpoint_type']
         table_rows = []
 
         deployment = db.deployment_get(deployment)

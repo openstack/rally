@@ -28,7 +28,6 @@ class ExistingCloud(engine.EngineFactory):
             "auth_url": "http://localhost:5000/v2.0/",
             "region_name": "RegionOne",
             "endpoint_type": "public",
-            "admin_port": 35357,
             "admin": {
                 "username": "admin",
                 "password": "password",
@@ -43,7 +42,6 @@ class ExistingCloud(engine.EngineFactory):
             "auth_url": "http://localhost:5000/v3/",
             "region_name": "RegionOne",
             "endpoint_type": "public",
-            "admin_port": 35357,
             "admin": {
                 "username": "admin",
                 "password": "admin",
@@ -93,11 +91,6 @@ class ExistingCloud(engine.EngineFactory):
                               "enum": [consts.EndpointType.ADMIN,
                                        consts.EndpointType.INTERNAL,
                                        consts.EndpointType.PUBLIC]},
-            "admin_port": {
-                "type": "integer",
-                "minimum": 2,
-                "maximum": 65535
-            }
         },
         "anyOf": [
             {
@@ -124,7 +117,6 @@ class ExistingCloud(engine.EngineFactory):
             region_name=common.get("region_name"),
             endpoint_type=common.get("endpoint_type",
                                      consts.EndpointType.PUBLIC),
-            admin_port=common.get("admin_port", 35357),
             domain_name=user.get("domain_name"),
             user_domain_name=user.get("user_domain_name", "Default"),
             project_domain_name=user.get("project_domain_name", "Default")

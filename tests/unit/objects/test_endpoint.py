@@ -29,5 +29,4 @@ class EndpointTestCase(test.TestCase):
                           "domain_name": None,
                           "endpoint_type": consts.EndpointType.PUBLIC,
                           "project_domain_name": "Default",
-                          "user_domain_name": "Default",
-                          'admin_port': 35357})
+                          "user_domain_name": "Default"})
