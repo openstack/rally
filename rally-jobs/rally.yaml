@@ -774,7 +774,7 @@
           tenants: 3
           users_per_tenant: 2
         network:
-          start_cidr: "100.100.0.0/24"
+          start_cidr: "10.2.0.0/24"
           networks_per_tenant: 2
 
     -
@@ -995,9 +995,7 @@
           name: "m1.tiny"
         image:
           name: {{image_name}}
-        fixed_network: "private"
         floating_network: "public"
-        use_floatingip: true
         script: "/home/jenkins/.rally/extra/instance_dd_test.sh"
         interpreter: "/bin/sh"
         username: "cirros"
@@ -1133,7 +1131,7 @@
           tenants: 3
           users_per_tenant: 2
         network:
-          start_cidr: "100.1.0.0/26"
+          start_cidr: "10.2.0.0/24"
         quotas:
           nova:
             security_groups: -1

@@ -103,16 +103,15 @@ class NovaScenario(base.Scenario):
 
         if auto_assign_nic and not kwargs.get("nics", False):
             nets = [net["id"]
-                    for net in filter(lambda net: not net["external"],
-                                      self.context["tenant"]["networks"])]
+                    for net in self.context["tenant"].get("networks", [])]
             if nets:
                 # NOTE(amaretskiy): Balance servers among networks:
                 #     divmod(iteration % tenants_num, nets_num)[1]
-                net_id = divmod(
+                net_idx = divmod(
                     (self.context["iteration"]
                      % self.context["config"]["users"]["tenants"]),
                     len(nets))[1]
-                kwargs["nics"] = [{"net-id": nets[net_id]}]
+                kwargs["nics"] = [{"net-id": nets[net_idx]}]
 
         server = self.clients("nova").servers.create(
             server_name, image_id, flavor_id, **kwargs)

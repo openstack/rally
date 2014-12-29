@@ -87,7 +87,7 @@ class NeutronScenario(base.Scenario):
         network_id = network["network"]["id"]
 
         if not subnet_create_args.get("cidr"):
-            start_cidr = start_cidr or "1.0.0.0/24"
+            start_cidr = start_cidr or "10.2.0.0/24"
             subnet_create_args["cidr"] = (
                 network_wrapper.generate_cidr(start_cidr=start_cidr))
 

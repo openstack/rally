@@ -276,17 +276,15 @@ def network_exists(config, clients, deployment, network_name):
 
 
 @validator
-def external_network_exists(config, clients, deployment, network_name,
-                            use_external_network):
-    """Validator checks that externatl network with network_name exist."""
-
-    if not config.get("args", {}).get(use_external_network, True):
+def external_network_exists(config, clients, deployment, network_name):
+    """Validator checks that external network with given name exists."""
+    ext_network = config.get("args", {}).get(network_name)
+    if not ext_network:
         return ValidationResult()
 
-    ext_network = config.get("args", {}).get(network_name, "public")
     networks = [net.name for net in clients.nova().floating_ip_pools.list()]
 
-    if isinstance(networks[0], dict):
+    if networks and isinstance(networks[0], dict):
         networks = [n["name"] for n in networks]
 
     if ext_network not in networks:
@@ -294,11 +292,8 @@ def external_network_exists(config, clients, deployment, network_name,
                     "not found. "
                     "Available networks: %(networks)s") % {
                         "network": ext_network,
-                        "networks": networks
-                    }
+                        "networks": networks}
         return ValidationResult(False, message)
-
-    return ValidationResult()
 
 
 @validator

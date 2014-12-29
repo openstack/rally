@@ -69,26 +69,6 @@ class VMScenario(base.Scenario):
         return self.run_action(ssh, interpreter, script)
 
     @staticmethod
-    def check_network(server, network):
-        """Check if a server is attached to the specified network.
-
-        :param server: The server object to consider
-        :param network: The name of the network to search for
-
-        :raises: `ValueError` if server is not attached to network.
-        """
-        if network not in server.addresses:
-            raise ValueError(
-                "Server %(server_name)s is not attached to"
-                " network %(network)s. "
-                "Attached networks are: %(networks)s" % {
-                    "server_name": server.name,
-                    "network": network,
-                    "networks": server.addresses.keys()
-                }
-            )
-
-    @staticmethod
     def ping_ip_address(host, should_succeed=True):
         ip = netaddr.IPAddress(host)
         ping = 'ping' if ip.version == 4 else 'ping6'

@@ -43,7 +43,7 @@ class Network(base.Context):
         },
         "additionalProperties": False
     }
-    START_CIDR_DFLT = "100.1.0.0/26"
+    START_CIDR_DFLT = "10.2.0.0/24"
 
     def __init__(self, context):
         super(Network, self).__init__(context)

@@ -8,9 +8,7 @@
                 "image": {
                     "name": "^cirros.*uec$"
                 },
-                "fixed_network": "private",
                 "floating_network": "public",
-                "use_floatingip": true,
                 "force_delete": false,
                 "script": "doc/samples/tasks/support/instance_dd_test.sh",
                 "interpreter": "/bin/sh",
@@ -25,6 +23,8 @@
                 "users": {
                     "tenants": 3,
                     "users_per_tenant": 2
+                },
+                "network": {
                 }
             }
         }

@@ -113,7 +113,6 @@ class NeutronMixin(SynchronizedDeletion):
 class NeutronPort(NeutronMixin, base.ResourceManager):
 
     def delete(self):
-
         if self.raw_resource["device_owner"] == "network:router_interface":
             self._manager().remove_interface_router(
                 self.raw_resource["device_id"],

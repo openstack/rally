@@ -20,7 +20,6 @@ import mock
 from oslotest import mockpatch
 
 from rally.benchmark.scenarios.vm import utils
-from tests.unit import fakes
 from tests.unit import test
 
 
@@ -78,18 +77,6 @@ class VMScenarioTestCase(test.TestCase):
         mock_ssh_instance.wait.assert_called_once_with()
         mock_run_action.assert_called_once_with(mock_ssh_instance,
                                                 "int", "script")
-
-    def test_check_network(self):
-        vm_scenario = utils.VMScenario()
-        fake_server = fakes.FakeServer()
-        fake_server.addresses = {}
-        self.assertRaises(ValueError,
-                          vm_scenario.check_network, fake_server, "private")
-        fake_server.addresses["private_1"] = {
-            "version": 4,
-            "addr": "1.2.3.4"
-        }
-        vm_scenario.check_network(fake_server, "private_1")
 
     @mock.patch(VMTASKS_UTILS + ".sys")
     @mock.patch("subprocess.Popen")

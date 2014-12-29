@@ -334,9 +334,9 @@ class ValidatorsTestCase(test.TestCase):
         self.assertFalse(result.is_valid, result.msg)
 
     def test_external_network_exists(self):
-        validator = self._unwrap_validator(validation.external_network_exists,
-                                           "name", "use_ext")
-        result = validator({"args": {"use_ext": False}}, None, None)
+        validator = self._unwrap_validator(
+            validation.external_network_exists, "name")
+        result = validator({"args": {}}, None, None)
         self.assertTrue(result.is_valid, result.msg)
 
         clients = mock.MagicMock()
