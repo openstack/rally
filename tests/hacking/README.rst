@@ -29,4 +29,5 @@ Rally Specific Commandments
  * [N334] - Ensure that ``itertools.imap`` is not used
  * [N335] - Ensure that ``xrange`` is not used
  * [N336] - Ensure that ``string.lowercase`` and ``string.uppercase`` are not used
+ * [N337] - Ensure that ``next()`` method on iterator objects is not used
 * [N340] - Ensure that we are importing always ``from rally import objects``

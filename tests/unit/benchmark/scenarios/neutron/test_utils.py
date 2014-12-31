@@ -400,7 +400,7 @@ class NeutronScenarioTestCase(test.TestCase):
 
         cidrs = ["1.1.%d.0/24" % i for i in range(subnets_per_network)]
         cidrs_ = iter(cidrs)
-        mock_generate_cidr.side_effect = lambda **kw: cidrs_.next()
+        mock_generate_cidr.side_effect = lambda **kw: next(cidrs_)
 
         network, subnets = scenario._create_network_and_subnets(
             network_create_args,

@@ -58,17 +58,17 @@ class HeatStack(base.ResourceManager):
 _nova_order = get_order(200)
 
 
-@base.resource("nova", "servers", order=_nova_order.next())
+@base.resource("nova", "servers", order=next(_nova_order))
 class NovaServer(base.ResourceManager):
     pass
 
 
-@base.resource("nova", "keypairs", order=_nova_order.next())
+@base.resource("nova", "keypairs", order=next(_nova_order))
 class NovaKeypair(SynchronizedDeletion, base.ResourceManager):
     pass
 
 
-@base.resource("nova", "security_groups", order=_nova_order.next())
+@base.resource("nova", "security_groups", order=next(_nova_order))
 class NovaSecurityGroup(SynchronizedDeletion, base.ResourceManager):
 
     def list(self):
@@ -76,7 +76,7 @@ class NovaSecurityGroup(SynchronizedDeletion, base.ResourceManager):
                       super(NovaSecurityGroup, self).list())
 
 
-@base.resource("nova", "quotas", order=_nova_order.next(),
+@base.resource("nova", "quotas", order=next(_nova_order),
                admin_required=True, tenant_resource=True)
 class NovaQuotas(QuotaMixin, base.ResourceManager):
     pass
@@ -108,7 +108,7 @@ class NeutronMixin(SynchronizedDeletion):
                       list_method({"tenant_id": self.tenant_uuid})[resources])
 
 
-@base.resource("neutron", "port", order=_neutron_order.next(),
+@base.resource("neutron", "port", order=next(_neutron_order),
                tenant_resource=True)
 class NeutronPort(NeutronMixin, base.ResourceManager):
 
@@ -128,19 +128,19 @@ class NeutronPort(NeutronMixin, base.ResourceManager):
                           % self.id())
 
 
-@base.resource("neutron", "router", order=_neutron_order.next(),
+@base.resource("neutron", "router", order=next(_neutron_order),
                tenant_resource=True)
 class NeutronRouter(NeutronMixin, base.ResourceManager):
     pass
 
 
-@base.resource("neutron", "subnet", order=_neutron_order.next(),
+@base.resource("neutron", "subnet", order=next(_neutron_order),
                tenant_resource=True)
 class NeutronSubnet(NeutronMixin, base.ResourceManager):
     pass
 
 
-@base.resource("neutron", "network", order=_neutron_order.next(),
+@base.resource("neutron", "network", order=next(_neutron_order),
                tenant_resource=True)
 class NeutronNetwork(NeutronMixin, base.ResourceManager):
     pass
@@ -151,31 +151,31 @@ class NeutronNetwork(NeutronMixin, base.ResourceManager):
 _cinder_order = get_order(400)
 
 
-@base.resource("cinder", "backups", order=_cinder_order.next(),
+@base.resource("cinder", "backups", order=next(_cinder_order),
                tenant_resource=True)
 class CinderVolumeBackup(base.ResourceManager):
     pass
 
 
-@base.resource("cinder", "volume_snapshots", order=_cinder_order.next(),
+@base.resource("cinder", "volume_snapshots", order=next(_cinder_order),
                tenant_resource=True)
 class CinderVolumeSnapshot(base.ResourceManager):
     pass
 
 
-@base.resource("cinder", "transfers", order=_cinder_order.next(),
+@base.resource("cinder", "transfers", order=next(_cinder_order),
                tenant_resource=True)
 class CinderVolumeTransfer(base.ResourceManager):
     pass
 
 
-@base.resource("cinder", "volumes", order=_cinder_order.next(),
+@base.resource("cinder", "volumes", order=next(_cinder_order),
                tenant_resource=True)
 class CinderVolume(base.ResourceManager):
     pass
 
 
-@base.resource("cinder", "quotas", order=_cinder_order.next(),
+@base.resource("cinder", "quotas", order=next(_cinder_order),
                admin_required=True, tenant_resource=True)
 class CinderQuotas(QuotaMixin, base.ResourceManager):
     pass
@@ -195,49 +195,49 @@ class GlanceImage(base.ResourceManager):
 _sahara_order = get_order(600)
 
 
-@base.resource("sahara", "job_executions", order=_sahara_order.next(),
+@base.resource("sahara", "job_executions", order=next(_sahara_order),
                tenant_resource=True)
 class SaharaJobExecution(SynchronizedDeletion, base.ResourceManager):
     pass
 
 
-@base.resource("sahara", "jobs", order=_sahara_order.next(),
+@base.resource("sahara", "jobs", order=next(_sahara_order),
                tenant_resource=True)
 class SaharaJob(SynchronizedDeletion, base.ResourceManager):
     pass
 
 
-@base.resource("sahara", "job_binary_internals", order=_sahara_order.next(),
+@base.resource("sahara", "job_binary_internals", order=next(_sahara_order),
                tenant_resource=True)
 class SaharaJobBinaryInternals(SynchronizedDeletion, base.ResourceManager):
     pass
 
 
-@base.resource("sahara", "job_binaries", order=_sahara_order.next(),
+@base.resource("sahara", "job_binaries", order=next(_sahara_order),
                tenant_resource=True)
 class SaharaJobBinary(SynchronizedDeletion, base.ResourceManager):
     pass
 
 
-@base.resource("sahara", "data_sources", order=_sahara_order.next(),
+@base.resource("sahara", "data_sources", order=next(_sahara_order),
                tenant_resource=True)
 class SaharaDataSource(SynchronizedDeletion, base.ResourceManager):
     pass
 
 
-@base.resource("sahara", "clusters", order=_sahara_order.next(),
+@base.resource("sahara", "clusters", order=next(_sahara_order),
                tenant_resource=True)
 class SaharaCluster(base.ResourceManager):
     pass
 
 
-@base.resource("sahara", "cluster_templates", order=_sahara_order.next(),
+@base.resource("sahara", "cluster_templates", order=next(_sahara_order),
                tenant_resource=True)
 class SaharaClusterTemplate(SynchronizedDeletion, base.ResourceManager):
     pass
 
 
-@base.resource("sahara", "node_group_templates", order=_sahara_order.next(),
+@base.resource("sahara", "node_group_templates", order=next(_sahara_order),
                tenant_resource=True)
 class SaharaNodeGroup(SynchronizedDeletion, base.ResourceManager):
     pass
@@ -298,25 +298,25 @@ class KeystoneMixin(SynchronizedDeletion):
         return filter(kutils.is_temporary, list_method())
 
 
-@base.resource("keystone", "user", order=_keystone_order.next(),
+@base.resource("keystone", "user", order=next(_keystone_order),
                admin_required=True, perform_for_admin_only=True)
 class KeystoneUser(KeystoneMixin, base.ResourceManager):
     pass
 
 
-@base.resource("keystone", "project", order=_keystone_order.next(),
+@base.resource("keystone", "project", order=next(_keystone_order),
                admin_required=True, perform_for_admin_only=True)
 class KeystoneProject(KeystoneMixin, base.ResourceManager):
     pass
 
 
-@base.resource("keystone", "service", order=_keystone_order.next(),
+@base.resource("keystone", "service", order=next(_keystone_order),
                admin_required=True, perform_for_admin_only=True)
 class KeystoneService(KeystoneMixin, base.ResourceManager):
     pass
 
 
-@base.resource("keystone", "role", order=_keystone_order.next(),
+@base.resource("keystone", "role", order=next(_keystone_order),
                admin_required=True, perform_for_admin_only=True)
 class KeystoneRole(KeystoneMixin, base.ResourceManager):
     pass
