@@ -13,9 +13,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-
 import subprocess
 import sys
+
+import netaddr
 
 from rally.benchmark.scenarios import base
 from rally.benchmark import utils as bench_utils
@@ -87,10 +88,12 @@ class VMScenario(base.Scenario):
 
     @staticmethod
     def ping_ip_address(host, should_succeed=True):
+        ip = netaddr.IPAddress(host)
+        ping = 'ping' if ip.version == 4 else 'ping6'
         if sys.platform.startswith('linux'):
-            cmd = ['ping', '-c1', '-w1', host]
+            cmd = [ping, '-c1', '-w1', host]
         else:
-            cmd = ['ping', '-c1', host]
+            cmd = [ping, '-c1', host]
 
         proc = subprocess.Popen(cmd,
                                 stdout=subprocess.PIPE,
