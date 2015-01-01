@@ -307,7 +307,7 @@ def _process_results(results):
             "pos": int(pos),
             "name": name,
             "runner": kw["runner"]["type"],
-            "config": json.dumps({scenario_name: kw}, indent=2),
+            "config": json.dumps({scenario_name: [kw]}, indent=2),
             "iterations": _process_main_duration(result, data),
             "atomic": _process_atomic(result, data),
             "table_cols": table_cols,

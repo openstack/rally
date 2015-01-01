@@ -99,7 +99,7 @@ class PlotTestCase(test.TestCase):
         results = sorted(results, key=lambda r: "%s%s" % (r["key"]["name"],
                                                           r["key"]["pos"]))
         for i, r in enumerate(results):
-            config = json.dumps({r["key"]["name"]: r["key"]["kw"]}, indent=2)
+            config = json.dumps({r["key"]["name"]: [r["key"]["kw"]]}, indent=2)
             pos = int(r["key"]["pos"])
             cls = r["key"]["name"].split(".")[0]
             met = r["key"]["name"].split(".")[1]
