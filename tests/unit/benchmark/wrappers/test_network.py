@@ -44,7 +44,7 @@ class NovaNetworkWrapperTestCase(test.TestCase):
     def test__generate_cidr(self, mock_cidr):
         skip_cidrs = [5, 7]
         cidrs = iter(range(7))
-        mock_cidr.side_effect = lambda start_cidr: start_cidr + cidrs.next()
+        mock_cidr.side_effect = lambda start_cidr: start_cidr + next(cidrs)
         service = self.get_wrapper(*skip_cidrs, start_cidr=3)
         self.assertEqual(service._generate_cidr(), 3)
         self.assertEqual(service._generate_cidr(), 4)
@@ -97,7 +97,7 @@ class NeutronWrapperTestCase(test.TestCase):
     @mock.patch("rally.benchmark.wrappers.network.generate_cidr")
     def test__generate_cidr(self, mock_cidr):
         cidrs = iter(range(5))
-        mock_cidr.side_effect = lambda start_cidr: start_cidr + cidrs.next()
+        mock_cidr.side_effect = lambda start_cidr: start_cidr + next(cidrs)
         service = self.get_wrapper(start_cidr=3)
         self.assertEqual(service._generate_cidr(), 3)
         self.assertEqual(service._generate_cidr(), 4)
@@ -134,10 +134,10 @@ class NeutronWrapperTestCase(test.TestCase):
         subnets_cidrs = iter(range(subnets_num))
         subnets_ids = iter(range(subnets_num))
         service._generate_cidr = mock.Mock(
-            side_effect=lambda: "cidr-%d" % subnets_cidrs.next())
+            side_effect=lambda: "cidr-%d" % next(subnets_cidrs))
         service.client.create_subnet = mock.Mock(
             side_effect=lambda i: {
-                "subnet": {"id": "subnet-%d" % subnets_ids.next()}})
+                "subnet": {"id": "subnet-%d" % next(subnets_ids)}})
         service.client.create_network.return_value = {
             "network": {"id": "foo_id",
                         "name": "foo_name",

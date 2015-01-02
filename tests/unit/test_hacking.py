@@ -176,6 +176,13 @@ class HackingTestCase(test.TestCase):
         self.assertEqual(len(list(checks.check_string_lower_upper_case_method(
             "string.ascii_uppercase[:16]"))), 0)
 
+    def test_check_next_on_iterator_method(self):
+        self.assertEqual(len(list(checks.check_next_on_iterator_method(
+            "iterator.next()"))), 1)
+
+        self.assertEqual(len(list(checks.check_next_on_iterator_method(
+            "next(iterator)"))), 0)
+
     def test_assert_equal_none(self):
         self.assertEqual(len(list(checks.assert_equal_none(
             "self.assertEqual(A, None)"))), 1)

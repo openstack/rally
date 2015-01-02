@@ -53,6 +53,7 @@ re_itertools_imap_method = re.compile(r"(^|[\s=])itertools\.imap\(")
 re_xrange_method = re.compile(r"(^|[\s=])xrange\(")
 re_string_lower_upper_case_method = re.compile(
     r"(^|[(,\s=])string\.(lower|upper)case([)\[,\s]|$)")
+re_next_on_iterator_method = re.compile(r"\.next\(\)")
 
 
 def _parse_assert_mock_str(line):
@@ -322,6 +323,21 @@ def check_string_lower_upper_case_method(logical_line):
                   "rather than string.lowercase or string.uppercase.")
 
 
+def check_next_on_iterator_method(logical_line):
+    """Check if next() method on iterator objects are properly called
+
+    Python 3 introduced a next() function to replace the next() method on
+    iterator objects. Rather than calling the method on the iterator,
+    the next() function is called with the iterable object as it's sole
+    parameter, which calls the underlying __next__() method.
+
+    N337
+    """
+    res = re_next_on_iterator_method.search(logical_line)
+    if res:
+        yield (0, "N337: Use next(iterator) rather than iterator.next().")
+
+
 def check_no_direct_rally_objects_import(logical_line, filename):
     """Check if rally.objects are properly imported.
 
@@ -356,4 +372,5 @@ def factory(register):
     register(check_itertools_imap_method)
     register(check_xrange_method)
     register(check_string_lower_upper_case_method)
+    register(check_next_on_iterator_method)
     register(check_no_direct_rally_objects_import)

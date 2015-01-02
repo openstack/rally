@@ -400,7 +400,7 @@ class RAMIntTestCase(test.TestCase):
                 return_value="next_value")
     @mock.patch("rally.common.utils.multiprocessing")
     def test_next(self, mock_multi, mock_next):
-        self.assertEqual(utils.RAMInt().next(), "next_value")
+        self.assertEqual(next(utils.RAMInt()), "next_value")
         mock_next.assert_called_once_with()
 
     @mock.patch("rally.common.utils.multiprocessing")
@@ -418,33 +418,33 @@ class GenerateRandomTestCase(test.TestCase):
         choice = "foobarspamchoicestring"
 
         idx = iter(range(100))
-        mock_random.choice.side_effect = lambda choice: choice[idx.next()]
+        mock_random.choice.side_effect = lambda choice: choice[next(idx)]
         self.assertEqual(utils.generate_random_name(),
                          string.ascii_lowercase[:16])
 
         idx = iter(range(100))
-        mock_random.choice.side_effect = lambda choice: choice[idx.next()]
+        mock_random.choice.side_effect = lambda choice: choice[next(idx)]
         self.assertEqual(utils.generate_random_name(length=10),
                          string.ascii_lowercase[:10])
 
         idx = iter(range(100))
-        mock_random.choice.side_effect = lambda choice: choice[idx.next()]
+        mock_random.choice.side_effect = lambda choice: choice[next(idx)]
         self.assertEqual(utils.generate_random_name(choice=choice),
                          choice[:16])
 
         idx = iter(range(100))
-        mock_random.choice.side_effect = lambda choice: choice[idx.next()]
+        mock_random.choice.side_effect = lambda choice: choice[next(idx)]
         self.assertEqual(utils.generate_random_name(choice=choice, length=5),
                          choice[:5])
 
         idx = iter(range(100))
-        mock_random.choice.side_effect = lambda choice: choice[idx.next()]
+        mock_random.choice.side_effect = lambda choice: choice[next(idx)]
         self.assertEqual(
             utils.generate_random_name(prefix="foo_", length=10),
             "foo_" + string.ascii_lowercase[:10])
 
         idx = iter(range(100))
-        mock_random.choice.side_effect = lambda choice: choice[idx.next()]
+        mock_random.choice.side_effect = lambda choice: choice[next(idx)]
         self.assertEqual(
             utils.generate_random_name(prefix="foo_",
                                        choice=choice, length=10),
