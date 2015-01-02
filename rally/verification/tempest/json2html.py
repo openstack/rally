@@ -11,7 +11,7 @@
 # under the License.
 
 from rally.ui import utils as ui_utils
-from rally.verification.verifiers.tempest import subunit2json
+from rally.verification.tempest import subunit2json
 
 
 STATUS_MAP = {subunit2json.STATUS_PASS: "pass",

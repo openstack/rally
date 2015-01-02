@@ -16,10 +16,10 @@
 import mock
 
 from rally.benchmark.scenarios.tempest import tempest
-from rally.verification.verifiers.tempest import tempest as verifier
+from rally.verification.tempest import tempest as verifier
 from tests.unit import test
 
-VERIFIER = "rally.verification.verifiers.tempest.tempest"
+VERIFIER = "rally.verification.tempest.tempest"
 TS = "rally.benchmark.scenarios.tempest"
 
 

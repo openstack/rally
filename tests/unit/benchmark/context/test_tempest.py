@@ -19,13 +19,13 @@ import mock
 
 from rally.benchmark.context import tempest
 from rally import exceptions
-from rally.verification.verifiers.tempest import config
-from rally.verification.verifiers.tempest import tempest as tempest_verifier
+from rally.verification.tempest import config
+from rally.verification.tempest import tempest as tempest_verifier
 from tests.unit import test
 
 
 CONTEXT = "rally.benchmark.context.tempest"
-TEMPEST = "rally.verification.verifiers.tempest.tempest"
+TEMPEST = "rally.verification.tempest.tempest"
 
 
 class TempestContextTestCase(test.TestCase):

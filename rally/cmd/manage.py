@@ -22,7 +22,7 @@ import sys
 from rally.cmd import cliutils
 from rally.cmd import envutils
 from rally import db
-from rally.verification.verifiers.tempest import tempest
+from rally.verification.tempest import tempest
 
 
 class DBCommands(object):

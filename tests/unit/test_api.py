@@ -224,7 +224,7 @@ class APITestCase(test.TestCase):
 
     @mock.patch("rally.objects.Deployment.get")
     @mock.patch("rally.api.objects.Verification")
-    @mock.patch("rally.verification.verifiers.tempest.tempest.Tempest")
+    @mock.patch("rally.verification.tempest.tempest.Tempest")
     def test_verify(self, mock_tempest, mock_verification, mock_d_get):
         mock_d_get.return_value = {"uuid": self.deploy_uuid}
 
@@ -238,7 +238,7 @@ class APITestCase(test.TestCase):
 
     @mock.patch("rally.api.objects.Deployment.get")
     @mock.patch("rally.api.objects.Verification")
-    @mock.patch("rally.verification.verifiers.tempest.tempest.Tempest")
+    @mock.patch("rally.verification.tempest.tempest.Tempest")
     def test_verify_tempest_not_installed(self, mock_tempest,
                                           mock_verification, mock_d_get):
         mock_d_get.return_value = {"uuid": self.deploy_uuid}

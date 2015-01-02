@@ -25,8 +25,8 @@ from rally.common.i18n import _
 from rally.common import utils
 from rally import exceptions
 from rally import log as logging
-from rally.verification.verifiers.tempest import config
-from rally.verification.verifiers.tempest import subunit2json
+from rally.verification.tempest import config
+from rally.verification.tempest import subunit2json
 
 LOG = logging.getLogger(__name__)
 

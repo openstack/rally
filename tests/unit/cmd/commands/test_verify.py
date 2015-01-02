@@ -175,7 +175,7 @@ class VerifyCommandsTestCase(test.TestCase):
 
     @mock.patch("rally.cmd.commands.verify.open", create=True)
     @mock.patch("rally.db.verification_result_get")
-    @mock.patch("rally.verification.verifiers.tempest.json2html.HtmlOutput")
+    @mock.patch("rally.verification.tempest.json2html.HtmlOutput")
     def test_results_with_output_html_and_output_file(self,
                                                       mock_html,
                                                       mock_db_result_get,
@@ -267,7 +267,7 @@ class VerifyCommandsTestCase(test.TestCase):
 
     @mock.patch("rally.cmd.commands.verify.open", create=True)
     @mock.patch("rally.db.verification_result_get")
-    @mock.patch(("rally.verification.verifiers.tempest."
+    @mock.patch(("rally.verification.tempest."
                  "compare2html.create_report"), return_value="")
     def test_compare_with_output_html_and_output_file(self,
                                                       mock_compare2html_create,

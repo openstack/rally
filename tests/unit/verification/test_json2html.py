@@ -12,10 +12,10 @@
 
 import mock
 
-from rally.verification.verifiers.tempest import json2html
+from rally.verification.tempest import json2html
 from tests.unit import test
 
-BASE = "rally.verification.verifiers.tempest"
+BASE = "rally.verification.tempest"
 
 
 class HtmlOutputTestCase(test.TestCase):
