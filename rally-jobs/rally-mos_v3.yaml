@@ -1,0 +1,549 @@
+---
+
+  KeystoneBasic.create_user:
+    -
+      args:
+        name_length: 10
+      runner:
+        type: "constant"
+        times: 1
+        concurrency: 1
+      sla:
+        failure_rate:
+          max: 0
+
+  KeystoneBasic.create_delete_user:
+    -
+      args:
+        name_length: 10
+      runner:
+        type: "constant"
+        times: 1
+        concurrency: 1
+      sla:
+        failure_rate:
+          max: 0
+
+  KeystoneBasic.create_and_list_tenants:
+    -
+      args:
+        name_length: 10
+      runner:
+        type: "constant"
+        times: 1
+        concurrency: 1
+      sla:
+        failure_rate:
+          max: 0
+
+  KeystoneBasic.create_and_list_users:
+    -
+      args:
+        name_length: 10
+      runner:
+        type: "constant"
+        times: 1
+        concurrency: 1
+      sla:
+        failure_rate:
+          max: 0
+
+  KeystoneBasic.create_tenant:
+    -
+      args:
+        name_length: 10
+      runner:
+        type: "constant"
+        times: 1
+        concurrency: 1
+      sla:
+        failure_rate:
+          max: 0
+
+  KeystoneBasic.create_tenant_with_users:
+    -
+      args:
+        name_length: 10
+        users_per_tenant: 10
+      runner:
+        type: "constant"
+        times: 1
+        concurrency: 1
+      context:
+        users:
+          tenants: 1
+      sla:
+        failure_rate:
+          max: 0
+
+  KeystoneBasic.create_delete_user:
+    -
+      args:
+        name_length: 10
+      runner:
+        type: "constant"
+        times: 1
+        concurrency: 1
+      sla:
+        failure_rate:
+          max: 0
+
+  HeatStacks.create_and_list_stack:
+    -
+      runner:
+        type: "constant"
+        times: 1
+        concurrency: 1
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+      sla:
+        failure_rate:
+          max: 0
+
+  HeatStacks.create_and_delete_stack:
+    -
+      runner:
+        type: "constant"
+        times: 1
+        concurrency: 1
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+      sla:
+        failure_rate:
+          max: 0
+
+  Authenticate.keystone:
+    -
+      runner:
+        type: "constant"
+        times: 1
+        concurrency: 1
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+      sla:
+        failure_rate:
+          max: 0
+
+  SaharaNodeGroupTemplates.create_and_list_node_group_templates:
+    -
+      args:
+        flavor:
+         name: "m1.small"
+      runner:
+        type: "constant"
+        times: 1
+        concurrency: 1
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+      sla:
+        failure_rate:
+          max: 0
+
+  SaharaNodeGroupTemplates.create_delete_node_group_templates:
+    -
+      args:
+        flavor:
+         name: "m1.small"
+      runner:
+        type: "constant"
+        times: 1
+        concurrency: 1
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+      sla:
+        failure_rate:
+          max: 0
+
+  Authenticate.validate_cinder:
+    -
+      args:
+        repetitions: 2
+      runner:
+        type: "constant"
+        times: 1
+        concurrency: 1
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+      sla:
+        failure_rate:
+          max: 0
+
+  Authenticate.validate_glance:
+    -
+      args:
+        repetitions: 2
+      runner:
+        type: "constant"
+        times: 1
+        concurrency: 1
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+      sla:
+        failure_rate:
+          max: 0
+
+  Authenticate.validate_heat:
+    -
+      args:
+        repetitions: 2
+      runner:
+        type: "constant"
+        times: 1
+        concurrency: 1
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+      sla:
+        failure_rate:
+          max: 0
+
+  Authenticate.validate_nova:
+    -
+      args:
+        repetitions: 2
+      runner:
+        type: "constant"
+        times: 1
+        concurrency: 1
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+      sla:
+        failure_rate:
+          max: 0
+
+  Quotas.cinder_update_and_delete:
+    -
+      args:
+        max_quota: 1024
+      runner:
+        type: "constant"
+        times: 1
+        concurrency: 1
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+      sla:
+        failure_rate:
+          max: 0
+
+  Quotas.cinder_update:
+    -
+      args:
+        max_quota: 1024
+      runner:
+        type: "constant"
+        times: 1
+        concurrency: 1
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+      sla:
+        failure_rate:
+          max: 0
+
+  Quotas.nova_update_and_delete:
+    -
+      args:
+        max_quota: 1024
+      runner:
+        type: "constant"
+        times: 1
+        concurrency: 1
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+      sla:
+        failure_rate:
+          max: 0
+
+  Quotas.nova_update:
+    -
+      args:
+        max_quota: 1024
+      runner:
+        type: "constant"
+        times: 1
+        concurrency: 1
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+      sla:
+        failure_rate:
+          max: 0
+
+  VMTasks.boot_runcommand_delete:
+    -
+      args:
+        flavor:
+          name: "m1.tiny"
+        image:
+          name: "TestVM|cirros.*uec"
+        floating_network: "net04_ext"
+        use_floatingip: true
+        script: "/home/rally/.rally/extra/instance_dd_test.sh"
+        interpreter: "/bin/sh"
+        username: "cirros"
+      runner:
+        type: "constant"
+        times: 1
+        concurrency: 1
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+        network: {}
+      sla:
+        failure_rate:
+          max: 0
+
+
+  NovaServers.boot_and_delete_server:
+    -
+      args:
+        flavor:
+            name: "m1.tiny"
+        image:
+            name: "TestVM|cirros.*uec"
+      runner:
+        type: "constant"
+        times: 1
+        concurrency: 1
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+      sla:
+        failure_rate:
+          max: 0
+
+    -
+      args:
+        auto_assign_nic: true
+        flavor:
+            name: "m1.tiny"
+        image:
+            name: "TestVM|cirros.*uec"
+      runner:
+        type: "constant"
+        times: 1
+        concurrency: 1
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+        network:
+          start_cidr: "10.2.0.0/24"
+          networks_per_tenant: 2
+      sla:
+        failure_rate:
+          max: 0
+
+
+  NovaServers.boot_and_list_server:
+    -
+      args:
+        flavor:
+            name: "m1.tiny"
+        image:
+            name: "TestVM|cirros.*uec"
+        detailed: True
+      runner:
+        type: "constant"
+        times: 1
+        concurrency: 1
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+      sla:
+        failure_rate:
+          max: 0
+
+  NovaServers.list_servers:
+    -
+      args:
+        detailed: True
+      runner:
+        type: "constant"
+        times: 1
+        concurrency: 1
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+        servers:
+          flavor:
+              name: "m1.tiny"
+          image:
+              name: "TestVM|cirros.*uec"
+          servers_per_tenant: 1
+      sla:
+        failure_rate:
+          max: 0
+
+  NovaServers.boot_and_bounce_server:
+    -
+      args:
+        flavor:
+            name: "m1.tiny"
+        image:
+            name: "TestVM|cirros.*uec"
+        actions:
+          -
+            hard_reboot: 1
+          -
+            stop_start: 1
+          -
+            rescue_unrescue: 1
+      runner:
+        type: "constant"
+        times: 1
+        concurrency: 1
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+      sla:
+        failure_rate:
+          max: 0
+
+  NovaServers.boot_server:
+    -
+      args:
+        flavor:
+            name: "^ram64$"
+        image:
+            name: "TestVM|cirros.*uec"
+      runner:
+        type: "constant"
+        times: 1
+        concurrency: 1
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+        flavors:
+          -
+            name: "ram64"
+            ram: 64
+      sla:
+        failure_rate:
+          max: 0
+    -
+      args:
+        flavor:
+            name: "m1.tiny"
+        image:
+            name: "TestVM|cirros.*uec"
+      runner:
+        type: "constant"
+        times: 1
+        concurrency: 1
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+      sla:
+        failure_rate:
+          max: 0
+
+  Requests.check_response:
+    -
+      args:
+          url: "http://git.openstack.org/cgit"
+          response: 200
+      runner:
+        type: "constant"
+        times: 1
+        concurrency: 1
+      sla:
+        failure_rate:
+          max: 0
+
+  NovaSecGroup.create_and_delete_secgroups:
+    -
+      args:
+        security_group_count: 5
+        rules_per_security_group: 5
+      runner:
+        type: "constant"
+        times: 1
+        concurrency: 1
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+        quotas:
+          nova:
+            security_groups: -1
+            security_group_rules: -1
+      sla:
+        failure_rate:
+          max: 0
+
+  NovaSecGroup.create_and_list_secgroups:
+    -
+      args:
+        security_group_count: 5
+        rules_per_security_group: 5
+      runner:
+        type: "constant"
+        times: 1
+        concurrency: 1
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+        quotas:
+          nova:
+            security_groups: -1
+            security_group_rules: -1
+      sla:
+        failure_rate:
+          max: 0
+
+
+  NovaSecGroup.boot_and_delete_server_with_secgroups:
+    -
+      args:
+        flavor:
+          name: "m1.tiny"
+        image:
+          name: "TestVM|cirros.*uec"
+        security_group_count: 5
+        rules_per_security_group: 5
+      runner:
+        type: "constant"
+        times: 1
+        concurrency: 1
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+        network:
+          start_cidr: "10.2.0.0/24"
+        quotas:
+          nova:
+            security_groups: -1
+            security_group_rules: -1

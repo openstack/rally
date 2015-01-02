@@ -1,0 +1,89 @@
+---
+
+  KeystoneBasic.create_user:
+    -
+      args:
+        name_length: 10
+      runner:
+        type: "constant"
+        times: 8
+        concurrency: 1
+      sla:
+        failure_rate:
+          max: 0
+
+  KeystoneBasic.create_delete_user:
+    -
+      args:
+        name_length: 10
+      runner:
+        type: "constant"
+        times: 8
+        concurrency: 1
+      sla:
+        failure_rate:
+          max: 0
+
+  KeystoneBasic.create_and_list_tenants:
+    -
+      args:
+        name_length: 10
+      runner:
+        type: "constant"
+        times: 1
+        concurrency: 1
+      sla:
+        failure_rate:
+          max: 0
+
+  KeystoneBasic.create_and_list_users:
+    -
+      args:
+        name_length: 10
+      runner:
+        type: "constant"
+        times: 1
+        concurrency: 1
+      sla:
+        failure_rate:
+          max: 0
+
+  KeystoneBasic.create_tenant:
+    -
+      args:
+        name_length: 10
+      runner:
+        type: "constant"
+        times: 1
+        concurrency: 1
+      sla:
+        failure_rate:
+          max: 0
+
+  KeystoneBasic.create_tenant_with_users:
+    -
+      args:
+        name_length: 10
+        users_per_tenant: 10
+      runner:
+        type: "constant"
+        times: 1
+        concurrency: 1
+      context:
+        users:
+          tenants: 3
+      sla:
+        failure_rate:
+          max: 0
+
+  KeystoneBasic.create_delete_user:
+    -
+      args:
+        name_length: 10
+      runner:
+        type: "constant"
+        times: 1
+        concurrency: 1
+      sla:
+        failure_rate:
+          max: 0
