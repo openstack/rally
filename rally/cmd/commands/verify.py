@@ -31,8 +31,8 @@ from rally import db
 from rally import exceptions
 from rally import objects
 from rally.openstack.common import cliutils as common_cliutils
-from rally.verification.verifiers.tempest import diff
-from rally.verification.verifiers.tempest import json2html
+from rally.verification.tempest import diff
+from rally.verification.tempest import json2html
 
 
 class VerifyCommands(object):

@@ -18,7 +18,7 @@ import os
 import mock
 from oslo.config import cfg
 
-from rally.verification.verifiers.tempest import config
+from rally.verification.tempest import config
 from tests.unit import fakes
 from tests.unit import test
 
@@ -31,7 +31,7 @@ class ConfigTestCase(test.TestCase):
     @mock.patch("rally.osclients.Clients.services",
                 return_value={"test_service_type": "test_service"})
     @mock.patch("rally.osclients.Clients.verified_keystone")
-    @mock.patch("rally.verification.verifiers.tempest.config.os.path.isfile",
+    @mock.patch("rally.verification.tempest.config.os.path.isfile",
                 return_value=True)
     def setUp(self, mock_isfile, mock_verified_keystone, mock_services,
               mock_get):
@@ -57,8 +57,8 @@ class ConfigTestCase(test.TestCase):
                     ("use_stderr", "False"))
         return [item for item in items if item not in defaults]
 
-    @mock.patch("rally.verification.verifiers.tempest.config.requests")
-    @mock.patch("rally.verification.verifiers.tempest.config.os.rename")
+    @mock.patch("rally.verification.tempest.config.requests")
+    @mock.patch("rally.verification.tempest.config.os.rename")
     @mock.patch("six.moves.builtins.open")
     def test__load_img_success(self, mock_open, mock_rename, mock_requests):
         mock_result = mock.MagicMock()
@@ -72,7 +72,7 @@ class ConfigTestCase(test.TestCase):
                        CONF.image.cirros_image))
         mock_requests.get.assert_called_once_with(cirros_url, stream=True)
 
-    @mock.patch("rally.verification.verifiers.tempest.config.requests")
+    @mock.patch("rally.verification.tempest.config.requests")
     def test__load_img_notfound(self, mock_requests):
         mock_result = mock.MagicMock()
         mock_result.status_code = 404
@@ -93,7 +93,7 @@ class ConfigTestCase(test.TestCase):
             }]}
         self.assertEqual(self.conf_generator._get_url(service), url)
 
-    @mock.patch("rally.verification.verifiers.tempest.config.TempestConf"
+    @mock.patch("rally.verification.tempest.config.TempestConf"
                 "._get_url")
     def test__set_boto(self, mock_get_url):
         url = "test_url"
@@ -206,9 +206,9 @@ class ConfigTestCase(test.TestCase):
                          self.conf_generator.conf.get("compute",
                                                       "ssh_connect_method"))
 
-    @mock.patch("rally.verification.verifiers.tempest.config.os.path.exists",
+    @mock.patch("rally.verification.tempest.config.os.path.exists",
                 return_value=False)
-    @mock.patch("rally.verification.verifiers.tempest.config.os.makedirs")
+    @mock.patch("rally.verification.tempest.config.os.makedirs")
     def test__set_default(self, mock_makedirs, mock_exists):
         self.conf_generator._set_default()
         lock_path = os.path.join(self.conf_generator.data_path, "lock_files_%s"
@@ -273,7 +273,7 @@ class ConfigTestCase(test.TestCase):
                          self.conf_generator.conf.get("network",
                                                       "default_network"))
 
-    @mock.patch("rally.verification.verifiers.tempest.config.requests")
+    @mock.patch("rally.verification.tempest.config.requests")
     def test__set_service_available(self, mock_requests):
         mock_result = mock.MagicMock()
         mock_result.status_code = 404
@@ -289,7 +289,7 @@ class ConfigTestCase(test.TestCase):
             self.conf_generator.conf.items("service_available"))
         self.assertEqual(sorted(expected), sorted(options))
 
-    @mock.patch("rally.verification.verifiers.tempest.config.requests")
+    @mock.patch("rally.verification.tempest.config.requests")
     def test__set_service_available_horizon(self, mock_requests):
         mock_result = mock.MagicMock()
         mock_result.status_code = 200

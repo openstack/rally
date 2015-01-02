@@ -23,12 +23,12 @@ from oslo.serialization import jsonutils
 import testtools
 
 from rally import exceptions
-from rally.verification.verifiers.tempest import subunit2json
-from rally.verification.verifiers.tempest import tempest
+from rally.verification.tempest import subunit2json
+from rally.verification.tempest import tempest
 from tests.unit import test
 
 
-TEMPEST_PATH = "rally.verification.verifiers.tempest"
+TEMPEST_PATH = "rally.verification.tempest"
 
 
 class BaseTestCase(test.TestCase):

@@ -15,7 +15,7 @@
 
 import json
 
-import compare2html
+from rally.verification.tempest import compare2html
 
 
 class Diff(object):

@@ -24,7 +24,7 @@ from rally.benchmark import types as types
 from rally.common.i18n import _
 from rally import consts
 from rally import exceptions
-from rally.verification.verifiers.tempest import tempest
+from rally.verification.tempest import tempest
 
 
 class ValidationResult(object):

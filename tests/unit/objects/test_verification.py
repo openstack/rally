@@ -17,7 +17,7 @@ import mock
 
 from rally import objects
 from tests.unit import test
-from tests.unit.verification.verifiers import fakes
+from tests.unit.verification import fakes
 
 
 class VerificationTestCase(test.TestCase):

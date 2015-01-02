@@ -22,7 +22,7 @@ from rally import deploy
 from rally import exceptions
 from rally import log as logging
 from rally import objects
-from rally.verification.verifiers.tempest import tempest
+from rally.verification.tempest import tempest
 
 LOG = logging.getLogger(__name__)
 

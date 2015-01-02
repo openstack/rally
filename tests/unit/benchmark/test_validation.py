@@ -20,7 +20,7 @@ from novaclient import exceptions as nova_exc
 from rally.benchmark import validation
 from rally import consts
 from rally import exceptions
-from rally.verification.verifiers.tempest import tempest
+from rally.verification.tempest import tempest
 from tests.unit import test
 
 

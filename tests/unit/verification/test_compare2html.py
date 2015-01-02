@@ -12,7 +12,7 @@
 
 import mock
 
-from rally.verification.verifiers.tempest import compare2html
+from rally.verification.tempest import compare2html
 from tests.unit import test
 
 
