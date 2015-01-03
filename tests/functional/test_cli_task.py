@@ -91,11 +91,6 @@ class TaskTestCase(unittest.TestCase):
         self.assertRaises(utils.RallyCmdError,
                           rally, "task detailed --uuid %s" % FAKE_TASK_UUID)
 
-    def test_plot2html_with_wrong_task_id(self):
-        rally = utils.Rally()
-        self.assertRaises(utils.RallyCmdError,
-                          rally, "task plot2html --uuid %s" % FAKE_TASK_UUID)
-
     def test_report_with_wrong_task_id(self):
         rally = utils.Rally()
         self.assertRaises(utils.RallyCmdError,
@@ -131,12 +126,12 @@ class TaskTestCase(unittest.TestCase):
         html_file = "/tmp/test_plot.html"
         if os.path.exists(html_file):
             os.remove(html_file)
-        task_uuids = list()
+        task_uuids = []
         for i in range(3):
             res = rally("task start --task %s" % config.filename)
             for line in res.splitlines():
                 if "finished" in line:
-                    task_uuids.append(line.split(" ")[1])
+                    task_uuids.append(line.split(" ")[1][:-1])
         rally("task report --tasks %s --out %s" % (" ".join(task_uuids),
                                                    html_file))
         self.assertTrue(os.path.exists(html_file))
@@ -222,11 +217,12 @@ class TaskTestCase(unittest.TestCase):
             deployment_id = envutils.get_global("RALLY_DEPLOYMENT")
         cfg = {"invalid": "config"}
         config = utils.TaskConfig(cfg)
-        output = rally(("task validate --task %(task_file)s "
-                        "--deployment %(deployment_id)s") %
-                       {"task_file": config.filename,
-                        "deployment_id": deployment_id})
-        self.assertIn("Task config is invalid", output)
+        self.assertRaises(utils.RallyCmdError,
+                          rally,
+                          ("task validate --task %(task_file)s "
+                           "--deployment %(deployment_id)s") %
+                          {"task_file": config.filename,
+                           "deployment_id": deployment_id})
 
     def test_start(self):
         rally = utils.Rally()
@@ -239,7 +235,7 @@ class TaskTestCase(unittest.TestCase):
                            {"task_file": config.filename,
                             "deployment_id": deployment_id})
         result = re.search(
-            r"(?P<task_id>[0-9a-f\-]{36}) is started", output)
+            r"(?P<task_id>[0-9a-f\-]{36}): started", output)
         self.assertIsNotNone(result)
 
     # NOTE(oanufriev): Not implemented
@@ -283,14 +279,14 @@ class SLATestCase(unittest.TestCase):
         rally("task start --task %s" % config.filename)
         rally("task sla_check")
         expected = [
-                {"benchmark": "KeystoneBasic.create_and_list_users",
-                 "criterion": "max_seconds_per_iteration",
-                 "detail": mock.ANY,
-                 "pos": 0, "status": "PASS"},
-                {"benchmark": "KeystoneBasic.create_and_list_users",
-                 "criterion": "max_failure_percent",
-                 "detail": mock.ANY,
-                 "pos": 0, "status": "PASS"},
+            {"benchmark": "KeystoneBasic.create_and_list_users",
+             "criterion": "max_seconds_per_iteration",
+             "detail": mock.ANY,
+             "pos": 0, "status": "PASS"},
+            {"benchmark": "KeystoneBasic.create_and_list_users",
+             "criterion": "max_failure_percent",
+             "detail": mock.ANY,
+             "pos": 0, "status": "PASS"},
         ]
         data = rally("task sla_check --json", getjson=True)
         self.assertEqual(expected, data)

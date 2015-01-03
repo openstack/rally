@@ -68,7 +68,7 @@ class CliUtilsTestCase(unittest.TestCase):
                                 {"task_file": config.filename,
                                  "deployment_id": deployment_id})
             result = re.search(
-                r"(?P<uuid>[0-9a-f\-]{36}) is started", output)
+                r"(?P<uuid>[0-9a-f\-]{36}): started", output)
             uuid = result.group("uuid")
             self.rally("use task --uuid %s" % uuid)
             current_task = envutils.get_global("RALLY_TASK")

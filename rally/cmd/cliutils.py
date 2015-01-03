@@ -40,6 +40,19 @@ LOG = logging.getLogger(__name__)
 MARGIN = 3
 
 
+def make_header(text, size=80, symbol="-"):
+    """Unified way to make header message to CLI.
+
+    :param text: what text to write
+    :param size: Length of header decorative line
+    :param symbol: What symbol to use to create header
+    """
+    header = symbol * size + "\n"
+    header += " %s\n" % text
+    header += symbol * size + "\n"
+    return header
+
+
 class CategoryParser(argparse.ArgumentParser):
 
     """Customized arguments parser
@@ -190,9 +203,9 @@ def _add_command_parsers(categories, subparsers):
         for action, action_fn in _methods_of(command_object):
             descr = _compose_action_description(action_fn)
             parser = category_subparsers.add_parser(
-                    action,
-                    formatter_class=argparse.RawDescriptionHelpFormatter,
-                    description=descr, help=descr)
+                action,
+                formatter_class=argparse.RawDescriptionHelpFormatter,
+                description=descr, help=descr)
 
             action_kwargs = []
             for args, kwargs in getattr(action_fn, 'args', []):
@@ -209,8 +222,9 @@ def _add_command_parsers(categories, subparsers):
 
 
 def validate_deprecated_args(argv, fn):
-    if len(argv) > 3 and argv[2] == fn.func_name and not getattr(
-                                        fn, "deprecated_args", []) == list():
+    if (len(argv) > 3
+       and (argv[2] == fn.func_name)
+       and getattr(fn, "deprecated_args", None)):
         for item in fn.deprecated_args:
             if item in argv[3:]:
                 LOG.warning("Deprecated argument %s for %s." % (item,
