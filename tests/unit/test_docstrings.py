@@ -62,8 +62,8 @@ class DocstringsTestCase(test.TestCase):
                                      "One-line description for %s "
                                      "should be declarative and not start "
                                      "with 'Test(s) ...'" % scenario_name)
-                    params_count = scenario.func_code.co_argcount
-                    params = scenario.func_code.co_varnames[:params_count]
+                    params_count = scenario.__code__.co_argcount
+                    params = scenario.__code__.co_varnames[:params_count]
                     documented_params = [p["name"] for p in doc["params"]]
                     for param in params:
                         if param not in ignored_params:

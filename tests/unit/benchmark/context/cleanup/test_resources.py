@@ -131,7 +131,7 @@ class NeutronMixinTestCase(test.TestCase):
             "some_resources": some_resources
         }
 
-        self.assertEqual([some_resources[0]], neut.list())
+        self.assertEqual([some_resources[0]], list(neut.list()))
 
         neut.user.neutron().list_some_resources.assert_called_once_with(
             {"tenant_id": neut.tenant_uuid})

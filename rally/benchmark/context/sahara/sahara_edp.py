@@ -13,7 +13,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import urllib2
+import requests
 
 from rally.benchmark.context import base
 from rally.benchmark.context.cleanup import manager as resource_manager
@@ -144,7 +144,7 @@ class SaharaEDP(base.Context):
 
     def download_and_save_lib(self, sahara, lib_type, name, download_url,
                               tenant_id):
-        lib_data = urllib2.urlopen(download_url).read()
+        lib_data = requests.get(download_url).json()
 
         job_binary_internal = sahara.job_binary_internals.create(
             name=name,

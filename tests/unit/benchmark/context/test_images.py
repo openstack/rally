@@ -76,7 +76,7 @@ class ImageGeneratorTestCase(test.TestCase):
 
         tenants = self._gen_tenants(tenants_count)
         users = list()
-        for id in tenants.iterkeys():
+        for id in tenants:
             for i in range(users_per_tenant):
                 users.append({"id": i, "tenant_id": id,
                               "endpoint": "endpoint"})
@@ -123,7 +123,7 @@ class ImageGeneratorTestCase(test.TestCase):
 
         tenants = self._gen_tenants(tenants_count)
         users = list()
-        for id_ in tenants.iterkeys():
+        for id_ in tenants:
             for i in range(users_per_tenant):
                 users.append({"id": i, "tenant_id": id_,
                               "endpoint": "endpoint"})

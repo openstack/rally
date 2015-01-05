@@ -55,7 +55,7 @@ def get_global(global_key, do_raise=False):
 def default_from_global(arg_name, env_name,
                         cli_arg_name):
     def default_from_global(f, *args, **kwargs):
-        id_arg_index = f.func_code.co_varnames.index(arg_name)
+        id_arg_index = f.__code__.co_varnames.index(arg_name)
         args = list(args)
         if args[id_arg_index] is None:
             args[id_arg_index] = get_global(env_name)

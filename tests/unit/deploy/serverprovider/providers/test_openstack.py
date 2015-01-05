@@ -176,8 +176,7 @@ class OpenStackProviderTestCase(test.TestCase):
             nics='fake_nics', key_name='fake_key_name')
 
     @mock.patch(MOD_NAME + '.osclients')
-    @mock.patch(MOD_NAME + '.urllib2')
-    def test_get_image_found_by_checksum(self, u, oscl):
+    def test_get_image_found_by_checksum(self, oscl):
         self._init_mock_clients()
         oscl.Clients = mock.MagicMock(return_value=self.clients)
         prov = OSProvider(mock.MagicMock(), self._get_valid_config())
@@ -185,16 +184,13 @@ class OpenStackProviderTestCase(test.TestCase):
         self.assertEqual(image_uuid, 'fake-uuid')
 
     @mock.patch(MOD_NAME + '.osclients')
-    @mock.patch(MOD_NAME + '.urllib2')
-    def test_get_image_download(self, u, oscl):
+    def test_get_image_download(self, oscl):
         self._init_mock_clients()
         self.glance_client.images.list = mock.Mock(return_value=[])
         oscl.Clients = mock.MagicMock(return_value=self.clients)
         prov = OSProvider(mock.MagicMock(), self._get_valid_config())
         image_uuid = prov.get_image_uuid()
         self.assertEqual(image_uuid, 'fake-uuid')
-        self.assertEqual(u.mock_calls,
-                         [mock.call.urlopen('http://example.net/img.qcow2')])
 
     @mock.patch(MOD_NAME + '.osclients')
     def test_get_image_no_glance_exception(

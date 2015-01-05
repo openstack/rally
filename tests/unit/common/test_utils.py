@@ -226,7 +226,7 @@ class MethodClassTestCase(test.TestCase):
         class A:
             def m(self):
                 pass
-        self.assertEqual(utils.get_method_class(A.m), A)
+        self.assertEqual(A, utils.get_method_class(A.m))
 
     def test_method_class_for_module_level_method(self):
         self.assertIsNone(utils.get_method_class(module_level_method))

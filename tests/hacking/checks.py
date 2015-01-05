@@ -45,7 +45,6 @@ re_assert_equal_in_end_with_true_or_false = re.compile(
     r"assertEqual\((\w|[][.'\"])+( not)? in (\w|[][.'\", ])+, (True|False)\)")
 re_assert_equal_in_start_with_true_or_false = re.compile(
     r"assertEqual\((True|False), (\w|[][.'\"])+( not)? in (\w|[][.'\", ])+\)")
-re_iteritems_method = re.compile(r"\.iteritems\(\)")
 re_basestring_method = re.compile(r"(^|[\s,(\[=])basestring([\s,)\]]|$)")
 re_StringIO_method = re.compile(r"StringIO\.StringIO\(")
 re_urlparse_method = re.compile(r"(^|[\s=])urlparse\.")
@@ -233,17 +232,24 @@ def assert_equal_in(logical_line):
 
 
 def check_iteritems_method(logical_line):
-    """Check if iteritems is properly called for compatibility with Python 3
+    """Check that collections are iterated in Python 3 compatible way
 
-    The correct form is six.iteritems(dict) or dict.items(), instead of
-    dict.iteritems()
+    The correct forms:
+      six.iterkeys(collection)
+      six.itervalues(collection)
+      six.iteritems(collection)
+      six.iterlist(collection)
 
     N330
     """
-    res = re_iteritems_method.search(logical_line)
-    if res:
-        yield (0, "N330: Use six.iteritems(dict) or dict.items() rather than "
-                  "dict.iteritems() to iterate a collection.")
+    iter_functions = ["iterkeys()", "itervalues()",
+                      "iteritems()", "iterlist()"]
+    for func in iter_functions:
+        pos = logical_line.find(func)
+        if pos != -1:
+            yield (pos, "N330: Use six.%(func)s(dict) rather than "
+                        "dict.%(func)s() to iterate a collection." %
+                   {"func": func[:-2]})
 
 
 def check_basestring_method(logical_line):

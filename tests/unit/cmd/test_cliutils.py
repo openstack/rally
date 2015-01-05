@@ -15,6 +15,7 @@
 
 import mock
 from oslo.config import cfg
+import testtools
 
 from rally.cmd import cliutils
 from rally.cmd.commands import deployment
@@ -141,6 +142,10 @@ class CliUtilsTestCase(test.TestCase):
         ret = cliutils.run(["rally", "show", "keypairs"], self.categories)
         self.assertEqual(ret, 1)
 
+    @testtools.skip(
+        "This test is not work with latest(1.6.0) oslo.config(see "
+        "https://review.openstack.org/#/c/135150 for more details). "
+        "Should wait for new release of oslo.config with appropriate fix.")
     @mock.patch("rally.db.task_get",
                 side_effect=exceptions.TaskNotFound(FAKE_TASK_UUID))
     def test_run_task_not_found(self, mock_task_get):
@@ -149,6 +154,10 @@ class CliUtilsTestCase(test.TestCase):
         self.assertTrue(mock_task_get.called)
         self.assertEqual(ret, 1)
 
+    @testtools.skip(
+        "This test is not work with latest(1.6.0) oslo.config(see "
+        "https://review.openstack.org/#/c/135150 for more details). "
+        "Should wait for new release of oslo.config with appropriate fix.")
     @mock.patch("rally.openstack.common.cliutils.validate_args",
                 side_effect=common_cliutils.MissingArgs("missing"))
     def test_run_show_fails(self, mock_validate_args):
@@ -156,6 +165,10 @@ class CliUtilsTestCase(test.TestCase):
         self.assertTrue(mock_validate_args.called)
         self.assertEqual(ret, 1)
 
+    @testtools.skip(
+        "This test is not work with latest(1.6.0) oslo.config(see "
+        "https://review.openstack.org/#/c/135150 for more details). "
+        "Should wait for new release of oslo.config with appropriate fix.")
     def test_run_failed_to_open_file(self):
 
         class FailuresCommands(object):
