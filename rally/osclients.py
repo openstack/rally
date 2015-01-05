@@ -97,7 +97,8 @@ class Clients(object):
             "timeout": CONF.openstack_client_http_timeout,
             "insecure": CONF.https_insecure, "cacert": CONF.https_cacert
         }
-        kw = dict(self.endpoint.to_dict().items() + new_kw.items())
+        kw = self.endpoint.to_dict()
+        kw.update(new_kw)
         if kw["endpoint_type"] == consts.EndpointType.PUBLIC:
             mgmt_url = parse.urlparse(kw["auth_url"])
             if (mgmt_url.port != kw["admin_port"] and
