@@ -353,6 +353,17 @@ class MistralWorkbooks(SynchronizedDeletion, base.ResourceManager):
         self._manager().delete(self.raw_resource.name)
 
 
+# MURANO
+
+_murano_order = get_order(1200)
+
+
+@base.resource("murano", "environments", tenant_resource=True,
+               order=next(_murano_order))
+class MuranoEnvironments(base.ResourceManager):
+    pass
+
+
 # KEYSTONE
 
 _keystone_order = get_order(9000)
