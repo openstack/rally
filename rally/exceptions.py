@@ -53,7 +53,7 @@ class RallyException(Exception):
                 pass
 
         if "%(message)s" in self.msg_fmt:
-            kwargs = dict(kwargs.items() + {"message": message}.items())
+            kwargs.update({"message": message})
 
         try:
             message = self.msg_fmt % kwargs
