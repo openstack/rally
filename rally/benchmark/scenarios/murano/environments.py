@@ -44,3 +44,27 @@ class MuranoEnvironments(utils.MuranoScenario, vm_utils.VMScenario):
 
         self._create_session(environment.id)
         self._delete_environment(environment)
+
+    @validation.required_clients("murano")
+    @validation.required_services(consts.Service.MURANO)
+    @validation.required_contexts("murano_packages")
+    @base.scenario(context={"cleanup": ["murano"], "roles": ["admin"]})
+    def create_and_deploy_environment(self, packages_per_env=1):
+        """Create environment, session and deploy environment.
+
+        Create environment, create session, add app to environment
+        packages_per_env times, send environment to deploy.
+
+        :param packages_per_env: number of packages per environment
+        """
+        environment = self._create_environment()
+        session = self._create_session(environment.id)
+        package = self.context["tenant"]["packages"][0]
+
+        with base.AtomicAction(self, "murano.create_service"):
+            for i in range(packages_per_env):
+                self._create_service(environment, session,
+                                     package.fully_qualified_name,
+                                     atomic_action=False)
+
+        self._deploy_environment(environment, session)
