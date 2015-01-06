@@ -115,7 +115,7 @@ class BenchmarkEngine(object):
                              _("Task validation of scenarios names."))
     def _validate_config_scenarios_name(self, config):
         available = set(base_scenario.Scenario.list_benchmark_scenarios())
-        specified = set(config.iterkeys())
+        specified = set(six.iterkeys(config))
 
         if not specified.issubset(available):
             names = ", ".join(specified - available)

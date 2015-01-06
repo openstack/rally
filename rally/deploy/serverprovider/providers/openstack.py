@@ -15,7 +15,6 @@
 
 import os
 import time
-import urllib2
 
 import novaclient.exceptions
 
@@ -137,14 +136,11 @@ class OpenStackProvider(provider.ProviderFactory):
                 return image.id
 
         LOG.info(_('Downloading new image %s') % self.config['image']['url'])
-        image = self.glance.images.create(name=self.config['image']['name'])
-        try:
-            image.update(data=urllib2.urlopen(self.config['image']['url']),
-                         disk_format=self.config['image']['format'],
-                         container_format='bare')
-        except urllib2.URLError:
-            LOG.error(_('Unable to retrieve %s') % self.config['image']['url'])
-            raise
+        image = self.glance.images.create(
+            name=self.config['image']['name'],
+            copy_from=self.config['image']['url'],
+            disk_format=self.config['image']['format'],
+            container_format='bare')
         image.get()
 
         if image.checksum != self.config['image']['checksum']:

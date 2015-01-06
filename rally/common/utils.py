@@ -297,7 +297,7 @@ def parse_docstring(docstring):
 
     if docstring:
         lines = docstrings.prepare_docstring(docstring)
-        lines = filter(lambda line: line != "", lines)
+        lines = [line for line in lines if line]
     else:
         lines = []
 

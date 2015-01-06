@@ -22,7 +22,7 @@ Rally Specific Commandments
  * [N323] - Ensure that ``assertTrue/assertFalse(A in/not in B)`` are not used with collection contents
  * [N324] - Ensure that ``assertEqual(A in/not in B, True/False)`` and ``assertEqual(True/False, A in/not in B)`` are not used with collection contents
 * [N33x] - Reserved for rules related to Python 3 compatibility
- * [N330] - Ensure that ``dict.iteritems()`` is not used
+ * [N330] - Ensure that ``dict.iterkeys()``, ``dict.itervalues()``, ``dict.iteritems()`` and ``dict.iterlist()`` are not used
  * [N331] - Ensure that ``basestring`` is not used
  * [N332] - Ensure that ``StringIO.StringIO`` is not used
  * [N333] - Ensure that ``urlparse`` is not used

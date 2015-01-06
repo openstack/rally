@@ -74,9 +74,9 @@ class SaharaEDPTestCase(test.TestCase):
         }
 
     @mock.patch("%s.sahara_edp.resource_manager.cleanup" % CTX)
-    @mock.patch("%s.sahara_edp.urllib2" % CTX)
+    @mock.patch("%s.sahara_edp.requests" % CTX)
     @mock.patch("%s.sahara_edp.osclients" % CTX)
-    def test_setup_and_cleanup(self, mock_osclients, mock_urllib,
+    def test_setup_and_cleanup(self, mock_osclients, mock_requests,
                                mock_cleanup):
 
         mock_sahara = mock_osclients.Clients(mock.MagicMock()).sahara()
@@ -84,7 +84,7 @@ class SaharaEDPTestCase(test.TestCase):
         mock_sahara.job_binary_internals.create.return_value = (
             mock.MagicMock(id=42))
 
-        mock_urllib.urlopen().read.return_value = "test_binary"
+        mock_requests.get().json.return_value = "test_binary"
 
         ctx = self.context_without_edp_keys
         sahara_ctx = sahara_edp.SaharaEDP(ctx)
@@ -112,7 +112,7 @@ class SaharaEDPTestCase(test.TestCase):
         sahara_ctx.setup()
 
         mock_sahara.data_sources.create.assert_has_calls(input_ds_crete_calls)
-        mock_urllib.urlopen().read.assert_has_calls(download_calls)
+        mock_requests.get().json.assert_has_calls(download_calls)
         mock_sahara.job_binary_internals.create.assert_has_calls(
             job_binary_internals_calls)
         mock_sahara.job_binaries.create.assert_has_calls(job_binaries_calls)
