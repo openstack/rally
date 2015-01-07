@@ -128,6 +128,33 @@ class HackingTestCase(test.TestCase):
         self.assertEqual(len(list(checks.check_iteritems_method(
             "dict.items()"))), 0)
 
+    def test_check_concatenate_dict_with_plus_operand(self):
+        self.assertEqual(len(list(
+            checks.check_concatenate_dict_with_plus_operand(
+                "dict1.items() + dict2.items()"))), 1)
+
+        self.assertEqual(len(list(
+            checks.check_concatenate_dict_with_plus_operand(
+                "dict(self.endpoint.to_dict().items() + "
+                "endpoint.items())"))), 1)
+
+        self.assertEqual(len(list(
+            checks.check_concatenate_dict_with_plus_operand(
+                "dict(self.endpoint.to_dict().items() + "
+                "endpoint.items() + something.items())"))), 1)
+
+        self.assertEqual(len(list(
+            checks.check_concatenate_dict_with_plus_operand(
+                "dict1.item() + dict2.item()"))), 0)
+
+        self.assertEqual(len(list(
+            checks.check_concatenate_dict_with_plus_operand(
+                "obj.getitems() + obj.getitems()"))), 0)
+
+        self.assertEqual(len(list(
+            checks.check_concatenate_dict_with_plus_operand(
+                "obj.getitems() + dict2.items()"))), 0)
+
     def test_check_basestring_method(self):
         self.assertEqual(len(list(checks.check_basestring_method(
             "basestring"))), 1)
