@@ -68,7 +68,7 @@ class CinderScenarioTestCase(test.TestCase):
             timeout=CONF.benchmark.cinder_volume_create_timeout,
             check_interval=CONF.benchmark.cinder_volume_create_poll_interval
         )
-        self.res_is.mock.assert_has_calls(mock.call('available'))
+        self.res_is.mock.assert_has_calls([mock.call('available')])
         self.assertEqual(self.wait_for.mock(), return_volume)
         self._test_atomic_action_timer(self.scenario.atomic_actions(),
                                        'cinder.create_volume')
@@ -100,7 +100,7 @@ class CinderScenarioTestCase(test.TestCase):
             timeout=cfg.CONF.benchmark.cinder_volume_create_timeout,
             check_interval=cfg.CONF.benchmark
             .cinder_volume_create_poll_interval)
-        self.res_is.mock.assert_has_calls(mock.call('available'))
+        self.res_is.mock.assert_has_calls([mock.call('available')])
         self.assertEqual(self.wait_for.mock(), return_snapshot)
         self._test_atomic_action_timer(self.scenario.atomic_actions(),
                                        'cinder.create_snapshot')
