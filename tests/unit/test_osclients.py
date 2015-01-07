@@ -63,7 +63,8 @@ class OSClientsTestCase(test.TestCase):
         endpoint = {"timeout": cfg.CONF.openstack_client_http_timeout,
                     "insecure": False, "cacert": None,
                     "endpoint": auth_url}
-        kwargs = dict(self.endpoint.to_dict().items() + endpoint.items())
+        kwargs = self.endpoint.to_dict()
+        kwargs.update(endpoint.items())
         self.mock_create_keystone_client.assert_called_once_with(kwargs)
         self.assertEqual(self.clients.cache["keystone"], self.fake_keystone)
 
@@ -74,7 +75,8 @@ class OSClientsTestCase(test.TestCase):
         endpoint = {"timeout": cfg.CONF.openstack_client_http_timeout,
                     "insecure": False, "cacert": None,
                     "endpoint": self.endpoint_https.auth_url}
-        kwargs = dict(self.endpoint_https.to_dict().items() + endpoint.items())
+        kwargs = self.endpoint_https.to_dict()
+        kwargs.update(endpoint.items())
         self.mock_create_keystone_client.assert_called_once_with(kwargs)
         self.assertEqual(self.clients_https.cache["keystone"],
                          self.fake_keystone)
