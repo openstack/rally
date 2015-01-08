@@ -109,7 +109,7 @@ class NovaScenarioTestCase(test.TestCase):
             self.wait_for.mock, self.server,
             CONF.benchmark.nova_server_boot_poll_interval,
             CONF.benchmark.nova_server_boot_timeout)
-        self.res_is.mock.assert_has_calls(mock.call('ACTIVE'))
+        self.res_is.mock.assert_has_calls([mock.call('ACTIVE')])
         self.assertEqual(self.wait_for.mock(), return_server)
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        'nova.boot_server')
@@ -131,7 +131,7 @@ class NovaScenarioTestCase(test.TestCase):
             self.wait_for.mock, self.server,
             CONF.benchmark.nova_server_boot_poll_interval,
             CONF.benchmark.nova_server_boot_timeout)
-        self.res_is.mock.assert_has_calls(mock.call("ACTIVE"))
+        self.res_is.mock.assert_has_calls([mock.call("ACTIVE")])
         self.assertEqual(self.wait_for.mock(), return_server)
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.boot_server")
@@ -155,7 +155,7 @@ class NovaScenarioTestCase(test.TestCase):
             self.wait_for.mock, self.server,
             CONF.benchmark.nova_server_boot_poll_interval,
             CONF.benchmark.nova_server_boot_timeout)
-        self.res_is.mock.assert_has_calls(mock.call('ACTIVE'))
+        self.res_is.mock.assert_has_calls([mock.call('ACTIVE')])
         self.assertEqual(self.wait_for.mock(), return_server)
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        'nova.boot_server')
@@ -171,7 +171,7 @@ class NovaScenarioTestCase(test.TestCase):
             self.wait_for.mock, self.server,
             CONF.benchmark.nova_server_boot_poll_interval,
             CONF.benchmark.nova_server_boot_timeout)
-        self.res_is.mock.assert_has_calls(mock.call('ACTIVE'))
+        self.res_is.mock.assert_has_calls([mock.call('ACTIVE')])
         self.assertEqual(self.wait_for.mock(), return_server)
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        'nova.boot_server')
@@ -187,7 +187,7 @@ class NovaScenarioTestCase(test.TestCase):
             self.wait_for.mock, self.server,
             CONF.benchmark.nova_server_boot_poll_interval,
             CONF.benchmark.nova_server_boot_timeout)
-        self.res_is.mock.assert_has_calls(mock.call('ACTIVE'))
+        self.res_is.mock.assert_has_calls([mock.call('ACTIVE')])
         self.assertEqual(self.wait_for.mock(), return_server)
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        'nova.boot_server')
@@ -200,7 +200,7 @@ class NovaScenarioTestCase(test.TestCase):
             self.wait_for.mock, self.server,
             CONF.benchmark.nova_server_suspend_poll_interval,
             CONF.benchmark.nova_server_suspend_timeout)
-        self.res_is.mock.assert_has_calls(mock.call('SUSPENDED'))
+        self.res_is.mock.assert_has_calls([mock.call('SUSPENDED')])
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        'nova.suspend_server')
 
@@ -213,7 +213,7 @@ class NovaScenarioTestCase(test.TestCase):
             self.wait_for.mock, self.image,
             CONF.benchmark.nova_server_image_create_poll_interval,
             CONF.benchmark.nova_server_image_create_timeout)
-        self.res_is.mock.assert_has_calls(mock.call('ACTIVE'))
+        self.res_is.mock.assert_has_calls([mock.call('ACTIVE')])
         self.assertEqual(self.wait_for.mock(), return_image)
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        'nova.create_image')
@@ -250,7 +250,7 @@ class NovaScenarioTestCase(test.TestCase):
             self.wait_for.mock, self.server,
             CONF.benchmark.nova_server_reboot_poll_interval,
             CONF.benchmark.nova_server_reboot_timeout)
-        self.res_is.mock.assert_has_calls(mock.call('ACTIVE'))
+        self.res_is.mock.assert_has_calls([mock.call('ACTIVE')])
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        'nova.reboot_server')
 
@@ -262,7 +262,7 @@ class NovaScenarioTestCase(test.TestCase):
             self.wait_for.mock, self.server,
             CONF.benchmark.nova_server_reboot_poll_interval,
             CONF.benchmark.nova_server_reboot_timeout)
-        self.res_is.mock.assert_has_calls(mock.call('ACTIVE'))
+        self.res_is.mock.assert_has_calls([mock.call('ACTIVE')])
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        'nova.soft_reboot_server')
 
@@ -274,7 +274,7 @@ class NovaScenarioTestCase(test.TestCase):
             self.wait_for.mock, self.server,
             CONF.benchmark.nova_server_start_poll_interval,
             CONF.benchmark.nova_server_start_timeout)
-        self.res_is.mock.assert_has_calls(mock.call('ACTIVE'))
+        self.res_is.mock.assert_has_calls([mock.call('ACTIVE')])
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        'nova.start_server')
 
@@ -286,7 +286,7 @@ class NovaScenarioTestCase(test.TestCase):
             self.wait_for.mock, self.server,
             CONF.benchmark.nova_server_stop_poll_interval,
             CONF.benchmark.nova_server_stop_timeout)
-        self.res_is.mock.assert_has_calls(mock.call('SHUTOFF'))
+        self.res_is.mock.assert_has_calls([mock.call('SHUTOFF')])
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        'nova.stop_server')
 
@@ -298,7 +298,7 @@ class NovaScenarioTestCase(test.TestCase):
             self.wait_for.mock, self.server,
             CONF.benchmark.nova_server_rescue_poll_interval,
             CONF.benchmark.nova_server_rescue_timeout)
-        self.res_is.mock.assert_has_calls(mock.call('RESCUE'))
+        self.res_is.mock.assert_has_calls([mock.call('RESCUE')])
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        'nova.rescue_server')
 
@@ -310,7 +310,7 @@ class NovaScenarioTestCase(test.TestCase):
             self.wait_for.mock, self.server,
             CONF.benchmark.nova_server_unrescue_poll_interval,
             CONF.benchmark.nova_server_unrescue_timeout)
-        self.res_is.mock.assert_has_calls(mock.call('ACTIVE'))
+        self.res_is.mock.assert_has_calls([mock.call('ACTIVE')])
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        'nova.unrescue_server')
 
@@ -393,7 +393,7 @@ class NovaScenarioTestCase(test.TestCase):
             )
         ]
         self.assertEqual(expected, self.wait_for.mock.mock_calls)
-        self.res_is.mock.assert_has_calls(mock.call('ACTIVE'))
+        self.res_is.mock.assert_has_calls([mock.call('ACTIVE')])
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        'nova.boot_servers')
 
@@ -542,7 +542,7 @@ class NovaScenarioTestCase(test.TestCase):
             self.wait_for.mock, self.server,
             CONF.benchmark.nova_server_live_migrate_poll_interval,
             CONF.benchmark.nova_server_live_migrate_timeout)
-        self.res_is.mock.assert_has_calls(mock.call('ACTIVE'))
+        self.res_is.mock.assert_has_calls([mock.call('ACTIVE')])
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        'nova.live_migrate')
 

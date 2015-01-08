@@ -82,7 +82,7 @@ class GlanceScenarioTestCase(test.TestCase):
                                                    is_ready=self.res_is.mock(),
                                                    check_interval=1,
                                                    timeout=120)
-        self.res_is.mock.assert_has_calls(mock.call('active'))
+        self.res_is.mock.assert_has_calls([mock.call('active')])
         self.assertEqual(self.wait_for.mock(), return_image)
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        'glance.create_image')
@@ -100,7 +100,7 @@ class GlanceScenarioTestCase(test.TestCase):
                                                    is_ready=self.res_is.mock(),
                                                    check_interval=1,
                                                    timeout=120)
-        self.res_is.mock.assert_has_calls(mock.call('active'))
+        self.res_is.mock.assert_has_calls([mock.call('active')])
         self.assertEqual(self.wait_for.mock(), return_image)
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        'glance.create_image')

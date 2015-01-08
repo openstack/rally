@@ -70,7 +70,7 @@ class HeatScenarioTestCase(test.TestCase):
                                                    is_ready=self.res_is.mock(),
                                                    check_interval=1,
                                                    timeout=3600)
-        self.res_is.mock.assert_has_calls(mock.call('CREATE_COMPLETE'))
+        self.res_is.mock.assert_has_calls([mock.call('CREATE_COMPLETE')])
         self.assertEqual(self.wait_for.mock(), return_stack)
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        'heat.create_stack')
