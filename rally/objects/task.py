@@ -15,8 +15,93 @@
 
 import json
 
+from rally.common import utils as rutils
 from rally import consts
 from rally import db
+
+
+TASK_RESULT_SCHEMA = {
+    "type": "object",
+    "$schema": rutils.JSON_SCHEMA,
+    "properties": {
+        "key": {
+            "type": "object",
+            "properties": {
+                "kw": {
+                    "type": "object"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "pos": {
+                    "type": "integer"
+                },
+            },
+            "required": ["kw", "name", "pos"]
+        },
+        "sla": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "criterion": {
+                        "type": "string"
+                    },
+                    "detail": {
+                        "type": "string"
+                    },
+                    "success": {
+                        "type": "boolean"
+                    }
+                }
+            }
+        },
+        "result": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "atomic_actions": {
+                        "type": "object"
+                    },
+                    "duration": {
+                        "type": "number"
+                    },
+                    "error": {
+                        "type": "array"
+                    },
+                    "idle_duration": {
+                        "type": "number"
+                    },
+                    "scenario_output": {
+                        "type": "object",
+                        "properties": {
+                            "data": {
+                                "type": "object"
+                            },
+                            "errors": {
+                                "type": "string"
+                            },
+                        },
+                        "required": ["data", "errors"]
+                    },
+                },
+                "required": ["atomic_actions", "duration", "error",
+                             "idle_duration", "scenario_output"]
+            },
+            "minItems": 1
+        },
+        "load_duration": {
+            "type": "number",
+        },
+        "full_duration": {
+            "type": "number",
+        },
+    },
+    "required": ["key", "sla", "result", "load_duration",
+                 "full_duration"],
+    "additionalProperties": False
+}
 
 
 class Task(object):

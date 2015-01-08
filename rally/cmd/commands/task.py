@@ -21,6 +21,8 @@ import os
 import pprint
 import webbrowser
 
+import jsonschema
+from oslo.utils import uuidutils
 import yaml
 
 from rally import api
@@ -322,7 +324,9 @@ class TaskCommands(object):
         """
 
         results = map(lambda x: {"key": x["key"], "result": x["data"]["raw"],
-                                 "sla": x["data"]["sla"]},
+                                 "sla": x["data"]["sla"],
+                                 "load_duration": x["data"]["load_duration"],
+                                 "full_duration": x["data"]["full_duration"]},
                       objects.Task.get(task_id).get_results())
 
         if results:
@@ -384,33 +388,79 @@ class TaskCommands(object):
                 print(_("There are no tasks. To run a new task, use:"
                         "\trally task start"))
 
-    @cliutils.args('--uuid', type=str, dest='task_id', help='uuid of task')
-    @cliutils.args('--out', type=str, dest='out', required=False,
+    @cliutils.args("--tasks", dest="tasks", nargs="+",
+                   help="uuids of tasks or json files with task results")
+    @cliutils.args('--out', type=str, dest='out', required=True,
                    help='Path to output file.')
     @cliutils.args('--open', dest='open_it', action='store_true',
                    help='Open it in browser.')
-    @envutils.with_default_task_id
-    def report(self, task_id=None, out=None, open_it=False):
+    @cliutils.deprecated_args(
+        "--uuid", dest="tasks", nargs="+",
+        help="uuids of tasks or json files with task results")
+    @envutils.default_from_global("tasks", envutils.ENV_TASK, "--uuid")
+    def report(self, tasks=None, out=None, open_it=False):
         """Generate HTML report file for specified task.
 
-        :param task_id: int, task identifier
+        :param task_id: UUID, task identifier
+        :param tasks: list, UUIDs od tasks or pathes files with tasks results
         :param out: str, output html file name
         :param open_it: bool, whether to open output file in web browser
         """
-        results = map(lambda x: {"key": x["key"],
-                                 "sla": x["data"]["sla"],
-                                 "result": x["data"]["raw"],
-                                 "load_duration": x["data"]["load_duration"],
-                                 "full_duration": x["data"]["full_duration"]},
-                      objects.Task.get(task_id).get_results())
-        if out:
-            out = os.path.expanduser(out)
-        output_file = out or ("%s.html" % task_id)
+
+        tasks = isinstance(tasks, list) and tasks or [tasks]
+
+        results = list()
+        processed_names = dict()
+        for task_file_or_uuid in tasks:
+            if os.path.exists(os.path.expanduser(task_file_or_uuid)):
+                with open(os.path.expanduser(task_file_or_uuid),
+                          "r") as inp_js:
+                    tasks_results = json.load(inp_js)
+                    for result in tasks_results:
+                        try:
+                            jsonschema.validate(
+                                result,
+                                objects.task.TASK_RESULT_SCHEMA)
+                        except jsonschema.ValidationError as e:
+                            msg = _("ERROR: Invalid task result format in %s"
+                                    ) % task_file_or_uuid
+                            print(msg)
+                            if logging.is_debug():
+                                print(e)
+                            else:
+                                print(e.message)
+                            return 1
+
+            elif uuidutils.is_uuid_like(task_file_or_uuid):
+                tasks_results = map(lambda x: {"key": x["key"],
+                                    "sla": x["data"]["sla"],
+                                    "result": x["data"]["raw"],
+                                    "load_duration": x["data"][
+                                        "load_duration"],
+                                    "full_duration": x["data"][
+                                    "full_duration"]},
+                                    objects.Task.get(
+                                        task_file_or_uuid).get_results())
+            else:
+                print(_("ERROR: Invalid UUID or file name passed: %s"
+                        ) % task_file_or_uuid)
+                return 1
+
+            for task_result in tasks_results:
+                if task_result["key"]["name"] in processed_names:
+                    processed_names[task_result["key"]["name"]] += 1
+                    task_result["key"]["pos"] = processed_names[
+                        task_result["key"]["name"]]
+                else:
+                    processed_names[task_result["key"]["name"]] = 0
+                results.append(task_result)
+
+        output_file = os.path.expanduser(out)
         with open(output_file, "w+") as f:
             f.write(plot.plot(results))
 
         if open_it:
-            webbrowser.open_new_tab("file://" + os.path.realpath(output_file))
+            webbrowser.open_new_tab("file://" + os.path.realpath(out))
 
     # NOTE(maretskiy): plot2html is deprecated by `report'
     #                  and should be removed later

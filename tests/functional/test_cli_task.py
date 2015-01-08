@@ -99,7 +99,7 @@ class TaskTestCase(unittest.TestCase):
     def test_report_with_wrong_task_id(self):
         rally = utils.Rally()
         self.assertRaises(utils.RallyCmdError,
-                          rally, "task report --uuid %s" % FAKE_TASK_UUID)
+                          rally, "task report --tasks %s" % FAKE_TASK_UUID)
 
     def test_sla_check_with_wrong_task_id(self):
         rally = utils.Rally()
@@ -111,7 +111,7 @@ class TaskTestCase(unittest.TestCase):
         self.assertRaises(utils.RallyCmdError,
                           rally, "task status --uuid %s" % FAKE_TASK_UUID)
 
-    def test_report(self):
+    def test_report_one_uuid(self):
         rally = utils.Rally()
         cfg = self._get_sample_task_config()
         config = utils.TaskConfig(cfg)
@@ -122,7 +122,70 @@ class TaskTestCase(unittest.TestCase):
         rally("task report --out %s" % html_file)
         self.assertTrue(os.path.exists(html_file))
         self.assertRaises(utils.RallyCmdError,
-                          rally, "task report --uuid %s" % FAKE_TASK_UUID)
+                          rally, "task report --report %s" % FAKE_TASK_UUID)
+
+    def test_report_bunch_uuids(self):
+        rally = utils.Rally()
+        cfg = self._get_sample_task_config()
+        config = utils.TaskConfig(cfg)
+        html_file = "/tmp/test_plot.html"
+        if os.path.exists(html_file):
+            os.remove(html_file)
+        task_uuids = list()
+        for i in range(3):
+            res = rally("task start --task %s" % config.filename)
+            for line in res.splitlines():
+                if "finished" in line:
+                    task_uuids.append(line.split(" ")[1])
+        rally("task report --tasks %s --out %s" % (" ".join(task_uuids),
+                                                   html_file))
+        self.assertTrue(os.path.exists(html_file))
+
+    def test_report_bunch_files(self):
+        rally = utils.Rally()
+        cfg = self._get_sample_task_config()
+        config = utils.TaskConfig(cfg)
+        html_file = "/tmp/test_plot.html"
+        if os.path.exists(html_file):
+            os.remove(html_file)
+        files = list()
+        for i in range(3):
+            rally("task start --task %s" % config.filename)
+            path = "/tmp/task_%d.html" % i
+            files.append(path)
+            with open(path, "w") as tr:
+                tr.write(rally("task results"))
+
+        rally("task report --tasks %s --out %s" % (" ".join(files),
+                                                   html_file))
+        self.assertTrue(os.path.exists(html_file))
+
+    def test_report_one_uuid_one_file(self):
+        rally = utils.Rally()
+        cfg = self._get_sample_task_config()
+        config = utils.TaskConfig(cfg)
+        html_file = "/tmp/test_plot.html"
+        rally("task start --task %s" % config.filename)
+        if os.path.exists(html_file):
+            os.remove(html_file)
+        task_result_file = "/tmp/report_42.json"
+        with open(task_result_file, "w") as res:
+            res.write(rally("task results"))
+
+        task_run_output = rally(
+            "task start --task %s" % config.filename).splitlines()
+        for line in task_run_output:
+            if "is finished" in line:
+                task_uuid = line.split(" ")[1]
+                break
+        else:
+            return 1
+
+        rally("task report --tasks"
+              " %s %s --out %s" % (task_result_file, task_uuid, html_file))
+        self.assertTrue(os.path.exists(html_file))
+        self.assertRaises(utils.RallyCmdError,
+                          rally, "task report --report %s" % FAKE_TASK_UUID)
 
     def test_delete(self):
         rally = utils.Rally()
