@@ -20,9 +20,9 @@ import tempfile
 
 from rally.benchmark.context import base
 from rally.common.i18n import _
+from rally.common import log as logging
 from rally.common import utils
 from rally import exceptions
-from rally import log as logging
 from rally.verification.tempest import config
 from rally.verification.tempest import tempest
 

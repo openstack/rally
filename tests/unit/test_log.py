@@ -17,14 +17,14 @@ import logging
 
 import mock
 
-from rally import log
+from rally.common import log
 from tests.unit import test
 
 
 class LogTestCase(test.TestCase):
 
-    @mock.patch("rally.log.CONF")
-    @mock.patch("rally.log.oslogging")
+    @mock.patch("rally.common.log.CONF")
+    @mock.patch("rally.common.log.oslogging")
     def test_setup(self, mock_oslogger, mock_conf):
 
         proj = "fakep"
@@ -44,9 +44,9 @@ class LogTestCase(test.TestCase):
         mock_oslogger.getLogger(None).logger.setLevel.assert_called_once_with(
             logging.RDEBUG)
 
-    @mock.patch("rally.log.logging")
-    @mock.patch("rally.log.RallyContextAdapter")
-    @mock.patch("rally.log.oslogging")
+    @mock.patch("rally.common.log.logging")
+    @mock.patch("rally.common.log.RallyContextAdapter")
+    @mock.patch("rally.common.log.oslogging")
     def test_getLogger(self, mock_oslogger, mock_radapter, mock_pylogging):
 
         proj = "fake"
@@ -63,8 +63,8 @@ class LogTestCase(test.TestCase):
 
 class LogRallyContaxtAdapter(test.TestCase):
 
-    @mock.patch("rally.log.logging")
-    @mock.patch("rally.log.oslogging.ContextAdapter")
+    @mock.patch("rally.common.log.logging")
+    @mock.patch("rally.common.log.oslogging.ContextAdapter")
     def test_debug(self, mock_oslo_adapter, mock_logging):
 
         mock_logging.RDEBUG = 123

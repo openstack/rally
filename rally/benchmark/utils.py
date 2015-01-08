@@ -21,8 +21,8 @@ from novaclient import exceptions as nova_exc
 from novaclient.v1_1 import servers
 import six
 
+from rally.common import log as logging
 from rally import exceptions
-from rally import log as logging
 
 
 LOG = logging.getLogger(__name__)

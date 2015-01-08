@@ -17,10 +17,10 @@ import jsonschema
 
 from rally.benchmark import engine
 from rally.common.i18n import _
+from rally.common import log as logging
 from rally import consts
 from rally import deploy
 from rally import exceptions
-from rally import log as logging
 from rally import objects
 from rally.verification.tempest import tempest
 

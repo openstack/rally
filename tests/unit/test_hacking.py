@@ -65,9 +65,9 @@ class HackingTestCase(test.TestCase):
         bad_imports = ["from rally.openstack.common import log",
                        "import rally.openstack.common.log",
                        "import logging"]
-        good_imports = ["from rally import log",
-                        "from rally.log",
-                        "import rally.log"]
+        good_imports = ["from rally.common import log",
+                        "from rally.common.log",
+                        "import rally.common.log"]
 
         for bad_import in bad_imports:
             checkres = checks.check_import_of_logging(bad_import, "fakefile")
@@ -75,7 +75,7 @@ class HackingTestCase(test.TestCase):
 
         for bad_import in bad_imports:
             checkres = checks.check_import_of_logging(bad_import,
-                                                      "./rally/log.py")
+                                                      "./rally/common/log.py")
             self.assertEqual([], list(checkres))
 
         for good_import in good_imports:

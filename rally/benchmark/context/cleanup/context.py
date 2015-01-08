@@ -18,10 +18,10 @@ import sys
 from rally.benchmark.context import base
 from rally.benchmark.context.cleanup import manager
 from rally.common.i18n import _
+from rally.common import log as logging
 from rally.common import utils as rutils
 from rally import consts
 from rally import exceptions
-from rally import log as logging
 
 
 LOG = logging.getLogger(__name__)

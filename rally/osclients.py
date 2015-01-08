@@ -30,9 +30,9 @@ from saharaclient import client as sahara
 from troveclient import client as trove
 from zaqarclient.queues import client as zaqar
 
+from rally.common import log as logging
 from rally import consts
 from rally import exceptions
-from rally import log as logging
 
 
 CONF = cfg.CONF

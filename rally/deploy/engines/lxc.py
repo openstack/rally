@@ -19,12 +19,12 @@ import netaddr
 import six
 
 from rally.common.i18n import _
+from rally.common import log as logging
 from rally.common import utils
 from rally.deploy import engine
 from rally.deploy.serverprovider import provider
 from rally.deploy.serverprovider.providers import lxc
 from rally import exceptions
-from rally import log as logging
 from rally import objects
 
 LOG = logging.getLogger(__name__)

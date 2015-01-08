@@ -17,7 +17,7 @@ from oslo.utils import uuidutils as uid
 
 from rally.benchmark.scenarios import base
 from rally.benchmark.wrappers import network as network_wrapper
-from rally import log as logging
+from rally.common import log as logging
 
 LOG = logging.getLogger(__name__)
 

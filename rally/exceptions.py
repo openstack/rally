@@ -19,7 +19,7 @@ import sys
 from oslo.config import cfg
 
 from rally.common.i18n import _
-from rally import log as logging
+from rally.common import log as logging
 
 LOG = logging.getLogger(__name__)
 
