@@ -29,6 +29,7 @@ import six
 from rally.benchmark.context import base as base_ctx
 from rally.benchmark.scenarios import base
 from rally.common import utils as rally_utils
+from rally import consts
 from rally import objects
 
 
@@ -1268,7 +1269,7 @@ class FakeRunner(object):
 
     CONFIG_SCHEMA = {
         "type": "object",
-        "$schema": rally_utils.JSON_SCHEMA,
+        "$schema": consts.JSON_SCHEMA,
         "properties": {
             "type": {
                 "type": "string",
@@ -1319,7 +1320,7 @@ class FakeContext(base_ctx.Context):
 
     CONFIG_SCHEMA = {
         "type": "object",
-        "$schema": rally_utils.JSON_SCHEMA,
+        "$schema": consts.JSON_SCHEMA,
         "properties": {
             "test": {
                 "type": "integer"

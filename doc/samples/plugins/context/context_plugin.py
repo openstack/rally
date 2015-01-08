@@ -1,6 +1,6 @@
 
 from rally.benchmark.context import base
-from rally.common import utils
+from rally import consts
 from rally import log as logging
 from rally import osclients
 
@@ -18,7 +18,7 @@ class CreateFlavorContext(base.Context):
 
     CONFIG_SCHEMA = {
         "type": "object",
-        "$schema": utils.JSON_SCHEMA,
+        "$schema": consts.JSON_SCHEMA,
         "additionalProperties": False,
         "properties": {
             "flavor_name": {

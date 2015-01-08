@@ -19,6 +19,7 @@ from rally.benchmark.context import base
 from rally.benchmark.context.cleanup import manager as resource_manager
 from rally.common.i18n import _
 from rally.common import utils as rutils
+from rally import consts
 from rally import exceptions
 from rally import log as logging
 from rally import osclients
@@ -33,7 +34,7 @@ class SaharaEDP(base.Context):
 
     CONFIG_SCHEMA = {
         "type": "object",
-        "$schema": rutils.JSON_SCHEMA,
+        "$schema": consts.JSON_SCHEMA,
         "properties": {
             "input_type": {
                 "enum": ["swift", "hdfs"],

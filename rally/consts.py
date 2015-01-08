@@ -39,6 +39,9 @@ TEMPEST_TEST_SETS = ("full",
                      "volume")
 
 
+JSON_SCHEMA = "http://json-schema.org/draft-04/schema"
+
+
 class _TaskStatus(utils.ImmutableMixin, utils.EnumMixin):
     INIT = "init"
     VERIFYING = "verifying"

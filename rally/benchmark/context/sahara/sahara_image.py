@@ -18,6 +18,7 @@ from rally.benchmark.scenarios import base as scenarios_base
 from rally.benchmark.scenarios.glance import utils as glance_utils
 from rally.common.i18n import _
 from rally.common import utils as rutils
+from rally import consts
 from rally import log as logging
 from rally import osclients
 
@@ -31,7 +32,7 @@ class SaharaImage(base.Context):
 
     CONFIG_SCHEMA = {
         "type": "object",
-        "$schema": rutils.JSON_SCHEMA,
+        "$schema": consts.JSON_SCHEMA,
         "properties": {
             "image_url": {
                 "type": "string",

@@ -16,6 +16,7 @@
 from rally.benchmark.context import base
 from rally.common.i18n import _
 from rally.common import utils as rutils
+from rally import consts
 from rally import exceptions
 from rally import log as logging
 from rally import osclients
@@ -30,7 +31,7 @@ class RoleGenerator(base.Context):
 
     CONFIG_SCHEMA = {
         "type": "array",
-        "$schema": rutils.JSON_SCHEMA,
+        "$schema": consts.JSON_SCHEMA,
         "items": {
             "type": "string",
         },

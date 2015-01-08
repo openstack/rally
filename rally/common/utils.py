@@ -35,8 +35,6 @@ from rally import log as logging
 
 LOG = logging.getLogger(__name__)
 
-JSON_SCHEMA = 'http://json-schema.org/draft-04/schema'
-
 
 class ImmutableMixin(object):
     _inited = False

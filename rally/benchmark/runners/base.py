@@ -97,7 +97,7 @@ class ScenarioRunnerResult(dict):
 
     RESULT_SCHEMA = {
         "type": "object",
-        "$schema": rutils.JSON_SCHEMA,
+        "$schema": consts.JSON_SCHEMA,
         "properties": {
             "duration": {
                 "type": "number"

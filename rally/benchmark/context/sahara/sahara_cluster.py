@@ -22,6 +22,7 @@ from rally.benchmark import types
 from rally.benchmark import utils as bench_utils
 from rally.common.i18n import _
 from rally.common import utils as rutils
+from rally import consts
 from rally import exceptions
 from rally import log as logging
 from rally import osclients
@@ -37,7 +38,7 @@ class SaharaCluster(base.Context):
 
     CONFIG_SCHEMA = {
         "type": "object",
-        "$schema": rutils.JSON_SCHEMA,
+        "$schema": consts.JSON_SCHEMA,
         "properties": {
             "plugin_name": {
                 "type": "string"

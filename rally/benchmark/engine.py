@@ -40,7 +40,7 @@ LOG = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = {
     "type": "object",
-    "$schema": rutils.JSON_SCHEMA,
+    "$schema": consts.JSON_SCHEMA,
     "patternProperties": {
         ".*": {
             "type": "array",

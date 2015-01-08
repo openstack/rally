@@ -19,7 +19,6 @@ import threading
 import time
 
 from rally.benchmark.runners import base
-from rally.common import utils as rutils
 from rally import consts
 from rally import log as logging
 
@@ -109,7 +108,7 @@ class RPSScenarioRunner(base.ScenarioRunner):
 
     CONFIG_SCHEMA = {
         "type": "object",
-        "$schema": rutils.JSON_SCHEMA,
+        "$schema": consts.JSON_SCHEMA,
         "properties": {
             "type": {
                 "type": "string"
