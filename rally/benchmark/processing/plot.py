@@ -255,28 +255,6 @@ def _get_atomic_action_durations(result):
     return table
 
 
-def _task_json(source_dict):
-    """Generate task input file in JSON format.
-
-    :param source_dict: dict with input task data, in format:
-                        {
-                            scenario_name: [
-                                {scenario config},
-                                ...
-                            ],
-                            ...
-                        }
-    :returns: str JSON, ready for usage as task input file data
-    """
-    source_list = []
-    indent = 2
-    for name, conf in sorted(source_dict.items()):
-        conf_str = '"%s": %s' % (name, json.dumps(conf, indent=indent))
-        source_list.append("\n".join(["%s%s" % (" " * indent, line)
-                                      for line in conf_str.split("\n")]))
-    return "{\n%s\n}" % ",\n".join(source_list)
-
-
 def _process_results(results):
     output = []
     source_dict = {}
@@ -321,7 +299,7 @@ def _process_results(results):
             "sla_success": all([sla["success"] for sla in data["sla"]]),
             "iterations_num": len(result["result"]),
         })
-    source = _task_json(source_dict)
+    source = json.dumps(source_dict, indent=2, sort_keys=True)
     scenarios = sorted(output, key=lambda r: "%s%s" % (r["cls"], r["name"]))
     return source, scenarios
 

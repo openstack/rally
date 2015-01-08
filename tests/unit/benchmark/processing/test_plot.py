@@ -43,22 +43,13 @@ class PlotTestCase(test.TestCase):
         )
         mock_utils.get_template.assert_called_once_with("task/report.mako")
 
-    def test__task_json(self):
-        self.assertRaises(TypeError, plot._task_json)
-        self.assertRaises(AttributeError, plot._task_json, [])
-        self.assertEqual(plot._task_json({"foo": ["a", "b"]}),
-                         '{\n  "foo": [\n    "a", \n    "b"\n  ]\n}')
-        self.assertEqual(plot._task_json({"foo": ["a", "b"], "bar": ["c"]}),
-                         ('{\n  "bar": [\n    "c"\n  ],'
-                          '\n  "foo": [\n    "a", \n    "b"\n  ]\n}'))
-
-    @mock.patch(PLOT + "_task_json")
+    @mock.patch(PLOT + "json.dumps")
     @mock.patch(PLOT + "_prepare_data")
     @mock.patch(PLOT + "_process_atomic")
     @mock.patch(PLOT + "_get_atomic_action_durations")
     @mock.patch(PLOT + "_process_main_duration")
     def test__process_results(self, mock_main_duration, mock_get_atomic,
-                              mock_atomic, mock_prepare, mock_task_json):
+                              mock_atomic, mock_prepare, mock_dumps):
         sla = [{"success": True}]
         result = ["iter_1", "iter_2"]
         iterations = len(result)
@@ -88,12 +79,13 @@ class PlotTestCase(test.TestCase):
         mock_main_duration.return_value = "main_duration"
         mock_get_atomic.return_value = atomic_durations
         mock_atomic.return_value = "main_atomic"
-        mock_task_json.return_value = "JSON"
+        mock_dumps.return_value = "JSON"
 
         source, scenarios = plot._process_results(results)
 
         source_dict = {"Class.method": [kw] * len(results)}
-        mock_task_json.assert_called_with(source_dict)
+        mock_dumps.assert_called_with(source_dict, indent=2,
+                                      sort_keys=True)
         self.assertEqual(source, "JSON")
 
         results = sorted(results, key=lambda r: "%s%s" % (r["key"]["name"],
