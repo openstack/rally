@@ -21,7 +21,6 @@ from six import moves
 
 from rally.benchmark.runners import base
 from rally.benchmark import utils
-from rally.common import utils as rutils
 from rally import consts
 from rally import log as logging
 
@@ -46,7 +45,7 @@ class ConstantScenarioRunner(base.ScenarioRunner):
 
     CONFIG_SCHEMA = {
         "type": "object",
-        "$schema": rutils.JSON_SCHEMA,
+        "$schema": consts.JSON_SCHEMA,
         "properties": {
             "type": {
                 "type": "string"
@@ -113,7 +112,7 @@ class ConstantForDurationScenarioRunner(base.ScenarioRunner):
 
     CONFIG_SCHEMA = {
         "type": "object",
-        "$schema": rutils.JSON_SCHEMA,
+        "$schema": consts.JSON_SCHEMA,
         "properties": {
             "type": {
                 "type": "string"

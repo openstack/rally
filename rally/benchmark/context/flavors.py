@@ -15,6 +15,7 @@
 
 from rally.benchmark.context import base
 from rally.common import utils as rutils
+from rally import consts
 from rally import log as logging
 from rally import osclients
 
@@ -27,7 +28,7 @@ class FlavorsGenerator(base.Context):
 
     CONFIG_SCHEMA = {
         "type": "array",
-        "$schema": rutils.JSON_SCHEMA,
+        "$schema": consts.JSON_SCHEMA,
         "items": {
             "type": "object",
             "properties": {

@@ -170,7 +170,7 @@ It is possible to extend Rally with new Scenario Runner types, if needed. Basica
 .. parsed-literal::
 
     from rally.benchmark.runners import base
-    from rally.common import utils
+    from rally import consts
 
     class MyScenarioRunner(base.ScenarioRunner):
         *"""My scenario runner."""*
@@ -187,7 +187,7 @@ It is possible to extend Rally with new Scenario Runner types, if needed. Basica
 
         CONFIG_SCHEMA = {
             "type": "object",
-            "$schema": utils.JSON_SCHEMA,
+            "$schema": consts.JSON_SCHEMA,
             "properties": {
                 "type": {
                     "type": "string"
@@ -265,6 +265,7 @@ From the developer's view, contexts management is implemented via **Context clas
 .. parsed-literal::
 
     from rally.benchmark.context import base
+    from rally import consts
 
     @base.context(name="your_context", *# Corresponds to the context field name in task configuration files*
                   order=100500,        *# a number specifying the priority with which the context should be set up*
@@ -275,7 +276,7 @@ From the developer's view, contexts management is implemented via **Context clas
         *# The schema of the context configuration format*
         CONFIG_SCHEMA = {
             "type": "object",
-            "$schema": utils.JSON_SCHEMA,
+            "$schema": consts.JSON_SCHEMA,
             "additionalProperties": False,
             "properties": {
                 "property_1": <SCHEMA>,

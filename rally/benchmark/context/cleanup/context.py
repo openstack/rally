@@ -19,6 +19,7 @@ from rally.benchmark.context import base
 from rally.benchmark.context.cleanup import manager
 from rally.common.i18n import _
 from rally.common import utils as rutils
+from rally import consts
 from rally import exceptions
 from rally import log as logging
 
@@ -34,7 +35,7 @@ class CleanupMixin(object):
 
     CONFIG_SCHEMA = {
         "type": "array",
-        "$schema": rutils.JSON_SCHEMA,
+        "$schema": consts.JSON_SCHEMA,
         "items": {
             "type": "string",
         },

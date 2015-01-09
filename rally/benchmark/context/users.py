@@ -58,7 +58,7 @@ class UserGenerator(base.Context):
 
     CONFIG_SCHEMA = {
         "type": "object",
-        "$schema": rutils.JSON_SCHEMA,
+        "$schema": consts.JSON_SCHEMA,
         "properties": {
             "tenants": {
                 "type": "integer",

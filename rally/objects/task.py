@@ -15,14 +15,13 @@
 
 import json
 
-from rally.common import utils as rutils
 from rally import consts
 from rally import db
 
 
 TASK_RESULT_SCHEMA = {
     "type": "object",
-    "$schema": rutils.JSON_SCHEMA,
+    "$schema": consts.JSON_SCHEMA,
     "properties": {
         "key": {
             "type": "object",

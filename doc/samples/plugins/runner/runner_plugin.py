@@ -1,7 +1,7 @@
 import random
 
 from rally.benchmark.runners import base
-from rally.common import utils
+from rally import consts
 
 
 class RandomTimesScenarioRunner(base.ScenarioRunner):
@@ -15,7 +15,7 @@ class RandomTimesScenarioRunner(base.ScenarioRunner):
 
     CONFIG_SCHEMA = {
         "type": "object",
-        "$schema": utils.JSON_SCHEMA,
+        "$schema": consts.JSON_SCHEMA,
         "properties": {
             "type": {
                 "type": "string"

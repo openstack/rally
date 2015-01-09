@@ -27,6 +27,7 @@ import six
 from rally.benchmark.processing import utils as putils
 from rally.common.i18n import _
 from rally.common import utils
+from rally import consts
 from rally import exceptions
 
 
@@ -114,7 +115,7 @@ class FailureRate(SLA):
     OPTION_NAME = "failure_rate"
     CONFIG_SCHEMA = {
         "type": "object",
-        "$schema": utils.JSON_SCHEMA,
+        "$schema": consts.JSON_SCHEMA,
         "properties": {
             "min": {"type": "number", "minimum": 0.0, "maximum": 100.0},
             "max": {"type": "number", "minimum": 0.0, "maximum": 100.0}

@@ -14,7 +14,7 @@
 
 import jsonschema
 
-from rally.common import utils
+from rally import consts
 
 
 class ActionBuilder(object):
@@ -35,7 +35,7 @@ class ActionBuilder(object):
 
     SCHEMA_TEMPLATE = {
         "type": "array",
-        "$schema": utils.JSON_SCHEMA,
+        "$schema": consts.JSON_SCHEMA,
         "items": {
             "type": "object",
             "properties": {},

@@ -20,6 +20,7 @@ from rally.benchmark.context.quotas import neutron_quotas
 from rally.benchmark.context.quotas import nova_quotas
 from rally.common.i18n import _
 from rally.common import utils
+from rally import consts
 from rally import log as logging
 from rally import osclients
 
@@ -33,7 +34,7 @@ class Quotas(base.Context):
 
     CONFIG_SCHEMA = {
         "type": "object",
-        "$schema": utils.JSON_SCHEMA,
+        "$schema": consts.JSON_SCHEMA,
         "additionalProperties": False,
         "properties": {
             "nova": nova_quotas.NovaQuotas.QUOTAS_SCHEMA,
