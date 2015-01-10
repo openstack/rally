@@ -122,7 +122,7 @@ class SaharaUtilsTestCase(test.TestCase):
     @mock.patch(SAHARA_UTILS + '.SaharaScenario.clients')
     def test_launch_cluster(self, mock_clients, mock_random_name):
 
-        scenario = utils.SaharaScenario()
+        scenario = utils.SaharaScenario(clients=mock_clients)
         mock_processes = {
             "test_plugin": {
                 "test_version": {
@@ -208,7 +208,7 @@ class SaharaUtilsTestCase(test.TestCase):
     @mock.patch(SAHARA_UTILS + '.SaharaScenario.clients')
     def test_launch_cluster_error(self, mock_clients, mock_random_name):
 
-        scenario = utils.SaharaScenario()
+        scenario = utils.SaharaScenario(clients=mock.MagicMock())
         mock_processes = {
             "test_plugin": {
                 "test_version": {

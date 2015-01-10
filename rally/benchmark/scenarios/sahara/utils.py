@@ -13,11 +13,15 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import random
+
 from oslo.config import cfg
+from oslo.utils import uuidutils
 from saharaclient.api import base as sahara_base
 
 from rally.benchmark.scenarios import base
 from rally.benchmark import utils as bench_utils
+from rally import consts
 from rally import exceptions
 from rally import log as logging
 
@@ -171,6 +175,100 @@ class SaharaScenario(base.Scenario):
             timeout=CONF.benchmark.cluster_create_timeout,
             check_interval=CONF.benchmark.cluster_check_interval)
 
+    def _setup_neutron_floating_ip_pool(self, name_or_id):
+        if name_or_id:
+            if uuidutils.is_uuid_like(name_or_id):
+                # Looks like an id is provided Return as is.
+                return name_or_id
+            else:
+                # It's a name. Changing to id.
+                for net in self.clients("neutron").list_networks()["networks"]:
+                    if net["name"] == name_or_id:
+                        return net["id"]
+                # If the name is not found in the list. Exit with error.
+                raise exceptions.BenchmarkSetupFailure(
+                    "Could not resolve Floating IP Pool name %(name)s to id" %
+                    name_or_id)
+        else:
+            # Pool is not provided. Using the one set as GW for current router.
+
+            net = self.context["tenant"]["networks"][0]
+            router_id = net["router_id"]
+            router = self.clients("neutron").show_router(router_id)["router"]
+            net_id = router["external_gateway_info"]["network_id"]
+
+            return net_id
+
+    def _setup_nova_floating_ip_pool(self, name):
+        if name:
+            # The name is provided returning it as is.
+            return name
+        else:
+            # The name is not provided. Discovering
+            pools = self.clients("nova").floating_ip_pools.list()
+
+            if pools:
+                return random.choice(pools).name
+            else:
+                LOG.warn("No Floating Ip Pools found. This may cause "
+                         "instances to be unreachable.")
+                return None
+
+    def _setup_floating_ip_pool(self, node_groups, floating_ip_pool):
+        if consts.Service.NEUTRON in self._clients.services().values():
+            floating_ip_pool_value = self._setup_neutron_floating_ip_pool(
+                floating_ip_pool)
+        else:
+            floating_ip_pool_value = self._setup_nova_floating_ip_pool(
+                floating_ip_pool)
+
+        if floating_ip_pool_value:
+            # If the pool is set by any means assign it to all node groups.
+            for ng in node_groups:
+                ng["floating_ip_pool"] = floating_ip_pool_value
+
+        return node_groups
+
+    def _setup_volumes(self, node_groups, volumes_per_node, volumes_size):
+        if volumes_per_node:
+            LOG.debug("Adding volumes config to Node Groups")
+            for ng in node_groups:
+                ng["volumes_per_node"] = volumes_per_node
+                ng["volumes_size"] = volumes_size
+
+        return node_groups
+
+    def _setup_security_groups(self, node_groups, auto_security_group,
+                               security_groups):
+        for ng in node_groups:
+            if auto_security_group:
+                ng["auto_security_group"] = auto_security_group
+            if security_groups:
+                ng["security_groups"] = security_groups
+
+        return node_groups
+
+    def _setup_node_configs(self, node_groups, node_configs):
+        if node_configs:
+            LOG.debug("Adding Hadoop configs to Node Groups")
+            for ng in node_groups:
+                ng["node_configs"] = node_configs
+
+        return node_groups
+
+    def _setup_replication_config(self, hadoop_version, node_count,
+                                  plugin_name):
+        replication_value = min(node_count - 1, 3)
+        # 3 is a default Hadoop replication
+        conf = self.REPLICATION_CONFIGS[plugin_name][hadoop_version]
+        LOG.debug("Using replication factor: %s" % replication_value)
+        replication_config = {
+            conf["target"]: {
+                conf["config_name"]: replication_value
+            }
+        }
+        return replication_config
+
     @base.atomic_action_timer('sahara.launch_cluster')
     def _launch_cluster(self, plugin_name, hadoop_version, flavor_id,
                         image_id, node_count, floating_ip_pool=None,
@@ -226,48 +324,29 @@ class SaharaScenario(base.Scenario):
             }
         ]
 
-        if floating_ip_pool:
-            LOG.debug("Floating IP pool is set. Appending to Node Groups")
-            for ng in node_groups:
-                ng["floating_ip_pool"] = floating_ip_pool
+        node_groups = self._setup_floating_ip_pool(node_groups,
+                                                   floating_ip_pool)
 
-        if volumes_per_node:
-            LOG.debug("Adding volumes config to Node Groups")
-            for ng in node_groups:
-                ng["volumes_per_node"] = volumes_per_node
-                ng["volumes_size"] = volumes_size
+        node_groups = self._setup_volumes(node_groups, volumes_per_node,
+                                          volumes_size)
 
-        if auto_security_group:
-            for ng in node_groups:
-                ng["auto_security_group"] = auto_security_group
+        node_groups = self._setup_security_groups(node_groups,
+                                                  auto_security_group,
+                                                  security_groups)
 
-        if security_groups:
-            for ng in node_groups:
-                ng["security_groups"] = security_groups
+        node_groups = self._setup_node_configs(node_groups, node_configs)
 
-        if node_configs:
-            LOG.debug("Adding Hadoop configs to Node Groups")
-            for ng in node_groups:
-                ng["node_configs"] = node_configs
-
-        name = self._generate_random_name(prefix="sahara-cluster-")
-
-        replication_value = min(node_count - 1, 3)
-        # 3 is a default Hadoop replication
-
-        conf = self.REPLICATION_CONFIGS[plugin_name][hadoop_version]
-        LOG.debug("Using replication factor: %s" % replication_value)
-
-        replication_config = {
-            conf["target"]: {
-                conf["config_name"]: replication_value
-            }
-        }
+        replication_config = self._setup_replication_config(hadoop_version,
+                                                            node_count,
+                                                            plugin_name)
 
         # The replication factor should be set for small clusters. However the
         # cluster_configs parameter can override it
         merged_cluster_configs = self._merge_configs(replication_config,
                                                      cluster_configs)
+
+        name = self._generate_random_name(prefix="sahara-cluster-")
+
         cluster_object = self.clients("sahara").clusters.create(
             name=name,
             plugin_name=plugin_name,
