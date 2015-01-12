@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import datetime
 import functools
 import imp
 import inspect
@@ -84,6 +85,9 @@ class Timer(object):
         self.error = None
         self.start = time.time()
         return self
+
+    def timestamp(self):
+        return datetime.datetime.fromtimestamp(self.start)
 
     def __exit__(self, type, value, tb):
         self.finish = time.time()
