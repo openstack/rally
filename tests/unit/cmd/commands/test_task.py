@@ -171,7 +171,8 @@ class TaskCommandsTestCase(test.TestCase):
                 return_value=None)
     @mock.patch("rally.cmd.commands.task.os.path.realpath",
                 side_effect=lambda p: "realpath_%s" % p)
-    @mock.patch("rally.cmd.commands.task.open", create=True)
+    @mock.patch("rally.cmd.commands.task.open",
+                side_effect=mock.mock_open(), create=True)
     @mock.patch("rally.cmd.commands.task.plot")
     @mock.patch("rally.cmd.commands.task.webbrowser")
     @mock.patch("rally.cmd.commands.task.objects.Task.get")
@@ -197,9 +198,6 @@ class TaskCommandsTestCase(test.TestCase):
         mock_results = mock.Mock(return_value=data)
         mock_get.return_value = mock.Mock(get_results=mock_results)
         mock_plot.plot.return_value = "html_report"
-        mock_write = mock.Mock()
-        mock_open.return_value.__enter__.return_value = (
-            mock.Mock(write=mock_write))
 
         def reset_mocks():
             for m in mock_get, mock_web, mock_plot, mock_open:
@@ -208,7 +206,7 @@ class TaskCommandsTestCase(test.TestCase):
         mock_open.assert_called_once_with("/tmp/%s.html" % task_id, "w+")
         mock_plot.plot.assert_called_once_with(results)
 
-        mock_write.assert_called_once_with("html_report")
+        mock_open.side_effect().write.assert_called_once_with("html_report")
         mock_get.assert_called_once_with(task_id)
 
         reset_mocks()
@@ -220,7 +218,8 @@ class TaskCommandsTestCase(test.TestCase):
                 return_value=None)
     @mock.patch("rally.cmd.commands.task.os.path.realpath",
                 side_effect=lambda p: "realpath_%s" % p)
-    @mock.patch("rally.cmd.commands.task.open", create=True)
+    @mock.patch("rally.cmd.commands.task.open",
+                side_effect=mock.mock_open(), create=True)
     @mock.patch("rally.cmd.commands.task.plot")
     @mock.patch("rally.cmd.commands.task.webbrowser")
     @mock.patch("rally.cmd.commands.task.objects.Task.get")
@@ -252,9 +251,6 @@ class TaskCommandsTestCase(test.TestCase):
         mock_results = mock.Mock(return_value=data)
         mock_get.return_value = mock.Mock(get_results=mock_results)
         mock_plot.plot.return_value = "html_report"
-        mock_write = mock.Mock()
-        mock_open.return_value.__enter__.return_value = (
-            mock.Mock(write=mock_write))
 
         def reset_mocks():
             for m in mock_get, mock_web, mock_plot, mock_open:
@@ -263,7 +259,7 @@ class TaskCommandsTestCase(test.TestCase):
         mock_open.assert_called_once_with("/tmp/1_test.html", "w+")
         mock_plot.plot.assert_called_once_with(results)
 
-        mock_write.assert_called_once_with("html_report")
+        mock_open.side_effect().write.assert_called_once_with("html_report")
         expected_get_calls = [mock.call(task) for task in tasks]
         mock_get.assert_has_calls(expected_get_calls, any_order=True)
 
@@ -297,11 +293,9 @@ class TaskCommandsTestCase(test.TestCase):
                       data)
 
         mock_plot.plot.return_value = "html_report"
-        mock_write = mock.Mock()
-        mock_read = mock.MagicMock(return_value=results)
+        mock_open.side_effect = mock.mock_open(read_data=results)
+
         mock_json_load.return_value = results
-        mock_open.return_value.__enter__.return_value = (
-            mock.Mock(write=mock_write, read=mock_read))
 
         def reset_mocks():
             for m in mock_plot, mock_open, mock_json_load, mock_validate:
@@ -312,7 +306,7 @@ class TaskCommandsTestCase(test.TestCase):
         mock_open.assert_has_calls(expected_open_calls, any_order=True)
         mock_plot.plot.assert_called_once_with(results)
 
-        mock_write.assert_called_once_with("html_report")
+        mock_open.side_effect().write.assert_called_once_with("html_report")
 
     @mock.patch("rally.cmd.commands.task.os.path.exists", return_value=True)
     @mock.patch("rally.cmd.commands.task.json.load")
@@ -326,11 +320,8 @@ class TaskCommandsTestCase(test.TestCase):
                       "load_duration": 0.1,
                       "full_duration": 1.2}}]
 
-        mock_write = mock.Mock()
-        mock_read = mock.MagicMock(return_value=results)
+        mock_open.side_effect = mock.mock_open(read_data=results)
         mock_json_load.return_value = results
-        mock_open.return_value.__enter__.return_value = (
-            mock.Mock(write=mock_write, read=mock_read))
 
         ret = self.task.report(tasks="/tmp/task.json",
                                out="/tmp/tmp.hsml")

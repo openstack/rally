@@ -35,15 +35,13 @@ class VMScenarioTestCase(test.TestCase):
                                         ".bench_utils.wait_for")
         self.useFixture(self.wait_for)
 
-    @mock.patch('__builtin__.open')
+    @mock.patch('__builtin__.open', side_effect=mock.mock_open(), create=True)
     def test_run_action(self, mock_open):
         mock_ssh = mock.MagicMock()
-        mock_file_handle = mock.MagicMock()
-        mock_open.return_value = mock_file_handle
         vm_scenario = utils.VMScenario()
         vm_scenario.run_action(mock_ssh, 'interpreter', 'script')
         mock_ssh.execute.assert_called_once_with('interpreter',
-                                                 stdin=mock_file_handle)
+                                                 stdin=mock_open.side_effect())
 
     def test_wait_for_ssh(self):
         ssh = mock.MagicMock()
