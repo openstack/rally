@@ -15,7 +15,7 @@
 
 import pecan
 
-from rally import log as logging
+from rally.common import log as logging
 
 
 def setup_app(config):

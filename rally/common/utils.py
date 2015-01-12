@@ -30,8 +30,8 @@ from sphinx.util import docstrings
 
 import rally
 from rally.common.i18n import _
+from rally.common import log as logging
 from rally import exceptions
-from rally import log as logging
 
 LOG = logging.getLogger(__name__)
 

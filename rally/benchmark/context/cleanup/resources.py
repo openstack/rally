@@ -18,7 +18,7 @@ from neutronclient.common import exceptions as neutron_exceptions
 from rally.benchmark.context.cleanup import base
 from rally.benchmark.scenarios.keystone import utils as kutils
 from rally.benchmark.wrappers import keystone as keystone_wrapper
-from rally import log as logging
+from rally.common import log as logging
 
 
 LOG = logging.getLogger(__name__)

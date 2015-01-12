@@ -17,8 +17,8 @@ from rally.benchmark.scenarios import base
 from rally.benchmark.scenarios.sahara import utils
 from rally.benchmark import types
 from rally.benchmark import validation
+from rally.common import log as logging
 from rally import consts
-from rally import log as logging
 
 LOG = logging.getLogger(__name__)
 

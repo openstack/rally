@@ -25,10 +25,10 @@ from oslo.config import cfg
 import six
 
 from rally.common.i18n import _
+from rally.common import log as logging
 from rally.common import utils
 from rally.common import version
 from rally import exceptions
-from rally import log as logging
 from rally.openstack.common import cliutils
 
 

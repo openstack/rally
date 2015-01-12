@@ -23,10 +23,10 @@ from rally.benchmark import utils
 from rally.benchmark.wrappers import keystone
 from rally.common import broker
 from rally.common.i18n import _
+from rally.common import log as logging
 from rally.common import utils as rutils
 from rally import consts
 from rally import exceptions
-from rally import log as logging
 from rally import objects
 from rally import osclients
 

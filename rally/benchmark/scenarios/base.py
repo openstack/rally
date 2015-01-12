@@ -20,10 +20,10 @@ import random
 import string
 import time
 
+from rally.common import log as logging
 from rally.common import utils
 from rally import consts
 from rally import exceptions
-from rally import log as logging
 
 
 LOG = logging.getLogger(__name__)

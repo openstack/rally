@@ -22,10 +22,10 @@ import six
 from six import moves
 
 from rally.common.i18n import _
+from rally.common import log as logging
 from rally.common import utils
 from rally.deploy.serverprovider import provider
 from rally import exceptions
-from rally import log as logging
 
 
 LOG = logging.getLogger(__name__)

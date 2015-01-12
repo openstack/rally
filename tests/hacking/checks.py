@@ -116,7 +116,7 @@ def check_import_of_logging(logical_line, filename):
     N310
     """
 
-    excluded_files = ["./rally/log.py", "./tests/unit/test_log.py"]
+    excluded_files = ["./rally/common/log.py", "./tests/unit/test_log.py"]
 
     forbidden_imports = ["from rally.openstack.common import log",
                          "import rally.openstack.common.log",
@@ -126,7 +126,7 @@ def check_import_of_logging(logical_line, filename):
         for forbidden_import in forbidden_imports:
             if logical_line.startswith(forbidden_import):
                 yield (0, "N310 Wrong module for logging is imported. Please "
-                          "use `rally.log` instead.")
+                          "use `rally.common.log` instead.")
 
 
 def no_translate_debug_logs(logical_line):
@@ -156,12 +156,13 @@ def no_use_conf_debug_check(logical_line, filename):
 
     N312
     """
-    excluded_files = ["./rally/log.py"]
+    excluded_files = ["./rally/common/log.py"]
 
     point = logical_line.find("CONF.debug")
     if point != -1 and filename not in excluded_files:
         yield(point, "N312 Don't use `CONF.debug`. "
-                     "Function `rally.log.is_debug` should be used instead.")
+                     "Function `rally.common.log.is_debug` "
+                     "should be used instead.")
 
 
 def assert_true_instance(logical_line):

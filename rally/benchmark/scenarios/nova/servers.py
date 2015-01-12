@@ -21,9 +21,9 @@ from rally.benchmark.scenarios.nova import utils
 from rally.benchmark.scenarios import utils as scenario_utils
 from rally.benchmark import types as types
 from rally.benchmark import validation
+from rally.common import log as logging
 from rally import consts
 from rally import exceptions as rally_exceptions
-from rally import log as logging
 
 
 LOG = logging.getLogger(__name__)

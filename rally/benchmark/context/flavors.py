@@ -14,9 +14,9 @@
 #    under the License.
 
 from rally.benchmark.context import base
+from rally.common import log as logging
 from rally.common import utils as rutils
 from rally import consts
-from rally import log as logging
 from rally import osclients
 
 LOG = logging.getLogger(__name__)

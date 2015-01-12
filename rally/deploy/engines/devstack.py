@@ -18,11 +18,11 @@ import os
 import six
 
 from rally.common.i18n import _
+from rally.common import log as logging
 from rally.common import utils
 from rally import consts
 from rally.deploy import engine
 from rally.deploy.serverprovider import provider
-from rally import log as logging
 from rally import objects
 
 
