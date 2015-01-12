@@ -45,9 +45,9 @@ class SaharaCluster(base.Context):
             "hadoop_version": {
                 "type": "string",
             },
-            "node_count": {
+            "workers_count": {
                 "type": "integer",
-                "minimum": 2
+                "minimum": 1
             },
             "flavor_id": {
                 "type": "string",
@@ -80,7 +80,7 @@ class SaharaCluster(base.Context):
             }
         },
         "additionalProperties": False,
-        "required": ["plugin_name", "hadoop_version", "node_count",
+        "required": ["plugin_name", "hadoop_version", "workers_count",
                      "flavor_id"]
     }
 
@@ -106,7 +106,7 @@ class SaharaCluster(base.Context):
                     plugin_name=self.config["plugin_name"],
                     hadoop_version=self.config["hadoop_version"],
                     flavor_id=self.config["flavor_id"],
-                    node_count=self.config["node_count"],
+                    workers_count=self.config["workers_count"],
                     image_id=image_id,
                     floating_ip_pool=floating_ip_pool,
                     volumes_per_node=self.config.get("volumes_per_node"),

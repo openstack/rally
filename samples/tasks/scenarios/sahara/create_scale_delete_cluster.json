@@ -5,7 +5,7 @@
                 "flavor": {
                     "name": "m1.small"
                 },
-                "node_count": 2,
+                "workers_count": 3,
                 "deltas": [1, -1, 1, -1],
                 "plugin_name": "vanilla",
                 "hadoop_version": "2.3.0",
