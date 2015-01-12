@@ -21,8 +21,8 @@ class Endpoint(object):
     def __init__(self, auth_url, username, password, tenant_name=None,
                  permission=consts.EndpointPermission.USER,
                  region_name=None, endpoint_type=consts.EndpointType.PUBLIC,
-                 admin_port=None, domain_name=None,
-                 user_domain_name='Default', project_domain_name='Default'):
+                 admin_port=None, domain_name=None, endpoint=None,
+                 user_domain_name="Default", project_domain_name="Default"):
         self.auth_url = auth_url
         self.username = username
         self.password = password
@@ -33,6 +33,7 @@ class Endpoint(object):
         self.domain_name = domain_name
         self.user_domain_name = user_domain_name
         self.project_domain_name = project_domain_name
+        self.endpoint = endpoint
         if admin_port:
             import warnings
             warnings.warn("'admin_port' argument is deprecated and will "
@@ -44,6 +45,7 @@ class Endpoint(object):
                "region_name": self.region_name,
                "endpoint_type": self.endpoint_type,
                "domain_name": self.domain_name,
+               "endpoint": self.endpoint,
                "user_domain_name": self.user_domain_name,
                "project_domain_name": self.project_domain_name}
         if include_permission:

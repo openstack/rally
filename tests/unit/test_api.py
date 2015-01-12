@@ -51,6 +51,7 @@ class APITestCase(test.TestCase):
         self.deploy_uuid = "599bdf1d-fe77-461a-a810-d59b1490f4e3"
         admin_endpoint = FAKE_DEPLOY_CONFIG.copy()
         admin_endpoint.pop("type")
+        admin_endpoint["endpoint"] = None
         admin_endpoint.update(admin_endpoint.pop("admin"))
         admin_endpoint["permission"] = consts.EndpointPermission.ADMIN
         self.endpoints = {"admin": admin_endpoint, "users": []}

@@ -57,6 +57,7 @@ class TestExistingCloud(test.TestCase):
         endpoints = engine.deploy()
         admin_endpoint = self.deployment["config"].copy()
         admin_endpoint.pop("type")
+        admin_endpoint["endpoint"] = None
         admin_endpoint.update(admin_endpoint.pop("admin"))
         self.assertEqual(admin_endpoint, endpoints["admin"].to_dict())
         self.assertEqual([], endpoints["users"])

@@ -117,6 +117,7 @@ class ExistingCloud(engine.EngineFactory):
             region_name=common.get("region_name"),
             endpoint_type=common.get("endpoint_type",
                                      consts.EndpointType.PUBLIC),
+            endpoint=common.get("endpoint"),
             domain_name=user.get("domain_name"),
             user_domain_name=user.get("user_domain_name", "Default"),
             project_domain_name=user.get("project_domain_name", "Default")
