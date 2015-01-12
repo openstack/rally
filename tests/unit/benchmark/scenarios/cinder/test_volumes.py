@@ -50,7 +50,8 @@ class CinderServersTestCase(test.TestCase):
         scenario.sleep_between = mock.MagicMock()
         scenario._delete_volume = mock.MagicMock()
 
-        scenario.create_and_delete_volume(1, 10, 20, fakearg="f")
+        scenario.create_and_delete_volume(size=1, min_sleep=10, max_sleep=20,
+                                          fakearg="f")
 
         scenario._create_volume.assert_called_once_with(1, fakearg="f")
         scenario.sleep_between.assert_called_once_with(10, 20)
@@ -78,6 +79,38 @@ class CinderServersTestCase(test.TestCase):
         self.assertTrue(scenario._extend_volume.called)
         scenario.sleep_between.assert_called_once_with(10, 20)
         scenario._delete_volume.assert_called_once_with(fake_volume)
+
+    def test_create_from_image_and_delete_volume(self):
+        fake_volume = mock.MagicMock()
+        scenario = volumes.CinderVolumes()
+        scenario._create_volume = mock.MagicMock(return_value=fake_volume)
+        scenario._delete_volume = mock.MagicMock()
+
+        scenario.create_and_delete_volume(1, image="fake_image")
+        scenario._create_volume.assert_called_once_with(1,
+                                                        imageRef="fake_image")
+
+        scenario._delete_volume.assert_called_once_with(fake_volume)
+
+    def test_create_volume_from_image(self):
+        fake_volume = mock.MagicMock()
+        scenario = volumes.CinderVolumes()
+        scenario._create_volume = mock.MagicMock(return_value=fake_volume)
+
+        scenario.create_volume(1, image="fake_image")
+        scenario._create_volume.assert_called_once_with(1,
+                                                        imageRef="fake_image")
+
+    def test_create_volume_from_image_and_list(self):
+        fake_volume = mock.MagicMock()
+        scenario = volumes.CinderVolumes()
+        scenario._create_volume = mock.MagicMock(return_value=fake_volume)
+        scenario._list_volumes = mock.MagicMock()
+
+        scenario.create_and_list_volume(1, True, "fake_image")
+        scenario._create_volume.assert_called_once_with(1,
+                                                        imageRef="fake_image")
+        scenario._list_volumes.assert_called_once_with(True)
 
     def test_create_and_delete_snapshot(self):
         fake_snapshot = mock.MagicMock()

@@ -1,0 +1,23 @@
+{
+    "CinderVolumes.create_and_delete_volume": [
+        {
+            "args": {
+                "size": 1,
+                "image": {
+                    "name": "^cirros.*uec$"
+                }
+            },
+            "runner": {
+                "type": "constant",
+                "times": 2,
+                "concurrency": 2
+            },
+            "context": {
+                "users": {
+                    "tenants": 2,
+                    "users_per_tenant": 2
+                }
+            }
+        }
+    ]
+}

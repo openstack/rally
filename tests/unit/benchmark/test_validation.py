@@ -230,6 +230,12 @@ class ValidatorsTestCase(test.TestCase):
         result = validator({}, "clients", "deployment")
         self.assertFalse(result.is_valid, result.msg)
 
+    def test_image_exists_nullable(self):
+        validator = self._unwrap_validator(validation.image_exists,
+                                           "param", nullable=True)
+        result = validator({}, "clients", "deployment")
+        self.assertTrue(result.is_valid, result.msg)
+
     def test_flavor_exists(self):
         validator = self._unwrap_validator(validation.flavor_exists, "param")
         result = validator({}, "clients", "deployment")

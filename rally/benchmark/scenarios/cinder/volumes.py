@@ -30,10 +30,13 @@ class CinderVolumes(utils.CinderScenario,
                     nova_utils.NovaScenario):
     """Benchmark scenarios for Cinder Volumes."""
 
+    @types.set(image=types.ImageResourceType)
+    @validation.image_exists("image", nullable=True)
     @validation.required_services(consts.Service.CINDER)
     @validation.required_openstack(users=True)
     @base.scenario(context={"cleanup": ["cinder"]})
-    def create_and_list_volume(self, size, detailed=True, **kwargs):
+    def create_and_list_volume(self, size, detailed=True,
+                               image=None, **kwargs):
         """Create a volume and list all volumes.
 
         Measure the "cinder volume-list" command performance.
@@ -47,8 +50,12 @@ class CinderVolumes(utils.CinderScenario,
         :param size: volume size (in GB)
         :param detailed: determines whether the volume listing should contain
                          detailed information about all of them
+        :param image: image to be used to create volume
         :param kwargs: optional args to create a volume
         """
+        if image:
+            kwargs["imageRef"] = image
+
         self._create_volume(size, **kwargs)
         self._list_volumes(detailed)
 
@@ -67,10 +74,13 @@ class CinderVolumes(utils.CinderScenario,
 
         self._list_volumes(detailed)
 
+    @types.set(image=types.ImageResourceType)
+    @validation.image_exists("image", nullable=True)
     @validation.required_services(consts.Service.CINDER)
     @validation.required_openstack(users=True)
     @base.scenario(context={"cleanup": ["cinder"]})
-    def create_and_delete_volume(self, size, min_sleep=0, max_sleep=0,
+    def create_and_delete_volume(self, size, image=None,
+                                 min_sleep=0, max_sleep=0,
                                  **kwargs):
         """Create and then delete a volume.
 
@@ -80,28 +90,38 @@ class CinderVolumes(utils.CinderScenario,
         [min_sleep, max_sleep]).
 
         :param size: volume size (in GB)
+        :param image: image to be used to create volume
         :param min_sleep: minimum sleep time between volume creation and
                           deletion (in seconds)
         :param max_sleep: maximum sleep time between volume creation and
                           deletion (in seconds)
         :param kwargs: optional args to create a volume
         """
+        if image:
+            kwargs["imageRef"] = image
+
         volume = self._create_volume(size, **kwargs)
         self.sleep_between(min_sleep, max_sleep)
         self._delete_volume(volume)
 
+    @types.set(image=types.ImageResourceType)
+    @validation.image_exists("image", nullable=True)
     @validation.required_services(consts.Service.CINDER)
     @validation.required_openstack(users=True)
     @base.scenario(context={"cleanup": ["cinder"]})
-    def create_volume(self, size, **kwargs):
+    def create_volume(self, size, image=None, **kwargs):
         """Create a volume.
 
         Good test to check how influence amount of active volumes on
         performance of creating new.
 
         :param size: volume size (in GB)
+        :param image: image to be used to create volume
         :param kwargs: optional args to create a volume
         """
+        if image:
+            kwargs["imageRef"] = image
+
         self._create_volume(size, **kwargs)
 
     @validation.required_services(consts.Service.CINDER)

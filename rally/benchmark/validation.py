@@ -198,12 +198,16 @@ def _get_validated_flavor(config, clients, param_name):
 
 
 @validator
-def image_exists(config, clients, deployment, param_name):
+def image_exists(config, clients, deployment, param_name, nullable=False):
     """Returns validator for image_id
 
     :param param_name: defines which variable should be used
                        to get image id value.
+    :param nullable: defines image id param is required
     """
+    image_value = config.get("args", {}).get(param_name)
+    if not image_value and nullable:
+        return ValidationResult(True)
     return _get_validated_image(config, clients, param_name)[0]
 
 
