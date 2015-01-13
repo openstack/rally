@@ -131,12 +131,13 @@ class NovaSecGroup(utils.NovaScenario):
                 raise NovaSecurityGroupException(e.message)
             raise
 
-        if sorted([sg.id for sg in security_groups]) != sorted(
-                [sg.id for sg in attached_security_groups]):
-            raise NovaSecurityGroupException(
-                "Expected number of attached security groups to server "
-                "%(server)s is '%(all)s', but actual number is '%(attached)s'."
-                % {
-                    "attached": len(attached_security_groups),
-                    "all": len(security_groups),
-                    "server": server})
+        error_message = ("Expected number of attached security groups to "
+                         " server %(server)s is '%(all)s', but actual number "
+                         "is '%(attached)s'." % {
+                             "attached": len(attached_security_groups),
+                             "all": len(security_groups),
+                             "server": server})
+
+        self.assertEqual(sorted([sg.id for sg in security_groups]),
+                         sorted([sg.id for sg in attached_security_groups]),
+                         error_message)

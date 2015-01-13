@@ -19,6 +19,7 @@ import itertools
 import random
 import time
 
+from rally.benchmark import functional
 from rally.common import costilius
 from rally.common import log as logging
 from rally.common import utils
@@ -45,7 +46,7 @@ def scenario(context=None):
     return wrapper
 
 
-class Scenario(object):
+class Scenario(functional.FunctionalMixin):
     """This is base class for any benchmark scenario.
 
        You should create subclass of this class. And your test scenarios will
