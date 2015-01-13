@@ -86,6 +86,7 @@ def _run_scenario_once(args):
                   "status": status})
 
         return {"duration": timer.duration() - scenario.idle_duration(),
+                "timestamp": str(timer.timestamp()),
                 "idle_duration": scenario.idle_duration(),
                 "error": error,
                 "scenario_output": scenario_output,
@@ -101,6 +102,10 @@ class ScenarioRunnerResult(dict):
         "properties": {
             "duration": {
                 "type": "number"
+            },
+            "timestamp": {
+                "type": "string",
+                "format": "date-time"
             },
             "idle_duration": {
                 "type": "number"
