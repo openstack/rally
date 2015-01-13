@@ -30,7 +30,7 @@ class Root(wtypes.Base):
     @classmethod
     def convert(self, name, description, versions):
         root = Root(name=name, description=description)
-        root.versions = [v.get()['result'] for v in versions]
+        root.versions = [v.get()["result"] for v in versions]
         return root
 
 

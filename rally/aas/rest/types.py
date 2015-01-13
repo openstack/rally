@@ -56,9 +56,9 @@ class Version(wtypes.Base):
         v = Version(id=id, status=status, updated_at=updated_at)
         if media_types is None:
             mime_type = "application/vnd.openstack.rally.%s+json" % id
-            media_types = [MediaType('application/json', mime_type)]
+            media_types = [MediaType("application/json", mime_type)]
         v.media_types = media_types
         if links is None:
-            links = [Link.make_link('self', pecan.request.host_url, id)]
+            links = [Link.make_link("self", pecan.request.host_url, id)]
         v.links = links
         return v
