@@ -161,6 +161,15 @@ To run functional tests locally::
 
   #NOTE: openrc file with OpenStack admin credentials
 
+Output of every Rally execution will be collected under some reports root in
+directiry structure like: reports_root/ClassName/MethodName_suffix.extension
+This functionality implemented in tests.functional.utils.Rally.__call__ method.
+Use 'gen_report_path' method of 'Rally' class to get automaticaly generated file
+path and name if you need. You can use it to publish html reports, generated
+during tests.
+Reports root can be passed throw environment variable 'REPORTS_ROOT'. Default is
+'rally-cli-output-files'.
+
 Rally CI scripts
 ^^^^^^^^^^^^^^^^
 
