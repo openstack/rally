@@ -13,7 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import datetime
 import multiprocessing
 import random
 import re
@@ -1318,7 +1317,7 @@ class FakeTimer(rally_utils.Timer):
         return 10
 
     def timestamp(self):
-        return datetime.datetime(2015, 1, 1)
+        return 0
 
 
 @base_ctx.context("fake", order=1)
