@@ -310,7 +310,9 @@ def tempest_tests_exists(config, clients, deployment):
         return ValidationResult(False,
                                 _("Parameter 'test_name' or 'test_names' "
                                   "should be specified."))
-    verifier = tempest.Tempest(deployment["uuid"])
+    verifier = tempest.Tempest(
+        deployment["uuid"],
+        source=config.get("context", {}).get("tempest", {}).get("source"))
     if not verifier.is_installed():
         try:
             verifier.install()
