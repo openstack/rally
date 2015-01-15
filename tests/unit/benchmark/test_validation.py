@@ -424,8 +424,10 @@ class ValidatorsTestCase(test.TestCase):
 
     def test_tempest_set_exists(self):
         validator = self._unwrap_validator(validation.tempest_set_exists)
+        sets = list(list(consts.TempestTestsSets) +
+                    list(consts.TempestTestsAPI))
         result = validator(
-            {"args": {"set_name": consts.TEMPEST_TEST_SETS[0]}}, None, None)
+            {"args": {"set_name": sets[0]}}, None, None)
         self.assertTrue(result.is_valid, result.msg)
 
         result = validator(

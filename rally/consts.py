@@ -24,20 +24,24 @@ for each enum. (e.g TaskStatus)
 from rally.common import utils
 
 
-TEMPEST_TEST_SETS = ("full",
-                     "smoke",
-                     "baremetal",
-                     "compute",
-                     "dns",
-                     "data_processing",
-                     "identity",
-                     "image",
-                     "network",
-                     "object_storage",
-                     "orchestration",
-                     "telemetry",
-                     "volume")
+class _TempestTestsAPI(utils.ImmutableMixin, utils.EnumMixin):
+    BAREMTAL = "baremetal"
+    COMPUTE = "compute"
+    DNS = "dns"
+    DATA_PROCCESING = "data_processing"
+    IDENTITY = "identity"
+    IMAGE = "image"
+    NETWORK = "network"
+    OBJECT_STORAGE = "object_storage"
+    ORCHESTRATION = "orchestration"
+    TELEMETRY = "telemetry"
+    VOLUME = "volume"
 
+
+class _TempestTestsSets(utils.ImmutableMixin, utils.EnumMixin):
+    FULL = "full"
+    SMOKE = "smoke"
+    SCENARIO = "scenario"
 
 JSON_SCHEMA = "http://json-schema.org/draft-04/schema"
 
@@ -164,3 +168,5 @@ RunnerType = _RunnerType()
 ServiceType = _ServiceType()
 Service = _Service()
 EndpointType = _EndpointType()
+TempestTestsAPI = _TempestTestsAPI()
+TempestTestsSets = _TempestTestsSets()

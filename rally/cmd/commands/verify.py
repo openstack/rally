@@ -49,7 +49,8 @@ class VerifyCommands(object):
                    required=False, help="UUID or name of a deployment.")
     @cliutils.args("--set", dest="set_name", type=str, required=False,
                    help="Name of tempest test set. Available sets: %s" % ", ".
-                   join(consts.TEMPEST_TEST_SETS))
+                   join(list(consts.TempestTestsSets) +
+                        list(consts.TempestTestsAPI)))
     @cliutils.args("--regex", dest="regex", type=str, required=False,
                    help="Regular expression of test.")
     @cliutils.args("--tempest-config", dest="tempest_config", type=str,
@@ -73,9 +74,11 @@ class VerifyCommands(object):
                                                        "are not compatible")
         if not (regex or set_name):
             set_name = "full"
-        if set_name and set_name not in consts.TEMPEST_TEST_SETS:
+        if set_name and set_name not in (list(consts.TempestTestsSets) +
+                                         list(consts.TempestTestsAPI)):
             print("Sorry, but there are no desired tempest test set. Please "
-                  "choose from: %s" % ", ".join(consts.TEMPEST_TEST_SETS))
+                  "choose from: %s" % ", ".join(list(consts.TempestTestsSets) +
+                                                list(consts.TempestTestsAPI)))
             return (1)
         verification = api.verify(deployment, set_name, regex,
                                   tempest_config)

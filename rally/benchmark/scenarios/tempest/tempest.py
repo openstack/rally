@@ -34,7 +34,7 @@ class TempestScenario(base.Scenario):
         :param tempest_conf: User specified tempest.conf location
         """
         if (not test_name.startswith("tempest.api.")
-                and test_name.split(".")[0] in consts.TEMPEST_TEST_SETS):
+                and test_name.split(".")[0] in consts.TempestTestsAPI):
             test_name = "tempest.api." + test_name
 
         self.context["verifier"].run(test_name, log_file=log_file,

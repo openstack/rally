@@ -24,6 +24,7 @@ from oslo_serialization import jsonutils
 from rally.common.i18n import _
 from rally.common import log as logging
 from rally.common import utils
+from rally import consts
 from rally import exceptions
 from rally.verification.tempest import config
 from rally.verification.tempest import subunit2json
@@ -173,15 +174,11 @@ class Tempest(object):
 
         if set_name == "full":
             testr_arg = ""
-        elif set_name == "smoke":
-            testr_arg = "smoke"
         else:
-            if set_name:
+            if set_name in consts.TempestTestsAPI:
                 testr_arg = "tempest.api.%s" % set_name
-            elif regex:
-                testr_arg = regex
             else:
-                testr_arg = ""
+                testr_arg = set_name or regex
 
         self.verification.start_verifying(set_name)
         try:

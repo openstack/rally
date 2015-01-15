@@ -342,7 +342,8 @@ def tempest_set_exists(config, clients, deployment):
     if not set_name:
         return ValidationResult(False, "`set_name` is not specified.")
 
-    if set_name not in consts.TEMPEST_TEST_SETS:
+    if set_name not in (list(consts.TempestTestsSets) +
+                        list(consts.TempestTestsAPI)):
         message = _("There is no tempest set with name '%s'.") % set_name
         return ValidationResult(False, message)
 

@@ -90,7 +90,8 @@ class VerifyCommandsTestCase(test.TestCase):
 
         self.verify.start(deployment_id, wrong_set_name)
 
-        self.assertNotIn(wrong_set_name, consts.TEMPEST_TEST_SETS)
+        self.assertNotIn(wrong_set_name, consts.TempestTestsSets,
+                         consts.TempestTestsAPI)
         self.assertFalse(mock_verify.called)
 
     @mock.patch("rally.openstack.common.cliutils.print_list")
