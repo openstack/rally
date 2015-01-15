@@ -103,7 +103,7 @@ class ScenarioHelpersTestCase(test.TestCase):
 
         expected_result = {
             "duration": fakes.FakeTimer().duration(),
-            "timestamp": str(fakes.FakeTimer().timestamp()),
+            "timestamp": fakes.FakeTimer().timestamp(),
             "idle_duration": 0,
             "error": [],
             "scenario_output": {"errors": "", "data": {}},
@@ -122,7 +122,7 @@ class ScenarioHelpersTestCase(test.TestCase):
 
         expected_result = {
             "duration": fakes.FakeTimer().duration(),
-            "timestamp": str(fakes.FakeTimer().timestamp()),
+            "timestamp": fakes.FakeTimer().timestamp(),
             "idle_duration": 0,
             "error": [],
             "scenario_output": fakes.FakeScenario().with_output(),
@@ -140,7 +140,7 @@ class ScenarioHelpersTestCase(test.TestCase):
         expected_error = result.pop("error")
         expected_result = {
             "duration": fakes.FakeTimer().duration(),
-            "timestamp": str(fakes.FakeTimer().timestamp()),
+            "timestamp": fakes.FakeTimer().timestamp(),
             "idle_duration": 0,
             "scenario_output": {"errors": "", "data": {}},
             "atomic_actions": {}
