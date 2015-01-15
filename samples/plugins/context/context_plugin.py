@@ -1,3 +1,17 @@
+# Copyright 2013: Mirantis Inc.
+# All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
 
 from rally.benchmark.context import base
 from rally.common import log as logging
@@ -9,9 +23,10 @@ LOG = logging.getLogger(__name__)
 
 @base.context(name="create_flavor", order=1000)
 class CreateFlavorContext(base.Context):
-    """This sample create flavor with specified options before task starts and
-    delete it after task completion.
+    """Create sample flavor
 
+    This sample create flavor with specified options before task starts and
+    delete it after task completion.
     To create your own context plugin, inherit it from
     rally.benchmark.context.base.Context
     """
@@ -40,7 +55,7 @@ class CreateFlavorContext(base.Context):
     }
 
     def setup(self):
-        """This method is called before task start"""
+        """This method is called before task start."""
         try:
             # use rally.osclients to get nessesary client instance
             nova = osclients.Clients(self.context["admin"]["endpoint"]).nova()
@@ -60,7 +75,7 @@ class CreateFlavorContext(base.Context):
                 LOG.warning(msg)
 
     def cleanup(self):
-        """This method is called after task finish"""
+        """This method is called after task finish."""
         try:
             nova = osclients.Clients(self.context["admin"]["endpoint"]).nova()
             nova.flavors.delete(self.context["flavor"]["id"])

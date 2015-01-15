@@ -30,7 +30,7 @@ class TaskSampleTestCase(test.TestCase):
     samples_path = os.path.join(
         os.path.dirname(__file__),
         os.pardir, os.pardir, os.pardir,
-        "doc", "samples", "tasks")
+        "samples", "tasks")
 
     @mock.patch("rally.benchmark.engine.BenchmarkEngine"
                 "._validate_config_semantic")
