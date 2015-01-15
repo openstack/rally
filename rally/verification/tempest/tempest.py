@@ -28,6 +28,8 @@ from rally import exceptions
 from rally.verification.tempest import config
 from rally.verification.tempest import subunit2json
 
+TEMPEST_SOURCE = "https://github.com/openstack/tempest"
+
 LOG = logging.getLogger(__name__)
 
 
@@ -52,7 +54,9 @@ class Tempest(object):
 
     base_repo = os.path.join(os.path.expanduser("~"), ".rally/tempest/base")
 
-    def __init__(self, deployment, verification=None, tempest_config=None):
+    def __init__(self, deployment, verification=None, tempest_config=None,
+                 source=None):
+        self.tempest_source = source or TEMPEST_SOURCE
         self.deployment = deployment
         self._path = os.path.join(os.path.expanduser("~"),
                                   ".rally/tempest",
@@ -129,19 +133,18 @@ class Tempest(object):
     def is_installed(self):
         return os.path.exists(self.path(".venv"))
 
-    @staticmethod
-    def _clone():
+    def _clone(self):
         print("Please wait while tempest is being cloned. "
               "This could take a few minutes...")
         subprocess.check_call(["git", "clone",
-                               "https://github.com/openstack/tempest",
+                               self.tempest_source,
                                Tempest.base_repo])
 
     def install(self):
         if not self.is_installed():
             try:
                 if not os.path.exists(Tempest.base_repo):
-                    Tempest._clone()
+                    self._clone()
 
                 if not os.path.exists(self.path()):
                     shutil.copytree(Tempest.base_repo, self.path())

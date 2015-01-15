@@ -42,12 +42,15 @@ class TempestCommands(object):
         required=False, help="UUID of the deployment.")
     @cliutils.args("--deployment", type=str, dest="deployment",
                    required=False, help="UUID or name of the deployment")
+    @cliutils.args("--source", type=str, dest="source",
+                   required=False, help="Path/URL to repo to pull tempest "
+                                        "from.")
     @envutils.with_default_deployment
-    def install(self, deployment=None):
+    def install(self, deployment=None, source=None):
         """Install tempest."""
 
         deployment_uuid = db.deployment_get(deployment)['uuid']
-        verifier = tempest.Tempest(deployment_uuid)
+        verifier = tempest.Tempest(deployment_uuid, source=source)
         verifier.install()
 
 
