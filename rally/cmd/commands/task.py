@@ -19,6 +19,7 @@ from __future__ import print_function
 import json
 import os
 import pprint
+import sys
 import webbrowser
 
 import jsonschema
@@ -41,79 +42,179 @@ from rally import objects
 from rally.openstack.common import cliutils as common_cliutils
 
 
+class FailedToLoadTask(exceptions.RallyException):
+    msg_fmt = _("Failed to load task")
+
+
 class TaskCommands(object):
     """Task management.
 
     Set of commands that allow you to manage benchmarking tasks and results.
     """
 
+    def _load_task(self, task_file, task_args=None, task_args_file=None):
+        """Load tasks template from file and render it with passed args.
+
+        :param task_file: Path to file with input task
+        :param task_args: JSON or YAML representation of dict with args that
+                          will be used to render input task with jinja2
+        :param task_args_file: Path to file with JSON or YAML representation
+                               of dict, that will be used to render input
+                               with jinja2. If both specified task_args and
+                               task_args_file they will be merged. task_args
+                               has bigger priority so it will update values
+                               from task_args_file.
+        :returns: Str with loaded and rendered task
+        """
+        print(cliutils.make_header("Preparing input task"))
+
+        def print_invalid_header(source_name, args):
+            print(_("Invalid %(source)s passed: \n\n %(args)s \n")
+                  % {"source": source_name, "args": args},
+                  file=sys.stderr)
+
+        def parse_task_args(src_name, args):
+            try:
+                kw = args and yaml.safe_load(args)
+                kw = {} if kw is None else kw
+            except yaml.parser.ParserError as e:
+                print_invalid_header(src_name, args)
+                print(_("%(source)s has to be YAML or JSON. Details:"
+                        "\n\n%(err)s\n")
+                      % {"source": src_name, "err": e},
+                      file=sys.stderr)
+                raise TypeError()
+
+            if not isinstance(kw, dict):
+                print_invalid_header(src_name, args)
+                print(_("%(src)s has to be dict, actually %(src_type)s\n")
+                      % {"src": src_name, "src_type": type(kw)},
+                      file=sys.stderr)
+                raise TypeError()
+            return kw
+
+        try:
+            kw = {}
+            if task_args_file:
+                with open(task_args_file) as f:
+                    kw.update(parse_task_args("task_args_file", f.read()))
+            kw.update(parse_task_args("task_args", task_args))
+        except TypeError:
+            raise FailedToLoadTask()
+
+        with open(task_file) as f:
+            try:
+                input_task = f.read()
+                rendered_task = api.task_template_render(input_task, **kw)
+            except Exception as e:
+                print(_("Failed to render task template:\n%(task)s\n%(err)s\n")
+                      % {"task": input_task, "err": e},
+                      file=sys.stderr)
+                raise FailedToLoadTask()
+
+            print(_("Input task is:\n%s\n") % rendered_task)
+            try:
+                return yaml.safe_load(rendered_task)
+            except Exception as e:
+                print(_("Wrong format of rendered input task. It should be "
+                        "YAML or JSON.\n%s") % e,
+                      file=sys.stderr)
+                raise FailedToLoadTask()
+
     @cliutils.deprecated_args(
         "--deploy-id", dest="deployment", type=str,
         required=False, help="UUID of the deployment.")
-    @cliutils.args('--deployment', type=str, dest='deployment',
-                   required=False, help='UUID or name of the deployment')
-    @cliutils.args('--task', '--filename',
-                   help='Path to the file with full configuration of task')
+    @cliutils.args("--deployment", type=str, dest="deployment",
+                   required=False, help="UUID or name of the deployment")
+    @cliutils.args("--task", "--filename",
+                   help="Path to the file with full configuration of task")
+    @cliutils.args("--task-args", dest="task_args",
+                   help="Input task args (dict in json). These args are used "
+                        "to render input task that is jinja2 template.")
+    @cliutils.args("--task-args-file", dest="task_args_file",
+                   help="Path to the file with input task args (dict in "
+                        "json/yaml). These args are used to render input "
+                        "task that is jinja2 template.")
     @envutils.with_default_deployment
-    def validate(self, task, deployment=None):
+    def validate(self, task, deployment=None, task_args=None,
+                 task_args_file=None):
         """Validate a task configuration file.
 
         This will check that task configuration file has valid syntax and
         all required options of scenarios, contexts, SLA and runners are set.
 
-        :param task: a file with yaml/json configration
+        :param task: a file with yaml/json task
+        :param task_args: Input task args (dict in json/yaml). These args are
+                          used to render input task that is jinja2 template.
+        :param task_args_file: File with input task args (dict in json/yaml).
+                               These args are used to render input task that
+                               is jinja2 template.
         :param deployment: UUID or name of a deployment
         """
-
-        task = os.path.expanduser(task)
-        with open(task, "rb") as task_file:
-            config_dict = yaml.safe_load(task_file.read())
         try:
-            api.task_validate(deployment, config_dict)
+            input_task = self._load_task(task, task_args, task_args_file)
+        except FailedToLoadTask:
+            return(1)
+
+        try:
+            api.task_validate(deployment, input_task)
             print("Task config is valid :)")
         except exceptions.InvalidTaskException as e:
             print("Task config is invalid: \n")
             print(e)
+            return(1)
 
     @cliutils.deprecated_args(
         "--deploy-id", dest="deployment", type=str,
         required=False, help="UUID of the deployment.")
-    @cliutils.args('--deployment', type=str, dest='deployment',
-                   required=False, help='UUID or name of the deployment')
-    @cliutils.args('--task', '--filename',
-                   help='Path to the file with full configuration of task')
-    @cliutils.args('--tag',
-                   help='Tag for this task')
-    @cliutils.args('--no-use', action='store_false', dest='do_use',
-                   help='Don\'t set new task as default for future operations')
+    @cliutils.args("--deployment", type=str, dest="deployment",
+                   required=False, help="UUID or name of the deployment")
+    @cliutils.args("--task", "--filename", help="Path to the input task file")
+    @cliutils.args("--task-args", dest="task_args",
+                   help="Input task args (dict in json). These args are used "
+                        "to render input task that is jinja2 template.")
+    @cliutils.args("--task-args-file", dest="task_args_file",
+                   help="Path to the file with input task args (dict in "
+                        "json/yaml). These args are used to render input "
+                        "task that is jinja2 template.")
+    @cliutils.args("--tag", help="Tag for this task")
+    @cliutils.args("--no-use", action="store_false", dest="do_use",
+                   help="Don't set new task as default for future operations")
     @envutils.with_default_deployment
-    def start(self, task, deployment=None, tag=None, do_use=False):
+    def start(self, task, deployment=None, task_args=None, task_args_file=None,
+              tag=None, do_use=False):
         """Start benchmark task.
 
-        :param task: a file with yaml/json configration
+        :param task: a file with yaml/json task
+        :param task_args: Input task args (dict in json/yaml). These args are
+                          used to render input task that is jinja2 template.
+        :param task_args_file: File with input task args (dict in json/yaml).
+                               These args are used to render input task that
+                               is jinja2 template.
         :param deployment: UUID or name of a deployment
         :param tag: optional tag for this task
         """
-        task = os.path.expanduser(task)
-        with open(task, 'rb') as task_file:
-            config_dict = yaml.safe_load(task_file.read())
-            try:
-                task = api.create_task(deployment, tag)
-                print("=" * 80)
-                print(_("Task %(tag)s %(uuid)s is started")
-                      % {"uuid": task["uuid"], "tag": task["tag"]})
-                print("-" * 80)
-                api.start_task(deployment, config_dict, task=task)
-                self.detailed(task_id=task['uuid'])
-                if do_use:
-                    use.UseCommands().task(task['uuid'])
-            except exceptions.InvalidConfigException:
-                return(1)
-            except KeyboardInterrupt:
-                api.abort_task(task['uuid'])
-                raise
+        try:
+            input_task = self._load_task(task, task_args, task_args_file)
+        except FailedToLoadTask:
+            return(1)
 
-    @cliutils.args('--uuid', type=str, dest='task_id', help='UUID of task')
+        try:
+            task = api.create_task(deployment, tag)
+            print(cliutils.make_header(
+                  _("Task %(tag)s %(uuid)s: started")
+                  % {"uuid": task["uuid"], "tag": task["tag"]}))
+            print("Benchmarking... This can take a while...\n")
+            print("To track task status use:\n")
+            print("\trally task status\n\tor\n\trally task detailed\n")
+            api.start_task(deployment, input_task, task=task)
+            self.detailed(task_id=task["uuid"])
+            if do_use:
+                use.UseCommands().task(task["uuid"])
+        except exceptions.InvalidConfigException:
+            return(1)
+
+    @cliutils.args("--uuid", type=str, dest="task_id", help="UUID of task")
     @envutils.with_default_task_id
     def abort(self, task_id=None):
         """Abort started benchmarking task.
@@ -123,7 +224,7 @@ class TaskCommands(object):
 
         api.abort_task(task_id)
 
-    @cliutils.args('--uuid', type=str, dest='task_id', help='UUID of task')
+    @cliutils.args("--uuid", type=str, dest="task_id", help="UUID of task")
     @envutils.with_default_task_id
     def status(self, task_id=None):
         """Display current status of task.
@@ -133,16 +234,15 @@ class TaskCommands(object):
         """
 
         task = db.task_get(task_id)
-        print(_("Task %(task_id)s is %(status)s.")
-              % {'task_id': task_id, 'status': task['status']})
+        print(_("Task %(task_id)s: %(status)s")
+              % {"task_id": task_id, "status": task["status"]})
 
-    @cliutils.args(
-        '--uuid', type=str, dest='task_id',
-        help=('uuid of task, if --uuid is "last" results of most '
-              'recently created task will be displayed.'))
-    @cliutils.args('--iterations-data', dest='iterations_data',
-                   action='store_true',
-                   help='print detailed results for each iteration')
+    @cliutils.args("--uuid", type=str, dest="task_id",
+                   help=("uuid of task, if --uuid is \"last\" results of most "
+                         "recently created task will be displayed."))
+    @cliutils.args("--iterations-data", dest="iterations_data",
+                   action="store_true",
+                   help="print detailed results for each iteration")
     @envutils.with_default_task_id
     def detailed(self, task_id=None, iterations_data=False):
         """Display results table.
@@ -188,19 +288,15 @@ class TaskCommands(object):
                                        formatters=formatters)
             print()
 
-        if task_id == "last":
-            task = db.task_get_detailed_last()
-            task_id = task.uuid
-        else:
-            task = db.task_get_detailed(task_id)
+        task = db.task_get_detailed(task_id)
 
         if task is None:
             print("The task %s can not be found" % task_id)
             return(1)
 
         print()
-        print("=" * 80)
-        print(_("Task %(task_id)s is %(status)s.")
+        print("-" * 80)
+        print(_("Task %(task_id)s: %(status)s")
               % {"task_id": task_id, "status": task["status"]})
 
         if task["failed"]:
@@ -226,7 +322,6 @@ class TaskCommands(object):
             print("args values:")
             pprint.pprint(key["kw"])
 
-            scenario_time = result["data"]["load_duration"]
             raw = result["data"]["raw"]
             table_cols = ["action", "min (sec)", "avg (sec)", "max (sec)",
                           "90 percentile", "95 percentile", "success",
@@ -261,8 +356,8 @@ class TaskCommands(object):
             if iterations_data:
                 _print_iterations_data(raw)
 
-            print(_("Whole scenario time without context preparation: "),
-                  scenario_time)
+            print(_("Load duration: %s") % result["data"]["load_duration"])
+            print(_("Full duration: %s") % result["data"]["full_duration"])
 
             # NOTE(hughsaunders): ssrs=scenario specific results
             ssrs = []
@@ -293,7 +388,7 @@ class TaskCommands(object):
                                utils.percentile(values, 0.90),
                                utils.percentile(values, 0.95)]
                     else:
-                        row = [str(key)] + ['n/a'] * 5
+                        row = [str(key)] + ["n/a"] * 5
                     table_rows.append(rutils.Struct(**dict(zip(headers, row))))
                 print("\nScenario Specific Results\n")
                 common_cliutils.print_list(table_rows,
@@ -313,7 +408,7 @@ class TaskCommands(object):
         print(_("* To get raw JSON output of task results, run:"))
         print("\trally task results %s\n" % task["uuid"])
 
-    @cliutils.args('--uuid', type=str, dest='task_id', help='uuid of task')
+    @cliutils.args("--uuid", type=str, dest="task_id", help="uuid of task")
     @envutils.with_default_task_id
     def results(self, task_id=None):
         """Display raw task results.
@@ -335,15 +430,15 @@ class TaskCommands(object):
             print(_("The task %s can not be found") % task_id)
             return(1)
 
-    @cliutils.args('--deployment', type=str, dest='deployment',
-                   help='List tasks from specified deployment.'
-                   'By default tasks listed from active deployment.')
-    @cliutils.args('--all-deployments', action='store_true',
-                   dest='all_deployments',
-                   help='List tasks from all deployments.')
-    @cliutils.args('--status', type=str, dest='status',
-                   help='List tasks with specified status.'
-                   ' Available statuses: %s' % ', '.join(consts.TaskStatus))
+    @cliutils.args("--deployment", type=str, dest="deployment",
+                   help="List tasks from specified deployment."
+                   "By default tasks listed from active deployment.")
+    @cliutils.args("--all-deployments", action="store_true",
+                   dest="all_deployments",
+                   help="List tasks from all deployments.")
+    @cliutils.args("--status", type=str, dest="status",
+                   help="List tasks with specified status."
+                   " Available statuses: %s" % ", ".join(consts.TaskStatus))
     @envutils.with_default_deployment
     def list(self, deployment=None, all_deployments=False, status=None):
         """List tasks, started and finished.
@@ -357,16 +452,17 @@ class TaskCommands(object):
         :param all_deployments: display tasks from all deployments
         """
 
-        filters = dict()
+        filters = {}
         headers = ["uuid", "deployment_name", "created_at", "status",
                    "failed", "tag"]
 
         if status in consts.TaskStatus:
             filters.setdefault("status", status)
-        elif status is not None:
+        elif status:
             print(_("Error: Invalid task status '%s'.\n"
                     "Available statuses: %s") % (
-                  status, ", ".join(consts.TaskStatus)))
+                  status, ", ".join(consts.TaskStatus)),
+                  file=sys.stderr)
             return(1)
 
         if not all_deployments:
@@ -375,17 +471,16 @@ class TaskCommands(object):
         task_list = objects.Task.list(**filters)
 
         if task_list:
-            common_cliutils.print_list(map(lambda x: x.to_dict(), task_list),
-                                       headers,
-                                       sortby_index=headers.index(
-                                           'created_at'))
+            common_cliutils.print_list(
+                map(lambda x: x.to_dict(), task_list),
+                headers, sortby_index=headers.index("created_at"))
         else:
             if status:
                 print(_("There are no tasks in '%s' status. "
-                        "To run a new task, use:"
+                        "To run a new task, use:\n"
                         "\trally task start") % status)
             else:
-                print(_("There are no tasks. To run a new task, use:"
+                print(_("There are no tasks. To run a new task, use:\n"
                         "\trally task start"))
 
     @cliutils.args("--tasks", dest="tasks", nargs="+",
@@ -422,28 +517,26 @@ class TaskCommands(object):
                                 result,
                                 objects.task.TASK_RESULT_SCHEMA)
                         except jsonschema.ValidationError as e:
-                            msg = _("ERROR: Invalid task result format in %s"
-                                    ) % task_file_or_uuid
-                            print(msg)
+                            print(_("ERROR: Invalid task result format in %s")
+                                  % task_file_or_uuid, file=sys.stderr)
                             if logging.is_debug():
-                                print(e)
+                                print(e, file=sys.stderr)
                             else:
-                                print(e.message)
+                                print(e.message, file=sys.stderr)
                             return 1
 
             elif uuidutils.is_uuid_like(task_file_or_uuid):
-                tasks_results = map(lambda x: {"key": x["key"],
-                                    "sla": x["data"]["sla"],
-                                    "result": x["data"]["raw"],
-                                    "load_duration": x["data"][
-                                        "load_duration"],
-                                    "full_duration": x["data"][
-                                    "full_duration"]},
-                                    objects.Task.get(
-                                        task_file_or_uuid).get_results())
+                tasks_results = map(
+                    lambda x: {"key": x["key"],
+                               "sla": x["data"]["sla"],
+                               "result": x["data"]["raw"],
+                               "load_duration": x["data"]["load_duration"],
+                               "full_duration": x["data"]["full_duration"]},
+                    objects.Task.get(task_file_or_uuid).get_results())
             else:
                 print(_("ERROR: Invalid UUID or file name passed: %s"
-                        ) % task_file_or_uuid)
+                        ) % task_file_or_uuid,
+                      file=sys.stderr)
                 return 1
 
             for task_result in tasks_results:
@@ -462,23 +555,10 @@ class TaskCommands(object):
         if open_it:
             webbrowser.open_new_tab("file://" + os.path.realpath(out))
 
-    # NOTE(maretskiy): plot2html is deprecated by `report'
-    #                  and should be removed later
-    @cliutils.args('--uuid', type=str, dest='task_id', help='uuid of task')
-    @cliutils.args('--out', type=str, dest='out', required=False,
-                   help='Path to output file.')
-    @cliutils.args('--open', dest='open_it', action='store_true',
-                   help='Open it in browser.')
-    @envutils.with_default_task_id
-    def plot2html(self, task_id=None, out=None, open_it=False):
-        """Deprecated, use `task report' instead."""
-        print(self.plot2html.__doc__)
-        return self.report(task_id=task_id, out=out, open_it=open_it)
-
-    @cliutils.args('--force', action='store_true', help='force delete')
-    @cliutils.args('--uuid', type=str, dest='task_id', nargs="*",
+    @cliutils.args("--force", action="store_true", help="force delete")
+    @cliutils.args("--uuid", type=str, dest="task_id", nargs="*",
                    metavar="TASK_ID",
-                   help='uuid of task or a list of task uuids')
+                   help="uuid of task or a list of task uuids")
     @envutils.with_default_task_id
     def delete(self, task_id=None, force=False):
         """Delete task and its results.

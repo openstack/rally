@@ -65,9 +65,9 @@ def _run_scenario_once(args):
 
     context["iteration"] = iteration
     scenario = cls(
-            context=context,
-            admin_clients=osclients.Clients(context["admin"]["endpoint"]),
-            clients=osclients.Clients(context["user"]["endpoint"]))
+        context=context,
+        admin_clients=osclients.Clients(context["admin"]["endpoint"]),
+        clients=osclients.Clients(context["user"]["endpoint"]))
 
     error = []
     scenario_output = {"errors": "", "data": {}}

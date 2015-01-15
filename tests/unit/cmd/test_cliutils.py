@@ -54,6 +54,10 @@ class CliUtilsTestCase(test.TestCase):
         self._unregister_opts()
         super(CliUtilsTestCase, self).tearDown()
 
+    def test_make_header(self):
+        h1 = cliutils.make_header("msg", size="4", symbol="=")
+        self.assertEqual(h1, "====\n msg\n====\n")
+
     def test_pretty_float_formatter_rounding(self):
         test_table_rows = {"test_header": 6.56565}
         self.__dict__.update(**test_table_rows)

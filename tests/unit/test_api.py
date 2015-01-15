@@ -90,6 +90,22 @@ class APITestCase(test.TestCase):
         mock_deployment_get.assert_called_once_with(
             mock_deployment_get.return_value["uuid"])
 
+    def test_task_template_render(self):
+        self.assertEqual(
+            "3 = 3",
+            api.task_template_render("{{a + b}} = {{c}}", a=1, b=2, c=3))
+
+    def test_task_template_render_default_values(self):
+        template = "{% set a = a or 1 %}{{a + b}} = {{c}}"
+
+        self.assertEqual("3 = 3", api.task_template_render(template, b=2, c=3))
+
+        self.assertEqual(
+            "5 = 5", api.task_template_render(template, a=2, b=3, c=5))
+
+    def test_task_template_render_missing_args(self):
+        self.assertRaises(TypeError, api.task_template_render, "{{a}}")
+
     @mock.patch("rally.objects.Deployment.get",
                 return_value={'uuid': 'b0d9cd6c-2c94-4417-a238-35c7019d0257'})
     @mock.patch("rally.objects.Task")

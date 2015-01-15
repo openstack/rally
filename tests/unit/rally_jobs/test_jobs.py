@@ -18,6 +18,7 @@ import traceback
 import mock
 import yaml
 
+from rally import api
 from rally.benchmark import engine
 import rally.common.utils as rutils
 from tests.unit import test
@@ -38,9 +39,22 @@ class RallyJobsTestCase(test.TestCase):
 
             with open(full_path) as task_file:
                 try:
-                    task_config = yaml.safe_load(task_file.read())
-                    eng = engine.BenchmarkEngine(task_config,
-                                                 mock.MagicMock())
+                    args_file = os.path.join(
+                        self.rally_jobs_path,
+                        filename.rsplit(".", 1)[0] + "_args.yaml")
+
+                    args = {}
+                    if os.path.exists(args_file):
+                        args = yaml.safe_load(open(args_file).read())
+                        if not isinstance(args, dict):
+                            raise TypeError(
+                                "args file %s must be dict in yaml or json "
+                                "presenatation" % args_file)
+
+                    task = api.task_template_render(task_file.read(), **args)
+                    task = yaml.safe_load(task)
+
+                    eng = engine.BenchmarkEngine(task, mock.MagicMock())
                     eng.validate()
                 except Exception:
                     print(traceback.format_exc())

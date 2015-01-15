@@ -1,3 +1,4 @@
+{% set image_name = "^cirros.*uec$" %}
 ---
   Dummy.dummy:
     -
@@ -302,7 +303,7 @@
         flavor:
             name: "m1.tiny"
         image:
-            name: "^cirros.*uec$"
+            name: {{image_name}}
       runner:
         type: "constant"
         times: 4
@@ -321,7 +322,7 @@
         flavor:
             name: "m1.tiny"
         image:
-            name: "^cirros.*uec$"
+            name: {{image_name}}
       runner:
         type: "constant"
         times: 4
@@ -340,7 +341,7 @@
         flavor:
             name: "m1.tiny"
         image:
-            name: "^cirros.*uec$"
+            name: {{image_name}}
       runner:
         type: "constant"
         times: 4
@@ -362,7 +363,7 @@
         flavor:
             name: "m1.tiny"
         image:
-            name: "^cirros.*uec$"
+            name: {{image_name}}
         detailed: True
       runner:
         type: "constant"
@@ -382,7 +383,7 @@
         flavor:
             name: "m1.tiny"
         image:
-            name: "^cirros.*uec$"
+            name: {{image_name}}
         actions:
           -
             hard_reboot: 1
@@ -410,7 +411,7 @@
         flavor:
             name: "m1.tiny"
         image:
-            name: "^cirros.*uec$"
+            name: {{image_name}}
         volume_size: 1
       runner:
         type: "constant"
@@ -430,7 +431,7 @@
         flavor:
             name: "m1.tiny"
         image:
-            name: "^cirros.*uec$"
+            name: {{image_name}}
         volume_size: 1
       runner:
         type: "constant"
@@ -450,7 +451,7 @@
         flavor:
             name: "m1.tiny"
         image:
-            name: "^cirros.*uec$"
+            name: {{image_name}}
       runner:
         type: "constant"
         times: 3
@@ -469,7 +470,7 @@
         flavor:
             name: "m1.tiny"
         image:
-            name: "^cirros.*uec$"
+            name: {{image_name}}
         to_flavor:
             name: "m1.small"
         confirm: true
@@ -546,7 +547,7 @@
         flavor:
           name: "m1.tiny"
         image:
-          name: "^cirros.*uec$"
+          name: {{image_name}}
         security_group_count: 5
         rules_per_security_group: 5
       runner:
@@ -655,7 +656,7 @@
       args:
         size: 1
         image:
-          name: "^cirros.*uec$"
+          name: {{image_name}}
         flavor:
           name: "m1.tiny"
       runner:
@@ -687,7 +688,7 @@
           users_per_tenant: 1
         servers:
           image:
-            name: "^cirros.*uec$"
+            name: {{image_name}}
           flavor:
             name: "m1.tiny"
           servers_per_tenant: 2
@@ -710,7 +711,7 @@
           users_per_tenant: 1
         servers:
           image:
-            name: "^cirros.*uec$"
+            name: {{image_name}}
           flavor:
             name: "m1.tiny"
           servers_per_tenant: 1
@@ -738,7 +739,7 @@
           users_per_tenant: 1
         servers:
           image:
-            name: "^cirros.*uec$"
+            name: {{image_name}}
           flavor:
             name: "m1.tiny"
           servers_per_tenant: 2

@@ -21,7 +21,14 @@ if [ ! -d $RALLY_JOB_DIR ]; then
     RALLY_JOB_DIR=$BASE/new/$PROJECT/rally-jobs
 fi
 
-SCENARIO=${RALLY_JOB_DIR}/${RALLY_SCENARIO}.yaml
+BASE_FOR_TASK=${RALLY_JOB_DIR}/${RALLY_SCENARIO}
+
+TASK=${BASE_FOR_TASK}.yaml
+TASK_ARGS=""
+if [ -f ${BASE_FOR_TASK}_args.yaml ]; then
+    TASK_ARGS=" --task-args-file ${BASE_FOR_TASK}_args.yaml"
+fi
+
 PLUGINS_DIR=${RALLY_JOB_DIR}/plugins
 EXTRA_DIR=${RALLY_JOB_DIR}/extra
 
@@ -48,12 +55,13 @@ rally show images
 rally show networks
 rally show secgroups
 rally show keypairs
-rally -v task start --task $SCENARIO
+
+rally -v task start --task $TASK $TASK_ARGS
 
 mkdir -p rally-plot/extra
 python $BASE/new/rally/rally/ui/utils.py render\
     tests/ci/rally-gate/index.mako > rally-plot/extra/index.html
-cp $SCENARIO rally-plot/task.txt
+cp $TASK rally-plot/task.txt
 tar -czf rally-plot/plugins.tar.gz -C $RALLY_PLUGINS_DIR .
 rally task report --out rally-plot/results.html
 gzip -9 rally-plot/results.html

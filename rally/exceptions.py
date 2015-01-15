@@ -105,11 +105,10 @@ class NotFoundScenarios(InvalidTaskException):
 
 
 class InvalidBenchmarkConfig(InvalidTaskException):
-    msg_fmt = _("Task config is invalid.\n"
-                "\tBenchmark %(name)s has wrong configuration at"
-                " position %(pos)s"
-                "\n\tReason: %(reason)s"
-                "\n\tBenchmark configuration: %(config)s")
+    msg_fmt = _("Input task is invalid!\n\n"
+                "Benchmark %(name)s[%(pos)s] has wrong configuration"
+                "\nBenchmark configuration:\n%(config)s\n"
+                "\nReason:\n %(reason)s")
 
 
 class NotFoundException(RallyException):

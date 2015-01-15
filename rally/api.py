@@ -13,6 +13,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+
+import re
+
+import jinja2
+import jinja2.meta
 import jsonschema
 
 from rally.benchmark import engine
@@ -88,6 +93,36 @@ def recreate_deploy(deployment):
         deployer.make_cleanup()
         endpoints = deployer.make_deploy()
         deployment.update_endpoints(endpoints)
+
+
+def task_template_render(task_template, **kwargs):
+    """Render jinja2 task template to Rally input task.
+
+    :param task_template: String that contains template
+    :param kwargs: Dict with template arguments
+    :returns: rendered template str
+    """
+    ast = jinja2.Environment().parse(task_template)
+    required_kwargs = jinja2.meta.find_undeclared_variables(ast)
+
+    missing = set(required_kwargs) - set(kwargs)
+    # NOTE(boris-42): Removing variables that have default values from missing.
+    #                 Construction that won't be properly checked is
+    #                 {% set x = x or 1}
+    real_missing = []
+    for mis in missing:
+        if not re.search(mis.join(["{%\s*set\s+", "\s*=\s*", "[^\w]+"]),
+                         task_template):
+            real_missing.append(mis)
+
+    if real_missing:
+        multi_msg = _("Please specify next template task arguments: %s")
+        single_msg = _("Please specify template task argument: %s")
+
+        raise TypeError((len(real_missing) > 1 and multi_msg or single_msg) %
+                        ", ".join(real_missing))
+
+    return jinja2.Template(task_template).render(**kwargs)
 
 
 def create_task(deployment, tag):
