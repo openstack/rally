@@ -26,11 +26,6 @@ class QuotasScenarioTestCase(test.TestCase):
     def setUp(self):
         super(QuotasScenarioTestCase, self).setUp()
 
-    def _test_atomic_action_timer(self, atomic_actions_time, name):
-        action_duration = atomic_actions_time.get(name)
-        self.assertIsNotNone(action_duration)
-        self.assertIsInstance(action_duration, float)
-
     def test__update_quotas(self):
         tenant_id = 'fake_tenant'
         quotas = {

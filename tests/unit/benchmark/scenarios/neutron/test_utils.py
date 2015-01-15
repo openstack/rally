@@ -29,11 +29,6 @@ class NeutronScenarioTestCase(test.TestCase):
         super(NeutronScenarioTestCase, self).setUp()
         self.network = mock.Mock()
 
-    def _test_atomic_action_timer(self, atomic_actions_time, name):
-        action_duration = atomic_actions_time.get(name)
-        self.assertIsNotNone(action_duration)
-        self.assertIsInstance(action_duration, float)
-
     @mock.patch(NEUTRON_UTILS + 'NeutronScenario._generate_random_name')
     @mock.patch(NEUTRON_UTILS + 'NeutronScenario.clients')
     def test_create_network(self, mock_clients, mock_random_name):

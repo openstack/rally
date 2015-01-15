@@ -23,6 +23,7 @@ from rally import exceptions as rally_exceptions
 from tests.unit import fakes
 from tests.unit import test
 
+
 BM_UTILS = 'rally.benchmark.utils'
 NOVA_UTILS = "rally.benchmark.scenarios.nova.utils"
 CONF = cfg.CONF
@@ -48,11 +49,6 @@ class NovaScenarioTestCase(test.TestCase):
         self.useFixture(self.get_fm)
         self.gfm = self.get_fm.mock
         self.useFixture(mockpatch.Patch('time.sleep'))
-
-    def _test_atomic_action_timer(self, atomic_actions, name):
-        action_duration = atomic_actions.get(name)
-        self.assertIsNotNone(action_duration)
-        self.assertIsInstance(action_duration, float)
 
     def test_failed_server_status(self):
         self.get_fm.cleanUp()

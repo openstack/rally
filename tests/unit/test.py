@@ -37,6 +37,11 @@ class TestCase(base.BaseTestCase):
         super(TestCase, self).setUp()
         self.addCleanup(mock.patch.stopall)
 
+    def _test_atomic_action_timer(self, atomic_actions, name):
+        action_duration = atomic_actions.get(name)
+        self.assertIsNotNone(action_duration)
+        self.assertIsInstance(action_duration, float)
+
 
 class DBTestCase(TestCase):
     """Base class for tests which use DB."""

@@ -28,11 +28,6 @@ class CeilometerScenarioTestCase(test.TestCase):
         self.scenario.clients = mock.MagicMock(
             return_value=fakes.FakeCeilometerClient())
 
-    def _test_atomic_action_timer(self, atomic_actions_time, name):
-        action_duration = atomic_actions_time.get(name)
-        self.assertIsNotNone(action_duration)
-        self.assertIsInstance(action_duration, float)
-
     def test__list_alarms(self):
         alarm1_id = "fake_alarm1_id"
         alarm2_id = "fake_alarm2_id"

@@ -36,11 +36,6 @@ class SaharaUtilsTestCase(test.TestCase):
         CONF.set_override("cluster_check_interval", 0, "benchmark")
         CONF.set_override("job_check_interval", 0, "benchmark")
 
-    def _test_atomic_action_timer(self, atomic_actions, name):
-        action_duration = atomic_actions.get(name)
-        self.assertIsNotNone(action_duration)
-        self.assertIsInstance(action_duration, float)
-
     @mock.patch(SAHARA_UTILS + '.SaharaScenario.clients')
     def test_list_node_group_templates(self, mock_clients):
         ngts = []

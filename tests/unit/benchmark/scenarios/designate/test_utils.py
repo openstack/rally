@@ -29,11 +29,6 @@ class DesignateScenarioTestCase(test.TestCase):
         super(DesignateScenarioTestCase, self).setUp()
         self.domain = mock.Mock()
 
-    def _test_atomic_action_timer(self, atomic_actions_time, name):
-        action_duration = atomic_actions_time.get(name)
-        self.assertIsNotNone(action_duration)
-        self.assertIsInstance(action_duration, float)
-
     @mock.patch(DESIGNATE_UTILS + 'DesignateScenario._generate_random_name')
     @mock.patch(DESIGNATE_UTILS + 'DesignateScenario.clients')
     def test_create_domain(self, mock_clients, mock_random_name):

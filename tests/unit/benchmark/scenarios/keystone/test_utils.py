@@ -51,11 +51,6 @@ class KeystoneUtilsTestCase(test.TestCase):
 
 class KeystoneScenarioTestCase(test.TestCase):
 
-    def _test_atomic_action_timer(self, atomic_actions, name):
-        action_duration = atomic_actions.get(name)
-        self.assertIsNotNone(action_duration)
-        self.assertIsInstance(action_duration, float)
-
     @mock.patch(UTILS + "uuid.uuid4", return_value="pwd")
     @mock.patch(UTILS + "KeystoneScenario._generate_random_name",
                 return_value="abc")
