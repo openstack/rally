@@ -112,6 +112,20 @@ class CinderServersTestCase(test.TestCase):
                                                         imageRef="fake_image")
         scenario._list_volumes.assert_called_once_with(True)
 
+    def test_create_from_volume_and_delete_volume(self):
+        fake_volume = mock.MagicMock()
+        vol_size = 1
+        scenario = volumes.CinderVolumes(
+            context={"user": {"tenant_id": "fake"},
+                     "tenant": {"id": "fake", "name": "fake",
+                                "volumes": [{"id": "uuid"}]}})
+        scenario._create_volume = mock.MagicMock(return_value=fake_volume)
+        scenario._delete_volume = mock.MagicMock()
+
+        scenario.create_from_volume_and_delete_volume(vol_size)
+        scenario._create_volume.assert_called_once_with(1, source_volid="uuid")
+        scenario._delete_volume.assert_called_once_with(fake_volume)
+
     def test_create_and_delete_snapshot(self):
         fake_snapshot = mock.MagicMock()
         scenario = volumes.CinderVolumes(

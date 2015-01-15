@@ -149,6 +149,32 @@ class CinderVolumes(utils.CinderScenario,
     @validation.required_contexts("volumes")
     @validation.required_openstack(users=True)
     @base.scenario(context={"cleanup": ["cinder"]})
+    def create_from_volume_and_delete_volume(self, size, min_sleep=0,
+                                             max_sleep=0, **kwargs):
+        """Create volume from volume and then delete it.
+
+        Scenario for testing volume clone.Optional 'min_sleep' and 'max_sleep'
+        parameters allow the scenario to simulate a pause between volume
+        creation and deletion (of random duration from [min_sleep, max_sleep]).
+
+        :param size: volume size (in GB). Should be equal or bigger
+                     source volume size
+        :param min_sleep: minimum sleep time between volume creation and
+                          deletion (in seconds)
+        :param max_sleep: maximum sleep time between volume creation and
+                          deletion (in seconds)
+        :param kwargs: optional args to create a volume
+        """
+        source_vol = random.choice(self.context["tenant"]["volumes"])
+        volume = self._create_volume(size, source_volid=source_vol["id"],
+                                     **kwargs)
+        self.sleep_between(min_sleep, max_sleep)
+        self._delete_volume(volume)
+
+    @validation.required_services(consts.Service.CINDER)
+    @validation.required_contexts("volumes")
+    @validation.required_openstack(users=True)
+    @base.scenario(context={"cleanup": ["cinder"]})
     def create_and_delete_snapshot(self, force=False, min_sleep=0,
                                    max_sleep=0, **kwargs):
         """Create and then delete a volume-snapshot.
