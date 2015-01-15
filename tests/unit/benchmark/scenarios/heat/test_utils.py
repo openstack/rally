@@ -42,11 +42,6 @@ class HeatScenarioTestCase(test.TestCase):
         self.useFixture(mockpatch.Patch('time.sleep'))
         self.scenario = utils.HeatScenario()
 
-    def _test_atomic_action_timer(self, atomic_actions, name):
-        action_duration = atomic_actions.get(name)
-        self.assertIsNotNone(action_duration)
-        self.assertIsInstance(action_duration, float)
-
     @mock.patch(HEAT_UTILS + '.HeatScenario.clients')
     def test_list_stacks(self, mock_clients):
         stacks_list = []

@@ -53,11 +53,6 @@ class GlanceScenarioTestCase(test.TestCase):
                           butils.get_from_manager(),
                           image_manager.create('fails', 'url', 'cf', 'df'))
 
-    def _test_atomic_action_timer(self, atomic_actions, name):
-        action_duration = atomic_actions.get(name)
-        self.assertIsNotNone(action_duration)
-        self.assertIsInstance(action_duration, float)
-
     @mock.patch(GLANCE_UTILS + '.GlanceScenario.clients')
     def test_list_images(self, mock_clients):
         images_list = []

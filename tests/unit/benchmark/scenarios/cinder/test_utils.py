@@ -41,11 +41,6 @@ class CinderScenarioTestCase(test.TestCase):
         self.useFixture(mockpatch.Patch('time.sleep'))
         self.scenario = utils.CinderScenario()
 
-    def _test_atomic_action_timer(self, atomic_actions, name):
-        action_duration = atomic_actions.get(name)
-        self.assertIsNotNone(action_duration)
-        self.assertIsInstance(action_duration, float)
-
     @mock.patch(CINDER_UTILS + '.CinderScenario.clients')
     def test__list_volumes(self, mock_clients):
         volumes_list = mock.Mock()

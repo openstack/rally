@@ -23,11 +23,6 @@ UTILS = "rally.benchmark.scenarios.zaqar.utils."
 
 class ZaqarScenarioTestCase(test.TestCase):
 
-    def _test_atomic_action_timer(self, atomic_actions, name):
-        action_duration = atomic_actions.get(name)
-        self.assertIsNotNone(action_duration)
-        self.assertIsInstance(action_duration, float)
-
     @mock.patch(UTILS + "ZaqarScenario._generate_random_name",
                 return_value="kitkat")
     def test_queue_create(self, mock_gen_name):
