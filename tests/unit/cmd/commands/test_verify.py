@@ -54,7 +54,7 @@ class VerifyCommandsTestCase(test.TestCase):
             self.flavor1, self.flavor2]
 
         self.verify.start(deployment=deployment_id)
-        default_set_name = "smoke"
+        default_set_name = "full"
         default_regex = None
 
         mock_verify.assert_called_once_with(deployment_id,
@@ -73,7 +73,7 @@ class VerifyCommandsTestCase(test.TestCase):
         tempest_config = tempfile.NamedTemporaryFile()
         self.verify.start(deployment=deployment_id,
                           tempest_config=tempest_config.name)
-        default_set_name = "smoke"
+        default_set_name = "full"
         default_regex = None
 
         mock_verify.assert_called_once_with(deployment_id,

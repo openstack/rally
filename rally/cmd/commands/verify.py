@@ -58,7 +58,7 @@ class VerifyCommands(object):
     @cliutils.args("--no-use", action="store_false", dest="do_use",
                    help="Don't set new task as default for future operations")
     @envutils.with_default_deployment
-    def start(self, set_name="smoke", deployment=None, regex=None,
+    def start(self, set_name="", deployment=None, regex=None,
               tempest_config=None, do_use=False):
         """Start set of tests.
 
@@ -68,9 +68,12 @@ class VerifyCommands(object):
         :param tempest_config: User specified Tempest config file location
         """
 
-        if regex:
+        if regex and set_name:
+            raise exceptions.InvalidArgumentsException("set_name and regex "
+                                                       "are not compatible")
+        if not (regex or set_name):
             set_name = "full"
-        if set_name not in consts.TEMPEST_TEST_SETS:
+        if set_name and set_name not in consts.TEMPEST_TEST_SETS:
             print("Sorry, but there are no desired tempest test set. Please "
                   "choose from: %s" % ", ".join(consts.TEMPEST_TEST_SETS))
             return (1)
