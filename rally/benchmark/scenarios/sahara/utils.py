@@ -205,6 +205,7 @@ class SaharaScenario(base.Scenario):
             return name
         else:
             # The name is not provided. Discovering
+            LOG.debug("No Floating Ip Pool provided. Taking random.")
             pools = self.clients("nova").floating_ip_pools.list()
 
             if pools:
@@ -216,13 +217,16 @@ class SaharaScenario(base.Scenario):
 
     def _setup_floating_ip_pool(self, node_groups, floating_ip_pool):
         if consts.Service.NEUTRON in self._clients.services().values():
+            LOG.debug("Neutron detected as networking backend.")
             floating_ip_pool_value = self._setup_neutron_floating_ip_pool(
                 floating_ip_pool)
         else:
+            LOG.debug("Nova Network detected as networking backend.")
             floating_ip_pool_value = self._setup_nova_floating_ip_pool(
                 floating_ip_pool)
 
         if floating_ip_pool_value:
+            LOG.debug("Using floating ip pool %s." % floating_ip_pool_value)
             # If the pool is set by any means assign it to all node groups.
             for ng in node_groups:
                 ng["floating_ip_pool"] = floating_ip_pool_value
@@ -240,6 +244,11 @@ class SaharaScenario(base.Scenario):
 
     def _setup_security_groups(self, node_groups, auto_security_group,
                                security_groups):
+        if auto_security_group:
+            LOG.debug("Auto security group enabled. Adding to Node Groups.")
+        if security_groups:
+            LOG.debug("Adding provided Security Groups to Node Groups.")
+
         for ng in node_groups:
             if auto_security_group:
                 ng["auto_security_group"] = auto_security_group
@@ -272,7 +281,7 @@ class SaharaScenario(base.Scenario):
     @base.atomic_action_timer('sahara.launch_cluster')
     def _launch_cluster(self, plugin_name, hadoop_version, flavor_id,
                         image_id, node_count, floating_ip_pool=None,
-                        neutron_net_id=None, volumes_per_node=None,
+                        volumes_per_node=None,
                         volumes_size=None, auto_security_group=None,
                         security_groups=None, node_configs=None,
                         cluster_configs=None, wait_active=True):
@@ -290,8 +299,6 @@ class SaharaScenario(base.Scenario):
                            for the workers
         :param floating_ip_pool: floating ip pool name from which Floating
                                  IPs will be allocated
-        :param neutron_net_id: network id to allocate Fixed IPs
-                               from, when Neutron is enabled for networking
         :param volumes_per_node: number of Cinder volumes that will be
                                  attached to every cluster node
         :param volumes_size: size of each Cinder volume in GB
@@ -326,6 +333,8 @@ class SaharaScenario(base.Scenario):
 
         node_groups = self._setup_floating_ip_pool(node_groups,
                                                    floating_ip_pool)
+
+        neutron_net_id = self._get_neutron_net_id()
 
         node_groups = self._setup_volumes(node_groups, volumes_per_node,
                                           volumes_size)
@@ -524,3 +533,22 @@ class SaharaScenario(base.Scenario):
                     result[a_target].update(config_dict[a_target])
 
         return result
+
+    def _get_neutron_net_id(self):
+        """Get the Neutron Network id from context.
+
+        If Nova Network is used as networking backend, None is returned.
+
+        :return: Network id for Neutron or None for Nova Networking.
+        """
+
+        if consts.Service.NEUTRON not in self._clients.services().values():
+            return None
+
+        # Taking net id from context.
+        net = self.context["tenant"]["networks"][0]
+        neutron_net_id = net["id"]
+        LOG.debug("Using neutron network %s." % neutron_net_id)
+        LOG.debug("Using neutron router %s." % net["router_id"])
+
+        return neutron_net_id

@@ -26,3 +26,4 @@
           username: "ubuntu"
           plugin_name: "vanilla"
           hadoop_version: "2.3.0"
+        network: {}

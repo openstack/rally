@@ -37,7 +37,7 @@ class SaharaClusters(utils.SaharaScenario):
     @base.scenario(context={"cleanup": ["sahara"]})
     def create_and_delete_cluster(self, flavor, node_count, plugin_name,
                                   hadoop_version, floating_ip_pool=None,
-                                  neutron_net=None, volumes_per_node=None,
+                                  volumes_per_node=None,
                                   volumes_size=None, auto_security_group=None,
                                   security_groups=None, node_configs=None,
                                   cluster_configs=None):
@@ -58,9 +58,6 @@ class SaharaClusters(utils.SaharaScenario):
                                  it's own configurations. Defaults to None
                                  because in some cases Sahara may work w/o
                                  Floating IPs.
-        :param neutron_net: id or name of a Neutron network that
-                            will be used for fixed IPs. This parameter is
-                            ignored when Nova Network is set up.
         :param volumes_per_node: number of Cinder volumes that will be
                                  attached to every cluster node
         :param volumes_size: size of each Cinder volume in GB
@@ -87,7 +84,6 @@ class SaharaClusters(utils.SaharaScenario):
             plugin_name=plugin_name,
             hadoop_version=hadoop_version,
             floating_ip_pool=floating_ip_pool,
-            neutron_net_id=neutron_net,
             volumes_per_node=volumes_per_node,
             volumes_size=volumes_size,
             auto_security_group=auto_security_group,
@@ -105,7 +101,7 @@ class SaharaClusters(utils.SaharaScenario):
     @base.scenario(context={"cleanup": ["sahara"]})
     def create_scale_delete_cluster(self, flavor, node_count, plugin_name,
                                     hadoop_version, deltas,
-                                    floating_ip_pool=None, neutron_net_id=None,
+                                    floating_ip_pool=None,
                                     volumes_per_node=None, volumes_size=None,
                                     auto_security_group=None,
                                     security_groups=None, node_configs=None,
@@ -161,7 +157,6 @@ class SaharaClusters(utils.SaharaScenario):
             plugin_name=plugin_name,
             hadoop_version=hadoop_version,
             floating_ip_pool=floating_ip_pool,
-            neutron_net_id=neutron_net_id,
             volumes_per_node=volumes_per_node,
             volumes_size=volumes_size,
             auto_security_group=auto_security_group,

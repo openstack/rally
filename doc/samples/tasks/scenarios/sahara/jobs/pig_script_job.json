@@ -45,7 +45,8 @@
                     "plugin_name": "vanilla",
                     "hadoop_version": "1.2.1",
                     "auto_security_group": true
-                }
+                },
+                "network": {}
             }
         }
     ]

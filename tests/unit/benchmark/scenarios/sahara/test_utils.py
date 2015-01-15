@@ -15,9 +15,11 @@
 
 import mock
 from oslo.config import cfg
+from oslo.utils import uuidutils
 from saharaclient.api import base as sahara_base
 
 from rally.benchmark.scenarios.sahara import utils
+from rally import consts
 from rally import exceptions
 from tests.unit import test
 
@@ -122,7 +124,23 @@ class SaharaUtilsTestCase(test.TestCase):
     @mock.patch(SAHARA_UTILS + '.SaharaScenario.clients')
     def test_launch_cluster(self, mock_clients, mock_random_name):
 
-        scenario = utils.SaharaScenario(clients=mock_clients)
+        clients_values = mock.MagicMock(return_value=[consts.Service.NEUTRON])
+        mock_clients.services.return_value = mock.MagicMock(
+            values=clients_values)
+
+        context = {
+            "tenant": {
+                "networks": [
+                    {
+                        "id": "test_neutron_id",
+                        "router_id": "test_router_id"
+                    }
+                ]
+            }
+        }
+
+        scenario = utils.SaharaScenario(context=context, clients=mock_clients)
+
         mock_processes = {
             "test_plugin": {
                 "test_version": {
@@ -141,12 +159,13 @@ class SaharaUtilsTestCase(test.TestCase):
             }
         }
 
+        floating_ip_pool_uuid = uuidutils.generate_uuid()
         node_groups = [
             {
                 "name": "master-ng",
                 "flavor_id": "test_flavor",
                 "node_processes": ["p1"],
-                "floating_ip_pool": "test_pool",
+                "floating_ip_pool": floating_ip_pool_uuid,
                 "volumes_per_node": 5,
                 "volumes_size": 10,
                 "count": 1,
@@ -157,7 +176,7 @@ class SaharaUtilsTestCase(test.TestCase):
                 "name": "worker-ng",
                 "flavor_id": "test_flavor",
                 "node_processes": ["p2"],
-                "floating_ip_pool": "test_pool",
+                "floating_ip_pool": floating_ip_pool_uuid,
                 "volumes_per_node": 5,
                 "volumes_size": 10,
                 "count": 41,
@@ -181,7 +200,7 @@ class SaharaUtilsTestCase(test.TestCase):
             hadoop_version="test_version",
             flavor_id="test_flavor",
             image_id="test_image",
-            floating_ip_pool="test_pool",
+            floating_ip_pool=floating_ip_pool_uuid,
             volumes_per_node=5,
             volumes_size=10,
             auto_security_group=True,
@@ -197,7 +216,7 @@ class SaharaUtilsTestCase(test.TestCase):
             node_groups=node_groups,
             default_image_id="test_image",
             cluster_configs={"HDFS": {"dfs.replication": 3}},
-            net_id=None
+            net_id="test_neutron_id"
         )
 
         self._test_atomic_action_timer(scenario.atomic_actions(),
