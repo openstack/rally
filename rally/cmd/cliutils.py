@@ -368,6 +368,11 @@ def run(argv, categories):
             urllib3_log = logging.getLogger("urllib3").logger
             urllib3_log.setLevel(logging.WARNING)
 
+            # NOTE(wtakase): This is for suppressing boto error logging.
+            LOG.debug("ERROR log from boto module is hide.")
+            boto_log = logging.getLogger("boto").logger
+            boto_log.setLevel(logging.CRITICAL)
+
     except cfg.ConfigFilesNotFoundError:
         cfgfile = CONF.config_file[-1] if CONF.config_file else None
         if cfgfile and not os.access(cfgfile, os.R_OK):

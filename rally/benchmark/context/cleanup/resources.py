@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from boto import exception as boto_exception
 from neutronclient.common import exceptions as neutron_exceptions
 from saharaclient.api import base as saharaclient_base
 
@@ -81,6 +82,44 @@ class NovaSecurityGroup(SynchronizedDeletion, base.ResourceManager):
                admin_required=True, tenant_resource=True)
 class NovaQuotas(QuotaMixin, base.ResourceManager):
     pass
+
+
+# EC2
+
+_ec2_order = get_order(250)
+
+
+class EC2Mixin(object):
+
+    def _manager(self):
+        return getattr(self.user, self._service)()
+
+
+@base.resource("ec2", "servers", order=next(_ec2_order))
+class EC2Server(EC2Mixin, base.ResourceManager):
+
+    def is_deleted(self):
+        try:
+            instances = self._manager().get_only_instances(
+                instance_ids=[self.id()])
+        except boto_exception.EC2ResponseError as e:
+            # NOTE(wtakase): Nova EC2 API returns 'InvalidInstanceID.NotFound'
+            #                if instance not found. In this case, we consider
+            #                instance has already been deleted.
+            return getattr(e, "error_code") == "InvalidInstanceID.NotFound"
+
+        # NOTE(wtakase): After instance deletion, instance can be 'terminated'
+        #                state. If all instance states are 'terminated', this
+        #                returns True. And if get_only_instaces() returns empty
+        #                list, this also returns True because we consider
+        #                instance has already been deleted.
+        return all(map(lambda i: i.state == "terminated", instances))
+
+    def delete(self):
+        self._manager().terminate_instances(instance_ids=[self.id()])
+
+    def list(self):
+        return self._manager().get_only_instances()
 
 
 # NEUTRON

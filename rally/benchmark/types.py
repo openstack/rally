@@ -133,6 +133,37 @@ def obj_from_name(resource_config, resources, typename):
     return matching[0]
 
 
+def obj_from_id(resource_config, resources, typename):
+    """Return the resource whose name matches the id.
+
+    resource_config has to contain `id`, as it is used to lookup a resource.
+
+    :param resource_config: resource to be transformed
+    :param resources: iterable containing all resources
+    :param typename: name which describes the type of resource
+
+    :returns: resource object mapped to `id`
+    """
+    if "id" in resource_config:
+        matching = [resource for resource in resources
+                    if resource.id == resource_config["id"]]
+        if len(matching) == 1:
+            return matching[0]
+        elif len(matching) > 1:
+            raise exceptions.MultipleMatchesFound(
+                needle="{typename} with id '{id}'".format(
+                    typename=typename.title(), id=resource_config["id"]),
+                haystack=matching)
+        else:
+            raise exceptions.InvalidScenarioArgument(
+                "{typename} with id '{id}' not found".format(
+                    typename=typename.title(), id=resource_config["id"]))
+    else:
+        raise exceptions.InvalidScenarioArgument(
+            "{typename} 'id' not found in '{resource_config}'".format(
+                typename=typename.title(), resource_config=resource_config))
+
+
 def _id_from_name(resource_config, resources, typename):
     """Return the id of the resource whose name matches the pattern.
 
@@ -149,6 +180,20 @@ def _id_from_name(resource_config, resources, typename):
     :returns: resource id uniquely mapped to `name` or `regex`
     """
     return obj_from_name(resource_config, resources, typename).id
+
+
+def _name_from_id(resource_config, resources, typename):
+    """Return the name of the resource which has the id.
+
+    resource_config has to contain `id`, as it is used to lookup an name.
+
+    :param resource_config: resource to be transformed
+    :param resources: iterable containing all resources
+    :param typename: name which describes the type of resource
+
+    :returns: resource name mapped to `id`
+    """
+    return obj_from_id(resource_config, resources, typename).name
 
 
 class FlavorResourceType(ResourceType):
@@ -171,6 +216,30 @@ class FlavorResourceType(ResourceType):
         return resource_id
 
 
+class EC2FlavorResourceType(ResourceType):
+
+    @classmethod
+    def transform(cls, clients, resource_config):
+        """Transform the resource config to name.
+
+        In the case of using EC2 API, flavor name is used for launching
+        servers.
+
+        :param clients: openstack admin client handles
+        :param resource_config: scenario config with `id`, `name` or `regex`
+
+        :returns: name matching resource
+        """
+        resource_name = resource_config.get("name")
+        if not resource_name:
+            # NOTE(wtakase): gets resource name from OpenStack id
+            novaclient = clients.nova()
+            resource_name = _name_from_id(resource_config=resource_config,
+                                          resources=novaclient.flavors.list(),
+                                          typename="flavor")
+        return resource_name
+
+
 class ImageResourceType(ResourceType):
 
     @classmethod
@@ -190,6 +259,38 @@ class ImageResourceType(ResourceType):
                                             glanceclient.images.list()),
                                         typename="image")
         return resource_id
+
+
+class EC2ImageResourceType(ResourceType):
+
+    @classmethod
+    def transform(cls, clients, resource_config):
+        """Transform the resource config to EC2 id.
+
+        If OpenStack resource id is given, this function gets resource name
+        from the id and then gets EC2 resource id from the name.
+
+        :param clients: openstack admin client handles
+        :param resource_config: scenario config with `id`, `name` or `regex`
+
+        :returns: EC2 id matching resource
+        """
+        if "name" not in resource_config and "regex" not in resource_config:
+            # NOTE(wtakase): gets resource name from OpenStack id
+            glanceclient = clients.glance()
+            resource_name = _name_from_id(resource_config=resource_config,
+                                          resources=list(
+                                              glanceclient.images.list()),
+                                          typename="image")
+            resource_config["name"] = resource_name
+
+        # NOTE(wtakase): gets EC2 resource id from name or regex
+        ec2client = clients.ec2()
+        resource_ec2_id = _id_from_name(resource_config=resource_config,
+                                        resources=list(
+                                            ec2client.get_all_images()),
+                                        typename="ec2_image")
+        return resource_ec2_id
 
 
 class VolumeTypeResourceType(ResourceType):

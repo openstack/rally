@@ -320,6 +320,32 @@ class OSClientsTestCase(test.TestCase):
             mock_swift.Connection.assert_called_once_with(**kw)
             self.assertEqual(self.clients.cache["swift"], fake_swift)
 
+    def test_ec2(self):
+        mock_boto = mock.Mock()
+        self.service_catalog.url_for.return_value = "http://fake.to:1/fake"
+        self.fake_keystone.ec2 = mock.Mock()
+        self.fake_keystone.ec2.create.return_value = mock.Mock(
+            access="fake_access", secret="fake_secret")
+        fake_ec2 = fakes.FakeEC2Client()
+        mock_boto.connect_ec2_endpoint.return_value = fake_ec2
+
+        self.assertNotIn("ec2", self.clients.cache)
+        with mock.patch.dict("sys.modules", {"boto": mock_boto}):
+            client = self.clients.ec2()
+            self.assertEqual(fake_ec2, client)
+            self.service_catalog.url_for.assert_called_once_with(
+                service_type="ec2",
+                endpoint_type=consts.EndpointType.PUBLIC,
+                region_name=self.endpoint.region_name)
+            kw = {
+                "url": "http://fake.to:1/fake",
+                "aws_access_key_id": "fake_access",
+                "aws_secret_access_key": "fake_secret",
+                "is_secure": cfg.CONF.https_insecure,
+            }
+            mock_boto.connect_ec2_endpoint.assert_called_once_with(**kw)
+            self.assertEqual(fake_ec2, self.clients.cache["ec2"])
+
     @mock.patch("rally.osclients.Clients.keystone")
     def test_services(self, mock_keystone):
         available_services = {consts.ServiceType.IDENTITY: {},

@@ -1304,6 +1304,12 @@ class FakeSwiftClient(FakeObjectManager):
     pass
 
 
+class FakeEC2Client(object):
+
+    def __init__(self):
+        pass
+
+
 class FakeClients(object):
 
     def __init__(self, endpoint_=None):
@@ -1321,6 +1327,7 @@ class FakeClients(object):
         self._mistral = None
         self._swift = None
         self._murano = None
+        self._ec2 = None
         self._endpoint = endpoint_ or objects.Endpoint(
             "http://fake.example.org:5000/v2.0/",
             "fake_username",
@@ -1399,6 +1406,11 @@ class FakeClients(object):
         if not self._murano:
             self._murano = FakeMuranoClient()
         return self._murano
+
+    def ec2(self):
+        if not self._ec2:
+            self._ec2 = FakeEC2Client()
+        return self._ec2
 
 
 class FakeRunner(object):

@@ -365,6 +365,16 @@
 # Cluster status polling interval in seconds (integer value)
 #job_check_interval = 5
 
+# Time to sleep after boot before polling for status (floating point
+# value)
+#ec2_server_boot_prepoll_delay = 1.0
+
+# Server boot timeout (floating point value)
+#ec2_server_boot_timeout = 300.0
+
+# Server boot poll interval (floating point value)
+#ec2_server_boot_poll_interval = 1.0
+
 
 [database]
 
@@ -455,19 +465,20 @@
 # lost. (boolean value)
 #use_db_reconnect = false
 
-# Seconds between database connection retries. (integer value)
+# Seconds between retries of a database transaction. (integer value)
 #db_retry_interval = 1
 
-# If True, increases the interval between database connection retries
-# up to db_max_retry_interval. (boolean value)
+# If True, increases the interval between retries of a database
+# operation up to db_max_retry_interval. (boolean value)
 #db_inc_retry_interval = true
 
-# If db_inc_retry_interval is set, the maximum seconds between
-# database connection retries. (integer value)
+# If db_inc_retry_interval is set, the maximum seconds between retries
+# of a database operation. (integer value)
 #db_max_retry_interval = 10
 
-# Maximum database connection retries before error is raised. Set to
-# -1 to specify an infinite retry count. (integer value)
+# Maximum retries in case of connection error or deadlock error before
+# error is raised. Set to -1 to specify an infinite retry count.
+# (integer value)
 #db_max_retries = 20
 
 

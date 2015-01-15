@@ -87,6 +87,47 @@ class FlavorResourceTypeTestCase(test.TestCase):
                           resource_config)
 
 
+class EC2FlavorResourceTypeTestCase(test.TestCase):
+
+    def setUp(self):
+        super(EC2FlavorResourceTypeTestCase, self).setUp()
+        self.clients = fakes.FakeClients()
+        self.clients.nova().flavors._cache(fakes.FakeResource(name="m1.tiny",
+                                                              id="1"))
+        self.clients.nova().flavors._cache(fakes.FakeResource(name="m1.nano",
+                                                              id="2"))
+        self.clients.nova().flavors._cache(fakes.FakeResource(name="m1.large",
+                                                              id="3"))
+        self.clients.nova().flavors._cache(fakes.FakeResource(name="m1.xlarge",
+                                                              id="3"))
+
+    def test_transform_by_name(self):
+        resource_config = {"name": "m1.nano"}
+        flavor_name = types.EC2FlavorResourceType.transform(
+                      clients=self.clients,
+                      resource_config=resource_config)
+        self.assertEqual(flavor_name, "m1.nano")
+
+    def test_transform_by_id(self):
+        resource_config = {"id": "2"}
+        flavor_name = types.EC2FlavorResourceType.transform(
+                      clients=self.clients,
+                      resource_config=resource_config)
+        self.assertEqual(flavor_name, "m1.nano")
+
+    def test_transform_by_id_no_match(self):
+        resource_config = {"id": "4"}
+        self.assertRaises(exceptions.InvalidScenarioArgument,
+                          types.EC2FlavorResourceType.transform, self.clients,
+                          resource_config)
+
+    def test_transform_by_id_multiple_match(self):
+        resource_config = {"id": "3"}
+        self.assertRaises(exceptions.MultipleMatchesFound,
+                          types.EC2FlavorResourceType.transform, self.clients,
+                          resource_config)
+
+
 class ImageResourceTypeTestCase(test.TestCase):
 
     def setUp(self):
@@ -146,6 +187,91 @@ class ImageResourceTypeTestCase(test.TestCase):
         resource_config = {"regex": "-boot$"}
         self.assertRaises(exceptions.InvalidScenarioArgument,
                           types.ImageResourceType.transform, self.clients,
+                          resource_config)
+
+
+class EC2ImageResourceTypeTestCase(test.TestCase):
+
+    def setUp(self):
+        super(EC2ImageResourceTypeTestCase, self).setUp()
+        self.clients = fakes.FakeClients()
+        image1 = fakes.FakeResource(name="cirros-0.3.1-uec", id="100")
+        self.clients.glance().images._cache(image1)
+        image2 = fakes.FakeResource(name="cirros-0.3.1-uec-ramdisk", id="102")
+        self.clients.glance().images._cache(image2)
+        image3 = fakes.FakeResource(name="cirros-0.3.1-uec-ramdisk-copy",
+                                    id="102")
+        self.clients.glance().images._cache(image3)
+        image4 = fakes.FakeResource(name="cirros-0.3.1-uec-ramdisk-copy",
+                                    id="103")
+        self.clients.glance().images._cache(image4)
+
+        ec2_image1 = fakes.FakeResource(name="cirros-0.3.1-uec", id="200")
+        ec2_image2 = fakes.FakeResource(name="cirros-0.3.1-uec-ramdisk",
+                                        id="201")
+        ec2_image3 = fakes.FakeResource(name="cirros-0.3.1-uec-ramdisk-copy",
+                                        id="202")
+        ec2_image4 = fakes.FakeResource(name="cirros-0.3.1-uec-ramdisk-copy",
+                                        id="203")
+
+        self.clients.ec2().get_all_images = mock.Mock(
+            return_value=[ec2_image1, ec2_image2, ec2_image3, ec2_image4])
+
+    def test_transform_by_name(self):
+        resource_config = {"name": "^cirros-0.3.1-uec$"}
+        ec2_image_id = types.EC2ImageResourceType.transform(
+                       clients=self.clients,
+                       resource_config=resource_config)
+        self.assertEqual(ec2_image_id, "200")
+
+    def test_transform_by_id(self):
+        resource_config = {"id": "100"}
+        ec2_image_id = types.EC2ImageResourceType.transform(
+                       clients=self.clients,
+                       resource_config=resource_config)
+        self.assertEqual(ec2_image_id, "200")
+
+    def test_transform_by_id_no_match(self):
+        resource_config = {"id": "101"}
+        self.assertRaises(exceptions.InvalidScenarioArgument,
+                          types.EC2ImageResourceType.transform, self.clients,
+                          resource_config)
+
+    def test_transform_by_id_match_multiple(self):
+        resource_config = {"id": "102"}
+        self.assertRaises(exceptions.MultipleMatchesFound,
+                          types.EC2ImageResourceType.transform, self.clients,
+                          resource_config)
+
+    def test_transform_by_name_no_match(self):
+        resource_config = {"name": "cirros-0.3.1-uec-boot"}
+        self.assertRaises(exceptions.InvalidScenarioArgument,
+                          types.EC2ImageResourceType.transform, self.clients,
+                          resource_config)
+
+    def test_transform_by_name_match_multiple(self):
+        resource_config = {"name": "cirros-0.3.1-uec-ramdisk-copy"}
+        self.assertRaises(exceptions.InvalidScenarioArgument,
+                          types.EC2ImageResourceType.transform, self.clients,
+                          resource_config)
+
+    def test_transform_by_regex(self):
+        resource_config = {"regex": "-uec$"}
+        ec2_image_id = types.EC2ImageResourceType.transform(
+                       clients=self.clients,
+                       resource_config=resource_config)
+        self.assertEqual(ec2_image_id, "200")
+
+    def test_transform_by_regex_match_multiple(self):
+        resource_config = {"regex": "^cirros"}
+        self.assertRaises(exceptions.InvalidScenarioArgument,
+                          types.EC2ImageResourceType.transform, self.clients,
+                          resource_config)
+
+    def test_transform_by_regex_no_match(self):
+        resource_config = {"regex": "-boot$"}
+        self.assertRaises(exceptions.InvalidScenarioArgument,
+                          types.EC2ImageResourceType.transform, self.clients,
                           resource_config)
 
 

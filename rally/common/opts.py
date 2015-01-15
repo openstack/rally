@@ -16,6 +16,7 @@ import itertools
 
 from rally.benchmark.context import users
 from rally.benchmark.scenarios.cinder import utils as cinder_utils
+from rally.benchmark.scenarios.ec2 import utils as ec2_utils
 from rally.benchmark.scenarios.glance import utils as glance_utils
 from rally.benchmark.scenarios.heat import utils as heat_utils
 from rally.benchmark.scenarios.nova import utils as nova_utils
@@ -37,7 +38,8 @@ def list_opts():
                          glance_utils.GLANCE_BENCHMARK_OPTS,
                          heat_utils.HEAT_BENCHMARK_OPTS,
                          nova_utils.NOVA_BENCHMARK_OPTS,
-                         sahara_utils.SAHARA_TIMEOUT_OPTS)),
+                         sahara_utils.SAHARA_TIMEOUT_OPTS,
+                         ec2_utils.EC2_BENCHMARK_OPTS)),
         ("image",
          itertools.chain(tempest_conf.IMAGE_OPTS)),
         ("users_context", itertools.chain(users.USER_CONTEXT_OPTS))
