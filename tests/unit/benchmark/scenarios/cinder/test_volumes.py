@@ -64,6 +64,21 @@ class CinderServersTestCase(test.TestCase):
         scenario.create_volume(1, fakearg="f")
         scenario._create_volume.assert_called_once_with(1, fakearg="f")
 
+    def test_create_and_extend_volume(self):
+        fake_volume = mock.MagicMock()
+
+        scenario = volumes.CinderVolumes()
+        scenario._create_volume = mock.MagicMock(return_value=fake_volume)
+        scenario._extend_volume = mock.MagicMock(return_value=fake_volume)
+        scenario.sleep_between = mock.MagicMock()
+        scenario._delete_volume = mock.MagicMock()
+
+        scenario.create_and_extend_volume(1, 2, 10, 20, fakearg="f")
+        scenario._create_volume.assert_called_once_with(1, fakearg="f")
+        self.assertTrue(scenario._extend_volume.called)
+        scenario.sleep_between.assert_called_once_with(10, 20)
+        scenario._delete_volume.assert_called_once_with(fake_volume)
+
     def test_create_and_delete_snapshot(self):
         fake_snapshot = mock.MagicMock()
         scenario = volumes.CinderVolumes(
