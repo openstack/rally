@@ -53,6 +53,8 @@ re_xrange_method = re.compile(r"(^|[\s=])xrange\(")
 re_string_lower_upper_case_method = re.compile(
     r"(^|[(,\s=])string\.(lower|upper)case([)\[,\s]|$)")
 re_next_on_iterator_method = re.compile(r"\.next\(\)")
+re_concatenate_dict = re.compile(
+    r".*\.items\(\)(\s*\+\s*.*\.items\(\))+.*")
 
 
 def _parse_assert_mock_str(line):
@@ -345,6 +347,21 @@ def check_next_on_iterator_method(logical_line):
         yield (0, "N337: Use next(iterator) rather than iterator.next().")
 
 
+def check_concatenate_dict_with_plus_operand(logical_line):
+    """Check if a dict is being sum with + operator
+
+    Python 3 dict.items() return a dict_items object instead of a list, and
+    this object, doesn't support + operator. Need to use the update method
+    instead in order to concatenate two dictionaries.
+
+    N338
+    """
+    res = re_concatenate_dict.search(logical_line)
+    if res:
+        yield (0, "N338: Use update() method instead of '+'' operand to "
+                  "concatenate dictionaries")
+
+
 def check_no_direct_rally_objects_import(logical_line, filename):
     """Check if rally.objects are properly imported.
 
@@ -381,3 +398,4 @@ def factory(register):
     register(check_string_lower_upper_case_method)
     register(check_next_on_iterator_method)
     register(check_no_direct_rally_objects_import)
+    register(check_concatenate_dict_with_plus_operand)
