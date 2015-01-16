@@ -22,8 +22,8 @@ from rally.aas.rest import types
 class Version(types.Version):
     @classmethod
     def convert(cls):
-        v = super(Version, cls).convert('v1', 'CURRENT',
-                                        updated_at='2014-01-07T00:00:00Z')
+        v = super(Version, cls).convert("v1", "CURRENT",
+                                        updated_at="2014-01-07T00:00:00Z")
         return v
 
 
