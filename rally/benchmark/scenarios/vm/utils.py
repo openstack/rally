@@ -51,7 +51,8 @@ class VMScenario(base.Scenario):
             timeout=120
         )
 
-    def run_command(self, server_ip, port, username, interpreter, script):
+    def run_command(self, server_ip, port, username, password,
+                    interpreter, script):
         """Run command via SSH on server.
 
         Create SSH connection for server, wait for server to become
@@ -61,7 +62,8 @@ class VMScenario(base.Scenario):
         """
         self.wait_for_ping(server_ip)
         ssh = sshutils.SSH(username, server_ip, port=port,
-                           pkey=self.context["user"]["keypair"]["private"])
+                           pkey=self.context["user"]["keypair"]["private"],
+                           password=password)
 
         self.wait_for_ssh(ssh)
         return self.run_action(ssh, interpreter, script)

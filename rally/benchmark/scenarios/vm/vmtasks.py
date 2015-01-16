@@ -45,6 +45,7 @@ class VMTasks(nova_utils.NovaScenario, vm_utils.VMScenario,
                             "keypair": {}, "allow_ssh": {}})
     def boot_runcommand_delete(self, image, flavor,
                                script, interpreter, username,
+                               password=None,
                                volume_args=None,
                                fixed_network="private",
                                floating_network="public",
@@ -62,6 +63,7 @@ class VMTasks(nova_utils.NovaScenario, vm_utils.VMScenario,
                        metric names to values (see the sample script below)
         :param interpreter: The shell interpreter to use when running script
         :param username: User to SSH to instance as
+        :param password: Password on SSH authentication
         :param volume_args: volume args when boot VM from volume
         :param fixed_network: Network where instance is part of
         :param floating_network: External network used to get floating ip from
@@ -99,7 +101,8 @@ class VMTasks(nova_utils.NovaScenario, vm_utils.VMScenario,
                 server_ip = fixed_ip
 
             code, out, err = self.run_command(server_ip, port,
-                                              username, interpreter, script)
+                                              username, password,
+                                              interpreter, script)
 
             if code:
                 raise exceptions.ScriptError(

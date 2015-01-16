@@ -63,7 +63,8 @@ class VMTasksTestCase(test.TestCase):
         scenario.boot_runcommand_delete(
             "image_id", "flavour_id", "script_path", "interpreter",
             fixed_network='private', floating_network='public',
-            volume_args={'size': 10}, username="username", ip_version=4,
+            volume_args={'size': 10}, username="username",
+            password='password', ip_version=4,
             port=22, use_floatingip=True, force_delete=False, fakearg="f")
 
         # Assertions
@@ -77,7 +78,7 @@ class VMTasksTestCase(test.TestCase):
         scenario._associate_floating_ip.assert_called_once_with(
             fake_server, fake_floating_ip)
         scenario.run_command.assert_called_once_with(
-            fake_floating_ip.ip, 22, 'username',
+            fake_floating_ip.ip, 22, 'username', 'password',
             "interpreter", "script_path")
 
         mock_json_loads.assert_called_once_with('stdout')
@@ -125,6 +126,7 @@ class VMTasksTestCase(test.TestCase):
                           "image_id", "flavour_id", "script_path",
                           "interpreter", fixed_network='private',
                           floating_network='public', username="username",
+                          password='password',
                           ip_version=4, port=22, use_floatingip=True,
                           force_delete=False, fakearg="f")
 
@@ -138,7 +140,7 @@ class VMTasksTestCase(test.TestCase):
         scenario._associate_floating_ip.assert_called_once_with(
             fake_server, fake_floating_ip)
         scenario.run_command.assert_called_once_with(
-            fake_floating_ip.ip, 22, 'username',
+            fake_floating_ip.ip, 22, 'username', 'password',
             "interpreter", "script_path")
 
     @mock.patch("json.loads")
@@ -180,6 +182,7 @@ class VMTasksTestCase(test.TestCase):
                           "image_id", "flavour_id", "script_path",
                           "interpreter", fixed_network='private',
                           floating_network='public', username="username",
+                          password='password',
                           ip_version=4, port=22, use_floatingip=True,
                           force_delete=False, fakearg="f")
 
@@ -193,7 +196,7 @@ class VMTasksTestCase(test.TestCase):
         scenario._associate_floating_ip.assert_called_once_with(
             fake_server, fake_floating_ip)
         scenario.run_command.assert_called_once_with(
-            fake_floating_ip.ip, 22, 'username',
+            fake_floating_ip.ip, 22, 'username', 'password',
             "interpreter", "script_path")
 
     @mock.patch("json.loads")
@@ -220,7 +223,7 @@ class VMTasksTestCase(test.TestCase):
         scenario.boot_runcommand_delete(
             "image_id", "flavour_id", "script_path", "interpreter",
             fixed_network='private', floating_network='public',
-            username="username", ip_version=4,
+            username="username", password='password', ip_version=4,
             port=22, use_floatingip=False, force_delete=False, fakearg="f")
 
         # Assertions
@@ -230,7 +233,7 @@ class VMTasksTestCase(test.TestCase):
 
         scenario.run_command.assert_called_once_with(
             fake_server.addresses['private'][0]['addr'], 22, 'username',
-            "interpreter", "script_path")
+            'password', "interpreter", "script_path")
 
         mock_json_loads.assert_called_once_with('stdout')
 
