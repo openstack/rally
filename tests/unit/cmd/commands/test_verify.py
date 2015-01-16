@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import datetime as date
 import tempfile
 
 import mock
@@ -96,10 +97,16 @@ class VerifyCommandsTestCase(test.TestCase):
     @mock.patch("rally.db.verification_list")
     def test_list(self, mock_db_verification_list, mock_print_list):
         fields = ["UUID", "Deployment UUID", "Set name", "Tests", "Failures",
-                  "Created at", "Status"]
-        verifications = {"dummy": []}
+                  "Created at", "Duration", "Status"]
+        verifications = [{"created_at": date.datetime.now(),
+                          "updated_at": date.datetime.now()}]
         mock_db_verification_list.return_value = verifications
         self.verify.list()
+
+        for row in verifications:
+            self.assertEqual(row["updated_at"] - row["created_at"],
+                             row["duration"])
+
         mock_db_verification_list.assert_called_once_with()
         mock_print_list.assert_called_once_with(verifications, fields,
                                                 sortby_index=fields.index(
