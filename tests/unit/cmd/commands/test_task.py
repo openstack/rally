@@ -14,6 +14,7 @@
 #    under the License.
 
 import copy
+import datetime as date
 
 import mock
 
@@ -489,7 +490,8 @@ class TaskCommandsTestCase(test.TestCase):
                 return_value="123456789")
     @mock.patch("rally.cmd.commands.task.objects.Task.list",
                 return_value=[fakes.FakeTask(uuid="a",
-                                             created_at="b",
+                                             created_at=date.datetime.now(),
+                                             updated_at=date.datetime.now(),
                                              status="c",
                                              failed=True,
                                              tag="d",
@@ -501,8 +503,8 @@ class TaskCommandsTestCase(test.TestCase):
             deployment=mock_default.return_value,
             status=consts.TaskStatus.RUNNING)
 
-        headers = ["uuid", "deployment_name", "created_at", "status",
-                   "failed", "tag"]
+        headers = ["uuid", "deployment_name", "created_at", "duration",
+                   "status", "failed", "tag"]
         mock_print_list.assert_called_once_with(
             mock_objects_list.return_value, headers,
             sortby_index=headers.index('created_at'))

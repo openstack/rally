@@ -453,8 +453,8 @@ class TaskCommands(object):
         """
 
         filters = {}
-        headers = ["uuid", "deployment_name", "created_at", "status",
-                   "failed", "tag"]
+        headers = ["uuid", "deployment_name", "created_at", "duration",
+                   "status", "failed", "tag"]
 
         if status in consts.TaskStatus:
             filters.setdefault("status", status)
@@ -468,11 +468,14 @@ class TaskCommands(object):
         if not all_deployments:
             filters.setdefault("deployment", deployment)
 
-        task_list = objects.Task.list(**filters)
+        task_list = map(lambda x: x.to_dict(), objects.Task.list(**filters))
+
+        for x in task_list:
+            x["duration"] = x["updated_at"] - x["created_at"]
 
         if task_list:
             common_cliutils.print_list(
-                map(lambda x: x.to_dict(), task_list),
+                task_list,
                 headers, sortby_index=headers.index("created_at"))
         else:
             if status:
