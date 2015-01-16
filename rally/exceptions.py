@@ -24,9 +24,9 @@ from rally.common import log as logging
 LOG = logging.getLogger(__name__)
 
 exc_log_opts = [
-    cfg.BoolOpt('fatal_exception_format_errors',
+    cfg.BoolOpt("fatal_exception_format_errors",
                 default=False,
-                help='make exception message format errors fatal'),
+                help="make exception message format errors fatal"),
 ]
 
 CONF = cfg.CONF
@@ -37,7 +37,7 @@ class RallyException(Exception):
     """Base Rally Exception
 
     To correctly use this class, inherit from it and define
-    a 'msg_fmt' property. That msg_fmt will get printf'd
+    a "msg_fmt" property. That msg_fmt will get printf'd
     with the keyword arguments provided to the constructor.
 
     """
@@ -73,7 +73,7 @@ class RallyException(Exception):
         super(RallyException, self).__init__(message)
 
     def format_message(self):
-        if self.__class__.__name__.endswith('_Remote'):
+        if self.__class__.__name__.endswith("_Remote"):
             return self.args[0]
         else:
             return unicode(self)
