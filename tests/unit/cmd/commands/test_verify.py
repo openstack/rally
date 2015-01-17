@@ -158,29 +158,30 @@ class VerifyCommandsTestCase(test.TestCase):
 
         mock_db_result_get.assert_called_once_with(verification_uuid)
 
-    @mock.patch("rally.cmd.commands.verify.open", create=True)
+    @mock.patch("rally.cmd.commands.verify.open",
+                side_effect=mock.mock_open(), create=True)
     @mock.patch("rally.db.verification_result_get", return_value={"data": {}})
     def test_results_with_output_json_and_output_file(self,
                                                       mock_db_result_get,
                                                       mock_open):
-        mock_open.return_value = mock.MagicMock()
+        mock_open.side_effect = mock.mock_open()
         verification_uuid = "94615cd4-ff45-4123-86bd-4b0741541d09"
         self.verify.results(verification_uuid, output_file="results",
                             output_html=False, output_json=True)
 
         mock_db_result_get.assert_called_once_with(verification_uuid)
         mock_open.assert_called_once_with("results", "wb")
-        fake_file = mock_open.return_value.__enter__.return_value
-        fake_file.write.assert_called_once_with("{}")
+        mock_open.side_effect().write.assert_called_once_with("{}")
 
-    @mock.patch("rally.cmd.commands.verify.open", create=True)
+    @mock.patch("rally.cmd.commands.verify.open",
+                side_effect=mock.mock_open(), create=True)
     @mock.patch("rally.db.verification_result_get")
     @mock.patch("rally.verification.tempest.json2html.HtmlOutput")
     def test_results_with_output_html_and_output_file(self,
                                                       mock_html,
                                                       mock_db_result_get,
                                                       mock_open):
-        mock_open.return_value = mock.MagicMock()
+
         verification_uuid = "7140dd59-3a7b-41fd-a3ef-5e3e615d7dfa"
         fake_data = {}
         results = {"data": fake_data}
@@ -193,8 +194,7 @@ class VerifyCommandsTestCase(test.TestCase):
         mock_db_result_get.assert_called_once_with(verification_uuid)
         mock_html.assert_called_once_with(fake_data)
         mock_open.assert_called_once_with("results", "wb")
-        fake_file = mock_open.return_value.__enter__.return_value
-        fake_file.write.assert_called_once_with("html_report")
+        mock_open.side_effect().write.assert_called_once_with("html_report")
 
     @mock.patch("rally.db.verification_result_get",
                 return_value={"data": {"test_cases": {}}})
@@ -224,7 +224,8 @@ class VerifyCommandsTestCase(test.TestCase):
 
         mock_db_result_get.assert_called_once_with(uuid1)
 
-    @mock.patch("rally.cmd.commands.verify.open", create=True)
+    @mock.patch("rally.cmd.commands.verify.open",
+                side_effect=mock.mock_open(), create=True)
     @mock.patch("rally.db.verification_result_get",
                 return_value={"data": {"test_cases": {}}})
     def test_compare_with_output_csv_and_output_file(self,
@@ -242,10 +243,10 @@ class VerifyCommandsTestCase(test.TestCase):
                  mock.call(uuid2)]
         mock_db_result_get.assert_has_calls(calls, True)
         mock_open.assert_called_once_with("results", "wb")
-        fake_file = mock_open.return_value.__enter__.return_value
-        fake_file.write.assert_called_once_with(fake_string)
+        mock_open.side_effect().write.assert_called_once_with(fake_string)
 
-    @mock.patch("rally.cmd.commands.verify.open", create=True)
+    @mock.patch("rally.cmd.commands.verify.open",
+                side_effect=mock.mock_open(), create=True)
     @mock.patch("rally.db.verification_result_get",
                 return_value={"data": {"test_cases": {}}})
     def test_compare_with_output_json_and_output_file(self,
@@ -262,10 +263,10 @@ class VerifyCommandsTestCase(test.TestCase):
                  mock.call(uuid2)]
         mock_db_result_get.assert_has_calls(calls, True)
         mock_open.assert_called_once_with("results", "wb")
-        fake_file = mock_open.return_value.__enter__.return_value
-        fake_file.write.assert_called_once_with(fake_json_string)
+        mock_open.side_effect().write.assert_called_once_with(fake_json_string)
 
-    @mock.patch("rally.cmd.commands.verify.open", create=True)
+    @mock.patch("rally.cmd.commands.verify.open",
+                side_effect=mock.mock_open(), create=True)
     @mock.patch("rally.db.verification_result_get")
     @mock.patch(("rally.verification.tempest."
                  "compare2html.create_report"), return_value="")
@@ -289,5 +290,4 @@ class VerifyCommandsTestCase(test.TestCase):
         mock_compare2html_create.assert_called_once_with(fake_data)
 
         mock_open.assert_called_once_with("results", "wb")
-        fake_file = mock_open.return_value.__enter__.return_value
-        fake_file.write.assert_called_once_with("")
+        mock_open.side_effect().write.assert_called_once_with("")

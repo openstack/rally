@@ -59,13 +59,12 @@ class ConfigTestCase(test.TestCase):
 
     @mock.patch("rally.verification.tempest.config.requests")
     @mock.patch("rally.verification.tempest.config.os.rename")
-    @mock.patch("six.moves.builtins.open")
+    @mock.patch("six.moves.builtins.open", side_effect=mock.mock_open(),
+                create=True)
     def test__load_img_success(self, mock_open, mock_rename, mock_requests):
         mock_result = mock.MagicMock()
         mock_result.status_code = 200
         mock_requests.get.return_value = mock_result
-        mock_file = mock.MagicMock()
-        mock_open.return_value = mock_file
         self.conf_generator._load_img()
         cirros_url = ("http://download.cirros-cloud.net/%s/%s" %
                       (CONF.image.cirros_version,
@@ -298,16 +297,14 @@ class ConfigTestCase(test.TestCase):
         self.assertEqual(self.conf_generator.conf.get(
             "service_available", "horizon"), "True")
 
-    @mock.patch('six.moves.builtins.open')
+    @mock.patch('six.moves.builtins.open', side_effect=mock.mock_open(),
+                create=True)
     def test_write_config(self, mock_open):
         self.conf_generator.conf = mock.Mock()
-        mock_file = mock.MagicMock()
-        mock_open.return_value = mock_file
         file_name = '/path/to/fake/conf'
 
         self.conf_generator.write_config(file_name)
 
         mock_open.assert_called_once_with(file_name, 'w+')
         self.conf_generator.conf.write.assert_called_once_with(
-            mock_file.__enter__())
-        mock_file.__exit__.assert_called_once_with(None, None, None)
+            mock_open.side_effect())
