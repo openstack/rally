@@ -86,8 +86,12 @@ class VerifyCommands(object):
         """Display all verifications table, started and finished."""
 
         fields = ["UUID", "Deployment UUID", "Set name", "Tests", "Failures",
-                  "Created at", "Status"]
+                  "Created at", "Duration", "Status"]
         verifications = db.verification_list()
+
+        for el in verifications:
+            el["duration"] = el["updated_at"] - el["created_at"]
+
         if verifications:
             common_cliutils.print_list(verifications, fields,
                                        sortby_index=fields.index("Created at"))
