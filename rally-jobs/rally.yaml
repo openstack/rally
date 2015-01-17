@@ -905,6 +905,10 @@
         users:
           tenants: 3
           users_per_tenant: 3
+      sla:
+        failure_rate:
+          max: 0
+
 
   NovaServers.boot_server_from_volume:
     -
@@ -922,6 +926,10 @@
         users:
           tenants: 2
           users_per_tenant: 2
+      sla:
+        failure_rate:
+          max: 0
+
 
   NovaServers.snapshot_server:
     -
@@ -1030,6 +1038,9 @@
         users:
           tenants: 1
           users_per_tenant: 1
+      sla:
+        failure_rate:
+          max: 0
 
     -
       args:

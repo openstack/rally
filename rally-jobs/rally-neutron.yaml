@@ -421,6 +421,10 @@
         users:
           tenants: 2
           users_per_tenant: 2
+      sla:
+        failure_rate:
+          max: 0
+
 
   NovaServers.boot_server_from_volume:
     -
@@ -438,6 +442,10 @@
         users:
           tenants: 2
           users_per_tenant: 2
+      sla:
+        failure_rate:
+          max: 0
+
 
   NovaServers.snapshot_server:
     -
@@ -480,19 +488,6 @@
         failure_rate:
           max: 0
 
-  HeatStacks.create_and_delete_stack:
-    -
-      args:
-        template_path: '/home/jenkins/.rally/extra/server_with_ports.yaml.template'
-      runner:
-        type: "constant"
-        times: 3
-        concurrency: 3
-      context:
-        users:
-          tenants: 2
-          users_per_tenant: 2
-
   NovaSecGroup.create_and_delete_secgroups:
     -
       args:
@@ -534,30 +529,6 @@
       sla:
         failure_rate:
           max: 0
-
-  NovaSecGroup.boot_and_delete_server_with_secgroups:
-    -
-      args:
-        flavor:
-          name: "m1.tiny"
-        image:
-          name: {{image_name}}
-        security_group_count: 5
-        rules_per_security_group: 5
-      runner:
-        type: "constant"
-        times: 4
-        concurrency: 4
-      context:
-        users:
-          tenants: 3
-          users_per_tenant: 2
-        network:
-          start_cidr: "100.1.0.0/26"
-        quotas:
-          neutron:
-            security_group: -1
-            security_group_rule: -1
 
   CinderVolumes.create_and_delete_volume:
     -
@@ -644,99 +615,3 @@
       sla:
         failure_rate:
           max: 0
-
-  CinderVolumes.create_and_attach_volume:
-    -
-      args:
-        size: 1
-        image:
-          name: {{image_name}}
-        flavor:
-          name: "m1.tiny"
-      runner:
-        type: "constant"
-        times: 3
-        concurrency: 3
-      context:
-        users:
-          tenants: 2
-          users_per_tenant: 2
-      sla:
-        failure_rate:
-          max: 0
-
-  CinderVolumes.create_snapshot_and_attach_volume:
-    -
-      args:
-          volume_type: false
-          size:
-              min: 1
-              max: 2
-      runner:
-        type: "constant"
-        times: 3
-        concurrency: 3
-      context:
-        users:
-          tenants: 2
-          users_per_tenant: 1
-        servers:
-          image:
-            name: {{image_name}}
-          flavor:
-            name: "m1.tiny"
-          servers_per_tenant: 2
-      sla:
-          failure_rate:
-            max: 0
-    -
-      args:
-          volume_type: true
-          size:
-              min: 1
-              max: 2
-      runner:
-        type: "constant"
-        times: 3
-        concurrency: 3
-      context:
-        users:
-          tenants: 1
-          users_per_tenant: 1
-        servers:
-          image:
-            name: {{image_name}}
-          flavor:
-            name: "m1.tiny"
-          servers_per_tenant: 1
-      sla:
-          failure_rate:
-            max: 0
-
-
-  CinderVolumes.create_nested_snapshots_and_attach_volume:
-    -
-      args:
-          size:
-              min: 1
-              max: 2
-          nested_level:
-              min: 2
-              max: 2
-      runner:
-        type: "constant"
-        times: 2
-        concurrency: 2
-      context:
-        users:
-          tenants: 2
-          users_per_tenant: 1
-        servers:
-          image:
-            name: {{image_name}}
-          flavor:
-            name: "m1.tiny"
-          servers_per_tenant: 2
-      sla:
-          failure_rate:
-            max: 0
