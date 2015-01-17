@@ -21,7 +21,7 @@ import os
 import sys
 
 import jsonschema
-from oslo.config import cfg
+from oslo_config import cfg
 import six
 
 from rally.common.i18n import _

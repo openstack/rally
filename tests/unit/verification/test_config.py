@@ -16,7 +16,7 @@
 import os
 
 import mock
-from oslo.config import cfg
+from oslo_config import cfg
 
 from rally.verification.tempest import config
 from tests.unit import fakes

@@ -39,9 +39,9 @@ these objects be simple dictionaries.
 
 """
 
-from oslo.config import cfg
-from oslo.db import api as db_api
-from oslo.db import options as db_options
+from oslo_config import cfg
+from oslo_db import api as db_api
+from oslo_db import options as db_options
 
 
 CONF = cfg.CONF

@@ -15,8 +15,8 @@
 
 import random
 
-from oslo.config import cfg
-from oslo.utils import uuidutils
+from oslo_config import cfg
+from oslo_utils import uuidutils
 from saharaclient.api import base as sahara_base
 
 from rally.benchmark.scenarios import base

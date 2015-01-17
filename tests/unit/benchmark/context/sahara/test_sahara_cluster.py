@@ -13,7 +13,7 @@
 # under the License.
 
 import mock
-from oslo.config import cfg
+from oslo_config import cfg
 
 from rally.benchmark.context.sahara import sahara_cluster
 from rally import exceptions

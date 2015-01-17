@@ -13,7 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from oslo.utils import uuidutils as uid
+from oslo_utils import uuidutils as uid
 
 from rally.benchmark.scenarios import base
 from rally.benchmark.wrappers import network as network_wrapper

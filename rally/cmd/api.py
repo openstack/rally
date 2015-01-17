@@ -19,7 +19,7 @@ import os
 import sys
 from wsgiref import simple_server
 
-from oslo.config import cfg
+from oslo_config import cfg
 
 from rally.aas.rest import app as rally_app
 from rally.common.i18n import _

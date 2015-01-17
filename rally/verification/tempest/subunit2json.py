@@ -19,8 +19,8 @@ import os
 import tempfile
 import traceback
 
-from oslo.serialization import jsonutils
-from oslo.utils import timeutils
+from oslo_serialization import jsonutils
+from oslo_utils import timeutils
 import subunit
 import testtools
 

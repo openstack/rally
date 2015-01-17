@@ -32,3 +32,4 @@ Rally Specific Commandments
  * [N337] - Ensure that ``next()`` method on iterator objects is not used
  * [N338] - Ensure that ``+`` operand is not used to concatenate dict.items()
 * [N340] - Ensure that we are importing always ``from rally import objects``
+* [N341] - Ensure that we are importing oslo_xyz packages instead of deprecated oslo.xyz ones

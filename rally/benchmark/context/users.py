@@ -16,7 +16,7 @@
 import collections
 import uuid
 
-from oslo.config import cfg
+from oslo_config import cfg
 
 from rally.benchmark.context import base
 from rally.benchmark import utils

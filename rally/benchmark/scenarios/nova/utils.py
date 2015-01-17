@@ -16,7 +16,7 @@
 import random
 import time
 
-from oslo.config import cfg
+from oslo_config import cfg
 import six
 
 from rally.benchmark.scenarios import base
