@@ -54,9 +54,9 @@ def cached(func):
     """Cache client handles."""
 
     def wrapper(self, *args, **kwargs):
-        key = '{0}{1}{2}'.format(func.__name__,
-                                 str(args) if args else '',
-                                 str(kwargs) if kwargs else '')
+        key = "{0}{1}{2}".format(func.__name__,
+                                 str(args) if args else "",
+                                 str(kwargs) if kwargs else "")
 
         if key in self.cache:
             return self.cache[key]
@@ -69,13 +69,13 @@ def cached(func):
 def create_keystone_client(args):
     discover = keystone_discover.Discover(**args)
     for version_data in discover.version_data():
-        version = version_data['version']
+        version = version_data["version"]
         if version[0] <= 2:
             return keystone_v2.Client(**args)
         elif version[0] == 3:
             return keystone_v3.Client(**args)
     raise exceptions.RallyException(
-        'Failed to discover keystone version for url %(auth_url)s.', **args)
+        "Failed to discover keystone version for url %(auth_url)s.", **args)
 
 
 class Clients(object):
@@ -111,7 +111,7 @@ class Clients(object):
         try:
             # Ensure that user is admin
             client = self.keystone()
-            if 'admin' not in [role.lower() for role in
+            if "admin" not in [role.lower() for role in
                                client.auth_ref.role_names]:
                 raise exceptions.InvalidAdminException(
                     username=self.endpoint.username)
@@ -123,11 +123,11 @@ class Clients(object):
         return client
 
     @cached
-    def nova(self, version='2'):
+    def nova(self, version="2"):
         """Return nova client."""
         kc = self.keystone()
         compute_api_url = kc.service_catalog.url_for(
-            service_type='compute',
+            service_type="compute",
             endpoint_type=self.endpoint.endpoint_type,
             region_name=self.endpoint.region_name)
         client = nova.Client(version,
@@ -140,11 +140,11 @@ class Clients(object):
         return client
 
     @cached
-    def neutron(self, version='2.0'):
+    def neutron(self, version="2.0"):
         """Return neutron client."""
         kc = self.keystone()
         network_api_url = kc.service_catalog.url_for(
-            service_type='network',
+            service_type="network",
             endpoint_type=self.endpoint.endpoint_type,
             region_name=self.endpoint.region_name)
         client = neutron.Client(version,
@@ -156,11 +156,11 @@ class Clients(object):
         return client
 
     @cached
-    def glance(self, version='1'):
+    def glance(self, version="1"):
         """Return glance client."""
         kc = self.keystone()
         image_api_url = kc.service_catalog.url_for(
-            service_type='image',
+            service_type="image",
             endpoint_type=self.endpoint.endpoint_type,
             region_name=self.endpoint.region_name)
         client = glance.Client(version,
@@ -172,11 +172,11 @@ class Clients(object):
         return client
 
     @cached
-    def heat(self, version='1'):
+    def heat(self, version="1"):
         """Return heat client."""
         kc = self.keystone()
         orchestration_api_url = kc.service_catalog.url_for(
-            service_type='orchestration',
+            service_type="orchestration",
             endpoint_type=self.endpoint.endpoint_type,
             region_name=self.endpoint.region_name)
         client = heat.Client(version,
@@ -188,7 +188,7 @@ class Clients(object):
         return client
 
     @cached
-    def cinder(self, version='1'):
+    def cinder(self, version="1"):
         """Return cinder client."""
         client = cinder.Client(version, None, None,
                                http_log_debug=logging.is_debug(),
@@ -197,7 +197,7 @@ class Clients(object):
                                cacert=CONF.https_cacert)
         kc = self.keystone()
         volume_api_url = kc.service_catalog.url_for(
-            service_type='volume',
+            service_type="volume",
             endpoint_type=self.endpoint.endpoint_type,
             region_name=self.endpoint.region_name)
         client.client.management_url = volume_api_url
@@ -205,15 +205,15 @@ class Clients(object):
         return client
 
     @cached
-    def ceilometer(self, version='2'):
+    def ceilometer(self, version="2"):
         """Return ceilometer client."""
         kc = self.keystone()
         metering_api_url = kc.service_catalog.url_for(
-            service_type='metering',
+            service_type="metering",
             endpoint_type=self.endpoint.endpoint_type,
             region_name=self.endpoint.region_name)
         auth_token = kc.auth_token
-        if not hasattr(auth_token, '__call__'):
+        if not hasattr(auth_token, "__call__"):
             # python-ceilometerclient requires auth_token to be a callable
             auth_token = lambda: kc.auth_token
 
@@ -226,11 +226,11 @@ class Clients(object):
         return client
 
     @cached
-    def ironic(self, version='1.0'):
+    def ironic(self, version="1.0"):
         """Return Ironic client."""
         kc = self.keystone()
         baremetal_api_url = kc.service_catalog.url_for(
-            service_type='baremetal',
+            service_type="baremetal",
             endpoint_type=self.endpoint.endpoint_type,
             region_name=self.endpoint.region_name)
         client = ironic.get_client(version,
@@ -242,7 +242,7 @@ class Clients(object):
         return client
 
     @cached
-    def sahara(self, version='1.1'):
+    def sahara(self, version="1.1"):
         """Return Sahara client."""
         client = sahara.Client(version,
                                username=self.endpoint.username,
@@ -257,16 +257,16 @@ class Clients(object):
         """Return Zaqar client."""
         kc = self.keystone()
         messaging_api_url = kc.service_catalog.url_for(
-            service_type='messaging',
+            service_type="messaging",
             endpoint_type=self.endpoint.endpoint_type,
             region_name=self.endpoint.region_name)
-        conf = {'auth_opts': {'backend': 'keystone', 'options': {
-            'os_username': self.endpoint.username,
-            'os_password': self.endpoint.password,
-            'os_project_name': self.endpoint.tenant_name,
-            'os_project_id': kc.auth_tenant_id,
-            'os_auth_url': self.endpoint.auth_url,
-            'insecure': CONF.https_insecure,
+        conf = {"auth_opts": {"backend": "keystone", "options": {
+            "os_username": self.endpoint.username,
+            "os_password": self.endpoint.password,
+            "os_project_name": self.endpoint.tenant_name,
+            "os_project_id": kc.auth_tenant_id,
+            "os_auth_url": self.endpoint.auth_url,
+            "insecure": CONF.https_insecure,
         }}}
         client = zaqar.Client(url=messaging_api_url,
                               version=version,
@@ -278,7 +278,7 @@ class Clients(object):
         """Return designate client."""
         kc = self.keystone()
         dns_api_url = kc.service_catalog.url_for(
-            service_type='dns',
+            service_type="dns",
             endpoint_type=self.endpoint.endpoint_type,
             region_name=self.endpoint.region_name)
         client = designate.Client(
@@ -288,7 +288,7 @@ class Clients(object):
         return client
 
     @cached
-    def trove(self, version='1.0'):
+    def trove(self, version="1.0"):
         """Returns trove client."""
         client = trove.Client(version,
                               username=self.endpoint.username,

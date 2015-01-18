@@ -46,13 +46,13 @@ def create_deploy(config, name):
             LOG.exception(e)
         raise
 
-    deployer = deploy.EngineFactory.get_engine(deployment['config']['type'],
+    deployer = deploy.EngineFactory.get_engine(deployment["config"]["type"],
                                                deployment)
     try:
         deployer.validate()
     except jsonschema.ValidationError:
-        LOG.error(_('Deployment %(uuid)s: Schema validation error.') %
-                  {'uuid': deployment['uuid']})
+        LOG.error(_("Deployment %(uuid)s: Schema validation error.") %
+                  {"uuid": deployment["uuid"]})
         deployment.update_status(consts.DeployStatus.DEPLOY_FAILED)
         raise
 
@@ -72,10 +72,10 @@ def destroy_deploy(deployment):
     # TODO(akscram): Check that the deployment have got a status that
     #                is equal to "*->finished" or "deploy->inconsistent".
     deployment = objects.Deployment.get(deployment)
-    deployer = deploy.EngineFactory.get_engine(deployment['config']['type'],
+    deployer = deploy.EngineFactory.get_engine(deployment["config"]["type"],
                                                deployment)
 
-    tempest.Tempest(deployment['uuid']).uninstall()
+    tempest.Tempest(deployment["uuid"]).uninstall()
     with deployer:
         deployer.make_cleanup()
         deployment.delete()
@@ -87,7 +87,7 @@ def recreate_deploy(deployment):
     :param deployment: UUID or name of the deployment
     """
     deployment = objects.Deployment.get(deployment)
-    deployer = deploy.EngineFactory.get_engine(deployment['config']['type'],
+    deployer = deploy.EngineFactory.get_engine(deployment["config"]["type"],
                                                deployment)
     with deployer:
         deployer.make_cleanup()
@@ -135,7 +135,7 @@ def create_task(deployment, tag):
     :param tag: tag for this task
     """
 
-    deployment_uuid = objects.Deployment.get(deployment)['uuid']
+    deployment_uuid = objects.Deployment.get(deployment)["uuid"]
     return objects.Task(deployment_uuid=deployment_uuid, tag=tag)
 
 
@@ -146,7 +146,7 @@ def task_validate(deployment, config):
     :param config: a dict with a task configuration
     """
     deployment = objects.Deployment.get(deployment)
-    task = objects.Task(deployment_uuid=deployment['uuid'])
+    task = objects.Task(deployment_uuid=deployment["uuid"])
     benchmark_engine = engine.BenchmarkEngine(
         config, task, admin=deployment["admin"], users=deployment["users"])
     benchmark_engine.validate()
@@ -162,9 +162,9 @@ def start_task(deployment, config, task=None):
     :param config: a dict with a task configuration
     """
     deployment = objects.Deployment.get(deployment)
-    task = task or objects.Task(deployment_uuid=deployment['uuid'])
-    LOG.info("Benchmark Task %s on Deployment %s" % (task['uuid'],
-                                                     deployment['uuid']))
+    task = task or objects.Task(deployment_uuid=deployment["uuid"])
+    LOG.info("Benchmark Task %s on Deployment %s" % (task["uuid"],
+                                                     deployment["uuid"]))
     benchmark_engine = engine.BenchmarkEngine(
         config, task, admin=deployment["admin"], users=deployment["users"])
 

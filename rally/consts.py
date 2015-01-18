@@ -53,17 +53,17 @@ class _TaskStatus(utils.ImmutableMixin, utils.EnumMixin):
 
 
 class _DeployStatus(utils.ImmutableMixin, utils.EnumMixin):
-    DEPLOY_INIT = 'deploy->init'
-    DEPLOY_STARTED = 'deploy->started'
-    DEPLOY_SUBDEPLOY = 'deploy->subdeploy'
-    DEPLOY_FINISHED = 'deploy->finished'
-    DEPLOY_FAILED = 'deploy->failed'
+    DEPLOY_INIT = "deploy->init"
+    DEPLOY_STARTED = "deploy->started"
+    DEPLOY_SUBDEPLOY = "deploy->subdeploy"
+    DEPLOY_FINISHED = "deploy->finished"
+    DEPLOY_FAILED = "deploy->failed"
 
-    DEPLOY_INCONSISTENT = 'deploy->inconsistent'
+    DEPLOY_INCONSISTENT = "deploy->inconsistent"
 
-    CLEANUP_STARTED = 'cleanup->started'
-    CLEANUP_FINISHED = 'cleanup->finished'
-    CLEANUP_FAILED = 'cleanup->failed'
+    CLEANUP_STARTED = "cleanup->started"
+    CLEANUP_FINISHED = "cleanup->finished"
+    CLEANUP_FAILED = "cleanup->failed"
 
 
 class _EndpointPermission(utils.ImmutableMixin, utils.EnumMixin):
