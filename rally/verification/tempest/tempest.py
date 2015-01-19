@@ -53,7 +53,8 @@ def check_output(*args, **kwargs):
 
 class Tempest(object):
 
-    base_repo = os.path.join(os.path.expanduser("~"), ".rally/tempest/base")
+    base_repo_dir = os.path.join(os.path.expanduser("~"),
+                                 ".rally/tempest/base")
 
     def __init__(self, deployment, verification=None, tempest_config=None,
                  source=None):
@@ -67,6 +68,7 @@ class Tempest(object):
         self.venv_wrapper = self.path("tools/with_venv.sh")
         self.verification = verification
         self._env = None
+        self._base_repo = None
 
     def _generate_env(self):
         env = os.environ.copy()
@@ -86,6 +88,79 @@ class Tempest(object):
         if inner_path:
             return os.path.join(self._path, *inner_path)
         return self._path
+
+    @staticmethod
+    def _is_git_repo(directory):
+        # will suppress git output
+        with open(os.devnull, 'w') as devnull:
+            return os.path.isdir(directory) and not subprocess.call(
+                "git status", shell=True,
+                stdout=devnull, stderr=subprocess.STDOUT,
+                cwd=os.path.abspath(directory))
+
+    @staticmethod
+    def _move_contents_to_subdir(base, subdir):
+        """Moves contents of directory :base into its sub-directory :subdir
+
+        :param base: source directory to move files from
+        :param subdir: name of subdirectory to move files to
+        """
+        for filename in os.listdir(base):
+            shutil.move(filename, os.path.join(base, subdir, filename))
+
+    @property
+    def base_repo(self):
+        """Get directory to clone tempest to
+
+        old:
+            _ rally/tempest
+            |_base -> clone from source to here
+            |_for-deployment-<UUID1> -> copy from relevant tempest base
+            |_for-deployment-<UUID2> -> copy from relevant tempest base
+
+       new:
+            _ rally/tempest
+            |_base
+            ||_ tempest_base-<rand suffix specific for source> -> clone
+            ||        from source to here
+            ||_ tempest_base-<rand suffix 2>
+            |_for-deployment-<UUID1> -> copy from relevant tempest base
+            |_for-deployment-<UUID2> -> copy from relevant tempest base
+
+        """
+        if os.path.exists(Tempest.base_repo_dir):
+            if self._is_git_repo(Tempest.base_repo_dir):
+                # this is the old dir structure and needs to be upgraded
+                directory = utils.generate_random_name("tempest_base-")
+                LOG.debug("Upgrading Tempest directory tree: "
+                          "Moving Tempest base dir %s into subdirectory %s" %
+                          (Tempest.base_repo_dir, directory))
+                self._move_contents_to_subdir(Tempest.base_repo_dir,
+                                              directory)
+            if not self._base_repo:
+                # Search existing tempest bases for a matching source
+                repos = [d for d in os.listdir(Tempest.base_repo_dir)
+                         if self._is_git_repo(d) and
+                         self.tempest_source == self._get_remote_origin(d)]
+                if len(repos) > 1:
+                    raise exceptions.MultipleMatchesFound(
+                        needle="git directory",
+                        haystack=repos)
+                if repos:
+                    # Use existing base with relevant source
+                    self._base_repo = repos.pop()
+        if not self._base_repo:
+            directory = utils.generate_random_name("tempest_base-")
+            self._base_repo = os.path.join(
+                os.path.abspath(Tempest.base_repo_dir), directory)
+        return self._base_repo
+
+    @staticmethod
+    def _get_remote_origin(directory):
+        out = subprocess.check_output("git config --get remote.origin.url",
+                                      shell=True,
+                                      cwd=os.path.abspath(directory))
+        return out.strip()
 
     def _install_venv(self):
         path_to_venv = self.path(".venv")
@@ -139,16 +214,16 @@ class Tempest(object):
               "This could take a few minutes...")
         subprocess.check_call(["git", "clone",
                                self.tempest_source,
-                               Tempest.base_repo])
+                               self.base_repo])
 
     def install(self):
         if not self.is_installed():
             try:
-                if not os.path.exists(Tempest.base_repo):
+                if not os.path.exists(self.base_repo):
                     self._clone()
 
                 if not os.path.exists(self.path()):
-                    shutil.copytree(Tempest.base_repo, self.path())
+                    shutil.copytree(self.base_repo, self.path())
                     subprocess.check_call("git checkout master; "
                                           "git pull", shell=True,
                                           cwd=self.path("tempest"))

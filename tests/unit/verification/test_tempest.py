@@ -34,6 +34,11 @@ TEMPEST_PATH = "rally.verification.tempest"
 class BaseTestCase(test.TestCase):
     def setUp(self):
         super(BaseTestCase, self).setUp()
+        self.base_repo_patcher = mock.patch.object(tempest.Tempest,
+                                                   "base_repo", "foo-baserepo")
+        self.base_repo_dir_patcher = mock.patch.object(tempest.Tempest,
+                                                       "base_repo_dir",
+                                                       "foo-baserepodir")
         self.verifier = tempest.Tempest("fake_deployment_id",
                                         verification=mock.MagicMock())
 
@@ -166,21 +171,47 @@ class TempestInstallAndUninstallTestCase(BaseTestCase):
 
     @mock.patch(TEMPEST_PATH + ".tempest.subprocess.check_call")
     def test__clone_successful(self, mock_sp):
-        self.verifier._clone()
-        mock_sp.assert_called_once_with(
-            ["git", "clone", "https://github.com/openstack/tempest",
-             tempest.Tempest.base_repo])
+        with self.base_repo_patcher:
+            self.verifier._clone()
+            mock_sp.assert_called_once_with(
+                ["git", "clone", "https://github.com/openstack/tempest",
+                 "foo-baserepo"])
+
+    def test__no_dir(self):
+        with mock.patch("os.path.isdir", return_value=False):
+            self.assertFalse(self.verifier._is_git_repo("fake_dir"))
+
+    @mock.patch("subprocess.call", return_value=1)
+    @mock.patch("os.path.isdir", return_value=True)
+    def test__is_not_git_repo(self, mock_isdir, mock_git_status):
+        self.assertFalse(self.verifier._is_git_repo("fake_dir"))
+
+    @mock.patch("subprocess.call", return_value=0)
+    @mock.patch("os.path.isdir", return_value=True)
+    def test__is_git_repo(self, mock_isdir, mock_git_status):
+        self.assertTrue(self.verifier._is_git_repo("fake_dir"))
+
+    @testtools.skipIf(sys.version_info < (2, 7), "Incompatible Python Version")
+    @mock.patch("subprocess.check_output", return_value="fake_url")
+    def test__get_remote_origin(self, mock_sp):
+        with mock_sp:
+            self.assertEqual("fake_url",
+                             self.verifier._get_remote_origin("fake_dir"))
 
     @mock.patch(TEMPEST_PATH + ".tempest.subprocess.check_call")
     def test__clone_failed(self, mock_sp):
-        # Check that `subprocess.CalledProcessError` is not handled by `_clone`
-        mock_sp.side_effect = subprocess.CalledProcessError(0, None)
+        with self.base_repo_patcher:
+            # Check that `subprocess.CalledProcessError` is not handled
+            # by `_clone`
+            mock_sp.side_effect = subprocess.CalledProcessError(0, None)
 
-        self.assertRaises(subprocess.CalledProcessError, self.verifier._clone)
-        mock_sp.assert_called_once_with(
-            ["git", "clone", "https://github.com/openstack/tempest",
-             tempest.Tempest.base_repo])
+            self.assertRaises(subprocess.CalledProcessError,
+                              self.verifier._clone)
+            mock_sp.assert_called_once_with(
+                ["git", "clone", "https://github.com/openstack/tempest",
+                 "foo-baserepo"])
 
+    @mock.patch(TEMPEST_PATH + ".tempest.Tempest.base_repo")
     @mock.patch(TEMPEST_PATH + ".tempest.Tempest._initialize_testr")
     @mock.patch(TEMPEST_PATH + ".tempest.Tempest._install_venv")
     @mock.patch(TEMPEST_PATH + ".tempest.subprocess.check_call")
@@ -188,7 +219,9 @@ class TempestInstallAndUninstallTestCase(BaseTestCase):
     @mock.patch(TEMPEST_PATH + ".tempest.Tempest._clone")
     @mock.patch("os.path.exists", return_value=False)
     def test_install_successful(self, mock_exists, mock_clone, mock_copytree,
-                                mock_sp, mock_install_venv, mock_testr_init):
+                                mock_sp, mock_install_venv, mock_testr_init,
+                                mock_base_repo):
+        mock_base_repo.__get__ = mock.Mock(return_value="fake_dir")
         self.verifier.install()
 
         self.assertEqual([mock.call(self.verifier.path(".venv")),
@@ -206,6 +239,7 @@ class TempestInstallAndUninstallTestCase(BaseTestCase):
         mock_install_venv.assert_called_once_with()
         mock_testr_init.assert_called_once_with()
 
+    @mock.patch(TEMPEST_PATH + ".tempest.Tempest.base_repo")
     @mock.patch(TEMPEST_PATH + ".tempest.Tempest.uninstall")
     @mock.patch(TEMPEST_PATH + ".tempest.Tempest._initialize_testr")
     @mock.patch(TEMPEST_PATH + ".tempest.Tempest._install_venv")
@@ -215,7 +249,8 @@ class TempestInstallAndUninstallTestCase(BaseTestCase):
     @mock.patch("os.path.exists", return_value=False)
     def test_install_failed(self, mock_exists, mock_clone, mock_copytree,
                             mock_sp, mock_install_venv, mock_testr_init,
-                            mock_uninstall):
+                            mock_uninstall, mock_base_repo):
+        mock_base_repo.__get__ = mock.Mock(return_value="fake_dir")
         mock_sp.side_effect = subprocess.CalledProcessError(0, None)
 
         self.assertRaises(tempest.TempestSetupFailure, self.verifier.install)
@@ -242,6 +277,25 @@ class TempestInstallAndUninstallTestCase(BaseTestCase):
         self.verifier.uninstall()
         mock_exists.assert_called_once_with(self.verifier.path())
         mock_shutil.assert_called_once_with(self.verifier.path())
+
+    @mock.patch(TEMPEST_PATH + ".tempest.Tempest._is_git_repo",
+                return_value=True)
+    @mock.patch("rally.common.utils.generate_random_name",
+                return_value="fake_tempest_dir")
+    @mock.patch("os.listdir", return_value=["fake_dir"])
+    @mock.patch("shutil.move")
+    @mock.patch("os.path.exists", return_value=True)
+    def test_upgrade_repo_tree(self, mock_exists, mock_move, mock_listdir,
+                               mock_rand, mock_isgitrepo):
+        with self.base_repo_dir_patcher as foo_base:
+            self.verifier._base_repo = "fake_base"
+            self.verifier.base_repo
+            subdir = mock_rand.return_value
+            mock_listdir.assert_called_once_with(foo_base)
+            fake_dir = mock_listdir.return_value[0]
+            dest = os.path.join(self.base_repo_dir_patcher.new, subdir,
+                                fake_dir)
+            mock_move.assert_called_once_with(fake_dir, dest)
 
 
 class TempestVerifyTestCase(BaseTestCase):
