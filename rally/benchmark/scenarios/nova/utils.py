@@ -41,6 +41,7 @@ option_names_and_defaults = [
     ('resize_confirm', 0, 200, 2),
     ('resize_revert', 0, 200, 2),
     ('live_migrate', 1, 400, 2),
+    ('migrate', 1, 400, 2),
 ]
 
 for action, prepoll, timeout, poll in option_names_and_defaults:
@@ -454,11 +455,11 @@ class NovaScenario(base.Scenario):
         )
 
     @base.atomic_action_timer('nova.resize_confirm')
-    def _resize_confirm(self, server):
+    def _resize_confirm(self, server, status="ACTIVE"):
         server.confirm_resize()
         bench_utils.wait_for(
             server,
-            is_ready=bench_utils.resource_is("ACTIVE"),
+            is_ready=bench_utils.resource_is(status),
             update_resource=bench_utils.get_from_manager(),
             timeout=CONF.benchmark.nova_server_resize_confirm_timeout,
             check_interval=(
@@ -466,11 +467,11 @@ class NovaScenario(base.Scenario):
         )
 
     @base.atomic_action_timer('nova.resize_revert')
-    def _resize_revert(self, server):
+    def _resize_revert(self, server, status="ACTIVE"):
         server.revert_resize()
         bench_utils.wait_for(
             server,
-            is_ready=bench_utils.resource_is("ACTIVE"),
+            is_ready=bench_utils.resource_is(status),
             update_resource=bench_utils.get_from_manager(),
             timeout=CONF.benchmark.nova_server_resize_revert_timeout,
             check_interval=(
@@ -564,6 +565,33 @@ class NovaScenario(base.Scenario):
         except IndexError:
             raise exceptions.InvalidHostException(
                 "No valid host found to migrate")
+
+    @base.atomic_action_timer('nova.migrate')
+    def _migrate(self, server, skip_host_check=False):
+        """Run migration of the given server.
+
+        :param server: Server object
+        :param skip_host_check: Specifies whether to verify the targeted host
+                                availability
+        """
+        server_admin = self.admin_clients("nova").servers.get(server.id)
+        host_pre_migrate = getattr(server_admin, "OS-EXT-SRV-ATTR:host")
+        server_admin.migrate()
+        bench_utils.wait_for(
+            server,
+            is_ready=bench_utils.resource_is("VERIFY_RESIZE"),
+            update_resource=bench_utils.get_from_manager(),
+            timeout=CONF.benchmark.nova_server_migrate_timeout,
+            check_interval=(
+                CONF.benchmark.nova_server_migrate_poll_interval)
+        )
+        if not skip_host_check:
+            server_admin = self.admin_clients("nova").servers.get(server.id)
+            host_after_migrate = getattr(server_admin, "OS-EXT-SRV-ATTR:host")
+            if host_pre_migrate == host_after_migrate:
+                raise exceptions.MigrateException(
+                    "Migration complete but instance did not change host: %s" %
+                    host_pre_migrate)
 
     def _create_security_groups(self, security_group_count):
         security_groups = []

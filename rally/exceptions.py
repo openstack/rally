@@ -260,5 +260,9 @@ class LiveMigrateException(RallyException):
     msg_fmt = _("Live Migration failed: %(message)s")
 
 
+class MigrateException(RallyException):
+    msg_fmt = _("Migration failed: %(message)s")
+
+
 class InvalidHostException(RallyException):
     msg_fmt = _("Live Migration failed: %(message)s")

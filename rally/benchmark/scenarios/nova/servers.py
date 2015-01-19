@@ -349,3 +349,33 @@ class NovaServers(utils.NovaScenario,
                            block_migration, disk_over_commit)
 
         self._delete_server(server)
+
+    @types.set(image=types.ImageResourceType,
+               flavor=types.FlavorResourceType)
+    @validation.image_valid_on_flavor("flavor", "image")
+    @validation.required_services(consts.Service.NOVA)
+    @validation.required_openstack(admin=True, users=True)
+    @base.scenario(context={"cleanup": ["nova"]})
+    def boot_and_migrate_server(self, image, flavor, **kwargs):
+        """Migrate a server.
+
+        This scenario launches a VM on a compute node available in
+        the availability zone and stops the VM, and then migrates the VM
+        to another compute node on the same availability zone.
+
+        :param image: image to be used to boot an instance
+        :param flavor: flavor to be used to boot an instance
+        :param kwargs: Optional additional arguments for server creation
+        """
+        server = self._boot_server(self._generate_random_name(),
+                                   image, flavor, **kwargs)
+        self._stop_server(server)
+        self._migrate(server)
+        # NOTE(wtakase): This is required because cold migration and resize
+        #                share same code path.
+        confirm = kwargs.get("confirm", True)
+        if confirm:
+            self._resize_confirm(server, status="SHUTOFF")
+        else:
+            self._resize_revert(server, status="SHUTOFF")
+        self._delete_server(server)

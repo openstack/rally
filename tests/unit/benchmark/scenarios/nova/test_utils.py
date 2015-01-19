@@ -567,6 +567,26 @@ class NovaScenarioTestCase(test.TestCase):
         self.assertIn(
                 nova_scenario._find_host_to_migrate(fake_server), ["b1", "b3"])
 
+    @mock.patch(NOVA_UTILS + '.NovaScenario.clients')
+    def test__migrate_server(self, mock_clients):
+        fake_server = self.server
+        setattr(fake_server, "OS-EXT-SRV-ATTR:host", "a1")
+        mock_clients("nova").servers.get(return_value=fake_server)
+        nova_scenario = utils.NovaScenario(admin_clients=mock_clients)
+        nova_scenario._migrate(fake_server, skip_host_check=True)
+
+        self._test_assert_called_once_with(
+            self.wait_for.mock, fake_server,
+            CONF.benchmark.nova_server_migrate_poll_interval,
+            CONF.benchmark.nova_server_migrate_timeout)
+        self.res_is.mock.assert_has_calls([mock.call("VERIFY_RESIZE")])
+        self._test_atomic_action_timer(nova_scenario.atomic_actions(),
+                                       "nova.migrate")
+
+        self.assertRaises(rally_exceptions.MigrateException,
+                          nova_scenario._migrate,
+                          fake_server, skip_host_check=False)
+
     def test__create_security_groups(self):
         clients = mock.MagicMock()
         nova_scenario = utils.NovaScenario()

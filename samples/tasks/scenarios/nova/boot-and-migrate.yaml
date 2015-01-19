@@ -1,0 +1,15 @@
+---
+NovaServers.boot_and_migrate_server:
+- args:
+    flavor:
+      name: m1.nano
+    image:
+      name: "^cirros.*uec$"
+  runner:
+    type: constant
+    times: 10
+    concurrency: 2
+  context:
+    users:
+      tenants: 1
+      users_per_tenant: 1

@@ -350,3 +350,42 @@ class NovaServersTestCase(test.TestCase):
                                                        "host_name",
                                                        False, False)
         scenario._delete_server.assert_called_once_with(fake_server)
+
+    def _test_boot_and_migrate_server(self, confirm=False):
+        fake_server = mock.MagicMock()
+
+        scenario = servers.NovaServers()
+        scenario._generate_random_name = mock.MagicMock(return_value="name")
+        scenario._boot_server = mock.MagicMock(return_value=fake_server)
+        scenario._stop_server = mock.MagicMock()
+        scenario._migrate = mock.MagicMock()
+        scenario._resize_confirm = mock.MagicMock()
+        scenario._resize_revert = mock.MagicMock()
+        scenario._delete_server = mock.MagicMock()
+
+        kwargs = {"confirm": confirm}
+        scenario.boot_and_migrate_server("img", 0,
+                                         fakearg="fakearg", **kwargs)
+
+        scenario._boot_server.assert_called_once_with("name", "img", 0,
+                                                      fakearg="fakearg",
+                                                      confirm=confirm)
+
+        scenario._stop_server.assert_called_once_with(fake_server)
+
+        scenario._migrate.assert_called_once_with(fake_server)
+
+        if confirm:
+            scenario._resize_confirm.assert_called_once_with(fake_server,
+                                                             status="SHUTOFF")
+        else:
+            scenario._resize_revert.assert_called_once_with(fake_server,
+                                                            status="SHUTOFF")
+
+        scenario._delete_server.assert_called_once_with(fake_server)
+
+    def test_boot_and_migrate_server_with_confirm(self):
+        self._test_boot_and_migrate_server(confirm=True)
+
+    def test_boot_and_migrate_server_with_revert(self):
+        self._test_boot_and_migrate_server(confirm=False)
