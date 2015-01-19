@@ -51,6 +51,15 @@ class CinderScenarioTestCase(test.TestCase):
                                        'cinder.list_volumes')
 
     @mock.patch(CINDER_UTILS + '.CinderScenario.clients')
+    def test__list_snapshots(self, mock_clients):
+        snapsht_lst = mock.Mock()
+        mock_clients("cinder").volume_snapshots.list.return_value = snapsht_lst
+        return_snapshots_list = self.scenario._list_snapshots()
+        self.assertEqual(snapsht_lst, return_snapshots_list)
+        self._test_atomic_action_timer(self.scenario.atomic_actions(),
+                                       'cinder.list_snapshots')
+
+    @mock.patch(CINDER_UTILS + '.CinderScenario.clients')
     def test__create_volume(self, mock_clients):
         CONF = cfg.CONF
         volume = mock.Mock()

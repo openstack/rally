@@ -1,0 +1,24 @@
+{
+    "CinderVolumes.create_and_list_snapshots": [
+        {
+            "args": {
+                "force": false,
+                "detailed": true
+            },
+            "runner": {
+                "type": "constant",
+                "times": 2,
+                "concurrency": 2
+            },
+            "context": {
+                "users": {
+                    "tenants": 1,
+                    "users_per_tenant": 1
+                },
+                "volumes": {
+                    "size": 1
+                }
+            }
+        }
+    ]
+}

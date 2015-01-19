@@ -282,3 +282,21 @@ class CinderVolumes(utils.CinderScenario,
             self._detach_volume(server, volume)
             self._delete_snapshot(snapshot)
             self._delete_volume(volume)
+
+    @validation.required_services(consts.Service.CINDER)
+    @validation.required_contexts("volumes")
+    @validation.required_openstack(users=True)
+    @base.scenario(context={"cleanup": ["cinder"]})
+    def create_and_list_snapshots(self, force=False, detailed=True, **kwargs):
+        """Create and then list a volume-snapshot.
+
+
+        :param force: when set to True, allows snapshot of a volume when
+                      the volume is attached to an instance
+        :param detailed: True if detailed information about snapshots
+                         should be listed
+        :param kwargs: optional args to create a snapshot
+        """
+        volume = random.choice(self.context["tenant"]["volumes"])
+        self._create_snapshot(volume["id"], force=force, **kwargs)
+        self._list_snapshots(detailed)
