@@ -45,7 +45,7 @@ class TempestCommands(object):
     @cliutils.args("--source", type=str, dest="source",
                    required=False, help="Path/URL to repo to pull tempest "
                                         "from.")
-    @envutils.with_default_deployment
+    @envutils.with_default_deployment(cli_arg_name="deployment")
     def install(self, deployment=None, source=None):
         """Install tempest."""
 

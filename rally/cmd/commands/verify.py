@@ -57,7 +57,7 @@ class VerifyCommands(object):
                    help="User specified Tempest config file location")
     @cliutils.args("--no-use", action="store_false", dest="do_use",
                    help="Don't set new task as default for future operations")
-    @envutils.with_default_deployment
+    @envutils.with_default_deployment(cli_arg_name="deployment")
     def start(self, set_name="", deployment=None, regex=None,
               tempest_config=None, do_use=False):
         """Start set of tests.

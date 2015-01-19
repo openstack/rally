@@ -135,7 +135,7 @@ class TaskCommands(object):
                    help="Path to the file with input task args (dict in "
                         "json/yaml). These args are used to render input "
                         "task that is jinja2 template.")
-    @envutils.with_default_deployment
+    @envutils.with_default_deployment(cli_arg_name="deployment")
     def validate(self, task, deployment=None, task_args=None,
                  task_args_file=None):
         """Validate a task configuration file.
@@ -180,7 +180,7 @@ class TaskCommands(object):
     @cliutils.args("--tag", help="Tag for this task")
     @cliutils.args("--no-use", action="store_false", dest="do_use",
                    help="Don't set new task as default for future operations")
-    @envutils.with_default_deployment
+    @envutils.with_default_deployment(cli_arg_name="deployment")
     def start(self, task, deployment=None, task_args=None, task_args_file=None,
               tag=None, do_use=False):
         """Start benchmark task.
@@ -439,7 +439,7 @@ class TaskCommands(object):
     @cliutils.args("--status", type=str, dest="status",
                    help="List tasks with specified status."
                    " Available statuses: %s" % ", ".join(consts.TaskStatus))
-    @envutils.with_default_deployment
+    @envutils.with_default_deployment(cli_arg_name="deployment")
     def list(self, deployment=None, all_deployments=False, status=None):
         """List tasks, started and finished.
 

@@ -53,21 +53,30 @@ def get_global(global_key, do_raise=False):
 
 
 def default_from_global(arg_name, env_name,
-                        cli_arg_name):
+                        cli_arg_name,
+                        message=MSG_MISSING_ARG):
     def default_from_global(f, *args, **kwargs):
         id_arg_index = f.__code__.co_varnames.index(arg_name)
         args = list(args)
         if args[id_arg_index] is None:
             args[id_arg_index] = get_global(env_name)
             if not args[id_arg_index]:
-                print(MSG_MISSING_ARG % {"arg_name": cli_arg_name})
+                print(message % {"arg_name": cli_arg_name})
                 return(1)
         return f(*args, **kwargs)
     return decorator.decorator(default_from_global)
 
-with_default_deployment = default_from_global(
-    "deployment", ENV_DEPLOYMENT, "uuid")
-with_default_task_id = default_from_global('task_id', ENV_TASK,
-                                           "uuid")
+
+def with_default_deployment(cli_arg_name="uuid"):
+    return default_from_global("deployment", ENV_DEPLOYMENT, cli_arg_name,
+                               message=_("There is no default deployment.\n"
+                                         "\tPlease use command:\n"
+                                         "\trally use deployment "
+                                         "<deployment_uuid>|<deployment_name>"
+                                         "\nor pass uuid of deployment to "
+                                         "the --%(arg_name)s argument of "
+                                         "this command"))
+
+with_default_task_id = default_from_global('task_id', ENV_TASK, "uuid")
 with_default_verification_id = default_from_global(
     "verification_uuid", ENV_VERIFICATION, "uuid")
