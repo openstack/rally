@@ -16,6 +16,7 @@
 import six
 
 from rally.benchmark.context import base
+from rally.benchmark.wrappers import network
 from rally.common.i18n import _
 from rally.common import log as logging
 from rally.common import utils
@@ -84,11 +85,20 @@ class AllowSSH(base.Context):
 
     def __init__(self, context):
         super(AllowSSH, self).__init__(context)
-        self.context["allow_ssh"] = SSH_GROUP_NAME
         self.secgroup = []
 
     @utils.log_task_wrapper(LOG.info, _("Enter context: `allow_ssh`"))
     def setup(self):
+        net_wrapper = network.wrap(
+            osclients.Clients(self.context["admin"]["endpoint"]),
+            self.config)
+        use_sg, msg = net_wrapper.supports_security_group()
+        if not use_sg:
+            LOG.info(_("Security group context is disabled: %(message)s")
+                     % {"message": msg})
+            return
+
+        self.context["allow_ssh"] = SSH_GROUP_NAME
         for user, tenant_id in utils.iterate_per_tenants(
                 self.context["users"]):
             endpoint = user["endpoint"]
