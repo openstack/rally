@@ -41,6 +41,46 @@
         failure_rate:
           max: 0
 
+  NovaServers.boot_server_from_volume_and_delete:
+    -
+      args:
+        flavor:
+            name: "m1.tiny"
+        image:
+            name: {{image_name}}
+        volume_size: 1
+      runner:
+        type: "constant"
+        times: 2
+        concurrency: 2
+      context:
+        users:
+          tenants: 2
+          users_per_tenant: 2
+      sla:
+        failure_rate:
+          max: 0
+
+  NovaServers.boot_server_from_volume:
+    -
+      args:
+        flavor:
+            name: "m1.tiny"
+        image:
+            name: {{image_name}}
+        volume_size: 1
+      runner:
+        type: "constant"
+        times: 2
+        concurrency: 2
+      context:
+        users:
+          tenants: 2
+          users_per_tenant: 2
+      sla:
+        failure_rate:
+          max: 0
+
   CinderVolumes.create_and_attach_volume:
     -
       args:

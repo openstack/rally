@@ -776,9 +776,6 @@
         network:
           start_cidr: "100.100.0.0/24"
           networks_per_tenant: 2
-      sla:
-        failure_rate:
-          max: 0
 
     -
       args:
