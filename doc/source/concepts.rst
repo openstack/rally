@@ -75,8 +75,8 @@ Note that inside each scenario configuration, the benchmark scenario is actually
 
 
 .. _ScenariosDevelopment:
-Developer's  view
-^^^^^^^^^^^^^^^^^
+Developer's view
+^^^^^^^^^^^^^^^^
 
 From the developer's perspective, a benchmark scenario is a method marked by a **@scenario** decorator and placed in a class that inherits from the base `Scenario <https://github.com/stackforge/rally/blob/master/rally/benchmark/scenarios/base.py#L40>`_ class and located in some subpackage of `rally.benchmark.scenarios <https://github.com/stackforge/rally/tree/master/rally/benchmark/scenarios>`_. There may be arbitrary many benchmark scenarios in a scenario class; each of them should be referenced to (in the task configuration file) as *ScenarioClassName.method_name*.
 
@@ -162,8 +162,8 @@ Also, all scenario runners can be provided (again, through the **"runner"** sect
 
 
 .. _RunnersDevelopment:
-Developer's  view
-^^^^^^^^^^^^^^^^^
+Developer's view
+^^^^^^^^^^^^^^^^
 
 It is possible to extend Rally with new Scenario Runner types, if needed. Basically, each scenario runner should be implemented as a subclass of the base `ScenarioRunner <https://github.com/stackforge/rally/blob/master/rally/benchmark/runners/base.py#L137>`_ class and located in the `rally.benchmark.runners package <https://github.com/stackforge/rally/tree/master/rally/benchmark/runners>`_. The interface each scenario runner class should support is fairly easy:
 
@@ -318,27 +318,3 @@ The *hidden* attribute defines whether the context should be a *hidden* one. **H
 it configuration via task and break his cloud.
 
 If you want to dive deeper, also see the context manager (:mod:`rally.benchmark.context.base`) class that actually implements the algorithm described above.
-
-
-Plugins
--------
-
-Rally provides an opportunity to create and use a custom benchmark scenario, runner or context as a plugin. The plugins mechanism can be used to simplify some experiments with new scenarios and to facilitate their creation by users who don't want to edit the actual Rally code.
-
-Placement
-^^^^^^^^^
-
-Put the plugin into the **/opt/rally/plugins** or **~/.rally/plugins** directory  or it's subdirectories and it will be autoloaded. The corresponding module should have ".py" extension. Directories are not created automatically, you should create them by hand or you can use script **unpack_plugins_samles.sh** from **doc/samples/plugins** which will internally create directory **~/.rally/plugins** (see more about this script into **Samples** section).
-
-Creation
-^^^^^^^^
-
-Inherit a class for your plugin from base class for scenario, runner or context depends on what type of plugin you want create.
-
-See more information about `scenarios <ScenariosDevelopment>`_, `runnres <RunnersDevelopment>`_ and `contexts <ContextDevelopment>`_ creation.
-
-
-Usage
-^^^^^
-
-Specify your plugin's information into a task configuration file. See `how to work with task configuration file <https://github.com/stackforge/rally/blob/master/doc/samples/tasks/README.rst>`_. You can find samples of configuration files for different types of plugins in corresponded folders `here <https://github.com/stackforge/rally/tree/master/doc/samples/plugins>`_.

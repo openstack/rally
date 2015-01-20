@@ -1,12 +1,15 @@
+===================================================================================
+4x performance increase in Keysone inside Apache using the token creation benchmark
+===================================================================================
 
-Keystone token creation benchmark
-=================================
-Authenticate users with keystone to get tokens.
+*(Contributed by Neependra Khare, Red Hat)*
+
+Below we describe how we were able to get and verify a 4x better performance of Keysone inside Apache. To do that, we ran a Keystone token creation benchmark with Rally under different load (this benchmark scenario essentially just authenticates users with keystone to get tokens).
 
 Goal
 ----
-- To get data about performance of token creation under different load.
-- To ensure that keystone with increased  public_workers/admin_workers values
+- Get the data about performance of token creation under different load.
+- Ensure that keystone with increased public_workers/admin_workers values
   and under Apache works better than the default setup.
 
 Summary

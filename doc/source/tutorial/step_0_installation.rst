@@ -13,19 +13,20 @@
       License for the specific language governing permissions and limitations
       under the License.
 
-.. _feature_requests:
+.. _tutorial_step_0_installation:
 
-Request New Features
+Step 0. Installation
 ====================
 
-To request a new feature, you should create a document similar to other feature requests and then contribute it to the **doc/feature_request** directory of the Rally repository (see the :ref:`How-to-contribute tutorial <contribute>`).
+Installing Rally is very simple. Just execute the following commands:
 
-If you don't have time to contribute your feature request via gerrit, please contact Boris Pavlovic (boris@pavlovic.me)
+.. code-block:: none
 
-Active feature requests:
+   git clone https://git.openstack.org/stackforge/rally
+   ./rally/install_rally.sh
 
-.. toctree::
-   :glob:
-   :maxdepth: 1
+**Notes:** The installation script should be run as root or as a normal user using **sudo**. Rally requires either the Python 2.6 or the Python 2.7 version.
 
-   feature_request/*
+There are also other installation options that you can find :ref:`here <install>`.
+
+Now that you have rally installed, you are ready to start :ref:`benchmarking OpenStack with it <tutorial_step_1_setting_up_env_and_running_benchmark_from_samples>`!

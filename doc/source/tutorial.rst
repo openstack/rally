@@ -1,5 +1,5 @@
 ..
-      Copyright 2014 Mirantis Inc. All Rights Reserved.
+      Copyright 2015 Mirantis Inc. All Rights Reserved.
 
       Licensed under the Apache License, Version 2.0 (the "License"); you may
       not use this file except in compliance with the License. You may obtain
@@ -13,25 +13,16 @@
       License for the specific language governing permissions and limitations
       under the License.
 
-.. _cmds:
+.. _tutorial:
 
-Command Line Interface
-======================
+Rally step-by-step
+==================
 
-Represents command line operations.
+In the following tutorial, we will guide you step-by-step through different use cases that might occur in Rally, starting with the easy ones and moving towards more complicated cases.
 
-The :mod:`rally.cmd.main` Module
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. automodule:: rally.cmd.main
-    :members:
-    :undoc-members:
-    :show-inheritance:
+.. toctree::
+   :glob:
+   :maxdepth: 1
 
-The :mod:`rally.cmd.manage` Module
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. automodule:: rally.cmd.manage
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   tutorial/**
