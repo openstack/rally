@@ -299,7 +299,7 @@ class TaskCommands(object):
         print(_("Task %(task_id)s: %(status)s")
               % {"task_id": task_id, "status": task["status"]})
 
-        if task["failed"]:
+        if task["status"] == consts.TaskStatus.FAILED:
             print("-" * 80)
             verification = yaml.safe_load(task["verification_log"])
 
@@ -454,7 +454,7 @@ class TaskCommands(object):
 
         filters = {}
         headers = ["uuid", "deployment_name", "created_at", "duration",
-                   "status", "failed", "tag"]
+                   "status", "tag"]
 
         if status in consts.TaskStatus:
             filters.setdefault("status", status)

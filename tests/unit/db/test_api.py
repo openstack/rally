@@ -48,7 +48,6 @@ class TasksTestCase(test.DBTestCase):
         self.assertIsNotNone(db_task['uuid'])
         self.assertIsNotNone(db_task['id'])
         self.assertEqual(db_task['status'], consts.TaskStatus.INIT)
-        self.assertFalse(db_task['failed'])
 
     def test_task_create_without_uuid(self):
         _uuid = '19be8589-48b0-4af1-a369-9bebaaa563ab'
@@ -58,9 +57,9 @@ class TasksTestCase(test.DBTestCase):
 
     def test_task_update(self):
         task = self._create_task({})
-        db.task_update(task['uuid'], {'failed': True})
+        db.task_update(task['uuid'], {'status': consts.TaskStatus.FAILED})
         db_task = self._get_task(task['uuid'])
-        self.assertTrue(db_task['failed'])
+        self.assertEqual(db_task['status'], consts.TaskStatus.FAILED)
 
     def test_task_update_not_found(self):
         self.assertRaises(exceptions.TaskNotFound,

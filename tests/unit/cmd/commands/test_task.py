@@ -107,7 +107,7 @@ class TaskCommandsTestCase(test.TestCase):
         mock_create_task.return_value = (
             dict(uuid="c1a9bbe-1ead-4740-92b5-0feecf421634",
                  created_at="2014-01-14 09:14:45.395822",
-                 status="init", failed=False, tag=None))
+                 status="init", tag=None))
         deployment_id = "e0617de9-77d1-4875-9b49-9d5789e29f20"
         task_path = "path_to_config.json"
         self.task.start(task_path, deployment_id)
@@ -237,8 +237,7 @@ class TaskCommandsTestCase(test.TestCase):
                         ]
                     }
                 }
-            ],
-            "failed": False
+            ]
         }
         mock_db.task_get_detailed = mock.MagicMock(return_value=value)
         self.task.detailed(test_uuid)
@@ -252,10 +251,9 @@ class TaskCommandsTestCase(test.TestCase):
         value = {
             "id": "task",
             "uuid": "task_uuid",
-            "status": "status",
+            "status": consts.TaskStatus.FAILED,
             "results": [],
-            "verification_log": "['1', '2', '3']",
-            "failed": True
+            "verification_log": "['1', '2', '3']"
         }
         mock_db.task_get_detailed = mock.MagicMock(return_value=value)
 
@@ -484,7 +482,6 @@ class TaskCommandsTestCase(test.TestCase):
                                              created_at=date.datetime.now(),
                                              updated_at=date.datetime.now(),
                                              status="c",
-                                             failed=True,
                                              tag="d",
                                              deployment_name="some_name")])
     def test_list(self, mock_objects_list, mock_default, mock_print_list):
@@ -495,7 +492,7 @@ class TaskCommandsTestCase(test.TestCase):
             status=consts.TaskStatus.RUNNING)
 
         headers = ["uuid", "deployment_name", "created_at", "duration",
-                   "status", "failed", "tag"]
+                   "status", "tag"]
         mock_print_list.assert_called_once_with(
             mock_objects_list.return_value, headers,
             sortby_index=headers.index('created_at'))

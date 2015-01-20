@@ -143,8 +143,7 @@ class Task(object):
         self._update({'verification_log': json.dumps(log)})
 
     def set_failed(self, log=""):
-        self._update({'failed': True,
-                      'status': consts.TaskStatus.FAILED,
+        self._update({'status': consts.TaskStatus.FAILED,
                       'verification_log': json.dumps(log)})
 
     def get_results(self):

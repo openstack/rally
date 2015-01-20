@@ -30,15 +30,15 @@ class TaskTestCase(test.TestCase):
         self.task = {
             'uuid': '00ef46a2-c5b8-4aea-a5ca-0f54a10cbca1',
             'status': consts.TaskStatus.INIT,
-            'failed': False,
             'verification_log': '',
         }
 
     @mock.patch('rally.objects.task.db.task_create')
     def test_init_with_create(self, mock_create):
         mock_create.return_value = self.task
-        task = objects.Task(failed=True)
-        mock_create.assert_called_once_with({'failed': True})
+        task = objects.Task(status=consts.TaskStatus.FAILED)
+        mock_create.assert_called_once_with({
+                    'status': consts.TaskStatus.FAILED})
         self.assertEqual(task['uuid'], self.task['uuid'])
 
     @mock.patch('rally.objects.task.db.task_create')
@@ -86,8 +86,7 @@ class TaskTestCase(test.TestCase):
     @mock.patch("rally.objects.task.db.task_list",
                 return_value=[{"uuid": "a",
                                "created_at": "b",
-                               "status": "c",
-                               "failed": True,
+                               "status": consts.TaskStatus.FAILED,
                                "tag": "d",
                                "deployment_name": "some_name"}])
     def list(self, mock_db_task_list):
@@ -151,5 +150,5 @@ class TaskTestCase(test.TestCase):
         task.set_failed()
         mock_update.assert_called_once_with(
             self.task['uuid'],
-            {'failed': True, 'status': 'failed', 'verification_log': '""'},
+            {'status': consts.TaskStatus.FAILED, 'verification_log': '""'},
         )
