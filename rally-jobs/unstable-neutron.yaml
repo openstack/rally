@@ -1,19 +1,6 @@
 {% set image_name = "^cirros.*uec$" %}
 ---
 
-  HeatStacks.create_and_delete_stack:
-    -
-      args:
-        template_path: '/home/jenkins/.rally/extra/server_with_ports.yaml.template'
-      runner:
-        type: "constant"
-        times: 3
-        concurrency: 3
-      context:
-        users:
-          tenants: 2
-          users_per_tenant: 2
-
   NovaSecGroup.boot_and_delete_server_with_secgroups:
     -
       args:
