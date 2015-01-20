@@ -8,7 +8,7 @@
             name: "^cirros.*uec$"
         floating_network: "public"
         force_delete: false
-        script: "doc/samples/tasks/support/instance_dd_test.sh"
+        script: "samples/tasks/support/instance_dd_test.sh"
         interpreter: "/bin/sh"
         username: "cirros"
       runner:
