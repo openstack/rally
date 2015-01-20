@@ -101,6 +101,24 @@ class CinderScenario(base.Scenario):
             check_interval=CONF.benchmark.cinder_volume_delete_poll_interval
         )
 
+    @base.atomic_action_timer('cinder.extend_volume')
+    def _extend_volume(self, volume, new_size):
+        """Extend the given volume.
+
+        Returns when the volume is actually extended.
+
+        :param volume: volume object
+        :param new_size: new volume size in GB
+        """
+        volume.extend(volume, new_size)
+        volume = bench_utils.wait_for(
+            volume,
+            is_ready=bench_utils.resource_is("available"),
+            update_resource=bench_utils.get_from_manager(),
+            timeout=CONF.benchmark.cinder_volume_create_timeout,
+            check_interval=CONF.benchmark.cinder_volume_create_poll_interval
+        )
+
     @base.atomic_action_timer('cinder.create_snapshot')
     def _create_snapshot(self, volume_id, force=False, **kwargs):
         """Create one snapshot.

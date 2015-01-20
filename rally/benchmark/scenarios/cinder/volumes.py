@@ -105,6 +105,27 @@ class CinderVolumes(utils.CinderScenario,
         self._create_volume(size, **kwargs)
 
     @validation.required_services(consts.Service.CINDER)
+    @validation.required_openstack(users=True)
+    @base.scenario(context={"cleanup": ["cinder"]})
+    def create_and_extend_volume(self, size, new_size, min_sleep=0,
+                                 max_sleep=0, **kwargs):
+        """Create and extend a volume and then delete it.
+
+
+        :param size: volume size (in GB)
+        :param new_size: volume new size (in GB) to extend
+        :param min_sleep: minimum sleep time between volume extension and
+                          deletion (in seconds)
+        :param max_sleep: maximum sleep time between volume extension and
+                          deletion (in seconds)
+        :param kwargs: optinal args to extend the volume
+        """
+        volume = self._create_volume(size, **kwargs)
+        self._extend_volume(volume, new_size)
+        self.sleep_between(min_sleep, max_sleep)
+        self._delete_volume(volume)
+
+    @validation.required_services(consts.Service.CINDER)
     @validation.required_contexts("volumes")
     @validation.required_openstack(users=True)
     @base.scenario(context={"cleanup": ["cinder"]})
