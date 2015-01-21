@@ -30,7 +30,7 @@ from rally.verification.tempest import tempest
 
 class ValidationResult(object):
 
-    def __init__(self, is_valid=True, msg=None):
+    def __init__(self, is_valid, msg=None):
         self.is_valid = is_valid
         self.msg = msg
 
@@ -56,7 +56,7 @@ def validator(fn):
         def wrap_validator(config, clients, deployment):
             # NOTE(amaretskiy): validator is successful by default
             return (fn(config, clients, deployment, *args, **kwargs) or
-                    ValidationResult())
+                    ValidationResult(True))
 
         def wrap_scenario(scenario):
             # TODO(boris-42): remove this in future.
@@ -101,7 +101,7 @@ def number(config, clients, deployment, param_name, minval=None, maxval=None,
 
     # None may be valid if the scenario sets a sensible default.
     if nullable and val is None:
-        return ValidationResult()
+        return ValidationResult(True)
 
     try:
         number = num_func(val)
@@ -117,7 +117,7 @@ def number(config, clients, deployment, param_name, minval=None, maxval=None,
                 "%(name)s is %(val)s which is greater than the maximum "
                 "(%(max)s)"
                 % {"name": param_name, "val": number, "max": maxval})
-        return ValidationResult()
+        return ValidationResult(True)
     except (ValueError, TypeError):
         return ValidationResult(
             False,
@@ -143,9 +143,7 @@ def file_exists(config, clients, deployment, param_name, mode=os.R_OK):
     """
 
     file_name = config.get("args", {}).get(param_name)
-    if os.access(file_name, mode):
-        return ValidationResult()
-    else:
+    if not os.access(file_name, mode):
         return ValidationResult(
             False, "Could not open %(file_name)s with mode %(mode)s "
             "for parameter %(param_name)s"
@@ -161,7 +159,7 @@ def _get_validated_image(config, clients, param_name):
         image_id = types.ImageResourceType.transform(
             clients=clients, resource_config=image_value)
         image = clients.glance().images.get(image=image_id)
-        return (ValidationResult(), image)
+        return (ValidationResult(True), image)
     except (glance_exc.HTTPNotFound, exceptions.InvalidScenarioArgument):
         message = _("Image '%s' not found") % image_value
         return (ValidationResult(False, message), None)
@@ -177,7 +175,7 @@ def _get_flavor_from_context(config, flavor_value):
                                    resources=flavors, typename="flavor")
     flavor = flavors_ctx.FlavorConfig(**resource)
     flavor.id = "<context flavor: %s>" % flavor.name
-    return (ValidationResult(), flavor)
+    return (ValidationResult(True), flavor)
 
 
 def _get_validated_flavor(config, clients, param_name):
@@ -189,7 +187,7 @@ def _get_validated_flavor(config, clients, param_name):
         flavor_id = types.FlavorResourceType.transform(
             clients=clients, resource_config=flavor_value)
         flavor = clients.nova().flavors.get(flavor=flavor_id)
-        return (ValidationResult(), flavor)
+        return (ValidationResult(True), flavor)
     except (nova_exc.NotFound, exceptions.InvalidScenarioArgument):
         try:
             return _get_flavor_from_context(config, flavor_value)
@@ -253,7 +251,6 @@ def image_valid_on_flavor(config, clients, deployment, flavor_name,
             message = _("The disk size for flavor '%s' is too small "
                         "for requested image '%s'") % (flavor.id, image.id)
             return ValidationResult(False, message)
-    return ValidationResult()
 
 
 @validator
@@ -272,15 +269,13 @@ def network_exists(config, clients, deployment, network_name):
                     }
         return ValidationResult(False, message)
 
-    return ValidationResult()
-
 
 @validator
 def external_network_exists(config, clients, deployment, network_name):
     """Validator checks that external network with given name exists."""
     ext_network = config.get("args", {}).get(network_name)
     if not ext_network:
-        return ValidationResult()
+        return ValidationResult(True)
 
     networks = [net.name for net in clients.nova().floating_ip_pools.list()]
 
@@ -329,9 +324,7 @@ def tempest_tests_exists(config, clients, deployment):
 
     wrong_tests = set(tests) - allowed_tests
 
-    if not wrong_tests:
-        return ValidationResult()
-    else:
+    if wrong_tests:
         message = (_("One or more tests not found: '%s'") %
                    "', '".join(sorted(wrong_tests)))
         return ValidationResult(False, message)
@@ -349,8 +342,6 @@ def tempest_set_exists(config, clients, deployment):
         message = _("There is no tempest set with name '%s'.") % set_name
         return ValidationResult(False, message)
 
-    return ValidationResult()
-
 
 @validator
 def required_parameters(config, clients, deployment, *required_params):
@@ -363,7 +354,6 @@ def required_parameters(config, clients, deployment, *required_params):
         message = _("%s parameters are not defined in "
                     "the benchmark config file") % ", ".join(missing)
         return ValidationResult(False, message)
-    return ValidationResult()
 
 
 @validator
@@ -380,8 +370,6 @@ def required_services(config, clients, deployment, *required_services):
             return ValidationResult(
                 False, _("Service is not available: %s") % service)
 
-    return ValidationResult()
-
 
 @validator
 def required_contexts(config, clients, deployment, *context_names):
@@ -395,8 +383,6 @@ def required_contexts(config, clients, deployment, *context_names):
                      "the benchmark configuration file: %s") %
                    ", ".join(missing_contexts))
         return ValidationResult(False, message)
-    else:
-        return ValidationResult()
 
 
 @validator
@@ -418,18 +404,16 @@ def required_openstack(config, clients, deployment, admin=False, users=False):
             False, _("You should specify admin=True or users=True or both."))
 
     if deployment["admin"] and deployment["users"]:
-        return ValidationResult()
+        return ValidationResult(True)
 
     if deployment["admin"]:
         if users and not config.get("context", {}).get("users"):
             return ValidationResult(False,
                                     _("You should specify 'users' context"))
-        return ValidationResult()
+        return ValidationResult(True)
 
     if deployment["users"] and admin:
         return ValidationResult(False, _("Admin credentials required"))
-
-    return ValidationResult()
 
 
 @validator
@@ -446,4 +430,3 @@ def volume_type_exists(config, clients, deployment, param_name):
             message = (_("Must have at least one volume type created "
                          "when specifying use of volume types."))
             return ValidationResult(False, message)
-    return ValidationResult()
