@@ -22,6 +22,7 @@ from rally.benchmark.context import base
 from rally.common.i18n import _
 from rally.common import log as logging
 from rally.common import utils
+from rally import consts
 from rally import exceptions
 from rally.verification.tempest import config
 from rally.verification.tempest import tempest
@@ -29,15 +30,30 @@ from rally.verification.tempest import tempest
 LOG = logging.getLogger(__name__)
 
 
-@base.context(name="tempest", order=666, hidden=True)
+@base.context(name="tempest", order=666)
 class Tempest(base.Context):
-    @utils.log_task_wrapper(LOG.info, _("Enter context: `tempest`"))
-    def setup(self):
-        self.verifier = tempest.Tempest(self.task.task.deployment_uuid)
-        self.verifier.log_file_raw = "/dev/null"
-        # Create temporary directory for subunit-results.
+    CONFIG_SCHEMA = {
+        "type": "object",
+        "$schema": consts.JSON_SCHEMA,
+        "properties": {
+            "source": {"type": "string"},
+            "tempest-config": {"type": "string"}
+        },
+    }
+
+    def __init__(self, context):
+        super(Tempest, self).__init__(context)
         self.results_dir = os.path.join(
             tempfile.gettempdir(), "%s-results" % self.task.task.uuid)
+        self.verifier = tempest.Tempest(self.task["deployment_uuid"],
+                                        source=self.config.get("source"),
+                                        tempest_config=self.config.get(
+                                            "tempest-config"))
+
+    @utils.log_task_wrapper(LOG.info, _("Enter context: `tempest`"))
+    def setup(self):
+        self.verifier.log_file_raw = "/dev/null"
+        # Create temporary directory for subunit-results.
         os.mkdir(self.results_dir)
         self.context["tmp_results_dir"] = self.results_dir
 
