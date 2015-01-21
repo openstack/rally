@@ -59,6 +59,12 @@ class CinderScenario(base.Scenario):
 
         return self.clients("cinder").volumes.list(detailed)
 
+    @base.atomic_action_timer('cinder.list_snapshots')
+    def _list_snapshots(self, detailed=True):
+        """Returns user snapshots list."""
+
+        return self.clients("cinder").volume_snapshots.list(detailed)
+
     @base.atomic_action_timer('cinder.create_volume')
     def _create_volume(self, size, **kwargs):
         """Create one volume.
