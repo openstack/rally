@@ -250,7 +250,7 @@ class ValidatorsTestCase(test.TestCase):
     def test_image_valid_on_flavor(self, mock_get_flavor, mock_get_image):
         image = mock.MagicMock()
         flavor = mock.MagicMock()
-        success = validation.ValidationResult()
+        success = validation.ValidationResult(True)
         mock_get_flavor.return_value = (success, flavor)
         mock_get_image.return_value = (success, image)
 
@@ -292,7 +292,7 @@ class ValidatorsTestCase(test.TestCase):
         clients.nova().flavors.get.side_effect = nova_exc.NotFound("")
 
         image = mock.MagicMock()
-        success = validation.ValidationResult()
+        success = validation.ValidationResult(True)
         mock_get_image.return_value = (success, image)
 
         validator = self._unwrap_validator(validation.image_valid_on_flavor,

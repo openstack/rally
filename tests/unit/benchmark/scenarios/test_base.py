@@ -63,8 +63,8 @@ class ScenarioTestCase(test.TestCase):
 
     def test__validate_helper(self):
         validators = [
-            mock.MagicMock(return_value=validation.ValidationResult()),
-            mock.MagicMock(return_value=validation.ValidationResult())
+            mock.MagicMock(return_value=validation.ValidationResult(True)),
+            mock.MagicMock(return_value=validation.ValidationResult(True))
         ]
         clients = mock.MagicMock()
         config = {"a": 1, "b": 2}
@@ -86,7 +86,7 @@ class ScenarioTestCase(test.TestCase):
 
     def test__validate_helper__no_valid(self):
         validators = [
-            mock.MagicMock(return_value=validation.ValidationResult()),
+            mock.MagicMock(return_value=validation.ValidationResult(True)),
             mock.MagicMock(
                 return_value=validation.ValidationResult(is_valid=False)
             )
