@@ -76,7 +76,7 @@ class VMTasksTestCase(test.TestCase):
         self.assertEqual(result, {"errors": "foo_err", "data": "foo_out"})
         self.scenario._boot_server.assert_called_once_with(
             "foo_name", "foo_image", "foo_flavor",
-            block_device_mapping={"vda": "foo_volume:::1"},
+            block_device_mapping={"vdrally": "foo_volume:::1"},
             nics=[{"net-id": "foo_network"}], auto_assign_nic=True,
             key_name=keypair.Keypair.KEYPAIR_NAME)
 

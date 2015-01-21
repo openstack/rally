@@ -76,7 +76,7 @@ class VMTasks(nova_utils.NovaScenario, vm_utils.VMScenario,
 
         if volume_args:
             volume = self._create_volume(volume_args["size"], imageRef=None)
-            kwargs["block_device_mapping"] = {"vda": "%s:::1" % volume.id}
+            kwargs["block_device_mapping"] = {"vdrally": "%s:::1" % volume.id}
 
         fip = server = None
         net_wrap = network_wrapper.wrap(self.clients)
