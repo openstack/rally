@@ -18,7 +18,8 @@ SQLAlchemy models for rally data.
 
 import uuid
 
-from oslo.db.sqlalchemy import models
+from oslo_db.sqlalchemy.compat import utils as compat_utils
+from oslo_db.sqlalchemy import models
 import sqlalchemy as sa
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import schema
@@ -52,15 +53,15 @@ class Deployment(BASE, RallyBase):
     """Represent a deployment of OpenStack."""
     __tablename__ = "deployments"
     __table_args__ = (
-        sa.Index('deployment_uuid', 'uuid', unique=True),
-        sa.Index('deployment_parent_uuid', 'parent_uuid'),
+        sa.Index("deployment_uuid", "uuid", unique=True),
+        sa.Index("deployment_parent_uuid", "parent_uuid"),
     )
 
     id = sa.Column(sa.Integer, primary_key=True, autoincrement=True)
     uuid = sa.Column(sa.String(36), default=UUID, nullable=False)
     parent_uuid = sa.Column(
         sa.String(36),
-        sa.ForeignKey(uuid, use_alter=True, name='fk_parent_uuid'),
+        sa.ForeignKey(uuid, use_alter=True, name="fk_parent_uuid"),
         default=None,
     )
     name = sa.Column(sa.String(255), unique=True)
@@ -83,8 +84,8 @@ class Deployment(BASE, RallyBase):
     users = sa.Column(types.PickleType, default=[], nullable=False)
 
     status = sa.Column(
-        sa.Enum(*consts.DeployStatus),
-        name='enum_deployments_status',
+        sa.Enum(*consts.DeployStatus, name="enum_deploy_status"),
+        name="enum_deployments_status",
         default=consts.DeployStatus.DEPLOY_INIT,
         nullable=False,
     )
@@ -99,13 +100,13 @@ class Deployment(BASE, RallyBase):
 
 class Resource(BASE, RallyBase):
     """Represent a resource of a deployment."""
-    __tablename__ = 'resources'
+    __tablename__ = "resources"
     __table_args__ = (
-        sa.Index('resource_deployment_uuid', 'deployment_uuid'),
-        sa.Index('resource_provider_name', 'deployment_uuid', 'provider_name'),
-        sa.Index('resource_type', 'deployment_uuid', 'type'),
-        sa.Index('resource_provider_name_and_type', 'deployment_uuid',
-                 'provider_name', 'type'),
+        sa.Index("resource_deployment_uuid", "deployment_uuid"),
+        sa.Index("resource_provider_name", "deployment_uuid", "provider_name"),
+        sa.Index("resource_type", "deployment_uuid", "type"),
+        sa.Index("resource_provider_name_and_type", "deployment_uuid",
+                 "provider_name", "type"),
     )
 
     id = sa.Column(sa.Integer, primary_key=True, autoincrement=True)
@@ -125,7 +126,7 @@ class Resource(BASE, RallyBase):
     )
     deployment = sa.orm.relationship(
         Deployment,
-        backref=sa.orm.backref('resources'),
+        backref=sa.orm.backref("resources"),
         foreign_keys=deployment_uuid,
         primaryjoin=(deployment_uuid == Deployment.uuid),
     )
@@ -146,8 +147,8 @@ class Task(BASE, RallyBase):
                        name="enum_tasks_status"),
                        default=consts.TaskStatus.INIT,
                        nullable=False)
-    verification_log = sa.Column(sa.Text, default='')
-    tag = sa.Column(sa.String(64), default='')
+    verification_log = sa.Column(sa.Text, default="")
+    tag = sa.Column(sa.String(64), default="")
 
     deployment_uuid = sa.Column(
         sa.String(36),
@@ -172,11 +173,11 @@ class TaskResult(BASE, RallyBase):
     key = sa.Column(sa_types.MutableJSONEncodedDict, nullable=False)
     data = sa.Column(sa_types.BigMutableJSONEncodedDict, nullable=False)
 
-    task_uuid = sa.Column(sa.String(36), sa.ForeignKey('tasks.uuid'))
+    task_uuid = sa.Column(sa.String(36), sa.ForeignKey("tasks.uuid"))
     task = sa.orm.relationship(Task,
-                               backref=sa.orm.backref('results'),
+                               backref=sa.orm.backref("results"),
                                foreign_keys=task_uuid,
-                               primaryjoin='TaskResult.task_uuid == Task.uuid')
+                               primaryjoin="TaskResult.task_uuid == Task.uuid")
 
 
 class Verification(BASE, RallyBase):
@@ -215,7 +216,7 @@ class VerificationResult(BASE, RallyBase):
     id = sa.Column(sa.Integer, primary_key=True, autoincrement=True)
 
     verification_uuid = sa.Column(sa.String(36),
-                                  sa.ForeignKey('verifications.uuid'))
+                                  sa.ForeignKey("verifications.uuid"))
 
     data = sa.Column(sa_types.BigMutableJSONEncodedDict, nullable=False)
 
@@ -223,7 +224,7 @@ class VerificationResult(BASE, RallyBase):
 class Worker(BASE, RallyBase):
     __tablename__ = "workers"
     __table_args__ = (
-        schema.UniqueConstraint('hostname', name='uniq_worker@hostname'),
+        schema.UniqueConstraint("hostname", name="uniq_worker@hostname"),
     )
     id = sa.Column(sa.Integer, primary_key=True, autoincrement=True)
     hostname = sa.Column(sa.String(255))
@@ -235,10 +236,46 @@ def create_db():
     BASE.metadata.create_all(sa_api.get_engine())
 
 
+# TODO(boris-42): Remove it after oslo.db > 1.4.1 will be released.
+def drop_all_objects(engine):
+    """Drop all database objects.
+
+    Drops all database objects remaining on the default schema of the given
+    engine. Per-db implementations will also need to drop items specific to
+    those systems, such as sequences, custom types (e.g. pg ENUM), etc.
+    """
+    with engine.begin() as conn:
+        inspector = sa.inspect(engine)
+        metadata = schema.MetaData()
+        tbs = []
+        all_fks = []
+
+        for table_name in inspector.get_table_names():
+            fks = []
+            for fk in inspector.get_foreign_keys(table_name):
+                if not fk["name"]:
+                    continue
+                fks.append(
+                    schema.ForeignKeyConstraint((), (), name=fk["name"]))
+            table = schema.Table(table_name, metadata, *fks)
+            tbs.append(table)
+            all_fks.extend(fks)
+
+        for fkc in all_fks:
+            conn.execute(schema.DropConstraint(fkc))
+        for table in tbs:
+            conn.execute(schema.DropTable(table))
+
+        if engine.name == "postgresql":
+            if compat_utils.sqla_100:
+                enums = [e["name"] for e in sa.inspect(conn).get_enums()]
+            else:
+                enums = conn.dialect._load_enums(conn).keys()
+
+            for e in enums:
+                conn.execute("DROP TYPE %s" % e)
+
+
 def drop_db():
     from rally.db.sqlalchemy import api as sa_api
-
-    engine = sa_api.get_engine()
-    OLD_BASE = declarative_base()
-    OLD_BASE.metadata.reflect(bind=engine)
-    OLD_BASE.metadata.drop_all(engine, checkfirst=True)
+    drop_all_objects(sa_api.get_engine())

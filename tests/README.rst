@@ -31,6 +31,11 @@ To run py26, py27 or pep8 only::
 
   #NOTE: <name> is one of py26, py27 or pep8
 
+To run py26, py27 against mysql or psql
+
+  $ export RALLY_UNITTEST_DB_URL="mysql://user:secret@localhost/rally"
+  $ tox -epy27
+
 To get test coverage::
 
   $ tox -e cover

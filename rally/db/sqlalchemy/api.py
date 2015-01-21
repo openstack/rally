@@ -105,12 +105,12 @@ class Connection(object):
 
     def task_get_detailed(self, uuid):
         return (self.model_query(models.Task).
-                options(sa.orm.joinedload('results')).
+                options(sa.orm.joinedload("results")).
                 filter_by(uuid=uuid).first())
 
     def task_get_detailed_last(self):
         return (self.model_query(models.Task).
-                options(sa.orm.joinedload('results')).
+                options(sa.orm.joinedload("results")).
                 order_by(models.Task.id.desc()).first())
 
     def task_create(self, values):
@@ -121,7 +121,7 @@ class Connection(object):
 
     def task_update(self, uuid, values):
         session = get_session()
-        values.pop('uuid', None)
+        values.pop("uuid", None)
         with session.begin():
             task = self._task_get(uuid, session=session)
             task.update(values)
@@ -132,9 +132,9 @@ class Connection(object):
 
         filters = {}
         if status is not None:
-            filters['status'] = status
+            filters["status"] = status
         if deployment is not None:
-            filters['deployment_uuid'] = self.deployment_get(
+            filters["deployment_uuid"] = self.deployment_get(
                 deployment)["uuid"]
 
         if filters:
@@ -212,7 +212,7 @@ class Connection(object):
 
     def deployment_update(self, deployment, values):
         session = get_session()
-        values.pop('uuid', None)
+        values.pop("uuid", None)
         with session.begin():
             dpl = self._deployment_get(deployment, session=session)
             dpl.update(values)
@@ -306,12 +306,12 @@ class Connection(object):
         try:
             worker = models.Worker()
             worker.update(values)
-            worker.update({'updated_at': timeutils.utcnow()})
+            worker.update({"updated_at": timeutils.utcnow()})
             worker.save()
             return worker
         except db_exc.DBDuplicateEntry:
             raise exceptions.WorkerAlreadyRegistered(
-                    worker=values['hostname'])
+                    worker=values["hostname"])
 
     def get_worker(self, hostname):
         try:
@@ -329,6 +329,6 @@ class Connection(object):
     def update_worker(self, hostname):
         count = (self.model_query(models.Worker).
                  filter_by(hostname=hostname).
-                 update({'updated_at': timeutils.utcnow()}))
+                 update({"updated_at": timeutils.utcnow()}))
         if count == 0:
             raise exceptions.WorkerNotFound(worker=hostname)

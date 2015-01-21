@@ -50,7 +50,7 @@ CONF = cfg.CONF
 db_options.set_defaults(CONF, connection="sqlite:////tmp/rally.sqlite",
                         sqlite_db="rally.sqlite")
 
-_BACKEND_MAPPING = {'sqlalchemy': 'rally.db.sqlalchemy.api'}
+_BACKEND_MAPPING = {"sqlalchemy": "rally.db.sqlalchemy.api"}
 
 IMPL = db_api.DBAPI.from_config(CONF, backend_mapping=_BACKEND_MAPPING)
 
@@ -327,7 +327,7 @@ def register_worker(values):
 
     :param values: A dict of values which must contain the following:
                    {
-                    'hostname': the unique hostname which identifies
+                    "hostname": the unique hostname which identifies
                                 this worker service.
                    }
     :returns: A worker.
@@ -356,7 +356,7 @@ def unregister_worker(hostname):
 
 
 def update_worker(hostname):
-    """Mark a worker as active by updating its 'updated_at' property.
+    """Mark a worker as active by updating its "updated_at" property.
 
     :param hostname: The hostname of this worker service.
     :raises: WorkerNotFound

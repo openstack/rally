@@ -13,6 +13,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import os
+
 import mock
 from oslo.config import fixture
 from oslotest import base
@@ -24,8 +26,9 @@ class DatabaseFixture(fixture.Config):
     """Create clean DB before starting test."""
     def setUp(self):
         super(DatabaseFixture, self).setUp()
+        db_url = os.environ.get("RALLY_UNITTEST_DB_URL", "sqlite://")
         db.db_cleanup()
-        self.conf.set_default('connection', "sqlite://", group='database')
+        self.conf.set_default("connection", db_url, group="database")
         db.db_drop()
         db.db_create()
 
