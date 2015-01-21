@@ -140,9 +140,9 @@ class TempestConf(object):
                 image.update(data=open(self.img_path, 'rb'))
                 image_list.append(image)
             except Exception as e:
-                msg = _('There are no desired images (cirros) or only one and '
-                        'new image could not be created.\n'
-                        'Reason: %s') % e.message
+                msg = _("There are no desired images (cirros) or only one and "
+                        "new image could not be created.\n"
+                        "Reason: %s") % getattr(e, "message", "unknown")
                 raise TempestConfigCreationFailure(msg)
         self.conf.set(section_name, 'image_ref', image_list[0].id)
         self.conf.set(section_name, 'image_ref_alt', image_list[1].id)
@@ -159,9 +159,9 @@ class TempestConf(object):
                 flv = novaclient.flavors.create("m1.tiny_%s" % now, 512, 1, 1)
                 flavor_list.append(flv)
             except Exception as e:
-                msg = _('There are no desired flavors or only one and '
-                        'new flavor could not be created.\n'
-                        'Reason: %s') % e.message
+                msg = _("There are no desired flavors or only one and "
+                        "new flavor could not be created.\n"
+                        "Reason: %s") % getattr(e, "message", "unknown")
                 raise TempestConfigCreationFailure(msg)
         self.conf.set(section_name, 'flavor_ref', flavor_list[0].id)
         self.conf.set(section_name, 'flavor_ref_alt', flavor_list[1].id)

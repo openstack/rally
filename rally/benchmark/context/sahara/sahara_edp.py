@@ -166,5 +166,5 @@ class SaharaEDP(base.Context):
 
         # TODO(boris-42): Delete only resources created by this context
         resource_manager.cleanup(
-            names=map(lambda r: "sahara.%s" % r, resources),
+            names=["sahara.%s" % res for res in resources],
             users=self.context.get("users", []))

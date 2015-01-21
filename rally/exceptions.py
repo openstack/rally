@@ -234,7 +234,11 @@ class UnknownRelease(RallyException):
     msg_fmt = _("Unknown release '%(release)s'")
 
 
-class ImageCleanUpException(RallyException):
+class CleanUpException(RallyException):
+    msg_fmt = _("Cleanup failed.")
+
+
+class ImageCleanUpException(CleanUpException):
     msg_fmt = _("Image Deletion Failed")
 
 

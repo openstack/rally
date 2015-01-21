@@ -21,7 +21,7 @@ from tests.unit import test
 class MathTestCase(test.TestCase):
 
     def test_percentile(self):
-        lst = range(1, 101)
+        lst = list(range(1, 101))
         result = utils.percentile(lst, 0.1)
         self.assertEqual(result, 10.9)
 
@@ -30,12 +30,12 @@ class MathTestCase(test.TestCase):
         self.assertIsNone(result)
 
     def test_percentile_equal(self):
-        lst = range(1, 101)
+        lst = list(range(1, 101))
         result = utils.percentile(lst, 1)
         self.assertEqual(result, 100)
 
     def test_mean(self):
-        lst = range(1, 100)
+        lst = list(range(1, 100))
         result = utils.mean(lst)
         self.assertEqual(result, 50.0)
 

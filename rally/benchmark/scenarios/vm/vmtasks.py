@@ -93,7 +93,7 @@ class VMTasks(nova_utils.NovaScenario, vm_utils.VMScenario,
                 "or provide `nics' argument with specific net-id." % {
                     "server": server.name})
 
-        internal_network = server.networks.keys()[0]
+        internal_network = list(server.networks)[0]
         fixed_ip = server.addresses[internal_network][0]["addr"]
         try:
             fip = net_wrap.create_floating_ip(ext_network=floating_network,

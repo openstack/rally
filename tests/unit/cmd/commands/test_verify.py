@@ -137,13 +137,14 @@ class VerifyCommandsTestCase(test.TestCase):
         mock_verification_result_get.return_value = tests
         mock_verification_get.return_value = verification
         mock_obj_verification.return_value = 1
-        values = map(objects.Verification,
-                     six.itervalues(tests.data["test_cases"]))
+        values = [objects.Verification(t)
+                  for t in six.itervalues(tests.data["test_cases"])]
         self.verify.show(verification_id)
-        mock_print_list.assert_any_call([verification], fields=total_fields)
+        self.assertEqual([mock.call([verification], fields=total_fields),
+                          mock.call(values, fields, sortby_index=0)],
+                         mock_print_list.call_args_list)
         mock_verification_get.assert_called_once_with(verification_id)
         mock_verification_result_get.assert_called_once_with(verification_id)
-        mock_print_list.assert_any_call(values, fields, sortby_index=0)
 
     @mock.patch("rally.db.verification_result_get", return_value={"data": {}})
     @mock.patch("json.dumps")

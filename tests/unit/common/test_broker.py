@@ -52,7 +52,7 @@ class BrokerTestCase(test.TestCase):
 
         def consume(cache, item):
             cache[item] = True
-            cache_keys_history.append(cache.keys())
+            cache_keys_history.append(list(cache))
 
         queue = collections.deque([1, 2, 3])
         mock_is_published = mock.MagicMock()

@@ -184,6 +184,7 @@ class ContextManagerTestCase(test.TestCase):
     @mock.patch("rally.benchmark.context.base.Context.get_by_name")
     def test_setup(self, mock_get_by_name):
         mock_context = mock.MagicMock()
+        mock_context.return_value = mock.MagicMock(__lt__=lambda x, y: True)
         mock_get_by_name.return_value = mock_context
         ctx_object = {"config": {"a": [], "b": []}}
 
@@ -203,6 +204,7 @@ class ContextManagerTestCase(test.TestCase):
     @mock.patch("rally.benchmark.context.base.Context.get_by_name")
     def test_cleanup(self, mock_get_by_name):
         mock_context = mock.MagicMock()
+        mock_context.return_value = mock.MagicMock(__lt__=lambda x, y: True)
         mock_get_by_name.return_value = mock_context
         ctx_object = {"config": {"a": [], "b": []}}
 
@@ -217,8 +219,9 @@ class ContextManagerTestCase(test.TestCase):
                                                    any_order=True)
 
     @mock.patch("rally.benchmark.context.base.Context.get_by_name")
-    def test_cleanp_exception(self, mock_get_by_name):
+    def test_cleanup_exception(self, mock_get_by_name):
         mock_context = mock.MagicMock()
+        mock_context.return_value = mock.MagicMock(__lt__=lambda x, y: True)
         mock_context.cleanup.side_effect = Exception()
         mock_get_by_name.return_value = mock_context
         ctx_object = {"config": {"a": [], "b": []}}

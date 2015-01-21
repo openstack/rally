@@ -90,14 +90,14 @@ class LxcEngineTestCase(test.TestCase):
         m_get_provider.assert_called_once_with(self.config['provider'],
                                                self.deployment)
 
-    @mock.patch(MOD + 'open', create=True)
-    @mock.patch(MOD + 'get_script_path', return_value='fake_sp')
-    @mock.patch(MOD + 'lxc.LxcHost')
-    @mock.patch(MOD + 'LxcEngine._deploy_first')
-    @mock.patch(MOD + 'LxcEngine._get_provider')
+    @mock.patch(MOD + "open", create=True)
+    @mock.patch(MOD + "get_script_path", return_value="fake_sp")
+    @mock.patch(MOD + "lxc.LxcHost")
+    @mock.patch(MOD + "LxcEngine._deploy_first")
+    @mock.patch(MOD + "LxcEngine._get_provider")
     def test_deploy(self, m_get_provider, m_deploy_first, m_LxcHost,
                     m_gsp, m_open):
-        m_open.return_value = 'fs'
+        m_open.return_value = "fs"
         fake_containers = ((mock.Mock(), mock.Mock()),
                            (mock.Mock(), mock.Mock()))
         fake_hosts = m_LxcHost.side_effect = [mock.Mock(), mock.Mock()]
@@ -107,60 +107,79 @@ class LxcEngineTestCase(test.TestCase):
         fake_hosts[1]._port_cache = {5: 6, 7: 8}
         fake_provider = m_get_provider.return_value = mock.Mock()
         fake_servers = [mock.Mock(), mock.Mock()]
-        fake_servers[0].get_credentials.return_value = 'fc1'
-        fake_servers[1].get_credentials.return_value = 'fc2'
+        fake_servers[0].get_credentials.return_value = "fc1"
+        fake_servers[1].get_credentials.return_value = "fc2"
         fake_provider.create_servers.return_value = fake_servers
-        with mock.patch.object(self.engine, 'deployment') as m_deployment:
+
+        add_res_calls = [
+            {"provider_name": "LxcEngine",
+             "info": {"host": "fc1",
+                      "config": {"network": "10.128.128.0/28",
+                                 "tunnel_to": ["1.1.1.1", "2.2.2.2"]},
+                      "forwarded_ports": [(1, 2), (3, 4)],
+                      "containers": fake_hosts[0].containers}},
+            {"provider_name": "LxcEngine",
+             "info": {"host": "fc2",
+                      "config": {"network": "10.128.128.16/28",
+                                 "tunnel_to": ["1.1.1.1", "2.2.2.2"]},
+                      "forwarded_ports": [(5, 6), (7, 8)],
+                      "containers": fake_hosts[1].containers}}]
+
+        def add_resource(**actual_kwargs):
+            expected_kwargs = add_res_calls.pop(0)
+
+            self.assertEqual(expected_kwargs["provider_name"],
+                             actual_kwargs["provider_name"])
+            self.assertEqual(expected_kwargs["info"]["host"],
+                             actual_kwargs["info"]["host"])
+            self.assertEqual(expected_kwargs["info"]["config"],
+                             actual_kwargs["info"]["config"])
+            self.assertEqual(expected_kwargs["info"]["containers"],
+                             actual_kwargs["info"]["containers"])
+            self.assertSequenceEqual(
+                expected_kwargs["info"]["forwarded_ports"],
+                actual_kwargs["info"]["forwarded_ports"])
+
+        fake_deployment = mock.MagicMock()
+        fake_deployment.add_resource = add_resource
+
+        with mock.patch.object(self.engine, "deployment", fake_deployment):
             endpoint = self.engine.deploy()
 
         self.assertIsInstance(endpoint["admin"], objects.Endpoint)
         LxcHost_calls = [
-            mock.call(fake_servers[0], {'network': '10.128.128.0/28',
-                                        'tunnel_to': ['1.1.1.1', '2.2.2.2']}),
-            mock.call(fake_servers[1], {'network': '10.128.128.16/28',
-                                        'tunnel_to': ['1.1.1.1', '2.2.2.2']})]
+            mock.call(fake_servers[0], {"network": "10.128.128.0/28",
+                                        "tunnel_to": ["1.1.1.1", "2.2.2.2"]}),
+            mock.call(fake_servers[1], {"network": "10.128.128.16/28",
+                                        "tunnel_to": ["1.1.1.1", "2.2.2.2"]})]
         self.assertEqual(LxcHost_calls, m_LxcHost.mock_calls)
         deploy_first_calls = [
-            mock.call(fake_hosts[0], 'rally-10-128-128-0-000', 'ubuntu', None),
-            mock.call(fake_hosts[1], 'rally-10-128-128-16-000', 'ubuntu',
+            mock.call(fake_hosts[0], "rally-10-128-128-0-000", "ubuntu", None),
+            mock.call(fake_hosts[1], "rally-10-128-128-16-000", "ubuntu",
                       None)]
         self.assertEqual(deploy_first_calls, m_deploy_first.mock_calls)
 
         host1_calls = [
-            mock.call.create_clone('rally-10-128-128-0-001',
-                                   'rally-10-128-128-0-000'),
+            mock.call.create_clone("rally-10-128-128-0-001",
+                                   "rally-10-128-128-0-000"),
             mock.call.start_containers(),
             mock.call.get_server_objects()]
 
         host2_calls = [
-            mock.call.create_clone('rally-10-128-128-16-001',
-                                   'rally-10-128-128-16-000'),
+            mock.call.create_clone("rally-10-128-128-16-001",
+                                   "rally-10-128-128-16-000"),
             mock.call.start_containers(),
             mock.call.get_server_objects()]
 
         self.assertEqual(host1_calls, fake_hosts[0].mock_calls)
         self.assertEqual(host2_calls, fake_hosts[1].mock_calls)
 
-        self.assertEqual([mock.call('fake_sp', 'rb')] * 4, m_open.mock_calls)
+        self.assertEqual([mock.call("fake_sp", "rb")] * 4, m_open.mock_calls)
 
         for host in fake_containers:
             for container in host:
-                self.assertEqual([mock.call.ssh.run('/bin/sh -e', stdin='fs')],
+                self.assertEqual([mock.call.ssh.run("/bin/sh -e", stdin="fs")],
                                  container.mock_calls)
-        add_res_calls = [
-            mock.call(provider_name='LxcEngine',
-                      info={'host': 'fc1',
-                            'config': {'network': '10.128.128.0/28',
-                                       'tunnel_to': ['1.1.1.1', '2.2.2.2']},
-                            'forwarded_ports': [(1, 2), (3, 4)],
-                            'containers': fake_hosts[0].containers}),
-            mock.call(provider_name='LxcEngine',
-                      info={'host': 'fc2',
-                            'config': {'network': '10.128.128.16/28',
-                                       'tunnel_to': ['1.1.1.1', '2.2.2.2']},
-                            'forwarded_ports': [(5, 6), (7, 8)],
-                            'containers': fake_hosts[1].containers})]
-        self.assertEqual(add_res_calls, m_deployment.add_resource.mock_calls)
 
     @mock.patch(MOD + 'LxcEngine._get_provider')
     @mock.patch(MOD + 'lxc.LxcHost')

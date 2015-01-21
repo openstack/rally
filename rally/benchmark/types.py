@@ -92,9 +92,9 @@ def obj_from_name(resource_config, resources, typename):
     :returns: resource object uniquely mapped to `name` or `regex`
     """
     if "name" in resource_config:
-        # In a case of pattern string exactly maches resource name
-        matching_exact = filter(lambda r: r.name == resource_config["name"],
-                                resources)
+        # In a case of pattern string exactly matches resource name
+        matching_exact = [resource for resource in resources
+                          if resource.name == resource_config["name"]]
         if len(matching_exact) == 1:
             return matching_exact[0]
         elif len(matching_exact) > 1:
@@ -117,8 +117,8 @@ def obj_from_name(resource_config, resources, typename):
                                              resource_config=resource_config))
 
     pattern = re.compile(patternstr)
-    matching = filter(lambda resource: re.search(pattern, resource.name),
-                      resources)
+    matching = [resource for resource in resources
+                if re.search(pattern, resource.name)]
     if not matching:
         raise exceptions.InvalidScenarioArgument(
             "{typename} with pattern '{pattern}' not found".format(

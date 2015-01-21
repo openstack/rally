@@ -191,7 +191,7 @@ def _process_atomic(result, data):
 
     # filter out empty action lists in pie / histogram to avoid errors
     pie = filter(lambda x: x["values"], pie)
-    histogram_data = filter(lambda x: x["values"], histogram_data)
+    histogram_data = [x for x in histogram_data if x["values"]]
 
     histograms = [[] for atomic_action in range(len(histogram_data))]
     for i, atomic_action in enumerate(histogram_data):
@@ -220,7 +220,7 @@ def _process_atomic(result, data):
             for i, atomic_action_list in enumerate(histograms)
         ],
         "iter": stacked_area,
-        "pie": map(lambda x: {"key": x["key"], "value": avg(x["values"])}, pie)
+        "pie": [{"key": x["key"], "value": avg(x["values"])} for x in pie]
     }
 
 

@@ -102,18 +102,18 @@ class TempestContextTestCase(test.TestCase):
 
         mock_sp.check_call.assert_called_once_with(
             "cd %s && %s python tempest/stress/tools/cleanup.py" %
-            (benchmark.verifier.path, benchmark.verifier.venv_wrapper),
-            shell=True, cwd=benchmark.verifier.path,
+            (benchmark.verifier.path(), benchmark.verifier.venv_wrapper),
+            shell=True, cwd=benchmark.verifier.path(),
             env=benchmark.verifier.env)
         mock_shutil.rmtree.assert_called_once_with("/tmp/path")
 
     @mock.patch(CONTEXT + ".os.path.exists", return_value=False)
     @mock.patch(CONTEXT + ".shutil")
-    @mock.patch(CONTEXT + ".subprocess")
+    @mock.patch(CONTEXT + ".subprocess.check_call")
     def test_cleanup_fail(self, mock_sp, mock_shutil, mock_os_path_exists):
         benchmark = tempest.Tempest(self.context)
         benchmark.verifier = mock.MagicMock()
         benchmark.results_dir = "/tmp/path"
-        benchmark.cleanup()
-        mock_sp.check_call.side_effect = subprocess.CalledProcessError(0, '')
-        self.assertRaises(subprocess.CalledProcessError, benchmark.cleanup)
+
+        mock_sp.side_effect = subprocess.CalledProcessError(0, None)
+        self.assertRaises(exceptions.CleanUpException, benchmark.cleanup)

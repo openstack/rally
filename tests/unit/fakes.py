@@ -70,11 +70,11 @@ def setup_dict(data, required=None, defaults=None):
     :raises: IndexError, ValueError
     """
     required = required or []
-    for i in set(required) - set(data.keys()):
+    for i in set(required) - set(data):
         raise IndexError("Missed: %s" % i)
 
     defaults = defaults or {}
-    for i in set(data.keys()) - set(required + defaults.keys()):
+    for i in set(data) - set(required) - set(defaults):
         raise ValueError("Unexpected: %s" % i)
 
     defaults.update(data)

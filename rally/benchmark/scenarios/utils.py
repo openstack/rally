@@ -113,7 +113,7 @@ class ActionBuilder(object):
         self.validate(actions)
         bound_actions = []
         for action in actions:
-            action_key = action.keys()[0]
+            action_key = list(action)[0]
             times = action.get(action_key)
             binding = self._bindings.get(action_key)
             dft_kwargs = dict(binding["kwargs"])
