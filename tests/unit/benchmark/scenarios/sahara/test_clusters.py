@@ -40,14 +40,14 @@ class SaharaClustersTestCase(test.TestCase):
         }
         clusters_scenario.create_and_delete_cluster(
             flavor="test_flavor",
-            node_count=5,
+            workers_count=5,
             plugin_name="test_plugin",
             hadoop_version="test_version")
 
         mock_launch_cluster.assert_called_once_with(
             flavor_id="test_flavor",
             image_id="test_image",
-            node_count=5,
+            workers_count=5,
             plugin_name="test_plugin",
             hadoop_version="test_version",
             floating_ip_pool=None,
@@ -85,7 +85,7 @@ class SaharaClustersTestCase(test.TestCase):
 
         clusters_scenario.create_scale_delete_cluster(
             flavor="test_flavor",
-            node_count=5,
+            workers_count=5,
             deltas=[1, -1],
             plugin_name="test_plugin",
             hadoop_version="test_version")
@@ -93,7 +93,7 @@ class SaharaClustersTestCase(test.TestCase):
         mock_launch_cluster.assert_called_once_with(
             flavor_id="test_flavor",
             image_id="test_image",
-            node_count=5,
+            workers_count=5,
             plugin_name="test_plugin",
             hadoop_version="test_version",
             floating_ip_pool=None,

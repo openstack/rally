@@ -52,7 +52,7 @@
               download_url: "http://repo1.maven.org/maven2/org/apache/hadoop/hadoop-test/1.2.1/hadoop-test-1.2.1.jar"
         sahara_cluster:
           flavor_id: "2"
-          node_count: 2
+          workers_count: 3
           plugin_name: "vanilla"
           hadoop_version: "1.2.1"
           auto_security_group: True

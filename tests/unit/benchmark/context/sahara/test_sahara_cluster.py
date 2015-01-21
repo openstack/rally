@@ -58,7 +58,7 @@ class SaharaClusterTestCase(test.TestCase):
                 },
                 "sahara_cluster": {
                     "flavor_id": "test_flavor",
-                    "node_count": 2,
+                    "workers_count": 2,
                     "plugin_name": "test_plugin",
                     "hadoop_version": "test_version"
                 }
@@ -88,7 +88,7 @@ class SaharaClusterTestCase(test.TestCase):
                 plugin_name="test_plugin",
                 hadoop_version="test_version",
                 flavor_id="test_flavor",
-                node_count=2,
+                workers_count=2,
                 image_id=ctx["tenants"][i]["sahara_image"],
                 floating_ip_pool=None,
                 volumes_per_node=None,
@@ -127,7 +127,7 @@ class SaharaClusterTestCase(test.TestCase):
                 plugin_name="test_plugin",
                 hadoop_version="test_version",
                 flavor_id="test_flavor",
-                node_count=2,
+                workers_count=2,
                 image_id=ctx["tenants"][i]["sahara_image"],
                 floating_ip_pool=None,
                 volumes_per_node=None,

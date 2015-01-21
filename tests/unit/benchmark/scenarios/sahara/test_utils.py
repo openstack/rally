@@ -174,7 +174,7 @@ class SaharaUtilsTestCase(test.TestCase):
                 "floating_ip_pool": floating_ip_pool_uuid,
                 "volumes_per_node": 5,
                 "volumes_size": 10,
-                "count": 41,
+                "count": 42,
                 "auto_security_group": True,
                 "security_groups": ["g1", "g2"],
                 "node_configs": {"HDFS": {"local_config": "local_value"}},
@@ -200,7 +200,7 @@ class SaharaUtilsTestCase(test.TestCase):
             volumes_size=10,
             auto_security_group=True,
             security_groups=["g1", "g2"],
-            node_count=42,
+            workers_count=42,
             node_configs={"HDFS": {"local_config": "local_value"}}
         )
 
@@ -259,7 +259,7 @@ class SaharaUtilsTestCase(test.TestCase):
                           floating_ip_pool="test_pool",
                           volumes_per_node=5,
                           volumes_size=10,
-                          node_count=42,
+                          workers_count=42,
                           node_configs={"HDFS": {"local_config":
                                                  "local_value"}})
 

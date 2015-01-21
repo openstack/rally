@@ -75,13 +75,23 @@ class SaharaScenario(base.Scenario):
                            'MAPREDUCE_CLIENT', 'OOZIE_CLIENT', 'PIG']
             },
             "2.0.6": {
-                "master": ['NAMENODE', 'SECONDARY_NAMENODE',
-                           'ZOOKEEPER_SERVER', 'AMBARI_SERVER',
-                           'HISTORYSERVER', 'RESOURCEMANAGER',
-                           'GANGLIA_SERVER', 'NAGIOS_SERVER', 'OOZIE_SERVER'],
-                "worker": ['HDFS_CLIENT', 'DATANODE', 'ZOOKEEPER_CLIENT',
-                           'MAPREDUCE2_CLIENT', 'YARN_CLIENT', 'NODEMANAGER',
-                           'PIG', 'OOZIE_CLIENT']
+                "manager": ["AMBARI_SERVER", "GANGLIA_SERVER",
+                            "NAGIOS_SERVER"],
+                "master": ["NAMENODE", "SECONDARY_NAMENODE",
+                           "ZOOKEEPER_SERVER", "ZOOKEEPER_CLIENT",
+                           "HISTORYSERVER", "RESOURCEMANAGER",
+                           "OOZIE_SERVER"],
+                "worker": ["DATANODE", "HDFS_CLIENT", "ZOOKEEPER_CLIENT",
+                           "PIG", "MAPREDUCE2_CLIENT", "YARN_CLIENT",
+                           "NODEMANAGER", "OOZIE_CLIENT"]
+            }
+        },
+        "cdh": {
+            "5": {
+                "manager": ["MANAGER"],
+                "master": ["NAMENODE", "SECONDARYNAMENODE", "RESOURCEMANAGER",
+                           "JOBHISTORY", "OOZIE_SERVER"],
+                "worker": ["DATANODE", "NODEMANAGER"]
             }
         }
     }
@@ -109,6 +119,12 @@ class SaharaScenario(base.Scenario):
             "2.0.6": {
                 "target": "HDFS",
                 "config_name": "dfs.replication"
+            }
+        },
+        "cdh": {
+            "5": {
+                "target": "HDFS",
+                "config_name": "dfs_replication"
             }
         }
     }
@@ -265,9 +281,9 @@ class SaharaScenario(base.Scenario):
 
         return node_groups
 
-    def _setup_replication_config(self, hadoop_version, node_count,
+    def _setup_replication_config(self, hadoop_version, workers_count,
                                   plugin_name):
-        replication_value = min(node_count - 1, 3)
+        replication_value = min(workers_count, 3)
         # 3 is a default Hadoop replication
         conf = self.REPLICATION_CONFIGS[plugin_name][hadoop_version]
         LOG.debug("Using replication factor: %s" % replication_value)
@@ -280,7 +296,7 @@ class SaharaScenario(base.Scenario):
 
     @base.atomic_action_timer('sahara.launch_cluster')
     def _launch_cluster(self, plugin_name, hadoop_version, flavor_id,
-                        image_id, node_count, floating_ip_pool=None,
+                        image_id, workers_count, floating_ip_pool=None,
                         volumes_per_node=None,
                         volumes_size=None, auto_security_group=None,
                         security_groups=None, node_configs=None,
@@ -295,8 +311,9 @@ class SaharaScenario(base.Scenario):
         :param hadoop_version: Hadoop version supported by the plugin
         :param flavor_id: flavor which will be used to create instances
         :param image_id: image id that will be used to boot instances
-        :param node_count: total number of instances. 1 master node, others
-                           for the workers
+        :param workers_count: number of worker instances. All plugins will
+                              also add one Master instance and some plugins
+                              add a Manager instance.
         :param floating_ip_pool: floating ip pool name from which Floating
                                  IPs will be allocated
         :param volumes_per_node: number of Cinder volumes that will be
@@ -327,9 +344,21 @@ class SaharaScenario(base.Scenario):
                 "flavor_id": flavor_id,
                 "node_processes": self.NODE_PROCESSES[plugin_name]
                 [hadoop_version]["worker"],
-                "count": node_count - 1
+                "count": workers_count
             }
         ]
+
+        if "manager" in self.NODE_PROCESSES[plugin_name][hadoop_version]:
+            # Adding manager group separately as it is supported only in
+            # specific configurations.
+
+            node_groups.append({
+                "name": "manager-ng",
+                "flavor_id": flavor_id,
+                "node_processes": self.NODE_PROCESSES[plugin_name]
+                [hadoop_version]["manager"],
+                "count": 1
+            })
 
         node_groups = self._setup_floating_ip_pool(node_groups,
                                                    floating_ip_pool)
@@ -346,7 +375,7 @@ class SaharaScenario(base.Scenario):
         node_groups = self._setup_node_configs(node_groups, node_configs)
 
         replication_config = self._setup_replication_config(hadoop_version,
-                                                            node_count,
+                                                            workers_count,
                                                             plugin_name)
 
         # The replication factor should be set for small clusters. However the

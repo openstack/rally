@@ -31,11 +31,11 @@ class SaharaClusters(utils.SaharaScenario):
                floating_ip_pool=types.NeutronNetworkResourceType)
     @validation.flavor_exists('flavor')
     @validation.required_contexts("users", "sahara_image")
-    @validation.number("node_count", minval=2, integer_only=True)
+    @validation.number("workers_count", minval=1, integer_only=True)
     @validation.required_services(consts.Service.SAHARA)
     @validation.required_openstack(users=True)
     @base.scenario(context={"cleanup": ["sahara"]})
-    def create_and_delete_cluster(self, flavor, node_count, plugin_name,
+    def create_and_delete_cluster(self, flavor, workers_count, plugin_name,
                                   hadoop_version, floating_ip_pool=None,
                                   volumes_per_node=None,
                                   volumes_size=None, auto_security_group=None,
@@ -48,7 +48,7 @@ class SaharaClusters(utils.SaharaScenario):
 
         :param flavor: Nova flavor that will be for nodes in the
                        created node groups
-        :param node_count: total number of instances in a cluster (>= 2)
+        :param workers_count: number of worker instances in a cluster
         :param plugin_name: name of a provisioning plugin
         :param hadoop_version: version of Hadoop distribution supported by
                                the specified plugin.
@@ -80,7 +80,7 @@ class SaharaClusters(utils.SaharaScenario):
         cluster = self._launch_cluster(
             flavor_id=flavor,
             image_id=image_id,
-            node_count=node_count,
+            workers_count=workers_count,
             plugin_name=plugin_name,
             hadoop_version=hadoop_version,
             floating_ip_pool=floating_ip_pool,
@@ -97,9 +97,9 @@ class SaharaClusters(utils.SaharaScenario):
     @validation.flavor_exists('flavor')
     @validation.required_services(consts.Service.SAHARA)
     @validation.required_contexts("users", "sahara_image")
-    @validation.number("node_count", minval=2, integer_only=True)
+    @validation.number("workers_count", minval=1, integer_only=True)
     @base.scenario(context={"cleanup": ["sahara"]})
-    def create_scale_delete_cluster(self, flavor, node_count, plugin_name,
+    def create_scale_delete_cluster(self, flavor, workers_count, plugin_name,
                                     hadoop_version, deltas,
                                     floating_ip_pool=None,
                                     volumes_per_node=None, volumes_size=None,
@@ -116,7 +116,7 @@ class SaharaClusters(utils.SaharaScenario):
 
         :param flavor: Nova flavor that will be for nodes in the
                        created node groups
-        :param node_count: total number of instances in a cluster (>= 2)
+        :param workers_count: number of worker instances in a cluster
         :param plugin_name: name of a provisioning plugin
         :param hadoop_version: version of Hadoop distribution supported by
                                the specified plugin.
@@ -153,7 +153,7 @@ class SaharaClusters(utils.SaharaScenario):
         cluster = self._launch_cluster(
             flavor_id=flavor,
             image_id=image_id,
-            node_count=node_count,
+            workers_count=workers_count,
             plugin_name=plugin_name,
             hadoop_version=hadoop_version,
             floating_ip_pool=floating_ip_pool,

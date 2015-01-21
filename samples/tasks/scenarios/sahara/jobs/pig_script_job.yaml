@@ -32,7 +32,7 @@
               download_url: "https://github.com/openstack/sahara/blob/master/etc/edp-examples/pig-job/udf.jar?raw=true"
         sahara_cluster:
           flavor_id: "2"
-          node_count: 2
+          workers_count: 3
           plugin_name: "vanilla"
           hadoop_version: "1.2.1"
           auto_security_group: True
