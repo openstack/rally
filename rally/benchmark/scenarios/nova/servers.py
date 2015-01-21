@@ -131,7 +131,7 @@ class NovaServers(utils.NovaScenario,
         :param kwargs: Optional additional arguments for server creation
         """
         volume = self._create_volume(volume_size, imageRef=image)
-        block_device_mapping = {'vda': '%s:::1' % volume.id}
+        block_device_mapping = {"vda": "%s:::1" % volume.id}
         server = self._boot_server(self._generate_random_name(),
                                    image, flavor,
                                    block_device_mapping=block_device_mapping,
@@ -169,7 +169,7 @@ class NovaServers(utils.NovaScenario,
         except jsonschema.exceptions.ValidationError as error:
             raise rally_exceptions.InvalidConfigException(
                 "Invalid server actions configuration \'%(actions)s\' due to: "
-                "%(error)s" % {'actions': str(actions), 'error': str(error)})
+                "%(error)s" % {"actions": str(actions), "error": str(error)})
         server = self._boot_server(self._generate_random_name(),
                                    image, flavor, **kwargs)
         for action in action_builder.build_actions(actions, server):
@@ -241,21 +241,21 @@ class NovaServers(utils.NovaScenario,
         :param kwargs: Optional additional arguments for server creation
         """
         volume = self._create_volume(volume_size, imageRef=image)
-        block_device_mapping = {'vda': '%s:::1' % volume.id}
+        block_device_mapping = {"vda": "%s:::1" % volume.id}
         self._boot_server(self._generate_random_name(),
                           image, flavor, auto_assign_nic,
                           block_device_mapping=block_device_mapping,
                           **kwargs)
 
     def _bind_actions(self):
-        actions = ['hard_reboot', 'soft_reboot', 'stop_start',
-                   'rescue_unrescue']
+        actions = ["hard_reboot", "soft_reboot", "stop_start",
+                   "rescue_unrescue"]
         action_builder = scenario_utils.ActionBuilder(actions)
-        action_builder.bind_action('hard_reboot', self._reboot_server)
-        action_builder.bind_action('soft_reboot', self._soft_reboot_server)
-        action_builder.bind_action('stop_start',
+        action_builder.bind_action("hard_reboot", self._reboot_server)
+        action_builder.bind_action("soft_reboot", self._soft_reboot_server)
+        action_builder.bind_action("stop_start",
                                    self._stop_and_start_server)
-        action_builder.bind_action('rescue_unrescue',
+        action_builder.bind_action("rescue_unrescue",
                                    self._rescue_and_unrescue_server)
         return action_builder
 
@@ -312,7 +312,7 @@ class NovaServers(utils.NovaScenario,
                                    image, flavor, **kwargs)
         self._resize(server, to_flavor)
         # by default we confirm
-        confirm = kwargs.get('confirm', True)
+        confirm = kwargs.get("confirm", True)
         if confirm:
             self._resize_confirm(server)
         else:

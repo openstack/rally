@@ -49,8 +49,8 @@ class ImageGenerator(base.Context):
                 "minimum": 1
             },
         },
-        'required': ['image_url', 'image_type', 'image_container',
-                     'images_per_tenant'],
+        "required": ["image_url", "image_type", "image_container",
+                     "images_per_tenant"],
         "additionalProperties": False
     }
 

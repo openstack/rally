@@ -23,41 +23,41 @@ from rally.benchmark import utils as bench_utils
 
 
 glance_benchmark_opts = [
-    cfg.FloatOpt('glance_image_create_prepoll_delay',
+    cfg.FloatOpt("glance_image_create_prepoll_delay",
                  default=2.0,
-                 help='Time to sleep after creating a resource before '
-                      'polling for it status'),
-    cfg.FloatOpt('glance_image_create_timeout',
+                 help="Time to sleep after creating a resource before "
+                      "polling for it status"),
+    cfg.FloatOpt("glance_image_create_timeout",
                  default=120.0,
-                 help='Time to wait for glance image to be created.'),
-    cfg.FloatOpt('glance_image_create_poll_interval',
+                 help="Time to wait for glance image to be created."),
+    cfg.FloatOpt("glance_image_create_poll_interval",
                  default=1.0,
-                 help='Interval between checks when waiting for image '
-                      'creation.'),
-    cfg.FloatOpt('glance_image_delete_timeout',
+                 help="Interval between checks when waiting for image "
+                      "creation."),
+    cfg.FloatOpt("glance_image_delete_timeout",
                  default=120.0,
-                 help='Time to wait for glance image to be deleted.'),
-    cfg.FloatOpt('glance_image_delete_poll_interval',
+                 help="Time to wait for glance image to be deleted."),
+    cfg.FloatOpt("glance_image_delete_poll_interval",
                  default=1.0,
-                 help='Interval between checks when waiting for image '
-                      'deletion.')
+                 help="Interval between checks when waiting for image "
+                      "deletion.")
 ]
 
 
 CONF = cfg.CONF
-benchmark_group = cfg.OptGroup(name='benchmark', title='benchmark options')
+benchmark_group = cfg.OptGroup(name="benchmark", title="benchmark options")
 CONF.register_opts(glance_benchmark_opts, group=benchmark_group)
 
 
 class GlanceScenario(base.Scenario):
     """Base class for Glance scenarios with basic atomic actions."""
 
-    @base.atomic_action_timer('glance.list_images')
+    @base.atomic_action_timer("glance.list_images")
     def _list_images(self):
         """Returns user images list."""
         return list(self.clients("glance").images.list())
 
-    @base.atomic_action_timer('glance.create_image')
+    @base.atomic_action_timer("glance.create_image")
     def _create_image(self, image_name, container_format,
                       image_location, disk_format, **kwargs):
         """Create a new image.
@@ -104,7 +104,7 @@ class GlanceScenario(base.Scenario):
 
         return image
 
-    @base.atomic_action_timer('glance.delete_image')
+    @base.atomic_action_timer("glance.delete_image")
     def _delete_image(self, image):
         """Deletes given image.
 

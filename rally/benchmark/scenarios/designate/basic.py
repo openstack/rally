@@ -66,7 +66,7 @@ class DesignateBasic(utils.DesignateScenario):
         with different level of load.
         """
         domain = self._create_domain()
-        self._delete_domain(domain['id'])
+        self._delete_domain(domain["id"])
 
     @validation.required_services(consts.Service.DESIGNATE)
     @validation.required_openstack(users=True)
@@ -93,7 +93,7 @@ class DesignateBasic(utils.DesignateScenario):
         with base.AtomicAction(self, key):
             for record in records:
                 self._delete_record(
-                    domain['id'], record['id'], atomic_action=False)
+                    domain["id"], record["id"], atomic_action=False)
 
     @validation.required_services(consts.Service.DESIGNATE)
     @validation.required_openstack(users=True)
@@ -134,4 +134,4 @@ class DesignateBasic(utils.DesignateScenario):
             for i in range(records_per_domain):
                 self._create_record(domain, atomic_action=False)
 
-        self._list_records(domain['id'])
+        self._list_records(domain["id"])

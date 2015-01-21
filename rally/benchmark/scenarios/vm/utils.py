@@ -29,7 +29,7 @@ class VMScenario(base.Scenario):
     VM scenarios are scenarios executed inside some launched VM instance.
     """
 
-    @base.atomic_action_timer('vm.run_command')
+    @base.atomic_action_timer("vm.run_command")
     def run_action(self, ssh, interpreter, script):
         """Run command inside an instance.
 
@@ -39,11 +39,11 @@ class VMScenario(base.Scenario):
         """
         return ssh.execute(interpreter, stdin=open(script, "rb"))
 
-    @base.atomic_action_timer('vm.wait_for_ssh')
+    @base.atomic_action_timer("vm.wait_for_ssh")
     def wait_for_ssh(self, ssh):
         ssh.wait()
 
-    @base.atomic_action_timer('vm.wait_for_ping')
+    @base.atomic_action_timer("vm.wait_for_ping")
     def wait_for_ping(self, server_ip):
         bench_utils.wait_for(
             server_ip,
@@ -71,11 +71,11 @@ class VMScenario(base.Scenario):
     @staticmethod
     def ping_ip_address(host, should_succeed=True):
         ip = netaddr.IPAddress(host)
-        ping = 'ping' if ip.version == 4 else 'ping6'
-        if sys.platform.startswith('linux'):
-            cmd = [ping, '-c1', '-w1', host]
+        ping = "ping" if ip.version == 4 else "ping6"
+        if sys.platform.startswith("linux"):
+            cmd = [ping, "-c1", "-w1", host]
         else:
-            cmd = [ping, '-c1', host]
+            cmd = [ping, "-c1", host]
 
         proc = subprocess.Popen(cmd,
                                 stdout=subprocess.PIPE,

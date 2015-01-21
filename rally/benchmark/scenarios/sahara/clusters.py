@@ -29,7 +29,7 @@ class SaharaClusters(utils.SaharaScenario):
     @types.set(flavor=types.FlavorResourceType,
                neutron_net=types.NeutronNetworkResourceType,
                floating_ip_pool=types.NeutronNetworkResourceType)
-    @validation.flavor_exists('flavor')
+    @validation.flavor_exists("flavor")
     @validation.required_contexts("users", "sahara_image")
     @validation.number("workers_count", minval=1, integer_only=True)
     @validation.required_services(consts.Service.SAHARA)
@@ -94,7 +94,7 @@ class SaharaClusters(utils.SaharaScenario):
         self._delete_cluster(cluster)
 
     @types.set(flavor=types.FlavorResourceType)
-    @validation.flavor_exists('flavor')
+    @validation.flavor_exists("flavor")
     @validation.required_services(consts.Service.SAHARA)
     @validation.required_contexts("users", "sahara_image")
     @validation.number("workers_count", minval=1, integer_only=True)

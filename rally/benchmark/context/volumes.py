@@ -43,7 +43,7 @@ class VolumeGenerator(base.Context):
                 "minimum": 1
             }
         },
-        'required': ['size'],
+        "required": ["size"],
         "additionalProperties": False
     }
 

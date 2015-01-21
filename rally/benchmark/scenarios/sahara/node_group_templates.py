@@ -24,7 +24,7 @@ class SaharaNodeGroupTemplates(utils.SaharaScenario):
     """Benchmark scenarios for Sahara node group templates."""
 
     @types.set(flavor=types.FlavorResourceType)
-    @validation.flavor_exists('flavor')
+    @validation.flavor_exists("flavor")
     @validation.required_services(consts.Service.SAHARA)
     @validation.required_openstack(users=True)
     @base.scenario(context={"cleanup": ["sahara"]})
@@ -59,7 +59,7 @@ class SaharaNodeGroupTemplates(utils.SaharaScenario):
         self._list_node_group_templates()
 
     @types.set(flavor=types.FlavorResourceType)
-    @validation.flavor_exists('flavor')
+    @validation.flavor_exists("flavor")
     @validation.required_services(consts.Service.SAHARA)
     @validation.required_openstack(users=True)
     @base.scenario(context={"cleanup": ["sahara"]})

@@ -23,7 +23,7 @@ class ActionBuilder(object):
     An action list is an array of single key/value dicts which takes
     the form:
 
-    [{'action': times}, {'action': times}...]
+    [{"action": times}, {"action": times}...]
 
     Here 'action' is a string which indicates a action to perform and
     'times' is a non-zero positive integer which specifies how many
@@ -60,7 +60,7 @@ class ActionBuilder(object):
         self._bindings = {}
         self.schema = dict(ActionBuilder.SCHEMA_TEMPLATE)
         for kw in action_keywords:
-            self.schema['items']['properties'][kw] = (
+            self.schema["items"]["properties"][kw] = (
                 ActionBuilder.ITEM_TEMPLATE)
 
     def bind_action(self, action_key, action, *args, **kwargs):
@@ -76,9 +76,9 @@ class ActionBuilder(object):
         """
         self.validate([{action_key: 1}])
         self._bindings[action_key] = {
-            'action': action,
-            'args': args or (),
-            'kwargs': kwargs or {}
+            "action": action,
+            "args": args or (),
+            "kwargs": kwargs or {}
         }
 
     def validate(self, actions):
@@ -116,9 +116,9 @@ class ActionBuilder(object):
             action_key = action.keys()[0]
             times = action.get(action_key)
             binding = self._bindings.get(action_key)
-            dft_kwargs = dict(binding['kwargs'])
+            dft_kwargs = dict(binding["kwargs"])
             dft_kwargs.update(kwargs or {})
             bound_actions.append(self._build(
-                                    binding['action'], times,
-                                    *(binding['args'] + args), **dft_kwargs))
+                                    binding["action"], times,
+                                    *(binding["args"] + args), **dft_kwargs))
         return bound_actions

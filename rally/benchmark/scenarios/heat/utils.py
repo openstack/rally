@@ -22,29 +22,29 @@ from rally.benchmark import utils as bench_utils
 
 
 heat_benchmark_opts = [
-    cfg.FloatOpt('heat_stack_create_prepoll_delay',
+    cfg.FloatOpt("heat_stack_create_prepoll_delay",
                  default=2.0,
-                 help='Time to sleep after creating a resource before '
-                      'polling for it status'),
-    cfg.FloatOpt('heat_stack_create_timeout',
+                 help="Time to sleep after creating a resource before "
+                      "polling for it status"),
+    cfg.FloatOpt("heat_stack_create_timeout",
                  default=3600.0,
-                 help='Time to wait for heat stack to be created.'),
-    cfg.FloatOpt('heat_stack_create_poll_interval',
+                 help="Time to wait for heat stack to be created."),
+    cfg.FloatOpt("heat_stack_create_poll_interval",
                  default=1.0,
-                 help='Interval between checks when waiting for stack '
-                      'creation.'),
-    cfg.FloatOpt('heat_stack_delete_timeout',
+                 help="Interval between checks when waiting for stack "
+                      "creation."),
+    cfg.FloatOpt("heat_stack_delete_timeout",
                  default=3600.0,
-                 help='Time to wait for heat stack to be deleted.'),
-    cfg.FloatOpt('heat_stack_delete_poll_interval',
+                 help="Time to wait for heat stack to be deleted."),
+    cfg.FloatOpt("heat_stack_delete_poll_interval",
                  default=1.0,
-                 help='Interval between checks when waiting for stack '
-                      'deletion.')
+                 help="Interval between checks when waiting for stack "
+                      "deletion.")
 ]
 
 
 CONF = cfg.CONF
-benchmark_group = cfg.OptGroup(name='benchmark', title='benchmark options')
+benchmark_group = cfg.OptGroup(name="benchmark", title="benchmark options")
 CONF.register_opts(heat_benchmark_opts, group=benchmark_group)
 
 
@@ -59,13 +59,13 @@ class HeatScenario(base.Scenario):
 
     default_template = "HeatTemplateFormatVersion: '2012-12-12'"
 
-    @base.atomic_action_timer('heat.list_stacks')
+    @base.atomic_action_timer("heat.list_stacks")
     def _list_stacks(self):
         """Return user stack list."""
 
         return list(self.clients("heat").stacks.list())
 
-    @base.atomic_action_timer('heat.create_stack')
+    @base.atomic_action_timer("heat.create_stack")
     def _create_stack(self, stack_name, template=None):
         """Create a new stack.
 
@@ -101,7 +101,7 @@ class HeatScenario(base.Scenario):
 
         return stack
 
-    @base.atomic_action_timer('heat.delete_stack')
+    @base.atomic_action_timer("heat.delete_stack")
     def _delete_stack(self, stack):
         """Delete given stack.
 

@@ -71,10 +71,10 @@ def _prepare_open_secgroup(endpoint):
                    in rally_open.rules):
             nova.security_group_rules.create(
                         rally_open.id,
-                        from_port=new_rule['from_port'],
-                        to_port=new_rule['to_port'],
-                        ip_protocol=new_rule['ip_protocol'],
-                        cidr=new_rule['ip_range']['cidr'])
+                        from_port=new_rule["from_port"],
+                        to_port=new_rule["to_port"],
+                        ip_protocol=new_rule["ip_protocol"],
+                        cidr=new_rule["ip_range"]["cidr"])
 
     return rally_open
 

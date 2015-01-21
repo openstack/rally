@@ -18,7 +18,7 @@ from rally.benchmark.scenarios import base
 class ZaqarScenario(base.Scenario):
     """Base class for Zaqar scenarios with basic atomic actions."""
 
-    @base.atomic_action_timer('zaqar.create_queue')
+    @base.atomic_action_timer("zaqar.create_queue")
     def _queue_create(self, name_length=10, **kwargs):
         """Create a Zaqar queue with random name.
 
@@ -30,7 +30,7 @@ class ZaqarScenario(base.Scenario):
         name = self._generate_random_name(length=name_length)
         return self.clients("zaqar").queue(name, **kwargs)
 
-    @base.atomic_action_timer('zaqar.delete_queue')
+    @base.atomic_action_timer("zaqar.delete_queue")
     def _queue_delete(self, queue):
         """Removes a Zaqar queue.
 
@@ -47,11 +47,11 @@ class ZaqarScenario(base.Scenario):
         :param min_msg_count: minimum number of messages
         :param max_msg_count: maximum number of messages
         """
-        with base.AtomicAction(self, 'zaqar.post_between_%s_and_%s_messages' %
+        with base.AtomicAction(self, "zaqar.post_between_%s_and_%s_messages" %
                                (min_msg_count, max_msg_count)):
             queue.post(messages)
 
-    @base.atomic_action_timer('zaqar.list_messages')
+    @base.atomic_action_timer("zaqar.list_messages")
     def _messages_list(self, queue):
         """Gets messages from a given Zaqar queue.
 

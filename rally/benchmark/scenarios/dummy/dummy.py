@@ -83,8 +83,8 @@ class Dummy(base.Scenario):
         output processing.
         """
         out = {
-            'value_1': random.randint(1, 100),
-            'value_2': random.random()
+            "value_1": random.randint(1, 100),
+            "value_2": random.random()
         }
         err = ""
         return {"data": out, "errors": err}

@@ -27,21 +27,21 @@ from rally import exceptions
 nova_benchmark_opts = []
 option_names_and_defaults = [
     # action, prepoll delay, timeout, poll interval
-    ('start', 0, 300, 1),
-    ('stop', 0, 300, 2),
-    ('boot', 1, 300, 1),
-    ('delete', 2, 300, 2),
-    ('reboot', 2, 300, 2),
-    ('rescue', 2, 300, 2),
-    ('unrescue', 2, 300, 2),
-    ('suspend', 2, 300, 2),
-    ('image_create', 0, 300, 2),
-    ('image_delete', 0, 300, 2),
-    ('resize', 2, 400, 5),
-    ('resize_confirm', 0, 200, 2),
-    ('resize_revert', 0, 200, 2),
-    ('live_migrate', 1, 400, 2),
-    ('migrate', 1, 400, 2),
+    ("start", 0, 300, 1),
+    ("stop", 0, 300, 2),
+    ("boot", 1, 300, 1),
+    ("delete", 2, 300, 2),
+    ("reboot", 2, 300, 2),
+    ("rescue", 2, 300, 2),
+    ("unrescue", 2, 300, 2),
+    ("suspend", 2, 300, 2),
+    ("image_create", 0, 300, 2),
+    ("image_delete", 0, 300, 2),
+    ("resize", 2, 400, 5),
+    ("resize_confirm", 0, 200, 2),
+    ("resize_revert", 0, 200, 2),
+    ("live_migrate", 1, 400, 2),
+    ("migrate", 1, 400, 2),
 ]
 
 for action, prepoll, timeout, poll in option_names_and_defaults:
@@ -49,23 +49,23 @@ for action, prepoll, timeout, poll in option_names_and_defaults:
         cfg.FloatOpt(
             "nova_server_%s_prepoll_delay" % action,
             default=float(prepoll),
-            help='Time to sleep after %s before polling for status' % action
+            help="Time to sleep after %s before polling for status" % action
         ),
         cfg.FloatOpt(
             "nova_server_%s_timeout" % action,
             default=float(timeout),
-            help='Server %s timeout' % action
+            help="Server %s timeout" % action
         ),
         cfg.FloatOpt(
             "nova_server_%s_poll_interval" % action,
             default=float(poll),
-            help='Server %s poll interval' % action
+            help="Server %s poll interval" % action
         )
     ])
 
 CONF = cfg.CONF
-benchmark_group = cfg.OptGroup(name='benchmark',
-                               title='benchmark options')
+benchmark_group = cfg.OptGroup(name="benchmark",
+                               title="benchmark options")
 CONF.register_group(benchmark_group)
 CONF.register_opts(nova_benchmark_opts, group=benchmark_group)
 
@@ -73,7 +73,7 @@ CONF.register_opts(nova_benchmark_opts, group=benchmark_group)
 class NovaScenario(base.Scenario):
     """Base class for Nova scenarios with basic atomic actions."""
 
-    @base.atomic_action_timer('nova.list_servers')
+    @base.atomic_action_timer("nova.list_servers")
     def _list_servers(self, detailed=True):
         """Returns user servers list."""
         return self.clients("nova").servers.list(detailed)
@@ -137,7 +137,7 @@ class NovaScenario(base.Scenario):
             check_interval=CONF.benchmark.nova_server_reboot_poll_interval
         )
 
-    @base.atomic_action_timer('nova.soft_reboot_server')
+    @base.atomic_action_timer("nova.soft_reboot_server")
     def _soft_reboot_server(self, server):
         """Reboot a server with soft reboot.
 
@@ -148,7 +148,7 @@ class NovaScenario(base.Scenario):
         """
         self._do_server_reboot(server, "SOFT")
 
-    @base.atomic_action_timer('nova.reboot_server')
+    @base.atomic_action_timer("nova.reboot_server")
     def _reboot_server(self, server):
         """Reboot a server with hard reboot.
 
@@ -159,7 +159,7 @@ class NovaScenario(base.Scenario):
         """
         self._do_server_reboot(server, "HARD")
 
-    @base.atomic_action_timer('nova.start_server')
+    @base.atomic_action_timer("nova.start_server")
     def _start_server(self, server):
         """Start the given server.
 
@@ -176,7 +176,7 @@ class NovaScenario(base.Scenario):
             check_interval=CONF.benchmark.nova_server_start_poll_interval
         )
 
-    @base.atomic_action_timer('nova.stop_server')
+    @base.atomic_action_timer("nova.stop_server")
     def _stop_server(self, server):
         """Stop the given server.
 
@@ -193,7 +193,7 @@ class NovaScenario(base.Scenario):
             check_interval=CONF.benchmark.nova_server_stop_poll_interval
         )
 
-    @base.atomic_action_timer('nova.rescue_server')
+    @base.atomic_action_timer("nova.rescue_server")
     def _rescue_server(self, server):
         """Rescue the given server.
 
@@ -211,7 +211,7 @@ class NovaScenario(base.Scenario):
             check_interval=CONF.benchmark.nova_server_rescue_poll_interval
         )
 
-    @base.atomic_action_timer('nova.unrescue_server')
+    @base.atomic_action_timer("nova.unrescue_server")
     def _unrescue_server(self, server):
         """Unrescue the given server.
 
@@ -228,7 +228,7 @@ class NovaScenario(base.Scenario):
             check_interval=CONF.benchmark.nova_server_unrescue_poll_interval
         )
 
-    @base.atomic_action_timer('nova.suspend_server')
+    @base.atomic_action_timer("nova.suspend_server")
     def _suspend_server(self, server):
         """Suspends the given server.
 
@@ -254,7 +254,7 @@ class NovaScenario(base.Scenario):
         :param server: Server object
         :param force: If True, force_delete will be used instead of delete.
         """
-        atomic_name = ('nova.%sdelete_server') % (force and "force_" or "")
+        atomic_name = ("nova.%sdelete_server") % (force and "force_" or "")
         with base.AtomicAction(self, atomic_name):
             if force:
                 server.force_delete()
@@ -273,14 +273,14 @@ class NovaScenario(base.Scenario):
 
         :param force: If True, force_delete will be used instead of delete.
         """
-        atomic_name = ('nova.%sdelete_all_servers') % (force
+        atomic_name = ("nova.%sdelete_all_servers") % (force
                                                        and "force_" or "")
         with base.AtomicAction(self, atomic_name):
             servers = self.clients("nova").servers.list()
             for server in servers:
                 self._delete_server(server, force)
 
-    @base.atomic_action_timer('nova.delete_image')
+    @base.atomic_action_timer("nova.delete_image")
     def _delete_image(self, image):
         """Delete the given image.
 
@@ -297,7 +297,7 @@ class NovaScenario(base.Scenario):
             check_interval=check_interval
         )
 
-    @base.atomic_action_timer('nova.create_image')
+    @base.atomic_action_timer("nova.create_image")
     def _create_image(self, server):
         """Create an image from the given server
 
@@ -321,7 +321,7 @@ class NovaScenario(base.Scenario):
         )
         return image
 
-    @base.atomic_action_timer('nova.boot_servers')
+    @base.atomic_action_timer("nova.boot_servers")
     def _boot_servers(self, name_prefix, image_id, flavor_id,
                       requests, instances_amount=1, **kwargs):
         """Boot multiple servers.
@@ -339,7 +339,7 @@ class NovaScenario(base.Scenario):
         :returns: List of created server objects
         """
         for i in range(requests):
-            self.clients("nova").servers.create('%s_%d' % (name_prefix, i),
+            self.clients("nova").servers.create("%s_%d" % (name_prefix, i),
                                                 image_id, flavor_id,
                                                 min_count=instances_amount,
                                                 max_count=instances_amount,
@@ -360,17 +360,17 @@ class NovaScenario(base.Scenario):
         ) for server in servers]
         return servers
 
-    @base.atomic_action_timer('nova.list_floating_ip_pools')
+    @base.atomic_action_timer("nova.list_floating_ip_pools")
     def _list_floating_ip_pools(self):
         """Return user floating ip pools list."""
         return self.clients("nova").floating_ip_pools.list()
 
-    @base.atomic_action_timer('nova.list_floating_ips')
+    @base.atomic_action_timer("nova.list_floating_ips")
     def _list_floating_ips(self):
         """Return user floating ips list."""
         return self.clients("nova").floating_ips.list()
 
-    @base.atomic_action_timer('nova.create_floating_ip')
+    @base.atomic_action_timer("nova.create_floating_ip")
     def _create_floating_ip(self, pool):
         """Create (allocate) a floating ip from the given pool
 
@@ -380,7 +380,7 @@ class NovaScenario(base.Scenario):
         """
         return self.clients("nova").floating_ips.create(pool)
 
-    @base.atomic_action_timer('nova.delete_floating_ip')
+    @base.atomic_action_timer("nova.delete_floating_ip")
     def _delete_floating_ip(self, floating_ip):
         """Delete (deallocate) a  floating ip for a tenant
 
@@ -392,7 +392,7 @@ class NovaScenario(base.Scenario):
             update_resource=bench_utils.get_from_manager()
         )
 
-    @base.atomic_action_timer('nova.associate_floating_ip')
+    @base.atomic_action_timer("nova.associate_floating_ip")
     def _associate_floating_ip(self, server, address, fixed_address=None):
         """Add floating IP to an instance
 
@@ -410,7 +410,7 @@ class NovaScenario(base.Scenario):
         # Update server data
         server.addresses = server.manager.get(server.id).addresses
 
-    @base.atomic_action_timer('nova.dissociate_floating_ip')
+    @base.atomic_action_timer("nova.dissociate_floating_ip")
     def _dissociate_floating_ip(self, server, address):
         """Remove floating IP from an instance
 
@@ -438,12 +438,12 @@ class NovaScenario(base.Scenario):
                 return not must_exist
         return _check_addr
 
-    @base.atomic_action_timer('nova.list_networks')
+    @base.atomic_action_timer("nova.list_networks")
     def _list_networks(self):
         """Return user networks list."""
         return self.clients("nova").networks.list()
 
-    @base.atomic_action_timer('nova.resize')
+    @base.atomic_action_timer("nova.resize")
     def _resize(self, server, flavor):
         server.resize(flavor)
         bench_utils.wait_for(
@@ -454,7 +454,7 @@ class NovaScenario(base.Scenario):
             check_interval=CONF.benchmark.nova_server_resize_poll_interval
         )
 
-    @base.atomic_action_timer('nova.resize_confirm')
+    @base.atomic_action_timer("nova.resize_confirm")
     def _resize_confirm(self, server, status="ACTIVE"):
         server.confirm_resize()
         bench_utils.wait_for(
@@ -466,7 +466,7 @@ class NovaScenario(base.Scenario):
                 CONF.benchmark.nova_server_resize_confirm_poll_interval)
         )
 
-    @base.atomic_action_timer('nova.resize_revert')
+    @base.atomic_action_timer("nova.resize_revert")
     def _resize_revert(self, server, status="ACTIVE"):
         server.revert_resize()
         bench_utils.wait_for(
@@ -478,7 +478,7 @@ class NovaScenario(base.Scenario):
                     CONF.benchmark.nova_server_resize_revert_poll_interval)
         )
 
-    @base.atomic_action_timer('nova.attach_volume')
+    @base.atomic_action_timer("nova.attach_volume")
     def _attach_volume(self, server, volume, device=None):
         server_id = server.id
         volume_id = volume.id
@@ -494,7 +494,7 @@ class NovaScenario(base.Scenario):
                     CONF.benchmark.nova_server_resize_revert_poll_interval)
         )
 
-    @base.atomic_action_timer('nova.detach_volume')
+    @base.atomic_action_timer("nova.detach_volume")
     def _detach_volume(self, server, volume):
         server_id = server.id
         volume_id = volume.id
@@ -509,7 +509,7 @@ class NovaScenario(base.Scenario):
                     CONF.benchmark.nova_server_resize_revert_poll_interval)
         )
 
-    @base.atomic_action_timer('nova.live_migrate')
+    @base.atomic_action_timer("nova.live_migrate")
     def _live_migrate(self, server, target_host, block_migration=False,
                       disk_over_commit=False, skip_host_check=False):
         """Run live migration of the given server.
@@ -542,7 +542,7 @@ class NovaScenario(base.Scenario):
                 "Migration complete but instance did not change host: %s" %
                 host_pre_migrate)
 
-    @base.atomic_action_timer('nova.find_host_to_migrate')
+    @base.atomic_action_timer("nova.find_host_to_migrate")
     def _find_host_to_migrate(self, server):
         """Find a compute node for live migration.
 
@@ -607,7 +607,7 @@ class NovaScenario(base.Scenario):
 
     def _create_rules_for_security_group(self, security_groups,
                                          rules_per_security_group,
-                                         ip_protocol='tcp', cidr="0.0.0.0/0"):
+                                         ip_protocol="tcp", cidr="0.0.0.0/0"):
         action_name = ("nova.create_%s_rules" % (rules_per_security_group *
                                                  len(security_groups)))
         with base.AtomicAction(self, action_name):

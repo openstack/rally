@@ -20,11 +20,11 @@ from keystoneclient import exceptions
 import six
 
 
-Project = collections.namedtuple('Project', ['id', 'name', 'domain_id'])
-User = collections.namedtuple('User',
-                              ['id', 'name', 'project_id', 'domain_id'])
-Service = collections.namedtuple('Service', ['id', 'name'])
-Role = collections.namedtuple('Role', ['id', 'name'])
+Project = collections.namedtuple("Project", ["id", "name", "domain_id"])
+User = collections.namedtuple("User",
+                              ["id", "name", "project_id", "domain_id"])
+Service = collections.namedtuple("Service", ["id", "name"])
+Role = collections.namedtuple("Role", ["id", "name"])
 
 
 @six.add_metaclass(abc.ABCMeta)
@@ -36,7 +36,7 @@ class KeystoneWrapper(object):
         return getattr(self.client, attr_name)
 
     @abc.abstractmethod
-    def create_project(self, project_name, domain_name='Default'):
+    def create_project(self, project_name, domain_name="Default"):
         """Creates new project/tenant and return project object.
 
         :param project_name: Name of project to be created.
@@ -51,7 +51,7 @@ class KeystoneWrapper(object):
 
     @abc.abstractmethod
     def create_user(self, username, password, email=None, project_id=None,
-                    domain_name='Default'):
+                    domain_name="Default"):
         """Creates user that have Mamber role in given project.
 
         :param username: name of user
@@ -101,21 +101,21 @@ class KeystoneWrapper(object):
 
 class KeystoneV2Wrapper(KeystoneWrapper):
     def _check_domain(self, domain_name):
-        if domain_name.lower() != 'default':
-            raise NotImplementedError('Domain functionality not implemented '
-                                      'in Keystone v2')
+        if domain_name.lower() != "default":
+            raise NotImplementedError("Domain functionality not implemented "
+                                      "in Keystone v2")
 
     @staticmethod
     def _wrap_v2_tenant(tenant):
-        return Project(id=tenant.id, name=tenant.name, domain_id='default')
+        return Project(id=tenant.id, name=tenant.name, domain_id="default")
 
     @staticmethod
     def _wrap_v2_user(user):
         return User(id=user.id, name=user.name,
-                    project_id=getattr(user, 'tenantId', None),
-                    domain_id='default')
+                    project_id=getattr(user, "tenantId", None),
+                    domain_id="default")
 
-    def create_project(self, project_name, domain_name='Default'):
+    def create_project(self, project_name, domain_name="Default"):
         self._check_domain(domain_name)
         tenant = self.client.tenants.create(project_name)
         return KeystoneV2Wrapper._wrap_v2_tenant(tenant)
@@ -124,7 +124,7 @@ class KeystoneV2Wrapper(KeystoneWrapper):
         self.client.tenants.delete(project_id)
 
     def create_user(self, username, password, email=None, project_id=None,
-                    domain_name='Default'):
+                    domain_name="Default"):
         self._check_domain(domain_name)
         user = self.client.users.create(username, password, email, project_id)
         return KeystoneV2Wrapper._wrap_v2_user(user)
@@ -162,11 +162,11 @@ class KeystoneV3Wrapper(KeystoneWrapper):
     def _wrap_v3_user(user):
         # When user has default_project_id that is None user.default_project_id
         # will raise AttributeError
-        project_id = getattr(user, 'default_project_id', None)
+        project_id = getattr(user, "default_project_id", None)
         return User(id=user.id, name=user.name, project_id=project_id,
                     domain_id=user.domain_id)
 
-    def create_project(self, project_name, domain_name='Default'):
+    def create_project(self, project_name, domain_name="Default"):
         domain_id = self._get_domain_id(domain_name)
         project = self.client.projects.create(
             name=project_name, domain=domain_id)
@@ -176,7 +176,7 @@ class KeystoneV3Wrapper(KeystoneWrapper):
         self.client.projects.delete(project_id)
 
     def create_user(self, username, password, email=None, project_id=None,
-                    domain_name='Default'):
+                    domain_name="Default"):
         domain_id = self._get_domain_id(domain_name)
         client = self.client
 
@@ -186,9 +186,9 @@ class KeystoneV3Wrapper(KeystoneWrapper):
                                    domain=domain_id)
 
         # Grant member role to user in project or domain
-        # TODO(Anton Frolov): replace hard-coded 'Member' role with role name
+        # TODO(Anton Frolov): replace hard-coded "Member" role with role name
         #                     gained via deployment
-        member_role = client.roles.list(name='Member')[0].id
+        member_role = client.roles.list(name="Member")[0].id
         client.roles.grant(member_role, user=user.id, project=project_id)
 
         return KeystoneV3Wrapper._wrap_v3_user(user)
@@ -207,10 +207,10 @@ class KeystoneV3Wrapper(KeystoneWrapper):
 def wrap(client):
     """Returns keystone wrapper based on keystone client version."""
 
-    if client.version == 'v2.0':
+    if client.version == "v2.0":
         return KeystoneV2Wrapper(client)
-    elif client.version == 'v3':
+    elif client.version == "v3":
         return KeystoneV3Wrapper(client)
     else:
         raise NotImplementedError(
-            'Wrapper for version %s is not implemented.' % client.version)
+            "Wrapper for version %s is not implemented." % client.version)

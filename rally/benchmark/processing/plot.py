@@ -109,8 +109,8 @@ def _process_main_duration(result, data):
         hvariety = histo.hvariety(histogram_data)
         for i in range(len(hvariety)):
             histograms.append(histo.Histogram(histogram_data,
-                                              hvariety[i]['number_of_bins'],
-                                              hvariety[i]['method']))
+                                              hvariety[i]["number_of_bins"],
+                                              hvariety[i]["method"]))
 
     stacked_area = []
     for key in "duration", "idle_duration":
@@ -195,12 +195,12 @@ def _process_atomic(result, data):
 
     histograms = [[] for atomic_action in range(len(histogram_data))]
     for i, atomic_action in enumerate(histogram_data):
-        hvariety = histo.hvariety(atomic_action['values'])
+        hvariety = histo.hvariety(atomic_action["values"])
         for v in range(len(hvariety)):
-            histograms[i].append(histo.Histogram(atomic_action['values'],
-                                                 hvariety[v]['number_of_bins'],
-                                                 hvariety[v]['method'],
-                                                 atomic_action['key']))
+            histograms[i].append(histo.Histogram(atomic_action["values"],
+                                                 hvariety[v]["number_of_bins"],
+                                                 hvariety[v]["method"],
+                                                 atomic_action["key"]))
     stacked_area = []
     for name, durations in six.iteritems(data["atomic_durations"]):
         stacked_area.append({
@@ -243,7 +243,7 @@ def _get_atomic_action_durations(result):
         else:
             data = [action, None, None, None, None, None, 0, len(raw)]
 
-        # Save `total' - it must be appended last
+        # Save 'total' - it must be appended last
         if action == "total":
             total = data
             continue

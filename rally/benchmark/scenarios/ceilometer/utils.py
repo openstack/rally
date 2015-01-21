@@ -34,7 +34,7 @@ class CeilometerScenario(base.Scenario):
         alarm.update(kwargs)
         return alarm
 
-    @base.atomic_action_timer('ceilometer.list_alarms')
+    @base.atomic_action_timer("ceilometer.list_alarms")
     def _list_alarms(self, alarm_id=None):
         """List alarms.
 
@@ -49,7 +49,7 @@ class CeilometerScenario(base.Scenario):
         else:
             return self.clients("ceilometer").alarms.list()
 
-    @base.atomic_action_timer('ceilometer.create_alarm')
+    @base.atomic_action_timer("ceilometer.create_alarm")
     def _create_alarm(self, meter_name, threshold, kwargs):
         """Create an alarm.
 
@@ -64,7 +64,7 @@ class CeilometerScenario(base.Scenario):
         alarm = self.clients("ceilometer").alarms.create(**alarm_dict)
         return alarm
 
-    @base.atomic_action_timer('ceilometer.delete_alarm')
+    @base.atomic_action_timer("ceilometer.delete_alarm")
     def _delete_alarm(self, alarm_id):
         """Delete an alarm.
 
@@ -72,7 +72,7 @@ class CeilometerScenario(base.Scenario):
         """
         self.clients("ceilometer").alarms.delete(alarm_id)
 
-    @base.atomic_action_timer('ceilometer.update_alarm')
+    @base.atomic_action_timer("ceilometer.update_alarm")
     def _update_alarm(self, alarm_id, alarm_dict_delta):
         """Update an alarm.
 
@@ -81,12 +81,12 @@ class CeilometerScenario(base.Scenario):
         """
         self.clients("ceilometer").alarms.update(alarm_id, **alarm_dict_delta)
 
-    @base.atomic_action_timer('ceilometer.get_meters')
+    @base.atomic_action_timer("ceilometer.get_meters")
     def _list_meters(self):
         """Get list of user's meters."""
         return self.clients("ceilometer").meters.list()
 
-    @base.atomic_action_timer('ceilometer.list_resources')
+    @base.atomic_action_timer("ceilometer.list_resources")
     def _list_resources(self):
         """List all resources.
 
@@ -94,7 +94,7 @@ class CeilometerScenario(base.Scenario):
         """
         return self.clients("ceilometer").resources.list()
 
-    @base.atomic_action_timer('ceilometer.get_stats')
+    @base.atomic_action_timer("ceilometer.get_stats")
     def _get_stats(self, meter_name):
         """Get stats for a specific meter.
 
@@ -102,7 +102,7 @@ class CeilometerScenario(base.Scenario):
         """
         return self.clients("ceilometer").statistics.list(meter_name)
 
-    @base.atomic_action_timer('ceilometer.create_meter')
+    @base.atomic_action_timer("ceilometer.create_meter")
     def _create_meter(self, **kwargs):
         """Create a new meter.
 
@@ -115,7 +115,7 @@ class CeilometerScenario(base.Scenario):
             counter_name=name, **kwargs)
         return samples[0]
 
-    @base.atomic_action_timer('ceilometer.query_alarms')
+    @base.atomic_action_timer("ceilometer.query_alarms")
     def _query_alarms(self, filter, orderby, limit):
         """Query alarms with specific parameters.
 
@@ -130,7 +130,7 @@ class CeilometerScenario(base.Scenario):
         return self.clients("ceilometer").query_alarms.query(
                 filter, orderby, limit)
 
-    @base.atomic_action_timer('ceilometer.query_alarm_history')
+    @base.atomic_action_timer("ceilometer.query_alarm_history")
     def _query_alarm_history(self, filter, orderby, limit):
         """Query history of an alarm.
 
@@ -145,7 +145,7 @@ class CeilometerScenario(base.Scenario):
         return self.clients("ceilometer").query_alarm_history.query(
                 filter, orderby, limit)
 
-    @base.atomic_action_timer('ceilometer.create_sample')
+    @base.atomic_action_timer("ceilometer.create_sample")
     def _create_sample(self, counter_name, counter_type, counter_unit,
                        counter_volume, resource_id, **kwargs):
         """Create a Sample with specified parameters.
@@ -165,7 +165,7 @@ class CeilometerScenario(base.Scenario):
                        "resource_id": resource_id})
         return self.clients("ceilometer").samples.create(**kwargs)
 
-    @base.atomic_action_timer('ceilometer.query_samples')
+    @base.atomic_action_timer("ceilometer.query_samples")
     def _query_samples(self, filter, orderby, limit):
         """Query samples with specified parameters.
 

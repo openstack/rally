@@ -21,7 +21,7 @@ from rally.benchmark.scenarios import base
 class QuotasScenario(base.Scenario):
     """Base class for quotas scenarios with basic atomic actions."""
 
-    @base.atomic_action_timer('quotas.update_quotas')
+    @base.atomic_action_timer("quotas.update_quotas")
     def _update_quotas(self, component, tenant_id, max_quota=1024):
         """Update quotas.
 
@@ -34,7 +34,7 @@ class QuotasScenario(base.Scenario):
         quotas = self._generate_quota_values(max_quota, component)
         return self.admin_clients(component).quotas.update(tenant_id, **quotas)
 
-    @base.atomic_action_timer('quotas.delete_quotas')
+    @base.atomic_action_timer("quotas.delete_quotas")
     def _delete_quotas(self, component, tenant_id):
         """Delete quotas.
 
@@ -47,19 +47,19 @@ class QuotasScenario(base.Scenario):
         quotas = {}
         if component == "nova":
             quotas = {
-                'metadata_items': random.randint(-1, max_quota),
-                'key_pairs': random.randint(-1, max_quota),
-                'injected_file_content_bytes': random.randint(-1, max_quota),
-                'injected_file_path_bytes': random.randint(-1, max_quota),
-                'ram': random.randint(-1, max_quota),
-                'instances': random.randint(-1, max_quota),
-                'injected_files': random.randint(-1, max_quota),
-                'cores': random.randint(-1, max_quota)
+                "metadata_items": random.randint(-1, max_quota),
+                "key_pairs": random.randint(-1, max_quota),
+                "injected_file_content_bytes": random.randint(-1, max_quota),
+                "injected_file_path_bytes": random.randint(-1, max_quota),
+                "ram": random.randint(-1, max_quota),
+                "instances": random.randint(-1, max_quota),
+                "injected_files": random.randint(-1, max_quota),
+                "cores": random.randint(-1, max_quota)
             }
         elif component == "cinder":
             quotas = {
-                'volumes': random.randint(-1, max_quota),
-                'snapshots': random.randint(-1, max_quota),
-                'gigabytes': random.randint(-1, max_quota),
+                "volumes": random.randint(-1, max_quota),
+                "snapshots": random.randint(-1, max_quota),
+                "gigabytes": random.randint(-1, max_quota),
             }
         return quotas

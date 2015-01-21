@@ -78,9 +78,9 @@ class SLA(object):
 
         for name, criterion in six.iteritems(config.get("sla", {})):
             check_result = opt_name_map[name].check(criterion, result)
-            results.append({'criterion': name,
-                            'success': check_result.success,
-                            'detail': check_result.msg})
+            results.append({"criterion": name,
+                            "success": check_result.success,
+                            "detail": check_result.msg})
         return results
 
     @staticmethod
@@ -99,7 +99,7 @@ class FailureRateDeprecated(SLA):
 
     @staticmethod
     def check(criterion_value, result):
-        errors = len(filter(lambda x: x['error'], result))
+        errors = len(filter(lambda x: x["error"], result))
         error_rate = errors * 100.0 / len(result) if len(result) > 0 else 100.0
         if criterion_value < error_rate:
             success = False
@@ -126,7 +126,7 @@ class FailureRate(SLA):
     def check(criterion_value, result):
         min_percent = criterion_value.get("min", 0)
         max_percent = criterion_value.get("max", 100)
-        errors = len(filter(lambda x: x['error'], result))
+        errors = len(filter(lambda x: x["error"], result))
         error_rate = errors * 100.0 / len(result) if len(result) > 0 else 100.0
 
         success = min_percent <= error_rate <= max_percent
@@ -149,9 +149,9 @@ class IterationTime(SLA):
         duration = 0
         success = True
         for i in result:
-            if i['duration'] >= duration:
-                duration = i['duration']
-            if i['duration'] > criterion_value:
+            if i["duration"] >= duration:
+                duration = i["duration"]
+            if i["duration"] > criterion_value:
                 success = False
         msg = (_("Maximum seconds per iteration %ss, found with %ss") %
                 (criterion_value, duration))

@@ -49,7 +49,7 @@ def get_from_manager(error_statuses=None):
         try:
             res = resource.manager.get(resource.id)
         except Exception as e:
-            if getattr(e, 'code', 400) == 404:
+            if getattr(e, "code", 400) == 404:
                 raise exceptions.GetResourceNotFound(resource=resource)
             raise exceptions.GetResourceFailure(resource=resource, err=e)
 
@@ -60,9 +60,9 @@ def get_from_manager(error_statuses=None):
             raise exceptions.GetResourceNotFound(resource=res)
         if status in error_statuses:
             if isinstance(res.manager, servers.ServerManager):
-                msg = res.fault['message']
+                msg = res.fault["message"]
             else:
-                msg = ''
+                msg = ""
             raise exceptions.GetResourceErrorStatus(resource=res,
                                                     status=status, fault=msg)
 
@@ -149,7 +149,7 @@ def check_service_status(client, service_name):
     try:
         for service in client.services.list():
             if service_name in str(service):
-                if service.status == 'enabled' and service.state == 'up':
+                if service.status == "enabled" and service.state == "up":
                     return True
     except nova_exc.NotFound:
         LOG.warning(_("Unable to retrieve a list of available services from "

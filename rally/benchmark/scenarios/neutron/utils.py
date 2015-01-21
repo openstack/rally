@@ -29,7 +29,7 @@ class NeutronScenario(base.Scenario):
     RESOURCE_NAME_LENGTH = 16
     SUBNET_IP_VERSION = 4
 
-    @base.atomic_action_timer('neutron.create_network')
+    @base.atomic_action_timer("neutron.create_network")
     def _create_network(self, network_create_args):
         """Create neutron network.
 
@@ -40,12 +40,12 @@ class NeutronScenario(base.Scenario):
         return self.clients("neutron").create_network(
             {"network": network_create_args})
 
-    @base.atomic_action_timer('neutron.list_networks')
+    @base.atomic_action_timer("neutron.list_networks")
     def _list_networks(self):
         """Return user networks list."""
-        return self.clients("neutron").list_networks()['networks']
+        return self.clients("neutron").list_networks()["networks"]
 
-    @base.atomic_action_timer('neutron.update_network')
+    @base.atomic_action_timer("neutron.update_network")
     def _update_network(self, network, network_update_args):
         """Update the network name and admin state.
 
@@ -68,15 +68,15 @@ class NeutronScenario(base.Scenario):
         return self.clients("neutron").update_network(
             network["network"]["id"], body)
 
-    @base.atomic_action_timer('neutron.delete_network')
+    @base.atomic_action_timer("neutron.delete_network")
     def _delete_network(self, network):
         """Delete neutron network.
 
         :param network: Network object
         """
-        self.clients("neutron").delete_network(network['id'])
+        self.clients("neutron").delete_network(network["id"])
 
-    @base.atomic_action_timer('neutron.create_subnet')
+    @base.atomic_action_timer("neutron.create_subnet")
     def _create_subnet(self, network, subnet_create_args, start_cidr=None):
         """Create neutron subnet.
 
@@ -99,12 +99,12 @@ class NeutronScenario(base.Scenario):
         return self.clients("neutron").create_subnet(
             {"subnet": subnet_create_args})
 
-    @base.atomic_action_timer('neutron.list_subnets')
+    @base.atomic_action_timer("neutron.list_subnets")
     def _list_subnets(self):
         """Returns user subnetworks list."""
         return self.clients("neutron").list_subnets()["subnets"]
 
-    @base.atomic_action_timer('neutron.update_subnet')
+    @base.atomic_action_timer("neutron.update_subnet")
     def _update_subnet(self, subnet, subnet_update_args):
         """Update the neutron subnet name and DHCP status.
 
@@ -127,15 +127,15 @@ class NeutronScenario(base.Scenario):
         return self.clients("neutron").update_subnet(
             subnet["subnet"]["id"], body)
 
-    @base.atomic_action_timer('neutron.delete_subnet')
+    @base.atomic_action_timer("neutron.delete_subnet")
     def _delete_subnet(self, subnet):
         """Delete neutron subnet
 
         :param subnet: Subnet object
         """
-        self.clients("neutron").delete_subnet(subnet['subnet']['id'])
+        self.clients("neutron").delete_subnet(subnet["subnet"]["id"])
 
-    @base.atomic_action_timer('neutron.create_router')
+    @base.atomic_action_timer("neutron.create_router")
     def _create_router(self, router_create_args, external_gw=False):
         """Create neutron router.
 
@@ -157,12 +157,12 @@ class NeutronScenario(base.Scenario):
         return self.clients("neutron").create_router(
             {"router": router_create_args})
 
-    @base.atomic_action_timer('neutron.list_routers')
+    @base.atomic_action_timer("neutron.list_routers")
     def _list_routers(self):
         """Returns user routers list."""
         return self.clients("neutron").list_routers()["routers"]
 
-    @base.atomic_action_timer('neutron.update_router')
+    @base.atomic_action_timer("neutron.update_router")
     def _update_router(self, router, router_update_args):
         """Update the neutron router name and admin state.
 
@@ -185,7 +185,7 @@ class NeutronScenario(base.Scenario):
         return self.clients("neutron").update_router(
             router["router"]["id"], body)
 
-    @base.atomic_action_timer('neutron.create_port')
+    @base.atomic_action_timer("neutron.create_port")
     def _create_port(self, network, port_create_args):
         """Create neutron port.
 
@@ -198,12 +198,12 @@ class NeutronScenario(base.Scenario):
             "name", self._generate_random_name("rally_port_"))
         return self.clients("neutron").create_port({"port": port_create_args})
 
-    @base.atomic_action_timer('neutron.list_ports')
+    @base.atomic_action_timer("neutron.list_ports")
     def _list_ports(self):
         """Return user ports list."""
         return self.clients("neutron").list_ports()["ports"]
 
-    @base.atomic_action_timer('neutron.update_port')
+    @base.atomic_action_timer("neutron.update_port")
     def _update_port(self, port, port_update_args):
         """Update the neutron port name, admin state, device id and owner.
 
@@ -230,13 +230,13 @@ class NeutronScenario(base.Scenario):
         }
         return self.clients("neutron").update_port(port["port"]["id"], body)
 
-    @base.atomic_action_timer('neutron.delete_port')
+    @base.atomic_action_timer("neutron.delete_port")
     def _delete_port(self, port):
         """Delete neutron port.
 
         :param port: Port object
         """
-        self.clients("neutron").delete_port(port['port']['id'])
+        self.clients("neutron").delete_port(port["port"]["id"])
 
     def _create_network_and_subnets(self,
                                     network_create_args=None,

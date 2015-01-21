@@ -39,7 +39,7 @@ TIMEOUT_OPTS = [
                help="Cluster status polling interval in seconds")
 ]
 
-benchmark_group = cfg.OptGroup(name='benchmark', title='benchmark options')
+benchmark_group = cfg.OptGroup(name="benchmark", title="benchmark options")
 CONF.register_opts(TIMEOUT_OPTS, group=benchmark_group)
 
 
@@ -68,11 +68,11 @@ class SaharaScenario(base.Scenario):
         },
         "hdp": {
             "1.3.2": {
-                "master": ['JOBTRACKER', 'NAMENODE', 'SECONDARY_NAMENODE',
-                           'GANGLIA_SERVER', 'NAGIOS_SERVER',
-                           'AMBARI_SERVER', 'OOZIE_SERVER'],
-                "worker": ['TASKTRACKER', 'DATANODE', 'HDFS_CLIENT',
-                           'MAPREDUCE_CLIENT', 'OOZIE_CLIENT', 'PIG']
+                "master": ["JOBTRACKER", "NAMENODE", "SECONDARY_NAMENODE",
+                           "GANGLIA_SERVER", "NAGIOS_SERVER",
+                           "AMBARI_SERVER", "OOZIE_SERVER"],
+                "worker": ["TASKTRACKER", "DATANODE", "HDFS_CLIENT",
+                           "MAPREDUCE_CLIENT", "OOZIE_CLIENT", "PIG"]
             },
             "2.0.6": {
                 "manager": ["AMBARI_SERVER", "GANGLIA_SERVER",
@@ -129,12 +129,12 @@ class SaharaScenario(base.Scenario):
         }
     }
 
-    @base.atomic_action_timer('sahara.list_node_group_templates')
+    @base.atomic_action_timer("sahara.list_node_group_templates")
     def _list_node_group_templates(self):
         """Return user Node Group Templates list."""
         return self.clients("sahara").node_group_templates.list()
 
-    @base.atomic_action_timer('sahara.create_master_node_group_template')
+    @base.atomic_action_timer("sahara.create_master_node_group_template")
     def _create_master_node_group_template(self, flavor_id, plugin_name,
                                            hadoop_version):
         """Create a master Node Group Template with a random name.
@@ -155,7 +155,7 @@ class SaharaScenario(base.Scenario):
             node_processes=self.NODE_PROCESSES[plugin_name][hadoop_version]
             ["master"])
 
-    @base.atomic_action_timer('sahara.create_worker_node_group_template')
+    @base.atomic_action_timer("sahara.create_worker_node_group_template")
     def _create_worker_node_group_template(self, flavor_id, plugin_name,
                                            hadoop_version):
         """Create a worker Node Group Template with a random name.
@@ -176,7 +176,7 @@ class SaharaScenario(base.Scenario):
             node_processes=self.NODE_PROCESSES[plugin_name][hadoop_version]
             ["worker"])
 
-    @base.atomic_action_timer('sahara.delete_node_group_template')
+    @base.atomic_action_timer("sahara.delete_node_group_template")
     def _delete_node_group_template(self, node_group):
         """Delete a Node Group Template by id.
 
@@ -294,7 +294,7 @@ class SaharaScenario(base.Scenario):
         }
         return replication_config
 
-    @base.atomic_action_timer('sahara.launch_cluster')
+    @base.atomic_action_timer("sahara.launch_cluster")
     def _launch_cluster(self, plugin_name, hadoop_version, flavor_id,
                         image_id, workers_count, floating_ip_pool=None,
                         volumes_per_node=None,
@@ -439,7 +439,7 @@ class SaharaScenario(base.Scenario):
 
         self._wait_active(cluster)
 
-    @base.atomic_action_timer('sahara.scale_up')
+    @base.atomic_action_timer("sahara.scale_up")
     def _scale_cluster_up(self, cluster, delta):
         """Add a given number of worker nodes to the cluster.
 
@@ -449,7 +449,7 @@ class SaharaScenario(base.Scenario):
         """
         self._scale_cluster(cluster, delta)
 
-    @base.atomic_action_timer('sahara.scale_down')
+    @base.atomic_action_timer("sahara.scale_down")
     def _scale_cluster_down(self, cluster, delta):
         """Remove a given number of worker nodes from the cluster.
 
@@ -459,7 +459,7 @@ class SaharaScenario(base.Scenario):
         """
         self._scale_cluster(cluster, delta)
 
-    @base.atomic_action_timer('sahara.delete_cluster')
+    @base.atomic_action_timer("sahara.delete_cluster")
     def _delete_cluster(self, cluster):
         """Delete cluster.
 
@@ -519,7 +519,7 @@ class SaharaScenario(base.Scenario):
         :param job_idx: The index of a job in a sequence
 
         """
-        @base.atomic_action_timer('sahara.job_execution_%s' % job_idx)
+        @base.atomic_action_timer("sahara.job_execution_%s" % job_idx)
         def run(self):
             job_execution = self.clients("sahara").job_executions.create(
                 job_id=job_id,
@@ -538,7 +538,7 @@ class SaharaScenario(base.Scenario):
 
     def _job_execution_is_finished(self, je_id):
         status = self.clients("sahara").job_executions.get(je_id).info[
-            'status']
+            "status"]
         if status.lower() in ("success", "succeeded"):
             return True
         elif status.lower() in ("failed", "killed"):

@@ -272,7 +272,7 @@ class CinderVolumes(utils.CinderScenario,
                 volume_types.append(s.name)
             selected_type = random.choice(volume_types)
 
-        size = random.randint(size['min'], size['max'])
+        size = random.randint(size["min"], size["max"])
 
         volume = self._create_volume(size, volume_type=selected_type)
         snapshot = self._create_snapshot(volume.id, False, **kwargs)
@@ -324,8 +324,8 @@ class CinderVolumes(utils.CinderScenario,
         if nested_level is None:
             nested_level = {"min": 5, "max": 10}
 
-        size = random.randint(size['min'], size['max'])
-        nested_level = random.randint(nested_level['min'], nested_level['max'])
+        size = random.randint(size["min"], size["max"])
+        nested_level = random.randint(nested_level["min"], nested_level["max"])
 
         servers = [self.get_random_server()]
         volumes = [self._create_volume(size)]

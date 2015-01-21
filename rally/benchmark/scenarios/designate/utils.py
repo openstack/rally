@@ -22,7 +22,7 @@ class DesignateScenario(base.Scenario):
 
     RESOURCE_NAME_PREFIX = "rally_"
 
-    @base.atomic_action_timer('designate.create_domain')
+    @base.atomic_action_timer("designate.create_domain")
     def _create_domain(self, domain=None):
         """Create domain.
 
@@ -31,16 +31,16 @@ class DesignateScenario(base.Scenario):
         """
         domain = domain or {}
 
-        domain.setdefault('email', 'root@random.name')
-        domain.setdefault('name', '%s.name.' % self._generate_random_name())
+        domain.setdefault("email", "root@random.name")
+        domain.setdefault("name", "%s.name." % self._generate_random_name())
         return self.clients("designate").domains.create(domain)
 
-    @base.atomic_action_timer('designate.list_domains')
+    @base.atomic_action_timer("designate.list_domains")
     def _list_domains(self):
         """Return user domain list."""
         return self.clients("designate").domains.list()
 
-    @base.atomic_action_timer('designate.delete_domain')
+    @base.atomic_action_timer("designate.delete_domain")
     def _delete_domain(self, domain_id):
         """Delete designate zone.
 
@@ -58,20 +58,20 @@ class DesignateScenario(base.Scenario):
         :returns: Designate record dict
         """
         record = record or {}
-        record.setdefault('type', 'A')
-        record.setdefault('name', '%s.%s' % (self._generate_random_name(),
-                                             domain['name']))
-        record.setdefault('data', '10.0.0.1')
+        record.setdefault("type", "A")
+        record.setdefault("name", "%s.%s" % (self._generate_random_name(),
+                                             domain["name"]))
+        record.setdefault("data", "10.0.0.1")
 
-        client = self.clients('designate')
+        client = self.clients("designate")
 
         if atomic_action:
-            with base.AtomicAction(self, 'designate.create_record'):
-                return client.records.create(domain['id'], record)
+            with base.AtomicAction(self, "designate.create_record"):
+                return client.records.create(domain["id"], record)
 
-        return client.records.create(domain['id'], record)
+        return client.records.create(domain["id"], record)
 
-    @base.atomic_action_timer('designate.list_records')
+    @base.atomic_action_timer("designate.list_records")
     def _list_records(self, domain_id):
         """List domain records.
 
@@ -88,10 +88,10 @@ class DesignateScenario(base.Scenario):
         :param atomic_action: True if the record creation should be tracked
                               as an atomic action
         """
-        client = self.clients('designate')
+        client = self.clients("designate")
 
         if atomic_action:
-            with base.AtomicAction(self, 'designate.delete_record'):
+            with base.AtomicAction(self, "designate.delete_record"):
                 client.records.create(domain_id, record_id)
 
         client.records.delete(domain_id, record_id)

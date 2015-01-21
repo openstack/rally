@@ -48,8 +48,8 @@ context_opts = [
 
 CONF = cfg.CONF
 CONF.register_opts(context_opts,
-                   group=cfg.OptGroup(name='users_context',
-                                      title='benchmark context options'))
+                   group=cfg.OptGroup(name="users_context",
+                                      title="benchmark context options"))
 
 
 @base.context(name="users", order=100)
@@ -115,7 +115,7 @@ class UserGenerator(base.Context):
 
         nova_admin = clients.nova()
 
-        if not utils.check_service_status(nova_admin, 'nova-network'):
+        if not utils.check_service_status(nova_admin, "nova-network"):
             return
 
         for network in nova_admin.networks.list():

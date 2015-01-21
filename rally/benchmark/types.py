@@ -31,7 +31,7 @@ def set(**kwargs):
     used to perform a transformation on the value of that key.
     """
     def wrapper(func):
-        func.preprocessors = getattr(func, 'preprocessors', {})
+        func.preprocessors = getattr(func, "preprocessors", {})
         func.preprocessors.update(kwargs)
         return func
     return wrapper
@@ -162,12 +162,12 @@ class FlavorResourceType(ResourceType):
 
         :returns: id matching resource
         """
-        resource_id = resource_config.get('id')
+        resource_id = resource_config.get("id")
         if not resource_id:
             novaclient = clients.nova()
             resource_id = _id_from_name(resource_config=resource_config,
                                         resources=novaclient.flavors.list(),
-                                        typename='flavor')
+                                        typename="flavor")
         return resource_id
 
 
@@ -182,13 +182,13 @@ class ImageResourceType(ResourceType):
 
         :returns: id matching resource
         """
-        resource_id = resource_config.get('id')
+        resource_id = resource_config.get("id")
         if not resource_id:
             glanceclient = clients.glance()
             resource_id = _id_from_name(resource_config=resource_config,
                                         resources=list(
                                             glanceclient.images.list()),
-                                        typename='image')
+                                        typename="image")
         return resource_id
 
 
@@ -203,13 +203,13 @@ class VolumeTypeResourceType(ResourceType):
 
         :returns: id matching resource
         """
-        resource_id = resource_config.get('id')
+        resource_id = resource_config.get("id")
         if not resource_id:
             cinderclient = clients.cinder()
             resource_id = _id_from_name(resource_config=resource_config,
                                         resources=cinderclient.
                                         volume_types.list(),
-                                        typename='volume_type')
+                                        typename="volume_type")
         return resource_id
 
 
@@ -224,7 +224,7 @@ class NeutronNetworkResourceType(ResourceType):
 
         :returns: id matching resource
         """
-        resource_id = resource_config.get('id')
+        resource_id = resource_config.get("id")
         if resource_id:
             return resource_id
         else:

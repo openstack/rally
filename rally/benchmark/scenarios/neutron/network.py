@@ -67,7 +67,7 @@ class NeutronNetworks(utils.NeutronScenario):
         :param network_create_args: dict, POST /v2.0/networks request options
         """
         network = self._create_network(network_create_args or {})
-        self._delete_network(network['network'])
+        self._delete_network(network["network"])
 
     @validation.number("subnets_per_network", minval=1, integer_only=True)
     @validation.required_services(consts.Service.NEUTRON)

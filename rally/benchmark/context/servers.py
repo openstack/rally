@@ -58,7 +58,7 @@ class ServerGenerator(base.Context):
                 "minimum": 1
             },
         },
-        'required': ['image', 'flavor'],
+        "required": ["image", "flavor"],
         "additionalProperties": False
     }
 

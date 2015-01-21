@@ -27,7 +27,7 @@ class KeystoneScenario(base.Scenario):
 
     RESOURCE_NAME_PREFIX = "rally_keystone_"
 
-    @base.atomic_action_timer('keystone.create_user')
+    @base.atomic_action_timer("keystone.create_user")
     def _user_create(self, name_length=10, email=None, **kwargs):
         """Creates keystone user with random name.
 
@@ -51,7 +51,7 @@ class KeystoneScenario(base.Scenario):
         with base.AtomicAction(self, r):
             resource.delete()
 
-    @base.atomic_action_timer('keystone.create_tenant')
+    @base.atomic_action_timer("keystone.create_tenant")
     def _tenant_create(self, name_length=10, **kwargs):
         """Creates keystone tenant with random name.
 
@@ -62,7 +62,7 @@ class KeystoneScenario(base.Scenario):
         name = self._generate_random_name(length=name_length)
         return self.admin_clients("keystone").tenants.create(name, **kwargs)
 
-    @base.atomic_action_timer('keystone.create_users')
+    @base.atomic_action_timer("keystone.create_users")
     def _users_create(self, tenant, users_per_tenant, name_length=10):
         """Adds users to a tenant.
 
@@ -77,12 +77,12 @@ class KeystoneScenario(base.Scenario):
             self.admin_clients("keystone").users.create(
                     name, password=password, email=email, tenant_id=tenant.id)
 
-    @base.atomic_action_timer('keystone.list_users')
+    @base.atomic_action_timer("keystone.list_users")
     def _list_users(self):
         """List users."""
         return self.admin_clients("keystone").users.list()
 
-    @base.atomic_action_timer('keystone.list_tenants')
+    @base.atomic_action_timer("keystone.list_tenants")
     def _list_tenants(self):
         """List tenants."""
         return self.admin_clients("keystone").tenants.list()

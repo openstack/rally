@@ -31,7 +31,7 @@ class Quotas(utils.QuotasScenario):
         :param max_quota: Max value to be updated for quota.
         """
         tenant_id = self.context["user"]["tenant_id"]
-        self._update_quotas('nova', tenant_id, max_quota)
+        self._update_quotas("nova", tenant_id, max_quota)
 
     @validation.required_services(consts.Service.NOVA)
     @validation.required_openstack(admin=True, users=True)
@@ -43,8 +43,8 @@ class Quotas(utils.QuotasScenario):
         """
 
         tenant_id = self.context["user"]["tenant_id"]
-        self._update_quotas('nova', tenant_id, max_quota)
-        self._delete_quotas('nova', tenant_id)
+        self._update_quotas("nova", tenant_id, max_quota)
+        self._delete_quotas("nova", tenant_id)
 
     @validation.required_services(consts.Service.CINDER)
     @validation.required_openstack(admin=True, users=True)
@@ -55,7 +55,7 @@ class Quotas(utils.QuotasScenario):
         :param max_quota: Max value to be updated for quota.
         """
         tenant_id = self.context["user"]["tenant_id"]
-        self._update_quotas('cinder', tenant_id, max_quota)
+        self._update_quotas("cinder", tenant_id, max_quota)
 
     @validation.required_services(consts.Service.CINDER)
     @validation.required_openstack(admin=True, users=True)
@@ -66,5 +66,5 @@ class Quotas(utils.QuotasScenario):
         :param max_quota: Max value to be updated for quota.
         """
         tenant_id = self.context["user"]["tenant_id"]
-        self._update_quotas('cinder', tenant_id, max_quota)
-        self._delete_quotas('cinder', tenant_id)
+        self._update_quotas("cinder", tenant_id, max_quota)
+        self._delete_quotas("cinder", tenant_id)

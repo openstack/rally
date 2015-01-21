@@ -23,28 +23,28 @@ from rally.benchmark import utils as bench_utils
 
 
 cinder_benchmark_opts = [
-    cfg.FloatOpt('cinder_volume_create_prepoll_delay',
+    cfg.FloatOpt("cinder_volume_create_prepoll_delay",
                  default=2.0,
-                 help='Time to sleep after creating a resource before'
-                      ' polling for it status'),
-    cfg.FloatOpt('cinder_volume_create_timeout',
+                 help="Time to sleep after creating a resource before"
+                      " polling for it status"),
+    cfg.FloatOpt("cinder_volume_create_timeout",
                  default=600.0,
-                 help='Time to wait for cinder volume to be created.'),
-    cfg.FloatOpt('cinder_volume_create_poll_interval',
+                 help="Time to wait for cinder volume to be created."),
+    cfg.FloatOpt("cinder_volume_create_poll_interval",
                  default=2.0,
-                 help='Interval between checks when waiting for volume'
-                      ' creation.'),
-    cfg.FloatOpt('cinder_volume_delete_timeout',
+                 help="Interval between checks when waiting for volume"
+                      " creation."),
+    cfg.FloatOpt("cinder_volume_delete_timeout",
                  default=600.0,
-                 help='Time to wait for cinder volume to be deleted.'),
-    cfg.FloatOpt('cinder_volume_delete_poll_interval',
+                 help="Time to wait for cinder volume to be deleted."),
+    cfg.FloatOpt("cinder_volume_delete_poll_interval",
                  default=2.0,
-                 help='Interval between checks when waiting for volume'
-                      ' deletion.')
+                 help="Interval between checks when waiting for volume"
+                      " deletion.")
 ]
 
 CONF = cfg.CONF
-benchmark_group = cfg.OptGroup(name='benchmark', title='benchmark options')
+benchmark_group = cfg.OptGroup(name="benchmark", title="benchmark options")
 CONF.register_opts(cinder_benchmark_opts, group=benchmark_group)
 
 
@@ -53,19 +53,19 @@ class CinderScenario(base.Scenario):
 
     RESOURCE_NAME_PREFIX = "rally_volume_"
 
-    @base.atomic_action_timer('cinder.list_volumes')
+    @base.atomic_action_timer("cinder.list_volumes")
     def _list_volumes(self, detailed=True):
         """Returns user volumes list."""
 
         return self.clients("cinder").volumes.list(detailed)
 
-    @base.atomic_action_timer('cinder.list_snapshots')
+    @base.atomic_action_timer("cinder.list_snapshots")
     def _list_snapshots(self, detailed=True):
         """Returns user snapshots list."""
 
         return self.clients("cinder").volume_snapshots.list(detailed)
 
-    @base.atomic_action_timer('cinder.create_volume')
+    @base.atomic_action_timer("cinder.create_volume")
     def _create_volume(self, size, **kwargs):
         """Create one volume.
 
@@ -91,7 +91,7 @@ class CinderScenario(base.Scenario):
         )
         return volume
 
-    @base.atomic_action_timer('cinder.delete_volume')
+    @base.atomic_action_timer("cinder.delete_volume")
     def _delete_volume(self, volume):
         """Delete the given volume.
 
@@ -107,7 +107,7 @@ class CinderScenario(base.Scenario):
             check_interval=CONF.benchmark.cinder_volume_delete_poll_interval
         )
 
-    @base.atomic_action_timer('cinder.extend_volume')
+    @base.atomic_action_timer("cinder.extend_volume")
     def _extend_volume(self, volume, new_size):
         """Extend the given volume.
 
@@ -125,7 +125,7 @@ class CinderScenario(base.Scenario):
             check_interval=CONF.benchmark.cinder_volume_create_poll_interval
         )
 
-    @base.atomic_action_timer('cinder.create_snapshot')
+    @base.atomic_action_timer("cinder.create_snapshot")
     def _create_snapshot(self, volume_id, force=False, **kwargs):
         """Create one snapshot.
 
@@ -153,7 +153,7 @@ class CinderScenario(base.Scenario):
         )
         return snapshot
 
-    @base.atomic_action_timer('cinder.delete_snapshot')
+    @base.atomic_action_timer("cinder.delete_snapshot")
     def _delete_snapshot(self, snapshot):
         """Delete the given snapshot.
 

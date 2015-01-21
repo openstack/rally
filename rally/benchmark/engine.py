@@ -214,7 +214,7 @@ class BenchmarkEngine(object):
         self.task.update_status(consts.TaskStatus.RUNNING)
         for name in self.config:
             for n, kw in enumerate(self.config[name]):
-                key = {'name': name, 'pos': n, 'kw': kw}
+                key = {"name": name, "pos": n, "kw": kw}
                 LOG.info("Running benchmark with key: \n%s"
                          % json.dumps(key, indent=2))
                 runner = self._get_runner(kw)
