@@ -229,3 +229,10 @@ def verify(deployment, set_name, regex, tempest_config):
     verifier.verify(set_name=set_name, regex=regex)
 
     return verification
+
+
+def install_tempest(deployment, source):
+    """Install tempest."""
+    deployment_uuid = objects.Deployment.get(deployment)['uuid']
+    verifier = tempest.Tempest(deployment_uuid, source=source)
+    verifier.install()
