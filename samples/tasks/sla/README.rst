@@ -9,10 +9,10 @@ with contracted values such as maximum error rate or minimum response time.
 Currently supported criteria:
 
 
-max_failure_percent
+failure_rate
 -------------------
 
-Maximum allowed failure rate in percent.
+A maximum and/or a minimum failure rate expressed as max or min sub-keys.
 
 
 max_seconds_per_iteration

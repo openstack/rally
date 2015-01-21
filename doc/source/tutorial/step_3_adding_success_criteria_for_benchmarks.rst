@@ -41,7 +41,9 @@ To configure the SLA, add the *"sla"* section to the configuration of the corres
                 },
                 "sla": {
                     "max_seconds_per_iteration": 10,
-                    "max_failure_percent": 25
+                    "failure_rate": {
+                        "max": 25
+                    }
                 }
             }
         ]

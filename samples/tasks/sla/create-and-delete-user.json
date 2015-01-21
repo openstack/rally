@@ -11,7 +11,9 @@
             },
             "sla": {
                 "max_seconds_per_iteration": 4,
-                "max_failure_percent": 1
+                "failure_rate": {
+                    "max": 1
+                }
             }
         }
     ]

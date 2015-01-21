@@ -162,7 +162,8 @@ class InfoCommands(object):
                 "assosiated value, e.g.:\n\n"
                 "  sla:\n"
                 "    max_seconds_per_iteration: 4\n"
-                "    max_failure_percent: 1"
+                "    failure_rate:\n"
+                "      max: 1"
                 "\n\n" +
                 self._compose_table("List of SLA checks", sla) +
                 "To get information about specific SLA checks, run:\n"
