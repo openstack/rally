@@ -102,10 +102,16 @@ def task_template_render(task_template, **kwargs):
     :param kwargs: Dict with template arguments
     :returns: rendered template str
     """
+
+    # NOTE(boris-42): We have to import __builtin__ to get full list of builtin
+    #                 functions (e.g. range()). Unfortunately __builtins__
+    #                 doesn't return them (when it is not main module)
+    import __builtin__
+
     ast = jinja2.Environment().parse(task_template)
     required_kwargs = jinja2.meta.find_undeclared_variables(ast)
 
-    missing = set(required_kwargs) - set(kwargs)
+    missing = set(required_kwargs) - set(kwargs) - set(dir(__builtin__))
     # NOTE(boris-42): Removing variables that have default values from missing.
     #                 Construction that won't be properly checked is
     #                 {% set x = x or 1}
