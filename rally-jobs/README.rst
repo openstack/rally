@@ -37,4 +37,4 @@ Useful links
 
 * About plugins:  https://rally.readthedocs.org/en/latest/plugins.html
 
-* Plugin samples: https://github.com/stackforge/rally/tree/master/doc/samples/plugins
+* Plugin samples: https://github.com/stackforge/rally/tree/master/samples/plugins

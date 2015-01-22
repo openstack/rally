@@ -55,7 +55,7 @@ class VMTasks(nova_utils.NovaScenario, vm_utils.VMScenario,
                                **kwargs):
         """Boot a server, run a script that outputs JSON, delete the server.
 
-        Example Script in doc/samples/tasks/support/instance_dd_test.sh
+        Example Script in samples/tasks/support/instance_dd_test.sh
 
         :param image: glance image name to use for the vm
         :param flavor: VM flavor name
