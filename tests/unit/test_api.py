@@ -103,6 +103,10 @@ class APITestCase(test.TestCase):
         self.assertEqual(
             "5 = 5", api.task_template_render(template, a=2, b=3, c=5))
 
+    def test_task_template_render_builtin(self):
+        template = "{% for i in range(4) %}{{i}}{% endfor %}"
+        self.assertEqual("0123", api.task_template_render(template))
+
     def test_task_template_render_missing_args(self):
         self.assertRaises(TypeError, api.task_template_render, "{{a}}")
 
