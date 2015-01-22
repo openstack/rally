@@ -130,7 +130,7 @@ class DeploymentCommands(object):
         required=False, help="UUID of the deployment.")
     @cliutils.args('--deployment', dest='deployment', type=str,
                    required=False, help='UUID or name of a deployment.')
-    @envutils.with_default_deployment
+    @envutils.with_default_deployment()
     def recreate(self, deployment=None):
         """Destroy and create an existing deployment.
 
@@ -146,7 +146,7 @@ class DeploymentCommands(object):
         required=False, help="UUID of the deployment.")
     @cliutils.args('--deployment', dest='deployment', type=str,
                    required=False, help='UUID or name of a deployment.')
-    @envutils.with_default_deployment
+    @envutils.with_default_deployment()
     def destroy(self, deployment=None):
         """Destroy existing deployment.
 
@@ -184,7 +184,7 @@ class DeploymentCommands(object):
         required=False, help="UUID of the deployment.")
     @cliutils.args('--deployment', dest='deployment', type=str,
                    required=False, help='UUID or name of a deployment.')
-    @envutils.with_default_deployment
+    @envutils.with_default_deployment()
     def config(self, deployment=None):
         """Display configuration of the deployment.
 
@@ -202,7 +202,7 @@ class DeploymentCommands(object):
         required=False, help="UUID of the deployment.")
     @cliutils.args('--deployment', dest='deployment', type=str,
                    required=False, help='UUID or name of a deployment.')
-    @envutils.with_default_deployment
+    @envutils.with_default_deployment()
     def show(self, deployment=None):
         """Show the endpoints of the deployment.
 
@@ -228,7 +228,7 @@ class DeploymentCommands(object):
         required=False, help="UUID of the deployment.")
     @cliutils.args('--deployment', dest='deployment', type=str,
                    required=False, help='UUID or name of a deployment.')
-    @envutils.with_default_deployment
+    @envutils.with_default_deployment()
     def check(self, deployment=None):
         """Check keystone authentication and list all available services.
 

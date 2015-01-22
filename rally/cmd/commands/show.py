@@ -47,7 +47,7 @@ class ShowCommands(object):
         required=False, help="UUID of the deployment.")
     @cliutils.args('--deployment', dest='deployment', type=str,
                    required=False, help='UUID or name of a deployment')
-    @envutils.with_default_deployment
+    @envutils.with_default_deployment(cli_arg_name="deployment")
     def images(self, deployment=None):
         """Display available images.
 
@@ -84,7 +84,7 @@ class ShowCommands(object):
         required=False, help="UUID of the deployment.")
     @cliutils.args('--deployment', dest='deployment', type=str,
                    required=False, help='UUID or name of a deployment')
-    @envutils.with_default_deployment
+    @envutils.with_default_deployment(cli_arg_name="deployment")
     def flavors(self, deployment=None):
         """Display available flavors.
 
@@ -121,7 +121,7 @@ class ShowCommands(object):
         required=False, help="UUID of the deployment.")
     @cliutils.args('--deployment', dest='deployment', type=str,
                    required=False, help='UUID or name of a deployment')
-    @envutils.with_default_deployment
+    @envutils.with_default_deployment(cli_arg_name="deployment")
     def networks(self, deployment=None):
         """Display configured networks."""
 
@@ -148,7 +148,7 @@ class ShowCommands(object):
         required=False, help="UUID of the deployment.")
     @cliutils.args('--deployment', dest='deployment', type=str,
                    required=False, help='UUID or name of a deployment')
-    @envutils.with_default_deployment
+    @envutils.with_default_deployment(cli_arg_name="deployment")
     def secgroups(self, deployment=None):
         """Display security groups."""
 
@@ -178,7 +178,7 @@ class ShowCommands(object):
         required=False, help="UUID of the deployment.")
     @cliutils.args('--deployment', dest='deployment', type=str,
                    required=False, help='UUID or name of a deployment')
-    @envutils.with_default_deployment
+    @envutils.with_default_deployment(cli_arg_name="deployment")
     def keypairs(self, deployment=None):
         """Display available ssh keypairs."""
 
