@@ -30,9 +30,9 @@ MSG_MISSING_ARG = _("Missing argument: --%(arg_name)s")
 
 
 def clear_global(global_key):
-    path = os.path.expanduser('~/.rally/globals')
+    path = os.path.expanduser("~/.rally/globals")
     if os.path.exists(path):
-        fileutils.update_env_file(path, global_key, '\n')
+        fileutils.update_env_file(path, global_key, "\n")
     if global_key in os.environ:
         os.environ.pop(global_key)
 
@@ -44,10 +44,10 @@ def clear_env():
 
 def get_global(global_key, do_raise=False):
     if global_key not in os.environ:
-        fileutils.load_env_file(os.path.expanduser('~/.rally/globals'))
+        fileutils.load_env_file(os.path.expanduser("~/.rally/globals"))
     value = os.environ.get(global_key)
     if not value and do_raise:
-        raise exceptions.InvalidArgumentsException('%s env is missing'
+        raise exceptions.InvalidArgumentsException("%s env is missing"
                                                    % global_key)
     return value
 
@@ -77,6 +77,6 @@ def with_default_deployment(cli_arg_name="uuid"):
                                          "the --%(arg_name)s argument of "
                                          "this command"))
 
-with_default_task_id = default_from_global('task_id', ENV_TASK, "uuid")
+with_default_task_id = default_from_global("task_id", ENV_TASK, "uuid")
 with_default_verification_id = default_from_global(
     "verification_uuid", ENV_VERIFICATION, "uuid")

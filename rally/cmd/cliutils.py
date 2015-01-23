@@ -114,7 +114,7 @@ def pretty_float_formatter(field, ndigits=None):
 
 def args(*args, **kwargs):
     def _decorator(func):
-        func.__dict__.setdefault('args', []).insert(0, (args, kwargs))
+        func.__dict__.setdefault("args", []).insert(0, (args, kwargs))
         return func
     return _decorator
 
@@ -189,10 +189,10 @@ def _add_command_parsers(categories, subparsers):
     # 'subparsers' parameter of this function (categories and actions).
     subparsers._parser_class = CategoryParser
 
-    parser = subparsers.add_parser('version')
+    parser = subparsers.add_parser("version")
 
-    parser = subparsers.add_parser('bash-completion')
-    parser.add_argument('query_category', nargs='?')
+    parser = subparsers.add_parser("bash-completion")
+    parser.add_argument("query_category", nargs="?")
 
     for category in categories:
         command_object = categories[category]()
@@ -202,7 +202,7 @@ def _add_command_parsers(categories, subparsers):
             formatter_class=argparse.RawDescriptionHelpFormatter)
         parser.set_defaults(command_object=command_object)
 
-        category_subparsers = parser.add_subparsers(dest='action')
+        category_subparsers = parser.add_subparsers(dest="action")
 
         for action, action_fn in _methods_of(command_object):
             descr = _compose_action_description(action_fn)
@@ -212,17 +212,17 @@ def _add_command_parsers(categories, subparsers):
                 description=descr, help=descr)
 
             action_kwargs = []
-            for args, kwargs in getattr(action_fn, 'args', []):
+            for args, kwargs in getattr(action_fn, "args", []):
                 # FIXME(markmc): hack to assume dest is the arg name without
                 # the leading hyphens if no dest is supplied
-                kwargs.setdefault('dest', args[0][2:])
-                action_kwargs.append(kwargs['dest'])
-                kwargs['dest'] = 'action_kwarg_' + kwargs['dest']
+                kwargs.setdefault("dest", args[0][2:])
+                action_kwargs.append(kwargs["dest"])
+                kwargs["dest"] = "action_kwarg_" + kwargs["dest"]
                 parser.add_argument(*args, **kwargs)
 
             parser.set_defaults(action_fn=action_fn)
             parser.set_defaults(action_kwargs=action_kwargs)
-            parser.add_argument('action_args', nargs='*')
+            parser.add_argument("action_args", nargs="*")
 
 
 def validate_deprecated_args(argv, fn):
@@ -237,17 +237,17 @@ def validate_deprecated_args(argv, fn):
 
 def run(argv, categories):
     parser = lambda subparsers: _add_command_parsers(categories, subparsers)
-    category_opt = cfg.SubCommandOpt('category',
-                                     title='Command categories',
-                                     help='Available categories',
+    category_opt = cfg.SubCommandOpt("category",
+                                     title="Command categories",
+                                     help="Available categories",
                                      handler=parser)
 
     CONF.register_cli_opt(category_opt)
 
     try:
-        CONF(argv[1:], project='rally', version=version.version_string())
+        CONF(argv[1:], project="rally", version=version.version_string())
         logging.setup("rally")
-        if not CONF.get('log_config_append'):
+        if not CONF.get("log_config_append"):
             # The below two lines are to disable noise from request module. The
             # standard way should be we make such lots of settings on the root
             # rally. However current oslo codes doesn't support such interface.
@@ -266,11 +266,11 @@ def run(argv, categories):
             st = os.stat(cfgfile)
             print(_("Could not read %s. Re-running with sudo") % cfgfile)
             try:
-                os.execvp('sudo', ['sudo', '-u', '#%s' % st.st_uid] + sys.argv)
+                os.execvp("sudo", ["sudo", "-u", "#%s" % st.st_uid] + sys.argv)
             except Exception:
-                print(_('sudo failed, continuing as if nothing happened'))
+                print(_("sudo failed, continuing as if nothing happened"))
 
-        print(_('Please re-run %s as root.') % argv[0])
+        print(_("Please re-run %s as root.") % argv[0])
         return(2)
 
     if CONF.category.name == "version":
@@ -282,14 +282,14 @@ def run(argv, categories):
         return(0)
 
     fn = CONF.category.action_fn
-    fn_args = [arg.decode('utf-8') for arg in CONF.category.action_args]
+    fn_args = [arg.decode("utf-8") for arg in CONF.category.action_args]
     fn_kwargs = {}
     for k in CONF.category.action_kwargs:
-        v = getattr(CONF.category, 'action_kwarg_' + k)
+        v = getattr(CONF.category, "action_kwarg_" + k)
         if v is None:
             continue
         if isinstance(v, six.string_types):
-            v = v.decode('utf-8')
+            v = v.decode("utf-8")
         fn_kwargs[k] = v
 
     # call the action with the remaining arguments
@@ -305,7 +305,7 @@ def run(argv, categories):
         print("Missing arguments:")
         for missing in e.missing:
             for arg in fn.args:
-                if arg[1].get('dest', '').endswith(missing):
+                if arg[1].get("dest", "").endswith(missing):
                     print(" " + arg[0][0])
                     break
         return(1)
@@ -359,7 +359,7 @@ _rally()
         COMPREPLY=($(compgen -W "${SUBCOMMANDS[${prev}]}" -- ${cur}))
     else
         if [ $prev == "--filename" ] ; then
-            _filedir '@(json|ya?ml)'
+            _filedir "@(json|ya?ml)"
         elif [ $prev == "--output-file" ] || [ $prev == "--out" ]; then
             _filedir
         else

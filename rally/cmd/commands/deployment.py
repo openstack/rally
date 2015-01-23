@@ -40,16 +40,16 @@ from rally import osclients
 class DeploymentCommands(object):
     """Set of commands that allow you to manage deployments."""
 
-    @cliutils.args('--name', type=str, required=True,
-                   help='A name of the deployment.')
-    @cliutils.args('--fromenv', action='store_true',
-                   help='Read environment variables instead of config file')
-    @cliutils.args('--filename', type=str, required=False,
-                   help='A path to the configuration file of the '
-                   'deployment.')
-    @cliutils.args('--no-use', action='store_false', dest='do_use',
-                   help='Don\'t set new deployment as default for'
-                        ' future operations')
+    @cliutils.args("--name", type=str, required=True,
+                   help="A name of the deployment.")
+    @cliutils.args("--fromenv", action="store_true",
+                   help="Read environment variables instead of config file")
+    @cliutils.args("--filename", type=str, required=False,
+                   help="A path to the configuration file of the "
+                   "deployment.")
+    @cliutils.args("--no-use", action="store_false", dest="do_use",
+                   help="Don\'t set new deployment as default for"
+                        " future operations")
     def create(self, name, fromenv=False, filename=None, do_use=False):
         """Create new deployment.
 
@@ -89,27 +89,27 @@ class DeploymentCommands(object):
                                 if v not in os.environ]
             if unavailable_vars:
                 print("The following environment variables are required but "
-                      "not set: %s" % ' '.join(unavailable_vars))
+                      "not set: %s" % " ".join(unavailable_vars))
                 return(1)
 
             config = {
                 "type": "ExistingCloud",
-                "auth_url": os.environ['OS_AUTH_URL'],
+                "auth_url": os.environ["OS_AUTH_URL"],
                 "admin": {
-                    "username": os.environ['OS_USERNAME'],
-                    "password": os.environ['OS_PASSWORD'],
-                    "tenant_name": os.environ['OS_TENANT_NAME']
+                    "username": os.environ["OS_USERNAME"],
+                    "password": os.environ["OS_PASSWORD"],
+                    "tenant_name": os.environ["OS_TENANT_NAME"]
                 }
             }
-            region_name = os.environ.get('OS_REGION_NAME')
-            if region_name and region_name != 'None':
-                config['region_name'] = region_name
+            region_name = os.environ.get("OS_REGION_NAME")
+            if region_name and region_name != "None":
+                config["region_name"] = region_name
         else:
             if not filename:
                 print("Either --filename or --fromenv is required")
                 return(1)
             filename = os.path.expanduser(filename)
-            with open(filename, 'rb') as deploy_file:
+            with open(filename, "rb") as deploy_file:
                 config = yaml.safe_load(deploy_file.read())
 
         try:
@@ -123,13 +123,13 @@ class DeploymentCommands(object):
 
         self.list(deployment_list=[deployment])
         if do_use:
-            use.UseCommands().deployment(deployment['uuid'])
+            use.UseCommands().deployment(deployment["uuid"])
 
     @cliutils.deprecated_args(
         "--uuid", dest="deployment", type=str,
         required=False, help="UUID of the deployment.")
-    @cliutils.args('--deployment', dest='deployment', type=str,
-                   required=False, help='UUID or name of a deployment.')
+    @cliutils.args("--deployment", dest="deployment", type=str,
+                   required=False, help="UUID or name of a deployment.")
     @envutils.with_default_deployment()
     def recreate(self, deployment=None):
         """Destroy and create an existing deployment.
@@ -144,8 +144,8 @@ class DeploymentCommands(object):
     @cliutils.deprecated_args(
         "--uuid", dest="deployment", type=str,
         required=False, help="UUID of the deployment.")
-    @cliutils.args('--deployment', dest='deployment', type=str,
-                   required=False, help='UUID or name of a deployment.')
+    @cliutils.args("--deployment", dest="deployment", type=str,
+                   required=False, help="UUID or name of a deployment.")
     @envutils.with_default_deployment()
     def destroy(self, deployment=None):
         """Destroy existing deployment.
@@ -161,8 +161,8 @@ class DeploymentCommands(object):
     def list(self, deployment_list=None):
         """List existing deployments."""
 
-        headers = ['uuid', 'created_at', 'name', 'status', 'active']
-        current_deployment = envutils.get_global('RALLY_DEPLOYMENT')
+        headers = ["uuid", "created_at", "name", "status", "active"]
+        current_deployment = envutils.get_global("RALLY_DEPLOYMENT")
         deployment_list = deployment_list or db.deployment_list()
 
         table_rows = []
@@ -173,7 +173,7 @@ class DeploymentCommands(object):
                 table_rows.append(utils.Struct(**dict(zip(headers, r))))
             common_cliutils.print_list(table_rows, headers,
                                        sortby_index=headers.index(
-                                           'created_at'))
+                                           "created_at"))
         else:
             print(_("There are no deployments. "
                     "To create a new deployment, use:"
@@ -182,8 +182,8 @@ class DeploymentCommands(object):
     @cliutils.deprecated_args(
         "--uuid", dest="deployment", type=str,
         required=False, help="UUID of the deployment.")
-    @cliutils.args('--deployment', dest='deployment', type=str,
-                   required=False, help='UUID or name of a deployment.')
+    @cliutils.args("--deployment", dest="deployment", type=str,
+                   required=False, help="UUID or name of a deployment.")
     @envutils.with_default_deployment()
     def config(self, deployment=None):
         """Display configuration of the deployment.
@@ -200,8 +200,8 @@ class DeploymentCommands(object):
     @cliutils.deprecated_args(
         "--uuid", dest="deployment", type=str,
         required=False, help="UUID of the deployment.")
-    @cliutils.args('--deployment', dest='deployment', type=str,
-                   required=False, help='UUID or name of a deployment.')
+    @cliutils.args("--deployment", dest="deployment", type=str,
+                   required=False, help="UUID or name of a deployment.")
     @envutils.with_default_deployment()
     def show(self, deployment=None):
         """Show the endpoints of the deployment.
@@ -209,8 +209,8 @@ class DeploymentCommands(object):
         :param deployment: a UUID or name of the deployment
         """
 
-        headers = ['auth_url', 'username', 'password', 'tenant_name',
-                   'region_name', 'endpoint_type']
+        headers = ["auth_url", "username", "password", "tenant_name",
+                   "region_name", "endpoint_type"]
         table_rows = []
 
         deployment = db.deployment_get(deployment)
@@ -219,15 +219,15 @@ class DeploymentCommands(object):
         endpoints = users + [admin] if admin else users
 
         for ep in endpoints:
-            data = [ep.get(m, '') for m in headers]
+            data = [ep.get(m, "") for m in headers]
             table_rows.append(utils.Struct(**dict(zip(headers, data))))
         common_cliutils.print_list(table_rows, headers)
 
     @cliutils.deprecated_args(
         "--uuid", dest="deployment", type=str,
         required=False, help="UUID of the deployment.")
-    @cliutils.args('--deployment', dest='deployment', type=str,
-                   required=False, help='UUID or name of a deployment.')
+    @cliutils.args("--deployment", dest="deployment", type=str,
+                   required=False, help="UUID or name of a deployment.")
     @envutils.with_default_deployment()
     def check(self, deployment=None):
         """Check keystone authentication and list all available services.
@@ -235,10 +235,10 @@ class DeploymentCommands(object):
         :param deployment: a UUID or name of the deployment
         """
 
-        headers = ['services', 'type', 'status']
+        headers = ["services", "type", "status"]
         table_rows = []
         try:
-            admin = db.deployment_get(deployment)['admin']
+            admin = db.deployment_get(deployment)["admin"]
             # TODO(boris-42): make this work for users in future
             for endpoint_dict in [admin]:
                 clients = osclients.Clients(objects.Endpoint(**endpoint_dict))
@@ -246,10 +246,10 @@ class DeploymentCommands(object):
                 print("keystone endpoints are valid and following "
                       "services are available:")
                 for service in client.services.list():
-                    data = [service.name, service.type, 'Available']
+                    data = [service.name, service.type, "Available"]
                     table_rows.append(utils.Struct(**dict(zip(headers, data))))
         except exceptions.InvalidArgumentsException:
-            data = ['keystone', 'identity', 'Error']
+            data = ["keystone", "identity", "Error"]
             table_rows.append(utils.Struct(**dict(zip(headers, data))))
             print(_("Authentication Issues: %s.")
                   % sys.exc_info()[1])

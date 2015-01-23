@@ -29,17 +29,17 @@ from rally.cmd.commands import verify
 
 
 categories = {
-    'deployment': deployment.DeploymentCommands,
-    'info': info.InfoCommands,
-    'show': show.ShowCommands,
-    'task': task.TaskCommands,
-    'use': use.UseCommands,
-    'verify': verify.VerifyCommands
+    "deployment": deployment.DeploymentCommands,
+    "info": info.InfoCommands,
+    "show": show.ShowCommands,
+    "task": task.TaskCommands,
+    "use": use.UseCommands,
+    "verify": verify.VerifyCommands
 }
 
 
 def main():
     return cliutils.run(sys.argv, categories)
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

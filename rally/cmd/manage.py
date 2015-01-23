@@ -52,10 +52,10 @@ class TempestCommands(object):
 
 
 def main():
-    categories = {'db': DBCommands,
-                  'tempest': TempestCommands}
+    categories = {"db": DBCommands,
+                  "tempest": TempestCommands}
     cliutils.run(sys.argv, categories)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -488,10 +488,10 @@ class TaskCommands(object):
 
     @cliutils.args("--tasks", dest="tasks", nargs="+",
                    help="uuids of tasks or json files with task results")
-    @cliutils.args('--out', type=str, dest='out', required=True,
-                   help='Path to output file.')
-    @cliutils.args('--open', dest='open_it', action='store_true',
-                   help='Open it in browser.')
+    @cliutils.args("--out", type=str, dest="out", required=True,
+                   help="Path to output file.")
+    @cliutils.args("--open", dest="open_it", action="store_true",
+                   help="Open it in browser.")
     @cliutils.deprecated_args(
         "--uuid", dest="tasks", nargs="+",
         help="uuids of tasks or json files with task results")

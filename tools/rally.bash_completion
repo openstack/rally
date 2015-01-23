@@ -65,7 +65,7 @@ _rally()
         COMPREPLY=($(compgen -W "${SUBCOMMANDS[${prev}]}" -- ${cur}))
     else
         if [ $prev == "--filename" ] ; then
-            _filedir '@(json|ya?ml)'
+            _filedir "@(json|ya?ml)"
         elif [ $prev == "--output-file" ] || [ $prev == "--out" ]; then
             _filedir
         else

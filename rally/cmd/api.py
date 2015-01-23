@@ -32,15 +32,15 @@ LOG = logging.getLogger(__name__)
 
 def main():
     # Initialize configuration and logging.
-    CONF(sys.argv[1:], project='rally')
-    logging.setup('rally')
+    CONF(sys.argv[1:], project="rally")
+    logging.setup("rally")
     # Prepare application and bind to the service socket.
     host = CONF.rest.host
     port = CONF.rest.port
     app = rally_app.make_app()
     server = simple_server.make_server(host, port, app)
     # Start application.
-    LOG.info(_('Starting server in PID %s') % os.getpid())
+    LOG.info(_("Starting server in PID %s") % os.getpid())
     LOG.info(_("Configuration:"))
     CONF.log_opt_values(LOG, logging.INFO)
     try:
@@ -49,5 +49,5 @@ def main():
         pass
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

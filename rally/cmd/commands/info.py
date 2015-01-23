@@ -128,7 +128,7 @@ class InfoCommands(object):
                 "\n\n"
                 "Scenarios in Rally are put together in groups. Each "
                 "scenario group is concentrated on some specific \nOpenStack "
-                'functionality. For example, the "NovaServers" scenario '
+                "functionality. For example, the 'NovaServers' scenario "
                 "group contains scenarios that employ\nseveral basic "
                 "operations available in Nova."
                 "\n\n" +
@@ -192,9 +192,9 @@ class InfoCommands(object):
                 "configuration file as its parameter. This file may look "
                 "like:\n"
                 "{\n"
-                '  "type": "ExistingCloud",\n'
-                '  "auth_url": "http://example.net:5000/v2.0/",\n'
-                '  "admin": { <credentials> },\n'
+                "  \"type\": \"ExistingCloud\",\n"
+                "  \"auth_url\": \"http://example.net:5000/v2.0/\",\n"
+                "  \"admin\": { <credentials> },\n"
                 "  ...\n"
                 "}"
                 "\n\n" +
@@ -230,10 +230,11 @@ class InfoCommands(object):
                 "configuration files\npassed to the 'rally deployment create'"
                 " command, e.g.:\n"
                 "{\n"
-                '  "type": "DevstackEngine",\n'
-                '  "provider": {\n'
-                '    "type": "ExistingServers",\n'
-                '    "credentials": [{"user": "root", "host": "10.2.0.8"}]\n'
+                "  \"type\": \"DevstackEngine\",\n"
+                "  \"provider\": {\n"
+                "  \"type\": \"ExistingServers\",\n"
+                "  \"credentials\": [{\"user\": \"root\",\n"
+                "                     \"host\": \"10.2.0.8\"}]\n"
                 "  }\n"
                 "}"
                 "\n\n" +

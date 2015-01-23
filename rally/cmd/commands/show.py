@@ -45,8 +45,8 @@ class ShowCommands(object):
     @cliutils.deprecated_args(
         "--deploy-id", dest="deployment", type=str,
         required=False, help="UUID of the deployment.")
-    @cliutils.args('--deployment', dest='deployment', type=str,
-                   required=False, help='UUID or name of a deployment')
+    @cliutils.args("--deployment", dest="deployment", type=str,
+                   required=False, help="UUID or name of a deployment")
     @envutils.with_default_deployment(cli_arg_name="deployment")
     def images(self, deployment=None):
         """Display available images.
@@ -54,8 +54,8 @@ class ShowCommands(object):
         :param deployment: UUID or name of a deployment
         """
 
-        headers = ['UUID', 'Name', 'Size (B)']
-        mixed_case_fields = ['UUID', 'Name']
+        headers = ["UUID", "Name", "Size (B)"]
+        mixed_case_fields = ["UUID", "Name"]
         float_cols = ["Size (B)"]
         table_rows = []
         formatters = dict(zip(float_cols,
@@ -82,8 +82,8 @@ class ShowCommands(object):
     @cliutils.deprecated_args(
         "--deploy-id", dest="deployment", type=str,
         required=False, help="UUID of the deployment.")
-    @cliutils.args('--deployment', dest='deployment', type=str,
-                   required=False, help='UUID or name of a deployment')
+    @cliutils.args("--deployment", dest="deployment", type=str,
+                   required=False, help="UUID or name of a deployment")
     @envutils.with_default_deployment(cli_arg_name="deployment")
     def flavors(self, deployment=None):
         """Display available flavors.
@@ -91,9 +91,9 @@ class ShowCommands(object):
         :param deployment: UUID or name of a deployment
         """
 
-        headers = ['ID', 'Name', 'vCPUs', 'RAM (MB)', 'Swap (MB)', 'Disk (GB)']
-        mixed_case_fields = ['ID', 'Name', 'vCPUs']
-        float_cols = ['RAM (MB)', 'Swap (MB)', 'Disk (GB)']
+        headers = ["ID", "Name", "vCPUs", "RAM (MB)", "Swap (MB)", "Disk (GB)"]
+        mixed_case_fields = ["ID", "Name", "vCPUs"]
+        float_cols = ["RAM (MB)", "Swap (MB)", "Disk (GB)"]
         formatters = dict(zip(float_cols,
                               [cliutils.pretty_float_formatter(col)
                                for col in float_cols]))
@@ -119,14 +119,14 @@ class ShowCommands(object):
     @cliutils.deprecated_args(
         "--deploy-id", dest="deployment", type=str,
         required=False, help="UUID of the deployment.")
-    @cliutils.args('--deployment', dest='deployment', type=str,
-                   required=False, help='UUID or name of a deployment')
+    @cliutils.args("--deployment", dest="deployment", type=str,
+                   required=False, help="UUID or name of a deployment")
     @envutils.with_default_deployment(cli_arg_name="deployment")
     def networks(self, deployment=None):
         """Display configured networks."""
 
-        headers = ['ID', 'Label', 'CIDR']
-        mixed_case_fields = ['ID', 'Label', 'CIDR']
+        headers = ["ID", "Label", "CIDR"]
+        mixed_case_fields = ["ID", "Label", "CIDR"]
         table_rows = []
         try:
             for endpoint_dict in self._get_endpoints(deployment):
@@ -146,14 +146,14 @@ class ShowCommands(object):
     @cliutils.deprecated_args(
         "--deploy-id", dest="deployment", type=str,
         required=False, help="UUID of the deployment.")
-    @cliutils.args('--deployment', dest='deployment', type=str,
-                   required=False, help='UUID or name of a deployment')
+    @cliutils.args("--deployment", dest="deployment", type=str,
+                   required=False, help="UUID or name of a deployment")
     @envutils.with_default_deployment(cli_arg_name="deployment")
     def secgroups(self, deployment=None):
         """Display security groups."""
 
-        headers = ['ID', 'Name', 'Description']
-        mixed_case_fields = ['ID', 'Name', 'Description']
+        headers = ["ID", "Name", "Description"]
+        mixed_case_fields = ["ID", "Name", "Description"]
         table_rows = []
         try:
             for endpoint_dict in self._get_endpoints(deployment):
@@ -176,14 +176,14 @@ class ShowCommands(object):
     @cliutils.deprecated_args(
         "--deploy-id", dest="deployment", type=str,
         required=False, help="UUID of the deployment.")
-    @cliutils.args('--deployment', dest='deployment', type=str,
-                   required=False, help='UUID or name of a deployment')
+    @cliutils.args("--deployment", dest="deployment", type=str,
+                   required=False, help="UUID or name of a deployment")
     @envutils.with_default_deployment(cli_arg_name="deployment")
     def keypairs(self, deployment=None):
         """Display available ssh keypairs."""
 
-        headers = ['Name', 'Fingerprint']
-        mixed_case_fields = ['Name', 'Fingerprint']
+        headers = ["Name", "Fingerprint"]
+        mixed_case_fields = ["Name", "Fingerprint"]
         table_rows = []
         try:
             for endpoint_dict in self._get_endpoints(deployment):
