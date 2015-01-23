@@ -51,7 +51,7 @@ class ImmutableMixin(object):
 class EnumMixin(object):
     def __iter__(self):
         for k, v in moves.map(lambda x: (x, getattr(self, x)), dir(self)):
-            if not k.startswith('_'):
+            if not k.startswith("_"):
                 yield v
 
 
@@ -143,8 +143,8 @@ def itersubclasses(cls, _seen=None):
     """Generator over all subclasses of a given class in depth first order."""
 
     if not isinstance(cls, type):
-        raise TypeError(_('itersubclasses must be called with '
-                          'new-style classes, not %.100r') % cls)
+        raise TypeError(_("itersubclasses must be called with "
+                          "new-style classes, not %.100r") % cls)
     _seen = _seen or set()
     try:
         subs = cls.__subclasses__()
@@ -168,14 +168,14 @@ def import_modules_from_package(package):
 
     :param: package - Full package name. For example: rally.deploy.engines
     """
-    path = [os.path.dirname(rally.__file__), '..'] + package.split('.')
+    path = [os.path.dirname(rally.__file__), ".."] + package.split(".")
     path = os.path.join(*path)
     for root, dirs, files in os.walk(path):
         for filename in files:
-            if filename.startswith('__') or not filename.endswith('.py'):
+            if filename.startswith("__") or not filename.endswith(".py"):
                 continue
             new_package = ".".join(root.split(os.sep)).split("....")[1]
-            module_name = '%s.%s' % (new_package, filename[:-3])
+            module_name = "%s.%s" % (new_package, filename[:-3])
             try_append_module(module_name, sys.modules)
 
 
@@ -191,7 +191,7 @@ def _log_wrapper(obj, log, msg, **kw):
     [Method execution...]
     "Task <Task UUID> | Completed: <Logging message>"
 
-    :param obj: task or deployment which must be attribute of 'self'
+    :param obj: task or deployment which must be attribute of "self"
     :param log: Logging method to be used, e.g. LOG.info
     :param msg: Text message (possibly parameterized) to be put to the log
     :param **kw: Parameters for msg
@@ -210,15 +210,15 @@ def _log_wrapper(obj, log, msg, **kw):
 
 
 def log_task_wrapper(log, msg, **kw):
-    return _log_wrapper('task', log, msg, **kw)
+    return _log_wrapper("task", log, msg, **kw)
 
 
 def log_deploy_wrapper(log, msg, **kw):
-    return _log_wrapper('deployment', log, msg, **kw)
+    return _log_wrapper("deployment", log, msg, **kw)
 
 
 def log_verification_wrapper(log, msg, **kw):
-    return _log_wrapper('verification', log, msg, **kw)
+    return _log_wrapper("verification", log, msg, **kw)
 
 
 def load_plugins(directory):

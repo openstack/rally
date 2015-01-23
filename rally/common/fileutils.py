@@ -27,7 +27,7 @@ def _read_env_file(path, except_env=None):
     """
     output = []
     if os.path.exists(path):
-        with open(path, 'r') as env_file:
+        with open(path, "r") as env_file:
             content = env_file.readlines()
             for line in content:
                 if except_env is None or not line.startswith("%s=" %
@@ -54,7 +54,7 @@ def _rewrite_env_file(path, initial_content):
     :param path: the path of the file
     :param initial_content: the original content of the file
     """
-    with open(path, 'w+') as env_file:
+    with open(path, "w+") as env_file:
         for line in initial_content:
             env_file.write(line)
 
@@ -67,5 +67,5 @@ def update_env_file(path, env_key, env_value):
     :param env_value: the value of the property to update
     """
     output = _read_env_file(path, env_key)
-    output.append('%s=%s' % (env_key, env_value))
+    output.append("%s=%s" % (env_key, env_value))
     _rewrite_env_file(path, output)
