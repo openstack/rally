@@ -16,10 +16,13 @@
 
 import subprocess
 
+
 import mock
 from oslotest import mockpatch
+import six
 
 from rally.benchmark.scenarios.vm import utils
+from rally import exceptions
 from tests.unit import test
 
 
@@ -36,12 +39,26 @@ class VMScenarioTestCase(test.TestCase):
 
     @mock.patch("%s.open" % VMTASKS_UTILS,
                 side_effect=mock.mock_open(), create=True)
-    def test__run_action(self, mock_open):
+    def test__run_command_over_ssh(self, mock_open):
         mock_ssh = mock.MagicMock()
         vm_scenario = utils.VMScenario()
-        vm_scenario._run_action(mock_ssh, "interpreter", "script")
+        vm_scenario._run_command_over_ssh(mock_ssh, "interpreter", "script")
         mock_ssh.execute.assert_called_once_with("interpreter",
                                                  stdin=mock_open.side_effect())
+
+    def test__run_command_over_ssh_stringio(self):
+        mock_ssh = mock.MagicMock()
+        vm_scenario = utils.VMScenario()
+        script = six.moves.StringIO("script")
+        vm_scenario._run_command_over_ssh(mock_ssh, "interpreter", script)
+        mock_ssh.execute.assert_called_once_with("interpreter",
+                                                 stdin=script)
+
+    def test__run_command_over_ssh_fails(self):
+        vm_scenario = utils.VMScenario()
+        self.assertRaises(exceptions.ScriptError,
+                          vm_scenario._run_command_over_ssh,
+                          None, "interpreter", 10)
 
     def test__wait_for_ssh(self):
         ssh = mock.MagicMock()
@@ -58,9 +75,9 @@ class VMScenarioTestCase(test.TestCase):
                                                    is_ready=mock__ping,
                                                    timeout=120)
 
-    @mock.patch(VMTASKS_UTILS + ".VMScenario._run_action")
+    @mock.patch(VMTASKS_UTILS + ".VMScenario._run_command_over_ssh")
     @mock.patch("rally.common.sshutils.SSH")
-    def test__run_command(self, mock_ssh_class, mock_run_action):
+    def test__run_command(self, mock_ssh_class, mock_run_command_over_ssh):
         mock_ssh_instance = mock.MagicMock()
         mock_ssh_class.return_value = mock_ssh_instance
 
@@ -73,8 +90,8 @@ class VMScenarioTestCase(test.TestCase):
                                                pkey="ssh",
                                                password="password")
         mock_ssh_instance.wait.assert_called_once_with()
-        mock_run_action.assert_called_once_with(mock_ssh_instance,
-                                                "int", "script")
+        mock_run_command_over_ssh.assert_called_once_with(
+            mock_ssh_instance, "int", "script")
 
     @mock.patch(VMTASKS_UTILS + ".sys")
     @mock.patch("subprocess.Popen")

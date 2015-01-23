@@ -104,8 +104,8 @@ class NovaScenario(base.Scenario):
                 kwargs["security_groups"].append(secgroup["name"])
 
         if auto_assign_nic and not kwargs.get("nics", False):
-            nets = [net["id"]
-                    for net in self.context["tenant"].get("networks", [])]
+            nets = [net["id"] for net in
+                    self.context.get("tenant", {}).get("networks", [])]
             if nets:
                 # NOTE(amaretskiy): Balance servers among networks:
                 #     divmod(iteration % tenants_num, nets_num)[1]
