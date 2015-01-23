@@ -20,7 +20,7 @@ RALLY_PRODUCT = "OpenStack Rally"
 RALLY_PACKAGE = None  # OS distro package version suffix
 
 loaded = False
-version_info = pbr_version.VersionInfo('rally')
+version_info = pbr_version.VersionInfo("rally")
 
 
 def version_string():

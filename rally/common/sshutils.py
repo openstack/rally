@@ -20,32 +20,32 @@ Usage examples:
 
 Execute command and get output:
 
-    ssh = sshclient.SSH('root', 'example.com', port=33)
-    status, stdout, stderr = ssh.execute('ps ax')
+    ssh = sshclient.SSH("root", "example.com", port=33)
+    status, stdout, stderr = ssh.execute("ps ax")
     if status:
-        raise Exception('Command failed with non-zero status.')
+        raise Exception("Command failed with non-zero status.")
     print stdout.splitlines()
 
 Execute command with huge output:
 
     class PseudoFile(object):
         def write(chunk):
-            if 'error' in chunk:
+            if "error" in chunk:
                 email_admin(chunk)
 
-    ssh = sshclient.SSH('root', 'example.com')
-    ssh.run('tail -f /var/log/syslog', stdout=PseudoFile(), timeout=False)
+    ssh = sshclient.SSH("root", "example.com")
+    ssh.run("tail -f /var/log/syslog", stdout=PseudoFile(), timeout=False)
 
 Execute local script on remote side:
 
-    ssh = sshclient.SSH('user', 'example.com')
-    status, out, err = ssh.execute('/bin/sh -s arg1 arg2',
-                                   stdin=open('~/myscript.sh', 'r'))
+    ssh = sshclient.SSH("user", "example.com")
+    status, out, err = ssh.execute("/bin/sh -s arg1 arg2",
+                                   stdin=open("~/myscript.sh", "r"))
 
 Upload file:
 
-    ssh = sshclient.SSH('user', 'example.com')
-    ssh.run('cat > ~/upload/file.gz', stdin=open('/store/file.gz', 'rb'))
+    ssh = sshclient.SSH("user", "example.com")
+    ssh.run("cat > ~/upload/file.gz", stdin=open("/store/file.gz", "rb"))
 
 Eventlet:
 
@@ -111,7 +111,7 @@ class SSH(object):
                 return key_class.from_private_key(key)
             except paramiko.SSHException as e:
                 errors.append(e)
-        raise SSHError('Invalid pkey: %s' % (errors))
+        raise SSHError("Invalid pkey: %s" % (errors))
 
     def _get_client(self):
         if self._client:
@@ -128,8 +128,8 @@ class SSH(object):
             message = _("Exception %(exception_type)s was raised "
                         "during connect. Exception value is: %(exception)r")
             self._client = False
-            raise SSHError(message % {'exception': e,
-                                      'exception_type': type(e)})
+            raise SSHError(message % {"exception": e,
+                                      "exception_type": type(e)})
 
     def close(self):
         self._client.close()
@@ -166,7 +166,7 @@ class SSH(object):
         session.exec_command(cmd)
         start_time = time.time()
 
-        data_to_send = ''
+        data_to_send = ""
         stderr_data = None
 
         # If we have data to be sent to stdin then `select' should also
@@ -182,14 +182,14 @@ class SSH(object):
 
             if session.recv_ready():
                 data = session.recv(4096)
-                LOG.debug('stdout: %r' % data)
+                LOG.debug("stdout: %r" % data)
                 if stdout is not None:
                     stdout.write(data)
                 continue
 
             if session.recv_stderr_ready():
                 stderr_data = session.recv_stderr(4096)
-                LOG.debug('stderr: %r' % stderr_data)
+                LOG.debug("stderr: %r" % stderr_data)
                 if stderr is not None:
                     stderr.write(stderr_data)
                 continue
@@ -204,25 +204,25 @@ class SSH(object):
                             writes = []
                             continue
                     sent_bytes = session.send(data_to_send)
-                    LOG.debug('sent: %s' % data_to_send[:sent_bytes])
+                    LOG.debug("sent: %s" % data_to_send[:sent_bytes])
                     data_to_send = data_to_send[sent_bytes:]
 
             if session.exit_status_ready():
                 break
 
             if timeout and (time.time() - timeout) > start_time:
-                args = {'cmd': cmd, 'host': self.host}
-                raise SSHTimeout(_('Timeout executing command '
-                                   '"%(cmd)s" on host %(host)s') % args)
+                args = {"cmd": cmd, "host": self.host}
+                raise SSHTimeout(_("Timeout executing command "
+                                   "'%(cmd)s' on host %(host)s") % args)
             if e:
-                raise SSHError('Socket error.')
+                raise SSHError("Socket error.")
 
         exit_status = session.recv_exit_status()
         if 0 != exit_status and raise_on_error:
-            fmt = _('Command "%(cmd)s" failed with exit_status %(status)d.')
-            details = fmt % {'cmd': cmd, 'status': exit_status}
+            fmt = _("Command '%(cmd)s' failed with exit_status %(status)d.")
+            details = fmt % {"cmd": cmd, "status": exit_status}
             if stderr_data:
-                details += _(' Last stderr data: "%s".') % stderr_data
+                details += _(" Last stderr data: '%s'.") % stderr_data
             raise SSHError(details)
         return exit_status
 
@@ -250,9 +250,9 @@ class SSH(object):
         start_time = time.time()
         while True:
             try:
-                return self.execute('uname')
+                return self.execute("uname")
             except (socket.error, SSHError) as e:
-                LOG.debug('Ssh is still unavailable: %r' % e)
+                LOG.debug("Ssh is still unavailable: %r" % e)
                 time.sleep(interval)
             if time.time() > (start_time + timeout):
-                raise SSHTimeout(_('Timeout waiting for "%s"') % self.host)
+                raise SSHTimeout(_("Timeout waiting for '%s'") % self.host)
