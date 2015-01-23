@@ -26,10 +26,19 @@ class KeyPairContextTestCase(test.TestCase):
     def setUp(self):
         super(KeyPairContextTestCase, self).setUp()
         self.users = 2
-        task = mock.MagicMock()
+        self.keypair_name = keypair.Keypair.KEYPAIR_NAME + "_foo_task_id"
+
+        task = {"uuid": "foo_task_id"}
         self.ctx_with_keys = {
             "users": [
-                {"keypair": "key", "endpoint": "endpoint"},
+                {
+                    "keypair": {
+                        "id": "key_id",
+                        "key": "key",
+                        "name": self.keypair_name
+                    },
+                    "endpoint": "endpoint"
+                },
             ] * self.users,
             "task": task
         }
@@ -40,10 +49,18 @@ class KeyPairContextTestCase(test.TestCase):
 
     @mock.patch("%s.keypair.Keypair._generate_keypair" % CTX)
     def test_keypair_setup(self, mock_generate):
-        mock_generate.return_value = "key"
+        mock_generate.side_effect = [
+            {"id": "key_id", "key": "key", "name": self.keypair_name},
+            {"id": "key_id", "key": "key", "name": self.keypair_name},
+        ]
+
         keypair_ctx = keypair.Keypair(self.ctx_without_keys)
         keypair_ctx.setup()
-        self.assertEqual(self.ctx_without_keys, self.ctx_with_keys)
+        self.assertEqual(self.ctx_with_keys, keypair_ctx.context)
+
+        self.assertEqual(
+            [mock.call("endpoint")] * 2,
+            mock_generate.mock_calls)
 
     @mock.patch("%s.keypair.resource_manager.cleanup" % CTX)
     def test_keypair_cleanup(self, mock_cleanup):
@@ -54,10 +71,22 @@ class KeyPairContextTestCase(test.TestCase):
 
     @mock.patch("rally.osclients.Clients")
     def test_keypair_generate(self, mock_osclients):
+        mock_keypairs = mock_osclients.return_value.nova.return_value.keypairs
+        mock_keypair = mock_keypairs.create.return_value
+        mock_keypair.public_key = "public_key"
+        mock_keypair.private_key = "private_key"
+        mock_keypair.id = "key_id"
         keypair_ctx = keypair.Keypair(self.ctx_without_keys)
-        keypair_ctx._generate_keypair("endpoint")
+        key = keypair_ctx._generate_keypair("endpoint")
+
+        self.assertEqual({
+            "id": "key_id",
+            "name": "rally_ssh_key_foo_task_id",
+            "private": "private_key",
+            "public": "public_key"
+        }, key)
 
         mock_osclients.assert_has_calls([
-            mock.call().nova().keypairs.delete("rally_ssh_key"),
-            mock.call().nova().keypairs.create("rally_ssh_key"),
+            mock.call().nova().keypairs.delete("rally_ssh_key_foo_task_id"),
+            mock.call().nova().keypairs.create("rally_ssh_key_foo_task_id"),
         ])

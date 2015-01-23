@@ -28,19 +28,24 @@ LOG = logging.getLogger(__name__)
 SSH_GROUP_NAME = "rally_ssh_open"
 
 
-def _prepare_open_secgroup(endpoint):
+def _prepare_open_secgroup(endpoint, secgroup_name):
     """Generate secgroup allowing all tcp/udp/icmp access.
 
     In order to run tests on instances it is necessary to have SSH access.
-    This function generates a secgroup which allows all tcp/udp/icmp access
+    This function generates a secgroup which allows all tcp/udp/icmp access.
+
+    :param endpoint: clients endpoint
+    :param secgroup_name: security group name
+
+    :returns: dict with security group details
     """
     nova = osclients.Clients(endpoint).nova()
 
-    if SSH_GROUP_NAME not in [sg.name for sg in nova.security_groups.list()]:
+    if secgroup_name not in [sg.name for sg in nova.security_groups.list()]:
         descr = "Allow ssh access to VMs created by Rally for benchmarking"
-        rally_open = nova.security_groups.create(SSH_GROUP_NAME, descr)
+        rally_open = nova.security_groups.create(secgroup_name, descr)
 
-    rally_open = nova.security_groups.find(name=SSH_GROUP_NAME)
+    rally_open = nova.security_groups.find(name=secgroup_name)
 
     rules_to_add = [
         {
@@ -77,7 +82,7 @@ def _prepare_open_secgroup(endpoint):
                         ip_protocol=new_rule["ip_protocol"],
                         cidr=new_rule["ip_range"]["cidr"])
 
-    return rally_open
+    return rally_open.to_dict()
 
 
 @base.context(name="allow_ssh", order=320)
@@ -85,12 +90,14 @@ class AllowSSH(base.Context):
 
     def __init__(self, context):
         super(AllowSSH, self).__init__(context)
-        self.secgroup = []
 
     @utils.log_task_wrapper(LOG.info, _("Enter context: `allow_ssh`"))
     def setup(self):
+        admin_or_user = (self.context.get("admin") or
+                         self.context.get("users")[0])
+
         net_wrapper = network.wrap(
-            osclients.Clients(self.context["admin"]["endpoint"]),
+            osclients.Clients(admin_or_user["endpoint"]),
             self.config)
         use_sg, msg = net_wrapper.supports_security_group()
         if not use_sg:
@@ -98,16 +105,21 @@ class AllowSSH(base.Context):
                      % {"message": msg})
             return
 
-        self.context["allow_ssh"] = SSH_GROUP_NAME
+        secgroup_name = "%s_%s" % (SSH_GROUP_NAME,
+                                   self.context["task"]["uuid"])
+
         for user, tenant_id in utils.iterate_per_tenants(
                 self.context["users"]):
-            endpoint = user["endpoint"]
-            secgroup = _prepare_open_secgroup(endpoint)
-            self.secgroup.append(secgroup)
+            user["secgroup"] = _prepare_open_secgroup(user["endpoint"],
+                                                      secgroup_name)
 
     @utils.log_task_wrapper(LOG.info, _("Exit context: `allow_ssh`"))
     def cleanup(self):
-        for secgroup in self.secgroup:
+        for user, tenant_id in utils.iterate_per_tenants(
+                self.context["users"]):
             with logging.ExceptionLogger(
-                    LOG, _("Unable to delete secgroup: %s.") % secgroup.id):
-                secgroup.delete()
+                    LOG, _("Unable to delete secgroup: %s.") %
+                    user["secgroup"]["name"]):
+                clients = osclients.Clients(user["endpoint"])
+                clients.nova().security_groups.get(
+                     user["secgroup"]["id"]).delete()

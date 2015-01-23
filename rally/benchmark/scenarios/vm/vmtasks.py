@@ -15,7 +15,6 @@
 
 import json
 
-from rally.benchmark.context import keypair
 from rally.benchmark.scenarios import base
 from rally.benchmark.scenarios.cinder import utils as cinder_utils
 from rally.benchmark.scenarios.nova import utils as nova_utils
@@ -80,8 +79,10 @@ class VMTasks(nova_utils.NovaScenario, vm_utils.VMScenario,
 
         fip = server = None
         net_wrap = network_wrapper.wrap(self.clients)
-        kwargs.update({"auto_assign_nic": True,
-                       "key_name": keypair.Keypair.KEYPAIR_NAME})
+        kwargs.update({
+            "auto_assign_nic": True,
+            "key_name": self.context["user"]["keypair"]["name"]
+        })
         server = self._boot_server(image, flavor, **kwargs)
 
         if not server.networks:
