@@ -108,9 +108,6 @@ class AllowSSH(base.Context):
     @utils.log_task_wrapper(LOG.info, _("Exit context: `allow_ssh`"))
     def cleanup(self):
         for secgroup in self.secgroup:
-            try:
+            with logging.ExceptionLogger(
+                    LOG, _("Unable to delete secgroup: %s.") % secgroup.id):
                 secgroup.delete()
-            except Exception as ex:
-                LOG.warning("Unable to delete secgroup: %(group_id)s. "
-                            "Exception: %(ex)s" %
-                            {"group_id": secgroup.id, "ex": ex})

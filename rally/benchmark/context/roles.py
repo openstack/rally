@@ -74,13 +74,10 @@ class RoleGenerator(base.Context):
         client = osclients.Clients(admin_endpoint).keystone()
 
         for user in self.context["users"]:
-            try:
+            with logging.ExceptionLogger(
+                    LOG, _("Failed to remove role: %s") % role["id"]):
                 client.roles.remove_user_role(
                     user["id"], role["id"], tenant=user["tenant_id"])
-            except Exception as ex:
-                LOG.warning("Failed to remove role: %(role_id)s. "
-                            "Exception: %(ex)s" %
-                            {"role_id": role["id"], "ex": ex})
 
     @rutils.log_task_wrapper(LOG.info, _("Enter context: `roles`"))
     def setup(self):

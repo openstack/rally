@@ -98,14 +98,10 @@ class FlavorsGenerator(base.Context):
         """Delete created flavors."""
         clients = osclients.Clients(self.context["admin"]["endpoint"])
         for flavor in self.context["flavors"].values():
-            try:
+            with logging.ExceptionLogger(
+                    LOG, _("Can't delete flavor %s") % flavor["id"]):
                 rutils.retry(3, clients.nova().flavors.delete, flavor["id"])
                 LOG.debug("Flavor is deleted %s" % flavor["id"])
-            except Exception as e:
-                LOG.error(
-                    "Can't delete flavor %s: %s" % (flavor["id"], e.message))
-                if logging.is_debug():
-                    LOG.exception(e)
 
 
 class FlavorConfig(dict):

@@ -76,3 +76,27 @@ class LogRallyContaxtAdapter(test.TestCase):
 
         radapter.log.assert_called_once_with(mock_logging.RDEBUG,
                                              fake_msg)
+
+
+class ExceptionLoggerTestCase(test.TestCase):
+
+    @mock.patch("rally.common.log.is_debug")
+    def test_context(self, mock_is_debug):
+        # Prepare
+        mock_is_debug.return_value = True
+
+        logger = mock.MagicMock()
+        exception = Exception()
+
+        # Run
+        with log.ExceptionLogger(logger, "foo") as e:
+            raise exception
+
+        # Assertions
+        logger.warning.assert_called_once_with("foo")
+
+        logger.exception.assert_called_once_with(exception)
+
+        logger.debug.assert_called_once_with(exception)
+
+        self.assertEqual(e.exception, exception)
