@@ -79,8 +79,8 @@ class NovaScenario(base.Scenario):
         return self.clients("nova").servers.list(detailed)
 
     @base.atomic_action_timer("nova.boot_server")
-    def _boot_server(self, server_name, image_id, flavor_id,
-                     auto_assign_nic=False, **kwargs):
+    def _boot_server(self, image_id, flavor_id,
+                     auto_assign_nic=False, name=None, **kwargs):
         """Boot a server.
 
         Returns when the server is actually booted and in "ACTIVE" state.
@@ -88,13 +88,14 @@ class NovaScenario(base.Scenario):
         If multiple networks are present, the first network found that
         isn't associated with a floating IP pool is used.
 
-        :param server_name: str, server name
         :param image_id: int, image ID for server creation
         :param flavor_id: int, flavor ID for server creation
         :param auto_assign_nic: bool, whether or not to auto assign NICs
+        :param name: str, server name
         :param kwargs: other optional parameters to initialize the server
         :returns: nova Server instance
         """
+        server_name = name or self._generate_random_name()
         allow_ssh_secgroup = self.context.get("allow_ssh")
         if allow_ssh_secgroup:
             if "security_groups" not in kwargs:

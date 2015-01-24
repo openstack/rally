@@ -113,8 +113,8 @@ class NovaSecGroup(utils.NovaScenario):
                                               rules_per_security_group)
 
         secgroups_names = [sg.name for sg in security_groups]
-        server = self._boot_server(self._generate_random_name(), image,
-                                   flavor, security_groups=secgroups_names)
+        server = self._boot_server(image, flavor,
+                                   security_groups=secgroups_names)
 
         action_name = "nova.get_attached_security_groups"
         with base.AtomicAction(self, action_name):

@@ -40,7 +40,7 @@ class NovaServersTestCase(test.TestCase):
         scenario._delete_server = mock.MagicMock()
 
         scenario.boot_and_bounce_server("img", 1, actions=actions)
-        scenario._boot_server.assert_called_once_with("name", "img", 1)
+        scenario._boot_server.assert_called_once_with("img", 1)
         server_calls = []
         for i in range(5):
             server_calls.append(mock.call(fake_server))
@@ -65,7 +65,7 @@ class NovaServersTestCase(test.TestCase):
 
         scenario.boot_and_bounce_server("img", 1, actions=actions)
 
-        scenario._boot_server.assert_called_once_with("name", "img", 1)
+        scenario._boot_server.assert_called_once_with("img", 1)
         server_calls = []
         for i in range(5):
             server_calls.append(mock.call(fake_server))
@@ -90,7 +90,7 @@ class NovaServersTestCase(test.TestCase):
         scenario._generate_random_name = mock.MagicMock(return_value="name")
 
         scenario.boot_and_bounce_server("img", 1, actions=actions)
-        scenario._boot_server.assert_called_once_with("name", "img", 1)
+        scenario._boot_server.assert_called_once_with("img", 1)
         server_calls = []
         for i in range(5):
             server_calls.append(mock.call(fake_server))
@@ -143,7 +143,7 @@ class NovaServersTestCase(test.TestCase):
 
         scenario.boot_and_bounce_server("img", 1, actions=actions)
 
-        scenario._boot_server.assert_called_once_with("name", "img", 1)
+        scenario._boot_server.assert_called_once_with("img", 1)
         server_calls = []
         for i in range(5):
             server_calls.append(mock.call(fake_server))
@@ -175,7 +175,7 @@ class NovaServersTestCase(test.TestCase):
 
         scenario.boot_and_delete_server("img", 0, 10, 20, fakearg="fakearg")
 
-        scenario._boot_server.assert_called_once_with("name", "img", 0,
+        scenario._boot_server.assert_called_once_with("img", 0,
                                                       fakearg="fakearg")
         scenario.sleep_between.assert_called_once_with(10, 20)
         scenario._delete_server.assert_called_once_with(fake_server,
@@ -189,7 +189,7 @@ class NovaServersTestCase(test.TestCase):
 
         scenario.boot_and_list_server("img", 0, fakearg="fakearg")
 
-        scenario._boot_server.assert_called_once_with("name", "img", 0,
+        scenario._boot_server.assert_called_once_with("img", 0,
                                                       fakearg="fakearg")
         scenario._list_servers.assert_called_once_with(True)
 
@@ -216,8 +216,8 @@ class NovaServersTestCase(test.TestCase):
 
         scenario._create_volume.assert_called_once_with(5, imageRef="img")
         scenario._boot_server.assert_called_once_with(
-            "name", "img", 0,
-            block_device_mapping={"vda": "volume_id:::1"},
+            "img", 0,
+            block_device_mapping={'vda': 'volume_id:::1'},
             fakearg="f")
         scenario.sleep_between.assert_called_once_with(10, 20)
         scenario._delete_server.assert_called_once_with(fake_server,
@@ -259,8 +259,8 @@ class NovaServersTestCase(test.TestCase):
             nic=nic, assert_nic=assert_nic)
 
         scenario.boot_server("img", 0, **kwargs)
-        scenario._boot_server.assert_called_once_with("name", "img", 0, False,
-                                                      **expected_kwargs)
+        scenario._boot_server.assert_called_once_with(
+            "img", 0, auto_assign_nic=False, **expected_kwargs)
 
     @mock.patch("rally.benchmark.scenarios.nova.servers.NovaServers.clients")
     @mock.patch("rally.benchmark.runners.base.osclients")
@@ -289,8 +289,8 @@ class NovaServersTestCase(test.TestCase):
         scenario.snapshot_server("i", 0, fakearg=2)
 
         scenario._boot_server.assert_has_calls([
-            mock.call("name", "i", 0, fakearg=2),
-            mock.call("name", "image_id", 0, fakearg=2)])
+            mock.call("i", 0, fakearg=2),
+            mock.call("image_id", 0, fakearg=2)])
         scenario._create_image.assert_called_once_with(fake_server)
         scenario._delete_server.assert_has_calls([
             mock.call(fake_server, force=False),
@@ -341,7 +341,7 @@ class NovaServersTestCase(test.TestCase):
 
         scenario.boot_and_live_migrate_server("img", 0, fakearg="fakearg")
 
-        scenario._boot_server.assert_called_once_with("name", "img", 0,
+        scenario._boot_server.assert_called_once_with("img", 0,
                                                       fakearg="fakearg")
 
         scenario._find_host_to_migrate.assert_called_once_with(fake_server)
@@ -367,7 +367,7 @@ class NovaServersTestCase(test.TestCase):
         scenario.boot_and_migrate_server("img", 0,
                                          fakearg="fakearg", **kwargs)
 
-        scenario._boot_server.assert_called_once_with("name", "img", 0,
+        scenario._boot_server.assert_called_once_with("img", 0,
                                                       fakearg="fakearg",
                                                       confirm=confirm)
 
