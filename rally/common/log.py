@@ -15,7 +15,7 @@
 
 import logging
 
-from oslo.config import cfg
+from oslo_config import cfg
 
 from rally.openstack.common import log as oslogging
 

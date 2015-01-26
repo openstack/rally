@@ -347,3 +347,21 @@ class HackingTestCase(test.TestCase):
         checkres = checks.check_no_direct_rally_objects_import(good_import,
                                                                "fakefile")
         self.assertEqual([], list(checkres))
+
+    def test_check_no_oslo_deprecated_import(self):
+
+        bad_imports = ["from oslo.config",
+                       "import oslo.config,"
+                       "from oslo.db",
+                       "import oslo.db,"
+                       "from oslo.i18n",
+                       "import oslo.i18n,"
+                       "from oslo.serialization",
+                       "import oslo.serialization,"
+                       "from oslo.utils",
+                       "import oslo.utils,"]
+
+        for bad_import in bad_imports:
+            checkres = checks.check_no_oslo_deprecated_import(bad_import,
+                                                              "fakefile")
+            self.assertIsNotNone(next(checkres))

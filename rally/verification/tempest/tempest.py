@@ -19,7 +19,7 @@ import shutil
 import subprocess
 import sys
 
-from oslo.serialization import jsonutils
+from oslo_serialization import jsonutils
 
 from rally.common.i18n import _
 from rally.common import log as logging

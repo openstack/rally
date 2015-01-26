@@ -16,7 +16,7 @@
 
 import sys
 
-from oslo.config import cfg
+from oslo_config import cfg
 
 from rally.common.i18n import _
 from rally.common import log as logging

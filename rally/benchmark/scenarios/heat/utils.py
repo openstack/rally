@@ -15,7 +15,7 @@
 
 import time
 
-from oslo.config import cfg
+from oslo_config import cfg
 
 from rally.benchmark.scenarios import base
 from rally.benchmark import utils as bench_utils

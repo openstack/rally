@@ -379,6 +379,21 @@ def check_no_direct_rally_objects_import(logical_line, filename):
                   "After that you can use directly objects e.g. objects.Task")
 
 
+def check_no_oslo_deprecated_import(logical_line, filename):
+    """Check if oslo.foo packages are not imported instead of oslo_foo ones.
+
+    Libraries from oslo.foo namespace are deprecated because of namespace
+    problems.
+
+    N341
+    """
+    if (logical_line.startswith("from oslo.")
+       or logical_line.startswith("import oslo.")):
+        yield (0, "N341: Import oslo module: `from oslo_xyz import ...`. "
+                  "The oslo.xyz namespace was deprecated, use oslo_xyz "
+                  "instead")
+
+
 def factory(register):
     register(check_assert_methods_from_mock)
     register(check_import_of_logging)
@@ -399,3 +414,4 @@ def factory(register):
     register(check_next_on_iterator_method)
     register(check_no_direct_rally_objects_import)
     register(check_concatenate_dict_with_plus_operand)
+    register(check_no_oslo_deprecated_import)

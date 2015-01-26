@@ -23,7 +23,7 @@ import sys
 import webbrowser
 
 import jsonschema
-from oslo.utils import uuidutils
+from oslo_utils import uuidutils
 import yaml
 
 from rally import api

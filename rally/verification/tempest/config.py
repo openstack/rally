@@ -18,7 +18,7 @@ import inspect
 import os
 import time
 
-from oslo.config import cfg
+from oslo_config import cfg
 import requests
 from six.moves import configparser
 from six.moves.urllib import parse

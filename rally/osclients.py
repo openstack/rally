@@ -25,7 +25,7 @@ from keystoneclient.v2_0 import client as keystone_v2
 from keystoneclient.v3 import client as keystone_v3
 from neutronclient.neutron import client as neutron
 from novaclient import client as nova
-from oslo.config import cfg
+from oslo_config import cfg
 from saharaclient import client as sahara
 from troveclient import client as trove
 from zaqarclient.queues import client as zaqar

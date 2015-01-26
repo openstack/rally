@@ -14,7 +14,7 @@
 #    under the License.
 
 import mock
-from oslo.config import cfg
+from oslo_config import cfg
 from oslotest import mockpatch
 
 from rally.benchmark.scenarios.nova import utils

@@ -24,7 +24,7 @@ import string
 import sys
 import time
 
-from oslo.utils import importutils
+from oslo_utils import importutils
 from six import moves
 from sphinx.util import docstrings
 

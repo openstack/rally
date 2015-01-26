@@ -16,7 +16,7 @@
 
 from keystoneclient import exceptions as keystone_exceptions
 import mock
-from oslo.config import cfg
+from oslo_config import cfg
 
 from rally import consts
 from rally import exceptions

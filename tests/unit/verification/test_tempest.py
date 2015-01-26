@@ -19,7 +19,7 @@ import subprocess
 import sys
 
 import mock
-from oslo.serialization import jsonutils
+from oslo_serialization import jsonutils
 import testtools
 
 from rally import exceptions

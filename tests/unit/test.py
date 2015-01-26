@@ -16,7 +16,7 @@
 import os
 
 import mock
-from oslo.config import fixture
+from oslo_config import fixture
 from oslotest import base
 
 from rally import db
