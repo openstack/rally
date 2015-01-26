@@ -169,7 +169,9 @@ class ResourceNotFound(NotFoundException):
 
 
 class TimeoutException(RallyException):
-    msg_fmt = _("Timeout exceeded.")
+    msg_fmt = _("Rally tired waiting for %(resource_type)s %(resource_name)s:"
+                "%(resource_id)s to become %(desired_status)s current "
+                "status %(resource_status)s")
 
 
 class GetResourceFailure(RallyException):
