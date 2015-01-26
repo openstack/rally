@@ -327,25 +327,23 @@ class CinderVolumes(utils.CinderScenario,
         size = random.randint(size["min"], size["max"])
         nested_level = random.randint(nested_level["min"], nested_level["max"])
 
-        servers = [self.get_random_server()]
-        volumes = [self._create_volume(size)]
-        snapshots = [self._create_snapshot(volumes[0].id, False, **kwargs)]
+        source_vol = self._create_volume(size)
+        nes_objs = [(self.get_random_server(), source_vol,
+                     self._create_snapshot(source_vol.id, False, **kwargs))]
 
-        self._attach_volume(servers[0], volumes[0])
+        self._attach_volume(nes_objs[0][0], nes_objs[0][1])
+        snapshot = nes_objs[0][2]
 
-        snapshot = snapshots[0]
         for i in range(nested_level - 1):
             volume = self._create_volume(size, snapshot_id=snapshot.id)
             snapshot = self._create_snapshot(volume.id, False, **kwargs)
             server = self.get_random_server()
-
-            servers.append(server)
-            volumes.append(volume)
-            snapshots.append(snapshot)
-
             self._attach_volume(server, volume)
 
-        for server, volume, snapshot in zip(servers, volumes, snapshots):
+            nes_objs.append((server, volume, snapshot))
+
+        nes_objs.reverse()
+        for server, volume, snapshot in nes_objs:
             self._detach_volume(server, volume)
             self._delete_snapshot(snapshot)
             self._delete_volume(volume)

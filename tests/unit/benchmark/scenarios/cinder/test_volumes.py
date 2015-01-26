@@ -291,3 +291,40 @@ class CinderServersTestCase(test.TestCase):
         self.assertEqual(scenario._delete_volume.call_count, volume_count)
         self.assertEqual(scenario._delete_snapshot.call_count, snapshots_count)
         self.assertEqual(scenario._detach_volume.call_count, attached_count)
+
+    def test_create_nested_snapshots_calls_order(self):
+        fake_volume1 = mock.MagicMock()
+        fake_volume2 = mock.MagicMock()
+        fake_snapshot1 = mock.MagicMock()
+        fake_snapshot2 = mock.MagicMock()
+        fake_clients = fakes.FakeClients()
+        fake_server = fake_clients.nova().servers.create("test_server",
+                                                         "image_id_01",
+                                                         "flavor_id_01")
+        scenario = volumes.CinderVolumes(
+
+            context={"user": {"tenant_id": "fake"},
+                     "users": [{"tenant_id": "fake", "users_per_tenant": 1}],
+                     "tenant": {"id": "fake", "name": "fake",
+                                "servers": [fake_server.uuid]}})
+
+        scenario._attach_volume = mock.MagicMock()
+        scenario._detach_volume = mock.MagicMock()
+        scenario._delete_server = mock.MagicMock()
+        scenario._create_volume = mock.MagicMock(
+            side_effect=[fake_volume1, fake_volume2])
+        scenario._delete_volume = mock.MagicMock()
+        scenario._create_snapshot = mock.MagicMock(
+            side_effect=[fake_snapshot1, fake_snapshot2])
+        scenario._delete_snapshot = mock.MagicMock()
+        scenario._clients = fake_clients
+
+        scenario.create_nested_snapshots_and_attach_volume(
+            nested_level={"min": 2, "max": 2})
+
+        vol_delete_calls = [mock.call(fake_volume2), mock.call(fake_volume1)]
+        snap_delete_calls = [mock.call(fake_snapshot2),
+                             mock.call(fake_snapshot1)]
+
+        scenario._delete_volume.assert_has_calls(vol_delete_calls)
+        scenario._delete_snapshot.assert_has_calls(snap_delete_calls)
