@@ -346,7 +346,7 @@ class NovaScenario(base.Scenario):
                                                 **kwargs)
         # NOTE(msdubov): Nova python client returns only one server even when
         #                min_count > 1, so we have to rediscover all the
-        #                created servers manyally.
+        #                created servers manually.
         servers = filter(lambda server: server.name.startswith(name_prefix),
                          self.clients("nova").servers.list())
         time.sleep(CONF.benchmark.nova_server_boot_prepoll_delay)

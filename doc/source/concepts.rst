@@ -71,7 +71,7 @@ Accordingly, the user may specify the names and parameters of benchmark scenario
 
 In this example, the task configuration file specifies two benchmarks to be run, namely **"NovaServers.boot_server"** and **"CinderVolumes.create_volume"** (benchmark name = *ScenarioClassName.method_name*). Each benchmark scenario may be started several times with different parameters. In our example, that's the case with **"NovaServers.boot_server"**, which is used to test booting servers from different images & flavors.
 
-Note that inside each scenario configuration, the benchmark scenario is actually launched **3 times** (that is specified in the **"runner"** field). It can be specified in **"runner"** in more detail how exactly the benchmark scenario should be launched; we elaborate on that in the *"Sceario Runners"* section below.
+Note that inside each scenario configuration, the benchmark scenario is actually launched **3 times** (that is specified in the **"runner"** field). It can be specified in **"runner"** in more detail how exactly the benchmark scenario should be launched; we elaborate on that in the *"Scenario Runners"* section below.
 
 
 .. _ScenariosDevelopment:
