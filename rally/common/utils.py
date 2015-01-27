@@ -179,7 +179,7 @@ def import_modules_from_package(package):
             try_append_module(module_name, sys.modules)
 
 
-def _log_wrapper(obj, log, msg, **kw):
+def _log_wrapper(obj, log_function, msg, **kw):
     """A logging wrapper for any method of a class.
 
     Class instances that use this decorator should have self.task or
@@ -192,7 +192,7 @@ def _log_wrapper(obj, log, msg, **kw):
     "Task <Task UUID> | Completed: <Logging message>"
 
     :param obj: task or deployment which must be attribute of "self"
-    :param log: Logging method to be used, e.g. LOG.info
+    :param log_function: Logging method to be used, e.g. LOG.info
     :param msg: Text message (possibly parameterized) to be put to the log
     :param **kw: Parameters for msg
     """
@@ -201,24 +201,46 @@ def _log_wrapper(obj, log, msg, **kw):
         def wrapper(self, *args, **kwargs):
             params = {"msg": msg % kw, "obj_name": obj.title(),
                       "uuid": getattr(self, obj)["uuid"]}
-            log(_("%(obj_name)s %(uuid)s | Starting:  %(msg)s") % params)
+            log_function(_("%(obj_name)s %(uuid)s | Starting:  %(msg)s") %
+                         params)
             result = f(self, *args, **kwargs)
-            log(_("%(obj_name)s %(uuid)s | Completed: %(msg)s") % params)
+            log_function(_("%(obj_name)s %(uuid)s | Completed: %(msg)s") %
+                         params)
             return result
         return wrapper
     return decorator
 
 
-def log_task_wrapper(log, msg, **kw):
-    return _log_wrapper("task", log, msg, **kw)
+def log_task_wrapper(log_function, msg, **kw):
+    return _log_wrapper("task", log_function, msg, **kw)
 
 
-def log_deploy_wrapper(log, msg, **kw):
-    return _log_wrapper("deployment", log, msg, **kw)
+def log_deploy_wrapper(log_function, msg, **kw):
+    return _log_wrapper("deployment", log_function, msg, **kw)
 
 
-def log_verification_wrapper(log, msg, **kw):
-    return _log_wrapper("verification", log, msg, **kw)
+def log_verification_wrapper(log_function, msg, **kw):
+    return _log_wrapper("verification", log_function, msg, **kw)
+
+
+def log_deprecated(message, rally_version, log_function=None):
+    """A wrapper marking a certain method as decrecated.
+
+    :param message: Message that describes why the method was deprecated
+    :param rally_version: version of Rally when the method was deprecated
+    :param log_function: Logging method to be used, e.g. LOG.info
+    """
+    log_function = log_function or LOG.warning
+
+    def decorator(f):
+        @functools.wraps(f)
+        def wrapper(*args, **kwargs):
+            log_function("%(msg)s (deprecated in Rally v%(version)s)" %
+                         {"msg": message, "version": rally_version})
+            result = f(*args, **kwargs)
+            return result
+        return wrapper
+    return decorator
 
 
 def load_plugins(directory):
