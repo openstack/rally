@@ -38,4 +38,4 @@ def create_report(results):
     with open(template_path) as f:
         template = mako.template.Template(f.read(), strict_undefined=True)
         output = template.render(**template_kw)
-        return output.encode('utf8')
+        return output.encode("utf8")

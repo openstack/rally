@@ -134,23 +134,23 @@ class Task(object):
         db.task_delete(uuid, status=status)
 
     def _update(self, values):
-        self.task = db.task_update(self.task['uuid'], values)
+        self.task = db.task_update(self.task["uuid"], values)
 
     def update_status(self, status):
-        self._update({'status': status})
+        self._update({"status": status})
 
     def update_verification_log(self, log):
-        self._update({'verification_log': json.dumps(log)})
+        self._update({"verification_log": json.dumps(log)})
 
     def set_failed(self, log=""):
-        self._update({'status': consts.TaskStatus.FAILED,
-                      'verification_log': json.dumps(log)})
+        self._update({"status": consts.TaskStatus.FAILED,
+                      "verification_log": json.dumps(log)})
 
     def get_results(self):
         return db.task_result_get_all_by_uuid(self.task["uuid"])
 
     def append_results(self, key, value):
-        db.task_result_create(self.task['uuid'], key, value)
+        db.task_result_create(self.task["uuid"], key, value)
 
     def delete(self, status=None):
-        db.task_delete(self.task['uuid'], status=status)
+        db.task_delete(self.task["uuid"], status=status)
