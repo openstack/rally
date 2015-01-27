@@ -29,41 +29,41 @@ class ExistingServers(provider.ProviderFactory):
     """
 
     CREDENTIALS_SCHEMA = {
-        'type': 'object',
-        'properties': {
-            'host': {'type': 'string'},
-            'port': {'type': 'integer'},
-            'user': {'type': 'string'},
-            'key': {'type': 'string'},
-            'password': {'type': 'string'}
+        "type": "object",
+        "properties": {
+            "host": {"type": "string"},
+            "port": {"type": "integer"},
+            "user": {"type": "string"},
+            "key": {"type": "string"},
+            "password": {"type": "string"}
         },
-        'required': ['host', 'user']
+        "required": ["host", "user"]
     }
 
     CONFIG_SCHEMA = {
-        'type': 'object',
-        'properties': {
-            'type': {'type': 'string'},
-            'credentials': {
-                'type': 'array',
-                'items': CREDENTIALS_SCHEMA
+        "type": "object",
+        "properties": {
+            "type": {"type": "string"},
+            "credentials": {
+                "type": "array",
+                "items": CREDENTIALS_SCHEMA
             },
         },
-        'required': ['credentials']
+        "required": ["credentials"]
     }
 
     def __init__(self, deployment, config):
         super(ExistingServers, self).__init__(deployment, config)
-        self.credentials = config['credentials']
+        self.credentials = config["credentials"]
 
     def create_servers(self):
         servers = []
         for endpoint in self.credentials:
-            servers.append(provider.Server(host=endpoint['host'],
-                                           user=endpoint['user'],
-                                           key=endpoint.get('key'),
-                                           password=endpoint.get('password'),
-                                           port=endpoint.get('port', 22)))
+            servers.append(provider.Server(host=endpoint["host"],
+                                           user=endpoint["user"],
+                                           key=endpoint.get("key"),
+                                           password=endpoint.get("password"),
+                                           port=endpoint.get("port", 22)))
         return servers
 
     def destroy_servers(self):

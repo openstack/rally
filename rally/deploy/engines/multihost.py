@@ -59,13 +59,13 @@ class MultihostEngine(engine.EngineFactory):
 
     def __init__(self, *args, **kwargs):
         super(MultihostEngine, self).__init__(*args, **kwargs)
-        self.config = self.deployment['config']
+        self.config = self.deployment["config"]
         self.nodes = []
 
     def _deploy_node(self, config):
         deployment = objects.Deployment(config=config,
-                                        parent_uuid=self.deployment['uuid'])
-        deployer = engine.EngineFactory.get_engine(config['type'], deployment)
+                                        parent_uuid=self.deployment["uuid"])
+        deployer = engine.EngineFactory.get_engine(config["type"], deployment)
         with deployer:
             endpoints = deployer.make_deploy()
         return deployer, endpoints
@@ -85,16 +85,16 @@ class MultihostEngine(engine.EngineFactory):
     def deploy(self):
         self.deployment.update_status(consts._DeployStatus.DEPLOY_SUBDEPLOY)
         self.controller, self.endpoints = self._deploy_node(
-            self.config['controller'])
+            self.config["controller"])
         endpoint = self.endpoints[0]
         self.controller_ip = parse.urlparse(endpoint.auth_url).hostname
 
-        for node_config in self.config['nodes']:
+        for node_config in self.config["nodes"]:
             self._update_controller_ip(node_config)
             self.nodes.append(self._deploy_node(node_config)[0])
         return self.endpoints
 
     def cleanup(self):
-        subdeploys = db.deployment_list(parent_uuid=self.deployment['uuid'])
+        subdeploys = db.deployment_list(parent_uuid=self.deployment["uuid"])
         for subdeploy in subdeploys:
-            rally.api.destroy_deploy(subdeploy['uuid'])
+            rally.api.destroy_deploy(subdeploy["uuid"])

@@ -17,4 +17,4 @@ from rally.common import utils
 from rally.deploy.serverprovider.provider import *  # noqa
 
 
-utils.import_modules_from_package('rally.deploy.serverprovider.providers')
+utils.import_modules_from_package("rally.deploy.serverprovider.providers")

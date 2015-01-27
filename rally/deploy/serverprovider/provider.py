@@ -40,17 +40,17 @@ class Server(utils.ImmutableMixin):
 
     def get_credentials(self):
         return {
-            'host': self.host,
-            'port': self.port,
-            'user': self.user,
-            'key': self.key,
-            'password': self.password,
+            "host": self.host,
+            "port": self.port,
+            "user": self.user,
+            "key": self.key,
+            "password": self.password,
         }
 
     @classmethod
     def from_credentials(cls, creds):
-        return cls(creds['host'], creds['user'], key=creds['key'],
-                   port=creds['port'], password=creds['password'])
+        return cls(creds["host"], creds["user"], key=creds["key"],
+                   port=creds["port"], password=creds["password"])
 
 
 class ResourceManager(object):
@@ -104,7 +104,7 @@ class ProviderFactory(object):
 
     Example of usage with a simple provider:
 
-    # Add new provider with __name__ == 'A'
+    # Add new provider with __name__ == "A"
     class A(ProviderFactory):
         def __init__(self, deployment, config):
             # do something
@@ -128,7 +128,7 @@ class ProviderFactory(object):
     def validate(self):
         # TODO(miarmak): remove this checking, when config schema is done for
         # all available providers
-        if hasattr(self, 'CONFIG_SCHEMA'):
+        if hasattr(self, "CONFIG_SCHEMA"):
             jsonschema.validate(self.config, self.CONFIG_SCHEMA)
 
     @staticmethod
@@ -142,7 +142,7 @@ class ProviderFactory(object):
     @staticmethod
     def get_provider(config, deployment):
         """Returns instance of server provider by name."""
-        provider_cls = ProviderFactory.get_by_name(config['type'])
+        provider_cls = ProviderFactory.get_by_name(config["type"])
         return provider_cls(deployment, config)
 
     @staticmethod

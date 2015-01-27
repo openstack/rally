@@ -40,7 +40,7 @@ class EngineFactory(object):
 
     Example of usage with a simple engine:
 
-    # Add new engine with __name__ == 'A'
+    # Add new engine with __name__ == "A"
     class A(EngineFactory):
         def __init__(self, deployment):
             # do something
@@ -59,24 +59,24 @@ class EngineFactory(object):
     operations to a deployment. Any unhandled exceptions bring a status
     of the deployment to the inconsistent state.
 
-    with EngineFactory.get_engine('A', deployment) as deploy:
+    with EngineFactory.get_engine("A", deployment) as deploy:
         # deploy is an instance of the A engine
         # perform all usage operations on your cloud
     """
     def __init__(self, deployment):
         self.deployment = deployment
-        self.config = deployment['config']
+        self.config = deployment["config"]
 
     def validate(self):
         # TODO(sskripnick): remove this checking when config schema
         # is done for all available engines
-        if hasattr(self, 'CONFIG_SCHEMA'):
+        if hasattr(self, "CONFIG_SCHEMA"):
             jsonschema.validate(self.config, self.CONFIG_SCHEMA)
 
     def get_provider(self):
-        if 'provider' in self.config:
+        if "provider" in self.config:
             return provider.ProviderFactory.get_provider(
-                self.config['provider'], self.deployment)
+                self.config["provider"], self.deployment)
 
     @staticmethod
     def get_by_name(name):
@@ -93,9 +93,9 @@ class EngineFactory(object):
             engine_cls = EngineFactory.get_by_name(name)
             return engine_cls(deployment)
         except exceptions.NoSuchEngine:
-            LOG.error(_('Deployment %(uuid)s: Deploy engine for %(name)s '
-                        'does not exist.') %
-                      {'uuid': deployment['uuid'], 'name': name})
+            LOG.error(_("Deployment %(uuid)s: Deploy engine for %(name)s "
+                        "does not exist.") %
+                      {"uuid": deployment["uuid"], "name": name})
             deployment.update_status(consts.DeployStatus.DEPLOY_FAILED)
             raise exceptions.NoSuchEngine(engine_name=name)
 
@@ -139,9 +139,9 @@ class EngineFactory(object):
                 exc_info = (exc_type, exc_value, exc_traceback)
             LOG.error(_("Deployment %(uuid)s: Error has occurred into context "
                         "of the deployment"),
-                      {'uuid': self.deployment['uuid']},
+                      {"uuid": self.deployment["uuid"]},
                       exc_info=exc_info)
-            status = self.deployment['status']
+            status = self.deployment["status"]
             if status in (consts.DeployStatus.DEPLOY_INIT,
                           consts.DeployStatus.DEPLOY_STARTED):
                 self.deployment.update_status(

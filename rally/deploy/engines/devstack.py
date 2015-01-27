@@ -27,14 +27,14 @@ from rally import objects
 
 
 LOG = logging.getLogger(__name__)
-DEVSTACK_REPO = 'https://git.openstack.org/cgit/openstack-dev/devstack.git'
-DEVSTACK_BRANCH = 'master'
-DEVSTACK_USER = 'rally'
+DEVSTACK_REPO = "https://git.openstack.org/cgit/openstack-dev/devstack.git"
+DEVSTACK_BRANCH = "master"
+DEVSTACK_USER = "rally"
 
 
 def get_script(name):
     return open(os.path.join(os.path.abspath(
-        os.path.dirname(__file__)), 'devstack', name), 'rb')
+        os.path.dirname(__file__)), "devstack", name), "rb")
 
 
 def get_updated_server(server, **kwargs):
@@ -56,74 +56,74 @@ class DevstackEngine(engine.EngineFactory):
             },
             "provider": {
                 "type": "ExistingServers",
-                "credentials": [{'user': 'root', 'host': '10.2.0.8'}]
+                "credentials": [{"user": "root", "host": "10.2.0.8"}]
             }
         }
     """
 
     CONFIG_SCHEMA = {
-        'type': 'object',
-        'properties': {
-            'type': {'type': 'string'},
-            'provider': {'type': 'object'},
-            'localrc': {'type': 'object'},
-            'devstack_repo': {'type': 'string'},
-            'devstack_branch': {'type': 'string'},
+        "type": "object",
+        "properties": {
+            "type": {"type": "string"},
+            "provider": {"type": "object"},
+            "localrc": {"type": "object"},
+            "devstack_repo": {"type": "string"},
+            "devstack_branch": {"type": "string"},
         },
-        'required': ['type', 'provider']
+        "required": ["type", "provider"]
     }
 
     def __init__(self, deployment):
         super(DevstackEngine, self).__init__(deployment)
         self.localrc = {
-            'DATABASE_PASSWORD': 'rally',
-            'RABBIT_PASSWORD': 'rally',
-            'SERVICE_TOKEN': 'rally',
-            'SERVICE_PASSWORD': 'rally',
-            'ADMIN_PASSWORD': 'admin',
-            'RECLONE': 'yes',
-            'SYSLOG': 'yes',
+            "DATABASE_PASSWORD": "rally",
+            "RABBIT_PASSWORD": "rally",
+            "SERVICE_TOKEN": "rally",
+            "SERVICE_PASSWORD": "rally",
+            "ADMIN_PASSWORD": "admin",
+            "RECLONE": "yes",
+            "SYSLOG": "yes",
         }
-        if 'localrc' in self.config:
-            self.localrc.update(self.config['localrc'])
+        if "localrc" in self.config:
+            self.localrc.update(self.config["localrc"])
 
     @utils.log_deploy_wrapper(LOG.info, _("Prepare server for devstack"))
     def prepare_server(self, server):
         script_path = os.path.abspath(os.path.join(os.path.dirname(__file__),
-                                                   'devstack', 'install.sh'))
-        server.ssh.run('/bin/sh -e', stdin=open(script_path, 'rb'))
+                                                   "devstack", "install.sh"))
+        server.ssh.run("/bin/sh -e", stdin=open(script_path, "rb"))
         if server.password:
-            server.ssh.run('chpasswd', stdin='rally:%s' % server.password)
+            server.ssh.run("chpasswd", stdin="rally:%s" % server.password)
 
     @utils.log_deploy_wrapper(LOG.info, _("Deploy devstack"))
     def deploy(self):
         self.servers = self.get_provider().create_servers()
-        devstack_repo = self.config.get('devstack_repo', DEVSTACK_REPO)
-        devstack_branch = self.config.get('devstack_branch', DEVSTACK_BRANCH)
-        localrc = ''
+        devstack_repo = self.config.get("devstack_repo", DEVSTACK_REPO)
+        devstack_branch = self.config.get("devstack_branch", DEVSTACK_BRANCH)
+        localrc = ""
         for k, v in six.iteritems(self.localrc):
-            localrc += '%s=%s\n' % (k, v)
+            localrc += "%s=%s\n" % (k, v)
 
         for server in self.servers:
-            self.deployment.add_resource(provider_name='DevstackEngine',
-                                         type='credentials',
+            self.deployment.add_resource(provider_name="DevstackEngine",
+                                         type="credentials",
                                          info=server.get_credentials())
-            cmd = '/bin/sh -e -s %s %s' % (devstack_repo, devstack_branch)
-            server.ssh.run(cmd, stdin=get_script('install.sh'))
+            cmd = "/bin/sh -e -s %s %s" % (devstack_repo, devstack_branch)
+            server.ssh.run(cmd, stdin=get_script("install.sh"))
             devstack_server = get_updated_server(server, user=DEVSTACK_USER)
             devstack_server.ssh.run("cat > ~/devstack/localrc", stdin=localrc)
-            devstack_server.ssh.run('~/devstack/stack.sh')
+            devstack_server.ssh.run("~/devstack/stack.sh")
 
-        admin_endpoint = objects.Endpoint('http://%s:5000/v2.0/' %
-                                          self.servers[0].host, 'admin',
-                                          self.localrc['ADMIN_PASSWORD'],
-                                          'admin',
+        admin_endpoint = objects.Endpoint("http://%s:5000/v2.0/" %
+                                          self.servers[0].host, "admin",
+                                          self.localrc["ADMIN_PASSWORD"],
+                                          "admin",
                                           consts.EndpointPermission.ADMIN)
         return {"admin": admin_endpoint}
 
     def cleanup(self):
-        for resource in self.deployment.get_resources(type='credentials'):
+        for resource in self.deployment.get_resources(type="credentials"):
             server = provider.Server.from_credentials(resource.info)
             devstack_server = get_updated_server(server, user=DEVSTACK_USER)
-            devstack_server.ssh.run('~/devstack/unstack.sh')
+            devstack_server.ssh.run("~/devstack/unstack.sh")
             self.deployment.delete_resource(resource.id)
