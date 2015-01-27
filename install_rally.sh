@@ -71,7 +71,7 @@ init_variables() {
 
 install_rhel_based_system_requirements() {
   local install_rally_dependencies='wget'
-  local cryptography_dependencies='gcc libffi-devel python-devel openssl-devel gmp-devel libpq-devel'
+  local cryptography_dependencies='gcc libffi-devel python-devel openssl-devel gmp-devel postgresql-devel'
   local external_dependencies='libxml2-devel libxslt-devel' # dependencies from projects, which are used by rally
   yum -y install ${install_rally_dependencies} ${cryptography_dependencies} ${external_dependencies}
 }
