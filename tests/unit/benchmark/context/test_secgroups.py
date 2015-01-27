@@ -27,6 +27,7 @@ class SecGroupContextTestCase(test.TestCase):
         self.users = 2
         task = mock.MagicMock()
         self.ctx_without_keys = {
+            "admin": {"endpoint": "endpoint"},
             "users": [{"tenant_id": "uuid1",
                        "endpoint": mock.MagicMock()}] * self.users,
             "tenants": {"uuid1": {"id": "uuid1", "name": "uuid1"}},
@@ -74,8 +75,41 @@ class SecGroupContextTestCase(test.TestCase):
         rally_open = fake_nova.security_groups.find(secgroup.SSH_GROUP_NAME)
         self.assertEqual(len(rally_open.rules), 3)
 
+    @mock.patch("rally.benchmark.context.secgroup.osclients.Clients")
     @mock.patch("rally.benchmark.context.secgroup._prepare_open_secgroup")
-    def test_sec_group_setup(self, mock_prepare_open_secgroup):
+    @mock.patch("rally.benchmark.wrappers.network.NetworkWrapper")
+    @mock.patch("rally.benchmark.wrappers.network.wrap")
+    @mock.patch("novaclient.v1_1.security_groups.SecurityGroup")
+    def test_sec_group_setup_secgroup_supported(self,
+                                                mock_security_group,
+                                                mock_network_wrap,
+                                                mock_network_wrapper,
+                                                mock_prepare_open_secgroup,
+                                                mock_osclients):
+        mock_network_wrap.return_value = mock_network_wrapper
+        mock_network_wrapper.supports_security_group.return_value = (
+            True, "")
+        mock_prepare_open_secgroup.return_value = mock_security_group
+        mock_osclients.return_value = mock.MagicMock()
+
         secgrp_ctx = secgroup.AllowSSH(self.ctx_without_keys)
         secgrp_ctx.setup()
+        self.assertEqual(len(secgrp_ctx.secgroup), 1)
         secgrp_ctx.cleanup()
+        self.assertTrue(mock_security_group.delete.called)
+
+    @mock.patch("rally.benchmark.context.secgroup.osclients.Clients")
+    @mock.patch("rally.benchmark.wrappers.network.NetworkWrapper")
+    @mock.patch("rally.benchmark.wrappers.network.wrap")
+    def test_sec_group_setup_secgroup_unsupported(self,
+                                                  mock_network_wrap,
+                                                  mock_network_wrapper,
+                                                  mock_osclients):
+        mock_network_wrap.return_value = mock_network_wrapper
+        mock_network_wrapper.supports_security_group.return_value = (
+            False, "Not supported")
+        mock_osclients.return_value = mock.MagicMock()
+
+        secgrp_ctx = secgroup.AllowSSH(self.ctx_without_keys)
+        secgrp_ctx.setup()
+        self.assertEqual(len(secgrp_ctx.secgroup), 0)

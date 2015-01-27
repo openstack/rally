@@ -94,6 +94,10 @@ class NetworkWrapper(object):
     def delete_floating_ip(self):
         """Delete floating IP."""
 
+    @abc.abstractmethod
+    def supports_security_group(self):
+        """Checks whether security group is supported."""
+
 
 class NovaNetworkWrapper(NetworkWrapper):
     SERVICE_IMPL = consts.Service.NOVA
@@ -169,6 +173,14 @@ class NovaNetworkWrapper(NetworkWrapper):
         bench_utils.wait_for_delete(
             {"id": fip_id},
             update_resource=lambda i: self.get_floating_ip(i, do_raise=True))
+
+    def supports_security_group(self):
+        """Check whether security group is supported
+
+        :return: result tuple. Always (True, "") for nova-network.
+        :rtype: (bool, string)
+        """
+        return True, ""
 
 
 class NeutronWrapper(NetworkWrapper):
@@ -353,6 +365,20 @@ class NeutronWrapper(NetworkWrapper):
         :param **kwargs: for compatibility, not used here
         """
         self.client.delete_floatingip(fip_id)
+
+    def supports_security_group(self):
+        """Check whether security group is supported
+
+        :return: result tuple
+        :rtype: (bool, string)
+        """
+        extensions = self.client.list_extensions().get("extensions", [])
+        use_sg = any(ext.get("alias") == "security-group"
+                     for ext in extensions)
+        if use_sg:
+            return True, ""
+
+        return False, _("neutron driver does not support security groups")
 
 
 def wrap(clients, config=None):

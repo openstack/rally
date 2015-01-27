@@ -140,6 +140,10 @@ class NovaNetworkWrapperTestCase(test.TestCase):
             wrap.get_floating_ip.mock_calls,
             [mock.call({"id": "fip_id"}, do_raise=True)] * 4)
 
+    def test_supports_secgroup(self):
+        wrap = self.get_wrapper()
+        self.assertTrue(wrap.supports_security_group()[0])
+
 
 class NeutronWrapperTestCase(test.TestCase):
     def get_wrapper(self, *skip_cidrs, **kwargs):
@@ -438,6 +442,19 @@ class NeutronWrapperTestCase(test.TestCase):
         wrap.client.create_port.assert_called_with(
             {"port": {"network_id": "foo_net",
                       "name": "random_name", "foo": "bar"}})
+
+    def test_supports_security_group(self):
+        wrap = self.get_wrapper()
+        wrap.client.list_extensions.return_value = (
+            {"extensions": [{"alias": "security-group"}]})
+        self.assertTrue(wrap.supports_security_group()[0])
+
+        wrap.client.list_extensions.return_value = (
+            {"extensions": [{"alias": "dummy-group"}]})
+        self.assertFalse(wrap.supports_security_group()[0])
+
+        wrap.client.list_extensions.return_value = {}
+        self.assertFalse(wrap.supports_security_group()[0])
 
 
 class FunctionsTestCase(test.TestCase):
