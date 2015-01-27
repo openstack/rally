@@ -418,11 +418,11 @@ class TaskCommands(object):
         :param task_id: Task uuid
         """
 
-        results = map(lambda x: {"key": x["key"], "result": x["data"]["raw"],
-                                 "sla": x["data"]["sla"],
-                                 "load_duration": x["data"]["load_duration"],
-                                 "full_duration": x["data"]["full_duration"]},
-                      objects.Task.get(task_id).get_results())
+        results = [{"key": x["key"], "result": x["data"]["raw"],
+                    "sla": x["data"]["sla"],
+                    "load_duration": x["data"]["load_duration"],
+                    "full_duration": x["data"]["full_duration"]}
+                   for x in objects.Task.get(task_id).get_results()]
 
         if results:
             print(json.dumps(results, sort_keys=True, indent=4))
@@ -468,7 +468,7 @@ class TaskCommands(object):
         if not all_deployments:
             filters.setdefault("deployment", deployment)
 
-        task_list = map(lambda x: x.to_dict(), objects.Task.list(**filters))
+        task_list = [task.to_dict() for task in objects.Task.list(**filters)]
 
         for x in task_list:
             x["duration"] = x["updated_at"] - x["created_at"]

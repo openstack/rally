@@ -91,7 +91,8 @@ class NovaSecurityGroupTestCase(test.TestCase):
         secgroups[2].name = "default"
 
         mock_manager().list.return_value = secgroups
-        self.assertEqual(secgroups[:2], resources.NovaSecurityGroup().list())
+        self.assertSequenceEqual(secgroups[:2],
+                                 resources.NovaSecurityGroup().list())
 
 
 class NeutronMixinTestCase(test.TestCase):
@@ -248,5 +249,5 @@ class KeystoneMixinTestCase(test.TestCase):
 
         mock_wrap().list_some_resource2s.return_value = result
 
-        self.assertEqual(result[:2], keystone_mixin.list())
+        self.assertSequenceEqual(result[:2], keystone_mixin.list())
         mock_wrap().list_some_resource2s.assert_called_once_with()

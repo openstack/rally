@@ -173,25 +173,21 @@ class VerifyCommands(object):
         print ("\nTests:\n")
         fields = ["name", "time", "status"]
 
-        values = map(objects.Verification,
-                     six.itervalues(tests.data["test_cases"]))
+        values = [objects.Verification(test)
+                  for test in six.itervalues(tests.data["test_cases"])]
         common_cliutils.print_list(values, fields, sortby_index=sortby_index)
 
         if detailed:
             for test in six.itervalues(tests.data["test_cases"]):
                 if test["status"] == "FAIL":
-                    formatted_test = (
-                        "====================================================="
-                        "=================\n"
+                    header = cliutils.make_header(
                         "FAIL: %(name)s\n"
                         "Time: %(time)s\n"
-                        "Type: %(type)s\n"
-                        "-----------------------------------------------------"
-                        "-----------------\n"
-                        "%(log)s\n"
-                    ) % {
-                        "name": test["name"], "time": test["time"],
-                        "type": test["failure"]["type"],
+                        "Type: %(type)s" % {"name": test["name"],
+                                            "time": test["time"],
+                                            "type": test["failure"]["type"]})
+                    formatted_test = "%(header)s%(log)s\n" % {
+                        "header": header,
                         "log": test["failure"]["log"]}
                     print (formatted_test)
 

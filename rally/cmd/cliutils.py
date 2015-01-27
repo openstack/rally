@@ -136,8 +136,12 @@ def _methods_of(cls):
 
     :returns: a list of tuples of the form (method_name, method)
     """
-    methods = [m for m in inspect.getmembers(cls, predicate=inspect.ismethod)
-               if not m[0].startswith('_')]
+    # The idea of unbound methods exists in Python 2 and was removed in
+    # Python 3, so "inspect.ismethod" is used here for Python 2 and
+    # "inspect.isfunction" for Python 3.
+    all_methods = inspect.getmembers(
+        cls, predicate=lambda x: inspect.ismethod(x) or inspect.isfunction(x))
+    methods = [m for m in all_methods if not m[0].startswith("_")]
     return methods
 
 
@@ -367,10 +371,10 @@ _rally()
 }
 complete -F _rally rally
 """
-    completion = ""
+    completion = []
     for category, cmds in main.categories.items():
         for name, command in _methods_of(cmds):
-            args_list = list()
+            args_list = []
             for arg in getattr(command, "args", []):
                 if getattr(command, "deprecated_args", []):
                     if arg[0][0] not in command.deprecated_args:
@@ -379,6 +383,6 @@ complete -F _rally rally
                     args_list.append(arg[0][0])
             args = " ".join(args_list)
 
-            completion += """    OPTS["{cat}_{cmd}"]="{args}"\n""".format(
-                    cat=category, cmd=name, args=args)
-    return bash_data % {"data": completion}
+            completion.append("""    OPTS["{cat}_{cmd}"]="{args}"\n""".format(
+                    cat=category, cmd=name, args=args))
+    return bash_data % {"data": "".join(sorted(completion))}

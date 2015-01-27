@@ -34,7 +34,8 @@ class VMScenarioTestCase(test.TestCase):
                                         ".bench_utils.wait_for")
         self.useFixture(self.wait_for)
 
-    @mock.patch('__builtin__.open', side_effect=mock.mock_open(), create=True)
+    @mock.patch("%s.open" % VMTASKS_UTILS,
+                side_effect=mock.mock_open(), create=True)
     def test_run_action(self, mock_open):
         mock_ssh = mock.MagicMock()
         vm_scenario = utils.VMScenario()

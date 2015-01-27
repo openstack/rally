@@ -79,14 +79,15 @@ class Tempest(base.Context):
             cmd = ("cd %(tempest_dir)s "
                    "&& %(venv)s python tempest/stress/tools/cleanup.py" %
                    {
-                       "tempest_dir": self.verifier.path,
+                       "tempest_dir": self.verifier.path(),
                        "venv": self.verifier.venv_wrapper})
             LOG.debug("Cleanup started by the command: %s" % cmd)
 
             subprocess.check_call(cmd, shell=True, env=self.verifier.env,
-                                  cwd=self.verifier.path)
+                                  cwd=self.verifier.path())
         except subprocess.CalledProcessError:
-            LOG.error("Tempest cleanup failed.")
-
-        if os.path.exists(self.results_dir):
-            shutil.rmtree(self.results_dir)
+            LOG.error("Tempest cleanup failed")
+            raise exceptions.CleanUpException()
+        finally:
+            if os.path.exists(self.results_dir):
+                shutil.rmtree(self.results_dir)

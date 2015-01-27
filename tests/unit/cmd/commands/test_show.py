@@ -42,7 +42,7 @@ class ShowCommandsTestCase(test.TestCase):
     def test_images(self, mock_deployment_get, mock_get_glance,
                     mock_struct, mock_formatter, mock_print_list):
         self.fake_glance_client.images.create('image', None, None, None)
-        fake_image = self.fake_glance_client.images.cache.values()[0]
+        fake_image = list(self.fake_glance_client.images.cache.values())[0]
         fake_image.size = 1
         mock_get_glance.return_value = self.fake_glance_client
         mock_deployment_get.return_value = {'admin': self.fake_endpoint}
@@ -70,7 +70,7 @@ class ShowCommandsTestCase(test.TestCase):
     def test_flavors(self, mock_deployment_get, mock_get_nova,
                      mock_struct, mock_formatter, mock_print_list):
         self.fake_nova_client.flavors.create()
-        fake_flavor = self.fake_nova_client.flavors.cache.values()[0]
+        fake_flavor = list(self.fake_nova_client.flavors.cache.values())[0]
         fake_flavor.id, fake_flavor.name, fake_flavor.vcpus = 1, 'm1.fake', 1
         fake_flavor.ram, fake_flavor.swap, fake_flavor.disk = 1024, 128, 10
         mock_get_nova.return_value = self.fake_nova_client
@@ -101,7 +101,7 @@ class ShowCommandsTestCase(test.TestCase):
     def test_networks(self, mock_deployment_get, mock_get_nova,
                       mock_struct, mock_print_list):
         self.fake_nova_client.networks.create(1234)
-        fake_network = self.fake_nova_client.networks.cache.values()[0]
+        fake_network = list(self.fake_nova_client.networks.cache.values())[0]
         fake_network.label = 'fakenet'
         fake_network.cidr = '10.0.0.0/24'
         mock_get_nova.return_value = self.fake_nova_client
@@ -126,7 +126,8 @@ class ShowCommandsTestCase(test.TestCase):
     @mock.patch('rally.cmd.commands.show.db.deployment_get')
     def test_secgroups(self, mock_deployment_get, mock_get_nova,
                        mock_struct, mock_print_list):
-        fake_secgroup = self.fake_nova_client.security_groups.cache.values()[0]
+        fake_secgroup = list(
+            self.fake_nova_client.security_groups.cache.values())[0]
         fake_secgroup.id = 0
         mock_get_nova.return_value = self.fake_nova_client
         mock_deployment_get.return_value = {'admin': self.fake_endpoint}
@@ -151,7 +152,7 @@ class ShowCommandsTestCase(test.TestCase):
     def test_keypairs(self, mock_deployment_get, mock_get_nova,
                       mock_struct, mock_print_list):
         self.fake_nova_client.keypairs.create('keypair')
-        fake_keypair = self.fake_nova_client.keypairs.cache.values()[0]
+        fake_keypair = list(self.fake_nova_client.keypairs.cache.values())[0]
         fake_keypair.fingerprint = '84:87:58'
         mock_get_nova.return_value = self.fake_nova_client
         mock_deployment_get.return_value = {'admin': self.fake_endpoint}

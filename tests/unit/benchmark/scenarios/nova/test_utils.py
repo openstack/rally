@@ -641,7 +641,7 @@ class NovaScenarioTestCase(test.TestCase):
 
         self.assertEqual(len(fake_secgroups), clients.call_count)
 
-        self.assertEqual(
+        self.assertSequenceEqual(
             map(lambda x: mock.call(x.id), fake_secgroups),
             clients().security_groups.delete.call_args_list)
         self._test_atomic_action_timer(

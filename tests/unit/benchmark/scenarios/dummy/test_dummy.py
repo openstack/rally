@@ -47,7 +47,7 @@ class DummyTestCase(test.TestCase):
         for i in range(100):
             self.assertRaises(dummy.DummyScenarioException,
                               scenario.dummy_exception_probability,
-                              {'exception_probability': 1})
+                              exception_probability=1)
 
     def test_dummy_dummy_with_scenario_output(self):
         scenario = dummy.Dummy()
@@ -66,4 +66,4 @@ class DummyTestCase(test.TestCase):
         for i in range(10):
             self.assertRaises(KeyError,
                               scenario.dummy_random_fail_in_atomic,
-                              {'exception_probability': 1})
+                              exception_probability=1)

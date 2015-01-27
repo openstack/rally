@@ -290,64 +290,72 @@ class LxcProviderTestCase(test.TestCase):
         self.assertRaises(exceptions.InvalidConfigException,
                           lxc.LxcProvider, self.deployment, config)
 
-    @mock.patch(MOD_NAME + 'LxcHost')
-    @mock.patch(MOD_NAME + 'provider.ProviderFactory.get_provider')
+    @mock.patch(MOD_NAME + "LxcHost")
+    @mock.patch(MOD_NAME + "provider.ProviderFactory.get_provider")
     def test_create_servers(self, m_get_provider, m_lxchost):
         fake_provider = mock.Mock()
-        fake_provider.create_servers.return_value = ['server1', 'server2']
+        fake_provider.create_servers.return_value = ["server1", "server2"]
         fake_hosts = []
         fake_sos = []
         for i in (1, 2):
             fake_host_sos = [mock.Mock(), mock.Mock()]
             fake_sos.extend(fake_host_sos)
             fake_host = mock.Mock()
-            fake_host.containers = ['c-%d-1' % i, 'c-%d-2' % i]
+            fake_host.containers = ["c-%d-1" % i, "c-%d-2" % i]
             fake_host._port_cache = {1: i, 2: i}
-            fake_host.config = {'netwrork': 'fake-%d' % i}
-            fake_host.server.get_credentials.return_value = {'ip': 'f%d' % i}
+            fake_host.config = {"network": "fake-%d" % i}
+            fake_host.server.get_credentials.return_value = {"ip": "f%d" % i}
             fake_host.get_server_objects.return_value = fake_host_sos
             fake_hosts.append(fake_host)
         m_lxchost.side_effect = fake_hosts
         m_get_provider.return_value = fake_provider
 
-        with mock.patch.object(self.provider, 'resources') as m_resources:
+        fake_info = [
+            {"host": {"ip": "f1"},
+             "config": {"network": "fake-1"},
+             "forwarded_ports": [(1, 1), (2, 1)],
+             "container_names": ["c-1-1", "c-1-2"]},
+            {"host": {"ip": "f2"},
+             "config": {"network": "fake-2"},
+             "forwarded_ports": [(1, 2), (2, 2)],
+             "container_names": ["c-2-1", "c-2-2"]}]
+
+        def res_create(actual_info):
+            expected_info = fake_info.pop(0)
+            self.assertEqual(expected_info["host"], actual_info["host"])
+            self.assertEqual(expected_info["config"], actual_info["config"])
+            self.assertEqual(expected_info["container_names"],
+                             actual_info["container_names"])
+            self.assertSequenceEqual(expected_info["forwarded_ports"],
+                                     actual_info["forwarded_ports"])
+
+        fake_res = mock.MagicMock()
+        fake_res.create = res_create
+
+        with mock.patch.object(self.provider, "resources", fake_res):
             servers = self.provider.create_servers()
 
         self.assertEqual(fake_sos, servers)
 
-        info1 = {'host': {'ip': 'f1'},
-                 'config': {'netwrork': 'fake-1'},
-                 'forwarded_ports': [(1, 1), (2, 1)],
-                 'container_names': ['c-1-1', 'c-1-2']}
-        info2 = {'host': {'ip': 'f2'},
-                 'config': {'netwrork': 'fake-2'},
-                 'forwarded_ports': [(1, 2), (2, 2)],
-                 'container_names': ['c-2-1', 'c-2-2']}
-        resource_calls = [
-            mock.call.create(info1),
-            mock.call.create(info2),
-        ]
-        self.assertEqual(resource_calls, m_resources.mock_calls)
-
-        call = mock.call
-
         host1_calls = [
-            call.prepare(),
-            call.create_container('rally-lxc-000-10-1-1-0', 'ubuntu', None),
-            call.create_clone('rally-lxc-001-10-1-1-0',
-                              'rally-lxc-000-10-1-1-0'),
-            call.start_containers(),
-            call.get_server_objects(),
-            call.server.get_credentials(),
+            mock.call.prepare(),
+            mock.call.create_container("rally-lxc-000-10-1-1-0",
+                                       "ubuntu", None),
+            mock.call.create_clone("rally-lxc-001-10-1-1-0",
+                                   "rally-lxc-000-10-1-1-0"),
+            mock.call.start_containers(),
+            mock.call.get_server_objects(),
+            mock.call.server.get_credentials(),
         ]
         host2_calls = [
-            call.prepare(),
-            call.create_container('rally-lxc-000-10-1-1-8', 'ubuntu', None),
-            call.create_clone('rally-lxc-001-10-1-1-8',
-                              'rally-lxc-000-10-1-1-8'),
-            call.start_containers(),
-            call.get_server_objects(),
-            call.server.get_credentials(),
+            mock.call.prepare(),
+            mock.call.create_container("rally-lxc-000-10-1-1-8",
+                                       "ubuntu", None),
+            mock.call.create_clone("rally-lxc-001-10-1-1-8",
+                                   "rally-lxc-000-10-1-1-8"),
+            mock.call.start_containers(),
+            mock.call.get_server_objects(),
+            mock.call.server.get_credentials(),
         ]
 
         self.assertEqual(host1_calls, fake_hosts[0].mock_calls)

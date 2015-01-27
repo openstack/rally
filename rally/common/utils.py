@@ -250,12 +250,20 @@ def get_method_class(func):
     :param func: function to get the class for.
     :returns: class object or None if func is not an instance method.
     """
-    if not hasattr(func, "im_class"):
-        return None
-    for cls in inspect.getmro(func.im_class):
-        if func.__name__ in cls.__dict__:
+    if hasattr(func, "im_class"):
+        # this check works in Python 2
+        for cls in inspect.getmro(func.im_class):
+            if func.__name__ in cls.__dict__:
+                return cls
+    elif hasattr(func, "__qualname__") and inspect.isfunction(func):
+        # this check works in Python 3
+        cls = getattr(
+            inspect.getmodule(func),
+            func.__qualname__.split('.<locals>.', 1)[0].rsplit('.', 1)[0])
+        if isinstance(cls, type):
             return cls
-    return None
+    else:
+        return None
 
 
 def first_index(lst, predicate):

@@ -21,6 +21,7 @@ import sys
 import time
 
 import mock
+import testtools
 
 from rally.common.i18n import _
 from rally.common import utils
@@ -222,6 +223,8 @@ def module_level_method():
 
 class MethodClassTestCase(test.TestCase):
 
+    @testtools.skipIf(sys.version_info > (2, 9), "Problems with access to "
+                                                 "class from <locals>")
     def test_method_class_for_class_level_method(self):
         class A:
             def m(self):

@@ -27,7 +27,7 @@ class KeystoneWrapperTestBase(object):
         service.name = 'Foobar'
         service.extra_field = 'extra_field'
         self.client.services.list.return_value = [service]
-        result = self.wrapped_client.list_services()
+        result = list(self.wrapped_client.list_services())
         self.assertEqual([('fake_id', 'Foobar')], result)
         self.assertEqual('fake_id', result[0].id)
         self.assertEqual('Foobar', result[0].name)
@@ -48,7 +48,7 @@ class KeystoneWrapperTestBase(object):
         role.name = 'Foobar'
         role.extra_field = 'extra_field'
         self.client.roles.list.return_value = [role]
-        result = self.wrapped_client.list_roles()
+        result = list(self.wrapped_client.list_roles())
         self.assertEqual([('fake_id', 'Foobar')], result)
         self.assertEqual('fake_id', result[0].id)
         self.assertEqual('Foobar', result[0].name)
@@ -85,7 +85,7 @@ class KeystoneV2WrapperTestCase(test.TestCase, KeystoneWrapperTestBase):
         tenant.name = 'Foobar'
         tenant.extra_field = 'extra_field'
         self.client.tenants.list.return_value = [tenant]
-        result = self.wrapped_client.list_projects()
+        result = list(self.wrapped_client.list_projects())
         self.assertEqual([('fake_id', 'Foobar', 'default')], result)
         self.assertEqual('fake_id', result[0].id)
         self.assertEqual('Foobar', result[0].name)
@@ -116,7 +116,7 @@ class KeystoneV2WrapperTestCase(test.TestCase, KeystoneWrapperTestBase):
         user.tenantId = 'tenant_id'
         user.extra_field = 'extra_field'
         self.client.users.list.return_value = [user]
-        result = self.wrapped_client.list_users()
+        result = list(self.wrapped_client.list_users())
         self.assertEqual([('fake_id', 'foo', 'tenant_id', 'default')], result)
         self.assertEqual('fake_id', result[0].id)
         self.assertEqual('foo', result[0].name)
@@ -157,7 +157,7 @@ class KeystoneV3WrapperTestCase(test.TestCase, KeystoneWrapperTestBase):
         project.domain_id = 'domain_id'
         project.extra_field = 'extra_field'
         self.client.projects.list.return_value = [project]
-        result = self.wrapped_client.list_projects()
+        result = list(self.wrapped_client.list_projects())
         self.assertEqual([('fake_id', 'Foobar', 'domain_id')], result)
         self.assertEqual('fake_id', result[0].id)
         self.assertEqual('Foobar', result[0].name)
@@ -199,9 +199,9 @@ class KeystoneV3WrapperTestCase(test.TestCase, KeystoneWrapperTestBase):
         user.domain_id = 'domain_id'
         user.extra_field = 'extra_field'
         self.client.users.list.return_value = [user]
-        result = self.wrapped_client.list_users()
-        self.assertEqual(
-            [('fake_id', 'foo', 'project_id', 'domain_id')], result)
+        result = list(self.wrapped_client.list_users())
+        self.assertEqual([('fake_id', 'foo', 'project_id', 'domain_id')],
+                         result)
         self.assertEqual('fake_id', result[0].id)
         self.assertEqual('foo', result[0].name)
         self.assertEqual('project_id', result[0].project_id)

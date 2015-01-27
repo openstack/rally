@@ -99,7 +99,7 @@ class FailureRateDeprecated(SLA):
 
     @staticmethod
     def check(criterion_value, result):
-        errors = len(filter(lambda x: x["error"], result))
+        errors = len([x for x in result if x["error"]])
         error_rate = errors * 100.0 / len(result) if len(result) > 0 else 100.0
         if criterion_value < error_rate:
             success = False
@@ -126,7 +126,7 @@ class FailureRate(SLA):
     def check(criterion_value, result):
         min_percent = criterion_value.get("min", 0)
         max_percent = criterion_value.get("max", 100)
-        errors = len(filter(lambda x: x["error"], result))
+        errors = len([x for x in result if x["error"]])
         error_rate = errors * 100.0 / len(result) if len(result) > 0 else 100.0
 
         success = min_percent <= error_rate <= max_percent

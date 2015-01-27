@@ -294,8 +294,7 @@ class ScenarioTestCase(test.TestCase):
     def test_generate_random_name(self):
         set_by_length = lambda lst: set(map(len, lst))
         len_by_prefix = (lambda lst, prefix:
-                         len(filter(bool, map(lambda i: i.startswith(prefix),
-                             lst))))
+                         len([i.startswith(prefix) for i in lst]))
         range_num = 50
 
         # Defaults

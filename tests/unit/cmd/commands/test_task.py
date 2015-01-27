@@ -294,7 +294,11 @@ class TaskCommandsTestCase(test.TestCase):
         mock_get.return_value = mock.Mock(get_results=mock_results)
 
         self.task.results(task_id)
-        mock_json.assert_called_once_with(result, sort_keys=True, indent=4)
+        self.assertEqual(1, mock_json.call_count)
+        self.assertEqual(1, len(mock_json.call_args[0]))
+        self.assertSequenceEqual(result, mock_json.call_args[0][0])
+        self.assertEqual({"sort_keys": True, "indent": 4},
+                         mock_json.call_args[1])
         mock_get.assert_called_once_with(task_id)
 
     @mock.patch("rally.cmd.commands.task.objects.Task.get")
@@ -330,12 +334,12 @@ class TaskCommandsTestCase(test.TestCase):
                       "load_duration": 2.1,
                       "full_duration": 2.2}}]
 
-        results = map(lambda x: {"key": x["key"],
-                                 "result": x["data"]["raw"],
-                                 "sla": x["data"]["sla"],
-                                 "load_duration": x["data"]["load_duration"],
-                                 "full_duration": x["data"]["full_duration"]},
-                      data)
+        results = [{"key": x["key"],
+                    "result": x["data"]["raw"],
+                    "sla": x["data"]["sla"],
+                    "load_duration": x["data"]["load_duration"],
+                    "full_duration": x["data"]["full_duration"]}
+                   for x in data]
         mock_results = mock.Mock(return_value=data)
         mock_get.return_value = mock.Mock(get_results=mock_results)
         mock_plot.plot.return_value = "html_report"
@@ -425,12 +429,12 @@ class TaskCommandsTestCase(test.TestCase):
                       "load_duration": 2.1,
                       "full_duration": 2.2}}]
 
-        results = map(lambda x: {"key": x["key"],
-                                 "result": x["data"]["raw"],
-                                 "sla": x["data"]["sla"],
-                                 "load_duration": x["data"]["load_duration"],
-                                 "full_duration": x["data"]["full_duration"]},
-                      data)
+        results = [{"key": x["key"],
+                    "result": x["data"]["raw"],
+                    "sla": x["data"]["sla"],
+                    "load_duration": x["data"]["load_duration"],
+                    "full_duration": x["data"]["full_duration"]}
+                   for x in data]
 
         mock_plot.plot.return_value = "html_report"
         mock_open.side_effect = mock.mock_open(read_data=results)
@@ -493,6 +497,7 @@ class TaskCommandsTestCase(test.TestCase):
 
         headers = ["uuid", "deployment_name", "created_at", "duration",
                    "status", "tag"]
+
         mock_print_list.assert_called_once_with(
             mock_objects_list.return_value, headers,
             sortby_index=headers.index('created_at'))
