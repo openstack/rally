@@ -30,7 +30,7 @@ class DeploymentCommandsTestCase(test.TestCase):
 
     @mock.patch.dict(os.environ, {'RALLY_DEPLOYMENT': 'my_deployment_id'})
     @mock.patch('rally.cmd.commands.deployment.DeploymentCommands.list')
-    @mock.patch('rally.cmd.commands.deployment.api.create_deploy')
+    @mock.patch('rally.cmd.commands.deployment.api.Deployment.create')
     @mock.patch('rally.cmd.commands.deployment.open',
                 mock.mock_open(read_data='{"some": "json"}'),
                 create=True)
@@ -44,7 +44,7 @@ class DeploymentCommandsTestCase(test.TestCase):
                                   'OS_TENANT_NAME': 'fake_tenant_name',
                                   'OS_REGION_NAME': 'fake_region_name',
                                   'RALLY_DEPLOYMENT': 'fake_deployment_id'})
-    @mock.patch('rally.cmd.commands.deployment.api.create_deploy')
+    @mock.patch('rally.cmd.commands.deployment.api.Deployment.create')
     @mock.patch('rally.cmd.commands.deployment.DeploymentCommands.list')
     def test_createfromenv(self, mock_list, mock_create):
         self.deployment.create('from_env', True)
@@ -64,7 +64,7 @@ class DeploymentCommandsTestCase(test.TestCase):
 
     @mock.patch('rally.cmd.commands.deployment.DeploymentCommands.list')
     @mock.patch('rally.cmd.commands.use.UseCommands.deployment')
-    @mock.patch('rally.cmd.commands.deployment.api.create_deploy',
+    @mock.patch('rally.cmd.commands.deployment.api.Deployment.create',
                 return_value=dict(uuid='uuid'))
     @mock.patch('rally.cmd.commands.deployment.open',
                 mock.mock_open(read_data='{"uuid": "uuid"}'),
@@ -76,7 +76,7 @@ class DeploymentCommandsTestCase(test.TestCase):
         mock_create.assert_called_once_with({'uuid': 'uuid'}, 'fake_deploy')
         mock_use_deployment.assert_called_once_with('uuid')
 
-    @mock.patch('rally.cmd.commands.deployment.api.recreate_deploy')
+    @mock.patch('rally.cmd.commands.deployment.api.Deployment.recreate')
     def test_recreate(self, mock_recreate):
         deployment_id = '43924f8b-9371-4152-af9f-4cf02b4eced4'
         self.deployment.recreate(deployment_id)
@@ -88,7 +88,7 @@ class DeploymentCommandsTestCase(test.TestCase):
         self.assertRaises(exceptions.InvalidArgumentsException,
                           self.deployment.recreate, None)
 
-    @mock.patch('rally.cmd.commands.deployment.api.destroy_deploy')
+    @mock.patch('rally.cmd.commands.deployment.api.Deployment.destroy')
     def test_destroy(self, mock_destroy):
         deployment_id = '53fd0273-60ce-42e5-a759-36f1a683103e'
         self.deployment.destroy(deployment_id)

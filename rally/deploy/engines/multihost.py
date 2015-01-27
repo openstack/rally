@@ -97,4 +97,4 @@ class MultihostEngine(engine.EngineFactory):
     def cleanup(self):
         subdeploys = db.deployment_list(parent_uuid=self.deployment["uuid"])
         for subdeploy in subdeploys:
-            rally.api.destroy_deploy(subdeploy["uuid"])
+            rally.api.Deployment.destroy(subdeploy["uuid"])

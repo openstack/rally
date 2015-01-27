@@ -105,7 +105,7 @@ class TaskCommands(object):
         with open(task_file) as f:
             try:
                 input_task = f.read()
-                rendered_task = api.task_template_render(input_task, **kw)
+                rendered_task = api.Task.render_template(input_task, **kw)
             except Exception as e:
                 print(_("Failed to render task template:\n%(task)s\n%(err)s\n")
                       % {"task": input_task, "err": e},
@@ -157,7 +157,7 @@ class TaskCommands(object):
             return(1)
 
         try:
-            api.task_validate(deployment, input_task)
+            api.Task.validate(deployment, input_task)
             print("Task config is valid :)")
         except exceptions.InvalidTaskException as e:
             print("Task config is invalid: \n")
@@ -200,14 +200,14 @@ class TaskCommands(object):
             return(1)
 
         try:
-            task = api.create_task(deployment, tag)
+            task = api.Task.create(deployment, tag)
             print(cliutils.make_header(
                   _("Task %(tag)s %(uuid)s: started")
                   % {"uuid": task["uuid"], "tag": task["tag"]}))
             print("Benchmarking... This can take a while...\n")
             print("To track task status use:\n")
             print("\trally task status\n\tor\n\trally task detailed\n")
-            api.start_task(deployment, input_task, task=task)
+            api.Task.start(deployment, input_task, task=task)
             self.detailed(task_id=task["uuid"])
             if do_use:
                 use.UseCommands().task(task["uuid"])
@@ -222,7 +222,7 @@ class TaskCommands(object):
         :param task_id: Task uuid
         """
 
-        api.abort_task(task_id)
+        api.Task.abort(task_id)
 
     @cliutils.args("--uuid", type=str, dest="task_id", help="UUID of task")
     @envutils.with_default_task_id
@@ -572,9 +572,9 @@ class TaskCommands(object):
 
         if isinstance(task_id, list):
             for tid in task_id:
-                api.delete_task(tid, force=force)
+                api.Task.delete(tid, force=force)
         else:
-            api.delete_task(task_id, force=force)
+            api.Task.delete(task_id, force=force)
 
     @cliutils.args("--uuid", type=str, dest="task_id", help="uuid of task")
     @cliutils.args("--json", dest="tojson",

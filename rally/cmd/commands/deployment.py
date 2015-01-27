@@ -113,7 +113,7 @@ class DeploymentCommands(object):
                 config = yaml.safe_load(deploy_file.read())
 
         try:
-            deployment = api.create_deploy(config, name)
+            deployment = api.Deployment.create(config, name)
         except jsonschema.ValidationError:
             print(_("Config schema validation error: %s.") % sys.exc_info()[1])
             return(1)
@@ -139,7 +139,7 @@ class DeploymentCommands(object):
 
         :param deployment: a UUID or name of the deployment
         """
-        api.recreate_deploy(deployment)
+        api.Deployment.recreate(deployment)
 
     @cliutils.deprecated_args(
         "--uuid", dest="deployment", type=str,
@@ -156,7 +156,7 @@ class DeploymentCommands(object):
 
         :param deployment: a UUID or name of the deployment
         """
-        api.destroy_deploy(deployment)
+        api.Deployment.destroy(deployment)
 
     def list(self, deployment_list=None):
         """List existing deployments."""

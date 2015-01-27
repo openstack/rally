@@ -80,8 +80,8 @@ class VerifyCommands(object):
                   "choose from: %s" % ", ".join(list(consts.TempestTestsSets) +
                                                 list(consts.TempestTestsAPI)))
             return (1)
-        verification = api.verify(deployment, set_name, regex,
-                                  tempest_config)
+        verification = api.Verification.verify(deployment, set_name, regex,
+                                               tempest_config)
         if do_use:
             use.UseCommands().verification(verification["uuid"])
 

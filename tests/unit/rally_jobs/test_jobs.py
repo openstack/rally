@@ -51,7 +51,7 @@ class RallyJobsTestCase(test.TestCase):
                                 "args file %s must be dict in yaml or json "
                                 "presenatation" % args_file)
 
-                    task = api.task_template_render(task_file.read(), **args)
+                    task = api.Task.render_template(task_file.read(), **args)
                     task = yaml.safe_load(task)
 
                     eng = engine.BenchmarkEngine(task, mock.MagicMock())

@@ -100,8 +100,8 @@ class TaskCommandsTestCase(test.TestCase):
     @mock.patch("rally.cmd.commands.task.TaskCommands.detailed")
     @mock.patch("rally.cmd.commands.task.TaskCommands._load_task",
                 return_value={"some": "json"})
-    @mock.patch("rally.api.create_task")
-    @mock.patch("rally.cmd.commands.task.api.start_task")
+    @mock.patch("rally.api.Task.create")
+    @mock.patch("rally.cmd.commands.task.api.Task.start")
     def test_start(self, mock_api, mock_create_task, mock_load,
                    mock_task_detailed):
         mock_create_task.return_value = (
@@ -134,22 +134,22 @@ class TaskCommandsTestCase(test.TestCase):
     @mock.patch("rally.cmd.commands.task.TaskCommands._load_task")
     @mock.patch("rally.cmd.commands.task.api")
     def test_start_invalid_task(self, mock_api, mock_load):
-        mock_api.start_task.side_effect = exceptions.InvalidConfigException
+        mock_api.Task.start.side_effect = exceptions.InvalidConfigException
 
         result = self.task.start("task_path", "deployment", tag="tag")
         self.assertEqual(1, result)
 
-        mock_api.create_task.assert_called_once_with("deployment", "tag")
-        mock_api.start_task.assert_called_once_with(
+        mock_api.Task.create.assert_called_once_with("deployment", "tag")
+        mock_api.Task.start.assert_called_once_with(
             "deployment", mock_load.return_value,
-            task=mock_api.create_task.return_value)
+            task=mock_api.Task.create.return_value)
 
     @mock.patch("rally.cmd.commands.task.api")
     def test_abort(self, mock_api):
         test_uuid = "17860c43-2274-498d-8669-448eff7b073f"
-        mock_api.abort_task = mock.MagicMock()
+        mock_api.Task.abort = mock.MagicMock()
         self.task.abort(test_uuid)
-        task.api.abort_task.assert_called_once_with(test_uuid)
+        task.api.Task.abort.assert_called_once_with(test_uuid)
 
     @mock.patch("rally.cmd.commands.task.envutils.get_global")
     def test_abort_no_task_id(self, mock_default):
@@ -523,9 +523,9 @@ class TaskCommandsTestCase(test.TestCase):
         task_uuid = "8dcb9c5e-d60b-4022-8975-b5987c7833f7"
         force = False
         with mock.patch("rally.cmd.commands.task.api") as mock_api:
-            mock_api.delete_task = mock.Mock()
+            mock_api.Task.delete = mock.Mock()
             self.task.delete(task_uuid, force=force)
-            mock_api.delete_task.assert_called_once_with(task_uuid,
+            mock_api.Task.delete.assert_called_once_with(task_uuid,
                                                          force=force)
 
     @mock.patch("rally.cmd.commands.task.api")
@@ -536,10 +536,10 @@ class TaskCommandsTestCase(test.TestCase):
                       "018af931-0e5a-40d5-9d6f-b13f4a3a09fc"]
         force = False
         self.task.delete(task_uuids, force=force)
-        self.assertTrue(mock_api.delete_task.call_count == len(task_uuids))
+        self.assertTrue(mock_api.Task.delete.call_count == len(task_uuids))
         expected_calls = [mock.call(task_uuid, force=force) for task_uuid
                           in task_uuids]
-        self.assertTrue(mock_api.delete_task.mock_calls == expected_calls)
+        self.assertTrue(mock_api.Task.delete.mock_calls == expected_calls)
 
     @mock.patch("rally.cmd.commands.task.common_cliutils.print_list")
     @mock.patch("rally.cmd.commands.task.objects.Task.get")
@@ -569,7 +569,7 @@ class TaskCommandsTestCase(test.TestCase):
     @mock.patch("rally.cmd.commands.task.open",
                 mock.mock_open(read_data="{\"some\": \"json\"}"),
                 create=True)
-    @mock.patch("rally.api.task_validate")
+    @mock.patch("rally.api.Task.validate")
     def test_validate(self, mock_validate):
         self.task.validate("path_to_config.json", "fake_id")
         mock_validate.assert_called_once_with("fake_id", {"some": "json"})
@@ -586,7 +586,7 @@ class TaskCommandsTestCase(test.TestCase):
         mock_load.assert_called_once_with("path_to_task", args, args_file)
 
     @mock.patch("rally.cmd.commands.task.TaskCommands._load_task")
-    @mock.patch("rally.api.task_validate")
+    @mock.patch("rally.api.Task.validate")
     def test_validate_invalid(self, mock_task_validate, mock_load):
 
         mock_task_validate.side_effect = exceptions.InvalidTaskException
