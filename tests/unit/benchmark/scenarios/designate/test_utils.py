@@ -28,6 +28,7 @@ class DesignateScenarioTestCase(test.TestCase):
     def setUp(self):
         super(DesignateScenarioTestCase, self).setUp()
         self.domain = mock.Mock()
+        self.server = mock.Mock()
 
     @mock.patch(DESIGNATE_UTILS + "DesignateScenario._generate_random_name")
     @mock.patch(DESIGNATE_UTILS + "DesignateScenario.clients")
@@ -130,3 +131,40 @@ class DesignateScenarioTestCase(test.TestCase):
         scenario._delete_record(domain["id"], record["id"])
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "designate.delete_record")
+
+    @mock.patch(DESIGNATE_UTILS + "DesignateScenario._generate_random_name")
+    @mock.patch(DESIGNATE_UTILS + "DesignateScenario.admin_clients")
+    def test_create_server(self, mock_clients, mock_random_name):
+        scenario = utils.DesignateScenario()
+
+        random_name = "foo"
+        explicit_name = "bar.io."
+
+        mock_random_name.return_value = random_name
+        mock_clients("designate").servers.create.return_value = self.server
+
+        # Check that the defaults / randoms are used if nothing is specified
+        server = scenario._create_server()
+        mock_clients("designate").servers.create.assert_called_once_with(
+            {"name": "name.%s." % random_name})
+        self.assertEqual(self.server, server)
+        self._test_atomic_action_timer(scenario.atomic_actions(),
+                                       "designate.create_server")
+
+        mock_clients("designate").servers.create.reset_mock()
+
+        # Check that when specifying server name defaults are not used...
+        data = {"name": explicit_name}
+        server = scenario._create_server(data)
+        mock_clients("designate").servers.create.assert_called_once_with(data)
+        self.assertEqual(self.server, server)
+
+    @mock.patch(DESIGNATE_UTILS + "DesignateScenario.admin_clients")
+    def test_delete_server(self, mock_clients):
+        scenario = utils.DesignateScenario()
+
+        scenario._delete_server("foo_id")
+        mock_clients("designate").servers.delete.assert_called_once_with(
+            "foo_id")
+        self._test_atomic_action_timer(scenario.atomic_actions(),
+                                       "designate.delete_server")

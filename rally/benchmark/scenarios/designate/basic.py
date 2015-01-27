@@ -135,3 +135,30 @@ class DesignateBasic(utils.DesignateScenario):
                 self._create_record(domain, atomic_action=False)
 
         self._list_records(domain["id"])
+
+    @validation.required_services(consts.Service.DESIGNATE)
+    @validation.required_openstack(admin=True)
+    @base.scenario(context={"cleanup": ["designate"]})
+    def create_and_list_servers(self):
+        """Create a Designate server and list all servers.
+
+        If you have only 1 user in your context, you will
+        add 1 server on every iteration. So you will have more
+        and more server and will be able to measure the
+        performance of the "designate server-list" command depending on
+        the number of servers owned by users.
+        """
+        self._create_server()
+        self._list_servers()
+
+    @validation.required_services(consts.Service.DESIGNATE)
+    @validation.required_openstack(admin=True)
+    @base.scenario(context={"cleanup": ["designate"]})
+    def create_and_delete_server(self):
+        """Add and then delete a server.
+
+        Measure the performance of creating and deleting servers
+        with different level of load.
+        """
+        server = self._create_server()
+        self._delete_server(server['id'])
