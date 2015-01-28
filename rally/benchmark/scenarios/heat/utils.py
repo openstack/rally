@@ -48,12 +48,6 @@ benchmark_group = cfg.OptGroup(name="benchmark", title="benchmark options")
 CONF.register_opts(heat_benchmark_opts, group=benchmark_group)
 
 
-def heat_resource_is(status):
-    """Check status of stack."""
-
-    return lambda resource: resource.stack_status.upper() == status.upper()
-
-
 class HeatScenario(base.Scenario):
     """Base class for Heat scenarios with basic atomic actions."""
 
@@ -94,7 +88,7 @@ class HeatScenario(base.Scenario):
 
         stack = bench_utils.wait_for(
             stack,
-            is_ready=heat_resource_is("CREATE_COMPLETE"),
+            is_ready=bench_utils.resource_is("CREATE_COMPLETE"),
             update_resource=bench_utils.get_from_manager(["CREATE_FAILED"]),
             timeout=CONF.benchmark.heat_stack_create_timeout,
             check_interval=CONF.benchmark.heat_stack_create_poll_interval)

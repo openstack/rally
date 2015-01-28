@@ -28,16 +28,23 @@ from rally import exceptions
 LOG = logging.getLogger(__name__)
 
 
-def resource_is(status):
-    return lambda resource: resource.status.upper() == status.upper()
-
-
 def get_status(resource):
     # workaround for heat resources - using stack_status instead of status
     if ((hasattr(resource, "stack_status") and
          isinstance(resource.stack_status, six.string_types))):
         return resource.stack_status.upper()
-    return resource.status.upper()
+    return getattr(resource, "status", "NONE").upper()
+
+
+class resource_is(object):
+    def __init__(self, desired_status):
+        self.desired_status = desired_status
+
+    def __call__(self, resource):
+        return get_status(resource) == self.desired_status.upper()
+
+    def __str__(self):
+        return str(self.desired_status)
 
 
 def get_from_manager(error_statuses=None):
@@ -106,7 +113,13 @@ def wait_for(resource, is_ready, update_resource=None, timeout=60,
             break
         time.sleep(check_interval)
         if time.time() - start > timeout:
-            raise exceptions.TimeoutException()
+            raise exceptions.TimeoutException(
+                desired_status=str(is_ready),
+                resource_name=getattr(resource, "name", repr(resource)),
+                resource_type=resource.__class__.__name__,
+                resource_id=getattr(resource, "id", "<no id>"),
+                resource_status=get_status(resource))
+
     return resource
 
 
@@ -132,7 +145,12 @@ def wait_for_delete(resource, update_resource=None, timeout=60,
             break
         time.sleep(check_interval)
         if time.time() - start > timeout:
-            raise exceptions.TimeoutException()
+            raise exceptions.TimeoutException(
+                desired_status="deleted",
+                resource_name=getattr(resource, "name", repr(resource)),
+                resource_type=resource.__class__.__name__,
+                resource_id=getattr(resource, "id", "<no id>"),
+                resource_status=get_status(resource))
 
 
 def format_exc(exc):

@@ -167,7 +167,8 @@ class WaitForTestCase(test.TestCase):
 
     def setUp(self):
         super(WaitForTestCase, self).setUp()
-        self.resource = object()
+
+        self.resource = fakes.FakeResource()
         self.load_secs = 0.01
         self.fake_checker_delayed = self.get_fake_checker_delayed(
             seconds=self.load_secs)
@@ -196,7 +197,21 @@ class WaitForTestCase(test.TestCase):
         self.assertEqual(loaded_resource, self.resource)
 
     def test_wait_for_timeout_failure(self):
-        self.assertRaises(exceptions.TimeoutException, utils.wait_for,
-                          self.resource, self.fake_checker_false,
-                          self.fake_updater, self.load_secs,
-                          self.load_secs / 3)
+        self.resource.name = "fake_name"
+        self.resource.id = "fake_id"
+        self.resource.status = "fake_stale_status"
+
+        is_ready = utils.resource_is("fake_new_status")
+        exc = self.assertRaises(
+            exceptions.TimeoutException, utils.wait_for,
+            self.resource, is_ready,
+            self.fake_updater, self.load_secs,
+            self.load_secs / 3)
+
+        self.assertEqual(exc.kwargs["resource_name"], "fake_name")
+        self.assertEqual(exc.kwargs["resource_id"], "fake_id")
+        self.assertEqual(exc.kwargs["desired_status"], "fake_new_status")
+        self.assertEqual(exc.kwargs["resource_status"], "FAKE_STALE_STATUS")
+
+        self.assertIn("FakeResource", str(exc))
+        self.assertIn("fake_new_status", str(exc))

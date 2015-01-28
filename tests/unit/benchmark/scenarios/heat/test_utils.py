@@ -29,7 +29,7 @@ class HeatScenarioTestCase(test.TestCase):
     def setUp(self):
         super(HeatScenarioTestCase, self).setUp()
         self.stack = mock.Mock()
-        self.res_is = mockpatch.Patch(HEAT_UTILS + ".heat_resource_is")
+        self.res_is = mockpatch.Patch(BM_UTILS + ".resource_is")
         self.get_fm = mockpatch.Patch(BM_UTILS + '.get_from_manager')
         self.wait_for = mockpatch.Patch(HEAT_UTILS + ".bench_utils.wait_for")
         self.wait_for_delete = mockpatch.Patch(
@@ -81,11 +81,6 @@ class HeatScenarioTestCase(test.TestCase):
             timeout=3600)
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        'heat.delete_stack')
-
-    def test_heat_resource_is(self):
-        stack = {'stack_status': 'CREATE_COMPLETED'}
-        status_fn = utils.heat_resource_is('CREATE_COMPLETED')
-        status_fn(stack)
 
 
 class HeatScenarioNegativeTestCase(test.TestCase):
