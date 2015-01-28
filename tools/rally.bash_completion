@@ -13,6 +13,7 @@ _rally()
     OPTS["deployment_list"]=""
     OPTS["deployment_recreate"]="--deployment"
     OPTS["deployment_show"]="--deployment"
+    OPTS["deployment_use"]="--deployment"
     OPTS["info_BenchmarkScenarios"]=""
     OPTS["info_DeployEngines"]=""
     OPTS["info_DeploymentEngines"]=""
@@ -34,6 +35,7 @@ _rally()
     OPTS["task_sla_check"]="--uuid --json"
     OPTS["task_start"]="--deployment --task --task-args --task-args-file --tag --no-use"
     OPTS["task_status"]="--uuid"
+    OPTS["task_use"]="--task"
     OPTS["task_validate"]="--deployment --task --task-args --task-args-file"
     OPTS["use_deployment"]="--deployment"
     OPTS["use_task"]="--uuid"
@@ -44,6 +46,7 @@ _rally()
     OPTS["verify_results"]="--uuid --html --json --output-file"
     OPTS["verify_show"]="--uuid --sort-by --detailed"
     OPTS["verify_start"]="--deployment --set --regex --tempest-config --no-use"
+    OPTS["verify_use"]="--verification"
 
 
     for OPT in ${!OPTS[*]} ; do

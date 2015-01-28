@@ -71,26 +71,36 @@ function do_verification {
     gzip -9 ${RESULTS_DIR}/${1}_verify_show_detailed.txt
 }
 
-do_verification 1
-do_verification 2
+function main {
+    do_verification 1
+    do_verification 2
 
-rally verify list > ${RESULTS_DIR}/verify_list.txt
-RESULTS+="l=$(do_status $?) "
-gzip -9 ${RESULTS_DIR}/verify_list.txt
+    rally verify list > ${RESULTS_DIR}/verify_list.txt
+    RESULTS+="l=$(do_status $?) "
+    gzip -9 ${RESULTS_DIR}/verify_list.txt
 
-# Compare and save results in different formats
-for OUTPUT_FORMAT in "csv" "html" "json"
-do
-    OUTPUT_FILE=${RESULTS_DIR}/compare_results.${OUTPUT_FORMAT}
-    rally --rally-debug verify compare --uuid-1 ${VERIFICATIONS[1]} --uuid-2 ${VERIFICATIONS[2]} --${OUTPUT_FORMAT} --output-file ${OUTPUT_FILE}
-    RESULTS+="c_${OUTPUT_FORMAT}=$(do_status $?) "
-    gzip -9 ${OUTPUT_FILE}
-done
+    # Compare and save results in different formats
+    for OUTPUT_FORMAT in "csv" "html" "json"
+    do
+        OUTPUT_FILE=${RESULTS_DIR}/compare_results.${OUTPUT_FORMAT}
+        rally --rally-debug verify compare --uuid-1 ${VERIFICATIONS[1]} --uuid-2 ${VERIFICATIONS[2]} --${OUTPUT_FORMAT} --output-file ${OUTPUT_FILE}
+        RESULTS+="c_${OUTPUT_FORMAT}=$(do_status $?) "
+        gzip -9 ${OUTPUT_FILE}
+    done
 
-python $BASE/new/rally/rally/ui/utils.py render\
-    tests/ci/rally-gate/index_verify.mako ${RESULTS[*]}> ${RESULTS_DIR}/extra/index.html
+    python $BASE/new/rally/rally/ui/utils.py render\
+        tests/ci/rally-gate/index_verify.mako ${RESULTS[*]}> ${RESULTS_DIR}/extra/index.html
 
-if [[ ${RESULTS[*]} == *"fail"* ]]
-then
-  return 1
-fi
+    if [[ ${RESULTS[*]} == *"fail"* ]]
+    then
+        return 1
+    fi
+
+    RESULT_USE=$(rally verify use --verification ${VERIFICATIONS[1]})
+    if [ "$RESULT_USE" != "Verification UUID: ${VERIFICATIONS[1]}" ]
+    then
+        return 1
+    fi
+}
+
+main "$@"

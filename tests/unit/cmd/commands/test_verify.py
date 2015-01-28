@@ -300,3 +300,8 @@ class VerifyCommandsTestCase(test.TestCase):
 
         mock_open.assert_called_once_with("results", "wb")
         mock_open.side_effect().write.assert_called_once_with("")
+
+    @mock.patch("rally.cmd.commands.use.UseCommands.verification")
+    def test_use(self, mock_use_verification):
+        self.verify.use("fake_id")
+        mock_use_verification.assert_called_once_with("fake_id")

@@ -255,3 +255,12 @@ class DeploymentCommands(object):
                   % sys.exc_info()[1])
             return(1)
         common_cliutils.print_list(table_rows, headers)
+
+    @cliutils.args("--deployment", type=str, dest="deployment",
+                   help="UUID or name of the deployment")
+    def use(self, deployment):
+        """Set active deployment. Alias for "rally use deployment".
+
+        :param deployment: UUID or name of a deployment
+        """
+        use.UseCommands().deployment(deployment)

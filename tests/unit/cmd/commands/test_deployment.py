@@ -202,3 +202,8 @@ class DeploymentCommandsTestCase(test.TestCase):
         mock_default.side_effect = exceptions.InvalidArgumentsException
         self.assertRaises(exceptions.InvalidArgumentsException,
                           self.deployment.show, None)
+
+    @mock.patch("rally.cmd.commands.use.UseCommands.deployment")
+    def test_use(self, mock_use_deployment):
+        self.deployment.use("fake_id")
+        mock_use_deployment.assert_called_once_with("fake_id")
