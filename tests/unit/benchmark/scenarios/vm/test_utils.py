@@ -59,10 +59,8 @@ class VMScenarioTestCase(test.TestCase):
                                                    timeout=120)
 
     @mock.patch(VMTASKS_UTILS + ".VMScenario._run_action")
-    @mock.patch(VMTASKS_UTILS + ".VMScenario._wait_for_ping")
     @mock.patch("rally.common.sshutils.SSH")
-    def test__run_command(self, mock_ssh_class, mock_wait_ping,
-                          mock_run_action):
+    def test__run_command(self, mock_ssh_class, mock_run_action):
         mock_ssh_instance = mock.MagicMock()
         mock_ssh_class.return_value = mock_ssh_instance
 
@@ -71,7 +69,6 @@ class VMScenarioTestCase(test.TestCase):
         vm_scenario._run_command("1.2.3.4", 22, "username",
                                  "password", "int", "script")
 
-        mock_wait_ping.assert_called_once_with("1.2.3.4")
         mock_ssh_class.assert_called_once_with("username", "1.2.3.4", port=22,
                                                pkey="ssh",
                                                password="password")
@@ -146,3 +143,114 @@ class VMScenarioTestCase(test.TestCase):
                 ["ping6", "-c1", host_ip],
                 stderr=subprocess.PIPE, stdout=subprocess.PIPE)
         ping_process.wait.assert_called_once_with()
+
+    def get_scenario(self):
+
+        server = mock.Mock(
+            networks={"foo_net": "foo_data"},
+            addresses={"foo_net": [{"addr": "foo_addr"}]},
+            tenant_id="foo_tenant"
+        )
+        scenario = utils.VMScenario(context={})
+
+        scenario._netwrap = mock.Mock()
+        scenario._boot_server = mock.Mock(return_value=server)
+        scenario._delete_server = mock.Mock()
+        scenario._associate_floating_ip = mock.Mock()
+        scenario._wait_for_ping = mock.Mock()
+
+        return scenario, server
+
+    @mock.patch(VMTASKS_UTILS + ".network_wrapper")
+    def test__get_netwrap(self, mock_wrap):
+        scenario = utils.VMScenario(context={})
+        scenario.clients = "clients"
+        mock_wrap.wrap.return_value = "wrap"
+
+        ret = scenario._get_netwrap()
+
+        self.assertEqual("wrap", ret)
+
+        mock_wrap.wrap.assert_called_once_with("clients")
+
+    def test__boot_server_with_fip_missed_networks(self):
+        scenario, server = self.get_scenario()
+
+        server.networks = {}
+
+        self.assertRaises(RuntimeError,
+                          scenario._boot_server_with_fip,
+                          "foo_image", "foo_flavor",
+                          foo_arg="foo_value")
+
+        scenario._boot_server.assert_called_once_with(
+              "foo_image", "foo_flavor",
+              foo_arg="foo_value", auto_assign_nic=True)
+
+    def test__boot_server_with_fip(self):
+        scenario, server = self.get_scenario()
+
+        scenario._attach_floating_ip = mock.Mock(
+            return_value={"id": "foo_id", "ip": "foo_ip"})
+
+        scenario._boot_server_with_fip(
+            "foo_image", "foo_flavor",
+            wait_for_ping=True, foo_arg="foo_value",
+            floating_network="floating_network")
+
+        scenario._boot_server.assert_called_once_with(
+            "foo_image", "foo_flavor",
+            foo_arg="foo_value", auto_assign_nic=True)
+
+        scenario._attach_floating_ip.assert_called_once_with(
+            server, "floating_network")
+
+        scenario._wait_for_ping.assert_called_once_with(
+            "foo_ip")
+
+    def test__attach_floating_ip(self):
+        scenario, server = self.get_scenario()
+
+        scenario._netwrap.create_floating_ip.return_value = {
+            "id": "foo_id", "ip": "foo_ip"}
+
+        scenario._attach_floating_ip(
+            server, floating_network="bar_network")
+
+        scenario._netwrap.create_floating_ip.assert_called_once_with(
+            ext_network="bar_network", int_network="foo_net",
+            tenant_id="foo_tenant", fixed_ip="foo_addr")
+
+        scenario._associate_floating_ip.assert_called_once_with(
+            server, "foo_ip", fixed_address="foo_addr")
+
+    def test__delete_floating_ip(self):
+        scenario, server = self.get_scenario()
+
+        _check_addr = mock.Mock(return_value=True)
+        scenario.check_ip_address = mock.Mock(return_value=_check_addr)
+        scenario._dissociate_floating_ip = mock.Mock()
+
+        scenario._delete_floating_ip(
+            server, fip={"id": "foo_id", "ip": "foo_ip"})
+
+        scenario.check_ip_address.assert_called_once_with(
+            "foo_ip")
+        _check_addr.assert_called_once_with(server)
+        scenario._dissociate_floating_ip.assert_called_once_with(
+            server, "foo_ip")
+        scenario._netwrap.delete_floating_ip.assert_called_once_with(
+            "foo_id", wait=True)
+
+    def test__delete_server_with_fip(self):
+        scenario, server = self.get_scenario()
+        scenario._delete_floating_ip = mock.Mock()
+
+        scenario._delete_server_with_fip(
+            server, "foo_fip", force_delete=True)
+
+        scenario._delete_floating_ip.assert_called_once_with(
+            server, "foo_fip")
+
+        scenario._delete_server.assert_called_once_with(
+            server, force=True)

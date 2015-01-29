@@ -21,7 +21,6 @@ from rally.benchmark.scenarios.nova import utils as nova_utils
 from rally.benchmark.scenarios.vm import utils as vm_utils
 from rally.benchmark import types as types
 from rally.benchmark import validation
-from rally.benchmark.wrappers import network as network_wrapper
 from rally import consts
 from rally import exceptions
 
@@ -77,52 +76,26 @@ class VMTasks(nova_utils.NovaScenario, vm_utils.VMScenario,
             volume = self._create_volume(volume_args["size"], imageRef=None)
             kwargs["block_device_mapping"] = {"vdrally": "%s:::1" % volume.id}
 
-        fip = server = None
-        net_wrap = network_wrapper.wrap(self.clients)
-        kwargs.update({
-            "auto_assign_nic": True,
-            "key_name": self.context["user"]["keypair"]["name"]
-        })
-        server = self._boot_server(image, flavor, **kwargs)
+        server, fip = self._boot_server_with_fip(
+            image, flavor, floating_network=floating_network,
+            key_name=self.context["user"]["keypair"]["name"],
+            **kwargs)
 
-        if not server.networks:
-            raise RuntimeError(
-                "Server `%(server)s' is not connected to any network. "
-                "Use network context for auto-assigning networks "
-                "or provide `nics' argument with specific net-id." % {
-                    "server": server.name})
+        code, out, err = self._run_command(fip["ip"], port, username,
+                                           password, interpreter, script)
+        if code:
+            raise exceptions.ScriptError(
+                "Error running script %(script)s."
+                "Error %(code)s: %(error)s" % {
+                    "script": script, "code": code, "error": err})
 
-        internal_network = list(server.networks)[0]
-        fixed_ip = server.addresses[internal_network][0]["addr"]
         try:
-            fip = net_wrap.create_floating_ip(ext_network=floating_network,
-                                              int_network=internal_network,
-                                              tenant_id=server.tenant_id,
-                                              fixed_ip=fixed_ip)
+            data = json.loads(out)
+        except ValueError as e:
+            raise exceptions.ScriptError(
+                "Script %(script)s has not output valid JSON: "
+                "%(error)s" % {"script": script, "error": str(e)})
 
-            self._associate_floating_ip(server, fip["ip"],
-                                        fixed_address=fixed_ip)
+        self._delete_server_with_fip(server, fip, force_delete=force_delete)
 
-            code, out, err = self._run_command(fip["ip"], port, username,
-                                               password, interpreter, script)
-            if code:
-                raise exceptions.ScriptError(
-                    "Error running script %(script)s."
-                    "Error %(code)s: %(error)s" % {
-                        "script": script, "code": code, "error": err})
-            try:
-                data = json.loads(out)
-            except ValueError as e:
-                raise exceptions.ScriptError(
-                    "Script %(script)s has not output valid JSON: "
-                    "%(error)s" % {"script": script, "error": str(e)})
-
-            return {"data": data, "errors": err}
-
-        finally:
-            if server:
-                if fip:
-                    if self.check_ip_address(fip["ip"])(server):
-                        self._dissociate_floating_ip(server, fip["ip"])
-                    net_wrap.delete_floating_ip(fip["id"], wait=True)
-                self._delete_server(server, force=force_delete)
+        return {"data": data, "errors": err}

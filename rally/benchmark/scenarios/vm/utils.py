@@ -20,7 +20,11 @@ import netaddr
 
 from rally.benchmark.scenarios import base
 from rally.benchmark import utils as bench_utils
+from rally.benchmark.wrappers import network as network_wrapper
+from rally.common import log as logging
 from rally.common import sshutils
+
+LOG = logging.getLogger(__name__)
 
 
 class VMScenario(base.Scenario):
@@ -38,6 +42,56 @@ class VMScenario(base.Scenario):
         :returns: tuple (exit_status, stdout, stderr)
         """
         return ssh.execute(interpreter, stdin=open(script, "rb"))
+
+    def _get_netwrap(self):
+        if not hasattr(self, "_netwrap"):
+            self._netwrap = network_wrapper.wrap(self.clients)
+        return self._netwrap
+
+    def _boot_server_with_fip(self, image, flavor, floating_network=None,
+                              wait_for_ping=True, **kwargs):
+        kwargs["auto_assign_nic"] = True
+        server = self._boot_server(image, flavor, **kwargs)
+
+        if not server.networks:
+            raise RuntimeError(
+                "Server `%(server)s' is not connected to any network. "
+                "Use network context for auto-assigning networks "
+                "or provide `nics' argument with specific net-id." % {
+                    "server": server.name})
+
+        fip = self._attach_floating_ip(server, floating_network)
+
+        if wait_for_ping:
+            self._wait_for_ping(fip["ip"])
+
+        return server, fip
+
+    @base.atomic_action_timer("vm.attach_floating_ip")
+    def _attach_floating_ip(self, server, floating_network):
+        internal_network = list(server.networks)[0]
+        fixed_ip = server.addresses[internal_network][0]["addr"]
+
+        fip = self._get_netwrap().create_floating_ip(
+            ext_network=floating_network, int_network=internal_network,
+            tenant_id=server.tenant_id, fixed_ip=fixed_ip)
+
+        self._associate_floating_ip(server, fip["ip"], fixed_address=fixed_ip)
+
+        return fip
+
+    @base.atomic_action_timer("vm.delete_floating_ip")
+    def _delete_floating_ip(self, server, fip):
+        with logging.ExceptionLogger(
+                LOG, _("Unable to delete IP: %s") % fip["ip"]):
+            if self.check_ip_address(fip["ip"])(server):
+                self._dissociate_floating_ip(server, fip["ip"])
+            self._get_netwrap().delete_floating_ip(fip["id"], wait=True)
+
+    def _delete_server_with_fip(self, server, fip, force_delete=False):
+        self._delete_floating_ip(server, fip)
+
+        return self._delete_server(server, force=force_delete)
 
     @base.atomic_action_timer("vm.wait_for_ssh")
     def _wait_for_ssh(self, ssh):
@@ -57,10 +111,9 @@ class VMScenario(base.Scenario):
 
         Create SSH connection for server, wait for server to become
         available (there is a delay between server being set to ACTIVE
-        and sshd being available). Then call __run_command to actually
+        and sshd being available). Then call run_action to actually
         execute the command.
         """
-        self._wait_for_ping(server_ip)
         ssh = sshutils.SSH(username, server_ip, port=port,
                            pkey=self.context["user"]["keypair"]["private"],
                            password=password)
@@ -81,4 +134,6 @@ class VMScenario(base.Scenario):
                                 stdout=subprocess.PIPE,
                                 stderr=subprocess.PIPE)
         proc.wait()
+        LOG.debug("Host %s is ICMP %s"
+                  % (host, proc.returncode and "down" or "up"))
         return (proc.returncode == 0) == should_succeed

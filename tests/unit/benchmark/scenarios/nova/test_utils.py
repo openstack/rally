@@ -427,45 +427,6 @@ class NovaScenarioTestCase(test.TestCase):
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.boot_servers")
 
-    @mock.patch(NOVA_UTILS + ".NovaScenario.clients")
-    def test__list_floating_ip_pools(self, mock_clients):
-        pools_list = []
-        mock_clients("nova").floating_ip_pools.list.return_value = pools_list
-        nova_scenario = utils.NovaScenario()
-        return_pools_list = nova_scenario._list_floating_ip_pools()
-        self.assertEqual(pools_list, return_pools_list)
-        self._test_atomic_action_timer(nova_scenario.atomic_actions(),
-                                       "nova.list_floating_ip_pools")
-
-    @mock.patch(NOVA_UTILS + ".NovaScenario.clients")
-    def test__list_floating_ips(self, mock_clients):
-        floating_ips_list = []
-        mock_clients("nova").floating_ips.list.return_value = floating_ips_list
-        nova_scenario = utils.NovaScenario()
-        return_floating_ips_list = nova_scenario._list_floating_ips()
-        self.assertEqual(floating_ips_list, return_floating_ips_list)
-        self._test_atomic_action_timer(nova_scenario.atomic_actions(),
-                                       "nova.list_floating_ips")
-
-    @mock.patch(NOVA_UTILS + ".NovaScenario.clients")
-    def test__create_floating_ip(self, mock_clients):
-        (mock_clients("nova").floating_ips.create.
-            return_value) = self.floating_ip
-        nova_scenario = utils.NovaScenario()
-        return_floating_ip = nova_scenario._create_floating_ip("public")
-        self.assertEqual(self.floating_ip, return_floating_ip)
-        self._test_atomic_action_timer(nova_scenario.atomic_actions(),
-                                       "nova.create_floating_ip")
-
-    @mock.patch(NOVA_UTILS + ".NovaScenario.clients")
-    def test__delete_floating_ip(self, mock_clients):
-        nova_scenario = utils.NovaScenario()
-        nova_scenario._delete_floating_ip(self.floating_ip)
-        mock_clients("nova").floating_ips.delete.assert_called_once_with(
-            self.floating_ip)
-        self._test_atomic_action_timer(nova_scenario.atomic_actions(),
-                                       "nova.delete_floating_ip")
-
     def test__associate_floating_ip(self):
         nova_scenario = utils.NovaScenario()
         nova_scenario._associate_floating_ip(self.server, self.floating_ip)

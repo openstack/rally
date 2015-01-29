@@ -361,38 +361,6 @@ class NovaScenario(base.Scenario):
         ) for server in servers]
         return servers
 
-    @base.atomic_action_timer("nova.list_floating_ip_pools")
-    def _list_floating_ip_pools(self):
-        """Return user floating ip pools list."""
-        return self.clients("nova").floating_ip_pools.list()
-
-    @base.atomic_action_timer("nova.list_floating_ips")
-    def _list_floating_ips(self):
-        """Return user floating ips list."""
-        return self.clients("nova").floating_ips.list()
-
-    @base.atomic_action_timer("nova.create_floating_ip")
-    def _create_floating_ip(self, pool):
-        """Create (allocate) a floating ip from the given pool
-
-        :param pool: Name of the floating ip pool or external network
-
-        :returns: The created floating ip
-        """
-        return self.clients("nova").floating_ips.create(pool)
-
-    @base.atomic_action_timer("nova.delete_floating_ip")
-    def _delete_floating_ip(self, floating_ip):
-        """Delete (deallocate) a  floating ip for a tenant
-
-        :param floating_ip: The floating ip address to delete.
-        """
-        self.clients("nova").floating_ips.delete(floating_ip)
-        bench_utils.wait_for_delete(
-            floating_ip,
-            update_resource=bench_utils.get_from_manager()
-        )
-
     @base.atomic_action_timer("nova.associate_floating_ip")
     def _associate_floating_ip(self, server, address, fixed_address=None):
         """Add floating IP to an instance
