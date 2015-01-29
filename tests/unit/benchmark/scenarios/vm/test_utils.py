@@ -39,8 +39,8 @@ class VMScenarioTestCase(test.TestCase):
     def test_run_action(self, mock_open):
         mock_ssh = mock.MagicMock()
         vm_scenario = utils.VMScenario()
-        vm_scenario.run_action(mock_ssh, 'interpreter', 'script')
-        mock_ssh.execute.assert_called_once_with('interpreter',
+        vm_scenario.run_action(mock_ssh, "interpreter", "script")
+        mock_ssh.execute.assert_called_once_with("interpreter",
                                                  stdin=mock_open.side_effect())
 
     def test_wait_for_ssh(self):
@@ -69,12 +69,12 @@ class VMScenarioTestCase(test.TestCase):
         vm_scenario = utils.VMScenario()
         vm_scenario.context = {"user": {"keypair": {"private": "ssh"}}}
         vm_scenario.run_command("1.2.3.4", 22, "username",
-                                'password', "int", "script")
+                                "password", "int", "script")
 
         mock_wait_ping.assert_called_once_with("1.2.3.4")
         mock_ssh_class.assert_called_once_with("username", "1.2.3.4", port=22,
                                                pkey="ssh",
-                                               password='password')
+                                               password="password")
         mock_ssh_instance.wait.assert_called_once_with()
         mock_run_action.assert_called_once_with(mock_ssh_instance,
                                                 "int", "script")
@@ -85,14 +85,14 @@ class VMScenarioTestCase(test.TestCase):
         ping_process = mock.MagicMock()
         ping_process.returncode = 0
         mock_subprocess.return_value = ping_process
-        mock_sys.platform = 'linux2'
+        mock_sys.platform = "linux2"
 
         vm_scenario = utils.VMScenario()
         host_ip = "1.2.3.4"
         self.assertTrue(vm_scenario.ping_ip_address(host_ip))
 
         mock_subprocess.assert_called_once_with(
-                ['ping', '-c1', '-w1', host_ip],
+                ["ping", "-c1", "-w1", host_ip],
                 stderr=subprocess.PIPE, stdout=subprocess.PIPE)
         ping_process.wait.assert_called_once_with()
 
@@ -102,14 +102,14 @@ class VMScenarioTestCase(test.TestCase):
         ping_process = mock.MagicMock()
         ping_process.returncode = 0
         mock_subprocess.return_value = ping_process
-        mock_sys.platform = 'linux2'
+        mock_sys.platform = "linux2"
 
         vm_scenario = utils.VMScenario()
         host_ip = "1ce:c01d:bee2:15:a5:900d:a5:11fe"
         self.assertTrue(vm_scenario.ping_ip_address(host_ip))
 
         mock_subprocess.assert_called_once_with(
-                ['ping6', '-c1', '-w1', host_ip],
+                ["ping6", "-c1", "-w1", host_ip],
                 stderr=subprocess.PIPE, stdout=subprocess.PIPE)
         ping_process.wait.assert_called_once_with()
 
@@ -119,14 +119,14 @@ class VMScenarioTestCase(test.TestCase):
         ping_process = mock.MagicMock()
         ping_process.returncode = 0
         mock_subprocess.return_value = ping_process
-        mock_sys.platform = 'freebsd10'
+        mock_sys.platform = "freebsd10"
 
         vm_scenario = utils.VMScenario()
         host_ip = "1.2.3.4"
         self.assertTrue(vm_scenario.ping_ip_address(host_ip))
 
         mock_subprocess.assert_called_once_with(
-                ['ping', '-c1', host_ip],
+                ["ping", "-c1", host_ip],
                 stderr=subprocess.PIPE, stdout=subprocess.PIPE)
         ping_process.wait.assert_called_once_with()
 
@@ -136,13 +136,13 @@ class VMScenarioTestCase(test.TestCase):
         ping_process = mock.MagicMock()
         ping_process.returncode = 0
         mock_subprocess.return_value = ping_process
-        mock_sys.platform = 'freebsd10'
+        mock_sys.platform = "freebsd10"
 
         vm_scenario = utils.VMScenario()
         host_ip = "1ce:c01d:bee2:15:a5:900d:a5:11fe"
         self.assertTrue(vm_scenario.ping_ip_address(host_ip))
 
         mock_subprocess.assert_called_once_with(
-                ['ping6', '-c1', host_ip],
+                ["ping6", "-c1", host_ip],
                 stderr=subprocess.PIPE, stdout=subprocess.PIPE)
         ping_process.wait.assert_called_once_with()

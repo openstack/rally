@@ -64,7 +64,7 @@ class UserGeneratorTestCase(test.TestCase):
         nova_admin = mock.MagicMock()
         clients = mock.MagicMock()
         self.osclients.Clients.return_value = clients
-        clients.services.return_value = {'compute': 'nova'}
+        clients.services.return_value = {"compute": "nova"}
         clients.nova.return_value = nova_admin
         nova_admin.networks.list.return_value = networks
         nova_admin.networks.get = fake_get_network
@@ -73,7 +73,7 @@ class UserGeneratorTestCase(test.TestCase):
                                              "t2": dict(id="t2", name="t2")}
         user_generator._remove_associated_networks()
         mock_check_service_status.assert_called_once_with(mock.ANY,
-                                                          'nova-network')
+                                                          "nova-network")
         nova_admin.networks.disassociate.assert_called_once_with(networks[0])
 
     @mock.patch("rally.benchmark.utils.check_service_status",
@@ -90,7 +90,7 @@ class UserGeneratorTestCase(test.TestCase):
         nova_admin = mock.MagicMock()
         clients = mock.MagicMock()
         self.osclients.Clients.return_value = clients
-        clients.services.return_value = {'compute': 'nova'}
+        clients.services.return_value = {"compute": "nova"}
         clients.nova.return_value = nova_admin
         nova_admin.networks.list.return_value = networks
         nova_admin.networks.get = fake_get_network
@@ -100,7 +100,7 @@ class UserGeneratorTestCase(test.TestCase):
                                              "t2": dict(id="t2", name="t2")}
         user_generator._remove_associated_networks()
         mock_check_service_status.assert_called_once_with(mock.ANY,
-                                                          'nova-network')
+                                                          "nova-network")
         nova_admin.networks.disassociate.assert_called_once_with(networks[0])
 
     @mock.patch("rally.benchmark.context.users.broker.time.sleep")
@@ -209,7 +209,7 @@ class UserGeneratorTestCase(test.TestCase):
             "task": task
         }
 
-        user_list = [mock.MagicMock(id='id_%d' % i)
+        user_list = [mock.MagicMock(id="id_%d" % i)
                      for i in range(self.users_num)]
         wrapped_keystone.create_user.side_effect = user_list
 

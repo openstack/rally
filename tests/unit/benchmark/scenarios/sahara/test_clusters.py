@@ -19,7 +19,7 @@ from rally.benchmark.scenarios.sahara import clusters
 from tests.unit import test
 
 SAHARA_CLUSTERS = "rally.benchmark.scenarios.sahara.clusters.SaharaClusters"
-SAHARA_UTILS = 'rally.benchmark.scenarios.sahara.utils'
+SAHARA_UTILS = "rally.benchmark.scenarios.sahara.utils"
 
 
 class SaharaClustersTestCase(test.TestCase):
@@ -27,7 +27,7 @@ class SaharaClustersTestCase(test.TestCase):
     @mock.patch(SAHARA_CLUSTERS + "._delete_cluster")
     @mock.patch(SAHARA_CLUSTERS + "._launch_cluster",
                 return_value=mock.MagicMock(id=42))
-    @mock.patch(SAHARA_UTILS + '.SaharaScenario.clients')
+    @mock.patch(SAHARA_UTILS + ".SaharaScenario.clients")
     def test_create_and_delete_cluster(self, mock_clients, mock_launch_cluster,
                                        mock_delete_cluster):
 
@@ -65,7 +65,7 @@ class SaharaClustersTestCase(test.TestCase):
     @mock.patch(SAHARA_CLUSTERS + "._scale_cluster")
     @mock.patch(SAHARA_CLUSTERS + "._launch_cluster",
                 return_value=mock.MagicMock(id=42))
-    @mock.patch(SAHARA_UTILS + '.SaharaScenario.clients')
+    @mock.patch(SAHARA_UTILS + ".SaharaScenario.clients")
     def test_create_scale_delete_cluster(self, mock_clients,
                                          mock_launch_cluster,
                                          mock_scale_cluster,

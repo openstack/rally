@@ -71,7 +71,7 @@ class KeystoneScenarioTestCase(test.TestCase):
                     email=mock_gen_name.return_value + "@rally.me")
         mock_uuid4.assert_called_with()
         self._test_atomic_action_timer(scenario.atomic_actions(),
-                                       'keystone.create_user')
+                                       "keystone.create_user")
 
     def test_user_delete(self):
         resource = fakes.FakeResource()
@@ -100,7 +100,7 @@ class KeystoneScenarioTestCase(test.TestCase):
         self.assertEqual(tenant, result)
         fake_keystone.tenants.create.assert_called_once_with(name)
         self._test_atomic_action_timer(scenario.atomic_actions(),
-                                       'keystone.create_tenant')
+                                       "keystone.create_tenant")
 
     @mock.patch(UTILS + "KeystoneScenario._generate_random_name")
     def test_tenant_create_with_users(self, mock_gen_name):
@@ -120,7 +120,7 @@ class KeystoneScenarioTestCase(test.TestCase):
                     name, password=name, email=name + "@rally.me",
                     tenant_id=tenant.id)
         self._test_atomic_action_timer(scenario.atomic_actions(),
-                                       'keystone.create_users')
+                                       "keystone.create_users")
 
     def test_list_users(self):
         fake_keystone = fakes.FakeKeystoneClient()
@@ -131,7 +131,7 @@ class KeystoneScenarioTestCase(test.TestCase):
         scenario._list_users()
         fake_keystone.users.list.assert_called_once_with()
         self._test_atomic_action_timer(scenario.atomic_actions(),
-                                       'keystone.list_users')
+                                       "keystone.list_users")
 
     def test_list_tenants(self):
         fake_keystone = fakes.FakeKeystoneClient()
@@ -142,4 +142,4 @@ class KeystoneScenarioTestCase(test.TestCase):
         scenario._list_tenants()
         fake_keystone.tenants.list.assert_called_once_with()
         self._test_atomic_action_timer(scenario.atomic_actions(),
-                                       'keystone.list_tenants')
+                                       "keystone.list_tenants")

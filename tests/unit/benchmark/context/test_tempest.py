@@ -49,7 +49,7 @@ class TempestContextTestCase(test.TestCase):
 
         self.assertEqual(0, mock_install.call_count)
         self.assertEqual(0, mock_cfg.call_count)
-        self.assertEqual('/dev/null', benchmark.verifier.log_file_raw)
+        self.assertEqual("/dev/null", benchmark.verifier.log_file_raw)
 
     @mock.patch(CONTEXT + ".os.mkdir")
     @mock.patch(TEMPEST + ".Tempest.is_configured")
@@ -87,7 +87,7 @@ class TempestContextTestCase(test.TestCase):
         benchmark = tempest.Tempest(self.context)
         benchmark.setup()
         self.assertEqual(1, mock_is_installed.call_count)
-        self.assertEqual('/dev/null', benchmark.verifier.log_file_raw)
+        self.assertEqual("/dev/null", benchmark.verifier.log_file_raw)
         self.assertEqual(1, mock_gen.call_count)
 
     @mock.patch(CONTEXT + ".os.path.exists", return_value=True)

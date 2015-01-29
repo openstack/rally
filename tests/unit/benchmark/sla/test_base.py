@@ -28,7 +28,7 @@ class TestCriterion(base.SLA):
     @staticmethod
     def check(criterion_value, result):
         return base.SLAResult(criterion_value == result,
-                              msg='detail')
+                              msg="detail")
 
 
 class BaseSLATestCase(test.TestCase):
@@ -59,15 +59,15 @@ class BaseSLATestCase(test.TestCase):
         result = {"key": {"kw": config, "name": "fake", "pos": 0},
                   "data": 42}
         results = list(base.SLA.check_all(config, result["data"]))
-        expected = [{'criterion': 'test_criterion',
-                     'detail': 'detail',
-                     'success': True}]
+        expected = [{"criterion": "test_criterion",
+                     "detail": "detail",
+                     "success": True}]
         self.assertEqual(expected, results)
         result["data"] = 43
         results = list(base.SLA.check_all(config, result["data"]))
-        expected = [{'criterion': 'test_criterion',
-                     'detail': 'detail',
-                     'success': False}]
+        expected = [{"criterion": "test_criterion",
+                     "detail": "detail",
+                     "success": False}]
         self.assertEqual(expected, results)
 
 

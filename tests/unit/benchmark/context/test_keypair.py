@@ -34,7 +34,7 @@ class KeyPairContextTestCase(test.TestCase):
             "task": task
         }
         self.ctx_without_keys = {
-            "users": [{'endpoint': 'endpoint'}] * self.users,
+            "users": [{"endpoint": "endpoint"}] * self.users,
             "task": task
         }
 

@@ -28,7 +28,7 @@ class CeilometerAlarmsTestCase(test.TestCase):
                               fakearg="f")
         scenario._create_alarm.assert_called_once_with("fake_meter_name",
                                                        "fake_threshold",
-                                                       {'fakearg': 'f'})
+                                                       {"fakearg": "f"})
 
     def test_list_alarm(self):
         scenario = alarms.CeilometerAlarms()
@@ -48,11 +48,11 @@ class CeilometerAlarmsTestCase(test.TestCase):
                                        fakearg="f")
         scenario._create_alarm.assert_called_once_with("fake_meter_name",
                                                        "fake_threshold",
-                                                       {'fakearg': 'f'})
+                                                       {"fakearg": "f"})
         scenario._list_alarms.assert_called_once_with(fake_alarm.alarm_id)
 
     def test_create_and_update_alarm(self):
-        fake_alram_dict_diff = {'description': 'Changed Test Description'}
+        fake_alram_dict_diff = {"description": "Changed Test Description"}
         fake_alarm = mock.MagicMock()
         scenario = alarms.CeilometerAlarms()
 
@@ -63,7 +63,7 @@ class CeilometerAlarmsTestCase(test.TestCase):
                                          fakearg="f")
         scenario._create_alarm.assert_called_once_with("fake_meter_name",
                                                        "fake_threshold",
-                                                       {'fakearg': 'f'})
+                                                       {"fakearg": "f"})
         scenario._update_alarm.assert_called_once_with(fake_alarm.alarm_id,
                                                        fake_alram_dict_diff)
 
@@ -78,5 +78,5 @@ class CeilometerAlarmsTestCase(test.TestCase):
                                          fakearg="f")
         scenario._create_alarm.assert_called_once_with("fake_meter_name",
                                                        "fake_threshold",
-                                                       {'fakearg': 'f'})
+                                                       {"fakearg": "f"})
         scenario._delete_alarm.assert_called_once_with(fake_alarm.alarm_id)

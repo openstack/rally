@@ -27,16 +27,16 @@ class QuotasScenarioTestCase(test.TestCase):
         super(QuotasScenarioTestCase, self).setUp()
 
     def test__update_quotas(self):
-        tenant_id = 'fake_tenant'
+        tenant_id = "fake_tenant"
         quotas = {
-                'metadata_items': 10,
-                'key_pairs': 10,
-                'injected_file_content_bytes': 1024,
-                'injected_file_path_bytes': 1024,
-                'ram': 5120,
-                'instances': 10,
-                'injected_files': 10,
-                'cores': 10,
+                "metadata_items": 10,
+                "key_pairs": 10,
+                "injected_file_content_bytes": 1024,
+                "injected_file_path_bytes": 1024,
+                "ram": 5120,
+                "instances": 10,
+                "injected_files": 10,
+                "cores": 10,
         }
         fake_nova = fakes.FakeNovaClient()
         fake_nova.quotas.update = mock.MagicMock(return_value=quotas)
@@ -45,12 +45,12 @@ class QuotasScenarioTestCase(test.TestCase):
         scenario = utils.QuotasScenario(admin_clients=fake_clients)
         scenario._generate_quota_values = mock.MagicMock(return_value=quotas)
 
-        result = scenario._update_quotas('nova', tenant_id)
+        result = scenario._update_quotas("nova", tenant_id)
 
         self.assertEqual(quotas, result)
         fake_nova.quotas.update.assert_called_once_with(tenant_id, **quotas)
         self._test_atomic_action_timer(scenario.atomic_actions(),
-                                       'quotas.update_quotas')
+                                       "quotas.update_quotas")
 
     def test__generate_quota_values_nova(self):
         max_quota = 1024
@@ -67,15 +67,15 @@ class QuotasScenarioTestCase(test.TestCase):
             self.assertTrue(-1 <= v <= max_quota)
 
     def test__delete_quotas(self):
-        tenant_id = 'fake_tenant'
+        tenant_id = "fake_tenant"
         fake_nova = fakes.FakeNovaClient()
         fake_nova.quotas.delete = mock.MagicMock()
         fake_clients = fakes.FakeClients()
         fake_clients._nova = fake_nova
         scenario = utils.QuotasScenario(admin_clients=fake_clients)
 
-        scenario._delete_quotas('nova', tenant_id)
+        scenario._delete_quotas("nova", tenant_id)
 
         fake_nova.quotas.delete.assert_called_once_with(tenant_id)
         self._test_atomic_action_timer(scenario.atomic_actions(),
-                                       'quotas.delete_quotas')
+                                       "quotas.delete_quotas")

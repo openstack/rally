@@ -77,26 +77,26 @@ class MathTestCase(test.TestCase):
         self.assertEqual(
             utils.compress(data64, limit=4,
                            normalize=alt_normalize, merge=alt_merge),
-            [(17, '012345678910111213141516'),
-             (33, '17181920212223242526272829303132'),
-             (49, '33343536373839404142434445464748'),
-             (64, '495051525354555657585960616263')])
+            [(17, "012345678910111213141516"),
+             (33, "17181920212223242526272829303132"),
+             (49, "33343536373839404142434445464748"),
+             (64, "495051525354555657585960616263")])
 
         # Short list
         self.assertEqual(utils.compress(data4, limit=2),
                          [(3, 2.0), (4, 3.0)])
         self.assertEqual(utils.compress(data4, normalize=alt_normalize),
-                         [(1, '4'), (2, '2'), (3, '1'), (4, '3')])
+                         [(1, "4"), (2, "2"), (3, "1"), (4, "3")])
 
         # List with mixed data types
         self.assertEqual(utils.compress(mixed),
                          [(1, 2.0), (2, 5.0), (3, 0.0), (4, 0.5)])
         self.assertEqual(utils.compress(mixed, normalize=str),
-                         [(1, '2'), (2, '5'), (3, 'None'), (4, '0.5')])
+                         [(1, "2"), (2, "5"), (3, "None"), (4, "0.5")])
         self.assertRaises(TypeError, utils.compress, mixed, normalize=int)
         self.assertEqual(
             utils.compress(mixed, normalize=alt_normalize, merge=alt_merge),
-            [(1, '2'), (2, '5'), (3, 'None'), (4, '0.5')])
+            [(1, "2"), (2, "5"), (3, "None"), (4, "0.5")])
 
 
 class AtomicActionsDataTestCase(test.TestCase):

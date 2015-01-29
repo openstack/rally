@@ -23,8 +23,8 @@ from rally import exceptions as rally_exceptions
 from tests.unit import fakes
 from tests.unit import test
 
-BM_UTILS = 'rally.benchmark.utils'
-GLANCE_UTILS = 'rally.benchmark.scenarios.glance.utils'
+BM_UTILS = "rally.benchmark.utils"
+GLANCE_UTILS = "rally.benchmark.scenarios.glance.utils"
 
 
 class GlanceScenarioTestCase(test.TestCase):
@@ -34,7 +34,7 @@ class GlanceScenarioTestCase(test.TestCase):
         self.image = mock.Mock()
         self.image1 = mock.Mock()
         self.res_is = mockpatch.Patch(BM_UTILS + ".resource_is")
-        self.get_fm = mockpatch.Patch(BM_UTILS + '.get_from_manager')
+        self.get_fm = mockpatch.Patch(BM_UTILS + ".get_from_manager")
         self.wait_for = mockpatch.Patch(GLANCE_UTILS + ".bench_utils.wait_for")
         self.wait_for_delete = mockpatch.Patch(
             GLANCE_UTILS + ".bench_utils.wait_for_delete")
@@ -43,7 +43,7 @@ class GlanceScenarioTestCase(test.TestCase):
         self.useFixture(self.res_is)
         self.useFixture(self.get_fm)
         self.gfm = self.get_fm.mock
-        self.useFixture(mockpatch.Patch('time.sleep'))
+        self.useFixture(mockpatch.Patch("time.sleep"))
         self.scenario = utils.GlanceScenario()
 
     def test_failed_image_status(self):
@@ -51,9 +51,9 @@ class GlanceScenarioTestCase(test.TestCase):
         image_manager = fakes.FakeFailedImageManager()
         self.assertRaises(rally_exceptions.GetResourceFailure,
                           butils.get_from_manager(),
-                          image_manager.create('fails', 'url', 'cf', 'df'))
+                          image_manager.create("fails", "url", "cf", "df"))
 
-    @mock.patch(GLANCE_UTILS + '.GlanceScenario.clients')
+    @mock.patch(GLANCE_UTILS + ".GlanceScenario.clients")
     def test_list_images(self, mock_clients):
         images_list = []
         mock_clients("glance").images.list.return_value = images_list
@@ -61,44 +61,44 @@ class GlanceScenarioTestCase(test.TestCase):
         return_images_list = scenario._list_images()
         self.assertEqual(images_list, return_images_list)
         self._test_atomic_action_timer(scenario.atomic_actions(),
-                                       'glance.list_images')
+                                       "glance.list_images")
 
-    @mock.patch(GLANCE_UTILS + '.GlanceScenario.clients')
+    @mock.patch(GLANCE_UTILS + ".GlanceScenario.clients")
     def test_create_image(self, mock_clients):
         image_location = tempfile.NamedTemporaryFile()
         mock_clients("glance").images.create.return_value = self.image
         scenario = utils.GlanceScenario()
-        return_image = scenario._create_image('image_name',
-                                              'container_format',
+        return_image = scenario._create_image("image_name",
+                                              "container_format",
                                               image_location.name,
-                                              'disk_format')
+                                              "disk_format")
         self.wait_for.mock.assert_called_once_with(self.image,
                                                    update_resource=self.gfm(),
                                                    is_ready=self.res_is.mock(),
                                                    check_interval=1,
                                                    timeout=120)
-        self.res_is.mock.assert_has_calls([mock.call('active')])
+        self.res_is.mock.assert_has_calls([mock.call("active")])
         self.assertEqual(self.wait_for.mock(), return_image)
         self._test_atomic_action_timer(scenario.atomic_actions(),
-                                       'glance.create_image')
+                                       "glance.create_image")
 
-    @mock.patch(GLANCE_UTILS + '.GlanceScenario.clients')
+    @mock.patch(GLANCE_UTILS + ".GlanceScenario.clients")
     def test_create_image_with_location(self, mock_clients):
         mock_clients("glance").images.create.return_value = self.image
         scenario = utils.GlanceScenario()
-        return_image = scenario._create_image('image_name',
-                                              'container_format',
-                                              'image_location',
-                                              'disk_format')
+        return_image = scenario._create_image("image_name",
+                                              "container_format",
+                                              "image_location",
+                                              "disk_format")
         self.wait_for.mock.assert_called_once_with(self.image,
                                                    update_resource=self.gfm(),
                                                    is_ready=self.res_is.mock(),
                                                    check_interval=1,
                                                    timeout=120)
-        self.res_is.mock.assert_has_calls([mock.call('active')])
+        self.res_is.mock.assert_has_calls([mock.call("active")])
         self.assertEqual(self.wait_for.mock(), return_image)
         self._test_atomic_action_timer(scenario.atomic_actions(),
-                                       'glance.create_image')
+                                       "glance.create_image")
 
     def test_delete_image(self):
         scenario = utils.GlanceScenario()
@@ -110,4 +110,4 @@ class GlanceScenarioTestCase(test.TestCase):
             check_interval=1,
             timeout=120)
         self._test_atomic_action_timer(scenario.atomic_actions(),
-                                       'glance.delete_image')
+                                       "glance.delete_image")

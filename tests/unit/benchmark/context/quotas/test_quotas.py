@@ -79,7 +79,7 @@ class QuotasTestCase(test.TestCase):
                 except jsonschema.ValidationError:
                     pass
                 else:
-                    self.fail('Invalid value %s must raise a validation error'
+                    self.fail("Invalid value %s must raise a validation error"
                               % ctx["config"]["quotas"][service][key])
 
                 ctx["config"]["quotas"][service][key] = 2.5
@@ -88,7 +88,7 @@ class QuotasTestCase(test.TestCase):
                 except jsonschema.ValidationError:
                     pass
                 else:
-                    self.fail('Invalid value %s must raise a validation error'
+                    self.fail("Invalid value %s must raise a validation error"
                               % ctx["config"]["quotas"][service][key])
 
                 ctx["config"]["quotas"][service][key] = "-1"
@@ -97,7 +97,7 @@ class QuotasTestCase(test.TestCase):
                 except jsonschema.ValidationError:
                     pass
                 else:
-                    self.fail('Invalid value %s must raise a validation error'
+                    self.fail("Invalid value %s must raise a validation error"
                               % ctx["config"]["quotas"][service][key])
 
                 # Test valid values
@@ -121,7 +121,7 @@ class QuotasTestCase(test.TestCase):
             except jsonschema.ValidationError:
                 pass
             else:
-                self.fail('Additional keys must raise a validation error')
+                self.fail("Additional keys must raise a validation error")
             del ctx["config"]["quotas"][service]["additional"]
 
             # Test valid keys are optional
