@@ -49,8 +49,8 @@ class RandomTimesScenarioRunner(base.ScenarioRunner):
 
     def _run_scenario(self, cls, method_name, context, args):
         # runners settings are stored in self.config
-        min_times = self.config.get('min_times', 1)
-        max_times = self.config.get('max_times', 1)
+        min_times = self.config.get("min_times", 1)
+        max_times = self.config.get("max_times", 1)
 
         for i in range(random.randrange(min_times, max_times)):
             run_args = (i, cls, method_name,
