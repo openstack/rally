@@ -115,6 +115,10 @@ class NotFoundException(RallyException):
     msg_fmt = _("Not found.")
 
 
+class NoSuchPlugin(NotFoundException):
+    msg_fmt = _("There is no plugin with name: `%(name)s`.")
+
+
 class NoSuchEngine(NotFoundException):
     msg_fmt = _("There is no engine with name `%(engine_name)s`.")
 
