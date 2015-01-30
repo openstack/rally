@@ -26,13 +26,13 @@ class FlavorResourceTypeTestCase(test.TestCase):
     def setUp(self):
         super(FlavorResourceTypeTestCase, self).setUp()
         self.clients = fakes.FakeClients()
-        self.clients.nova().flavors._cache(fakes.FakeResource(name='m1.tiny',
+        self.clients.nova().flavors._cache(fakes.FakeResource(name="m1.tiny",
                                                               id="1"))
-        self.clients.nova().flavors._cache(fakes.FakeResource(name='m1.nano',
+        self.clients.nova().flavors._cache(fakes.FakeResource(name="m1.nano",
                                                               id="42"))
-        self.clients.nova().flavors._cache(fakes.FakeResource(name='m1.large',
+        self.clients.nova().flavors._cache(fakes.FakeResource(name="m1.large",
                                                               id="44"))
-        self.clients.nova().flavors._cache(fakes.FakeResource(name='m1.large',
+        self.clients.nova().flavors._cache(fakes.FakeResource(name="m1.large",
                                                               id="45"))
 
     def test_transform_by_id(self):
@@ -154,7 +154,7 @@ class VolumeTypeResourceTypeTestCase(test.TestCase):
     def setUp(self):
         super(VolumeTypeResourceTypeTestCase, self).setUp()
         self.clients = fakes.FakeClients()
-        volume_type1 = fakes.FakeResource(name='lvmdriver-1', id=100)
+        volume_type1 = fakes.FakeResource(name="lvmdriver-1", id=100)
         self.clients.cinder().volume_types._cache(volume_type1)
 
     def test_transform_by_id(self):

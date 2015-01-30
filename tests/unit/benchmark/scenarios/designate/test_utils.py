@@ -29,8 +29,8 @@ class DesignateScenarioTestCase(test.TestCase):
         super(DesignateScenarioTestCase, self).setUp()
         self.domain = mock.Mock()
 
-    @mock.patch(DESIGNATE_UTILS + 'DesignateScenario._generate_random_name')
-    @mock.patch(DESIGNATE_UTILS + 'DesignateScenario.clients')
+    @mock.patch(DESIGNATE_UTILS + "DesignateScenario._generate_random_name")
+    @mock.patch(DESIGNATE_UTILS + "DesignateScenario.clients")
     def test_create_domain(self, mock_clients, mock_random_name):
         scenario = utils.DesignateScenario()
 
@@ -44,10 +44,10 @@ class DesignateScenarioTestCase(test.TestCase):
         # Check that the defaults / randoms are used if nothing is specified
         domain = scenario._create_domain()
         mock_clients("designate").domains.create.assert_called_once_with(
-            {"email": "root@random.name", "name": '%s.name.' % random_name})
+            {"email": "root@random.name", "name": "%s.name." % random_name})
         self.assertEqual(self.domain, domain)
         self._test_atomic_action_timer(scenario.atomic_actions(),
-                                       'designate.create_domain')
+                                       "designate.create_domain")
 
         mock_clients("designate").domains.create.reset_mock()
 
@@ -57,7 +57,7 @@ class DesignateScenarioTestCase(test.TestCase):
         mock_clients("designate").domains.create.assert_called_once_with(data)
         self.assertEqual(self.domain, domain)
 
-    @mock.patch(DESIGNATE_UTILS + 'DesignateScenario.clients')
+    @mock.patch(DESIGNATE_UTILS + "DesignateScenario.clients")
     def test_list_domains(self, mock_clients):
         scenario = utils.DesignateScenario()
         domains_list = []
@@ -65,25 +65,25 @@ class DesignateScenarioTestCase(test.TestCase):
         return_domains_list = scenario._list_domains()
         self.assertEqual(domains_list, return_domains_list)
         self._test_atomic_action_timer(scenario.atomic_actions(),
-                                       'designate.list_domains')
+                                       "designate.list_domains")
 
-    @mock.patch(DESIGNATE_UTILS + 'DesignateScenario.clients')
+    @mock.patch(DESIGNATE_UTILS + "DesignateScenario.clients")
     def test_delete_domain(self, mock_clients):
         scenario = utils.DesignateScenario()
 
         domain = scenario._create_domain()
-        scenario._delete_domain(domain['id'])
+        scenario._delete_domain(domain["id"])
         self._test_atomic_action_timer(scenario.atomic_actions(),
-                                       'designate.delete_domain')
+                                       "designate.delete_domain")
 
-    @mock.patch(DESIGNATE_UTILS + 'DesignateScenario._generate_random_name')
-    @mock.patch(DESIGNATE_UTILS + 'DesignateScenario.clients')
+    @mock.patch(DESIGNATE_UTILS + "DesignateScenario._generate_random_name")
+    @mock.patch(DESIGNATE_UTILS + "DesignateScenario.clients")
     def test_create_record(self, mock_clients, mock_random_name):
         scenario = utils.DesignateScenario()
 
         random_name = "foo"
         domain_name = "zone.name."
-        random_record_name = '%s.%s' % (random_name, domain_name)
+        random_record_name = "%s.%s" % (random_name, domain_name)
 
         mock_random_name.return_value = random_name
 
@@ -92,7 +92,7 @@ class DesignateScenarioTestCase(test.TestCase):
         # Create with randoms (name and type)
         scenario._create_record(domain)
         mock_clients("designate").records.create.assert_called_once_with(
-            domain['id'],
+            domain["id"],
             {"name": random_record_name, "type": "A", "data": "10.0.0.1"})
 
         self._test_atomic_action_timer(scenario.atomic_actions(),
@@ -104,9 +104,9 @@ class DesignateScenarioTestCase(test.TestCase):
         record = {"name": "www.zone.name.", "type": "ASD"}
         scenario._create_record(domain, record)
         mock_clients("designate").records.create.assert_called_once_with(
-            domain['id'], record)
+            domain["id"], record)
 
-    @mock.patch(DESIGNATE_UTILS + 'DesignateScenario.clients')
+    @mock.patch(DESIGNATE_UTILS + "DesignateScenario.clients")
     def test_list_records(self, mock_clients):
         scenario = utils.DesignateScenario()
         records_list = []
@@ -114,19 +114,19 @@ class DesignateScenarioTestCase(test.TestCase):
         return_records_list = scenario._list_records("123")
         self.assertEqual(records_list, return_records_list)
         self._test_atomic_action_timer(scenario.atomic_actions(),
-                                       'designate.list_records')
+                                       "designate.list_records")
 
-    @mock.patch(DESIGNATE_UTILS + 'DesignateScenario.clients')
+    @mock.patch(DESIGNATE_UTILS + "DesignateScenario.clients")
     def test_delete_record(self, mock_clients):
         scenario = utils.DesignateScenario()
 
-        mock_clients('designate').domains.create.return_value = {
+        mock_clients("designate").domains.create.return_value = {
             "id": "123", "name": "asd"}
         domain = scenario._create_domain()
 
-        mock_clients('designate').records.create.return_value = {"id": "123"}
+        mock_clients("designate").records.create.return_value = {"id": "123"}
         record = scenario._create_record(domain)
 
-        scenario._delete_record(domain['id'], record['id'])
+        scenario._delete_record(domain["id"], record["id"])
         self._test_atomic_action_timer(scenario.atomic_actions(),
-                                       'designate.delete_record')
+                                       "designate.delete_record")

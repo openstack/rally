@@ -29,8 +29,8 @@ class NeutronScenarioTestCase(test.TestCase):
         super(NeutronScenarioTestCase, self).setUp()
         self.network = mock.Mock()
 
-    @mock.patch(NEUTRON_UTILS + 'NeutronScenario._generate_random_name')
-    @mock.patch(NEUTRON_UTILS + 'NeutronScenario.clients')
+    @mock.patch(NEUTRON_UTILS + "NeutronScenario._generate_random_name")
+    @mock.patch(NEUTRON_UTILS + "NeutronScenario.clients")
     def test_create_network(self, mock_clients, mock_random_name):
         neutron_scenario = utils.NeutronScenario()
         explicit_name = "explicit_name"
@@ -46,7 +46,7 @@ class NeutronScenarioTestCase(test.TestCase):
             expected_network_data)
         self.assertEqual(self.network, network)
         self._test_atomic_action_timer(neutron_scenario.atomic_actions(),
-                                       'neutron.create_network')
+                                       "neutron.create_network")
 
         mock_clients("neutron").create_network.reset_mock()
 
@@ -57,7 +57,7 @@ class NeutronScenarioTestCase(test.TestCase):
         mock_clients("neutron").create_network.assert_called_once_with(
             expected_network_data)
 
-    @mock.patch(NEUTRON_UTILS + 'NeutronScenario.clients')
+    @mock.patch(NEUTRON_UTILS + "NeutronScenario.clients")
     def test_list_networks(self, mock_clients):
         scenario = utils.NeutronScenario()
         networks_list = []
@@ -66,9 +66,9 @@ class NeutronScenarioTestCase(test.TestCase):
         return_networks_list = scenario._list_networks()
         self.assertEqual(networks_list, return_networks_list)
         self._test_atomic_action_timer(scenario.atomic_actions(),
-                                       'neutron.list_networks')
+                                       "neutron.list_networks")
 
-    @mock.patch(NEUTRON_UTILS + 'NeutronScenario.clients')
+    @mock.patch(NEUTRON_UTILS + "NeutronScenario.clients")
     def test_update_network(self, mock_clients):
         scenario = utils.NeutronScenario()
         expected_network = {
@@ -87,9 +87,9 @@ class NeutronScenarioTestCase(test.TestCase):
                                 network["network"]["id"], expected_network)
         self.assertEqual(result_network, expected_network)
         self._test_atomic_action_timer(scenario.atomic_actions(),
-                                       'neutron.update_network')
+                                       "neutron.update_network")
 
-    @mock.patch(NEUTRON_UTILS + 'NeutronScenario.clients')
+    @mock.patch(NEUTRON_UTILS + "NeutronScenario.clients")
     def test_delete_network(self, mock_clients):
         scenario = utils.NeutronScenario()
 
@@ -97,23 +97,23 @@ class NeutronScenarioTestCase(test.TestCase):
         network = scenario._create_network(network_create_args)
         scenario._delete_network(network)
         self._test_atomic_action_timer(scenario.atomic_actions(),
-                                       'neutron.delete_network')
+                                       "neutron.delete_network")
 
-    @mock.patch(NEUTRON_UTILS + 'NeutronScenario._generate_random_name',
-                return_value='test_subnet')
-    @mock.patch(NEUTRON_UTILS + 'NeutronScenario.clients')
+    @mock.patch(NEUTRON_UTILS + "NeutronScenario._generate_random_name",
+                return_value="test_subnet")
+    @mock.patch(NEUTRON_UTILS + "NeutronScenario.clients")
     def test_create_subnet(self, mock_clients, mock_random_name):
         scenario = utils.NeutronScenario()
-        network_id = 'fake-id'
-        start_cidr = '192.168.0.0/24'
+        network_id = "fake-id"
+        start_cidr = "192.168.0.0/24"
 
-        network = {'network': {'id': network_id}}
+        network = {"network": {"id": network_id}}
         expected_subnet_data = {
-            'subnet': {
-                'network_id': network_id,
-                'cidr': start_cidr,
-                'ip_version': scenario.SUBNET_IP_VERSION,
-                'name': mock_random_name.return_value
+            "subnet": {
+                "network_id": network_id,
+                "cidr": start_cidr,
+                "ip_version": scenario.SUBNET_IP_VERSION,
+                "name": mock_random_name.return_value
             }
         }
 
@@ -128,7 +128,7 @@ class NeutronScenarioTestCase(test.TestCase):
         mock_clients("neutron").create_subnet.reset_mock()
 
         # Custom options
-        extras = {'cidr': '192.168.16.0/24', 'allocation_pools': []}
+        extras = {"cidr": "192.168.16.0/24", "allocation_pools": []}
         subnet_data.update(extras)
         expected_subnet_data["subnet"].update(extras)
         scenario._create_subnet(network, subnet_data)
@@ -147,7 +147,7 @@ class NeutronScenarioTestCase(test.TestCase):
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "neutron.list_subnets")
 
-    @mock.patch(NEUTRON_UTILS + 'NeutronScenario.clients')
+    @mock.patch(NEUTRON_UTILS + "NeutronScenario.clients")
     def test_update_subnet(self, mock_clients):
         scenario = utils.NeutronScenario()
         expected_subnet = {
@@ -166,9 +166,9 @@ class NeutronScenarioTestCase(test.TestCase):
                                 subnet["subnet"]["id"], expected_subnet)
         self.assertEqual(result_subnet, expected_subnet)
         self._test_atomic_action_timer(scenario.atomic_actions(),
-                                       'neutron.update_subnet')
+                                       "neutron.update_subnet")
 
-    @mock.patch(NEUTRON_UTILS + 'NeutronScenario.clients')
+    @mock.patch(NEUTRON_UTILS + "NeutronScenario.clients")
     def test_delete_subnet(self, mock_clients):
         scenario = utils.NeutronScenario()
 
@@ -177,10 +177,10 @@ class NeutronScenarioTestCase(test.TestCase):
         scenario._delete_subnet(subnet)
 
         self._test_atomic_action_timer(scenario.atomic_actions(),
-                                       'neutron.delete_subnet')
+                                       "neutron.delete_subnet")
 
-    @mock.patch(NEUTRON_UTILS + 'NeutronScenario._generate_random_name')
-    @mock.patch(NEUTRON_UTILS + 'NeutronScenario.clients')
+    @mock.patch(NEUTRON_UTILS + "NeutronScenario._generate_random_name")
+    @mock.patch(NEUTRON_UTILS + "NeutronScenario.clients")
     def test_create_router(self, mock_clients, mock_random_name):
         scenario = utils.NeutronScenario()
         router = mock.Mock()
@@ -195,7 +195,7 @@ class NeutronScenarioTestCase(test.TestCase):
             {"router": {"name": random_name}})
         self.assertEqual(result_router, router)
         self._test_atomic_action_timer(scenario.atomic_actions(),
-                                       'neutron.create_router')
+                                       "neutron.create_router")
 
         mock_clients("neutron").create_router.reset_mock()
 
@@ -205,7 +205,7 @@ class NeutronScenarioTestCase(test.TestCase):
         mock_clients("neutron").create_router.assert_called_once_with(
             {"router": router_data})
 
-    @mock.patch(NEUTRON_UTILS + 'NeutronScenario.clients')
+    @mock.patch(NEUTRON_UTILS + "NeutronScenario.clients")
     def test_list_routers(self, mock_clients):
         scenario = utils.NeutronScenario()
         routers = [mock.Mock()]
@@ -213,15 +213,15 @@ class NeutronScenarioTestCase(test.TestCase):
             "routers": routers}
         self.assertEqual(routers, scenario._list_routers())
         self._test_atomic_action_timer(scenario.atomic_actions(),
-                                       'neutron.list_routers')
+                                       "neutron.list_routers")
 
-    @mock.patch(NEUTRON_UTILS + 'NeutronScenario.clients')
+    @mock.patch(NEUTRON_UTILS + "NeutronScenario.clients")
     def test_update_router(self, mock_clients):
         scenario = utils.NeutronScenario()
         expected_router = {
             "router": {
                 "name": "router-name_updated",
-                'admin_state_up': False
+                "admin_state_up": False
             }
         }
         mock_clients("neutron").update_router.return_value = expected_router
@@ -230,17 +230,17 @@ class NeutronScenarioTestCase(test.TestCase):
             "router": {
                 "id": "router-id",
                 "name": "router-name",
-                'admin_state_up': True
+                "admin_state_up": True
             }
         }
         router_update_args = {"name": "_updated", "admin_state_up": False}
 
         result_router = scenario._update_router(router, router_update_args)
         mock_clients("neutron").update_router.assert_called_once_with(
-                                 router['router']['id'], expected_router)
+                                 router["router"]["id"], expected_router)
         self.assertEqual(result_router, expected_router)
         self._test_atomic_action_timer(scenario.atomic_actions(),
-                                       'neutron.update_router')
+                                       "neutron.update_router")
 
     def test_SUBNET_IP_VERSION(self):
         """Curent NeutronScenario implementation supports only IPv4."""
@@ -288,7 +288,7 @@ class NeutronScenarioTestCase(test.TestCase):
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "neutron.list_ports")
 
-    @mock.patch(NEUTRON_UTILS + 'NeutronScenario.clients')
+    @mock.patch(NEUTRON_UTILS + "NeutronScenario.clients")
     def test_update_port(self, mock_clients):
         scenario = utils.NeutronScenario()
         expected_port = {
@@ -317,12 +317,12 @@ class NeutronScenarioTestCase(test.TestCase):
 
         result_port = scenario._update_port(port, port_update_args)
         mock_clients("neutron").update_port.assert_called_once_with(
-                                 port['port']['id'], expected_port)
+                                 port["port"]["id"], expected_port)
         self.assertEqual(result_port, expected_port)
         self._test_atomic_action_timer(scenario.atomic_actions(),
-                                       'neutron.update_port')
+                                       "neutron.update_port")
 
-    @mock.patch(NEUTRON_UTILS + 'NeutronScenario.clients')
+    @mock.patch(NEUTRON_UTILS + "NeutronScenario.clients")
     def test_delete_port(self, mock_clients):
         scenario = utils.NeutronScenario()
 

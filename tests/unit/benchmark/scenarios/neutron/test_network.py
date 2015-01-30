@@ -478,8 +478,8 @@ class NeutronNetworksTestCase(test.TestCase):
         ports_per_network = 10
 
         port_update_args = {
-            'name': '_updated',
-            'admin_state_up': False
+            "name": "_updated",
+            "admin_state_up": False
         }
 
         # Defaults

@@ -42,7 +42,7 @@ class SaharaEDPTestCase(test.TestCase):
                                        "tenant_id": str(i),
                                        "endpoint": "endpoint"})
 
-        self.user_key = [{'id': i, 'tenant_id': j, 'endpoint': 'endpoint'}
+        self.user_key = [{"id": i, "tenant_id": j, "endpoint": "endpoint"}
                          for j in range(self.tenants_num)
                          for i in range(self.users_per_tenant)]
 

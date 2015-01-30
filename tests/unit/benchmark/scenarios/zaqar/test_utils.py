@@ -40,7 +40,7 @@ class ZaqarScenarioTestCase(test.TestCase):
 
         fake_zaqar.queue.assert_called_once_with("kitkat")
         self._test_atomic_action_timer(scenario.atomic_actions(),
-                                       'zaqar.create_queue')
+                                       "zaqar.create_queue")
 
     def test_queue_delete(self):
         queue = fakes.FakeQueue()
@@ -50,15 +50,15 @@ class ZaqarScenarioTestCase(test.TestCase):
         scenario._queue_delete(queue)
         queue.delete.assert_called_once_with()
         self._test_atomic_action_timer(scenario.atomic_actions(),
-                                       'zaqar.delete_queue')
+                                       "zaqar.delete_queue")
 
     def test_messages_post(self):
         queue = fakes.FakeQueue()
         queue.post = mock.MagicMock()
 
-        messages = [{'body': {'id': 'one'}, 'ttl': 100},
-                    {'body': {'id': 'two'}, 'ttl': 120},
-                    {'body': {'id': 'three'}, 'ttl': 140}]
+        messages = [{"body": {"id": "one"}, "ttl": 100},
+                    {"body": {"id": "two"}, "ttl": 120},
+                    {"body": {"id": "three"}, "ttl": 140}]
         min_msg_count = max_msg_count = len(messages)
 
         scenario = utils.ZaqarScenario()
@@ -73,4 +73,4 @@ class ZaqarScenarioTestCase(test.TestCase):
         scenario._messages_list(queue)
         queue.messages.assert_called_once_with()
         self._test_atomic_action_timer(scenario.atomic_actions(),
-                                       'zaqar.list_messages')
+                                       "zaqar.list_messages")

@@ -247,7 +247,7 @@ class CinderServersTestCase(test.TestCase):
         # Make sure create volume's second arg was the correct volume type.
         # fake or none (randomly selected)
         self.assertTrue(scenario._create_volume.called)
-        vol_type = scenario._create_volume.call_args_list[0][1]['volume_type']
+        vol_type = scenario._create_volume.call_args_list[0][1]["volume_type"]
         self.assertTrue(vol_type is fake.name or vol_type is None)
         scenario._create_snapshot.assert_called_once_with(fake_volume.id,
                                                           False)

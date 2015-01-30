@@ -33,7 +33,7 @@ class ZaqarBasicTestCase(test.TestCase):
     @mock.patch(BASIC + "_generate_random_name", return_value="kitkat")
     def test_producer_consumer(self, mock_gen_name):
         scenario = basic.ZaqarBasic()
-        messages = [{'body': {'id': idx}, 'ttl': 360} for idx
+        messages = [{"body": {"id": idx}, "ttl": 360} for idx
                     in range(20)]
         queue = mock.MagicMock()
 

@@ -34,7 +34,7 @@ class SecGroupContextTestCase(test.TestCase):
             "task": task
         }
 
-    @mock.patch('rally.benchmark.context.secgroup.osclients.Clients')
+    @mock.patch("rally.benchmark.context.secgroup.osclients.Clients")
     def test_prep_ssh_sec_group(self, mock_osclients):
         fake_nova = fakes.FakeNovaClient()
         self.assertEqual(len(fake_nova.security_groups.list()), 1)
@@ -42,7 +42,7 @@ class SecGroupContextTestCase(test.TestCase):
         mock_cl.nova.return_value = fake_nova
         mock_osclients.return_value = mock_cl
 
-        secgroup._prepare_open_secgroup('endpoint')
+        secgroup._prepare_open_secgroup("endpoint")
 
         self.assertEqual(len(fake_nova.security_groups.list()), 2)
         self.assertTrue(
@@ -51,10 +51,10 @@ class SecGroupContextTestCase(test.TestCase):
             ])
 
         # run prep again, check that another security group is not created
-        secgroup._prepare_open_secgroup('endpoint')
+        secgroup._prepare_open_secgroup("endpoint")
         self.assertEqual(len(fake_nova.security_groups.list()), 2)
 
-    @mock.patch('rally.benchmark.context.secgroup.osclients.Clients')
+    @mock.patch("rally.benchmark.context.secgroup.osclients.Clients")
     def test_prep_ssh_sec_group_rules(self, mock_osclients):
         fake_nova = fakes.FakeNovaClient()
 
@@ -64,14 +64,14 @@ class SecGroupContextTestCase(test.TestCase):
         mock_cl.nova.return_value = fake_nova
         mock_osclients.return_value = mock_cl
 
-        secgroup._prepare_open_secgroup('endpoint')
+        secgroup._prepare_open_secgroup("endpoint")
 
         self.assertEqual(len(fake_nova.security_groups.list()), 2)
         rally_open = fake_nova.security_groups.find(secgroup.SSH_GROUP_NAME)
         self.assertEqual(len(rally_open.rules), 3)
 
         # run prep again, check that extra rules are not created
-        secgroup._prepare_open_secgroup('endpoint')
+        secgroup._prepare_open_secgroup("endpoint")
         rally_open = fake_nova.security_groups.find(secgroup.SSH_GROUP_NAME)
         self.assertEqual(len(rally_open.rules), 3)
 

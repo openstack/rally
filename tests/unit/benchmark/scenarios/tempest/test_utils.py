@@ -52,7 +52,7 @@ class TempestLogWrappersTestCase(test.TestCase):
         target_func.__name__ = "target_func"
         func = utils.tempest_log_wrapper(target_func)
 
-        func(self.scenario, log_file='log_file')
+        func(self.scenario, log_file="log_file")
 
         target_func.assert_called_once_with(self.scenario,
                                             log_file="log_file")

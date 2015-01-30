@@ -77,8 +77,8 @@ class RPSScenarioRunnerTestCase(test.TestCase):
 
         times = 4
 
-        context = {'users': [{'tenant_id': 't1', 'endpoint': 'e1',
-                              'id': 'uuid1'}]}
+        context = {"users": [{"tenant_id": "t1", "endpoint": "e1",
+                              "id": "uuid1"}]}
 
         rps._worker_process(10, times, mock_queue, context, 600, 1, 1,
                             "Dummy", "dummy", ())
@@ -119,7 +119,7 @@ class RPSScenarioRunnerTestCase(test.TestCase):
     @mock.patch("rally.benchmark.runners.rps.time.sleep")
     def test__run_scenario(self, mock_sleep):
         context = fakes.FakeUserContext({}).context
-        context['task'] = {'uuid': 'fake_uuid'}
+        context["task"] = {"uuid": "fake_uuid"}
         config = {"times": 20, "rps": 20, "timeout": 5}
         runner = rps.RPSScenarioRunner(
                         None, config)
@@ -134,7 +134,7 @@ class RPSScenarioRunnerTestCase(test.TestCase):
     @mock.patch("rally.benchmark.runners.rps.time.sleep")
     def test__run_scenario_exception(self, mock_sleep):
         context = fakes.FakeUserContext({}).context
-        context['task'] = {'uuid': 'fake_uuid'}
+        context["task"] = {"uuid": "fake_uuid"}
 
         config = {"times": 4, "rps": 10}
         runner = rps.RPSScenarioRunner(

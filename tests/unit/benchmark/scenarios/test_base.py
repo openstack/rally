@@ -95,7 +95,7 @@ class ScenarioTestCase(test.TestCase):
         args = {"a": 1, "b": 2}
         self.assertRaises(exceptions.InvalidScenarioArgument,
                           base.Scenario._validate_helper,
-                          validators, clients, args, 'fake_uuid')
+                          validators, clients, args, "fake_uuid")
 
     @mock.patch("rally.benchmark.scenarios.base.Scenario.get_by_name")
     def test_validate__no_validators(self, mock_base_get_by_name):
@@ -164,7 +164,7 @@ class ScenarioTestCase(test.TestCase):
         class MyFakeScenario(fakes.FakeScenario):
             pass
 
-        attr_name = 'preprocessors'
+        attr_name = "preprocessors"
         preprocessors = [mock.MagicMock(), mock.MagicMock()]
         MyFakeScenario.do_it.__dict__[attr_name] = preprocessors
 
@@ -177,7 +177,7 @@ class ScenarioTestCase(test.TestCase):
         class MyFakeScenario(fakes.FakeScenario):
             pass
 
-        attr_name = 'preprocessors'
+        attr_name = "preprocessors"
         preprocessors = [mock.MagicMock(), mock.MagicMock()]
         MyFakeScenario.do_it.__dict__[attr_name] = preprocessors
 
@@ -339,16 +339,16 @@ class ScenarioTestCase(test.TestCase):
 class AtomicActionTestCase(test.TestCase):
     def test__init__(self):
         fake_scenario_instance = fakes.FakeScenario()
-        c = base.AtomicAction(fake_scenario_instance, 'asdf')
+        c = base.AtomicAction(fake_scenario_instance, "asdf")
         self.assertEqual(c.scenario_instance, fake_scenario_instance)
-        self.assertEqual(c.name, 'asdf')
+        self.assertEqual(c.name, "asdf")
 
-    @mock.patch('tests.unit.fakes.FakeScenario._add_atomic_actions')
-    @mock.patch('rally.common.utils.time')
+    @mock.patch("tests.unit.fakes.FakeScenario._add_atomic_actions")
+    @mock.patch("rally.common.utils.time")
     def test__exit__(self, mock_time, mock__add_atomic_actions):
         fake_scenario_instance = fakes.FakeScenario()
         self.start = mock_time.time()
         with base.AtomicAction(fake_scenario_instance, "asdf"):
             pass
         duration = mock_time.time() - self.start
-        mock__add_atomic_actions.assert_called_once_with('asdf', duration)
+        mock__add_atomic_actions.assert_called_once_with("asdf", duration)

@@ -64,7 +64,7 @@ class ConstantScenarioRunnerTestCase(test.TestCase):
         self.assertEqual(len(runner.result_queue), self.config["times"])
         for result in runner.result_queue:
             self.assertIsNotNone(base.ScenarioRunnerResult(result))
-        self.assertIn('error', runner.result_queue[0])
+        self.assertIn("error", runner.result_queue[0])
 
     def test_run_scenario_constantly_for_times_timeout(self):
         runner = constant.ConstantScenarioRunner(
@@ -75,7 +75,7 @@ class ConstantScenarioRunnerTestCase(test.TestCase):
         self.assertEqual(len(runner.result_queue), self.config["times"])
         for result in runner.result_queue:
             self.assertIsNotNone(base.ScenarioRunnerResult(result))
-        self.assertIn('error', runner.result_queue[0])
+        self.assertIn("error", runner.result_queue[0])
 
 
 class ConstantForDurationScenarioRunnerTeestCase(test.TestCase):
@@ -124,7 +124,7 @@ class ConstantForDurationScenarioRunnerTeestCase(test.TestCase):
         self.assertEqual(len(runner.result_queue), expected_times)
         for result in runner.result_queue:
             self.assertIsNotNone(base.ScenarioRunnerResult(result))
-        self.assertIn('error', runner.result_queue[0])
+        self.assertIn("error", runner.result_queue[0])
 
     def test_run_scenario_constantly_for_duration_timeout(self):
         runner = constant.ConstantForDurationScenarioRunner(
@@ -137,4 +137,4 @@ class ConstantForDurationScenarioRunnerTeestCase(test.TestCase):
         self.assertEqual(len(runner.result_queue), expected_times)
         for result in runner.result_queue:
             self.assertIsNotNone(base.ScenarioRunnerResult(result))
-        self.assertIn('error', runner.result_queue[0])
+        self.assertIn("error", runner.result_queue[0])

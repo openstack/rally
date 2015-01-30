@@ -137,10 +137,10 @@ class BenchmarkUtilsTestCase(test.TestCase):
                 return self.name
 
         client = mock.MagicMock()
-        client.services.list.return_value = [service('nova-compute'),
-                                             service('nova-network'),
-                                             service('glance-api')]
-        ret = utils.check_service_status(client, 'nova-network')
+        client.services.list.return_value = [service("nova-compute"),
+                                             service("nova-network"),
+                                             service("glance-api")]
+        ret = utils.check_service_status(client, "nova-network")
         self.assertTrue(ret)
         self.assertTrue(client.services.list.called)
 
@@ -155,10 +155,10 @@ class BenchmarkUtilsTestCase(test.TestCase):
                 return self.name
 
         client = mock.MagicMock()
-        client.services.list.return_value = [service('nova-compute'),
-                                             service('nova-network'),
-                                             service('glance-api')]
-        ret = utils.check_service_status(client, 'nova-network')
+        client.services.list.return_value = [service("nova-compute"),
+                                             service("nova-network"),
+                                             service("glance-api")]
+        ret = utils.check_service_status(client, "nova-network")
         self.assertFalse(ret)
         self.assertTrue(client.services.list.called)
 

@@ -52,10 +52,10 @@ class DummyTestCase(test.TestCase):
     def test_dummy_dummy_with_scenario_output(self):
         scenario = dummy.Dummy()
         result = scenario.dummy_with_scenario_output()
-        self.assertEqual(result['errors'], "")
+        self.assertEqual(result["errors"], "")
         # Since the data is generated in random,
         # checking for not None
-        self.assertNotEqual(result['data'], None)
+        self.assertNotEqual(result["data"], None)
 
     def test_dummy_random_fail_in_atomic(self):
         scenario = dummy.Dummy()

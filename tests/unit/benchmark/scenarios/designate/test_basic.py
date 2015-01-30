@@ -76,7 +76,7 @@ class DesignateBasicTestCase(test.TestCase):
         self.assertEqual(mock_create_record.mock_calls,
                          [mock.call(domain, atomic_action=False)]
                          * records_per_domain)
-        mock_list.assert_called_once_with(domain['id'])
+        mock_list.assert_called_once_with(domain["id"])
 
     @mock.patch(DESIGNATE_BASIC + "._delete_record")
     @mock.patch(DESIGNATE_BASIC + "._create_record")
@@ -101,7 +101,7 @@ class DesignateBasicTestCase(test.TestCase):
                          [mock.call(domain, atomic_action=False)]
                          * records_per_domain)
         self.assertEqual(mock_delete.mock_calls,
-                         [mock.call(domain['id'], "321", atomic_action=False)]
+                         [mock.call(domain["id"], "321", atomic_action=False)]
                          * records_per_domain)
 
     @mock.patch(DESIGNATE_BASIC + "._list_records")
