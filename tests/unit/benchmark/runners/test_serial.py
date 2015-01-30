@@ -26,7 +26,7 @@ class SerialScenarioRunnerTestCase(test.TestCase):
         super(SerialScenarioRunnerTestCase, self).setUp()
 
     @mock.patch("rally.benchmark.runners.base._run_scenario_once")
-    def test_run_scenario(self, mock_run_once):
+    def test__run_scenario(self, mock_run_once):
         times = 5
         result = {"duration": 10, "idle_duration": 0, "error": [],
                   "scenario_output": {}, "atomic_actions": {}}
@@ -40,3 +40,18 @@ class SerialScenarioRunnerTestCase(test.TestCase):
         self.assertEqual(len(runner.result_queue), times)
         results = list(runner.result_queue)
         self.assertEqual(results, expected_results)
+
+    def test__run_scenario_aborted(self):
+        runner = serial.SerialScenarioRunner(mock.MagicMock(),
+                                             {"times": 5})
+        runner.abort()
+        runner._run_scenario(fakes.FakeScenario, "do_it",
+                             fakes.FakeUserContext({}).context, {})
+        self.assertEqual(len(runner.result_queue), 0)
+
+    def test_abort(self):
+        runner = serial.SerialScenarioRunner(mock.MagicMock(),
+                                             {"times": 5})
+        self.assertFalse(runner.aborted.is_set())
+        runner.abort()
+        self.assertTrue(runner.aborted.is_set())

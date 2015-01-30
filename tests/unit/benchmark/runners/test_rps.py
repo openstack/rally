@@ -75,13 +75,16 @@ class RPSScenarioRunnerTestCase(test.TestCase):
             isAlive=mock.MagicMock(return_value=False))
         mock_thread.return_value = mock_thread_instance
 
+        mock_event = mock.MagicMock(
+            is_set=mock.MagicMock(return_value=False))
+
         times = 4
 
         context = {"users": [{"tenant_id": "t1", "endpoint": "e1",
                               "id": "uuid1"}]}
 
         rps._worker_process(10, times, mock_queue, context, 600, 1, 1,
-                            "Dummy", "dummy", ())
+                            "Dummy", "dummy", (), mock_event)
 
         self.assertEqual(times, mock_log.debug.call_count)
         self.assertEqual(times, mock_thread.call_count)
@@ -120,9 +123,9 @@ class RPSScenarioRunnerTestCase(test.TestCase):
     def test__run_scenario(self, mock_sleep):
         context = fakes.FakeUserContext({}).context
         context["task"] = {"uuid": "fake_uuid"}
+
         config = {"times": 20, "rps": 20, "timeout": 5}
-        runner = rps.RPSScenarioRunner(
-                        None, config)
+        runner = rps.RPSScenarioRunner(None, config)
 
         runner._run_scenario(fakes.FakeScenario, "do_it", context, {})
 
@@ -137,11 +140,37 @@ class RPSScenarioRunnerTestCase(test.TestCase):
         context["task"] = {"uuid": "fake_uuid"}
 
         config = {"times": 4, "rps": 10}
-        runner = rps.RPSScenarioRunner(
-                        None, config)
+        runner = rps.RPSScenarioRunner(None, config)
 
         runner._run_scenario(fakes.FakeScenario,
                              "something_went_wrong", context, {})
         self.assertEqual(len(runner.result_queue), config["times"])
         for result in runner.result_queue:
             self.assertIsNotNone(base.ScenarioRunnerResult(result))
+
+    @mock.patch("rally.benchmark.runners.rps.time.sleep")
+    def test__run_scenario_aborted(self, mock_sleep):
+        context = fakes.FakeUserContext({}).context
+        context["task"] = {"uuid": "fake_uuid"}
+
+        config = {"times": 20, "rps": 20, "timeout": 5}
+        runner = rps.RPSScenarioRunner(None, config)
+
+        runner.abort()
+        runner._run_scenario(fakes.FakeScenario, "do_it", context, {})
+
+        self.assertEqual(len(runner.result_queue), 0)
+
+        for result in runner.result_queue:
+            self.assertIsNotNone(base.ScenarioRunnerResult(result))
+
+    def test_abort(self):
+        context = fakes.FakeUserContext({}).context
+        context["task"] = {"uuid": "fake_uuid"}
+
+        config = {"times": 4, "rps": 10}
+        runner = rps.RPSScenarioRunner(None, config)
+
+        self.assertFalse(runner.aborted.is_set())
+        runner.abort()
+        self.assertTrue(runner.aborted.is_set())

@@ -15,6 +15,7 @@
 
 import abc
 import collections
+import multiprocessing
 import random
 
 import jsonschema
@@ -169,6 +170,7 @@ class ScenarioRunner(object):
         self.task = task
         self.config = config
         self.result_queue = collections.deque()
+        self.aborted = multiprocessing.Event()
 
     @staticmethod
     def _get_cls(runner_type):
@@ -212,12 +214,18 @@ class ScenarioRunner(object):
         cls_name, method_name = name.split(".", 1)
         cls = scenario_base.Scenario.get_by_name(cls_name)
 
+        self.aborted.clear()
+
         # NOTE(boris-42): processing @types decorators
         args = types.preprocess(cls, method_name, context, args)
 
         with rutils.Timer() as timer:
             self._run_scenario(cls, method_name, context, args)
         return timer.duration()
+
+    def abort(self):
+        """Abort the execution of further benchmark scenario iterations."""
+        self.aborted.set()
 
     def _send_result(self, result):
         """Send partial result to consumer.

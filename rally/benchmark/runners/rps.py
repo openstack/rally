@@ -28,11 +28,11 @@ SEND_RESULT_DELAY = 1
 
 
 def _worker_thread(queue, args):
-        queue.put(base._run_scenario_once(args))
+    queue.put(base._run_scenario_once(args))
 
 
 def _worker_process(rps, times, queue, context, timeout,
-                    worker_id, workers, cls, method_name, args):
+                    worker_id, workers, cls, method_name, args, aborted):
     """Start scenario within threads.
 
     Spawn N threads per second. Each thread runs scenario once, and appends
@@ -48,6 +48,7 @@ def _worker_process(rps, times, queue, context, timeout,
     :param cls: scenario class
     :param method_name: scenario method name
     :param args: scenario args
+    :param aborted: multiprocessing.Event that is an abort flag
     """
 
     pool = []
@@ -61,7 +62,7 @@ def _worker_process(rps, times, queue, context, timeout,
     randsleep_delay = random.randint(int(sleep / 2 * 100), int(sleep * 100))
     time.sleep(randsleep_delay / 100.0)
 
-    while times > i:
+    while times > i and not aborted.is_set():
         scenario_context = base._get_scenario_context(context)
         i += 1
         scenario_args = (queue, (worker_id + workers * (i - 1), cls,
@@ -145,7 +146,7 @@ class RPSScenarioRunner(base.ScenarioRunner):
             rest -= 1
             worker_args = (rps_per_worker, times, queue, context,
                            timeout, i, processes_to_start, cls,
-                           method_name, args)
+                           method_name, args, self.aborted)
             process = multiprocessing.Process(target=_worker_process,
                                               args=worker_args)
             process.start()

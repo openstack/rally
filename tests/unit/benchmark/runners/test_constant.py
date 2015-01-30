@@ -45,9 +45,8 @@ class ConstantScenarioRunnerTestCase(test.TestCase):
                           constant.ConstantScenarioRunner.validate,
                           self.config)
 
-    def test_run_scenario_constantly_for_times(self):
-        runner = constant.ConstantScenarioRunner(
-                        None, self.config)
+    def test__run_scenario_constantly_for_times(self):
+        runner = constant.ConstantScenarioRunner(None, self.config)
 
         runner._run_scenario(fakes.FakeScenario,
                              "do_it", self.context, self.args)
@@ -55,9 +54,8 @@ class ConstantScenarioRunnerTestCase(test.TestCase):
         for result in runner.result_queue:
             self.assertIsNotNone(base.ScenarioRunnerResult(result))
 
-    def test_run_scenario_constantly_for_times_exception(self):
-        runner = constant.ConstantScenarioRunner(
-                        None, self.config)
+    def test__run_scenario_constantly_for_times_exception(self):
+        runner = constant.ConstantScenarioRunner(None, self.config)
 
         runner._run_scenario(fakes.FakeScenario,
                              "something_went_wrong", self.context, self.args)
@@ -66,9 +64,8 @@ class ConstantScenarioRunnerTestCase(test.TestCase):
             self.assertIsNotNone(base.ScenarioRunnerResult(result))
         self.assertIn("error", runner.result_queue[0])
 
-    def test_run_scenario_constantly_for_times_timeout(self):
-        runner = constant.ConstantScenarioRunner(
-                        None, self.config)
+    def test__run_scenario_constantly_for_times_timeout(self):
+        runner = constant.ConstantScenarioRunner(None, self.config)
 
         runner._run_scenario(fakes.FakeScenario,
                              "raise_timeout", self.context, self.args)
@@ -77,11 +74,25 @@ class ConstantScenarioRunnerTestCase(test.TestCase):
             self.assertIsNotNone(base.ScenarioRunnerResult(result))
         self.assertIn("error", runner.result_queue[0])
 
+    def test__run_scenario_constantly_aborted(self):
+        runner = constant.ConstantScenarioRunner(None, self.config)
 
-class ConstantForDurationScenarioRunnerTeestCase(test.TestCase):
+        runner.abort()
+        runner._run_scenario(fakes.FakeScenario,
+                             "do_it", self.context, self.args)
+        self.assertEqual(len(runner.result_queue), 0)
+
+    def test_abort(self):
+        runner = constant.ConstantScenarioRunner(None, self.config)
+        self.assertFalse(runner.aborted.is_set())
+        runner.abort()
+        self.assertTrue(runner.aborted.is_set())
+
+
+class ConstantForDurationScenarioRunnerTestCase(test.TestCase):
 
     def setUp(self):
-        super(ConstantForDurationScenarioRunnerTeestCase, self).setUp()
+        super(ConstantForDurationScenarioRunnerTestCase, self).setUp()
         duration = 0
         concurrency = 2
         timeout = 2
@@ -138,3 +149,17 @@ class ConstantForDurationScenarioRunnerTeestCase(test.TestCase):
         for result in runner.result_queue:
             self.assertIsNotNone(base.ScenarioRunnerResult(result))
         self.assertIn("error", runner.result_queue[0])
+
+    def test__run_scenario_constantly_aborted(self):
+        runner = constant.ConstantForDurationScenarioRunner(None, self.config)
+
+        runner.abort()
+        runner._run_scenario(fakes.FakeScenario,
+                             "do_it", self.context, self.args)
+        self.assertEqual(len(runner.result_queue), 0)
+
+    def test_abort(self):
+        runner = constant.ConstantForDurationScenarioRunner(None, self.config)
+        self.assertFalse(runner.aborted.is_set())
+        runner.abort()
+        self.assertTrue(runner.aborted.is_set())

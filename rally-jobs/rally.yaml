@@ -232,11 +232,32 @@
 
     -
       args:
+        sleep: 0.1
+      runner:
+        type: "constant_for_duration"
+        duration: 5
+        concurrency: 5
+      sla:
+        failure_rate:
+          max: 0
+
+    -
+      args:
         sleep: 0.001
       runner:
         type: "rps"
         times: 2000
         rps: 200
+      sla:
+        failure_rate:
+          max: 0
+
+    -
+      args:
+        sleep: 0.1
+      runner:
+        type: "serial"
+        times: 20
       sla:
         failure_rate:
           max: 0

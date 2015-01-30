@@ -267,3 +267,11 @@ class ScenarioRunnerTestCase(test.TestCase):
         self.assertRaises(
             jsonschema.ValidationError,
             lambda: runner._send_result(mock.MagicMock()))
+
+    def test_abort(self):
+        runner = serial.SerialScenarioRunner(
+            mock.MagicMock(),
+            mock.MagicMock())
+        self.assertFalse(runner.aborted.is_set())
+        runner.abort()
+        self.assertTrue(runner.aborted.is_set())

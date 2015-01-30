@@ -68,12 +68,13 @@ class ConstantScenarioRunner(base.ScenarioRunner):
     }
 
     @staticmethod
-    def _iter_scenario_args(cls, method, ctx, args, times):
+    def _iter_scenario_args(cls, method, ctx, args, times, aborted):
         for i in moves.range(times):
+            if aborted.is_set():
+                break
             yield (i, cls, method, base._get_scenario_context(ctx), args)
 
     def _run_scenario(self, cls, method, context, args):
-
         timeout = self.config.get("timeout", 600)
         concurrency = self.config.get("concurrency", 1)
         # NOTE(msdubov): If not specified, perform single scenario run.
@@ -82,12 +83,15 @@ class ConstantScenarioRunner(base.ScenarioRunner):
         pool = multiprocessing.Pool(concurrency)
         iter_result = pool.imap(base._run_scenario_once,
                                 self._iter_scenario_args(cls, method, context,
-                                                         args, times))
-        for i in range(times):
+                                                         args, times,
+                                                         self.aborted))
+        while True:
             try:
                 result = iter_result.next(timeout)
             except multiprocessing.TimeoutError as e:
                 result = base.format_result_on_timeout(e, timeout)
+            except StopIteration:
+                break
 
             self._send_result(result)
 
@@ -135,13 +139,14 @@ class ConstantForDurationScenarioRunner(base.ScenarioRunner):
     }
 
     @staticmethod
-    def _iter_scenario_args(cls, method, ctx, args):
+    def _iter_scenario_args(cls, method, ctx, args, aborted):
         def _scenario_args(i):
+            if aborted.is_set():
+                raise StopIteration()
             return (i, cls, method, base._get_scenario_context(ctx), args)
         return _scenario_args
 
     def _run_scenario(self, cls, method, context, args):
-
         timeout = self.config.get("timeout", 600)
         concurrency = self.config.get("concurrency", 1)
         duration = self.config.get("duration")
@@ -149,7 +154,8 @@ class ConstantForDurationScenarioRunner(base.ScenarioRunner):
         pool = multiprocessing.Pool(concurrency)
 
         run_args = utils.infinite_run_args_generator(
-                    self._iter_scenario_args(cls, method, context, args))
+                    self._iter_scenario_args(cls, method, context, args,
+                                             self.aborted))
         iter_result = pool.imap(base._run_scenario_once, run_args)
 
         start = time.time()
@@ -158,6 +164,8 @@ class ConstantForDurationScenarioRunner(base.ScenarioRunner):
                 result = iter_result.next(timeout)
             except multiprocessing.TimeoutError as e:
                 result = base.format_result_on_timeout(e, timeout)
+            except StopIteration:
+                break
 
             self._send_result(result)
 
