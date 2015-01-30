@@ -67,5 +67,40 @@ class RallyContextAdapter(oslogging.ContextAdapter):
         self.log(logging.RDEBUG, msg, *args, **kwargs)
 
 
+class ExceptionLogger(object):
+    """Context that intercepts and logs exceptions.
+
+    Usage::
+        LOG = logging.getLogger(__name__)
+        ...
+
+        def foobar():
+            with ExceptionLogger(LOG, "foobar warning") as e:
+                return house_of_raising_exception()
+
+            if e.exception:
+                raise e.exception # remove if not required
+    """
+
+    def __init__(self, logger, warn=None):
+        self.logger = logger
+        self.warn = warn
+        self.exception = None
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type_, value, traceback):
+        if value:
+            self.exception = value
+
+            if self.warn:
+                self.logger.warning(self.warn)
+            self.logger.debug(value)
+            if is_debug():
+                self.logger.exception(value)
+            return True
+
+
 def is_debug():
     return CONF.debug or CONF.rally_debug

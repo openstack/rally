@@ -71,8 +71,8 @@ class Network(base.Context):
     def cleanup(self):
         for tenant_id, tenant_ctx in six.iteritems(self.context["tenants"]):
             for network in tenant_ctx.get("networks", []):
-                try:
+                with logging.ExceptionLogger(
+                        LOG,
+                        _("Failed to delete network for tenant %s")
+                        % tenant_id):
                     self.net_wrapper.delete_network(network)
-                except Exception as e:
-                    LOG.error("Failed to delete network for tenant %s\n"
-                              " reason: %s" % (tenant_id, e))
