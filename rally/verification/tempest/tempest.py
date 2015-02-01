@@ -235,7 +235,7 @@ class Tempest(object):
             stdout=subprocess.PIPE).communicate()[0]
 
         tests = set()
-        for test in raw_results.split('\n'):
+        for test in raw_results.split("\n"):
             if test.startswith("tempest."):
                 index = test.find("[")
                 if index != -1:
@@ -250,7 +250,7 @@ class Tempest(object):
         log_file_raw = log_file or self.log_file_raw
         if os.path.isfile(log_file_raw):
             data = jsonutils.loads(subunit2json.main(log_file_raw))
-            return data['total'], data['test_cases']
+            return data["total"], data["test_cases"]
         else:
             LOG.error("JSON-log file not found.")
             return None, None

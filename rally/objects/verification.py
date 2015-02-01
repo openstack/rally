@@ -38,7 +38,7 @@ class Verification(object):
         return cls(db.verification_get(uuid))
 
     def delete(self):
-        db.verification_delete(self.db_object['uuid'])
+        db.verification_delete(self.db_object["uuid"])
 
     def _update(self, **values):
         self.db_object = db.verification_update(self.uuid, values)
@@ -61,7 +61,7 @@ class Verification(object):
 
         # create db object for results
         data = total.copy()
-        data['test_cases'] = test_cases
+        data["test_cases"] = test_cases
         db.verification_result_create(self.uuid, data)
 
     def get_results(self):
