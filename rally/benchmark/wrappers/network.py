@@ -288,6 +288,9 @@ class NeutronWrapper(NetworkWrapper):
                                                     {"subnet_id": subnet_id})
             self.client.delete_router(router_id)
 
+        for port in self.client.list_ports(network_id=network["id"])["ports"]:
+            self.client.delete_port(port["id"])
+
         for subnet_id in network["subnets"]:
             self._delete_subnet(subnet_id)
 
