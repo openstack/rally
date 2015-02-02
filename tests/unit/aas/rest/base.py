@@ -23,7 +23,7 @@ from six.moves.urllib import parse
 
 from tests.unit import test
 
-PATH_PREFIX = '/v1'
+PATH_PREFIX = "/v1"
 
 
 class PecanControllerTest(test.TestCase):
@@ -33,7 +33,7 @@ class PecanControllerTest(test.TestCase):
     and its integration with the framework.
     """
 
-    SOURCE_DATA = {'test_source': {'somekey': '666'}}
+    SOURCE_DATA = {"test_source": {"somekey": "666"}}
 
     def setUp(self):
         super(PecanControllerTest, self).setUp()
@@ -48,9 +48,9 @@ class PecanControllerTest(test.TestCase):
         # Determine where we are so we can set up paths in the config
 
         self.config = {
-            'app': {
-                'root': 'rally.aas.rest.controllers.root.RootController',
-                'modules': ['rally.aas.rest'],
+            "app": {
+                "root": "rally.aas.rest.controllers.root.RootController",
+                "modules": ["rally.aas.rest"],
             },
         }
 
@@ -185,13 +185,13 @@ class PecanControllerTest(test.TestCase):
         :param params: content for wsgi.input of request
         """
         full_path = path_prefix + path
-        query_params = {'q.field': [],
-                        'q.value': [],
-                        'q.op': [],
+        query_params = {"q.field": [],
+                        "q.value": [],
+                        "q.op": [],
                         }
         for query in q:
-            for name in ['field', 'op', 'value']:
-                query_params['q.%s' % name].append(query.get(name, ''))
+            for name in ["field", "op", "value"]:
+                query_params["q.%s" % name].append(query.get(name, ""))
         all_params = {}
         all_params.update(params)
         if q:
@@ -209,7 +209,7 @@ class PecanControllerTest(test.TestCase):
         """Check if the given link can get correct data."""
         # removes the scheme and net location parts of the link
         url_parts = list(parse.urlparse(link))
-        url_parts[0] = url_parts[1] = ''
+        url_parts[0] = url_parts[1] = ""
 
         # bookmark link should not have the version in the URL
         if bookmark and url_parts[2].startswith(PATH_PREFIX):
@@ -217,7 +217,7 @@ class PecanControllerTest(test.TestCase):
 
         full_path = parse.urlunparse(url_parts)
         try:
-            self.get_json(full_path, path_prefix='')
+            self.get_json(full_path, path_prefix="")
             return True
         except Exception:
             return False

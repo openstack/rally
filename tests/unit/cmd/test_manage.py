@@ -23,11 +23,11 @@ from tests.unit import test
 
 class CmdManageTestCase(test.TestCase):
 
-    @mock.patch('rally.cmd.manage.cliutils')
+    @mock.patch("rally.cmd.manage.cliutils")
     def test_main(self, cli_mock):
         manage.main()
-        categories = {'db': manage.DBCommands,
-                      'tempest': manage.TempestCommands}
+        categories = {"db": manage.DBCommands,
+                      "tempest": manage.TempestCommands}
         cli_mock.run.assert_called_once_with(sys.argv, categories)
 
 

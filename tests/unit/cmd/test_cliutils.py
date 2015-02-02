@@ -30,7 +30,7 @@ from tests.unit import test
 
 CONF = cfg.CONF
 
-FAKE_TASK_UUID = 'bb0f621c-29bd-495c-9d7a-d844335ed0fa'
+FAKE_TASK_UUID = "bb0f621c-29bd-495c-9d7a-d844335ed0fa"
 
 
 @testtools.skip(
