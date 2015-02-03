@@ -108,6 +108,23 @@ class CinderScenarioTestCase(test.TestCase):
                                        "cinder.extend_volume")
 
     @mock.patch(CINDER_UTILS + ".CinderScenario.clients")
+    def test__upload_volume_to_image(self, mock_clients):
+        volume = mock.Mock()
+        image = {"os-volume_upload_image": {"image_id": 1}}
+        volume.upload_to_image.return_value = (None, image)
+        mock_clients("cinder").images.get.return_value = image
+
+        self.scenario._generate_random_name = mock.Mock(
+            return_value="test_vol")
+        self.scenario._upload_volume_to_image(volume, False,
+                                              "container", "disk")
+
+        volume.upload_to_image.assert_called_once_with(False, "test_vol",
+                                                       "container", "disk")
+        self.assertTrue(self.wait_for.mock.called)
+        self.assertEqual(2, self.wait_for.mock.call_count)
+
+    @mock.patch(CINDER_UTILS + ".CinderScenario.clients")
     def test__create_snapshot(self, mock_clients):
         snapshot = mock.Mock()
         mock_clients("cinder").volume_snapshots.create.return_value = snapshot

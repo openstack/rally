@@ -258,3 +258,19 @@
       sla:
         failure_rate:
           max: 0
+
+  CinderVolumes.create_and_upload_volume_to_image:
+    -
+      args:
+        size: 1
+      runner:
+        type: "constant"
+        times: 1
+        concurrency: 1
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+      sla:
+        failure_rate:
+          max: 0

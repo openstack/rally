@@ -125,6 +125,46 @@ class CinderScenario(base.Scenario):
             check_interval=CONF.benchmark.cinder_volume_create_poll_interval
         )
 
+    @base.atomic_action_timer("cinder.upload_volume_to_image")
+    def _upload_volume_to_image(self, volume, force=False,
+                                container_format="bare", disk_format="raw"):
+        """Upload the given volume to image.
+
+        Returns created image.
+
+        :param volume: volume object
+        :param force: flag to indicate whether to snapshot a volume even if
+                      it's attached to an instance
+        :param container_format: container format of image. Acceptable
+                                 formats: ami, ari, aki, bare, and ovf
+        :param: disk_format: disk format of image. Acceptable formats:
+                             ami, ari, aki, vhd, vmdk, raw, qcow2, vdi
+                             and iso
+        :returns: Returns created image object
+        """
+        resp, img = volume.upload_to_image(force, self._generate_random_name(),
+                                           container_format, disk_format)
+        # NOTE (e0ne): upload_to_image changes volume status to uploading so
+        # we need to wait until it will be available.
+        volume = bench_utils.wait_for(
+            volume,
+            is_ready=bench_utils.resource_is("available"),
+            update_resource=bench_utils.get_from_manager(),
+            timeout=CONF.benchmark.cinder_volume_create_timeout,
+            check_interval=CONF.benchmark.cinder_volume_create_poll_interval
+        )
+        image_id = img["os-volume_upload_image"]["image_id"]
+        image = self.clients("glance").images.get(image_id)
+        image = bench_utils.wait_for(
+            image,
+            is_ready=bench_utils.resource_is("active"),
+            update_resource=bench_utils.get_from_manager(),
+            timeout=CONF.benchmark.glance_image_create_prepoll_delay,
+            check_interval=CONF.benchmark.glance_image_create_poll_interval
+        )
+
+        return image
+
     @base.atomic_action_timer("cinder.create_snapshot")
     def _create_snapshot(self, volume_id, force=False, **kwargs):
         """Create one snapshot.

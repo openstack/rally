@@ -180,6 +180,40 @@ class CinderServersTestCase(test.TestCase):
         scenario._delete_volume.assert_called_once_with(fake_volume)
         scenario._delete_server.assert_called_once_with(fake_server)
 
+    def test_create_and_upload_volume_to_image(self):
+        fake_volume = mock.Mock()
+        fake_image = mock.Mock()
+        scenario = volumes.CinderVolumes()
+
+        scenario._create_volume = mock.MagicMock(return_value=fake_volume)
+        scenario._upload_volume_to_image = mock.MagicMock(
+                return_value=fake_image)
+        scenario._delete_volume = mock.MagicMock()
+        scenario._delete_image = mock.MagicMock()
+
+        scenario.create_and_upload_volume_to_image(2,
+                                                   container_format="fake",
+                                                   disk_format="disk",
+                                                   do_delete=False)
+
+        scenario._create_volume.assert_called_once_with(2)
+        scenario._upload_volume_to_image.assert_called_once_with(fake_volume,
+                                                                 False,
+                                                                 "fake",
+                                                                 "disk")
+        scenario._create_volume.reset_mock()
+        scenario._upload_volume_to_image.reset_mock()
+
+        scenario.create_and_upload_volume_to_image(1, do_delete=True)
+
+        scenario._create_volume.assert_called_once_with(1)
+        scenario._upload_volume_to_image.assert_called_once_with(fake_volume,
+                                                                 False,
+                                                                 "bare",
+                                                                 "raw")
+        scenario._delete_volume.assert_called_once_with(fake_volume)
+        scenario._delete_image.assert_called_once_with(fake_image)
+
     def test_create_snapshot_and_attach_volume(self):
         fake_volume = mock.MagicMock()
         fake_snapshot = mock.MagicMock()

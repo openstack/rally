@@ -1,0 +1,24 @@
+{
+    "CinderVolumes.create_and_upload_volume_to_image": [
+        {
+            "args": {
+                "size": 1,
+                "force": false,
+                "container_format": "bare",
+                "disk_format": "raw",
+                "do_delete": true
+            },
+            "runner": {
+                "type": "constant",
+                "times": 3,
+                "concurrency": 2
+            },
+            "context": {
+                "users": {
+                    "tenants": 2,
+                    "users_per_tenant": 2
+                }
+            }
+        }
+    ]
+}
