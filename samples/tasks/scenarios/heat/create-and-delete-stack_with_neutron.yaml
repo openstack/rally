@@ -2,7 +2,7 @@
   HeatStacks.create_and_delete_stack:
     -
       args:
-        template_path: 'server_with_ports.yaml.template'
+        template_path: "templates/server_with_ports.yaml.template"
       runner:
         type: "constant"
         times: 10
