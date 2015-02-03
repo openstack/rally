@@ -94,7 +94,7 @@ class TaskAPITestCase(test.TestCase):
         self.assertRaises(TypeError, api.Task.render_template, "{{a}}")
 
     @mock.patch("rally.objects.Deployment.get",
-                return_value={'uuid': 'b0d9cd6c-2c94-4417-a238-35c7019d0257'})
+                return_value={"uuid": "b0d9cd6c-2c94-4417-a238-35c7019d0257"})
     @mock.patch("rally.objects.Task")
     def test_create(self, mock_task, mock_d_get):
         tag = "a"
@@ -207,7 +207,7 @@ class DeploymentAPITestCase(BaseDeploymentTestCase):
     @mock.patch("rally.objects.deploy.db.deployment_update")
     @mock.patch("rally.objects.deploy.db.deployment_create")
     @mock.patch("rally.deploy.engine.EngineFactory.validate",
-                side_effect=jsonschema.ValidationError('ValidationError'))
+                side_effect=jsonschema.ValidationError("ValidationError"))
     def test_create_validation_error(self, mock_validate, mock_create,
                                      mock_update):
         mock_create.return_value = self.deployment
@@ -216,12 +216,12 @@ class DeploymentAPITestCase(BaseDeploymentTestCase):
                           self.deployment_config, "fake_deployment")
         mock_update.assert_called_once_with(
             self.deployment_uuid,
-            {'status': consts.DeployStatus.DEPLOY_FAILED})
+            {"status": consts.DeployStatus.DEPLOY_FAILED})
 
     @mock.patch("rally.api.LOG")
     @mock.patch("rally.objects.deploy.db.deployment_create",
                 side_effect=exceptions.DeploymentNameExists(
-                    deployment='fake_deploy'))
+                    deployment="fake_deploy"))
     def test_create_duplication_error(self, mock_d_create, mock_log):
         self.assertRaises(exceptions.DeploymentNameExists,
                           api.Deployment.create, self.deployment_config,

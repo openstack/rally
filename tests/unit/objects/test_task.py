@@ -28,59 +28,59 @@ class TaskTestCase(test.TestCase):
     def setUp(self):
         super(TaskTestCase, self).setUp()
         self.task = {
-            'uuid': '00ef46a2-c5b8-4aea-a5ca-0f54a10cbca1',
-            'status': consts.TaskStatus.INIT,
-            'verification_log': '',
+            "uuid": "00ef46a2-c5b8-4aea-a5ca-0f54a10cbca1",
+            "status": consts.TaskStatus.INIT,
+            "verification_log": "",
         }
 
-    @mock.patch('rally.objects.task.db.task_create')
+    @mock.patch("rally.objects.task.db.task_create")
     def test_init_with_create(self, mock_create):
         mock_create.return_value = self.task
         task = objects.Task(status=consts.TaskStatus.FAILED)
         mock_create.assert_called_once_with({
-                    'status': consts.TaskStatus.FAILED})
-        self.assertEqual(task['uuid'], self.task['uuid'])
+                    "status": consts.TaskStatus.FAILED})
+        self.assertEqual(task["uuid"], self.task["uuid"])
 
-    @mock.patch('rally.objects.task.db.task_create')
+    @mock.patch("rally.objects.task.db.task_create")
     def test_init_without_create(self, mock_create):
         task = objects.Task(task=self.task)
         self.assertFalse(mock_create.called)
-        self.assertEqual(task['uuid'], self.task['uuid'])
+        self.assertEqual(task["uuid"], self.task["uuid"])
 
-    @mock.patch('rally.objects.task.db.task_get')
+    @mock.patch("rally.objects.task.db.task_get")
     def test_get(self, mock_get):
         mock_get.return_value = self.task
-        task = objects.Task.get(self.task['uuid'])
-        mock_get.assert_called_once_with(self.task['uuid'])
-        self.assertEqual(task['uuid'], self.task['uuid'])
+        task = objects.Task.get(self.task["uuid"])
+        mock_get.assert_called_once_with(self.task["uuid"])
+        self.assertEqual(task["uuid"], self.task["uuid"])
 
-    @mock.patch('rally.objects.task.db.task_delete')
-    @mock.patch('rally.objects.task.db.task_create')
+    @mock.patch("rally.objects.task.db.task_delete")
+    @mock.patch("rally.objects.task.db.task_create")
     def test_create_and_delete(self, mock_create, mock_delete):
         mock_create.return_value = self.task
         task = objects.Task()
         task.delete()
-        mock_delete.assert_called_once_with(self.task['uuid'], status=None)
+        mock_delete.assert_called_once_with(self.task["uuid"], status=None)
 
-    @mock.patch('rally.objects.task.db.task_delete')
-    @mock.patch('rally.objects.task.db.task_create')
+    @mock.patch("rally.objects.task.db.task_delete")
+    @mock.patch("rally.objects.task.db.task_create")
     def test_create_and_delete_status(self, mock_create, mock_delete):
         mock_create.return_value = self.task
         task = objects.Task()
         task.delete(status=consts.TaskStatus.FINISHED)
-        mock_delete.assert_called_once_with(self.task['uuid'],
+        mock_delete.assert_called_once_with(self.task["uuid"],
                                             status=consts.TaskStatus.FINISHED)
 
-    @mock.patch('rally.objects.task.db.task_delete')
+    @mock.patch("rally.objects.task.db.task_delete")
     def test_delete_by_uuid(self, mock_delete):
-        objects.Task.delete_by_uuid(self.task['uuid'])
-        mock_delete.assert_called_once_with(self.task['uuid'], status=None)
+        objects.Task.delete_by_uuid(self.task["uuid"])
+        mock_delete.assert_called_once_with(self.task["uuid"], status=None)
 
-    @mock.patch('rally.objects.task.db.task_delete')
+    @mock.patch("rally.objects.task.db.task_delete")
     def test_delete_by_uuid_status(self, mock_delete):
-        objects.Task.delete_by_uuid(self.task['uuid'],
+        objects.Task.delete_by_uuid(self.task["uuid"],
                                     consts.TaskStatus.FINISHED)
-        mock_delete.assert_called_once_with(self.task['uuid'],
+        mock_delete.assert_called_once_with(self.task["uuid"],
                                             status=consts.TaskStatus.FINISHED)
 
     @mock.patch("rally.objects.task.db.task_list",
@@ -97,35 +97,35 @@ class TaskTestCase(test.TestCase):
         self.assertEqual(mock_db_task_list.return_value["uuis"],
                          tasks[0]["uuid"])
 
-    @mock.patch('rally.objects.deploy.db.task_update')
-    @mock.patch('rally.objects.task.db.task_create')
+    @mock.patch("rally.objects.deploy.db.task_update")
+    @mock.patch("rally.objects.task.db.task_create")
     def test_update(self, mock_create, mock_update):
         mock_create.return_value = self.task
-        mock_update.return_value = {'opt': 'val2'}
-        deploy = objects.Task(opt='val1')
-        deploy._update({'opt': 'val2'})
-        mock_update.assert_called_once_with(self.task['uuid'],
-                                            {'opt': 'val2'})
-        self.assertEqual(deploy['opt'], 'val2')
+        mock_update.return_value = {"opt": "val2"}
+        deploy = objects.Task(opt="val1")
+        deploy._update({"opt": "val2"})
+        mock_update.assert_called_once_with(self.task["uuid"],
+                                            {"opt": "val2"})
+        self.assertEqual(deploy["opt"], "val2")
 
-    @mock.patch('rally.objects.task.db.task_update')
+    @mock.patch("rally.objects.task.db.task_update")
     def test_update_status(self, mock_update):
         mock_update.return_value = self.task
         task = objects.Task(task=self.task)
         task.update_status(consts.TaskStatus.FINISHED)
         mock_update.assert_called_once_with(
-            self.task['uuid'],
-            {'status': consts.TaskStatus.FINISHED},
+            self.task["uuid"],
+            {"status": consts.TaskStatus.FINISHED},
         )
 
-    @mock.patch('rally.objects.task.db.task_update')
+    @mock.patch("rally.objects.task.db.task_update")
     def test_update_verification_log(self, mock_update):
         mock_update.return_value = self.task
         task = objects.Task(task=self.task)
         task.update_verification_log({"a": "fake"})
         mock_update.assert_called_once_with(
-            self.task['uuid'],
-            {'verification_log': json.dumps({"a": "fake"})}
+            self.task["uuid"],
+            {"verification_log": json.dumps({"a": "fake"})}
         )
 
     @mock.patch("rally.objects.task.db.task_result_get_all_by_uuid",
@@ -136,19 +136,19 @@ class TaskTestCase(test.TestCase):
         mock_get.assert_called_once_with(self.task["uuid"])
         self.assertEqual(results, "foo_results")
 
-    @mock.patch('rally.objects.task.db.task_result_create')
+    @mock.patch("rally.objects.task.db.task_result_create")
     def test_append_results(self, mock_append_results):
         task = objects.Task(task=self.task)
-        task.append_results('opt', 'val')
-        mock_append_results.assert_called_once_with(self.task['uuid'],
-                                                    'opt', 'val')
+        task.append_results("opt", "val")
+        mock_append_results.assert_called_once_with(self.task["uuid"],
+                                                    "opt", "val")
 
-    @mock.patch('rally.objects.task.db.task_update')
+    @mock.patch("rally.objects.task.db.task_update")
     def test_set_failed(self, mock_update):
         mock_update.return_value = self.task
         task = objects.Task(task=self.task)
         task.set_failed()
         mock_update.assert_called_once_with(
-            self.task['uuid'],
-            {'status': consts.TaskStatus.FAILED, 'verification_log': '""'},
+            self.task["uuid"],
+            {"status": consts.TaskStatus.FAILED, "verification_log": '""'},
         )
