@@ -93,18 +93,22 @@ class BenchmarkEngine(object):
             engine.run()        # to run config
     """
 
-    def __init__(self, config, task, admin=None, users=None):
+    def __init__(self, config, task, admin=None, users=None,
+                 abort_on_sla_failure=False):
         """BenchmarkEngine constructor.
 
         :param config: The configuration with specified benchmark scenarios
         :param task: The current task which is being performed
         :param admin: Dict with admin credentials
         :param users: List of dicts with user credentials
+        :param abort_on_sla_failure: True if the execution should be stopped
+                                     when some SLA check fails
         """
         self.config = config
         self.task = task
         self.admin = admin and objects.Endpoint(**admin) or None
         self.users = map(lambda u: objects.Endpoint(**u), users or [])
+        self.abort_on_sla_failure = abort_on_sla_failure
 
     @rutils.log_task_wrapper(LOG.info, _("Task validation check cloud."))
     def _check_cloud(self):
@@ -221,7 +225,7 @@ class BenchmarkEngine(object):
                 is_done = threading.Event()
                 consumer = threading.Thread(
                     target=self.consume_results,
-                    args=(key, self.task, runner.result_queue, is_done))
+                    args=(key, self.task, is_done, runner))
                 consumer.start()
                 context_obj = self._prepare_context(kw.get("context", {}),
                                                     name, self.admin)
@@ -240,7 +244,7 @@ class BenchmarkEngine(object):
                     consumer.join()
         self.task.update_status(consts.TaskStatus.FINISHED)
 
-    def consume_results(self, key, task, result_queue, is_done):
+    def consume_results(self, key, task, is_done, runner):
         """Consume scenario runner results from queue and send them to db.
 
         Has to be run from different thread simultaneously with the runner.run
@@ -248,22 +252,25 @@ class BenchmarkEngine(object):
 
         :param key: Scenario identifier
         :param task: Running task
-        :param result_queue: Deque with runner results
         :param is_done: Event which is set from the runner thread after the
                         runner finishes it's work.
+        :param runner: ScenarioRunner object that was used to run a task
         """
         results = []
+        sla_checker = base_sla.SLAChecker(key["kw"])
         while True:
-            if result_queue:
-                result = result_queue.popleft()
+            if runner.result_queue:
+                result = runner.result_queue.popleft()
                 results.append(result)
+                success = sla_checker.add_iteration(result)
+                if self.abort_on_sla_failure and not success:
+                    runner.abort()
             elif is_done.isSet():
                 break
             else:
                 time.sleep(0.1)
 
-        sla = base_sla.SLA.check_all(key["kw"], results)
         task.append_results(key, {"raw": results,
                                   "load_duration": self.duration,
                                   "full_duration": self.full_duration,
-                                  "sla": sla})
+                                  "sla": sla_checker.results()})

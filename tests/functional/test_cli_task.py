@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import json
 import os
 import re
 import unittest
@@ -243,6 +244,210 @@ class TaskTestCase(unittest.TestCase):
             r"(?P<task_id>[0-9a-f\-]{36}): started", output)
         self.assertIsNotNone(result)
 
+    def _test_start_abort_on_sla_failure_success(self, cfg, times):
+        rally = utils.Rally()
+        with mock.patch.dict("os.environ", utils.TEST_ENV):
+            deployment_id = envutils.get_global("RALLY_DEPLOYMENT")
+            config = utils.TaskConfig(cfg)
+            rally(("task start --task %(task_file)s "
+                   "--deployment %(deployment_id)s --abort-on-sla-failure") %
+                  {"task_file": config.filename,
+                   "deployment_id": deployment_id})
+            results = json.loads(rally("task results"))
+        iterations_completed = len(results[0]["result"])
+        self.assertEqual(times, iterations_completed)
+
+    def test_start_abort_on_sla_failure_success_constant(self):
+        times = 100
+        cfg = {
+            "Dummy.dummy": [
+                {
+                    "args": {
+                        "sleep": 0.1
+                    },
+                    "runner": {
+                        "type": "constant",
+                        "times": times,
+                        "concurrency": 5
+                    },
+                    "sla": {
+                        "failure_rate": {"max": 0.0}
+                    }
+                }
+            ]
+        }
+        self._test_start_abort_on_sla_failure_success(cfg, times)
+
+    def test_start_abort_on_sla_failure_success_serial(self):
+        times = 100
+        cfg = {
+            "Dummy.dummy": [
+                {
+                    "args": {
+                        "sleep": 0.1
+                    },
+                    "runner": {
+                        "type": "serial",
+                        "times": times
+                    },
+                    "sla": {
+                        "failure_rate": {"max": 0.0}
+                    }
+                }
+            ]
+        }
+        self._test_start_abort_on_sla_failure_success(cfg, times)
+
+    def test_start_abort_on_sla_failure_success_rps(self):
+        times = 100
+        cfg = {
+            "Dummy.dummy": [
+                {
+                    "args": {
+                        "sleep": 0.1
+                    },
+                    "runner": {
+                        "type": "rps",
+                        "times": times,
+                        "rps": 20
+                    },
+                    "sla": {
+                        "failure_rate": {"max": 0.0}
+                    }
+                }
+            ]
+        }
+        self._test_start_abort_on_sla_failure_success(cfg, times)
+
+    def _test_start_abort_on_sla_failure(self, cfg, times):
+        rally = utils.Rally()
+        with mock.patch.dict("os.environ", utils.TEST_ENV):
+            deployment_id = envutils.get_global("RALLY_DEPLOYMENT")
+            config = utils.TaskConfig(cfg)
+            rally(("task start --task %(task_file)s "
+                   "--deployment %(deployment_id)s --abort-on-sla-failure") %
+                  {"task_file": config.filename,
+                   "deployment_id": deployment_id})
+            results = json.loads(rally("task results"))
+        iterations_completed = len(results[0]["result"])
+        # NOTE(msdubov): Change '<=' to '<' as soon as we fix the runners.
+        self.assertTrue(iterations_completed <= times)
+
+    def test_start_abort_on_sla_failure_max_seconds_constant(self):
+        times = 100
+        cfg = {
+            "Dummy.dummy": [
+                {
+                    "args": {
+                        "sleep": 0.1
+                    },
+                    "runner": {
+                        "type": "constant",
+                        "times": times,
+                        "concurrency": 5
+                    },
+                    "sla": {
+                        "max_seconds_per_iteration": 0.01
+                    }
+                }
+            ]
+        }
+        self._test_start_abort_on_sla_failure(cfg, times)
+
+    def test_start_abort_on_sla_failure_max_seconds_serial(self):
+        times = 100
+        cfg = {
+            "Dummy.dummy": [
+                {
+                    "args": {
+                        "sleep": 0.1
+                    },
+                    "runner": {
+                        "type": "serial",
+                        "times": times
+                    },
+                    "sla": {
+                        "max_seconds_per_iteration": 0.01
+                    }
+                }
+            ]
+        }
+        self._test_start_abort_on_sla_failure(cfg, times)
+
+    def test_start_abort_on_sla_failure_max_seconds_rps(self):
+        times = 100
+        cfg = {
+            "Dummy.dummy": [
+                {
+                    "args": {
+                        "sleep": 0.1
+                    },
+                    "runner": {
+                        "type": "rps",
+                        "times": times,
+                        "rps": 20
+                    },
+                    "sla": {
+                        "max_seconds_per_iteration": 0.01
+                    }
+                }
+            ]
+        }
+        self._test_start_abort_on_sla_failure(cfg, times)
+
+    def test_start_abort_on_sla_failure_max_failure_rate_constant(self):
+        times = 100
+        cfg = {
+            "Dummy.dummy_exception": [
+                {
+                    "runner": {
+                        "type": "constant",
+                        "times": times,
+                        "concurrency": 5
+                    },
+                    "sla": {
+                        "failure_rate": {"max": 0.0}
+                    }
+                }
+            ]
+        }
+        self._test_start_abort_on_sla_failure(cfg, times)
+
+    def test_start_abort_on_sla_failure_max_failure_rate_serial(self):
+        times = 100
+        cfg = {
+            "Dummy.dummy_exception": [
+                {
+                    "runner": {
+                        "type": "serial",
+                        "times": times
+                    },
+                    "sla": {
+                        "failure_rate": {"max": 0.0}
+                    }
+                }
+            ]
+        }
+        self._test_start_abort_on_sla_failure(cfg, times)
+
+    def test_start_abort_on_sla_failure_max_failure_rate_rps(self):
+        times = 100
+        cfg = {
+            "Dummy.dummy_exception": [
+                {
+                    "runner": {
+                        "type": "rps",
+                        "times": times,
+                        "rps": 20
+                    },
+                    "sla": {
+                        "failure_rate": {"max": 0.0}
+                    }
+                }
+            ]
+        }
+        self._test_start_abort_on_sla_failure(cfg, times)
+
     # NOTE(oanufriev): Not implemented
     def test_abort(self):
         pass
@@ -251,7 +456,7 @@ class TaskTestCase(unittest.TestCase):
 class SLATestCase(unittest.TestCase):
 
     def _get_sample_task_config(self, max_seconds_per_iteration=4,
-                                max_failure_percent=0):
+                                failure_rate_max=0):
         return {
             "KeystoneBasic.create_and_list_users": [
                 {
@@ -265,7 +470,7 @@ class SLATestCase(unittest.TestCase):
                     },
                     "sla": {
                         "max_seconds_per_iteration": max_seconds_per_iteration,
-                        "max_failure_percent": max_failure_percent,
+                        "failure_rate": {"max": failure_rate_max}
                     }
                 }
             ]
@@ -289,9 +494,9 @@ class SLATestCase(unittest.TestCase):
              "detail": mock.ANY,
              "pos": 0, "status": "PASS"},
             {"benchmark": "KeystoneBasic.create_and_list_users",
-             "criterion": "max_failure_percent",
+             "criterion": "failure_rate",
              "detail": mock.ANY,
-             "pos": 0, "status": "PASS"},
+             "pos": 0, "status": "PASS"}
         ]
         data = rally("task sla_check --json", getjson=True)
         self.assertEqual(expected, data)

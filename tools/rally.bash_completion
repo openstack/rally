@@ -32,7 +32,7 @@ _rally()
     OPTS["task_report"]="--tasks --out --open"
     OPTS["task_results"]="--uuid"
     OPTS["task_sla_check"]="--uuid --json"
-    OPTS["task_start"]="--deployment --task --task-args --task-args-file --tag --no-use"
+    OPTS["task_start"]="--deployment --task --task-args --task-args-file --tag --no-use --abort-on-sla-failure"
     OPTS["task_status"]="--uuid"
     OPTS["task_validate"]="--deployment --task --task-args --task-args-file"
     OPTS["use_deployment"]="--deployment"

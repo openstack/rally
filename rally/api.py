@@ -168,7 +168,7 @@ class Task(object):
         benchmark_engine.validate()
 
     @classmethod
-    def start(cls, deployment, config, task=None):
+    def start(cls, deployment, config, task=None, abort_on_sla_failure=False):
         """Start a task.
 
         Task is a list of benchmarks that will be called one by one, results of
@@ -177,13 +177,17 @@ class Task(object):
         :param deployment: UUID or name of the deployment
         :param config: a dict with a task configuration
         :param task: Task object. If None, it will be created
+        :param abort_on_sla_failure: if True, the execution of a benchmark
+                                     scenario will stop when any SLA check
+                                     for it fails
         """
         deployment = objects.Deployment.get(deployment)
         task = task or objects.Task(deployment_uuid=deployment["uuid"])
         LOG.info("Benchmark Task %s on Deployment %s" % (task["uuid"],
                                                          deployment["uuid"]))
         benchmark_engine = engine.BenchmarkEngine(
-            config, task, admin=deployment["admin"], users=deployment["users"])
+            config, task, admin=deployment["admin"], users=deployment["users"],
+            abort_on_sla_failure=abort_on_sla_failure)
 
         try:
             benchmark_engine.validate()

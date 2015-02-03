@@ -25,10 +25,32 @@ class TestCriterion(base.SLA):
     OPTION_NAME = "test_criterion"
     CONFIG_SCHEMA = {"type": "integer"}
 
-    @staticmethod
-    def check(criterion_value, result):
-        return base.SLAResult(criterion_value == result,
-                              msg="detail")
+    def add_iteration(self, iteration):
+        self.success = self.criterion_value == iteration
+        return self.success
+
+    def details(self):
+        return "detail"
+
+
+class SLACheckerTestCase(test.TestCase):
+
+    def test_add_iteration_and_results(self):
+        sla_checker = base.SLAChecker({"sla": {"test_criterion": 42}})
+
+        iteration = {"key": {"name": "fake", "pos": 0}, "data": 42}
+        self.assertTrue(sla_checker.add_iteration(iteration["data"]))
+        expected_result = [{"criterion": "test_criterion",
+                            "detail": "detail",
+                            "success": True}]
+        self.assertEqual(expected_result, sla_checker.results())
+
+        iteration["data"] = 43
+        self.assertFalse(sla_checker.add_iteration(iteration["data"]))
+        expected_result = [{"criterion": "test_criterion",
+                            "detail": "detail",
+                            "success": False}]
+        self.assertEqual(expected_result, sla_checker.results())
 
 
 class BaseSLATestCase(test.TestCase):
@@ -52,39 +74,24 @@ class BaseSLATestCase(test.TestCase):
         self.assertRaises(jsonschema.ValidationError,
                           base.SLA.validate, {"test_criterion": 42.0})
 
-    def test_check_all(self):
-        config = {
-            "sla": {"test_criterion": 42},
-        }
-        result = {"key": {"kw": config, "name": "fake", "pos": 0},
-                  "data": 42}
-        results = list(base.SLA.check_all(config, result["data"]))
-        expected = [{"criterion": "test_criterion",
-                     "detail": "detail",
-                     "success": True}]
-        self.assertEqual(expected, results)
-        result["data"] = 43
-        results = list(base.SLA.check_all(config, result["data"]))
-        expected = [{"criterion": "test_criterion",
-                     "detail": "detail",
-                     "success": False}]
-        self.assertEqual(expected, results)
-
 
 class FailureRateDeprecatedTestCase(test.TestCase):
-    def test_check(self):
-        result = [
-                {"error": ["error"]},
-                {"error": []},
-        ]  # one error and one success. 50% success rate
-        # 50% < 75.0%
-        self.assertTrue(base.FailureRateDeprecated.check(75.0, result).success)
-        # 50% > 25%
-        self.assertFalse(base.FailureRateDeprecated.check(25, result).success)
 
-    def test_check_with_no_results(self):
-        result = []
-        self.assertFalse(base.FailureRateDeprecated.check(10, result).success)
+    def test_result(self):
+        sla1 = base.FailureRateDeprecated(75.0)
+        sla2 = base.FailureRateDeprecated(25.0)
+        # 50% failure rate
+        for sla in [sla1, sla2]:
+            sla.add_iteration({"error": ["error"]})
+            sla.add_iteration({"error": []})
+        self.assertTrue(sla1.result()["success"])   # 50% < 75.0%
+        self.assertFalse(sla2.result()["success"])  # 50% > 25.0%
+        self.assertEqual("Passed", sla1.status())
+        self.assertEqual("Failed", sla2.status())
+
+    def test_result_no_iterations(self):
+        sla = base.FailureRateDeprecated(10.0)
+        self.assertTrue(sla.result()["success"])
 
 
 class FailureRateTestCase(test.TestCase):
@@ -103,30 +110,60 @@ class FailureRateTestCase(test.TestCase):
                           base.IterationTime.validate,
                           {"failure_rate": {"max": 101}})
 
-    def test_check_min(self):
-        result = [{"error": ["error"]}, {"error": []}, {"error": ["error"]},
-                  {"error": ["error"]}, ]  # 75% failure rate
-        self.assertFalse(base.FailureRate.check({"min": 80}, result).success)
-        self.assertTrue(base.FailureRate.check({"min": 60.5}, result).success)
+    def test_result_min(self):
+        sla1 = base.FailureRate({"min": 80.0})
+        sla2 = base.FailureRate({"min": 60.5})
+        # 75% failure rate
+        for sla in [sla1, sla2]:
+            sla.add_iteration({"error": ["error"]})
+            sla.add_iteration({"error": []})
+            sla.add_iteration({"error": ["error"]})
+            sla.add_iteration({"error": ["error"]})
+        self.assertFalse(sla1.result()["success"])  # 80.0% > 75.0%
+        self.assertTrue(sla2.result()["success"])   # 60.5% < 75.0%
+        self.assertEqual("Failed", sla1.status())
+        self.assertEqual("Passed", sla2.status())
 
-    def test_check_max(self):
-        result = [{"error": ["error"]}, {"error": []}]  # 50% failure rate
-        self.assertFalse(base.FailureRate.check({"max": 25}, result).success)
-        self.assertTrue(base.FailureRate.check({"max": 75.0}, result).success)
+    def test_result_max(self):
+        sla1 = base.FailureRate({"max": 25.0})
+        sla2 = base.FailureRate({"max": 75.0})
+        # 50% failure rate
+        for sla in [sla1, sla2]:
+            sla.add_iteration({"error": ["error"]})
+            sla.add_iteration({"error": []})
+        self.assertFalse(sla1.result()["success"])  # 25.0% < 50.0%
+        self.assertTrue(sla2.result()["success"])   # 75.0% > 50.0%
+        self.assertEqual("Failed", sla1.status())
+        self.assertEqual("Passed", sla2.status())
 
-    def test_check_min_max(self):
-        result = [{"error": ["error"]}, {"error": []}, {"error": []},
-                  {"error": []}]  # 25% failure rate
-        self.assertFalse(base.FailureRate.check({"min": 50, "max": 90}, result)
-                         .success)
-        self.assertFalse(base.FailureRate.check({"min": 5, "max": 20}, result)
-                         .success)
-        self.assertTrue(base.FailureRate.check({"min": 24.9, "max": 25.1},
-                                               result).success)
+    def test_result_min_max(self):
+        sla1 = base.FailureRate({"min": 50, "max": 90})
+        sla2 = base.FailureRate({"min": 5, "max": 20})
+        sla3 = base.FailureRate({"min": 24.9, "max": 25.1})
+        # 25% failure rate
+        for sla in [sla1, sla2, sla3]:
+            sla.add_iteration({"error": ["error"]})
+            sla.add_iteration({"error": []})
+            sla.add_iteration({"error": []})
+            sla.add_iteration({"error": []})
+        self.assertFalse(sla1.result()["success"])  # 25.0% < 50.0%
+        self.assertFalse(sla2.result()["success"])  # 25.0% > 20.0%
+        self.assertTrue(sla3.result()["success"])   # 24.9% < 25.0% < 25.1%
+        self.assertEqual("Failed", sla1.status())
+        self.assertEqual("Failed", sla2.status())
+        self.assertEqual("Passed", sla3.status())
 
-    def test_check_empty_result(self):
-        result = []
-        self.assertFalse(base.FailureRate.check({"max": 10.0}, result).success)
+    def test_result_no_iterations(self):
+        sla = base.FailureRate({"max": 10.0})
+        self.assertTrue(sla.result()["success"])
+
+    def test_add_iteration(self):
+        sla = base.FailureRate({"max": 35.0})
+        self.assertTrue(sla.add_iteration({"error": []}))
+        self.assertTrue(sla.add_iteration({"error": []}))
+        self.assertTrue(sla.add_iteration({"error": []}))
+        self.assertTrue(sla.add_iteration({"error": ["error"]}))   # 33%
+        self.assertFalse(sla.add_iteration({"error": ["error"]}))  # 40%
 
 
 class IterationTimeTestCase(test.TestCase):
@@ -137,13 +174,28 @@ class IterationTimeTestCase(test.TestCase):
         self.assertRaises(jsonschema.ValidationError,
                           base.IterationTime.validate, properties)
 
-    def test_check(self):
-        result = [
-                {"duration": 3.14},
-                {"duration": 6.28},
-        ]
-        self.assertTrue(base.IterationTime.check(42, result).success)
-        self.assertFalse(base.IterationTime.check(3.62, result).success)
+    def test_result(self):
+        sla1 = base.IterationTime(42)
+        sla2 = base.IterationTime(3.62)
+        for sla in [sla1, sla2]:
+            sla.add_iteration({"duration": 3.14})
+            sla.add_iteration({"duration": 6.28})
+        self.assertTrue(sla1.result()["success"])   # 42 > 6.28
+        self.assertFalse(sla2.result()["success"])  # 3.62 < 6.28
+        self.assertEqual("Passed", sla1.status())
+        self.assertEqual("Failed", sla2.status())
+
+    def test_result_no_iterations(self):
+        sla = base.IterationTime(42)
+        self.assertTrue(sla.result()["success"])
+
+    def test_add_iteration(self):
+        sla = base.IterationTime(4.0)
+        self.assertTrue(sla.add_iteration({"duration": 3.14}))
+        self.assertTrue(sla.add_iteration({"duration": 2.0}))
+        self.assertTrue(sla.add_iteration({"duration": 3.99}))
+        self.assertFalse(sla.add_iteration({"duration": 4.5}))
+        self.assertFalse(sla.add_iteration({"duration": 3.8}))
 
 
 class MaxAverageDurationTestCase(test.TestCase):
@@ -154,10 +206,25 @@ class MaxAverageDurationTestCase(test.TestCase):
         self.assertRaises(jsonschema.ValidationError,
                           base.MaxAverageDuration.validate, properties)
 
-    def test_check(self):
-        result = [
-                {"duration": 3.14},
-                {"duration": 6.28},
-        ]
-        self.assertTrue(base.MaxAverageDuration.check(42, result).success)
-        self.assertFalse(base.MaxAverageDuration.check(3.62, result).success)
+    def test_result(self):
+        sla1 = base.MaxAverageDuration(42)
+        sla2 = base.MaxAverageDuration(3.62)
+        for sla in [sla1, sla2]:
+            sla.add_iteration({"duration": 3.14})
+            sla.add_iteration({"duration": 6.28})
+        self.assertTrue(sla1.result()["success"])   # 42 > avg([3.14, 6.28])
+        self.assertFalse(sla2.result()["success"])  # 3.62 < avg([3.14, 6.28])
+        self.assertEqual("Passed", sla1.status())
+        self.assertEqual("Failed", sla2.status())
+
+    def test_result_no_iterations(self):
+        sla = base.MaxAverageDuration(42)
+        self.assertTrue(sla.result()["success"])
+
+    def test_add_iteration(self):
+        sla = base.MaxAverageDuration(4.0)
+        self.assertTrue(sla.add_iteration({"duration": 3.5}))
+        self.assertTrue(sla.add_iteration({"duration": 2.5}))
+        self.assertTrue(sla.add_iteration({"duration": 5.0}))   # avg = 3.667
+        self.assertFalse(sla.add_iteration({"duration": 7.0}))  # avg = 4.5
+        self.assertTrue(sla.add_iteration({"duration": 1.0}))   # avg = 3.8

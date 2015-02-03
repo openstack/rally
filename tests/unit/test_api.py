@@ -115,9 +115,9 @@ class TaskAPITestCase(test.TestCase):
         mock_engine.assert_has_calls([
             mock.call("config", mock_task.return_value,
                       admin=mock_deployment_get.return_value["admin"],
-                      users=[]),
+                      users=[], abort_on_sla_failure=False),
             mock.call().validate(),
-            mock.call().run(),
+            mock.call().run()
         ])
 
         mock_task.assert_called_once_with(
