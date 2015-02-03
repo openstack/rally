@@ -34,7 +34,7 @@ class ImmutableMixinTestCase(test.TestCase):
     def test_without_base_values(self):
         im = utils.ImmutableMixin()
         self.assertRaises(exceptions.ImmutableException,
-                          im.__setattr__, 'test', 'test')
+                          im.__setattr__, "test", "test")
 
     def test_with_base_values(self):
 
@@ -43,10 +43,10 @@ class ImmutableMixinTestCase(test.TestCase):
                 self.test = test
                 super(A, self).__init__()
 
-        a = A('test')
+        a = A("test")
         self.assertRaises(exceptions.ImmutableException,
-                          a.__setattr__, 'abc', 'test')
-        self.assertEqual(a.test, 'test')
+                          a.__setattr__, "abc", "test")
+        self.assertEqual(a.test, "test")
 
 
 class EnumMixinTestCase(test.TestCase):
@@ -65,22 +65,22 @@ class StdIOCaptureTestCase(test.TestCase):
 
     def test_stdout_capture(self):
         stdout = sys.stdout
-        messages = ['abcdef', 'defgaga']
+        messages = ["abcdef", "defgaga"]
         with utils.StdOutCapture() as out:
             for msg in messages:
                 print(msg)
 
-        self.assertEqual(out.getvalue().rstrip('\n').split('\n'), messages)
+        self.assertEqual(out.getvalue().rstrip("\n").split("\n"), messages)
         self.assertEqual(stdout, sys.stdout)
 
     def test_stderr_capture(self):
         stderr = sys.stderr
-        messages = ['abcdef', 'defgaga']
+        messages = ["abcdef", "defgaga"]
         with utils.StdErrCapture() as err:
             for msg in messages:
                 print(msg, file=sys.stderr)
 
-        self.assertEqual(err.getvalue().rstrip('\n').split('\n'), messages)
+        self.assertEqual(err.getvalue().rstrip("\n").split("\n"), messages)
         self.assertEqual(stderr, sys.stderr)
 
 
@@ -90,7 +90,7 @@ class TimerTestCase(test.TestCase):
         start_time = time.time()
         end_time = time.time()
 
-        with mock.patch('rally.common.utils.time') as mock_time:
+        with mock.patch("rally.common.utils.time") as mock_time:
             mock_time.time = mock.MagicMock(return_value=start_time)
             with utils.Timer() as timer:
                 mock_time.time = mock.MagicMock(return_value=end_time)
@@ -129,20 +129,20 @@ class IterSubclassesTestCase(test.TestCase):
 class ImportModulesTestCase(test.TestCase):
     def test_try_append_module_into_sys_modules(self):
         modules = {}
-        utils.try_append_module('rally.common.version', modules)
-        self.assertIn('rally.common.version', modules)
+        utils.try_append_module("rally.common.version", modules)
+        self.assertIn("rally.common.version", modules)
 
     def test_try_append_broken_module(self):
         modules = {}
         self.assertRaises(ImportError,
                           utils.try_append_module,
-                          'tests.unit.fixtures.import.broken',
+                          "tests.unit.fixtures.import.broken",
                           modules)
 
     def test_import_modules_from_package(self):
-        utils.import_modules_from_package('tests.unit.fixtures.import.package')
-        self.assertIn('tests.unit.fixtures.import.package.a', sys.modules)
-        self.assertIn('tests.unit.fixtures.import.package.b', sys.modules)
+        utils.import_modules_from_package("tests.unit.fixtures.import.package")
+        self.assertIn("tests.unit.fixtures.import.package.a", sys.modules)
+        self.assertIn("tests.unit.fixtures.import.package.b", sys.modules)
 
 
 class LogTestCase(test.TestCase):
@@ -154,7 +154,7 @@ class LogTestCase(test.TestCase):
         class TaskLog(object):
 
             def __init__(self):
-                self.task = {'uuid': 'some_uuid'}
+                self.task = {"uuid": "some_uuid"}
 
             @utils.log_task_wrapper(mock_log, msg, a=10, b=20)
             def some_method(self, x, y):
@@ -163,7 +163,7 @@ class LogTestCase(test.TestCase):
         t = TaskLog()
         self.assertEqual(t.some_method.__name__, "some_method")
         self.assertEqual(t.some_method(2, 2), 4)
-        params = {'msg': msg % {'a': 10, 'b': 20}, 'uuid': t.task['uuid']}
+        params = {"msg": msg % {"a": 10, "b": 20}, "uuid": t.task["uuid"]}
         expected = [
             mock.call(_("Task %(uuid)s | Starting:  %(msg)s") % params),
             mock.call(_("Task %(uuid)s | Completed: %(msg)s") % params)
@@ -177,10 +177,10 @@ class LoadExtraModulesTestCase(test.TestCase):
     @mock.patch("rally.common.utils.imp.find_module",
                 return_value=(mock.MagicMock(), None, None))
     @mock.patch("rally.common.utils.os.walk", return_value=[
-        ('/somewhere', ('/subdir', ), ('plugin1.py', )),
-        ('/somewhere/subdir', ('/subsubdir', ), ('plugin2.py',
-                                                 'withoutextension')),
-        ('/somewhere/subdir/subsubdir', [], ('plugin3.py', ))])
+        ("/somewhere", ("/subdir", ), ("plugin1.py", )),
+        ("/somewhere/subdir", ("/subsubdir", ), ("plugin2.py",
+                                                 "withoutextension")),
+        ("/somewhere/subdir/subsubdir", [], ("plugin3.py", ))])
     @mock.patch("rally.common.utils.os.path.exists", return_value=True)
     def test_load_plugins_successfull(self, mock_exists,
                                       mock_oswalk, mock_find_module,
@@ -209,7 +209,7 @@ class LoadExtraModulesTestCase(test.TestCase):
     @mock.patch("rally.common.utils.imp.find_module")
     @mock.patch("rally.common.utils.os.path", return_value=True)
     @mock.patch("rally.common.utils.os.walk",
-                return_value=[('/etc/.rally/plugins', [], ('load_it.py', ))])
+                return_value=[("/etc/.rally/plugins", [], ("load_it.py", ))])
     def test_load_plugins_fails(self, mock_oswalk, mock_ospath,
                                 mock_load_module, mock_find_module):
         # test no fails if module is broken
