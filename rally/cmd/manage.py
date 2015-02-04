@@ -47,8 +47,8 @@ class TempestCommands(object):
                                         "from.")
     @envutils.with_default_deployment(cli_arg_name="deployment")
     def install(self, deployment=None, source=None):
-        """Install tempest."""
-        api.install_tempest(deployment, source)
+        """Install Tempest."""
+        api.Verification.install_tempest(deployment, source)
 
 
 def main():

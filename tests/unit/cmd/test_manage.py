@@ -37,7 +37,7 @@ class DBCommandsTestCase(test.TestCase):
         super(DBCommandsTestCase, self).setUp()
         self.db_commands = manage.DBCommands()
 
-    @mock.patch('rally.cmd.manage.db')
+    @mock.patch("rally.cmd.manage.db")
     def test_recreate(self, mock_db):
         self.db_commands.recreate()
         calls = [mock.call.db_drop(), mock.call.db_create()]
@@ -51,11 +51,9 @@ class TempestCommandsTestCase(test.TestCase):
         self.tempest_commands = manage.TempestCommands()
         self.tempest = mock.Mock()
 
-    @mock.patch("rally.cmd.manage.db.deployment_get",
-                return_value={"uuid": "e24b5af0-0e2a-4a70-9443-b30a88ab152e"})
-    @mock.patch("rally.verification.tempest.tempest.Tempest")
-    def test_install(self, mock_tempest, mock_d_get):
-        deployment_id = mock_d_get.return_value["uuid"]
-        mock_tempest.return_value = self.tempest
-        self.tempest_commands.install(deployment_id)
-        self.tempest.install.assert_called_once_with()
+    @mock.patch("rally.cmd.manage.api")
+    def test_install(self, mock_api):
+        deployment_uuid = "deployment_uuid"
+        self.tempest_commands.install(deployment_uuid)
+        mock_api.Verification.install_tempest.assert_called_once_with(
+                                                        deployment_uuid, None)
