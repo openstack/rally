@@ -500,7 +500,7 @@ class TaskCommandsTestCase(test.TestCase):
 
         mock_print_list.assert_called_once_with(
             mock_objects_list.return_value, headers,
-            sortby_index=headers.index('created_at'))
+            sortby_index=headers.index("created_at"))
 
     def test_list_wrong_status(self):
         self.assertEqual(1, self.task.list(deployment="fake",

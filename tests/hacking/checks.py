@@ -58,7 +58,7 @@ re_concatenate_dict = re.compile(
 
 
 def _parse_assert_mock_str(line):
-    point = line.find('.assert_')
+    point = line.find(".assert_")
 
     if point != -1:
         end_pos = line[point:].find('(') + point
@@ -132,7 +132,7 @@ def check_import_of_logging(logical_line, filename):
 
 
 def no_translate_debug_logs(logical_line):
-    """Check for 'LOG.debug(_('
+    """Check for "LOG.debug(_("
 
     As per our translation policy,
     https://wiki.openstack.org/wiki/LoggingStandards#Log_Translation
@@ -149,7 +149,7 @@ def no_translate_debug_logs(logical_line):
 
 
 def no_use_conf_debug_check(logical_line, filename):
-    """Check for 'cfg.CONF.debug'
+    """Check for "cfg.CONF.debug"
 
     Rally has two DEBUG level:
      - Full DEBUG, which include all debug-messages from all OpenStack services

@@ -21,8 +21,8 @@ from tests.unit.aas.rest import base
 class TestRoot(base.PecanControllerTest):
 
     def test_get_root(self):
-        data = self.get_json('/', path_prefix='')
-        self.assertEqual('v1', data['versions'][0]['id'])
+        data = self.get_json("/", path_prefix="")
+        self.assertEqual("v1", data["versions"][0]["id"])
         # Check fields are not empty
         [self.assertTrue(f) for f in data.keys()]
 
@@ -30,15 +30,15 @@ class TestRoot(base.PecanControllerTest):
 class TestV1Root(base.PecanControllerTest):
 
     def test_get_v1_root(self):
-        data = self.get_json('/')
-        self.assertEqual('v1', data['id'])
+        data = self.get_json("/")
+        self.assertEqual("v1", data["id"])
         # Check if all known resources are present and there are no extra ones.
-        expected_resources = set(['id', 'links', 'media_types', 'status',
-                                  'updated_at'])
+        expected_resources = set(["id", "links", "media_types", "status",
+                                  "updated_at"])
         actual_resources = set(data.keys())
         # TODO(lyj): There are still no resources in api, we need to add the
         #            related resources here when new api resources added.
         self.assertEqual(expected_resources, actual_resources)
 
-        self.assertIn({'type': 'application/vnd.openstack.rally.v1+json',
-                       'base': 'application/json'}, data['media_types'])
+        self.assertIn({"type": "application/vnd.openstack.rally.v1+json",
+                       "base": "application/json"}, data["media_types"])

@@ -45,7 +45,7 @@ def generate_name(prefix="", length=12, choices=string.ascii_lowercase):
     :param choices: str, chars that accurs in generated name
     :returns: str, pseudo-random name
     """
-    return prefix + ''.join(random.choice(choices) for i in range(length))
+    return prefix + "".join(random.choice(choices) for i in range(length))
 
 
 def generate_mac():
@@ -193,9 +193,9 @@ class FakeSecurityGroup(FakeResource):
 class FakeSecurityGroupRule(FakeResource):
     def __init__(self, name, **kwargs):
         super(FakeSecurityGroupRule, self).__init__(name)
-        if 'cidr' in kwargs:
-            kwargs['ip_range'] = {'cidr': kwargs['cidr']}
-            del kwargs['cidr']
+        if "cidr" in kwargs:
+            kwargs["ip_range"] = {"cidr": kwargs["cidr"]}
+            del kwargs["cidr"]
         for key, value in kwargs.items():
             self.items[key] = value
             setattr(self, key, value)
@@ -204,20 +204,20 @@ class FakeSecurityGroupRule(FakeResource):
 class FakeAlarm(FakeResource):
     def __init__(self, manager=None, **kwargs):
         super(FakeAlarm, self).__init__(manager)
-        self.meter_name = kwargs.get('meter_name')
-        self.threshold = kwargs.get('threshold')
-        self.alarm_id = kwargs.get('alarm_id', 'fake-alarm-id')
-        self.optional_args = kwargs.get('optional_args', {})
+        self.meter_name = kwargs.get("meter_name")
+        self.threshold = kwargs.get("threshold")
+        self.alarm_id = kwargs.get("alarm_id", "fake-alarm-id")
+        self.optional_args = kwargs.get("optional_args", {})
 
 
 class FakeSample(FakeResource):
     def __init__(self, manager=None, **kwargs):
         super(FakeSample, self).__init__(manager)
-        self.counter_name = kwargs.get('counter_name', 'fake-counter-name')
-        self.counter_type = kwargs.get('counter_type', 'fake-counter-type')
-        self.counter_unit = kwargs.get('counter_unit', 'fake-counter-unit')
-        self.counter_volume = kwargs.get('counter_volume', 100)
-        self.resource_id = kwargs.get('resource_id', 'fake-resource-id')
+        self.counter_name = kwargs.get("counter_name", "fake-counter-name")
+        self.counter_type = kwargs.get("counter_type", "fake-counter-type")
+        self.counter_unit = kwargs.get("counter_unit", "fake-counter-unit")
+        self.counter_volume = kwargs.get("counter_volume", 100)
+        self.resource_id = kwargs.get("resource_id", "fake-resource-id")
 
 
 class FakeVolume(FakeResource):
@@ -247,7 +247,7 @@ class FakeRole(FakeResource):
 
 
 class FakeQueue(FakeResource):
-    def __init__(self, manager=None, name='myqueue'):
+    def __init__(self, manager=None, name="myqueue"):
         super(FakeQueue, self).__init__(manager, name)
         self.queue_name = name
         self.messages = FakeMessagesManager(name)
@@ -267,8 +267,8 @@ class FakeDbInstance(FakeResource):
 class FakeMessage(FakeResource):
     def __init__(self, manager=None, **kwargs):
         super(FakeMessage, self).__init__(manager)
-        self.body = kwargs.get('body', 'fake-body')
-        self.ttl = kwargs.get('ttl', 100)
+        self.body = kwargs.get("body", "fake-body")
+        self.ttl = kwargs.get("ttl", 100)
 
 
 class FakeAvailabilityZone(FakeResource):
@@ -513,7 +513,7 @@ class FakeSecurityGroupManager(FakeManager):
     def __init__(self, rule_manager=None):
         super(FakeSecurityGroupManager, self).__init__()
         self.rule_manager = rule_manager
-        self.create('default')
+        self.create("default")
 
     def create(self, name, description=""):
         sg = FakeSecurityGroup(
@@ -524,7 +524,7 @@ class FakeSecurityGroupManager(FakeManager):
         return self._cache(sg)
 
     def find(self, name, **kwargs):
-        kwargs['name'] = name
+        kwargs["name"] = name
         for resource in self.cache.values():
             match = True
             for key, value in kwargs.items():
@@ -533,7 +533,7 @@ class FakeSecurityGroupManager(FakeManager):
                     break
             if match:
                 return resource
-        raise nova_exceptions.NotFound('Security Group not found')
+        raise nova_exceptions.NotFound("Security Group not found")
 
     def delete(self, resource):
         if not isinstance(resource, six.string_types):
@@ -551,7 +551,7 @@ class FakeSecurityGroupRuleManager(FakeManager):
         super(FakeSecurityGroupRuleManager, self).__init__()
 
     def create(self, parent_group_id, **kwargs):
-        kwargs['parent_group_id'] = parent_group_id
+        kwargs["parent_group_id"] = parent_group_id
         sgr = FakeSecurityGroupRule(self, **kwargs)
         return self._cache(sgr)
 
@@ -579,7 +579,7 @@ class FakeVolumeManager(FakeManager):
     def create(self, size=None, **kwargs):
         volume = FakeVolume(self)
         volume.size = size or 1
-        volume.name = kwargs.get('display_name', volume.name)
+        volume.name = kwargs.get("display_name", volume.name)
         volume.status = "available"
         volume.tenant_id = self.__tenant_id
         self.__volumes[volume.id] = volume
@@ -672,7 +672,7 @@ class FakeRolesManager(FakeManager):
 
     def roles_for_user(self, user, tenant):
         role = FakeRole(self)
-        role.name = 'admin'
+        role.name = "admin"
         return [role, ]
 
 
@@ -713,25 +713,25 @@ class FakeSampleManager(FakeManager):
 class FakeMeterManager(FakeManager):
 
     def list(self):
-        return ['fake-meter']
+        return ["fake-meter"]
 
 
 class FakeCeilometerResourceManager(FakeManager):
 
     def list(self):
-        return ['fake-resource']
+        return ["fake-resource"]
 
 
 class FakeStatisticsManager(FakeManager):
 
     def list(self, meter):
-        return ['%s-statistics' % meter]
+        return ["%s-statistics" % meter]
 
 
 class FakeQueryManager(FakeManager):
 
     def query(self, filter, orderby, limit):
-        return ['fake-query-result']
+        return ["fake-query-result"]
 
 
 class FakeQueuesManager(FakeManager):
@@ -779,7 +779,7 @@ class FakeDbInstanceManager(FakeManager):
 
 
 class FakeMessagesManager(FakeManager):
-    def __init__(self, queue='myqueue'):
+    def __init__(self, queue="myqueue"):
         super(FakeMessagesManager, self).__init__()
         self.__queue = queue
         self.__messages = {}
@@ -808,11 +808,11 @@ class FakeAvailabilityZonesManager(FakeManager):
 
 class FakeServiceCatalog(object):
     def get_endpoints(self):
-        return {'image': [{'publicURL': 'http://fake.to'}],
-                'metering': [{'publicURL': 'http://fake.to'}]}
+        return {"image": [{"publicURL": "http://fake.to"}],
+                "metering": [{"publicURL": "http://fake.to"}]}
 
     def url_for(self, **kwargs):
-        return 'http://fake.to'
+        return "http://fake.to"
 
 
 class FakeGlanceClient(object):
@@ -874,17 +874,17 @@ class FakeKeystoneClient(object):
         self.tenants = FakeTenantsManager()
         self.users = FakeUsersManager()
         self.roles = FakeRolesManager()
-        self.project_id = 'abc123'
-        self.auth_url = 'http://example.com:5000/v2.0/'
-        self.auth_token = 'fake'
+        self.project_id = "abc123"
+        self.auth_url = "http://example.com:5000/v2.0/"
+        self.auth_token = "fake"
         self.auth_user_id = generate_uuid()
         self.auth_tenant_id = generate_uuid()
         self.service_catalog = FakeServiceCatalog()
         self.services = FakeServicesManager()
-        self.region_name = 'RegionOne'
+        self.region_name = "RegionOne"
         self.auth_ref = mock.Mock()
-        self.auth_ref.role_names = ['admin']
-        self.version = 'v2.0'
+        self.auth_ref.role_names = ["admin"]
+        self.version = "v2.0"
         self.session = mock.Mock()
         self.authenticate = mock.MagicMock()
 
@@ -993,7 +993,7 @@ class FakeNeutronClient(object):
                      "device_owner": "",
                      "mac_address": generate_mac(),
                      "binding:profile": {},
-                     "binding:vif_details": {u'port_filter': True},
+                     "binding:vif_details": {u"port_filter": True},
                      "security_groups": [],
                      "fixed_ips": [],
                      "device_id": "",
@@ -1029,7 +1029,7 @@ class FakeNeutronClient(object):
                        "dns_nameservers": [],
                        "ipv6_ra_mode": None,
                        "allocation_pools": [],
-                       "gateway_ip": re.sub('./.*$', '1', subnet["cidr"]),
+                       "gateway_ip": re.sub("./.*$", "1", subnet["cidr"]),
                        "ipv6_address_mode": None,
                        "ip_version": 4,
                        "host_routes": []})
@@ -1362,7 +1362,7 @@ class FakeUserContext(FakeContext):
         context.setdefault("users", [FakeUserContext.user])
         context.setdefault("tenants", FakeUserContext.tenants)
         context.setdefault("scenario_name",
-                           'NovaServers.boot_server_from_volume_and_delete')
+                           "NovaServers.boot_server_from_volume_and_delete")
 
 
 class FakeDeployment(dict):

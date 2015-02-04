@@ -23,7 +23,7 @@ from rally.cmd import envutils
 from tests.functional import utils
 
 
-FAKE_TASK_UUID = '87ab639d-4968-4638-b9a1-07774c32484a'
+FAKE_TASK_UUID = "87ab639d-4968-4638-b9a1-07774c32484a"
 
 
 class TaskTestCase(unittest.TestCase):

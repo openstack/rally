@@ -35,31 +35,31 @@ class HackingTestCase(test.TestCase):
         for name in correct_method_names:
             self.assertEqual(0, len(
                 list(checks.check_assert_methods_from_mock(
-                    'some_mock.%s(asd)' % name, './tests/fake/test'))))
+                    "some_mock.%s(asd)" % name, "./tests/fake/test"))))
 
     def test_wrong_usage_of_broad_assert_from_mock(self):
-        fake_method = 'rtfm.assert_something()'
+        fake_method = "rtfm.assert_something()"
 
         actual_number, actual_msg = next(checks.check_assert_methods_from_mock(
-            fake_method, './tests/fake/test'))
+            fake_method, "./tests/fake/test"))
         self.assertEqual(4, actual_number)
-        self.assertTrue(actual_msg.startswith('N301'))
+        self.assertTrue(actual_msg.startswith("N301"))
 
     def test_wrong_usage_of_assert_called_from_mock(self):
-        fake_method = 'rtfm.assert_called()'
+        fake_method = "rtfm.assert_called()"
 
         actual_number, actual_msg = next(checks.check_assert_methods_from_mock(
-            fake_method, './tests/fake/test'))
+            fake_method, "./tests/fake/test"))
         self.assertEqual(4, actual_number)
-        self.assertTrue(actual_msg.startswith('N302'))
+        self.assertTrue(actual_msg.startswith("N302"))
 
     def test_wrong_usage_of_assert_called_once_from_mock(self):
-        fake_method = 'rtfm.assert_called_once()'
+        fake_method = "rtfm.assert_called_once()"
 
         actual_number, actual_msg = next(checks.check_assert_methods_from_mock(
-            fake_method, './tests/fake/test'))
+            fake_method, "./tests/fake/test"))
         self.assertEqual(4, actual_number)
-        self.assertTrue(actual_msg.startswith('N303'))
+        self.assertTrue(actual_msg.startswith("N303"))
 
     def test_check_wrong_logging_import(self):
         bad_imports = ["from rally.openstack.common import log",

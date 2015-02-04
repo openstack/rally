@@ -87,7 +87,7 @@ class OSClientsTestCase(test.TestCase):
             client = self.clients.nova()
             self.assertEqual(client, fake_nova)
             self.service_catalog.url_for.assert_called_once_with(
-                service_type='compute',
+                service_type="compute",
                 endpoint_type=consts.EndpointType.PUBLIC,
                 region_name=self.endpoint.region_name)
             mock_nova.Client.assert_called_once_with(
@@ -115,7 +115,7 @@ class OSClientsTestCase(test.TestCase):
             "ca_cert": cfg.CONF.https_cacert
         }
         self.service_catalog.url_for.assert_called_once_with(
-            service_type='network', endpoint_type=consts.EndpointType.PUBLIC,
+            service_type="network", endpoint_type=consts.EndpointType.PUBLIC,
             region_name=self.endpoint.region_name)
         mock_neutron.Client.assert_called_once_with("2.0", **kw)
         self.assertEqual(self.clients.cache["neutron"], fake_neutron)
@@ -132,7 +132,7 @@ class OSClientsTestCase(test.TestCase):
                   "timeout": cfg.CONF.openstack_client_http_timeout,
                   "insecure": False, "cacert": None}
             self.service_catalog.url_for.assert_called_once_with(
-                service_type='image',
+                service_type="image",
                 endpoint_type=consts.EndpointType.PUBLIC,
                 region_name=self.endpoint.region_name)
             mock_glance.Client.assert_called_once_with("1", **kw)
@@ -147,7 +147,7 @@ class OSClientsTestCase(test.TestCase):
             client = self.clients.cinder()
             self.assertEqual(client, fake_cinder)
             self.service_catalog.url_for.assert_called_once_with(
-                service_type='volume',
+                service_type="volume",
                 endpoint_type=consts.EndpointType.PUBLIC,
                 region_name=self.endpoint.region_name)
             mock_cinder.Client.assert_called_once_with(
@@ -169,7 +169,7 @@ class OSClientsTestCase(test.TestCase):
             client = self.clients.ceilometer()
             self.assertEqual(client, fake_ceilometer)
             self.service_catalog.url_for.assert_called_once_with(
-                service_type='metering',
+                service_type="metering",
                 endpoint_type=consts.EndpointType.PUBLIC,
                 region_name=self.endpoint.region_name)
             kw = {"endpoint": self.service_catalog.url_for.return_value,
@@ -188,7 +188,7 @@ class OSClientsTestCase(test.TestCase):
         client = self.clients.ironic()
         self.assertEqual(client, fake_ironic)
         self.service_catalog.url_for.assert_called_once_with(
-            service_type='baremetal',
+            service_type="baremetal",
             endpoint_type=consts.EndpointType.PUBLIC,
             region_name=self.endpoint.region_name)
         kw = {
@@ -225,17 +225,17 @@ class OSClientsTestCase(test.TestCase):
         client = self.clients.zaqar()
         self.assertEqual(client, fake_zaqar)
         self.service_catalog.url_for.assert_called_once_with(
-            service_type='messaging',
+            service_type="messaging",
             endpoint_type=consts.EndpointType.PUBLIC,
             region_name=self.endpoint.region_name)
         fake_zaqar_url = self.service_catalog.url_for.return_value
-        conf = {'auth_opts': {'backend': 'keystone', 'options': {
-            'os_username': self.endpoint.username,
-            'os_password': self.endpoint.password,
-            'os_project_name': self.endpoint.tenant_name,
-            'os_project_id': self.fake_keystone.auth_tenant_id,
-            'os_auth_url': self.endpoint.auth_url,
-            'insecure': cfg.CONF.https_insecure,
+        conf = {"auth_opts": {"backend": "keystone", "options": {
+            "os_username": self.endpoint.username,
+            "os_password": self.endpoint.password,
+            "os_project_name": self.endpoint.tenant_name,
+            "os_project_id": self.fake_keystone.auth_tenant_id,
+            "os_auth_url": self.endpoint.auth_url,
+            "insecure": cfg.CONF.https_insecure,
         }}}
         mock_zaqar.Client.assert_called_once_with(url=fake_zaqar_url,
                                                   version=1.1,
@@ -266,7 +266,7 @@ class OSClientsTestCase(test.TestCase):
     def test_services(self, mock_keystone):
         available_services = {consts.ServiceType.IDENTITY: {},
                               consts.ServiceType.COMPUTE: {},
-                              'unknown_service': {}
+                              "unknown_service": {}
                               }
         mock_keystone.return_value = mock.Mock(service_catalog=mock.Mock(
                 get_endpoints=lambda: available_services))
