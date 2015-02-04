@@ -30,8 +30,8 @@ from rally import api
 from rally.benchmark.processing import plot
 from rally.benchmark.processing import utils
 from rally.cmd import cliutils
-from rally.cmd.commands import use
 from rally.cmd import envutils
+from rally.common import fileutils
 from rally.common.i18n import _
 from rally.common import log as logging
 from rally.common import utils as rutils
@@ -219,7 +219,7 @@ class TaskCommands(object):
                            abort_on_sla_failure=abort_on_sla_failure)
             self.detailed(task_id=task["uuid"])
             if do_use:
-                use.UseCommands().task(task["uuid"])
+                self.use(task["uuid"])
         except exceptions.InvalidConfigException:
             return(1)
 
@@ -629,4 +629,6 @@ class TaskCommands(object):
 
         :param task: Task uuid.
         """
-        use.UseCommands().task(task)
+        print("Using task: %s" % task)
+        db.task_get(task)
+        fileutils.update_globals_file("RALLY_TASK", task)

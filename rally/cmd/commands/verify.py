@@ -23,8 +23,8 @@ import six
 
 from rally import api
 from rally.cmd import cliutils
-from rally.cmd.commands import use
 from rally.cmd import envutils
+from rally.common import fileutils
 from rally.common.i18n import _
 from rally import consts
 from rally import db
@@ -82,7 +82,7 @@ class VerifyCommands(object):
         verification = api.Verification.verify(deployment, set_name, regex,
                                                tempest_config)
         if do_use:
-            use.UseCommands().verification(verification["uuid"])
+            self.use(verification["uuid"])
 
     def list(self):
         """Display all verifications table, started and finished."""
@@ -274,4 +274,6 @@ class VerifyCommands(object):
 
         :param verification: a UUID of verification
         """
-        use.UseCommands().verification(verification)
+        print("Verification UUID: %s" % verification)
+        db.verification_get(verification)
+        fileutils.update_globals_file("RALLY_VERIFICATION", verification)

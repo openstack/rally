@@ -18,8 +18,10 @@ import os
 import mock
 
 from rally.cmd.commands import deployment
+from rally.cmd import envutils
 from rally import consts
 from rally import exceptions
+from tests.unit import fakes
 from tests.unit import test
 
 
@@ -63,7 +65,7 @@ class DeploymentCommandsTestCase(test.TestCase):
         )
 
     @mock.patch("rally.cmd.commands.deployment.DeploymentCommands.list")
-    @mock.patch("rally.cmd.commands.use.UseCommands.deployment")
+    @mock.patch("rally.cmd.commands.deployment.DeploymentCommands.use")
     @mock.patch("rally.cmd.commands.deployment.api.Deployment.create",
                 return_value=dict(uuid="uuid"))
     @mock.patch("rally.cmd.commands.deployment.open",
@@ -203,7 +205,64 @@ class DeploymentCommandsTestCase(test.TestCase):
         self.assertRaises(exceptions.InvalidArgumentsException,
                           self.deployment.show, None)
 
-    @mock.patch("rally.cmd.commands.use.UseCommands.deployment")
-    def test_use(self, mock_use_deployment):
-        self.deployment.use("fake_id")
-        mock_use_deployment.assert_called_once_with("fake_id")
+    @mock.patch("os.remove")
+    @mock.patch("os.symlink")
+    @mock.patch("rally.cmd.commands.deployment.db.deployment_get",
+                return_value=fakes.FakeDeployment(
+                    uuid="593b683c-4b16-4b2b-a56b-e162bd60f10b"))
+    @mock.patch("os.path.exists", return_value=True)
+    @mock.patch("rally.common.fileutils.update_env_file")
+    def test_use(self, mock_env, mock_path, mock_deployment,
+                 mock_symlink, mock_remove):
+        deployment_id = mock_deployment.return_value["uuid"]
+
+        mock_deployment.return_value["admin"] = {
+                "auth_url": "fake_auth_url",
+                "username": "fake_username",
+                "password": "fake_password",
+                "tenant_name": "fake_tenant_name",
+                "region_name": None}
+
+        with mock.patch("rally.cmd.commands.deployment.open", mock.mock_open(),
+                        create=True) as mock_file:
+            self.deployment.use(deployment_id)
+            self.assertEqual(2, mock_path.call_count)
+            mock_env.assert_called_once_with(os.path.expanduser(
+                "~/.rally/globals"),
+                "RALLY_DEPLOYMENT", "%s\n" % deployment_id)
+            mock_file.return_value.write.assert_called_once_with(
+                "export OS_AUTH_URL=fake_auth_url\n"
+                "export OS_USERNAME=fake_username\n"
+                "export OS_PASSWORD=fake_password\n"
+                "export OS_TENANT_NAME=fake_tenant_name\n")
+            mock_symlink.assert_called_once_with(
+                os.path.expanduser("~/.rally/openrc-%s" % deployment_id),
+                os.path.expanduser("~/.rally/openrc"))
+            mock_remove.assert_called_once_with(os.path.expanduser(
+                "~/.rally/openrc"))
+
+    @mock.patch("rally.cmd.commands.deployment.DeploymentCommands."
+                "_update_openrc_deployment_file")
+    @mock.patch("rally.common.fileutils.update_globals_file")
+    @mock.patch("rally.cmd.commands.deployment.db")
+    def test_use_by_name(self, mock_db, mock_update_openrc,
+                         mock_update_globals):
+        fake_deployment = fakes.FakeDeployment(
+            uuid="fake_uuid",
+            admin="fake_endpoints")
+        mock_db.deployment_list.return_value = [fake_deployment]
+        mock_db.deployment_get.return_value = fake_deployment
+        status = self.deployment.use(deployment="fake_name")
+        self.assertIsNone(status)
+        mock_db.deployment_get.assert_called_once_with("fake_name")
+        mock_update_openrc.assert_called_once_with(
+            envutils.ENV_DEPLOYMENT, "fake_uuid")
+        mock_update_globals.assert_called_once_with(
+            "fake_uuid", "fake_endpoints")
+
+    @mock.patch("rally.cmd.commands.deployment.db.deployment_get")
+    def test_deployment_not_found(self, mock_deployment_get):
+        deployment_id = "e87e4dca-b515-4477-888d-5f6103f13b42"
+        mock_deployment_get.side_effect = exceptions.DeploymentNotFound(
+            uuid=deployment_id)
+        self.assertEqual(1, self.deployment.use(deployment_id))
