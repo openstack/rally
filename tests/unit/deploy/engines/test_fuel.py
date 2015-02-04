@@ -23,17 +23,17 @@ import mock
 
 
 SAMPLE_CONFIG = {
-    'type': 'FuelEngine',
-    'deploy_name': 'TestDeploy01',
-    'net_provider': 'nova_network',
-    'release': 'Havana on Ubuntu 12.04',
-    'api_url': 'http://example.net:8000/api/v1/',
-    'mode': 'multinode',
-    'networks': {'public': {'cidr': '10.1.1.0/24'}},
-    'nodes': {
-        'controller': {'amount': 1, 'filters': ['cpus==2']},
-        'cinder+compute': {'amount': 4, 'filters': ['cpus==8',
-                                                    'storage>=2T']},
+    "type": "FuelEngine",
+    "deploy_name": "TestDeploy01",
+    "net_provider": "nova_network",
+    "release": "Havana on Ubuntu 12.04",
+    "api_url": "http://example.net:8000/api/v1/",
+    "mode": "multinode",
+    "networks": {"public": {"cidr": "10.1.1.0/24"}},
+    "nodes": {
+        "controller": {"amount": 1, "filters": ["cpus==2"]},
+        "cinder+compute": {"amount": 4, "filters": ["cpus==8",
+                                                    "storage>=2T"]},
     },
 }
 
@@ -42,15 +42,15 @@ class FuelEngineTestCase(test.TestCase):
 
     def setUp(self):
         super(FuelEngineTestCase, self).setUp()
-        self.deployment = fakes.FakeDeployment({'config': SAMPLE_CONFIG})
+        self.deployment = fakes.FakeDeployment({"config": SAMPLE_CONFIG})
 
     def test_construct(self):
         fuel.FuelEngine(self.deployment)
 
     def test_validate_no_computes(self):
         config = SAMPLE_CONFIG.copy()
-        config['nodes'].pop('cinder+compute')
-        deployment = {'config': config}
+        config["nodes"].pop("cinder+compute")
+        deployment = {"config": config}
         engine = fuel.FuelEngine(deployment)
         self.assertRaises(exceptions.ValidationError,
                           engine.validate)
@@ -59,9 +59,9 @@ class FuelEngineTestCase(test.TestCase):
         engine = fuel.FuelEngine(self.deployment)
         engine.nodes = mock.MagicMock()
         engine.nodes.pop.side_effect = [1, 2, 3, 4]
-        nodes = engine._get_nodes('cinder+compute')
+        nodes = engine._get_nodes("cinder+compute")
         self.assertEqual([1, 2, 3, 4], nodes)
-        expected_calls = [mock.call(['cpus==8', 'storage>=2T'])] * 4
+        expected_calls = [mock.call(["cpus==8", "storage>=2T"])] * 4
         self.assertEqual(expected_calls, engine.nodes.pop.mock_calls)
 
     def test__get_nodes_no_nodes(self):
@@ -69,30 +69,30 @@ class FuelEngineTestCase(test.TestCase):
         engine.nodes = mock.MagicMock()
         engine.nodes.pop.return_value = None
         self.assertRaises(exceptions.NoNodesFound,
-                          engine._get_nodes, 'controller')
+                          engine._get_nodes, "controller")
 
     def test__get_nodes_empty(self):
         engine = fuel.FuelEngine(self.deployment)
-        self.assertEqual([], engine._get_nodes('nonexistent'))
+        self.assertEqual([], engine._get_nodes("nonexistent"))
 
     def test__get_release_id(self):
         engine = fuel.FuelEngine(self.deployment)
         engine.client = mock.Mock()
-        fake_releases = [{'name': 'fake', 'id': 1},
-                         {'name': 'Havana on Ubuntu 12.04', 'id': 42}]
+        fake_releases = [{"name": "fake", "id": 1},
+                         {"name": "Havana on Ubuntu 12.04", "id": 42}]
         engine.client.get_releases = mock.Mock(return_value=fake_releases)
         self.assertEqual(42, engine._get_release_id())
 
-    @mock.patch('rally.deploy.fuel.fuelclient.FuelClient')
-    @mock.patch('rally.deploy.fuel.fuelclient.FuelCluster')
+    @mock.patch("rally.deploy.fuel.fuelclient.FuelClient")
+    @mock.patch("rally.deploy.fuel.fuelclient.FuelCluster")
     def test_deploy(self, m_cluster, m_client):
-        attributes = {'editable': {'access': {'user': {'value': 'user'},
-                                              'password': {'value': 'pw'},
-                                              'tenant': {'value': 'tn'}}}}
+        attributes = {"editable": {"access": {"user": {"value": "user"},
+                                              "password": {"value": "pw"},
+                                              "tenant": {"value": "tn"}}}}
         client = mock.Mock()
         cluster = mock.Mock()
-        cluster.cluster = {'id': 42}
-        cluster.get_endpoint_ip = mock.Mock(return_value='2.3.4.5')
+        cluster.cluster = {"id": 42}
+        cluster.get_endpoint_ip = mock.Mock(return_value="2.3.4.5")
         cluster.get_attributes = mock.Mock(return_value=attributes)
         m_client.return_value = client
         m_cluster.return_value = cluster
@@ -107,18 +107,18 @@ class FuelEngineTestCase(test.TestCase):
         self.assertEqual(["admin"], list(endpoint))
         endpoint = endpoint["admin"]
 
-        self.assertEqual('user', endpoint.username)
-        self.assertEqual('pw', endpoint.password)
-        self.assertEqual('tn', endpoint.tenant_name)
-        self.assertEqual('http://2.3.4.5:5000/v2.0/', endpoint.auth_url)
+        self.assertEqual("user", endpoint.username)
+        self.assertEqual("pw", endpoint.password)
+        self.assertEqual("tn", endpoint.tenant_name)
+        self.assertEqual("http://2.3.4.5:5000/v2.0/", endpoint.auth_url)
         self.assertEqual(consts.EndpointPermission.ADMIN, endpoint.permission)
 
         expected_cluster_calls = [
-            mock.call.set_nodes(1, ['controller']),
-            mock.call.set_nodes(2, ['compute']),
-            mock.call.set_nodes(3, ['cinder']),
-            mock.call.set_nodes(4, ['compute', 'cinder']),
-            mock.call.configure_network({'public': {'cidr': '10.1.1.0/24'}}),
+            mock.call.set_nodes(1, ["controller"]),
+            mock.call.set_nodes(2, ["compute"]),
+            mock.call.set_nodes(3, ["cinder"]),
+            mock.call.set_nodes(4, ["compute", "cinder"]),
+            mock.call.configure_network({"public": {"cidr": "10.1.1.0/24"}}),
             mock.call.deploy(),
             mock.call.get_endpoint_ip(),
             mock.call.get_attributes()
@@ -126,10 +126,10 @@ class FuelEngineTestCase(test.TestCase):
         self.assertEqual(expected_cluster_calls, cluster.mock_calls)
         self.assertEqual([mock.call.get_nodes()], client.mock_calls)
 
-    @mock.patch('rally.deploy.fuel.fuelclient.FuelClient')
-    @mock.patch('rally.deploy.engines.fuel.objects.Deployment')
+    @mock.patch("rally.deploy.fuel.fuelclient.FuelClient")
+    @mock.patch("rally.deploy.engines.fuel.objects.Deployment")
     def test_cleanup(self, m_deployment, m_client):
-        fake_resources = [{'id': 41, 'info': {'id': 42}}]
+        fake_resources = [{"id": 41, "info": {"id": 42}}]
         self.deployment.get_resources = mock.Mock(return_value=fake_resources)
 
         engine = fuel.FuelEngine(self.deployment)

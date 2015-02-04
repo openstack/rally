@@ -43,7 +43,7 @@ class TaskSampleTestCase(test.TestCase):
 
                 # NOTE(hughsaunders): Skip non config files
                 # (bug https://bugs.launchpad.net/rally/+bug/1314369)
-                if not re.search('\.(ya?ml|json)$', filename, flags=re.I):
+                if not re.search("\.(ya?ml|json)$", filename, flags=re.I):
                     continue
 
                 with open(full_path) as task_file:
