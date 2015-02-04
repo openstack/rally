@@ -13,7 +13,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import ConfigParser
+from six.moves import configparser
+
 import json
 import os
 import pwd
@@ -21,13 +22,14 @@ import shutil
 import subprocess
 import tempfile
 
-
 TEST_ENV = {
     "OS_USERNAME": "admin",
     "OS_PASSWORD": "admin",
     "OS_TENANT_NAME": "admin",
     "OS_AUTH_URL": "http://fake/",
 }
+
+DEPLOYMENT_FILE = "/tmp/rally_functests_main_deployment.json"
 
 
 class RallyCmdError(Exception):
@@ -47,7 +49,7 @@ class TaskConfig(object):
 
     def __init__(self, config):
         config_file = tempfile.NamedTemporaryFile(delete=False)
-        config_file.write(json.dumps(config))
+        config_file.write(json.dumps(config).encode("utf-8"))
         config_file.close()
         self.filename = config_file.name
 
@@ -70,19 +72,28 @@ class Rally(object):
         # NOTE(sskripnick): we shoud change home dir to avoid races
         # and do not touch any user files in ~/.rally
         os.environ["HOME"] = pwd.getpwuid(os.getuid()).pw_dir
-        subprocess.call("rally deployment config > /tmp/.rd.json", shell=True)
+        if not os.path.exists(DEPLOYMENT_FILE):
+            subprocess.call("rally deployment config > %s" % DEPLOYMENT_FILE,
+                            shell=True)
         self.tmp_dir = tempfile.mkdtemp()
         os.environ["HOME"] = self.tmp_dir
-        config_filename = os.path.join(self.tmp_dir, "conf")
-        config = ConfigParser.RawConfigParser()
-        config.add_section("database")
-        config.set("database", "connection", "sqlite:///%s/db" % self.tmp_dir)
-        with open(config_filename, "wb") as conf:
-            config.write(conf)
-        self.args = ["rally", "--config-file", config_filename]
-        subprocess.call(["rally-manage", "--config-file", config_filename,
-                         "db", "recreate"])
-        self("deployment create --file /tmp/.rd.json --name MAIN")
+
+        if "RCI_KEEP_DB" not in os.environ:
+            config_filename = os.path.join(self.tmp_dir, "conf")
+            config = configparser.RawConfigParser()
+            config.add_section("database")
+            config.set("database", "connection",
+                       "sqlite:///%s/db" % self.tmp_dir)
+            with open(config_filename, "w") as conf:
+                config.write(conf)
+            self.args = ["rally", "--config-file", config_filename]
+            subprocess.call(["rally-manage", "--config-file", config_filename,
+                             "db", "recreate"])
+        else:
+            self.args = ["rally"]
+            subprocess.call(["rally-manage", "db", "recreate"])
+
+        self("deployment create --file %s --name MAIN" % DEPLOYMENT_FILE)
 
     def __del__(self):
         shutil.rmtree(self.tmp_dir)
@@ -95,6 +106,6 @@ class Rally(object):
                                              stderr=subprocess.STDOUT)
             if getjson:
                 return json.loads(output)
-            return output
+            return output.decode("utf-8")
         except subprocess.CalledProcessError as e:
             raise RallyCmdError(e.returncode, e.output)
