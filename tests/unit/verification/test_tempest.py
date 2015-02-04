@@ -34,7 +34,7 @@ TEMPEST_PATH = "rally.verification.tempest"
 class BaseTestCase(test.TestCase):
     def setUp(self):
         super(BaseTestCase, self).setUp()
-        self.verifier = tempest.Tempest('fake_deployment_id',
+        self.verifier = tempest.Tempest("fake_deployment_id",
                                         verification=mock.MagicMock())
 
         self.verifier._path = "/tmp"
@@ -135,24 +135,24 @@ class TempestUtilsTestCase(BaseTestCase):
         mock_isdir.assert_called_once_with(
             self.verifier.path(".testrepository"))
         mock_sp.assert_called_once_with(
-            '%s testr init' % self.verifier.venv_wrapper, shell=True,
+            "%s testr init" % self.verifier.venv_wrapper, shell=True,
             cwd=self.verifier.path(), stderr=subprocess.STDOUT)
 
-    @mock.patch.object(subunit2json, 'main')
-    @mock.patch('os.path.isfile', return_value=False)
+    @mock.patch.object(subunit2json, "main")
+    @mock.patch("os.path.isfile", return_value=False)
     def test__save_results_without_log_file(self, mock_isfile, mock_parse):
 
         self.verifier._save_results()
         mock_isfile.assert_called_once_with(self.verifier.log_file_raw)
         self.assertEqual(0, mock_parse.call_count)
 
-    @mock.patch('os.path.isfile', return_value=True)
+    @mock.patch("os.path.isfile", return_value=True)
     def test__save_results_with_log_file(self, mock_isfile):
-        with mock.patch.object(subunit2json, 'main') as mock_main:
-            data = {'total': True, 'test_cases': True}
+        with mock.patch.object(subunit2json, "main") as mock_main:
+            data = {"total": True, "test_cases": True}
             mock_main.return_value = jsonutils.dumps(data)
             self.verifier.log_file_raw = os.path.join(
-                os.path.dirname(__file__), 'subunit.stream')
+                os.path.dirname(__file__), "subunit.stream")
             self.verifier._save_results()
             mock_isfile.assert_called_once_with(self.verifier.log_file_raw)
             mock_main.assert_called_once_with(
@@ -168,7 +168,7 @@ class TempestInstallAndUninstallTestCase(BaseTestCase):
     def test__clone_successful(self, mock_sp):
         self.verifier._clone()
         mock_sp.assert_called_once_with(
-            ['git', 'clone', 'https://github.com/openstack/tempest',
+            ["git", "clone", "https://github.com/openstack/tempest",
              tempest.Tempest.base_repo])
 
     @mock.patch(TEMPEST_PATH + ".tempest.subprocess.check_call")
@@ -178,7 +178,7 @@ class TempestInstallAndUninstallTestCase(BaseTestCase):
 
         self.assertRaises(subprocess.CalledProcessError, self.verifier._clone)
         mock_sp.assert_called_once_with(
-            ['git', 'clone', 'https://github.com/openstack/tempest',
+            ["git", "clone", "https://github.com/openstack/tempest",
              tempest.Tempest.base_repo])
 
     @mock.patch(TEMPEST_PATH + ".tempest.Tempest._initialize_testr")

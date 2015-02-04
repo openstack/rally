@@ -19,12 +19,12 @@ from tests.unit import test
 class Compare2HtmlTestCase(test.TestCase):
 
     def test_main(self):
-        results = [{'val2': 0.0111, 'field': u'time', 'val1': 0.0222,
-                    'type': 'CHANGED', 'test_name': u'test.one'},
-                   {'val2': 0.111, 'field': u'time', 'val1': 0.222,
-                    'type': 'CHANGED', 'test_name': u'test.two'},
-                   {'val2': 1.11, 'field': u'time', 'val1': 2.22,
-                    'type': 'CHANGED', 'test_name': u'test.three'}]
+        results = [{"val2": 0.0111, "field": u"time", "val1": 0.0222,
+                    "type": "CHANGED", "test_name": u"test.one"},
+                   {"val2": 0.111, "field": u"time", "val1": 0.222,
+                    "type": "CHANGED", "test_name": u"test.two"},
+                   {"val2": 1.11, "field": u"time", "val1": 2.22,
+                    "type": "CHANGED", "test_name": u"test.three"}]
 
         fake_kw = {"heading":
                    {"title": compare2html.__title__,
@@ -34,6 +34,6 @@ class Compare2HtmlTestCase(test.TestCase):
                    "generator": "compare2html %s" % compare2html.__version__,
                    "results": results}
 
-        with mock.patch('mako.template.Template') as mock_mako:
+        with mock.patch("mako.template.Template") as mock_mako:
             compare2html.create_report(results)
             mock_mako().render.assert_called_once_with(**fake_kw)

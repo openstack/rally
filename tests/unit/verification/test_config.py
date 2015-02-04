@@ -297,14 +297,14 @@ class ConfigTestCase(test.TestCase):
         self.assertEqual(self.conf_generator.conf.get(
             "service_available", "horizon"), "True")
 
-    @mock.patch('six.moves.builtins.open', side_effect=mock.mock_open(),
+    @mock.patch("six.moves.builtins.open", side_effect=mock.mock_open(),
                 create=True)
     def test_write_config(self, mock_open):
         self.conf_generator.conf = mock.Mock()
-        file_name = '/path/to/fake/conf'
+        file_name = "/path/to/fake/conf"
 
         self.conf_generator.write_config(file_name)
 
-        mock_open.assert_called_once_with(file_name, 'w+')
+        mock_open.assert_called_once_with(file_name, "w+")
         self.conf_generator.conf.write.assert_called_once_with(
             mock_open.side_effect())
