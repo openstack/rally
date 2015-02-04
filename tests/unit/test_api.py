@@ -69,6 +69,7 @@ class TaskAPITestCase(test.TestCase):
         ])
 
         mock_task.assert_called_once_with(
+            fake=True,
             deployment_uuid=mock_deployment_get.return_value["uuid"])
         mock_deployment_get.assert_called_once_with(
             mock_deployment_get.return_value["uuid"])
