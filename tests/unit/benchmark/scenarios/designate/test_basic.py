@@ -111,3 +111,26 @@ class DesignateBasicTestCase(test.TestCase):
         # Default options
         scenario.list_records("123")
         mock_list.assert_called_once_with("123")
+
+    @mock.patch(DESIGNATE_BASIC + "._list_servers")
+    @mock.patch(DESIGNATE_BASIC + "._create_server")
+    def test_create_and_list_servers(self, mock_create, mock_list):
+        scenario = basic.DesignateBasic()
+
+        # Default options
+        scenario.create_and_list_servers()
+        mock_create.assert_called_once_with()
+        mock_list.assert_called_once_with()
+
+    @mock.patch(DESIGNATE_BASIC + "._delete_server")
+    @mock.patch(DESIGNATE_BASIC + "._create_server")
+    def test_create_and_delete_server(self, mock_create, mock_delete):
+        scenario = basic.DesignateBasic()
+
+        mock_create.return_value = {"id": "123"}
+
+        # Default options
+        scenario.create_and_delete_server()
+
+        mock_create.assert_called_once_with()
+        mock_delete.assert_called_once_with("123")

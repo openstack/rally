@@ -95,3 +95,28 @@ class DesignateScenario(base.Scenario):
                 client.records.create(domain_id, record_id)
 
         client.records.delete(domain_id, record_id)
+
+    @base.atomic_action_timer("designate.create_server")
+    def _create_server(self, server=None):
+        """Create server.
+
+        :param server: dict, POST /v1/servers request options
+        :returns: designate server dict
+        """
+        server = server or {}
+
+        server.setdefault("name", "name.%s." % self._generate_random_name())
+        return self.admin_clients("designate").servers.create(server)
+
+    @base.atomic_action_timer("designate.list_servers")
+    def _list_servers(self):
+        """Return user server list."""
+        return self.admin_clients("designate").servers.list()
+
+    @base.atomic_action_timer("designate.delete_server")
+    def _delete_server(self, server_id):
+        """Delete Server.
+
+        :param server_id: unicode server ID
+        """
+        self.admin_clients("designate").servers.delete(server_id)

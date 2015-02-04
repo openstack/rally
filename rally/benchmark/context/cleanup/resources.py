@@ -270,8 +270,17 @@ class ZaqarQueues(SynchronizedDeletion, base.ResourceManager):
 
 # DESIGNATE
 
-@base.resource("designate", "domains", order=900)
+_designate_order = get_order(900)
+
+
+@base.resource("designate", "domains", order=next(_designate_order))
 class Designate(SynchronizedDeletion, base.ResourceManager):
+    pass
+
+
+@base.resource("designate", "servers", order=next(_designate_order),
+               admin_required=True, perform_for_admin_only=True)
+class DesignateServer(SynchronizedDeletion, base.ResourceManager):
     pass
 
 

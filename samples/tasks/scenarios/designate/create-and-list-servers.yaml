@@ -1,0 +1,11 @@
+---
+  DesignateBasic.create_and_list_servers:
+    -
+      runner:
+        type: "constant"
+        times: 10
+        concurrency: 1
+      context:
+        users:
+          tenants: 2
+          users_per_tenant: 2
