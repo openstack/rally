@@ -24,7 +24,6 @@ from rally.common import utils
 from rally import db
 from rally import exceptions
 from rally import objects
-from rally.openstack.common import cliutils as common_cliutils
 from rally import osclients
 
 
@@ -70,10 +69,10 @@ class ShowCommands(object):
                     data = [image.id, image.name, image.size]
                     table_rows.append(utils.Struct(**dict(zip(headers, data))))
 
-                common_cliutils.print_list(table_rows,
-                                           fields=headers,
-                                           formatters=formatters,
-                                           mixed_case_fields=mixed_case_fields)
+                cliutils.print_list(table_rows,
+                                    fields=headers,
+                                    formatters=formatters,
+                                    mixed_case_fields=mixed_case_fields)
 
         except exceptions.InvalidArgumentsException as e:
             print(_("Authentication Issues: %s") % e)
@@ -107,10 +106,10 @@ class ShowCommands(object):
                             flavor.ram, flavor.swap, flavor.disk]
                     table_rows.append(utils.Struct(**dict(zip(headers, data))))
 
-                common_cliutils.print_list(table_rows,
-                                           fields=headers,
-                                           formatters=formatters,
-                                           mixed_case_fields=mixed_case_fields)
+                cliutils.print_list(table_rows,
+                                    fields=headers,
+                                    formatters=formatters,
+                                    mixed_case_fields=mixed_case_fields)
 
         except exceptions.InvalidArgumentsException as e:
             print(_("Authentication Issues: %s") % e)
@@ -136,9 +135,9 @@ class ShowCommands(object):
                     data = [network.id, network.label, network.cidr]
                     table_rows.append(utils.Struct(**dict(zip(headers, data))))
 
-                common_cliutils.print_list(table_rows,
-                                           fields=headers,
-                                           mixed_case_fields=mixed_case_fields)
+                cliutils.print_list(table_rows,
+                                    fields=headers,
+                                    mixed_case_fields=mixed_case_fields)
         except exceptions.InvalidArgumentsException as e:
             print(_("Authentication Issues: %s") % e)
             return(1)
@@ -164,7 +163,7 @@ class ShowCommands(object):
                             secgroup.description]
                     table_rows.append(utils.Struct(**dict(zip(headers,
                                                               data))))
-                    common_cliutils.print_list(
+                    cliutils.print_list(
                         table_rows,
                         fields=headers,
                         mixed_case_fields=mixed_case_fields)
@@ -192,9 +191,9 @@ class ShowCommands(object):
                 for keypair in nova_client.keypairs.list():
                     data = [keypair.name, keypair.fingerprint]
                     table_rows.append(utils.Struct(**dict(zip(headers, data))))
-                common_cliutils.print_list(table_rows,
-                                           fields=headers,
-                                           mixed_case_fields=mixed_case_fields)
+                cliutils.print_list(table_rows,
+                                    fields=headers,
+                                    mixed_case_fields=mixed_case_fields)
 
         except exceptions.InvalidArgumentsException as e:
             print(_("Authentication Issues: %s") % e)

@@ -22,7 +22,7 @@ from rally.benchmark.scenarios import base
 from rally.benchmark import utils as bench_utils
 
 
-glance_benchmark_opts = [
+GLANCE_BENCHMARK_OPTS = [
     cfg.FloatOpt("glance_image_create_prepoll_delay",
                  default=2.0,
                  help="Time to sleep after creating a resource before "
@@ -46,7 +46,7 @@ glance_benchmark_opts = [
 
 CONF = cfg.CONF
 benchmark_group = cfg.OptGroup(name="benchmark", title="benchmark options")
-CONF.register_opts(glance_benchmark_opts, group=benchmark_group)
+CONF.register_opts(GLANCE_BENCHMARK_OPTS, group=benchmark_group)
 
 
 class GlanceScenario(base.Scenario):

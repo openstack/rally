@@ -120,8 +120,8 @@ def check_import_of_logging(logical_line, filename):
 
     excluded_files = ["./rally/common/log.py", "./tests/unit/test_log.py"]
 
-    forbidden_imports = ["from rally.openstack.common import log",
-                         "import rally.openstack.common.log",
+    forbidden_imports = ["from oslo_log",
+                         "import oslo_log",
                          "import logging"]
 
     if filename not in excluded_files:

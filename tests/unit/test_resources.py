@@ -22,7 +22,7 @@ import rally
 from rally.cmd import cliutils
 from tests.unit import test
 
-RES_PATH = os.path.join(os.path.dirname(rally.__file__), os.pardir, "tools")
+RES_PATH = os.path.join(os.path.dirname(rally.__file__), os.pardir, "etc")
 
 
 class BashCompletionTestCase(test.TestCase):
@@ -39,5 +39,5 @@ class BashCompletionTestCase(test.TestCase):
             self.fail("bash completion script is outdated. "
                       "New script is located at %s "
                       "You may fix this by executing "
-                      "`mv %s tools/rally.bash_completion`" % (new_filename,
-                                                               new_filename))
+                      "`mv %s etc/rally.bash_completion`" % (new_filename,
+                                                             new_filename))

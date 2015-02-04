@@ -34,7 +34,7 @@ from rally import osclients
 LOG = logging.getLogger(__name__)
 
 
-image_opts = [
+IMAGE_OPTS = [
     cfg.StrOpt("cirros_version",
                default="0.3.2",
                help="Version of cirros image"),
@@ -43,7 +43,7 @@ image_opts = [
                help="Cirros image name"),
 ]
 CONF = cfg.CONF
-CONF.register_opts(image_opts, "image")
+CONF.register_opts(IMAGE_OPTS, "image")
 
 
 class TempestConfigCreationFailure(exceptions.RallyException):

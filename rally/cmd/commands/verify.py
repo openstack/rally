@@ -30,7 +30,6 @@ from rally import consts
 from rally import db
 from rally import exceptions
 from rally import objects
-from rally.openstack.common import cliutils as common_cliutils
 from rally.verification.tempest import diff
 from rally.verification.tempest import json2html
 
@@ -96,8 +95,8 @@ class VerifyCommands(object):
             el["duration"] = el["updated_at"] - el["created_at"]
 
         if verifications:
-            common_cliutils.print_list(verifications, fields,
-                                       sortby_index=fields.index("Created at"))
+            cliutils.print_list(verifications, fields,
+                                sortby_index=fields.index("Created at"))
         else:
             print(_("There are no results from verifier. To run a verifier, "
                     "use:\nrally verify start"))
@@ -172,14 +171,14 @@ class VerifyCommands(object):
         print ("Total results of verification:\n")
         total_fields = ["UUID", "Deployment UUID", "Set name", "Tests",
                         "Failures", "Created at", "Status"]
-        common_cliutils.print_list([verification], fields=total_fields)
+        cliutils.print_list([verification], fields=total_fields)
 
         print ("\nTests:\n")
         fields = ["name", "time", "status"]
 
         values = [objects.Verification(test)
                   for test in six.itervalues(tests.data["test_cases"])]
-        common_cliutils.print_list(values, fields, sortby_index=sortby_index)
+        cliutils.print_list(values, fields, sortby_index=sortby_index)
 
         if detailed:
             for test in six.itervalues(tests.data["test_cases"]):

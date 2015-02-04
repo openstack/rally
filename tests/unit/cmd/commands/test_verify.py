@@ -94,7 +94,7 @@ class VerifyCommandsTestCase(test.TestCase):
                          consts.TempestTestsAPI)
         self.assertFalse(mock_verify.called)
 
-    @mock.patch("rally.openstack.common.cliutils.print_list")
+    @mock.patch("rally.cmd.cliutils.print_list")
     @mock.patch("rally.db.verification_list")
     def test_list(self, mock_db_verification_list, mock_print_list):
         fields = ["UUID", "Deployment UUID", "Set name", "Tests", "Failures",
@@ -113,7 +113,7 @@ class VerifyCommandsTestCase(test.TestCase):
                                                 sortby_index=fields.index(
                                                     "Created at"))
 
-    @mock.patch("rally.openstack.common.cliutils.print_list")
+    @mock.patch("rally.cmd.cliutils.print_list")
     @mock.patch("rally.db.verification_get")
     @mock.patch("rally.db.verification_result_get")
     @mock.patch("rally.objects.Verification")

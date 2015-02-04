@@ -39,7 +39,6 @@ from rally import consts
 from rally import db
 from rally import exceptions
 from rally import objects
-from rally.openstack.common import cliutils as common_cliutils
 
 
 class FailedToLoadTask(exceptions.RallyException):
@@ -287,10 +286,9 @@ class TaskCommands(object):
                 if r["atomic_actions"]:
                     for action in atomic_actions:
                         dlist.append(r["atomic_actions"].get(action) or 0)
-                table_rows.append(rutils.Struct(**dict(zip(headers, dlist))))
-            common_cliutils.print_list(table_rows,
-                                       fields=headers,
-                                       formatters=formatters)
+            cliutils.print_list(table_rows,
+                                fields=headers,
+                                formatters=formatters)
             print()
 
         task = db.task_get_detailed(task_id)
@@ -355,8 +353,8 @@ class TaskCommands(object):
                             "0.0%", len(raw)]
                 table_rows.append(rutils.Struct(**dict(zip(table_cols, data))))
 
-            common_cliutils.print_list(table_rows, fields=table_cols,
-                                       formatters=formatters)
+            cliutils.print_list(table_rows, fields=table_cols,
+                                formatters=formatters)
 
             if iterations_data:
                 _print_iterations_data(raw)
@@ -396,9 +394,9 @@ class TaskCommands(object):
                         row = [str(key)] + ["n/a"] * 5
                     table_rows.append(rutils.Struct(**dict(zip(headers, row))))
                 print("\nScenario Specific Results\n")
-                common_cliutils.print_list(table_rows,
-                                           fields=headers,
-                                           formatters=formatters)
+                cliutils.print_list(table_rows,
+                                    fields=headers,
+                                    formatters=formatters)
 
                 for result in raw:
                     errors = result["scenario_output"].get("errors")
@@ -480,7 +478,7 @@ class TaskCommands(object):
             x["duration"] = x["updated_at"] - x["created_at"]
 
         if task_list:
-            common_cliutils.print_list(
+            cliutils.print_list(
                 task_list,
                 headers, sortby_index=headers.index("created_at"))
         else:
@@ -620,8 +618,8 @@ class TaskCommands(object):
         if tojson:
             print(json.dumps(data))
         else:
-            common_cliutils.print_list(data, ("benchmark", "pos", "criterion",
-                                              "status", "detail"))
+            cliutils.print_list(data, ("benchmark", "pos", "criterion",
+                                       "status", "detail"))
         return failed_criteria
 
     @cliutils.args("--task", type=str, dest="task", required=False,

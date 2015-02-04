@@ -16,17 +16,19 @@
 import logging
 
 from oslo_config import cfg
+from oslo_log import handlers
+from oslo_log import log as oslogging
 
-from rally.openstack.common import log as oslogging
 
-
-common_cli_opts = [cfg.BoolOpt("rally-debug",
-                   default=False,
-                   help="Print debugging output only for Rally. "
-                   "Off-site components stay quiet.")]
+DEBUG_OPTS = [cfg.BoolOpt(
+    "rally-debug",
+    default=False,
+    help="Print debugging output only for Rally. "
+         "Off-site components stay quiet.")]
 
 CONF = cfg.CONF
-CONF.register_cli_opts(common_cli_opts)
+CONF.register_cli_opts(DEBUG_OPTS)
+oslogging.register_options(CONF)
 
 logging.RDEBUG = logging.DEBUG + 1
 logging.addLevelName(logging.RDEBUG, "RALLYDEBUG")
@@ -43,25 +45,26 @@ WARNING = logging.WARNING
 
 
 def setup(product_name, version="unknown"):
-    dbg_color = oslogging.ColorHandler.LEVEL_COLORS[logging.DEBUG]
-    oslogging.ColorHandler.LEVEL_COLORS[logging.RDEBUG] = dbg_color
+    dbg_color = handlers.ColorHandler.LEVEL_COLORS[logging.DEBUG]
+    handlers.ColorHandler.LEVEL_COLORS[logging.RDEBUG] = dbg_color
 
-    oslogging.setup(product_name, version)
+    oslogging.setup(CONF, product_name, version)
 
     if CONF.rally_debug:
-        oslogging.getLogger(None).logger.setLevel(logging.RDEBUG)
+        oslogging.getLogger(
+            project=product_name).logger.setLevel(logging.RDEBUG)
 
 
 def getLogger(name="unknown", version="unknown"):
 
     if name not in oslogging._loggers:
         oslogging._loggers[name] = RallyContextAdapter(logging.getLogger(name),
-                                                       name,
-                                                       version)
+                                                       {"project": "rally",
+                                                        "version": version})
     return oslogging._loggers[name]
 
 
-class RallyContextAdapter(oslogging.ContextAdapter):
+class RallyContextAdapter(oslogging.KeywordArgumentAdapter):
 
     def debug(self, msg, *args, **kwargs):
         self.log(logging.RDEBUG, msg, *args, **kwargs)

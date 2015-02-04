@@ -23,6 +23,8 @@ import warnings
 
 import jsonschema
 from oslo_config import cfg
+from oslo_utils import encodeutils
+import prettytable
 import six
 
 from rally.common.i18n import _
@@ -30,7 +32,6 @@ from rally.common import log as logging
 from rally.common import utils
 from rally.common import version
 from rally import exceptions
-from rally.openstack.common import cliutils
 
 
 CONF = cfg.CONF
@@ -39,6 +40,95 @@ LOG = logging.getLogger(__name__)
 
 # Some CLI-specific constants
 MARGIN = 3
+
+
+class MissingArgs(Exception):
+    """Supplied arguments are not sufficient for calling a function."""
+    def __init__(self, missing):
+        self.missing = missing
+        msg = _("Missing arguments: %s") % ", ".join(missing)
+        super(MissingArgs, self).__init__(msg)
+
+
+def validate_args(fn, *args, **kwargs):
+    """Check that the supplied args are sufficient for calling a function.
+
+    >>> validate_args(lambda a: None)
+    Traceback (most recent call last):
+        ...
+    MissingArgs: Missing argument(s): a
+    >>> validate_args(lambda a, b, c, d: None, 0, c=1)
+    Traceback (most recent call last):
+        ...
+    MissingArgs: Missing argument(s): b, d
+
+    :param fn: the function to check
+    :param arg: the positional arguments supplied
+    :param kwargs: the keyword arguments supplied
+    """
+    argspec = inspect.getargspec(fn)
+
+    num_defaults = len(argspec.defaults or [])
+    required_args = argspec.args[:len(argspec.args) - num_defaults]
+
+    def isbound(method):
+        return getattr(method, "__self__", None) is not None
+
+    if isbound(fn):
+        required_args.pop(0)
+
+    missing = [arg for arg in required_args if arg not in kwargs]
+    missing = missing[len(args):]
+    if missing:
+        raise MissingArgs(missing)
+
+
+def print_list(objs, fields, formatters=None, sortby_index=0,
+               mixed_case_fields=None, field_labels=None):
+    """Print a list or objects as a table, one row per object.
+
+    :param objs: iterable of :class:`Resource`
+    :param fields: attributes that correspond to columns, in order
+    :param formatters: `dict` of callables for field formatting
+    :param sortby_index: index of the field for sorting table rows
+    :param mixed_case_fields: fields corresponding to object attributes that
+        have mixed case names (e.g., 'serverId')
+    :param field_labels: Labels to use in the heading of the table, default to
+        fields.
+    """
+    formatters = formatters or {}
+    mixed_case_fields = mixed_case_fields or []
+    field_labels = field_labels or fields
+    if len(field_labels) != len(fields):
+        raise ValueError(_("Field labels list %(labels)s has different number "
+                           "of elements than fields list %(fields)s"),
+                         {'labels': field_labels, 'fields': fields})
+
+    if sortby_index is None:
+        kwargs = {}
+    else:
+        kwargs = {"sortby": field_labels[sortby_index]}
+    pt = prettytable.PrettyTable(field_labels)
+    pt.align = "l"
+
+    for o in objs:
+        row = []
+        for field in fields:
+            if field in formatters:
+                row.append(formatters[field](o))
+            else:
+                if field in mixed_case_fields:
+                    field_name = field.replace(" ", "_")
+                else:
+                    field_name = field.lower().replace(" ", "_")
+                data = getattr(o, field_name, "")
+                row.append(data)
+        pt.add_row(row)
+
+    if six.PY3:
+        print(encodeutils.safe_encode(pt.get_string(**kwargs)).decode())
+    else:
+        print(encodeutils.safe_encode(pt.get_string(**kwargs)))
 
 
 def make_header(text, size=80, symbol="-"):
@@ -302,8 +392,8 @@ def run(argv, categories):
     # call the action with the remaining arguments
     # check arguments
     try:
-        cliutils.validate_args(fn, *fn_args, **fn_kwargs)
-    except cliutils.MissingArgs as e:
+        validate_args(fn, *fn_args, **fn_kwargs)
+    except MissingArgs as e:
         # NOTE(mikal): this isn't the most helpful error message ever. It is
         # long, and tells you a lot of things you probably don't want to know
         # if you just got a single arg wrong.

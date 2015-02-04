@@ -24,7 +24,7 @@ from rally.benchmark import utils as bench_utils
 from rally import exceptions
 
 
-nova_benchmark_opts = []
+NOVA_BENCHMARK_OPTS = []
 option_names_and_defaults = [
     # action, prepoll delay, timeout, poll interval
     ("start", 0, 300, 1),
@@ -45,7 +45,7 @@ option_names_and_defaults = [
 ]
 
 for action, prepoll, timeout, poll in option_names_and_defaults:
-    nova_benchmark_opts.extend([
+    NOVA_BENCHMARK_OPTS.extend([
         cfg.FloatOpt(
             "nova_server_%s_prepoll_delay" % action,
             default=float(prepoll),
@@ -67,7 +67,7 @@ CONF = cfg.CONF
 benchmark_group = cfg.OptGroup(name="benchmark",
                                title="benchmark options")
 CONF.register_group(benchmark_group)
-CONF.register_opts(nova_benchmark_opts, group=benchmark_group)
+CONF.register_opts(NOVA_BENCHMARK_OPTS, group=benchmark_group)
 
 
 class NovaScenario(base.Scenario):
