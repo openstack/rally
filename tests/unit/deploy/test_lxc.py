@@ -19,7 +19,7 @@ from rally.deploy import engine
 from rally import objects
 from tests.unit import test
 
-MOD = 'rally.deploy.engines.lxc.'
+MOD = "rally.deploy.engines.lxc."
 
 
 class LxcEngineTestCase(test.TestCase):
@@ -27,35 +27,35 @@ class LxcEngineTestCase(test.TestCase):
     def setUp(self):
         super(LxcEngineTestCase, self).setUp()
         self.config = {
-            'type': 'LxcEngine',
-            'container_name': 'rally',
-            'containers_per_host': 2,
-            'tunnel_to': ['1.1.1.1', '2.2.2.2'],
-            'distribution': 'ubuntu',
-            'start_lxc_network': '10.128.128.0/28',
-            'engine': {
-                'name': 'FakeEngine',
-                'config': {
-                    'key': 'value',
+            "type": "LxcEngine",
+            "container_name": "rally",
+            "containers_per_host": 2,
+            "tunnel_to": ["1.1.1.1", "2.2.2.2"],
+            "distribution": "ubuntu",
+            "start_lxc_network": "10.128.128.0/28",
+            "engine": {
+                "name": "FakeEngine",
+                "config": {
+                    "key": "value",
                 },
             },
-            'provider': {
-                'type': 'DummyProvider',
-                'credentials': [{'user': 'root', 'host': 'host1.net'},
-                                {'user': 'root', 'host': 'host2.net'}]
+            "provider": {
+                "type": "DummyProvider",
+                "credentials": [{"user": "root", "host": "host1.net"},
+                                {"user": "root", "host": "host2.net"}]
             }
         }
         self.deployment = {
-            'uuid': 'test-deployment-uuid',
-            'config': self.config,
+            "uuid": "test-deployment-uuid",
+            "config": self.config,
         }
-        self.engine = engine.EngineFactory.get_engine('LxcEngine',
+        self.engine = engine.EngineFactory.get_engine("LxcEngine",
                                                       self.deployment)
 
-    @mock.patch(MOD + 'objects')
-    @mock.patch(MOD + 'engine')
+    @mock.patch(MOD + "objects")
+    @mock.patch(MOD + "engine")
     def test__deploy_first(self, m_engine, m_objects):
-        fake_credentials = {'user': 'admin', 'host': 'host.net'}
+        fake_credentials = {"user": "admin", "host": "host.net"}
         fake_deployment = mock.Mock()
         fake_engine = mock.Mock()
         m_objects.Deployment = mock.Mock(return_value=fake_deployment)
@@ -65,29 +65,29 @@ class LxcEngineTestCase(test.TestCase):
         fake_so = mock.Mock()
         fake_so.get_credentials.return_value = fake_credentials
         fake_host.get_server_object = mock.Mock(return_value=fake_so)
-        self.engine._deploy_first(fake_host, 'name', 'dist', 'release')
+        self.engine._deploy_first(fake_host, "name", "dist", "release")
         host_calls = [
             mock.call.prepare(),
-            mock.call.create_container('name', 'dist', 'release'),
+            mock.call.create_container("name", "dist", "release"),
             mock.call.start_containers(),
-            mock.call.get_server_object('name'),
+            mock.call.get_server_object("name"),
             mock.call.stop_containers()]
         self.assertEqual(host_calls, fake_host.mock_calls)
         fake_engine.deploy.assert_called_once_with()
         m_engine.EngineFactory.get_engine.assert_called_once_with(
-            'FakeEngine', fake_deployment)
-        engine_config = self.config['engine'].copy()
-        engine_config['provider'] = {'credentials': [fake_credentials],
-                                     'type': 'DummyProvider'}
+            "FakeEngine", fake_deployment)
+        engine_config = self.config["engine"].copy()
+        engine_config["provider"] = {"credentials": [fake_credentials],
+                                     "type": "DummyProvider"}
         m_objects.Deployment.assert_called_once_with(
-            config=engine_config, parent_uuid='test-deployment-uuid')
+            config=engine_config, parent_uuid="test-deployment-uuid")
 
-    @mock.patch(MOD + 'provider.ProviderFactory.get_provider')
+    @mock.patch(MOD + "provider.ProviderFactory.get_provider")
     def test__get_provider(self, m_get_provider):
-        m_get_provider.return_value = 'fake_provider'
+        m_get_provider.return_value = "fake_provider"
         provider = self.engine._get_provider()
-        self.assertEqual('fake_provider', provider)
-        m_get_provider.assert_called_once_with(self.config['provider'],
+        self.assertEqual("fake_provider", provider)
+        m_get_provider.assert_called_once_with(self.config["provider"],
                                                self.deployment)
 
     @mock.patch(MOD + "open", create=True)
@@ -181,27 +181,27 @@ class LxcEngineTestCase(test.TestCase):
                 self.assertEqual([mock.call.ssh.run("/bin/sh -e", stdin="fs")],
                                  container.mock_calls)
 
-    @mock.patch(MOD + 'LxcEngine._get_provider')
-    @mock.patch(MOD + 'lxc.LxcHost')
-    @mock.patch(MOD + 'provider.Server.from_credentials')
+    @mock.patch(MOD + "LxcEngine._get_provider")
+    @mock.patch(MOD + "lxc.LxcHost")
+    @mock.patch(MOD + "provider.Server.from_credentials")
     def test_cleanup(self, m_from_c, m_lxc_host, m_get_provider):
         m_get_provider.return_value = fake_provider = mock.Mock()
         m_lxc_host.side_effect = fake_hosts = [mock.Mock(), mock.Mock()]
-        m_from_c.side_effect = ['s1', 's2']
+        m_from_c.side_effect = ["s1", "s2"]
         fake_resources = []
         for i in range(2):
             res = mock.Mock()
-            res.info = {'host': 'host%d' % i,
-                        'config': 'fake_config%d' % i,
-                        'forwarded_ports': [(1, 2), (3, 4)],
-                        'containers': 'fake_containers'}
+            res.info = {"host": "host%d" % i,
+                        "config": "fake_config%d" % i,
+                        "forwarded_ports": [(1, 2), (3, 4)],
+                        "containers": "fake_containers"}
             fake_resources.append(res)
-        with mock.patch.object(self.engine, 'deployment') as m_deployment:
+        with mock.patch.object(self.engine, "deployment") as m_deployment:
             m_deployment.get_resources.return_value = fake_resources
             self.engine.cleanup()
 
         for host in fake_hosts:
-            self.assertEqual('fake_containers', host.containers)
+            self.assertEqual("fake_containers", host.containers)
             self.assertEqual([mock.call.destroy_containers(),
                               mock.call.destroy_ports([(1, 2), (3, 4)]),
                               mock.call.delete_tunnels()], host.mock_calls)

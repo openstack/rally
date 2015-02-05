@@ -63,7 +63,7 @@ FAKE_PROVIDERS = [ProviderA, ProviderB, ProviderC]
 
 class ProviderTestCase(test.TestCase):
 
-    @mock.patch.object(ProviderFactory, 'validate')
+    @mock.patch.object(ProviderFactory, "validate")
     def test_init(self, fake_validate):
         ProviderA(None, None)
         fake_validate.assert_called_once_with()
@@ -100,8 +100,8 @@ class ProviderTestCase(test.TestCase):
 class ServerTestCase(test.TestCase):
     def setUp(self):
         super(ServerTestCase, self).setUp()
-        self.vals = ['192.168.1.1', 'admin', 'some_key', 'pwd']
-        self.keys = ['host', 'user', 'key', 'password']
+        self.vals = ["192.168.1.1", "admin", "some_key", "pwd"]
+        self.keys = ["host", "user", "key", "password"]
 
     def test_init_server_dto(self):
         server = serverprovider.Server(*self.vals)
@@ -122,19 +122,19 @@ class ResourceManagerTestCase(test.TestCase):
         super(ResourceManagerTestCase, self).setUp()
         self.deployment = mock.Mock()
         self.resources = serverprovider.ResourceManager(self.deployment,
-                                                        'provider')
+                                                        "provider")
 
     def test_create(self):
-        self.resources.create('info', type='type')
-        self.deployment.add_resource.assert_called_once_with('provider',
-                                                             type='type',
-                                                             info='info')
+        self.resources.create("info", type="type")
+        self.deployment.add_resource.assert_called_once_with("provider",
+                                                             type="type",
+                                                             info="info")
 
     def test_get_all(self):
-        self.resources.get_all(type='type')
+        self.resources.get_all(type="type")
         self.deployment.get_resources.assert_called_once_with(
-            provider_name='provider', type='type')
+            provider_name="provider", type="type")
 
     def test_delete(self):
-        self.resources.delete('resource_id')
-        self.deployment.delete_resource.assert_called_once_with('resource_id')
+        self.resources.delete("resource_id")
+        self.deployment.delete_resource.assert_called_once_with("resource_id")

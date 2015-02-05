@@ -26,23 +26,23 @@ ProviderFactory = serverprovider.ProviderFactory
 class ExistingServersTestCase(test.TestCase):
     def setUp(self):
         super(ExistingServersTestCase, self).setUp()
-        self.config = {'type': 'ExistingServers',
-                       'credentials': [{'user': 'user', 'host': 'host1'},
-                                       {'user': 'user', 'host': 'host2'}]}
+        self.config = {"type": "ExistingServers",
+                       "credentials": [{"user": "user", "host": "host1"},
+                                       {"user": "user", "host": "host2"}]}
 
     def test_create_servers(self):
         provider = serverprovider.ProviderFactory.get_provider(self.config,
                                                                None)
         credentials = provider.create_servers()
-        self.assertEqual(['host1', 'host2'], [s.host for s in credentials])
-        self.assertEqual(['user', 'user'], [s.user for s in credentials])
+        self.assertEqual(["host1", "host2"], [s.host for s in credentials])
+        self.assertEqual(["user", "user"], [s.user for s in credentials])
 
     def test_invalid_config(self):
-        self.config['type'] = 42
+        self.config["type"] = 42
         self.assertRaises(jsonschema.ValidationError,
                           existing.ExistingServers, None, self.config)
 
     def test_invalid_credentials(self):
-        self.config['credentials'] = ['user@host1', 'user@host2']
+        self.config["credentials"] = ["user@host1", "user@host2"]
         self.assertRaises(jsonschema.ValidationError,
                           existing.ExistingServers, None, self.config)

@@ -25,11 +25,11 @@ from tests.unit import test
 
 def make_fake_deployment(**kwargs):
     values = dict({
-        'uuid': '1359befb-8737-4f4e-bea9-492416106977',
-        'config': {
-            'name': 'fake',
+        "uuid": "1359befb-8737-4f4e-bea9-492416106977",
+        "config": {
+            "name": "fake",
         },
-        'status': consts.DeployStatus.DEPLOY_INIT,
+        "status": consts.DeployStatus.DEPLOY_INIT,
     }, **kwargs)
     return FakeDeployment(values=values)
 
@@ -116,10 +116,10 @@ class EngineFactoryTestCase(test.TestCase):
                           deploy.EngineFactory.get_engine,
                           "non_existing_engine", deployment)
         self.assertEqual(consts.DeployStatus.DEPLOY_FAILED,
-                         deployment['status'])
+                         deployment["status"])
 
-    @mock.patch.object(FakeDeployment, 'set_completed')
-    @mock.patch.object(FakeDeployment, 'set_started')
+    @mock.patch.object(FakeDeployment, "set_completed")
+    @mock.patch.object(FakeDeployment, "set_started")
     def test_make_deploy(self, mock_set_started, mock_set_completed):
         deployment = make_fake_deployment()
         engine = FakeEngine(deployment)
@@ -130,8 +130,8 @@ class EngineFactoryTestCase(test.TestCase):
         mock_set_started.assert_called_once_with()
         mock_set_completed.assert_called_once_with()
 
-    @mock.patch.object(FakeDeployment, 'set_started')
-    @mock.patch.object(FakeEngine, 'deploy')
+    @mock.patch.object(FakeDeployment, "set_started")
+    @mock.patch.object(FakeEngine, "deploy")
     def test_make_deploy_failed(self, mock_deploy, mock_set_started):
         class DeployFailed(Exception):
             pass
@@ -142,7 +142,7 @@ class EngineFactoryTestCase(test.TestCase):
         self.assertRaises(DeployFailed, engine.make_deploy)
         mock_set_started.assert_called_once_with()
 
-    @mock.patch.object(FakeDeployment, 'update_status')
+    @mock.patch.object(FakeDeployment, "update_status")
     def test_make_cleanup(self, mock_update_status):
         deployment = make_fake_deployment()
         engine = FakeEngine(deployment)
@@ -155,8 +155,8 @@ class EngineFactoryTestCase(test.TestCase):
         ])
         self.assertTrue(engine.cleanuped)
 
-    @mock.patch.object(FakeDeployment, 'update_status')
-    @mock.patch.object(FakeEngine, 'cleanup')
+    @mock.patch.object(FakeDeployment, "update_status")
+    @mock.patch.object(FakeEngine, "cleanup")
     def test_make_cleanup_failed(self, mock_cleanup, mock_update_status):
         class CleanUpFailed(Exception):
             pass
@@ -170,7 +170,7 @@ class EngineFactoryTestCase(test.TestCase):
         ])
         self.assertFalse(engine.cleanuped)
 
-    @mock.patch.object(FakeDeployment, 'update_status')
+    @mock.patch.object(FakeDeployment, "update_status")
     def test_with_statement(self, mock_update_status):
         deployment = make_fake_deployment()
         engine = FakeEngine(deployment)
@@ -200,7 +200,7 @@ class EngineFactoryTestCase(test.TestCase):
             consts.DeployStatus.CLEANUP_STARTED,
             consts.DeployStatus.CLEANUP_FAILED)
 
-    @mock.patch.object(FakeDeployment, 'update_status')
+    @mock.patch.object(FakeDeployment, "update_status")
     def _assert_changed_status_on_error(self, initial, final,
                                         mock_update_status):
         # NOTE(akscram): The assertRaises of testtools can't be used as

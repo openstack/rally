@@ -161,4 +161,4 @@ class DesignateBasic(utils.DesignateScenario):
         with different level of load.
         """
         server = self._create_server()
-        self._delete_server(server['id'])
+        self._delete_server(server["id"])

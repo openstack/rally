@@ -252,7 +252,7 @@ class Verification(object):
         :param deployment: UUID or name of the deployment
         :param source: Source to fetch Tempest from
         """
-        deployment_uuid = objects.Deployment.get(deployment)['uuid']
+        deployment_uuid = objects.Deployment.get(deployment)["uuid"]
         verifier = tempest.Tempest(deployment_uuid, source=source)
         verifier.install()
 

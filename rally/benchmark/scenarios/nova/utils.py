@@ -566,7 +566,7 @@ class NovaScenario(base.Scenario):
             raise exceptions.InvalidHostException(
                 "No valid host found to migrate")
 
-    @base.atomic_action_timer('nova.migrate')
+    @base.atomic_action_timer("nova.migrate")
     def _migrate(self, server, skip_host_check=False):
         """Run migration of the given server.
 

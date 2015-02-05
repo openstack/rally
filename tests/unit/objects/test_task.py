@@ -150,5 +150,5 @@ class TaskTestCase(test.TestCase):
         task.set_failed()
         mock_update.assert_called_once_with(
             self.task["uuid"],
-            {"status": consts.TaskStatus.FAILED, "verification_log": '""'},
+            {"status": consts.TaskStatus.FAILED, "verification_log": "\"\""},
         )

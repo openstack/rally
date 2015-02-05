@@ -41,7 +41,7 @@ class VMTasksTestCase(test.TestCase):
         self.scenario._associate_floating_ip = mock.MagicMock()
         self.scenario._delete_server = mock.MagicMock()
         self.scenario.run_command = mock.MagicMock(
-            return_value=(0, '\"foo_out\"', "foo_err"))
+            return_value=(0, "\"foo_out\"", "foo_err"))
 
     @mock.patch(VM + "vmtasks.network_wrapper")
     def test_boot_runcommand_delete_missed_networks(self, mock_wrap):
@@ -56,7 +56,7 @@ class VMTasksTestCase(test.TestCase):
     @mock.patch(VM + "vmtasks.network_wrapper")
     def test_boot_runcommand_delete_script_fails(self, mock_wrap):
         self.scenario.run_command = mock.MagicMock(
-            return_value=(1, '\"foo_out\"', "foo_err"))
+            return_value=(1, "\"foo_out\"", "foo_err"))
         self.assertRaises(exceptions.ScriptError,
                           self.scenario.boot_runcommand_delete,
                           "foo_image", "foo_flavor", "foo_script",

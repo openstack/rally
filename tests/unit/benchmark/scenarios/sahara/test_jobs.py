@@ -23,7 +23,7 @@ from tests.unit import test
 CONF = cfg.CONF
 
 SAHARA_JOB = "rally.benchmark.scenarios.sahara.jobs.SaharaJob"
-SAHARA_UTILS = 'rally.benchmark.scenarios.sahara.utils'
+SAHARA_UTILS = "rally.benchmark.scenarios.sahara.utils"
 
 
 class SaharaJobTestCase(test.TestCase):
@@ -34,10 +34,10 @@ class SaharaJobTestCase(test.TestCase):
         CONF.set_override("cluster_check_interval", 0, "benchmark")
         CONF.set_override("job_check_interval", 0, "benchmark")
 
-    @mock.patch(SAHARA_UTILS + '.SaharaScenario._generate_random_name',
+    @mock.patch(SAHARA_UTILS + ".SaharaScenario._generate_random_name",
                 return_value="job_42")
     @mock.patch(SAHARA_JOB + "._run_job_execution")
-    @mock.patch(SAHARA_UTILS + '.SaharaScenario.clients')
+    @mock.patch(SAHARA_UTILS + ".SaharaScenario.clients")
     def test_create_launch_job_java(self, mock_osclients, mock_run_execution,
                                     mock_random_name):
 
@@ -77,12 +77,12 @@ class SaharaJobTestCase(test.TestCase):
             job_idx=0
         )
 
-    @mock.patch(SAHARA_UTILS + '.SaharaScenario._generate_random_name',
+    @mock.patch(SAHARA_UTILS + ".SaharaScenario._generate_random_name",
                 return_value="job_42")
     @mock.patch(SAHARA_JOB + "._run_job_execution")
     @mock.patch(SAHARA_JOB + "._create_output_ds",
                 return_value=mock.MagicMock(id="out_42"))
-    @mock.patch(SAHARA_UTILS + '.SaharaScenario.clients')
+    @mock.patch(SAHARA_UTILS + ".SaharaScenario.clients")
     def test_create_launch_job_pig(self, mock_osclients, mock_create_ds,
                                    mock_run_execution, mock_random_name):
 
@@ -122,10 +122,10 @@ class SaharaJobTestCase(test.TestCase):
             job_idx=0
         )
 
-    @mock.patch(SAHARA_UTILS + '.SaharaScenario._generate_random_name',
+    @mock.patch(SAHARA_UTILS + ".SaharaScenario._generate_random_name",
                 return_value="job_42")
     @mock.patch(SAHARA_JOB + "._run_job_execution")
-    @mock.patch(SAHARA_UTILS + '.SaharaScenario.clients')
+    @mock.patch(SAHARA_UTILS + ".SaharaScenario.clients")
     def test_create_launch_job_sequence(self, mock_osclients,
                                         mock_run_execution, mock_random_name):
 
@@ -180,11 +180,11 @@ class SaharaJobTestCase(test.TestCase):
                 job_idx=1)]
         )
 
-    @mock.patch(SAHARA_UTILS + '.SaharaScenario._generate_random_name',
+    @mock.patch(SAHARA_UTILS + ".SaharaScenario._generate_random_name",
                 return_value="job_42")
     @mock.patch(SAHARA_JOB + "._run_job_execution")
     @mock.patch(SAHARA_JOB + "._scale_cluster")
-    @mock.patch(SAHARA_UTILS + '.SaharaScenario.clients')
+    @mock.patch(SAHARA_UTILS + ".SaharaScenario.clients")
     def test_create_launch_job_sequence_with_scaling(self, mock_osclients,
                                                      mock_scale,
                                                      mock_run_execution,

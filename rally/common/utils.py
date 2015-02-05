@@ -281,7 +281,7 @@ def get_method_class(func):
         # this check works in Python 3
         cls = getattr(
             inspect.getmodule(func),
-            func.__qualname__.split('.<locals>.', 1)[0].rsplit('.', 1)[0])
+            func.__qualname__.split(".<locals>.", 1)[0].rsplit(".", 1)[0])
         if isinstance(cls, type):
             return cls
     else:

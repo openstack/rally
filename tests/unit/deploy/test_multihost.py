@@ -21,7 +21,7 @@ from rally import deploy
 from tests.unit import fakes
 from tests.unit import test
 
-MOD = 'rally.deploy.engines.multihost.'
+MOD = "rally.deploy.engines.multihost."
 
 
 class TestMultihostEngine(test.TestCase):
@@ -31,29 +31,29 @@ class TestMultihostEngine(test.TestCase):
             "type": "MultihostEngine",
             "controller": {
                 "type": "DummyEngine",
-                "endpoint": {'auth_url': 'http://h1.net'}
+                "endpoint": {"auth_url": "http://h1.net"}
             },
             "nodes": [
                 {
                     "type": "DummyEngine",
-                    "endpoint": {'auth_url': 'endpoint1'},
+                    "endpoint": {"auth_url": "endpoint1"},
                 },
                 {
                     "type": "DummyEngine",
-                    "endpoint": {'auth_url': 'endpoint2',
-                                 'cnt': '{controller_ip}'}
+                    "endpoint": {"auth_url": "endpoint2",
+                                 "cnt": "{controller_ip}"}
                 }
             ]
         }
         self.deployment = fakes.FakeDeployment(
-            uuid='905b2f16-6453-4b86-8ba5-6d32025fcfa6',
+            uuid="905b2f16-6453-4b86-8ba5-6d32025fcfa6",
             config=self.config,
         )
-        self.engine = deploy.engine.EngineFactory.get_engine('MultihostEngine',
+        self.engine = deploy.engine.EngineFactory.get_engine("MultihostEngine",
                                                              self.deployment)
 
-    @mock.patch(MOD + 'objects.Deployment')
-    @mock.patch(MOD + 'engine.EngineFactory')
+    @mock.patch(MOD + "objects.Deployment")
+    @mock.patch(MOD + "engine.EngineFactory")
     def test__deploy_node(self, fakeEngineFactory, fakeDeployment):
         fake_endpoint = mock.Mock()
         fake_deployment = mock.Mock()
@@ -65,50 +65,50 @@ class TestMultihostEngine(test.TestCase):
         fakeDeployment.return_value = fake_deployment
         fakeEngineFactory.get_engine = mock.Mock(return_value=fake_engine)
 
-        engine, endpoint = self.engine._deploy_node(self.config['nodes'][0])
+        engine, endpoint = self.engine._deploy_node(self.config["nodes"][0])
 
         self.assertEqual(fake_engine, engine)
         self.assertEqual(fake_endpoint, endpoint)
 
         fakeDeployment.assert_called_once_with(
-            config=self.config['nodes'][0],
-            parent_uuid=self.deployment['uuid'])
+            config=self.config["nodes"][0],
+            parent_uuid=self.deployment["uuid"])
         fake_engine.__enter__.assert_called_once_with()
         fake_engine.__exit__.assert_called_once_with(None, None, None)
 
     def test__update_controller_ip(self):
-        self.engine.controller_ip = '1.2.3.4'
+        self.engine.controller_ip = "1.2.3.4"
         self.engine._update_controller_ip(self.config)
-        expected = {'auth_url': 'endpoint2', 'cnt': '1.2.3.4'}
-        self.assertEqual(expected, self.config['nodes'][1]['endpoint'])
+        expected = {"auth_url": "endpoint2", "cnt": "1.2.3.4"}
+        self.assertEqual(expected, self.config["nodes"][1]["endpoint"])
 
-    @mock.patch(MOD + 'MultihostEngine._deploy_node')
-    @mock.patch(MOD + 'MultihostEngine._update_controller_ip')
+    @mock.patch(MOD + "MultihostEngine._deploy_node")
+    @mock.patch(MOD + "MultihostEngine._update_controller_ip")
     def test_deploy(self, update_ip, deploy_node):
         fake_endpoints = [mock.Mock()]
-        fake_endpoints[0].auth_url = 'http://h1.net'
+        fake_endpoints[0].auth_url = "http://h1.net"
         deploy_node.return_value = [mock.Mock(), fake_endpoints]
 
         endpoints = self.engine.deploy()
 
-        self.assertEqual(self.engine.controller_ip, 'h1.net')
+        self.assertEqual(self.engine.controller_ip, "h1.net")
         self.assertEqual(fake_endpoints, endpoints)
         expected = [
-            mock.call(self.config['nodes'][0]),
-            mock.call(self.config['nodes'][1]),
+            mock.call(self.config["nodes"][0]),
+            mock.call(self.config["nodes"][1]),
         ]
         self.assertEqual(expected, update_ip.mock_calls)
         self.deployment.update_status.assert_called_once_with(
             consts._DeployStatus.DEPLOY_SUBDEPLOY)
 
-    @mock.patch('rally.api')
-    @mock.patch(MOD + 'db')
+    @mock.patch("rally.api")
+    @mock.patch(MOD + "db")
     def test_cleanup(self, m_db, m_api):
-        m_db.deployment_list.return_value = [{'uuid': 'uuid1'},
-                                             {'uuid': 'uuid2'}]
+        m_db.deployment_list.return_value = [{"uuid": "uuid1"},
+                                             {"uuid": "uuid2"}]
         self.engine.cleanup()
         api_calls = [
-            mock.call.Deployment.destroy('uuid1'),
-            mock.call.Deployment.destroy('uuid2'),
+            mock.call.Deployment.destroy("uuid1"),
+            mock.call.Deployment.destroy("uuid2"),
         ]
         self.assertEqual(api_calls, m_api.mock_calls)
