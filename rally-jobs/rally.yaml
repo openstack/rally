@@ -585,6 +585,23 @@
         failure_rate:
           max: 0
 
+  HeatStacks.list_stacks_and_resources:
+    -
+      runner:
+        type: "constant"
+        times: 6
+        concurrency: 3
+      context:
+        users:
+          tenants: 2
+          users_per_tenant: 3
+        stacks:
+          stacks_per_tenant: 2
+          resources_per_stack: 10
+      sla:
+        failure_rate:
+          max: 0
+
   Authenticate.keystone:
     -
       runner:
