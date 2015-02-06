@@ -219,8 +219,7 @@ class CinderVolumes(utils.CinderScenario,
                           "use 'size' instead.")
             size = kwargs["volume_size"]
 
-        server = self._boot_server(
-            self._generate_random_name(), image, flavor, **kwargs)
+        server = self._boot_server(image, flavor, **kwargs)
         volume = self._create_volume(size, **kwargs)
 
         self._attach_volume(server, volume)

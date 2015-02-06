@@ -99,8 +99,8 @@ class NovaScenarioTestCase(test.TestCase):
     def test__boot_server(self, mock_clients):
         mock_clients("nova").servers.create.return_value = self.server
         nova_scenario = utils.NovaScenario(context={})
-        return_server = nova_scenario._boot_server("server_name", "image_id",
-                                                   "flavor_id")
+        return_server = nova_scenario._boot_server('image_id',
+                                                   'flavor_id')
         self._test_assert_called_once_with(
             self.wait_for.mock, self.server,
             CONF.benchmark.nova_server_boot_poll_interval,
@@ -120,7 +120,7 @@ class NovaScenarioTestCase(test.TestCase):
                 "iteration": 3,
                 "config": {"users": {"tenants": 2}},
                 "tenant": {"networks": networks}})
-        return_server = nova_scenario._boot_server("server_name", "image_id",
+        return_server = nova_scenario._boot_server("image_id",
                                                    "flavor_id",
                                                    auto_assign_nic=True)
         self._test_assert_called_once_with(
@@ -138,15 +138,14 @@ class NovaScenarioTestCase(test.TestCase):
         nova_scenario = utils.NovaScenario(
             context={"tenant": {"networks": None}})
         self.assertRaises(TypeError, nova_scenario._boot_server,
-                          "server_name", "image_id", "flavor_id",
+                          "image_id", "flavor_id",
                           auto_assign_nic=True)
 
     @mock.patch(NOVA_UTILS + ".NovaScenario.clients")
     def test__boot_server_with_ssh(self, mock_clients):
         mock_clients("nova").servers.create.return_value = self.server
         nova_scenario = utils.NovaScenario(context={"allow_ssh": "test"})
-        return_server = nova_scenario._boot_server("server_name", "image_id",
-                                                   "flavor_id")
+        return_server = nova_scenario._boot_server('image_id', 'flavor_id')
         self._test_assert_called_once_with(
             self.wait_for.mock, self.server,
             CONF.benchmark.nova_server_boot_poll_interval,
@@ -161,8 +160,8 @@ class NovaScenarioTestCase(test.TestCase):
         mock_clients("nova").servers.create.return_value = self.server
         nova_scenario = utils.NovaScenario(context={"allow_ssh": "new"})
         return_server = nova_scenario._boot_server(
-            "server_name", "image_id", "flavor_id",
-            security_groups=["test1"])
+            'image_id', 'flavor_id',
+            security_groups=['test1'])
         self._test_assert_called_once_with(
             self.wait_for.mock, self.server,
             CONF.benchmark.nova_server_boot_poll_interval,
@@ -177,8 +176,8 @@ class NovaScenarioTestCase(test.TestCase):
         mock_clients("nova").servers.create.return_value = self.server
         nova_scenario = utils.NovaScenario(context={"allow_ssh": "test1"})
         return_server = nova_scenario._boot_server(
-            "server_name", "image_id", "flavor_id",
-            security_groups=["test1"])
+            'image_id', 'flavor_id',
+            security_groups=['test1'])
         self._test_assert_called_once_with(
             self.wait_for.mock, self.server,
             CONF.benchmark.nova_server_boot_poll_interval,

@@ -60,8 +60,7 @@ class NovaServers(utils.NovaScenario,
                          detailed information about all of them
         :param kwargs: Optional additional arguments for server creation
         """
-        self._boot_server(
-            self._generate_random_name(), image, flavor, **kwargs)
+        self._boot_server(image, flavor, **kwargs)
         self._list_servers(detailed)
 
     @validation.required_services(consts.Service.NOVA)
@@ -100,8 +99,7 @@ class NovaServers(utils.NovaScenario,
         :param force_delete: True if force_delete should be used
         :param kwargs: Optional additional arguments for server creation
         """
-        server = self._boot_server(
-            self._generate_random_name(), image, flavor, **kwargs)
+        server = self._boot_server(image, flavor, **kwargs)
         self.sleep_between(min_sleep, max_sleep)
         self._delete_server(server, force=force_delete)
 
@@ -132,8 +130,7 @@ class NovaServers(utils.NovaScenario,
         """
         volume = self._create_volume(volume_size, imageRef=image)
         block_device_mapping = {"vda": "%s:::1" % volume.id}
-        server = self._boot_server(self._generate_random_name(),
-                                   image, flavor,
+        server = self._boot_server(image, flavor,
                                    block_device_mapping=block_device_mapping,
                                    **kwargs)
         self.sleep_between(min_sleep, max_sleep)
@@ -170,8 +167,7 @@ class NovaServers(utils.NovaScenario,
             raise rally_exceptions.InvalidConfigException(
                 "Invalid server actions configuration \'%(actions)s\' due to: "
                 "%(error)s" % {"actions": str(actions), "error": str(error)})
-        server = self._boot_server(self._generate_random_name(),
-                                   image, flavor, **kwargs)
+        server = self._boot_server(image, flavor, **kwargs)
         for action in action_builder.build_actions(actions, server):
             action()
         self._delete_server(server, force=force_delete)
@@ -191,13 +187,12 @@ class NovaServers(utils.NovaScenario,
         :param force_delete: True if force_delete should be used
         :param kwargs: Optional additional arguments for server creation
         """
-        server_name = self._generate_random_name()
 
-        server = self._boot_server(server_name, image, flavor, **kwargs)
+        server = self._boot_server(image, flavor, **kwargs)
         image = self._create_image(server)
         self._delete_server(server, force=force_delete)
 
-        server = self._boot_server(server_name, image.id, flavor, **kwargs)
+        server = self._boot_server(image.id, flavor, **kwargs)
         self._delete_server(server, force=force_delete)
         self._delete_image(image)
 
@@ -217,9 +212,8 @@ class NovaServers(utils.NovaScenario,
         :param auto_assign_nic: True if NICs should be assigned
         :param kwargs: Optional additional arguments for server creation
         """
-        server_name = self._generate_random_name()
-        self._boot_server(server_name, image, flavor, auto_assign_nic,
-                          **kwargs)
+        self._boot_server(image, flavor,
+                          auto_assign_nic=auto_assign_nic, **kwargs)
 
     @types.set(image=types.ImageResourceType,
                flavor=types.FlavorResourceType)
@@ -242,8 +236,7 @@ class NovaServers(utils.NovaScenario,
         """
         volume = self._create_volume(volume_size, imageRef=image)
         block_device_mapping = {"vda": "%s:::1" % volume.id}
-        self._boot_server(self._generate_random_name(),
-                          image, flavor, auto_assign_nic,
+        self._boot_server(image, flavor, auto_assign_nic=auto_assign_nic,
                           block_device_mapping=block_device_mapping,
                           **kwargs)
 
@@ -308,8 +301,7 @@ class NovaServers(utils.NovaScenario,
         :param force_delete: True if force_delete should be used
         :param kwargs: Optional additional arguments for server creation
         """
-        server = self._boot_server(self._generate_random_name(),
-                                   image, flavor, **kwargs)
+        server = self._boot_server(image, flavor, **kwargs)
         self._resize(server, to_flavor)
         # by default we confirm
         confirm = kwargs.get("confirm", True)
@@ -341,8 +333,7 @@ class NovaServers(utils.NovaScenario,
                                  on migrated instance or not
         :param kwargs: Optional additional arguments for server creation
         """
-        server = self._boot_server(self._generate_random_name(),
-                                   image, flavor, **kwargs)
+        server = self._boot_server(image, flavor, **kwargs)
 
         new_host = self._find_host_to_migrate(server)
         self._live_migrate(server, new_host,
@@ -367,8 +358,7 @@ class NovaServers(utils.NovaScenario,
         :param flavor: flavor to be used to boot an instance
         :param kwargs: Optional additional arguments for server creation
         """
-        server = self._boot_server(self._generate_random_name(),
-                                   image, flavor, **kwargs)
+        server = self._boot_server(image, flavor, **kwargs)
         self._stop_server(server)
         self._migrate(server)
         # NOTE(wtakase): This is required because cold migration and resize

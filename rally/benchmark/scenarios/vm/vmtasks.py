@@ -82,9 +82,7 @@ class VMTasks(nova_utils.NovaScenario, vm_utils.VMScenario,
         net_wrap = network_wrapper.wrap(self.clients)
         kwargs.update({"auto_assign_nic": True,
                        "key_name": keypair.Keypair.KEYPAIR_NAME})
-        server = self._boot_server(
-            self._generate_random_name("rally_novaserver_"),
-            image, flavor, **kwargs)
+        server = self._boot_server(image, flavor, **kwargs)
 
         if not server.networks:
             raise RuntimeError(

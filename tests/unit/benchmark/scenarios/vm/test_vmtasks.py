@@ -75,7 +75,7 @@ class VMTasksTestCase(test.TestCase):
 
         self.assertEqual(result, {"errors": "foo_err", "data": "foo_out"})
         self.scenario._boot_server.assert_called_once_with(
-            "foo_name", "foo_image", "foo_flavor",
+            "foo_image", "foo_flavor",
             block_device_mapping={"vdrally": "foo_volume:::1"},
             nics=[{"net-id": "foo_network"}], auto_assign_nic=True,
             key_name=keypair.Keypair.KEYPAIR_NAME)
@@ -101,7 +101,7 @@ class VMTasksTestCase(test.TestCase):
             "foo_image", "foo_flavor", "foo_script", "foo_shell", "foo_user")
 
         self.scenario._boot_server.assert_called_once_with(
-            "foo_name", "foo_image", "foo_flavor", auto_assign_nic=True,
+            "foo_image", "foo_flavor", auto_assign_nic=True,
             key_name=keypair.Keypair.KEYPAIR_NAME)
         self.scenario._associate_floating_ip.assert_called_once_with(
             self.server, "foo_fip", fixed_address="foo_addr")
@@ -117,7 +117,7 @@ class VMTasksTestCase(test.TestCase):
             floating_network="bar_network")
 
         self.scenario._boot_server.assert_called_once_with(
-            "foo_name", "foo_image", "foo_flavor", auto_assign_nic=True,
+            "foo_image", "foo_flavor", auto_assign_nic=True,
             key_name=keypair.Keypair.KEYPAIR_NAME)
 
         net_wrap.create_floating_ip.assert_called_once_with(
