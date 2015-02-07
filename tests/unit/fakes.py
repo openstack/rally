@@ -25,6 +25,7 @@ import mock
 from neutronclient.common import exceptions as neutron_exceptions
 from novaclient import exceptions as nova_exceptions
 import six
+from swiftclient import exceptions as swift_exceptions
 
 from rally.benchmark.context import base as base_ctx
 from rally.benchmark.scenarios import base
@@ -283,6 +284,10 @@ class FakeWorkbook(FakeResource):
     def __init__(self, manager=None):
         super(FakeWorkbook, self).__init__(manager)
         self.workbook = mock.MagicMock()
+
+
+class FakeObject(FakeResource):
+    pass
 
 
 class FakeManager(object):
@@ -821,6 +826,49 @@ class FakeWorkbookManager(FakeManager):
         return [self.workbook]
 
 
+class FakeObjectManager(FakeManager):
+
+    def get_account(self, **kwargs):
+        containers = self.list()
+        return (mock.MagicMock(), [{"name": con.name} for con in containers])
+
+    def get_container(self, name, **kwargs):
+        container = self.find(name=name)
+        if container is None:
+            raise swift_exceptions.ClientException("Container GET failed")
+        return (mock.MagicMock(), [{"name": obj} for obj in container.items])
+
+    def put_container(self, name, **kwargs):
+        if self.find(name=name):
+            raise swift_exceptions.ClientException("Container PUT failed")
+        self._cache(FakeObject(name=name))
+
+    def delete_container(self, name, **kwargs):
+        container = self.find(name=name)
+        if container is None or len(container.items.keys()) > 0:
+            raise swift_exceptions.ClientException("Container DELETE failed")
+        self.delete(container.uuid)
+
+    def get_object(self, container_name, object_name, **kwargs):
+        container = self.find(name=container_name)
+        if container is None or object_name not in container.items:
+            raise swift_exceptions.ClientException("Object GET failed")
+        return (mock.MagicMock(), container.items[object_name])
+
+    def put_object(self, container_name, object_name, content, **kwargs):
+        container = self.find(name=container_name)
+        if container is None or object_name in container.items:
+            raise swift_exceptions.ClientException("Object PUT failed")
+        container.items[object_name] = content
+        return mock.MagicMock()
+
+    def delete_object(self, container_name, object_name, **kwargs):
+        container = self.find(name=container_name)
+        if container is None or object_name not in container.items:
+            raise swift_exceptions.ClientException("Object DELETE failed")
+        del container.items[object_name]
+
+
 class FakeServiceCatalog(object):
     def get_endpoints(self):
         return {"image": [{"publicURL": "http://fake.to"}],
@@ -1209,6 +1257,10 @@ class FakeMistralClient(object):
         self.workbook = FakeWorkbookManager()
 
 
+class FakeSwiftClient(FakeObjectManager):
+    pass
+
+
 class FakeClients(object):
 
     def __init__(self, endpoint_=None):
@@ -1224,6 +1276,7 @@ class FakeClients(object):
         self._zaqar = None
         self._trove = None
         self._mistral = None
+        self._swift = None
         self._endpoint = endpoint_ or objects.Endpoint(
             "http://fake.example.org:5000/v2.0/",
             "fake_username",
@@ -1292,6 +1345,11 @@ class FakeClients(object):
         if not self._mistral:
             self._mistral = FakeMistralClient()
         return self._mistral
+
+    def swift(self):
+        if not self._swift:
+            self._swift = FakeSwiftClient()
+        return self._swift
 
 
 class FakeRunner(object):
