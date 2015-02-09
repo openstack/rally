@@ -18,14 +18,10 @@ import mock
 from rally.benchmark.scenarios.mistral import utils
 from tests.unit import test
 
-BM_UTILS = "rally.benchmark.utils"
 MISTRAL_UTILS = "rally.benchmark.scenarios.mistral.utils"
 
 
 class MistralScenarioTestCase(test.TestCase):
-
-    def setUp(self):
-        super(MistralScenarioTestCase, self).setUp()
 
     def _test_atomic_action_timer(self, atomic_actions, name):
         action_duration = atomic_actions.get(name)
