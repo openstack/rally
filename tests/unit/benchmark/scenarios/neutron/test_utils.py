@@ -242,6 +242,30 @@ class NeutronScenarioTestCase(test.TestCase):
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "neutron.update_router")
 
+    @mock.patch(NEUTRON_UTILS + "NeutronScenario.clients")
+    def test_delete_router(self, mock_clients):
+        scenario = utils.NeutronScenario()
+        router = scenario._create_router({})
+        scenario._delete_router(router)
+        mock_clients("neutron").delete_router.assert_called_once_with(
+                router["router"]["id"])
+        self._test_atomic_action_timer(scenario.atomic_actions(),
+                                       "neutron.delete_router")
+
+    @mock.patch(NEUTRON_UTILS + "NeutronScenario.clients")
+    def test_remove_interface_router(self, mock_clients):
+        subnet = {"name": "subnet-name", "id": "subnet-id"}
+        router_data = {"id": 1}
+        scenario = utils.NeutronScenario()
+        router = scenario._create_router(router_data)
+        scenario._add_interface_router(subnet, router)
+        scenario._remove_interface_router(subnet, router)
+        mock_remove_router = mock_clients("neutron").remove_interface_router
+        mock_remove_router.assert_called_once_with(
+                                    router["id"], {"subnet_id": subnet["id"]})
+        self._test_atomic_action_timer(scenario.atomic_actions(),
+                                       "neutron.remove_interface_router")
+
     def test_SUBNET_IP_VERSION(self):
         """Curent NeutronScenario implementation supports only IPv4."""
         self.assertEqual(utils.NeutronScenario.SUBNET_IP_VERSION, 4)

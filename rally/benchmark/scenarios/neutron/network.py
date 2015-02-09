@@ -223,6 +223,48 @@ class NeutronNetworks(utils.NeutronScenario):
                 {"subnet_id": subnet["subnet"]["id"]})
             self._update_router(router, router_update_args)
 
+    @base.scenario(context={"cleanup": ["neutron"]})
+    @validation.required_parameters("subnets_per_network")
+    @validation.required_services(consts.Service.NEUTRON)
+    def create_and_delete_routers(self,
+                                  network_create_args=None,
+                                  subnet_create_args=None,
+                                  subnet_cidr_start=None,
+                                  subnets_per_network=None,
+                                  router_create_args=None):
+        """Create and delete a given number of routers.
+
+        Create a network, a given number of subnets and routers
+        and then delete all routers.
+
+        :param network_create_args: dict, POST /v2.0/networks request options
+        :param subnet_create_args: dict, POST /v2.0/subnets request options
+        :param subnet_cidr_start: str, start value for subnets CIDR
+        :param subnets_per_network: int, number of subnets for one network
+        :param router_create_args: dict, POST /v2.0/routers request options
+        """
+        network, subnets = self._create_network_and_subnets(
+                              network_create_args or {},
+                              subnet_create_args or {},
+                              subnets_per_network,
+                              subnet_cidr_start)
+
+        routers = []
+        for subnet in subnets:
+            router = self._create_router(router_create_args or {})
+            self.clients("neutron").add_interface_router(
+                router["router"]["id"],
+                {"subnet_id": subnet["subnet"]["id"]})
+            routers.append(router)
+
+        for e in range(subnets_per_network):
+            router = routers[e]
+            subnet = subnets[e]
+            self.clients("neutron").remove_interface_router(
+                    router["router"]["id"],
+                    {"subnet_id": subnet["subnet"]["id"]})
+            self._delete_router(router)
+
     @validation.number("ports_per_network", minval=1, integer_only=True)
     @validation.required_services(consts.Service.NEUTRON)
     @validation.required_openstack(users=True)
