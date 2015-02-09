@@ -13,6 +13,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import collections
+import multiprocessing
+
 import jsonschema
 import mock
 
@@ -24,9 +27,12 @@ from tests.unit import fakes
 from tests.unit import test
 
 
+BASE = "rally.benchmark.runners.base."
+
+
 class ScenarioHelpersTestCase(test.TestCase):
 
-    @mock.patch("rally.benchmark.runners.base.utils.format_exc")
+    @mock.patch(BASE + "utils.format_exc")
     def test_format_result_on_timeout(self, mock_format_exc):
         mock_exc = mock.MagicMock()
 
@@ -42,8 +48,7 @@ class ScenarioHelpersTestCase(test.TestCase):
                          expected)
         mock_format_exc.assert_called_once_with(mock_exc)
 
-    @mock.patch("rally.benchmark.runners.base.random.choice",
-                side_effect=lambda x: x[1])
+    @mock.patch(BASE + "random.choice", side_effect=lambda x: x[1])
     def test_get_scenario_context(self, mock_random):
 
         users = list()
@@ -74,7 +79,7 @@ class ScenarioHelpersTestCase(test.TestCase):
 
         self.assertEqual(expected_context, base._get_scenario_context(context))
 
-    @mock.patch("rally.benchmark.runners.base.osclients")
+    @mock.patch(BASE + "osclients")
     def test_run_scenario_once_internal_logic(self, mock_clients):
         mock_clients.Clients.return_value = "cl"
 
@@ -92,9 +97,8 @@ class ScenarioHelpersTestCase(test.TestCase):
         ]
         scenario_cls.assert_has_calls(expected_calls, any_order=True)
 
-    @mock.patch("rally.benchmark.runners.base.rutils.Timer",
-                side_effect=fakes.FakeTimer)
-    @mock.patch("rally.benchmark.runners.base.osclients")
+    @mock.patch(BASE + "rutils.Timer", side_effect=fakes.FakeTimer)
+    @mock.patch(BASE + "osclients")
     def test_run_scenario_once_without_scenario_output(self, mock_clients,
                                                        mock_rtimer):
         context = base._get_scenario_context(fakes.FakeUserContext({}).context)
@@ -111,9 +115,8 @@ class ScenarioHelpersTestCase(test.TestCase):
         }
         self.assertEqual(expected_result, result)
 
-    @mock.patch("rally.benchmark.runners.base.rutils.Timer",
-                side_effect=fakes.FakeTimer)
-    @mock.patch("rally.benchmark.runners.base.osclients")
+    @mock.patch(BASE + "rutils.Timer", side_effect=fakes.FakeTimer)
+    @mock.patch(BASE + "osclients")
     def test_run_scenario_once_with_scenario_output(self, mock_clients,
                                                     mock_rtimer):
         context = base._get_scenario_context(fakes.FakeUserContext({}).context)
@@ -130,9 +133,8 @@ class ScenarioHelpersTestCase(test.TestCase):
         }
         self.assertEqual(expected_result, result)
 
-    @mock.patch("rally.benchmark.runners.base.rutils.Timer",
-                side_effect=fakes.FakeTimer)
-    @mock.patch("rally.benchmark.runners.base.osclients")
+    @mock.patch(BASE + "rutils.Timer", side_effect=fakes.FakeTimer)
+    @mock.patch(BASE + "osclients")
     def test_run_scenario_once_exception(self, mock_clients, mock_rtimer):
         context = base._get_scenario_context(fakes.FakeUserContext({}).context)
         args = (1, fakes.FakeScenario, "something_went_wrong", context, {})
@@ -190,8 +192,8 @@ class ScenarioRunnerTestCase(test.TestCase):
     def setUp(self):
         super(ScenarioRunnerTestCase, self).setUp()
 
-    @mock.patch("rally.benchmark.runners.base.jsonschema.validate")
-    @mock.patch("rally.benchmark.runners.base.ScenarioRunner._get_cls")
+    @mock.patch(BASE + "jsonschema.validate")
+    @mock.patch(BASE + "ScenarioRunner._get_cls")
     def test_validate(self, mock_get_cls, mock_validate):
         mock_get_cls.return_value = fakes.FakeRunner
 
@@ -219,7 +221,7 @@ class ScenarioRunnerTestCase(test.TestCase):
                           base.ScenarioRunner.get_runner,
                           None, {"type": "NoSuchRunner"})
 
-    @mock.patch("rally.benchmark.runners.base.jsonschema.validate")
+    @mock.patch(BASE + "jsonschema.validate")
     def test_validate_default_runner(self, mock_validate):
         config = {"a": 10}
         base.ScenarioRunner.validate(config)
@@ -227,8 +229,7 @@ class ScenarioRunnerTestCase(test.TestCase):
                 config,
                 serial.SerialScenarioRunner.CONFIG_SCHEMA)
 
-    @mock.patch("rally.benchmark.runners.base.rutils.Timer.duration",
-                return_value=10)
+    @mock.patch(BASE + "rutils.Timer.duration", return_value=10)
     def test_run(self, mock_duration):
         runner = serial.SerialScenarioRunner(
             mock.MagicMock(),
@@ -275,3 +276,39 @@ class ScenarioRunnerTestCase(test.TestCase):
         self.assertFalse(runner.aborted.is_set())
         runner.abort()
         self.assertTrue(runner.aborted.is_set())
+
+    def test__create_process_pool(self):
+        runner = serial.SerialScenarioRunner(
+            mock.MagicMock(),
+            mock.MagicMock())
+
+        processes_to_start = 10
+
+        def worker_process(i):
+            pass
+
+        counter = ((i,) for i in range(100))
+
+        process_pool = runner._create_process_pool(processes_to_start,
+                                                   worker_process,
+                                                   counter)
+        self.assertEqual(processes_to_start, len(process_pool))
+        for process in process_pool:
+            self.assertIsInstance(process, multiprocessing.Process)
+
+    @mock.patch(BASE + "ScenarioRunner._send_result")
+    def test__join_processes(self, mock_send_result):
+        process = mock.MagicMock(is_alive=mock.MagicMock(return_value=False))
+        processes = 10
+        process_pool = collections.deque([process] * processes)
+        mock_result_queue = mock.MagicMock(
+                                    empty=mock.MagicMock(return_value=True))
+
+        runner = serial.SerialScenarioRunner(
+            mock.MagicMock(),
+            mock.MagicMock())
+
+        runner._join_processes(process_pool, mock_result_queue)
+
+        self.assertEqual(processes, process.join.call_count)
+        mock_result_queue.close.assert_called_once_with()

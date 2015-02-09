@@ -18,11 +18,11 @@ from rally import consts
 
 
 class SerialScenarioRunner(base.ScenarioRunner):
-    """Scenario runner that executes benchmark scenarios in serial.
+    """Scenario runner that executes benchmark scenarios serially.
 
-    Unlike scenario runners that execute in parallel, the SerialScenarioRunner
-    executes scenarios one-by-one in the same python interpreter process as
-    Rally.  This allows you to benchmark your scenario without introducing
+    Unlike scenario runners that execute in parallel, the serial scenario
+    runner executes scenarios one-by-one in the same python interpreter process
+    as Rally. This allows you to benchmark your scenario without introducing
     any concurrent operations as well as interactively debug the scenario
     from the same command that you use to start Rally.
     """
@@ -47,6 +47,23 @@ class SerialScenarioRunner(base.ScenarioRunner):
     }
 
     def _run_scenario(self, cls, method_name, context, args):
+        """Runs the specified benchmark scenario with given arguments.
+
+        The scenario iterations are executed one-by-one in the same python
+        interpreter process as Rally. This allows you to benchmark your
+        scenario without introducing any concurrent operations as well as
+        interactively debug the scenario from the same command that you use
+        to start Rally.
+
+        :param cls: The Scenario class where the scenario is implemented
+        :param method_name: Name of the method that implements the scenario
+        :param context: Benchmark context that contains users, admin & other
+                        information, that was created before benchmark started.
+        :param args: Arguments to call the scenario method with
+
+        :returns: List of results fore each single scenario iteration,
+                  where each result is a dictionary
+        """
         times = self.config.get("times", 1)
 
         for i in range(times):

@@ -17,6 +17,7 @@ import abc
 import collections
 import multiprocessing
 import random
+import time
 
 import jsonschema
 import six
@@ -92,6 +93,21 @@ def _run_scenario_once(args):
                 "error": error,
                 "scenario_output": scenario_output,
                 "atomic_actions": scenario.atomic_actions()}
+
+
+def _worker_thread(queue, args):
+    queue.put(_run_scenario_once(args))
+
+
+def _log_worker_info(**info):
+    """Log worker parameters for debugging.
+
+    :param info: key-value pairs to be logged
+    """
+    info_message = "\n\t".join(["%s: %s" % (k, v)
+                                for k, v in info.items()])
+    LOG.debug("Starting a worker."
+              "\n\t%(info)s" % {"info": info_message})
 
 
 class ScenarioRunnerResult(dict):
@@ -227,6 +243,43 @@ class ScenarioRunner(object):
         """Abort the execution of further benchmark scenario iterations."""
         self.aborted.set()
 
+    def _create_process_pool(self, processes_to_start, worker_process,
+                             worker_args_gen):
+        """Create a pool of processes with some defined target function.
+
+        :param processes_to_start: number of processes to create in the pool
+        :param worker_process: target function for all processes in the pool
+        :param worker_args_gen: generator of arguments for the target funciton
+        :returns: the process pool as a deque
+        """
+        process_pool = collections.deque()
+
+        for i in range(processes_to_start):
+            process = multiprocessing.Process(target=worker_process,
+                                              args=next(worker_args_gen))
+            process.start()
+            process_pool.append(process)
+
+        return process_pool
+
+    def _join_processes(self, process_pool, result_queue):
+        """Join the processes in the pool and send their results to the queue.
+
+        :param process_pool: pool of processes to join
+        :result_queue: multiprocessing.Queue that receives the results
+        """
+        while process_pool:
+            while process_pool and not process_pool[0].is_alive():
+                process_pool.popleft().join()
+
+            if result_queue.empty():
+                # sleep a bit to avoid 100% usage of CPU by this method
+                time.sleep(0.001)
+
+            while not result_queue.empty():
+                self._send_result(result_queue.get())
+        result_queue.close()
+
     def _send_result(self, result):
         """Send partial result to consumer.
 
@@ -235,3 +288,19 @@ class ScenarioRunner(object):
                        ValidationError is raised.
         """
         self.result_queue.append(ScenarioRunnerResult(result))
+
+    def _log_debug_info(self, **info):
+        """Log runner parameters for debugging.
+
+        The method logs the runner name, the task id as well as the values
+        passed as arguments.
+
+        :param info: key-value pairs to be logged
+        """
+        info_message = "\n\t".join(["%s: %s" % (k, v)
+                                    for k, v in info.items()])
+        LOG.debug("Starting the %(runner_type)s runner (task UUID: %(task)s)."
+                  "\n\t%(info)s" %
+                  {"runner_type": self.__execution_type__,
+                   "task": self.task["uuid"],
+                   "info": info_message})

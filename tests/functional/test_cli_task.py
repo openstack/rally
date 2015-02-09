@@ -351,8 +351,7 @@ class TaskTestCase(unittest.TestCase):
                    "deployment_id": deployment_id})
             results = json.loads(rally("task results"))
         iterations_completed = len(results[0]["result"])
-        # NOTE(msdubov): Change '<=' to '<' as soon as we fix the runners.
-        self.assertTrue(iterations_completed <= times)
+        self.assertTrue(iterations_completed < times)
 
     def test_start_abort_on_sla_failure_max_seconds_constant(self):
         times = 100
@@ -421,6 +420,9 @@ class TaskTestCase(unittest.TestCase):
         cfg = {
             "Dummy.dummy_exception": [
                 {
+                    "args": {
+                        "sleep": 0.1
+                    },
                     "runner": {
                         "type": "constant",
                         "times": times,
@@ -439,6 +441,9 @@ class TaskTestCase(unittest.TestCase):
         cfg = {
             "Dummy.dummy_exception": [
                 {
+                    "args": {
+                        "sleep": 0.1
+                    },
                     "runner": {
                         "type": "serial",
                         "times": times
@@ -456,6 +461,9 @@ class TaskTestCase(unittest.TestCase):
         cfg = {
             "Dummy.dummy_exception": [
                 {
+                    "args": {
+                        "sleep": 0.1
+                    },
                     "runner": {
                         "type": "rps",
                         "times": times,

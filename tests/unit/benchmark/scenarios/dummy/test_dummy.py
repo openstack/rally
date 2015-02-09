@@ -29,12 +29,14 @@ class DummyTestCase(test.TestCase):
         scenario.dummy(sleep=10)
         mock_sleep.sleep.assert_called_once_with(10)
 
-    def test_dummy_exception(self):
+    @mock.patch("rally.benchmark.scenarios.dummy.dummy.time")
+    def test_dummy_exception(self, mock_sleep):
         scenario = dummy.Dummy()
 
         size_of_message = 5
         self.assertRaises(dummy.DummyScenarioException,
-                          scenario.dummy_exception, size_of_message)
+                          scenario.dummy_exception, size_of_message, sleep=10)
+        mock_sleep.sleep.assert_called_once_with(10)
 
     def test_dummy_exception_probability(self):
         scenario = dummy.Dummy()

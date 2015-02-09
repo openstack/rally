@@ -183,7 +183,7 @@ class IterationTime(SLA):
         return self.success
 
     def details(self):
-        return (_("Maximum seconds per iteration %.2fs<= %.2fs - %s") %
+        return (_("Maximum seconds per iteration %.2fs <= %.2fs - %s") %
                 (self.max_iteration_time, self.criterion_value, self.status()))
 
 

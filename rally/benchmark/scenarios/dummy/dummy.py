@@ -41,7 +41,7 @@ class Dummy(base.Scenario):
     @validation.number("size_of_message",
                        minval=1, integer_only=True, nullable=True)
     @base.scenario()
-    def dummy_exception(self, size_of_message=1):
+    def dummy_exception(self, size_of_message=1, sleep=0):
         """Throw an exception.
 
         Dummy.dummy_exception can be used for test if exceptions are processed
@@ -49,8 +49,11 @@ class Dummy(base.Scenario):
         results storing process.
 
         :param size_of_message: int size of the exception message
+        :param sleep: idle time of method (in seconds).
         :raises: DummyScenarioException
         """
+        if sleep:
+            time.sleep(sleep)
 
         raise DummyScenarioException("M" * size_of_message)
 
