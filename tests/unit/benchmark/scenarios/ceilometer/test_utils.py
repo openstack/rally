@@ -13,12 +13,14 @@
 #    under the License.
 
 import mock
+from oslotest import mockpatch
 
 from rally.benchmark.scenarios.ceilometer import utils
 from tests.unit import fakes
 from tests.unit import test
 
-UTILS = "rally.benchmark.scenarios.ceilometer.utils"
+BM_UTILS = "rally.benchmark.utils"
+CEILOMETER_UTILS = "rally.benchmark.scenarios.ceilometer.utils"
 
 
 class CeilometerScenarioTestCase(test.TestCase):
@@ -27,6 +29,14 @@ class CeilometerScenarioTestCase(test.TestCase):
         self.scenario = utils.CeilometerScenario()
         self.scenario.clients = mock.MagicMock(
             return_value=fakes.FakeCeilometerClient())
+        self.res_is = mockpatch.Patch(BM_UTILS + ".resource_is")
+        self.get_fm = mockpatch.Patch(BM_UTILS + ".get_from_manager")
+        self.wait_for = mockpatch.Patch(CEILOMETER_UTILS +
+                                        ".bench_utils.wait_for")
+        self.useFixture(self.wait_for)
+        self.useFixture(self.res_is)
+        self.useFixture(self.get_fm)
+        self.gfm = self.get_fm.mock
 
     def test__list_alarms(self):
         alarm1_id = "fake_alarm1_id"
@@ -70,6 +80,32 @@ class CeilometerScenarioTestCase(test.TestCase):
         fake_alarm_dict_diff = {"description": "Changed Test Description"}
         self.scenario._update_alarm(fake_alarm.alarm_id, fake_alarm_dict_diff)
         self.assertEqual(fake_alarm.description, "Changed Test Description")
+
+    def test__get_alarm_history(self):
+        fake_history = self.scenario._get_alarm_history("fake-alarm")
+        self.assertEqual(fake_history, ["fake-alarm-history"])
+
+    def test__get_alarm_state(self):
+        fake_alarm_dict = {"alarm_id": "alarm-id", "state": "alarm-state"}
+        fake_alarm = self.scenario._create_alarm("fake-meter-name", 100,
+                                                 fake_alarm_dict)
+        fake_state = self.scenario._get_alarm_state(fake_alarm.alarm_id)
+        self.assertEqual(fake_state, "alarm-state")
+
+    @mock.patch(CEILOMETER_UTILS + ".CeilometerScenario.clients")
+    def test__set_alarm_state(self, mock_clients):
+        alarm = mock.Mock()
+        mock_clients("ceilometer").alarms.create.return_value = alarm
+        return_alarm = self.scenario._set_alarm_state(alarm, "ok", 100)
+        self.wait_for.mock.assert_called_once_with(
+            alarm,
+            is_ready=self.res_is.mock(),
+            update_resource=self.gfm(),
+            timeout=100, check_interval=1)
+        self.res_is.mock.assert_has_calls([mock.call("ok")])
+        self.assertEqual(self.wait_for.mock(), return_alarm)
+        self._test_atomic_action_timer(self.scenario.atomic_actions(),
+                                       "ceilometer.set_alarm_state")
 
     def test__list_meters(self):
         """Test _list_meters."""

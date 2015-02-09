@@ -13,6 +13,7 @@
 #    under the License.
 
 from rally.benchmark.scenarios import base
+from rally.benchmark import utils as bench_utils
 
 
 class CeilometerScenario(base.Scenario):
@@ -80,6 +81,41 @@ class CeilometerScenario(base.Scenario):
         :param alarm_dict_delta: features of alarm to be updated
         """
         self.clients("ceilometer").alarms.update(alarm_id, **alarm_dict_delta)
+
+    @base.atomic_action_timer("ceilometer.get_alarm_history")
+    def _get_alarm_history(self, alarm_id):
+        """Assemble the alarm history requested.
+
+        :param alarm_id: specifies id of the alarm
+        :returns: list of alarm changes
+        """
+        return self.clients("ceilometer").alarms.get_history(alarm_id)
+
+    @base.atomic_action_timer("ceilometer.get_alarm_state")
+    def _get_alarm_state(self, alarm_id):
+        """Get the state of the alarm.
+
+        :param alarm_id: specifies id of the alarm
+        :returns: state of the alarm
+        """
+        return self.clients("ceilometer").alarms.get_state(alarm_id)
+
+    @base.atomic_action_timer("ceilometer.set_alarm_state")
+    def _set_alarm_state(self, alarm, state, timeout):
+        """Set the state of the alarm.
+
+        :param alarm: alarm instance
+        :param state: an alarm state to be set
+        :param timeout: The number of seconds for which to attempt a
+                         successful check of the alarm state.
+        :returns: alarm in the set state
+        """
+        self.clients("ceilometer").alarms.set_state(alarm.alarm_id, state)
+        return bench_utils.wait_for(alarm,
+                                    is_ready=bench_utils.resource_is(state),
+                                    update_resource=bench_utils
+                                    .get_from_manager(),
+                                    timeout=timeout, check_interval=1)
 
     @base.atomic_action_timer("ceilometer.get_meters")
     def _list_meters(self):

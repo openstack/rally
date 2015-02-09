@@ -207,6 +207,7 @@ class FakeAlarm(FakeResource):
         super(FakeAlarm, self).__init__(manager)
         self.meter_name = kwargs.get("meter_name")
         self.threshold = kwargs.get("threshold")
+        self.state = kwargs.get("state", "fake-alarm-state")
         self.alarm_id = kwargs.get("alarm_id", "fake-alarm-id")
         self.optional_args = kwargs.get("optional_args", {})
 
@@ -715,6 +716,19 @@ class FakeAlarmManager(FakeManager):
             alarm.status = "DELETED"
             del self.cache[alarm.id]
             self.resources_order.remove(alarm.id)
+
+    def get_state(self, alarm_id):
+        alarm = self.find(alarm_id=alarm_id)
+        if alarm is not None:
+            return getattr(alarm, "state", "fake-alarm-state")
+
+    def get_history(self, alarm_id):
+        return ["fake-alarm-history"]
+
+    def set_state(self, alarm_id, state):
+        alarm = self.find(alarm_id=alarm_id)
+        if alarm is not None:
+            return setattr(alarm, "state", state)
 
 
 class FakeSampleManager(FakeManager):
