@@ -255,22 +255,21 @@ class PreprocessTestCase(test.TestCase):
 
 class FileTypeTestCase(test.TestCase):
 
-    def setUp(self):
-        super(FileTypeTestCase, self).setUp()
-        self.clients = fakes.FakeClients()
-
     @mock.patch("rally.benchmark.types.open",
                 side_effect=mock.mock_open(read_data="file_context"),
                 create=True)
     def test_transform_by_path(self, mock_open):
         resource_config = "file.yaml"
         file_context = types.FileType.transform(
-                           clients=self.clients,
+                           clients=None,
                            resource_config=resource_config)
         self.assertEqual(file_context, "file_context")
 
-    def test_transform_by_path_no_match(self):
+    @mock.patch("rally.benchmark.types.open",
+                side_effect=IOError, create=True)
+    def test_transform_by_path_no_match(self, mock_open):
         resource_config = "nonexistant.yaml"
         self.assertRaises(IOError,
                           types.FileType.transform,
-                          self.clients, resource_config)
+                          clients=None,
+                          resource_config=resource_config)
