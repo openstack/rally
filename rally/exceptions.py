@@ -276,3 +276,7 @@ class MigrateException(RallyException):
 
 class InvalidHostException(RallyException):
     msg_fmt = _("Live Migration failed: %(message)s")
+
+
+class MultipleMatchesFound(RallyException):
+    msg_fmt = _("Found multiple %(needle)s: %(haystack)s")
