@@ -87,11 +87,13 @@ class NovaQuotas(QuotaMixin, base.ResourceManager):
 _neutron_order = get_order(300)
 
 
-class NeutronMixin(SynchronizedDeletion):
+@base.resource(service=None, resource=None, admin_required=True)
+class NeutronMixin(SynchronizedDeletion, base.ResourceManager):
     # Neutron has the best client ever, so we need to override everything
 
     def _manager(self):
-        return getattr(self.user, self._service)()
+        client = self._admin_required and self.admin or self.user
+        return getattr(client, self._service)()
 
     def id(self):
         return self.raw_resource["id"]
@@ -110,7 +112,7 @@ class NeutronMixin(SynchronizedDeletion):
 
 @base.resource("neutron", "port", order=next(_neutron_order),
                tenant_resource=True)
-class NeutronPort(NeutronMixin, base.ResourceManager):
+class NeutronPort(NeutronMixin):
 
     def delete(self):
         if self.raw_resource["device_owner"] == "network:router_interface":
@@ -129,20 +131,28 @@ class NeutronPort(NeutronMixin, base.ResourceManager):
 
 @base.resource("neutron", "router", order=next(_neutron_order),
                tenant_resource=True)
-class NeutronRouter(NeutronMixin, base.ResourceManager):
+class NeutronRouter(NeutronMixin):
     pass
 
 
 @base.resource("neutron", "subnet", order=next(_neutron_order),
                tenant_resource=True)
-class NeutronSubnet(NeutronMixin, base.ResourceManager):
+class NeutronSubnet(NeutronMixin):
     pass
 
 
 @base.resource("neutron", "network", order=next(_neutron_order),
                tenant_resource=True)
-class NeutronNetwork(NeutronMixin, base.ResourceManager):
+class NeutronNetwork(NeutronMixin):
     pass
+
+
+@base.resource("neutron", "quota", order=next(_neutron_order),
+               admin_required=True, tenant_resource=True)
+class NeutronQuota(QuotaMixin, NeutronMixin):
+
+    def delete(self):
+        self._manager().delete_quota(self.tenant_uuid)
 
 
 # CINDER

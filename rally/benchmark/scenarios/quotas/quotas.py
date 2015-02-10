@@ -30,8 +30,8 @@ class Quotas(utils.QuotasScenario):
 
         :param max_quota: Max value to be updated for quota.
         """
-        tenant_id = self.context["user"]["tenant_id"]
-        self._update_quotas("nova", tenant_id, max_quota)
+        self._update_quotas("nova", self.context["tenant"]["id"],
+                            max_quota)
 
     @validation.required_services(consts.Service.NOVA)
     @validation.required_openstack(admin=True, users=True)
@@ -42,9 +42,9 @@ class Quotas(utils.QuotasScenario):
         :param max_quota: Max value to be updated for quota.
         """
 
-        tenant_id = self.context["user"]["tenant_id"]
-        self._update_quotas("nova", tenant_id, max_quota)
-        self._delete_quotas("nova", tenant_id)
+        self._update_quotas("nova", self.context["tenant"]["id"],
+                            max_quota)
+        self._delete_quotas("nova", self.context["tenant"]["id"])
 
     @validation.required_services(consts.Service.CINDER)
     @validation.required_openstack(admin=True, users=True)
@@ -54,8 +54,8 @@ class Quotas(utils.QuotasScenario):
 
         :param max_quota: Max value to be updated for quota.
         """
-        tenant_id = self.context["user"]["tenant_id"]
-        self._update_quotas("cinder", tenant_id, max_quota)
+        self._update_quotas("cinder", self.context["tenant"]["id"],
+                            max_quota)
 
     @validation.required_services(consts.Service.CINDER)
     @validation.required_openstack(admin=True, users=True)
@@ -65,6 +65,18 @@ class Quotas(utils.QuotasScenario):
 
         :param max_quota: Max value to be updated for quota.
         """
-        tenant_id = self.context["user"]["tenant_id"]
-        self._update_quotas("cinder", tenant_id, max_quota)
-        self._delete_quotas("cinder", tenant_id)
+        self._update_quotas("cinder", self.context["tenant"]["id"],
+                            max_quota)
+        self._delete_quotas("cinder", self.context["tenant"]["id"])
+
+    @validation.required_services(consts.Service.NEUTRON)
+    @validation.required_openstack(admin=True, users=True)
+    @base.scenario(context={"admin_cleanup": ["neutron.quota"]})
+    def neutron_update(self, max_quota=1024):
+        """Update quotas for neutron.
+
+        :param max_quota: Max value to be updated for quota.
+        """
+        quota_update_fn = self.admin_clients("neutron").update_quota
+        self._update_quotas("neutron", self.context["tenant"]["id"],
+                            max_quota, quota_update_fn)
