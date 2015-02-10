@@ -2,6 +2,7 @@
 Rally
 =====
 
+
 What is Rally
 =============
 
@@ -19,6 +20,12 @@ The OpenStack QA team mostly works on CI/CD that ensures that new patches don't 
 .. image:: https://wiki.openstack.org/w/images/e/ee/Rally-Actions.png
    :width: 700px
    :alt: Rally Architecture
+
+
+Documentation
+=============
+
+`Rally documentation on ReadTheDocs <http://rally.readthedocs.org/en/latest/>`_ is a perfect place to start learning about Rally. It provides you with an **easy** and **illustrative** guidance through this benchmarking tool. For example, check out the `Rally step-by-step tutorial <http://rally.readthedocs.org/en/latest/tutorial.html>`_ that explains, in a series of lessons, how to explore the power of Rally in benchmarking your OpenStack clouds.
 
 
 Architecture
@@ -57,13 +64,17 @@ Typical cases where Rally aims to help are:
 Links
 ----------------------
 
-Wiki page:
+Rally documentation:
 
-    https://wiki.openstack.org/wiki/Rally
+    http://rally.readthedocs.org/en/latest/
 
-Rally/HowTo:
+Rally step-by-step tutorial:
 
-    https://wiki.openstack.org/wiki/Rally/HowTo
+    http://rally.readthedocs.org/en/latest/tutorial.html
+
+RoadMap:
+
+    https://docs.google.com/a/mirantis.com/spreadsheets/d/16DXpfbqvlzMFaqaXAcJsBzzpowb_XpymaK2aFY2gA2g
 
 Launchpad page:
 
@@ -72,7 +83,3 @@ Launchpad page:
 Code is hosted on github:
 
     https://github.com/stackforge/rally
-
-Trello board:
-
-    https://trello.com/b/DoD8aeZy/rally
