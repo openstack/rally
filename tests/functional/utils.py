@@ -15,6 +15,7 @@
 
 from six.moves import configparser
 
+import inspect
 import json
 import os
 import pwd
@@ -93,17 +94,91 @@ class Rally(object):
             self.args = ["rally"]
             subprocess.call(["rally-manage", "db", "recreate"])
 
-        self("deployment create --file %s --name MAIN" % DEPLOYMENT_FILE)
+        self.reports_root = os.environ.get("REPORTS_ROOT",
+                                           "rally-cli-output-files")
+        self._created_files = list()
+
+        self("deployment create --file %s --name MAIN" % DEPLOYMENT_FILE,
+             write_report=False)
 
     def __del__(self):
         shutil.rmtree(self.tmp_dir)
 
-    def __call__(self, cmd, getjson=False):
+    def gen_report_path(self, suffix=None, extension=None, keep_old=False):
+        """Report file path/name modifier
+
+        :param suffix: suffix that will be appended to filename.
+            It will be appended before extension
+        :param extension: file extension.
+        :param keep_old: if True, previous reports will not be deleted,
+            but rename to 'nameSuffix.old*.extension'
+
+        :return: complete report name to write report
+        """
+        caller_frame = inspect.currentframe().f_back
+        if caller_frame.f_code.co_name == "__call__":
+            caller_frame = caller_frame.f_back
+
+        method_name = caller_frame.f_code.co_name
+        test_object = caller_frame.f_locals["self"]
+        class_name = test_object.__class__.__name__
+
+        if not os.path.exists("%s/%s" % (self.reports_root, class_name)):
+            os.makedirs("%s/%s" % (self.reports_root, class_name))
+
+        suff = suffix or ""
+        ext = extension or "txt"
+        path = "%s/%s/%s%s.%s" % (self.reports_root, class_name,
+                                  method_name, suff, ext)
+
+        if path not in self._created_files:
+            if os.path.exists(path):
+                if not keep_old:
+                    os.remove(path)
+                else:
+                    path_list = path.split(".")
+                    old_suff = "old"
+                    path_list.insert(-1, old_suff)
+                    new_path = ".".join(path_list)
+                    count = 0
+                    while os.path.exists(new_path):
+                        count += 1
+                        path_list[-2] = "old%d" % count
+                        new_path = ".".join(path_list)
+                    os.rename(path, new_path)
+
+            self._created_files.append(path)
+        return path
+
+    def __call__(self, cmd, getjson=False, report_path=None, raw=False,
+                 suffix=None, extension=None, keep_old=False,
+                 write_report=True):
+        """Call rally in the shell
+
+        :param cmd: rally command
+        :param getjson: in cases, when rally prints JSON, you can catch output
+            deserialized
+        :param report_path: if present, rally command and its output will be
+            wretten to file with passed file name
+        :param raw: don't write command itself to report file. Only output
+            will be written
+        """
+
         if not isinstance(cmd, list):
             cmd = cmd.split(" ")
         try:
             output = subprocess.check_output(self.args + cmd,
                                              stderr=subprocess.STDOUT)
+
+            if write_report:
+                if not report_path:
+                    report_path = self.gen_report_path(
+                        suffix=suffix, extension=extension, keep_old=keep_old)
+                with open(report_path, "a") as rep:
+                    if not raw:
+                        rep.write("\n%s:\n" % " ".join(self.args + cmd))
+                    rep.write("%s\n" % output)
+
             if getjson:
                 return json.loads(output)
             return output.decode("utf-8")
