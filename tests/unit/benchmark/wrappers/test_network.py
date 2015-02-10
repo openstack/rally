@@ -91,20 +91,20 @@ class NovaNetworkWrapperTestCase(test.TestCase):
         self.assertEqual(service.list_networks(), "foo_list")
         service.client.networks.list.assert_called_once_with()
 
-    def test_get_floating_ip(self):
+    def test__get_floating_ip(self):
         wrap = self.get_wrapper()
         wrap.client.floating_ips.get.return_value = mock.Mock(id="foo_id",
                                                               ip="foo_ip")
-        fip = wrap.get_floating_ip("fip_id")
+        fip = wrap._get_floating_ip("fip_id")
         wrap.client.floating_ips.get.assert_called_once_with("fip_id")
-        self.assertEqual(fip, {"ip": "foo_ip", "id": "foo_id"})
+        self.assertEqual(fip, "foo_id")
 
         wrap.client.floating_ips.get.side_effect = (
             nova_exceptions.NotFound(""))
-        self.assertIsNone(wrap.get_floating_ip("fip_id"))
+        self.assertIsNone(wrap._get_floating_ip("fip_id"))
 
         self.assertRaises(exceptions.GetResourceNotFound,
-                          wrap.get_floating_ip, "fip_id", do_raise=True)
+                          wrap._get_floating_ip, "fip_id", do_raise=True)
 
     def test_create_floating_ip(self):
         wrap = self.get_wrapper()
@@ -127,18 +127,18 @@ class NovaNetworkWrapperTestCase(test.TestCase):
 
         def get_fip(*args, **kwargs):
             for i in fip_found:
-                return {"id": "fip_id"}
+                return "fip_id"
             raise exceptions.GetResourceNotFound
-        wrap.get_floating_ip = mock.Mock(side_effect=get_fip)
+        wrap._get_floating_ip = mock.Mock(side_effect=get_fip)
 
         wrap.delete_floating_ip("fip_id")
         wrap.client.floating_ips.delete.assert_called_once_with("fip_id")
-        self.assertFalse(wrap.get_floating_ip.called)
+        self.assertFalse(wrap._get_floating_ip.called)
 
         wrap.delete_floating_ip("fip_id", wait=True)
         self.assertEqual(
-            wrap.get_floating_ip.mock_calls,
-            [mock.call({"id": "fip_id"}, do_raise=True)] * 4)
+            [mock.call("fip_id", do_raise=True)] * 4,
+            wrap._get_floating_ip.mock_calls)
 
     def test_supports_secgroup(self):
         wrap = self.get_wrapper()

@@ -136,16 +136,6 @@ class NovaNetworkWrapper(NetworkWrapper):
     def list_networks(self):
         return self.client.networks.list()
 
-    def get_floating_ip(self, fip_id, do_raise=False):
-        try:
-            fip = self.client.floating_ips.get(fip_id)
-        except nova_exceptions.NotFound:
-            if not do_raise:
-                return None
-            raise exceptions.GetResourceNotFound(
-                resource="Floating IP %s" % fip_id)
-        return {"id": fip.id, "ip": fip.ip}
-
     def create_floating_ip(self, ext_network=None, **kwargs):
         """Allocate a floating ip from the given nova-network pool
 
@@ -161,6 +151,16 @@ class NovaNetworkWrapper(NetworkWrapper):
         fip = self.client.floating_ips.create(ext_network)
         return {"id": fip.id, "ip": fip.ip}
 
+    def _get_floating_ip(self, fip_id, do_raise=False):
+        try:
+            fip = self.client.floating_ips.get(fip_id)
+        except nova_exceptions.NotFound:
+            if not do_raise:
+                return None
+            raise exceptions.GetResourceNotFound(
+                resource="Floating IP %s" % fip_id)
+        return fip.id
+
     def delete_floating_ip(self, fip_id, wait=False):
         """Delete floating IP.
 
@@ -171,8 +171,8 @@ class NovaNetworkWrapper(NetworkWrapper):
         if not wait:
             return
         bench_utils.wait_for_delete(
-            {"id": fip_id},
-            update_resource=lambda i: self.get_floating_ip(i, do_raise=True))
+            fip_id,
+            update_resource=lambda i: self._get_floating_ip(i, do_raise=True))
 
     def supports_security_group(self):
         """Check whether security group is supported
