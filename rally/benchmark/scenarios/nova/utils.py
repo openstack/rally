@@ -436,7 +436,7 @@ class NovaScenario(base.Scenario):
                 for addr in addr_list:
                         if ip_to_check == addr["addr"]:
                             return must_exist
-                return not must_exist
+            return not must_exist
         return _check_addr
 
     @base.atomic_action_timer("nova.list_networks")
