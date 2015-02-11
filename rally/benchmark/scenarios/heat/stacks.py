@@ -25,7 +25,8 @@ class HeatStacks(utils.HeatScenario):
     RESOURCE_NAME_PREFIX = "rally_stack_"
     RESOURCE_NAME_LENGTH = 7
 
-    def _get_template_from_file(self, template_path):
+    @staticmethod
+    def _get_template_from_file(template_path):
         template = None
         if template_path:
             try:
@@ -42,17 +43,15 @@ class HeatStacks(utils.HeatScenario):
     def create_and_list_stack(self, template_path=None):
         """Add a stack and then list all stacks.
 
-        Mesure the "heat stack-create" and "heat stack-list" commands
+        Measure the "heat stack-create" and "heat stack-list" commands
         performance.
 
         :param template_path: path to template file. If None or incorrect,
                               then default empty template will be used.
         """
 
-        stack_name = self._generate_random_name()
         template = self._get_template_from_file(template_path)
-
-        self._create_stack(stack_name, template)
+        self._create_stack(template)
         self._list_stacks()
 
     @validation.required_services(consts.Service.HEAT)
@@ -67,8 +66,31 @@ class HeatStacks(utils.HeatScenario):
         :param template_path: path to template file. If None or incorrect,
                               then default empty template will be used.
         """
-        stack_name = self._generate_random_name()
-        template = self._get_template_from_file(template_path)
 
-        stack = self._create_stack(stack_name, template)
+        template = self._get_template_from_file(template_path)
+        stack = self._create_stack(template)
+        self._delete_stack(stack)
+
+    @validation.required_services(consts.Service.HEAT)
+    @validation.required_openstack(users=True)
+    @base.scenario(context={"cleanup": ["heat"]})
+    def create_update_delete_stack(self, template_path=None,
+                                   updated_template_path=None):
+        """Add, update and then delete a stack.
+
+        Measure the "heat stack-create", "heat stack-update"
+        and "heat stack-delete" commands performance.
+
+        :param template_path: path to template file. If None or incorrect,
+                              then default empty template will be used.
+        :param updated_template_path: path to template file that will be used
+                                      for stack update. If None or incorrect,
+                                      then default empty template will be
+                                      used instead.
+        """
+
+        template = self._get_template_from_file(template_path)
+        stack = self._create_stack(template)
+        updated_template = self._get_template_from_file(updated_template_path)
+        self._update_stack(stack, updated_template)
         self._delete_stack(stack)

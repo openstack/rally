@@ -25,7 +25,6 @@ HEAT_UTILS = "rally.benchmark.scenarios.heat.utils"
 
 
 class HeatScenarioTestCase(test.TestCase):
-
     def setUp(self):
         super(HeatScenarioTestCase, self).setUp()
         self.stack = mock.Mock()
@@ -59,7 +58,7 @@ class HeatScenarioTestCase(test.TestCase):
         }
         mock_clients("heat").stacks.get.return_value = self.stack
         scenario = utils.HeatScenario()
-        return_stack = scenario._create_stack("stack_name")
+        return_stack = scenario._create_stack()
         self.wait_for.mock.assert_called_once_with(self.stack,
                                                    update_resource=self.gfm(),
                                                    is_ready=self.res_is.mock(),
@@ -69,6 +68,25 @@ class HeatScenarioTestCase(test.TestCase):
         self.assertEqual(self.wait_for.mock(), return_stack)
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "heat.create_stack")
+
+    @mock.patch(HEAT_UTILS + ".HeatScenario.clients")
+    @mock.patch(HEAT_UTILS + ".CONF.benchmark")
+    def test_update_stack(self, mock_bench, mock_clients):
+        mock_clients("heat").stacks.update.return_value = None
+        mock_bench.heat_stack_update_timeout = 1
+        mock_bench.heat_stack_update_poll_interval = 1
+
+        scenario = utils.HeatScenario()
+        scenario._update_stack(self.stack, None)
+        self.wait_for.mock.assert_called_once_with(
+            self.stack,
+            update_resource=self.gfm(),
+            is_ready=self.res_is.mock(),
+            check_interval=1,
+            timeout=1)
+        self.res_is.mock.assert_has_calls([mock.call("UPDATE_COMPLETE")])
+        self._test_atomic_action_timer(scenario.atomic_actions(),
+                                       "heat.update_stack")
 
     def test_delete_stack(self):
         scenario = utils.HeatScenario()
@@ -84,7 +102,6 @@ class HeatScenarioTestCase(test.TestCase):
 
 
 class HeatScenarioNegativeTestCase(test.TestCase):
-
     @mock.patch(HEAT_UTILS + ".HeatScenario.clients")
     @mock.patch(HEAT_UTILS + ".CONF.benchmark")
     def test_failed_create_stack(self, mock_bench, mock_clients):
@@ -105,5 +122,25 @@ class HeatScenarioNegativeTestCase(test.TestCase):
             ex = self.assertRaises(exceptions.GetResourceErrorStatus,
                                    scenario._create_stack, "stack_name")
             self.assertIn("has CREATE_FAILED status", str(ex))
+        except exceptions.TimeoutException:
+            raise self.fail("Unrecognized error status")
+
+    @mock.patch(HEAT_UTILS + ".HeatScenario.clients")
+    @mock.patch(HEAT_UTILS + ".CONF.benchmark")
+    def test_failed_update_stack(self, mock_bench, mock_clients):
+        mock_bench.heat_stack_update_prepoll_delay = 2
+        mock_bench.heat_stack_update_timeout = 1
+        mock_bench.benchmark.heat_stack_update_poll_interval = 1
+
+        stack = mock.Mock()
+        resource = mock.Mock()
+        resource.stack_status = "UPDATE_FAILED"
+        stack.manager.get.return_value = resource
+        mock_clients("heat").stacks.get.return_value = stack
+        scenario = utils.HeatScenario()
+        try:
+            ex = self.assertRaises(exceptions.GetResourceErrorStatus,
+                                   scenario._update_stack, stack)
+            self.assertIn("has UPDATE_FAILED status", str(ex))
         except exceptions.TimeoutException:
             raise self.fail("Unrecognized error status")

@@ -39,7 +39,18 @@ heat_benchmark_opts = [
     cfg.FloatOpt("heat_stack_delete_poll_interval",
                  default=1.0,
                  help="Interval between checks when waiting for stack "
-                      "deletion.")
+                      "deletion."),
+    cfg.FloatOpt("heat_stack_update_prepoll_delay",
+                 default=2.0,
+                 help="Time to sleep after updating a resource before "
+                      "polling for it status"),
+    cfg.FloatOpt("heat_stack_update_timeout",
+                 default=3600.0,
+                 help="Time to wait for stack to be updated"),
+    cfg.FloatOpt("heat_stack_update_poll_interval",
+                 default=1.0,
+                 help="Interval between checks when waiting for stack "
+                      "update."),
 ]
 
 
@@ -60,16 +71,15 @@ class HeatScenario(base.Scenario):
         return list(self.clients("heat").stacks.list())
 
     @base.atomic_action_timer("heat.create_stack")
-    def _create_stack(self, stack_name, template=None):
+    def _create_stack(self, template=None):
         """Create a new stack.
 
-        :param stack_name: string. Name for created stack.
         :param template: optional parameter. Template with stack description.
 
         :returns: object of stack
         """
+        stack_name = self._generate_random_name()
         template = template or self.default_template
-
         kw = {
             "stack_name": stack_name,
             "disable_rollback": True,
@@ -93,6 +103,36 @@ class HeatScenario(base.Scenario):
             timeout=CONF.benchmark.heat_stack_create_timeout,
             check_interval=CONF.benchmark.heat_stack_create_poll_interval)
 
+        return stack
+
+    @base.atomic_action_timer("heat.update_stack")
+    def _update_stack(self, stack, template=None):
+        """Update an existing stack
+
+        :param stack: stack that need to be updated
+        :param template: Updated template
+        :return: object of updated stack
+        """
+
+        template = template or self.default_template
+
+        kw = {
+            "stack_name": stack.stack_name,
+            "disable_rollback": True,
+            "parameters": {},
+            "template": template,
+            "files": {},
+            "environment": {}
+        }
+        self.clients("heat").stacks.update(stack.id, **kw)
+
+        time.sleep(CONF.benchmark.heat_stack_update_prepoll_delay)
+        stack = bench_utils.wait_for(
+            stack,
+            is_ready=bench_utils.resource_is("UPDATE_COMPLETE"),
+            update_resource=bench_utils.get_from_manager(["UPDATE_FAILED"]),
+            timeout=CONF.benchmark.heat_stack_update_timeout,
+            check_interval=CONF.benchmark.heat_stack_update_poll_interval)
         return stack
 
     @base.atomic_action_timer("heat.delete_stack")

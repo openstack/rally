@@ -59,5 +59,21 @@ class HeatStacksTestCase(test.TestCase):
         mock_random_name.return_value = "test-rally-stack"
         heat_scenario.create_and_delete_stack()
 
-        self.assertEqual(1, mock_create.called)
+        self.assertTrue(mock_create.called)
+        mock_delete.assert_called_once_with(fake_stack)
+
+    @mock.patch(HEAT_STACKS + "._generate_random_name")
+    @mock.patch(HEAT_STACKS + "._delete_stack")
+    @mock.patch(HEAT_STACKS + "._update_stack")
+    @mock.patch(HEAT_STACKS + "._create_stack")
+    def test_create_update_delete_stack(self, mock_create, mock_update,
+                                        mock_delete, mock_random_name):
+        heat_scenario = stacks.HeatStacks()
+        fake_stack = object()
+        mock_create.return_value = fake_stack
+        mock_random_name.return_value = "test-rally-stack"
+        heat_scenario.create_update_delete_stack()
+
+        self.assertTrue(mock_create.called)
+        mock_update.assert_called_once_with(fake_stack, None)
         mock_delete.assert_called_once_with(fake_stack)
