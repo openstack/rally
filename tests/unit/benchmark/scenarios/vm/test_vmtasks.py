@@ -65,13 +65,13 @@ class VMTasksTestCase(test.TestCase):
             return_value=(1, "\"foo_out\"", "foo_err"))
         self.assertRaises(exceptions.ScriptError,
                           self.scenario.boot_runcommand_delete,
-                          "foo_image", "foo_flavor", "foo_script",
-                          "foo_interpreter", "foo_username")
+                          "foo_image", "foo_flavor", "foo_interpreter",
+                          "foo_script", "foo_username")
 
     @mock.patch("rally.benchmark.scenarios.vm.vmtasks.json")
     def test_boot_runcommand_delete_json_fails(self, mock_json):
         mock_json.loads.side_effect = ValueError()
         self.assertRaises(exceptions.ScriptError,
                           self.scenario.boot_runcommand_delete,
-                          "foo_image", "foo_flavor", "foo_script",
-                          "foo_interpreter", "foo_username")
+                          "foo_image", "foo_flavor", "foo_interpreter",
+                          "foo_script", "foo_username")
