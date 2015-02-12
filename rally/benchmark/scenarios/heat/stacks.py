@@ -106,3 +106,25 @@ class HeatStacks(utils.HeatScenario):
         updated_template = self._get_template_from_file(updated_template_path)
         self._update_stack(stack, updated_template)
         self._delete_stack(stack)
+
+    @validation.required_services(consts.Service.HEAT)
+    @validation.required_openstack(users=True)
+    @base.scenario(context={"cleanup": ["heat"]})
+    def create_suspend_resume_delete_stack(self, template_path=None):
+        """Create, suspend-resume and then delete a stack.
+
+        Measure performance of the following commands:
+        heat stack-create
+        heat action-suspend
+        heat action-resume
+        heat stack-delete
+
+        :param template_path: path to template file. If None or incorrect,
+                              then default empty template will be used.
+        """
+
+        template = self._get_template_from_file(template_path)
+        s = self._create_stack(template)
+        self._suspend_stack(s)
+        self._resume_stack(s)
+        self._delete_stack(s)

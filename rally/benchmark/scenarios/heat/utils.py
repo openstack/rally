@@ -24,33 +24,47 @@ from rally.benchmark import utils as bench_utils
 HEAT_BENCHMARK_OPTS = [
     cfg.FloatOpt("heat_stack_create_prepoll_delay",
                  default=2.0,
-                 help="Time to sleep after creating a resource before "
-                      "polling for it status"),
+                 help="Time(in sec) to sleep after creating a resource before "
+                      "polling for it status."),
     cfg.FloatOpt("heat_stack_create_timeout",
                  default=3600.0,
-                 help="Time to wait for heat stack to be created."),
+                 help="Time(in sec) to wait for heat stack to be created."),
     cfg.FloatOpt("heat_stack_create_poll_interval",
                  default=1.0,
-                 help="Interval between checks when waiting for stack "
-                      "creation."),
+                 help="Time interval(in sec) between checks when waiting for "
+                      "stack creation."),
     cfg.FloatOpt("heat_stack_delete_timeout",
                  default=3600.0,
-                 help="Time to wait for heat stack to be deleted."),
+                 help="Time(in sec) to wait for heat stack to be deleted."),
     cfg.FloatOpt("heat_stack_delete_poll_interval",
                  default=1.0,
-                 help="Interval between checks when waiting for stack "
-                      "deletion."),
+                 help="Time interval(in sec) between checks when waiting for "
+                      "stack deletion."),
     cfg.FloatOpt("heat_stack_update_prepoll_delay",
                  default=2.0,
-                 help="Time to sleep after updating a resource before "
-                      "polling for it status"),
+                 help="Time(in sec) to sleep after updating a resource before "
+                      "polling for it status."),
     cfg.FloatOpt("heat_stack_update_timeout",
                  default=3600.0,
-                 help="Time to wait for stack to be updated"),
+                 help="Time(in sec) to wait for stack to be updated."),
     cfg.FloatOpt("heat_stack_update_poll_interval",
                  default=1.0,
-                 help="Interval between checks when waiting for stack "
-                      "update."),
+                 help="Time interval(in sec) between checks when waiting for "
+                      "stack update."),
+    cfg.FloatOpt("heat_stack_suspend_timeout",
+                 default=3600.0,
+                 help="Time(in sec) to wait for stack to be suspended."),
+    cfg.FloatOpt("heat_stack_suspend_poll_interval",
+                 default=1.0,
+                 help="Time interval(in sec) between checks when waiting for "
+                      "stack suspend."),
+    cfg.FloatOpt("heat_stack_resume_timeout",
+                 default=3600.0,
+                 help="Time(in sec) to wait for stack to be resumed."),
+    cfg.FloatOpt("heat_stack_resume_poll_interval",
+                 default=1.0,
+                 help="Time interval(in sec) between checks when waiting for "
+                      "stack resume."),
 ]
 
 CONF = cfg.CONF
@@ -148,3 +162,35 @@ class HeatScenario(base.Scenario):
             update_resource=bench_utils.get_from_manager(),
             timeout=CONF.benchmark.heat_stack_delete_timeout,
             check_interval=CONF.benchmark.heat_stack_delete_poll_interval)
+
+    @base.atomic_action_timer("heat.suspend_stack")
+    def _suspend_stack(self, stack):
+        """Suspend given stack.
+
+        :param stack: stack that needs to be suspended
+        """
+
+        self.clients("heat").actions.suspend(stack.id)
+        bench_utils.wait_for(
+            stack,
+            is_ready=bench_utils.resource_is("SUSPEND_COMPLETE"),
+            update_resource=bench_utils.get_from_manager(
+                ["SUSPEND_FAILED"]),
+            timeout=CONF.benchmark.heat_stack_suspend_timeout,
+            check_interval=CONF.benchmark.heat_stack_suspend_poll_interval)
+
+    @base.atomic_action_timer("heat.resume_stack")
+    def _resume_stack(self, stack):
+        """Resume given stack.
+
+        :param stack: stack that needs to be resumed
+        """
+
+        self.clients("heat").actions.resume(stack.id)
+        bench_utils.wait_for(
+            stack,
+            is_ready=bench_utils.resource_is("RESUME_COMPLETE"),
+            update_resource=bench_utils.get_from_manager(
+                ["RESUME_FAILED"]),
+            timeout=CONF.benchmark.heat_stack_resume_timeout,
+            check_interval=CONF.benchmark.heat_stack_resume_poll_interval)

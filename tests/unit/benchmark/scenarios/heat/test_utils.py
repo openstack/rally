@@ -100,6 +100,46 @@ class HeatScenarioTestCase(test.TestCase):
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "heat.delete_stack")
 
+    @mock.patch(HEAT_UTILS + ".HeatScenario.clients")
+    @mock.patch(HEAT_UTILS + ".CONF.benchmark")
+    def test_suspend_stack(self, mock_bench, mock_clients):
+        mock_bench.heat_stack_suspend_timeout = 1
+        mock_bench.heat_stack_suspend_poll_interval = 1
+
+        scenario = utils.HeatScenario()
+        scenario._suspend_stack(self.stack)
+        mock_clients("heat").actions.suspend.assert_called_once_with(
+            self.stack.id)
+        self.wait_for.mock.assert_called_once_with(
+            self.stack,
+            update_resource=self.gfm(),
+            is_ready=self.res_is.mock(),
+            check_interval=1,
+            timeout=1)
+        self.res_is.mock.assert_has_calls([mock.call("SUSPEND_COMPLETE")])
+        self._test_atomic_action_timer(scenario.atomic_actions(),
+                                       "heat.suspend_stack")
+
+    @mock.patch(HEAT_UTILS + ".HeatScenario.clients")
+    @mock.patch(HEAT_UTILS + ".CONF.benchmark")
+    def test_resume_stack(self, mock_bench, mock_clients):
+        mock_bench.heat_stack_resume_timeout = 1
+        mock_bench.heat_stack_resume_poll_interval = 1
+
+        scenario = utils.HeatScenario()
+        scenario._resume_stack(self.stack)
+        mock_clients("heat").actions.resume.assert_called_once_with(
+            self.stack.id)
+        self.wait_for.mock.assert_called_once_with(
+            self.stack,
+            update_resource=self.gfm(),
+            is_ready=self.res_is.mock(),
+            check_interval=1,
+            timeout=1)
+        self.res_is.mock.assert_has_calls([mock.call("RESUME_COMPLETE")])
+        self._test_atomic_action_timer(scenario.atomic_actions(),
+                                       "heat.resume_stack")
+
 
 class HeatScenarioNegativeTestCase(test.TestCase):
     @mock.patch(HEAT_UTILS + ".HeatScenario.clients")
