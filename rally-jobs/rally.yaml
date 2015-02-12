@@ -542,6 +542,38 @@
         failure_rate:
           max: 0
 
+    -
+      args:
+        template_path: "/home/jenkins/.rally/extra/autoscaling_policy.yaml.template"
+        updated_template_path: "/home/jenkins/.rally/extra/updated_autoscaling_policy_inplace.yaml.template"
+      runner:
+        type: "constant"
+        times: 6
+        concurrency: 3
+      context:
+        users:
+          tenants: 2
+          users_per_tenant: 3
+      sla:
+        failure_rate:
+          max: 0
+
+    -
+      args:
+        template_path: "/home/jenkins/.rally/extra/random_strings.yaml.template"
+        updated_template_path: "/home/jenkins/.rally/extra/updated_random_strings_replace.yaml.template"
+      runner:
+        type: "constant"
+        times: 6
+        concurrency: 3
+      context:
+        users:
+          tenants: 2
+          users_per_tenant: 3
+      sla:
+        failure_rate:
+          max: 0
+
   Authenticate.keystone:
     -
       runner:
