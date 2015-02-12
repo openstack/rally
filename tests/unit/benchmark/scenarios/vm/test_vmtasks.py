@@ -15,7 +15,6 @@
 
 import mock
 
-from rally.benchmark.context import keypair
 from rally.benchmark.scenarios.vm import vmtasks
 from rally import exceptions
 from tests.unit import test
@@ -28,7 +27,10 @@ class VMTasksTestCase(test.TestCase):
 
     def setUp(self):
         super(VMTasksTestCase, self).setUp()
-        self.scenario = vmtasks.VMTasks()
+        self.context = {
+            "user": {"keypair": {"name": "keypair_name"}}
+        }
+        self.scenario = vmtasks.VMTasks(self.context)
         self.clients = mock.Mock()
         self.server = mock.Mock(networks={"foo_net": "foo_net_data"},
                                 addresses={"foo_net": [{"addr": "foo_addr"}]},
@@ -78,7 +80,7 @@ class VMTasksTestCase(test.TestCase):
             "foo_image", "foo_flavor",
             block_device_mapping={"vdrally": "foo_volume:::1"},
             nics=[{"net-id": "foo_network"}], auto_assign_nic=True,
-            key_name=keypair.Keypair.KEYPAIR_NAME)
+            key_name="keypair_name")
 
         self.scenario._associate_floating_ip.assert_called_once_with(
             self.server, "foo_fip", fixed_address="foo_addr")
@@ -102,7 +104,7 @@ class VMTasksTestCase(test.TestCase):
 
         self.scenario._boot_server.assert_called_once_with(
             "foo_image", "foo_flavor", auto_assign_nic=True,
-            key_name=keypair.Keypair.KEYPAIR_NAME)
+            key_name="keypair_name")
         self.scenario._associate_floating_ip.assert_called_once_with(
             self.server, "foo_fip", fixed_address="foo_addr")
 
@@ -118,7 +120,7 @@ class VMTasksTestCase(test.TestCase):
 
         self.scenario._boot_server.assert_called_once_with(
             "foo_image", "foo_flavor", auto_assign_nic=True,
-            key_name=keypair.Keypair.KEYPAIR_NAME)
+            key_name="keypair_name")
 
         net_wrap.create_floating_ip.assert_called_once_with(
             tenant_id="foo_tenant", fixed_ip="foo_addr",

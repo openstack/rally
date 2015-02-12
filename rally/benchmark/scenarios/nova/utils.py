@@ -96,12 +96,12 @@ class NovaScenario(base.Scenario):
         :returns: nova Server instance
         """
         server_name = name or self._generate_random_name()
-        allow_ssh_secgroup = self.context.get("allow_ssh")
-        if allow_ssh_secgroup:
+        secgroup = self.context.get("user", {}).get("secgroup")
+        if secgroup:
             if "security_groups" not in kwargs:
-                kwargs["security_groups"] = [allow_ssh_secgroup]
-            elif allow_ssh_secgroup not in kwargs["security_groups"]:
-                kwargs["security_groups"].append(allow_ssh_secgroup)
+                kwargs["security_groups"] = [secgroup["name"]]
+            elif secgroup["name"] not in kwargs["security_groups"]:
+                kwargs["security_groups"].append(secgroup["name"])
 
         if auto_assign_nic and not kwargs.get("nics", False):
             nets = [net["id"]

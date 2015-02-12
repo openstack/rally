@@ -31,24 +31,28 @@ class Keypair(base.Context):
     KEYPAIR_NAME = "rally_ssh_key"
 
     def _generate_keypair(self, endpoint):
+        keypair_name = "%s_%s" % (
+            self.KEYPAIR_NAME, self.context["task"]["uuid"])
+
         nova_client = osclients.Clients(endpoint).nova()
 
         # NOTE(hughsaunders): If keypair exists, it must be deleted as we can't
         # retrieve the private key
         try:
-            nova_client.keypairs.delete(self.KEYPAIR_NAME)
+            nova_client.keypairs.delete(keypair_name)
         except novaclient.exceptions.NotFound:
             pass
 
-        keypair = nova_client.keypairs.create(self.KEYPAIR_NAME)
+        keypair = nova_client.keypairs.create(keypair_name)
         return {"private": keypair.private_key,
-                "public": keypair.public_key}
+                "public": keypair.public_key,
+                "name": keypair_name,
+                "id": keypair.id}
 
     @utils.log_task_wrapper(LOG.info, _("Enter context: `keypair`"))
     def setup(self):
         for user in self.context["users"]:
-            keypair = self._generate_keypair(user["endpoint"])
-            user["keypair"] = keypair
+            user["keypair"] = self._generate_keypair(user["endpoint"])
 
     @utils.log_task_wrapper(LOG.info, _("Exit context: `keypair`"))
     def cleanup(self):

@@ -26,6 +26,7 @@ from tests.unit import test
 
 BM_UTILS = "rally.benchmark.utils"
 NOVA_UTILS = "rally.benchmark.scenarios.nova.utils"
+SCN = "rally.benchmark.scenarios.base"
 CONF = cfg.CONF
 
 
@@ -95,8 +96,10 @@ class NovaScenarioTestCase(test.TestCase):
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.list_servers")
 
+    @mock.patch(SCN + ".Scenario._generate_random_name",
+                return_value="foo_server_name")
     @mock.patch(NOVA_UTILS + ".NovaScenario.clients")
-    def test__boot_server(self, mock_clients):
+    def test__boot_server(self, mock_clients, mock_generate_random_name):
         mock_clients("nova").servers.create.return_value = self.server
         nova_scenario = utils.NovaScenario(context={})
         return_server = nova_scenario._boot_server("image_id",
@@ -107,11 +110,16 @@ class NovaScenarioTestCase(test.TestCase):
             CONF.benchmark.nova_server_boot_timeout)
         self.res_is.mock.assert_has_calls([mock.call("ACTIVE")])
         self.assertEqual(self.wait_for.mock(), return_server)
+        mock_clients("nova").servers.create.assert_called_once_with(
+            "foo_server_name", "image_id", "flavor_id")
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.boot_server")
 
+    @mock.patch(SCN + ".Scenario._generate_random_name",
+                return_value="foo_server_name")
     @mock.patch(NOVA_UTILS + ".NovaScenario.clients")
-    def test__boot_server_with_network(self, mock_clients):
+    def test__boot_server_with_network(self, mock_clients,
+                                       mock_generate_random_name):
         mock_clients("nova").servers.create.return_value = self.server
         networks = [{"id": "foo_id", "external": False},
                     {"id": "bar_id", "external": False}]
@@ -128,6 +136,9 @@ class NovaScenarioTestCase(test.TestCase):
             CONF.benchmark.nova_server_boot_poll_interval,
             CONF.benchmark.nova_server_boot_timeout)
         self.res_is.mock.assert_has_calls([mock.call("ACTIVE")])
+        mock_clients("nova").servers.create.assert_called_once_with(
+            "foo_server_name", "image_id", "flavor_id",
+            nics=[{"net-id": "bar_id"}])
         self.assertEqual(self.wait_for.mock(), return_server)
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.boot_server")
@@ -141,10 +152,15 @@ class NovaScenarioTestCase(test.TestCase):
                           "image_id", "flavor_id",
                           auto_assign_nic=True)
 
+    @mock.patch(SCN + ".Scenario._generate_random_name",
+                return_value="foo_server_name")
     @mock.patch(NOVA_UTILS + ".NovaScenario.clients")
-    def test__boot_server_with_ssh(self, mock_clients):
+    def test__boot_server_with_ssh(self, mock_clients,
+                                   mock_generate_random_name):
         mock_clients("nova").servers.create.return_value = self.server
-        nova_scenario = utils.NovaScenario(context={"allow_ssh": "test"})
+        nova_scenario = utils.NovaScenario(context={
+            "user": {"secgroup": {"name": "test"}}}
+        )
         return_server = nova_scenario._boot_server("image_id", "flavor_id")
         self._test_assert_called_once_with(
             self.wait_for.mock, self.server,
@@ -152,13 +168,45 @@ class NovaScenarioTestCase(test.TestCase):
             CONF.benchmark.nova_server_boot_timeout)
         self.res_is.mock.assert_has_calls([mock.call("ACTIVE")])
         self.assertEqual(self.wait_for.mock(), return_server)
+        mock_clients("nova").servers.create.assert_called_once_with(
+            "foo_server_name", "image_id", "flavor_id",
+            security_groups=["test"])
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.boot_server")
 
+    @mock.patch(SCN + ".Scenario._generate_random_name",
+                return_value="foo_server_name")
     @mock.patch(NOVA_UTILS + ".NovaScenario.clients")
-    def test__boot_server_with_sec_group(self, mock_clients):
+    def test__boot_server_with_sec_group(self, mock_clients,
+                                         mock_generate_random_name):
         mock_clients("nova").servers.create.return_value = self.server
-        nova_scenario = utils.NovaScenario(context={"allow_ssh": "new"})
+        nova_scenario = utils.NovaScenario(context={
+            "user": {"secgroup": {"name": "new"}}}
+        )
+        return_server = nova_scenario._boot_server(
+            "image_id", "flavor_id",
+            security_groups=["test"])
+        self._test_assert_called_once_with(
+            self.wait_for.mock, self.server,
+            CONF.benchmark.nova_server_boot_poll_interval,
+            CONF.benchmark.nova_server_boot_timeout)
+        self.res_is.mock.assert_has_calls([mock.call("ACTIVE")])
+        self.assertEqual(self.wait_for.mock(), return_server)
+        mock_clients("nova").servers.create.assert_called_once_with(
+            "foo_server_name", "image_id", "flavor_id",
+            security_groups=["test", "new"])
+        self._test_atomic_action_timer(nova_scenario.atomic_actions(),
+                                       "nova.boot_server")
+
+    @mock.patch(SCN + ".Scenario._generate_random_name",
+                return_value="foo_server_name")
+    @mock.patch(NOVA_UTILS + ".NovaScenario.clients")
+    def test__boot_server_with_similar_sec_group(self, mock_clients,
+                                                 mock_generate_random_name):
+        mock_clients("nova").servers.create.return_value = self.server
+        nova_scenario = utils.NovaScenario(context={
+            "user": {"secgroup": {"name": "test1"}}}
+        )
         return_server = nova_scenario._boot_server(
             "image_id", "flavor_id",
             security_groups=["test1"])
@@ -168,22 +216,9 @@ class NovaScenarioTestCase(test.TestCase):
             CONF.benchmark.nova_server_boot_timeout)
         self.res_is.mock.assert_has_calls([mock.call("ACTIVE")])
         self.assertEqual(self.wait_for.mock(), return_server)
-        self._test_atomic_action_timer(nova_scenario.atomic_actions(),
-                                       "nova.boot_server")
-
-    @mock.patch(NOVA_UTILS + ".NovaScenario.clients")
-    def test__boot_server_with_similar_sec_group(self, mock_clients):
-        mock_clients("nova").servers.create.return_value = self.server
-        nova_scenario = utils.NovaScenario(context={"allow_ssh": "test1"})
-        return_server = nova_scenario._boot_server(
-            "image_id", "flavor_id",
+        mock_clients("nova").servers.create.assert_called_once_with(
+            "foo_server_name", "image_id", "flavor_id",
             security_groups=["test1"])
-        self._test_assert_called_once_with(
-            self.wait_for.mock, self.server,
-            CONF.benchmark.nova_server_boot_poll_interval,
-            CONF.benchmark.nova_server_boot_timeout)
-        self.res_is.mock.assert_has_calls([mock.call("ACTIVE")])
-        self.assertEqual(self.wait_for.mock(), return_server)
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.boot_server")
 

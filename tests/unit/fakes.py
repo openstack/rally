@@ -96,7 +96,7 @@ class FakeResource(object):
     def __getattr__(self, name):
         # NOTE(msdubov): e.g. server.delete() -> manager.delete(server)
         def manager_func(*args, **kwargs):
-            getattr(self.manager, name)(self, *args, **kwargs)
+            return getattr(self.manager, name)(self, *args, **kwargs)
         return manager_func
 
     def __getitem__(self, key):
@@ -528,6 +528,9 @@ class FakeSecurityGroupManager(FakeManager):
         sg.name = name or sg.name
         sg.description = description
         return self._cache(sg)
+
+    def to_dict(self, obj):
+        return {"id": obj.id, "name": obj.name}
 
     def find(self, name, **kwargs):
         kwargs["name"] = name
