@@ -88,6 +88,22 @@ class HeatScenarioTestCase(test.TestCase):
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "heat.update_stack")
 
+    @mock.patch(HEAT_UTILS + ".HeatScenario.clients")
+    def test_check_stack(self, mock_clients):
+        scenario = utils.HeatScenario()
+        scenario._check_stack(self.stack)
+        mock_clients("heat").actions.check.assert_called_once_with(
+            self.stack.id)
+        self.wait_for.mock.assert_called_once_with(
+            self.stack,
+            update_resource=self.gfm(),
+            is_ready=self.res_is.mock(),
+            check_interval=utils.CONF.benchmark.heat_stack_check_poll_interval,
+            timeout=utils.CONF.benchmark.heat_stack_check_timeout)
+        self.res_is.mock.assert_has_calls([mock.call("CHECK_COMPLETE")])
+        self._test_atomic_action_timer(scenario.atomic_actions(),
+                                       "heat.check_stack")
+
     def test_delete_stack(self):
         scenario = utils.HeatScenario()
         scenario._delete_stack(self.stack)

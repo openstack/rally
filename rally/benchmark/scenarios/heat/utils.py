@@ -1,7 +1,7 @@
 # Copyright 2014: Mirantis Inc.
 # All Rights Reserved.
 #
-# Licensed under the Apache License, Version 2.0 (the "License"); you may
+#    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
 #    a copy of the License at
 #
@@ -40,6 +40,13 @@ HEAT_BENCHMARK_OPTS = [
                  default=1.0,
                  help="Time interval(in sec) between checks when waiting for "
                       "stack deletion."),
+    cfg.FloatOpt("heat_stack_check_timeout",
+                 default=3600.0,
+                 help="Time(in sec) to wait for stack to be checked."),
+    cfg.FloatOpt("heat_stack_check_poll_interval",
+                 default=1.0,
+                 help="Time interval(in sec) between checks when waiting for "
+                      "stack checking."),
     cfg.FloatOpt("heat_stack_update_prepoll_delay",
                  default=2.0,
                  help="Time(in sec) to sleep after updating a resource before "
@@ -147,6 +154,22 @@ class HeatScenario(base.Scenario):
             timeout=CONF.benchmark.heat_stack_update_timeout,
             check_interval=CONF.benchmark.heat_stack_update_poll_interval)
         return stack
+
+    @base.atomic_action_timer("heat.check_stack")
+    def _check_stack(self, stack):
+        """Check given stack.
+
+        Check the stack and stack resources.
+
+        :param stack: stack that needs to be checked
+        """
+        self.clients("heat").actions.check(stack.id)
+        bench_utils.wait_for(
+            stack,
+            is_ready=bench_utils.resource_is("CHECK_COMPLETE"),
+            update_resource=bench_utils.get_from_manager(["CHECK_FAILED"]),
+            timeout=CONF.benchmark.heat_stack_check_timeout,
+            check_interval=CONF.benchmark.heat_stack_check_poll_interval)
 
     @base.atomic_action_timer("heat.delete_stack")
     def _delete_stack(self, stack):
