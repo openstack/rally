@@ -162,7 +162,7 @@ class Task(object):
         :param config: a dict with a task configuration
         """
         deployment = objects.Deployment.get(deployment)
-        task = objects.Task(deployment_uuid=deployment["uuid"])
+        task = objects.Task(deployment_uuid=deployment["uuid"], fake=True)
         benchmark_engine = engine.BenchmarkEngine(
             config, task, admin=deployment["admin"], users=deployment["users"])
         benchmark_engine.validate()

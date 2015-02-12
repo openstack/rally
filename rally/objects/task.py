@@ -14,6 +14,7 @@
 #    under the License.
 
 import json
+import uuid
 
 from rally import consts
 from rally import db
@@ -106,11 +107,21 @@ TASK_RESULT_SCHEMA = {
 class Task(object):
     """Represents a task object."""
 
-    def __init__(self, task=None, **attributes):
-        if task:
-            self.task = task
+    def __init__(self, task=None, fake=False, **attributes):
+        """Task object init
+
+        :param task: dictionary like object, that represents a task
+        :param fake: if True, will be created task object with random UUID and
+            parameters, passed in 'attributes'. Does not create database
+            record. Used for special purposes, like task config validation.
+        """
+
+        self.fake = fake
+        if fake:
+            self.task = task or {"uuid": str(uuid.uuid4())}
+            self.task.update(attributes)
         else:
-            self.task = db.task_create(attributes)
+            self.task = task or db.task_create(attributes)
 
     def __getitem__(self, key):
         return self.task[key]
@@ -134,7 +145,8 @@ class Task(object):
         db.task_delete(uuid, status=status)
 
     def _update(self, values):
-        self.task = db.task_update(self.task["uuid"], values)
+        if not self.fake:
+            self.task = db.task_update(self.task["uuid"], values)
 
     def update_status(self, status):
         self._update({"status": status})
