@@ -131,8 +131,9 @@ class NovaSecGroup(utils.NovaScenario):
         if sorted([sg.id for sg in security_groups]) != sorted(
                 [sg.id for sg in attached_security_groups]):
             raise NovaSecurityGroupException(
-                "%(attached)s from %(all)s security groups were attached "
-                "to server %(server)s." % {
+                "Expected number of attached security groups to server "
+                "%(server)s is '%(all)s', but actual number is '%(attached)s'."
+                % {
                     "attached": len(attached_security_groups),
                     "all": len(security_groups),
                     "server": server})
