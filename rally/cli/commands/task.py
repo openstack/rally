@@ -117,12 +117,27 @@ class TaskCommands(object):
 
             print(_("Input task is:\n%s\n") % rendered_task)
             try:
-                return yaml.safe_load(rendered_task)
+                parsed_task = yaml.safe_load(rendered_task)
+
             except Exception as e:
                 print(_("Wrong format of rendered input task. It should be "
                         "YAML or JSON.\n%s") % e,
                       file=sys.stderr)
                 raise FailedToLoadTask()
+
+            print(_("Task syntax is correct :)"))
+            return parsed_task
+
+    def _load_and_validate_task(self, task, task_args, task_args_file,
+                                deployment, task_instance=None):
+        if not os.path.isfile(task):
+            if task_instance:
+                task_instance.set_failed(log="No such file '%s'" % task)
+            raise IOError("File '%s' is not found." % task)
+        input_task = self._load_task(task, task_args, task_args_file)
+        api.Task.validate(deployment, input_task, task_instance)
+        print(_("Task config is valid :)"))
+        return input_task
 
     @cliutils.args("--deployment", type=str, dest="deployment",
                    required=False, help="UUID or name of the deployment")
@@ -153,16 +168,11 @@ class TaskCommands(object):
         :param deployment: UUID or name of a deployment
         """
         try:
-            input_task = self._load_task(task, task_args, task_args_file)
-        except FailedToLoadTask:
-            return(1)
+            self._load_and_validate_task(task, task_args, task_args_file,
+                                         deployment)
 
-        try:
-            api.Task.validate(deployment, input_task)
-            print("Task config is valid :)")
-        except exceptions.InvalidTaskException as e:
-            print("Task config is invalid: \n")
-            print(e)
+        except (exceptions.InvalidTaskException, FailedToLoadTask) as e:
+            print(e, file=sys.stderr)
             return(1)
 
     @cliutils.args("--deployment", type=str, dest="deployment",
@@ -202,25 +212,32 @@ class TaskCommands(object):
                                      scenario will stop when any SLA check
                                      for it fails
         """
-        try:
-            input_task = self._load_task(task, task_args, task_args_file)
-        except FailedToLoadTask:
-            return(1)
+
+        task_instance = api.Task.create(deployment, tag)
 
         try:
-            task = api.Task.create(deployment, tag)
+            input_task = self._load_and_validate_task(
+                task, task_args, task_args_file, deployment,
+                task_instance=task_instance)
+
             print(cliutils.make_header(
                   _("Task %(tag)s %(uuid)s: started")
-                  % {"uuid": task["uuid"], "tag": task["tag"]}))
+                  % {"uuid": task_instance["uuid"],
+                     "tag": task_instance["tag"]}))
             print("Benchmarking... This can take a while...\n")
             print("To track task status use:\n")
             print("\trally task status\n\tor\n\trally task detailed\n")
+
             if do_use:
-                self.use(task["uuid"])
-            api.Task.start(deployment, input_task, task=task,
+                self.use(task_instance["uuid"])
+
+            api.Task.start(deployment, input_task, task=task_instance,
                            abort_on_sla_failure=abort_on_sla_failure)
-            self.detailed(task_id=task["uuid"])
-        except exceptions.InvalidConfigException:
+            self.detailed(task_id=task_instance["uuid"])
+
+        except (exceptions.InvalidTaskException, FailedToLoadTask) as e:
+            task_instance.set_failed(log=e.format_message())
+            print(e, file=sys.stderr)
             return(1)
 
     @cliutils.args("--uuid", type=str, dest="task_id", help="UUID of task")
@@ -453,8 +470,9 @@ class TaskCommands(object):
         if results:
             print(json.dumps(results, sort_keys=True, indent=4))
         else:
-            print(_("The task %s is still running, results will become "
-                    "available when it is finished.") % task_id)
+            print(_("The task %s marked as '%s'. Results "
+                    "available when it is '%s' .") % (
+                task_id, consts.TaskStatus.FAILED, consts.TaskStatus.FINISHED))
             return(1)
 
     @cliutils.args("--deployment", type=str, dest="deployment",

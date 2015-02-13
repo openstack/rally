@@ -73,10 +73,24 @@ class TaskAPITestCase(test.TestCase):
         ])
 
         mock_task.assert_called_once_with(
-            fake=True,
+            temporary=True,
             deployment_uuid=mock_deployment_get.return_value["uuid"])
         mock_deployment_get.assert_called_once_with(
             mock_deployment_get.return_value["uuid"])
+
+    @mock.patch("rally.api.objects.Task")
+    @mock.patch("rally.api.objects.Deployment",
+                return_value=fakes.FakeDeployment(uuid="deployment_uuid",
+                                                  admin=mock.MagicMock(),
+                                                  users=[]))
+    @mock.patch("rally.api.engine.BenchmarkEngine")
+    def test_validate_engine_exception(self, mock_benchmark_engine,
+                                       mock_deployment, mock_task):
+
+        excpt = exceptions.InvalidTaskException()
+        mock_benchmark_engine.return_value.validate.side_effect = excpt
+        self.assertRaises(exceptions.InvalidTaskException, api.Task.validate,
+                          mock_deployment.return_value["uuid"], "config")
 
     def test_render_template(self):
         self.assertEqual(
@@ -127,7 +141,8 @@ class TaskAPITestCase(test.TestCase):
         mock_task.assert_called_once_with(
             deployment_uuid=mock_deployment_get.return_value["uuid"], tag=tag)
 
-    @mock.patch("rally.api.objects.Task")
+    @mock.patch("rally.api.objects.Task",
+                return_value=fakes.FakeTask(uuid="some_uuid"))
     @mock.patch("rally.api.objects.Deployment.get",
                 return_value=fakes.FakeDeployment(uuid="deployment_uuid",
                                                   admin=mock.MagicMock(),
@@ -141,32 +156,35 @@ class TaskAPITestCase(test.TestCase):
             mock.call("config", mock_task.return_value,
                       admin=mock_deployment_get.return_value["admin"],
                       users=[], abort_on_sla_failure=False),
-            mock.call().validate(),
-            mock.call().run()
+            mock.call().run(),
         ])
 
         mock_task.assert_called_once_with(
             deployment_uuid=mock_deployment_get.return_value["uuid"])
+
         mock_deployment_get.assert_called_once_with(
             mock_deployment_get.return_value["uuid"])
 
-    @mock.patch("rally.api.objects.Task")
-    @mock.patch("rally.api.objects.Deployment.get")
-    @mock.patch("rally.api.engine.BenchmarkEngine")
-    def test_start_invalid_task_ignored(self, mock_benchmark_engine,
-                                        mock_deployment_get, mock_task):
-        mock_benchmark_engine().run.side_effect = (
-            exceptions.InvalidTaskException())
+    @mock.patch("rally.api.objects.Task",
+                return_value=fakes.FakeTask(uuid="some_uuid", task={},
+                                            temporary=True))
+    @mock.patch("rally.api.objects.Deployment.get",
+                return_value=fakes.FakeDeployment(uuid="deployment_uuid",
+                                                  admin=mock.MagicMock(),
+                                                  users=[]))
+    def test_start_temporary_task(self, mock_deployment_get,
+                                  mock_task):
 
-        # check that it doesn't raise anything
-        api.Task.start("deployment_uuid", "config")
+        self.assertRaises(ValueError, api.Task.start,
+                          mock_deployment_get.return_value["uuid"], "config")
 
     @mock.patch("rally.api.objects.Task")
     @mock.patch("rally.api.objects.Deployment.get")
     @mock.patch("rally.api.engine.BenchmarkEngine")
     def test_start_exception(self, mock_benchmark_engine, mock_deployment_get,
                              mock_task):
-        mock_benchmark_engine().run.side_effect = TypeError
+        mock_task.return_value.is_temporary = False
+        mock_benchmark_engine.return_value.run.side_effect = TypeError
         self.assertRaises(TypeError, api.Task.start, "deployment_uuid",
                           "config")
         mock_deployment_get().update_status.assert_called_once_with(
