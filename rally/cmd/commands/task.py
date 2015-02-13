@@ -180,9 +180,13 @@ class TaskCommands(object):
     @cliutils.args("--tag", help="Tag for this task")
     @cliutils.args("--no-use", action="store_false", dest="do_use",
                    help="Don't set new task as default for future operations")
+    @cliutils.args("--abort-on-sla-failure", action="store_true",
+                   dest="abort_on_sla_failure",
+                   help="Abort the execution of a benchmark scenario when"
+                        "any SLA check for it fails")
     @envutils.with_default_deployment(cli_arg_name="deployment")
     def start(self, task, deployment=None, task_args=None, task_args_file=None,
-              tag=None, do_use=False):
+              tag=None, do_use=False, abort_on_sla_failure=False):
         """Start benchmark task.
 
         :param task: a file with yaml/json task
@@ -193,6 +197,11 @@ class TaskCommands(object):
                                is jinja2 template.
         :param deployment: UUID or name of a deployment
         :param tag: optional tag for this task
+        :param do_use: if True, the new task will be stored as the default one
+                       for future operations
+        :param abort_on_sla_failure: if True, the execution of a benchmark
+                                     scenario will stop when any SLA check
+                                     for it fails
         """
         try:
             input_task = self._load_task(task, task_args, task_args_file)
@@ -207,7 +216,8 @@ class TaskCommands(object):
             print("Benchmarking... This can take a while...\n")
             print("To track task status use:\n")
             print("\trally task status\n\tor\n\trally task detailed\n")
-            api.Task.start(deployment, input_task, task=task)
+            api.Task.start(deployment, input_task, task=task,
+                           abort_on_sla_failure=abort_on_sla_failure)
             self.detailed(task_id=task["uuid"])
             if do_use:
                 use.UseCommands().task(task["uuid"])

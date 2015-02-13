@@ -112,7 +112,8 @@ class TaskCommandsTestCase(test.TestCase):
         task_path = "path_to_config.json"
         self.task.start(task_path, deployment_id)
         mock_api.assert_called_once_with(deployment_id, {"some": "json"},
-                                         task=mock_create_task.return_value)
+                                         task=mock_create_task.return_value,
+                                         abort_on_sla_failure=False)
         mock_load.assert_called_once_with(task_path, None, None)
 
     @mock.patch("rally.cmd.commands.task.TaskCommands._load_task",
@@ -142,7 +143,7 @@ class TaskCommandsTestCase(test.TestCase):
         mock_api.Task.create.assert_called_once_with("deployment", "tag")
         mock_api.Task.start.assert_called_once_with(
             "deployment", mock_load.return_value,
-            task=mock_api.Task.create.return_value)
+            task=mock_api.Task.create.return_value, abort_on_sla_failure=False)
 
     @mock.patch("rally.cmd.commands.task.api")
     def test_abort(self, mock_api):

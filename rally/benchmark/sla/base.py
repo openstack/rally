@@ -24,23 +24,42 @@ import abc
 import jsonschema
 import six
 
-from rally.benchmark.processing import utils as putils
 from rally.common.i18n import _
 from rally.common import utils
 from rally import consts
 from rally import exceptions
 
 
-class SLAResult(object):
+class SLAChecker(object):
+    """Base SLA checker class."""
 
-    def __init__(self, success=True, msg=None):
-        self.success = success
-        self.msg = msg
+    def __init__(self, config):
+        self.config = config
+        self.sla_criteria = [SLA.get_by_name(name)(criterion_value)
+                             for name, criterion_value
+                             in config.get("sla", {}).items()]
+
+    def add_iteration(self, iteration):
+        """Process the result of a single iteration.
+
+        The call to add_iteration() will return True if all the SLA checks
+        passed, and False otherwise.
+
+        :param iteration: iteration result object
+        """
+        return all([sla.add_iteration(iteration) for sla in self.sla_criteria])
+
+    def results(self):
+        return [sla.result() for sla in self.sla_criteria]
 
 
 @six.add_metaclass(abc.ABCMeta)
 class SLA(object):
     """Factory for criteria classes."""
+
+    def __init__(self, criterion_value):
+        self.criterion_value = criterion_value
+        self.success = True
 
     @staticmethod
     def validate(config):
@@ -54,36 +73,6 @@ class SLA(object):
         jsonschema.validate(config, schema)
 
     @staticmethod
-    @abc.abstractmethod
-    def check(criterion_value, result):
-        """Check if task succeeded according to criterion.
-
-        :param criterion_value: Criterion value specified in configuration
-        :param result: result object
-        :returns: True if success
-        """
-
-    @staticmethod
-    def check_all(config, result):
-        """Check all SLA criteria.
-
-        :param config: sla related config for a task
-        :param result: Result of a task
-        :returns: A list of sla results
-        """
-
-        results = []
-        opt_name_map = dict([(c.OPTION_NAME, c)
-                             for c in utils.itersubclasses(SLA)])
-
-        for name, criterion in six.iteritems(config.get("sla", {})):
-            check_result = opt_name_map[name].check(criterion, result)
-            results.append({"criterion": name,
-                            "success": check_result.success,
-                            "detail": check_result.msg})
-        return results
-
-    @staticmethod
     def get_by_name(name):
         """Returns SLA by name or config option name."""
         for sla in utils.itersubclasses(SLA):
@@ -91,23 +80,56 @@ class SLA(object):
                 return sla
         raise exceptions.NoSuchSLA(name=name)
 
+    @abc.abstractmethod
+    def add_iteration(self, iteration):
+        """Process the result of a single iteration and perform a SLA check.
+
+        The call to add_iteration() will return True if the SLA check passed,
+        and False otherwise.
+
+        :param iteration: iteration result object
+        :returns: True if the SLA check passed, False otherwise
+        """
+
+    def result(self):
+        """Returns the SLA result dict corresponding to the current state."""
+        return {
+            "criterion": self.OPTION_NAME,
+            "success": self.success,
+            "detail": self.details()
+        }
+
+    @abc.abstractmethod
+    def details(self):
+        """Returns the string describing the current results of the SLA."""
+
+    def status(self):
+        """Return "Passed" or "Failed" depending on the current SLA status."""
+        return "Passed" if self.success else "Failed"
+
 
 class FailureRateDeprecated(SLA):
     """[Deprecated] Failure rate in percents."""
     OPTION_NAME = "max_failure_percent"
     CONFIG_SCHEMA = {"type": "number", "minimum": 0.0, "maximum": 100.0}
 
-    @staticmethod
-    def check(criterion_value, result):
-        errors = len([x for x in result if x["error"]])
-        error_rate = errors * 100.0 / len(result) if len(result) > 0 else 100.0
-        if criterion_value < error_rate:
-            success = False
-        else:
-            success = True
-        msg = (_("Maximum failure percent %s%% failures, actually %s%%") %
-                (criterion_value * 100.0, error_rate))
-        return SLAResult(success, msg)
+    def __init__(self, criterion_value):
+        super(FailureRateDeprecated, self).__init__(criterion_value)
+        self.errors = 0
+        self.total = 0
+        self.error_rate = 0.0
+
+    def add_iteration(self, iteration):
+        self.total += 1
+        if iteration["error"]:
+            self.errors += 1
+        self.error_rate = self.errors * 100.0 / self.total
+        self.success = self.error_rate <= self.criterion_value
+        return self.success
+
+    def details(self):
+        return (_("Maximum failure rate %s%% <= %s%% - %s") %
+                (self.criterion_value, self.error_rate, self.status()))
 
 
 class FailureRate(SLA):
@@ -122,20 +144,26 @@ class FailureRate(SLA):
         }
     }
 
-    @staticmethod
-    def check(criterion_value, result):
-        min_percent = criterion_value.get("min", 0)
-        max_percent = criterion_value.get("max", 100)
-        errors = len([x for x in result if x["error"]])
-        error_rate = errors * 100.0 / len(result) if len(result) > 0 else 100.0
+    def __init__(self, criterion_value):
+        super(FailureRate, self).__init__(criterion_value)
+        self.min_percent = self.criterion_value.get("min", 0)
+        self.max_percent = self.criterion_value.get("max", 100)
+        self.errors = 0
+        self.total = 0
+        self.error_rate = 0.0
 
-        success = min_percent <= error_rate <= max_percent
+    def add_iteration(self, iteration):
+        self.total += 1
+        if iteration["error"]:
+            self.errors += 1
+        self.error_rate = self.errors * 100.0 / self.total
+        self.success = self.min_percent <= self.error_rate <= self.max_percent
+        return self.success
 
-        msg = (_("Maximum failure rate percent %s%% failures, minimum failure "
-               "rate percent %s%% failures, actually %s%%") %
-               (max_percent, min_percent, error_rate))
-
-        return SLAResult(success, msg)
+    def details(self):
+        return (_("Failure rate criteria %.2f%% <= %.2f%% <= %.2f%% - %s") %
+                (self.min_percent, self.error_rate, self.max_percent,
+                 self.status()))
 
 
 class IterationTime(SLA):
@@ -144,31 +172,41 @@ class IterationTime(SLA):
     CONFIG_SCHEMA = {"type": "number", "minimum": 0.0,
                      "exclusiveMinimum": True}
 
-    @staticmethod
-    def check(criterion_value, result):
-        duration = 0
-        success = True
-        for i in result:
-            if i["duration"] >= duration:
-                duration = i["duration"]
-            if i["duration"] > criterion_value:
-                success = False
-        msg = (_("Maximum seconds per iteration %ss, found with %ss") %
-                (criterion_value, duration))
-        return SLAResult(success, msg)
+    def __init__(self, criterion_value):
+        super(IterationTime, self).__init__(criterion_value)
+        self.max_iteration_time = 0.0
+
+    def add_iteration(self, iteration):
+        if iteration["duration"] > self.max_iteration_time:
+            self.max_iteration_time = iteration["duration"]
+        self.success = self.max_iteration_time <= self.criterion_value
+        return self.success
+
+    def details(self):
+        return (_("Maximum seconds per iteration %.2fs<= %.2fs - %s") %
+                (self.max_iteration_time, self.criterion_value, self.status()))
 
 
 class MaxAverageDuration(SLA):
-    """Maximum average duration for one iteration in seconds."""
+    """Maximum average duration of one iteration in seconds."""
     OPTION_NAME = "max_avg_duration"
     CONFIG_SCHEMA = {"type": "number", "minimum": 0.0,
                      "exclusiveMinimum": True}
 
-    @staticmethod
-    def check(criterion_value, result):
-        durations = [r["duration"] for r in result if not r.get("error")]
-        avg = putils.mean(durations)
-        success = avg < criterion_value
-        msg = (_("Maximum average duration per iteration %ss, found with %ss")
-               % (criterion_value, avg))
-        return SLAResult(success, msg)
+    def __init__(self, criterion_value):
+        super(MaxAverageDuration, self).__init__(criterion_value)
+        self.total_duration = 0.0
+        self.iterations = 0
+        self.avg = 0.0
+
+    def add_iteration(self, iteration):
+        if not iteration.get("error"):
+            self.total_duration += iteration["duration"]
+            self.iterations += 1
+        self.avg = self.total_duration / self.iterations
+        self.success = self.avg <= self.criterion_value
+        return self.success
+
+    def details(self):
+        return (_("Maximum average duration of one iteration %.2fs <= %.2fs - "
+                  "%s") % (self.avg, self.criterion_value, self.status()))

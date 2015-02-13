@@ -303,17 +303,68 @@ class BenchmarkEngineTestCase(test.TestCase):
         self.assertEqual(result, expected_result)
         mock_meta.assert_called_once_with(name, "context")
 
-    @mock.patch("rally.benchmark.sla.base.SLA.check_all")
-    def test_consume_results(self, mock_check_all):
+    @mock.patch("rally.benchmark.sla.base.SLAChecker")
+    def test_consume_results(self, mock_sla):
+        mock_sla_instance = mock.MagicMock()
+        mock_sla.return_value = mock_sla_instance
         key = {"kw": {"fake": 2}, "name": "fake", "pos": 0}
         task = mock.MagicMock()
         config = {
             "a.benchmark": [{"context": {"context_a": {"a": 1}}}],
         }
+        runner = mock.MagicMock()
+        runner.result_queue = collections.deque([1, 2])
         is_done = mock.MagicMock()
         is_done.isSet.side_effect = [False, False, True]
         eng = engine.BenchmarkEngine(config, task)
         eng.duration = 123
         eng.full_duration = 456
-        eng.consume_results(key, task, collections.deque([1, 2]), is_done)
-        mock_check_all.assert_called_once_with({"fake": 2}, [1, 2])
+        eng.consume_results(key, task, is_done, runner)
+        mock_sla.assert_called_once_with({"fake": 2})
+        expected_iteration_calls = [mock.call(1), mock.call(2)]
+        self.assertEqual(expected_iteration_calls,
+                         mock_sla_instance.add_iteration.mock_calls)
+
+    @mock.patch("rally.benchmark.sla.base.SLAChecker")
+    def test_consume_results_sla_failure_abort(self, mock_sla):
+        mock_sla_instance = mock.MagicMock()
+        mock_sla.return_value = mock_sla_instance
+        mock_sla_instance.add_iteration.side_effect = [True, True, False,
+                                                       False]
+        key = {"kw": {"fake": 2}, "name": "fake", "pos": 0}
+        task = mock.MagicMock()
+        config = {
+            "a.benchmark": [{"context": {"context_a": {"a": 1}}}],
+        }
+        runner = mock.MagicMock()
+        runner.result_queue = collections.deque([1, 2, 3, 4])
+        is_done = mock.MagicMock()
+        is_done.isSet.side_effect = [False, False, False, False, True]
+        eng = engine.BenchmarkEngine(config, task, abort_on_sla_failure=True)
+        eng.duration = 123
+        eng.full_duration = 456
+        eng.consume_results(key, task, is_done, runner)
+        mock_sla.assert_called_once_with({"fake": 2})
+        self.assertTrue(runner.abort.called)
+
+    @mock.patch("rally.benchmark.sla.base.SLAChecker")
+    def test_consume_results_sla_failure_continue(self, mock_sla):
+        mock_sla_instance = mock.MagicMock()
+        mock_sla.return_value = mock_sla_instance
+        mock_sla_instance.add_iteration.side_effect = [True, True, False,
+                                                       False]
+        key = {"kw": {"fake": 2}, "name": "fake", "pos": 0}
+        task = mock.MagicMock()
+        config = {
+            "a.benchmark": [{"context": {"context_a": {"a": 1}}}],
+        }
+        runner = mock.MagicMock()
+        runner.result_queue = collections.deque([1, 2, 3, 4])
+        is_done = mock.MagicMock()
+        is_done.isSet.side_effect = [False, False, False, False, True]
+        eng = engine.BenchmarkEngine(config, task, abort_on_sla_failure=False)
+        eng.duration = 123
+        eng.full_duration = 456
+        eng.consume_results(key, task, is_done, runner)
+        mock_sla.assert_called_once_with({"fake": 2})
+        self.assertEqual(0, runner.abort.call_count)
