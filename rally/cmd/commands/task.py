@@ -283,16 +283,11 @@ class TaskCommands(object):
                                    for col in float_cols]))
             for (c, r) in enumerate(raw_data, 1):
                 dlist = [c]
+                dlist.append(r["duration"])
                 if r["atomic_actions"]:
-                    dlist.append(r["duration"])
                     for action in atomic_actions:
                         dlist.append(r["atomic_actions"].get(action) or 0)
-                    table_rows.append(rutils.Struct(**dict(zip(headers,
-                                                               dlist))))
-                else:
-                    data = dlist + [None for i in range(1, len(headers))]
-                    table_rows.append(rutils.Struct(**dict(zip(headers,
-                                                               data))))
+                table_rows.append(rutils.Struct(**dict(zip(headers, dlist))))
             common_cliutils.print_list(table_rows,
                                        fields=headers,
                                        formatters=formatters)

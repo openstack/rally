@@ -64,6 +64,27 @@ class TaskTestCase(unittest.TestCase):
         self.assertIn("dummy_fail_test (2)", detailed)
         detailed_iterations_data = rally("task detailed --iterations-data")
         self.assertIn("2. dummy_fail_test (2)", detailed_iterations_data)
+        self.assertNotIn("n/a", detailed_iterations_data)
+
+    def test_detailed_no_atomic_actions(self):
+        rally = utils.Rally()
+        cfg = {
+            "Dummy.dummy": [
+                {
+                    "runner": {
+                        "type": "constant",
+                        "times": 100,
+                        "concurrency": 5
+                    }
+                }
+            ]
+        }
+        config = utils.TaskConfig(cfg)
+        rally("task start --task %s" % config.filename)
+        detailed = rally("task detailed")
+        self.assertIn("Dummy.dummy", detailed)
+        detailed_iterations_data = rally("task detailed --iterations-data")
+        self.assertNotIn("n/a", detailed_iterations_data)
 
     def test_results(self):
         rally = utils.Rally()
