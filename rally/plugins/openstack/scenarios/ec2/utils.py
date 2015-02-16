@@ -48,33 +48,38 @@ CONF.register_opts(EC2_BENCHMARK_OPTS, group=benchmark_group)
 class EC2Scenario(scenario.OpenStackScenario):
     """Base class for EC2 scenarios with basic atomic actions."""
 
-    RESOURCE_NAME_PREFIX = "rally_ec2server_"
-    RESOURCE_NAME_LENGTH = 16
+    @base.atomic_action_timer("ec2.boot_servers")
+    def _boot_servers(self, image_id, flavor_name,
+                      instance_num=1, **kwargs):
+        """Boot multiple servers.
 
-    @base.atomic_action_timer("ec2.boot_server")
-    def _boot_server(self, image_id, flavor_name, **kwargs):
-        """Boot a server.
-
-        Returns when the server is actually booted and in "Running" state.
+        Returns when all the servers are actually booted and are in the
+        "Running" state.
 
         :param image_id: ID of the image to be used for server creation
         :param flavor_name: Name of the flavor to be used for server creation
-        :param kwargs: other optional parameters to initialize the server
-        :returns: EC2 Server instance
+        :param instance_num: Number of instances to boot
+        :param kwargs: Other optional parameters to boot servers
+
+        :returns: List of created server objects
         """
         reservation = self.clients("ec2").run_instances(
-            image_id=image_id, instance_type=flavor_name, **kwargs)
-        server = reservation.instances[0]
+            image_id=image_id,
+            instance_type=flavor_name,
+            min_count=instance_num,
+            max_count=instance_num,
+            **kwargs)
+        servers = [instance for instance in reservation.instances]
 
         time.sleep(CONF.benchmark.ec2_server_boot_prepoll_delay)
-        server = utils.wait_for(
+        servers = [utils.wait_for(
             server,
             is_ready=utils.resource_is("RUNNING"),
             update_resource=self._update_resource,
             timeout=CONF.benchmark.ec2_server_boot_timeout,
             check_interval=CONF.benchmark.ec2_server_boot_poll_interval
-        )
-        return server
+        ) for server in servers]
+        return servers
 
     def _update_resource(self, resource):
         resource.update()

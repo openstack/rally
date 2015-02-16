@@ -41,4 +41,4 @@ class EC2Servers(utils.EC2Scenario):
         :param flavor: flavor to be used to boot an instance
         :param kwargs: optional additional arguments for server creation
         """
-        self._boot_server(image, flavor, **kwargs)
+        self._boot_servers(image, flavor, **kwargs)

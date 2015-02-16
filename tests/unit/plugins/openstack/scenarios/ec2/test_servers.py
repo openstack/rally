@@ -22,7 +22,7 @@ class EC2ServersTestCase(test.ScenarioTestCase):
 
     def test_boot_server(self):
         scenario = servers.EC2Servers()
-        scenario._boot_server = mock.Mock()
+        scenario._boot_servers = mock.Mock()
         scenario.boot_server("foo_image", "foo_flavor", foo="bar")
-        scenario._boot_server.assert_called_once_with(
+        scenario._boot_servers.assert_called_once_with(
             "foo_image", "foo_flavor", foo="bar")
