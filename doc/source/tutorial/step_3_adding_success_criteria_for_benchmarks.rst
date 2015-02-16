@@ -19,7 +19,7 @@ Step 3. Adding success criteria (SLA) for benchmarks
 ====================================================
 
 1. SLA - Service-Level Agreement (Success Criteria)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+---------------------------------------------------
 
 Rally allows you to set success criteria (also called *SLA - Service-Level Agreement*) for every benchmark. Rally will automatically check them for you.
 
@@ -53,10 +53,10 @@ Such configuration will mark the **NovaServers.boot_and_delete_server** benchmar
 
 
 2. Checking SLA
-^^^^^^^^^^^^^^^
+---------------
 Let us show you how Rally SLA work using a simple example based on **Dummy benchmark scenarios**. These scenarios actually do not perform any OpenStack-related stuff but are very useful for testing the behavious of Rally. Let us put in a new task, *test-sla.json*, 2 scenarios -- one that does nothing and another that just throws an exception:
 
-  .. code-block:: none
+.. code-block:: none
 
     {
         "Dummy.dummy": [
@@ -123,7 +123,7 @@ Exactly as expected.
 
 
 3. SLA in task report
-^^^^^^^^^^^^^^^^^^^^^
+---------------------
 
 SLA checks are nicely visualized in task reports. Generate one:
 
@@ -135,11 +135,11 @@ SLA checks are nicely visualized in task reports. Generate one:
 Benchmark scenarios that have passed SLA have a green check on the overview page:
 
 .. image:: ../images/Report-SLA-Overview.png
-   :width: 100%
    :align: center
 
 Somewhat more detailed information about SLA is displayed on the scenario pages:
 
 .. image:: ../images/Report-SLA-Scenario.png
-   :width: 100%
    :align: center
+
+Success criteria present a very useful concept that enables not only to analyze the outcome of your benchmark tasks, but also to control their execution. In the :ref:`the next section of our tutorial <tutorial_step_4_aborting_load_generation_on_sla_failure>`, we will show how to use SLA to abort the load generation before your OpenStack goes wrong.

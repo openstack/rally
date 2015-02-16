@@ -37,6 +37,12 @@ Automated installation
    ./rally/install_rally.sh -v
 
 
+You also have to set up the **Rally database** after the installation is complete:
+
+.. code-block:: none
+
+   rally-manage db recreate
+
 
 Rally with DevStack all-in-one installation
 -------------------------------------------
@@ -62,7 +68,6 @@ Finally, run DevStack as usually:
 .. code-block:: none
 
    ./stack.sh
-
 
 
 Rally & Docker

@@ -24,7 +24,6 @@ How plugins work
 Rally provides an opportunity to create and use a **custom benchmark scenario, runner or context** as a **plugin**:
 
 .. image:: ./images/Rally-Plugins.png
-   :width: 100%
    :align: center
 
 Plugins can be quickly written and used, with no need to contribute them to the actual Rally code. Just place a python module with your plugin class into the **/opt/rally/plugins** or **~/.rally/plugins** directory (or it's subdirectories), and it will be autoloaded.

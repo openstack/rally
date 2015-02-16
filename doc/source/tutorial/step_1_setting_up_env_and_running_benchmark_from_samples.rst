@@ -18,16 +18,13 @@
 Step 1. Setting up the environment and running a benchmark from samples
 =======================================================================
 
-In this demo, we will show how to perform the following basic operations in Rally:
-
-.. toctree::
-   :maxdepth: 1
+In this demo, we will show how to perform some basic operations in Rally, such as registering an OpenStack cloud, benchmarking it and generating benchmark reports.
 
 We assume that you have a :ref:`Rally installation <tutorial_step_0_installation>` and an already existing OpenStack deployment with Keystone available at *<KEYSTONE_AUTH_URL>*.
 
 
 1. Registering an OpenStack deployment in Rally
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+-----------------------------------------------
 
 First, you have to provide Rally with an Openstack deployment it is going to benchmark. This should be done either through `OpenRC files <http://docs.openstack.org/user-guide/content/cli_openrc.html>`_ or through deployment `configuration files <https://github.com/stackforge/rally/tree/master/samples/deployments>`_. In case you already have an *OpenRC*, it is extremely simple to register a deployment with the *deployment create* command:
 
@@ -82,7 +79,7 @@ Finally, the *deployment check* command enables you to verify that your current 
 
 
 2. Benchmarking
-^^^^^^^^^^^^^^^
+---------------
 
 Now that we have a working and registered deployment, we can start benchmarking it. The sequence of benchmarks to be launched by Rally should be specified in a *benchmark task configuration file* (either in *JSON* or in *YAML* format). Let's try one of the sample benchmark tasks available in `samples/tasks/scenarios <https://github.com/stackforge/rally/tree/master/samples/tasks/scenarios>`_, say, the one that boots and deletes multiple servers (*samples/tasks/scenarios/nova/boot-and-delete.json*):
 
@@ -203,7 +200,7 @@ Note that the Rally input task above uses *regular expressions* to specify the i
 
 
 3. Report generation
-^^^^^^^^^^^^^^^^^^^^
+--------------------
 
 One of the most beautiful things in Rally is its task report generation mechanism. It enables you to create illustrative and comprehensive HTML reports based on the benchmarking data. To create and open at once such a report for the last task you have launched, call:
 
@@ -214,7 +211,6 @@ One of the most beautiful things in Rally is its task report generation mechanis
 This will produce an HTML page with the overview of all the scenarios that you've included into the last benchmark task completed in Rally (in our case, this is just one scenario, and we will cover the topic of multiple scenarios in one task in :ref:`the next step of our tutorial <tutorial_step_3_adding_success_criteria_for_benchmarks>`):
 
 .. image:: ../images/Report-Overview.png
-   :width: 100%
    :align: center
 
 This aggregating table shows the duration of the load produced by the corresponding scenario (*"Load duration"*), the overall benchmark scenario execution time, including the duration of environment preparation with contexts (*"Full duration"*), the number of iterations of each scenario (*"Iterations"*), the type of the load used while running the scenario (*"Runner"*), the number of failed iterations (*"Errors"*) and finally whether the scenario has passed certain Success Criteria (*"SLA"*) that were set up by the user in the input configuration file (we will cover these criteria in :ref:`one of the next steps <tutorial_step_3_sla>`).
@@ -222,13 +218,11 @@ This aggregating table shows the duration of the load produced by the correspond
 By navigating in the left panel, you can switch to the detailed view of the benchmark results for the only scenario we included into our task, namely **NovaServers.boot_and_delete_server**:
 
 .. image:: ../images/Report-Scenario-Overview.png
-   :width: 100%
    :align: center
 
 This page, along with the description of the success criteria used to check the outcome of this scenario, shows some more detailed information and statistics about the duration of its iterations. Now, the *"Total durations"* table splits the duration of our scenario into the so-called **"atomic actions"**: in our case, the **"boot_and_delete_server"** scenario consists of two actions - **"boot_server"** and **"delete_server"**. You can also see how the scenario duration changed throughout is iterations in the *"Charts for the total duration"* section. Similar charts, but with atomic actions detalization, will arise if you switch to the *"Details"* tab of this page:
 
 .. image:: ../images/Report-Scenario-Atomic.png
-   :width: 100%
    :align: center
 
 Note that all the charts on the report pages are very dynamic: you can change their contents by clicking the switches above the graph and see more information about its single points by hovering the cursor over these points.

@@ -13,20 +13,20 @@
       License for the specific language governing permissions and limitations
       under the License.
 
-.. _tutorial_step_5_discovering_more_benchmark_scenarios:
+.. _tutorial_step_6_discovering_more_benchmark_scenarios:
 
-Step 5. Discovering more benchmark scenarios in Rally
+Step 6. Discovering more benchmark scenarios in Rally
 =====================================================
 
 1. Scenarios in the Rally repository
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+------------------------------------
 
 Rally currently comes with a great collection of benchmark scenarios that use the API of different OpenStack projects like **Keystone**, **Nova**, **Cinder**, **Glance** and so on. The good news is that you can combine multiple benchmark scenarios in one task to benchmark your cloud in a comprehensive way.
 
 First, let's see what scenarios are available in Rally. One of the ways to discover these scenario is just to inspect their `source code <https://github.com/stackforge/rally/tree/master/rally/benchmark/scenarios>`_.
 
 2. Rally built-in search engine
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+-------------------------------
 
 A much more convenient way to learn about different benchmark scenarios in Rally, however, is to use a special **search engine** embedded into its Command-Line Interface, which, for a given **search query**, prints documentation for the corresponding benchmark scenario (and also supports other Rally entities like SLA).
 
