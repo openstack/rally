@@ -103,8 +103,8 @@ class VMTasks(nova_utils.NovaScenario, vm_utils.VMScenario,
             self._associate_floating_ip(server, fip["ip"],
                                         fixed_address=fixed_ip)
 
-            code, out, err = self.run_command(fip["ip"], port, username,
-                                              password, interpreter, script)
+            code, out, err = self._run_command(fip["ip"], port, username,
+                                               password, interpreter, script)
             if code:
                 raise exceptions.ScriptError(
                     "Error running script %(script)s."

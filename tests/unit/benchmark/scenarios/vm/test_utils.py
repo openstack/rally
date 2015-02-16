@@ -36,40 +36,40 @@ class VMScenarioTestCase(test.TestCase):
 
     @mock.patch("%s.open" % VMTASKS_UTILS,
                 side_effect=mock.mock_open(), create=True)
-    def test_run_action(self, mock_open):
+    def test__run_action(self, mock_open):
         mock_ssh = mock.MagicMock()
         vm_scenario = utils.VMScenario()
-        vm_scenario.run_action(mock_ssh, "interpreter", "script")
+        vm_scenario._run_action(mock_ssh, "interpreter", "script")
         mock_ssh.execute.assert_called_once_with("interpreter",
                                                  stdin=mock_open.side_effect())
 
-    def test_wait_for_ssh(self):
+    def test__wait_for_ssh(self):
         ssh = mock.MagicMock()
         vm_scenario = utils.VMScenario()
-        vm_scenario.wait_for_ssh(ssh)
+        vm_scenario._wait_for_ssh(ssh)
         ssh.wait.assert_called_once_with()
 
-    @mock.patch(VMTASKS_UTILS + ".VMScenario.ping_ip_address",
+    @mock.patch(VMTASKS_UTILS + ".VMScenario._ping_ip_address",
                 return_value=True)
-    def test_wait_for_ping(self, mock_ping):
+    def test__wait_for_ping(self, mock__ping):
         vm_scenario = utils.VMScenario()
-        vm_scenario.wait_for_ping("1.2.3.4")
+        vm_scenario._wait_for_ping("1.2.3.4")
         self.wait_for.mock.assert_called_once_with("1.2.3.4",
-                                                   is_ready=mock_ping,
+                                                   is_ready=mock__ping,
                                                    timeout=120)
 
-    @mock.patch(VMTASKS_UTILS + ".VMScenario.run_action")
-    @mock.patch(VMTASKS_UTILS + ".VMScenario.wait_for_ping")
+    @mock.patch(VMTASKS_UTILS + ".VMScenario._run_action")
+    @mock.patch(VMTASKS_UTILS + ".VMScenario._wait_for_ping")
     @mock.patch("rally.common.sshutils.SSH")
-    def test_run_command(self, mock_ssh_class, mock_wait_ping,
-                         mock_run_action):
+    def test__run_command(self, mock_ssh_class, mock_wait_ping,
+                          mock_run_action):
         mock_ssh_instance = mock.MagicMock()
         mock_ssh_class.return_value = mock_ssh_instance
 
         vm_scenario = utils.VMScenario()
         vm_scenario.context = {"user": {"keypair": {"private": "ssh"}}}
-        vm_scenario.run_command("1.2.3.4", 22, "username",
-                                "password", "int", "script")
+        vm_scenario._run_command("1.2.3.4", 22, "username",
+                                 "password", "int", "script")
 
         mock_wait_ping.assert_called_once_with("1.2.3.4")
         mock_ssh_class.assert_called_once_with("username", "1.2.3.4", port=22,
@@ -81,7 +81,7 @@ class VMScenarioTestCase(test.TestCase):
 
     @mock.patch(VMTASKS_UTILS + ".sys")
     @mock.patch("subprocess.Popen")
-    def test_ping_ip_address_linux(self, mock_subprocess, mock_sys):
+    def test__ping_ip_address_linux(self, mock_subprocess, mock_sys):
         ping_process = mock.MagicMock()
         ping_process.returncode = 0
         mock_subprocess.return_value = ping_process
@@ -89,7 +89,7 @@ class VMScenarioTestCase(test.TestCase):
 
         vm_scenario = utils.VMScenario()
         host_ip = "1.2.3.4"
-        self.assertTrue(vm_scenario.ping_ip_address(host_ip))
+        self.assertTrue(vm_scenario._ping_ip_address(host_ip))
 
         mock_subprocess.assert_called_once_with(
                 ["ping", "-c1", "-w1", host_ip],
@@ -98,7 +98,7 @@ class VMScenarioTestCase(test.TestCase):
 
     @mock.patch(VMTASKS_UTILS + ".sys")
     @mock.patch("subprocess.Popen")
-    def test_ping_ip_address_linux_ipv6(self, mock_subprocess, mock_sys):
+    def test__ping_ip_address_linux_ipv6(self, mock_subprocess, mock_sys):
         ping_process = mock.MagicMock()
         ping_process.returncode = 0
         mock_subprocess.return_value = ping_process
@@ -106,7 +106,7 @@ class VMScenarioTestCase(test.TestCase):
 
         vm_scenario = utils.VMScenario()
         host_ip = "1ce:c01d:bee2:15:a5:900d:a5:11fe"
-        self.assertTrue(vm_scenario.ping_ip_address(host_ip))
+        self.assertTrue(vm_scenario._ping_ip_address(host_ip))
 
         mock_subprocess.assert_called_once_with(
                 ["ping6", "-c1", "-w1", host_ip],
@@ -115,7 +115,7 @@ class VMScenarioTestCase(test.TestCase):
 
     @mock.patch(VMTASKS_UTILS + ".sys")
     @mock.patch("subprocess.Popen")
-    def test_ping_ip_address_other_os(self, mock_subprocess, mock_sys):
+    def test__ping_ip_address_other_os(self, mock_subprocess, mock_sys):
         ping_process = mock.MagicMock()
         ping_process.returncode = 0
         mock_subprocess.return_value = ping_process
@@ -123,7 +123,7 @@ class VMScenarioTestCase(test.TestCase):
 
         vm_scenario = utils.VMScenario()
         host_ip = "1.2.3.4"
-        self.assertTrue(vm_scenario.ping_ip_address(host_ip))
+        self.assertTrue(vm_scenario._ping_ip_address(host_ip))
 
         mock_subprocess.assert_called_once_with(
                 ["ping", "-c1", host_ip],
@@ -132,7 +132,7 @@ class VMScenarioTestCase(test.TestCase):
 
     @mock.patch(VMTASKS_UTILS + ".sys")
     @mock.patch("subprocess.Popen")
-    def test_ping_ip_address_other_os_ipv6(self, mock_subprocess, mock_sys):
+    def test__ping_ip_address_other_os_ipv6(self, mock_subprocess, mock_sys):
         ping_process = mock.MagicMock()
         ping_process.returncode = 0
         mock_subprocess.return_value = ping_process
@@ -140,7 +140,7 @@ class VMScenarioTestCase(test.TestCase):
 
         vm_scenario = utils.VMScenario()
         host_ip = "1ce:c01d:bee2:15:a5:900d:a5:11fe"
-        self.assertTrue(vm_scenario.ping_ip_address(host_ip))
+        self.assertTrue(vm_scenario._ping_ip_address(host_ip))
 
         mock_subprocess.assert_called_once_with(
                 ["ping6", "-c1", host_ip],

@@ -42,7 +42,7 @@ class VMTasksTestCase(test.TestCase):
         self.scenario._boot_server = mock.MagicMock(return_value=self.server)
         self.scenario._associate_floating_ip = mock.MagicMock()
         self.scenario._delete_server = mock.MagicMock()
-        self.scenario.run_command = mock.MagicMock(
+        self.scenario._run_command = mock.MagicMock(
             return_value=(0, "\"foo_out\"", "foo_err"))
 
     @mock.patch(VM + "vmtasks.network_wrapper")
@@ -57,7 +57,7 @@ class VMTasksTestCase(test.TestCase):
 
     @mock.patch(VM + "vmtasks.network_wrapper")
     def test_boot_runcommand_delete_script_fails(self, mock_wrap):
-        self.scenario.run_command = mock.MagicMock(
+        self.scenario._run_command = mock.MagicMock(
             return_value=(1, "\"foo_out\"", "foo_err"))
         self.assertRaises(exceptions.ScriptError,
                           self.scenario.boot_runcommand_delete,
@@ -84,7 +84,7 @@ class VMTasksTestCase(test.TestCase):
 
         self.scenario._associate_floating_ip.assert_called_once_with(
             self.server, "foo_fip", fixed_address="foo_addr")
-        self.scenario.run_command.assert_called_once_with(
+        self.scenario._run_command.assert_called_once_with(
             "foo_fip", 22, "foo_user", "foo_password",
             "foo_shell", "foo_script")
         self.scenario._delete_server.assert_called_once_with(self.server,
