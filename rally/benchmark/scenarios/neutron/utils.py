@@ -162,6 +162,14 @@ class NeutronScenario(base.Scenario):
         """Returns user routers list."""
         return self.clients("neutron").list_routers()["routers"]
 
+    @base.atomic_action_timer("neutron.delete_router")
+    def _delete_router(self, router):
+        """Delete neutron router
+
+        :param router: Router object
+        """
+        self.clients("neutron").delete_router(router["router"]["id"])
+
     @base.atomic_action_timer("neutron.update_router")
     def _update_router(self, router, router_update_args):
         """Update the neutron router name and admin state.
@@ -269,3 +277,13 @@ class NeutronScenario(base.Scenario):
         """
         self.clients("neutron").add_interface_router(
             router["id"], {"subnet_id": subnet["id"]})
+
+    @base.atomic_action_timer("neutron.remove_interface_router")
+    def _remove_interface_router(self, subnet, router):
+        """Remove subnet from router
+
+        :param subnet: dict, neutron subnet
+        :param router: dict, neutron router
+        """
+        self.clients("neutron").remove_interface_router(
+             router["id"], {"subnet_id": subnet["id"]})
