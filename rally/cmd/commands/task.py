@@ -575,11 +575,20 @@ class TaskCommands(object):
         :param force: Force delete or not
         """
 
+        def _delete_single_task(tid, force):
+            try:
+                api.Task.delete(tid, force=force)
+                print("Successfully deleted task `%s`" % tid)
+            except exceptions.TaskInvalidStatus as e:
+                print(e)
+                print("Use '--force' option to delete the task with vague "
+                      "state.")
+
         if isinstance(task_id, list):
             for tid in task_id:
-                api.Task.delete(tid, force=force)
+                _delete_single_task(tid, force)
         else:
-            api.Task.delete(task_id, force=force)
+            _delete_single_task(task_id, force)
 
     @cliutils.args("--uuid", type=str, dest="task_id", help="uuid of task")
     @cliutils.args("--json", dest="tojson",
