@@ -39,6 +39,7 @@ class NovaScenarioTestCase(test.TestCase):
         self.volume = mock.Mock()
         self.floating_ip = mock.Mock()
         self.image = mock.Mock()
+        self.keypair = mock.Mock()
         self.res_is = mockpatch.Patch(BM_UTILS + ".resource_is")
         self.get_fm = mockpatch.Patch(BM_UTILS + ".get_from_manager")
         self.wait_for = mockpatch.Patch(NOVA_UTILS + ".bench_utils.wait_for")
@@ -655,3 +656,32 @@ class NovaScenarioTestCase(test.TestCase):
 
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.list_security_groups")
+
+    @mock.patch(NOVA_UTILS + ".NovaScenario.clients")
+    def test__list_keypairs(self, mock_clients):
+        keypairs_list = ["foo_keypair"]
+        mock_clients("nova").keypairs.list.return_value = keypairs_list
+        nova_scenario = utils.NovaScenario()
+        return_keypairs_list = nova_scenario._list_keypairs()
+        self.assertEqual(keypairs_list, return_keypairs_list)
+        self._test_atomic_action_timer(nova_scenario.atomic_actions(),
+                                       "nova.list_keypairs")
+
+    @mock.patch(NOVA_UTILS + ".NovaScenario.clients")
+    def test__create_keypair(self, mock_clients):
+        (mock_clients("nova").keypairs.create.
+            return_value.name) = self.keypair
+        nova_scenario = utils.NovaScenario()
+        return_keypair = nova_scenario._create_keypair()
+        self.assertEqual(self.keypair, return_keypair)
+        self._test_atomic_action_timer(nova_scenario.atomic_actions(),
+                                       "nova.create_keypair")
+
+    @mock.patch(NOVA_UTILS + ".NovaScenario.clients")
+    def test__delete_keypair(self, mock_clients):
+        nova_scenario = utils.NovaScenario()
+        nova_scenario._delete_keypair(self.keypair)
+        mock_clients("nova").keypairs.delete.assert_called_once_with(
+            self.keypair)
+        self._test_atomic_action_timer(nova_scenario.atomic_actions(),
+                                       "nova.delete_keypair")

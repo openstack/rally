@@ -322,6 +322,29 @@ class NovaScenario(base.Scenario):
         )
         return image
 
+    @base.atomic_action_timer("nova.create_keypair")
+    def _create_keypair(self, **kwargs):
+        """Create a keypair
+
+        :returns: Created keypair name
+        """
+        keypair_name = self._generate_random_name(prefix="rally_keypair_")
+        keypair = self.clients("nova").keypairs.create(keypair_name, **kwargs)
+        return keypair.name
+
+    @base.atomic_action_timer("nova.list_keypairs")
+    def _list_keypairs(self):
+        """Return user keypairs list."""
+        return self.clients("nova").keypairs.list()
+
+    @base.atomic_action_timer("nova.delete_keypair")
+    def _delete_keypair(self, keypair_name):
+        """Delete keypair
+
+        :param keypair_name: The keypair name to delete.
+        """
+        self.clients("nova").keypairs.delete(keypair_name)
+
     @base.atomic_action_timer("nova.boot_servers")
     def _boot_servers(self, name_prefix, image_id, flavor_id,
                       requests, instances_amount=1, **kwargs):

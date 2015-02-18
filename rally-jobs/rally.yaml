@@ -1271,3 +1271,55 @@
           nova:
             security_groups: -1
             security_group_rules: -1
+
+
+  NovaKeypair.create_and_delete_keypair:
+    -
+      runner:
+        type: "constant"
+        times: 4
+        concurrency: 4
+      context:
+        users:
+          tenants: 3
+          users_per_tenant: 2
+      sla:
+        failure_rate:
+          max: 0
+
+
+  NovaKeypair.create_and_list_keypairs:
+    -
+      runner:
+        type: "constant"
+        times: 4
+        concurrency: 4
+      context:
+        users:
+          tenants: 3
+          users_per_tenant: 2
+      sla:
+        failure_rate:
+          max: 0
+
+
+  NovaKeypair.boot_and_delete_server_with_keypair:
+    -
+      args:
+        flavor:
+          name: "m1.tiny"
+        image:
+          name: {{image_name}}
+      runner:
+        type: "constant"
+        times: 4
+        concurrency: 4
+      context:
+        users:
+          tenants: 3
+          users_per_tenant: 2
+        network:
+          start_cidr: "10.2.0.0/24"
+      sla:
+        failure_rate:
+          max: 0
