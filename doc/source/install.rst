@@ -68,11 +68,21 @@ Finally, run DevStack as usually:
 Rally & Docker
 --------------
 
-There is an image on dokerhub with rally installed. To pull this image, just execute:
+First you need to install docker. Installing docker in ubuntu may be done by following:
 
 .. code-block:: none
 
-   docker pull rallyforge/rally
+    $ sudo apt-get update
+    $ sudo apt-get install docker.io
+    $ sudo usermod -a -G docker `id -u -n` # add yourself to docker group
+
+NOTE: re-login is required to apply users groups changes and actually use docker.
+
+Pull docker image with rally:
+
+.. code-block:: none
+
+   $ docker pull rallyforge/rally
 
 Or you may want to build rally image from source:
 
@@ -86,7 +96,7 @@ you may want to keep this directories outside of container. This may be done by 
 
 .. code-block:: none
 
-   cd ~  #go to your home directory
+   cd
    mkdir rally_home rally_db
    docker run -t -i -v ~/rally_home:/home/rally -v ~/rally_db:/var/lib/rally/database rallyforge/rally
 
@@ -94,7 +104,7 @@ You may want to save last command as an alias:
 
 .. code-block:: none
 
-   echo 'alias dock_rally="docker run -t -i -v ~/rally_home:/home/rally -v ~/rally_db:/var/lib/rally/database rallyforge/rally"' >> ~.bashrc
+   echo 'alias dock_rally="docker run -t -i -v ~/rally_home:/home/rally -v ~/rally_db:/var/lib/rally/database rallyforge/rally"' >> ~/.bashrc
 
 After executing ``dock_rally`` alias, or ``docker run`` you got bash running inside container with
 rally installed. You may do anytnig with rally, but you need to create db first:
