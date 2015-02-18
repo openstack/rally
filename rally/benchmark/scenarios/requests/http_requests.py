@@ -36,5 +36,6 @@ class Requests(base.Scenario):
         """
         resp = requests.head(url)
         if response and response != resp.status_code:
-            error = "Expected Response and Actual Response not equal"
+            error = "Expected HTTP request code is `%s` actual `%s`" % (
+                    response, resp.status_code)
             raise WrongStatusException(error)
