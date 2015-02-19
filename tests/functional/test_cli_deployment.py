@@ -14,10 +14,12 @@
 #    under the License.
 
 import json
+import re
 import unittest
 
 import mock
 
+from rally.cmd import envutils
 from tests.functional import utils
 
 
@@ -77,3 +79,14 @@ class DeploymentTestCase(unittest.TestCase):
             self.rally("deployment create --name t_create_env --fromenv")
         self.rally("deployment recreate --deployment t_create_env")
         self.assertIn("t_create_env", self.rally("deployment list"))
+
+    def test_use(self):
+        with mock.patch.dict("os.environ", utils.TEST_ENV):
+            output = self.rally(
+                "deployment create --name t_create_env1 --fromenv")
+            uuid = re.search(r"Using deployment: (?P<uuid>[0-9a-f\-]{36})",
+                             output).group("uuid")
+            self.rally("deployment create --name t_create_env2 --fromenv")
+            self.rally("deployment use --deployment %s" % uuid)
+            current_deployment = envutils.get_global("RALLY_DEPLOYMENT")
+            self.assertEqual(uuid, current_deployment)

@@ -473,6 +473,22 @@ class TaskTestCase(unittest.TestCase):
     def test_abort(self):
         pass
 
+    def test_use(self):
+        rally = utils.Rally()
+        with mock.patch.dict("os.environ", utils.TEST_ENV):
+            deployment_id = envutils.get_global("RALLY_DEPLOYMENT")
+            config = utils.TaskConfig(self._get_sample_task_config())
+            output = rally(("task start --task %(task_file)s "
+                            "--deployment %(deployment_id)s") %
+                           {"task_file": config.filename,
+                            "deployment_id": deployment_id})
+            result = re.search(
+                r"(?P<uuid>[0-9a-f\-]{36}): started", output)
+            uuid = result.group("uuid")
+            rally("task use --task %s" % uuid)
+            current_task = envutils.get_global("RALLY_TASK")
+            self.assertEqual(uuid, current_task)
+
 
 class SLATestCase(unittest.TestCase):
 

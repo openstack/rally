@@ -621,3 +621,12 @@ class TaskCommands(object):
             common_cliutils.print_list(data, ("benchmark", "pos", "criterion",
                                               "status", "detail"))
         return failed_criteria
+
+    @cliutils.args("--task", type=str, dest="task", required=False,
+                   help="UUID of the task")
+    def use(self, task):
+        """Set active task. Alias for "rally use task".
+
+        :param task: Task uuid.
+        """
+        use.UseCommands().task(task)

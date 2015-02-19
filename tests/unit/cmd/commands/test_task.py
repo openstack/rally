@@ -595,3 +595,8 @@ class TaskCommandsTestCase(test.TestCase):
         self.assertEqual(1, result)
         mock_task_validate.assert_called_once_with("deployment",
                                                    mock_load.return_value)
+
+    @mock.patch("rally.cmd.commands.use.UseCommands.task")
+    def test_use(self, mock_use_task):
+        self.task.use("fake_id")
+        mock_use_task.assert_called_once_with("fake_id")
