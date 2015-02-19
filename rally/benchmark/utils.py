@@ -18,7 +18,6 @@ import time
 import traceback
 
 from novaclient import exceptions as nova_exc
-from novaclient.v1_1 import servers
 import six
 
 from rally.common import log as logging
@@ -66,12 +65,8 @@ def get_from_manager(error_statuses=None):
         if status in ("DELETED", "DELETE_COMPLETE"):
             raise exceptions.GetResourceNotFound(resource=res)
         if status in error_statuses:
-            if isinstance(res.manager, servers.ServerManager):
-                msg = res.fault["message"]
-            else:
-                msg = ""
             raise exceptions.GetResourceErrorStatus(resource=res,
-                                                    status=status, fault=msg)
+                                                    status=status, fault="")
 
         return res
 

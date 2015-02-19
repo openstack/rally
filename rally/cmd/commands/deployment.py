@@ -185,6 +185,7 @@ class DeploymentCommands(object):
     @cliutils.args("--deployment", dest="deployment", type=str,
                    required=False, help="UUID or name of a deployment.")
     @envutils.with_default_deployment()
+    @cliutils.suppress_warnings
     def config(self, deployment=None):
         """Display configuration of the deployment.
 

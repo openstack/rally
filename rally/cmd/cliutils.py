@@ -19,6 +19,7 @@ import argparse
 import inspect
 import os
 import sys
+import warnings
 
 import jsonschema
 from oslo_config import cfg
@@ -51,6 +52,11 @@ def make_header(text, size=80, symbol="-"):
     header += " %s\n" % text
     header += symbol * size + "\n"
     return header
+
+
+def suppress_warnings(f):
+    f._suppress_warnings = True
+    return f
 
 
 class CategoryParser(argparse.ArgumentParser):
@@ -260,6 +266,7 @@ def run(argv, categories):
             requests_log.setLevel(logging.WARNING)
             urllib3_log = logging.getLogger("urllib3").logger
             urllib3_log.setLevel(logging.WARNING)
+
     except cfg.ConfigFilesNotFoundError:
         cfgfile = CONF.config_file[-1] if CONF.config_file else None
         if cfgfile and not os.access(cfgfile, os.R_OK):
@@ -315,8 +322,15 @@ def run(argv, categories):
         utils.load_plugins(os.path.expanduser("~/.rally/plugins/"))
 
         validate_deprecated_args(argv, fn)
-        ret = fn(*fn_args, **fn_kwargs)
+
+        if getattr(fn, "_suppress_warnings", False):
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                ret = fn(*fn_args, **fn_kwargs)
+        else:
+            ret = fn(*fn_args, **fn_kwargs)
         return(ret)
+
     except (IOError, TypeError, ValueError, exceptions.DeploymentNotFound,
             exceptions.TaskNotFound, jsonschema.ValidationError) as e:
         if logging.is_debug():

@@ -415,6 +415,7 @@ class TaskCommands(object):
 
     @cliutils.args("--uuid", type=str, dest="task_id", help="uuid of task")
     @envutils.with_default_task_id
+    @cliutils.suppress_warnings
     def results(self, task_id=None):
         """Display raw task results.
 
@@ -501,6 +502,7 @@ class TaskCommands(object):
         "--uuid", dest="tasks", nargs="+",
         help="uuids of tasks or json files with task results")
     @envutils.default_from_global("tasks", envutils.ENV_TASK, "--uuid")
+    @cliutils.suppress_warnings
     def report(self, tasks=None, out=None, open_it=False):
         """Generate HTML report file for specified task.
 

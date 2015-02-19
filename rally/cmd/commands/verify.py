@@ -112,6 +112,7 @@ class VerifyCommands(object):
                    dest="output_file",
                    help="If specified, output will be saved to given file")
     @envutils.with_default_verification_id
+    @cliutils.suppress_warnings
     def results(self, verification_uuid=None, output_file=None,
                 output_html=None, output_json=None):
         """Get raw results of the verification.
