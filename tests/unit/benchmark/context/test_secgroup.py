@@ -41,7 +41,9 @@ class SecGroupContextTestCase(test.TestCase):
         }
         self.ctx_without_secgroup = {
             "users": [{"tenant_id": "uuid1",
-                       "endpoint": "endpoint"}] * self.users,
+                       "endpoint": "endpoint"},
+                      {"tenant_id": "uuid1",
+                       "endpoint": "endpoint"}],
             "admin": {"tenant_id": "uuid2", "endpoint": "admin_endpoint"},
             "tenants": {"uuid1": {"id": "uuid1", "name": "uuid1"}},
             "task": task
