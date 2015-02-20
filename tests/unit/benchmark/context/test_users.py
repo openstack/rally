@@ -16,7 +16,9 @@
 import mock
 
 from rally.benchmark.context import users
+from rally import consts
 from rally import exceptions
+from rally import objects
 from tests.unit import test
 
 
@@ -235,3 +237,46 @@ class UserGeneratorTestCase(test.TestCase):
                                                     tenants_ids, user_list):
                 self.assertEqual(user["id"], orig_user.id)
                 self.assertEqual(user["tenant_id"], tenant_id)
+
+    @mock.patch("rally.benchmark.context.users.keystone")
+    def test_users_contains_correct_endpoint_type(self, mock_keystone):
+        endpoint = objects.Endpoint("foo_url", "foo", "foo_pass",
+                                    endpoint_type=consts.EndpointType.INTERNAL)
+        config = {
+            "config": {
+                "users": {
+                    "tenants": 1,
+                    "users_per_tenant": 2,
+                    "resource_management_workers": 1
+                }
+            },
+            "admin": {"endpoint": endpoint},
+            "task": {"uuid": "task_id"}
+        }
+
+        user_generator = users.UserGenerator(config)
+        users_ = user_generator._create_users()
+
+        for user in users_:
+            self.assertEqual("internal", user["endpoint"].endpoint_type)
+
+    @mock.patch("rally.benchmark.context.users.keystone")
+    def test_users_contains_default_endpoint_type(self, mock_keystone):
+        endpoint = objects.Endpoint("foo_url", "foo", "foo_pass")
+        config = {
+            "config": {
+                "users": {
+                    "tenants": 1,
+                    "users_per_tenant": 2,
+                    "resource_management_workers": 1
+                }
+            },
+            "admin": {"endpoint": endpoint},
+            "task": {"uuid": "task_id"}
+        }
+
+        user_generator = users.UserGenerator(config)
+        users_ = user_generator._create_users()
+
+        for user in users_:
+            self.assertEqual("public", user["endpoint"].endpoint_type)

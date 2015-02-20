@@ -186,7 +186,8 @@ class UserGenerator(base.Context):
                     client.auth_url, user.name, password,
                     self.context["tenants"][tenant_id]["name"],
                     consts.EndpointPermission.USER, client.region_name,
-                    project_domain_name=project_dom, user_domain_name=user_dom)
+                    project_domain_name=project_dom, user_domain_name=user_dom,
+                    endpoint_type=self.endpoint.endpoint_type)
             users.append({"id": user.id,
                           "endpoint": user_endpoint,
                           "tenant_id": tenant_id})
