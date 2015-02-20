@@ -115,8 +115,14 @@ class NotFoundException(RallyException):
     msg_fmt = _("Not found.")
 
 
-class NoSuchPlugin(NotFoundException):
-    msg_fmt = _("There is no plugin with name: `%(name)s`.")
+class PluginNotFound(NotFoundException):
+    msg_fmt = _("There is no plugin with name: `%(name)s` in "
+                "`%(namespace)s` namespace.")
+
+
+class PluginWithSuchNameExists(RallyException):
+    msg_fmt = _("Plugin with such name: `%(name)s` already exists in "
+                "`%(namespace)s` namespace")
 
 
 class NoSuchEngine(NotFoundException):
