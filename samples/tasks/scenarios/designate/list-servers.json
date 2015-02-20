@@ -1,0 +1,17 @@
+{
+    "DesignateBasic.list_servers": [
+        {
+            "runner": {
+                "type": "constant",
+                "times": 3,
+                "concurrency": 2
+            },
+            "context": {
+                "users": {
+                    "tenants": 2,
+                    "users_per_tenant": 2
+                }
+            }
+        }
+    ]
+}

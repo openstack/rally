@@ -162,3 +162,14 @@ class DesignateBasic(utils.DesignateScenario):
         """
         server = self._create_server()
         self._delete_server(server["id"])
+
+    @validation.required_services(consts.Service.DESIGNATE)
+    @validation.required_openstack(admin=True)
+    @base.scenario(context={"cleanup": ["designate"]})
+    def list_servers(self):
+        """List Designate servers.
+
+        This simple scenario tests the designate server-list command by listing
+        all the servers.
+        """
+        self._list_servers()

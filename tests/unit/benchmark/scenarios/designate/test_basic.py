@@ -134,3 +134,11 @@ class DesignateBasicTestCase(test.TestCase):
 
         mock_create.assert_called_once_with()
         mock_delete.assert_called_once_with("123")
+
+    @mock.patch(DESIGNATE_BASIC + "._list_servers")
+    def test_list_servers(self, mock_list):
+        scenario = basic.DesignateBasic()
+
+        # Default options
+        scenario.list_servers()
+        mock_list.assert_called_once_with()

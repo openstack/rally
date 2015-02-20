@@ -100,3 +100,18 @@
       sla:
         failure_rate:
           max: 0
+
+  DesignateBasic.list_servers:
+    -
+      runner:
+        type: "constant"
+        times: 4
+        concurrency: 2
+      context:
+        users:
+          tenants: 2
+          users_per_tenant: 2
+      sla:
+        failure_rate:
+          max: 0
+
