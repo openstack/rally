@@ -577,3 +577,9 @@ class ValidateArgsTest(test.TestCase):
     def test_static_method_with_default_missing_args4(self):
         self.assertRaises(cliutils.MissingArgs,
                           self._test_static_method_with_default, y=2, z=3)
+
+    def test_alias_decorator(self):
+        alias_fn = mock.Mock(name="alias_fn")
+        cmd_name = "test-command"
+        wrapped = cliutils.alias(cmd_name)
+        self.assertEqual(wrapped(alias_fn).alias, cmd_name)
