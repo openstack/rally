@@ -351,6 +351,72 @@ class NovaServersTestCase(test.TestCase):
                                                        False, False)
         scenario._delete_server.assert_called_once_with(fake_server)
 
+    def test_boot_server_from_volume_and_live_migrate(self):
+        fake_server = mock.MagicMock()
+
+        scenario = servers.NovaServers()
+        scenario._generate_random_name = mock.MagicMock(return_value="name")
+        scenario._boot_server = mock.MagicMock(return_value=fake_server)
+        scenario._find_host_to_migrate = mock.MagicMock(
+                                         return_value="host_name")
+        scenario._live_migrate = mock.MagicMock()
+        scenario._delete_server = mock.MagicMock()
+
+        fake_volume = fakes.FakeVolumeManager().create()
+        fake_volume.id = "volume_id"
+        scenario._create_volume = mock.MagicMock(return_value=fake_volume)
+
+        scenario.boot_server_from_volume_and_live_migrate("img", 0, 5,
+                                                          fakearg="f")
+
+        scenario._create_volume.assert_called_once_with(5, imageRef="img")
+
+        scenario._boot_server.assert_called_once_with(
+            "img", 0,
+            block_device_mapping={"vda": "volume_id:::1"},
+            fakearg="f")
+
+        scenario._find_host_to_migrate.assert_called_once_with(fake_server)
+
+        scenario._live_migrate.assert_called_once_with(fake_server,
+                                                       "host_name",
+                                                       False, False)
+        scenario._delete_server.assert_called_once_with(fake_server,
+                                                        force=False)
+
+    def test_boot_server_attach_created_volume_and_live_migrate(self):
+        fake_volume = mock.MagicMock()
+        fake_server = mock.MagicMock()
+
+        scenario = servers.NovaServers()
+
+        scenario._attach_volume = mock.MagicMock()
+        scenario._detach_volume = mock.MagicMock()
+
+        scenario._find_host_to_migrate = mock.MagicMock(
+                                         return_value="host_name")
+        scenario._live_migrate = mock.MagicMock()
+
+        scenario._boot_server = mock.MagicMock(return_value=fake_server)
+        scenario._delete_server = mock.MagicMock()
+        scenario._create_volume = mock.MagicMock(return_value=fake_volume)
+        scenario._delete_volume = mock.MagicMock()
+
+        scenario.boot_server_attach_created_volume_and_live_migrate(
+            "img",
+            0,
+            5)
+        scenario._attach_volume.assert_called_once_with(fake_server,
+                                                        fake_volume)
+        scenario._detach_volume.assert_called_once_with(fake_server,
+                                                        fake_volume)
+        scenario._live_migrate.assert_called_once_with(fake_server,
+                                                       "host_name",
+                                                       False, False)
+
+        scenario._delete_volume.assert_called_once_with(fake_volume)
+        scenario._delete_server.assert_called_once_with(fake_server)
+
     def _test_boot_and_migrate_server(self, confirm=False):
         fake_server = mock.MagicMock()
 

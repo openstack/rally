@@ -344,6 +344,94 @@ class NovaServers(utils.NovaScenario,
     @types.set(image=types.ImageResourceType,
                flavor=types.FlavorResourceType)
     @validation.image_valid_on_flavor("flavor", "image")
+    @validation.required_services(consts.Service.NOVA, consts.Service.CINDER)
+    @validation.required_openstack(admin=True, users=True)
+    @base.scenario(context={"cleanup": ["nova", "cinder"]})
+    def boot_server_from_volume_and_live_migrate(self, image, flavor,
+                                                 volume_size,
+                                                 block_migration=False,
+                                                 disk_over_commit=False,
+                                                 force_delete=False, **kwargs):
+        """Boot a server from volume and then migrate it.
+
+        The scenario first creates a volume and a server booted from
+        the volume on a compute node available in the availability zone and
+        then migrates the VM to another compute node on the same availability
+        zone.
+
+        :param image: image to be used to boot an instance
+        :param flavor: flavor to be used to boot an instance
+        :param volume_size: volume size (in GB)
+        :param block_migration: Specifies the migration type
+        :param disk_over_commit: Specifies whether to allow overcommit
+                                 on migrated instance or not
+        :param force_delete: True if force_delete should be used
+        :param kwargs: Optional additional arguments for server creation
+        """
+        volume = self._create_volume(volume_size, imageRef=image)
+        block_device_mapping = {"vda": "%s:::1" % volume.id}
+        server = self._boot_server(image, flavor,
+                                   block_device_mapping=block_device_mapping,
+                                   **kwargs)
+
+        new_host = self._find_host_to_migrate(server)
+        self._live_migrate(server, new_host,
+                           block_migration, disk_over_commit)
+
+        self._delete_server(server, force=force_delete)
+
+    @types.set(image=types.ImageResourceType,
+               flavor=types.FlavorResourceType)
+    @validation.image_valid_on_flavor("flavor", "image")
+    @validation.required_services(consts.Service.NOVA, consts.Service.CINDER)
+    @validation.required_openstack(admin=True, users=True)
+    @base.scenario(context={"cleanup": ["cinder", "nova"]})
+    def boot_server_attach_created_volume_and_live_migrate(
+            self,
+            image,
+            flavor,
+            size,
+            block_migration=False,
+            disk_over_commit=False,
+            boot_server_kwargs=None,
+            create_volume_kwargs=None):
+        """Create a VM, attach a volume to it amd live migrate.
+
+        Simple test to create a VM and attach a volume, then migrate the VM,
+        detach the volume and delete volume/VM.
+
+        :param image: Glance image name to use for the VM
+        :param flavor: VM flavor name
+        :param size: volume size (in GB)
+        :param block_migration: Specifies the migration type
+        :param disk_over_commit: Specifies whether to allow overcommit
+                                 on migrated instance or not
+        :param boot_server_kwargs: optional arguments for VM creation
+        :param create_volume_kwargs: optional arguments for volume creation
+        """
+
+        if boot_server_kwargs is None:
+            boot_server_kwargs = {}
+        if create_volume_kwargs is None:
+            create_volume_kwargs = {}
+
+        server = self._boot_server(image, flavor, boot_server_kwargs)
+        volume = self._create_volume(size, create_volume_kwargs)
+
+        self._attach_volume(server, volume)
+
+        new_host = self._find_host_to_migrate(server)
+        self._live_migrate(server, new_host,
+                           block_migration, disk_over_commit)
+
+        self._detach_volume(server, volume)
+
+        self._delete_volume(volume)
+        self._delete_server(server)
+
+    @types.set(image=types.ImageResourceType,
+               flavor=types.FlavorResourceType)
+    @validation.image_valid_on_flavor("flavor", "image")
     @validation.required_services(consts.Service.NOVA)
     @validation.required_openstack(admin=True, users=True)
     @base.scenario(context={"cleanup": ["nova"]})
