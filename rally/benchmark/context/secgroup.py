@@ -108,8 +108,7 @@ class AllowSSH(base.Context):
         secgroup_name = "%s_%s" % (SSH_GROUP_NAME,
                                    self.context["task"]["uuid"])
 
-        for user, tenant_id in utils.iterate_per_tenants(
-                self.context["users"]):
+        for user in self.context["users"]:
             user["secgroup"] = _prepare_open_secgroup(user["endpoint"],
                                                       secgroup_name)
 
