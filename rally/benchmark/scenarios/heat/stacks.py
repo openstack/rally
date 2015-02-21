@@ -56,6 +56,18 @@ class HeatStacks(utils.HeatScenario):
 
     @validation.required_services(consts.Service.HEAT)
     @validation.required_openstack(users=True)
+    @base.scenario()
+    def list_stacks_and_resources(self):
+        """List resources from tenant stacks."""
+
+        stacks = self._list_stacks()
+        with base.AtomicAction(
+                self, "heat.list_resources_of_%s_stacks" % len(stacks)):
+            for stack in stacks:
+                self.clients("heat").resources.list(stack.id)
+
+    @validation.required_services(consts.Service.HEAT)
+    @validation.required_openstack(users=True)
     @base.scenario(context={"cleanup": ["heat"]})
     def create_and_delete_stack(self, template_path=None):
         """Add and then delete a stack.

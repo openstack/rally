@@ -1,7 +1,7 @@
 # Copyright 2014: Mirantis Inc.
 # All Rights Reserved.
 #
-#    Licensed under the Apache License, Version 2.0 (the "License"); you may
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
 #    a copy of the License at
 #
@@ -52,7 +52,6 @@ heat_benchmark_opts = [
                  help="Interval between checks when waiting for stack "
                       "update."),
 ]
-
 
 CONF = cfg.CONF
 benchmark_group = cfg.OptGroup(name="benchmark", title="benchmark options")
@@ -111,7 +110,7 @@ class HeatScenario(base.Scenario):
 
         :param stack: stack that need to be updated
         :param template: Updated template
-        :return: object of updated stack
+        :returns: object of updated stack
         """
 
         template = template or self.default_template
