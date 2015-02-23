@@ -20,7 +20,9 @@ import subprocess
 import sys
 
 from oslo_serialization import jsonutils
+from oslo_utils import encodeutils
 
+from rally.common import costilius
 from rally.common.i18n import _
 from rally.common import log as logging
 from rally.common import utils
@@ -41,14 +43,14 @@ class TempestSetupFailure(exceptions.RallyException):
 def check_output(*args, **kwargs):
     kwargs["stderr"] = subprocess.STDOUT
     try:
-        output = subprocess.check_output(*args, **kwargs)
+        output = costilius.sp_check_output(*args, **kwargs)
     except subprocess.CalledProcessError as e:
         LOG.debug("failed cmd: '%s'" % e.cmd)
-        LOG.debug("error output: '%s'" % e.output)
+        LOG.debug("error output: '%s'" % encodeutils.safe_decode(e.output))
         raise
 
-    if logging.is_debug():
-        print(output)
+    LOG.debug("subprocess output: '%s'" % encodeutils.safe_decode(output))
+    return output
 
 
 class Tempest(object):
@@ -118,7 +120,7 @@ class Tempest(object):
             |_for-deployment-<UUID1> -> copy from relevant tempest base
             |_for-deployment-<UUID2> -> copy from relevant tempest base
 
-       new:
+        new:
             _ rally/tempest
             |_base
             ||_ tempest_base-<rand suffix specific for source> -> clone
@@ -157,21 +159,34 @@ class Tempest(object):
 
     @staticmethod
     def _get_remote_origin(directory):
-        out = subprocess.check_output("git config --get remote.origin.url",
-                                      shell=True,
-                                      cwd=os.path.abspath(directory))
+        out = check_output("git config --get remote.origin.url",
+                           shell=True, cwd=os.path.abspath(directory))
         return out.strip()
 
     def _install_venv(self):
         path_to_venv = self.path(".venv")
 
         if not os.path.isdir(path_to_venv):
-            self.validate_env()
             print("No virtual environment found...Install the virtualenv.")
             LOG.debug("Virtual environment directory: %s" % path_to_venv)
+            required_vers = (2, 7)
+            if sys.version_info[:2] != required_vers:
+                # NOTE(andreykurilin): let's try to find a suitable python
+                # interpreter for Tempest
+                python_interpreter = costilius.get_interpreter(required_vers)
+                if not python_interpreter:
+                    raise exceptions.IncompatiblePythonVersion(
+                        version=sys.version, required_version=required_vers)
+                LOG.info(
+                    _("Tempest requires Python %(required)s, '%(found)s' was "
+                      "found in your system and it will be used for installing"
+                      " virtual environment.") % {"required": required_vers,
+                                                  "found": python_interpreter})
+            else:
+                python_interpreter = sys.executable
             try:
-                check_output("python ./tools/install_venv.py", shell=True,
-                             cwd=self.path())
+                check_output("%s ./tools/install_venv.py" % python_interpreter,
+                             shell=True, cwd=self.path())
                 check_output("%s python setup.py install" % self.venv_wrapper,
                              shell=True, cwd=self.path())
             except subprocess.CalledProcessError:
@@ -341,16 +356,6 @@ class Tempest(object):
                                                   test_cases=test_cases)
         else:
             self.verification.set_failed()
-
-    def validate_env(self):
-        """Validate environment parameters required for running tempest.
-
-           eg: python>2.7
-        """
-
-        if sys.version_info < (2, 7):
-            raise exceptions.IncompatiblePythonVersion(
-                version=sys.version_info)
 
     def verify(self, set_name, regex):
         self._prepare_and_run(set_name, regex)

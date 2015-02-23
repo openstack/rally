@@ -250,7 +250,7 @@ class ImageCleanUpException(CleanUpException):
 
 class IncompatiblePythonVersion(RallyException):
     msg_fmt = _("Incompatible python version found '%(version)s', "
-                "required at least python>=2.7.x")
+                "required '%(required_version)s'")
 
 
 class WorkerNotFound(NotFoundException):

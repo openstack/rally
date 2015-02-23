@@ -18,7 +18,13 @@
 This module is a storage for different types of workarounds.
 """
 
+from distutils import spawn
+import os
+import subprocess
 import sys
+
+from rally.common.i18n import _LE
+from rally import exceptions
 
 
 try:
@@ -49,3 +55,64 @@ def json_loads(*args, **kwargs):
     """
 
     return json.loads(*args, **kwargs)
+
+
+def sp_check_output(*popenargs, **kwargs):
+    """Run command with arguments and return its output as a byte string.
+
+    If the exit code was non-zero it raises a CalledProcessError.  The
+    CalledProcessError object will have the return code in the returncode
+    attribute and output in the output attribute.
+
+    The arguments are the same as for the Popen constructor.
+    """
+
+    if is_py26():
+        # NOTE(andreykurilin): as I said before, support python 26 env is hard
+        # task. Subprocess supports check_output function from Python 2.7, so
+        # let's copy-paste code of this function from it.
+        if "stdout" in kwargs:
+            raise ValueError("stdout argument not allowed, "
+                             "it will be overridden.")
+        process = subprocess.Popen(stdout=subprocess.PIPE,
+                                   *popenargs, **kwargs)
+        output, unused_err = process.communicate()
+        retcode = process.poll()
+        if retcode:
+            cmd = kwargs.get("args")
+            if cmd is None:
+                cmd = popenargs[0]
+            raise subprocess.CalledProcessError(retcode, cmd, output=output)
+        return output
+    return subprocess.check_output(*popenargs, **kwargs)
+
+
+def get_interpreter(python_version):
+    """Discovers PATH to find proper python interpreter
+
+    :param python_version: (major, minor) version numbers
+    :type python_version: tuple
+    """
+
+    if not isinstance(python_version, tuple):
+        msg = (_LE("given format of python version `%s` is invalid") %
+               python_version)
+        raise exceptions.InvalidArgumentsException(msg)
+
+    interpreter_name = "python%s.%s" % python_version
+    interpreter = spawn.find_executable(interpreter_name)
+    if interpreter:
+        return interpreter
+    else:
+        interpreters = filter(
+            os.path.isfile, [os.path.join(p, interpreter_name)
+                             for p in os.environ.get("PATH", "").split(":")])
+        cmd = "%s -c 'import sys; print(sys.version_info[:2])'"
+        for interpreter in interpreters:
+            try:
+                out = sp_check_output(cmd % interpreter, shell=True)
+            except subprocess.CalledProcessError:
+                pass
+            else:
+                if out.strip() == str(python_version):
+                    return interpreter
