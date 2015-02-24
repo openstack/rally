@@ -47,6 +47,21 @@ class OSClientsTestCase(test.TestCase):
     def tearDown(self):
         super(OSClientsTestCase, self).tearDown()
 
+    def test_create_from_env(self):
+        with mock.patch.dict("os.environ",
+                             {"OS_AUTH_URL": "foo_auth_url",
+                              "OS_USERNAME": "foo_username",
+                              "OS_PASSWORD": "foo_password",
+                              "OS_TENANT_NAME": "foo_tenant_name",
+                              "OS_REGION_NAME": "foo_region_name"}):
+            clients = osclients.Clients.create_from_env()
+
+        self.assertEqual("foo_auth_url", clients.endpoint.auth_url)
+        self.assertEqual("foo_username", clients.endpoint.username)
+        self.assertEqual("foo_password", clients.endpoint.password)
+        self.assertEqual("foo_tenant_name", clients.endpoint.tenant_name)
+        self.assertEqual("foo_region_name", clients.endpoint.region_name)
+
     def test_keystone(self):
         self.assertNotIn("keystone", self.clients.cache)
         client = self.clients.keystone()
