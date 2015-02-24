@@ -14,7 +14,6 @@
 
 from rally.benchmark.context import base
 from rally.benchmark.context.cleanup import manager as resource_manager
-from rally.benchmark.scenarios import base as scenario_base
 from rally.benchmark.scenarios.glance import utils as glance_utils
 from rally.common.i18n import _
 from rally.common import log as logging
@@ -44,6 +43,17 @@ class ImageGenerator(base.Context):
             "image_container": {
                 "type": "string",
             },
+            "image_name": {
+                "type": "string",
+            },
+            "min_ram": {  # megabytes
+                "type": "integer",
+                "minimum": 0
+            },
+            "min_disk": {  # gigabytes
+                "type": "integer",
+                "minimum": 0
+            },
             "images_per_tenant": {
                 "type": "integer",
                 "minimum": 1
@@ -63,20 +73,27 @@ class ImageGenerator(base.Context):
         image_type = self.config["image_type"]
         image_container = self.config["image_container"]
         images_per_tenant = self.config["images_per_tenant"]
+        image_name = self.config.get("image_name")
 
         for user, tenant_id in rutils.iterate_per_tenants(
                 self.context["users"]):
             current_images = []
             clients = osclients.Clients(user["endpoint"])
-            glance_util_class = glance_utils.GlanceScenario(
-                                clients=clients)
+            glance_scenario = glance_utils.GlanceScenario(
+                clients=clients)
             for i in range(images_per_tenant):
-                rnd_name = scenario_base.Scenario._generate_random_name()
+                if image_name and i > 0:
+                    cur_name = image_name + str(i)
+                elif image_name:
+                    cur_name = image_name
+                else:
+                    cur_name = glance_scenario._generate_random_name(
+                        prefix="rally_ctx_image_")
 
-                image = glance_util_class._create_image(rnd_name,
-                                                        image_container,
-                                                        image_url,
-                                                        image_type)
+                image = glance_scenario._create_image(
+                    cur_name, image_container, image_url, image_type,
+                    min_ram=self.config.get("min_ram", 0),
+                    min_disk=self.config.get("min_disk", 0))
                 current_images.append(image.id)
 
             self.context["tenants"][tenant_id]["images"] = current_images

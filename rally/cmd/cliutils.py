@@ -102,7 +102,7 @@ def print_list(objs, fields, formatters=None, sortby_index=0,
     if len(field_labels) != len(fields):
         raise ValueError(_("Field labels list %(labels)s has different number "
                            "of elements than fields list %(fields)s"),
-                         {'labels': field_labels, 'fields': fields})
+                         {"labels": field_labels, "fields": fields})
 
     if sortby_index is None:
         kwargs = {}

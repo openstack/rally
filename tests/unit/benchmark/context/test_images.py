@@ -44,6 +44,9 @@ class ImageGeneratorTestCase(test.TestCase):
                 "image_type": "qcow2",
                 "image_container": "bare",
                 "images_per_tenant": 4,
+                "image_name": "some_name",
+                "min_ram": 128,
+                "min_disk": 1,
             }
         }
 
@@ -93,6 +96,9 @@ class ImageGeneratorTestCase(test.TestCase):
                     "image_type": "qcow2",
                     "image_container": "bare",
                     "images_per_tenant": images_per_tenant,
+                    "image_name": "some_name",
+                    "min_ram": 128,
+                    "min_disk": 1,
                 }
             },
             "admin": {
@@ -143,6 +149,9 @@ class ImageGeneratorTestCase(test.TestCase):
                     "image_type": "qcow2",
                     "image_container": "bare",
                     "images_per_tenant": 5,
+                    "image_name": "some_name",
+                    "min_ram": 128,
+                    "min_disk": 1,
                 }
             },
             "admin": {
