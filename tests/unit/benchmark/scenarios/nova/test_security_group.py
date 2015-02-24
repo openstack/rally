@@ -104,7 +104,8 @@ class NovaSecurityGroupTestCase(test.TestCase):
         rules_per_security_group = 10
 
         nova_scenario.boot_and_delete_server_with_secgroups(
-            image, flavor, security_group_count, rules_per_security_group)
+            image, flavor, security_group_count, rules_per_security_group,
+            fakearg="fakearg")
         nova_scenario._create_security_groups.assert_called_once_with(
             security_group_count)
         self.assertEqual(1, nova_scenario._generate_random_name.call_count)
@@ -112,7 +113,7 @@ class NovaSecurityGroupTestCase(test.TestCase):
             sg_list, rules_per_security_group)
         nova_scenario._boot_server.assert_called_once_with(
             "name", image, flavor,
-            security_groups=[sg.name for sg in sg_list])
+            security_groups=[sg.name for sg in sg_list], fakearg="fakearg")
         fake_server.list_security_group.assert_called_once_with()
         nova_scenario._delete_server.assert_called_once_with(fake_server)
         nova_scenario._delete_security_groups.assert_called_once_with(sg_list)
