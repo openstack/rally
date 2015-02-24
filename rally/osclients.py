@@ -13,6 +13,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import os
+
 from ceilometerclient import client as ceilometer
 from cinderclient import client as cinder
 from designateclient import v1 as designate
@@ -33,6 +35,7 @@ from zaqarclient.queues import client as zaqar
 from rally.common import log as logging
 from rally import consts
 from rally import exceptions
+from rally import objects
 
 
 CONF = cfg.CONF
@@ -86,6 +89,17 @@ class Clients(object):
     def __init__(self, endpoint):
         self.endpoint = endpoint
         self.cache = {}
+
+    @classmethod
+    def create_from_env(cls):
+        return cls(
+            objects.Endpoint(
+                os.environ["OS_AUTH_URL"],
+                os.environ["OS_USERNAME"],
+                os.environ["OS_PASSWORD"],
+                os.environ.get("OS_TENANT_NAME"),
+                region_name=os.environ.get("OS_REGION_NAME")
+            ))
 
     def clear(self):
         """Remove all cached client handles."""
