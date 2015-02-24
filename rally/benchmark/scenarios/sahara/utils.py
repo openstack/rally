@@ -28,7 +28,7 @@ from rally import exceptions
 LOG = logging.getLogger(__name__)
 CONF = cfg.CONF
 
-TIMEOUT_OPTS = [
+SAHARA_TIMEOUT_OPTS = [
     cfg.IntOpt("cluster_create_timeout", default=600,
                help="A timeout in seconds for a cluster create operation"),
     cfg.IntOpt("cluster_check_interval", default=5,
@@ -40,7 +40,7 @@ TIMEOUT_OPTS = [
 ]
 
 benchmark_group = cfg.OptGroup(name="benchmark", title="benchmark options")
-CONF.register_opts(TIMEOUT_OPTS, group=benchmark_group)
+CONF.register_opts(SAHARA_TIMEOUT_OPTS, group=benchmark_group)
 
 
 class SaharaScenario(base.Scenario):

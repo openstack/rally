@@ -100,7 +100,7 @@ class DeploymentCommandsTestCase(test.TestCase):
         self.assertRaises(exceptions.InvalidArgumentsException,
                           self.deployment.destroy, None)
 
-    @mock.patch("rally.cmd.commands.deployment.common_cliutils.print_list")
+    @mock.patch("rally.cmd.commands.deployment.cliutils.print_list")
     @mock.patch("rally.cmd.commands.deployment.utils.Struct")
     @mock.patch("rally.cmd.commands.deployment.envutils.get_global")
     @mock.patch("rally.cmd.commands.deployment.db.deployment_list")
@@ -128,7 +128,7 @@ class DeploymentCommandsTestCase(test.TestCase):
                                                 sortby_index=headers.index(
                                                 "created_at"))
 
-    @mock.patch("rally.cmd.commands.deployment.common_cliutils.print_list")
+    @mock.patch("rally.cmd.commands.deployment.cliutils.print_list")
     @mock.patch("rally.cmd.commands.deployment.utils.Struct")
     @mock.patch("rally.cmd.commands.deployment.envutils.get_global")
     @mock.patch("rally.cmd.commands.deployment.db.deployment_list")
@@ -171,7 +171,7 @@ class DeploymentCommandsTestCase(test.TestCase):
         self.assertRaises(exceptions.InvalidArgumentsException,
                           self.deployment.config, None)
 
-    @mock.patch("rally.cmd.commands.deployment.common_cliutils.print_list")
+    @mock.patch("rally.cmd.commands.deployment.cliutils.print_list")
     @mock.patch("rally.cmd.commands.deployment.utils.Struct")
     @mock.patch("rally.cmd.commands.deployment.db.deployment_get")
     def test_show(self, mock_deployment, mock_struct, mock_print_list):

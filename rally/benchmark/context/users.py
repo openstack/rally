@@ -33,7 +33,7 @@ from rally import osclients
 
 LOG = logging.getLogger(__name__)
 
-context_opts = [
+USER_CONTEXT_OPTS = [
     cfg.IntOpt("resource_management_workers",
                default=30,
                help="How many concurrent threads use for serving users "
@@ -47,7 +47,7 @@ context_opts = [
 ]
 
 CONF = cfg.CONF
-CONF.register_opts(context_opts,
+CONF.register_opts(USER_CONTEXT_OPTS,
                    group=cfg.OptGroup(name="users_context",
                                       title="benchmark context options"))
 

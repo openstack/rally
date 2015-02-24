@@ -479,7 +479,7 @@ class TaskCommandsTestCase(test.TestCase):
                                out="/tmp/tmp.hsml")
         self.assertEqual(ret, 1)
 
-    @mock.patch("rally.cmd.commands.task.common_cliutils.print_list")
+    @mock.patch("rally.cmd.commands.task.cliutils.print_list")
     @mock.patch("rally.cmd.commands.task.envutils.get_global",
                 return_value="123456789")
     @mock.patch("rally.cmd.commands.task.objects.Task.list",
@@ -542,7 +542,7 @@ class TaskCommandsTestCase(test.TestCase):
                           in task_uuids]
         self.assertTrue(mock_api.Task.delete.mock_calls == expected_calls)
 
-    @mock.patch("rally.cmd.commands.task.common_cliutils.print_list")
+    @mock.patch("rally.cmd.commands.task.cliutils.print_list")
     @mock.patch("rally.cmd.commands.task.objects.Task.get")
     def test_sla_check(self, mock_task_get, mock_print_list):
         data = [{"key": {"name": "fake_name",

@@ -21,7 +21,7 @@ from rally.benchmark.scenarios import base
 from rally.benchmark import utils as bench_utils
 
 
-heat_benchmark_opts = [
+HEAT_BENCHMARK_OPTS = [
     cfg.FloatOpt("heat_stack_create_prepoll_delay",
                  default=2.0,
                  help="Time to sleep after creating a resource before "
@@ -55,7 +55,7 @@ heat_benchmark_opts = [
 
 CONF = cfg.CONF
 benchmark_group = cfg.OptGroup(name="benchmark", title="benchmark options")
-CONF.register_opts(heat_benchmark_opts, group=benchmark_group)
+CONF.register_opts(HEAT_BENCHMARK_OPTS, group=benchmark_group)
 
 
 class HeatScenario(base.Scenario):

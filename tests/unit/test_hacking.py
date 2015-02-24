@@ -62,8 +62,8 @@ class HackingTestCase(test.TestCase):
         self.assertTrue(actual_msg.startswith("N303"))
 
     def test_check_wrong_logging_import(self):
-        bad_imports = ["from rally.openstack.common import log",
-                       "import rally.openstack.common.log",
+        bad_imports = ["from oslo_log import log",
+                       "import oslo_log",
                        "import logging"]
         good_imports = ["from rally.common import log",
                         "from rally.common.log",

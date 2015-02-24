@@ -12,7 +12,7 @@ Rally Specific Commandments
  * [N302] - Ensure that nonexistent "assert_called" is not used
  * [N303] - Ensure that  nonexistent "assert_called_once" is not used
 * [N310-N314] - Reserved for rules related to logging
- * [N310] - Ensure that ``rally.common.log`` is used instead of ``rally.openstack.common.log``
+ * [N310] - Ensure that ``rally.common.log`` is used as logging module
  * [N311] - Validate that debug level logs are not translated
  * [N312] - Validate correctness of debug on check.
 * [N32x] - Reserved for rules related to assert* methods

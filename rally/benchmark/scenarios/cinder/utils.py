@@ -22,7 +22,7 @@ from rally.benchmark.scenarios import base
 from rally.benchmark import utils as bench_utils
 
 
-cinder_benchmark_opts = [
+CINDER_BENCHMARK_OPTS = [
     cfg.FloatOpt("cinder_volume_create_prepoll_delay",
                  default=2.0,
                  help="Time to sleep after creating a resource before"
@@ -45,7 +45,7 @@ cinder_benchmark_opts = [
 
 CONF = cfg.CONF
 benchmark_group = cfg.OptGroup(name="benchmark", title="benchmark options")
-CONF.register_opts(cinder_benchmark_opts, group=benchmark_group)
+CONF.register_opts(CINDER_BENCHMARK_OPTS, group=benchmark_group)
 
 
 class CinderScenario(base.Scenario):

@@ -34,7 +34,7 @@ class ShowCommandsTestCase(test.TestCase):
         self.fake_glance_client = fakes.FakeGlanceClient()
         self.fake_nova_client = fakes.FakeNovaClient()
 
-    @mock.patch("rally.cmd.commands.show.common_cliutils.print_list")
+    @mock.patch("rally.cmd.commands.show.cliutils.print_list")
     @mock.patch("rally.cmd.commands.show.cliutils.pretty_float_formatter")
     @mock.patch("rally.cmd.commands.show.utils.Struct")
     @mock.patch("rally.cmd.commands.show.osclients.Clients.glance")
@@ -62,7 +62,7 @@ class ShowCommandsTestCase(test.TestCase):
             formatters=fake_formatters,
             mixed_case_fields=mixed_case_fields)
 
-    @mock.patch("rally.cmd.commands.show.common_cliutils.print_list")
+    @mock.patch("rally.cmd.commands.show.cliutils.print_list")
     @mock.patch("rally.cmd.commands.show.cliutils.pretty_float_formatter")
     @mock.patch("rally.cmd.commands.show.utils.Struct")
     @mock.patch("rally.cmd.commands.show.osclients.Clients.nova")
@@ -94,7 +94,7 @@ class ShowCommandsTestCase(test.TestCase):
             formatters=fake_formatters,
             mixed_case_fields=mixed_case_fields)
 
-    @mock.patch("rally.cmd.commands.show.common_cliutils.print_list")
+    @mock.patch("rally.cmd.commands.show.cliutils.print_list")
     @mock.patch("rally.cmd.commands.show.utils.Struct")
     @mock.patch("rally.cmd.commands.show.osclients.Clients.nova")
     @mock.patch("rally.cmd.commands.show.db.deployment_get")
@@ -120,7 +120,7 @@ class ShowCommandsTestCase(test.TestCase):
             fields=headers,
             mixed_case_fields=mixed_case_fields)
 
-    @mock.patch("rally.cmd.commands.show.common_cliutils.print_list")
+    @mock.patch("rally.cmd.commands.show.cliutils.print_list")
     @mock.patch("rally.cmd.commands.show.utils.Struct")
     @mock.patch("rally.cmd.commands.show.osclients.Clients.nova")
     @mock.patch("rally.cmd.commands.show.db.deployment_get")
@@ -145,7 +145,7 @@ class ShowCommandsTestCase(test.TestCase):
             fields=headers,
             mixed_case_fields=mixed_case_fields)
 
-    @mock.patch("rally.cmd.commands.show.common_cliutils.print_list")
+    @mock.patch("rally.cmd.commands.show.cliutils.print_list")
     @mock.patch("rally.cmd.commands.show.utils.Struct")
     @mock.patch("rally.cmd.commands.show.osclients.Clients.nova")
     @mock.patch("rally.cmd.commands.show.db.deployment_get")

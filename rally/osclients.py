@@ -36,14 +36,16 @@ from rally import exceptions
 
 
 CONF = cfg.CONF
-CONF.register_opts([
+
+OSCLIENTS_OPTS = [
     cfg.FloatOpt("openstack_client_http_timeout", default=180.0,
                  help="HTTP timeout for any of OpenStack service in seconds"),
     cfg.BoolOpt("https_insecure", default=False,
                 help="Use SSL for all OpenStack API interfaces"),
     cfg.StrOpt("https_cacert", default=None,
                help="Path to CA server cetrificate for SSL")
-])
+]
+CONF.register_opts(OSCLIENTS_OPTS)
 
 
 # NOTE(boris-42): super dirty hack to fix nova python client 2.17 thread safe

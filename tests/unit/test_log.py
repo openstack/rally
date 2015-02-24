@@ -24,23 +24,24 @@ from tests.unit import test
 class LogTestCase(test.TestCase):
 
     @mock.patch("rally.common.log.CONF")
+    @mock.patch("rally.common.log.handlers")
     @mock.patch("rally.common.log.oslogging")
-    def test_setup(self, mock_oslogger, mock_conf):
+    def test_setup(self, mock_oslogger, mock_handlers, mock_conf):
 
         proj = "fakep"
         version = "fakev"
-        mock_oslogger.ColorHandler.LEVEL_COLORS = {
+        mock_handlers.ColorHandler.LEVEL_COLORS = {
             logging.DEBUG: "debug_color"}
         mock_conf.rally_debug = True
 
         log.setup(proj, version)
 
-        self.assertIn(logging.RDEBUG, mock_oslogger.ColorHandler.LEVEL_COLORS)
+        self.assertIn(logging.RDEBUG, mock_handlers.ColorHandler.LEVEL_COLORS)
         self.assertEqual(
-            mock_oslogger.ColorHandler.LEVEL_COLORS[logging.DEBUG],
-            mock_oslogger.ColorHandler.LEVEL_COLORS[logging.RDEBUG])
+            mock_handlers.ColorHandler.LEVEL_COLORS[logging.DEBUG],
+            mock_handlers.ColorHandler.LEVEL_COLORS[logging.RDEBUG])
 
-        mock_oslogger.setup.assert_called_once_with(proj, version)
+        mock_oslogger.setup.assert_called_once_with(mock_conf, proj, version)
         mock_oslogger.getLogger(None).logger.setLevel.assert_called_once_with(
             logging.RDEBUG)
 
@@ -49,27 +50,28 @@ class LogTestCase(test.TestCase):
     @mock.patch("rally.common.log.oslogging")
     def test_getLogger(self, mock_oslogger, mock_radapter, mock_pylogging):
 
-        proj = "fake"
+        name = "fake"
         vers = "fake"
         mock_oslogger._loggers = dict()
 
-        returned_logger = log.getLogger(proj, vers)
+        returned_logger = log.getLogger(name, vers)
 
-        self.assertIn(proj, mock_oslogger._loggers)
-        mock_radapter.assert_called_once_with(mock_pylogging.getLogger(proj),
-                                              proj, vers)
-        self.assertEqual(mock_oslogger._loggers[proj], returned_logger)
+        self.assertIn(name, mock_oslogger._loggers)
+        mock_radapter.assert_called_once_with(
+            mock_pylogging.getLogger(name),
+            {"project": "rally", "version": vers})
+        self.assertEqual(mock_oslogger._loggers[name], returned_logger)
 
 
 class LogRallyContaxtAdapter(test.TestCase):
 
     @mock.patch("rally.common.log.logging")
-    @mock.patch("rally.common.log.oslogging.ContextAdapter")
+    @mock.patch("rally.common.log.oslogging.KeywordArgumentAdapter")
     def test_debug(self, mock_oslo_adapter, mock_logging):
 
         mock_logging.RDEBUG = 123
         fake_msg = "fake message"
-        radapter = log.RallyContextAdapter(mock.MagicMock(), "fakep", "fakev")
+        radapter = log.RallyContextAdapter(mock.MagicMock(), "fakep")
         radapter.log = mock.MagicMock()
 
         radapter.debug(fake_msg)

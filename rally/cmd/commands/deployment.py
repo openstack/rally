@@ -33,7 +33,6 @@ from rally.common import utils
 from rally import db
 from rally import exceptions
 from rally import objects
-from rally.openstack.common import cliutils as common_cliutils
 from rally import osclients
 
 
@@ -171,9 +170,8 @@ class DeploymentCommands(object):
                 r = [str(t[column]) for column in headers[:-1]]
                 r.append("" if t["uuid"] != current_deployment else "*")
                 table_rows.append(utils.Struct(**dict(zip(headers, r))))
-            common_cliutils.print_list(table_rows, headers,
-                                       sortby_index=headers.index(
-                                           "created_at"))
+            cliutils.print_list(table_rows, headers,
+                                sortby_index=headers.index("created_at"))
         else:
             print(_("There are no deployments. "
                     "To create a new deployment, use:"
@@ -222,7 +220,7 @@ class DeploymentCommands(object):
         for ep in endpoints:
             data = [ep.get(m, "") for m in headers]
             table_rows.append(utils.Struct(**dict(zip(headers, data))))
-        common_cliutils.print_list(table_rows, headers)
+        cliutils.print_list(table_rows, headers)
 
     @cliutils.deprecated_args(
         "--uuid", dest="deployment", type=str,
@@ -255,7 +253,7 @@ class DeploymentCommands(object):
             print(_("Authentication Issues: %s.")
                   % sys.exc_info()[1])
             return(1)
-        common_cliutils.print_list(table_rows, headers)
+        cliutils.print_list(table_rows, headers)
 
     @cliutils.args("--deployment", type=str, dest="deployment",
                    help="UUID or name of the deployment")
