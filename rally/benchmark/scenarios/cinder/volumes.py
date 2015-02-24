@@ -211,16 +211,11 @@ class CinderVolumes(utils.CinderScenario,
         :param size: volume size (in GB)
         :param image: Glance image name to use for the VM
         :param flavor: VM flavor name
-        :param kwargs: optional arguments for VM/volume creation
+        :param kwargs: optional arguments for VM creation
         """
-        if "volume_size" in kwargs:
-            import warnings
-            warnings.warn("'volume_size' argument is deprecated. You should "
-                          "use 'size' instead.")
-            size = kwargs["volume_size"]
 
         server = self._boot_server(image, flavor, **kwargs)
-        volume = self._create_volume(size, **kwargs)
+        volume = self._create_volume(size)
 
         self._attach_volume(server, volume)
         self._detach_volume(server, volume)
