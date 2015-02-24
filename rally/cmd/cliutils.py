@@ -323,12 +323,12 @@ def _add_command_parsers(categories, subparsers):
 
 def validate_deprecated_args(argv, fn):
     if (len(argv) > 3
-       and (argv[2] == fn.func_name)
+       and (argv[2] == fn.__name__)
        and getattr(fn, "deprecated_args", None)):
         for item in fn.deprecated_args:
             if item in argv[3:]:
                 LOG.warning("Deprecated argument %s for %s." % (item,
-                                                                fn.func_name))
+                                                                fn.__name__))
 
 
 def run(argv, categories):
@@ -379,14 +379,15 @@ def run(argv, categories):
         return(0)
 
     fn = CONF.category.action_fn
-    fn_args = [arg.decode("utf-8") for arg in CONF.category.action_args]
+    fn_args = [encodeutils.safe_decode(arg)
+               for arg in CONF.category.action_args]
     fn_kwargs = {}
     for k in CONF.category.action_kwargs:
         v = getattr(CONF.category, "action_kwarg_" + k)
         if v is None:
             continue
         if isinstance(v, six.string_types):
-            v = v.decode("utf-8")
+            v = encodeutils.safe_decode(v)
         fn_kwargs[k] = v
 
     # call the action with the remaining arguments

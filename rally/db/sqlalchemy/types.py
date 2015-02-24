@@ -19,6 +19,8 @@ from sqlalchemy.dialects import mysql as mysql_types
 from sqlalchemy.ext import mutable
 from sqlalchemy import types as sa_types
 
+from rally.common import costilius
+
 
 class JSONEncodedDict(sa_types.TypeDecorator):
     """Represents an immutable structure as a json-encoded string."""
@@ -27,12 +29,13 @@ class JSONEncodedDict(sa_types.TypeDecorator):
 
     def process_bind_param(self, value, dialect):
         if value is not None:
-            value = json.dumps(value)
+            value = json.dumps(value, sort_keys=False)
         return value
 
     def process_result_value(self, value, dialect):
         if value is not None:
-            value = json.loads(value)
+            value = costilius.json_loads(
+                value, object_pairs_hook=costilius.OrderedDict)
         return value
 
 

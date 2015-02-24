@@ -527,11 +527,11 @@ class SLATestCase(unittest.TestCase):
         rally("task sla_check")
         expected = [
             {"benchmark": "KeystoneBasic.create_and_list_users",
-             "criterion": "max_seconds_per_iteration",
+             "criterion": "failure_rate",
              "detail": mock.ANY,
              "pos": 0, "status": "PASS"},
             {"benchmark": "KeystoneBasic.create_and_list_users",
-             "criterion": "failure_rate",
+             "criterion": "max_seconds_per_iteration",
              "detail": mock.ANY,
              "pos": 0, "status": "PASS"}
         ]

@@ -608,7 +608,8 @@ class TaskCommands(object):
         STATUS_FAIL = "FAIL"
         for result in results:
             key = result["key"]
-            for sla in result["data"]["sla"]:
+            for sla in sorted(result["data"]["sla"],
+                              key=lambda x: x["criterion"]):
                 success = sla.pop("success")
                 sla["status"] = success and STATUS_PASS or STATUS_FAIL
                 sla["benchmark"] = key["name"]
@@ -616,7 +617,7 @@ class TaskCommands(object):
                 failed_criteria += int(not success)
                 data.append(sla if tojson else rutils.Struct(**sla))
         if tojson:
-            print(json.dumps(data))
+            print(json.dumps(data, sort_keys=False))
         else:
             cliutils.print_list(data, ("benchmark", "pos", "criterion",
                                        "status", "detail"))

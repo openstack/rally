@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from oslo_utils import encodeutils
 from six.moves import configparser
 
 import inspect
@@ -37,7 +38,7 @@ class RallyCmdError(Exception):
 
     def __init__(self, code, output):
         self.code = code
-        self.output = output
+        self.output = encodeutils.safe_decode(output)
 
     def __str__(self):
         return "Code: %d Output: %s\n" % (self.code, self.output)
@@ -50,7 +51,7 @@ class TaskConfig(object):
 
     def __init__(self, config):
         config_file = tempfile.NamedTemporaryFile(delete=False)
-        config_file.write(json.dumps(config).encode("utf-8"))
+        config_file.write(encodeutils.safe_encode(json.dumps(config)))
         config_file.close()
         self.filename = config_file.name
 
@@ -159,7 +160,7 @@ class Rally(object):
         :param getjson: in cases, when rally prints JSON, you can catch output
             deserialized
         :param report_path: if present, rally command and its output will be
-            wretten to file with passed file name
+            written to file with passed file name
         :param raw: don't write command itself to report file. Only output
             will be written
         """
@@ -167,8 +168,8 @@ class Rally(object):
         if not isinstance(cmd, list):
             cmd = cmd.split(" ")
         try:
-            output = subprocess.check_output(self.args + cmd,
-                                             stderr=subprocess.STDOUT)
+            output = encodeutils.safe_decode(subprocess.check_output(
+                self.args + cmd, stderr=subprocess.STDOUT))
 
             if write_report:
                 if not report_path:
@@ -181,6 +182,6 @@ class Rally(object):
 
             if getjson:
                 return json.loads(output)
-            return output.decode("utf-8")
+            return output
         except subprocess.CalledProcessError as e:
             raise RallyCmdError(e.returncode, e.output)

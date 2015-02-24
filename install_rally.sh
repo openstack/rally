@@ -7,7 +7,7 @@
 #
 # NOTE: The script assumes that you have the following
 # programs already installed:
-# -> Python 2.6 or Python 2.7
+# -> Python 2.6, Python 2.7 or Python 3.4
 
 set -e
 
