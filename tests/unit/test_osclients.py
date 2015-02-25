@@ -301,6 +301,25 @@ class OSClientsTestCase(test.TestCase):
             )
             self.assertEqual(fake_mistral, self.clients.cache["mistral"])
 
+    def test_swift(self):
+        with mock.patch("rally.osclients.swift") as mock_swift:
+            fake_swift = fakes.FakeSwiftClient()
+            mock_swift.Connection = mock.MagicMock(return_value=fake_swift)
+            self.assertNotIn("swift", self.clients.cache)
+            client = self.clients.swift()
+            self.assertEqual(client, fake_swift)
+            self.service_catalog.url_for.assert_called_once_with(
+                service_type="object-store",
+                endpoint_type=consts.EndpointType.PUBLIC,
+                region_name=self.endpoint.region_name)
+            kw = {"retries": 1,
+                  "preauthurl": self.service_catalog.url_for.return_value,
+                  "preauthtoken": self.fake_keystone.auth_token,
+                  "insecure": False,
+                  "cacert": None}
+            mock_swift.Connection.assert_called_once_with(**kw)
+            self.assertEqual(self.clients.cache["swift"], fake_swift)
+
     @mock.patch("rally.osclients.Clients.keystone")
     def test_services(self, mock_keystone):
         available_services = {consts.ServiceType.IDENTITY: {},

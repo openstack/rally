@@ -29,6 +29,7 @@ from neutronclient.neutron import client as neutron
 from novaclient import client as nova
 from oslo_config import cfg
 from saharaclient import client as sahara
+from swiftclient import client as swift
 from troveclient import client as trove
 from zaqarclient.queues import client as zaqar
 
@@ -331,7 +332,21 @@ class Clients(object):
         client = client.client(mistral_url=mistral_url,
                                service_type="workflowv2",
                                auth_token=kc.auth_token)
+        return client
 
+    @cached
+    def swift(self):
+        """Return swift client."""
+        kc = self.keystone()
+        object_api_url = kc.service_catalog.url_for(
+            service_type="object-store",
+            endpoint_type=self.endpoint.endpoint_type,
+            region_name=self.endpoint.region_name)
+        client = swift.Connection(retries=1,
+                                  preauthurl=object_api_url,
+                                  preauthtoken=kc.auth_token,
+                                  insecure=CONF.https_insecure,
+                                  cacert=CONF.https_cacert)
         return client
 
     @cached

@@ -31,6 +31,7 @@ python-ironicclient>=0.2.1
 python-saharaclient>=0.7.6
 python-troveclient>=1.0.7
 python-zaqarclient>=0.0.3
+python-swiftclient>=2.2.0
 python-subunit>=0.0.18
 requests>=2.2.0,!=2.4.0
 SQLAlchemy>=0.9.7,<=0.9.99
