@@ -15,7 +15,6 @@
 
 import os
 import shutil
-import subprocess
 import tempfile
 
 from rally.benchmark.context import base
@@ -75,19 +74,8 @@ class Tempest(base.Context):
 
     @utils.log_task_wrapper(LOG.info, _("Exit context: `tempest`"))
     def cleanup(self):
-        try:
-            cmd = ("cd %(tempest_dir)s "
-                   "&& %(venv)s python tempest/stress/tools/cleanup.py" %
-                   {
-                       "tempest_dir": self.verifier.path(),
-                       "venv": self.verifier.venv_wrapper})
-            LOG.debug("Cleanup started by the command: %s" % cmd)
-
-            subprocess.check_call(cmd, shell=True, env=self.verifier.env,
-                                  cwd=self.verifier.path())
-        except subprocess.CalledProcessError:
-            LOG.error("Tempest cleanup failed")
-            raise exceptions.CleanUpException()
-        finally:
-            if os.path.exists(self.results_dir):
-                shutil.rmtree(self.results_dir)
+        LOG.info("Built-in stress cleanup from Tempest looks like can help to "
+                 "shot yourself in the foot. Sorry, but even Rally can not "
+                 "clean up after Tempest. Deal with it.")
+        if os.path.exists(self.results_dir):
+            shutil.rmtree(self.results_dir)
