@@ -89,7 +89,8 @@ class NovaSecGroup(utils.NovaScenario):
     @base.scenario(context={"cleanup": ["nova"]})
     def boot_and_delete_server_with_secgroups(self, image, flavor,
                                               security_group_count,
-                                              rules_per_security_group):
+                                              rules_per_security_group,
+                                              **kwargs):
         """Boot and delete server with security groups attached.
 
         Plan of this scenario:
@@ -105,6 +106,7 @@ class NovaSecGroup(utils.NovaScenario):
         :param flavor: ID of the flavor to be used for server creation
         :param security_group_count: Number of security groups
         :param rules_per_security_group: Number of rules per security group
+        :param **kwargs: Optional arguments for booting the instance
         """
 
         security_groups = self._create_security_groups(
@@ -114,7 +116,8 @@ class NovaSecGroup(utils.NovaScenario):
 
         secgroups_names = [sg.name for sg in security_groups]
         server = self._boot_server(image, flavor,
-                                   security_groups=secgroups_names)
+                                   security_groups=secgroups_names,
+                                   **kwargs)
 
         action_name = "nova.get_attached_security_groups"
         with base.AtomicAction(self, action_name):
