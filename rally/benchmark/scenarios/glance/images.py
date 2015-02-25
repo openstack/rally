@@ -112,14 +112,13 @@ class GlanceImages(utils.GlanceScenario, nova_utils.NovaScenario):
                             ami, ari, aki, vhd, vmdk, raw, qcow2, vdi, and iso
         :param flavor: Nova flavor to be used to launch an instance
         :param number_instances: number of Nova servers to boot
-        :param kwargs: optional parameters to create image / server
+        :param kwargs: optional parameters to create server
         """
         image_name = self._generate_random_name()
         image = self._create_image(image_name,
                                    container_format,
                                    image_location,
-                                   disk_format,
-                                   **kwargs)
+                                   disk_format)
         image_id = image.id
         server_name = self._generate_random_name(prefix="rally_novaserver_")
         self._boot_servers(server_name, image_id,
