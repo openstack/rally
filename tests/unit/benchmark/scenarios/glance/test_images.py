@@ -92,7 +92,7 @@ class GlanceImagesTestCase(test.TestCase):
                                                             "df", "fid",
                                                             5, **kwargs)
             mock_create_image.assert_called_once_with("random_name", "cf",
-                                                      "url", "df", **kwargs)
+                                                      "url", "df")
             mock_boot_servers.assert_called_once_with("random_name",
                                                       "image-id-0",
                                                       "fid", 5, **kwargs)
