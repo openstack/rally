@@ -345,6 +345,53 @@ class DesignateServer(SynchronizedDeletion, base.ResourceManager):
     pass
 
 
+# SWIFT
+
+_swift_order = get_order(1000)
+
+
+class SwiftMixin(SynchronizedDeletion, base.ResourceManager):
+
+    def _manager(self):
+        client = self._admin_required and self.admin or self.user
+        return getattr(client, self._service)()
+
+    def id(self):
+        return self.raw_resource
+
+    def delete(self):
+        delete_method = getattr(self._manager(), "delete_%s" % self._resource)
+        # NOTE(weiwu): *self.raw_resource is required because for deleting
+        # container we are passing only container name, to delete object we
+        # should pass as first argument container and second is object name.
+        delete_method(*self.raw_resource)
+
+
+@base.resource("swift", "object", order=next(_swift_order),
+               tenant_resource=True)
+class SwiftObject(SwiftMixin):
+
+    def list(self):
+        object_list = []
+        containers = self._manager().get_account(full_listing=True)[1]
+        for con in containers:
+            objects = self._manager().get_container(con["name"],
+                                                    full_listing=True)[1]
+            for obj in objects:
+                raw_resource = [con["name"], obj["name"]]
+                object_list.append(raw_resource)
+        return object_list
+
+
+@base.resource("swift", "container", order=next(_swift_order),
+               tenant_resource=True)
+class SwiftContainer(SwiftMixin):
+
+    def list(self):
+        containers = self._manager().get_account(full_listing=True)[1]
+        return [[con["name"]] for con in containers]
+
+
 # MISTRAL
 
 @base.resource("mistral", "workbooks", order=1100, tenant_resource=True)

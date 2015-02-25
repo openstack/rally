@@ -342,3 +342,55 @@ class KeystoneMixinTestCase(test.TestCase):
 
         self.assertSequenceEqual(result[:2], keystone_mixin.list())
         mock_wrap().list_some_resource2s.assert_called_once_with()
+
+
+class SwiftMixinTestCase(test.TestCase):
+
+    def get_swift_mixin(self):
+        swift_mixin = resources.SwiftMixin()
+        swift_mixin._service = "swift"
+        return swift_mixin
+
+    def test_manager(self):
+        swift_mixin = self.get_swift_mixin()
+        swift_mixin.user = mock.MagicMock()
+        self.assertEqual(swift_mixin.user.swift.return_value,
+                         swift_mixin._manager())
+
+    def test_id(self):
+        swift_mixin = self.get_swift_mixin()
+        swift_mixin.raw_resource = mock.MagicMock()
+        self.assertEqual(swift_mixin.raw_resource, swift_mixin.id())
+
+    def test_delete(self):
+        swift_mixin = self.get_swift_mixin()
+        swift_mixin.user = mock.MagicMock()
+        swift_mixin._resource = "some_resource"
+        swift_mixin.raw_resource = mock.MagicMock()
+        swift_mixin.delete()
+        swift_mixin.user.swift().delete_some_resource.assert_called_once_with(
+            *swift_mixin.raw_resource)
+
+
+class SwiftObjectTestCase(test.TestCase):
+
+    @mock.patch("%s.SwiftMixin._manager" % BASE)
+    def test_list(self, mock_manager):
+        containers = [mock.MagicMock(), mock.MagicMock()]
+        objects = [mock.MagicMock(), mock.MagicMock(), mock.MagicMock()]
+        mock_manager().get_account.return_value = ("header", containers)
+        mock_manager().get_container.return_value = ("header", objects)
+        self.assertEqual(len(containers),
+                         len(resources.SwiftContainer().list()))
+        self.assertEqual(len(containers) * len(objects),
+                         len(resources.SwiftObject().list()))
+
+
+class SwiftContainerTestCase(test.TestCase):
+
+    @mock.patch("%s.SwiftMixin._manager" % BASE)
+    def test_list(self, mock_manager):
+        containers = [mock.MagicMock(), mock.MagicMock(), mock.MagicMock()]
+        mock_manager().get_account.return_value = ("header", containers)
+        self.assertEqual(len(containers),
+                         len(resources.SwiftContainer().list()))

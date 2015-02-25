@@ -1,0 +1,124 @@
+# Copyright 2015: Cisco Systems, Inc.
+# All Rights Reserved.
+#
+#    Licensed under the Apache License, Version 2.0 (the "License"); you may
+#    not use this file except in compliance with the License. You may obtain
+#    a copy of the License at
+#
+#         http://www.apache.org/licenses/LICENSE-2.0
+#
+#    Unless required by applicable law or agreed to in writing, software
+#    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+#    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+#    License for the specific language governing permissions and limitations
+#    under the License.
+
+import tempfile
+
+from rally.benchmark.scenarios import base
+from rally.benchmark.scenarios.swift import utils
+from rally.benchmark import validation
+from rally import consts
+
+
+class SwiftObjects(utils.SwiftScenario):
+    """Benchmark scenarios for Swift Objects."""
+
+    @validation.required_services(consts.Service.SWIFT)
+    @validation.required_openstack(users=True)
+    @base.scenario(context={"cleanup": ["swift"]})
+    def create_container_and_object_then_list_objects(
+            self, objects_per_container=1,
+            object_size=1024, **kwargs):
+        """Create container and objects then list all objects.
+
+        :param objects_per_container: int, number of objects to upload
+        :param object_size: int, temporary local object size
+        :param kwargs: dict, optional parameters to create container
+        """
+        key_suffix = "object"
+        if objects_per_container > 1:
+            key_suffix = "%i_objects" % objects_per_container
+
+        container_name = None
+        with tempfile.TemporaryFile() as dummy_file:
+            # set dummy file to specified object size
+            dummy_file.truncate(object_size)
+            container_name = self._create_container(**kwargs)
+            with base.AtomicAction(self, "swift.create_%s" % key_suffix):
+                for i in range(objects_per_container):
+                    dummy_file.seek(0)
+                    self._upload_object(container_name, dummy_file,
+                                        atomic_action=False)
+        self._list_objects(container_name)
+
+    @validation.required_services(consts.Service.SWIFT)
+    @validation.required_openstack(users=True)
+    @base.scenario(context={"cleanup": ["swift"]})
+    def create_container_and_object_then_delete_all(
+            self, objects_per_container=1,
+            object_size=1024, **kwargs):
+        """Create container and objects then delete everything created.
+
+        :param objects_per_container: int, number of objects to upload
+        :param object_size: int, temporary local object size
+        :param kwargs: dict, optional parameters to create container
+        """
+        key_suffix = "object"
+        if objects_per_container > 1:
+            key_suffix = "%i_objects" % objects_per_container
+
+        container_name = None
+        objects_list = []
+        with tempfile.TemporaryFile() as dummy_file:
+            # set dummy file to specified object size
+            dummy_file.truncate(object_size)
+            container_name = self._create_container(**kwargs)
+            with base.AtomicAction(self, "swift.create_%s" % key_suffix):
+                for i in range(objects_per_container):
+                    dummy_file.seek(0)
+                    object_name = self._upload_object(container_name,
+                                                      dummy_file,
+                                                      atomic_action=False)[1]
+                    objects_list.append(object_name)
+
+        with base.AtomicAction(self, "swift.delete_%s" % key_suffix):
+            for object_name in objects_list:
+                self._delete_object(container_name, object_name,
+                                    atomic_action=False)
+        self._delete_container(container_name)
+
+    @validation.required_services(consts.Service.SWIFT)
+    @validation.required_openstack(users=True)
+    @base.scenario(context={"cleanup": ["swift"]})
+    def create_container_and_object_then_download_object(
+            self, objects_per_container=1,
+            object_size=1024, **kwargs):
+        """Create container and objects then download all objects.
+
+        :param objects_per_container: int, number of objects to upload
+        :param object_size: int, temporary local object size
+        :param kwargs: dict, optional parameters to create container
+        """
+        key_suffix = "object"
+        if objects_per_container > 1:
+            key_suffix = "%i_objects" % objects_per_container
+
+        container_name = None
+        objects_list = []
+        with tempfile.TemporaryFile() as dummy_file:
+            # set dummy file to specified object size
+            dummy_file.truncate(object_size)
+            container_name = self._create_container(**kwargs)
+            with base.AtomicAction(self, "swift.create_%s" % key_suffix):
+                for i in range(objects_per_container):
+                    dummy_file.seek(0)
+                    object_name = self._upload_object(container_name,
+                                                      dummy_file,
+                                                      atomic_action=False)[1]
+                    objects_list.append(object_name)
+
+        with base.AtomicAction(self, "swift.download_%s" % key_suffix):
+            for object_name in objects_list:
+                self._download_object(container_name, object_name,
+                                      atomic_action=False)

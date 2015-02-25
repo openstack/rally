@@ -892,7 +892,7 @@ class FakeObjectManager(FakeManager):
 
     def put_object(self, container_name, object_name, content, **kwargs):
         container = self.find(name=container_name)
-        if container is None or object_name in container.items:
+        if container is None:
             raise swift_exceptions.ClientException("Object PUT failed")
         container.items[object_name] = content
         return mock.MagicMock()
