@@ -47,9 +47,9 @@ class VolumeGenerator(base.Context):
         "additionalProperties": False
     }
 
-    def __init__(self, context):
-        super(VolumeGenerator, self).__init__(context)
-        self.config.setdefault("volumes_per_tenant", 1)
+    DEFAULT_CONFIG = {
+        "volumes_per_tenant": 1
+    }
 
     @rutils.log_task_wrapper(LOG.info, _("Enter context: `Volumes`"))
     def setup(self):

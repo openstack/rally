@@ -62,9 +62,9 @@ class ServerGenerator(base.Context):
         "additionalProperties": False
     }
 
-    def __init__(self, context):
-        super(ServerGenerator, self).__init__(context)
-        self.config.setdefault("servers_per_tenant", 5)
+    DEFAULT_CONFIG = {
+        "servers_per_tenant": 5
+    }
 
     @rutils.log_task_wrapper(LOG.info, _("Enter context: `Servers`"))
     def setup(self):

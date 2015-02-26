@@ -54,10 +54,10 @@ class StackGenerator(base.Context):
         "additionalProperties": False
     }
 
-    def __init__(self, context):
-        super(StackGenerator, self).__init__(context)
-        self.config.setdefault("stacks_per_tenant", 2)
-        self.config.setdefault("resources_per_stack", 10)
+    DEFAULT_CONFIG = {
+        "stacks_per_tenant": 2,
+        "resources_per_stack": 10
+    }
 
     @staticmethod
     def _prepare_stack_template(res_num):
