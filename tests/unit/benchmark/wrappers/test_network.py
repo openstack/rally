@@ -259,6 +259,7 @@ class NeutronWrapperTestCase(test.TestCase):
                                    "network_id": "foo_id",
                                    "tenant_id": "foo_tenant",
                                    "ip_version": service.SUBNET_IP_VERSION,
+                                   "dns_nameservers": ["8.8.8.8", "8.8.4.4"],
                                    "cidr": "cidr-%d" % i}})
              for i in range(subnets_num)])
 
@@ -296,7 +297,8 @@ class NeutronWrapperTestCase(test.TestCase):
                         "name": "foo_name",
                         "status": "foo_status"}}
         net = service.create_network("foo_tenant", add_router=True,
-                                     subnets_num=subnets_num)
+                                     subnets_num=subnets_num,
+                                     dns_nameservers=["foo_nameservers"])
         self.assertEqual(net, {"id": "foo_id",
                                "name": "foo_name",
                                "status": "foo_status",
@@ -313,6 +315,7 @@ class NeutronWrapperTestCase(test.TestCase):
                                    "network_id": "foo_id",
                                    "tenant_id": "foo_tenant",
                                    "ip_version": service.SUBNET_IP_VERSION,
+                                   "dns_nameservers": ["foo_nameservers"],
                                    "cidr": "foo_cidr"}})] * subnets_num)
         self.assertEqual(service.client.add_interface_router.mock_calls,
                          [mock.call("foo_router", {"subnet_id": "foo_subnet"})

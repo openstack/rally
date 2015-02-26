@@ -241,7 +241,9 @@ class NeutronWrapper(NetworkWrapper):
         network_args = {
             "network": {
                 "tenant_id": tenant_id,
-                "name": utils.generate_random_name("rally_net_")}}
+                "name": utils.generate_random_name("rally_net_")
+            }
+        }
         network = self.client.create_network(network_args)["network"]
 
         router = None
@@ -258,7 +260,11 @@ class NeutronWrapper(NetworkWrapper):
                     "name": utils.generate_random_name("rally_subnet_"),
                     "ip_version": self.SUBNET_IP_VERSION,
                     "cidr": self._generate_cidr(),
-                    "enable_dhcp": True}}
+                    "enable_dhcp": True,
+                    "dns_nameservers": kwargs.get("dns_nameservers",
+                                                  ["8.8.8.8", "8.8.4.4"])
+                }
+            }
             subnet = self.client.create_subnet(subnet_args)["subnet"]
             subnets.append(subnet["id"])
 
