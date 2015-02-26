@@ -78,10 +78,10 @@ class SaharaImageTestCase(test.TestCase):
         glance_calls = []
 
         for i in range(self.tenants_num):
-            glance_calls.append(mock.call("sahara_image_42",
-                                          "bare",
+            glance_calls.append(mock.call("bare",
                                           "http://somewhere",
-                                          "qcow2"))
+                                          "qcow2",
+                                          "rally_ctx_image_", 15))
 
         sahara_update_image_calls = []
         sahara_update_tags_calls = []

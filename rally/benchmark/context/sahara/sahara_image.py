@@ -14,7 +14,6 @@
 
 from rally.benchmark.context import base
 from rally.benchmark.context.cleanup import manager as resource_manager
-from rally.benchmark.scenarios import base as scenarios_base
 from rally.benchmark.scenarios.glance import utils as glance_utils
 from rally.common.i18n import _
 from rally.common import log as logging
@@ -68,13 +67,9 @@ class SaharaImage(base.Context):
             clients = osclients.Clients(user["endpoint"])
             glance_util_class = glance_utils.GlanceScenario(
                 clients=clients)
-
-            image_name = scenarios_base.Scenario._generate_random_name(
-                prefix="sahara_image_", length=15)
-            image = glance_util_class._create_image(image_name,
-                                                    "bare",
-                                                    image_url,
-                                                    "qcow2")
+            image = glance_util_class._create_image("bare", image_url,
+                                                    "qcow2",
+                                                    "rally_ctx_image_", 15)
 
             clients.sahara().images.update_image(image_id=image.id,
                                                  user_name=user_name,

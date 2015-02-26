@@ -49,8 +49,7 @@ class GlanceImages(utils.GlanceScenario, nova_utils.NovaScenario):
                             ami, ari, aki, vhd, vmdk, raw, qcow2, vdi, and iso
         :param kwargs: optional parameters to create image
         """
-        self._create_image(self._generate_random_name(),
-                           container_format,
+        self._create_image(container_format,
                            image_location,
                            disk_format,
                            **kwargs)
@@ -86,9 +85,7 @@ class GlanceImages(utils.GlanceScenario, nova_utils.NovaScenario):
                             ami, ari, aki, vhd, vmdk, raw, qcow2, vdi, and iso
         :param kwargs: optional parameters to create image
         """
-        image_name = self._generate_random_name()
-        image = self._create_image(image_name,
-                                   container_format,
+        image = self._create_image(container_format,
                                    image_location,
                                    disk_format,
                                    **kwargs)
@@ -114,9 +111,7 @@ class GlanceImages(utils.GlanceScenario, nova_utils.NovaScenario):
         :param number_instances: number of Nova servers to boot
         :param kwargs: optional parameters to create server
         """
-        image_name = self._generate_random_name()
-        image = self._create_image(image_name,
-                                   container_format,
+        image = self._create_image(container_format,
                                    image_location,
                                    disk_format)
         image_id = image.id

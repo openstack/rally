@@ -87,11 +87,11 @@ class ImageGenerator(base.Context):
                 elif image_name:
                     cur_name = image_name
                 else:
-                    cur_name = glance_scenario._generate_random_name(
-                        prefix="rally_ctx_image_")
+                    cur_name = None
 
                 image = glance_scenario._create_image(
-                    cur_name, image_container, image_url, image_type,
+                    image_container, image_url, image_type,
+                    name=cur_name, prefix="rally_ctx_image_",
                     min_ram=self.config.get("min_ram", 0),
                     min_disk=self.config.get("min_disk", 0))
                 current_images.append(image.id)
