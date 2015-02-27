@@ -31,7 +31,7 @@ class NetworkTestCase(test.TestCase):
                             "bar_tenant": {"networks": [{"id": "bar_net"}]}}}
 
     def test_START_CIDR_DFLT(self):
-        netaddr.IPNetwork(network_context.Network.START_CIDR_DFLT)
+        netaddr.IPNetwork(network_context.Network.DEFAULT_CONFIG["start_cidr"])
 
     @mock.patch("rally.osclients.Clients")
     @mock.patch(NET + "wrap", return_value="foo_service")
@@ -40,7 +40,7 @@ class NetworkTestCase(test.TestCase):
         self.assertEqual(context.net_wrapper, "foo_service")
         self.assertEqual(context.config["networks_per_tenant"], 1)
         self.assertEqual(context.config["start_cidr"],
-                         network_context.Network.START_CIDR_DFLT)
+                         network_context.Network.DEFAULT_CONFIG["start_cidr"])
 
         context = network_context.Network(
             self.get_context(start_cidr="foo_cidr", networks_per_tenant=42))

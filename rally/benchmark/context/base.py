@@ -67,6 +67,9 @@ class Context(object):
 
     def __init__(self, context):
         self.config = context.get("config", {}).get(self.get_name(), {})
+        if hasattr(self, "DEFAULT_CONFIG"):
+            for key, value in self.DEFAULT_CONFIG.items():
+                self.config.setdefault(key, value)
         self.context = context
         self.task = context["task"]
 

@@ -43,12 +43,14 @@ class Network(base.Context):
         },
         "additionalProperties": False
     }
-    START_CIDR_DFLT = "10.2.0.0/24"
+
+    DEFAULT_CONFIG = {
+        "start_cidr": "10.2.0.0/24",
+        "networks_per_tenant": 1
+    }
 
     def __init__(self, context):
         super(Network, self).__init__(context)
-        self.config.setdefault("start_cidr", self.START_CIDR_DFLT)
-        self.config.setdefault("networks_per_tenant", 1)
         self.net_wrapper = network_wrapper.wrap(
             osclients.Clients(context["admin"]["endpoint"]),
             self.config)

@@ -84,17 +84,17 @@ class UserGenerator(base.Context):
     PATTERN_TENANT = "ctx_rally_%(task_id)s_tenant_%(iter)i"
     PATTERN_USER = "ctx_rally_%(tenant_id)s_user_%(uid)d"
 
+    DEFAULT_CONFIG = {
+        "tenants": 1,
+        "users_per_tenant": 1,
+        "resource_management_workers":
+            cfg.CONF.users_context.resource_management_workers,
+        "project_domain": cfg.CONF.users_context.project_domain,
+        "user_domain": cfg.CONF.users_context.user_domain
+    }
+
     def __init__(self, context):
         super(UserGenerator, self).__init__(context)
-        self.config.setdefault("tenants", 1)
-        self.config.setdefault("users_per_tenant", 1)
-        self.config.setdefault(
-            "resource_management_workers",
-            cfg.CONF.users_context.resource_management_workers)
-        self.config.setdefault("project_domain",
-                               cfg.CONF.users_context.project_domain)
-        self.config.setdefault("user_domain",
-                               cfg.CONF.users_context.user_domain)
         self.context["users"] = []
         self.context["tenants"] = dict()
         self.endpoint = self.context["admin"]["endpoint"]
