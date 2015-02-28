@@ -120,19 +120,47 @@ class ValidatorsTestCase(test.TestCase):
         result = validation._get_validated_image({}, None, "non_existing")
         self.assertFalse(result[0].is_valid, result[0].msg)
 
+    def test__get_validated_image_from_context(self):
+        clients = mock.MagicMock()
+        image = {
+            "size": 0,
+            "min_ram": 0,
+            "min_disk": 0
+        }
+        result = validation._get_validated_image({"args": {
+            "image": {"name": "foo"}}, "context": {
+            "images": {
+                "image_name": "foo"}
+        }}, clients, "image")
+
+        self.assertTrue(result[0].is_valid, result[0].msg)
+        self.assertEqual(result[1], image)
+
+        result = validation._get_validated_image({"args": {
+            "image": {"regex": r"^foo$"}}, "context": {
+            "images": {
+                "image_name": "foo"}
+        }}, clients, "image")
+
+        self.assertTrue(result[0].is_valid, result[0].msg)
+        self.assertEqual(result[1], image)
+
     @mock.patch("rally.benchmark.validation.types.ImageResourceType.transform")
     def test__get_validated_image(self, mock_transform):
         mock_transform.return_value = "image_id"
         clients = mock.MagicMock()
-        clients.glance().images.get.return_value = "image"
+        clients.glance().images.get().to_dict.return_value = {
+            "image": "image_id"}
 
-        result = validation._get_validated_image({"args": {"a": "test"}},
+        result = validation._get_validated_image({"args": {"a": "test"},
+                                                  "context": {
+                                                      "image_name": "foo"}},
                                                  clients, "a")
         self.assertTrue(result[0].is_valid, result[0].msg)
-        self.assertEqual(result[1], "image")
+        self.assertEqual(result[1], {"image": "image_id"})
         mock_transform.assert_called_once_with(clients=clients,
                                                resource_config="test")
-        clients.glance().images.get.assert_called_once_with(image="image_id")
+        clients.glance().images.get.assert_called_with(image="image_id")
 
     @mock.patch("rally.benchmark.validation.types.ImageResourceType.transform")
     def test__get_validated_image_transform_error(self, mock_transform):
@@ -144,7 +172,8 @@ class ValidatorsTestCase(test.TestCase):
     @mock.patch("rally.benchmark.validation.types.ImageResourceType.transform")
     def test__get_validated_image_not_found(self, mock_transform):
         clients = mock.MagicMock()
-        clients.glance().images.get.side_effect = glance_exc.HTTPNotFound("")
+        clients.glance().images.get().to_dict.side_effect = (
+            glance_exc.HTTPNotFound(""))
         result = validation._get_validated_image({"args": {"a": "test"}},
                                                  clients, "a")
         self.assertFalse(result[0].is_valid, result[0].msg)
@@ -254,7 +283,12 @@ class ValidatorsTestCase(test.TestCase):
     @mock.patch("rally.benchmark.validation._get_validated_image")
     @mock.patch("rally.benchmark.validation._get_validated_flavor")
     def test_image_valid_on_flavor(self, mock_get_flavor, mock_get_image):
-        image = mock.MagicMock()
+        image = {
+            "id": "fake_id",
+            "min_ram": None,
+            "size": 2,
+            "min_disk": 0
+        }
         flavor = mock.MagicMock()
         success = validation.ValidationResult(True)
         mock_get_flavor.return_value = (success, flavor)
@@ -265,27 +299,27 @@ class ValidatorsTestCase(test.TestCase):
         # test ram
         flavor.disk = None
         flavor.ram = 2
-        image.min_ram = None
+        image["min_ram"] = None
         result = validator(None, None, None)
         self.assertTrue(result.is_valid, result.msg)
-        image.min_ram = 4
+        image["min_ram"] = 4
         result = validator(None, None, None)
         self.assertFalse(result.is_valid, result.msg)
-        image.min_ram = 1
+        image["min_ram"] = 1
         result = validator(None, None, None)
         self.assertTrue(result.is_valid, result.msg)
 
         # test disk (flavor.disk not None)
-        image.size = 2
-        image.min_disk = 0
+        image["size"] = 2
+        image["min_disk"] = 0
         flavor.disk = 5.0 / (1024 ** 3)
         result = validator(None, None, None)
         self.assertTrue(result.is_valid, result.msg)
-        image.min_disk = flavor.disk * 2
+        image["min_disk"] = flavor.disk * 2
         result = validator(None, None, None)
         self.assertFalse(result.is_valid, result.msg)
-        image.min_disk = flavor.disk / 4
-        image.size = 1000
+        image["min_disk"] = flavor.disk / 4
+        image["size"] = 1000
         result = validator(None, None, None)
         self.assertFalse(result.is_valid, result.msg)
 
@@ -297,7 +331,7 @@ class ValidatorsTestCase(test.TestCase):
         clients = mock.MagicMock()
         clients.nova().flavors.get.side_effect = nova_exc.NotFound("")
 
-        image = mock.MagicMock()
+        image = {"min_ram": 24, "id": "fake_id"}
         success = validation.ValidationResult(True)
         mock_get_image.return_value = (success, image)
 
@@ -314,11 +348,11 @@ class ValidatorsTestCase(test.TestCase):
         }
 
         # test ram
-        image.min_ram = None
+        image["min_ram"] = None
         result = validator(config, clients, None)
         self.assertTrue(result.is_valid, result.msg)
 
-        image.min_ram = 64
+        image["min_ram"] = 64
         result = validator(config, clients, None)
         self.assertFalse(result.is_valid, result.msg)
 

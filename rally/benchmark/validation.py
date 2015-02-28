@@ -16,6 +16,7 @@
 
 import functools
 import os
+import re
 
 from glanceclient import exc as glance_exc
 from novaclient import exceptions as nova_exc
@@ -151,17 +152,33 @@ def file_exists(config, clients, deployment, param_name, mode=os.R_OK):
 
 
 def _get_validated_image(config, clients, param_name):
-    image_value = config.get("args", {}).get(param_name)
-    if not image_value:
-        msg = "Parameter %s is not specified." % param_name
+    image_context = config.get("context", {}).get("images", {})
+    image_args = config.get("args", {}).get(param_name)
+    image_ctx_name = image_context.get("image_name")
+
+    if not image_args:
+        msg = _("Parameter %s is not specified.") % param_name
         return (ValidationResult(False, msg), None)
+    if "image_name" in image_context:
+        # NOTE(rvasilets) check string is "exactly equal to" a regex
+        # or image name from context equal to image name from args
+        if "regex" in image_args:
+            match = re.match(image_args.get("regex"), image_ctx_name)
+        if image_ctx_name == image_args.get("name") or (
+                    "regex" in image_args and match):
+            image = {
+                "size": image_context.get("min_disk", 0),
+                "min_ram": image_context.get("min_ram", 0),
+                "min_disk": image_context.get("min_disk", 0)
+            }
+            return (ValidationResult(True), image)
     try:
         image_id = types.ImageResourceType.transform(
-            clients=clients, resource_config=image_value)
-        image = clients.glance().images.get(image=image_id)
+            clients=clients, resource_config=image_args)
+        image = clients.glance().images.get(image=image_id).to_dict()
         return (ValidationResult(True), image)
     except (glance_exc.HTTPNotFound, exceptions.InvalidScenarioArgument):
-        message = _("Image '%s' not found") % image_value
+        message = _("Image '%s' not found") % image_args
         return (ValidationResult(False, message), None)
 
 
@@ -240,20 +257,20 @@ def image_valid_on_flavor(config, clients, deployment, flavor_name,
     if not valid_result.is_valid:
         return valid_result
 
-    if flavor.ram < (image.min_ram or 0):
+    if flavor.ram < (image["min_ram"] or 0):
         message = _("The memory size for flavor '%s' is too small "
-                    "for requested image '%s'") % (flavor.id, image.id)
+                    "for requested image '%s'") % (flavor.id, image["id"])
         return ValidationResult(False, message)
 
     if flavor.disk:
-        if (image.size or 0) > flavor.disk * (1024 ** 3):
+        if (image["size"] or 0) > flavor.disk * (1024 ** 3):
             message = _("The disk size for flavor '%s' is too small "
-                        "for requested image '%s'") % (flavor.id, image.id)
+                        "for requested image '%s'") % (flavor.id, image["id"])
             return ValidationResult(False, message)
 
-        if (image.min_disk or 0) > flavor.disk:
+        if (image["min_disk"] or 0) > flavor.disk:
             message = _("The disk size for flavor '%s' is too small "
-                        "for requested image '%s'") % (flavor.id, image.id)
+                        "for requested image '%s'") % (flavor.id, image["id"])
             return ValidationResult(False, message)
 
 
