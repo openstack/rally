@@ -17,7 +17,6 @@ import jsonschema
 import mock
 
 from rally.benchmark import runner
-from rally import consts
 from rally.plugins.common.runners import constant
 from tests.unit import fakes
 from tests.unit import test
@@ -31,14 +30,9 @@ class ConstantScenarioRunnerTestCase(test.TestCase):
 
     def setUp(self):
         super(ConstantScenarioRunnerTestCase, self).setUp()
-        times = 4
-        concurrency = 2
-        timeout = 2
-        max_cpu_count = 2
-        type = consts.RunnerType.CONSTANT
-        self.config = {"times": times, "concurrency": concurrency,
-                       "timeout": timeout, "type": type,
-                       "max_cpu_count": max_cpu_count}
+        self.config = {"times": 4, "concurrency": 2,
+                       "timeout": 2, "type": "constant",
+                       "max_cpu_count": 2}
         self.context = fakes.FakeUserContext({"task":
                                              {"uuid": "uuid"}}).context
         self.args = {"a": 1}
@@ -48,20 +42,10 @@ class ConstantScenarioRunnerTestCase(test.TestCase):
         constant.ConstantScenarioRunner.validate(self.config)
 
     def test_validate_failed(self):
-        self.config["type"] = consts.RunnerType.CONSTANT_FOR_DURATION
+        self.config["new_key"] = "should fail"
         self.assertRaises(jsonschema.ValidationError,
-                          constant.ConstantScenarioRunner.validate,
+                          runner.ScenarioRunner.validate,
                           self.config)
-
-    @mock.patch(RUNNERS_BASE + "scenario_base")
-    @mock.patch(RUNNERS_BASE + "osclients")
-    def test_get_constant_runner(self, mock_osclients, mock_base):
-
-        mock_osclients.Clients.return_value = fakes.FakeClients()
-
-        runner_obj = runner.ScenarioRunner.get_runner(
-            mock.MagicMock(), {"type": consts.RunnerType.CONSTANT})
-        self.assertIsNotNone(runner_obj)
 
     @mock.patch(RUNNERS + "constant.time")
     @mock.patch(RUNNERS + "constant.threading.Thread")
@@ -246,12 +230,8 @@ class ConstantForDurationScenarioRunnerTestCase(test.TestCase):
 
     def setUp(self):
         super(ConstantForDurationScenarioRunnerTestCase, self).setUp()
-        duration = 0
-        concurrency = 2
-        timeout = 2
-        type = consts.RunnerType.CONSTANT_FOR_DURATION
-        self.config = {"duration": duration, "concurrency": concurrency,
-                       "timeout": timeout, "type": type}
+        self.config = {"duration": 0, "concurrency": 2,
+                       "timeout": 2, "type": "constant_for_duration"}
         self.context = fakes.FakeUserContext({"task":
                                              {"uuid": "uuid"}}).context
         self.args = {"a": 1}
@@ -260,9 +240,9 @@ class ConstantForDurationScenarioRunnerTestCase(test.TestCase):
         constant.ConstantForDurationScenarioRunner.validate(self.config)
 
     def test_validate_failed(self):
-        self.config["type"] = consts.RunnerType.CONSTANT
-        self.assertRaises(jsonschema.ValidationError, constant.
-                          ConstantForDurationScenarioRunner.validate,
+        self.config["times"] = "gagaga"
+        self.assertRaises(jsonschema.ValidationError,
+                          runner.ScenarioRunner.validate,
                           self.config)
 
     def test_run_scenario_constantly_for_duration(self):

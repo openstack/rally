@@ -51,14 +51,6 @@ class InfoTestCase(unittest.TestCase):
         expected = "failure_rate (SLA)"
         self.assertIn(expected, self.rally("info find failure_rte"))
 
-    def test_find_sla_by_class_name(self):
-        expected = "failure_rate (SLA)"
-        self.assertIn(expected, self.rally("info find FailureRate"))
-
-    def test_find_sla_by_class_name_misspelling_typos(self):
-        expected = "failure_rate (SLA)"
-        self.assertIn(expected, self.rally("info find FailureRte"))
-
     def test_find_deployment_engine(self):
         marker_string = "ExistingCloud (deploy engine)"
         self.assertIn(marker_string, self.rally("info find ExistingCloud"))

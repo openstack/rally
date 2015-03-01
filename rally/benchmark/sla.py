@@ -25,8 +25,7 @@ import jsonschema
 import six
 
 from rally.common.i18n import _
-from rally.common import utils
-from rally import exceptions
+from rally.common.plugin import plugin
 
 
 def _format_result(criterion_name, success, detail):
@@ -43,7 +42,7 @@ class SLAChecker(object):
         self.config = config
         self.unexpected_failure = None
         self.aborted = False
-        self.sla_criteria = [SLA.get_by_name(name)(criterion_value)
+        self.sla_criteria = [SLA.get(name)(criterion_value)
                              for name, criterion_value
                              in config.get("sla", {}).items()]
 
@@ -76,8 +75,13 @@ class SLAChecker(object):
         self.unexpected_failure = exc
 
 
+def configure(name, namespace="default"):
+    return plugin.configure(name=name, namespace=namespace)
+
+
 @six.add_metaclass(abc.ABCMeta)
-class SLA(object):
+@configure(name="base_sla")
+class SLA(plugin.Plugin):
     """Factory for criteria classes."""
 
     def __init__(self, criterion_value):
@@ -86,22 +90,14 @@ class SLA(object):
 
     @staticmethod
     def validate(config):
-        properties = dict([(c.OPTION_NAME, c.CONFIG_SCHEMA)
-                           for c in utils.itersubclasses(SLA)])
+        properties = dict([(s.get_name(), s.CONFIG_SCHEMA)
+                           for s in SLA.get_all()])
         schema = {
             "type": "object",
             "properties": properties,
             "additionalProperties": False,
         }
         jsonschema.validate(config, schema)
-
-    @staticmethod
-    def get_by_name(name):
-        """Returns SLA by name or config option name."""
-        for sla in utils.itersubclasses(SLA):
-            if name == sla.__name__ or name == sla.OPTION_NAME:
-                return sla
-        raise exceptions.NoSuchSLA(name=name)
 
     @abc.abstractmethod
     def add_iteration(self, iteration):
@@ -116,7 +112,7 @@ class SLA(object):
 
     def result(self):
         """Returns the SLA result dict corresponding to the current state."""
-        return _format_result(self.OPTION_NAME, self.success, self.details())
+        return _format_result(self.get_name(), self.success, self.details())
 
     @abc.abstractmethod
     def details(self):

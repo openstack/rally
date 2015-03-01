@@ -139,6 +139,11 @@ class ProviderFactory(object):
                 return provider
         raise exceptions.NoSuchVMProvider(vm_provider_name=name)
 
+    # TODO(boris-42): Remove after switching to plugin base.
+    @classmethod
+    def get_name(cls):
+        return cls.__name__
+
     @staticmethod
     def get_provider(config, deployment):
         """Returns instance of server provider by name."""

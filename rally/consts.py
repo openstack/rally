@@ -82,13 +82,6 @@ class _EndpointType(utils.ImmutableMixin, utils.EnumMixin):
     PUBLIC = "public"
 
 
-class _RunnerType(utils.ImmutableMixin, utils.EnumMixin):
-    SERIAL = "serial"
-    CONSTANT = "constant"
-    CONSTANT_FOR_DURATION = "constant_for_duration"
-    RPS = "rps"
-
-
 class _Service(utils.ImmutableMixin, utils.EnumMixin):
     """OpenStack services names, by rally convention."""
 
@@ -171,7 +164,6 @@ class _ServiceType(utils.ImmutableMixin, utils.EnumMixin):
 TaskStatus = _TaskStatus()
 DeployStatus = _DeployStatus()
 EndpointPermission = _EndpointPermission()
-RunnerType = _RunnerType()
 ServiceType = _ServiceType()
 Service = _Service()
 EndpointType = _EndpointType()

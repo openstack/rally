@@ -26,9 +26,9 @@ from rally.benchmark.scenarios import base as scenario_base
 from rally.benchmark import types
 from rally.benchmark import utils
 from rally.common import log as logging
+from rally.common.plugin import plugin
 from rally.common import utils as rutils
 from rally import consts
-from rally import exceptions
 from rally import osclients
 
 
@@ -162,7 +162,12 @@ class ScenarioRunnerResult(dict):
         jsonschema.validate(result_list, self.RESULT_SCHEMA)
 
 
-class ScenarioRunner(object):
+def configure(name, namespace="default"):
+    return plugin.configure(name=name, namespace=namespace)
+
+
+@configure(name="base_runner")
+class ScenarioRunner(plugin.Plugin):
     """Base class for all scenario runners.
 
     Scenario runner is an entity that implements a certain strategy of
@@ -189,27 +194,9 @@ class ScenarioRunner(object):
         self.aborted = multiprocessing.Event()
 
     @staticmethod
-    def _get_cls(runner_type):
-        for runner in rutils.itersubclasses(ScenarioRunner):
-            if runner_type == runner.__execution_type__:
-                return runner
-        raise exceptions.NoSuchRunner(type=runner_type)
-
-    @staticmethod
-    def get_runner(task, config):
-        """Returns instance of a scenario runner for execution type.
-
-        :param task: instance of objects.Task corresponding to current task
-        :param config: contents of "runner" section from task configuration
-                       for specific benchmark
-        """
-        return ScenarioRunner._get_cls(config["type"])(task, config)
-
-    @staticmethod
     def validate(config):
         """Validates runner's part of task config."""
-        runner = ScenarioRunner._get_cls(config.get("type",
-                                                    consts.RunnerType.SERIAL))
+        runner = ScenarioRunner.get(config.get("type", "serial"))
         jsonschema.validate(config, runner.CONFIG_SCHEMA)
 
     @abc.abstractmethod
@@ -303,8 +290,8 @@ class ScenarioRunner(object):
         """
         info_message = "\n\t".join(["%s: %s" % (k, v)
                                     for k, v in info.items()])
-        LOG.debug("Starting the %(runner_type)s runner (task UUID: %(task)s)."
+        LOG.debug("Starting the %(name)s runner (task UUID: %(task)s)."
                   "\n\t%(info)s" %
-                  {"runner_type": self.__execution_type__,
+                  {"name": self._meta_get("name"),
                    "task": self.task["uuid"],
                    "info": info_message})

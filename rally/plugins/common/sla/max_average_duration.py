@@ -23,9 +23,9 @@ from rally.benchmark import sla
 from rally.common.i18n import _
 
 
+@sla.configure(name="max_avg_duration")
 class MaxAverageDuration(sla.SLA):
     """Maximum average duration of one iteration in seconds."""
-    OPTION_NAME = "max_avg_duration"
     CONFIG_SCHEMA = {"type": "number", "minimum": 0.0,
                      "exclusiveMinimum": True}
 

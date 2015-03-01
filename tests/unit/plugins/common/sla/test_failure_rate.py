@@ -22,14 +22,6 @@ from tests.unit import test
 
 class SLAPluginTestCase(test.TestCase):
 
-    def test_get_by_name(self):
-        self.assertEqual(failure_rate.FailureRate,
-                         failure_rate.FailureRate.get_by_name("FailureRate"))
-
-    def test_get_by_name_by_config_option(self):
-        self.assertEqual(failure_rate.FailureRate,
-                         failure_rate.FailureRate.get_by_name("failure_rate"))
-
     def test_validate(self):
         cnf = {"test_criterion": 42}
         failure_rate.sla.SLA.validate(cnf)

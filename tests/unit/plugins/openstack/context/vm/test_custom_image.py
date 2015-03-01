@@ -17,6 +17,7 @@
 
 import mock
 
+from rally.benchmark import context
 from rally.plugins.openstack.context.vm import custom_image
 from tests.unit import test
 
@@ -24,6 +25,7 @@ from tests.unit import test
 BASE = "rally.plugins.openstack.context.vm.custom_image"
 
 
+@context.context(name="test_custom_image", order=500)
 class TestImageGenerator(custom_image.BaseCustomImageGenerator):
     def _customize_image(self, *args):
         pass
@@ -37,7 +39,7 @@ class BaseCustomImageContextVMTestCase(test.TestCase):
         self.context = {
             "task": mock.MagicMock(),
             "config": {
-                "custom_image": {
+                "test_custom_image": {
                     "image": {"name": "image"},
                     "flavor": {"name": "flavor"},
                     "username": "fedora",
