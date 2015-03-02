@@ -17,12 +17,15 @@ import subprocess
 import sys
 
 import netaddr
+import six
 
 from rally.benchmark.scenarios import base
 from rally.benchmark import utils as bench_utils
 from rally.benchmark.wrappers import network as network_wrapper
+from rally.common.i18n import _
 from rally.common import log as logging
 from rally.common import sshutils
+from rally import exceptions
 
 LOG = logging.getLogger(__name__)
 
@@ -33,15 +36,29 @@ class VMScenario(base.Scenario):
     VM scenarios are scenarios executed inside some launched VM instance.
     """
 
-    @base.atomic_action_timer("vm.run_command")
-    def _run_action(self, ssh, interpreter, script):
+    @base.atomic_action_timer("vm.run_command_over_ssh")
+    def _run_command_over_ssh(self, ssh, interpreter, script):
         """Run command inside an instance.
 
         This is a separate function so that only script execution is timed.
 
+        :param ssh: A SSHClient instance.
+        :param interpreter: The interpreter that will be used to execute
+                the script.
+        :param script: Path to the script file or its content in a StringIO.
+
         :returns: tuple (exit_status, stdout, stderr)
         """
-        return ssh.execute(interpreter, stdin=open(script, "rb"))
+        if isinstance(script, six.string_types):
+            stdin = open(script, "rb")
+        elif isinstance(script, six.moves.StringIO):
+            stdin = script
+        else:
+            raise exceptions.ScriptError(
+                "Either file path or StringIO expected, given %s" %
+                type(script).__name__)
+
+        return ssh.execute(interpreter, stdin=stdin)
 
     def _get_netwrap(self):
         if not hasattr(self, "_netwrap"):
@@ -106,20 +123,19 @@ class VMScenario(base.Scenario):
         )
 
     def _run_command(self, server_ip, port, username, password,
-                     interpreter, script):
+                     interpreter, script, pkey=None):
         """Run command via SSH on server.
 
         Create SSH connection for server, wait for server to become
         available (there is a delay between server being set to ACTIVE
-        and sshd being available). Then call run_action to actually
+        and sshd being available). Then call run_command_over_ssh to actually
         execute the command.
         """
+        pkey = pkey if pkey else self.context["user"]["keypair"]["private"]
         ssh = sshutils.SSH(username, server_ip, port=port,
-                           pkey=self.context["user"]["keypair"]["private"],
-                           password=password)
-
+                           pkey=pkey, password=password)
         self._wait_for_ssh(ssh)
-        return self._run_action(ssh, interpreter, script)
+        return self._run_command_over_ssh(ssh, interpreter, script)
 
     @staticmethod
     def _ping_ip_address(host, should_succeed=True):
