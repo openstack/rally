@@ -433,10 +433,15 @@ def retry(times, func, *args, **kwargs):
 
 
 def iterate_per_tenants(users):
-    processed_tenants = list()
+    """Iterate of a single arbitrary user from each tenant
+
+    :type users: list of users
+    :return: iterator of a single user from each tenant
+    """
+    processed_tenants = set()
     for user in users:
         if user["tenant_id"] not in processed_tenants:
-            processed_tenants.append(user["tenant_id"])
+            processed_tenants.add(user["tenant_id"])
             yield (user, user["tenant_id"])
 
 
