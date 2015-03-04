@@ -15,6 +15,7 @@
 
 import math
 
+from rally.common.i18n import _
 from rally import exceptions
 
 
@@ -29,6 +30,26 @@ def mean(values):
         raise exceptions.InvalidArgumentsException(
                                         "the list should be non-empty")
     return math.fsum(values) / len(values)
+
+
+def median(values):
+    """Find the sample median of a list of values.
+
+    :parameter values: non-empty list of numbers
+
+    :returns: float value
+     """
+    if not values:
+        raise ValueError(_("no median for empty data"))
+
+    values = sorted(values)
+    size = len(values)
+
+    if size % 2 == 1:
+        return values[size // 2]
+    else:
+        index = size // 2
+        return (values[index - 1] + values[index]) / 2.0
 
 
 def percentile(values, percent):
