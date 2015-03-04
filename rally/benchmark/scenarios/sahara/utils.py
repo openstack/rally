@@ -29,8 +29,10 @@ LOG = logging.getLogger(__name__)
 CONF = cfg.CONF
 
 SAHARA_TIMEOUT_OPTS = [
-    cfg.IntOpt("cluster_create_timeout", default=600,
+    cfg.IntOpt("cluster_create_timeout", default=1800,
                help="A timeout in seconds for a cluster create operation"),
+    cfg.IntOpt("cluster_delete_timeout", default=900,
+               help="A timeout in seconds for a cluster delete operation"),
     cfg.IntOpt("cluster_check_interval", default=5,
                help="Cluster status polling interval in seconds"),
     cfg.IntOpt("job_execution_timeout", default=600,
@@ -467,8 +469,11 @@ class SaharaScenario(base.Scenario):
         """
         self.clients("sahara").clusters.delete(cluster.id)
 
-        bench_utils.wait_for(resource=cluster.id,
-                             is_ready=self._is_cluster_deleted)
+        bench_utils.wait_for(
+            resource=cluster.id,
+            timeout=CONF.benchmark.cluster_delete_timeout,
+            check_interval=CONF.benchmark.cluster_check_interval,
+            is_ready=self._is_cluster_deleted)
 
     def _is_cluster_deleted(self, cl_id):
         try:

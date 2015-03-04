@@ -330,7 +330,10 @@
 #nova_server_migrate_poll_interval = 2.0
 
 # A timeout in seconds for a cluster create operation (integer value)
-#cluster_create_timeout = 600
+#cluster_create_timeout = 1800
+
+# A timeout in seconds for a cluster delete operation (integer value)
+#cluster_delete_timeout = 900
 
 # Cluster status polling interval in seconds (integer value)
 #cluster_check_interval = 5
