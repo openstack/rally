@@ -145,7 +145,7 @@ class SaharaEDP(base.Context):
 
     def download_and_save_lib(self, sahara, lib_type, name, download_url,
                               tenant_id):
-        lib_data = requests.get(download_url).json()
+        lib_data = requests.get(download_url).content
 
         job_binary_internal = sahara.job_binary_internals.create(
             name=name,
