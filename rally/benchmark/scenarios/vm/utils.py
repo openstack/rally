@@ -69,8 +69,10 @@ class VMScenario(base.Scenario):
             self._netwrap = network_wrapper.wrap(self.clients)
         return self._netwrap
 
-    def _boot_server_with_fip(self, image, flavor, floating_network=None,
+    def _boot_server_with_fip(self, image, flavor,
+                              use_floating_ip=True, floating_network=None,
                               wait_for_ping=True, **kwargs):
+        """Boot server prepared for SSH actions."""
         kwargs["auto_assign_nic"] = True
         server = self._boot_server(image, flavor, **kwargs)
 
@@ -81,12 +83,18 @@ class VMScenario(base.Scenario):
                 "or provide `nics' argument with specific net-id." % {
                     "server": server.name})
 
-        fip = self._attach_floating_ip(server, floating_network)
+        if use_floating_ip:
+            fip = self._attach_floating_ip(server, floating_network)
+        else:
+            internal_network = list(server.networks)[0]
+            fip = {"ip": server.addresses[internal_network][0]["addr"]}
 
         if wait_for_ping:
             self._wait_for_ping(fip["ip"])
 
-        return server, fip
+        return server, {"ip": fip.get("ip"),
+                        "id": fip.get("id"),
+                        "is_floating": use_floating_ip}
 
     @base.atomic_action_timer("vm.attach_floating_ip")
     def _attach_floating_ip(self, server, floating_network):
@@ -110,8 +118,8 @@ class VMScenario(base.Scenario):
             self._get_netwrap().delete_floating_ip(fip["id"], wait=True)
 
     def _delete_server_with_fip(self, server, fip, force_delete=False):
-        self._delete_floating_ip(server, fip)
-
+        if fip["is_floating"]:
+            self._delete_floating_ip(server, fip)
         return self._delete_server(server, force=force_delete)
 
     @base.atomic_action_timer("vm.wait_for_ssh")

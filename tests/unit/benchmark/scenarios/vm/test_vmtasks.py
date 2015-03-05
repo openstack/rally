@@ -26,16 +26,12 @@ class VMTasksTestCase(test.TestCase):
         super(VMTasksTestCase, self).setUp()
         self.scenario = vmtasks.VMTasks(
             context={"user": {"keypair": {"name": "keypair_name"}}})
-        self.clients = mock.Mock()
-        self.fip = {"id": "fip_id", "ip": "fip_ip"}
-        self.server = mock.Mock(networks={"foo_net": "foo_net_data"},
-                                addresses={"foo_net": [{"addr": "foo_addr"}]},
-                                tenant_id="foo_tenant")
+        self.ip = {"id": "foo_id", "ip": "foo_ip", "is_floating": True}
+        self.scenario._boot_server_with_fip = mock.Mock(
+            return_value=("foo_server", self.ip))
+        self.scenario._delete_server_with_fip = mock.Mock()
         self.scenario._create_volume = mock.Mock(
             return_value=mock.Mock(id="foo_volume"))
-        self.scenario._boot_server_with_fip = mock.MagicMock(
-            return_value=(self.server, self.fip))
-        self.scenario._delete_server_with_fip = mock.MagicMock()
         self.scenario._run_command = mock.MagicMock(
             return_value=(0, "\"foo_out\"", "foo_err"))
 
@@ -44,21 +40,25 @@ class VMTasksTestCase(test.TestCase):
                 "foo_image", "foo_flavor", "foo_script",
                 "foo_interpreter", "foo_username",
                 password="foo_password",
-                volume_args={"size": 16})
+                use_floating_ip="use_fip",
+                floating_network="ext_network",
+                force_delete="foo_force",
+                volume_args={"size": 16},
+                foo_arg="foo_value")
 
         self.scenario._create_volume.assert_called_once_with(
             16, imageRef=None)
-
         self.scenario._boot_server_with_fip.assert_called_once_with(
-            "foo_image", "foo_flavor", floating_network=None,
-            key_name="keypair_name",
-            block_device_mapping={"vdrally": "foo_volume:::1"})
+            "foo_image", "foo_flavor", use_floating_ip="use_fip",
+            floating_network="ext_network", key_name="keypair_name",
+            block_device_mapping={"vdrally": "foo_volume:::1"},
+            foo_arg="foo_value")
 
         self.scenario._run_command.assert_called_once_with(
-            "fip_ip", 22, "foo_username", "foo_password",
+            "foo_ip", 22, "foo_username", "foo_password",
             "foo_interpreter", "foo_script")
         self.scenario._delete_server_with_fip.assert_called_once_with(
-            self.server, self.fip, force_delete=False)
+            "foo_server", self.ip, force_delete="foo_force")
 
     def test_boot_runcommand_delete_script_fails(self):
         self.scenario._run_command = mock.MagicMock(
@@ -67,6 +67,8 @@ class VMTasksTestCase(test.TestCase):
                           self.scenario.boot_runcommand_delete,
                           "foo_image", "foo_flavor", "foo_interpreter",
                           "foo_script", "foo_username")
+        self.scenario._delete_server_with_fip.assert_called_once_with(
+            "foo_server", self.ip, force_delete=False)
 
     @mock.patch("rally.benchmark.scenarios.vm.vmtasks.json")
     def test_boot_runcommand_delete_json_fails(self, mock_json):
@@ -75,3 +77,5 @@ class VMTasksTestCase(test.TestCase):
                           self.scenario.boot_runcommand_delete,
                           "foo_image", "foo_flavor", "foo_interpreter",
                           "foo_script", "foo_username")
+        self.scenario._delete_server_with_fip.assert_called_once_with(
+            "foo_server", self.ip, force_delete=False)

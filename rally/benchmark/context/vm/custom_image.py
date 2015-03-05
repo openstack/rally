@@ -227,11 +227,11 @@ class BaseCustomImageGenerator(base.Context):
 
     @utils.log_task_wrapper(LOG.info,
                             _("Custom image context: customizing"))
-    def customize_image(self, server, fip, user):
-        return self._customize_image(server, fip, user)
+    def customize_image(self, server, ip, user):
+        return self._customize_image(server, ip, user)
 
     @abc.abstractmethod
-    def _customize_image(self, server, fip, user):
+    def _customize_image(self, server, ip, user):
         """Override this method with one that customizes image.
 
         Basically, code can simply call `VMScenario._run_command` function
@@ -239,7 +239,7 @@ class BaseCustomImageGenerator(base.Context):
         be then executed using SSH.
 
         :param server: nova.Server instance
-        :param fip: dict with Floating IP details
+        :param ip: dict with server IP details
         :param user: user who started a VM instance. Used to extract keypair
         """
         pass

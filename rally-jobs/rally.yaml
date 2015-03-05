@@ -1314,6 +1314,7 @@
         image:
           name: {{image_name}}
         floating_network: "public"
+        use_floatingip: true
         script: "/home/jenkins/.rally/extra/instance_dd_test.sh"
         interpreter: "/bin/sh"
         username: "cirros"
@@ -1337,8 +1338,6 @@
           name: {{image_name}}
         volume_args:
             size: 2
-        fixed_network: "private"
-        floating_network: "public"
         use_floatingip: true
         script: "/home/jenkins/.rally/extra/instance_dd_test.sh"
         interpreter: "/bin/sh"
@@ -1361,7 +1360,6 @@
           name: "m1.tiny"
         image:
           name: {{image_name}}
-        fixed_network: "private"
         use_floatingip: false
         script: "/home/jenkins/.rally/extra/instance_dd_test.sh"
         interpreter: "/bin/sh"
