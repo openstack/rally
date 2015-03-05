@@ -15,6 +15,7 @@
 
 import copy
 import datetime as date
+import os.path
 
 import mock
 
@@ -596,7 +597,17 @@ class TaskCommandsTestCase(test.TestCase):
         mock_task_validate.assert_called_once_with("deployment",
                                                    mock_load.return_value)
 
-    @mock.patch("rally.cmd.commands.use.UseCommands.task")
-    def test_use(self, mock_use_task):
-        self.task.use("fake_id")
-        mock_use_task.assert_called_once_with("fake_id")
+    @mock.patch("rally.common.fileutils._rewrite_env_file")
+    @mock.patch("rally.cmd.commands.task.db.task_get", return_value=True)
+    def test_use(self, mock_task, mock_file):
+        task_id = "80422553-5774-44bd-98ac-38bd8c7a0feb"
+        self.task.use(task_id)
+        mock_file.assert_called_once_with(
+            os.path.expanduser("~/.rally/globals"),
+            ["RALLY_TASK=%s\n" % task_id])
+
+    @mock.patch("rally.cmd.commands.task.db.task_get")
+    def test_use_not_found(self, mock_task):
+        task_id = "ddc3f8ba-082a-496d-b18f-72cdf5c10a14"
+        mock_task.side_effect = exceptions.TaskNotFound(uuid=task_id)
+        self.assertRaises(exceptions.TaskNotFound, self.task.use, task_id)

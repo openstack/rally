@@ -26,8 +26,8 @@ import yaml
 
 from rally import api
 from rally.cmd import cliutils
-from rally.cmd.commands import use
 from rally.cmd import envutils
+from rally.common import fileutils
 from rally.common.i18n import _
 from rally.common import utils
 from rally import db
@@ -122,7 +122,7 @@ class DeploymentCommands(object):
 
         self.list(deployment_list=[deployment])
         if do_use:
-            use.UseCommands().deployment(deployment["uuid"])
+            self.use(deployment["uuid"])
 
     @cliutils.deprecated_args(
         "--uuid", dest="deployment", type=str,
@@ -255,6 +255,22 @@ class DeploymentCommands(object):
             return(1)
         cliutils.print_list(table_rows, headers)
 
+    def _update_openrc_deployment_file(self, deployment, endpoint):
+        openrc_path = os.path.expanduser("~/.rally/openrc-%s" % deployment)
+        with open(openrc_path, "w+") as env_file:
+            env_file.write("export OS_AUTH_URL=%(auth_url)s\n"
+                           "export OS_USERNAME=%(username)s\n"
+                           "export OS_PASSWORD=%(password)s\n"
+                           "export OS_TENANT_NAME=%(tenant_name)s\n"
+                           % endpoint)
+            if endpoint.get("region_name"):
+                env_file.write("export OS_REGION_NAME=%(region_name)s\n"
+                               % endpoint)
+        expanded_path = os.path.expanduser("~/.rally/openrc")
+        if os.path.exists(expanded_path):
+            os.remove(expanded_path)
+        os.symlink(openrc_path, expanded_path)
+
     @cliutils.args("--deployment", type=str, dest="deployment",
                    help="UUID or name of the deployment")
     def use(self, deployment):
@@ -262,4 +278,21 @@ class DeploymentCommands(object):
 
         :param deployment: UUID or name of a deployment
         """
-        use.UseCommands().deployment(deployment)
+        try:
+            deployment = db.deployment_get(deployment)
+            print("Using deployment: %s" % deployment["uuid"])
+            fileutils.update_globals_file("RALLY_DEPLOYMENT",
+                                          deployment["uuid"])
+            self._update_openrc_deployment_file(
+                deployment["uuid"], deployment.get("admin") or
+                deployment.get("users")[0])
+            print ("~/.rally/openrc was updated\n\nHINTS:\n"
+                   "* To get your cloud resources, run:\n\t"
+                   "rally show [flavors|images|keypairs|networks|secgroups]\n"
+                   "\n* To use standard OpenStack clients, set up your env by "
+                   "running:\n\tsource ~/.rally/openrc\n"
+                   "  OpenStack clients are now configured, e.g run:\n\t"
+                   "glance image-list")
+        except exceptions.DeploymentNotFound:
+            print("Deployment %s is not found." % deployment)
+            return 1

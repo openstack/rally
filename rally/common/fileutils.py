@@ -69,3 +69,16 @@ def update_env_file(path, env_key, env_value):
     output = _read_env_file(path, env_key)
     output.append("%s=%s" % (env_key, env_value))
     _rewrite_env_file(path, output)
+
+
+def update_globals_file(key, value):
+    """Update the globals variables file.
+
+    :param key: the key to update
+    :param value: the value to update
+    """
+    dir = os.path.expanduser("~/.rally/")
+    if not os.path.exists(dir):
+        os.makedirs(dir)
+    expanded_path = os.path.join(dir, "globals")
+    update_env_file(expanded_path, key, "%s\n" % value)

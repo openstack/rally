@@ -14,6 +14,7 @@
 #    under the License.
 
 import datetime as date
+import os.path
 import tempfile
 
 import mock
@@ -301,7 +302,20 @@ class VerifyCommandsTestCase(test.TestCase):
         mock_open.assert_called_once_with("results", "wb")
         mock_open.side_effect().write.assert_called_once_with("")
 
-    @mock.patch("rally.cmd.commands.use.UseCommands.verification")
-    def test_use(self, mock_use_verification):
-        self.verify.use("fake_id")
-        mock_use_verification.assert_called_once_with("fake_id")
+    @mock.patch("rally.common.fileutils._rewrite_env_file")
+    @mock.patch("rally.cmd.commands.verify.db.verification_get",
+                return_value=True)
+    def test_use(self, mock_task, mock_file):
+        verification_id = "80422553-5774-44bd-98ac-38bd8c7a0feb"
+        self.verify.use(verification_id)
+        mock_file.assert_called_once_with(
+            os.path.expanduser("~/.rally/globals"),
+            ["RALLY_VERIFICATION=%s\n" % verification_id])
+
+    @mock.patch("rally.cmd.commands.verify.db.verification_get")
+    def test_use_not_found(self, mock_verification_get):
+        verification_id = "ddc3f8ba-082a-496d-b18f-72cdf5c10a14"
+        mock_verification_get.side_effect = exceptions.NotFoundException(
+            uuid=verification_id)
+        self.assertRaises(exceptions.NotFoundException, self.verify.use,
+                          verification_id)
