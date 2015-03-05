@@ -45,9 +45,20 @@ resources:
       network: { get_resource: private_net }
       cidr: {get_param: cidr}
 
+  port_security_group:
+    type: OS::Neutron::SecurityGroup
+    properties:
+      name: default_port_security_group
+      description: >
+        Default security group assigned to port. The neutron default group is not
+        used because neutron creates several groups with the same name=default and
+        nova cannot chooses which one should it use.
+
   server_port:
     type: OS::Neutron::Port
     properties:
       network: {get_resource: private_net}
       fixed_ips:
-        - subnet_id: { get_resource: private_subnet }
+        - subnet: { get_resource: private_subnet }
+      security_groups:
+        - { get_resource: port_security_group }
