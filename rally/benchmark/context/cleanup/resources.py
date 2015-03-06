@@ -14,6 +14,7 @@
 #    under the License.
 
 from neutronclient.common import exceptions as neutron_exceptions
+from saharaclient.api import base as saharaclient_base
 
 from rally.benchmark.context.cleanup import base
 from rally.benchmark.scenarios.keystone import utils as kutils
@@ -237,7 +238,18 @@ class SaharaDataSource(SynchronizedDeletion, base.ResourceManager):
 @base.resource("sahara", "clusters", order=next(_sahara_order),
                tenant_resource=True)
 class SaharaCluster(base.ResourceManager):
-    pass
+
+    # Need special treatment for Sahara Cluster because of the way the
+    # exceptions are described in:
+    # https://github.com/openstack/python-saharaclient/blob/master/
+    # saharaclient/api/base.py#L145
+
+    def is_deleted(self):
+        try:
+            self._manager().get(self.id())
+            return False
+        except saharaclient_base.APIException as e:
+            return e.error_code == 404
 
 
 @base.resource("sahara", "cluster_templates", order=next(_sahara_order),
