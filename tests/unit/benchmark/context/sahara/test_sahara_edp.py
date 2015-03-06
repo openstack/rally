@@ -84,7 +84,7 @@ class SaharaEDPTestCase(test.TestCase):
         mock_sahara.job_binary_internals.create.return_value = (
             mock.MagicMock(id=42))
 
-        mock_requests.get().json.return_value = "test_binary"
+        mock_requests.get().content = "test_binary"
 
         ctx = self.context_without_edp_keys
         sahara_ctx = sahara_edp.SaharaEDP(ctx)
@@ -99,7 +99,7 @@ class SaharaEDPTestCase(test.TestCase):
                 name="input_ds", description="",
                 data_source_type="hdfs",
                 url="hdfs://test_host/"))
-            download_calls.append(mock.call())
+            download_calls.append(mock.call("http://example.com/test.jar"))
             job_binary_internals_calls.append(mock.call(
                 name="test.jar",
                 data="test_binary"))
@@ -112,7 +112,7 @@ class SaharaEDPTestCase(test.TestCase):
         sahara_ctx.setup()
 
         mock_sahara.data_sources.create.assert_has_calls(input_ds_crete_calls)
-        mock_requests.get().json.assert_has_calls(download_calls)
+        mock_requests.get.assert_has_calls(download_calls)
         mock_sahara.job_binary_internals.create.assert_has_calls(
             job_binary_internals_calls)
         mock_sahara.job_binaries.create.assert_has_calls(job_binaries_calls)
