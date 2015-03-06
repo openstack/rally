@@ -1,0 +1,28 @@
+{
+   "NovaServers.boot_server_from_volume_and_live_migrate": [
+        {
+            "args": {
+                "flavor": {
+                    "name": "m1.nano"
+                },
+                "image": {
+                    "name": "^cirros.*uec$"
+                },
+                "block_migration": false,
+                "volume_size": 10,
+                "force_delete": false
+            },
+            "runner": {
+                "type": "constant",
+                "times": 10,
+                "concurrency": 2
+            },
+            "context": {
+                "users": {
+                    "tenants": 1,
+                    "users_per_tenant": 1
+                }
+            }
+        }
+    ]
+}
