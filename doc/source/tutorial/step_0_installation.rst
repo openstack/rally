@@ -18,15 +18,21 @@
 Step 0. Installation
 ====================
 
-Installing Rally is very simple. Just execute the following commands:
+The easiest way to install Rally is by running its `installation script
+<https://raw.githubusercontent.com/openstack/rally/master/install_rally.sh>`_:
 
 .. code-block:: none
 
-   git clone https://git.openstack.org/openstack/rally
-   ./rally/install_rally.sh
+    wget -q -O- https://raw.githubusercontent.com/openstack/rally/master/install_rally.sh | bash
+    # or using curl:
+    curl https://raw.githubusercontent.com/openstack/rally/master/install_rally.sh | bash
 
-**Notes:** The installation script should be run as root or as a normal user using **sudo**. Rally requires either the Python 2.6 or the Python 2.7 version.
+If you execute the script as regular user, Rally will create a new
+virtual environment in ``~/rally/`` and install in it Rally, and will
+use `sqlite` as database backend. If you execute the script as root,
+Rally will be installed system wide. For more installation options,
+please refer to the :ref:`installation <install>` page.
 
-There are also other installation options that you can find :ref:`here <install>`.
+**Note:** Rally requires Python version 2.6, 2.7 or 3.4.
 
 Now that you have rally installed, you are ready to start :ref:`benchmarking OpenStack with it <tutorial_step_1_setting_up_env_and_running_benchmark_from_samples>`!

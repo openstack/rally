@@ -3,7 +3,10 @@ MAINTAINER Sergey Skripnick <sskripnick@mirantis.com>
 COPY . /tmp/rally
 RUN apt-get update && \
     apt-get -y install git python2.7 bash-completion python-dev libffi-dev \
-                       libxml2-dev libxslt1-dev libssl-dev &&\
+                       libxml2-dev libxslt1-dev libssl-dev libpq-dev wget \
+                       build-essential &&\
+    wget https://raw.github.com/pypa/pip/master/contrib/get-pip.py -O /tmp/pip.py &&\
+    python /tmp/pip.py && rm /tmp/pip.py &&\
     cd /tmp/rally &&\
     ./install_rally.sh &&\
     pip install -r optional-requirements.txt &&\

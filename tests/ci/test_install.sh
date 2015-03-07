@@ -15,9 +15,18 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+env
 
-sudo ./install_rally.sh
+sudo ./install_rally.sh --system --yes
 rally deployment list
 
-sudo ./install_rally.sh
+sudo ./install_rally.sh --system --yes
 rally deployment list
+
+sudo ./install_rally.sh --yes -d /tmp/rallytest_root/
+/tmp/rallytest_root/bin/rally deployment list
+
+sudo rm -fr ~/.rally
+
+./install_rally.sh --yes -d /tmp/rallytest_user
+/tmp/rallytest_user/bin/rally deployment list
