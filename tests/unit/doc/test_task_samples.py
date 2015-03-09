@@ -97,7 +97,8 @@ class TaskSampleTestCase(test.TestCase):
                     inexistent_paths.append(json_path)
 
         if inexistent_paths:
-            self.fail("Sample task configs are missing:\n%r" % inexistent_paths)
+            self.fail("Sample task configs are missing:\n%r"
+                      % inexistent_paths)
 
     def test_task_config_pairs_equality(self):
         for dirname, dirnames, filenames in os.walk(self.samples_path):
