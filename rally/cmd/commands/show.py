@@ -163,10 +163,10 @@ class ShowCommands(object):
                             secgroup.description]
                     table_rows.append(utils.Struct(**dict(zip(headers,
                                                               data))))
-                    cliutils.print_list(
-                        table_rows,
-                        fields=headers,
-                        mixed_case_fields=mixed_case_fields)
+                cliutils.print_list(
+                    table_rows,
+                    fields=headers,
+                    mixed_case_fields=mixed_case_fields)
 
         except exceptions.InvalidArgumentsException as e:
             print(_("Authentication Issues: %s") % e)
