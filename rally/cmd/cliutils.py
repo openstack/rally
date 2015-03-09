@@ -445,8 +445,9 @@ _rally()
 %(data)s
 
     for OPT in ${!OPTS[*]} ; do
-        CMDSUB=(${OPT//_/ })
-        SUBCOMMANDS[${CMDSUB[0]}]+="${CMDSUB[1]} "
+        CMD=${OPT%%%%_*}
+        CMDSUB=${OPT#*_}
+        SUBCOMMANDS[${CMD}]+="${CMDSUB} "
     done
 
     COMMANDS="${!SUBCOMMANDS[*]}"
