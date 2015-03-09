@@ -15,6 +15,7 @@
 
 from rally.benchmark.scenarios import base
 from rally.benchmark.scenarios.cinder import utils
+from rally.benchmark.scenarios.glance import utils as glance_utils
 from rally.benchmark.scenarios.nova import utils as nova_utils
 from rally.benchmark import types as types
 from rally.benchmark import validation
@@ -27,7 +28,8 @@ LOG = logging.getLogger(__name__)
 
 
 class CinderVolumes(utils.CinderScenario,
-                    nova_utils.NovaScenario):
+                    nova_utils.NovaScenario,
+                    glance_utils.GlanceScenario):
     """Benchmark scenarios for Cinder Volumes."""
 
     @types.set(image=types.ImageResourceType)
@@ -359,3 +361,30 @@ class CinderVolumes(utils.CinderScenario,
         volume = random.choice(self.context["tenant"]["volumes"])
         self._create_snapshot(volume["id"], force=force, **kwargs)
         self._list_snapshots(detailed)
+
+    @validation.required_services(consts.Service.CINDER, consts.Service.GLANCE)
+    @validation.required_openstack(users=True)
+    @validation.required_parameters("size")
+    @base.scenario(context={"cleanup": ["cinder", "glance"]})
+    def create_and_upload_volume_to_image(self, size, force=False,
+                                          container_format="bare",
+                                          disk_format="raw",
+                                          do_delete=True,
+                                          **kwargs):
+        """Create and upload a volume to image.
+
+        :param size: volume size (integers, in GB)
+        :param force: when set to True volume that is attached to an instance
+                      could be uploaded to image
+        :param container_format: image container format
+        :param disk_format: disk format for image
+        :param do_delete: deletes image and volume after uploading if True
+        :param kwargs: optional args to create a volume
+        """
+        volume = self._create_volume(size, **kwargs)
+        image = self._upload_volume_to_image(volume, force, container_format,
+                                             disk_format)
+
+        if do_delete:
+            self._delete_volume(volume)
+            self._delete_image(image)
