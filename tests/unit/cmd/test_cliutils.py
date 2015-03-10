@@ -15,7 +15,6 @@
 
 import mock
 from oslo_config import cfg
-import testtools
 
 from rally.cmd import cliutils
 from rally.cmd.commands import deployment
@@ -32,10 +31,6 @@ CONF = cfg.CONF
 FAKE_TASK_UUID = "bb0f621c-29bd-495c-9d7a-d844335ed0fa"
 
 
-@testtools.skip(
-    "These tests are not work with latest(1.6.0) oslo.config (see "
-    "https://review.openstack.org/#/c/135150 for more details). "
-    "Should wait for new release of oslo.config with appropriate fix.")
 class CliUtilsTestCase(test.TestCase):
 
     def setUp(self):
@@ -54,7 +49,7 @@ class CliUtilsTestCase(test.TestCase):
         super(CliUtilsTestCase, self).tearDown()
 
     def test_make_header(self):
-        h1 = cliutils.make_header("msg", size="4", symbol="=")
+        h1 = cliutils.make_header("msg", size=4, symbol="=")
         self.assertEqual(h1, "====\n msg\n====\n")
 
     def test_pretty_float_formatter_rounding(self):
@@ -157,7 +152,7 @@ class CliUtilsTestCase(test.TestCase):
         self.assertTrue(mock_task_get.called)
         self.assertEqual(ret, 1)
 
-    @mock.patch("rally.common.cliutils.validate_args",
+    @mock.patch("rally.cmd.cliutils.validate_args",
                 side_effect=cliutils.MissingArgs("missing"))
     def test_run_show_fails(self, mock_validate_args):
         ret = cliutils.run(["rally", "show", "keypairs"], self.categories)
