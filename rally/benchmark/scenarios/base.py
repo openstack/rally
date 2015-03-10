@@ -19,6 +19,7 @@ import itertools
 import random
 import time
 
+from rally.common import costilius
 from rally.common import log as logging
 from rally.common import utils
 from rally import consts
@@ -58,7 +59,7 @@ class Scenario(object):
         self._admin_clients = admin_clients
         self._clients = clients
         self._idle_duration = 0
-        self._atomic_actions = {}
+        self._atomic_actions = costilius.OrderedDict()
 
     # TODO(amaretskiy): consider about prefix part of benchmark uuid
     @classmethod
