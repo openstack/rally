@@ -234,12 +234,13 @@ class Clients(object):
             # python-ceilometerclient requires auth_token to be a callable
             auth_token = lambda: kc.auth_token
 
-        client = ceilometer.Client(version,
-                                   endpoint=metering_api_url,
-                                   token=auth_token,
-                                   timeout=CONF.openstack_client_http_timeout,
-                                   insecure=CONF.https_insecure,
-                                   cacert=CONF.https_cacert)
+        client = ceilometer.get_client(
+                    version,
+                    os_endpoint=metering_api_url,
+                    token=auth_token,
+                    timeout=CONF.openstack_client_http_timeout,
+                    insecure=CONF.https_insecure,
+                    cacert=CONF.https_cacert)
         return client
 
     @cached

@@ -178,7 +178,7 @@ class OSClientsTestCase(test.TestCase):
     def test_ceilometer(self):
         with mock.patch("rally.osclients.ceilometer") as mock_ceilometer:
             fake_ceilometer = fakes.FakeCeilometerClient()
-            mock_ceilometer.Client = mock.MagicMock(
+            mock_ceilometer.get_client = mock.MagicMock(
                 return_value=fake_ceilometer)
             self.assertNotIn("ceilometer", self.clients.cache)
             client = self.clients.ceilometer()
@@ -187,11 +187,11 @@ class OSClientsTestCase(test.TestCase):
                 service_type="metering",
                 endpoint_type=consts.EndpointType.PUBLIC,
                 region_name=self.endpoint.region_name)
-            kw = {"endpoint": self.service_catalog.url_for.return_value,
+            kw = {"os_endpoint": self.service_catalog.url_for.return_value,
                   "token": self.fake_keystone.auth_token,
                   "timeout": cfg.CONF.openstack_client_http_timeout,
                   "insecure": False, "cacert": None}
-            mock_ceilometer.Client.assert_called_once_with("2", **kw)
+            mock_ceilometer.get_client.assert_called_once_with("2", **kw)
             self.assertEqual(fake_ceilometer,
                              self.clients.cache["ceilometer"])
 
