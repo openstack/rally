@@ -126,9 +126,13 @@ class ShowCommandsTestCase(test.TestCase):
     @mock.patch("rally.cmd.commands.show.db.deployment_get")
     def test_secgroups(self, mock_deployment_get, mock_get_nova,
                        mock_struct, mock_print_list):
+        self.fake_nova_client.security_groups.create("othersg")
         fake_secgroup = list(
             self.fake_nova_client.security_groups.cache.values())[0]
         fake_secgroup.id = 0
+        fake_secgroup2 = list(
+            self.fake_nova_client.security_groups.cache.values())[1]
+        fake_secgroup2.id = 1
         mock_get_nova.return_value = self.fake_nova_client
         mock_deployment_get.return_value = {"admin": self.fake_endpoint}
         self.show.secgroups(self.fake_deployment_id)
@@ -137,11 +141,14 @@ class ShowCommandsTestCase(test.TestCase):
 
         headers = ["ID", "Name", "Description"]
         fake_data = [fake_secgroup.id, fake_secgroup.name, ""]
-        mock_struct.assert_called_once_with(**dict(zip(headers, fake_data)))
+        fake_data2 = [fake_secgroup2.id, fake_secgroup2.name, ""]
+        calls = [mock.call(**dict(zip(headers, fake_data))),
+                 mock.call(**dict(zip(headers, fake_data2)))]
+        mock_struct.assert_has_calls(calls, any_order=True)
 
         mixed_case_fields = ["ID", "Name", "Description"]
         mock_print_list.assert_called_once_with(
-            [mock_struct()],
+            [mock_struct(), mock_struct()],
             fields=headers,
             mixed_case_fields=mixed_case_fields)
 
