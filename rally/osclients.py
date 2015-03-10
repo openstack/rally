@@ -291,6 +291,22 @@ class Clients(object):
         return client
 
     @cached
+    def murano(self, version="1"):
+        """Return Murano client."""
+        from muranoclient import client as murano
+        kc = self.keystone()
+        murano_url = kc.service_catalog.url_for(
+            service_type=consts.ServiceType.APPLICATION_CATALOG,
+            endpoint_type=self.endpoint.endpoint_type,
+            region_name=self.endpoint.region_name
+        )
+
+        client = murano.Client(version, endpoint=murano_url,
+                               token=kc.auth_token)
+
+        return client
+
+    @cached
     def designate(self):
         """Return designate client."""
         kc = self.keystone()
