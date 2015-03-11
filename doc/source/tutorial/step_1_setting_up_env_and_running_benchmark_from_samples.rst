@@ -30,7 +30,7 @@ First, you have to provide Rally with an Openstack deployment it is going to ben
 
 .. code-block:: none
 
-   $ . opernc admin admin
+   $ . openrc admin admin
    $ rally deployment create --fromenv --name=existing 
    +--------------------------------------+----------------------------+------------+------------------+--------+
    | uuid                                 | created_at                 | name       | status           | active |

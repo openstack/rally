@@ -22,7 +22,7 @@ Rally is an awesome tool that allows you to work with multiple clouds and can it
 
 .. code-block:: none
 
-    $ . opernc admin admin  # openrc with correct credentials
+    $ . openrc admin admin  # openrc with correct credentials
     $ rally deployment create --fromenv --name=cloud-1
     +--------------------------------------+----------------------------+------------+------------------+--------+
     | uuid                                 | created_at                 | name       | status           | active |
@@ -33,7 +33,7 @@ Rally is an awesome tool that allows you to work with multiple clouds and can it
     ~/.rally/openrc was updated
     ...
 
-    $ . bad_opernc admin admin  # openrc with wrong credentials
+    $ . bad_openrc admin admin  # openrc with wrong credentials
     $ rally deployment create --fromenv --name=cloud-2
     +--------------------------------------+----------------------------+------------+------------------+--------+
     | uuid                                 | created_at                 | name       | status           | active |

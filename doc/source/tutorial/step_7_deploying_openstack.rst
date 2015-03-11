@@ -35,9 +35,9 @@ You can try to deploy OpenStack in your Virtual Machine using this script. Edit 
 .. code-block:: none
 
    $ rally deployment create --file=samples/deployments/devstack-in-existing-servers.json.json --name=new-devstack
-   +---------------------------+----------------------------+----------+----------------------+
+   +---------------------------+----------------------------+--------------+------------------+
    |            uuid           |         created_at         |     name     |      status      |
-   +---------------------------+----------------------------+----------+----------------------+
+   +---------------------------+----------------------------+--------------+------------------+
    |     <Deployment UUID>     | 2015-01-10 22:00:28.270941 | new-devstack | deploy->finished |
    +---------------------------+----------------------------+--------------+------------------+
    Using deployment : <Deployment UUID>
