@@ -17,6 +17,7 @@ import os
 
 import mock
 from oslo_config import cfg
+import requests
 
 from rally.verification.tempest import config
 from tests.unit import fakes
@@ -296,6 +297,13 @@ class ConfigTestCase(test.TestCase):
         self.conf_generator._set_service_available()
         self.assertEqual(self.conf_generator.conf.get(
             "service_available", "horizon"), "True")
+
+    @mock.patch("rally.verification.tempest.config.requests.get")
+    def test__set_service_not_available_horizon(self, mock_requests_get):
+        mock_requests_get.side_effect = requests.Timeout()
+        self.conf_generator._set_service_available()
+        self.assertEqual(self.conf_generator.conf.get(
+            "service_available", "horizon"), "False")
 
     @mock.patch("six.moves.builtins.open", side_effect=mock.mock_open(),
                 create=True)

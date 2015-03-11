@@ -232,7 +232,13 @@ class TempestConf(object):
                           str(service in self.available_services))
         horizon_url = ("http://" +
                        parse.urlparse(self.endpoint["auth_url"]).hostname)
-        horizon_availability = (requests.get(horizon_url).status_code == 200)
+        try:
+            horizon_req = requests.get(horizon_url)
+        except requests.RequestException as e:
+            LOG.debug("Failed to connect to Horizon: %s" % e)
+            horizon_availability = False
+        else:
+            horizon_availability = (horizon_req.status_code == 200)
         # convert boolean to string because ConfigParser fails
         # on attempt to get option with boolean value
         self.conf.set(section_name, "horizon", str(horizon_availability))
