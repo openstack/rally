@@ -1,1 +1,2 @@
 git+git://github.com/stackforge/python-mistralclient.git
+python-muranoclient>=0.5.5

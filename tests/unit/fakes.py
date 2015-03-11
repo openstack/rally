@@ -127,6 +127,10 @@ class FakeImage(FakeResource):
         self.update = mock.MagicMock()
 
 
+class FakeMurano(FakeResource):
+    pass
+
+
 class FakeFailedImage(FakeResource):
 
     def __init__(self, manager=None):
@@ -157,10 +161,12 @@ class FakeNetwork(FakeResource):
 
 class FakeFlavor(FakeResource):
 
-    def __init__(self, id="flavor-id-0", manager=None, ram=0, disk=0):
+    def __init__(self, id="flavor-id-0", manager=None, ram=0, disk=0,
+                 name="flavor-name-0"):
         super(FakeFlavor, self).__init__(manager, id=id)
         self.ram = ram
         self.disk = disk
+        self.name = name
 
 
 class FakeKeypair(FakeResource):
@@ -405,6 +411,14 @@ class FakeImageManager(FakeManager):
             cached.status = "DELETED"
             del self.cache[resource]
             self.resources_order.remove(resource)
+
+
+class FakePackageManager(FakeManager):
+
+    def create(self, package_descr, package_arch, package_class=FakeMurano):
+        package = self._cache(package_class(self))
+        package.name = package_arch.keys()[0]
+        return package
 
 
 class FakeFailedImageManager(FakeImageManager):
@@ -890,6 +904,12 @@ class FakeGlanceClient(object):
             self.images = FakeImageManager()
 
 
+class FakeMuranoClient(object):
+
+    def __init__(self):
+        self.packages = FakePackageManager()
+
+
 class FakeCinderClient(object):
 
     def __init__(self):
@@ -1282,6 +1302,7 @@ class FakeClients(object):
         self._trove = None
         self._mistral = None
         self._swift = None
+        self._murano = None
         self._endpoint = endpoint_ or objects.Endpoint(
             "http://fake.example.org:5000/v2.0/",
             "fake_username",
@@ -1355,6 +1376,11 @@ class FakeClients(object):
         if not self._swift:
             self._swift = FakeSwiftClient()
         return self._swift
+
+    def murano(self):
+        if not self._murano:
+            self._murano = FakeMuranoClient()
+        return self._murano
 
 
 class FakeRunner(object):

@@ -71,7 +71,7 @@ class OSClientsTestCase(test.TestCase):
         kwargs = self.endpoint.to_dict()
         kwargs.update(endpoint.items())
         self.mock_create_keystone_client.assert_called_once_with(kwargs)
-        self.assertEqual(self.clients.cache["keystone"], self.fake_keystone)
+        self.assertEqual(self.fake_keystone, self.clients.cache["keystone"])
 
     @mock.patch("rally.osclients.Clients.keystone")
     def test_verified_keystone_user_not_admin(self, mock_keystone):
@@ -100,7 +100,7 @@ class OSClientsTestCase(test.TestCase):
             mock_nova.Client = mock.MagicMock(return_value=fake_nova)
             self.assertNotIn("nova", self.clients.cache)
             client = self.clients.nova()
-            self.assertEqual(client, fake_nova)
+            self.assertEqual(fake_nova, client)
             self.service_catalog.url_for.assert_called_once_with(
                 service_type="compute",
                 endpoint_type=consts.EndpointType.PUBLIC,
@@ -113,7 +113,7 @@ class OSClientsTestCase(test.TestCase):
                 insecure=False, cacert=None)
             client.set_management_url.assert_called_once_with(
                 self.service_catalog.url_for.return_value)
-            self.assertEqual(self.clients.cache["nova"], fake_nova)
+            self.assertEqual(fake_nova, self.clients.cache["nova"])
 
     @mock.patch("rally.osclients.neutron")
     def test_neutron(self, mock_neutron):
@@ -121,7 +121,7 @@ class OSClientsTestCase(test.TestCase):
         mock_neutron.Client = mock.MagicMock(return_value=fake_neutron)
         self.assertNotIn("neutron", self.clients.cache)
         client = self.clients.neutron()
-        self.assertEqual(client, fake_neutron)
+        self.assertEqual(fake_neutron, client)
         kw = {
             "token": self.fake_keystone.auth_token,
             "endpoint_url": self.service_catalog.url_for.return_value,
@@ -133,7 +133,7 @@ class OSClientsTestCase(test.TestCase):
             service_type="network", endpoint_type=consts.EndpointType.PUBLIC,
             region_name=self.endpoint.region_name)
         mock_neutron.Client.assert_called_once_with("2.0", **kw)
-        self.assertEqual(self.clients.cache["neutron"], fake_neutron)
+        self.assertEqual(fake_neutron, self.clients.cache["neutron"])
 
     def test_glance(self):
         with mock.patch("rally.osclients.glance") as mock_glance:
@@ -141,7 +141,7 @@ class OSClientsTestCase(test.TestCase):
             mock_glance.Client = mock.MagicMock(return_value=fake_glance)
             self.assertNotIn("glance", self.clients.cache)
             client = self.clients.glance()
-            self.assertEqual(client, fake_glance)
+            self.assertEqual(fake_glance, client)
             kw = {"endpoint": self.service_catalog.url_for.return_value,
                   "token": self.fake_keystone.auth_token,
                   "timeout": cfg.CONF.openstack_client_http_timeout,
@@ -151,7 +151,7 @@ class OSClientsTestCase(test.TestCase):
                 endpoint_type=consts.EndpointType.PUBLIC,
                 region_name=self.endpoint.region_name)
             mock_glance.Client.assert_called_once_with("1", **kw)
-            self.assertEqual(self.clients.cache["glance"], fake_glance)
+            self.assertEqual(fake_glance, self.clients.cache["glance"])
 
     def test_cinder(self):
         with mock.patch("rally.osclients.cinder") as mock_cinder:
@@ -160,7 +160,7 @@ class OSClientsTestCase(test.TestCase):
             mock_cinder.Client = mock.MagicMock(return_value=fake_cinder)
             self.assertNotIn("cinder", self.clients.cache)
             client = self.clients.cinder()
-            self.assertEqual(client, fake_cinder)
+            self.assertEqual(fake_cinder, client)
             self.service_catalog.url_for.assert_called_once_with(
                 service_type="volume",
                 endpoint_type=consts.EndpointType.PUBLIC,
@@ -173,7 +173,7 @@ class OSClientsTestCase(test.TestCase):
                              self.service_catalog.url_for.return_value)
             self.assertEqual(fake_cinder.client.auth_token,
                              self.fake_keystone.auth_token)
-            self.assertEqual(self.clients.cache["cinder"], fake_cinder)
+            self.assertEqual(fake_cinder, self.clients.cache["cinder"])
 
     def test_ceilometer(self):
         with mock.patch("rally.osclients.ceilometer") as mock_ceilometer:
@@ -182,7 +182,7 @@ class OSClientsTestCase(test.TestCase):
                 return_value=fake_ceilometer)
             self.assertNotIn("ceilometer", self.clients.cache)
             client = self.clients.ceilometer()
-            self.assertEqual(client, fake_ceilometer)
+            self.assertEqual(fake_ceilometer, client)
             self.service_catalog.url_for.assert_called_once_with(
                 service_type="metering",
                 endpoint_type=consts.EndpointType.PUBLIC,
@@ -192,8 +192,8 @@ class OSClientsTestCase(test.TestCase):
                   "timeout": cfg.CONF.openstack_client_http_timeout,
                   "insecure": False, "cacert": None}
             mock_ceilometer.Client.assert_called_once_with("2", **kw)
-            self.assertEqual(self.clients.cache["ceilometer"],
-                             fake_ceilometer)
+            self.assertEqual(fake_ceilometer,
+                             self.clients.cache["ceilometer"])
 
     @mock.patch("rally.osclients.ironic")
     def test_ironic(self, mock_ironic):
@@ -201,7 +201,7 @@ class OSClientsTestCase(test.TestCase):
         mock_ironic.get_client = mock.MagicMock(return_value=fake_ironic)
         self.assertNotIn("ironic", self.clients.cache)
         client = self.clients.ironic()
-        self.assertEqual(client, fake_ironic)
+        self.assertEqual(fake_ironic, client)
         self.service_catalog.url_for.assert_called_once_with(
             service_type="baremetal",
             endpoint_type=consts.EndpointType.PUBLIC,
@@ -214,7 +214,7 @@ class OSClientsTestCase(test.TestCase):
             "cacert": cfg.CONF.https_cacert
         }
         mock_ironic.get_client.assert_called_once_with("1.0", **kw)
-        self.assertEqual(self.clients.cache["ironic"], fake_ironic)
+        self.assertEqual(fake_ironic, self.clients.cache["ironic"])
 
     @mock.patch("rally.osclients.sahara")
     def test_sahara(self, mock_sahara):
@@ -222,7 +222,7 @@ class OSClientsTestCase(test.TestCase):
         mock_sahara.Client = mock.MagicMock(return_value=fake_sahara)
         self.assertNotIn("sahara", self.clients.cache)
         client = self.clients.sahara()
-        self.assertEqual(client, fake_sahara)
+        self.assertEqual(fake_sahara, client)
         kw = {
             "username": self.endpoint.username,
             "api_key": self.endpoint.password,
@@ -230,7 +230,7 @@ class OSClientsTestCase(test.TestCase):
             "auth_url": self.endpoint.auth_url
         }
         mock_sahara.Client.assert_called_once_with("1.1", **kw)
-        self.assertEqual(self.clients.cache["sahara"], fake_sahara)
+        self.assertEqual(fake_sahara, self.clients.cache["sahara"])
 
     @mock.patch("rally.osclients.zaqar")
     def test_zaqar(self, mock_zaqar):
@@ -238,7 +238,7 @@ class OSClientsTestCase(test.TestCase):
         mock_zaqar.Client = mock.MagicMock(return_value=fake_zaqar)
         self.assertNotIn("zaqar", self.clients.cache)
         client = self.clients.zaqar()
-        self.assertEqual(client, fake_zaqar)
+        self.assertEqual(fake_zaqar, client)
         self.service_catalog.url_for.assert_called_once_with(
             service_type="messaging",
             endpoint_type=consts.EndpointType.PUBLIC,
@@ -255,7 +255,7 @@ class OSClientsTestCase(test.TestCase):
         mock_zaqar.Client.assert_called_once_with(url=fake_zaqar_url,
                                                   version=1.1,
                                                   conf=conf)
-        self.assertEqual(self.clients.cache["zaqar"], fake_zaqar)
+        self.assertEqual(fake_zaqar, self.clients.cache["zaqar"])
 
     @mock.patch("rally.osclients.trove")
     def test_trove(self, mock_trove):
@@ -263,7 +263,7 @@ class OSClientsTestCase(test.TestCase):
         mock_trove.Client = mock.MagicMock(return_value=fake_trove)
         self.assertNotIn("trove", self.clients.cache)
         client = self.clients.trove()
-        self.assertEqual(client, fake_trove)
+        self.assertEqual(fake_trove, client)
         kw = {
             "username": self.endpoint.username,
             "api_key": self.endpoint.password,
@@ -275,7 +275,7 @@ class OSClientsTestCase(test.TestCase):
             "cacert": cfg.CONF.https_cacert
         }
         mock_trove.Client.assert_called_once_with("1.0", **kw)
-        self.assertEqual(self.clients.cache["trove"], fake_trove)
+        self.assertEqual(fake_trove, self.clients.cache["trove"])
 
     def test_mistral(self):
         fake_mistral = fakes.FakeMistralClient()
@@ -324,13 +324,30 @@ class OSClientsTestCase(test.TestCase):
     def test_services(self, mock_keystone):
         available_services = {consts.ServiceType.IDENTITY: {},
                               consts.ServiceType.COMPUTE: {},
-                              "unknown_service": {}
-                              }
+                              "unknown_service": {}}
         mock_keystone.return_value = mock.Mock(service_catalog=mock.Mock(
                 get_endpoints=lambda: available_services))
         clients = osclients.Clients({})
 
         self.assertEqual(
-            clients.services(), {
-                consts.ServiceType.IDENTITY: consts.Service.KEYSTONE,
-                consts.ServiceType.COMPUTE: consts.Service.NOVA})
+            {consts.ServiceType.IDENTITY: consts.Service.KEYSTONE,
+             consts.ServiceType.COMPUTE: consts.Service.NOVA},
+            clients.services())
+
+    def test_murano(self):
+        fake_murano = fakes.FakeMuranoClient()
+        mock_murano = mock.Mock()
+        mock_murano.client.Client.return_value = fake_murano
+        self.assertNotIn("murano", self.clients.cache)
+        with mock.patch.dict("sys.modules", {"muranoclient": mock_murano}):
+            client = self.clients.murano()
+            self.assertEqual(fake_murano, client)
+            self.service_catalog.url_for.assert_called_once_with(
+                service_type="application_catalog",
+                endpoint_type=consts.EndpointType.PUBLIC,
+                region_name=self.endpoint.region_name
+            )
+            kw = {"endpoint": self.service_catalog.url_for.return_value,
+                  "token": self.fake_keystone.auth_token}
+            mock_murano.client.Client.assert_called_once_with("1", **kw)
+            self.assertEqual(fake_murano, self.clients.cache["murano"])

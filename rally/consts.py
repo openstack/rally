@@ -36,6 +36,7 @@ class _TempestTestsAPI(utils.ImmutableMixin, utils.EnumMixin):
     ORCHESTRATION = "orchestration"
     TELEMETRY = "telemetry"
     VOLUME = "volume"
+    APPLICATION_CATALOG = "application_catalog"
 
 
 class _TempestTestsSets(utils.ImmutableMixin, utils.EnumMixin):
@@ -109,6 +110,7 @@ class _Service(utils.ImmutableMixin, utils.EnumMixin):
     SAHARA = "sahara"
     SWIFT = "swift"
     MISTRAL = "mistral"
+    MURANO = "murano"
 
 
 class _ServiceType(utils.ImmutableMixin, utils.EnumMixin):
@@ -132,6 +134,7 @@ class _ServiceType(utils.ImmutableMixin, utils.EnumMixin):
     DATA_PROCESSING = "data_processing"
     OBJECT_STORE = "object-store"
     WORKFLOW_EXECUTION = "workflowv2"
+    APPLICATION_CATALOG = "application_catalog"
 
     def __init__(self):
         self.__names = {
@@ -153,6 +156,7 @@ class _ServiceType(utils.ImmutableMixin, utils.EnumMixin):
             self.DATA_PROCESSING: _Service.SAHARA,
             self.OBJECT_STORE: _Service.SWIFT,
             self.WORKFLOW_EXECUTION: _Service.MISTRAL,
+            self.APPLICATION_CATALOG: _Service.MURANO
         }
 
     def __getitem__(self, service_type):
