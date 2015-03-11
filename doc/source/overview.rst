@@ -26,7 +26,6 @@ Use Cases
 Let's take a look at 3 major high level Use Cases of Rally:
 
 .. image:: ./images/Rally-UseCases.png
-   :width: 100%
    :align: center
 
 
@@ -61,7 +60,6 @@ How does amqp_rpc_single_reply_queue affect performance?
 Rally allowed us to reveal a quite an interesting fact about **Nova**. We used *NovaServers.boot_and_delete* benchmark scenario to see how the *amqp_rpc_single_reply_queue* option affects VM bootup time (it turns on a kind of fast RPC). Some time ago it was `shown <https://docs.google.com/file/d/0B-droFdkDaVhVzhsN3RKRlFLODQ/edit?pli=1>`_ that cloud performance can be boosted by setting it on, so we naturally decided to check this result with Rally. To make this test, we issued requests for booting and deleting VMs for a number of concurrent users ranging from 1 to 30 with and without the investigated option. For each group of users, a total number of 200 requests was issued. Averaged time per request is shown below:
 
 .. image:: ./images/Amqp_rpc_single_reply_queue.png
-   :width: 100%
    :align: center
 
 **So Rally has unexpectedly indicated that setting the *amqp_rpc_single_reply_queue* option apparently affects the cloud performance, but in quite an opposite way rather than it was thought before.**
@@ -79,7 +77,6 @@ Another interesting result comes from the *NovaServers.boot_and_list_server* sce
 During the execution of this benchmark scenario, the user has more and more VMs on each iteration. Rally has shown that in this case, the performance of the **VM list** command in Nova is degrading much faster than one might expect:
 
 .. image:: ./images/Rally_VM_list.png
-   :width: 100%
    :align: center
 
 
@@ -98,7 +95,6 @@ In fact, the vast majority of Rally scenarios is expressed as a sequence of **"a
 Rally measures not only the performance of the benchmark scenario as a whole, but also that of single atomic actions. As a result, Rally also plots the atomic actions performance data for each benchmark iteration in a quite detailed way:
 
 .. image:: ./images/Rally_snapshot_vm.png
-   :width: 100%
    :align: center
 
 
@@ -113,7 +109,6 @@ Usually OpenStack projects are implemented *"as-a-Service"*, so Rally provides t
 The diagram below shows how this is possible:
 
 .. image:: ./images/Rally_Architecture.png
-   :width: 100%
    :align: center
 
 The actual **Rally core** consists of 4 main components, listed below in the order they go into action:
@@ -127,4 +122,3 @@ It should become fairly obvious why Rally core needs to be split to these parts 
 
 .. image:: ./images/Rally_QA.png
    :align: center
-   :width: 100%

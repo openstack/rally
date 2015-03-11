@@ -17,8 +17,7 @@ The OpenStack QA team mostly works on CI/CD that ensures that new patches don't 
 
 **Rally** workflow can be visualized by the following diagram:
 
-.. image:: https://wiki.openstack.org/w/images/e/ee/Rally-Actions.png
-   :width: 700px
+.. image:: doc/source/images/Rally-Actions.png
    :alt: Rally Architecture
 
 
@@ -43,8 +42,7 @@ Use Cases
 
 There are 3 major high level Rally Use Cases:
 
-.. image:: https://wiki.openstack.org/w/images/6/6e/Rally-UseCases.png
-   :width: 700px
+.. image:: doc/source/images/Rally-UseCases.png
    :alt: Rally Use Cases
 
 
