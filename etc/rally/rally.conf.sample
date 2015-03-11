@@ -150,34 +150,48 @@
 # point value)
 #glance_image_delete_poll_interval = 1.0
 
-# Time to sleep after creating a resource before polling for it status
+# Time(in sec) to sleep after creating a resource before polling for it status.
 # (floating point value)
 #heat_stack_create_prepoll_delay = 2.0
 
-# Time to wait for heat stack to be created. (floating point value)
+# Time(in sec) to wait for heat stack to be created. (floating point value)
 #heat_stack_create_timeout = 3600.0
 
-# Interval between checks when waiting for stack creation. (floating
-# point value)
+# Time interval(in sec) between checks when waiting for stack creation.
+# (floating point value)
 #heat_stack_create_poll_interval = 1.0
 
-# Time to wait for heat stack to be deleted. (floating point value)
+# Time(in sec) to wait for heat stack to be deleted. (floating point value)
 #heat_stack_delete_timeout = 3600.0
 
-# Interval between checks when waiting for stack deletion. (floating
-# point value)
+# Time interval(in sec) between checks when waiting for stack deletion.
+# (floating point value)
 #heat_stack_delete_poll_interval = 1.0
 
-# Time to sleep after updating a resource before polling for it status
+# Time(in sec) to sleep after updating a resource before polling for it status.
 # (floating point value)
 #heat_stack_update_prepoll_delay = 2.0
 
-# Time to wait for stack to be updated (floating point value)
+# Time(in sec) to wait for stack to be updated. (floating point value)
 #heat_stack_update_timeout = 3600.0
 
-# Interval between checks when waiting for stack update. (floating
-# point value)
+# Time interval(in sec) between checks when waiting for stack update.
+# (floating point value)
 #heat_stack_update_poll_interval = 1.0
+
+# Time(in sec) to wait for stack to be suspended. (floating point value)
+#heat_stack_suspend_timeout = 3600.0
+
+# Time interval(in sec) between checks when waiting for stack suspend.
+# (floating point value)
+#heat_stack_suspend_poll_interval = 1.0
+
+# Time(in sec) to wait for stack to be resumed. (floating point value)
+#heat_stack_resume_timeout = 3600.0
+
+# Time interval(in sec) between checks when waiting for stack resume.
+# (floating point value)
+#heat_stack_resume_poll_interval = 1.0
 
 # Time to sleep after start before polling for status (floating point
 # value)
