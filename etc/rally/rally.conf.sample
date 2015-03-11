@@ -193,6 +193,13 @@
 # (floating point value)
 #heat_stack_resume_poll_interval = 1.0
 
+# Time(in sec) to wait for stack to be checked. (floating point value)
+#heat_stack_check_timeout = 3600.0
+
+# Time interval(in sec) between checks when waiting for stack checking.
+# (floating point value)
+#heat_stack_check_poll_interval = 1.0
+
 # Time to sleep after start before polling for status (floating point
 # value)
 #nova_server_start_prepoll_delay = 0.0

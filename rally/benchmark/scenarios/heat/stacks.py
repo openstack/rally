@@ -86,6 +86,27 @@ class HeatStacks(utils.HeatScenario):
     @validation.required_services(consts.Service.HEAT)
     @validation.required_openstack(users=True)
     @base.scenario(context={"cleanup": ["heat"]})
+    def create_check_delete_stack(self, template_path=None):
+        """Create, check and delete a stack.
+
+        Measure the performance of the following commands:
+        - heat stack-create
+        - heat action-check
+        - heat stack-delete
+
+        :param template_path: path to template file that will be used for
+                              stack create. If None or incorrect, then
+                              default empty template will be used.
+        """
+
+        template = self._get_template_from_file(template_path)
+        stack = self._create_stack(template)
+        self._check_stack(stack)
+        self._delete_stack(stack)
+
+    @validation.required_services(consts.Service.HEAT)
+    @validation.required_openstack(users=True)
+    @base.scenario(context={"cleanup": ["heat"]})
     def create_update_delete_stack(self, template_path=None,
                                    updated_template_path=None):
         """Add, update and then delete a stack.
