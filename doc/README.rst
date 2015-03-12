@@ -14,13 +14,6 @@ To request new feature you should just explain use case on high level.
 Technical details and writing code are not required at all.
 
 
-samples
-~~~~~~~
-
-If you are looking for samples of deployments and benchmarks configuration
-you are on the right way
-
-
 source
 ~~~~~~
 

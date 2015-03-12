@@ -36,3 +36,4 @@ Contents
    gates
    feature_requests
    project_info
+   release_notes

@@ -1,0 +1,28 @@
+============
+Rally v0.0.1
+============
+
+
+Information
+-----------
+
+
++------------------+-----------------+
+| Commits          |    **1039**     |
++------------------+-----------------+
+| Bug fixes        |      **0**      |
++------------------+-----------------+
+| Dev cycle        |  **547 days**   |
++------------------+-----------------+
+| Release date     | **26/Jan/2015** |
++------------------+-----------------+
+
+
+
+Details
+-------
+
+Rally is awesome tool for testing verifying and benchmarking OpenStack clouds.
+
+A lot of people started using Rally in their CI/CD so Rally team should provide
+more stable product with clear strategy of deprecation and upgrades.

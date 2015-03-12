@@ -61,7 +61,7 @@ CONFIG_SCHEMA = {
                         "type": "object"
                     },
                     "sla": {
-                        "type": "object",
+                        "type": "object"
                     },
                 },
                 "additionalProperties": False

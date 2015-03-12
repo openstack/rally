@@ -4,25 +4,66 @@ Tasks Configuration Samples
 To specify your tasks, use configuration files in json or yaml format.
 
 
-General structure of configuration file:
+JSON schema of input task format:
+
 ::
 
+
     {
-        "ScenarioClass.scenario_method":
-            "args": {
-                ...
-            },
-            "runner": {
-                ...
-            },
-            "context": {
-                ...
-            }
-            "sla": {
-                ...
+        "type": "object",
+        "$schema": "http://json-schema.org/draft-04/schema",
+        "patternProperties": {
+            ".*": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "args": {
+                            "type": "object"
+                        },
+                        "runner": {
+                            "type": "object",
+                            "properties": {
+                                "type": {"type": "string"}
+                            },
+                            "required": ["type"]
+                        },
+                        "context": {
+                            "type": "object"
+                        },
+                        "sla": {
+                            "type": "object"
+                        },
+                    },
+                    "additionalProperties": False
+                }
             }
         }
     }
+
+
+For humans:
+
+::
+    {
+        "ScenarioClass.scenario_method": [
+            {
+                "args": {
+                    ...
+                },
+                "runner": {
+                    ...
+                },
+                "context": {
+                    ...
+                },
+                "sla": {
+                    ...
+                }
+            }
+        ]
+    }
+
 
 ScanarioClass should be a subclass of the base Scenario class
 and scenario_method specifies what benchmark task should be run. Section

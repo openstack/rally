@@ -1,0 +1,223 @@
+============
+Rally v0.0.2
+============
+
+Information
+-----------
+
++------------------+-----------------+
+| Commits          |     **100**     |
++------------------+-----------------+
+| Bug fixes        |     **18**      |
++------------------+-----------------+
+| Dev cycle        |   **45 days**   |
++------------------+-----------------+
+| Release date     | **12/Mar/2015** |
++------------------+-----------------+
+
+
+Details
+-------
+
+This release contains new features, new benchmark plugins, bug fixes,
+various code and API improvements.
+
+
+New Features
+~~~~~~~~~~~~
+
+* rally task start **--abort-on-sla-failure**
+
+    Stopping load before things go wrong.
+    Load generation will be interrupted if SLA criteria stop passing.
+
+* Rally verify command supports multiple Tempest sources now.
+
+* python34 support
+
+* postgres DB backend support
+
+
+API changes
+~~~~~~~~~~~
+
+
+* [new] **rally [deployment | verify | task] use** subcommand
+
+    It should be used instead of root command **rally use**
+
+* [new] Rally as a Lib API
+
+    To avoid code duplication between Rally as CLI tool and Rally as a Service
+    we decide to make Rally as a Lib as a common part between these 2 modes.
+
+    Rally as a Service will be a daemon that just maps HTTP request to Rally
+    as a Lib API.
+
+* [deprecated] **rally use** CLI command
+
+* [deprecated] Old Rally as a Lib API
+
+    Old Rally API was quite mixed up so we decide to deprecate it
+
+
+Plugins
+~~~~~~~
+
+* **Benchmark Scenario Runners**:
+
+    [improved] Improved algorithm of generation load in **constant runner**
+
+        Before we used processes to generate load, now it creates pool of
+        processes (amount of processes is equal to CPU count) after that in
+        each process use threads to generate load. So now you can easily
+        generate load of 1k concurrent scenarios.
+
+    [improved] Unify code of **constant** and **rps** runners
+
+    [interface] Added **abort()** to runner's plugin interface
+
+        New method **abort()** is used to immediately interrupt execution.
+
+
+* **Benchmark Scenarios**:
+
+    [new] DesignateBasic.create_and_delete_server
+
+    [new] DesignateBasic.create_and_list_servers
+
+    [new] DesignateBasic.list_servers
+
+    [new] MistralWorkbooks.list_workbooks
+
+    [new] MistralWorkbooks.create_workbook
+
+    [new] Quotas.neutron_update
+
+    [new] HeatStacks.create_update_delete_stack
+
+    [new] HeatStacks.list_stacks_and_resources
+
+    [new] HeatStacks.create_suspend_resume_delete_stac
+
+    [new] HeatStacks.create_check_delete_stack
+
+    [new] NeutronNetworks.create_and_delete_routers
+
+    [new] NovaKeypair.create_and_delete_keypair
+
+    [new] NovaKeypair.create_and_list_keypairs
+
+    [new] NovaKeypair.boot_and_delete_server_with_keypair
+
+    [new] NovaServers.boot_server_from_volume_and_live_migrate
+
+    [new] NovaServers.boot_server_attach_created_volume_and_live_migrate
+
+    [new] CinderVolumes.create_and_upload_volume_to_image
+
+    [fix] CinderVolumes.create_and_attach_volume
+
+        Pass optional **kwargs only to create server command
+
+    [fix]  GlanceImages.create_image_and_boot_instances
+
+        Pass optional **kwargs only to create server command
+
+    [fix] TempestScenario.* removed stress cleanup.
+
+        Major issue is that tempest stress cleanup cleans whole OpenStack.
+        This is very dangerous, so it's better to remove it and leave some
+        extra resources.
+
+    [improved] NovaSecGroup.boot_and_delete_server_with_secgroups
+
+        Add optional **kwargs that are passed to boot server comment
+
+
+* **Benchmark Context**:
+
+    [new] **stacks**
+
+        Generates passed amount of heat stacks for all tenants.
+
+    [new] **custom_image**
+
+        Prepares images for benchmarks in VMs.
+
+        To Support generating workloads in VMs by existing tools like: IPerf,
+        Blogbench, HPCC and others we have to have prepared images, with
+        already installed and configured tools.
+
+        Rally team decide to generate such images on fly from passed to avoid
+        requirements of having big repository with a lot of images.
+
+        This context is abstract context that allows to automate next steps:
+
+        1) runs VM with passed image (with floating ip and other stuff)
+        2) execute abstract method that has access to VM
+        3) snapshot this image
+
+        In future we are going to use this as a base for making context that
+        prepares images.
+
+    [improved] **allow_ssh**
+
+        Automatically disable it if security group are disabled in neutron.
+
+    [improved] **keypair**
+
+        Key pairs are stored in "users" space it means that accessing keypair
+        from scenario is simpler now:
+
+            self.context["user"]["keypair"]["private"]
+
+    [fix] **users**
+
+        Pass proper EndpointType for newly created users
+
+    [fix] **sahara_edp**
+
+        The Job Binaries data should be treated as a binary content
+
+
+* **Benchmark SLA**:
+
+    [interface] SLA calculations is done in additive way now
+
+        Resolves scale issues, because now we don't need to have whole
+        array of iterations in memory to process SLA.
+
+        This is required to implement **--abort-on-sla-failure** feature
+
+    [all] SLA plugins were rewritten to implement new interface
+
+
+Bug fixes
+~~~~~~~~~
+
+**18 bugs were fixed, the most critical are**:
+
+
+* Fix **rally task detailed --iterations-data**
+
+  It didn't work in case of missing atomic actions. Such situation can occur
+  if scenario method raises exceptions
+
+* Add user-friendly message if the task cannot be deleted
+
+  In case of trying to delete task that is not in "finished" status users get
+  traces instead of user-friendly message try to run it with --force key.
+
+
+* Network context cleanups networks properly now
+
+
+Documentation
+~~~~~~~~~~~~~
+
+* Image sizes are fixed
+
+* New tutorial in "Step by Step" relate to **--abort-on-sla-failure**
+
+* Various fixes

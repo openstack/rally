@@ -8,6 +8,12 @@ deployments
 Input configurations for "rally deployment" command
 
 
+plugins
+~~~~~~~
+
+Samples of Rally plugins.
+
+
 tasks
 ~~~~~
 
