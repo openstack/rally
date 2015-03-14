@@ -29,6 +29,17 @@ class HackingTestCase(test.TestCase):
         self.assertIsNone(method)
         self.assertIsNone(obj)
 
+    def test_skip_ignored_lines(self):
+
+        @checks.skip_ignored_lines
+        def any_gen(logical_line, file_name):
+            yield 42
+
+        self.assertEqual([], list(any_gen("fdafadfdas  # noqa", "f")))
+        self.assertEqual([], list(any_gen("  # fdafadfdas", "f")))
+        self.assertEqual([], list(any_gen("  ", "f")))
+        self.assertEqual(42, next(any_gen("otherstuff", "f")))
+
     def test_correct_usage_of_assert_from_mock(self):
         correct_method_names = ["assert_any_call", "assert_called_once_with",
                                 "assert_called_with", "assert_has_calls"]
@@ -61,6 +72,14 @@ class HackingTestCase(test.TestCase):
         self.assertEqual(4, actual_number)
         self.assertTrue(actual_msg.startswith("N303"))
 
+    def _assert_good_samples(self, checker, samples, module_file="f"):
+        for s in samples:
+            self.assertEqual([], list(checker(s, module_file)), s)
+
+    def _assert_bad_samples(self, checker, samples, module_file="f"):
+        for s in samples:
+            self.assertEqual(1, len(list(checker(s, module_file))), s)
+
     def test_check_wrong_logging_import(self):
         bad_imports = ["from oslo_log import log",
                        "import oslo_log",
@@ -84,284 +103,145 @@ class HackingTestCase(test.TestCase):
             self.assertEqual([], list(checkres))
 
     def test_no_translate_debug_logs(self):
-        self.assertEqual(len(list(checks.no_translate_debug_logs(
-            "LOG.debug(_('foo'))"))), 1)
 
-        self.assertEqual(len(list(checks.no_translate_debug_logs(
-            "LOG.debug('foo')"))), 0)
-
-        self.assertEqual(len(list(checks.no_translate_debug_logs(
-            "LOG.info(_('foo'))"))), 0)
+        bad_samples = ["LOG.debug(_('foo'))"]
+        self._assert_bad_samples(checks.no_translate_debug_logs, bad_samples)
+        good_samples = ["LOG.debug('foo')", "LOG.info(_('foo'))"]
+        self._assert_good_samples(checks.no_translate_debug_logs, good_samples)
 
     def test_no_use_conf_debug_check(self):
-        self.assertEqual(len(list(checks.no_use_conf_debug_check(
-            "if CONF.debug:", "fakefile"))), 1)
+        bad_samples = [
+            "if CONF.debug:",
+            "if cfg.CONF.debug"
+        ]
+        self._assert_bad_samples(checks.no_use_conf_debug_check, bad_samples)
 
-        self.assertEqual(len(list(checks.no_use_conf_debug_check(
-            "if cfg.CONF.debug", "fakefile"))), 1)
-
-        self.assertEqual(len(list(checks.no_use_conf_debug_check(
-            "if logging.is_debug()", "fakefile"))), 0)
+        good_samples = ["if logging.is_debug()"]
+        self._assert_good_samples(checks.no_use_conf_debug_check, good_samples)
 
     def test_assert_true_instance(self):
         self.assertEqual(len(list(checks.assert_true_instance(
             "self.assertTrue(isinstance(e, "
-            "exception.BuildAbortException))"))), 1)
+            "exception.BuildAbortException))", "f"))), 1)
 
         self.assertEqual(
-            len(list(checks.assert_true_instance("self.assertTrue()"))), 0)
+            0,
+            len(list(checks.assert_true_instance("self.assertTrue()", "f"))))
 
     def test_assert_equal_type(self):
         self.assertEqual(len(list(checks.assert_equal_type(
-            "self.assertEqual(type(als['QuicAssist']), list)"))), 1)
+            "self.assertEqual(type(als['QuicAssist']), list)", "f"))), 1)
 
         self.assertEqual(
-            len(list(checks.assert_equal_type("self.assertTrue()"))), 0)
-
-    def test_check_iteritems_method(self):
-        self.assertEqual(len(list(checks.check_iteritems_method(
-            "dict.iteritems()"))), 1)
-
-        self.assertEqual(len(list(checks.check_iteritems_method(
-            "iteritems(dict)"))), 0)
-
-        self.assertEqual(len(list(checks.check_iteritems_method(
-            "dict.items()"))), 0)
-
-    def test_check_concatenate_dict_with_plus_operand(self):
-        self.assertEqual(len(list(
-            checks.check_concatenate_dict_with_plus_operand(
-                "dict1.items() + dict2.items()"))), 1)
-
-        self.assertEqual(len(list(
-            checks.check_concatenate_dict_with_plus_operand(
-                "dict(self.endpoint.to_dict().items() + "
-                "endpoint.items())"))), 1)
-
-        self.assertEqual(len(list(
-            checks.check_concatenate_dict_with_plus_operand(
-                "dict(self.endpoint.to_dict().items() + "
-                "endpoint.items() + something.items())"))), 1)
-
-        self.assertEqual(len(list(
-            checks.check_concatenate_dict_with_plus_operand(
-                "dict1.item() + dict2.item()"))), 0)
-
-        self.assertEqual(len(list(
-            checks.check_concatenate_dict_with_plus_operand(
-                "obj.getitems() + obj.getitems()"))), 0)
-
-        self.assertEqual(len(list(
-            checks.check_concatenate_dict_with_plus_operand(
-                "obj.getitems() + dict2.items()"))), 0)
-
-    def test_check_basestring_method(self):
-        self.assertEqual(len(list(checks.check_basestring_method(
-            "basestring"))), 1)
-
-        self.assertEqual(len(list(checks.check_basestring_method(
-            "six.string_types"))), 0)
-
-    def test_check_StringIO_method(self):
-        self.assertEqual(len(list(checks.check_StringIO_method(
-            "StringIO.StringIO()"))), 1)
-
-        self.assertEqual(len(list(checks.check_StringIO_method(
-            "six.moves.StringIO()"))), 0)
-
-    def test_check_urlparse_method(self):
-        self.assertEqual(len(list(checks.check_urlparse_method(
-            "urlparse.urlparse(url)"))), 1)
-
-        self.assertEqual(len(list(checks.check_urlparse_method(
-            "six.moves.urllib.parse.urlparse(url)"))), 0)
-
-    def test_check_itertools_imap_method(self):
-        self.assertEqual(len(list(checks.check_itertools_imap_method(
-            "itertools.imap()"))), 1)
-
-        self.assertEqual(len(list(checks.check_itertools_imap_method(
-            "six.moves.map()"))), 0)
-
-    def test_check_xrange_imap_method(self):
-        self.assertEqual(len(list(checks.check_xrange_method(
-            "xrange()"))), 1)
-
-        self.assertEqual(len(list(checks.check_xrange_method(
-            "six.moves.range()"))), 0)
-
-    def test_check_string_lower_upper_case_method(self):
-        self.assertEqual(len(list(checks.check_string_lower_upper_case_method(
-            "string.lowercase[:16]"))), 1)
-
-        self.assertEqual(len(list(checks.check_string_lower_upper_case_method(
-            "string.uppercase[:16]"))), 1)
-
-        self.assertEqual(len(list(checks.check_string_lower_upper_case_method(
-            "string.ascii_lowercase[:16]"))), 0)
-
-        self.assertEqual(len(list(checks.check_string_lower_upper_case_method(
-            "string.ascii_uppercase[:16]"))), 0)
-
-    def test_check_next_on_iterator_method(self):
-        self.assertEqual(len(list(checks.check_next_on_iterator_method(
-            "iterator.next()"))), 1)
-
-        self.assertEqual(len(list(checks.check_next_on_iterator_method(
-            "next(iterator)"))), 0)
+            len(list(checks.assert_equal_type("self.assertTrue()", "f"))), 0)
 
     def test_assert_equal_none(self):
         self.assertEqual(len(list(checks.assert_equal_none(
-            "self.assertEqual(A, None)"))), 1)
+            "self.assertEqual(A, None)", "f"))), 1)
 
         self.assertEqual(len(list(checks.assert_equal_none(
-            "self.assertEqual(None, A)"))), 1)
+            "self.assertEqual(None, A)", "f"))), 1)
 
         self.assertEqual(
-            len(list(checks.assert_equal_none("self.assertIsNone()"))), 0)
+            len(list(checks.assert_equal_none("self.assertIsNone()", "f"))), 0)
 
     def test_assert_true_or_false_with_in_or_not_in(self):
-        self.assertEqual(len(list(checks.assert_true_or_false_with_in(
-            "self.assertTrue(A in B)"))), 1)
+        good_lines = [
+            "self.assertTrue(any(A > 5 for A in B))",
+            "self.assertTrue(any(A > 5 for A in B), 'some message')",
+            "self.assertFalse(some in list1 and some2 in list2)"
+        ]
+        self._assert_good_samples(checks.assert_true_or_false_with_in,
+                                  good_lines)
 
-        self.assertEqual(len(list(checks.assert_true_or_false_with_in(
-            "self.assertFalse(A in B)"))), 1)
-
-        self.assertEqual(len(list(checks.assert_true_or_false_with_in(
-            "self.assertTrue(A not in B)"))), 1)
-
-        self.assertEqual(len(list(checks.assert_true_or_false_with_in(
-            "self.assertFalse(A not in B)"))), 1)
-
-        self.assertEqual(len(list(checks.assert_true_or_false_with_in(
-            "self.assertTrue(A in B, 'some message')"))), 1)
-
-        self.assertEqual(len(list(checks.assert_true_or_false_with_in(
-            "self.assertFalse(A in B, 'some message')"))), 1)
-
-        self.assertEqual(len(list(checks.assert_true_or_false_with_in(
-            "self.assertTrue(A not in B, 'some message')"))), 1)
-
-        self.assertEqual(len(list(checks.assert_true_or_false_with_in(
-            "self.assertFalse(A not in B, 'some message')"))), 1)
-
-        self.assertEqual(len(list(checks.assert_true_or_false_with_in(
-            "self.assertTrue(A in 'some string with spaces')"))), 1)
-
-        self.assertEqual(len(list(checks.assert_true_or_false_with_in(
-            "self.assertTrue(A in 'some string with spaces')"))), 1)
-
-        self.assertEqual(len(list(checks.assert_true_or_false_with_in(
-            "self.assertTrue(A in ['1', '2', '3'])"))), 1)
-
-        self.assertEqual(len(list(checks.assert_true_or_false_with_in(
-            "self.assertTrue(A in [1, 2, 3])"))), 1)
-
-        self.assertEqual(len(list(checks.assert_true_or_false_with_in(
-            "self.assertTrue(any(A > 5 for A in B))"))), 0)
-
-        self.assertEqual(len(list(checks.assert_true_or_false_with_in(
-            "self.assertTrue(any(A > 5 for A in B), 'some message')"))), 0)
-
-        self.assertEqual(len(list(checks.assert_true_or_false_with_in(
-            "self.assertFalse(some in list1 and some2 in list2)"))), 0)
+        bad_lines = [
+            "self.assertTrue(A in B)",
+            "self.assertFalse(A in B)",
+            "self.assertTrue(A not in B)",
+            "self.assertFalse(A not in B)",
+            "self.assertTrue(A in B, 'some message')",
+            "self.assertFalse(A in B, 'some message')",
+            "self.assertTrue(A not in B, 'some message')",
+            "self.assertFalse(A not in B, 'some message')",
+            "self.assertTrue(A in 'some string with spaces')",
+            "self.assertTrue(A in 'some string with spaces')",
+            "self.assertTrue(A in ['1', '2', '3'])",
+            "self.assertTrue(A in [1, 2, 3])"
+        ]
+        self._assert_bad_samples(checks.assert_true_or_false_with_in,
+                                 bad_lines)
 
     def test_assert_equal_in(self):
-        self.assertEqual(len(list(checks.assert_equal_in(
-            "self.assertEqual(a in b, True)"))), 1)
+        good_lines = [
+            "self.assertEqual(any(a==1 for a in b), True)",
+            "self.assertEqual(True, any(a==1 for a in b))",
+            "self.assertEqual(any(a==1 for a in b), False)",
+            "self.assertEqual(False, any(a==1 for a in b))"
+        ]
+        self._assert_good_samples(checks.assert_equal_in, good_lines)
 
-        self.assertEqual(len(list(checks.assert_equal_in(
-            "self.assertEqual(a not in b, True)"))), 1)
-
-        self.assertEqual(len(list(checks.assert_equal_in(
-            "self.assertEqual('str' in 'string', True)"))), 1)
-
-        self.assertEqual(len(list(checks.assert_equal_in(
-            "self.assertEqual('str' not in 'string', True)"))), 1)
-
-        self.assertEqual(len(list(checks.assert_equal_in(
-            "self.assertEqual(any(a==1 for a in b), True)"))), 0)
-
-        self.assertEqual(len(list(checks.assert_equal_in(
-            "self.assertEqual(True, a in b)"))), 1)
-
-        self.assertEqual(len(list(checks.assert_equal_in(
-            "self.assertEqual(True, a not in b)"))), 1)
-
-        self.assertEqual(len(list(checks.assert_equal_in(
-            "self.assertEqual(True, 'str' in 'string')"))), 1)
-
-        self.assertEqual(len(list(checks.assert_equal_in(
-            "self.assertEqual(True, 'str' not in 'string')"))), 1)
-
-        self.assertEqual(len(list(checks.assert_equal_in(
-            "self.assertEqual(True, any(a==1 for a in b))"))), 0)
-
-        self.assertEqual(len(list(checks.assert_equal_in(
-            "self.assertEqual(a in b, False)"))), 1)
-
-        self.assertEqual(len(list(checks.assert_equal_in(
-            "self.assertEqual(a not in b, False)"))), 1)
-
-        self.assertEqual(len(list(checks.assert_equal_in(
-            "self.assertEqual('str' in 'string', False)"))), 1)
-
-        self.assertEqual(len(list(checks.assert_equal_in(
-            "self.assertEqual('str' not in 'string', False)"))), 1)
-
-        self.assertEqual(len(list(checks.assert_equal_in(
-            "self.assertEqual(any(a==1 for a in b), False)"))), 0)
-
-        self.assertEqual(len(list(checks.assert_equal_in(
-            "self.assertEqual(False, a in b)"))), 1)
-
-        self.assertEqual(len(list(checks.assert_equal_in(
-            "self.assertEqual(False, a not in b)"))), 1)
-
-        self.assertEqual(len(list(checks.assert_equal_in(
-            "self.assertEqual(False, 'str' in 'string')"))), 1)
-
-        self.assertEqual(len(list(checks.assert_equal_in(
-            "self.assertEqual(False, 'str' not in 'string')"))), 1)
-
-        self.assertEqual(len(list(checks.assert_equal_in(
-            "self.assertEqual(False, any(a==1 for a in b))"))), 0)
+        bad_lines = [
+            "self.assertEqual(a in b, True)",
+            "self.assertEqual(a not in b, True)",
+            "self.assertEqual('str' in 'string', True)",
+            "self.assertEqual('str' not in 'string', True)",
+            "self.assertEqual(True, a in b)",
+            "self.assertEqual(True, a not in b)",
+            "self.assertEqual(True, 'str' in 'string')",
+            "self.assertEqual(True, 'str' not in 'string')",
+            "self.assertEqual(a in b, False)",
+            "self.assertEqual(a not in b, False)",
+            "self.assertEqual('str' in 'string', False)",
+            "self.assertEqual('str' not in 'string', False)",
+            "self.assertEqual(False, a in b)",
+            "self.assertEqual(False, a not in b)",
+            "self.assertEqual(False, 'str' in 'string')",
+            "self.assertEqual(False, 'str' not in 'string')",
+        ]
+        self._assert_bad_samples(checks.assert_equal_in, bad_lines)
 
     def test_check_no_direct_rally_objects_import(self):
-
         bad_imports = ["from rally.objects import task",
                        "import rally.objects.task"]
 
-        good_import = "from rally import objects"
+        self._assert_bad_samples(checks.check_no_direct_rally_objects_import,
+                                 bad_imports)
 
-        for bad_import in bad_imports:
-            checkres = checks.check_no_direct_rally_objects_import(bad_import,
-                                                                   "fakefile")
-            self.assertIsNotNone(next(checkres))
+        self._assert_good_samples(checks.check_no_direct_rally_objects_import,
+                                  bad_imports,
+                                  module_file="./rally/objects/__init__.py")
 
-        for bad_import in bad_imports:
-            checkres = checks.check_no_direct_rally_objects_import(
-                bad_import, "./rally/objects/__init__.py")
-            self.assertEqual([], list(checkres))
-
-        checkres = checks.check_no_direct_rally_objects_import(good_import,
-                                                               "fakefile")
-        self.assertEqual([], list(checkres))
+        good_imports = ["from rally import objects"]
+        self._assert_good_samples(checks.check_no_direct_rally_objects_import,
+                                  good_imports)
 
     def test_check_no_oslo_deprecated_import(self):
-
         bad_imports = ["from oslo.config",
-                       "import oslo.config,"
+                       "import oslo.config",
                        "from oslo.db",
-                       "import oslo.db,"
+                       "import oslo.db",
                        "from oslo.i18n",
-                       "import oslo.i18n,"
+                       "import oslo.i18n",
                        "from oslo.serialization",
-                       "import oslo.serialization,"
+                       "import oslo.serialization",
                        "from oslo.utils",
-                       "import oslo.utils,"]
+                       "import oslo.utils"]
 
-        for bad_import in bad_imports:
-            checkres = checks.check_no_oslo_deprecated_import(bad_import,
-                                                              "fakefile")
-            self.assertIsNotNone(next(checkres))
+        self._assert_bad_samples(checks.check_no_oslo_deprecated_import,
+                                 bad_imports)
+
+    def test_check_quotas(self):
+        bad_lines = [
+            "a = '1'",
+            "a = \"a\" + 'a'",
+            "'",
+            "\"\"\"\"\"\" + ''''''"
+        ]
+        self._assert_bad_samples(checks.check_quotes, bad_lines)
+
+        good_lines = [
+            "\"'a'\" + \"\"\"a'''fdfd'''\"\"\"",
+            "\"fdfdfd\" + \"''''''\"",
+            "a = ''   # noqa "
+        ]
+        self._assert_good_samples(checks.check_quotes, good_lines)

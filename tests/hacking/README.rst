@@ -21,15 +21,6 @@ Rally Specific Commandments
  * [N322] - Ensure that ``assertEqual(A, None)`` and ``assertEqual(None, A)`` are not used
  * [N323] - Ensure that ``assertTrue/assertFalse(A in/not in B)`` are not used with collection contents
  * [N324] - Ensure that ``assertEqual(A in/not in B, True/False)`` and ``assertEqual(True/False, A in/not in B)`` are not used with collection contents
-* [N33x] - Reserved for rules related to Python 3 compatibility
- * [N330] - Ensure that ``dict.iterkeys()``, ``dict.itervalues()``, ``dict.iteritems()`` and ``dict.iterlist()`` are not used
- * [N331] - Ensure that ``basestring`` is not used
- * [N332] - Ensure that ``StringIO.StringIO`` is not used
- * [N333] - Ensure that ``urlparse`` is not used
- * [N334] - Ensure that ``itertools.imap`` is not used
- * [N335] - Ensure that ``xrange`` is not used
- * [N336] - Ensure that ``string.lowercase`` and ``string.uppercase`` are not used
- * [N337] - Ensure that ``next()`` method on iterator objects is not used
- * [N338] - Ensure that ``+`` operand is not used to concatenate dict.items()
 * [N340] - Ensure that we are importing always ``from rally import objects``
 * [N341] - Ensure that we are importing oslo_xyz packages instead of deprecated oslo.xyz ones
+* [N350] - Ensure that single quotes are not used

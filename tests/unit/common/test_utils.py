@@ -132,18 +132,6 @@ class ImportModulesTestCase(test.TestCase):
         utils.try_append_module("rally.common.version", modules)
         self.assertIn("rally.common.version", modules)
 
-    def test_try_append_broken_module(self):
-        modules = {}
-        self.assertRaises(ImportError,
-                          utils.try_append_module,
-                          "tests.unit.fixtures.import.broken",
-                          modules)
-
-    def test_import_modules_from_package(self):
-        utils.import_modules_from_package("tests.unit.fixtures.import.package")
-        self.assertIn("tests.unit.fixtures.import.package.a", sys.modules)
-        self.assertIn("tests.unit.fixtures.import.package.b", sys.modules)
-
 
 class LogTestCase(test.TestCase):
 
