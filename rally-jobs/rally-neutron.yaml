@@ -55,7 +55,7 @@
              network: -1
       sla:
         failure_rate:
-          max: 0
+          max: 20
 
   NeutronNetworks.create_and_list_subnets:
     -
@@ -78,7 +78,7 @@
              subnet: -1
       sla:
         failure_rate:
-          max: 0
+          max: 20
 
   NeutronNetworks.create_and_list_routers:
     -
@@ -90,8 +90,8 @@
         router_create_args:
       runner:
         type: "constant"
-        times: 15
-        concurrency: 15
+        times: 40
+        concurrency: 20
       context:
         users:
           tenants: 1
@@ -103,7 +103,7 @@
              router: -1
       sla:
         failure_rate:
-          max: 0
+          max: 20
 
   NeutronNetworks.create_and_list_ports:
     -
@@ -113,7 +113,7 @@
         ports_per_network: 4
       runner:
         type: "constant"
-        times: 20
+        times: 40
         concurrency: 20
       context:
         users:
@@ -127,7 +127,7 @@
              port: -1
       sla:
         failure_rate:
-          max: 0
+          max: 20
 
   NeutronNetworks.create_and_update_networks:
     -
@@ -138,8 +138,8 @@
             name: "_updated"
       runner:
         type: "constant"
-        times: 10
-        concurrency: 5
+        times: 40
+        concurrency: 20
       context:
         users:
           tenants: 1
@@ -149,7 +149,7 @@
             network: -1
       sla:
         failure_rate:
-          max: 0
+          max: 20
 
   NeutronNetworks.create_and_update_subnets:
     -
@@ -163,8 +163,8 @@
             name: "_subnet_updated"
       runner:
         type: "constant"
-        times: 10
-        concurrency: 5
+        times: 40
+        concurrency: 20
       context:
         users:
           tenants: 5
@@ -175,7 +175,7 @@
             subnet: -1
       sla:
         failure_rate:
-          max: 0
+          max: 20
 
   NeutronNetworks.create_and_update_routers:
     -
@@ -190,8 +190,8 @@
             name: "_router_updated"
       runner:
         type: "constant"
-        times: 5
-        concurrency: 5
+        times: 40
+        concurrency: 20
       context:
         users:
           tenants: 1
@@ -203,7 +203,7 @@
             router: -1
       sla:
         failure_rate:
-          max: 0
+          max: 20
 
   NeutronNetworks.create_and_update_ports:
     -
@@ -218,8 +218,8 @@
             name: "_port_updated"
       runner:
         type: "constant"
-        times: 10
-        concurrency: 5
+        times: 40
+        concurrency: 20
       context:
         users:
           tenants: 1
@@ -230,7 +230,7 @@
             port: -1
       sla:
         failure_rate:
-          max: 0
+          max: 20
 
   NeutronNetworks.create_and_delete_networks:
     -
@@ -250,7 +250,7 @@
             subnet: -1
       sla:
         failure_rate:
-          max: 0
+          max: 20
 
   NeutronNetworks.create_and_delete_subnets:
     -
@@ -273,7 +273,7 @@
             subnet: -1
       sla:
         failure_rate:
-          max: 0
+          max: 20
 
   NeutronNetworks.create_and_delete_routers:
     -
@@ -285,8 +285,8 @@
         router_create_args: {}
       runner:
         type: "constant"
-        times: 30
-        concurrency: 10
+        times: 40
+        concurrency: 20
       context:
         users:
           tenants: 1
@@ -298,7 +298,7 @@
             router: -1
       sla:
           failure_rate:
-            max: 0
+            max: 20
 
   NeutronNetworks.create_and_delete_ports:
     -
@@ -308,8 +308,8 @@
         ports_per_network: 10
       runner:
         type: "constant"
-        times: 15
-        concurrency: 15
+        times: 40
+        concurrency: 20
       context:
         users:
           tenants: 1
@@ -320,7 +320,7 @@
             port: -1
       sla:
         failure_rate:
-          max: 0
+          max: 20
 
   Quotas.neutron_update:
     -
