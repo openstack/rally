@@ -36,9 +36,9 @@ LOG = logging.getLogger(__name__)
 class BaseCustomImageGenerator(base.Context):
     """Base class for the contexts providing customized image with.
 
-    Every context class for the specific cusomization must implement the method
-    `_customize_image` that is able to connect to the server using SSH
-    and e.g. install applications inside it.
+    Every context class for the specific customization must implement
+    the method `_customize_image` that is able to connect to the server
+    using SSH and e.g. install applications inside it.
 
     This is used e.g. to install the benchmark application using SSH
     access.

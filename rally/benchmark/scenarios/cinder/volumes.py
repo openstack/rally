@@ -140,7 +140,7 @@ class CinderVolumes(utils.CinderScenario,
                           deletion (in seconds)
         :param max_sleep: maximum sleep time between volume extension and
                           deletion (in seconds)
-        :param kwargs: optinal args to extend the volume
+        :param kwargs: optional args to extend the volume
         """
         volume = self._create_volume(size, **kwargs)
         self._extend_volume(volume, new_size)
@@ -191,7 +191,7 @@ class CinderVolumes(utils.CinderScenario,
                           deletion (in seconds)
         :param max_sleep: maximum sleep time between snapshot creation and
                           deletion (in seconds)
-        :param kwargs: optional args to create a shapshot
+        :param kwargs: optional args to create a snapshot
         """
         volume = random.choice(self.context["tenant"]["volumes"])
         snapshot = self._create_snapshot(volume["id"], force=force, **kwargs)

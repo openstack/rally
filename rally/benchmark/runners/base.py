@@ -249,7 +249,7 @@ class ScenarioRunner(object):
 
         :param processes_to_start: number of processes to create in the pool
         :param worker_process: target function for all processes in the pool
-        :param worker_args_gen: generator of arguments for the target funciton
+        :param worker_args_gen: generator of arguments for the target function
         :returns: the process pool as a deque
         """
         process_pool = collections.deque()

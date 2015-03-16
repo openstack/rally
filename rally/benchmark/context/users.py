@@ -148,7 +148,7 @@ class UserGenerator(base.Context):
             tenant_dict = {"id": tenant.id, "name": tenant.name}
             tenants.append(tenant_dict)
 
-        # NOTE(msdubov): cosume() will fill the tenants list in the closure.
+        # NOTE(msdubov): consume() will fill the tenants list in the closure.
         broker.run(publish, consume, threads)
         tenants_dict = dict()
         for t in tenants:
@@ -192,7 +192,7 @@ class UserGenerator(base.Context):
                           "endpoint": user_endpoint,
                           "tenant_id": tenant_id})
 
-        # NOTE(msdubov): cosume() will fill the users list in the closure.
+        # NOTE(msdubov): consume() will fill the users list in the closure.
         broker.run(publish, consume, threads)
         return list(users)
 

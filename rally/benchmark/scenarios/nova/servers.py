@@ -395,7 +395,7 @@ class NovaServers(utils.NovaScenario,
             disk_over_commit=False,
             boot_server_kwargs=None,
             create_volume_kwargs=None):
-        """Create a VM, attach a volume to it amd live migrate.
+        """Create a VM, attach a volume to it and live migrate.
 
         Simple test to create a VM and attach a volume, then migrate the VM,
         detach the volume and delete volume/VM.

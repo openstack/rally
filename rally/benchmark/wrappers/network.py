@@ -58,7 +58,7 @@ class NetworkWrapperException(exceptions.RallyException):
 class NetworkWrapper(object):
     """Base class for network service implementations.
 
-    We aclually have two network services implementations, with different API:
+    We actually have two network services implementations, with different API:
     NovaNetwork and Neutron. The idea is (at least to try) to use unified
     service, which hides most differences and routines behind the scenes.
     This allows to significantly re-use and simplify code.

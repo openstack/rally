@@ -139,7 +139,7 @@ def file_exists(config, clients, deployment, param_name, mode=os.R_OK):
         * os.W_OK (file is writable)
         * os.X_OK (file is executable)
 
-        If multiple modes are rquired they can be added, eg:
+        If multiple modes are required they can be added, eg:
             mode=os.R_OK+os.W_OK
     """
 
