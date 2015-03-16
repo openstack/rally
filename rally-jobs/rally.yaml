@@ -254,6 +254,18 @@
 
     -
       args:
+        sleep: 0.001
+      runner:
+        type: "rps"
+        times: 200
+        rps: 20
+        max_concurrency: 10
+      sla:
+        failure_rate:
+          max: 0
+
+    -
+      args:
         sleep: 0.1
       runner:
         type: "serial"
