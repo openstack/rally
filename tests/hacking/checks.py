@@ -24,6 +24,7 @@ Guidelines for writing new hacking checks
 
 """
 
+import functools
 import re
 
 
@@ -45,16 +46,18 @@ re_assert_equal_in_end_with_true_or_false = re.compile(
     r"assertEqual\((\w|[][.'\"])+( not)? in (\w|[][.'\", ])+, (True|False)\)")
 re_assert_equal_in_start_with_true_or_false = re.compile(
     r"assertEqual\((True|False), (\w|[][.'\"])+( not)? in (\w|[][.'\", ])+\)")
-re_basestring_method = re.compile(r"(^|[\s,(\[=])basestring([\s,)\]]|$)")
-re_StringIO_method = re.compile(r"StringIO\.StringIO\(")
-re_urlparse_method = re.compile(r"(^|[\s=])urlparse\.")
-re_itertools_imap_method = re.compile(r"(^|[\s=])itertools\.imap\(")
-re_xrange_method = re.compile(r"(^|[\s=])xrange\(")
-re_string_lower_upper_case_method = re.compile(
-    r"(^|[(,\s=])string\.(lower|upper)case([)\[,\s]|$)")
-re_next_on_iterator_method = re.compile(r"\.next\(\)")
-re_concatenate_dict = re.compile(
-    r".*\.items\(\)(\s*\+\s*.*\.items\(\))+.*")
+
+
+def skip_ignored_lines(func):
+
+    @functools.wraps(func)
+    def wrapper(logical_line, filename):
+        line = logical_line.strip()
+        if not line or line.startswith("#") or line.endswith("# noqa"):
+            return
+        yield next(func(logical_line, filename))
+
+    return wrapper
 
 
 def _parse_assert_mock_str(line):
@@ -67,6 +70,7 @@ def _parse_assert_mock_str(line):
         return None, None, None
 
 
+@skip_ignored_lines
 def check_assert_methods_from_mock(logical_line, filename):
     """Ensure that ``assert_*`` methods from ``mock`` library is used correctly
 
@@ -112,6 +116,7 @@ def check_assert_methods_from_mock(logical_line, filename):
                     "custom_msg": custom_msg})
 
 
+@skip_ignored_lines
 def check_import_of_logging(logical_line, filename):
     """Check correctness import of logging module
 
@@ -131,7 +136,8 @@ def check_import_of_logging(logical_line, filename):
                           "use `rally.common.log` instead.")
 
 
-def no_translate_debug_logs(logical_line):
+@skip_ignored_lines
+def no_translate_debug_logs(logical_line, filename):
     """Check for "LOG.debug(_("
 
     As per our translation policy,
@@ -148,6 +154,7 @@ def no_translate_debug_logs(logical_line):
         yield(0, "N311 Don't translate debug level logs")
 
 
+@skip_ignored_lines
 def no_use_conf_debug_check(logical_line, filename):
     """Check for "cfg.CONF.debug"
 
@@ -167,7 +174,8 @@ def no_use_conf_debug_check(logical_line, filename):
                      "should be used instead.")
 
 
-def assert_true_instance(logical_line):
+@skip_ignored_lines
+def assert_true_instance(logical_line, filename):
     """Check for assertTrue(isinstance(a, b)) sentences
 
     N320
@@ -177,7 +185,8 @@ def assert_true_instance(logical_line):
                   "you should use assertIsInstance(a, b) instead.")
 
 
-def assert_equal_type(logical_line):
+@skip_ignored_lines
+def assert_equal_type(logical_line, filename):
     """Check for assertEqual(type(A), B) sentences
 
     N321
@@ -187,7 +196,8 @@ def assert_equal_type(logical_line):
                   "you should use assertIsInstance(a, b) instead.")
 
 
-def assert_equal_none(logical_line):
+@skip_ignored_lines
+def assert_equal_none(logical_line, filename):
     """Check for assertEqual(A, None) or assertEqual(None, A) sentences
 
     N322
@@ -200,7 +210,8 @@ def assert_equal_none(logical_line):
                   "instead.")
 
 
-def assert_true_or_false_with_in(logical_line):
+@skip_ignored_lines
+def assert_true_or_false_with_in(logical_line, filename):
     """Check assertTrue/False(A in/not in B) with collection contents
 
     Check for assertTrue/False(A in B), assertTrue/False(A not in B),
@@ -217,7 +228,8 @@ def assert_true_or_false_with_in(logical_line):
                   " instead.")
 
 
-def assert_equal_in(logical_line):
+@skip_ignored_lines
+def assert_equal_in(logical_line, filename):
     """Check assertEqual(A in/not in B, True/False) with collection contents
 
     Check for assertEqual(A in B, True/False), assertEqual(True/False, A in B),
@@ -234,134 +246,7 @@ def assert_equal_in(logical_line):
                   "collection contents.")
 
 
-def check_iteritems_method(logical_line):
-    """Check that collections are iterated in Python 3 compatible way
-
-    The correct forms:
-      six.iterkeys(collection)
-      six.itervalues(collection)
-      six.iteritems(collection)
-      six.iterlist(collection)
-
-    N330
-    """
-    iter_functions = ["iterkeys()", "itervalues()",
-                      "iteritems()", "iterlist()"]
-    for func in iter_functions:
-        pos = logical_line.find(func)
-        if pos != -1:
-            yield (pos, "N330: Use six.%(func)s(dict) rather than "
-                        "dict.%(func)s() to iterate a collection." %
-                   {"func": func[:-2]})
-
-
-def check_basestring_method(logical_line):
-    """Check if basestring is properly called for compatibility with Python 3
-
-    There is no global variable "basestring" in Python 3.The correct form
-    is six.string_types, instead of basestring.
-
-    N331
-    """
-    res = re_basestring_method.search(logical_line)
-    if res:
-        yield (0, "N331: Use six.string_types rather than basestring.")
-
-
-def check_StringIO_method(logical_line):
-    """Check if StringIO is properly called for compatibility with Python 3
-
-    In Python 3, StringIO module is gone. The correct form is
-    six.moves.StringIO instead of StringIO.StringIO.
-
-    N332
-    """
-    res = re_StringIO_method.search(logical_line)
-    if res:
-        yield (0, "N332: Use six.moves.StringIO "
-                  "rather than StringIO.StringIO.")
-
-
-def check_urlparse_method(logical_line):
-    """Check if urlparse is properly called for compatibility with Python 3
-
-    The correct form is six.moves.urllib.parse instead of "urlparse".
-
-    N333
-    """
-    res = re_urlparse_method.search(logical_line)
-    if res:
-        yield (0, "N333: Use six.moves.urllib.parse rather than urlparse.")
-
-
-def check_itertools_imap_method(logical_line):
-    """Check if itertools.imap is properly called for compatibility with Python 3
-
-    The correct form is six.moves.map instead of itertools.imap.
-
-    N334
-    """
-    res = re_itertools_imap_method.search(logical_line)
-    if res:
-        yield (0, "N334: Use six.moves.map rather than itertools.imap.")
-
-
-def check_xrange_method(logical_line):
-    """Check if xrange is properly called for compatibility with Python 3
-
-    The correct form is six.moves.range instead of xrange.
-
-    N335
-    """
-    res = re_xrange_method.search(logical_line)
-    if res:
-        yield (0, "N335: Use six.moves.range rather than xrange.")
-
-
-def check_string_lower_upper_case_method(logical_line):
-    """Check if string.lowercase and string.uppercase are properly called
-
-    In Python 3, string.lowercase and string.uppercase are gone.
-    The correct form is "string.ascii_lowercase" and "string.ascii_uppercase".
-
-    N336
-    """
-    res = re_string_lower_upper_case_method.search(logical_line)
-    if res:
-        yield (0, "N336: Use string.ascii_lowercase or string.ascii_uppercase "
-                  "rather than string.lowercase or string.uppercase.")
-
-
-def check_next_on_iterator_method(logical_line):
-    """Check if next() method on iterator objects are properly called
-
-    Python 3 introduced a next() function to replace the next() method on
-    iterator objects. Rather than calling the method on the iterator,
-    the next() function is called with the iterable object as it's sole
-    parameter, which calls the underlying __next__() method.
-
-    N337
-    """
-    res = re_next_on_iterator_method.search(logical_line)
-    if res:
-        yield (0, "N337: Use next(iterator) rather than iterator.next().")
-
-
-def check_concatenate_dict_with_plus_operand(logical_line):
-    """Check if a dict is being sum with + operator
-
-    Python 3 dict.items() return a dict_items object instead of a list, and
-    this object, doesn't support + operator. Need to use the update method
-    instead in order to concatenate two dictionaries.
-
-    N338
-    """
-    res = re_concatenate_dict.search(logical_line)
-    if res:
-        yield (0, "N338: Use update() method instead of '+'' operand to "
-                  "concatenate dictionaries")
-
-
+@skip_ignored_lines
 def check_no_direct_rally_objects_import(logical_line, filename):
     """Check if rally.objects are properly imported.
 
@@ -379,6 +264,7 @@ def check_no_direct_rally_objects_import(logical_line, filename):
                   "After that you can use directly objects e.g. objects.Task")
 
 
+@skip_ignored_lines
 def check_no_oslo_deprecated_import(logical_line, filename):
     """Check if oslo.foo packages are not imported instead of oslo_foo ones.
 
@@ -394,6 +280,59 @@ def check_no_oslo_deprecated_import(logical_line, filename):
                   "instead")
 
 
+@skip_ignored_lines
+def check_quotes(logical_line, filename):
+    """Check that single quotation marks are not used
+
+    N350
+    """
+
+    in_string = False
+    in_multiline_string = False
+    single_quotas_are_used = False
+
+    check_tripple = (
+        lambda line, i, char: (
+            i + 2 < len(line) and
+            (char == line[i] == line[i + 1] == line[i + 2])
+        )
+    )
+
+    i = 0
+    while i < len(logical_line):
+        char = logical_line[i]
+
+        if in_string:
+            if char == "\"":
+                in_string = False
+            if char == "\\":
+                i += 1  # ignore next char
+
+        elif in_multiline_string:
+            if check_tripple(logical_line, i, "\""):
+                i += 2  # skip next 2 chars
+                in_multiline_string = False
+
+        elif char == "#":
+            break
+
+        elif char == "'":
+            single_quotas_are_used = True
+            break
+
+        elif char == "\"":
+            if check_tripple(logical_line, i, "\""):
+                in_multiline_string = True
+                i += 3
+                continue
+            in_string = True
+
+        i += 1
+
+    if single_quotas_are_used:
+        yield (i, "N350 Remove Single quotes")
+
+
 def factory(register):
     register(check_assert_methods_from_mock)
     register(check_import_of_logging)
@@ -404,14 +343,6 @@ def factory(register):
     register(assert_equal_none)
     register(assert_true_or_false_with_in)
     register(assert_equal_in)
-    register(check_iteritems_method)
-    register(check_basestring_method)
-    register(check_StringIO_method)
-    register(check_urlparse_method)
-    register(check_itertools_imap_method)
-    register(check_xrange_method)
-    register(check_string_lower_upper_case_method)
-    register(check_next_on_iterator_method)
     register(check_no_direct_rally_objects_import)
-    register(check_concatenate_dict_with_plus_operand)
     register(check_no_oslo_deprecated_import)
+    register(check_quotes)
