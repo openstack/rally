@@ -138,6 +138,11 @@ class CeilometerScenario(base.Scenario):
         """
         return self.clients("ceilometer").samples.list()
 
+    @base.atomic_action_timer("ceilometer.get_resource")
+    def _get_resource(self, resource_id):
+        """Retrieve details about one resource."""
+        return self.clients("ceilometer").resources.get(resource_id)
+
     @base.atomic_action_timer("ceilometer.get_stats")
     def _get_stats(self, meter_name):
         """Get stats for a specific meter.
@@ -191,7 +196,7 @@ class CeilometerScenario(base.Scenario):
 
     @base.atomic_action_timer("ceilometer.create_sample")
     def _create_sample(self, counter_name, counter_type, counter_unit,
-                       counter_volume, resource_id, **kwargs):
+                       counter_volume, resource_id=None, **kwargs):
         """Create a Sample with specified parameters.
 
         :param counter_name: specifies name of the counter
@@ -206,7 +211,9 @@ class CeilometerScenario(base.Scenario):
                        "counter_type": counter_type,
                        "counter_unit": counter_unit,
                        "counter_volume": counter_volume,
-                       "resource_id": resource_id})
+                       "resource_id": resource_id if resource_id
+                       else self._generate_random_name(
+                           prefix="rally_ctx_resource_")})
         return self.clients("ceilometer").samples.create(**kwargs)
 
     @base.atomic_action_timer("ceilometer.query_samples")

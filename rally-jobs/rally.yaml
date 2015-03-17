@@ -296,6 +296,26 @@
         failure_rate:
           max: 0
 
+  CeilometerResource.get_tenant_resources:
+    -
+      runner:
+        type: "constant"
+        times: 10
+        concurrency: 5
+      context:
+        users:
+          tenants: 2
+          users_per_tenant: 2
+        ceilometer:
+          counter_name: "cpu_util"
+          counter_type: "gauge"
+          counter_volume: 1.0
+          counter_unit: "instance"
+          resources_per_tenant: 3
+      sla:
+        failure_rate:
+          max: 0
+
   CeilometerSamples.list_samples:
     -
       runner:
@@ -306,6 +326,13 @@
         users:
           tenants: 1
           users_per_tenant: 1
+        ceilometer:
+          counter_name: "cpu_util"
+          counter_type: "gauge"
+          counter_unit: "instance"
+          counter_volume: 1.0
+          resources_per_tenant: 3
+          samples_per_resource: 3
       sla:
         failure_rate:
           max: 0
