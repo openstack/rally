@@ -122,6 +122,31 @@ class KeystoneScenarioTestCase(test.TestCase):
                                        "keystone.create_tenant")
 
     @mock.patch(UTILS + "KeystoneScenario._generate_random_name")
+    def test_service_create(self, mock_gen_name):
+        name = "abc"
+        mock_gen_name.return_value = name
+        service_type = name + "service_type"
+        description = name + "_description"
+
+        service = {}
+        fake_keystone = fakes.FakeKeystoneClient()
+        fake_keystone.services.create = mock.MagicMock(return_value=service)
+        fake_clients = fakes.FakeClients()
+        fake_clients._keystone = fake_keystone
+        scenario = utils.KeystoneScenario(admin_clients=fake_clients)
+
+        result = scenario._service_create(name=name,
+                                          service_type=service_type,
+                                          description=description)
+
+        self.assertEqual(service, result)
+        fake_keystone.services.create.assert_called_once_with(name,
+                                                              service_type,
+                                                              description)
+        self._test_atomic_action_timer(scenario.atomic_actions(),
+                                       "keystone.create_service")
+
+    @mock.patch(UTILS + "KeystoneScenario._generate_random_name")
     def test_tenant_create_with_users(self, mock_gen_name):
         name = "abc"
         mock_gen_name.return_value = name
@@ -162,6 +187,33 @@ class KeystoneScenarioTestCase(test.TestCase):
         fake_keystone.tenants.list.assert_called_once_with()
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "keystone.list_tenants")
+
+    def test_list_services(self):
+        fake_keystone = fakes.FakeKeystoneClient()
+        fake_keystone.services.list = mock.MagicMock()
+        fake_clients = fakes.FakeClients()
+        fake_clients._keystone = fake_keystone
+        scenario = utils.KeystoneScenario(admin_clients=fake_clients)
+
+        scenario._list_services()
+
+        fake_keystone.services.list.assert_called_once_with()
+        self._test_atomic_action_timer(scenario.atomic_actions(),
+                                       "keystone.service_list")
+
+    def test_delete_service(self):
+        service = mock.MagicMock()
+        fake_keystone = fakes.FakeKeystoneClient()
+        fake_keystone.services.delete = mock.MagicMock()
+        fake_clients = fakes.FakeClients()
+        fake_clients._keystone = fake_keystone
+        scenario = utils.KeystoneScenario(admin_clients=fake_clients)
+
+        scenario._delete_service(service_id=service.id)
+
+        fake_keystone.services.delete.assert_called_once_with(service.id)
+        self._test_atomic_action_timer(scenario.atomic_actions(),
+                                       "keystone.delete_service")
 
     def test_get_tenant(self):
         tenant = mock.MagicMock()

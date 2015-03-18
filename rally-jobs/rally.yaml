@@ -98,6 +98,16 @@
         failure_rate:
           max: 0
 
+  KeystoneBasic.create_and_delete_service:
+    -
+      runner:
+        type: "constant"
+        times: 10
+        concurrency: 5
+      sla:
+        failure_rate:
+          max: 0
+
   CeilometerAlarms.create_alarm:
     -
       args:
@@ -1453,9 +1463,9 @@
     -
       args:
         flavor:
-            name: "m1.tiny"
+          name: "m1.tiny"
         image:
-            name: {{image_name}}
+          name: {{image_name}}
       runner:
         type: "constant"
         times: 3

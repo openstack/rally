@@ -1,0 +1,11 @@
+---
+  KeystoneBasic.create_and_delete_service:
+    -
+      args:
+        name: "Rally_test_service"
+        service_type: "Really_test_type"
+        description: "test_description"
+      runner:
+        type: "constant"
+        times: 100
+        concurrency: 10
