@@ -1,0 +1,11 @@
+{
+    "KeystoneBasic.get_entities": [
+    {
+            "runner": {
+                "type": "constant",
+                "times": 100,
+                "concurrency": 10
+            }
+        }
+    ]
+}

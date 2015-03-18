@@ -36,6 +36,16 @@
         failure_rate:
           max: 0
 
+  KeystoneBasic.get_entities:
+    -
+      runner:
+        type: "constant"
+        times: 100
+        concurrency: 10
+      sla:
+        failure_rate:
+          max: 0
+
   KeystoneBasic.create_and_list_users:
     -
       args:

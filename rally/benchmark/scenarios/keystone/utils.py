@@ -77,6 +77,17 @@ class KeystoneScenario(base.Scenario):
             self.admin_clients("keystone").users.create(
                     name, password=password, email=email, tenant_id=tenant.id)
 
+    @base.atomic_action_timer("keystone.create_role")
+    def _role_create(self, name_length=5):
+        """Creates keystone user role with random name.
+
+        :param name_length: length of generated (random) part of role name
+        :returns: keystone user role instance
+        """
+        role = self.admin_clients("keystone").roles.create(
+            self._generate_random_name(length=name_length))
+        return role
+
     @base.atomic_action_timer("keystone.list_users")
     def _list_users(self):
         """List users."""
@@ -86,3 +97,45 @@ class KeystoneScenario(base.Scenario):
     def _list_tenants(self):
         """List tenants."""
         return self.admin_clients("keystone").tenants.list()
+
+    @base.atomic_action_timer("keystone.service_list")
+    def _list_services(self):
+        """List services."""
+        return self.admin_clients("keystone").services.list()
+
+    @base.atomic_action_timer("keystone.get_tenant")
+    def _get_tenant(self, tenant_id):
+        """Get given tenant.
+
+        :param tenant_id: tenant object
+        """
+        return self.admin_clients("keystone").tenants.get(tenant_id)
+
+    @base.atomic_action_timer("keystone.get_user")
+    def _get_user(self, user_id):
+        """Get given user.
+
+        :param user_id: user object
+        """
+        return self.admin_clients("keystone").users.get(user_id)
+
+    @base.atomic_action_timer("keystone.get_role")
+    def _get_role(self, role_id):
+        """Get given user role.
+
+        :param role_id: user role object
+        """
+        return self.admin_clients("keystone").roles.get(role_id)
+
+    @base.atomic_action_timer("keystone.get_service")
+    def _get_service(self, service_id):
+        """Get service with given service id.
+
+        :param service_id: id for service object
+        """
+        return self.admin_clients("keystone").services.get(service_id)
+
+    def _get_service_by_name(self, name):
+        for i in self._list_services():
+            if i.name == name:
+                return i
