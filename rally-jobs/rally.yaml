@@ -86,6 +86,19 @@
         failure_rate:
           max: 0
 
+  KeystoneBasic.create_user_update_password:
+    -
+      args:
+        name_length: 10
+        password_length: 10
+      runner:
+        type: "constant"
+        times: 10
+        concurrency: 5
+      sla:
+        failure_rate:
+          max: 0
+
   KeystoneBasic.create_update_and_delete_tenant:
     -
       args:

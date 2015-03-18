@@ -151,6 +151,21 @@ class KeystoneBasicTestCase(test.TestCase):
         scenario._update_tenant.assert_called_once_with(fake_tenant)
         scenario._resource_delete.assert_called_once_with(fake_tenant)
 
+    def test_create_user_update_password(self):
+        scenario = basic.KeystoneBasic()
+        fake_password = "pswd"
+        fake_user = mock.MagicMock()
+        scenario._user_create = mock.MagicMock(return_value=fake_user)
+        scenario._generate_random_name = mock.MagicMock(
+            return_value=fake_password)
+        scenario._update_user_password = mock.MagicMock()
+
+        scenario.create_user_update_password(name_length=9, password_length=9)
+        scenario._generate_random_name.assert_called_once_with(length=9)
+        scenario._user_create.assert_called_once_with(name_length=9)
+        scenario._update_user_password.assert_called_once_with(fake_user.id,
+                                                               fake_password)
+
     def test_create_and_list_services(self):
         scenario = basic.KeystoneBasic()
         name = "Rally_test_service"

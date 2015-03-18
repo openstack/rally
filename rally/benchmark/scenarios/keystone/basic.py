@@ -138,6 +138,20 @@ class KeystoneBasic(kutils.KeystoneScenario):
         self._update_tenant(tenant)
         self._resource_delete(tenant)
 
+    @validation.number("password_length", minval=10)
+    @validation.number("name_length", minval=10)
+    @validation.required_openstack(admin=True)
+    @base.scenario(context={"admin_cleanup": ["keystone"]})
+    def create_user_update_password(self, name_length=10, password_length=10):
+        """Create user and update password for that user.
+
+        :param name_length: length of the user name
+        :param password_length: length of the password
+        """
+        password = self._generate_random_name(length=password_length)
+        user = self._user_create(name_length=name_length)
+        self._update_user_password(user.id, password)
+
     @validation.required_openstack(admin=True)
     @base.scenario(context={"admin_cleanup": ["keystone"]})
     def create_and_list_services(self, name=None, service_type=None,
