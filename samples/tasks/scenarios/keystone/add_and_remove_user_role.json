@@ -1,0 +1,17 @@
+{
+    "KeystoneBasic.add_and_remove_user_role": [
+    {
+            "runner": {
+                "type": "constant",
+                "times": 100,
+                "concurrency": 10
+            },
+            "context": {
+                "users": {
+                    "tenants": 3,
+                    "users_per_tenant": 2
+                }
+            }
+        }
+    ]
+}

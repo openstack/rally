@@ -88,6 +88,40 @@ class KeystoneScenarioTestCase(test.TestCase):
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "keystone.create_role")
 
+    def test_list_roles_for_user(self):
+        user = mock.MagicMock()
+        tenant = mock.MagicMock()
+        fake_keystone = fakes.FakeKeystoneClient()
+        fake_keystone.roles.roles_for_user = mock.MagicMock()
+        fake_clients = fakes.FakeClients()
+        fake_clients._keystone = fake_keystone
+        scenario = utils.KeystoneScenario(admin_clients=fake_clients)
+
+        scenario._list_roles_for_user(user, tenant)
+
+        fake_keystone.roles.roles_for_user.assert_called_once_with(user,
+                                                                   tenant)
+        self._test_atomic_action_timer(scenario.atomic_actions(),
+                                       "keystone.list_roles")
+
+    def test_role_add(self):
+        user = mock.MagicMock()
+        role = mock.MagicMock()
+        tenant = mock.MagicMock()
+        fake_keystone = fakes.FakeKeystoneClient()
+        fake_keystone.roles.add_user_role = mock.MagicMock()
+        fake_clients = fakes.FakeClients()
+        fake_clients._keystone = fake_keystone
+        scenario = utils.KeystoneScenario(admin_clients=fake_clients)
+
+        scenario._role_add(user=user.id, role=role.id, tenant=tenant.id)
+
+        fake_keystone.roles.add_user_role.assert_called_once_with(user.id,
+                                                                  role.id,
+                                                                  tenant.id)
+        self._test_atomic_action_timer(scenario.atomic_actions(),
+                                       "keystone.add_role")
+
     def test_user_delete(self):
         resource = fakes.FakeResource()
         resource.delete = mock.MagicMock()
@@ -97,6 +131,24 @@ class KeystoneScenarioTestCase(test.TestCase):
         resource.delete.assert_called_once_with()
         r = "keystone.delete_%s" % resource.__class__.__name__.lower()
         self._test_atomic_action_timer(scenario.atomic_actions(), r)
+
+    def test_role_remove(self):
+        user = mock.MagicMock()
+        role = mock.MagicMock()
+        tenant = mock.MagicMock()
+        fake_keystone = fakes.FakeKeystoneClient()
+        fake_keystone.roles.remove_user_role = mock.MagicMock()
+        fake_clients = fakes.FakeClients()
+        fake_clients._keystone = fake_keystone
+        scenario = utils.KeystoneScenario(admin_clients=fake_clients)
+
+        scenario._role_remove(user=user, role=role, tenant=tenant)
+
+        fake_keystone.roles.remove_user_role.assert_called_once_with(user,
+                                                                     role,
+                                                                     tenant)
+        self._test_atomic_action_timer(scenario.atomic_actions(),
+                                       "keystone.remove_role")
 
     @mock.patch(UTILS + "KeystoneScenario._generate_random_name")
     def test_tenant_create(self, mock_gen_name):

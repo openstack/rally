@@ -120,6 +120,37 @@ class KeystoneScenario(base.Scenario):
         """List services."""
         return self.admin_clients("keystone").services.list()
 
+    @base.atomic_action_timer("keystone.list_roles")
+    def _list_roles_for_user(self, user, tenant):
+        """List user roles.
+
+        :param user: user for whom roles will be listed
+        :param tenant: tenant on which user have roles
+        """
+        return self.admin_clients("keystone").roles.roles_for_user(
+            user, tenant)
+
+    @base.atomic_action_timer("keystone.add_role")
+    def _role_add(self, user, role, tenant):
+        """Add role to a given user on a tenant.
+
+        :param user: user to be assigned the role to
+        :param role: user role to assign with
+        :param tenant: tenant on which assignation will take place
+        """
+        self.admin_clients("keystone").roles.add_user_role(user, role, tenant)
+
+    @base.atomic_action_timer("keystone.remove_role")
+    def _role_remove(self, user, role, tenant):
+        """Dissociate user with role.
+
+        :param user: user to be stripped with role
+        :param role: role to be dissociated with user
+        :param tenant: tenant on which assignation took place
+        """
+        self.admin_clients("keystone").roles.remove_user_role(user,
+                                                              role, tenant)
+
     @base.atomic_action_timer("keystone.get_tenant")
     def _get_tenant(self, tenant_id):
         """Get given tenant.
