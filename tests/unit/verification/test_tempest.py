@@ -198,8 +198,10 @@ class TempestInstallAndUninstallTestCase(BaseTestCase):
             self.assertEqual("fake_url",
                              self.verifier._get_remote_origin("fake_dir"))
 
+    @mock.patch("shutil.rmtree")
+    @mock.patch(TEMPEST_PATH + ".tempest.os.path.exists", return_value=True)
     @mock.patch(TEMPEST_PATH + ".tempest.subprocess.check_call")
-    def test__clone_failed(self, mock_sp):
+    def test__clone_failed(self, mock_sp, mock_exists, mock_shutils):
         with self.base_repo_patcher:
             # Check that `subprocess.CalledProcessError` is not handled
             # by `_clone`
@@ -210,6 +212,7 @@ class TempestInstallAndUninstallTestCase(BaseTestCase):
             mock_sp.assert_called_once_with(
                 ["git", "clone", "https://github.com/openstack/tempest",
                  "foo-baserepo"])
+            mock_shutils.assert_called_once_with(self.verifier.base_repo)
 
     @mock.patch(TEMPEST_PATH + ".tempest.Tempest.base_repo")
     @mock.patch(TEMPEST_PATH + ".tempest.Tempest._initialize_testr")
