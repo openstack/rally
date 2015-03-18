@@ -212,9 +212,14 @@ class Tempest(object):
     def _clone(self):
         print("Please wait while tempest is being cloned. "
               "This could take a few minutes...")
-        subprocess.check_call(["git", "clone",
-                               self.tempest_source,
-                               self.base_repo])
+        try:
+            subprocess.check_call(["git", "clone",
+                                   self.tempest_source,
+                                   self.base_repo])
+        except subprocess.CalledProcessError:
+            if os.path.exists(self.base_repo):
+                shutil.rmtree(self.base_repo)
+            raise
 
     def install(self):
         if not self.is_installed():
