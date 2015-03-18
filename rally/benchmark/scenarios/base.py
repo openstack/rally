@@ -182,26 +182,32 @@ class Scenario(object):
             return False
         return Scenario.meta(cls, "is_scenario", method_name, default=False)
 
-    def clients(self, client_type):
+    def clients(self, client_type, version=None):
         """Returns a python openstack client of the requested type.
 
         The client will be that for one of the temporary non-administrator
         users created before the benchmark launch.
 
         :param client_type: Client type ("nova"/"glance" etc.)
+        :param version: client version ("1"/"2" etc.)
 
         :returns: Standard python OpenStack client instance
         """
-        return getattr(self._clients, client_type)()
+        client = getattr(self._clients, client_type)
 
-    def admin_clients(self, client_type):
+        return client(version) if version is not None else client()
+
+    def admin_clients(self, client_type, version=None):
         """Returns a python admin openstack client of the requested type.
 
         :param client_type: Client type ("nova"/"glance" etc.)
+        :param version: client version ("1"/"2" etc.)
 
         :returns: Python openstack client object
         """
-        return getattr(self._admin_clients, client_type)()
+        client = getattr(self._admin_clients, client_type)
+
+        return client(version) if version is not None else client()
 
     def sleep_between(self, min_sleep, max_sleep):
         """Performs a time.sleep() call for a random amount of seconds.
