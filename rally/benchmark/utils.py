@@ -20,6 +20,7 @@ import traceback
 from novaclient import exceptions as nova_exc
 import six
 
+from rally.common.i18n import _
 from rally.common import log as logging
 from rally import exceptions
 

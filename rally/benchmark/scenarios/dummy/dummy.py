@@ -15,6 +15,7 @@ import time
 
 from rally.benchmark.scenarios import base
 from rally.benchmark import validation
+from rally.common.i18n import _
 from rally import exceptions
 
 

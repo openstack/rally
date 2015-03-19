@@ -21,6 +21,7 @@ from saharaclient.api import base as sahara_base
 
 from rally.benchmark.scenarios import base
 from rally.benchmark import utils as bench_utils
+from rally.common.i18n import _
 from rally.common import log as logging
 from rally import consts
 from rally import exceptions
