@@ -32,6 +32,10 @@ def get_status(resource):
     if ((hasattr(resource, "stack_status") and
          isinstance(resource.stack_status, six.string_types))):
         return resource.stack_status.upper()
+    # workaround for ceilometer alarms - using state instead of status
+    if ((hasattr(resource, "state") and
+         isinstance(resource.state, six.string_types))):
+        return resource.state.upper()
     return getattr(resource, "status", "NONE").upper()
 
 

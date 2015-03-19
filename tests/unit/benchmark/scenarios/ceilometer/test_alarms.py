@@ -80,3 +80,18 @@ class CeilometerAlarmsTestCase(test.TestCase):
                                                        "fake_threshold",
                                                        {"fakearg": "f"})
         scenario._delete_alarm.assert_called_once_with(fake_alarm.alarm_id)
+
+    def test_create_and_get_alarm_history(self):
+        alarm = mock.Mock(alarm_id="foo_id")
+        scenario = alarms.CeilometerAlarms()
+        scenario._create_alarm = mock.MagicMock(return_value=alarm)
+        scenario._get_alarm_state = mock.MagicMock()
+        scenario._get_alarm_history = mock.MagicMock()
+        scenario._set_alarm_state = mock.MagicMock()
+        scenario.create_alarm_and_get_history(
+            "meter_name", "threshold", "state", 60, fakearg="f")
+        scenario._create_alarm.assert_called_once_with(
+            "meter_name", "threshold", {"fakearg": "f"})
+        scenario._get_alarm_state.assert_called_once_with("foo_id")
+        scenario._get_alarm_history.assert_called_once_with("foo_id")
+        scenario._set_alarm_state.assert_called_once_with(alarm, "state", 60)

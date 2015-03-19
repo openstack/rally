@@ -102,6 +102,15 @@ class BenchmarkUtilsTestCase(test.TestCase):
         self.assertRaises(exceptions.GetResourceNotFound,
                           get_from_manager, resource)
 
+    def test_get_from_manager_in_deleted_state_for_ceilometer_resource(self):
+        get_from_manager = utils.get_from_manager()
+        manager = fakes.FakeManager()
+        resource = fakes.FakeResource(manager=manager)
+        resource.state = "DELETED"
+        manager._cache(resource)
+        self.assertRaises(exceptions.GetResourceNotFound,
+                          get_from_manager, resource)
+
     def test_get_from_manager_not_found(self):
         get_from_manager = utils.get_from_manager()
         manager = mock.MagicMock()

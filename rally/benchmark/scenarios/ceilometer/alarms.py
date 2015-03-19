@@ -106,3 +106,33 @@ class CeilometerAlarms(ceilometerutils.CeilometerScenario):
         """
         alarm = self._create_alarm(meter_name, threshold, kwargs)
         self._delete_alarm(alarm.alarm_id)
+
+    @validation.required_services(consts.Service.CEILOMETER)
+    @validation.required_openstack(users=True)
+    @base.scenario(context={"cleanup": ["ceilometer"]})
+    def create_alarm_and_get_history(self, meter_name, threshold, state,
+                                     timeout=60, **kwargs):
+        """Create an alarm, get and set the state and get the alarm history.
+
+         This scenario makes following queries:
+            GET /v2/alarms/{alarm_id}/history
+            GET /v2/alarms/{alarm_id}/state
+            PUT /v2/alarms/{alarm_id}/state
+        Initially alarm is created and then get the state of the created alarm
+        using its alarm_id. Then get the history of the alarm. And finally the
+        state of the alarm is updated using given state. meter_name and
+        threshold are required parameters for alarm creation. kwargs stores
+        other optional parameters like 'ok_actions', 'project_id' etc that may
+        be passed while alarm creation.
+
+        :param meter_name: specifies meter name of the alarm
+        :param threshold: specifies alarm threshold
+        :param state: an alarm state to be set
+        :param timeout: The number of seconds for which to attempt a
+                        successful check of the alarm state
+        :param kwargs: specifies optional arguments for alarm creation.
+        """
+        alarm = self._create_alarm(meter_name, threshold, kwargs)
+        self._get_alarm_state(alarm.alarm_id)
+        self._get_alarm_history(alarm.alarm_id)
+        self._set_alarm_state(alarm, state, timeout)
