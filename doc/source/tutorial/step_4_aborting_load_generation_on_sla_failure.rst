@@ -18,7 +18,7 @@
 Step 4. Aborting load generation on success criteria failure
 ============================================================
 
-Benchmarking pre-production and production OpenStack clouds is not a trivial task. From the one side it’s important to reach the OpenStack cloud’s limits, from the other side the cloud shouldn’t be damaged. Rally aims to make this task as simple as possible. Since the very beginning Rally was able to generate enough load for any OpenStack cloud. Generating to big load was the major issue for production clouds, because Rally didn’t know how to stop the load until it was to late. Finally I am happy to say that we solved this issue.
+Benchmarking pre-production and production OpenStack clouds is not a trivial task. From the one side it’s important to reach the OpenStack cloud’s limits, from the other side the cloud shouldn’t be damaged. Rally aims to make this task as simple as possible. Since the very beginning Rally was able to generate enough load for any OpenStack cloud. Generating too big a load was the major issue for production clouds, because Rally didn’t know how to stop the load until it was to late. Finally I am happy to say that we solved this issue.
 
 With the **"stop on SLA failure"** feature, however, things are much better.
 
