@@ -14,6 +14,7 @@
 #    under the License.
 
 from rally.benchmark.sla import base
+from rally.common.i18n import _
 
 
 class MaxDurationRange(base.SLA):
