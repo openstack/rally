@@ -58,7 +58,7 @@ def _worker_process(queue, iteration_gen, timeout, rps, times,
                           cls=cls, method_name=method_name, args=args)
 
     # Injecting timeout to exclude situations, where start time and
-    # actual time are neglible close
+    # actual time are negligible close
 
     randsleep_delay = random.randint(int(sleep / 2 * 100), int(sleep * 100))
     time.sleep(randsleep_delay / 100.0)
@@ -103,7 +103,7 @@ class RPSScenarioRunner(base.ScenarioRunner):
     frequency (runs per second) in a pool of processes. The scenario will be
     launched for a fixed number of times in total (specified in the config).
 
-    An example of a rps scenario is booting 1 VM onse per second. This
+    An example of a rps scenario is booting 1 VM per second. This
     execution type is thus very helpful in understanding the maximal load that
     a certain cloud can handle.
     """

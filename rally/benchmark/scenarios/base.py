@@ -261,7 +261,7 @@ def atomic_action_timer(name):
 class AtomicAction(utils.Timer):
     """A class to measure the duration of atomic operations
 
-    This would simplify the way measure atomic opeation duration
+    This would simplify the way measure atomic operation duration
     in certain cases. For example if we want to get the duration
     for each operation which runs in an iteration
     for i in range(repetitions):

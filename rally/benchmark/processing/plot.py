@@ -155,7 +155,7 @@ def _process_atomic(result, data):
     #                   "values": [[order, $atomic_actions.duration
     #                              if not $error else 0], ...}]
     #
-    #                 Order of actions in "atomic_action" is similiar for
+    #                 Order of actions in "atomic_action" is similar for
     #                 all iteration. So we should take first non "error"
     #                 iteration. And get in atomitc_iter list:
     #                 [{"key": "action", "values":[]}]
@@ -166,7 +166,7 @@ def _process_atomic(result, data):
                             for a in row["atomic_actions"]]
             break
 
-    # NOTE(boris-42): pie is similiar to stacked_area, only difference is in
+    # NOTE(boris-42): pie is similar to stacked_area, only difference is in
     #                 structure of values. In case of $error we shouldn't put
     #                 anything in pie. In case of non error we should put just
     #                 $atomic_actions.duration (without order)

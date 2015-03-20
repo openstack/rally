@@ -34,7 +34,7 @@ class SeekAndDestroy(object):
         This class contains method exterminate() that finds and deletes
         all resources created by Rally.
 
-        :param manager_cls: subclass of base.ResourceManger
+        :param manager_cls: subclass of base.ResourceManager
         :param admin: admin endpoint like in context["admin"]
         :param users: users endpoints like in context["users"]
         """

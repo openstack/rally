@@ -52,7 +52,7 @@ class KeystoneWrapper(object):
     @abc.abstractmethod
     def create_user(self, username, password, email=None, project_id=None,
                     domain_name="Default"):
-        """Creates user that have Mamber role in given project.
+        """Creates user that have Member role in given project.
 
         :param username: name of user
         :param password: user password
