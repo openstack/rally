@@ -1,7 +1,7 @@
 [run]
 branch = True
 source = rally
-omit = rally/openstack/*
 
 [report]
 ignore-errors = True
+precision = 2
