@@ -102,14 +102,15 @@ you may want to keep this directories outside of container. This may be done by 
 .. code-block:: none
 
    cd
-   mkdir rally_home rally_db
-   docker run -t -i -v ~/rally_home:/home/rally -v ~/rally_db:/var/lib/rally/database rallyforge/rally
+   mkdir rally_home
+   sudo chown 65500 rally_home
+   docker run -t -i -v ~/rally_home:/home/rally rallyforge/rally
 
 You may want to save last command as an alias:
 
 .. code-block:: none
 
-   echo 'alias dock_rally="docker run -t -i -v ~/rally_home:/home/rally -v ~/rally_db:/var/lib/rally/database rallyforge/rally"' >> ~/.bashrc
+   echo 'alias dock_rally="docker run -t -i -v ~/rally_home:/home/rally rallyforge/rally"' >> ~/.bashrc
 
 After executing ``dock_rally`` alias, or ``docker run`` you got bash running inside container with
 rally installed. You may do anytnig with rally, but you need to create db first:

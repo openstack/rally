@@ -6,6 +6,7 @@ RUN apt-get update && \
                        libxml2-dev libxslt1-dev libssl-dev &&\
     cd /tmp/rally &&\
     ./install_rally.sh &&\
+    sed 's|#*connection *=.*|connection = sqlite:////home/rally/.rally.sqlite|' -i /etc/rally/rally.conf &&\
     apt-get -y remove libssl-dev libffi-dev python-dev libxml2-dev \
                       libxslt1-dev build-essential gcc-4.8 python3 && \
     apt-get -y autoremove &&\
@@ -14,7 +15,7 @@ RUN apt-get update && \
     rm -fr /tmp/* &&\
     rm -rf /var/lib/apt/lists/* &&\
     update-alternatives --install /usr/bin/python python /usr/bin/python2.7 10 &&\
-    useradd -m rally &&\
+    useradd -u 65500 -m rally &&\
     ln -s /usr/share/doc/rally /home/rally/rally-docs
 USER rally
 CMD bash --login
