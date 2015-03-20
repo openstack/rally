@@ -16,11 +16,9 @@
 import copy
 import os
 import subprocess
-import sys
 
 import mock
 from oslo_serialization import jsonutils
-import testtools
 
 from rally import exceptions
 from rally.verification.tempest import subunit2json
@@ -88,33 +86,41 @@ class TempestUtilsTestCase(BaseTestCase):
         self.assertFalse(mock_env.copy.called)
 
     @mock.patch("os.path.isdir", return_value=True)
-    @mock.patch(TEMPEST_PATH + ".tempest.subprocess")
-    @testtools.skipIf(sys.version_info < (2, 7), "Incompatible Python Version")
-    def test__venv_install_when_venv_exists(self, mock_sp, mock_isdir):
+    @mock.patch(TEMPEST_PATH + ".tempest.check_output")
+    def test__venv_install_when_venv_exists(self, mock_co, mock_isdir):
         self.verifier._install_venv()
 
         mock_isdir.assert_called_once_with(self.verifier.path(".venv"))
-        self.assertFalse(mock_sp.check_output.called)
+        self.assertFalse(mock_co.called)
 
+    @mock.patch("%s.tempest.sys" % TEMPEST_PATH)
+    @mock.patch("%s.tempest.costilius.get_interpreter" % TEMPEST_PATH,
+                return_value="python")
     @mock.patch("os.path.isdir", return_value=False)
-    @mock.patch("%s.tempest.subprocess.check_output" % TEMPEST_PATH,
+    @mock.patch("%s.tempest.check_output" % TEMPEST_PATH,
                 return_value="some_output")
-    @testtools.skipIf(sys.version_info < (2, 7), "Incompatible Python Version")
-    def test__venv_install_when_venv_not_exist(self, mock_sp, mock_isdir):
+    def test__venv_install_when_venv_not_exist(self, mock_co, mock_isdir,
+                                               mock_get_interpreter, mock_sys):
+        mock_sys.version_info = "not_py27_env"
+
         self.verifier._install_venv()
 
         mock_isdir.assert_called_once_with(self.verifier.path(".venv"))
-        mock_sp.assert_has_calls([
+        mock_co.assert_has_calls([
             mock.call("python ./tools/install_venv.py", shell=True,
-                      cwd=self.verifier.path(), stderr=subprocess.STDOUT),
+                      cwd=self.verifier.path()),
             mock.call("%s python setup.py install" %
                       self.verifier.venv_wrapper, shell=True,
-                      cwd=self.verifier.path(), stderr=subprocess.STDOUT)])
+                      cwd=self.verifier.path())])
 
+    @mock.patch("%s.tempest.sys" % TEMPEST_PATH)
+    @mock.patch("%s.tempest.costilius.get_interpreter" % TEMPEST_PATH,
+                return_value=None)
     @mock.patch("os.path.isdir", return_value=False)
-    @testtools.skipIf(sys.version_info >= (2, 7),
-                      "Incompatible Python Version")
-    def test__venv_install_for_py26_fails(self, mock_isdir):
+    def test__venv_install_fails__when_py27_is_not_present(
+            self, mock_isdir, mock_get_interpreter, mock_sys):
+        mock_sys.version_info = "not_py27_env"
+
         self.assertRaises(exceptions.IncompatiblePythonVersion,
                           self.verifier._install_venv)
 
@@ -130,18 +136,17 @@ class TempestUtilsTestCase(BaseTestCase):
             self.verifier.path(".testrepository"))
         self.assertFalse(mock_sp.called)
 
-    @testtools.skipIf(sys.version_info < (2, 7), "Incompatible Python Version")
     @mock.patch("os.path.isdir", return_value=False)
-    @mock.patch(TEMPEST_PATH + ".tempest.subprocess.check_output")
+    @mock.patch(TEMPEST_PATH + ".tempest.check_output")
     def test__initialize_testr_when_testr_not_initialized(
-            self, mock_sp, mock_isdir):
+            self, mock_co, mock_isdir):
         self.verifier._initialize_testr()
 
         mock_isdir.assert_called_once_with(
             self.verifier.path(".testrepository"))
-        mock_sp.assert_called_once_with(
+        mock_co.assert_called_once_with(
             "%s testr init" % self.verifier.venv_wrapper, shell=True,
-            cwd=self.verifier.path(), stderr=subprocess.STDOUT)
+            cwd=self.verifier.path())
 
     @mock.patch.object(subunit2json, "main")
     @mock.patch("os.path.isfile", return_value=False)
@@ -191,12 +196,11 @@ class TempestInstallAndUninstallTestCase(BaseTestCase):
     def test__is_git_repo(self, mock_isdir, mock_git_status):
         self.assertTrue(self.verifier._is_git_repo("fake_dir"))
 
-    @testtools.skipIf(sys.version_info < (2, 7), "Incompatible Python Version")
-    @mock.patch("subprocess.check_output", return_value="fake_url")
-    def test__get_remote_origin(self, mock_sp):
-        with mock_sp:
-            self.assertEqual("fake_url",
-                             self.verifier._get_remote_origin("fake_dir"))
+    @mock.patch("%s.tempest.check_output" % TEMPEST_PATH,
+                return_value="fake_url")
+    def test__get_remote_origin(self, mock_co):
+        self.assertEqual("fake_url",
+                         self.verifier._get_remote_origin("fake_dir"))
 
     @mock.patch("shutil.rmtree")
     @mock.patch(TEMPEST_PATH + ".tempest.os.path.exists", return_value=True)
