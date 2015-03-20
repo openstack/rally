@@ -98,3 +98,16 @@ class KeystoneBasic(kutils.KeystoneScenario):
         """
         self._tenant_create(name_length=name_length, **kwargs)
         self._list_tenants()
+
+    @validation.required_openstack(admin=True)
+    @base.scenario(context={"admin_cleanup": ["keystone"]})
+    def get_entities(self):
+        """Get instance of a tenant, user, role and service by id's."""
+        tenant = self._tenant_create(name_length=5)
+        user = self._user_create(name_length=10)
+        role = self._role_create()
+        self._get_tenant(tenant.id)
+        self._get_user(user.id)
+        self._get_role(role.id)
+        service = self._get_service_by_name("keystone")
+        self._get_service(service.id)

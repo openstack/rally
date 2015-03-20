@@ -155,6 +155,10 @@ class FakeUser(FakeResource):
     pass
 
 
+class FakeService(FakeResource):
+    pass
+
+
 class FakeNetwork(FakeResource):
     pass
 

@@ -97,3 +97,30 @@ class KeystoneBasicTestCase(test.TestCase):
         scenario._tenant_create.assert_called_once_with(name_length=20,
                                                         enabled=True)
         scenario._list_tenants.assert_called_with()
+
+    @mock.patch(BASIC + "_generate_random_name")
+    def test_get_entities(self, mock_gen_name):
+        scenario = basic.KeystoneBasic()
+        mock_gen_name.return_value = "teeeeest"
+        fake_tenant = mock.MagicMock()
+        fake_user = mock.MagicMock()
+        fake_role = mock.MagicMock()
+        fake_service = mock.MagicMock()
+        scenario._tenant_create = mock.MagicMock(return_value=fake_tenant)
+        scenario._user_create = mock.MagicMock(return_value=fake_user)
+        scenario._role_create = mock.MagicMock(return_value=fake_role)
+        scenario._get_tenant = mock.MagicMock(return_value=fake_tenant)
+        scenario._get_user = mock.MagicMock(return_value=fake_user)
+        scenario._get_role = mock.MagicMock(return_value=fake_role)
+        scenario._get_service_by_name = mock.MagicMock(
+            return_value=fake_service)
+        scenario._get_service = mock.MagicMock(return_value=fake_service)
+        scenario.get_entities()
+        scenario._tenant_create.assert_called_once_with(name_length=5)
+        scenario._user_create.assert_called_once_with(name_length=10)
+        scenario._role_create.assert_called_once_with()
+        scenario._get_tenant.assert_called_once_with(fake_tenant.id)
+        scenario._get_user.assert_called_once_with(fake_user.id)
+        scenario._get_role.assert_called_once_with(fake_role.id)
+        scenario._get_service_by_name("keystone")
+        scenario._get_service.assert_called_once_with(fake_service.id)
