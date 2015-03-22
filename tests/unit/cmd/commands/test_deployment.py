@@ -45,6 +45,7 @@ class DeploymentCommandsTestCase(test.TestCase):
                                   "OS_PASSWORD": "fake_password",
                                   "OS_TENANT_NAME": "fake_tenant_name",
                                   "OS_REGION_NAME": "fake_region_name",
+                                  "OS_ENDPOINT": "fake_endpoint",
                                   "RALLY_DEPLOYMENT": "fake_deployment_id"})
     @mock.patch("rally.cmd.commands.deployment.api.Deployment.create")
     @mock.patch("rally.cmd.commands.deployment.DeploymentCommands.list")
@@ -55,6 +56,7 @@ class DeploymentCommandsTestCase(test.TestCase):
                 "type": "ExistingCloud",
                 "auth_url": "fake_auth_url",
                 "region_name": "fake_region_name",
+                "endpoint": "fake_endpoint",
                 "admin": {
                     "username": "fake_username",
                     "password": "fake_password",
@@ -221,6 +223,7 @@ class DeploymentCommandsTestCase(test.TestCase):
                 "username": "fake_username",
                 "password": "fake_password",
                 "tenant_name": "fake_tenant_name",
+                "endpoint": "fake_endpoint",
                 "region_name": None}
 
         with mock.patch("rally.cmd.commands.deployment.open", mock.mock_open(),
@@ -230,7 +233,9 @@ class DeploymentCommandsTestCase(test.TestCase):
             mock_env.assert_called_once_with(os.path.expanduser(
                 "~/.rally/globals"),
                 "RALLY_DEPLOYMENT", "%s\n" % deployment_id)
-            mock_file.return_value.write.assert_called_once_with(
+            mock_file.return_value.write.assert_any_call(
+                "export OS_ENDPOINT=fake_endpoint\n")
+            mock_file.return_value.write.assert_any_call(
                 "export OS_AUTH_URL=fake_auth_url\n"
                 "export OS_USERNAME=fake_username\n"
                 "export OS_PASSWORD=fake_password\n"

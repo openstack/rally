@@ -59,12 +59,14 @@ class DeploymentCommands(object):
         for you with Devstack or Fuel. For this purposes different deployment
         engines are developed.
 
-        If you use ExistionCloud deployment engine you can pass deployment
+        If you use ExistingCloud deployment engine you can pass deployment
         config by environment variables:
             OS_USERNAME
             OS_PASSWORD
             OS_AUTH_URL
             OS_TENANT_NAME
+            OS_ENDPOINT
+            OS_REGION_NAME
 
         All other deployment engines need more complex configuration data, so
         it should be stored in configuration file.
@@ -72,7 +74,7 @@ class DeploymentCommands(object):
         You can use physical servers, lxc containers, KVM virtual machines
         or virtual machines in OpenStack for deploying the cloud in.
         Except physical servers, Rally can create cluster nodes for you.
-        Interaction with virtualisation software, OpenStack
+        Interaction with virtualization software, OpenStack
         cloud or physical servers is provided by server providers.
 
         :param fromenv: boolean, read environment instead of config file
@@ -94,6 +96,7 @@ class DeploymentCommands(object):
             config = {
                 "type": "ExistingCloud",
                 "auth_url": os.environ["OS_AUTH_URL"],
+                "endpoint": os.environ.get("OS_ENDPOINT"),
                 "admin": {
                     "username": os.environ["OS_USERNAME"],
                     "password": os.environ["OS_PASSWORD"],
@@ -265,6 +268,9 @@ class DeploymentCommands(object):
                            % endpoint)
             if endpoint.get("region_name"):
                 env_file.write("export OS_REGION_NAME=%(region_name)s\n"
+                               % endpoint)
+            if endpoint.get("endpoint"):
+                env_file.write("export OS_ENDPOINT=%(endpoint)s\n"
                                % endpoint)
         expanded_path = os.path.expanduser("~/.rally/openrc")
         if os.path.exists(expanded_path):
