@@ -215,6 +215,17 @@ def args(*args, **kwargs):
     return _decorator
 
 
+def alias(command_name):
+    """Allow cli to use alias command name instead of function name.
+
+    :param command_name: desired command name
+    """
+    def decorator(func):
+        func.alias = command_name
+        return func
+    return decorator
+
+
 def deprecated_args(*args, **kwargs):
     def _decorator(func):
         func.__dict__.setdefault("args", []).insert(0, (args, kwargs))
@@ -254,7 +265,7 @@ def _compose_category_description(category):
         sublen = lambda item: len(item[0])
         first_column_len = max(map(sublen, descr_pairs)) + MARGIN
         for item in descr_pairs:
-            name = item[0]
+            name = getattr(item[1], "alias", item[0])
             if item[1].__doc__:
                 doc = utils.parse_docstring(
                     item[1].__doc__)["short_description"]
@@ -300,15 +311,15 @@ def _add_command_parsers(categories, subparsers):
 
         category_subparsers = parser.add_subparsers(dest="action")
 
-        for action, action_fn in _methods_of(command_object):
-            descr = _compose_action_description(action_fn)
+        for method_name, method in _methods_of(command_object):
+            descr = _compose_action_description(method)
             parser = category_subparsers.add_parser(
-                action,
+                getattr(method, "alias", method_name),
                 formatter_class=argparse.RawDescriptionHelpFormatter,
                 description=descr, help=descr)
 
             action_kwargs = []
-            for args, kwargs in getattr(action_fn, "args", []):
+            for args, kwargs in getattr(method, "args", []):
                 # FIXME(markmc): hack to assume dest is the arg name without
                 # the leading hyphens if no dest is supplied
                 kwargs.setdefault("dest", args[0][2:])
@@ -316,7 +327,7 @@ def _add_command_parsers(categories, subparsers):
                 kwargs["dest"] = "action_kwarg_" + kwargs["dest"]
                 parser.add_argument(*args, **kwargs)
 
-            parser.set_defaults(action_fn=action_fn)
+            parser.set_defaults(action_fn=method)
             parser.set_defaults(action_kwargs=action_kwargs)
             parser.add_argument("action_args", nargs="*")
 
@@ -480,6 +491,7 @@ complete -F _rally rally
     completion = []
     for category, cmds in main.categories.items():
         for name, command in _methods_of(cmds):
+            command_name = getattr(command, "alias", name)
             args_list = []
             for arg in getattr(command, "args", []):
                 if getattr(command, "deprecated_args", []):
@@ -490,5 +502,5 @@ complete -F _rally rally
             args = " ".join(args_list)
 
             completion.append("""    OPTS["{cat}_{cmd}"]="{args}"\n""".format(
-                    cat=category, cmd=name, args=args))
+                    cat=category, cmd=command_name, args=args))
     return bash_data % {"data": "".join(sorted(completion))}
