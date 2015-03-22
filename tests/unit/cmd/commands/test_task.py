@@ -303,16 +303,19 @@ class TaskCommandsTestCase(test.TestCase):
                          mock_json.call_args[1])
         mock_get.assert_called_once_with(task_id)
 
+    @mock.patch("rally.cmd.commands.task.sys.stdout")
     @mock.patch("rally.cmd.commands.task.objects.Task.get")
-    def test_invalid_results(self, mock_get):
+    def test_results_no_data(self, mock_get, mock_stdout):
         task_id = "foo_task_id"
-        data = []
-        mock_results = mock.Mock(return_value=data)
+        mock_results = mock.Mock(return_value=[])
         mock_get.return_value = mock.Mock(get_results=mock_results)
 
         result = self.task.results(task_id)
         mock_get.assert_called_once_with(task_id)
         self.assertEqual(1, result)
+        expected_out = ("The task %s is still running, results will become"
+                        " available when it is finished." % task_id)
+        mock_stdout.write.assert_has_calls([mock.call(expected_out)])
 
     @mock.patch("rally.cmd.commands.task.jsonschema.validate",
                 return_value=None)

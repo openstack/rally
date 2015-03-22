@@ -214,11 +214,11 @@ class TaskCommands(object):
             print("Benchmarking... This can take a while...\n")
             print("To track task status use:\n")
             print("\trally task status\n\tor\n\trally task detailed\n")
+            if do_use:
+                self.use(task["uuid"])
             api.Task.start(deployment, input_task, task=task,
                            abort_on_sla_failure=abort_on_sla_failure)
             self.detailed(task_id=task["uuid"])
-            if do_use:
-                self.use(task["uuid"])
         except exceptions.InvalidConfigException:
             return(1)
 
@@ -420,7 +420,6 @@ class TaskCommands(object):
 
         :param task_id: Task uuid
         """
-
         results = [{"key": x["key"], "result": x["data"]["raw"],
                     "sla": x["data"]["sla"],
                     "load_duration": x["data"]["load_duration"],
@@ -430,7 +429,8 @@ class TaskCommands(object):
         if results:
             print(json.dumps(results, sort_keys=True, indent=4))
         else:
-            print(_("The task %s can not be found") % task_id)
+            print(_("The task %s is still running, results will become "
+                    "available when it is finished.") % task_id)
             return(1)
 
     @cliutils.args("--deployment", type=str, dest="deployment",
