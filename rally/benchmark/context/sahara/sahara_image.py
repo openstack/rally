@@ -19,6 +19,7 @@ from rally.common.i18n import _
 from rally.common import log as logging
 from rally.common import utils as rutils
 from rally import consts
+from rally import exceptions
 from rally import osclients
 
 
@@ -33,6 +34,9 @@ class SaharaImage(base.Context):
         "type": "object",
         "$schema": consts.JSON_SCHEMA,
         "properties": {
+            "image_uuid": {
+                "type": "string"
+            },
             "image_url": {
                 "type": "string",
             },
@@ -44,46 +48,78 @@ class SaharaImage(base.Context):
             },
             "hadoop_version": {
                 "type": "string",
-            },
+            }
         },
-        "additionalProperties": False,
-        "required": ["image_url", "username", "plugin_name", "hadoop_version"]
+        "oneOf": [
+            {"required": ["image_url", "username", "plugin_name",
+                          "hadoop_version"]},
+            {"required": ["image_uuid"]}
+        ],
+        "additionalProperties": False
     }
 
     def __init__(self, context):
         super(SaharaImage, self).__init__(context)
         self.context["sahara_images"] = {}
 
+    def _create_image(self, hadoop_version, image_url, plugin_name, user,
+                      user_name):
+        clients = osclients.Clients(user["endpoint"])
+        scenario = glance_utils.GlanceScenario(clients=clients)
+        image_name = rutils.generate_random_name(prefix="rally_sahara_image_")
+        image = scenario._create_image(name=image_name,
+                                       container_format="bare",
+                                       image_location=image_url,
+                                       disk_format="qcow2")
+        clients.sahara().images.update_image(image_id=image.id,
+                                             user_name=user_name,
+                                             desc="")
+        clients.sahara().images.update_tags(image_id=image.id,
+                                            new_tags=[plugin_name,
+                                                      hadoop_version])
+        return image.id
+
     @rutils.log_task_wrapper(LOG.info, _("Enter context: `Sahara Image`"))
     def setup(self):
-        image_url = self.config["image_url"]
-        plugin_name = self.config["plugin_name"]
-        hadoop_version = self.config["hadoop_version"]
-        user_name = self.config["username"]
+        # The user may want to use the existing image. In this case he should
+        # make sure that the image is public and has all required metadata.
 
-        for user, tenant_id in rutils.iterate_per_tenants(
-                self.context["users"]):
+        image_uuid = self.config.get("image_uuid")
 
+        self.context["need_sahara_image_cleanup"] = not image_uuid
+
+        if image_uuid:
+            # Using the first user to check the existing image.
+            user = self.context["users"][0]
             clients = osclients.Clients(user["endpoint"])
-            glance_util_class = glance_utils.GlanceScenario(
-                clients=clients)
-            image = glance_util_class._create_image("bare", image_url,
-                                                    "qcow2",
-                                                    "rally_ctx_image_", 15)
 
-            clients.sahara().images.update_image(image_id=image.id,
-                                                 user_name=user_name,
-                                                 desc="")
+            image = clients.glance().images.get(image_uuid)
 
-            clients.sahara().images.update_tags(image_id=image.id,
-                                                new_tags=[plugin_name,
-                                                          hadoop_version])
+            if not image.is_public:
+                raise exceptions.BenchmarkSetupFailure(
+                    "Image provided in the Sahara context should be public.")
+            image_id = image_uuid
 
-            self.context["tenants"][tenant_id]["sahara_image"] = image.id
+            for user, tenant_id in rutils.iterate_per_tenants(
+                    self.context["users"]):
+                self.context["tenants"][tenant_id]["sahara_image"] = image_id
+        else:
+            for user, tenant_id in rutils.iterate_per_tenants(
+                    self.context["users"]):
+
+                image_id = self._create_image(
+                    hadoop_version=self.config["hadoop_version"],
+                    image_url=self.config["image_url"],
+                    plugin_name=self.config["plugin_name"],
+                    user=user,
+                    user_name=self.config["username"])
+
+                self.context["tenants"][tenant_id]["sahara_image"] = image_id
 
     @rutils.log_task_wrapper(LOG.info, _("Exit context: `Sahara Image`"))
     def cleanup(self):
 
         # TODO(boris-42): Delete only resources created by this context
-        resource_manager.cleanup(names=["glance.images"],
-                                 users=self.context.get("users", []))
+        if self.context["need_sahara_image_cleanup"]:
+            resource_manager.cleanup(names=["glance.images"],
+                                     users=self.context.get("users", []))

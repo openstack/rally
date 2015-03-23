@@ -15,11 +15,12 @@
 import mock
 
 from rally.benchmark.context.sahara import sahara_image
+from rally import exceptions
 from tests.unit import test
 
 
 BASE_CTX = "rally.benchmark.context"
-CTX = "rally.benchmark.context.sahara"
+CTX = "rally.benchmark.context.sahara.sahara_image"
 SCN = "rally.benchmark.scenarios"
 
 
@@ -43,7 +44,7 @@ class SaharaImageTestCase(test.TestCase):
                                        "endpoint": "endpoint"})
 
     @property
-    def context_without_images_key(self):
+    def url_image_context(self):
         return {
             "config": {
                 "users": {
@@ -63,25 +64,43 @@ class SaharaImageTestCase(test.TestCase):
             "tenants": self.tenants
         }
 
-    @mock.patch("%s.base.Scenario._generate_random_name" % SCN,
+    @property
+    def existing_image_context(self):
+        return {
+            "config": {
+                "users": {
+                    "tenants": self.tenants_num,
+                    "users_per_tenant": self.users_per_tenant,
+                },
+                "sahara_image": {
+                    "image_uuid": "some_id"
+                }
+            },
+            "admin": {"endpoint": mock.MagicMock()},
+            "task": mock.MagicMock(),
+            "users": self.users_key,
+            "tenants": self.tenants
+        }
+
+    @mock.patch("%s.rutils.generate_random_name" % CTX,
                 return_value="sahara_image_42")
     @mock.patch("%s.glance.utils.GlanceScenario._create_image" % SCN,
                 return_value=mock.MagicMock(id=42))
-    @mock.patch("%s.sahara_image.osclients" % CTX)
-    @mock.patch("%s.sahara_image.resource_manager.cleanup" % CTX)
-    def test_setup_and_cleanup(self, mock_cleanup, mock_osclients,
-                               mock_image_generator, mock_uuid):
+    @mock.patch("%s.osclients" % CTX)
+    @mock.patch("%s.resource_manager.cleanup" % CTX)
+    def test_setup_and_cleanup_url_image(self, mock_cleanup, mock_osclients,
+                                         mock_image_generator, mock_uuid):
 
-        ctx = self.context_without_images_key
+        ctx = self.url_image_context
         sahara_ctx = sahara_image.SaharaImage(ctx)
 
         glance_calls = []
 
         for i in range(self.tenants_num):
-            glance_calls.append(mock.call("bare",
-                                          "http://somewhere",
-                                          "qcow2",
-                                          "rally_ctx_image_", 15))
+            glance_calls.append(mock.call(container_format="bare",
+                                          image_location="http://somewhere",
+                                          disk_format="qcow2",
+                                          name="sahara_image_42"))
 
         sahara_update_image_calls = []
         sahara_update_tags_calls = []
@@ -106,3 +125,51 @@ class SaharaImageTestCase(test.TestCase):
         sahara_ctx.cleanup()
         mock_cleanup.assert_called_once_with(names=["glance.images"],
                                              users=ctx["users"])
+
+    @mock.patch("%s.glance.utils.GlanceScenario._create_image" % SCN,
+                return_value=mock.MagicMock(id=42))
+    @mock.patch("%s.resource_manager.cleanup" % CTX)
+    @mock.patch("%s.osclients" % CTX)
+    def test_setup_and_cleanup_existing_image(self, mock_os_clients,
+                                              mock_cleanup,
+                                              mock_image_generator):
+
+        clients = mock_os_clients.Clients(mock.MagicMock())
+        clients.glance().images.get.return_value = mock.MagicMock(
+            is_public=True)
+
+        ctx = self.existing_image_context
+        sahara_ctx = sahara_image.SaharaImage(ctx)
+
+        sahara_ctx.setup()
+        for tenant_id in sahara_ctx.context["tenants"]:
+            image_id = sahara_ctx.context["tenants"][tenant_id]["sahara_image"]
+            self.assertEqual("some_id", image_id)
+
+        self.assertEqual(False, mock_image_generator.called)
+
+        sahara_ctx.cleanup()
+        self.assertEqual(False, mock_cleanup.called)
+
+    @mock.patch("%s.osclients" % CTX)
+    def test_check_existing_image(self, mock_os_clients):
+
+        ctx = self.existing_image_context
+        sahara_ctx = sahara_image.SaharaImage(ctx)
+        sahara_ctx.setup()
+
+        mock_os_clients.glance().images.get.asser_called_once_with("some_id")
+
+    @mock.patch("%s.osclients" % CTX)
+    def test_check_existing_image_fail(self, mock_os_clients):
+
+        clients = mock_os_clients.Clients(mock.MagicMock())
+        clients.glance().images.get.return_value = mock.MagicMock(
+            is_public=False)
+
+        ctx = self.existing_image_context
+        sahara_ctx = sahara_image.SaharaImage(ctx)
+        self.assertRaises(exceptions.BenchmarkSetupFailure,
+                          sahara_ctx.setup)
+
+        clients.glance().images.get.asser_called_once_with("some_id")
