@@ -224,6 +224,38 @@ class CinderScenario(base.Scenario):
             check_interval=CONF.benchmark.cinder_volume_delete_poll_interval
         )
 
+    @base.atomic_action_timer("cinder.create_backup")
+    def _create_backup(self, volume_id, **kwargs):
+        """Create a volume backup of the given volume.
+
+        :param volume_id: The ID of the volume to backup.
+        :param kwargs: Other optional parameters
+        """
+        backup = self.clients("cinder").backups.create(volume_id, **kwargs)
+        return bench_utils.wait_for(
+            backup,
+            is_ready=bench_utils.resource_is("available"),
+            update_resource=bench_utils.get_from_manager(),
+            timeout=CONF.benchmark.cinder_volume_create_timeout,
+            check_interval=CONF.benchmark.cinder_volume_create_poll_interval
+        )
+
+    @base.atomic_action_timer("cinder.delete_backup")
+    def _delete_backup(self, backup):
+        """Delete the given backup.
+
+        Returns when the backup is actually deleted.
+
+        :param backup: backup instance
+        """
+        backup.delete()
+        bench_utils.wait_for_delete(
+            backup,
+            update_resource=bench_utils.get_from_manager(),
+            timeout=CONF.benchmark.cinder_volume_delete_timeout,
+            check_interval=CONF.benchmark.cinder_volume_delete_poll_interval
+        )
+
     def get_random_server(self):
         server_id = random.choice(self.context["tenant"]["servers"])
         return self.clients("nova").servers.get(server_id)
