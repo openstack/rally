@@ -18,7 +18,6 @@
 from __future__ import print_function
 import json
 import os
-import pprint
 import sys
 import webbrowser
 
@@ -323,7 +322,7 @@ class TaskCommands(object):
             print("test scenario %s" % key["name"])
             print("args position %s" % key["pos"])
             print("args values:")
-            pprint.pprint(key["kw"])
+            print(json.dumps(key["kw"], indent=2))
 
             raw = result["data"]["raw"]
             table_cols = ["action", "min (sec)", "avg (sec)", "max (sec)",
