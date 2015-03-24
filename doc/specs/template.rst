@@ -64,12 +64,6 @@ Primary assignee:
 Can optionally can list additional ids if they intend on doing
 substantial implementation work on this blueprint.
 
-Milestones
-----------
-
-Target Milestone for completion:
-  Juno-1
-
 Work Items
 ----------
 
