@@ -1,0 +1,9 @@
+---
+  KeystoneBasic.create_update_and_delete_tenant:
+    -
+      args:
+        name_length: 10
+      runner:
+        type: "constant"
+        times: 100
+        concurrency: 10

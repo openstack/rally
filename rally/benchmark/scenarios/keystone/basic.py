@@ -125,6 +125,19 @@ class KeystoneBasic(kutils.KeystoneScenario):
         service = self._service_create(name, service_type, description)
         self._delete_service(service.id)
 
+    @validation.number("name_length", minval=10)
+    @validation.required_openstack(admin=True)
+    @base.scenario(context={"admin_cleanup": ["keystone"]})
+    def create_update_and_delete_tenant(self, name_length=10, **kwargs):
+        """Create, update and delete tenant.
+
+        :param name_length: length of the random part of tenant name
+        :param kwargs: Other optional parameters for tenant creation
+        """
+        tenant = self._tenant_create(name_length=name_length, **kwargs)
+        self._update_tenant(tenant)
+        self._resource_delete(tenant)
+
     @validation.required_openstack(admin=True)
     @base.scenario(context={"admin_cleanup": ["keystone"]})
     def create_and_list_services(self, name=None, service_type=None,

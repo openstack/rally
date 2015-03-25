@@ -164,3 +164,16 @@ class KeystoneScenario(base.Scenario):
         :param service_id: service to be deleted
         """
         self.admin_clients("keystone").services.delete(service_id)
+
+    @base.atomic_action_timer("keystone.update_tenant")
+    def _update_tenant(self, tenant, name=None, description=None):
+        """Update tenant name and description.
+
+        :param tenant: tenant to be updated
+        :param name: tenant name to be set
+        :param description: tenant description to be set
+        """
+        name = name or (tenant.name + "_updated")
+        description = description or (tenant.name + "_description_updated")
+        self.admin_clients("keystone").tenants.update(tenant.id,
+                                                      name, description)
