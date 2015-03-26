@@ -97,6 +97,7 @@ class SaharaClusterTestCase(test.TestCase):
                 security_groups=None,
                 node_configs=None,
                 cluster_configs=None,
+                enable_anti_affinity=False,
                 wait_active=False
             ))
 
