@@ -412,7 +412,7 @@ def required_clients(config, clients, task, *components):
 
 @validator
 def required_contexts(config, clients, deployment, *context_names):
-    """Validator hecks if required benchmark contexts are specified.
+    """Validator checks if required benchmark contexts are specified.
 
     :param *context_names: list of context names that should be specified
     """
