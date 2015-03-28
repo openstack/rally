@@ -62,6 +62,23 @@ class KeystoneScenario(base.Scenario):
         name = self._generate_random_name(length=name_length)
         return self.admin_clients("keystone").tenants.create(name, **kwargs)
 
+    @base.atomic_action_timer("keystone.create_service")
+    def _service_create(self, name=None, service_type="rally_test_type",
+                        description=None):
+        """Creates keystone service with random name.
+
+        :param name: name of the service
+        :param service_type: type of the service
+        :param description: description of the service
+        :returns: keystone service instance
+        """
+        name = name or self._generate_random_name(prefix="rally_test_service_")
+        description = description or self._generate_random_name(
+            prefix="rally_test_service_description_")
+        return self.admin_clients("keystone").services.create(name,
+                                                              service_type,
+                                                              description)
+
     @base.atomic_action_timer("keystone.create_users")
     def _users_create(self, tenant, users_per_tenant, name_length=10):
         """Adds users to a tenant.
@@ -139,3 +156,11 @@ class KeystoneScenario(base.Scenario):
         for i in self._list_services():
             if i.name == name:
                 return i
+
+    @base.atomic_action_timer("keystone.delete_service")
+    def _delete_service(self, service_id):
+        """Delete service.
+
+        :param service_id: service to be deleted
+        """
+        self.admin_clients("keystone").services.delete(service_id)

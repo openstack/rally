@@ -111,3 +111,16 @@ class KeystoneBasic(kutils.KeystoneScenario):
         self._get_role(role.id)
         service = self._get_service_by_name("keystone")
         self._get_service(service.id)
+
+    @validation.required_openstack(admin=True)
+    @base.scenario(context={"admin_cleanup": ["keystone"]})
+    def create_and_delete_service(self, name=None, service_type=None,
+                                  description=None):
+        """Create and delete service.
+
+        :param name: name of the service
+        :param service_type: type of the service
+        :param description: description of the service
+        """
+        service = self._service_create(name, service_type, description)
+        self._delete_service(service.id)
