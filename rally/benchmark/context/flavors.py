@@ -13,6 +13,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from novaclient import exceptions as nova_exceptions
+
 from rally.benchmark.context import base
 from rally.common.i18n import _
 from rally.common import log as logging
@@ -81,7 +83,7 @@ class FlavorsGenerator(base.Context):
             flavor_config = FlavorConfig(**flavor_config)
             try:
                 flavor = clients.nova().flavors.create(**flavor_config)
-            except osclients.nova.exceptions.Conflict as e:
+            except nova_exceptions.Conflict as e:
                 LOG.warning("Using already existing flavor %s" %
                             flavor_config["name"])
                 if logging.is_debug():

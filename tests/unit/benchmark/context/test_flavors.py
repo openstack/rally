@@ -16,9 +16,9 @@
 import copy
 
 import mock
+from novaclient import exceptions as nova_exceptions
 
 from rally.benchmark.context import flavors
-from rally import osclients
 from tests.unit import test
 
 CTX = "rally.benchmark.context"
@@ -78,7 +78,7 @@ class FlavorsGeneratorTestCase(test.TestCase):
 
         mock_flavor_create = mock_osclients().nova().flavors.create
 
-        exception = osclients.nova.exceptions.Conflict("conflict")
+        exception = nova_exceptions.Conflict("conflict")
         mock_flavor_create.side_effect = exception
 
         # Run
