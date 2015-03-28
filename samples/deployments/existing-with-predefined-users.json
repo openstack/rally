@@ -1,0 +1,23 @@
+{
+    "type": "ExistingCloud",
+    "auth_url": "http://example.net:5000/v2.0/",
+    "region_name": "RegionOne",
+    "endpoint_type": "public",
+    "admin": {
+        "username": "admin",
+        "password": "pa55word",
+        "tenant_name": "demo"
+    },
+    "users": [
+        {
+            "username": "not_an_admin1",
+            "password": "password",
+            "tenant_name": "some_tenant"
+        },
+        {
+            "username": "not_an_admin2",
+            "password": "password2",
+            "tenant_name": "some_tenant2"
+        }
+    ]
+}

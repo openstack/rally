@@ -178,6 +178,22 @@ class BenchmarkEngineTestCase(test.TestCase):
                           eng._validate_config_semantic_helper, "a", "u", "n",
                           "p", mock.MagicMock(), {})
 
+    @mock.patch("rally.benchmark.engine.existing_users_ctx.ExistingUsers")
+    def test_get_user_ctx_for_validation_existing_users(self, mock_users_ctx):
+
+        context = {"a": 10}
+        users = [mock.MagicMock(), mock.MagicMock()]
+
+        eng = engine.BenchmarkEngine(mock.MagicMock(), mock.MagicMock(),
+                                     users=users)
+
+        result = eng._get_user_ctx_for_validation(context)
+
+        self.assertEqual(context["config"]["existing_users"], users)
+        mock_users_ctx.assert_called_once_with(context)
+
+        self.assertEqual(mock_users_ctx.return_value, result)
+
     @mock.patch("rally.benchmark.engine.osclients.Clients")
     @mock.patch("rally.benchmark.engine.users_ctx")
     @mock.patch("rally.benchmark.engine.BenchmarkEngine"
@@ -278,6 +294,28 @@ class BenchmarkEngineTestCase(test.TestCase):
         eng = engine.BenchmarkEngine(config, task)
         eng.run()
 
+    @mock.patch("rally.benchmark.engine.LOG")
+    @mock.patch("rally.benchmark.engine.BenchmarkEngine.consume_results")
+    @mock.patch("rally.benchmark.engine.base_scenario.Scenario")
+    @mock.patch("rally.benchmark.engine.base_runner.ScenarioRunner")
+    @mock.patch("rally.benchmark.engine.base_ctx.ContextManager.cleanup")
+    @mock.patch("rally.benchmark.engine.base_ctx.ContextManager.setup")
+    def test_run_exception_is_logged(self, mock_ctx_setup, mock_ctx_cleanup,
+                                     mock_runner, mock_scenario, mock_consume,
+                                     mock_log):
+
+        mock_ctx_setup.side_effect = Exception
+
+        config = {
+            "a.benchmark": [{"context": {"context_a": {"a": 1}}}],
+            "b.benchmark": [{"context": {"context_b": {"b": 2}}}]
+        }
+        task = mock.MagicMock()
+        eng = engine.BenchmarkEngine(config, task)
+        eng.run()
+
+        self.assertEqual(2, mock_log.exception.call_count)
+
     @mock.patch("rally.benchmark.engine.base_scenario.Scenario.meta")
     def test__prepare_context(self, mock_meta):
         default_context = {"a": 1, "b": 2}
@@ -293,6 +331,30 @@ class BenchmarkEngineTestCase(test.TestCase):
         result = eng._prepare_context(context, name, endpoint)
         expected_context = copy.deepcopy(default_context)
         expected_context.setdefault("users", {})
+        expected_context.update(context)
+        expected_result = {
+            "task": task,
+            "admin": {"endpoint": endpoint},
+            "scenario_name": name,
+            "config": expected_context
+        }
+        self.assertEqual(result, expected_result)
+        mock_meta.assert_called_once_with(name, "context")
+
+    @mock.patch("rally.benchmark.engine.base_scenario.Scenario.meta")
+    def test__prepare_context_with_existing_users(self, mock_meta):
+        mock_meta.return_value = {}
+        task = mock.MagicMock()
+        name = "a.benchmark"
+        context = {"b": 3, "c": 4}
+        endpoint = mock.MagicMock()
+        config = {
+            "a.benchmark": [{"context": {"context_a": {"a": 1}}}],
+        }
+        existing_users = [mock.MagicMock()]
+        eng = engine.BenchmarkEngine(config, task, users=existing_users)
+        result = eng._prepare_context(context, name, endpoint)
+        expected_context = {"existing_users": existing_users}
         expected_context.update(context)
         expected_result = {
             "task": task,
