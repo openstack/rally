@@ -22,7 +22,6 @@ from rally.cmd import envutils
 from rally.common.i18n import _
 from rally.common import utils
 from rally import db
-from rally import exceptions
 from rally import objects
 from rally import osclients
 
@@ -34,12 +33,18 @@ class ShowCommands(object):
     cloud represented by deployment.
     """
 
+    def _print_header(self, resource_name, credentials):
+        print(_("\n%(resource)s for user `%(user)s` in tenant `%(tenant)s`:")
+              % {"resource": resource_name,
+                 "user": credentials["username"],
+                 "tenant": credentials["tenant_name"]})
+
     def _get_endpoints(self, deployment):
         deployment = db.deployment_get(deployment)
         admin = deployment.get("admin")
-        admin = [admin] if admin else []
+        endpoints = [admin] if admin else []
 
-        return admin + deployment.get("users", [])
+        return endpoints + deployment.get("users", [])
 
     @cliutils.deprecated_args(
         "--deploy-id", dest="deployment", type=str,
@@ -47,6 +52,7 @@ class ShowCommands(object):
     @cliutils.args("--deployment", dest="deployment", type=str,
                    required=False, help="UUID or name of a deployment")
     @envutils.with_default_deployment(cli_arg_name="deployment")
+    @cliutils.process_keystone_exc
     def images(self, deployment=None):
         """Display available images.
 
@@ -56,27 +62,24 @@ class ShowCommands(object):
         headers = ["UUID", "Name", "Size (B)"]
         mixed_case_fields = ["UUID", "Name"]
         float_cols = ["Size (B)"]
-        table_rows = []
         formatters = dict(zip(float_cols,
                               [cliutils.pretty_float_formatter(col)
                                for col in float_cols]))
 
-        try:
-            for endpoint_dict in self._get_endpoints(deployment):
-                clients = osclients.Clients(objects.Endpoint(**endpoint_dict))
-                glance_client = clients.glance()
-                for image in glance_client.images.list():
-                    data = [image.id, image.name, image.size]
-                    table_rows.append(utils.Struct(**dict(zip(headers, data))))
+        for endpoint_dict in self._get_endpoints(deployment):
+            self._print_header("Images", endpoint_dict)
+            table_rows = []
 
-                cliutils.print_list(table_rows,
-                                    fields=headers,
-                                    formatters=formatters,
-                                    mixed_case_fields=mixed_case_fields)
+            clients = osclients.Clients(objects.Endpoint(**endpoint_dict))
+            glance_client = clients.glance()
+            for image in glance_client.images.list():
+                data = [image.id, image.name, image.size]
+                table_rows.append(utils.Struct(**dict(zip(headers, data))))
 
-        except exceptions.InvalidArgumentsException as e:
-            print(_("Authentication Issues: %s") % e)
-            return(1)
+            cliutils.print_list(table_rows,
+                                fields=headers,
+                                formatters=formatters,
+                                mixed_case_fields=mixed_case_fields)
 
     @cliutils.deprecated_args(
         "--deploy-id", dest="deployment", type=str,
@@ -84,36 +87,33 @@ class ShowCommands(object):
     @cliutils.args("--deployment", dest="deployment", type=str,
                    required=False, help="UUID or name of a deployment")
     @envutils.with_default_deployment(cli_arg_name="deployment")
+    @cliutils.process_keystone_exc
     def flavors(self, deployment=None):
         """Display available flavors.
 
         :param deployment: UUID or name of a deployment
         """
-
         headers = ["ID", "Name", "vCPUs", "RAM (MB)", "Swap (MB)", "Disk (GB)"]
         mixed_case_fields = ["ID", "Name", "vCPUs"]
         float_cols = ["RAM (MB)", "Swap (MB)", "Disk (GB)"]
         formatters = dict(zip(float_cols,
                               [cliutils.pretty_float_formatter(col)
                                for col in float_cols]))
-        table_rows = []
-        try:
-            for endpoint_dict in self._get_endpoints(deployment):
-                clients = osclients.Clients(objects.Endpoint(**endpoint_dict))
-                nova_client = clients.nova()
-                for flavor in nova_client.flavors.list():
-                    data = [flavor.id, flavor.name, flavor.vcpus,
-                            flavor.ram, flavor.swap, flavor.disk]
-                    table_rows.append(utils.Struct(**dict(zip(headers, data))))
 
-                cliutils.print_list(table_rows,
-                                    fields=headers,
-                                    formatters=formatters,
-                                    mixed_case_fields=mixed_case_fields)
+        for endpoint_dict in self._get_endpoints(deployment):
+            self._print_header("Flavors", endpoint_dict)
+            table_rows = []
+            clients = osclients.Clients(objects.Endpoint(**endpoint_dict))
+            nova_client = clients.nova()
+            for flavor in nova_client.flavors.list():
+                data = [flavor.id, flavor.name, flavor.vcpus,
+                        flavor.ram, flavor.swap, flavor.disk]
+                table_rows.append(utils.Struct(**dict(zip(headers, data))))
 
-        except exceptions.InvalidArgumentsException as e:
-            print(_("Authentication Issues: %s") % e)
-            return(1)
+            cliutils.print_list(table_rows,
+                                fields=headers,
+                                formatters=formatters,
+                                mixed_case_fields=mixed_case_fields)
 
     @cliutils.deprecated_args(
         "--deploy-id", dest="deployment", type=str,
@@ -121,26 +121,25 @@ class ShowCommands(object):
     @cliutils.args("--deployment", dest="deployment", type=str,
                    required=False, help="UUID or name of a deployment")
     @envutils.with_default_deployment(cli_arg_name="deployment")
+    @cliutils.process_keystone_exc
     def networks(self, deployment=None):
         """Display configured networks."""
 
         headers = ["ID", "Label", "CIDR"]
         mixed_case_fields = ["ID", "Label", "CIDR"]
-        table_rows = []
-        try:
-            for endpoint_dict in self._get_endpoints(deployment):
-                clients = osclients.Clients(objects.Endpoint(**endpoint_dict))
-                nova_client = clients.nova()
-                for network in nova_client.networks.list():
-                    data = [network.id, network.label, network.cidr]
-                    table_rows.append(utils.Struct(**dict(zip(headers, data))))
 
-                cliutils.print_list(table_rows,
-                                    fields=headers,
-                                    mixed_case_fields=mixed_case_fields)
-        except exceptions.InvalidArgumentsException as e:
-            print(_("Authentication Issues: %s") % e)
-            return(1)
+        for endpoint_dict in self._get_endpoints(deployment):
+            self._print_header("Networks", endpoint_dict)
+            table_rows = []
+            clients = osclients.Clients(objects.Endpoint(**endpoint_dict))
+            nova_client = clients.nova()
+            for network in nova_client.networks.list():
+                data = [network.id, network.label, network.cidr]
+                table_rows.append(utils.Struct(**dict(zip(headers, data))))
+
+            cliutils.print_list(table_rows,
+                                fields=headers,
+                                mixed_case_fields=mixed_case_fields)
 
     @cliutils.deprecated_args(
         "--deploy-id", dest="deployment", type=str,
@@ -148,29 +147,26 @@ class ShowCommands(object):
     @cliutils.args("--deployment", dest="deployment", type=str,
                    required=False, help="UUID or name of a deployment")
     @envutils.with_default_deployment(cli_arg_name="deployment")
+    @cliutils.process_keystone_exc
     def secgroups(self, deployment=None):
         """Display security groups."""
 
         headers = ["ID", "Name", "Description"]
         mixed_case_fields = ["ID", "Name", "Description"]
-        table_rows = []
-        try:
-            for endpoint_dict in self._get_endpoints(deployment):
-                clients = osclients.Clients(objects.Endpoint(**endpoint_dict))
-                nova_client = clients.nova()
-                for secgroup in nova_client.security_groups.list():
-                    data = [secgroup.id, secgroup.name,
-                            secgroup.description]
-                    table_rows.append(utils.Struct(**dict(zip(headers,
-                                                              data))))
-                cliutils.print_list(
-                    table_rows,
-                    fields=headers,
-                    mixed_case_fields=mixed_case_fields)
-
-        except exceptions.InvalidArgumentsException as e:
-            print(_("Authentication Issues: %s") % e)
-            return(1)
+        for endpoint_dict in self._get_endpoints(deployment):
+            self._print_header("Security groups", endpoint_dict)
+            table_rows = []
+            clients = osclients.Clients(objects.Endpoint(**endpoint_dict))
+            nova_client = clients.nova()
+            for secgroup in nova_client.security_groups.list():
+                data = [secgroup.id, secgroup.name,
+                        secgroup.description]
+                table_rows.append(utils.Struct(**dict(zip(headers,
+                                                          data))))
+            cliutils.print_list(
+                table_rows,
+                fields=headers,
+                mixed_case_fields=mixed_case_fields)
 
     @cliutils.deprecated_args(
         "--deploy-id", dest="deployment", type=str,
@@ -178,23 +174,21 @@ class ShowCommands(object):
     @cliutils.args("--deployment", dest="deployment", type=str,
                    required=False, help="UUID or name of a deployment")
     @envutils.with_default_deployment(cli_arg_name="deployment")
+    @cliutils.process_keystone_exc
     def keypairs(self, deployment=None):
         """Display available ssh keypairs."""
 
         headers = ["Name", "Fingerprint"]
         mixed_case_fields = ["Name", "Fingerprint"]
-        table_rows = []
-        try:
-            for endpoint_dict in self._get_endpoints(deployment):
-                clients = osclients.Clients(objects.Endpoint(**endpoint_dict))
-                nova_client = clients.nova()
-                for keypair in nova_client.keypairs.list():
-                    data = [keypair.name, keypair.fingerprint]
-                    table_rows.append(utils.Struct(**dict(zip(headers, data))))
-                cliutils.print_list(table_rows,
-                                    fields=headers,
-                                    mixed_case_fields=mixed_case_fields)
 
-        except exceptions.InvalidArgumentsException as e:
-            print(_("Authentication Issues: %s") % e)
-            return(1)
+        for endpoint_dict in self._get_endpoints(deployment):
+            self._print_header("Keypairs", endpoint_dict)
+            table_rows = []
+            clients = osclients.Clients(objects.Endpoint(**endpoint_dict))
+            nova_client = clients.nova()
+            for keypair in nova_client.keypairs.list():
+                data = [keypair.name, keypair.fingerprint]
+                table_rows.append(utils.Struct(**dict(zip(headers, data))))
+            cliutils.print_list(table_rows,
+                                fields=headers,
+                                mixed_case_fields=mixed_case_fields)

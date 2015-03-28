@@ -25,42 +25,62 @@ class ShowCommandsTestCase(test.TestCase):
     def setUp(self):
         super(ShowCommandsTestCase, self).setUp()
         self.show = show.ShowCommands()
-        self.fake_endpoint = {"username": "fake_username",
-                              "password": "fake_password",
-                              "tenant_name": "fake_tenant_name",
-                              "auth_url": "http://fake.auth.url"}
+        self.admin_endpoint = {
+            "username": "admin",
+            "password": "admin",
+            "tenant_name": "admin",
+            "auth_url": "http://fake.auth.url"
+        }
+        self.user_endpoints = {
+            "username": "user1",
+            "password": "user2",
+            "tenant_name": "user3",
+            "auth_url": "http://fake.auth.url"
+        }
+
         self.fake_deployment_id = "7f6e88e0-897e-45c0-947c-595ce2437bee"
         self.fake_clients = fakes.FakeClients()
         self.fake_glance_client = fakes.FakeGlanceClient()
         self.fake_nova_client = fakes.FakeNovaClient()
 
+    @mock.patch("rally.cmd.commands.show.print", create=True)
     @mock.patch("rally.cmd.commands.show.cliutils.print_list")
     @mock.patch("rally.cmd.commands.show.cliutils.pretty_float_formatter")
     @mock.patch("rally.cmd.commands.show.utils.Struct")
     @mock.patch("rally.cmd.commands.show.osclients.Clients.glance")
     @mock.patch("rally.cmd.commands.show.db.deployment_get")
     def test_images(self, mock_deployment_get, mock_get_glance,
-                    mock_struct, mock_formatter, mock_print_list):
+                    mock_struct, mock_formatter, mock_print_list, mock_print):
         self.fake_glance_client.images.create("image", None, None, None)
         fake_image = list(self.fake_glance_client.images.cache.values())[0]
         fake_image.size = 1
         mock_get_glance.return_value = self.fake_glance_client
-        mock_deployment_get.return_value = {"admin": self.fake_endpoint}
+        mock_deployment_get.return_value = {
+            "admin": self.admin_endpoint,
+            "users": [self.user_endpoints, self.user_endpoints]
+        }
+
         self.show.images(self.fake_deployment_id)
         mock_deployment_get.assert_called_once_with(self.fake_deployment_id)
-        mock_get_glance.assert_called_once_with()
+
+        mock_get_glance.assert_has_calls([mock.call()] * 3)
+        self.assertEqual(3, mock_get_glance.call_count)
 
         headers = ["UUID", "Name", "Size (B)"]
-        fake_data = [fake_image.id, fake_image.name, fake_image.size]
-        mock_struct.assert_called_once_with(**dict(zip(headers, fake_data)))
+        fake_data = dict(
+            zip(headers, [fake_image.id, fake_image.name, fake_image.size])
+        )
+        mock_struct.assert_has_calls([mock.call(**fake_data)] * 3)
 
         fake_formatters = {"Size (B)": mock_formatter()}
         mixed_case_fields = ["UUID", "Name"]
-        mock_print_list.assert_called_once_with(
+        mock_print_list.assert_has_calls([mock.call(
             [mock_struct()],
             fields=headers,
             formatters=fake_formatters,
-            mixed_case_fields=mixed_case_fields)
+            mixed_case_fields=mixed_case_fields
+        )] * 3)
+        self.assertEqual(3, mock_print.call_count)
 
     @mock.patch("rally.cmd.commands.show.cliutils.print_list")
     @mock.patch("rally.cmd.commands.show.cliutils.pretty_float_formatter")
@@ -74,25 +94,34 @@ class ShowCommandsTestCase(test.TestCase):
         fake_flavor.id, fake_flavor.name, fake_flavor.vcpus = 1, "m1.fake", 1
         fake_flavor.ram, fake_flavor.swap, fake_flavor.disk = 1024, 128, 10
         mock_get_nova.return_value = self.fake_nova_client
-        mock_deployment_get.return_value = {"admin": self.fake_endpoint}
+        mock_deployment_get.return_value = {
+            "admin": self.admin_endpoint,
+            "users": [self.user_endpoints, self.user_endpoints]
+        }
         self.show.flavors(self.fake_deployment_id)
         mock_deployment_get.assert_called_once_with(self.fake_deployment_id)
-        mock_get_nova.assert_called_once_with()
+        mock_get_nova.assert_has_calls([mock.call()] * 3)
+        self.assertEqual(3, mock_get_nova.call_count)
 
         headers = ["ID", "Name", "vCPUs", "RAM (MB)", "Swap (MB)", "Disk (GB)"]
-        fake_data = [fake_flavor.id, fake_flavor.name, fake_flavor.vcpus,
-                     fake_flavor.ram, fake_flavor.swap, fake_flavor.disk]
-        mock_struct.assert_called_once_with(**dict(zip(headers, fake_data)))
+        fake_data = dict(
+            zip(headers,
+                [fake_flavor.id, fake_flavor.name, fake_flavor.vcpus,
+                 fake_flavor.ram, fake_flavor.swap, fake_flavor.disk])
+        )
+
+        mock_struct.assert_has_calls([mock.call(**fake_data)] * 3)
 
         fake_formatters = {"RAM (MB)": mock_formatter(),
                            "Swap (MB)": mock_formatter(),
                            "Disk (GB)": mock_formatter()}
         mixed_case_fields = ["ID", "Name", "vCPUs"]
-        mock_print_list.assert_called_once_with(
+        mock_print_list.assert_has_calls([mock.call(
             [mock_struct()],
             fields=headers,
             formatters=fake_formatters,
-            mixed_case_fields=mixed_case_fields)
+            mixed_case_fields=mixed_case_fields
+        )] * 3)
 
     @mock.patch("rally.cmd.commands.show.cliutils.print_list")
     @mock.patch("rally.cmd.commands.show.utils.Struct")
@@ -105,20 +134,28 @@ class ShowCommandsTestCase(test.TestCase):
         fake_network.label = "fakenet"
         fake_network.cidr = "10.0.0.0/24"
         mock_get_nova.return_value = self.fake_nova_client
-        mock_deployment_get.return_value = {"admin": self.fake_endpoint}
+        mock_deployment_get.return_value = {
+            "admin": self.admin_endpoint,
+            "users": [self.user_endpoints, self.user_endpoints]
+        }
         self.show.networks(self.fake_deployment_id)
         mock_deployment_get.assert_called_once_with(self.fake_deployment_id)
-        mock_get_nova.assert_called_once_with()
+        mock_get_nova.assert_has_calls([mock.call()] * 3)
+        self.assertEqual(3, mock_get_nova.call_count)
 
         headers = ["ID", "Label", "CIDR"]
-        fake_data = [fake_network.id, fake_network.label, fake_network.cidr]
-        mock_struct.assert_called_once_with(**dict(zip(headers, fake_data)))
+        fake_data = dict(
+            zip(headers,
+                [fake_network.id, fake_network.label, fake_network.cidr])
+        )
+        mock_struct.assert_has_calls([mock.call(**fake_data)] * 3)
 
         mixed_case_fields = ["ID", "Label", "CIDR"]
-        mock_print_list.assert_called_once_with(
+        mock_print_list.assert_has_calls([mock.call(
             [mock_struct()],
             fields=headers,
-            mixed_case_fields=mixed_case_fields)
+            mixed_case_fields=mixed_case_fields
+        )] * 3)
 
     @mock.patch("rally.cmd.commands.show.cliutils.print_list")
     @mock.patch("rally.cmd.commands.show.utils.Struct")
@@ -134,23 +171,28 @@ class ShowCommandsTestCase(test.TestCase):
             self.fake_nova_client.security_groups.cache.values())[1]
         fake_secgroup2.id = 1
         mock_get_nova.return_value = self.fake_nova_client
-        mock_deployment_get.return_value = {"admin": self.fake_endpoint}
+        mock_deployment_get.return_value = {
+            "admin": self.admin_endpoint,
+            "users": [self.user_endpoints]
+        }
         self.show.secgroups(self.fake_deployment_id)
         mock_deployment_get.assert_called_once_with(self.fake_deployment_id)
-        mock_get_nova.assert_called_once_with()
+        mock_get_nova.assert_has_calls([mock.call()] * 2)
+        self.assertEqual(2, mock_get_nova.call_count)
 
         headers = ["ID", "Name", "Description"]
         fake_data = [fake_secgroup.id, fake_secgroup.name, ""]
         fake_data2 = [fake_secgroup2.id, fake_secgroup2.name, ""]
-        calls = [mock.call(**dict(zip(headers, fake_data))),
-                 mock.call(**dict(zip(headers, fake_data2)))]
-        mock_struct.assert_has_calls(calls, any_order=True)
+        calls = [mock.call(**dict(zip(headers, fake_data2))),
+                 mock.call(**dict(zip(headers, fake_data)))]
+        mock_struct.assert_has_calls(calls * 2, any_order=True)
 
         mixed_case_fields = ["ID", "Name", "Description"]
-        mock_print_list.assert_called_once_with(
+        mock_print_list.assert_has_calls([mock.call(
             [mock_struct(), mock_struct()],
             fields=headers,
-            mixed_case_fields=mixed_case_fields)
+            mixed_case_fields=mixed_case_fields
+        )] * 2)
 
     @mock.patch("rally.cmd.commands.show.cliutils.print_list")
     @mock.patch("rally.cmd.commands.show.utils.Struct")
@@ -162,17 +204,25 @@ class ShowCommandsTestCase(test.TestCase):
         fake_keypair = list(self.fake_nova_client.keypairs.cache.values())[0]
         fake_keypair.fingerprint = "84:87:58"
         mock_get_nova.return_value = self.fake_nova_client
-        mock_deployment_get.return_value = {"admin": self.fake_endpoint}
+        mock_deployment_get.return_value = {
+            "admin": self.admin_endpoint,
+            "users": [self.user_endpoints, self.user_endpoints]
+        }
         self.show.keypairs(self.fake_deployment_id)
         mock_deployment_get.assert_called_once_with(self.fake_deployment_id)
-        mock_get_nova.assert_called_once_with()
+        mock_get_nova.assert_has_calls([mock.call()] * 3)
+        self.assertEqual(3, mock_get_nova.call_count)
 
         headers = ["Name", "Fingerprint"]
-        fake_data = [fake_keypair.name, fake_keypair.fingerprint]
-        mock_struct.assert_called_once_with(**dict(zip(headers, fake_data)))
+        fake_data = dict(
+            zip(headers,
+                [fake_keypair.name, fake_keypair.fingerprint])
+        )
+        mock_struct.assert_has_calls([mock.call(**fake_data)] * 3)
 
         mixed_case_fields = ["Name", "Fingerprint"]
-        mock_print_list.assert_called_once_with(
+        mock_print_list.assert_has_calls([mock.call(
             [mock_struct()],
             fields=headers,
-            mixed_case_fields=mixed_case_fields)
+            mixed_case_fields=mixed_case_fields
+        )] * 3)
