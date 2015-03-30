@@ -270,3 +270,10 @@ class KeystoneScenarioTestCase(test.TestCase):
         fake_keystone.services.get.assert_called_once_with(service.id)
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "keystone.get_service")
+
+    def test_get_service_by_name(self):
+        scenario = utils.KeystoneScenario()
+        svc_foo, svc_bar = mock.Mock(), mock.Mock()
+        scenario._list_services = mock.Mock(return_value=[svc_foo, svc_bar])
+        self.assertEqual(scenario._get_service_by_name(svc_bar.name), svc_bar)
+        self.assertIsNone(scenario._get_service_by_name("spam"))
