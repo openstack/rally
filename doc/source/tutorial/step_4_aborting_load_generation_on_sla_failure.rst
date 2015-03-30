@@ -68,7 +68,7 @@ To understand better what has happened let’s generate HTML report:
 
     $ rally task report --out auth_report.html
 
-.. image:: Report-Abort-on-SLA-task-1.png
+.. image:: ../images/Report-Abort-on-SLA-task-1.png
     :align: center
 
 On the chart with durations we can observe that the duration of authentication request reaches 65 seconds at the end of the load generation. **Rally stopped load at the very last moment just before the mad things happened. The reason why it runs so many attempts to authenticate is because of not enough good success criteria.** We had to run a lot of iterations to make average duration bigger than 5 seconds. Let’s chose better success criteria for this task and run it one more time.
@@ -111,7 +111,7 @@ Let’s run it!
     | total  | 0.082     | 5.411     | 22.081    | 10.848        | 14.595        | 100.0%  | 1410  |
     +--------+-----------+-----------+-----------+---------------+---------------+---------+-------+
 
-.. image:: Report-Abort-on-SLA-task-2.png
+.. image:: ../images/Report-Abort-on-SLA-task-2.png
     :align: center
 
 This time load stopped after 1410 iterations versus 2495 which is much better. The interesting thing on this chart is that first occurence of “> 10 second” authentication happened on 950 iteration. The reasonable question: “Why Rally run 500 more authentication requests then?”. This appears from the math: During the execution of **bad** authentication (10 seconds) Rally performed about 50 request/sec * 10 sec = 500 new requests as a result we run 1400 iterations instead of 950.
