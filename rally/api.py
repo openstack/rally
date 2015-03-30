@@ -260,6 +260,16 @@ class Verification(object):
         verifier = tempest.Tempest(deployment_uuid, source=source)
         verifier.install()
 
+    @classmethod
+    def uninstall_tempest(cls, deployment):
+        """Removes deployment's local Tempest installation
+
+        :param deployment: UUID or name of the deployment
+        """
+        deployment_uuid = objects.Deployment.get(deployment)["uuid"]
+        verifier = tempest.Tempest(deployment_uuid)
+        verifier.uninstall()
+
 
 # NOTE(msdubov): API methods below are deprecated and left for compability.
 #                they're going to be removed in Rally v0.1.0.

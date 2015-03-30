@@ -50,6 +50,13 @@ class TempestCommands(object):
         """Install Tempest."""
         api.Verification.install_tempest(deployment, source)
 
+    @cliutils.args("--deployment", type=str, dest="deployment",
+                   required=False, help="UUID or name of the deployment")
+    @envutils.with_default_deployment(cli_arg_name="deployment")
+    def uninstall(self, deployment=None):
+        """Removes deployment's local Tempest installation."""
+        api.Verification.uninstall_tempest(deployment)
+
 
 def main():
     categories = {"db": DBCommands,
