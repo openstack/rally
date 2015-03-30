@@ -30,6 +30,15 @@ class EC2ScenarioTestCase(test.ScenarioTestCase):
         self.reservations = mock.MagicMock(instances=[self.server1,
                                                       self.server2])
 
+    def test__list_servers(self):
+        servers_list = []
+        self.clients("ec2").get_only_instances.return_value = servers_list
+        ec2_scenario = utils.EC2Scenario()
+        return_servers_list = ec2_scenario._list_servers()
+        self.assertEqual(servers_list, return_servers_list)
+        self._test_atomic_action_timer(ec2_scenario.atomic_actions(),
+                                       "ec2.list_servers")
+
     def test__update_resource(self):
         resource = mock.MagicMock()
         scenario = utils.EC2Scenario()

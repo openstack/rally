@@ -20,6 +20,12 @@ from tests.unit import test
 
 class EC2ServersTestCase(test.ScenarioTestCase):
 
+    def test_list_servers(self):
+        scenario = servers.EC2Servers()
+        scenario._list_servers = mock.MagicMock()
+        scenario.list_servers()
+        scenario._list_servers.assert_called_once_with()
+
     def test_boot_server(self):
         scenario = servers.EC2Servers()
         scenario._boot_servers = mock.Mock()
