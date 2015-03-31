@@ -442,8 +442,11 @@ class TaskCommands(object):
     @cliutils.args("--status", type=str, dest="status",
                    help="List tasks with specified status."
                    " Available statuses: %s" % ", ".join(consts.TaskStatus))
+    @cliutils.args("--uuids-only", action="store_true",
+                   dest="uuids_only", help="List task UUIDs only")
     @envutils.with_default_deployment(cli_arg_name="deployment")
-    def list(self, deployment=None, all_deployments=False, status=None):
+    def list(self, deployment=None, all_deployments=False, status=None,
+             uuids_only=False):
         """List tasks, started and finished.
 
         Displayed tasks could be filtered by status or deployment.
@@ -453,6 +456,7 @@ class TaskCommands(object):
         :param status: task status to filter by.
             Available task statuses are in rally.consts.TaskStatus
         :param all_deployments: display tasks from all deployments
+        :param uuids_only: list task UUIDs only
         """
 
         filters = {}
@@ -476,7 +480,12 @@ class TaskCommands(object):
         for x in task_list:
             x["duration"] = x["updated_at"] - x["created_at"]
 
-        if task_list:
+        if uuids_only:
+            if task_list:
+                cliutils.print_list(task_list, ["uuid"],
+                                    print_header=False,
+                                    print_border=False)
+        elif task_list:
             cliutils.print_list(
                 task_list,
                 headers, sortby_index=headers.index("created_at"))

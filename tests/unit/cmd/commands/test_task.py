@@ -507,6 +507,26 @@ class TaskCommandsTestCase(test.TestCase):
             mock_objects_list.return_value, headers,
             sortby_index=headers.index("created_at"))
 
+    @mock.patch("rally.cmd.commands.task.cliutils.print_list")
+    @mock.patch("rally.cmd.commands.task.envutils.get_global",
+                return_value="123456789")
+    @mock.patch("rally.cmd.commands.task.objects.Task.list",
+                return_value=[fakes.FakeTask(uuid="a",
+                                             created_at=date.datetime.now(),
+                                             updated_at=date.datetime.now(),
+                                             status="c",
+                                             tag="d",
+                                             deployment_name="some_name")])
+    def test_list_uuids_only(self, mock_objects_list, mock_default,
+                             mock_print_list):
+        self.task.list(status="running", uuids_only=True)
+        mock_objects_list.assert_called_once_with(
+            deployment=mock_default.return_value,
+            status=consts.TaskStatus.RUNNING)
+        mock_print_list.assert_called_once_with(
+            mock_objects_list.return_value, ["uuid"],
+            print_header=False, print_border=False)
+
     def test_list_wrong_status(self):
         self.assertEqual(1, self.task.list(deployment="fake",
                                            status="wrong non existing status"))

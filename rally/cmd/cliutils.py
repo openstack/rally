@@ -84,7 +84,9 @@ def validate_args(fn, *args, **kwargs):
 
 
 def print_list(objs, fields, formatters=None, sortby_index=0,
-               mixed_case_fields=None, field_labels=None):
+               mixed_case_fields=None, field_labels=None,
+               print_header=True, print_border=True,
+               out=sys.stdout):
     """Print a list or objects as a table, one row per object.
 
     :param objs: iterable of :class:`Resource`
@@ -95,6 +97,9 @@ def print_list(objs, fields, formatters=None, sortby_index=0,
         have mixed case names (e.g., 'serverId')
     :param field_labels: Labels to use in the heading of the table, default to
         fields.
+    :param print_header: print table header.
+    :param print_border: print table border.
+    :param out: stream to write output to.
     """
     formatters = formatters or {}
     mixed_case_fields = mixed_case_fields or []
@@ -125,10 +130,19 @@ def print_list(objs, fields, formatters=None, sortby_index=0,
                 row.append(data)
         pt.add_row(row)
 
+    if not print_border or not print_header:
+        pt.set_style(prettytable.PLAIN_COLUMNS)
+        pt.left_padding_width = 0
+        pt.right_padding_width = 1
+
+    outstr = pt.get_string(header=print_header,
+                           border=print_border,
+                           **kwargs) + "\n"
+
     if six.PY3:
-        print(encodeutils.safe_encode(pt.get_string(**kwargs)).decode())
+        out.write(encodeutils.safe_encode(outstr).decode())
     else:
-        print(encodeutils.safe_encode(pt.get_string(**kwargs)))
+        out.write(encodeutils.safe_encode(outstr))
 
 
 def make_header(text, size=80, symbol="-"):

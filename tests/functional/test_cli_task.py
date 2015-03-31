@@ -231,6 +231,36 @@ class TaskTestCase(unittest.TestCase):
         self.assertRaises(utils.RallyCmdError,
                           rally, "task list --status not_existing_status")
 
+    def test_list_with_print_uuids_option(self):
+        rally = utils.Rally()
+        cfg = self._get_sample_task_config()
+        config = utils.TaskConfig(cfg)
+
+        # Validate against zero tasks
+        self.assertEqual("", rally("task list --uuids-only"))
+
+        # Validate against a single task
+        res = rally("task start --task %s" % config.filename)
+        task_uuids = list()
+        for line in res.splitlines():
+            if "finished" in line:
+                task_uuids.append(line.split(" ")[1][:-1])
+        self.assertTrue(len(task_uuids))
+        self.assertIn(task_uuids[0],
+                      rally("task list --uuids-only --deployment MAIN"))
+
+        # Validate against multiple tasks
+        for i in range(2):
+            rally("task start --task %s" % config.filename)
+            self.assertIn("finished", rally("task list --deployment MAIN"))
+        res = rally("task list --uuids-only --deployment MAIN")
+        task_uuids = res.split()
+        self.assertEqual(3, len(task_uuids))
+        res = rally("task list --uuids-only --deployment MAIN "
+                    "--status finished")
+        for uuid in task_uuids:
+            self.assertIn(uuid, res)
+
     def test_validate_is_valid(self):
         rally = utils.Rally()
         cfg = self._get_sample_task_config()
