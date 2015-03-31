@@ -1,0 +1,26 @@
+{
+    "NovaServers.suspend_and_resume_server": [
+        {
+            "args": {
+                "flavor": {
+                    "name": "m1.nano"
+                },
+                "image": {
+                    "name": "^cirros.*uec$"
+                },
+                "force_delete": false
+            },
+            "runner": {
+                "type": "constant",
+                "times": 10,
+                "concurrency": 2
+            },
+            "context": {
+                "users": {
+                    "tenants": 3,
+                    "users_per_tenant": 2
+                }
+            }
+        }
+    ]
+}

@@ -193,6 +193,26 @@ class NovaServersTestCase(test.TestCase):
                                                       fakearg="fakearg")
         scenario._list_servers.assert_called_once_with(True)
 
+    def test_suspend_and_resume_server(self):
+        fake_server = object()
+
+        scenario = servers.NovaServers()
+        scenario._generate_random_name = mock.MagicMock(return_value="name")
+        scenario._boot_server = mock.MagicMock(return_value=fake_server)
+        scenario._suspend_server = mock.MagicMock()
+        scenario._resume_server = mock.MagicMock()
+        scenario._delete_server = mock.MagicMock()
+
+        scenario.suspend_and_resume_server("img", 0, fakearg="fakearg")
+
+        scenario._boot_server.assert_called_once_with("img", 0,
+                                                      fakearg="fakearg")
+
+        scenario._suspend_server.assert_called_once_with(fake_server)
+        scenario._resume_server.assert_called_once_with(fake_server)
+        scenario._delete_server.assert_called_once_with(fake_server,
+                                                        force=False)
+
     def test_list_servers(self):
         scenario = servers.NovaServers()
         scenario._list_servers = mock.MagicMock()

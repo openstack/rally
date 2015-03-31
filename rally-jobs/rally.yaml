@@ -1086,6 +1086,26 @@
         failure_rate:
           max: 0
 
+  NovaServers.suspend_and_resume_server:
+    -
+      args:
+        flavor:
+            name: "m1.tiny"
+        image:
+            name: {{image_name}}
+        detailed: True
+      runner:
+        type: "constant"
+        times: 3
+        concurrency: 3
+      context:
+        users:
+          tenants: 3
+          users_per_tenant: 1
+      sla:
+        failure_rate:
+          max: 0
+
   NovaServers.list_servers:
     -
       args:
