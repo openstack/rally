@@ -300,9 +300,10 @@ class TempestInstallAndUninstallTestCase(BaseTestCase):
             subdir = mock_rand.return_value
             mock_listdir.assert_called_once_with(foo_base)
             fake_dir = mock_listdir.return_value[0]
+            source = os.path.join(self.base_repo_dir_patcher.new, fake_dir)
             dest = os.path.join(self.base_repo_dir_patcher.new, subdir,
                                 fake_dir)
-            mock_move.assert_called_once_with(fake_dir, dest)
+            mock_move.assert_called_once_with(source, dest)
 
 
 class TempestVerifyTestCase(BaseTestCase):

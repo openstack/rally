@@ -108,7 +108,11 @@ class Tempest(object):
         :param subdir: name of subdirectory to move files to
         """
         for filename in os.listdir(base):
-            shutil.move(filename, os.path.join(base, subdir, filename))
+            source = os.path.join(base, filename)
+            dest = os.path.join(base, subdir)
+            LOG.debug("Moving file {source} to {dest}".format(source=source,
+                                                              dest=dest))
+            shutil.move(source, os.path.join(dest, filename))
 
     @property
     def base_repo(self):
