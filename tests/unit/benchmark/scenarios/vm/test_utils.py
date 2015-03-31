@@ -84,14 +84,34 @@ class VMScenarioTestCase(test.TestCase):
         vm_scenario = utils.VMScenario()
         vm_scenario.context = {"user": {"keypair": {"private": "ssh"}}}
         vm_scenario._run_command("1.2.3.4", 22, "username",
-                                 "password", "int", "script")
+                                 "password", "int", "/path/to/foo/script.sh",
+                                 is_file=True)
 
         mock_ssh_class.assert_called_once_with("username", "1.2.3.4", port=22,
                                                pkey="ssh",
                                                password="password")
         mock_ssh_instance.wait.assert_called_once_with()
         mock_run_command_over_ssh.assert_called_once_with(
-            mock_ssh_instance, "int", "script")
+            mock_ssh_instance, "int", "/path/to/foo/script.sh", True)
+
+    @mock.patch(VMTASKS_UTILS + ".sshutils.SSH")
+    def test__run_command_inline_script(self, mock_ssh):
+        mock_ssh_instance = mock.MagicMock()
+        mock_ssh.return_value = mock_ssh_instance
+        mock_ssh_instance.execute.return_value = "foobar"
+        vm_scenario = utils.VMScenario()
+        vm_scenario._wait_for_ssh = mock.Mock()
+        vm_scenario.context = {"user": {"keypair": {"private": "foo_pkey"}}}
+        result = vm_scenario._run_command("foo_ip", "foo_port", "foo_username",
+                                          "foo_password", "foo_interpreter",
+                                          "foo_script", is_file=False)
+        mock_ssh.assert_called_once_with("foo_username", "foo_ip",
+                                         port="foo_port", pkey="foo_pkey",
+                                         password="foo_password")
+        vm_scenario._wait_for_ssh.assert_called_once_with(mock_ssh_instance)
+        mock_ssh_instance.execute.assert_called_once_with("foo_interpreter",
+                                                          stdin="foo_script")
+        self.assertEqual(result, "foobar")
 
     @mock.patch(VMTASKS_UTILS + ".sys")
     @mock.patch("subprocess.Popen")

@@ -37,7 +37,8 @@ class VMScenario(base.Scenario):
     """
 
     @base.atomic_action_timer("vm.run_command_over_ssh")
-    def _run_command_over_ssh(self, ssh, interpreter, script):
+    def _run_command_over_ssh(self, ssh, interpreter, script,
+                              is_file=True):
         """Run command inside an instance.
 
         This is a separate function so that only script execution is timed.
@@ -46,10 +47,13 @@ class VMScenario(base.Scenario):
         :param interpreter: The interpreter that will be used to execute
                 the script.
         :param script: Path to the script file or its content in a StringIO.
-
+        :param is_file: if True, script represent a path,
+                        else, script contains an inline script.
         :returns: tuple (exit_status, stdout, stderr)
         """
-        if isinstance(script, six.string_types):
+        if not is_file:
+            stdin = script
+        elif isinstance(script, six.string_types):
             stdin = open(script, "rb")
         elif isinstance(script, six.moves.StringIO):
             stdin = script
@@ -122,20 +126,30 @@ class VMScenario(base.Scenario):
             timeout=120
         )
 
-    def _run_command(self, server_ip, port, username, password,
-                     interpreter, script, pkey=None):
+    def _run_command(self, server_ip, port, username, password, interpreter,
+                     script, pkey=None, is_file=True):
         """Run command via SSH on server.
 
         Create SSH connection for server, wait for server to become
         available (there is a delay between server being set to ACTIVE
         and sshd being available). Then call run_command_over_ssh to actually
         execute the command.
+        :param server_ip: server ip address
+        :param port: ssh port for SSH connection
+        :param username: str. ssh username for server
+        :param password: Password for SSH authentication
+        :param interpreter: server's interpreter to execute the script
+        :param script: script to run on server
+        :param pkey: key for SSH authentication
+        :param is_file: if True, script represent a path,
+                        else, script contains an inline script.
         """
         pkey = pkey if pkey else self.context["user"]["keypair"]["private"]
         ssh = sshutils.SSH(username, server_ip, port=port,
                            pkey=pkey, password=password)
         self._wait_for_ssh(ssh)
-        return self._run_command_over_ssh(ssh, interpreter, script)
+        return self._run_command_over_ssh(ssh, interpreter,
+                                          script, is_file)
 
     @staticmethod
     def _ping_ip_address(host, should_succeed=True):
