@@ -292,6 +292,13 @@ class VerificationAPITestCase(BaseDeploymentTestCase):
         api.Verification.install_tempest(self.deployment_uuid)
         self.tempest.install.assert_called_once_with()
 
+    @mock.patch("rally.api.objects.Deployment.get")
+    @mock.patch("rally.api.tempest.Tempest")
+    def test_uninstall_tempest(self, mock_tempest, mock_d_get):
+        mock_tempest.return_value = self.tempest
+        api.Verification.uninstall_tempest(self.deployment_uuid)
+        self.tempest.uninstall.assert_called_once_with()
+
 
 class DeprecatedAPITestCase(test.TestCase):
 

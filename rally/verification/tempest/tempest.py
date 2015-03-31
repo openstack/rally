@@ -241,6 +241,7 @@ class Tempest(object):
             raise
 
     def install(self):
+        """Creates local Tempest repo and virtualenv for deployment."""
         if not self.is_installed():
             try:
                 if not os.path.exists(self.base_repo):
@@ -263,6 +264,10 @@ class Tempest(object):
             print("Tempest is already installed")
 
     def uninstall(self):
+        """Removes local Tempest repo and virtualenv for deployment
+
+         Checks that local repo exists first.
+        """
         if os.path.exists(self.path()):
             shutil.rmtree(self.path())
 
