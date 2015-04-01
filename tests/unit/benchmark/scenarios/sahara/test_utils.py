@@ -51,7 +51,9 @@ class SaharaUtilsTestCase(test.TestCase):
     @mock.patch(SAHARA_UTILS + ".SaharaScenario._generate_random_name",
                 return_value="random_name")
     @mock.patch(SAHARA_UTILS + ".SaharaScenario.clients")
-    def test_create_node_group_templates(self, mock_clients, mock_random_name):
+    @mock.patch(SAHARA_UTILS + ".sahara_consts")
+    def test_create_node_group_templates(self, mock_constants, mock_clients,
+                                         mock_random_name):
 
         scenario = utils.SaharaScenario()
         mock_processes = {
@@ -63,7 +65,7 @@ class SaharaUtilsTestCase(test.TestCase):
             }
         }
 
-        scenario.NODE_PROCESSES = mock_processes
+        mock_constants.NODE_PROCESSES = mock_processes
 
         scenario._create_master_node_group_template(
             flavor_id="test_flavor",
@@ -117,7 +119,9 @@ class SaharaUtilsTestCase(test.TestCase):
     @mock.patch(SAHARA_UTILS + ".SaharaScenario._generate_random_name",
                 return_value="random_name")
     @mock.patch(SAHARA_UTILS + ".SaharaScenario.clients")
-    def test_launch_cluster(self, mock_clients, mock_random_name):
+    @mock.patch(SAHARA_UTILS + ".sahara_consts")
+    def test_launch_cluster(self, mock_constants,
+                            mock_clients, mock_random_name):
 
         clients_values = mock.MagicMock(return_value=[consts.Service.NEUTRON])
         mock_clients.services.return_value = mock.MagicMock(
@@ -181,8 +185,8 @@ class SaharaUtilsTestCase(test.TestCase):
             }
         ]
 
-        scenario.NODE_PROCESSES = mock_processes
-        scenario.REPLICATION_CONFIGS = mock_configs
+        mock_constants.NODE_PROCESSES = mock_processes
+        mock_constants.REPLICATION_CONFIGS = mock_configs
 
         mock_clients("sahara").clusters.create.return_value = mock.MagicMock(
             id="test_cluster_id")
@@ -220,7 +224,9 @@ class SaharaUtilsTestCase(test.TestCase):
     @mock.patch(SAHARA_UTILS + ".SaharaScenario._generate_random_name",
                 return_value="random_name")
     @mock.patch(SAHARA_UTILS + ".SaharaScenario.clients")
-    def test_launch_cluster_error(self, mock_clients, mock_random_name):
+    @mock.patch(SAHARA_UTILS + ".sahara_consts")
+    def test_launch_cluster_error(self, mock_constants, mock_clients,
+                                  mock_random_name):
 
         scenario = utils.SaharaScenario(clients=mock.MagicMock())
         mock_processes = {
@@ -241,8 +247,8 @@ class SaharaUtilsTestCase(test.TestCase):
             }
         }
 
-        scenario.NODE_PROCESSES = mock_processes
-        scenario.REPLICATION_CONFIGS = mock_configs
+        mock_constants.NODE_PROCESSES = mock_processes
+        mock_constants.REPLICATION_CONFIGS = mock_configs
 
         mock_clients("sahara").clusters.create.return_value = mock.MagicMock(
             id="test_cluster_id")

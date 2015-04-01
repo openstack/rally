@@ -20,6 +20,7 @@ from oslo_utils import uuidutils
 from saharaclient.api import base as sahara_base
 
 from rally.benchmark.scenarios import base
+from rally.benchmark.scenarios.sahara import consts as sahara_consts
 from rally.benchmark import utils as bench_utils
 from rally.common.i18n import _
 from rally.common import log as logging
@@ -51,87 +52,6 @@ class SaharaScenario(base.Scenario):
 
     RESOURCE_NAME_LENGTH = 20
 
-    # TODO(nkonovalov): Add other provisioning plugins
-    NODE_PROCESSES = {
-        "vanilla": {
-            "1.2.1": {
-                "master": ["namenode", "jobtracker", "oozie"],
-                "worker": ["datanode", "tasktracker"]
-            },
-            "2.3.0": {
-                "master": ["namenode", "resourcemanager", "historyserver",
-                           "oozie"],
-                "worker": ["datanode", "nodemanager"]
-            },
-            "2.4.1": {
-                "master": ["namenode", "resourcemanager", "historyserver",
-                           "oozie"],
-                "worker": ["datanode", "nodemanager"]
-            }
-        },
-        "hdp": {
-            "1.3.2": {
-                "master": ["JOBTRACKER", "NAMENODE", "SECONDARY_NAMENODE",
-                           "GANGLIA_SERVER", "NAGIOS_SERVER",
-                           "AMBARI_SERVER", "OOZIE_SERVER"],
-                "worker": ["TASKTRACKER", "DATANODE", "HDFS_CLIENT",
-                           "MAPREDUCE_CLIENT", "OOZIE_CLIENT", "PIG"]
-            },
-            "2.0.6": {
-                "manager": ["AMBARI_SERVER", "GANGLIA_SERVER",
-                            "NAGIOS_SERVER"],
-                "master": ["NAMENODE", "SECONDARY_NAMENODE",
-                           "ZOOKEEPER_SERVER", "ZOOKEEPER_CLIENT",
-                           "HISTORYSERVER", "RESOURCEMANAGER",
-                           "OOZIE_SERVER"],
-                "worker": ["DATANODE", "HDFS_CLIENT", "ZOOKEEPER_CLIENT",
-                           "PIG", "MAPREDUCE2_CLIENT", "YARN_CLIENT",
-                           "NODEMANAGER", "OOZIE_CLIENT"]
-            }
-        },
-        "cdh": {
-            "5": {
-                "manager": ["MANAGER"],
-                "master": ["NAMENODE", "SECONDARYNAMENODE", "RESOURCEMANAGER",
-                           "JOBHISTORY", "OOZIE_SERVER"],
-                "worker": ["DATANODE", "NODEMANAGER"]
-            }
-        }
-    }
-
-    REPLICATION_CONFIGS = {
-        "vanilla": {
-            "1.2.1": {
-                "target": "HDFS",
-                "config_name": "dfs.replication"
-            },
-            "2.3.0": {
-                "target": "HDFS",
-                "config_name": "dfs.replication"
-            },
-            "2.4.1": {
-                "target": "HDFS",
-                "config_name": "dfs.replication"
-            }
-        },
-        "hdp": {
-            "1.3.2": {
-                "target": "HDFS",
-                "config_name": "dfs.replication"
-            },
-            "2.0.6": {
-                "target": "HDFS",
-                "config_name": "dfs.replication"
-            }
-        },
-        "cdh": {
-            "5": {
-                "target": "HDFS",
-                "config_name": "dfs_replication"
-            }
-        }
-    }
-
     @base.atomic_action_timer("sahara.list_node_group_templates")
     def _list_node_group_templates(self):
         """Return user Node Group Templates list."""
@@ -155,8 +75,8 @@ class SaharaScenario(base.Scenario):
             plugin_name=plugin_name,
             hadoop_version=hadoop_version,
             flavor_id=flavor_id,
-            node_processes=self.NODE_PROCESSES[plugin_name][hadoop_version]
-            ["master"])
+            node_processes=sahara_consts.NODE_PROCESSES[plugin_name]
+            [hadoop_version]["master"])
 
     @base.atomic_action_timer("sahara.create_worker_node_group_template")
     def _create_worker_node_group_template(self, flavor_id, plugin_name,
@@ -176,8 +96,8 @@ class SaharaScenario(base.Scenario):
             plugin_name=plugin_name,
             hadoop_version=hadoop_version,
             flavor_id=flavor_id,
-            node_processes=self.NODE_PROCESSES[plugin_name][hadoop_version]
-            ["worker"])
+            node_processes=sahara_consts.NODE_PROCESSES[plugin_name]
+            [hadoop_version]["worker"])
 
     @base.atomic_action_timer("sahara.delete_node_group_template")
     def _delete_node_group_template(self, node_group):
@@ -288,7 +208,7 @@ class SaharaScenario(base.Scenario):
                                   plugin_name):
         replication_value = min(workers_count, 3)
         # 3 is a default Hadoop replication
-        conf = self.REPLICATION_CONFIGS[plugin_name][hadoop_version]
+        conf = sahara_consts.REPLICATION_CONFIGS[plugin_name][hadoop_version]
         LOG.debug("Using replication factor: %s" % replication_value)
         replication_config = {
             conf["target"]: {
@@ -339,26 +259,27 @@ class SaharaScenario(base.Scenario):
             {
                 "name": "master-ng",
                 "flavor_id": flavor_id,
-                "node_processes": self.NODE_PROCESSES[plugin_name]
+                "node_processes": sahara_consts.NODE_PROCESSES[plugin_name]
                 [hadoop_version]["master"],
                 "count": 1
             }, {
                 "name": "worker-ng",
                 "flavor_id": flavor_id,
-                "node_processes": self.NODE_PROCESSES[plugin_name]
+                "node_processes": sahara_consts.NODE_PROCESSES[plugin_name]
                 [hadoop_version]["worker"],
                 "count": workers_count
             }
         ]
 
-        if "manager" in self.NODE_PROCESSES[plugin_name][hadoop_version]:
+        if "manager" in (sahara_consts.NODE_PROCESSES[plugin_name]
+                         [hadoop_version]):
             # Adding manager group separately as it is supported only in
             # specific configurations.
 
             node_groups.append({
                 "name": "manager-ng",
                 "flavor_id": flavor_id,
-                "node_processes": self.NODE_PROCESSES[plugin_name]
+                "node_processes": sahara_consts.NODE_PROCESSES[plugin_name]
                 [hadoop_version]["manager"],
                 "count": 1
             })
