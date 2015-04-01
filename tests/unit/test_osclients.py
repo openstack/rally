@@ -26,6 +26,56 @@ from tests.unit import fakes
 from tests.unit import test
 
 
+class TestCreateKeystoneClient(test.TestCase):
+
+    def setUp(self):
+        super(TestCreateKeystoneClient, self).setUp()
+        self.kwargs = {"auth_url": "http://auth_url", "username": "user",
+                       "password": "password", "tenant_name": "tenant"}
+
+    def test_create_keystone_client_v2(self):
+        mock_keystone = mock.MagicMock()
+        fake_keystoneclient = mock.MagicMock()
+        mock_keystone.v2_0.client.Client.return_value = fake_keystoneclient
+        mock_discover = mock.MagicMock(
+            version_data=mock.MagicMock(return_value=[{"version": [2]}]))
+        mock_keystone.discover.Discover.return_value = mock_discover
+        with mock.patch.dict("sys.modules",
+                             {"keystoneclient": mock_keystone,
+                              "keystoneclient.v2_0": mock_keystone.v2_0}):
+            client = osclients.create_keystone_client(self.kwargs)
+            mock_discover.version_data.assert_called_once_with()
+            self.assertEqual(fake_keystoneclient, client)
+            mock_keystone.v2_0.client.Client.assert_called_once_with(
+                **self.kwargs)
+
+    def test_create_keystone_client_v3(self):
+        mock_keystone = mock.MagicMock()
+        fake_keystoneclient = mock.MagicMock()
+        mock_keystone.v3.client.Client.return_value = fake_keystoneclient
+        mock_discover = mock.MagicMock(
+            version_data=mock.MagicMock(return_value=[{"version": [3]}]))
+        mock_keystone.discover.Discover.return_value = mock_discover
+        with mock.patch.dict("sys.modules",
+                             {"keystoneclient": mock_keystone,
+                              "keystoneclient.v3": mock_keystone.v3}):
+            client = osclients.create_keystone_client(self.kwargs)
+            mock_discover.version_data.assert_called_once_with()
+            self.assertEqual(fake_keystoneclient, client)
+            mock_keystone.v3.client.Client.assert_called_once_with(
+                **self.kwargs)
+
+    def test_create_keystone_client_version_not_found(self):
+        mock_keystone = mock.MagicMock()
+        mock_discover = mock.MagicMock(
+            version_data=mock.MagicMock(return_value=[{"version": [100500]}]))
+        mock_keystone.discover.Discover.return_value = mock_discover
+        with mock.patch.dict("sys.modules", {"keystoneclient": mock_keystone}):
+            self.assertRaises(exceptions.RallyException,
+                              osclients.create_keystone_client, self.kwargs)
+            mock_discover.version_data.assert_called_once_with()
+
+
 class OSClientsTestCase(test.TestCase):
 
     def setUp(self):
