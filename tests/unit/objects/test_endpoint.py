@@ -33,6 +33,8 @@ class EndpointTestCase(test.TestCase):
                           "domain_name": None,
                           "endpoint": None,
                           "endpoint_type": consts.EndpointType.PUBLIC,
+                          "https_insecure": None,
+                          "https_cacert": None,
                           "project_domain_name": "Default",
                           "user_domain_name": "Default"})
 
@@ -50,6 +52,8 @@ class EndpointTestCase(test.TestCase):
                           "endpoint": None,
                           "permission": consts.EndpointPermission.ADMIN,
                           "endpoint_type": consts.EndpointType.PUBLIC,
+                          "https_insecure": None,
+                          "https_cacert": None,
                           "project_domain_name": "Default",
                           "user_domain_name": "Default"})
 
@@ -67,5 +71,7 @@ class EndpointTestCase(test.TestCase):
                           "domain_name": None,
                           "endpoint": "foo_endpoint",
                           "endpoint_type": consts.EndpointType.PUBLIC,
+                          "https_insecure": None,
+                          "https_cacert": None,
                           "project_domain_name": "Default",
                           "user_domain_name": "Default"})

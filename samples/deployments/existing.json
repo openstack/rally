@@ -7,5 +7,7 @@
         "username": "admin",
         "password": "myadminpass",
         "tenant_name": "demo"
-    }
+    },
+    "https_insecure": False,
+    "https_cacert": "",
 }

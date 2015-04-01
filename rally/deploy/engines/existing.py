@@ -32,7 +32,9 @@ class ExistingCloud(engine.EngineFactory):
                 "username": "admin",
                 "password": "password",
                 "tenant_name": "demo"
-            }
+            },
+            "https_insecure": False,
+            "https_cacert": "",
         }
 
     Or, using keystone v3 API endpoint:
@@ -48,7 +50,9 @@ class ExistingCloud(engine.EngineFactory):
                 "user_domain_name": "admin",
                 "project_name": "admin",
                 "project_domain_name": "admin",
-            }
+            },
+            "https_insecure": False,
+            "https_cacert": "",
         }
     """
 
@@ -91,6 +95,8 @@ class ExistingCloud(engine.EngineFactory):
                               "enum": [consts.EndpointType.ADMIN,
                                        consts.EndpointType.INTERNAL,
                                        consts.EndpointType.PUBLIC]},
+            "https_insecure": {"type": "boolean"},
+            "https_cacert": {"type": "string"},
         },
         "anyOf": [
             {
@@ -120,7 +126,9 @@ class ExistingCloud(engine.EngineFactory):
             endpoint=common.get("endpoint"),
             domain_name=user.get("domain_name"),
             user_domain_name=user.get("user_domain_name", "Default"),
-            project_domain_name=user.get("project_domain_name", "Default")
+            project_domain_name=user.get("project_domain_name", "Default"),
+            https_insecure=common.get("https_insecure", False),
+            https_cacert=common.get("https_cacert")
         )
 
     def deploy(self):
