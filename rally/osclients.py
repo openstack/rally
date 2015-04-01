@@ -15,23 +15,11 @@
 
 import os
 
-from ceilometerclient import client as ceilometer
-from cinderclient import client as cinder
-from designateclient import v1 as designate
-import glanceclient as glance
-from heatclient import client as heat
-from ironicclient import client as ironic
 from keystoneclient import discover as keystone_discover
 from keystoneclient import exceptions as keystone_exceptions
 from keystoneclient.v2_0 import client as keystone_v2
 from keystoneclient.v3 import client as keystone_v3
-from neutronclient.neutron import client as neutron
-from novaclient import client as nova
 from oslo_config import cfg
-from saharaclient import client as sahara
-from swiftclient import client as swift
-from troveclient import client as trove
-from zaqarclient.queues import client as zaqar
 
 from rally.common.i18n import _
 from rally.common import log as logging
@@ -51,10 +39,6 @@ OSCLIENTS_OPTS = [
                help="Path to CA server cetrificate for SSL")
 ]
 CONF.register_opts(OSCLIENTS_OPTS)
-
-
-# NOTE(boris-42): super dirty hack to fix nova python client 2.17 thread safe
-nova._adapter_pool = lambda x: nova.adapters.HTTPAdapter()
 
 
 def cached(func):
@@ -143,6 +127,7 @@ class Clients(object):
     @cached
     def nova(self, version="2"):
         """Return nova client."""
+        from novaclient import client as nova
         kc = self.keystone()
         compute_api_url = kc.service_catalog.url_for(
             service_type="compute",
@@ -160,6 +145,7 @@ class Clients(object):
     @cached
     def neutron(self, version="2.0"):
         """Return neutron client."""
+        from neutronclient.neutron import client as neutron
         kc = self.keystone()
         network_api_url = kc.service_catalog.url_for(
             service_type="network",
@@ -176,6 +162,7 @@ class Clients(object):
     @cached
     def glance(self, version="1"):
         """Return glance client."""
+        import glanceclient as glance
         kc = self.keystone()
         image_api_url = kc.service_catalog.url_for(
             service_type="image",
@@ -192,6 +179,7 @@ class Clients(object):
     @cached
     def heat(self, version="1"):
         """Return heat client."""
+        from heatclient import client as heat
         kc = self.keystone()
         orchestration_api_url = kc.service_catalog.url_for(
             service_type="orchestration",
@@ -208,6 +196,7 @@ class Clients(object):
     @cached
     def cinder(self, version="1"):
         """Return cinder client."""
+        from cinderclient import client as cinder
         client = cinder.Client(version, None, None,
                                http_log_debug=logging.is_debug(),
                                timeout=CONF.openstack_client_http_timeout,
@@ -225,6 +214,7 @@ class Clients(object):
     @cached
     def ceilometer(self, version="2"):
         """Return ceilometer client."""
+        from ceilometerclient import client as ceilometer
         kc = self.keystone()
         metering_api_url = kc.service_catalog.url_for(
             service_type="metering",
@@ -247,6 +237,7 @@ class Clients(object):
     @cached
     def ironic(self, version="1.0"):
         """Return Ironic client."""
+        from ironicclient import client as ironic
         kc = self.keystone()
         baremetal_api_url = kc.service_catalog.url_for(
             service_type="baremetal",
@@ -263,6 +254,7 @@ class Clients(object):
     @cached
     def sahara(self, version="1.1"):
         """Return Sahara client."""
+        from saharaclient import client as sahara
         client = sahara.Client(version,
                                username=self.endpoint.username,
                                api_key=self.endpoint.password,
@@ -274,6 +266,7 @@ class Clients(object):
     @cached
     def zaqar(self, version=1.1):
         """Return Zaqar client."""
+        from zaqarclient.queues import client as zaqar
         kc = self.keystone()
         messaging_api_url = kc.service_catalog.url_for(
             service_type="messaging",
@@ -311,6 +304,7 @@ class Clients(object):
     @cached
     def designate(self):
         """Return designate client."""
+        from designateclient import v1 as designate
         kc = self.keystone()
         dns_api_url = kc.service_catalog.url_for(
             service_type="dns",
@@ -325,6 +319,7 @@ class Clients(object):
     @cached
     def trove(self, version="1.0"):
         """Returns trove client."""
+        from troveclient import client as trove
         client = trove.Client(version,
                               username=self.endpoint.username,
                               api_key=self.endpoint.password,
@@ -355,6 +350,7 @@ class Clients(object):
     @cached
     def swift(self):
         """Return swift client."""
+        from swiftclient import client as swift
         kc = self.keystone()
         object_api_url = kc.service_catalog.url_for(
             service_type="object-store",

@@ -122,77 +122,87 @@ class ConfigTestCase(test.TestCase):
             self.conf_generator.conf.items("compute-admin"))
         self.assertEqual(sorted(expected), sorted(results))
 
-    @mock.patch("rally.osclients.nova")
-    def test__set_compute_flavors(self, mock_nova):
+    def test__set_compute_flavors(self):
         mock_novaclient = mock.MagicMock()
         mock_novaclient.flavors.list.return_value = [
             fakes.FakeFlavor(id="id1"), fakes.FakeFlavor(id="id2")]
-        mock_nova.Client.return_value = mock_novaclient
-        self.conf_generator._set_compute_flavors()
-        expected = ("id1", "id2")
-        results = (self.conf_generator.conf.get("compute", "flavor_ref"),
-                   self.conf_generator.conf.get("compute", "flavor_ref_alt"))
-        self.assertEqual(sorted(expected), sorted(results))
+        mock_nova = mock.MagicMock()
+        mock_nova.client.Client.return_value = mock_novaclient
+        with mock.patch.dict("sys.modules", {"novaclient": mock_nova}):
+            self.conf_generator._set_compute_flavors()
+            expected = ("id1", "id2")
+            results = (self.conf_generator.conf.get("compute", "flavor_ref"),
+                       self.conf_generator.conf.get("compute",
+                                                    "flavor_ref_alt"))
+            self.assertEqual(sorted(expected), sorted(results))
 
-    @mock.patch("rally.osclients.nova")
-    def test__set_compute_flavors_create(self, mock_nova):
+    def test__set_compute_flavors_create(self):
         mock_novaclient = mock.MagicMock()
         mock_novaclient.flavors.list.return_value = []
         mock_novaclient.flavors.create.side_effect = [
             fakes.FakeFlavor(id="id1"), fakes.FakeFlavor(id="id2")]
-        mock_nova.Client.return_value = mock_novaclient
-        self.conf_generator._set_compute_flavors()
-        self.assertEqual(mock_novaclient.flavors.create.call_count, 2)
-        expected = ("id1", "id2")
-        results = (self.conf_generator.conf.get("compute", "flavor_ref"),
-                   self.conf_generator.conf.get("compute", "flavor_ref_alt"))
-        self.assertEqual(sorted(expected), sorted(results))
+        mock_nova = mock.MagicMock()
+        mock_nova.client.Client.return_value = mock_novaclient
+        with mock.patch.dict("sys.modules", {"novaclient": mock_nova}):
+            self.conf_generator._set_compute_flavors()
+            self.assertEqual(mock_novaclient.flavors.create.call_count, 2)
+            expected = ("id1", "id2")
+            results = (self.conf_generator.conf.get("compute", "flavor_ref"),
+                       self.conf_generator.conf.get("compute",
+                                                    "flavor_ref_alt"))
+            self.assertEqual(sorted(expected), sorted(results))
 
-    @mock.patch("rally.osclients.nova")
-    def test__set_compute_flavors_create_fails(self, mock_nova):
+    def test__set_compute_flavors_create_fails(self):
         mock_novaclient = mock.MagicMock()
         mock_novaclient.flavors.list.return_value = []
         mock_novaclient.flavors.create.side_effect = Exception()
-        mock_nova.Client.return_value = mock_novaclient
-        self.assertRaises(config.TempestConfigCreationFailure,
-                          self.conf_generator._set_compute_flavors)
+        mock_nova = mock.MagicMock()
+        mock_nova.client.Client.return_value = mock_novaclient
+        with mock.patch.dict("sys.modules", {"novaclient": mock_nova}):
+            self.assertRaises(config.TempestConfigCreationFailure,
+                              self.conf_generator._set_compute_flavors)
 
-    @mock.patch("rally.osclients.glance")
-    def test__set_compute_images(self, mock_glance):
+    def test__set_compute_images(self):
         mock_glanceclient = mock.MagicMock()
         mock_glanceclient.images.list.return_value = [
             fakes.FakeImage(id="id1", name="cirros1"),
             fakes.FakeImage(id="id2", name="cirros2")]
+        mock_glance = mock.MagicMock()
         mock_glance.Client.return_value = mock_glanceclient
-        self.conf_generator._set_compute_images()
-        expected = ("id1", "id2")
-        results = (self.conf_generator.conf.get("compute", "image_ref"),
-                   self.conf_generator.conf.get("compute", "image_ref_alt"))
-        self.assertEqual(sorted(expected), sorted(results))
+        with mock.patch.dict("sys.modules", {"glanceclient": mock_glance}):
+            self.conf_generator._set_compute_images()
+            expected = ("id1", "id2")
+            results = (self.conf_generator.conf.get("compute", "image_ref"),
+                       self.conf_generator.conf.get("compute",
+                                                    "image_ref_alt"))
+            self.assertEqual(sorted(expected), sorted(results))
 
-    @mock.patch("rally.osclients.glance")
     @mock.patch("six.moves.builtins.open")
-    def test__set_compute_images_create(self, mock_open, mock_glance):
+    def test__set_compute_images_create(self, mock_open):
         mock_glanceclient = mock.MagicMock()
         mock_glanceclient.images.list.return_value = []
         mock_glanceclient.images.create.side_effect = [
             fakes.FakeImage(id="id1"), fakes.FakeImage(id="id2")]
+        mock_glance = mock.MagicMock()
         mock_glance.Client.return_value = mock_glanceclient
-        self.conf_generator._set_compute_images()
-        self.assertEqual(mock_glanceclient.images.create.call_count, 2)
-        expected = ("id1", "id2")
-        results = (self.conf_generator.conf.get("compute", "image_ref"),
-                   self.conf_generator.conf.get("compute", "image_ref_alt"))
-        self.assertEqual(sorted(expected), sorted(results))
+        with mock.patch.dict("sys.modules", {"glanceclient": mock_glance}):
+            self.conf_generator._set_compute_images()
+            self.assertEqual(mock_glanceclient.images.create.call_count, 2)
+            expected = ("id1", "id2")
+            results = (self.conf_generator.conf.get("compute", "image_ref"),
+                       self.conf_generator.conf.get("compute",
+                                                    "image_ref_alt"))
+            self.assertEqual(sorted(expected), sorted(results))
 
-    @mock.patch("rally.osclients.glance")
-    def test__set_compute_images_create_fails(self, mock_glance):
+    def test__set_compute_images_create_fails(self):
         mock_glanceclient = mock.MagicMock()
         mock_glanceclient.images.list.return_value = []
         mock_glanceclient.images.create.side_effect = Exception()
+        mock_glance = mock.MagicMock()
         mock_glance.Client.return_value = mock_glanceclient
-        self.assertRaises(config.TempestConfigCreationFailure,
-                          self.conf_generator._set_compute_images)
+        with mock.patch.dict("sys.modules", {"glanceclient": mock_glance}):
+            self.assertRaises(config.TempestConfigCreationFailure,
+                              self.conf_generator._set_compute_images)
 
     def test__set_compute_ssh_connect_method_if_neutron(self):
         self.conf_generator._set_compute_ssh_connect_method()
@@ -235,8 +245,7 @@ class ConfigTestCase(test.TestCase):
             self.conf_generator.conf.items("identity"))
         self.assertEqual(sorted(expected), sorted(results))
 
-    @mock.patch("rally.osclients.neutron")
-    def test__set_network_if_neutron(self, mock_neutron):
+    def test__set_network_if_neutron(self):
         fake_neutronclient = mock.MagicMock()
         fake_neutronclient.list_networks.return_value = {"networks": [
                                                          {"status": "ACTIVE",
@@ -248,30 +257,34 @@ class ConfigTestCase(test.TestCase):
         fake_neutronclient.list_subnets.return_value = {"subnets": [
                                                         {"cidr":
                                                          "10.0.0.0/24"}]}
-        mock_neutron.Client.return_value = fake_neutronclient
-        self.conf_generator.available_services = ["neutron"]
-        self.conf_generator._set_network()
-        expected = (("default_network", "10.0.0.0/24"),
-                    ("tenant_networks_reachable", "false"),
-                    ("api_version", "2.0"),
-                    ("public_network_id", "test_id"),
-                    ("public_router_id", "test_router"))
-        results = self._remove_default_section(
-            self.conf_generator.conf.items("network"))
-        self.assertEqual(sorted(expected), sorted(results))
+        mock_neutron = mock.MagicMock()
+        mock_neutron.client.Client.return_value = fake_neutronclient
+        with mock.patch.dict("sys.modules", {"neutronclient.neutron":
+                                             mock_neutron}):
+            self.conf_generator.available_services = ["neutron"]
+            self.conf_generator._set_network()
+            expected = (("default_network", "10.0.0.0/24"),
+                        ("tenant_networks_reachable", "false"),
+                        ("api_version", "2.0"),
+                        ("public_network_id", "test_id"),
+                        ("public_router_id", "test_router"))
+            results = self._remove_default_section(
+                self.conf_generator.conf.items("network"))
+            self.assertEqual(sorted(expected), sorted(results))
 
-    @mock.patch("rally.osclients.nova")
-    def test__set_network_if_nova(self, mock_nova):
+    def test__set_network_if_nova(self):
         network = "10.0.0.0/24"
         mock_novaclient = mock.MagicMock()
         mock_network = mock.MagicMock()
         mock_network.cidr = network
         mock_novaclient.networks.list.return_value = [mock_network]
-        mock_nova.Client.return_value = mock_novaclient
-        self.conf_generator._set_network()
-        self.assertEqual(network,
-                         self.conf_generator.conf.get("network",
-                                                      "default_network"))
+        mock_nova = mock.MagicMock()
+        mock_nova.client.Client.return_value = mock_novaclient
+        with mock.patch.dict("sys.modules", {"novaclient": mock_nova}):
+            self.conf_generator._set_network()
+            self.assertEqual(network,
+                             self.conf_generator.conf.get("network",
+                                                          "default_network"))
 
     @mock.patch("rally.verification.tempest.config.requests")
     def test__set_service_available(self, mock_requests):
