@@ -290,6 +290,26 @@
 # Server resume poll interval (floating point value)
 #nova_server_resume_poll_interval = 2.0
 
+# Time to sleep after pause before polling for status (floating
+# point value)
+#nova_server_pause_prepoll_delay = 2.0
+
+# Server pause timeout (floating point value)
+#nova_server_pause_timeout = 300.0
+
+# Server pause poll interval (floating point value)
+#nova_server_pause_poll_interval = 2.0
+
+# Time to sleep after unpause before polling for status (floating
+# point value)
+#nova_server_unpause_prepoll_delay = 2.0
+
+# Server unpause timeout (floating point value)
+#nova_server_unpause_timeout = 300.0
+
+# Server unpause poll interval (floating point value)
+#nova_server_unpause_poll_interval = 2.0
+
 # Time to sleep after image_create before polling for status (floating
 # point value)
 #nova_server_image_create_prepoll_delay = 0.0
