@@ -29,7 +29,7 @@ LOG = logging.getLogger(__name__)
 
 
 def _worker_process(queue, iteration_gen, timeout, concurrency, times, context,
-                    cls, method_name, args, aborted):
+                    cls, method_name, args, aborted, info):
     """Start the scenario within threads.
 
     Spawn threads to support scenario execution for a fixed number of times.
@@ -49,6 +49,7 @@ def _worker_process(queue, iteration_gen, timeout, concurrency, times, context,
     :param args: scenario args
     :param aborted: multiprocessing.Event that aborts load generation if
                     the flag is set
+    :param info: info about all processes count and counter of runned process
     """
 
     pool = collections.deque()

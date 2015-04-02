@@ -15,7 +15,6 @@
 
 import collections
 import multiprocessing
-import random
 import threading
 import time
 
@@ -30,7 +29,7 @@ LOG = logging.getLogger(__name__)
 
 def _worker_process(queue, iteration_gen, timeout, rps, times,
                     max_concurrent, context, cls, method_name,
-                    args, aborted):
+                    args, aborted, info):
     """Start scenario within threads.
 
     Spawn N threads per second. Each thread runs the scenario once, and appends
@@ -49,6 +48,7 @@ def _worker_process(queue, iteration_gen, timeout, rps, times,
     :param args: scenario args
     :param aborted: multiprocessing.Event that aborts load generation if
                     the flag is set
+    :param info: info about all processes count and counter of runned process
     """
 
     pool = collections.deque()
@@ -58,11 +58,8 @@ def _worker_process(queue, iteration_gen, timeout, rps, times,
     base._log_worker_info(times=times, rps=rps, timeout=timeout,
                           cls=cls, method_name=method_name, args=args)
 
-    # Injecting timeout to exclude situations, where start time and
-    # actual time are negligible close
-
-    randsleep_delay = random.randint(int(sleep / 2 * 100), int(sleep * 100))
-    time.sleep(randsleep_delay / 100.0)
+    time.sleep(
+        (sleep * info["processes_counter"]) / info["processes_to_start"])
 
     i = 0
     while i < times and not aborted.is_set():
@@ -86,11 +83,11 @@ def _worker_process(queue, iteration_gen, timeout, rps, times,
         # start new thread (if we have concurrent slots available)
         while i / (time.time() - start) > rps or len(pool) >= max_concurrent:
             if pool:
-                pool[0].join(sleep)
+                pool[0].join(0.001)
                 if not pool[0].isAlive():
                     pool.popleft()
             else:
-                time.sleep(sleep)
+                time.sleep(0.001)
 
     while pool:
         thr = pool.popleft()
@@ -124,7 +121,8 @@ class RPSScenarioRunner(base.ScenarioRunner):
             },
             "rps": {
                 "type": "number",
-                "minimum": 1
+                "exclusiveMinimum": True,
+                "minimum": 0
             },
             "timeout": {
                 "type": "number",

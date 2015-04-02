@@ -364,6 +364,28 @@
 
     -
       args:
+        sleep: 0.1
+      runner:
+        type: "rps"
+        times: 5
+        rps: 0.5
+      sla:
+        failure_rate:
+          max: 0
+
+    -
+      args:
+        sleep: 0.1
+      runner:
+        type: "rps"
+        times: 5
+        rps: 0.2
+      sla:
+        failure_rate:
+          max: 0
+
+    -
+      args:
         sleep: 0.001
       runner:
         type: "rps"
