@@ -235,6 +235,18 @@ class NovaScenarioTestCase(test.TestCase):
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.suspend_server")
 
+    def test__resume_server(self):
+        nova_scenario = utils.NovaScenario()
+        nova_scenario._resume_server(self.server)
+        self.server.resume.assert_called_once_with()
+        self._test_assert_called_once_with(
+            self.wait_for.mock, self.server,
+            CONF.benchmark.nova_server_resume_poll_interval,
+            CONF.benchmark.nova_server_resume_timeout)
+        self.res_is.mock.assert_has_calls([mock.call("ACTIVE")])
+        self._test_atomic_action_timer(nova_scenario.atomic_actions(),
+                                       "nova.resume_server")
+
     @mock.patch(NOVA_UTILS + ".NovaScenario.clients")
     def test__create_image(self, mock_clients):
         mock_clients("nova").images.get.return_value = self.image

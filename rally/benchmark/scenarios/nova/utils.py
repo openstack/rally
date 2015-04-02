@@ -35,6 +35,7 @@ option_names_and_defaults = [
     ("rescue", 2, 300, 2),
     ("unrescue", 2, 300, 2),
     ("suspend", 2, 300, 2),
+    ("resume", 2, 300, 2),
     ("image_create", 0, 300, 2),
     ("image_delete", 0, 300, 2),
     ("resize", 2, 400, 5),
@@ -245,6 +246,24 @@ class NovaScenario(base.Scenario):
             update_resource=bench_utils.get_from_manager(),
             timeout=CONF.benchmark.nova_server_suspend_timeout,
             check_interval=CONF.benchmark.nova_server_suspend_poll_interval
+        )
+
+    @base.atomic_action_timer("nova.resume_server")
+    def _resume_server(self, server):
+        """Resumes the suspended server.
+
+        Returns when the server is actually resumed and is in the "ACTIVE"
+        state.
+
+        :param server: Server object
+        """
+        server.resume()
+        time.sleep(CONF.benchmark.nova_server_resume_prepoll_delay)
+        bench_utils.wait_for(
+            server, is_ready=bench_utils.resource_is("ACTIVE"),
+            update_resource=bench_utils.get_from_manager(),
+            timeout=CONF.benchmark.nova_server_resume_timeout,
+            check_interval=CONF.benchmark.nova_server_resume_poll_interval
         )
 
     def _delete_server(self, server, force=False):
