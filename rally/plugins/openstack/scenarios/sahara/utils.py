@@ -109,8 +109,8 @@ class SaharaScenario(base.Scenario):
 
     def _wait_active(self, cluster_object):
         bench_utils.wait_for(
-            resource=cluster_object, is_ready=self._is_cluster_active,
-            update_resource=self._update_cluster,
+            resource=cluster_object, ready_statuses=["active"],
+            failure_statuses=["error"], update_resource=self._update_cluster,
             timeout=CONF.benchmark.cluster_create_timeout,
             check_interval=CONF.benchmark.cluster_check_interval)
 
@@ -329,23 +329,13 @@ class SaharaScenario(base.Scenario):
         )
 
         if wait_active:
+            LOG.debug("Starting cluster `%s`" % name)
             self._wait_active(cluster_object)
 
         return self.clients("sahara").clusters.get(cluster_object.id)
 
     def _update_cluster(self, cluster):
         return self.clients("sahara").clusters.get(cluster.id)
-
-    def _is_cluster_active(self, cluster):
-        cluster_status = cluster.status.lower()
-
-        if cluster_status == "error":
-            raise exceptions.SaharaClusterFailure(
-                name=cluster.name,
-                action="start",
-                reason=cluster.status_description)
-
-        return cluster_status == "active"
 
     def _scale_cluster(self, cluster, delta):
         """The scaling helper.
@@ -398,17 +388,21 @@ class SaharaScenario(base.Scenario):
 
         :param cluster: cluster to delete
         """
+
+        LOG.debug("Deleting cluster `%s`" % cluster.name)
         self.clients("sahara").clusters.delete(cluster.id)
 
         bench_utils.wait_for(
-            resource=cluster.id,
+            resource=cluster,
             timeout=CONF.benchmark.cluster_delete_timeout,
             check_interval=CONF.benchmark.cluster_check_interval,
             is_ready=self._is_cluster_deleted)
 
-    def _is_cluster_deleted(self, cl_id):
+    def _is_cluster_deleted(self, cluster):
+        LOG.debug("Checking cluster `%s` to be deleted. Status: `%s`" %
+                  (cluster.name, cluster.status))
         try:
-            self.clients("sahara").clusters.get(cl_id)
+            self.clients("sahara").clusters.get(cluster.id)
             return False
         except sahara_base.APIException:
             return True
@@ -474,10 +468,13 @@ class SaharaScenario(base.Scenario):
 
     def _job_execution_is_finished(self, je_id):
         status = self.clients("sahara").job_executions.get(je_id).info[
-            "status"]
-        if status.lower() in ("success", "succeeded"):
+            "status"].lower()
+
+        LOG.debug("Checking for Job Execution %s to complete. Status: %s" %
+                  (je_id, status))
+        if status in ("success", "succeeded"):
             return True
-        elif status.lower() in ("failed", "killed"):
+        elif status in ("failed", "killed"):
             raise exceptions.RallyException(
                 "Job execution %s has failed" % je_id)
         return False
