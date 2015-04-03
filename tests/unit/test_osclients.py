@@ -162,7 +162,11 @@ class OSClientsTestCase(test.TestCase):
                 auth_token=self.fake_keystone.auth_token,
                 http_log_debug=False,
                 timeout=cfg.CONF.openstack_client_http_timeout,
-                insecure=False, cacert=None)
+                insecure=False, cacert=None,
+                username=self.endpoint.username,
+                api_key=self.endpoint.password,
+                project_id=self.endpoint.tenant_name,
+                auth_url=self.endpoint.auth_url)
             client.set_management_url.assert_called_once_with(
                 self.service_catalog.url_for.return_value)
             self.assertEqual(fake_nova, self.clients.cache["nova"])
@@ -181,7 +185,11 @@ class OSClientsTestCase(test.TestCase):
                 "endpoint_url": self.service_catalog.url_for.return_value,
                 "timeout": cfg.CONF.openstack_client_http_timeout,
                 "insecure": self.endpoint.insecure,
-                "ca_cert": self.endpoint.cacert
+                "ca_cert": self.endpoint.cacert,
+                "username": self.endpoint.username,
+                "password": self.endpoint.password,
+                "tenant_name": self.endpoint.tenant_name,
+                "auth_url": self.endpoint.auth_url
             }
             self.service_catalog.url_for.assert_called_once_with(
                 service_type="network",
@@ -222,9 +230,14 @@ class OSClientsTestCase(test.TestCase):
                 endpoint_type=consts.EndpointType.PUBLIC,
                 region_name=self.endpoint.region_name)
             mock_cinder.client.Client.assert_called_once_with(
-                "1", None, None, http_log_debug=False,
+                "1",
+                http_log_debug=False,
                 timeout=cfg.CONF.openstack_client_http_timeout,
-                insecure=False, cacert=None)
+                insecure=False, cacert=None,
+                username=self.endpoint.username,
+                api_key=self.endpoint.password,
+                project_id=self.endpoint.tenant_name,
+                auth_url=self.endpoint.auth_url)
             self.assertEqual(fake_cinder.client.management_url,
                              self.service_catalog.url_for.return_value)
             self.assertEqual(fake_cinder.client.auth_token,
@@ -248,7 +261,12 @@ class OSClientsTestCase(test.TestCase):
             kw = {"os_endpoint": self.service_catalog.url_for.return_value,
                   "token": self.fake_keystone.auth_token,
                   "timeout": cfg.CONF.openstack_client_http_timeout,
-                  "insecure": False, "cacert": None}
+                  "insecure": False, "cacert": None,
+                  "username": self.endpoint.username,
+                  "password": self.endpoint.password,
+                  "tenant_name": self.endpoint.tenant_name,
+                  "auth_url": self.endpoint.auth_url
+                  }
             mock_ceilometer.client.get_client.assert_called_once_with("2",
                                                                       **kw)
             self.assertEqual(fake_ceilometer,
@@ -381,7 +399,12 @@ class OSClientsTestCase(test.TestCase):
                   "preauthurl": self.service_catalog.url_for.return_value,
                   "preauthtoken": self.fake_keystone.auth_token,
                   "insecure": False,
-                  "cacert": None}
+                  "cacert": None,
+                  "user": self.endpoint.username,
+                  "key": self.endpoint.password,
+                  "tenant_name": self.endpoint.tenant_name,
+                  "auth_url": self.endpoint.auth_url
+                  }
             mock_swift.client.Connection.assert_called_once_with(**kw)
             self.assertEqual(self.clients.cache["swift"], fake_swift)
 
