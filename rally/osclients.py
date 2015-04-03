@@ -15,10 +15,6 @@
 
 import os
 
-from keystoneclient import discover as keystone_discover
-from keystoneclient import exceptions as keystone_exceptions
-from keystoneclient.v2_0 import client as keystone_v2
-from keystoneclient.v3 import client as keystone_v3
 from oslo_config import cfg
 
 from rally.common.i18n import _
@@ -58,12 +54,15 @@ def cached(func):
 
 
 def create_keystone_client(args):
+    from keystoneclient import discover as keystone_discover
     discover = keystone_discover.Discover(**args)
     for version_data in discover.version_data():
         version = version_data["version"]
         if version[0] <= 2:
+            from keystoneclient.v2_0 import client as keystone_v2
             return keystone_v2.Client(**args)
         elif version[0] == 3:
+            from keystoneclient.v3 import client as keystone_v3
             return keystone_v3.Client(**args)
     raise exceptions.RallyException(
         "Failed to discover keystone version for url %(auth_url)s.", **args)
@@ -110,6 +109,7 @@ class Clients(object):
 
         :returns: Keystone Client
         """
+        from keystoneclient import exceptions as keystone_exceptions
         try:
             # Ensure that user is admin
             client = self.keystone()
