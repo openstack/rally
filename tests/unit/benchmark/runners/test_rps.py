@@ -38,6 +38,7 @@ class RPSScenarioRunnerTestCase(test.TestCase):
             "times": 1,
             "rps": 100,
             "max_concurrency": 50,
+            "max_cpu_count": 8,
             "timeout": 1
         }
         rps.RPSScenarioRunner.validate(config)
@@ -169,6 +170,113 @@ class RPSScenarioRunnerTestCase(test.TestCase):
 
         for result in runner.result_queue:
             self.assertIsNotNone(base.ScenarioRunnerResult(result))
+
+    @mock.patch(RUNNERS + "constant.multiprocessing.Queue")
+    @mock.patch(RUNNERS + "rps.multiprocessing.cpu_count")
+    @mock.patch(RUNNERS + "rps.RPSScenarioRunner._log_debug_info")
+    @mock.patch(RUNNERS +
+                "rps.RPSScenarioRunner._create_process_pool")
+    @mock.patch(RUNNERS + "rps.RPSScenarioRunner._join_processes")
+    def test_that_cpu_count_is_adjusted_properly(self, mock_join_processes,
+                                                 mock_create_pool, mock_log,
+                                                 mock_cpu_count, mock_queue):
+        context = fakes.FakeUserContext({}).context
+        context["task"] = {"uuid": "fake_uuid"}
+
+        samples = [
+            {
+                "input": {"times": 20, "rps": 20, "max_concurrency": 10,
+                          "max_cpu_count": 1},
+                "real_cpu": 2,
+                "expected": {
+                    # max_cpu_used equals to min(max_cpu_count, real_cpu)
+                    "max_cpu_used": 1,
+                    # processes_to_start equals to
+                    # min(max_cpu_used, times, max_concurrency))
+                    "processes_to_start": 1,
+                    "rps_per_worker": 20,
+                    "times_per_worker": 20,
+                    "times_overhead": 0,
+                    "concurrency_per_worker": 10,
+                    "concurrency_overhead": 0
+                }
+            },
+            {
+                "input": {"times": 20, "rps": 9, "max_concurrency": 5,
+                          "max_cpu_count": 3},
+                "real_cpu": 4,
+                "expected": {
+                    "max_cpu_used": 3,
+                    "processes_to_start": 3,
+                    "rps_per_worker": 3,
+                    "times_per_worker": 6,
+                    "times_overhead": 2,
+                    "concurrency_per_worker": 1,
+                    "concurrency_overhead": 2
+                }
+            },
+            {
+                "input": {"times": 10, "rps": 20, "max_concurrency": 12,
+                          "max_cpu_count": 20},
+                "real_cpu": 20,
+                "expected": {
+                    "max_cpu_used": 20,
+                    "processes_to_start": 10,
+                    "rps_per_worker": 2,
+                    "times_per_worker": 1,
+                    "times_overhead": 0,
+                    "concurrency_per_worker": 1,
+                    "concurrency_overhead": 2
+                }
+            },
+            {
+                "input": {"times": 20, "rps": 20, "max_concurrency": 10,
+                          "max_cpu_count": 20},
+                "real_cpu": 20,
+                "expected": {
+                    "max_cpu_used": 20,
+                    "processes_to_start": 10,
+                    "rps_per_worker": 2,
+                    "times_per_worker": 2,
+                    "times_overhead": 0,
+                    "concurrency_per_worker": 1,
+                    "concurrency_overhead": 0
+                }
+            }
+        ]
+
+        for sample in samples:
+            mock_log.reset_mock()
+            mock_cpu_count.reset_mock()
+            mock_create_pool.reset_mock()
+            mock_join_processes.reset_mock()
+            mock_queue.reset_mock()
+
+            mock_cpu_count.return_value = sample["real_cpu"]
+
+            runner = rps.RPSScenarioRunner(self.task, sample["input"])
+
+            runner._run_scenario(fakes.FakeScenario, "do_it", context, {})
+
+            mock_cpu_count.assert_called_once_with()
+            mock_log.assert_called_once_with(
+                times=sample["input"]["times"],
+                timeout=0,
+                max_cpu_used=sample["expected"]["max_cpu_used"],
+                processes_to_start=sample["expected"]["processes_to_start"],
+                rps_per_worker=sample["expected"]["rps_per_worker"],
+                times_per_worker=sample["expected"]["times_per_worker"],
+                times_overhead=sample["expected"]["times_overhead"],
+                concurrency_per_worker=(
+                    sample["expected"]["concurrency_per_worker"]),
+                concurrency_overhead=(
+                    sample["expected"]["concurrency_overhead"]))
+            args, kwargs = mock_create_pool.call_args
+            self.assertIn(sample["expected"]["processes_to_start"], args)
+            self.assertIn(rps._worker_process, args)
+            mock_join_processes.assert_called_once_with(
+                mock_create_pool(),
+                mock_queue())
 
     def test_abort(self):
         context = fakes.FakeUserContext({}).context

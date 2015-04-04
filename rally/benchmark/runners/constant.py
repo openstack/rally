@@ -132,6 +132,10 @@ class ConstantScenarioRunner(base.ScenarioRunner):
             "timeout": {
                 "type": "number",
                 "minimum": 1
+            },
+            "max_cpu_count": {
+                "type": "integer",
+                "minimum": 1
             }
         },
         "required": ["type"],
@@ -159,13 +163,17 @@ class ConstantScenarioRunner(base.ScenarioRunner):
         times = self.config.get("times", 1)
         concurrency = self.config.get("concurrency", 1)
         iteration_gen = utils.RAMInt()
+
         cpu_count = multiprocessing.cpu_count()
-        processes_to_start = min(cpu_count, times, concurrency)
+        max_cpu_used = min(cpu_count,
+                           self.config.get("max_cpu_count", cpu_count))
+
+        processes_to_start = min(max_cpu_used, times, concurrency)
         concurrency_per_worker, concurrency_overhead = divmod(
                                             concurrency, processes_to_start)
 
         self._log_debug_info(times=times, concurrency=concurrency,
-                             timeout=timeout, cpu_count=cpu_count,
+                             timeout=timeout, max_cpu_used=max_cpu_used,
                              processes_to_start=processes_to_start,
                              concurrency_per_worker=concurrency_per_worker,
                              concurrency_overhead=concurrency_overhead)

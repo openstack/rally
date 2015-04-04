@@ -232,6 +232,18 @@
 
     -
       args:
+        sleep: 0.25
+      runner:
+        type: "constant"
+        times: 20
+        concurrency: 5
+        max_cpu_count: 3
+      sla:
+        failure_rate:
+          max: 0
+
+    -
+      args:
         sleep: 0.1
       runner:
         type: "constant_for_duration"
@@ -260,6 +272,7 @@
         times: 200
         rps: 20
         max_concurrency: 10
+        max_cpu_count: 3
       sla:
         failure_rate:
           max: 0

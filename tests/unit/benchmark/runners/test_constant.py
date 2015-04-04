@@ -33,9 +33,11 @@ class ConstantScenarioRunnerTestCase(test.TestCase):
         times = 4
         concurrency = 2
         timeout = 2
+        max_cpu_count = 2
         type = consts.RunnerType.CONSTANT
         self.config = {"times": times, "concurrency": concurrency,
-                       "timeout": timeout, "type": type}
+                       "timeout": timeout, "type": type,
+                       "max_cpu_count": max_cpu_count}
         self.context = fakes.FakeUserContext({"task":
                                              {"uuid": "uuid"}}).context
         self.args = {"a": 1}
@@ -137,6 +139,99 @@ class ConstantScenarioRunnerTestCase(test.TestCase):
         runner._run_scenario(fakes.FakeScenario,
                              "do_it", self.context, self.args)
         self.assertEqual(len(runner.result_queue), 0)
+
+    @mock.patch(RUNNERS + "constant.multiprocessing.Queue")
+    @mock.patch(RUNNERS + "constant.multiprocessing.cpu_count")
+    @mock.patch(RUNNERS + "constant.ConstantScenarioRunner._log_debug_info")
+    @mock.patch(RUNNERS +
+                "constant.ConstantScenarioRunner._create_process_pool")
+    @mock.patch(RUNNERS + "constant.ConstantScenarioRunner._join_processes")
+    def test_that_cpu_count_is_adjusted_properly(self, mock_join_processes,
+                                                 mock_create_pool, mock_log,
+                                                 mock_cpu_count, mock_queue):
+
+        samples = [
+            {
+                "input": {"times": 20, "concurrency": 20, "type": "constant",
+                          "max_cpu_count": 1},
+                "real_cpu": 2,
+                "expected": {
+                    # max_cpu_used equals to min(max_cpu_count, real_cpu)
+                    "max_cpu_used": 1,
+                    # processes_to_start equals to
+                    # min(max_cpu_used, times, concurrency))
+                    "processes_to_start": 1,
+                    "concurrency_per_worker": 20,
+                    "concurrency_overhead": 0,
+                }
+            },
+            {
+                "input": {"times": 20, "concurrency": 15, "type": "constant",
+                          "max_cpu_count": 3},
+                "real_cpu": 2,
+                "expected": {
+                    "max_cpu_used": 2,
+                    "processes_to_start": 2,
+                    "concurrency_per_worker": 7,
+                    "concurrency_overhead": 1,
+                }
+            },
+            {
+                "input": {"times": 20, "concurrency": 1, "type": "constant",
+                          "max_cpu_count": 3},
+                "real_cpu": 2,
+                "expected": {
+                    "max_cpu_used": 2,
+                    "processes_to_start": 1,
+                    "concurrency_per_worker": 1,
+                    "concurrency_overhead": 0,
+                }
+            },
+            {
+                "input": {"times": 2, "concurrency": 5, "type": "constant",
+                          "max_cpu_count": 4},
+                "real_cpu": 4,
+                "expected": {
+                    "max_cpu_used": 4,
+                    "processes_to_start": 2,
+                    "concurrency_per_worker": 2,
+                    "concurrency_overhead": 1,
+                }
+            }
+        ]
+
+        for sample in samples:
+            mock_log.reset_mock()
+            mock_cpu_count.reset_mock()
+            mock_create_pool.reset_mock()
+            mock_join_processes.reset_mock()
+            mock_queue.reset_mock()
+
+            mock_cpu_count.return_value = sample["real_cpu"]
+
+            runner = constant.ConstantScenarioRunner(self.task,
+                                                     sample["input"])
+
+            runner._run_scenario(fakes.FakeScenario, "do_it", self.context,
+                                 self.args)
+
+            mock_cpu_count.assert_called_once_with()
+            mock_log.assert_called_once_with(
+                times=sample["input"]["times"],
+                concurrency=sample["input"]["concurrency"],
+                timeout=0,
+                max_cpu_used=sample["expected"]["max_cpu_used"],
+                processes_to_start=sample["expected"]["processes_to_start"],
+                concurrency_per_worker=(
+                    sample["expected"]["concurrency_per_worker"]),
+                concurrency_overhead=(
+                    sample["expected"]["concurrency_overhead"]))
+            args, kwargs = mock_create_pool.call_args
+            self.assertIn(sample["expected"]["processes_to_start"], args)
+            self.assertIn(constant._worker_process, args)
+            mock_join_processes.assert_called_once_with(
+                mock_create_pool(),
+                mock_queue())
 
     def test_abort(self):
         runner = constant.ConstantScenarioRunner(self.task, self.config)
