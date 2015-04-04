@@ -22,7 +22,8 @@ class Endpoint(object):
                  permission=consts.EndpointPermission.USER,
                  region_name=None, endpoint_type=consts.EndpointType.PUBLIC,
                  admin_port=None, domain_name=None, endpoint=None,
-                 user_domain_name="Default", project_domain_name="Default"):
+                 user_domain_name="Default", project_domain_name="Default",
+                 https_insecure=None, https_cacert=None):
         self.auth_url = auth_url
         self.username = username
         self.password = password
@@ -34,6 +35,8 @@ class Endpoint(object):
         self.user_domain_name = user_domain_name
         self.project_domain_name = project_domain_name
         self.endpoint = endpoint
+        self.insecure = https_insecure
+        self.cacert = https_cacert
         if admin_port:
             import warnings
             warnings.warn("'admin_port' argument is deprecated and will "
@@ -46,6 +49,8 @@ class Endpoint(object):
                "endpoint_type": self.endpoint_type,
                "domain_name": self.domain_name,
                "endpoint": self.endpoint,
+               "https_insecure": self.insecure,
+               "https_cacert": self.cacert,
                "user_domain_name": self.user_domain_name,
                "project_domain_name": self.project_domain_name}
         if include_permission:

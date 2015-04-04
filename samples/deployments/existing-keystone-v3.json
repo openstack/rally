@@ -9,5 +9,7 @@
         "user_domain_name": "admin",
         "project_name": "admin",
         "project_domain_name": "admin",
-    }
+    },
+    "https_insecure": False,
+    "https_cacert": "",
 }

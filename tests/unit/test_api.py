@@ -177,6 +177,8 @@ class BaseDeploymentTestCase(test.TestCase):
         admin_endpoint["endpoint"] = None
         admin_endpoint.update(admin_endpoint.pop("admin"))
         admin_endpoint["permission"] = consts.EndpointPermission.ADMIN
+        admin_endpoint["https_insecure"] = False
+        admin_endpoint["https_cacert"] = None
         self.endpoints = {"admin": admin_endpoint, "users": []}
         self.deployment = {
             "uuid": self.deployment_uuid,

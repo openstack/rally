@@ -30,9 +30,11 @@ OSCLIENTS_OPTS = [
     cfg.FloatOpt("openstack_client_http_timeout", default=180.0,
                  help="HTTP timeout for any of OpenStack service in seconds"),
     cfg.BoolOpt("https_insecure", default=False,
-                help="Use SSL for all OpenStack API interfaces"),
+                help="Use SSL for all OpenStack API interfaces",
+                deprecated_for_removal=True),
     cfg.StrOpt("https_cacert", default=None,
-               help="Path to CA server cetrificate for SSL")
+               help="Path to CA server cetrificate for SSL",
+               deprecated_for_removal=True)
 ]
 CONF.register_opts(OSCLIENTS_OPTS)
 
@@ -73,6 +75,12 @@ class Clients(object):
 
     def __init__(self, endpoint):
         self.endpoint = endpoint
+        # NOTE(kun) Apply insecure/cacert settings from rally.conf if those are
+        # not set in deployment config. Remove it when invaild.
+        if self.endpoint.insecure is None:
+            self.endpoint.insecure = CONF.https_insecure
+        if self.endpoint.cacert is None:
+            self.endpoint.cacert = CONF.https_cacert
         self.cache = {}
 
     @classmethod
@@ -95,7 +103,7 @@ class Clients(object):
         """Return keystone client."""
         new_kw = {
             "timeout": CONF.openstack_client_http_timeout,
-            "insecure": CONF.https_insecure, "cacert": CONF.https_cacert
+            "insecure": self.endpoint.insecure, "cacert": self.endpoint.cacert
         }
         kw = self.endpoint.to_dict()
         kw.update(new_kw)
@@ -137,8 +145,8 @@ class Clients(object):
                              auth_token=kc.auth_token,
                              http_log_debug=logging.is_debug(),
                              timeout=CONF.openstack_client_http_timeout,
-                             insecure=CONF.https_insecure,
-                             cacert=CONF.https_cacert)
+                             insecure=self.endpoint.insecure,
+                             cacert=self.endpoint.cacert)
         client.set_management_url(compute_api_url)
         return client
 
@@ -155,8 +163,8 @@ class Clients(object):
                                 token=kc.auth_token,
                                 endpoint_url=network_api_url,
                                 timeout=CONF.openstack_client_http_timeout,
-                                insecure=CONF.https_insecure,
-                                ca_cert=CONF.https_cacert)
+                                insecure=self.endpoint.insecure,
+                                ca_cert=self.endpoint.cacert)
         return client
 
     @cached
@@ -172,8 +180,8 @@ class Clients(object):
                                endpoint=image_api_url,
                                token=kc.auth_token,
                                timeout=CONF.openstack_client_http_timeout,
-                               insecure=CONF.https_insecure,
-                               cacert=CONF.https_cacert)
+                               insecure=self.endpoint.insecure,
+                               cacert=self.endpoint.cacert)
         return client
 
     @cached
@@ -189,8 +197,8 @@ class Clients(object):
                              endpoint=orchestration_api_url,
                              token=kc.auth_token,
                              timeout=CONF.openstack_client_http_timeout,
-                             insecure=CONF.https_insecure,
-                             cacert=CONF.https_cacert)
+                             insecure=self.endpoint.insecure,
+                             cacert=self.endpoint.cacert)
         return client
 
     @cached
@@ -200,8 +208,8 @@ class Clients(object):
         client = cinder.Client(version, None, None,
                                http_log_debug=logging.is_debug(),
                                timeout=CONF.openstack_client_http_timeout,
-                               insecure=CONF.https_insecure,
-                               cacert=CONF.https_cacert)
+                               insecure=self.endpoint.insecure,
+                               cacert=self.endpoint.cacert)
         kc = self.keystone()
         volume_api_url = kc.service_catalog.url_for(
             service_type="volume",
@@ -230,8 +238,8 @@ class Clients(object):
                     os_endpoint=metering_api_url,
                     token=auth_token,
                     timeout=CONF.openstack_client_http_timeout,
-                    insecure=CONF.https_insecure,
-                    cacert=CONF.https_cacert)
+                    insecure=self.endpoint.insecure,
+                    cacert=self.endpoint.cacert)
         return client
 
     @cached
@@ -247,8 +255,8 @@ class Clients(object):
                                    os_auth_token=kc.auth_token,
                                    ironic_url=baremetal_api_url,
                                    timeout=CONF.openstack_client_http_timeout,
-                                   insecure=CONF.https_insecure,
-                                   cacert=CONF.https_cacert)
+                                   insecure=self.endpoint.insecure,
+                                   cacert=self.endpoint.cacert)
         return client
 
     @cached
@@ -278,7 +286,7 @@ class Clients(object):
             "os_project_name": self.endpoint.tenant_name,
             "os_project_id": kc.auth_tenant_id,
             "os_auth_url": self.endpoint.auth_url,
-            "insecure": CONF.https_insecure,
+            "insecure": self.endpoint.insecure,
         }}}
         client = zaqar.Client(url=messaging_api_url,
                               version=version,
@@ -313,7 +321,7 @@ class Clients(object):
         client = designate.Client(
             endpoint=dns_api_url,
             token=kc.auth_token,
-            insecure=CONF.https_insecure)
+            insecure=self.endpoint.insecure)
         return client
 
     @cached
@@ -327,8 +335,8 @@ class Clients(object):
                               auth_url=self.endpoint.auth_url,
                               region_name=self.endpoint.region_name,
                               timeout=CONF.openstack_client_http_timeout,
-                              insecure=CONF.https_insecure,
-                              cacert=CONF.https_cacert)
+                              insecure=self.endpoint.insecure,
+                              cacert=self.endpoint.cacert)
         return client
 
     @cached
@@ -359,8 +367,8 @@ class Clients(object):
         client = swift.Connection(retries=1,
                                   preauthurl=object_api_url,
                                   preauthtoken=kc.auth_token,
-                                  insecure=CONF.https_insecure,
-                                  cacert=CONF.https_cacert)
+                                  insecure=self.endpoint.insecure,
+                                  cacert=self.endpoint.cacert)
         return client
 
     @cached
@@ -382,7 +390,7 @@ class Clients(object):
             url=ec2_api_url,
             aws_access_key_id=ec2_credential.access,
             aws_secret_access_key=ec2_credential.secret,
-            is_secure=CONF.https_insecure)
+            is_secure=self.endpoint.insecure)
         return client
 
     @cached

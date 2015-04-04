@@ -32,6 +32,8 @@ class TestExistingCloud(test.TestCase):
                 "auth_url": "http://example.net:5000/v2.0/",
                 "region_name": "RegionOne",
                 "endpoint_type": consts.EndpointType.INTERNAL,
+                "https_insecure": False,
+                "https_cacert": None,
                 "admin": {
                     "username": "admin",
                     "password": "myadminpass",
