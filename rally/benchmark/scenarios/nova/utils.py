@@ -36,6 +36,8 @@ option_names_and_defaults = [
     ("unrescue", 2, 300, 2),
     ("suspend", 2, 300, 2),
     ("resume", 2, 300, 2),
+    ("pause", 2, 300, 2),
+    ("unpause", 2, 300, 2),
     ("image_create", 0, 300, 2),
     ("image_delete", 0, 300, 2),
     ("resize", 2, 400, 5),
@@ -264,6 +266,42 @@ class NovaScenario(base.Scenario):
             update_resource=bench_utils.get_from_manager(),
             timeout=CONF.benchmark.nova_server_resume_timeout,
             check_interval=CONF.benchmark.nova_server_resume_poll_interval
+        )
+
+    @base.atomic_action_timer("nova.pause_server")
+    def _pause_server(self, server):
+        """Pause the live server.
+
+        Returns when the server is actually paused and is in the "PAUSED"
+        state.
+
+        :param server: Server object
+        """
+        server.pause()
+        time.sleep(CONF.benchmark.nova_server_pause_prepoll_delay)
+        bench_utils.wait_for(
+            server, is_ready=bench_utils.resource_is("PAUSED"),
+            update_resource=bench_utils.get_from_manager(),
+            timeout=CONF.benchmark.nova_server_pause_timeout,
+            check_interval=CONF.benchmark.nova_server_pause_poll_interval
+        )
+
+    @base.atomic_action_timer("nova.unpause_server")
+    def _unpause_server(self, server):
+        """Unpause the paused server.
+
+        Returns when the server is actually unpaused and is in the "ACTIVE"
+        state.
+
+        :param server: Server object
+        """
+        server.unpause()
+        time.sleep(CONF.benchmark.nova_server_unpause_prepoll_delay)
+        bench_utils.wait_for(
+            server, is_ready=bench_utils.resource_is("ACTIVE"),
+            update_resource=bench_utils.get_from_manager(),
+            timeout=CONF.benchmark.nova_server_unpause_timeout,
+            check_interval=CONF.benchmark.nova_server_unpause_poll_interval
         )
 
     def _delete_server(self, server, force=False):

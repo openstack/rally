@@ -335,6 +335,26 @@ class NovaServers(utils.NovaScenario,
                flavor=types.FlavorResourceType)
     @validation.image_valid_on_flavor("flavor", "image")
     @validation.required_services(consts.Service.NOVA)
+    @validation.required_openstack(users=True)
+    @base.scenario(context={"cleanup": ["nova"]})
+    def pause_and_unpause_server(self, image, flavor,
+                                 force_delete=False, **kwargs):
+        """Create a server, pause, unpause and then delete it
+
+        :param image: image to be used to boot an instance
+        :param flavor: flavor to be used to boot an instance
+        :param force_delete: True if force_delete should be used
+        :param kwargs: Optional additional arguments for server creation
+        """
+        server = self._boot_server(image, flavor, **kwargs)
+        self._pause_server(server)
+        self._unpause_server(server)
+        self._delete_server(server, force=force_delete)
+
+    @types.set(image=types.ImageResourceType,
+               flavor=types.FlavorResourceType)
+    @validation.image_valid_on_flavor("flavor", "image")
+    @validation.required_services(consts.Service.NOVA)
     @validation.required_openstack(admin=True, users=True)
     @base.scenario(context={"cleanup": ["nova"]})
     def boot_and_live_migrate_server(self, image,
