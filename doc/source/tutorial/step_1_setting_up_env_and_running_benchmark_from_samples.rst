@@ -23,8 +23,8 @@ In this demo, we will show how to perform some basic operations in Rally, such a
 We assume that you have a :ref:`Rally installation <tutorial_step_0_installation>` and an already existing OpenStack deployment with Keystone available at *<KEYSTONE_AUTH_URL>*.
 
 
-1. Registering an OpenStack deployment in Rally
------------------------------------------------
+Registering an OpenStack deployment in Rally
+--------------------------------------------
 
 First, you have to provide Rally with an Openstack deployment it is going to benchmark. This should be done either through `OpenRC files <http://docs.openstack.org/user-guide/content/cli_openrc.html>`_ or through deployment `configuration files <https://github.com/stackforge/rally/tree/master/samples/deployments>`_. In case you already have an *OpenRC*, it is extremely simple to register a deployment with the *deployment create* command:
 
@@ -78,8 +78,8 @@ Finally, the *deployment check* command enables you to verify that your current 
    +----------+----------------+-----------+
 
 
-2. Benchmarking
----------------
+Benchmarking
+------------
 
 Now that we have a working and registered deployment, we can start benchmarking it. The sequence of benchmarks to be launched by Rally should be specified in a *benchmark task configuration file* (either in *JSON* or in *YAML* format). Let's try one of the sample benchmark tasks available in `samples/tasks/scenarios <https://github.com/stackforge/rally/tree/master/samples/tasks/scenarios>`_, say, the one that boots and deletes multiple servers (*samples/tasks/scenarios/nova/boot-and-delete.json*):
 
@@ -199,8 +199,8 @@ Note that the Rally input task above uses *regular expressions* to specify the i
    +---------------------+-----------+-------+----------+-----------+-----------+
 
 
-3. Report generation
---------------------
+Report generation
+-----------------
 
 One of the most beautiful things in Rally is its task report generation mechanism. It enables you to create illustrative and comprehensive HTML reports based on the benchmarking data. To create and open at once such a report for the last task you have launched, call:
 
