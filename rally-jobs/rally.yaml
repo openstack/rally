@@ -1093,7 +1093,6 @@
             name: "m1.tiny"
         image:
             name: {{image_name}}
-        detailed: True
       runner:
         type: "constant"
         times: 3
