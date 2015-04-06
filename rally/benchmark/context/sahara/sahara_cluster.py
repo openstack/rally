@@ -77,6 +77,9 @@ class SaharaCluster(base.Context):
             },
             "cluster_configs": {
                 "type": "object"
+            },
+            "enable_anti_affinity": {
+                "type": "boolean"
             }
         },
         "additionalProperties": False,
@@ -116,6 +119,8 @@ class SaharaCluster(base.Context):
                     security_groups=self.config.get("security_groups"),
                     node_configs=self.config.get("node_configs"),
                     cluster_configs=self.config.get("cluster_configs"),
+                    enable_anti_affinity=self.config.get(
+                        "enable_anti_affinity", False),
                     wait_active=False)
 
             self.context["tenants"][tenant_id]["sahara_cluster"] = cluster.id

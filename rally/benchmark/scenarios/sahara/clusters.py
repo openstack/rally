@@ -40,7 +40,8 @@ class SaharaClusters(utils.SaharaScenario):
                                   volumes_per_node=None,
                                   volumes_size=None, auto_security_group=None,
                                   security_groups=None, node_configs=None,
-                                  cluster_configs=None):
+                                  cluster_configs=None,
+                                  enable_anti_affinity=False):
         """Launch and delete a Sahara Cluster.
 
         This scenario launches a Hadoop cluster, waits until it becomes
@@ -71,6 +72,8 @@ class SaharaClusters(utils.SaharaScenario):
                              Group
         :param cluster_configs: config dict that will be passed to the
                                 Cluster
+        :param enable_anti_affinity: If set to true the vms will be scheduled
+                                     one per compute node.
         """
 
         image_id = self.context["tenant"]["sahara_image"]
@@ -89,7 +92,8 @@ class SaharaClusters(utils.SaharaScenario):
             auto_security_group=auto_security_group,
             security_groups=security_groups,
             node_configs=node_configs,
-            cluster_configs=cluster_configs)
+            cluster_configs=cluster_configs,
+            enable_anti_affinity=enable_anti_affinity)
 
         self._delete_cluster(cluster)
 
@@ -105,7 +109,8 @@ class SaharaClusters(utils.SaharaScenario):
                                     volumes_per_node=None, volumes_size=None,
                                     auto_security_group=None,
                                     security_groups=None, node_configs=None,
-                                    cluster_configs=None):
+                                    cluster_configs=None,
+                                    enable_anti_affinity=False):
         """Launch, scale and delete a Sahara Cluster.
 
         This scenario launches a Hadoop cluster, waits until it becomes
@@ -144,6 +149,8 @@ class SaharaClusters(utils.SaharaScenario):
                              Group
         :param cluster_configs: configs dict that will be passed to the
                                 Cluster
+        :param enable_anti_affinity: If set to true the vms will be scheduled
+                                     one per compute node.
         """
 
         image_id = self.context["tenant"]["sahara_image"]
@@ -162,7 +169,8 @@ class SaharaClusters(utils.SaharaScenario):
             auto_security_group=auto_security_group,
             security_groups=security_groups,
             node_configs=node_configs,
-            cluster_configs=cluster_configs)
+            cluster_configs=cluster_configs,
+            enable_anti_affinity=enable_anti_affinity)
 
         for delta in deltas:
             # The Cluster is fetched every time so that its node groups have

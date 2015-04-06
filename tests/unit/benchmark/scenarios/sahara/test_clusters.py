@@ -56,7 +56,8 @@ class SaharaClustersTestCase(test.TestCase):
             auto_security_group=None,
             security_groups=None,
             node_configs=None,
-            cluster_configs=None)
+            cluster_configs=None,
+            enable_anti_affinity=False)
 
         mock_delete_cluster.assert_called_once_with(
             mock_launch_cluster.return_value)
@@ -102,7 +103,8 @@ class SaharaClustersTestCase(test.TestCase):
             auto_security_group=None,
             security_groups=None,
             node_configs=None,
-            cluster_configs=None)
+            cluster_configs=None,
+            enable_anti_affinity=False)
 
         mock_scale_cluster.assert_has_calls([
             mock.call(mock_sahara.clusters.get.return_value, 1),

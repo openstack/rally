@@ -118,3 +118,20 @@ REPLICATION_CONFIGS = {
         }
     }
 }
+
+ANTI_AFFINITY_PROCESSES = {
+    "vanilla": {
+        "1.2.1": ["datanode"],
+        "2.3.0": ["datanode"],
+        "2.4.1": ["datanode"],
+        "2.6.0": ["datanode"]
+    },
+    "hdp": {
+        "1.3.2": ["DATANODE"],
+        "2.0.6": ["DATANODE"],
+        "2.2": ["DATANODE"]
+    },
+    "cdh": {
+        "5": ["HDFS_DATANODE"]
+    }
+}

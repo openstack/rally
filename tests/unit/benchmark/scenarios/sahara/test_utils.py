@@ -215,7 +215,8 @@ class SaharaUtilsTestCase(test.TestCase):
             node_groups=node_groups,
             default_image_id="test_image",
             cluster_configs={"HDFS": {"dfs.replication": 3}},
-            net_id="test_neutron_id"
+            net_id="test_neutron_id",
+            anti_affinity=None
         )
 
         self._test_atomic_action_timer(scenario.atomic_actions(),

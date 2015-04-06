@@ -223,7 +223,8 @@ class SaharaScenario(base.Scenario):
                         volumes_per_node=None,
                         volumes_size=None, auto_security_group=None,
                         security_groups=None, node_configs=None,
-                        cluster_configs=None, wait_active=True):
+                        cluster_configs=None, enable_anti_affinity=False,
+                        wait_active=True):
         """Create a cluster and wait until it becomes Active.
 
         The cluster is created with two node groups. The master Node Group is
@@ -252,6 +253,8 @@ class SaharaScenario(base.Scenario):
                              Group
         :param cluster_configs: configs dict that will be passed to the
                                 Cluster
+        :param enable_anti_affinity: If set to true the vms will be scheduled
+                                     one per compute node.
         :param wait_active: Wait until a Cluster gets int "Active" state
         :returns: created cluster
         """
@@ -307,6 +310,11 @@ class SaharaScenario(base.Scenario):
         merged_cluster_configs = self._merge_configs(replication_config,
                                                      cluster_configs)
 
+        aa_processes = None
+        if enable_anti_affinity:
+            aa_processes = (sahara_consts.ANTI_AFFINITY_PROCESSES[plugin_name]
+                            [hadoop_version])
+
         name = self._generate_random_name(prefix="sahara-cluster-")
 
         cluster_object = self.clients("sahara").clusters.create(
@@ -316,7 +324,8 @@ class SaharaScenario(base.Scenario):
             node_groups=node_groups,
             default_image_id=image_id,
             net_id=neutron_net_id,
-            cluster_configs=merged_cluster_configs
+            cluster_configs=merged_cluster_configs,
+            anti_affinity=aa_processes
         )
 
         if wait_active:
