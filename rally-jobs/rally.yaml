@@ -108,6 +108,16 @@
         failure_rate:
           max: 0
 
+  KeystoneBasic.create_and_list_services:
+    -
+      runner:
+        type: "constant"
+        times: 10
+        concurrency: 5
+      sla:
+        failure_rate:
+          max: 0
+
   CeilometerAlarms.create_alarm:
     -
       args:
