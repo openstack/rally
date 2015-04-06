@@ -312,8 +312,7 @@ class NovaServers(utils.NovaScenario,
         self._delete_server(server, force=force_delete)
 
     @types.set(image=types.ImageResourceType,
-               flavor=types.FlavorResourceType,
-               to_flavor=types.FlavorResourceType)
+               flavor=types.FlavorResourceType)
     @validation.image_valid_on_flavor("flavor", "image")
     @validation.required_services(consts.Service.NOVA)
     @validation.required_openstack(users=True)
