@@ -18,8 +18,8 @@
 Step 8. Rally task templates
 ============================
 
-1. Basic template syntax
-------------------------
+Basic template syntax
+---------------------
 
 A nice feature of the input task format used in Rally is that it supports the **template syntax** based on `Jinja2 <https://pypi.python.org/pypi/Jinja2>`_. This turns out to be extremely useful when, say, you have a fixed structure of your task but you want to parameterize this task in some way. For example, imagine your input task file (*task.yaml*) runs a set of Nova scenarios:
 
@@ -189,8 +189,9 @@ Passed in either way, these parameter values will be substituted by Rally when s
     Benchmarking... This can take a while...
 
 
-1. Using the default values
----------------------------
+Using the default values
+------------------------
+
 Note that the Jinja2 template syntax allows you to set the default values for your parameters. With default values set, your task file will work even if you don't parameterize it explicitly while starting a task. The default values should be set using the *{% set ... %}* clause (*task.yaml*):
 
 .. code-block:: none
@@ -247,8 +248,8 @@ If you don't pass the value for *{{image_name}}* while starting a task, the defa
         ...
 
 
-3. Advanced templates
--------------------------------
+Advanced templates
+------------------
 
 Rally makes it possible to use all the power of Jinja2 template syntax, including the mechanism of **built-in functions**. This enables you to construct elegant task files capable of generating complex load on your cloud.
 

@@ -18,8 +18,8 @@
 Step 3. Adding success criteria (SLA) for benchmarks
 ====================================================
 
-1. SLA - Service-Level Agreement (Success Criteria)
----------------------------------------------------
+SLA - Service-Level Agreement (Success Criteria)
+------------------------------------------------
 
 Rally allows you to set success criteria (also called *SLA - Service-Level Agreement*) for every benchmark. Rally will automatically check them for you.
 
@@ -52,8 +52,8 @@ To configure the SLA, add the *"sla"* section to the configuration of the corres
 Such configuration will mark the **NovaServers.boot_and_delete_server** benchmark scenario as not successful if either some iteration took more than 10 seconds or more than 25% iterations failed.
 
 
-2. Checking SLA
----------------
+Checking SLA
+------------
 Let us show you how Rally SLA work using a simple example based on **Dummy benchmark scenarios**. These scenarios actually do not perform any OpenStack-related stuff but are very useful for testing the behavious of Rally. Let us put in a new task, *test-sla.json*, 2 scenarios -- one that does nothing and another that just throws an exception:
 
 .. code-block:: none
@@ -122,15 +122,14 @@ After the task completes, run *rally task sla_check* to check the results again 
 Exactly as expected.
 
 
-3. SLA in task report
----------------------
+SLA in task report
+------------------
 
 SLA checks are nicely visualized in task reports. Generate one:
 
 .. code-block:: none
 
    $ rally task report --out=report_sla.html --open
-
 
 Benchmark scenarios that have passed SLA have a green check on the overview page:
 
