@@ -191,7 +191,7 @@ class GetResourceErrorStatus(GetResourceFailure):
 
 
 class ScriptError(RallyException):
-    msg_fmt = _("Script execution failed.")
+    msg_fmt = _("Script execution failed: %(message)s")
 
 
 class TaskInvalidStatus(RallyException):

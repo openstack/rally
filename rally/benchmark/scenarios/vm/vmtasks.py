@@ -49,6 +49,7 @@ class VMTasks(nova_utils.NovaScenario, vm_utils.VMScenario,
                                volume_args=None,
                                floating_network=None,
                                port=22,
+                               use_floating_ip=True,
                                force_delete=False,
                                **kwargs):
         """Boot a server, run a script that outputs JSON, delete the server.
@@ -65,6 +66,7 @@ class VMTasks(nova_utils.NovaScenario, vm_utils.VMScenario,
         :param volume_args: volume args for booting server from volume
         :param floating_network: external network name, for floating ip
         :param port: ssh port for SSH connection
+        :param use_floating_ip: bool, floating or fixed IP for SSH connection
         :param force_delete: whether to use force_delete for servers
         :param **kwargs: extra arguments for booting the server
         :returns: dictionary with keys `data' and `errors':
@@ -77,25 +79,28 @@ class VMTasks(nova_utils.NovaScenario, vm_utils.VMScenario,
             kwargs["block_device_mapping"] = {"vdrally": "%s:::1" % volume.id}
 
         server, fip = self._boot_server_with_fip(
-            image, flavor, floating_network=floating_network,
+            image, flavor, use_floating_ip=use_floating_ip,
+            floating_network=floating_network,
             key_name=self.context["user"]["keypair"]["name"],
             **kwargs)
-
-        code, out, err = self._run_command(fip["ip"], port, username,
-                                           password, interpreter, script)
-        if code:
-            raise exceptions.ScriptError(
-                "Error running script %(script)s."
-                "Error %(code)s: %(error)s" % {
-                    "script": script, "code": code, "error": err})
-
         try:
-            data = json.loads(out)
-        except ValueError as e:
-            raise exceptions.ScriptError(
-                "Script %(script)s has not output valid JSON: "
-                "%(error)s" % {"script": script, "error": str(e)})
+            code, out, err = self._run_command(fip["ip"], port, username,
+                                               password, interpreter, script)
+            if code:
+                raise exceptions.ScriptError(
+                    "Error running script %(script)s. "
+                    "Error %(code)s: %(error)s" % {
+                        "script": script, "code": code, "error": err})
 
-        self._delete_server_with_fip(server, fip, force_delete=force_delete)
+            try:
+                data = json.loads(out)
+            except ValueError as e:
+                raise exceptions.ScriptError(
+                    "Script %(script)s has not output valid JSON: %(error)s. "
+                    "Output: %(output)s" % {
+                        "script": script, "error": str(e), "output": out})
+        finally:
+            self._delete_server_with_fip(server, fip,
+                                         force_delete=force_delete)
 
         return {"data": data, "errors": err}

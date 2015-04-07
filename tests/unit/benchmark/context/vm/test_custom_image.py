@@ -68,7 +68,7 @@ class BaseCustomImageContextVMTestCase(test.TestCase):
     def test_create_one_image(self, mock_flavor_transform,
                               mock_image_transform, mock_osclients,
                               mock_vmtasks):
-        fip = {"ip": "foo_ip"}
+        ip = {"ip": "foo_ip", "id": "foo_id", "is_floating": True}
         fake_server = mock.Mock()
 
         fake_image = mock.MagicMock(
@@ -77,7 +77,7 @@ class BaseCustomImageContextVMTestCase(test.TestCase):
         mock_vm_scenario = mock_vmtasks.return_value = mock.MagicMock(
             _create_image=mock.MagicMock(return_value=fake_image),
             _boot_server_with_fip=mock.MagicMock(
-                return_value=(fake_server, fip)),
+                return_value=(fake_server, ip)),
             _generate_random_name=mock.MagicMock(return_value="foo_name"),
         )
 
@@ -103,20 +103,20 @@ class BaseCustomImageContextVMTestCase(test.TestCase):
             self.context, clients=mock_osclients.return_value)
 
         mock_vm_scenario._boot_server_with_fip.assert_called_once_with(
-            name="foo_name", image="image", flavor="flavor",
-            floating_network="floating", key_name="keypair_name",
-            security_groups=["secgroup_name"],
+            image="image", flavor="flavor",
+            name="foo_name", floating_network="floating",
+            key_name="keypair_name", security_groups=["secgroup_name"],
             userdata=None, foo_arg="foo_value")
 
         mock_vm_scenario._stop_server.assert_called_once_with(fake_server)
 
         generator_ctx._customize_image.assert_called_once_with(
-            fake_server, fip, user)
+            fake_server, ip, user)
 
         mock_vm_scenario._create_image.assert_called_once_with(fake_server)
 
         mock_vm_scenario._delete_server_with_fip.assert_called_once_with(
-            fake_server, fip)
+            fake_server, ip)
 
         self.assertEqual({"id": "image"}, custom_image)
 
