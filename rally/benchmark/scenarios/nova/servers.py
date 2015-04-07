@@ -455,8 +455,8 @@ class NovaServers(utils.NovaScenario,
         if create_volume_kwargs is None:
             create_volume_kwargs = {}
 
-        server = self._boot_server(image, flavor, boot_server_kwargs)
-        volume = self._create_volume(size, create_volume_kwargs)
+        server = self._boot_server(image, flavor, **boot_server_kwargs)
+        volume = self._create_volume(size, **create_volume_kwargs)
 
         self._attach_volume(server, volume)
 
