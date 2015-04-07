@@ -149,3 +149,15 @@ class HeatStacks(utils.HeatScenario):
         self._suspend_stack(s)
         self._resume_stack(s)
         self._delete_stack(s)
+
+    @validation.required_services(consts.Service.HEAT)
+    @validation.required_openstack(users=True)
+    @base.scenario()
+    def list_stacks_and_events(self):
+        """List events from tenant stacks."""
+
+        stacks = self._list_stacks()
+        with base.AtomicAction(
+                self, "heat.list_events_of_%s_stacks" % len(stacks)):
+            for stack in stacks:
+                self.clients("heat").events.list(stack.id)

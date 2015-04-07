@@ -1,0 +1,21 @@
+{
+    "HeatStacks.list_stacks_and_events": [
+        {
+            "runner": {
+                "type": "constant",
+                "times": 10,
+                "concurrency": 1
+            },
+            "context": {
+                "users": {
+                    "tenants": 1,
+                    "users_per_tenant": 1
+                },
+                "stacks": {
+                    "stacks_per_tenant": 2,
+                    "resources_per_stack": 10
+                }
+            }
+        }
+    ]
+}
