@@ -442,10 +442,15 @@ class NovaServersTestCase(test.TestCase):
         scenario._create_volume = mock.MagicMock(return_value=fake_volume)
         scenario._delete_volume = mock.MagicMock()
 
+        image = "img"
+        flavor = "flavor"
+        size = 5
+        boot_kwargs = {"some_var": "asd"}
         scenario.boot_server_attach_created_volume_and_live_migrate(
-            "img",
-            0,
-            5)
+            image, flavor, size, boot_server_kwargs=boot_kwargs)
+        scenario._boot_server.assert_called_once_with(image, flavor,
+                                                      **boot_kwargs)
+        scenario._create_volume.assert_called_once_with(size)
         scenario._attach_volume.assert_called_once_with(fake_server,
                                                         fake_volume)
         scenario._detach_volume.assert_called_once_with(fake_server,
