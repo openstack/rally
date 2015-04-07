@@ -183,6 +183,10 @@ class TempestConf(object):
         self.conf.set(section_name, "password", self.endpoint["password"])
         self.conf.set(section_name, "tenant_name",
                       self.endpoint["tenant_name"])
+        self.conf.set(section_name, "alt_username", self.endpoint["username"])
+        self.conf.set(section_name, "alt_password", self.endpoint["password"])
+        self.conf.set(section_name, "alt_tenant_name",
+                      self.endpoint["tenant_name"])
         self.conf.set(section_name, "admin_username",
                       self.endpoint["username"])
         self.conf.set(section_name, "admin_password",
