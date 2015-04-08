@@ -1,0 +1,16 @@
+---
+  KeystoneBasic.create_user_set_enabled_and_delete:
+    -
+      args:
+        enabled: true
+      runner:
+        type: "constant"
+        times: 100
+        concurrency: 10
+    -
+      args:
+        enabled: false
+      runner:
+        type: "constant"
+        times: 100
+        concurrency: 10

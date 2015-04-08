@@ -64,6 +64,19 @@ class KeystoneScenarioTestCase(test.ClientsTestCase):
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "keystone.create_user")
 
+    def test_update_user_enabled(self):
+        user = mock.Mock()
+        enabled = mock.Mock()
+        scenario = utils.KeystoneScenario()
+
+        scenario._update_user_enabled(user, enabled)
+        self.admin_clients(
+            "keystone").users.update_enabled.assert_called_once_with(user,
+                                                                     enabled)
+
+        self._test_atomic_action_timer(scenario.atomic_actions(),
+                                       "keystone.update_user_enabled")
+
     @mock.patch("rally.common.utils.generate_random_name")
     def test_role_create(self, mock_generate_random_name):
         scenario = utils.KeystoneScenario()
