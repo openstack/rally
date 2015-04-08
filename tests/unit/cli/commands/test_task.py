@@ -330,11 +330,11 @@ class TaskCommandsTestCase(test.TestCase):
                              mock_os, mock_validate):
         task_id = "eb290c30-38d8-4c8f-bbcc-fc8f74b004ae"
         data = [
-            {"key": {"name": "test", "pos": 0},
+            {"key": {"name": "class.test", "pos": 0},
              "data": {"raw": "foo_raw", "sla": "foo_sla",
                       "load_duration": 0.1,
                       "full_duration": 1.2}},
-            {"key": {"name": "test", "pos": 0},
+            {"key": {"name": "class.test", "pos": 0},
              "data": {"raw": "bar_raw", "sla": "bar_sla",
                       "load_duration": 2.1,
                       "full_duration": 2.2}}]
@@ -358,6 +358,11 @@ class TaskCommandsTestCase(test.TestCase):
 
         mock_open.side_effect().write.assert_called_once_with("html_report")
         mock_get.assert_called_once_with(task_id)
+
+        reset_mocks()
+        self.task.report(tasks=task_id, out="/tmp/%s.html" % task_id,
+                         out_format="junit")
+        mock_open.assert_called_once_with("/tmp/%s.html" % task_id, "w+")
 
         reset_mocks()
         self.task.report(task_id, out="spam.html", open_it=True)
@@ -482,6 +487,18 @@ class TaskCommandsTestCase(test.TestCase):
         ret = self.task.report(tasks="/tmp/task.json",
                                out="/tmp/tmp.hsml")
         self.assertEqual(ret, 1)
+
+    @mock.patch("rally.cli.commands.task.sys.stderr")
+    @mock.patch("rally.cli.commands.task.os.path.exists", return_value=True)
+    @mock.patch("rally.cli.commands.task.json.load")
+    @mock.patch("rally.cli.commands.task.open", create=True)
+    def test_report_invalid_format(self, mock_open, mock_json_load,
+                                   mock_path_exists, mock_stderr):
+        result = self.task.report(tasks="/tmp/task.json", out="/tmp/tmp.html",
+                                  out_format="invalid")
+        self.assertEqual(1, result)
+        expected_out = "Invalid output format: invalid"
+        mock_stderr.write.assert_has_calls([mock.call(expected_out)])
 
     @mock.patch("rally.cli.commands.task.cliutils.print_list")
     @mock.patch("rally.cli.commands.task.envutils.get_global",

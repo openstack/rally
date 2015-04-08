@@ -32,6 +32,7 @@ from rally.cli import cliutils
 from rally.cli import envutils
 from rally.common import fileutils
 from rally.common.i18n import _
+from rally.common import junit
 from rally.common import log as logging
 from rally.common import utils as rutils
 from rally import consts
@@ -414,6 +415,10 @@ class TaskCommands(object):
         print(_("* To plot HTML graphics with this data, run:"))
         print("\trally task report %s --out output.html" % task["uuid"])
         print()
+        print(_("* To generate a JUnit report, run:"))
+        print("\trally task report %s --junit --out output.xml" %
+              task["uuid"])
+        print()
         print(_("* To get raw JSON output of task results, run:"))
         print("\trally task results %s\n" % task["uuid"])
 
@@ -511,18 +516,25 @@ class TaskCommands(object):
                    help="Path to output file.")
     @cliutils.args("--open", dest="open_it", action="store_true",
                    help="Open it in browser.")
+    @cliutils.args("--html", dest="out_format",
+                   action="store_const", const="html",
+                   help="Generate the report in HTML.")
+    @cliutils.args("--junit", dest="out_format",
+                   action="store_const", const="junit",
+                   help="Generate the report in the JUnit format.")
     @cliutils.deprecated_args(
         "--uuid", dest="tasks", nargs="+",
         help="uuids of tasks or json files with task results")
     @envutils.default_from_global("tasks", envutils.ENV_TASK, "--uuid")
     @cliutils.suppress_warnings
-    def report(self, tasks=None, out=None, open_it=False):
-        """Generate HTML report file for specified task.
+    def report(self, tasks=None, out=None, open_it=False, out_format="html"):
+        """Generate report file for specified task.
 
         :param task_id: UUID, task identifier
         :param tasks: list, UUIDs od tasks or pathes files with tasks results
-        :param out: str, output html file name
+        :param out: str, output file name
         :param open_it: bool, whether to open output file in web browser
+        :param out_format: output format (junit or html)
         """
 
         tasks = isinstance(tasks, list) and tasks or [tasks]
@@ -572,11 +584,29 @@ class TaskCommands(object):
                 results.append(task_result)
 
         output_file = os.path.expanduser(out)
-        with open(output_file, "w+") as f:
-            f.write(plot.plot(results))
 
-        if open_it:
-            webbrowser.open_new_tab("file://" + os.path.realpath(out))
+        if out_format == "html":
+            with open(output_file, "w+") as f:
+                f.write(plot.plot(results))
+            if open_it:
+                webbrowser.open_new_tab("file://" + os.path.realpath(out))
+        elif out_format == "junit":
+            test_suite = junit.JUnit("Rally test suite")
+            for result in results:
+                if (isinstance(result["sla"], list) and
+                   not all([sla["success"] for sla in result["sla"]])):
+                    outcome = junit.JUnit.FAILURE
+                else:
+                    outcome = junit.JUnit.SUCCESS
+                test_suite.add_test(result["key"]["name"],
+                                    result["full_duration"],
+                                    outcome=outcome)
+            with open(output_file, "w+") as f:
+                f.write(test_suite.to_xml())
+        else:
+            print(_("Invalid output format: %s") % out_format,
+                  file=sys.stderr)
+            return 1
 
     @cliutils.args("--force", action="store_true", help="force delete")
     @cliutils.args("--uuid", type=str, dest="task_id", nargs="*",

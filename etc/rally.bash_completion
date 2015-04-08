@@ -29,7 +29,7 @@ _rally()
     OPTS["task_delete"]="--force --uuid"
     OPTS["task_detailed"]="--uuid --iterations-data"
     OPTS["task_list"]="--deployment --all-deployments --status --uuids-only"
-    OPTS["task_report"]="--tasks --out --open"
+    OPTS["task_report"]="--tasks --out --open --html --junit"
     OPTS["task_results"]="--uuid"
     OPTS["task_sla_check"]="--uuid --json"
     OPTS["task_start"]="--deployment --task --task-args --task-args-file --tag --no-use --abort-on-sla-failure"
