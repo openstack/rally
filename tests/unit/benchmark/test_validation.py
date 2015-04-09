@@ -16,10 +16,12 @@
 from glanceclient import exc as glance_exc
 import mock
 from novaclient import exceptions as nova_exc
+import six
 
 from rally.benchmark import validation
 from rally import consts
 from rally import exceptions
+import rally.osclients
 from rally.verification.tempest import tempest
 from tests.unit import test
 
@@ -614,3 +616,26 @@ class ValidatorsTestCase(test.TestCase):
         clients.nova.side_effect = ImportError
         result = validator({}, clients, None)
         self.assertFalse(result.is_valid, result.msg)
+
+    def test_required_cinder_services(self):
+        validator = self._unwrap_validator(
+                validation.required_cinder_services,
+                service_name=six.text_type("cinder-service"))
+
+        with mock.patch.object(rally.osclients.Clients, "cinder") as client:
+            fake_service = mock.Mock(binary="cinder-service", state="up")
+            cinder_client = mock.Mock()
+            services = mock.Mock()
+            services.list.return_value = [fake_service]
+            cinder_client.services = services
+            client.return_value = cinder_client
+
+            deployment = {"admin": {"auth_url": "fake_endpoint",
+                                    "username": "username",
+                                    "password": "password"}}
+            result = validator({}, None, deployment)
+            self.assertTrue(result.is_valid, result.msg)
+
+            fake_service.state = "down"
+            result = validator({}, None, deployment)
+            self.assertFalse(result.is_valid, result.msg)

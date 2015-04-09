@@ -20,12 +20,15 @@ import re
 
 from glanceclient import exc as glance_exc
 from novaclient import exceptions as nova_exc
+import six
 
 from rally.benchmark.context import flavors as flavors_ctx
 from rally.benchmark import types as types
 from rally.common.i18n import _
 from rally import consts
 from rally import exceptions
+from rally import objects
+from rally import osclients
 from rally.verification.tempest import tempest
 
 
@@ -391,6 +394,28 @@ def required_services(config, clients, deployment, *required_services):
         if service not in available_services:
             return ValidationResult(
                 False, _("Service is not available: %s") % service)
+
+
+@validator
+def required_cinder_services(config, clients, deployment, service_name):
+    """Validator checks that specified Cinder service is available.
+
+    It uses Cinder client with admin permissions to call 'cinder service-list'
+    call
+
+    :param service_name: Cinder service name
+    """
+
+    admin_client = osclients.Clients(
+        objects.Endpoint(**deployment["admin"])).cinder()
+
+    for service in admin_client.services.list():
+        if (service.binary == six.text_type(service_name) and
+                service.state == six.text_type("up")):
+            return ValidationResult(True)
+
+    msg = _("%s service is not available") % service_name
+    return ValidationResult(False, msg)
 
 
 @validator
