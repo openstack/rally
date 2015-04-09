@@ -50,11 +50,11 @@ To search for some specific benchmark scenario by its name or by its group, use 
     $ rally info find some_non_existing_benchmark
     Failed to find any docs for query: 'some_non_existing_benchmark'
 
-You can also get the list of different benchmark scenario groups available in Rally by typing **rally info find BenchmarkScenarios** command:
+You can also get the list of different benchmark scenario groups available in Rally by typing **rally info BenchmarkScenarios** command:
 
 .. code-block:: none
 
-    $ rally info find BenchmarkScenarios
+    $ rally info BenchmarkScenarios
     --------------------------------------------------------------------------------
      Rally - Benchmark scenarios
     --------------------------------------------------------------------------------
