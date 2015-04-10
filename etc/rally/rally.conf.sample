@@ -250,6 +250,16 @@
 # Server reboot poll interval (floating point value)
 #nova_server_reboot_poll_interval = 2.0
 
+# Time to sleep after rebuild before polling for status (floating point
+# value)
+#nova_server_rebuild_prepoll_delay = 0.0
+
+# Server rebuild timeout (floating point value)
+#nova_server_rebuild_timeout = 300.0
+
+# Server rebuild poll interval (floating point value)
+#nova_server_rebuild_poll_interval = 1.0
+
 # Time to sleep after rescue before polling for status (floating point
 # value)
 #nova_server_rescue_prepoll_delay = 2.0

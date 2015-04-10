@@ -333,6 +333,18 @@ class NovaScenarioTestCase(test.TestCase):
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.soft_reboot_server")
 
+    def test__rebuild_server(self):
+        nova_scenario = utils.NovaScenario()
+        nova_scenario._rebuild_server(self.server, "img", fakearg="fakearg")
+        self.server.rebuild.assert_called_once_with("img", fakearg="fakearg")
+        self._test_assert_called_once_with(
+            self.wait_for.mock, self.server,
+            CONF.benchmark.nova_server_rebuild_poll_interval,
+            CONF.benchmark.nova_server_rebuild_timeout)
+        self.res_is.mock.assert_has_calls([mock.call("ACTIVE")])
+        self._test_atomic_action_timer(nova_scenario.atomic_actions(),
+                                       "nova.rebuild_server")
+
     def test__start_server(self):
         nova_scenario = utils.NovaScenario()
         nova_scenario._start_server(self.server)
