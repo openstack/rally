@@ -30,16 +30,28 @@ from rally import exceptions
 LOG = logging.getLogger(__name__)
 
 
-def get_status(resource):
-    # workaround for heat resources - using stack_status instead of status
-    if ((hasattr(resource, "stack_status") and
-         isinstance(resource.stack_status, six.string_types))):
-        return resource.stack_status.upper()
-    # workaround for ceilometer alarms - using state instead of status
-    if ((hasattr(resource, "state") and
-         isinstance(resource.state, six.string_types))):
-        return resource.state.upper()
-    return getattr(resource, "status", "NONE").upper()
+def get_status(resource, status_attr="status"):
+    """Get the status of a given resource object.
+
+    The status is returned in upper case. The status is checked for the
+    standard field names with special cases for Heat and Ceilometer.
+
+    :param resource: The resource object or dict.
+    :param status_attr: Allows to specify non-standard status fields.
+    :return: The status or "NONE" if it is not available.
+    """
+
+    for s_attr in ["stack_status", "state", status_attr]:
+        status = getattr(resource, s_attr, None)
+        if isinstance(status, six.string_types):
+            return status.upper()
+
+    # Dict case
+    if ((isinstance(resource, dict) and status_attr in resource.keys() and
+         isinstance(resource[status_attr], six.string_types))):
+        return resource[status_attr].upper()
+
+    return "NONE"
 
 
 class resource_is(object):
@@ -87,15 +99,27 @@ def manager_list_size(sizes):
     return _list
 
 
-def wait_for(resource, is_ready, update_resource=None, timeout=60,
-             check_interval=1):
-    """Waits for the given resource to come into the desired state.
+def wait_for(resource, is_ready=None, ready_statuses=None,
+             failure_statuses=None, status_attr="status", update_resource=None,
+             timeout=60, check_interval=1):
+    """Waits for the given resource to come into the one of the given statuses.
 
-    Uses the readiness check function passed as a parameter and (optionally)
-    a function that updates the resource being waited for.
+    The method can be used to check resource for status with a `is_ready`
+    function or with a list of expected statuses and the status attribute
+
+    In case when the is_ready checker is not provided the resource should have
+    status_attr. It may be an object attribute or a dictionary key. The value
+    of the attribute is checked against ready statuses list and failure
+    statuses. In case of a failure the wait exits with an exception. The
+    resource is updated between iterations with an update_resource call.
 
     :param is_ready: A predicate that should take the resource object and
                      return True iff it is ready to be returned
+    :param ready_statuses: List of statuses which mean that the resource is
+                         ready
+    :param failure_statuses: List of statuses which mean that an error has
+                           occurred while waiting for the resource
+    :param status_attr: The name of the status attribute of the resource
     :param update_resource: Function that should take the resource object
                           and return an 'updated' resource. If set to
                           None, no result updating is performed
@@ -107,23 +131,110 @@ def wait_for(resource, is_ready, update_resource=None, timeout=60,
     :returns: The "ready" resource object
     """
 
+    if is_ready is not None:
+        return wait_is_ready(resource=resource, is_ready=is_ready,
+                             update_resource=update_resource, timeout=timeout,
+                             check_interval=check_interval)
+    else:
+        return wait_for_status(resource=resource,
+                               ready_statuses=ready_statuses,
+                               failure_statuses=failure_statuses,
+                               status_attr=status_attr,
+                               update_resource=update_resource,
+                               timeout=timeout,
+                               check_interval=check_interval)
+
+
+def wait_is_ready(resource, is_ready, update_resource=None,
+                  timeout=60, check_interval=1):
+
+    resource_repr = getattr(resource, "name", repr(resource))
     start = time.time()
+
     while True:
-        # NOTE(boden): mitigate 1st iteration waits by updating immediately
-        if update_resource:
+        if update_resource is not None:
             resource = update_resource(resource)
+
         if is_ready(resource):
-            break
+            return resource
+
         time.sleep(check_interval)
         if time.time() - start > timeout:
             raise exceptions.TimeoutException(
                 desired_status=str(is_ready),
-                resource_name=getattr(resource, "name", repr(resource)),
+                resource_name=resource_repr,
                 resource_type=resource.__class__.__name__,
                 resource_id=getattr(resource, "id", "<no id>"),
                 resource_status=get_status(resource))
 
-    return resource
+
+def wait_for_status(resource, ready_statuses, failure_statuses=None,
+                    status_attr="status", update_resource=None,
+                    timeout=60, check_interval=1):
+
+    resource_repr = getattr(resource, "name", repr(resource))
+    if not isinstance(ready_statuses, (set, list, tuple)):
+        raise ValueError("Ready statuses should be supplied as set, list or "
+                         "tuple")
+    if failure_statuses and not isinstance(failure_statuses,
+                                           (set, list, tuple)):
+        raise ValueError("Failure statuses should be supplied as set, list or "
+                         "tuple")
+
+    # make all statuses upper case
+    ready_statuses = set([s.upper() for s in ready_statuses or []])
+    failure_statuses = set([s.upper() for s in failure_statuses or []])
+
+    if len(ready_statuses & failure_statuses) > 0:
+        raise ValueError(
+            "Can't wait for resource's %s status. Ready and Failure"
+            "statuses conflict." % resource_repr)
+    if not ready_statuses:
+        raise ValueError(
+            "Can't wait for resource's %s status. No ready "
+            "statuses provided" % resource_repr)
+    if not update_resource:
+        raise ValueError(
+            "Can't wait for resource's %s status. No update method."
+            % resource_repr)
+
+    start = time.time()
+
+    latest_status = get_status(resource, status_attr)
+    latest_status_update = start
+
+    while True:
+        resource = update_resource(resource)
+        status = get_status(resource, status_attr)
+
+        if status != latest_status:
+            current_time = time.time()
+            delta = current_time - latest_status_update
+            LOG.debug(
+                "Waiting for resource %(resource)s. Status changed: "
+                "%(latest)s => %(current)s in %(delta)s" %
+                {"resource": resource_repr, "latest": latest_status,
+                 "current": status, "delta": delta})
+
+            latest_status = status
+            latest_status_update = current_time
+
+        if status in ready_statuses:
+            return resource
+        if status in failure_statuses:
+            raise exceptions.GetResourceErrorStatus(
+                resource=resource,
+                status=status,
+                fault="Status in failure list %s" % str(failure_statuses))
+
+        time.sleep(check_interval)
+        if time.time() - start > timeout:
+            raise exceptions.TimeoutException(
+                desired_status=ready_statuses,
+                resource_name=resource_repr,
+                resource_type=resource.__class__.__name__,
+                resource_id=getattr(resource, "id", "<no id>"),
+                resource_status=get_status(resource))
 
 
 def wait_for_delete(resource, update_resource=None, timeout=60,
