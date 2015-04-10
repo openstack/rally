@@ -36,23 +36,23 @@ def _consumer(consume, queue, is_published):
     """
     cache = {}
     while True:
-        if queue:
-            try:
-                consume(cache, queue.popleft())
-            except IndexError:
-                # NOTE(boris-42): queue is accessed from multiple threads so
-                #                 it's quite possible to have 2 queue accessing
-                #                 at the same point queue with only 1 element
-                pass
-            except Exception as e:
-                LOG.warning(_("Failed to consume a task from the queue: "
-                              "%s") % e)
-                if logging.is_debug():
-                    LOG.exception(e)
-        elif is_published.isSet():
-            break
-        else:
+        if not queue:
+            if is_published.isSet():
+                break
             time.sleep(0.1)
+            continue
+        else:
+            try:
+                args = queue.popleft()
+            except IndexError:
+                # consumed by other thread
+                continue
+        try:
+            consume(cache, args)
+        except Exception as e:
+            LOG.warning(_("Failed to consume a task from the queue: %s") % e)
+            if logging.is_debug():
+                LOG.exception(e)
 
 
 def _publisher(publish, queue, is_published):
