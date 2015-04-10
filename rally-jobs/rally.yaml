@@ -996,54 +996,6 @@
         flavor:
             name: "m1.tiny"
         image:
-            name: "from_context_uploaded"
-      runner:
-        type: "constant"
-        times: 1
-        concurrency: 1
-      context:
-        users:
-          tenants: 1
-          users_per_tenant: 1
-        images:
-          image_name: "from_context_uploaded"
-          image_url: "http://download.cirros-cloud.net/0.3.1/cirros-0.3.1-x86_64-disk.img"
-          image_type: "qcow2"
-          image_container: "bare"
-          images_per_tenant: 1
-      sla:
-        failure_rate:
-          max: 0
-
-    -
-      args:
-        flavor:
-            name: "m1.tiny"
-        image:
-            regex: "^from_context_uploaded$"
-      runner:
-        type: "constant"
-        times: 1
-        concurrency: 1
-      context:
-        users:
-          tenants: 1
-          users_per_tenant: 1
-        images:
-          image_name: "from_context_uploaded"
-          image_url: "http://download.cirros-cloud.net/0.3.1/cirros-0.3.1-x86_64-disk.img"
-          image_type: "qcow2"
-          image_container: "bare"
-          images_per_tenant: 1
-      sla:
-        failure_rate:
-          max: 0
-
-    -
-      args:
-        flavor:
-            name: "m1.tiny"
-        image:
             name: {{image_name}}
       runner:
         type: "constant"

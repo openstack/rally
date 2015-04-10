@@ -575,3 +575,81 @@ class SLATestCase(unittest.TestCase):
         ]
         data = rally("task sla_check --json", getjson=True)
         self.assertEqual(expected, data)
+
+
+class SLAExtraFlagsTestCase(unittest.TestCase):
+
+    def test_abort_on_sla_fail(self):
+        rally = utils.Rally()
+        cfg = {
+            "Dummy.dummy_exception": [
+                {
+                    "args": {},
+                    "runner": {
+                        "type": "constant",
+                        "times": 5,
+                        "concurrency": 5
+                    },
+                    "sla": {
+                        "failure_rate": {"max": 0}
+                    }
+                }
+            ]}
+        config = utils.TaskConfig(cfg)
+        rally("task start --task %s --abort-on-sla-failure" % config.filename)
+        expected = [
+            {"benchmark": "Dummy.dummy_exception",
+             "criterion": "aborted_on_sla",
+             "detail": "Task was aborted due to SLA failure(s).",
+             "pos": 0, "status": "FAIL"},
+            {"benchmark": "Dummy.dummy_exception",
+             "criterion": "failure_rate",
+             "detail": mock.ANY,
+             "pos": 0, "status": "FAIL"}
+        ]
+        try:
+            rally("task sla_check --json", getjson=True)
+        except utils.RallyCmdError as expected_error:
+            self.assertEqual(json.loads(expected_error.output), expected)
+        else:
+            self.fail("`rally task sla_check` command should return non-zero "
+                      "exit code")
+
+    def _test_broken_context(self, runner):
+        rally = utils.Rally()
+        cfg = {
+            "Dummy.dummy": [
+                {
+                    "args": {},
+                    "runner": runner,
+                    "context": {
+                        "dummy_context": {"fail_setup": True}
+                    }
+                }
+            ]}
+        config = utils.TaskConfig(cfg)
+        rally("task start --task %s" % config.filename)
+        expected = [
+            {"benchmark": "Dummy.dummy",
+             "criterion": "something_went_wrong",
+             "detail": mock.ANY,
+             "pos": 0, "status": "FAIL"}
+        ]
+        try:
+            rally("task sla_check --json", getjson=True)
+        except utils.RallyCmdError as expected_error:
+            self.assertEqual(json.loads(expected_error.output), expected)
+        else:
+            self.fail("`rally task sla_check` command should return non-zero "
+                      "exit code")
+
+    def test_broken_context_with_constant_runner(self):
+        self._test_broken_context({"type": "constant",
+                                   "times": 5,
+                                   "concurrency": 5})
+
+    def test_broken_context_with_rps_runner(self):
+        self._test_broken_context({"type": "rps",
+                                   "times": 5,
+                                   "rps": 3,
+                                   "timeout": 6})
