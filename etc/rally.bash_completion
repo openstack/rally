@@ -15,7 +15,6 @@ _rally()
     OPTS["deployment_show"]="--deployment"
     OPTS["deployment_use"]="--deployment"
     OPTS["info_BenchmarkScenarios"]=""
-    OPTS["info_DeployEngines"]=""
     OPTS["info_DeploymentEngines"]=""
     OPTS["info_SLA"]=""
     OPTS["info_ServerProviders"]=""

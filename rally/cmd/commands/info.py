@@ -203,13 +203,6 @@ class InfoCommands(object):
                 "  $ rally info find <DeploymentEngineName>\n")
         print(info)
 
-    def DeployEngines(self):
-        """Get information about deploy engines available in Rally."""
-        # NOTE(msdubov): This alias should be removed as soon as we rename
-        #                DeployEngines to DeploymentEngines (which is more
-        #                grammatically correct).
-        self.DeploymentEngines()
-
     def ServerProviders(self):
         """Get information about server providers available in Rally."""
         providers = self._get_descriptions(serverprovider.ProviderFactory)
