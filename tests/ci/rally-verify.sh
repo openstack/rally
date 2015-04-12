@@ -24,7 +24,7 @@ mkdir -p ${RESULTS_DIR}/extra
 
 
 # Check deployment
-rally use deployment --deployment devstack
+rally deployment use --deployment devstack
 rally deployment check
 
 function do_status {

@@ -71,7 +71,7 @@ def with_default_deployment(cli_arg_name="uuid"):
     return default_from_global("deployment", ENV_DEPLOYMENT, cli_arg_name,
                                message=_("There is no default deployment.\n"
                                          "\tPlease use command:\n"
-                                         "\trally use deployment "
+                                         "\trally deployment use "
                                          "<deployment_uuid>|<deployment_name>"
                                          "\nor pass uuid of deployment to "
                                          "the --%(arg_name)s argument of "

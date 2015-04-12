@@ -48,7 +48,7 @@ fi
 env
 set -o pipefail
 
-rally use deployment --deployment devstack
+rally deployment use --deployment devstack
 rally deployment check
 rally show flavors
 rally show images
