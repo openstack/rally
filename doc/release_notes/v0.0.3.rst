@@ -147,7 +147,7 @@ Documentation
 
 * New tutorial **task templates**
 
-https://rally.readthedocs.org/en/latest/tutorial/step_8_task_templates.html
+https://rally.readthedocs.org/en/latest/tutorial/step_4_task_templates.html
 
 * Various fixes
 

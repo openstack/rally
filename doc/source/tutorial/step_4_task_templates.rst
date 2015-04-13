@@ -13,9 +13,9 @@
       License for the specific language governing permissions and limitations
       under the License.
 
-.. _tutorial_step_8_task_templates:
+.. _tutorial_step_4_task_templates:
 
-Step 8. Rally task templates
+Step 4. Rally task templates
 ============================
 
 Basic template syntax

@@ -13,9 +13,9 @@
       License for the specific language governing permissions and limitations
       under the License.
 
-.. _tutorial_step_5_working_with_multple_openstack_clouds:
+.. _tutorial_step_6_working_with_multple_openstack_clouds:
 
-Step 5. Working with multiple OpenStack clouds
+Step 6. Working with multiple OpenStack clouds
 ==============================================
 
 Rally is an awesome tool that allows you to work with multiple clouds and can itself deploy them. We already know how to work with :ref:`a single cloud <tutorial_step_1_setting_up_env_and_running_benchmark_from_samples>`. Let us now register 2 clouds in Rally: the one that we have access to and the other that we know is registered with wrong credentials.
