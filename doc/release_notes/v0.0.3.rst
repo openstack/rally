@@ -1,0 +1,153 @@
+============
+Rally v0.0.3
+============
+
+Information
+-----------
+
++------------------+-----------------+
+| Commits          |     **53**      |
++------------------+-----------------+
+| Bug fixes        |     **14**      |
++------------------+-----------------+
+| Dev cycle        |   **33 days**   |
++------------------+-----------------+
+| Release date     | **14/Apr/2015** |
++------------------+-----------------+
+
+
+Details
+-------
+
+This release contains new features, new benchmark plugins, bug fixes,
+various code and API improvements.
+
+
+New Features & API changes
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+    * Add the ability to specify versions for clients in benchmark scenarios
+
+      You can call self.clients("glance", "2") and get any client for
+      specific version.
+
+    * Add API for tempest uninstall
+
+      $ rally-manage tempest uninstall
+      # removes fully tempest for active deployment
+
+
+    * Add a --uuids-only option to rally task list
+
+        $ rally task list --uuids-only   # returns list with only task uuids
+
+    * Adds endpoint to --fromenv deployment creation
+
+        $ rally deployment create --fromenv
+        # recognizes standard OS_ENDPOINT environment variable
+
+    * Configure SSL per deployment
+
+        Now SSL information is deployment specific not Rally specific and
+        rally.conf option is deprecated
+
+        Like in this sample
+        https://github.com/stackforge/rally/blob/14d0b5ba0c75ececfdb6a6c121d9cf2810571f77/samples/deployments/existing.json#L11-L12
+
+
+Specs
+~~~~~
+
+    * [spec] Proposal for new task input file format
+
+      This spec describes new task input format that will allow us to generate
+      multi scenario load which is crucial for HA and more real life testing:
+
+      https://github.com/stackforge/rally/blob/master/doc/specs/in-progress/new_rally_input_task_format.rst
+
+
+Plugins
+~~~~~~~
+
+* **Benchmark Scenario Runners**:
+
+    * Add a maximum concurrency option to rps runner
+
+      To avoid running to heavy load you can set 'concurrency' to configuration
+      and in case if cloud is not able to process all requests it won't start
+      more parallel requests then 'concurrency' value.
+
+
+* **Benchmark Scenarios**:
+
+    [new] CeilometerAlarms.create_alarm_and_get_history
+
+    [new] KeystoneBasic.get_entities
+
+    [new] EC2Servers.boot_server
+
+    [new] KeystoneBasic.create_and_delete_service
+
+    [new] MuranoEnvironments.list_environments
+
+    [new] MuranoEnvironments.create_and_delete_environment
+
+    [new] NovaServers.suspend_and_resume_server
+
+    [new] NovaServers.pause_and_unpause_server
+
+    [new] NovaServers.boot_and_rebuild_server
+
+    [new] KeystoneBasic.create_and_list_services
+
+    [new] HeatStacks.list_stacks_and_events
+
+    [improved] VMTask.boot_runcommand_delete
+
+        restore ability to use fixed IP and floating IP to connect to VM
+        via ssh
+
+    [fix] NovaServers.boot_server_attach_created_volume_and_live_migrate
+
+        Kwargs in nova scenario were wrongly passed
+
+
+
+* **Benchmark SLA**:
+
+    * [new] aborted_on_sla
+
+    This is internal SLA criteria, that is added if task was aborted
+
+
+    * [new] something_went_wrong
+
+    This is internal SLA criteria, that is added if something went wrong,
+    context failed to create or runner raised some exceptions
+
+
+Bug fixes
+~~~~~~~~~
+
+**14 bugs were fixed, the most critical are**:
+
+    * Set default task uuid to running task. Before it was set only after
+      task was fully finished.
+
+    * The "rally task results" command showed a disorienting "task not found"
+      message for a task that is currently running.
+
+    * Rally didn't know how to reconnect to OpenStack in case if token
+      expired.
+
+
+Documentation
+~~~~~~~~~~~~~
+
+* New tutorial **task templates**
+
+https://rally.readthedocs.org/en/latest/tutorial/step_8_task_templates.html
+
+* Various fixes
+
