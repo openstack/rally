@@ -319,7 +319,7 @@ class BenchmarkEngineTestCase(test.TestCase):
         eng = engine.BenchmarkEngine(config, task)
         eng.duration = 123
         eng.full_duration = 456
-        eng.consume_results(key, task, is_done, runner)
+        eng.consume_results(key, task, is_done, {}, runner)
         mock_sla.assert_called_once_with({"fake": 2})
         expected_iteration_calls = [mock.call(1), mock.call(2)]
         self.assertEqual(expected_iteration_calls,
@@ -343,7 +343,7 @@ class BenchmarkEngineTestCase(test.TestCase):
         eng = engine.BenchmarkEngine(config, task, abort_on_sla_failure=True)
         eng.duration = 123
         eng.full_duration = 456
-        eng.consume_results(key, task, is_done, runner)
+        eng.consume_results(key, task, is_done, {}, runner)
         mock_sla.assert_called_once_with({"fake": 2})
         self.assertTrue(runner.abort.called)
 
@@ -365,6 +365,6 @@ class BenchmarkEngineTestCase(test.TestCase):
         eng = engine.BenchmarkEngine(config, task, abort_on_sla_failure=False)
         eng.duration = 123
         eng.full_duration = 456
-        eng.consume_results(key, task, is_done, runner)
+        eng.consume_results(key, task, is_done, {}, runner)
         mock_sla.assert_called_once_with({"fake": 2})
         self.assertEqual(0, runner.abort.call_count)

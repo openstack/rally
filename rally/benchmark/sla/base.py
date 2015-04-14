@@ -30,11 +30,20 @@ from rally import consts
 from rally import exceptions
 
 
+def _format_result(criterion_name, success, detail):
+    """Returns the SLA result dict corresponding to the current state."""
+    return {"criterion": criterion_name,
+            "success": success,
+            "detail": detail}
+
+
 class SLAChecker(object):
     """Base SLA checker class."""
 
     def __init__(self, config):
         self.config = config
+        self.unexpected_failure = None
+        self.aborted = False
         self.sla_criteria = [SLA.get_by_name(name)(criterion_value)
                              for name, criterion_value
                              in config.get("sla", {}).items()]
@@ -50,7 +59,22 @@ class SLAChecker(object):
         return all([sla.add_iteration(iteration) for sla in self.sla_criteria])
 
     def results(self):
-        return [sla.result() for sla in self.sla_criteria]
+        results = [sla.result() for sla in self.sla_criteria]
+        if self.aborted:
+            results.append(_format_result(
+                "aborted_on_sla", False,
+                _("Task was aborted due to SLA failure(s).")))
+        if self.unexpected_failure:
+            results.append(_format_result(
+                "something_went_wrong", False,
+                _("Unexpected error: %s") % self.unexpected_failure))
+        return results
+
+    def set_aborted(self):
+        self.aborted = True
+
+    def set_unexpected_failure(self, exc):
+        self.unexpected_failure = exc
 
 
 @six.add_metaclass(abc.ABCMeta)
@@ -93,11 +117,7 @@ class SLA(object):
 
     def result(self):
         """Returns the SLA result dict corresponding to the current state."""
-        return {
-            "criterion": self.OPTION_NAME,
-            "success": self.success,
-            "detail": self.details()
-        }
+        return _format_result(self.OPTION_NAME, self.success, self.details())
 
     @abc.abstractmethod
     def details(self):

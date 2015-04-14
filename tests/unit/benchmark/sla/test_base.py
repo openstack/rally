@@ -52,6 +52,25 @@ class SLACheckerTestCase(test.TestCase):
                             "success": False}]
         self.assertEqual(expected_result, sla_checker.results())
 
+    def test_set_unexpected_failure(self):
+        exc = "error;("
+        sla_checker = base.SLAChecker({"sla": {}})
+        self.assertEqual([], sla_checker.results())
+        sla_checker.set_unexpected_failure(exc)
+        self.assertEqual([{"criterion": "something_went_wrong",
+                           "success": False,
+                           "detail": "Unexpected error: %s" % exc}],
+                         sla_checker.results())
+
+    def test_set_aborted(self):
+        sla_checker = base.SLAChecker({"sla": {}})
+        self.assertEqual([], sla_checker.results())
+        sla_checker.set_aborted()
+        self.assertEqual(
+            [{"criterion": "aborted_on_sla", "success": False,
+              "detail": "Task was aborted due to SLA failure(s)."}],
+            sla_checker.results())
+
 
 class BaseSLATestCase(test.TestCase):
 
@@ -73,6 +92,15 @@ class BaseSLATestCase(test.TestCase):
     def test_validate_invalid_type(self):
         self.assertRaises(jsonschema.ValidationError,
                           base.SLA.validate, {"test_criterion": 42.0})
+
+    def test__format_result(self):
+        name = "some_name"
+        success = True
+        detail = "some details"
+        self.assertEqual({"criterion": name,
+                          "success": success,
+                          "detail": detail},
+                         base._format_result(name, success, detail))
 
 
 class FailureRateDeprecatedTestCase(test.TestCase):

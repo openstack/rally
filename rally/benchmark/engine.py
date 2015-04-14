@@ -223,9 +223,10 @@ class BenchmarkEngine(object):
                          % json.dumps(key, indent=2))
                 runner = self._get_runner(kw)
                 is_done = threading.Event()
+                unexpected_failure = {}
                 consumer = threading.Thread(
                     target=self.consume_results,
-                    args=(key, self.task, is_done, runner))
+                    args=(key, self.task, is_done, unexpected_failure, runner))
                 consumer.start()
                 context_obj = self._prepare_context(kw.get("context", {}),
                                                     name, self.admin)
@@ -238,13 +239,14 @@ class BenchmarkEngine(object):
                                                        kw.get("args", {}))
                 except Exception as e:
                     LOG.exception(e)
+                    unexpected_failure["exc"] = e
                 finally:
                     self.full_duration = timer.duration()
                     is_done.set()
                     consumer.join()
         self.task.update_status(consts.TaskStatus.FINISHED)
 
-    def consume_results(self, key, task, is_done, runner):
+    def consume_results(self, key, task, is_done, unexpected_failure, runner):
         """Consume scenario runner results from queue and send them to db.
 
         Has to be run from different thread simultaneously with the runner.run
@@ -254,6 +256,8 @@ class BenchmarkEngine(object):
         :param task: Running task
         :param is_done: Event which is set from the runner thread after the
                         runner finishes it's work.
+        :param unexpected_failure: Dictionary object with information about
+                                   unexpected exception.
         :param runner: ScenarioRunner object that was used to run a task
         """
         results = []
@@ -264,11 +268,15 @@ class BenchmarkEngine(object):
                 results.append(result)
                 success = sla_checker.add_iteration(result)
                 if self.abort_on_sla_failure and not success:
+                    sla_checker.set_aborted()
                     runner.abort()
             elif is_done.isSet():
                 break
             else:
                 time.sleep(0.1)
+
+            if unexpected_failure.get("exc"):
+                sla_checker.set_unexpected_failure(unexpected_failure["exc"])
 
         task.append_results(key, {"raw": results,
                                   "load_duration": self.duration,

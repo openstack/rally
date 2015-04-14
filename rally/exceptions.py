@@ -41,7 +41,7 @@ class RallyException(Exception):
     with the keyword arguments provided to the constructor.
 
     """
-    msg_fmt = _("An unknown exception occurred.")
+    msg_fmt = _("%(message)s")
 
     def __init__(self, message=None, **kwargs):
         self.kwargs = kwargs
