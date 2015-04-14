@@ -245,3 +245,18 @@ class HackingTestCase(test.TestCase):
             "a = ''   # noqa "
         ]
         self._assert_good_samples(checks.check_quotes, good_lines)
+
+    def test_check_no_constructor_data_struct(self):
+        bad_struct = [
+            "= dict()",
+            "= list()"
+        ]
+        self._assert_bad_samples(checks.check_no_constructor_data_struct,
+                                 bad_struct)
+
+        good_struct = [
+            "= []",
+            "= {}",
+        ]
+        self._assert_good_samples(checks.check_no_constructor_data_struct,
+                                  good_struct)

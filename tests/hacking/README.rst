@@ -24,3 +24,4 @@ Rally Specific Commandments
 * [N340] - Ensure that we are importing always ``from rally import objects``
 * [N341] - Ensure that we are importing oslo_xyz packages instead of deprecated oslo.xyz ones
 * [N350] - Ensure that single quotes are not used
+* [N351] - Ensure that data structs (i.e Lists and Dicts) are declared literally rather than using constructors

@@ -31,8 +31,8 @@ class SaharaEDPTestCase(test.TestCase):
         self.users = self.tenants_num * self.users_per_tenant
         self.task = mock.MagicMock()
 
-        self.tenants = dict()
-        self.users_key = list()
+        self.tenants = {}
+        self.users_key = []
 
         for i in range(self.tenants_num):
             self.tenants[str(i)] = {"id": str(i), "name": str(i),

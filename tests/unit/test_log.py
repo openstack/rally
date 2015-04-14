@@ -52,7 +52,7 @@ class LogTestCase(test.TestCase):
 
         name = "fake"
         vers = "fake"
-        mock_oslogger._loggers = dict()
+        mock_oslogger._loggers = {}
 
         returned_logger = log.getLogger(name, vers)
 

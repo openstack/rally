@@ -338,7 +338,7 @@ class EditDistanceTestCase(test.TestCase):
 class TenantIteratorTestCase(test.TestCase):
 
     def test_iterate_per_tenant(self):
-        users = list()
+        users = []
         tenants_count = 2
         users_per_tenant = 5
         for tenant_id in range(tenants_count):

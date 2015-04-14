@@ -97,7 +97,7 @@ class Rally(object):
 
         self.reports_root = os.environ.get("REPORTS_ROOT",
                                            "rally-cli-output-files")
-        self._created_files = list()
+        self._created_files = []
 
         self("deployment create --file %s --name MAIN" % DEPLOYMENT_FILE,
              write_report=False)

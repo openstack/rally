@@ -29,7 +29,7 @@ TYP = "rally.benchmark.types"
 class ServerGeneratorTestCase(test.TestCase):
 
     def _gen_tenants(self, count):
-        tenants = dict()
+        tenants = {}
         for id in range(count):
             tenants[str(id)] = dict(name=str(id))
         return tenants
@@ -70,7 +70,7 @@ class ServerGeneratorTestCase(test.TestCase):
         servers_per_tenant = 5
 
         tenants = self._gen_tenants(tenants_count)
-        users = list()
+        users = []
         for id in tenants.keys():
             for i in range(users_per_tenant):
                 users.append({"id": i, "tenant_id": id,
@@ -120,7 +120,7 @@ class ServerGeneratorTestCase(test.TestCase):
         servers_per_tenant = 5
 
         tenants = self._gen_tenants(tenants_count)
-        users = list()
+        users = []
         for id in tenants.keys():
             for i in range(users_per_tenant):
                 users.append({"id": i, "tenant_id": id,

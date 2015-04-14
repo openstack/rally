@@ -26,7 +26,7 @@ SCN = "rally.benchmark.scenarios"
 class TestStackGenerator(test.TestCase):
 
     def _gen_tenants(self, count):
-        tenants = dict()
+        tenants = {}
         for id in range(count):
             tenants[str(id)] = dict(name=str(id))
         return tenants
@@ -57,7 +57,7 @@ class TestStackGenerator(test.TestCase):
         mock_osclients.Clients.return_value = fc
 
         tenants = self._gen_tenants(tenants_count)
-        users = list()
+        users = []
         for ten_id in tenants:
             for i in range(users_per_tenant):
                 users.append({"id": i, "tenant_id": ten_id,

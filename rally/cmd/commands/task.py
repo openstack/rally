@@ -520,8 +520,8 @@ class TaskCommands(object):
 
         tasks = isinstance(tasks, list) and tasks or [tasks]
 
-        results = list()
-        processed_names = dict()
+        results = []
+        processed_names = {}
         for task_file_or_uuid in tasks:
             if os.path.exists(os.path.expanduser(task_file_or_uuid)):
                 with open(os.path.expanduser(task_file_or_uuid),
