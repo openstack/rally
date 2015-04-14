@@ -497,3 +497,26 @@ class NovaServers(utils.NovaScenario,
         else:
             self._resize_revert(server, status="SHUTOFF")
         self._delete_server(server)
+
+    @types.set(from_image=types.ImageResourceType,
+               to_image=types.ImageResourceType,
+               flavor=types.FlavorResourceType)
+    @validation.image_valid_on_flavor("flavor", "from_image")
+    @validation.image_valid_on_flavor("flavor", "to_image")
+    @validation.required_services(consts.Service.NOVA)
+    @validation.required_openstack(admin=True, users=True)
+    @base.scenario(context={"cleanup": ["nova"]})
+    def boot_and_rebuild_server(self, from_image, to_image, flavor, **kwargs):
+        """Rebuild a server.
+
+        This scenario launches a VM, then rebuilds that VM with a
+        different image.
+
+        :param from_image: image to be used to boot an instance
+        :param to_image: image to be used to rebuild the instance
+        :param flavor: flavor to be used to boot an instance
+        :param kwargs: Optional additional arguments for server creation
+        """
+        server = self._boot_server(from_image, flavor, **kwargs)
+        self._rebuild_server(server, to_image)
+        self._delete_server(server)

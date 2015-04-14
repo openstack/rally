@@ -500,3 +500,21 @@ class NovaServersTestCase(test.TestCase):
 
     def test_boot_and_migrate_server_with_revert(self):
         self._test_boot_and_migrate_server(confirm=False)
+
+    def test_boot_and_rebuild_server(self):
+        scenario = servers.NovaServers()
+        scenario._boot_server = mock.Mock()
+        scenario._rebuild_server = mock.Mock()
+        scenario._delete_server = mock.Mock()
+
+        from_image = "img1"
+        to_image = "img2"
+        flavor = "flavor"
+        scenario.boot_and_rebuild_server(from_image, to_image, flavor,
+                                         fakearg="fakearg")
+
+        scenario._boot_server.assert_called_once_with(from_image, flavor,
+                                                      fakearg="fakearg")
+        server = scenario._boot_server.return_value
+        scenario._rebuild_server.assert_called_once_with(server, to_image)
+        scenario._delete_server.assert_called_once_with(server)

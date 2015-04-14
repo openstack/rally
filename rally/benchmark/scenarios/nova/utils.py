@@ -32,6 +32,7 @@ option_names_and_defaults = [
     ("boot", 1, 300, 1),
     ("delete", 2, 300, 2),
     ("reboot", 2, 300, 2),
+    ("rebuild", 1, 300, 1),
     ("rescue", 2, 300, 2),
     ("unrescue", 2, 300, 2),
     ("suspend", 2, 300, 2),
@@ -162,6 +163,24 @@ class NovaScenario(base.Scenario):
         :param server: The server to reboot.
         """
         self._do_server_reboot(server, "HARD")
+
+    @base.atomic_action_timer("nova.rebuild_server")
+    def _rebuild_server(self, server, image, **kwargs):
+        """Rebuild a server with a new image.
+
+        :param server: The server to rebuild.
+        :param image: The new image to rebuild the server with.
+        :param kwargs: Optional additional arguments to pass to the rebuild
+        """
+        server.rebuild(image, **kwargs)
+        time.sleep(CONF.benchmark.nova_server_rebuild_prepoll_delay)
+        bench_utils.wait_for(
+            server,
+            is_ready=bench_utils.resource_is("ACTIVE"),
+            update_resource=bench_utils.get_from_manager(),
+            timeout=CONF.benchmark.nova_server_rebuild_timeout,
+            check_interval=CONF.benchmark.nova_server_rebuild_poll_interval
+        )
 
     @base.atomic_action_timer("nova.start_server")
     def _start_server(self, server):
