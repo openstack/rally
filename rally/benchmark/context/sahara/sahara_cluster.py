@@ -93,7 +93,7 @@ class SaharaCluster(base.Context):
 
     @rutils.log_task_wrapper(LOG.info, _("Enter context: `Sahara Cluster`"))
     def setup(self):
-        wait_dict = dict()
+        wait_dict = {}
 
         for user, tenant_id in rutils.iterate_per_tenants(
                 self.context["users"]):
@@ -136,7 +136,7 @@ class SaharaCluster(base.Context):
             check_interval=CONF.benchmark.cluster_check_interval)
 
     def update_clusters_dict(self, dct):
-        new_dct = dict()
+        new_dct = {}
         for cluster, client in dct.items():
             new_cl = client.clusters.get(cluster.id)
             new_dct[new_cl] = client

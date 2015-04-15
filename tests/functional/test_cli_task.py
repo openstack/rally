@@ -143,7 +143,7 @@ class TaskTestCase(unittest.TestCase):
         rally = utils.Rally()
         cfg = self._get_sample_task_config()
         config = utils.TaskConfig(cfg)
-        task_uuids = list()
+        task_uuids = []
         for i in range(3):
             res = rally("task start --task %s" % config.filename)
             for line in res.splitlines():
@@ -158,7 +158,7 @@ class TaskTestCase(unittest.TestCase):
         rally = utils.Rally()
         cfg = self._get_sample_task_config()
         config = utils.TaskConfig(cfg)
-        files = list()
+        files = []
         for i in range(3):
             rally("task start --task %s" % config.filename)
             path = "/tmp/task_%d.json" % i
@@ -241,7 +241,7 @@ class TaskTestCase(unittest.TestCase):
 
         # Validate against a single task
         res = rally("task start --task %s" % config.filename)
-        task_uuids = list()
+        task_uuids = []
         for line in res.splitlines():
             if "finished" in line:
                 task_uuids.append(line.split(" ")[1][:-1])

@@ -20,7 +20,7 @@ Guidelines for writing new hacking checks
  - Keep the test method code in the source file ordered based
    on the N3xx value.
  - List the new rule in the top level HACKING.rst file
- - Add test cases for each new rule to tests/test_hacking.py
+ - Add test cases for each new rule to tests/unit/test_hacking.py
 
 """
 
@@ -46,6 +46,10 @@ re_assert_equal_in_end_with_true_or_false = re.compile(
     r"assertEqual\((\w|[][.'\"])+( not)? in (\w|[][.'\", ])+, (True|False)\)")
 re_assert_equal_in_start_with_true_or_false = re.compile(
     r"assertEqual\((True|False), (\w|[][.'\"])+( not)? in (\w|[][.'\", ])+\)")
+re_no_construct_dict = re.compile(
+    r"=\sdict\(\)")
+re_no_construct_list = re.compile(
+    r"=\slist\(\)")
 
 
 def skip_ignored_lines(func):
@@ -333,6 +337,21 @@ def check_quotes(logical_line, filename):
         yield (i, "N350 Remove Single quotes")
 
 
+@skip_ignored_lines
+def check_no_constructor_data_struct(logical_line, filename):
+    """Check that data structs (lists, dicts) are declared using literals
+
+    N351
+    """
+
+    match = re_no_construct_dict.search(logical_line)
+    if match:
+        yield (0, "N351 Remove dict() construct and use literal {}")
+    match = re_no_construct_list.search(logical_line)
+    if match:
+        yield (0, "N351 Remove list() construct and use literal []")
+
+
 def factory(register):
     register(check_assert_methods_from_mock)
     register(check_import_of_logging)
@@ -346,3 +365,4 @@ def factory(register):
     register(check_no_direct_rally_objects_import)
     register(check_no_oslo_deprecated_import)
     register(check_quotes)
+    register(check_no_constructor_data_struct)

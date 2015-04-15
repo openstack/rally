@@ -96,7 +96,7 @@ class UserGenerator(base.Context):
     def __init__(self, context):
         super(UserGenerator, self).__init__(context)
         self.context["users"] = []
-        self.context["tenants"] = dict()
+        self.context["tenants"] = {}
         self.endpoint = self.context["admin"]["endpoint"]
         # NOTE(boris-42): I think this is the best place for adding logic when
         #                 we are using pre created users or temporary. So we
@@ -150,7 +150,7 @@ class UserGenerator(base.Context):
 
         # NOTE(msdubov): consume() will fill the tenants list in the closure.
         broker.run(publish, consume, threads)
-        tenants_dict = dict()
+        tenants_dict = {}
         for t in tenants:
             tenants_dict[t["id"]] = t
 
@@ -212,7 +212,7 @@ class UserGenerator(base.Context):
             cache["client"].delete_project(tenant_id)
 
         broker.run(publish, consume, threads)
-        self.context["tenants"] = dict()
+        self.context["tenants"] = {}
 
     def _delete_users(self):
         threads = self.config["resource_management_workers"]

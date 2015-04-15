@@ -29,7 +29,7 @@ SCN = "rally.benchmark.scenarios"
 class ImageGeneratorTestCase(test.TestCase):
 
     def _gen_tenants(self, count):
-        tenants = dict()
+        tenants = {}
         for id_ in range(count):
             tenants[str(id_)] = dict(name=str(id_))
         return tenants
@@ -78,7 +78,7 @@ class ImageGeneratorTestCase(test.TestCase):
         mock_osclients.Clients.return_value = fc
 
         tenants = self._gen_tenants(tenants_count)
-        users = list()
+        users = []
         for id in tenants:
             for i in range(users_per_tenant):
                 users.append({"id": i, "tenant_id": id,
@@ -128,7 +128,7 @@ class ImageGeneratorTestCase(test.TestCase):
         images_per_tenant = 5
 
         tenants = self._gen_tenants(tenants_count)
-        users = list()
+        users = []
         for id_ in tenants:
             for i in range(users_per_tenant):
                 users.append({"id": i, "tenant_id": id_,

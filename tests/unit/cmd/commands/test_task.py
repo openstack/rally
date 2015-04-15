@@ -387,7 +387,7 @@ class TaskCommandsTestCase(test.TestCase):
                       "load_duration": 2.1,
                       "full_duration": 2.2}}]
 
-        results = list()
+        results = []
         for task_uuid in tasks:
             results.extend(
                 map(lambda x: {"key": x["key"],

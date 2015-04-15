@@ -51,8 +51,8 @@ class ScenarioHelpersTestCase(test.TestCase):
     @mock.patch(BASE + "random.choice", side_effect=lambda x: x[1])
     def test_get_scenario_context(self, mock_random):
 
-        users = list()
-        tenants = dict()
+        users = []
+        tenants = {}
 
         for i in range(2):
             tenants[str(i)] = dict(name=str(i))
