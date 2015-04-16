@@ -52,7 +52,7 @@ class KeystoneWrapper(object):
     @abc.abstractmethod
     def create_user(self, username, password, email=None, project_id=None,
                     domain_name="Default"):
-        """Creates user that have Member role in given project.
+        """Create user.
 
         :param username: name of user
         :param password: user password
@@ -178,19 +178,9 @@ class KeystoneV3Wrapper(KeystoneWrapper):
     def create_user(self, username, password, email=None, project_id=None,
                     domain_name="Default"):
         domain_id = self._get_domain_id(domain_name)
-        client = self.client
-
-        # Create user
-        user = client.users.create(name=username, password=password,
-                                   email=email, default_project=project_id,
-                                   domain=domain_id)
-
-        # Grant member role to user in project or domain
-        # TODO(Anton Frolov): replace hard-coded "Member" role with role name
-        #                     gained via deployment
-        member_role = client.roles.list(name="Member")[0].id
-        client.roles.grant(member_role, user=user.id, project=project_id)
-
+        user = self.client.users.create(name=username, password=password,
+                                        email=email, domain=domain_id,
+                                        default_project=project_id)
         return KeystoneV3Wrapper._wrap_v3_user(user)
 
     def delete_user(self, user_id):
