@@ -165,6 +165,9 @@ class KeystoneV3WrapperTestCase(test.TestCase, KeystoneWrapperTestBase):
         self.assertFalse(hasattr(result[0], "extra_field"))
 
     def test_create_user(self):
+        fake_role = mock.MagicMock(id="fake_role_id")
+        fake_role.name = "__member__"
+        self.client.roles.list.return_value = [fake_role]
         self.client.users.create.return_value = mock.MagicMock(
             id="fake_user_id")
 
