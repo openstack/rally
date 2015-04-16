@@ -169,6 +169,36 @@ class LogTestCase(test.TestCase):
         mock_log.assert_called_once_with("Deprecated test "
                                          "(deprecated in Rally v0.0.1)")
 
+    def test_log_deprecated_args(self):
+        mock_log = mock.MagicMock()
+
+        @utils.log_deprecated_args("Deprecated test", "0.0.1", ("z",),
+                                   mock_log, once=True)
+        def some_method(x, y, z):
+            return x + y + z
+
+        self.assertEqual(some_method(2, 2, z=3), 7)
+        mock_log.assert_called_once_with(
+            "Deprecated test (args `z' deprecated in Rally v0.0.1)")
+
+        mock_log.reset_mock()
+        self.assertEqual(some_method(2, 2, z=3), 7)
+        self.assertFalse(mock_log.called)
+
+        @utils.log_deprecated_args("Deprecated test", "0.0.1", ("z",),
+                                   mock_log, once=False)
+        def some_method(x, y, z):
+            return x + y + z
+
+        self.assertEqual(some_method(2, 2, z=3), 7)
+        mock_log.assert_called_once_with(
+            "Deprecated test (args `z' deprecated in Rally v0.0.1)")
+
+        mock_log.reset_mock()
+        self.assertEqual(some_method(2, 2, z=3), 7)
+        mock_log.assert_called_once_with(
+            "Deprecated test (args `z' deprecated in Rally v0.0.1)")
+
 
 class LoadExtraModulesTestCase(test.TestCase):
 
