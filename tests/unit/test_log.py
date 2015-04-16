@@ -102,3 +102,104 @@ class ExceptionLoggerTestCase(test.TestCase):
         logger.debug.assert_called_once_with(exception)
 
         self.assertEqual(e.exception, exception)
+
+
+class LogCatcherTestCase(test.TestCase):
+    # FIXME(pboldin): These are really functional tests and should be moved
+    #                 there when the infrastructure is ready
+    def test_logcatcher(self):
+        LOG = log.getLogger("testlogger")
+        LOG.logger.setLevel(log.INFO)
+
+        with log.LogCatcher(LOG) as catcher:
+            LOG.warning("Warning")
+            LOG.info("Info")
+            LOG.debug("Debug")
+
+        catcher.assertInLogs("Warning")
+        self.assertRaises(AssertionError, catcher.assertInLogs, "Error")
+
+        self.assertEqual(["Warning", "Info"], catcher.fetchLogs())
+        self.assertEqual(2, len(catcher.fetchLogRecords()))
+
+
+class CatcherHandlerTestCase(test.TestCase):
+    @mock.patch("logging.handlers.BufferingHandler.__init__")
+    def test_init(self, mock_buffering_handler_init):
+        catcher_handler = log.CatcherHandler()
+        mock_buffering_handler_init.assert_called_once_with(catcher_handler, 0)
+
+    def test_shouldFlush(self):
+        catcher_handler = log.CatcherHandler()
+        self.assertFalse(catcher_handler.shouldFlush())
+
+    def test_emit(self):
+        catcher_handler = log.CatcherHandler()
+        catcher_handler.buffer = mock.Mock()
+
+        catcher_handler.emit("foobar")
+
+        catcher_handler.buffer.append.assert_called_once_with("foobar")
+
+
+class LogCatcherUnitTestCase(test.TestCase):
+    def setUp(self):
+        super(LogCatcherUnitTestCase, self).setUp()
+        patcher = mock.patch("rally.common.log.CatcherHandler")
+        self.catcher_handler = patcher.start()
+        self.catcher_handler.return_value.buffer = [
+            mock.Mock(msg="foo"), mock.Mock(msg="bar")]
+        self.addCleanup(patcher.stop)
+
+        self.logger = mock.Mock()
+
+    def test_init(self):
+        catcher = log.LogCatcher(self.logger)
+
+        self.assertEqual(self.logger.logger, catcher.logger)
+        self.assertEqual(self.catcher_handler.return_value, catcher.handler)
+        self.catcher_handler.assert_called_once_with()
+
+    def test_enter(self):
+        catcher = log.LogCatcher(self.logger)
+
+        self.assertEqual(catcher, catcher.__enter__())
+        self.logger.logger.addHandler.assert_called_once_with(
+            self.catcher_handler.return_value)
+
+    def test_exit(self):
+        catcher = log.LogCatcher(self.logger)
+
+        catcher.__exit__(None, None, None)
+        self.logger.logger.removeHandler.assert_called_once_with(
+            self.catcher_handler.return_value)
+
+    def test_assertInLogs(self):
+        catcher = log.LogCatcher(self.logger)
+
+        self.assertEqual(["foo"], catcher.assertInLogs("foo"))
+        self.assertEqual(["bar"], catcher.assertInLogs("bar"))
+        self.assertRaises(AssertionError, catcher.assertInLogs, "foobar")
+
+    def test_assertInLogs_contains(self):
+        catcher = log.LogCatcher(self.logger)
+
+        record_mock = mock.MagicMock()
+        self.catcher_handler.return_value.buffer = [record_mock]
+        record_mock.msg.__contains__.return_value = True
+        self.assertEqual([record_mock.msg], catcher.assertInLogs("foo"))
+
+        record_mock.msg.__contains__.assert_called_once_with("foo")
+
+    def test_fetchLogRecords(self):
+        catcher = log.LogCatcher(self.logger)
+
+        self.assertEqual(self.catcher_handler.return_value.buffer,
+                         catcher.fetchLogRecords())
+
+    def test_fetchLogs(self):
+        catcher = log.LogCatcher(self.logger)
+
+        self.assertEqual(
+            [r.msg for r in self.catcher_handler.return_value.buffer],
+            catcher.fetchLogs())
