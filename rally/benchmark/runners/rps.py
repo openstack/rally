@@ -24,6 +24,7 @@ from rally.common import log as logging
 from rally.common import utils
 from rally import consts
 
+
 LOG = logging.getLogger(__name__)
 
 
@@ -132,6 +133,10 @@ class RPSScenarioRunner(base.ScenarioRunner):
                 "type": "integer",
                 "minimum": 1
             },
+            "max_cpu_count": {
+                "type": "integer",
+                "minimum": 1
+            }
         },
         "additionalProperties": False
     }
@@ -156,8 +161,12 @@ class RPSScenarioRunner(base.ScenarioRunner):
         times = self.config["times"]
         timeout = self.config.get("timeout", 0)  # 0 means no timeout
         iteration_gen = utils.RAMInt()
+
         cpu_count = multiprocessing.cpu_count()
-        processes_to_start = min(cpu_count, times,
+        max_cpu_used = min(cpu_count,
+                           self.config.get("max_cpu_count", cpu_count))
+
+        processes_to_start = min(max_cpu_used, times,
                                  self.config.get("max_concurrency", times))
         rps_per_worker = float(self.config["rps"]) / processes_to_start
         times_per_worker, times_overhead = divmod(times, processes_to_start)
@@ -167,7 +176,8 @@ class RPSScenarioRunner(base.ScenarioRunner):
                        self.config.get("max_concurrency", times),
                        processes_to_start)
 
-        self._log_debug_info(times=times, timeout=timeout, cpu_count=cpu_count,
+        self._log_debug_info(times=times, timeout=timeout,
+                             max_cpu_used=max_cpu_used,
                              processes_to_start=processes_to_start,
                              rps_per_worker=rps_per_worker,
                              times_per_worker=times_per_worker,
