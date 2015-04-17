@@ -359,21 +359,29 @@ class NovaServers(utils.NovaScenario,
     @base.scenario(context={"cleanup": ["nova"]})
     def boot_and_live_migrate_server(self, image,
                                      flavor, block_migration=False,
-                                     disk_over_commit=False, **kwargs):
+                                     disk_over_commit=False, min_sleep=0,
+                                     max_sleep=0, **kwargs):
         """Live Migrate a server.
 
         This scenario launches a VM on a compute node available in
         the availability zone and then migrates the VM to another
         compute node on the same availability zone.
 
+        Optional 'min_sleep' and 'max_sleep' parameters allow the scenario
+        to simulate a pause between VM booting and running live migration
+        (of random duration from range [min_sleep, max_sleep]).
+
         :param image: image to be used to boot an instance
         :param flavor: flavor to be used to boot an instance
         :param block_migration: Specifies the migration type
         :param disk_over_commit: Specifies whether to allow overcommit
                                  on migrated instance or not
+        :param min_sleep: Minimum sleep time in seconds (non-negative)
+        :param max_sleep: Maximum sleep time in seconds (non-negative)
         :param kwargs: Optional additional arguments for server creation
         """
         server = self._boot_server(image, flavor, **kwargs)
+        self.sleep_between(min_sleep, max_sleep)
 
         new_host = self._find_host_to_migrate(server)
         self._live_migrate(server, new_host,
@@ -391,13 +399,19 @@ class NovaServers(utils.NovaScenario,
                                                  volume_size,
                                                  block_migration=False,
                                                  disk_over_commit=False,
-                                                 force_delete=False, **kwargs):
+                                                 force_delete=False,
+                                                 min_sleep=0, max_sleep=0,
+                                                 **kwargs):
         """Boot a server from volume and then migrate it.
 
         The scenario first creates a volume and a server booted from
         the volume on a compute node available in the availability zone and
         then migrates the VM to another compute node on the same availability
         zone.
+
+        Optional 'min_sleep' and 'max_sleep' parameters allow the scenario
+        to simulate a pause between VM booting and running live migration
+        (of random duration from range [min_sleep, max_sleep]).
 
         :param image: image to be used to boot an instance
         :param flavor: flavor to be used to boot an instance
@@ -406,6 +420,8 @@ class NovaServers(utils.NovaScenario,
         :param disk_over_commit: Specifies whether to allow overcommit
                                  on migrated instance or not
         :param force_delete: True if force_delete should be used
+        :param min_sleep: Minimum sleep time in seconds (non-negative)
+        :param max_sleep: Maximum sleep time in seconds (non-negative)
         :param kwargs: Optional additional arguments for server creation
         """
         volume = self._create_volume(volume_size, imageRef=image)
@@ -413,6 +429,7 @@ class NovaServers(utils.NovaScenario,
         server = self._boot_server(image, flavor,
                                    block_device_mapping=block_device_mapping,
                                    **kwargs)
+        self.sleep_between(min_sleep, max_sleep)
 
         new_host = self._find_host_to_migrate(server)
         self._live_migrate(server, new_host,
@@ -434,11 +451,17 @@ class NovaServers(utils.NovaScenario,
             block_migration=False,
             disk_over_commit=False,
             boot_server_kwargs=None,
-            create_volume_kwargs=None):
+            create_volume_kwargs=None,
+            min_sleep=0,
+            max_sleep=0):
         """Create a VM, attach a volume to it and live migrate.
 
         Simple test to create a VM and attach a volume, then migrate the VM,
         detach the volume and delete volume/VM.
+
+        Optional 'min_sleep' and 'max_sleep' parameters allow the scenario
+        to simulate a pause between attaching a volume and running live
+        migration (of random duration from range [min_sleep, max_sleep]).
 
         :param image: Glance image name to use for the VM
         :param flavor: VM flavor name
@@ -448,6 +471,8 @@ class NovaServers(utils.NovaScenario,
                                  on migrated instance or not
         :param boot_server_kwargs: optional arguments for VM creation
         :param create_volume_kwargs: optional arguments for volume creation
+        :param min_sleep: Minimum sleep time in seconds (non-negative)
+        :param max_sleep: Maximum sleep time in seconds (non-negative)
         """
 
         if boot_server_kwargs is None:
@@ -459,6 +484,8 @@ class NovaServers(utils.NovaScenario,
         volume = self._create_volume(size, **create_volume_kwargs)
 
         self._attach_volume(server, volume)
+
+        self.sleep_between(min_sleep, max_sleep)
 
         new_host = self._find_host_to_migrate(server)
         self._live_migrate(server, new_host,

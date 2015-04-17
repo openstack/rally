@@ -374,15 +374,19 @@ class NovaServersTestCase(test.TestCase):
         scenario = servers.NovaServers()
         scenario._generate_random_name = mock.MagicMock(return_value="name")
         scenario._boot_server = mock.MagicMock(return_value=fake_server)
+        scenario.sleep_between = mock.MagicMock()
         scenario._find_host_to_migrate = mock.MagicMock(
                                          return_value="host_name")
         scenario._live_migrate = mock.MagicMock()
         scenario._delete_server = mock.MagicMock()
 
-        scenario.boot_and_live_migrate_server("img", 0, fakearg="fakearg")
+        scenario.boot_and_live_migrate_server("img", 0, min_sleep=10,
+                                              max_sleep=20, fakearg="fakearg")
 
         scenario._boot_server.assert_called_once_with("img", 0,
                                                       fakearg="fakearg")
+
+        scenario.sleep_between.assert_called_once_with(10, 20)
 
         scenario._find_host_to_migrate.assert_called_once_with(fake_server)
 
@@ -397,6 +401,7 @@ class NovaServersTestCase(test.TestCase):
         scenario = servers.NovaServers()
         scenario._generate_random_name = mock.MagicMock(return_value="name")
         scenario._boot_server = mock.MagicMock(return_value=fake_server)
+        scenario.sleep_between = mock.MagicMock()
         scenario._find_host_to_migrate = mock.MagicMock(
                                          return_value="host_name")
         scenario._live_migrate = mock.MagicMock()
@@ -407,6 +412,8 @@ class NovaServersTestCase(test.TestCase):
         scenario._create_volume = mock.MagicMock(return_value=fake_volume)
 
         scenario.boot_server_from_volume_and_live_migrate("img", 0, 5,
+                                                          min_sleep=10,
+                                                          max_sleep=20,
                                                           fakearg="f")
 
         scenario._create_volume.assert_called_once_with(5, imageRef="img")
@@ -415,6 +422,8 @@ class NovaServersTestCase(test.TestCase):
             "img", 0,
             block_device_mapping={"vda": "volume_id:::1"},
             fakearg="f")
+
+        scenario.sleep_between.assert_called_once_with(10, 20)
 
         scenario._find_host_to_migrate.assert_called_once_with(fake_server)
 
@@ -433,6 +442,8 @@ class NovaServersTestCase(test.TestCase):
         scenario._attach_volume = mock.MagicMock()
         scenario._detach_volume = mock.MagicMock()
 
+        scenario.sleep_between = mock.MagicMock()
+
         scenario._find_host_to_migrate = mock.MagicMock(
                                          return_value="host_name")
         scenario._live_migrate = mock.MagicMock()
@@ -447,7 +458,8 @@ class NovaServersTestCase(test.TestCase):
         size = 5
         boot_kwargs = {"some_var": "asd"}
         scenario.boot_server_attach_created_volume_and_live_migrate(
-            image, flavor, size, boot_server_kwargs=boot_kwargs)
+            image, flavor, size, min_sleep=10, max_sleep=20,
+            boot_server_kwargs=boot_kwargs)
         scenario._boot_server.assert_called_once_with(image, flavor,
                                                       **boot_kwargs)
         scenario._create_volume.assert_called_once_with(size)
@@ -455,6 +467,7 @@ class NovaServersTestCase(test.TestCase):
                                                         fake_volume)
         scenario._detach_volume.assert_called_once_with(fake_server,
                                                         fake_volume)
+        scenario.sleep_between.assert_called_once_with(10, 20)
         scenario._live_migrate.assert_called_once_with(fake_server,
                                                        "host_name",
                                                        False, False)
