@@ -1278,6 +1278,25 @@
         failure_rate:
           max: 0
 
+  NovaServers.boot_lock_unlock_and_delete:
+    -
+      args:
+        flavor:
+            name: "m1.tiny"
+        image:
+            name: {{image_name}}
+      runner:
+        type: "constant"
+        times: 4
+        concurrency: 4
+      context:
+        users:
+          tenants: 2
+          users_per_tenant: 1
+      sla:
+        failure_rate:
+          max: 0
+
   NovaServers.boot_server_from_volume_and_delete:
     -
       args:

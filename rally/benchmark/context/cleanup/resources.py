@@ -62,7 +62,10 @@ _nova_order = get_order(200)
 
 @base.resource("nova", "servers", order=next(_nova_order))
 class NovaServer(base.ResourceManager):
-    pass
+    def delete(self):
+        if getattr(self.raw_resource, "OS-EXT-STS:locked", False):
+            self.raw_resource.unlock()
+        super(NovaServer, self).delete()
 
 
 @base.resource("nova", "keypairs", order=next(_nova_order))

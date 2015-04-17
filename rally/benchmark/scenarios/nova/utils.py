@@ -747,3 +747,19 @@ class NovaScenario(base.Scenario):
     def _list_hypervisors(self, detailed=True):
         """List hypervisors."""
         return self.admin_clients("nova").hypervisors.list(detailed)
+
+    @base.atomic_action_timer("nova.lock_server")
+    def _lock_server(self, server):
+        """Lock the given server.
+
+        :param server: Server to lock
+        """
+        server.lock()
+
+    @base.atomic_action_timer("nova.unlock_server")
+    def _unlock_server(self, server):
+        """Unlock the given server.
+
+        :param server: Server to unlock
+        """
+        server.unlock()

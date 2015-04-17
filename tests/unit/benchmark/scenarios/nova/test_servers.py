@@ -106,6 +106,27 @@ class NovaServersTestCase(test.TestCase):
         scenario._delete_server.assert_called_once_with(fake_server,
                                                         force=False)
 
+    def test_boot_lock_unlock_and_delete(self):
+        server = fakes.FakeServer()
+        image = fakes.FakeImage()
+        flavor = fakes.FakeFlavor()
+
+        scenario = servers.NovaServers()
+        scenario._boot_server = mock.Mock(return_value=server)
+        scenario._lock_server = mock.Mock(side_effect=lambda s: s.lock())
+        scenario._unlock_server = mock.Mock(side_effect=lambda s: s.unlock())
+        scenario._delete_server = mock.Mock(
+            side_effect=lambda s, **kwargs:
+                self.assertFalse(getattr(s, "OS-EXT-STS:locked", False)))
+
+        scenario.boot_lock_unlock_and_delete(image, flavor, fakearg="fakearg")
+
+        scenario._boot_server.assert_called_once_with(image, flavor,
+                                                      fakearg="fakearg")
+        scenario._lock_server.assert_called_once_with(server)
+        scenario._unlock_server.assert_called_once_with(server)
+        scenario._delete_server.assert_called_once_with(server, force=False)
+
     def test_validate_actions(self):
         actions = [{"hardd_reboot": 6}]
         scenario = servers.NovaServers()
