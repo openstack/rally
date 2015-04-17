@@ -17,7 +17,9 @@ import mock
 from oslo_config import cfg
 from oslotest import mockpatch
 
+from rally import exceptions
 from rally.plugins.openstack.scenarios.cinder import utils
+from tests.unit import fakes
 from tests.unit import test
 
 BM_UTILS = "rally.benchmark.utils"
@@ -58,6 +60,51 @@ class CinderScenarioTestCase(test.TestCase):
         self.assertEqual(snapsht_lst, return_snapshots_list)
         self._test_atomic_action_timer(self.scenario.atomic_actions(),
                                        "cinder.list_snapshots")
+
+    @mock.patch(CINDER_UTILS + ".CinderScenario.clients")
+    def test__set_metadata(self, mock_clients):
+        volume = fakes.FakeVolume()
+
+        self.scenario._set_metadata(volume, sets=2, set_size=4)
+        calls = mock_clients("cinder").volumes.set_metadata.call_args_list
+        self.assertEqual(len(calls), 2)
+        for call in calls:
+            call_volume, metadata = call[0]
+            self.assertEqual(call_volume, volume)
+            self.assertEqual(len(metadata), 4)
+
+        self._test_atomic_action_timer(self.scenario.atomic_actions(),
+                                       "cinder.set_4_metadatas_2_times")
+
+    @mock.patch(CINDER_UTILS + ".CinderScenario.clients")
+    def test__delete_metadata(self, mock_clients):
+        volume = fakes.FakeVolume()
+
+        keys = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l"]
+        self.scenario._delete_metadata(volume, keys, deletes=3, delete_size=4)
+        calls = mock_clients("cinder").volumes.delete_metadata.call_args_list
+        self.assertEqual(len(calls), 3)
+        all_deleted = []
+        for call in calls:
+            call_volume, del_keys = call[0]
+            self.assertEqual(call_volume, volume)
+            self.assertEqual(len(del_keys), 4)
+            for key in del_keys:
+                self.assertIn(key, keys)
+                self.assertNotIn(key, all_deleted)
+                all_deleted.append(key)
+
+        self._test_atomic_action_timer(self.scenario.atomic_actions(),
+                                       "cinder.delete_4_metadatas_3_times")
+
+    @mock.patch(CINDER_UTILS + ".CinderScenario.clients")
+    def test__delete_metadata_not_enough_keys(self, mock_clients):
+        volume = fakes.FakeVolume()
+
+        keys = ["a", "b", "c", "d", "e"]
+        self.assertRaises(exceptions.InvalidArgumentsException,
+                          self.scenario._delete_metadata,
+                          volume, keys, deletes=2, delete_size=3)
 
     @mock.patch(CINDER_UTILS + ".CinderScenario.clients")
     def test__create_volume(self, mock_clients):
