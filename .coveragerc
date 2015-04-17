@@ -4,4 +4,4 @@ source = rally
 
 [report]
 ignore-errors = True
-precision = 2
+precision = 3
