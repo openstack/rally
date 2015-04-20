@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/bin/bash
 #
 # Copyright 2015: Mirantis Inc.
 # All Rights Reserved.
@@ -15,33 +15,54 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+ALLOWED_EXTRA_MISSING=8
 
-# Checkout to master to collect base line coverage
-git stash
+show_diff () {
+    head -1 $1
+    diff -U 0 $1 $2 | sed 1,2d
+}
+
+# Stash uncommited changes, checkout master and save coverage report
+uncommited=$(git status --porcelain | grep -v "^??")
+[[ -n $uncommited ]] && git stash > /dev/null
 git checkout master
+baseline_report=$(mktemp -t rally_coverageXXXXXXX)
+python setup.py testr --coverage --testr-args="$*"
+coverage report > $baseline_report
+baseline_missing=$(awk 'END { print $3 }' $baseline_report)
 
-python setup.py testr --coverage --testr-args=$@
-baseline=`coverage report | tail -1 | tr " " "\n" | tail -1`
-
-# Checkout back to user directory to get current coverage
+# Checkout back and unstash uncommited changes (if any)
 git checkout -
-git stash pop || true
+[[ -n $uncommited ]] && git stash pop > /dev/null
 
-python setup.py testr --coverage --testr-args=$@
-current=`coverage report | tail -1 | tr " " "\n" | tail -1 `
+# Generate and save coverage report
+current_report=$(mktemp -t rally_coverageXXXXXXX)
+python setup.py testr --coverage --testr-args="$*"
+coverage report > $current_report
+current_missing=$(awk 'END { print $3 }' $current_report)
 
-echo "Coverage baseline: ${baseline} current: ${current}"
+# Show coverage details
+allowed_missing=$((baseline_missing+ALLOWED_EXTRA_MISSING))
 
-# If coverage was reduced by 0.01% job will fail
+echo "Allowed to introduce missing lines : ${ALLOWED_EXTRA_MISSING}"
+echo "Missing lines in master            : ${baseline_missing}"
+echo "Missing lines in proposed change   : ${current_missing}"
 
-code=`python -c "base=float(\"${baseline}\"[:-1]); current=float(\"${current}\"[:-1]); print(base - current > 0.01 and 1 or 0)"`
-
-
-if [ $code -eq 0 ];
+if [ $allowed_missing -gt $current_missing ];
 then
-    echo "Thank you! You are awesome! Keep writing unit tests! :)"
+    if [ $baseline_missing -lt $current_missing ];
+    then
+        show_diff $baseline_report $current_report
+        echo "I believe you can cover all your code with 100% coverage!"
+    else
+        echo "Thank you! You are awesome! Keep writing unit tests! :)"
+    fi
+    exit_code=0
 else
+    show_diff $baseline_report $current_report
     echo "Please write more unit tests, we should keep our test coverage :( "
+    exit_code=1
 fi
 
-exit $code
+rm $baseline_report $current_report
+exit $exit_code
