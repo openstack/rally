@@ -1,0 +1,20 @@
+{
+    "NovaFloatingIpsBulk.create_and_delete_floating_ips_bulk": [
+        {
+            "args": {
+                "start_cidr": "10.2.0.0/24"
+            },
+            "runner": {
+                "type": "constant",
+                "times": 5,
+                "concurrency": 2
+            },
+            "context": {
+                "users": {
+                    "tenants": 3,
+                    "users_per_tenant": 2
+                }
+            }
+        }
+    ]
+}

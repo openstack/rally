@@ -733,3 +733,41 @@ class NovaScenarioTestCase(test.TestCase):
             self.keypair)
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.delete_keypair")
+
+    @mock.patch(NOVA_UTILS + ".NovaScenario.admin_clients")
+    def test__list_floating_ips_bulk(self, mock_clients):
+        floating_ips_bulk_list = ["foo_floating_ips_bulk"]
+        mock_clients("nova").floating_ips_bulk.list.return_value = (
+            floating_ips_bulk_list)
+        nova_scenario = utils.NovaScenario()
+        return_floating_ips_bulk_list = nova_scenario._list_floating_ips_bulk()
+        self.assertEqual(floating_ips_bulk_list, return_floating_ips_bulk_list)
+        self._test_atomic_action_timer(nova_scenario.atomic_actions(),
+                                       "nova.list_floating_ips_bulk")
+
+    @mock.patch(NOVA_UTILS + ".network_wrapper.generate_cidr")
+    @mock.patch(NOVA_UTILS + ".NovaScenario.admin_clients")
+    def test__create_floating_ips_bulk(self, mock_clients, mock_gencidr):
+        fake_cidr = "10.2.0.0/24"
+        fake_pool = "test1"
+        fake_floating_ips_bulk = mock.MagicMock()
+        fake_floating_ips_bulk.ip_range = fake_cidr
+        fake_floating_ips_bulk.pool = fake_pool
+        mock_clients("nova").floating_ips_bulk.create.return_value = (
+            fake_floating_ips_bulk)
+        nova_scenario = utils.NovaScenario()
+        return_iprange = nova_scenario._create_floating_ips_bulk(fake_cidr)
+        mock_gencidr.assert_called_once_with(start_cidr=fake_cidr)
+        self.assertEqual(return_iprange, fake_floating_ips_bulk)
+        self._test_atomic_action_timer(nova_scenario.atomic_actions(),
+                                       "nova.create_floating_ips_bulk")
+
+    @mock.patch(NOVA_UTILS + ".NovaScenario.admin_clients")
+    def test__delete_floating_ips_bulk(self, mock_clients):
+        fake_cidr = "10.2.0.0/24"
+        nova_scenario = utils.NovaScenario()
+        nova_scenario._delete_floating_ips_bulk(fake_cidr)
+        mock_clients("nova").floating_ips_bulk.delete.assert_called_once_with(
+            fake_cidr)
+        self._test_atomic_action_timer(nova_scenario.atomic_actions(),
+                                       "nova.delete_floating_ips_bulk")

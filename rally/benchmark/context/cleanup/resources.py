@@ -84,6 +84,18 @@ class NovaQuotas(QuotaMixin, base.ResourceManager):
     pass
 
 
+@base.resource("nova", "floating_ips_bulk", order=next(_nova_order),
+               admin_required=True)
+class NovaFloatingIpsBulk(SynchronizedDeletion, base.ResourceManager):
+
+    def id(self):
+        return self.raw_resource.address
+
+    def list(self):
+        return [floating_ip for floating_ip in self._manager().list()
+                if floating_ip.pool.startswith("rally_fip_pool_")]
+
+
 # EC2
 
 _ec2_order = get_order(250)

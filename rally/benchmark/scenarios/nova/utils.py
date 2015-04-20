@@ -21,6 +21,7 @@ import six
 
 from rally.benchmark.scenarios import base
 from rally.benchmark import utils as bench_utils
+from rally.benchmark.wrappers import network as network_wrapper
 from rally import exceptions
 
 
@@ -698,3 +699,21 @@ class NovaScenario(base.Scenario):
         """Return security groups list."""
         with base.AtomicAction(self, "nova.list_security_groups"):
             return self.clients("nova").security_groups.list()
+
+    @base.atomic_action_timer("nova.list_floating_ips_bulk")
+    def _list_floating_ips_bulk(self):
+        """List all floating IPs."""
+        return self.admin_clients("nova").floating_ips_bulk.list()
+
+    @base.atomic_action_timer("nova.create_floating_ips_bulk")
+    def _create_floating_ips_bulk(self, ip_range, **kwargs):
+        """Create floating IPs by range."""
+        ip_range = network_wrapper.generate_cidr(start_cidr=ip_range)
+        pool_name = self._generate_random_name(prefix="rally_fip_pool_")
+        return self.admin_clients("nova").floating_ips_bulk.create(
+            ip_range=ip_range, pool=pool_name, **kwargs)
+
+    @base.atomic_action_timer("nova.delete_floating_ips_bulk")
+    def _delete_floating_ips_bulk(self, ip_range):
+        """Delete floating IPs by range."""
+        return self.admin_clients("nova").floating_ips_bulk.delete(ip_range)
