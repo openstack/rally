@@ -78,7 +78,7 @@ Note that inside each scenario configuration, the benchmark scenario is actually
 Developer's view
 ^^^^^^^^^^^^^^^^
 
-From the developer's perspective, a benchmark scenario is a method marked by a **@scenario** decorator and placed in a class that inherits from the base `Scenario <https://github.com/stackforge/rally/blob/master/rally/benchmark/scenarios/base.py#L40>`_ class and located in some subpackage of `rally.benchmark.scenarios <https://github.com/stackforge/rally/tree/master/rally/benchmark/scenarios>`_. There may be arbitrary many benchmark scenarios in a scenario class; each of them should be referenced to (in the task configuration file) as *ScenarioClassName.method_name*.
+From the developer's perspective, a benchmark scenario is a method marked by a **@scenario** decorator and placed in a class that inherits from the base `Scenario <https://github.com/openstack/rally/blob/master/rally/benchmark/scenarios/base.py#L40>`_ class and located in some subpackage of `rally.benchmark.scenarios <https://github.com/openstack/rally/tree/master/rally/benchmark/scenarios>`_. There may be arbitrary many benchmark scenarios in a scenario class; each of them should be referenced to (in the task configuration file) as *ScenarioClassName.method_name*.
 
 In a toy example below, we define a scenario class *MyScenario* with one benchmark scenario *MyScenario.scenario*. This benchmark scenario tests the performance of a sequence of 2 actions, implemented via private methods in the same class. Both methods are marked with the **@atomic_action_timer** decorator. This allows Rally to handle those actions in a special way and, after benchmarks complete, show runtime statistics not only for the whole scenarios, but for separate actions as well.
 
@@ -165,7 +165,7 @@ Also, all scenario runners can be provided (again, through the **"runner"** sect
 Developer's view
 ^^^^^^^^^^^^^^^^
 
-It is possible to extend Rally with new Scenario Runner types, if needed. Basically, each scenario runner should be implemented as a subclass of the base `ScenarioRunner <https://github.com/stackforge/rally/blob/master/rally/benchmark/runners/base.py#L137>`_ class and located in the `rally.benchmark.runners package <https://github.com/stackforge/rally/tree/master/rally/benchmark/runners>`_. The interface each scenario runner class should support is fairly easy:
+It is possible to extend Rally with new Scenario Runner types, if needed. Basically, each scenario runner should be implemented as a subclass of the base `ScenarioRunner <https://github.com/openstack/rally/blob/master/rally/benchmark/runners/base.py#L137>`_ class and located in the `rally.benchmark.runners package <https://github.com/openstack/rally/tree/master/rally/benchmark/runners>`_. The interface each scenario runner class should support is fairly easy:
 
 .. parsed-literal::
 
@@ -260,7 +260,7 @@ In the example below, the **"users" context** specifies that the *"NovaServers.b
 Developer's view
 ^^^^^^^^^^^^^^^^
 
-From the developer's view, contexts management is implemented via **Context classes**. Each context type that can be specified in the task configuration file corresponds to a certain subclass of the base [https://github.com/stackforge/rally/blob/master/rally/benchmark/context/base.py **Context**] class, located in the [https://github.com/stackforge/rally/tree/master/rally/benchmark/context **rally.benchmark.context**] module. Every context class should implement a fairly simple **interface**:
+From the developer's view, contexts management is implemented via **Context classes**. Each context type that can be specified in the task configuration file corresponds to a certain subclass of the base [https://github.com/openstack/rally/blob/master/rally/benchmark/context/base.py **Context**] class, located in the [https://github.com/openstack/rally/tree/master/rally/benchmark/context **rally.benchmark.context**] module. Every context class should implement a fairly simple **interface**:
 
 .. parsed-literal::
 

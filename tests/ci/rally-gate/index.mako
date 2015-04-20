@@ -43,7 +43,7 @@
     <h2>About Rally</h2>
     <p>Rally is benchmark system for OpenStack:</p>
     <ul>
-      <li><a href="https://github.com/stackforge/rally">Git repository</a>
+      <li><a href="https://github.com/openstack/rally">Git repository</a>
       <li><a href="https://rally.readthedocs.org/en/latest/">Documentation</a>
       <li><a href="https://wiki.openstack.org/wiki/Rally/HowTo">How to use Rally (locally)</a>
       <li><a href="https://wiki.openstack.org/wiki/Rally/RallyGates">How to add Rally job to your project</a>
@@ -53,7 +53,7 @@
     <ol>
       <li>Fetch rally task from <a href="rally-plot/task.txt">here</a></li>
       <li>Fetch rally plugins from <a href="rally-plot/plugins.tar.gz">here</a></li>
-      <li>Install OpenStack and Rally using <a href="https://github.com/stackforge/rally/tree/master/contrib/devstack">this instruction</a></li>
+      <li>Install OpenStack and Rally using <a href="https://github.com/openstack/rally/tree/master/contrib/devstack">this instruction</a></li>
       <li>Unzip plugins and put to <code>.rally/plugins/</code> directory</li>
       <li>Run rally task: <code>$ rally task start task.txt</code></li>
     </ol>

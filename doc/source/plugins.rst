@@ -387,4 +387,4 @@ You can refer to your scenario runner in the benchmark task configuration files 
 
 
 
-Different plugin samples are available `here <https://github.com/stackforge/rally/tree/master/samples/plugins>`_.
+Different plugin samples are available `here <https://github.com/openstack/rally/tree/master/samples/plugins>`_.

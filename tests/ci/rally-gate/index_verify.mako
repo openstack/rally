@@ -127,7 +127,7 @@
     <h2>About Rally</h2>
     <p>Rally is benchmarking and verification system for OpenStack:</p>
     <ul>
-      <li><a href="https://github.com/stackforge/rally">Git repository</a>
+      <li><a href="https://github.com/openstack/rally">Git repository</a>
       <li><a href="https://rally.readthedocs.org/en/latest/">Documentation</a>
       <li><a href="https://wiki.openstack.org/wiki/Rally/HowTo">How to use Rally (locally)</a>
       <li><a href="https://wiki.openstack.org/wiki/Rally/RallyGates">How to add Rally job to your project</a>

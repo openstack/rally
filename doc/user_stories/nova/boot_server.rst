@@ -67,7 +67,7 @@ https://review.openstack.org/#/c/96300/
 
 **Deployment**
 
-Rally was deployed for cluster using `ExistingCloud <https://github.com/stackforge/rally/blob/master/samples/deployments/existing.json>`_ type of deployment.
+Rally was deployed for cluster using `ExistingCloud <https://github.com/openstack/rally/blob/master/samples/deployments/existing.json>`_ type of deployment.
 
 **Server flavor** ::
 

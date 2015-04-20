@@ -23,7 +23,7 @@ Automated installation
 
 .. code-block:: none
 
-   git clone https://git.openstack.org/stackforge/rally
+   git clone https://git.openstack.org/openstack/rally
    ./rally/install_rally.sh
 
 **Notes:** The installation script should be run as root or as a normal user using **sudo**. Rally requires either the Python 2.6 or the Python 2.7 version.
@@ -33,7 +33,7 @@ Automated installation
 
 .. code-block:: none
 
-   git clone https://git.openstack.org/stackforge/rally
+   git clone https://git.openstack.org/openstack/rally
    ./rally/install_rally.sh -v
 
 
@@ -52,7 +52,7 @@ It is also possible to install Rally with DevStack. First, clone the correspondi
 .. code-block:: none
 
    git clone https://git.openstack.org/openstack-dev/devstack
-   git clone https://github.com/stackforge/rally
+   git clone https://github.com/openstack/rally
 
 Then, configure DevStack to run Rally:
 

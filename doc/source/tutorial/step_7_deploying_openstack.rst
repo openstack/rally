@@ -18,7 +18,7 @@
 Step 7. Deploying OpenStack from Rally
 ======================================
 
-Along with supporting already existing OpenStack deployments, Rally itself can **deploy OpenStack automatically** by using one of its *deployment engines*. Take a look at other `deployment configuration file samples <https://github.com/stackforge/rally/tree/master/samples/deployments>`_. For example, *devstack-in-existing-servers.json* is a deployment configuration file that tells Rally to deploy OpenStack with **Devstack** on the existing servers with given credentials:
+Along with supporting already existing OpenStack deployments, Rally itself can **deploy OpenStack automatically** by using one of its *deployment engines*. Take a look at other `deployment configuration file samples <https://github.com/openstack/rally/tree/master/samples/deployments>`_. For example, *devstack-in-existing-servers.json* is a deployment configuration file that tells Rally to deploy OpenStack with **Devstack** on the existing servers with given credentials:
 
 .. code-block:: none
 

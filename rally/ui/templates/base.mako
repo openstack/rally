@@ -40,7 +40,7 @@
 
   <div class="header">
     <div class="content-wrap">
-      <a href="https://github.com/stackforge/rally">Rally</a>&nbsp;
+      <a href="https://github.com/openstack/rally">Rally</a>&nbsp;
       <span><%block name="header_text"/></span>
     </div>
   </div>

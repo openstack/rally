@@ -20,7 +20,7 @@ Project Info
 
 Useful links
 ------------
-- `Source code <https://github.com/stackforge/rally>`_
+- `Source code <https://github.com/openstack/rally>`_
 - `Rally road map <https://docs.google.com/a/mirantis.com/spreadsheets/d/16DXpfbqvlzMFaqaXAcJsBzzpowb_XpymaK2aFY2gA2g/edit#gid=0>`_
 - `Project space <http://launchpad.net/rally>`_
 - `Bugs <https://bugs.launchpad.net/rally>`_

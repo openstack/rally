@@ -56,7 +56,7 @@ Several Linux distributions (notably Fedora 16 and Ubuntu 12.04) are also starti
 
 .. code-block:: none
 
-    git clone git@github.com:stackforge/rally.git
+    git clone git@github.com:openstack/rally.git
 
 6. Checkout a new branch to hack on:
 

@@ -7,5 +7,5 @@ from "args" section to actual values for your deployment.
 
 Samples here are presented with constant runner. To see samples of using
 other runners, go to `samples/tasks/runners
-<https://github.com/stackforge/rally/tree/master/samples/tasks/runners>`_.
+<https://github.com/openstack/rally/tree/master/samples/tasks/runners>`_.
 

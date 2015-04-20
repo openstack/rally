@@ -22,7 +22,7 @@ set +o xtrace
 # --------
 
 # Set up default repos
-RALLY_REPO=${RALLY_REPO:-${GIT_BASE}/stackforge/rally.git}
+RALLY_REPO=${RALLY_REPO:-${GIT_BASE}/openstack/rally.git}
 RALLY_BRANCH=${RALLY_BRANCH:-master}
 
 # Set up default directories

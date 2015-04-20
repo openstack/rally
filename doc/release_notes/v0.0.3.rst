@@ -53,7 +53,7 @@ New Features & API changes
         rally.conf option is deprecated
 
         Like in this sample
-        https://github.com/stackforge/rally/blob/14d0b5ba0c75ececfdb6a6c121d9cf2810571f77/samples/deployments/existing.json#L11-L12
+        https://github.com/openstack/rally/blob/14d0b5ba0c75ececfdb6a6c121d9cf2810571f77/samples/deployments/existing.json#L11-L12
 
 
 Specs
@@ -64,7 +64,7 @@ Specs
       This spec describes new task input format that will allow us to generate
       multi scenario load which is crucial for HA and more real life testing:
 
-      https://github.com/stackforge/rally/blob/master/doc/specs/in-progress/new_rally_input_task_format.rst
+      https://github.com/openstack/rally/blob/master/doc/specs/in-progress/new_rally_input_task_format.rst
 
 
 Plugins

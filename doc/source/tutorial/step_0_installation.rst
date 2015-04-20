@@ -22,7 +22,7 @@ Installing Rally is very simple. Just execute the following commands:
 
 .. code-block:: none
 
-   git clone https://git.openstack.org/stackforge/rally
+   git clone https://git.openstack.org/openstack/rally
    ./rally/install_rally.sh
 
 **Notes:** The installation script should be run as root or as a normal user using **sudo**. Rally requires either the Python 2.6 or the Python 2.7 version.
