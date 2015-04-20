@@ -919,7 +919,7 @@
           tenants: 1
           users_per_tenant: 2
         images:
-          image_url: "/home/jenkins/.rally/extra/fake-image.img"
+          image_url: "~/.rally/extra/fake-image.img"
           image_type: "qcow2"
           image_container: "bare"
           images_per_tenant: 1
@@ -948,7 +948,7 @@
   GlanceImages.create_and_list_image:
     -
       args:
-        image_location: "/home/jenkins/.rally/extra/fake-image.img"
+        image_location: "~/.rally/extra/fake-image.img"
         container_format: "bare"
         disk_format: "qcow2"
       runner:

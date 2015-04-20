@@ -85,6 +85,7 @@ class GlanceScenario(scenario.OpenStackScenario):
         }
 
         kw.update(kwargs)
+        image_location = os.path.expanduser(image_location)
 
         try:
             if os.path.isfile(image_location):
