@@ -271,6 +271,24 @@ class KeystoneScenarioTestCase(test.TestCase):
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "keystone.get_service")
 
+    def test_update_tenant(self):
+        tenant = mock.MagicMock()
+        description = tenant.name + "_description_updated_test"
+        name = tenant.name + "test_updated_test"
+        fake_keystone = fakes.FakeKeystoneClient()
+        fake_keystone.tenants.update = mock.MagicMock()
+        fake_clients = fakes.FakeClients()
+        fake_clients._keystone = fake_keystone
+        scenario = utils.KeystoneScenario(admin_clients=fake_clients)
+
+        scenario._update_tenant(tenant=tenant, name=name,
+                                description=description)
+
+        fake_keystone.tenants.update.assert_called_once_with(tenant.id, name,
+                                                             description)
+        self._test_atomic_action_timer(scenario.atomic_actions(),
+                                       "keystone.update_tenant")
+
     def test_get_service_by_name(self):
         scenario = utils.KeystoneScenario()
         svc_foo, svc_bar = mock.Mock(), mock.Mock()

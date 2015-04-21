@@ -449,6 +449,14 @@ class FakeTenantsManager(FakeManager):
     def create(self, name):
         return self._cache(FakeTenant(self, name))
 
+    def update(self, tenant_id, name=None, description=None):
+        tenant = self.get(tenant_id)
+        name = name or (tenant.name + "_updated")
+        desc = description or (tenant.name + "_description_updated")
+        tenant.name = name
+        tenant.description = desc
+        return self._cache(tenant)
+
 
 class FakeNetworkManager(FakeManager):
 

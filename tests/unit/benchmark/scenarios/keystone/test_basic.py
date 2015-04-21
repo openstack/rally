@@ -141,6 +141,16 @@ class KeystoneBasicTestCase(test.TestCase):
                                                          description)
         scenario._delete_service.assert_called_once_with(fake_service.id)
 
+    def test_create_update_and_delete_tenant(self):
+        scenario = basic.KeystoneBasic()
+        fake_tenant = mock.MagicMock()
+        scenario._tenant_create = mock.MagicMock(return_value=fake_tenant)
+        scenario._update_tenant = mock.MagicMock()
+        scenario._resource_delete = mock.MagicMock()
+        scenario.create_update_and_delete_tenant()
+        scenario._update_tenant.assert_called_once_with(fake_tenant)
+        scenario._resource_delete.assert_called_once_with(fake_tenant)
+
     def test_create_and_list_services(self):
         scenario = basic.KeystoneBasic()
         name = "Rally_test_service"
