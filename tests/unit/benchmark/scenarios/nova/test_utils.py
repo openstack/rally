@@ -271,6 +271,30 @@ class NovaScenarioTestCase(test.TestCase):
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.unpause_server")
 
+    def test__shelve_server(self):
+        nova_scenario = utils.NovaScenario()
+        nova_scenario._shelve_server(self.server)
+        self.server.shelve.assert_called_once_with()
+        self._test_assert_called_once_with(
+            self.wait_for.mock, self.server,
+            CONF.benchmark.nova_server_shelve_poll_interval,
+            CONF.benchmark.nova_server_shelve_timeout)
+        self.res_is.mock.assert_has_calls([mock.call("SHELVED_OFFLOADED")])
+        self._test_atomic_action_timer(nova_scenario.atomic_actions(),
+                                       "nova.shelve_server")
+
+    def test__unshelve_server(self):
+        nova_scenario = utils.NovaScenario()
+        nova_scenario._unshelve_server(self.server)
+        self.server.unshelve.assert_called_once_with()
+        self._test_assert_called_once_with(
+            self.wait_for.mock, self.server,
+            CONF.benchmark.nova_server_unshelve_poll_interval,
+            CONF.benchmark.nova_server_unshelve_timeout)
+        self.res_is.mock.assert_has_calls([mock.call("ACTIVE")])
+        self._test_atomic_action_timer(nova_scenario.atomic_actions(),
+                                       "nova.unshelve_server")
+
     @mock.patch(NOVA_UTILS + ".NovaScenario.clients")
     def test__create_image(self, mock_clients):
         mock_clients("nova").images.get.return_value = self.image
