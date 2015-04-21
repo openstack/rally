@@ -72,7 +72,7 @@ Several Linux distributions (notably Fedora 16 and Ubuntu 12.04) are also starti
 
     tox
 
-**(NOTE: you should have installed tox<=1.6.1 )**
+**(NOTE: you should have installed tox<=1.6.1)**
 
 If you extend Rally with new functionality, make sure you have also provided unit and/or functional tests for it.
 

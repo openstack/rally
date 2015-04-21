@@ -21,7 +21,7 @@ Step 2. Running multiple benchmarks in a single task
 Rally input task syntax
 -----------------------
 
-Rally comes with a really great collection of :ref:`benchmark scenarios <tutorial_step_6_discovering_more_benchmark_scenarios>` and in most real-world scenarios you will use multiple scenarios to test your OpenStack cloud. Rally makes it very easy to run **different benchmarks defined in a single benchmark task**. To do so, use the following syntax:
+Rally comes with a really great collection of :ref:`benchmark scenarios <tutorial_step_7_discovering_more_benchmark_scenarios>` and in most real-world scenarios you will use multiple scenarios to test your OpenStack cloud. Rally makes it very easy to run **different benchmarks defined in a single benchmark task**. To do so, use the following syntax:
 
 .. code-block:: none
 

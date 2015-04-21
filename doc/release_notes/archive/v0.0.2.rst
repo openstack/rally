@@ -118,13 +118,13 @@ Plugins
 
     [fix] CinderVolumes.create_and_attach_volume
 
-        Pass optional **kwargs only to create server command
+        Pass optional \*\*kwargs only to create server command
 
     [fix]  GlanceImages.create_image_and_boot_instances
 
-        Pass optional **kwargs only to create server command
+        Pass optional \*\*kwargs only to create server command
 
-    [fix] TempestScenario.* removed stress cleanup.
+    [fix] TempestScenario.\* removed stress cleanup.
 
         Major issue is that tempest stress cleanup cleans whole OpenStack.
         This is very dangerous, so it's better to remove it and leave some
@@ -132,7 +132,7 @@ Plugins
 
     [improved] NovaSecGroup.boot_and_delete_server_with_secgroups
 
-        Add optional **kwargs that are passed to boot server comment
+        Add optional \*\*kwargs that are passed to boot server comment
 
 
 * **Benchmark Context**:

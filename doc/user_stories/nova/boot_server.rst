@@ -39,7 +39,7 @@ Cluster
 This cluster was created via Fuel Dashboard interface.
 
 +----------------------+-----------------------------------------------------------------------------+
-| Deployment           | Custom build of `Mirantis OpenStack <https://software.mirantis.com/>`_  v5.1 |
+| Deployment           | Custom build of `Mirantis OpenStack <https://software.mirantis.com/>`_ v5.1 |
 +----------------------+-----------------------------------------------------------------------------+
 | OpenStack release    | Icehouse                                                                    |
 +----------------------+-----------------------------------------------------------------------------+

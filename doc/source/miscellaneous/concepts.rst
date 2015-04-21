@@ -75,6 +75,7 @@ Note that inside each scenario configuration, the benchmark scenario is actually
 
 
 .. _ScenariosDevelopment:
+
 Developer's view
 ^^^^^^^^^^^^^^^^
 
@@ -162,6 +163,7 @@ Also, all scenario runners can be provided (again, through the **"runner"** sect
 
 
 .. _RunnersDevelopment:
+
 Developer's view
 ^^^^^^^^^^^^^^^^
 
@@ -257,6 +259,7 @@ In the example below, the **"users" context** specifies that the *"NovaServers.b
 
 
 .. _ContextDevelopment:
+
 Developer's view
 ^^^^^^^^^^^^^^^^
 
