@@ -233,6 +233,24 @@ class NovaServersTestCase(test.TestCase):
         scenario._delete_server.assert_called_once_with(fake_server,
                                                         force=False)
 
+    def test_shelve_and_unshelve_server(self):
+        fake_server = mock.MagicMock()
+        scenario = servers.NovaServers()
+        scenario._boot_server = mock.MagicMock(return_value=fake_server)
+        scenario._shelve_server = mock.MagicMock()
+        scenario._unshelve_server = mock.MagicMock()
+        scenario._delete_server = mock.MagicMock()
+
+        scenario.shelve_and_unshelve_server("img", 0, fakearg="fakearg")
+
+        scenario._boot_server.assert_called_once_with("img", 0,
+                                                      fakearg="fakearg")
+
+        scenario._shelve_server.assert_called_once_with(fake_server)
+        scenario._unshelve_server.assert_called_once_with(fake_server)
+        scenario._delete_server.assert_called_once_with(fake_server,
+                                                        force=False)
+
     def test_list_servers(self):
         scenario = servers.NovaServers()
         scenario._list_servers = mock.MagicMock()

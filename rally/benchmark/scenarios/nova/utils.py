@@ -39,6 +39,8 @@ option_names_and_defaults = [
     ("resume", 2, 300, 2),
     ("pause", 2, 300, 2),
     ("unpause", 2, 300, 2),
+    ("shelve", 2, 300, 2),
+    ("unshelve", 2, 300, 2),
     ("image_create", 0, 300, 2),
     ("image_delete", 0, 300, 2),
     ("resize", 2, 400, 5),
@@ -321,6 +323,41 @@ class NovaScenario(base.Scenario):
             update_resource=bench_utils.get_from_manager(),
             timeout=CONF.benchmark.nova_server_unpause_timeout,
             check_interval=CONF.benchmark.nova_server_unpause_poll_interval
+        )
+
+    @base.atomic_action_timer("nova.shelve_server")
+    def _shelve_server(self, server):
+        """Shelve the given server.
+
+        Returns when the server is actually shelved and is in the
+        "SHELVED_OFFLOADED" state.
+
+        :param server: Server object
+        """
+        server.shelve()
+        time.sleep(CONF.benchmark.nova_server_shelve_prepoll_delay)
+        bench_utils.wait_for(
+            server, is_ready=bench_utils.resource_is("SHELVED_OFFLOADED"),
+            update_resource=bench_utils.get_from_manager(),
+            timeout=CONF.benchmark.nova_server_shelve_timeout,
+            check_interval=CONF.benchmark.nova_server_shelve_poll_interval
+        )
+
+    @base.atomic_action_timer("nova.unshelve_server")
+    def _unshelve_server(self, server):
+        """Unshelve the given server.
+
+        Returns when the server is unshelved and is in the "ACTIVE" state.
+
+        :param server: Server object
+        """
+        server.unshelve()
+        time.sleep(CONF.benchmark.nova_server_unshelve_prepoll_delay)
+        bench_utils.wait_for(
+            server, is_ready=bench_utils.resource_is("ACTIVE"),
+            update_resource=bench_utils.get_from_manager(),
+            timeout=CONF.benchmark.nova_server_unshelve_timeout,
+            check_interval=CONF.benchmark.nova_server_unshelve_poll_interval
         )
 
     def _delete_server(self, server, force=False):

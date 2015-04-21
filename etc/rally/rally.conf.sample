@@ -320,6 +320,26 @@
 # Server unpause poll interval (floating point value)
 #nova_server_unpause_poll_interval = 2.0
 
+# Time to sleep after shelve before polling for status (floating
+# point value)
+#nova_server_shelve_prepoll_delay = 2.0
+
+# Server shelve timeout (floating point value)
+#nova_server_shelve_timeout = 300.0
+
+# Server shelve poll interval (floating point value)
+#nova_server_shelve_poll_interval = 2.0
+
+# Time to sleep after unshelve before polling for status (floating
+# point value)
+#nova_server_unshelve_prepoll_delay = 2.0
+
+# Server unshelve timeout (floating point value)
+#nova_server_unshelve_timeout = 300.0
+
+# Server unshelve poll interval (floating point value)
+#nova_server_unshelve_poll_interval = 2.0
+
 # Time to sleep after image_create before polling for status (floating
 # point value)
 #nova_server_image_create_prepoll_delay = 0.0
