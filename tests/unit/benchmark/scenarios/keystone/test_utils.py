@@ -289,6 +289,22 @@ class KeystoneScenarioTestCase(test.TestCase):
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "keystone.update_tenant")
 
+    def test_update_user_password(self):
+        password = "pswd"
+        user = mock.MagicMock()
+        fake_keystone = fakes.FakeKeystoneClient()
+        fake_keystone.users.update_password = mock.MagicMock()
+        fake_clients = fakes.FakeClients()
+        fake_clients._keystone = fake_keystone
+        scenario = utils.KeystoneScenario(admin_clients=fake_clients)
+
+        scenario._update_user_password(password=password, user_id=user.id)
+
+        fake_keystone.users.update_password.assert_called_once_with(user.id,
+                                                                    password)
+        self._test_atomic_action_timer(scenario.atomic_actions(),
+                                       "keystone.update_user_password")
+
     def test_get_service_by_name(self):
         scenario = utils.KeystoneScenario()
         svc_foo, svc_bar = mock.Mock(), mock.Mock()

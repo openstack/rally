@@ -177,3 +177,13 @@ class KeystoneScenario(base.Scenario):
         description = description or (tenant.name + "_description_updated")
         self.admin_clients("keystone").tenants.update(tenant.id,
                                                       name, description)
+
+    @base.atomic_action_timer("keystone.update_user_password")
+    def _update_user_password(self, user_id, password):
+        """Update user password.
+
+        :param user_id: id of the user
+        :param password: new password
+        """
+        self.admin_clients("keystone").users.update_password(user_id,
+                                                             password)
