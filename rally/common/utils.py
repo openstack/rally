@@ -224,7 +224,7 @@ def log_verification_wrapper(log_function, msg, **kw):
 
 
 def log_deprecated(message, rally_version, log_function=None):
-    """A wrapper marking a certain method as decrecated.
+    """A wrapper marking a certain method as deprecated.
 
     :param message: Message that describes why the method was deprecated
     :param rally_version: version of Rally when the method was deprecated
@@ -237,6 +237,37 @@ def log_deprecated(message, rally_version, log_function=None):
         def wrapper(*args, **kwargs):
             log_function("%(msg)s (deprecated in Rally v%(version)s)" %
                          {"msg": message, "version": rally_version})
+            result = f(*args, **kwargs)
+            return result
+        return wrapper
+    return decorator
+
+
+def log_deprecated_args(message, rally_version, deprecated_args,
+                        log_function=None, once=False):
+    """A wrapper marking certain arguments as deprecated.
+
+    :param message: Message that describes why the arguments were deprecated
+    :param rally_version: version of Rally when the arguments were deprecated
+    :param deprecated_args: List of deprecated args.
+    :param log_function: Logging method to be used, e.g. LOG.info
+    :param once: Show only once (default is each)
+    """
+    log_function = log_function or LOG.warning
+
+    def decorator(f):
+        @functools.wraps(f)
+        def wrapper(*args, **kwargs):
+            if (not once) or (not getattr(f, "_warned_dep_args", False)):
+                deprecated = ", ".join([
+                        "`%s'" % x for x in deprecated_args if x in kwargs])
+                if deprecated:
+                    log_function(
+                        "%(msg)s (args %(args)s deprecated in Rally "
+                        "v%(version)s)" %
+                        {"msg": message, "version": rally_version,
+                         "args": deprecated})
+                    setattr(f, "_warned_dep_args", once)
             result = f(*args, **kwargs)
             return result
         return wrapper
