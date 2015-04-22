@@ -38,9 +38,9 @@ SAHARA_TIMEOUT_OPTS = [
     cfg.IntOpt("cluster_check_interval", default=5,
                help="Cluster status polling interval in seconds"),
     cfg.IntOpt("job_execution_timeout", default=600,
-               help="A timeout in seconds for a cluster create operation"),
+               help="A timeout in seconds for a Job Execution to complete"),
     cfg.IntOpt("job_check_interval", default=5,
-               help="Cluster status polling interval in seconds")
+               help="Job Execution status polling interval in seconds")
 ]
 
 benchmark_group = cfg.OptGroup(name="benchmark", title="benchmark options")
