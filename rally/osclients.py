@@ -134,12 +134,13 @@ class Clients(object):
 
     def _get_auth_info(self, user_key="username",
                        password_key="password",
+                       auth_url_key="auth_url",
                        project_name_key="project_id"
                        ):
         kw = {
             user_key: self.endpoint.username,
             password_key: self.endpoint.password,
-            "auth_url": self.endpoint.auth_url
+            auth_url_key: self.endpoint.auth_url
         }
         if project_name_key:
             kw.update({project_name_key: self.endpoint.tenant_name})
@@ -389,6 +390,7 @@ class Clients(object):
                                   **self._get_auth_info(
                                       user_key="user",
                                       password_key="key",
+                                      auth_url_key="authurl",
                                       project_name_key="tenant_name")
                                   )
         return client

@@ -403,7 +403,7 @@ class OSClientsTestCase(test.TestCase):
                   "user": self.endpoint.username,
                   "key": self.endpoint.password,
                   "tenant_name": self.endpoint.tenant_name,
-                  "auth_url": self.endpoint.auth_url
+                  "authurl": self.endpoint.auth_url
                   }
             mock_swift.client.Connection.assert_called_once_with(**kw)
             self.assertEqual(self.clients.cache["swift"], fake_swift)

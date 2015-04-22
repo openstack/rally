@@ -1,0 +1,16 @@
+---
+  SwiftObjects.create_container_and_object_then_list_objects:
+    -
+      args:
+        objects_per_container: 2
+        object_size: 5120
+      runner:
+        type: "constant"
+        times: 2
+        concurrency: 2
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+        roles:
+          - "admin"
