@@ -36,7 +36,7 @@ RALLY_PLUGINS_DIR=~/.rally/plugins
 
 mkdir -p $RALLY_PLUGINS_DIR
 if [ -d $PLUGINS_DIR ]; then
-    cp -r $PLUGINS_DIR/*.py $RALLY_PLUGINS_DIR
+    cp -r $PLUGINS_DIR/ $RALLY_PLUGINS_DIR
 fi
 
 if [ -d $EXTRA_DIR ]; then

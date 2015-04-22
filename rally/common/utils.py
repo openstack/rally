@@ -252,6 +252,9 @@ def load_plugins(directory):
             to_load.extend((plugin[:-3], root)
                            for plugin in files if plugin.endswith(".py"))
         for plugin, directory in to_load:
+            if directory not in sys.path:
+                sys.path.append(directory)
+
             fullpath = os.path.join(directory, plugin)
             try:
                 fp, pathname, descr = imp.find_module(plugin, [directory])
