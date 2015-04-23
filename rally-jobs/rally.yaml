@@ -1102,6 +1102,26 @@
         failure_rate:
           max: 0
 
+  NovaServers.boot_and_delete_multiple_servers:
+    -
+      args:
+        image:
+          name: {{image_name}}
+        flavor:
+          name: "m1.tiny"
+        count: 3
+      runner:
+        type: "constant"
+        times: 3
+        concurrency: 3
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+      sla:
+        failure_rate:
+          max: 0
+
   NovaServers.boot_and_list_server:
     -
       args:
