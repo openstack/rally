@@ -19,6 +19,10 @@ import collections
 from keystoneclient import exceptions
 import six
 
+from rally.common import log as logging
+
+
+LOG = logging.getLogger(__name__)
 
 Project = collections.namedtuple("Project", ["id", "name", "domain_id"])
 User = collections.namedtuple("User",
@@ -179,8 +183,15 @@ class KeystoneV3Wrapper(KeystoneWrapper):
                     domain_name="Default"):
         domain_id = self._get_domain_id(domain_name)
         user = self.client.users.create(name=username, password=password,
-                                        email=email, domain=domain_id,
-                                        default_project=project_id)
+                                        default_project=project_id,
+                                        email=email, domain=domain_id)
+        for role in self.client.roles.list():
+            if "member" in role.name.lower():
+                self.client.roles.grant(role.id, user=user.id,
+                                        project=project_id)
+                break
+        else:
+            LOG.warning("Unable to set member role to created user.")
         return KeystoneV3Wrapper._wrap_v3_user(user)
 
     def delete_user(self, user_id):
