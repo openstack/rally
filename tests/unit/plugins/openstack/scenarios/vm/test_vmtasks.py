@@ -37,8 +37,9 @@ class VMTasksTestCase(test.TestCase):
 
     def test_boot_runcommand_delete(self):
         self.scenario.boot_runcommand_delete(
-            "foo_image", "foo_flavor", "foo_script",
-            "foo_interpreter", "foo_username",
+            "foo_image", "foo_flavor",
+            script="foo_script", interpreter="foo_interpreter",
+            username="foo_username",
             password="foo_password",
             use_floating_ip="use_fip",
             floating_network="ext_network",
@@ -56,7 +57,8 @@ class VMTasksTestCase(test.TestCase):
 
         self.scenario._run_command.assert_called_once_with(
             "foo_ip", 22, "foo_username", "foo_password",
-            "foo_interpreter", "foo_script")
+            command={"script_file": "foo_script",
+                     "interpreter": "foo_interpreter"})
         self.scenario._delete_server_with_fip.assert_called_once_with(
             "foo_server", self.ip, force_delete="foo_force")
 

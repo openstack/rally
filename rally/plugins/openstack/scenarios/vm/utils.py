@@ -21,10 +21,10 @@ import six
 
 from rally.benchmark.scenarios import base
 from rally.benchmark import utils as bench_utils
+from rally.benchmark import validation
 from rally.common.i18n import _
 from rally.common import log as logging
 from rally.common import sshutils
-from rally import exceptions
 from rally.plugins.openstack.wrappers import network as network_wrapper
 
 LOG = logging.getLogger(__name__)
@@ -40,32 +40,33 @@ class VMScenario(base.Scenario):
     """
 
     @base.atomic_action_timer("vm.run_command_over_ssh")
-    def _run_command_over_ssh(self, ssh, interpreter, script,
-                              is_file=True):
+    def _run_command_over_ssh(self, ssh, command):
         """Run command inside an instance.
 
         This is a separate function so that only script execution is timed.
 
         :param ssh: A SSHClient instance.
-        :param interpreter: The interpreter that will be used to execute
-                the script.
-        :param script: Path to the script file or its content in a StringIO.
-        :param is_file: if True, script represent a path,
-                        else, script contains an inline script.
+        :param command: Dictionary specifying command to execute.
+            See `validation.valid_command' docstring for details.
+
         :returns: tuple (exit_status, stdout, stderr)
         """
-        if not is_file:
-            stdin = script
-        elif isinstance(script, six.string_types):
-            stdin = open(script, "rb")
-        elif isinstance(script, six.moves.StringIO):
-            stdin = script
-        else:
-            raise exceptions.ScriptError(
-                "Either file path or StringIO expected, given %s" %
-                type(script).__name__)
+        validation.check_command_dict(command)
 
-        return ssh.execute(interpreter, stdin=stdin)
+        # NOTE(pboldin): Here we `get' the values and not check for the keys
+        # due to template-driven configuration generation that can leave keys
+        # defined but values empty.
+        if command.get("script_file") or command.get("script_inline"):
+            cmd = command["interpreter"]
+            if command.get("script_file"):
+                stdin = open(command["script_file"], "rb")
+            elif command.get("script_inline"):
+                stdin = six.moves.StringIO(command["script_inline"])
+        elif command.get("remote_path"):
+            cmd = command["remote_path"]
+            stdin = None
+
+        return ssh.execute(cmd, stdin=stdin)
 
     def _boot_server_with_fip(self, image, flavor,
                               use_floating_ip=True, floating_network=None,
@@ -135,30 +136,30 @@ class VMScenario(base.Scenario):
             timeout=120
         )
 
-    def _run_command(self, server_ip, port, username, password, interpreter,
-                     script, pkey=None, is_file=True):
+    def _run_command(self, server_ip, port, username, password, command,
+                     pkey=None):
         """Run command via SSH on server.
 
-        Create SSH connection for server, wait for server to become
-        available (there is a delay between server being set to ACTIVE
-        and sshd being available). Then call run_command_over_ssh to actually
-        execute the command.
+        Create SSH connection for server, wait for server to become available
+        (there is a delay between server being set to ACTIVE and sshd being
+        available). Then call run_command_over_ssh to actually execute the
+        command.
+
         :param server_ip: server ip address
         :param port: ssh port for SSH connection
         :param username: str. ssh username for server
         :param password: Password for SSH authentication
-        :param interpreter: server's interpreter to execute the script
-        :param script: script to run on server
+        :param command: Dictionary specifying command to execute.
+                See `valiation.valid_command' docstring for explanation.
         :param pkey: key for SSH authentication
-        :param is_file: if True, script represent a path,
-                        else, script contains an inline script.
+
+        :returns: tuple (exit_status, stdout, stderr)
         """
         pkey = pkey if pkey else self.context["user"]["keypair"]["private"]
         ssh = sshutils.SSH(username, server_ip, port=port,
                            pkey=pkey, password=password)
         self._wait_for_ssh(ssh)
-        return self._run_command_over_ssh(ssh, interpreter,
-                                          script, is_file)
+        return self._run_command_over_ssh(ssh, command)
 
     @staticmethod
     def _ping_ip_address(host):
