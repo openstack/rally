@@ -15,7 +15,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-ALLOWED_EXTRA_MISSING=8
+ALLOWED_EXTRA_MISSING=4
 
 show_diff () {
     head -1 $1
@@ -25,7 +25,8 @@ show_diff () {
 # Stash uncommited changes, checkout master and save coverage report
 uncommited=$(git status --porcelain | grep -v "^??")
 [[ -n $uncommited ]] && git stash > /dev/null
-git checkout master
+git checkout HEAD^
+
 baseline_report=$(mktemp -t rally_coverageXXXXXXX)
 python setup.py testr --coverage --testr-args="$*"
 coverage report > $baseline_report
