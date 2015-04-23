@@ -13,6 +13,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import os
+
 from glanceclient import exc as glance_exc
 import mock
 from novaclient import exceptions as nova_exc
@@ -103,20 +105,29 @@ class ValidatorsTestCase(test.TestCase):
         self.assertTrue(result.is_valid, result.msg)
 
     @mock.patch("rally.benchmark.validation.os.access")
-    def test_file_exists(self, mock_access):
+    def test__file_access_ok(self, mock_access):
         mock_access.return_value = True
-        validator = self._unwrap_validator(validation.file_exists,
-                                           param_name="p")
-        result = validator({"args": {"p": "test_file"}}, None, None)
+        result = validation._file_access_ok(
+            "foobar", os.R_OK, "p", False)
         self.assertTrue(result.is_valid, result.msg)
 
     @mock.patch("rally.benchmark.validation.os.access")
-    def test_file_exists_not_found(self, mock_access):
+    def test__file_access_not_found(self, mock_access):
         mock_access.return_value = False
-        validator = self._unwrap_validator(validation.file_exists,
-                                           param_name="p")
-        result = validator({"args": {"p": "test_file"}}, None, None)
+        result = validation._file_access_ok(
+            "foobar", os.R_OK, "p", False)
         self.assertFalse(result.is_valid, result.msg)
+
+    @mock.patch("rally.benchmark.validation._file_access_ok")
+    def test_file_exists(self, mock__file_access_ok):
+        mock__file_access_ok.return_value = "foobar"
+        validator = self._unwrap_validator(validation.file_exists,
+                                           param_name="p",
+                                           required=False)
+        result = validator({"args": {"p": "test_file"}}, None, None)
+        self.assertEqual("foobar", result)
+        mock__file_access_ok.assert_called_once_with(
+            "test_file", os.R_OK, "p", False)
 
     def test__get_validated_image_no_value_in_config(self):
         result = validation._get_validated_image({}, None, "non_existing")
