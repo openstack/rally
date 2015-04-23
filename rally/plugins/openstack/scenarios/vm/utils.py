@@ -39,6 +39,8 @@ class VMScenario(base.Scenario):
     VM scenarios are scenarios executed inside some launched VM instance.
     """
 
+    USER_RWX_OTHERS_RX_ACCESS_MODE = 0o755
+
     @base.atomic_action_timer("vm.run_command_over_ssh")
     def _run_command_over_ssh(self, ssh, command):
         """Run command inside an instance.
@@ -66,6 +68,11 @@ class VMScenario(base.Scenario):
         elif command.get("remote_path"):
             cmd = command["remote_path"]
             stdin = None
+
+        if command.get("local_path"):
+            remote_path = cmd[-1] if isinstance(cmd, (tuple, list)) else cmd
+            ssh.put_file(command["local_path"], remote_path,
+                         mode=self.USER_RWX_OTHERS_RX_ACCESS_MODE)
 
         return ssh.execute(cmd, stdin=stdin)
 

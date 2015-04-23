@@ -73,6 +73,23 @@ class VMScenarioTestCase(test.ScenarioTestCase):
             ["foo", "bar"],
             stdin=None)
 
+    def test__run_command_over_ssh_remote_path_copy(self):
+        mock_ssh = mock.MagicMock()
+        vm_scenario = utils.VMScenario()
+        vm_scenario._run_command_over_ssh(
+            mock_ssh,
+            {
+                "remote_path": ["foo", "bar"],
+                "local_path": "/bin/false"
+            }
+        )
+        mock_ssh.put_file.assert_called_once_with(
+            "/bin/false", "bar", mode=0o755
+        )
+        mock_ssh.execute.assert_called_once_with(
+            ["foo", "bar"],
+            stdin=None)
+
     def test__run_command_over_ssh_fails(self):
         vm_scenario = utils.VMScenario()
         self.assertRaises(ValueError,
