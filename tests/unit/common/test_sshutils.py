@@ -13,6 +13,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import os
+
 import mock
 
 from rally.common import sshutils
@@ -269,3 +271,25 @@ class SSHRunTestCase(test.TestCase):
         m_select.select.return_value = ([], [], [])
         self.fake_session.exit_status_ready.return_value = False
         self.assertRaises(sshutils.SSHTimeout, self.ssh.run, "cmd")
+
+    @mock.patch("rally.common.sshutils.os.stat")
+    def test_put_file(self, mock_stat):
+        sftp = self.fake_client.open_sftp.return_value = mock.Mock()
+
+        mock_stat.return_value = os.stat_result([0o753] + [0] * 9)
+
+        self.ssh.put_file("localfile", "remotefile")
+
+        sftp.put.assert_called_once_with("localfile", "remotefile")
+        mock_stat.assert_called_once_with("localfile")
+        sftp.chmod.assert_called_once_with("remotefile", 0o753)
+        sftp.close.assert_called_once_with()
+
+    def test_put_file_mode(self):
+        sftp = self.fake_client.open_sftp.return_value = mock.Mock()
+
+        self.ssh.put_file("localfile", "remotefile", mode=0o753)
+
+        sftp.put.assert_called_once_with("localfile", "remotefile")
+        sftp.chmod.assert_called_once_with("remotefile", 0o753)
+        sftp.close.assert_called_once_with()

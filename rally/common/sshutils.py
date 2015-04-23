@@ -57,6 +57,7 @@ Eventlet:
 
 """
 
+import os
 import select
 import socket
 import time
@@ -259,3 +260,20 @@ class SSH(object):
                 time.sleep(interval)
             if time.time() > (start_time + timeout):
                 raise SSHTimeout(_("Timeout waiting for '%s'") % self.host)
+
+    def put_file(self, localpath, remotepath, mode=None):
+        """Copy specified local file to the server.
+
+        :param localpath:   Local filename.
+        :param remotepath:  Remote filename.
+        :param mode:        Permissions to set after upload
+        """
+
+        client = self._get_client()
+
+        sftp = client.open_sftp()
+        sftp.put(localpath, remotepath)
+        if mode is None:
+            mode = 0o777 & os.stat(localpath).st_mode
+        sftp.chmod(remotepath, mode)
+        sftp.close()
