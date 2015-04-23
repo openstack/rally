@@ -459,8 +459,9 @@
             name: "m1.tiny"
         image:
             name: {{image_name}}
-        script: "/home/jenkins/.rally/extra/instance_dd_test.sh"
-        interpreter: "/bin/sh"
+        command:
+          script_file: "/home/jenkins/.rally/extra/instance_dd_test.sh"
+          interpreter: "/bin/sh"
         username: "cirros"
       runner:
         type: "constant"

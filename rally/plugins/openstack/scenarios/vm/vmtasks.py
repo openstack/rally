@@ -15,6 +15,7 @@
 
 import json
 
+from rally.common import utils
 from rally import consts
 from rally import exceptions
 from rally.plugins.openstack.scenarios.cinder import utils as cinder_utils
@@ -35,7 +36,10 @@ class VMTasks(nova_utils.NovaScenario, vm_utils.VMScenario,
     @types.set(image=types.ImageResourceType,
                flavor=types.FlavorResourceType)
     @validation.image_valid_on_flavor("flavor", "image")
-    @validation.file_exists("script")
+    @utils.log_deprecated_args("Use `command' argument instead", "0.0.5",
+                               ("script", "interpreter"), once=True)
+    @validation.file_exists("script", required=False)
+    @validation.valid_command("command", required=False)
     @validation.number("port", minval=1, maxval=65535, nullable=True,
                        integer_only=True)
     @validation.external_network_exists("floating_network")
@@ -44,8 +48,11 @@ class VMTasks(nova_utils.NovaScenario, vm_utils.VMScenario,
     @base.scenario(context={"cleanup": ["nova", "cinder"],
                             "keypair": {}, "allow_ssh": {}})
     def boot_runcommand_delete(self, image, flavor,
-                               script, interpreter, username,
+                               username,
                                password=None,
+                               script=None,
+                               interpreter=None,
+                               command=None,
                                volume_args=None,
                                floating_network=None,
                                port=22,
@@ -58,11 +65,52 @@ class VMTasks(nova_utils.NovaScenario, vm_utils.VMScenario,
 
         :param image: glance image name to use for the vm
         :param flavor: VM flavor name
-        :param script: script to run on server, must output JSON mapping
-                       metric names to values (see the sample script below)
-        :param interpreter: server's interpreter to run the script
         :param username: ssh username on server, str
         :param password: Password on SSH authentication
+        :param script: DEPRECATED. Use `command' instead. Script to run on
+            server, must output JSON mapping metric names to values (see the
+            sample script below)
+        :param interpreter: DEPRECATED. Use `command' instead. server's
+            interpreter to run the script
+        :param command: Command-specifying dictionary that either specifies
+            remote command path via `remote_path', an inline script via
+            `script_inline' or a local script file path using `script_file'.
+            The `script_file' is checked to be accessible by the `file_exists'
+            validator.
+
+            The `script_inline' and `script_file' both require an `interpreter'
+            value to specify the interpreter script should be run with.
+
+            Note that any of `interpreter' and `remote_path' can be an array
+            prefixed with environment variables and suffixed with args for
+            the `interpreter' command.
+
+            Examples::
+
+                # Run a `local_script.pl' file sending it to a remote
+                # Perl interpreter
+                command = {
+                    "script_file": "local_script.pl",
+                    "interpreter": "/usr/bin/perl"
+                }
+
+                # Run an inline script sending it to a remote interpreter
+                command = {
+                    "script_inline": "echo 'Hello, World!'",
+                    "interpreter": "/bin/sh"
+                }
+
+                # Run a remote command
+                command = {
+                    "remote_path": "/bin/false"
+                }
+
+                # Run an inline script sending it to a remote interpreter
+                command = {
+                    "script_inline": "echo \"Hello, ${NAME:-World}\"",
+                    "interpreter": ["NAME=Earth", "/bin/sh"]
+                }
+
         :param volume_args: volume args for booting server from volume
         :param floating_network: external network name, for floating ip
         :param port: ssh port for SSH connection
@@ -73,6 +121,9 @@ class VMTasks(nova_utils.NovaScenario, vm_utils.VMScenario,
                   data: dict, JSON output from the script
                   errors: str, raw data from the script's stderr stream
         """
+
+        if command is None and script and interpreter:
+            command = {"script_file": script, "interpreter": interpreter}
 
         if volume_args:
             volume = self._create_volume(volume_args["size"], imageRef=None)
@@ -85,21 +136,20 @@ class VMTasks(nova_utils.NovaScenario, vm_utils.VMScenario,
             **kwargs)
         try:
             code, out, err = self._run_command(
-                fip["ip"], port, username, password,
-                command={"script_file": script, "interpreter": interpreter})
+                fip["ip"], port, username, password, command=command)
             if code:
                 raise exceptions.ScriptError(
-                    "Error running script %(script)s. "
+                    "Error running command %(command)s. "
                     "Error %(code)s: %(error)s" % {
-                        "script": script, "code": code, "error": err})
+                        "command": command, "code": code, "error": err})
 
             try:
                 data = json.loads(out)
             except ValueError as e:
                 raise exceptions.ScriptError(
-                    "Script %(script)s has not output valid JSON: %(error)s. "
-                    "Output: %(output)s" % {
-                        "script": script, "error": str(e), "output": out})
+                    "Command %(command)s has not output valid JSON: %(error)s."
+                    " Output: %(output)s" % {
+                        "command": command, "error": str(e), "output": out})
         finally:
             self._delete_server_with_fip(server, fip,
                                          force_delete=force_delete)

@@ -295,8 +295,9 @@
           name: "TestVM|cirros.*uec"
         floating_network: "net04_ext"
         use_floatingip: true
-        script: "/home/rally/.rally/extra/instance_dd_test.sh"
-        interpreter: "/bin/sh"
+        command:
+          script_file: "/home/rally/.rally/extra/instance_dd_test.sh"
+          interpreter: "/bin/sh"
         username: "cirros"
       runner:
         type: "constant"
