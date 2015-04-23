@@ -37,10 +37,11 @@ class VMScenarioTestCase(test.ScenarioTestCase):
             {
                 "script_file": "foobar",
                 "interpreter": ["interpreter", "interpreter_arg"],
+                "command_args": ["arg1", "arg2"]
             }
         )
         mock_ssh.execute.assert_called_once_with(
-            ["interpreter", "interpreter_arg"],
+            ["interpreter", "interpreter_arg", "arg1", "arg2"],
             stdin=mock_open.side_effect())
         mock_open.assert_called_once_with("foobar", "rb")
 
@@ -53,10 +54,11 @@ class VMScenarioTestCase(test.ScenarioTestCase):
             {
                 "script_inline": "foobar",
                 "interpreter": ["interpreter", "interpreter_arg"],
+                "command_args": ["arg1", "arg2"]
             }
         )
         mock_ssh.execute.assert_called_once_with(
-            ["interpreter", "interpreter_arg"],
+            ["interpreter", "interpreter_arg", "arg1", "arg2"],
             stdin=mock_string_io.return_value)
         mock_string_io.assert_called_once_with("foobar")
 
@@ -67,10 +69,11 @@ class VMScenarioTestCase(test.ScenarioTestCase):
             mock_ssh,
             {
                 "remote_path": ["foo", "bar"],
+                "command_args": ["arg1", "arg2"]
             }
         )
         mock_ssh.execute.assert_called_once_with(
-            ["foo", "bar"],
+            ["foo", "bar", "arg1", "arg2"],
             stdin=None)
 
     def test__run_command_over_ssh_remote_path_copy(self):
@@ -80,14 +83,15 @@ class VMScenarioTestCase(test.ScenarioTestCase):
             mock_ssh,
             {
                 "remote_path": ["foo", "bar"],
-                "local_path": "/bin/false"
+                "local_path": "/bin/false",
+                "command_args": ["arg1", "arg2"]
             }
         )
         mock_ssh.put_file.assert_called_once_with(
             "/bin/false", "bar", mode=0o755
         )
         mock_ssh.execute.assert_called_once_with(
-            ["foo", "bar"],
+            ["foo", "bar", "arg1", "arg2"],
             stdin=None)
 
     def test__run_command_over_ssh_fails(self):

@@ -74,6 +74,14 @@ class VMScenario(base.Scenario):
             ssh.put_file(command["local_path"], remote_path,
                          mode=self.USER_RWX_OTHERS_RX_ACCESS_MODE)
 
+        if command.get("command_args"):
+            if not isinstance(cmd, (list, tuple)):
+                cmd = [cmd]
+            # NOTE(pboldin): `ssh.execute' accepts either a string interpreted
+            # as a command name or the list of strings that are converted into
+            # single-line command with arguments.
+            cmd = cmd + list(command["command_args"])
+
         return ssh.execute(cmd, stdin=stdin)
 
     def _boot_server_with_fip(self, image, flavor,
