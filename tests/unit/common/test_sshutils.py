@@ -274,7 +274,8 @@ class SSHRunTestCase(test.TestCase):
 
     @mock.patch("rally.common.sshutils.os.stat")
     def test_put_file(self, mock_stat):
-        sftp = self.fake_client.open_sftp.return_value = mock.Mock()
+        sftp = self.fake_client.open_sftp.return_value = mock.MagicMock()
+        sftp.__enter__.return_value = sftp
 
         mock_stat.return_value = os.stat_result([0o753] + [0] * 9)
 
@@ -283,13 +284,14 @@ class SSHRunTestCase(test.TestCase):
         sftp.put.assert_called_once_with("localfile", "remotefile")
         mock_stat.assert_called_once_with("localfile")
         sftp.chmod.assert_called_once_with("remotefile", 0o753)
-        sftp.close.assert_called_once_with()
+        sftp.__exit__.assert_called_once_with(None, None, None)
 
     def test_put_file_mode(self):
-        sftp = self.fake_client.open_sftp.return_value = mock.Mock()
+        sftp = self.fake_client.open_sftp.return_value = mock.MagicMock()
+        sftp.__enter__.return_value = sftp
 
         self.ssh.put_file("localfile", "remotefile", mode=0o753)
 
         sftp.put.assert_called_once_with("localfile", "remotefile")
         sftp.chmod.assert_called_once_with("remotefile", 0o753)
-        sftp.close.assert_called_once_with()
+        sftp.__exit__.assert_called_once_with(None, None, None)

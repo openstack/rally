@@ -271,9 +271,8 @@ class SSH(object):
 
         client = self._get_client()
 
-        sftp = client.open_sftp()
-        sftp.put(localpath, remotepath)
-        if mode is None:
-            mode = 0o777 & os.stat(localpath).st_mode
-        sftp.chmod(remotepath, mode)
-        sftp.close()
+        with client.open_sftp() as sftp:
+            sftp.put(localpath, remotepath)
+            if mode is None:
+                mode = 0o777 & os.stat(localpath).st_mode
+            sftp.chmod(remotepath, mode)
