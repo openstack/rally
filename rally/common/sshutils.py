@@ -161,6 +161,9 @@ class SSH(object):
     def _run(self, client, cmd, stdin=None, stdout=None, stderr=None,
              raise_on_error=True, timeout=3600):
 
+        if isinstance(cmd, (list, tuple)):
+            cmd = " ".join(six.moves.shlex_quote(str(p)) for p in cmd)
+
         transport = client.get_transport()
         session = transport.open_session()
         session.exec_command(cmd)
@@ -229,7 +232,7 @@ class SSH(object):
     def execute(self, cmd, stdin=None, timeout=3600):
         """Execute the specified command on the server.
 
-        :param cmd:     Command to be executed.
+        :param cmd:     Command to be executed, can be a list.
         :param stdin:   Open file to be sent on process stdin.
         :param timeout: Timeout for execution of the command.
 
