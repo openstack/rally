@@ -26,7 +26,7 @@ Rally comes with a really great collection of :ref:`benchmark scenarios <tutoria
 .. code-block:: none
 
     {
-        "<ScenarioName1>": [<benchmark_config>, <benchmark_config2>, ...]
+        "<ScenarioName1>": [<benchmark_config>, <benchmark_config2>, ...],
         "<ScenarioName2>": [<benchmark_config>, ...]
     }
 
