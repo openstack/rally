@@ -6,6 +6,7 @@ RUN apt-get update && \
                        libxml2-dev libxslt1-dev libssl-dev &&\
     cd /tmp/rally &&\
     ./install_rally.sh &&\
+    pip install -r optional-requirements.txt &&\
     sed 's|#*connection *=.*|connection = sqlite:////home/rally/.rally.sqlite|' -i /etc/rally/rally.conf &&\
     apt-get -y remove libssl-dev libffi-dev python-dev libxml2-dev \
                       libxslt1-dev build-essential gcc-4.8 python3 && \
