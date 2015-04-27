@@ -188,6 +188,21 @@ class SSHRunTestCase(test.TestCase):
         self.fake_session.exec_command.assert_called_once_with("cmd")
 
     @mock.patch("rally.common.sshutils.select")
+    def test_execute_args(self, m_select):
+        m_select.select.return_value = ([], [], [])
+        self.fake_session.recv_ready.side_effect = [1, 0, 0]
+        self.fake_session.recv_stderr_ready.side_effect = [1, 0]
+        self.fake_session.recv.return_value = "ok"
+        self.fake_session.recv_stderr.return_value = "error"
+        self.fake_session.exit_status_ready.return_value = 1
+        self.fake_session.recv_exit_status.return_value = 127
+
+        result = self.ssh.execute(["cmd", "arg1", "arg2 with space"])
+        self.assertEqual((127, "ok", "error"), result)
+        self.fake_session.exec_command.assert_called_once_with(
+            "cmd arg1 'arg2 with space'")
+
+    @mock.patch("rally.common.sshutils.select")
     def test_run(self, m_select):
         m_select.select.return_value = ([], [], [])
         self.assertEqual(0, self.ssh.run("cmd"))
