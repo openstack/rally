@@ -14,16 +14,17 @@
 
 import mock
 
-from rally.plugins.openstack.context.sahara import sahara_edp
+from rally.plugins.openstack.context.sahara import sahara_data_sources
 from tests.unit import test
+
 
 CTX = "rally.plugins.openstack.context.sahara"
 
 
-class SaharaEDPTestCase(test.TestCase):
+class SaharaDataSourcesTestCase(test.ScenarioTestCase):
 
     def setUp(self):
-        super(SaharaEDPTestCase, self).setUp()
+        super(SaharaDataSourcesTestCase, self).setUp()
         self.tenants_num = 2
         self.users_per_tenant = 2
         self.users = self.tenants_num * self.users_per_tenant
@@ -44,55 +45,35 @@ class SaharaEDPTestCase(test.TestCase):
                          for j in range(self.tenants_num)
                          for i in range(self.users_per_tenant)]
 
-    @property
-    def context_without_edp_keys(self):
-        context = test.get_test_context()
-        context.update({
+        self.context.update({
             "config": {
                 "users": {
                     "tenants": self.tenants_num,
                     "users_per_tenant": self.users_per_tenant,
                 },
-                "sahara_edp": {
+                "sahara_data_sources": {
                     "input_type": "hdfs",
                     "output_type": "hdfs",
                     "input_url": "hdfs://test_host/",
-                    "output_url_prefix": "hdfs://test_host/out_",
-                    "libs": [
-                        {
-                            "name": "test.jar",
-                            "download_url": "http://example.com/test.jar"
-                        }
-                    ]
+                    "output_url_prefix": "hdfs://test_host/out_"
                 },
             },
             "admin": {"endpoint": mock.MagicMock()},
             "users": self.users_key,
             "tenants": self.tenants
         })
-        return context
 
-    @mock.patch("%s.sahara_edp.resource_manager.cleanup" % CTX)
-    @mock.patch("%s.sahara_edp.requests" % CTX)
-    @mock.patch("%s.sahara_edp.osclients" % CTX)
-    def test_setup_and_cleanup(self, mock_osclients, mock_requests,
-                               mock_cleanup):
+    @mock.patch("%s.sahara_data_sources.resource_manager.cleanup" % CTX)
+    @mock.patch("%s.sahara_data_sources.osclients" % CTX)
+    def test_setup_and_cleanup(self, mock_osclients, mock_cleanup):
 
         mock_sahara = mock_osclients.Clients(mock.MagicMock()).sahara()
         mock_sahara.data_sources.create.return_value = mock.MagicMock(id=42)
-        mock_sahara.job_binary_internals.create.return_value = (
-            mock.MagicMock(id=42))
 
-        mock_requests.get().content = "test_binary"
-
-        ctx = self.context_without_edp_keys
-        sahara_ctx = sahara_edp.SaharaEDP(ctx)
+        sahara_ctx = sahara_data_sources.SaharaDataSources(self.context)
         sahara_ctx.generate_random_name = mock.Mock()
 
         input_ds_crete_calls = []
-        download_calls = []
-        job_binary_internals_calls = []
-        job_binaries_calls = []
 
         for i in range(self.tenants_num):
             input_ds_crete_calls.append(mock.call(
@@ -100,28 +81,14 @@ class SaharaEDPTestCase(test.TestCase):
                 description="",
                 data_source_type="hdfs",
                 url="hdfs://test_host/"))
-            download_calls.append(mock.call("http://example.com/test.jar"))
-            job_binary_internals_calls.append(mock.call(
-                name="test.jar",
-                data="test_binary"))
-            job_binaries_calls.append(mock.call(
-                name="test.jar",
-                url="internal-db://42",
-                description="",
-                extra={}))
 
         sahara_ctx.setup()
 
         mock_sahara.data_sources.create.assert_has_calls(input_ds_crete_calls)
-        mock_requests.get.assert_has_calls(download_calls)
-        mock_sahara.job_binary_internals.create.assert_has_calls(
-            job_binary_internals_calls)
-        mock_sahara.job_binaries.create.assert_has_calls(job_binaries_calls)
 
         sahara_ctx.cleanup()
 
         mock_cleanup.assert_called_once_with(
             names=["sahara.job_executions", "sahara.jobs",
-                   "sahara.job_binary_internals", "sahara.job_binaries",
                    "sahara.data_sources"],
-            users=ctx["users"])
+            users=self.context["users"])
