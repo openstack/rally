@@ -1,0 +1,18 @@
+FROM centos
+COPY . /tmp/rally
+RUN yum install -y git wget bash-completion python-devel libffi-devel gmp-devel \
+                   postgresql-devel gcc libxml2-devel libxslt-devel openssl-devel &&\
+    cd /tmp/rally &&\
+    ./install_rally.sh &&\
+    sed 's|#*connection *=.*|connection = sqlite:////home/rally/.rally.sqlite|' -i /etc/rally/rally.conf &&\
+    yum remove -y openssl-devel python-devel libxml2-devel libxslt-devel gcc && \
+    yum autoremove -y &&\
+    yum clean all &&\
+    mv doc /usr/share/doc/rally &&\
+    rm -rf /tmp/* &&\
+    useradd -u 65500 -m rally &&\
+    ln -s /usr/share/doc/rally /home/rally/rally-docs
+USER rally
+CMD bash --login
+ENV HOME /home/rally
+WORKDIR /home/rally
