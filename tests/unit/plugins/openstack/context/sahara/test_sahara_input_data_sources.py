@@ -14,17 +14,16 @@
 
 import mock
 
-from rally.plugins.openstack.context.sahara import sahara_data_sources
+from rally.plugins.openstack.context.sahara import sahara_input_data_sources
 from tests.unit import test
-
 
 CTX = "rally.plugins.openstack.context.sahara"
 
 
-class SaharaDataSourcesTestCase(test.ScenarioTestCase):
+class SaharaInputDataSourcesTestCase(test.ScenarioTestCase):
 
     def setUp(self):
-        super(SaharaDataSourcesTestCase, self).setUp()
+        super(SaharaInputDataSourcesTestCase, self).setUp()
         self.tenants_num = 2
         self.users_per_tenant = 2
         self.users = self.tenants_num * self.users_per_tenant
@@ -51,11 +50,9 @@ class SaharaDataSourcesTestCase(test.ScenarioTestCase):
                     "tenants": self.tenants_num,
                     "users_per_tenant": self.users_per_tenant,
                 },
-                "sahara_data_sources": {
+                "sahara_input_data_sources": {
                     "input_type": "hdfs",
-                    "output_type": "hdfs",
                     "input_url": "hdfs://test_host/",
-                    "output_url_prefix": "hdfs://test_host/out_"
                 },
             },
             "admin": {"endpoint": mock.MagicMock()},
@@ -63,14 +60,15 @@ class SaharaDataSourcesTestCase(test.ScenarioTestCase):
             "tenants": self.tenants
         })
 
-    @mock.patch("%s.sahara_data_sources.resource_manager.cleanup" % CTX)
-    @mock.patch("%s.sahara_data_sources.osclients" % CTX)
+    @mock.patch("%s.sahara_input_data_sources.resource_manager.cleanup" % CTX)
+    @mock.patch("%s.sahara_input_data_sources.osclients" % CTX)
     def test_setup_and_cleanup(self, mock_osclients, mock_cleanup):
 
         mock_sahara = mock_osclients.Clients(mock.MagicMock()).sahara()
         mock_sahara.data_sources.create.return_value = mock.MagicMock(id=42)
 
-        sahara_ctx = sahara_data_sources.SaharaDataSources(self.context)
+        sahara_ctx = sahara_input_data_sources.SaharaInputDataSources(
+            self.context)
         sahara_ctx.generate_random_name = mock.Mock()
 
         input_ds_crete_calls = []
@@ -84,7 +82,8 @@ class SaharaDataSourcesTestCase(test.ScenarioTestCase):
 
         sahara_ctx.setup()
 
-        mock_sahara.data_sources.create.assert_has_calls(input_ds_crete_calls)
+        mock_sahara.data_sources.create.assert_has_calls(
+            input_ds_crete_calls)
 
         sahara_ctx.cleanup()
 

@@ -26,10 +26,11 @@
             -
               name: "udf.jar"
               download_url: "https://github.com/openstack/sahara/blob/master/etc/edp-examples/pig-job/udf.jar?raw=true"
-        sahara_data_sources:
+        sahara_input_data_sources:
           input_type: "hdfs"
-          output_type: "hdfs"
           input_url: "/"
+        sahara_output_data_sources:
+          output_type: "hdfs"
           output_url_prefix: "/out_"
         sahara_cluster:
           flavor_id: "2"
