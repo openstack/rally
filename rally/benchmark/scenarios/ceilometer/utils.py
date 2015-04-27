@@ -130,6 +130,14 @@ class CeilometerScenario(base.Scenario):
         """
         return self.clients("ceilometer").resources.list()
 
+    @base.atomic_action_timer("ceilometer.list_samples")
+    def _list_samples(self):
+        """List all Samples.
+
+        :returns: list of all samples
+        """
+        return self.clients("ceilometer").samples.list()
+
     @base.atomic_action_timer("ceilometer.get_stats")
     def _get_stats(self, meter_name):
         """Get stats for a specific meter.
