@@ -77,6 +77,33 @@ class CinderScenarioTestCase(test.TestCase):
         self._test_atomic_action_timer(self.scenario.atomic_actions(),
                                        "cinder.create_volume")
 
+    @mock.patch("rally.benchmark.scenarios.cinder.utils.random")
+    @mock.patch(CINDER_UTILS + ".CinderScenario.clients")
+    def test__create_volume_with_size_range(self, mock_clients, mock_random):
+        CONF = cfg.CONF
+        volume = mock.Mock()
+        mock_clients("cinder").volumes.create.return_value = volume
+        mock_random.randint.return_value = 3
+
+        return_volume = self.scenario._create_volume(
+            size={"min": 1, "max": 5},
+            display_name="TestVolume")
+
+        mock_clients("cinder").volumes.create.assert_called_once_with(
+            3, display_name="TestVolume")
+
+        self.wait_for.mock.assert_called_once_with(
+            volume,
+            is_ready=self.res_is.mock(),
+            update_resource=self.gfm(),
+            timeout=CONF.benchmark.cinder_volume_create_timeout,
+            check_interval=CONF.benchmark.cinder_volume_create_poll_interval
+        )
+        self.res_is.mock.assert_has_calls([mock.call("available")])
+        self.assertEqual(self.wait_for.mock(), return_volume)
+        self._test_atomic_action_timer(self.scenario.atomic_actions(),
+                                       "cinder.create_volume")
+
     def test__delete_volume(self):
         cinder = mock.Mock()
         self.scenario._delete_volume(cinder)
@@ -89,6 +116,28 @@ class CinderScenarioTestCase(test.TestCase):
             .cinder_volume_create_poll_interval)
         self._test_atomic_action_timer(self.scenario.atomic_actions(),
                                        "cinder.delete_volume")
+
+    @mock.patch("rally.benchmark.scenarios.cinder.utils.random")
+    @mock.patch(CINDER_UTILS + ".CinderScenario.clients")
+    def test__extend_volume_with_size_range(self, mock_clients, mock_random):
+        CONF = cfg.CONF
+        volume = mock.Mock()
+        mock_random.randint.return_value = 3
+        mock_clients("cinder").volumes.extend.return_value = volume
+
+        self.scenario._extend_volume(volume, new_size={"min": 1, "max": 5})
+
+        volume.extend.assert_called_once_with(volume, 3)
+        self.wait_for.mock.assert_called_once_with(
+            volume,
+            is_ready=self.res_is.mock(),
+            update_resource=self.gfm(),
+            timeout=CONF.benchmark.cinder_volume_create_timeout,
+            check_interval=CONF.benchmark.cinder_volume_create_poll_interval
+        )
+        self.res_is.mock.assert_has_calls([mock.call("available")])
+        self._test_atomic_action_timer(self.scenario.atomic_actions(),
+                                       "cinder.extend_volume")
 
     @mock.patch(CINDER_UTILS + ".CinderScenario.clients")
     def test__extend_volume(self, mock_clients):

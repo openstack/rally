@@ -12,3 +12,19 @@
         users:
           tenants: 1
           users_per_tenant: 1
+    -
+      args:
+        size:
+          min: 1
+          max: 5
+        new_size:
+          min: 6
+          max: 10
+      runner:
+        type: "constant"
+        times: 2
+        concurrency: 2
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1

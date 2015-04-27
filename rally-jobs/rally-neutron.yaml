@@ -560,11 +560,44 @@
       sla:
         failure_rate:
           max: 0
+    -
+      args:
+        size:
+          min: 1
+          max: 3
+      runner:
+        type: "constant"
+        times: 3
+        concurrency: 3
+      context:
+        users:
+          tenants: 2
+          users_per_tenant: 2
+      sla:
+        failure_rate:
+          max: 0
 
   CinderVolumes.create_and_list_volume:
     -
       args:
         size: 1
+        detailed: True
+      runner:
+        type: "constant"
+        times: 3
+        concurrency: 3
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+      sla:
+        failure_rate:
+          max: 0
+    -
+      args:
+        size:
+          min: 1
+          max: 3
         detailed: True
       runner:
         type: "constant"
@@ -631,6 +664,22 @@
           max: 0
     -
       args:
+        size:
+          min: 1
+          max: 3
+      runner:
+        type: "constant"
+        times: 2
+        concurrency: 2
+      context:
+        users:
+          tenants: 2
+          users_per_tenant: 2
+      sla:
+        failure_rate:
+          max: 0
+    -
+      args:
         size: 1
         image:
           name: {{image_name}}
@@ -662,11 +711,48 @@
       sla:
         failure_rate:
           max: 0
+    -
+      args:
+        size:
+          min: 1
+          max: 2
+        new_size:
+          min: 3
+          max: 4
+      runner:
+        type: "constant"
+        times: 2
+        concurrency: 2
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+      sla:
+        failure_rate:
+          max: 0
 
   CinderVolumes.create_from_volume_and_delete_volume:
     -
       args:
         size: 1
+      runner:
+        type: "constant"
+        times: 2
+        concurrency: 2
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+        volumes:
+          size: 1
+      sla:
+        failure_rate:
+          max: 0
+    -
+      args:
+        size:
+          min: 1
+          max: 2
       runner:
         type: "constant"
         times: 2
