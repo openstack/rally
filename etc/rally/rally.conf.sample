@@ -419,10 +419,10 @@
 # Cluster status polling interval in seconds (integer value)
 #cluster_check_interval = 5
 
-# A timeout in seconds for a cluster create operation (integer value)
+# A timeout in seconds for a Job Execution to complete (integer value)
 #job_execution_timeout = 600
 
-# Cluster status polling interval in seconds (integer value)
+# Job Execution status polling interval in seconds (integer value)
 #job_check_interval = 5
 
 # Time to sleep after boot before polling for status (floating point
