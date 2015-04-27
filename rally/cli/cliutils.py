@@ -433,6 +433,16 @@ def run(argv, categories):
                                      handler=parser)
 
     CONF.register_cli_opt(category_opt)
+    help_msg = ("Additional custom plugin locations. Multiple files or "
+                "directories may be specified. All plugins in the specified"
+                " directories and subdirectories will be imported. Plugins in"
+                " /opt/rally/plugins and ~/.rally/plugins will always be "
+                "imported.")
+
+    CONF.register_cli_opt(cfg.ListOpt("plugin-paths",
+                                      default=os.environ.get(
+                                          "RALLY_PLUGIN_PATHS"),
+                                      help=help_msg))
 
     try:
         CONF(argv[1:], project="rally", version=version.version_string())
@@ -511,6 +521,8 @@ def run(argv, categories):
         utils.load_plugins("/opt/rally/plugins/")
         utils.load_plugins(os.path.expanduser("~/.rally/plugins/"))
         utils.import_modules_from_package("rally.plugins")
+        for path in CONF.plugin_paths or []:
+            utils.load_plugins(path)
 
         validate_deprecated_args(argv, fn)
 

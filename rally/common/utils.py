@@ -274,8 +274,9 @@ def log_deprecated_args(message, rally_version, deprecated_args,
     return decorator
 
 
-def load_plugins(directory):
-    if os.path.exists(directory):
+def load_plugins(dir_or_file):
+    if os.path.isdir(dir_or_file):
+        directory = dir_or_file
         LOG.info("Loading plugins from directories %s/*" % directory)
 
         to_load = []
@@ -298,6 +299,21 @@ def load_plugins(directory):
                     % {"path": fullpath, "e": e})
                 if logging.is_debug():
                     LOG.exception(e)
+    elif os.path.isfile(dir_or_file):
+        plugin_file = dir_or_file
+        LOG.info("Loading plugins from file %s" % plugin_file)
+        if plugin_file not in sys.path:
+            sys.path.append(plugin_file)
+        try:
+            plugin_name = os.path.splitext(plugin_file.split("/")[-1])[0]
+            imp.load_source(plugin_name, plugin_file)
+            LOG.info("\t Loaded module with plugins: %s.py" % plugin_name)
+        except Exception as e:
+            LOG.warning(
+                "\t Failed to load module with plugins %(path)s: %(e)s"
+                % {"path": plugin_file, "e": e})
+            if logging.is_debug():
+                LOG.exception(e)
 
 
 def get_method_class(func):
