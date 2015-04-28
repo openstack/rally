@@ -18,6 +18,9 @@
 Step 1. Setting up the environment and running a benchmark from samples
 =======================================================================
 
+.. contents::
+   :local:
+
 In this demo, we will show how to perform some basic operations in Rally, such as registering an OpenStack cloud, benchmarking it and generating benchmark reports.
 
 We assume that you have a :ref:`Rally installation <tutorial_step_0_installation>` and an already existing OpenStack deployment with Keystone available at *<KEYSTONE_AUTH_URL>*.
@@ -208,12 +211,12 @@ One of the most beautiful things in Rally is its task report generation mechanis
 
    $ rally task report --out=report1.html --open
 
-This will produce an HTML page with the overview of all the scenarios that you've included into the last benchmark task completed in Rally (in our case, this is just one scenario, and we will cover the topic of multiple scenarios in one task in :ref:`the next step of our tutorial <tutorial_step_2_running_multple_benchmarks_in_a_single_task>`):
+This will produce an HTML page with the overview of all the scenarios that you've included into the last benchmark task completed in Rally (in our case, this is just one scenario, and we will cover the topic of multiple scenarios in one task in :ref:`the next step of our tutorial <tutorial_step_2_input_task_format>`):
 
 .. image:: ../images/Report-Overview.png
    :align: center
 
-This aggregating table shows the duration of the load produced by the corresponding scenario (*"Load duration"*), the overall benchmark scenario execution time, including the duration of environment preparation with contexts (*"Full duration"*), the number of iterations of each scenario (*"Iterations"*), the type of the load used while running the scenario (*"Runner"*), the number of failed iterations (*"Errors"*) and finally whether the scenario has passed certain Success Criteria (*"SLA"*) that were set up by the user in the input configuration file (we will cover these criteria in :ref:`one of the next steps <tutorial_step_3_adding_success_criteria_for_benchmarks>`).
+This aggregating table shows the duration of the load produced by the corresponding scenario (*"Load duration"*), the overall benchmark scenario execution time, including the duration of environment preparation with contexts (*"Full duration"*), the number of iterations of each scenario (*"Iterations"*), the type of the load used while running the scenario (*"Runner"*), the number of failed iterations (*"Errors"*) and finally whether the scenario has passed certain Success Criteria (*"SLA"*) that were set up by the user in the input configuration file (we will cover these criteria in :ref:`one of the next steps <tutorial_step_4_adding_success_criteria_for_benchmarks>`).
 
 By navigating in the left panel, you can switch to the detailed view of the benchmark results for the only scenario we included into our task, namely **NovaServers.boot_and_delete_server**:
 
@@ -228,4 +231,4 @@ This page, along with the description of the success criteria used to check the 
 Note that all the charts on the report pages are very dynamic: you can change their contents by clicking the switches above the graph and see more information about its single points by hovering the cursor over these points.
 
 Take some time to play around with these graphs
-and then move on to :ref:`the next step of our tutorial <tutorial_step_2_running_multple_benchmarks_in_a_single_task>`.
+and then move on to :ref:`the next step of our tutorial <tutorial_step_2_input_task_format>`.

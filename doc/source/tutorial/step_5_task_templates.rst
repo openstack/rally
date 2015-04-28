@@ -13,10 +13,13 @@
       License for the specific language governing permissions and limitations
       under the License.
 
-.. _tutorial_step_4_task_templates:
+.. _tutorial_step_5_task_templates:
 
-Step 4. Rally task templates
+Step 5. Rally task templates
 ============================
+
+.. contents::
+   :local:
 
 Basic template syntax
 ---------------------

@@ -13,15 +13,18 @@
       License for the specific language governing permissions and limitations
       under the License.
 
-.. _tutorial_step_2_running_multple_benchmarks_in_a_single_task:
+.. _tutorial_step_2_input_task_format:
 
-Step 2. Running multiple benchmarks in a single task
-====================================================
+Step 2. Rally input task format
+===============================
 
-Rally input task syntax
+.. contents::
+   :local:
+
+Basic input task syntax
 -----------------------
 
-Rally comes with a really great collection of :ref:`benchmark scenarios <tutorial_step_7_discovering_more_benchmark_scenarios>` and in most real-world scenarios you will use multiple scenarios to test your OpenStack cloud. Rally makes it very easy to run **different benchmarks defined in a single benchmark task**. To do so, use the following syntax:
+Rally comes with a really great collection of :ref:`benchmark scenarios <tutorial_step_8_discovering_more_benchmark_scenarios>` and in most real-world scenarios you will use multiple scenarios to test your OpenStack cloud. Rally makes it very easy to run **different benchmarks defined in a single benchmark task**. To do so, use the following syntax:
 
 .. code-block:: none
 
@@ -35,9 +38,10 @@ where *<benchmark_config>*, as before, is a dictionary:
 .. code-block:: none
 
     {
-        "args": { scenario-specific arguments },
-        "runner": {"type": ..., }
-        ...
+        "args": { <scenario-specific arguments> },
+        "runner": { <type of the runner and its specific parameters> },
+        "context": { <contexts needed for this scenario> },
+        "sla": { <different SLA configs> }
     }
 
 Multiple benchmarks in a single task
