@@ -1,7 +1,13 @@
 FROM centos
 COPY . /tmp/rally
 RUN yum install -y git wget bash-completion python-devel libffi-devel gmp-devel \
-                   postgresql-devel gcc libxml2-devel libxslt-devel openssl-devel &&\
+        gcc libxml2-devel libxslt-devel openssl-devel \
+	babel python-decorator python-jinja2 python-netaddr python-six \
+	PyYAML python-psycopg2 python-requests python27-python-sqlalchemy \
+	python-sphinx python-virtualenv pyOpenSSL &&\
+    cd /tmp &&\
+    curl "https://bootstrap.pypa.io/get-pip.py" -o "get-pip.py" &&\
+    python get-pip.py &&\
     cd /tmp/rally &&\
     ./install_rally.sh &&\
     sed 's|#*connection *=.*|connection = sqlite:////home/rally/.rally.sqlite|' -i /etc/rally/rally.conf &&\
