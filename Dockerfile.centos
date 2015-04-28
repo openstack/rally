@@ -1,10 +1,10 @@
 FROM centos
 COPY . /tmp/rally
 RUN yum install -y git wget bash-completion python-devel libffi-devel gmp-devel \
-        gcc libxml2-devel libxslt-devel openssl-devel \
+        gcc libxml2-devel libxslt-devel openssl-devel postgresql-devel \
 	babel python-decorator python-jinja2 python-netaddr python-six \
 	PyYAML python-psycopg2 python-requests python27-python-sqlalchemy \
-	python-sphinx python-virtualenv pyOpenSSL &&\
+	python-sphinx python-virtualenv pyOpenSSL python-lxml &&\
     cd /tmp &&\
     curl "https://bootstrap.pypa.io/get-pip.py" -o "get-pip.py" &&\
     python get-pip.py &&\
