@@ -494,3 +494,11 @@ def volume_type_exists(config, clients, deployment, param_name):
             message = (_("Must have at least one volume type created "
                          "when specifying use of volume types."))
             return ValidationResult(False, message)
+
+
+@validator
+def restricted_parameters(config, clients, deployment, param_name):
+    """Validator that check that parameter is not set."""
+    if param_name in config.get("args", {}):
+        return ValidationResult(False, "You can't specify parameter `%s`" %
+                                param_name)

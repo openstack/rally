@@ -96,6 +96,24 @@ class NovaSecurityGroupTestCase(test.TestCase):
                                  resources.NovaSecurityGroup().list())
 
 
+class NovaFloatingIpsBulkTestCase(test.TestCase):
+
+    def test_id(self):
+        ip_range = resources.NovaFloatingIpsBulk()
+        ip_range.raw_resource = mock.MagicMock()
+        self.assertEqual(ip_range.raw_resource.address, ip_range.id())
+
+    @mock.patch("%s.base.ResourceManager._manager" % BASE)
+    def test_list(self, mock_manager):
+        ip_range = [mock.MagicMock(), mock.MagicMock(), mock.MagicMock()]
+        ip_range[0].pool = "a"
+        ip_range[1].pool = "rally_fip_pool_a"
+        ip_range[2].pool = "rally_fip_pool_b"
+
+        mock_manager().list.return_value = ip_range
+        self.assertEqual(ip_range[1:], resources.NovaFloatingIpsBulk().list())
+
+
 class EC2MixinTestCase(test.TestCase):
 
     def get_ec2_mixin(self):

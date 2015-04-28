@@ -639,3 +639,9 @@ class ValidatorsTestCase(test.TestCase):
             fake_service.state = "down"
             result = validator({}, None, deployment)
             self.assertFalse(result.is_valid, result.msg)
+
+    def test_restricted_parameters(self):
+        validator = self._unwrap_validator(
+            validation.restricted_parameters, "param_name")
+        result = validator({"args": {}}, None, None)
+        self.assertTrue(result.is_valid, result.msg)
