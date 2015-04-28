@@ -86,6 +86,7 @@ class _Service(utils.ImmutableMixin, utils.EnumMixin):
     """OpenStack services names, by rally convention."""
 
     NOVA = "nova"
+    NOVA_NET = "nova-network"
     NOVAV21 = "novav21"
     NOVAV3 = "novav3"
     CINDER = "cinder"

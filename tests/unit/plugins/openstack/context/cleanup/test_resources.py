@@ -137,6 +137,18 @@ class NovaFloatingIpsBulkTestCase(test.TestCase):
         self.assertEqual(ip_range[1:], resources.NovaFloatingIpsBulk().list())
 
 
+class NovaNetworksTestCase(test.TestCase):
+
+    @mock.patch("%s.base.ResourceManager._manager" % BASE)
+    def test_list(self, mock_resource_manager__manager):
+        network = [mock.Mock(label="a"), mock.Mock(label="rally_novanet_a"),
+                   mock.Mock(label="rally_novanet_b")]
+
+        mock_resource_manager__manager.return_value.list.return_value = network
+        self.assertEqual(network[1:], resources.NovaNetworks().list())
+        mock_resource_manager__manager().list.assert_called_once_with()
+
+
 class EC2MixinTestCase(test.TestCase):
 
     def get_ec2_mixin(self):
