@@ -218,3 +218,33 @@ class KeystoneScenario(base.Scenario):
         """
         self.admin_clients("keystone").users.update_password(user_id,
                                                              password)
+
+    @base.atomic_action_timer("keystone.create_ec2creds")
+    def _create_ec2credentials(self, user_id, tenant_id):
+        """Create ec2credentials.
+
+        :param user_id: User ID for which to create credentials
+        :param tenant_id: Tenant ID for which to create credentials
+
+        :returns: Created ec2-credentials object
+        """
+        return self.clients("keystone").ec2.create(user_id, tenant_id)
+
+    @base.atomic_action_timer("keystone.list_ec2creds")
+    def _list_ec2credentials(self, user_id):
+        """List of access/secret pairs for a user_id.
+
+        :param user_id: List all ec2-credentials for User ID
+
+        :returns: Return ec2-credentials list
+        """
+        return self.clients("keystone").ec2.list(user_id)
+
+    @base.atomic_action_timer("keystone.delete_ec2creds")
+    def _delete_ec2credential(self, user_id, access):
+        """Delete ec2credential.
+
+        :param user_id: User ID for which to delete credential
+        :param access: access key for ec2credential to delete
+        """
+        self.clients("keystone").ec2.delete(user_id, access)

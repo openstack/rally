@@ -500,3 +500,10 @@ class KeystoneService(KeystoneMixin, base.ResourceManager):
                admin_required=True, perform_for_admin_only=True)
 class KeystoneRole(KeystoneMixin, base.ResourceManager):
     pass
+
+
+@base.resource("keystone", "ec2", tenant_resource=True,
+               order=next(_keystone_order))
+class KeystoneEc2(SynchronizedDeletion, base.ResourceManager):
+    def list(self):
+        return self._manager().list(self.raw_resource)

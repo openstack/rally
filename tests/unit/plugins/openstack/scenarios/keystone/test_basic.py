@@ -27,8 +27,8 @@ class KeystoneBasicTestCase(test.TestCase):
     @staticmethod
     def _get_context():
         return {
-            "user": {"id": "fake"},
-            "tenant": {"id": "fake"}
+            "user": {"id": "fake_user_id"},
+            "tenant": {"id": "fake_tenant_id"}
         }
 
     @mock.patch("rally.common.utils.generate_random_name")
@@ -248,3 +248,26 @@ class KeystoneBasicTestCase(test.TestCase):
                                                          service_type,
                                                          description)
         scenario._list_services.assert_called_once_with()
+
+    def test_create_and_list_ec2credentials(self):
+        context = self._get_context()
+        scenario = basic.KeystoneBasic(context)
+        scenario._create_ec2credentials = mock.MagicMock()
+        scenario._list_ec2credentials = mock.MagicMock()
+        scenario.create_and_list_ec2credentials()
+        scenario._create_ec2credentials.assert_called_once_with(
+            "fake_user_id", "fake_tenant_id")
+        scenario._list_ec2credentials.assert_called_with("fake_user_id")
+
+    def test_create_and_delete_ec2credential(self):
+        fake_creds = mock.MagicMock()
+        context = self._get_context()
+        scenario = basic.KeystoneBasic(context)
+        scenario._create_ec2credentials = mock.MagicMock(
+            return_value=fake_creds)
+        scenario._delete_ec2credential = mock.MagicMock()
+        scenario.create_and_delete_ec2credential()
+        scenario._create_ec2credentials.assert_called_once_with(
+            "fake_user_id", "fake_tenant_id")
+        scenario._delete_ec2credential.assert_called_once_with(
+            "fake_user_id", fake_creds.access)
