@@ -1,0 +1,24 @@
+{
+    "HeatStacks.create_and_delete_stack": [
+        {
+            "args": {
+               "template_path": "templates/resource_group_server_with_volume.yaml.template",
+               "parameters": {
+                   "num_instances": 2
+               },
+               "files": ["templates/server_with_volume.yaml.template"]
+            },
+            "runner": {
+                "type": "constant",
+                "times": 3,
+                "concurrency": 2
+            },
+            "context": {
+                "users": {
+                    "tenants": 2,
+                    "users_per_tenant": 3
+                }
+            }
+        }
+    ]
+}
