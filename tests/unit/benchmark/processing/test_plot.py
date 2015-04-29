@@ -65,10 +65,11 @@ class PlotTestCase(test.TestCase):
         results = [result_(i) for i in (0, 1, 2)]
         table_cols = ["Action",
                       "Min (sec)",
-                      "Avg (sec)",
+                      "Median (sec)",
+                      "90%ile (sec)",
+                      "95%ile (sec)",
                       "Max (sec)",
-                      "90 percentile",
-                      "95 percentile",
+                      "Avg (sec)",
                       "Success",
                       "Count"]
         atomic_durations = [["atomic_1"], ["atomic_2"]]

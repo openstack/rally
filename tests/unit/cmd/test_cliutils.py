@@ -54,6 +54,21 @@ class CliUtilsTestCase(test.TestCase):
         h1 = cliutils.make_header("msg", size=4, symbol="=")
         self.assertEqual(h1, "====\n msg\n====\n")
 
+    def test_make_table_header(self):
+        actual = cliutils.make_table_header("Response Times (sec)", 40)
+        expected = "\n".join(
+            ("+--------------------------------------+",
+             "|         Response Times (sec)         |",)
+        )
+        self.assertEqual(expected, actual)
+
+        actual = cliutils.make_table_header("Response Times (sec)", 39)
+        expected = "\n".join(
+            ("+-------------------------------------+",
+             "|        Response Times (sec)         |",)
+        )
+        self.assertEqual(expected, actual)
+
     def test_pretty_float_formatter_rounding(self):
         test_table_rows = {"test_header": 6.56565}
         self.__dict__.update(**test_table_rows)
