@@ -105,5 +105,65 @@ class ExceptionLogger(object):
             return True
 
 
+class CatcherHandler(logging.handlers.BufferingHandler):
+    def __init__(self):
+        logging.handlers.BufferingHandler.__init__(self, 0)
+
+    def shouldFlush(self):
+        return False
+
+    def emit(self, record):
+        self.buffer.append(record)
+
+
+class LogCatcher(object):
+    """Context manager that catches log messages.
+
+    User can make an assertion on their content or fetch them all.
+
+    Usage::
+        LOG = logging.getLogger(__name__)
+        ...
+
+        def foobar():
+            with LogCatcher(LOG) as catcher_in_rye:
+                LOG.warning("Running Kids")
+
+            catcher_in_rye.assertInLogs("Running Kids")
+    """
+    def __init__(self, logger):
+        self.logger = getattr(logger, "logger", logger)
+        self.handler = CatcherHandler()
+
+    def __enter__(self):
+        self.logger.addHandler(self.handler)
+        return self
+
+    def __exit__(self, type_, value, traceback):
+        self.logger.removeHandler(self.handler)
+
+    def assertInLogs(self, msg):
+        """Assert that `msg' is a substring at least of one logged message.
+
+        :param msg: Substring to look for.
+        :return: Log messages where the `msg' was found.
+            Raises AssertionError if none.
+        """
+        in_logs = [record.msg
+                   for record in self.handler.buffer if msg in record.msg]
+        if not in_logs:
+            raise AssertionError("Expected `%(expected)s' is not in logs"
+                                 % {"expected": msg})
+        return in_logs
+
+    def fetchLogRecords(self):
+        """Returns all logged Records."""
+        return self.handler.buffer
+
+    def fetchLogs(self):
+        """Returns all logged messages."""
+        return [record.msg for record in self.handler.buffer]
+
+
 def is_debug():
     return CONF.debug or CONF.rally_debug
