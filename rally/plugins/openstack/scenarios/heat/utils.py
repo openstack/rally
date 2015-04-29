@@ -89,10 +89,14 @@ class HeatScenario(base.Scenario):
         return list(self.clients("heat").stacks.list())
 
     @base.atomic_action_timer("heat.create_stack")
-    def _create_stack(self, template):
+    def _create_stack(self, template, parameters=None,
+                      files=None, environment=None):
         """Create a new stack.
 
         :param template: template with stack description.
+        :param parameters: template parameters used during stack creation
+        :param files: additional files used in template
+        :param environment: stack environment definition
 
         :returns: object of stack
         """
@@ -100,10 +104,10 @@ class HeatScenario(base.Scenario):
         kw = {
             "stack_name": stack_name,
             "disable_rollback": True,
-            "parameters": {},
+            "parameters": parameters or {},
             "template": template,
-            "files": {},
-            "environment": {}
+            "files": files or {},
+            "environment": environment or {}
         }
 
         # heat client returns body instead manager object, so we should
@@ -123,21 +127,26 @@ class HeatScenario(base.Scenario):
         return stack
 
     @base.atomic_action_timer("heat.update_stack")
-    def _update_stack(self, stack, template):
+    def _update_stack(self, stack, template, parameters=None,
+                      files=None, environment=None):
         """Update an existing stack
 
         :param stack: stack that need to be updated
         :param template: Updated template
+        :param parameters: template parameters for stack update
+        :param files: additional files used in template
+        :param environment: stack environment definition
+
         :returns: object of updated stack
         """
 
         kw = {
             "stack_name": stack.stack_name,
             "disable_rollback": True,
-            "parameters": {},
+            "parameters": parameters or {},
             "template": template,
-            "files": {},
-            "environment": {}
+            "files": files or {},
+            "environment": environment or {}
         }
         self.clients("heat").stacks.update(stack.id, **kw)
 

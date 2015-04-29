@@ -43,6 +43,9 @@ class HeatScenarioTestCase(test.TestCase):
         self.useFixture(mockpatch.Patch("time.sleep"))
         self.scenario = utils.HeatScenario()
         self.default_template = "heat_template_version: 2013-05-23"
+        self.dummy_parameters = {"dummy_param": "dummy_key"}
+        self.dummy_files = ["dummy_file.yaml"]
+        self.dummy_environment = {"dummy_env": "dummy_env_value"}
 
     @mock.patch(HEAT_UTILS + ".HeatScenario.clients")
     def test_list_stacks(self, mock_clients):
@@ -61,7 +64,15 @@ class HeatScenarioTestCase(test.TestCase):
         }
         mock_clients("heat").stacks.get.return_value = self.stack
         scenario = utils.HeatScenario()
-        return_stack = scenario._create_stack(self.default_template)
+        return_stack = scenario._create_stack(self.default_template,
+                                              self.dummy_parameters,
+                                              self.dummy_files,
+                                              self.dummy_environment)
+        args, kwargs = mock_clients("heat").stacks.create.call_args
+        self.assertIn(self.dummy_parameters, kwargs.values())
+        self.assertIn(self.default_template, kwargs.values())
+        self.assertIn(self.dummy_files, kwargs.values())
+        self.assertIn(self.dummy_environment, kwargs.values())
         self.wait_for.mock.assert_called_once_with(
             self.stack,
             update_resource=self.gfm(),
@@ -77,7 +88,15 @@ class HeatScenarioTestCase(test.TestCase):
     def test_update_stack(self, mock_clients):
         mock_clients("heat").stacks.update.return_value = None
         scenario = utils.HeatScenario()
-        scenario._update_stack(self.stack, self.default_template)
+        scenario._update_stack(self.stack, self.default_template,
+                               self.dummy_parameters, self.dummy_files,
+                               self.dummy_environment)
+        args, kwargs = mock_clients("heat").stacks.update.call_args
+        self.assertIn(self.dummy_parameters, kwargs.values())
+        self.assertIn(self.default_template, kwargs.values())
+        self.assertIn(self.dummy_files, kwargs.values())
+        self.assertIn(self.dummy_environment, kwargs.values())
+        self.assertIn(self.stack.id, args)
         self.wait_for.mock.assert_called_once_with(
             self.stack,
             update_resource=self.gfm(),
