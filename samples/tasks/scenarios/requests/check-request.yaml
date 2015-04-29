@@ -1,0 +1,12 @@
+---
+  HttpRequests.check_request:
+    -
+      args:
+        url: "http://www.example.com"
+        method: "GET"
+        status_code: 200
+        allow_redirects: False
+      runner:
+        type: "constant"
+        times: 20
+        concurrency: 5

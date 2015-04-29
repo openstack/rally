@@ -10,32 +10,42 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import requests
+import random
 
 from rally.benchmark.scenarios import base
-from rally.common.i18n import _
-from rally import exceptions
+from rally.benchmark.scenarios.requests import utils
 
 
-class WrongStatusException(exceptions.RallyException):
-    msg_fmt = _("Requests scenario exception: '%(message)s'")
-
-
-class Requests(base.Scenario):
+class HttpRequests(utils.RequestScenario):
     """Benchmark scenarios for HTTP requests."""
 
     @base.scenario()
-    def check_response(self, url, response=None):
+    def check_request(self, url, method, status_code, **kwargs):
         """Standard way to benchmark web services.
 
-        This benchmark is used to GET a URL and check it with expected
+        This benchmark is used to make request and check it with expected
         Response.
 
-        :param url: URL to be fetched
-        :param response: expected response code
+        :param url: url for the Request object
+        :param method: method for the Request object
+        :param status_code: expected response code
+        :param kwargs: optional additional request parameters
         """
-        resp = requests.head(url)
-        if response and response != resp.status_code:
-            error = "Expected HTTP request code is `%s` actual `%s`" % (
-                    response, resp.status_code)
-            raise WrongStatusException(error)
+
+        self._check_request(url, method, status_code, **kwargs)
+
+    @base.scenario()
+    def check_random_request(self, requests, status_code):
+        """Benchmark the list of requests
+
+        This scenario takes random url from list of requests, and raises
+        exception if the response is not the expected response.
+
+        :param requests: List of request dicts
+        :param status_code: Expected Response Code it will
+        be used only if we doesn't specified it in request proper
+        """
+
+        request = random.choice(requests)
+        request.setdefault("status_code", status_code)
+        self._check_request(**request)
