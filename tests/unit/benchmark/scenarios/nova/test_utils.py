@@ -795,3 +795,11 @@ class NovaScenarioTestCase(test.TestCase):
             fake_cidr)
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.delete_floating_ips_bulk")
+
+    @mock.patch(NOVA_UTILS + ".NovaScenario.admin_clients")
+    def test__list_hypervisors(self, mock_clients):
+        nova_scenario = utils.NovaScenario()
+        nova_scenario._list_hypervisors(detailed=False)
+        mock_clients("nova").hypervisors.list.assert_called_once_with(False)
+        self._test_atomic_action_timer(nova_scenario.atomic_actions(),
+                                       "nova.list_hypervisors")

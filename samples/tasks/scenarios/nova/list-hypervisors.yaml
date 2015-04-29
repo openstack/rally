@@ -1,0 +1,9 @@
+---
+  NovaHypervisors.list_hypervisors:
+    -
+      args:
+        detailed: True
+      runner:
+        type: "constant"
+        times: 10
+        concurrency: 2

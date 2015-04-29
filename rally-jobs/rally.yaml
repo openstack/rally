@@ -1336,6 +1336,18 @@
         failure_rate:
           max: 0
 
+  NovaHypervisors.list_hypervisors:
+    -
+      args:
+        detailed: True
+      runner:
+        type: "constant"
+        times: 5
+        concurrency: 2
+      sla:
+        failure_rate:
+          max: 0
+
   VMTasks.boot_runcommand_delete:
     -
       args:
