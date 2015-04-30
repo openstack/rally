@@ -25,6 +25,7 @@ import jsonschema
 import six
 
 from rally.common.i18n import _
+from rally.common import streaming_algorithms
 from rally.common import utils
 from rally import consts
 from rally import exceptions
@@ -228,5 +229,61 @@ class MaxAverageDuration(SLA):
         return self.success
 
     def details(self):
-        return (_("Maximum average duration of one iteration %.2fs <= %.2fs - "
-                  "%s") % (self.avg, self.criterion_value, self.status()))
+        return (_("Average duration of one iteration %.2fs <= %.2fs - %s") %
+                (self.avg, self.criterion_value, self.status()))
+
+
+class Outliers(SLA):
+    """Limit the number of outliers (iterations that take too much time).
+
+    The outliers are detected automatically using the computation of the mean
+    and standard deviation (std) of the data.
+    """
+    OPTION_NAME = "outliers"
+    CONFIG_SCHEMA = {
+        "type": "object",
+        "$schema": consts.JSON_SCHEMA,
+        "properties": {
+            "max": {"type": "integer", "minimum": 0},
+            "min_iterations": {"type": "integer", "minimum": 3},
+            "sigmas": {"type": "number", "minimum": 0.0,
+                       "exclusiveMinimum": True}
+        }
+    }
+
+    def __init__(self, criterion_value):
+        super(Outliers, self).__init__(criterion_value)
+        self.max_outliers = self.criterion_value.get("max", 0)
+        # NOTE(msdubov): Having 3 as default is reasonable (need enough data).
+        self.min_iterations = self.criterion_value.get("min_iterations", 3)
+        self.sigmas = self.criterion_value.get("sigmas", 3.0)
+        self.iterations = 0
+        self.outliers = 0
+        self.threshold = None
+        self.mean_comp = streaming_algorithms.MeanStreamingComputation()
+        self.std_comp = streaming_algorithms.StdDevStreamingComputation()
+
+    def add_iteration(self, iteration):
+        if not iteration.get("error"):
+            duration = iteration["duration"]
+            self.iterations += 1
+
+            # NOTE(msdubov): First check if the current iteration is an outlier
+            if ((self.iterations >= self.min_iterations and self.threshold and
+                 duration > self.threshold)):
+                self.outliers += 1
+
+            # NOTE(msdubov): Then update the threshold value
+            self.mean_comp.add(duration)
+            self.std_comp.add(duration)
+            if self.iterations >= 2:
+                mean = self.mean_comp.result()
+                std = self.std_comp.result()
+                self.threshold = mean + self.sigmas * std
+
+        self.success = self.outliers <= self.max_outliers
+        return self.success
+
+    def details(self):
+        return (_("Maximum number of outliers %i <= %i - %s") %
+                (self.outliers, self.max_outliers, self.status()))
