@@ -18,6 +18,7 @@ import abc
 import jsonschema
 import six
 
+from rally.benchmark import functional
 from rally.common import log as logging
 from rally.common import utils
 from rally import exceptions
@@ -50,7 +51,7 @@ def context(name, order, hidden=False):
 
 @six.add_metaclass(abc.ABCMeta)
 @context(name="base", order=0, hidden=True)
-class Context(object):
+class Context(functional.FunctionalMixin):
     """This class is a factory for context classes.
 
     Every context class should be a subclass of this class and implement

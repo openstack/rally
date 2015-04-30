@@ -168,6 +168,10 @@ class DeploymentIsBusy(RallyException):
                 "uuid=%(uuid)s.")
 
 
+class RallyAssertionError(RallyException):
+    msg_fmt = _("Assertion error: %(message)s")
+
+
 class ResourceNotFound(NotFoundException):
     msg_fmt = _("Resource with id=%(id)s not found.")
 
