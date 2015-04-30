@@ -70,6 +70,17 @@ for action, prepoll, timeout, poll in option_names_and_defaults:
         )
     ])
 
+NOVA_BENCHMARK_OPTS.extend([
+    cfg.FloatOpt(
+        "nova_detach_volume_timeout",
+        default=float(200),
+        help="Nova volume detach timeout"),
+    cfg.FloatOpt(
+        "nova_detach_volume_poll_interval",
+        default=float(2),
+        help="Nova volume detach poll interval")
+])
+
 CONF = cfg.CONF
 benchmark_group = cfg.OptGroup(name="benchmark",
                                title="benchmark options")
@@ -598,9 +609,8 @@ class NovaScenario(base.Scenario):
             volume,
             is_ready=bench_utils.resource_is("available"),
             update_resource=bench_utils.get_from_manager(),
-            timeout=CONF.benchmark.nova_server_resize_revert_timeout,
-            check_interval=(
-                    CONF.benchmark.nova_server_resize_revert_poll_interval)
+            timeout=CONF.benchmark.nova_detach_volume_timeout,
+            check_interval=CONF.benchmark.nova_detach_volume_poll_interval
         )
 
     @base.atomic_action_timer("nova.live_migrate")
