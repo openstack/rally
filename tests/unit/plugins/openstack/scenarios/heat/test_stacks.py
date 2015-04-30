@@ -171,3 +171,29 @@ class HeatStacksTestCase(test.ClientsTestCase):
         mock__delete_stack.assert_called_once_with(
             mock__create_stack.return_value
         )
+
+    @mock.patch(HEAT_STACKS + "._delete_stack")
+    @mock.patch(HEAT_STACKS + "._restore_stack")
+    @mock.patch(HEAT_STACKS + "._snapshot_stack")
+    @mock.patch(HEAT_STACKS + "._create_stack")
+    def test_create_snapshot_restore_delete_stack(
+            self, mock__create_stack, mock__snapshot_stack,
+            mock__restore_stack, mock__delete_stack):
+        heat_scenario = stacks.HeatStacks()
+        mock__snapshot_stack.return_value = {"id": "dummy_id"}
+        heat_scenario.create_snapshot_restore_delete_stack(
+            template_path=self.default_template,
+            parameters=self.default_parameters,
+            files=self.default_files,
+            environment=self.default_environment
+        )
+
+        mock__create_stack.assert_called_once_with(
+            self.default_template, self.default_parameters,
+            self.default_files, self.default_environment)
+        mock__snapshot_stack.assert_called_once_with(
+            mock__create_stack.return_value)
+        mock__restore_stack.assert_called_once_with(
+            mock__create_stack.return_value, "dummy_id")
+        mock__delete_stack.assert_called_once_with(
+            mock__create_stack.return_value)

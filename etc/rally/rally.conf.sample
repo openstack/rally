@@ -207,6 +207,19 @@
 # (floating point value)
 #heat_stack_resume_poll_interval = 1.0
 
+# Time(in sec) to wait for stack snapshot to be created.
+#heat_stack_snapshot_timeout = 3600.0
+
+# Time interval(in sec) between checks when waiting for stack snapshot
+# to be created.
+#heat_stack_snapshot_poll_interval = 1.0
+
+# Time(in sec) to wait for stack to be restored from snapshot.
+#heat_stack_restore_timeout = 3600.0
+
+# Time interval(in sec) between checks when waiting for stack to be restored.
+#heat_stack_restore_poll_interval = 1.0
+
 # Delay between creating Manila share and polling for its status.
 # (floating point value)
 #manila_share_create_prepoll_delay = 2.0
