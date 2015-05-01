@@ -53,6 +53,77 @@ class UserGeneratorTestCase(test.TestCase):
         self.osclients_patcher.stop()
         super(UserGeneratorTestCase, self).tearDown()
 
+    @mock.patch("rally.benchmark.context.users.network.wrap")
+    def test__remove_default_security_group_not_needed(self, mock_wrap):
+        user_generator = users.UserGenerator(self.context)
+        user_generator._remove_default_security_group()
+        mock_wrap.assert_called_once_with(self.osclients.Clients.return_value)
+
+    @mock.patch("rally.benchmark.context.users.network.wrap")
+    def test__remove_default_security_group_neutron_no_sg(self, mock_wrap):
+        net_wrapper = mock.Mock()
+        net_wrapper.supports_security_group.return_value = (False, None)
+        net_wrapper.SERVICE_IMPL = consts.Service.NEUTRON
+        mock_wrap.return_value = net_wrapper
+
+        user_generator = users.UserGenerator(self.context)
+
+        admin_clients = mock.Mock()
+        admin_clients.services.return_value = {"compute": consts.Service.NOVA}
+        user_clients = [mock.Mock(), mock.Mock()]
+        self.osclients.Clients.side_effect = [admin_clients] + user_clients
+
+        user_generator._remove_default_security_group()
+
+        mock_wrap.assert_called_once_with(admin_clients)
+        net_wrapper.supports_security_group.assert_called_once_with()
+
+    @mock.patch("rally.common.utils.iterate_per_tenants")
+    @mock.patch("rally.benchmark.context.users.network")
+    @mock.patch("rally.benchmark.utils.check_service_status",
+                return_value=False)
+    def test__remove_default_security_group(self, mock_check_service_status,
+                                            mock_netwrap,
+                                            mock_iterate_per_tenants):
+        net_wrapper = mock.Mock()
+        net_wrapper.supports_security_group.return_value = (True, None)
+        net_wrapper.SERVICE_IMPL = consts.Service.NEUTRON
+        mock_netwrap.wrap.return_value = net_wrapper
+
+        user_generator = users.UserGenerator(self.context)
+
+        admin_clients = mock.Mock()
+        admin_clients.services.return_value = {"compute": consts.Service.NOVA}
+        user_clients = [mock.Mock(), mock.Mock()]
+        self.osclients.Clients.side_effect = [admin_clients] + user_clients
+
+        mock_iterate_per_tenants.return_value = [
+            (mock.MagicMock(), "t1"),
+            (mock.MagicMock(), "t2")]
+
+        user_generator._remove_default_security_group()
+
+        mock_netwrap.wrap.assert_called_once_with(admin_clients)
+
+        mock_iterate_per_tenants.assert_called_once_with(
+            user_generator.context["users"])
+        expected = [mock.call(user_generator.endpoint)] + [
+            mock.call(u["endpoint"])
+            for u, t in mock_iterate_per_tenants.return_value]
+        self.osclients.Clients.assert_has_calls(expected, any_order=True)
+
+        expected_deletes = []
+        for clients in user_clients:
+            user_nova = clients.nova.return_value
+            user_nova.security_groups.find.assert_called_once_with(
+                name="default")
+            expected_deletes.append(
+                mock.call(user_nova.security_groups.find.return_value.id))
+
+        nova_admin = admin_clients.neutron.return_value
+        nova_admin.delete_security_group.assert_has_calls(expected_deletes,
+                                                          any_order=True)
+
     @mock.patch("rally.benchmark.utils.check_service_status",
                 return_value=True)
     def test__remove_associated_networks(self, mock_check_service_status):

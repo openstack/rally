@@ -21,6 +21,7 @@ from oslo_config import cfg
 from rally.benchmark.context import base
 from rally.benchmark import utils
 from rally.benchmark.wrappers import keystone
+from rally.benchmark.wrappers import network
 from rally.common import broker
 from rally.common.i18n import _
 from rally.common import log as logging
@@ -104,6 +105,28 @@ class UserGenerator(base.Context):
         #                 and change a bit logic of populating lists of users
         #                 and tenants
 
+    def _remove_default_security_group(self):
+        """Delete default security group for tenants."""
+        clients = osclients.Clients(self.endpoint)
+        net_wrapper = network.wrap(clients)
+
+        if net_wrapper.SERVICE_IMPL != consts.Service.NEUTRON:
+            return
+
+        use_sg, msg = net_wrapper.supports_security_group()
+        if not use_sg:
+            LOG.debug("Security group context is disabled: %(message)s" %
+                      {"message": msg})
+            return
+
+        for user, tenant_id in rutils.iterate_per_tenants(
+                self.context["users"]):
+            with logging.ExceptionLogger(
+                    LOG, _("Unable to delete default security group")):
+                uclients = osclients.Clients(user["endpoint"])
+                sg = uclients.nova().security_groups.find(name="default")
+                clients.neutron().delete_security_group(sg.id)
+
     def _remove_associated_networks(self):
         """Delete associated Nova networks from tenants."""
         # NOTE(rmk): Ugly hack to deal with the fact that Nova Network
@@ -118,11 +141,11 @@ class UserGenerator(base.Context):
         if not utils.check_service_status(nova_admin, "nova-network"):
             return
 
-        for network in nova_admin.networks.list():
-            network_tenant_id = nova_admin.networks.get(network).project_id
+        for net in nova_admin.networks.list():
+            network_tenant_id = nova_admin.networks.get(net).project_id
             if network_tenant_id in self.context["tenants"]:
                 try:
-                    nova_admin.networks.disassociate(network)
+                    nova_admin.networks.disassociate(net)
                 except Exception as ex:
                     LOG.warning("Failed disassociate net: %(tenant_id)s. "
                                 "Exception: %(ex)s" %
@@ -257,5 +280,6 @@ class UserGenerator(base.Context):
     @rutils.log_task_wrapper(LOG.info, _("Exit context: `users`"))
     def cleanup(self):
         """Delete tenants and users, using the broker pattern."""
+        self._remove_default_security_group()
         self._delete_users()
         self._delete_tenants()
