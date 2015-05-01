@@ -13,8 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import tempfile
-
 import mock
 
 from rally.benchmark.scenarios.heat import stacks
@@ -25,16 +23,20 @@ HEAT_STACKS = "rally.benchmark.scenarios.heat.stacks.HeatStacks"
 
 class HeatStacksTestCase(test.TestCase):
 
+    def setUp(self):
+        super(HeatStacksTestCase, self).setUp()
+        self.default_template = "heat_template_version: 2013-05-23"
+
     @mock.patch(HEAT_STACKS + "._generate_random_name")
     @mock.patch(HEAT_STACKS + "._list_stacks")
     @mock.patch(HEAT_STACKS + "._create_stack")
     def test_create_and_list_stack(self, mock_create, mock_list,
                                    mock_random_name):
-        template_file = tempfile.NamedTemporaryFile()
         heat_scenario = stacks.HeatStacks()
         mock_random_name.return_value = "test-rally-stack"
-        heat_scenario.create_and_list_stack(template_path=template_file.name)
-        self.assertEqual(1, mock_create.called)
+        heat_scenario.create_and_list_stack(
+            template_path=self.default_template)
+        mock_create.assert_called_once_with(self.default_template)
         mock_list.assert_called_once_with()
 
     @mock.patch(HEAT_STACKS + ".clients")
@@ -60,17 +62,6 @@ class HeatStacksTestCase(test.TestCase):
             heat_scenario.atomic_actions(), "heat.list_events_of_1_stacks")
 
     @mock.patch(HEAT_STACKS + "._generate_random_name")
-    @mock.patch(HEAT_STACKS + "._list_stacks")
-    @mock.patch(HEAT_STACKS + "._create_stack")
-    def test_create_and_list_stack_fails(self, mock_create, mock_list,
-                                         mock_random_name):
-        heat_scenario = stacks.HeatStacks()
-        mock_random_name.return_value = "test-rally-stack"
-        self.assertRaises(IOError,
-                          heat_scenario.create_and_list_stack,
-                          template_path="/tmp/dummy")
-
-    @mock.patch(HEAT_STACKS + "._generate_random_name")
     @mock.patch(HEAT_STACKS + "._delete_stack")
     @mock.patch(HEAT_STACKS + "._create_stack")
     def test_create_and_delete_stack(self, mock_create, mock_delete,
@@ -79,9 +70,10 @@ class HeatStacksTestCase(test.TestCase):
         fake_stack = object()
         mock_create.return_value = fake_stack
         mock_random_name.return_value = "test-rally-stack"
-        heat_scenario.create_and_delete_stack()
+        heat_scenario.create_and_delete_stack(
+            template_path=self.default_template)
 
-        self.assertTrue(mock_create.called)
+        mock_create.assert_called_once_with(self.default_template)
         mock_delete.assert_called_once_with(fake_stack)
 
     @mock.patch(HEAT_STACKS + "._delete_stack")
@@ -91,8 +83,9 @@ class HeatStacksTestCase(test.TestCase):
                                        mock_delete):
         heat_scenario = stacks.HeatStacks()
         mock_create.return_value = "fake_stack_create_check_delete"
-        heat_scenario.create_check_delete_stack()
-        mock_create.assert_called_once_with(None)
+        heat_scenario.create_check_delete_stack(
+            template_path=self.default_template)
+        mock_create.assert_called_once_with(self.default_template)
         mock_check.assert_called_once_with("fake_stack_create_check_delete")
         mock_delete.assert_called_once_with("fake_stack_create_check_delete")
 
@@ -106,10 +99,12 @@ class HeatStacksTestCase(test.TestCase):
         fake_stack = object()
         mock_create.return_value = fake_stack
         mock_random_name.return_value = "test-rally-stack"
-        heat_scenario.create_update_delete_stack()
+        heat_scenario.create_update_delete_stack(
+            template_path=self.default_template,
+            updated_template_path=self.default_template)
 
-        self.assertTrue(mock_create.called)
-        mock_update.assert_called_once_with(fake_stack, None)
+        mock_create.assert_called_once_with(self.default_template)
+        mock_update.assert_called_once_with(fake_stack, self.default_template)
         mock_delete.assert_called_once_with(fake_stack)
 
     @mock.patch(HEAT_STACKS + "._delete_stack")
@@ -123,9 +118,10 @@ class HeatStacksTestCase(test.TestCase):
                                                 mock_delete):
         heat_scenario = stacks.HeatStacks()
         mock_create.return_value = "fake_stack_create_suspend_resume_delete"
-        heat_scenario.create_suspend_resume_delete_stack()
+        heat_scenario.create_suspend_resume_delete_stack(
+            template_path=self.default_template)
 
-        mock_create.assert_called_once_with(None)
+        mock_create.assert_called_once_with(self.default_template)
         mock_suspend.assert_called_once_with(
             "fake_stack_create_suspend_resume_delete")
         mock_resume.assert_called_once_with(

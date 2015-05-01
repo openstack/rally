@@ -82,8 +82,6 @@ CONF.register_opts(HEAT_BENCHMARK_OPTS, group=benchmark_group)
 class HeatScenario(base.Scenario):
     """Base class for Heat scenarios with basic atomic actions."""
 
-    default_template = "HeatTemplateFormatVersion: '2012-12-12'"
-
     @base.atomic_action_timer("heat.list_stacks")
     def _list_stacks(self):
         """Return user stack list."""
@@ -91,15 +89,14 @@ class HeatScenario(base.Scenario):
         return list(self.clients("heat").stacks.list())
 
     @base.atomic_action_timer("heat.create_stack")
-    def _create_stack(self, template=None):
+    def _create_stack(self, template):
         """Create a new stack.
 
-        :param template: optional parameter. Template with stack description.
+        :param template: template with stack description.
 
         :returns: object of stack
         """
         stack_name = self._generate_random_name()
-        template = template or self.default_template
         kw = {
             "stack_name": stack_name,
             "disable_rollback": True,
@@ -126,15 +123,13 @@ class HeatScenario(base.Scenario):
         return stack
 
     @base.atomic_action_timer("heat.update_stack")
-    def _update_stack(self, stack, template=None):
+    def _update_stack(self, stack, template):
         """Update an existing stack
 
         :param stack: stack that need to be updated
         :param template: Updated template
         :returns: object of updated stack
         """
-
-        template = template or self.default_template
 
         kw = {
             "stack_name": stack.stack_name,

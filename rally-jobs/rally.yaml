@@ -591,6 +591,8 @@
 
   HeatStacks.create_and_list_stack:
     -
+      args:
+        template_path: "/home/jenkins/.rally/extra/default.yaml.template"
       runner:
         type: "constant"
         times: 6
@@ -605,6 +607,8 @@
 
   HeatStacks.create_and_delete_stack:
     -
+      args:
+        template_path: "/home/jenkins/.rally/extra/default.yaml.template"
       runner:
         type: "constant"
         times: 6
