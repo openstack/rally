@@ -285,6 +285,7 @@ class TaskCommands(object):
                 if r["atomic_actions"]:
                     for action in atomic_actions:
                         dlist.append(r["atomic_actions"].get(action) or 0)
+                table_rows.append(rutils.Struct(**dict(zip(headers, dlist))))
             cliutils.print_list(table_rows,
                                 fields=headers,
                                 formatters=formatters)
