@@ -64,11 +64,6 @@ class VMScenario(base.Scenario):
 
         return ssh.execute(interpreter, stdin=stdin)
 
-    def _get_netwrap(self):
-        if not hasattr(self, "_netwrap"):
-            self._netwrap = network_wrapper.wrap(self.clients)
-        return self._netwrap
-
     def _boot_server_with_fip(self, image, flavor,
                               use_floating_ip=True, floating_network=None,
                               wait_for_ping=True, **kwargs):
@@ -101,7 +96,7 @@ class VMScenario(base.Scenario):
         internal_network = list(server.networks)[0]
         fixed_ip = server.addresses[internal_network][0]["addr"]
 
-        fip = self._get_netwrap().create_floating_ip(
+        fip = network_wrapper.wrap(self.clients).create_floating_ip(
             ext_network=floating_network, int_network=internal_network,
             tenant_id=server.tenant_id, fixed_ip=fixed_ip)
 
@@ -115,7 +110,8 @@ class VMScenario(base.Scenario):
                 LOG, _("Unable to delete IP: %s") % fip["ip"]):
             if self.check_ip_address(fip["ip"])(server):
                 self._dissociate_floating_ip(server, fip["ip"])
-            self._get_netwrap().delete_floating_ip(fip["id"], wait=True)
+            network_wrapper.wrap(self.clients).delete_floating_ip(fip["id"],
+                                                                  wait=True)
 
     def _delete_server_with_fip(self, server, fip, force_delete=False):
         if fip["is_floating"]:
