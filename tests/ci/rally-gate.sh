@@ -56,7 +56,7 @@ rally show networks
 rally show secgroups
 rally show keypairs
 
-rally -v task start --task $TASK $TASK_ARGS
+rally -v --rally-debug task start --task $TASK $TASK_ARGS
 
 mkdir -p rally-plot/extra
 python $BASE/new/rally/rally/ui/utils.py render\
