@@ -417,52 +417,6 @@ class NovaScenarioTestCase(test.TestCase):
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.unrescue_server")
 
-    @mock.patch(NOVA_UTILS + ".NovaScenario.clients")
-    def test__default_delete_all_servers(self, mock_clients):
-        mock_clients("nova").servers.list.return_value = [self.server,
-                                                          self.server1]
-        nova_scenario = utils.NovaScenario()
-        nova_scenario._delete_all_servers()
-        check_interval = CONF.benchmark.nova_server_delete_poll_interval
-        expected = [
-            mock.call(
-                self.server, update_resource=self.gfm(),
-                check_interval=check_interval,
-                timeout=CONF.benchmark.nova_server_delete_timeout
-            ),
-            mock.call(
-                self.server1, update_resource=self.gfm(),
-                check_interval=check_interval,
-                timeout=CONF.benchmark.nova_server_delete_timeout
-            )
-        ]
-        self.assertEqual(expected, self.wait_for_delete.mock.mock_calls)
-        self._test_atomic_action_timer(nova_scenario.atomic_actions(),
-                                       "nova.delete_all_servers")
-
-    @mock.patch(NOVA_UTILS + ".NovaScenario.clients")
-    def test__force_delete_all_servers(self, mock_clients):
-        mock_clients("nova").servers.list.return_value = [self.server,
-                                                          self.server1]
-        nova_scenario = utils.NovaScenario()
-        nova_scenario._delete_all_servers(force=True)
-        check_interval = CONF.benchmark.nova_server_delete_poll_interval
-        expected = [
-            mock.call(
-                self.server, update_resource=self.gfm(),
-                check_interval=check_interval,
-                timeout=CONF.benchmark.nova_server_delete_timeout
-            ),
-            mock.call(
-                self.server1, update_resource=self.gfm(),
-                check_interval=check_interval,
-                timeout=CONF.benchmark.nova_server_delete_timeout
-            )
-        ]
-        self.assertEqual(expected, self.wait_for_delete.mock.mock_calls)
-        self._test_atomic_action_timer(nova_scenario.atomic_actions(),
-                                       "nova.force_delete_all_servers")
-
     def test__delete_image(self):
         nova_scenario = utils.NovaScenario()
         nova_scenario._delete_image(self.image)

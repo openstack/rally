@@ -383,18 +383,6 @@ class NovaScenario(base.Scenario):
                 check_interval=CONF.benchmark.nova_server_delete_poll_interval
             )
 
-    def _delete_all_servers(self, force=False):
-        """Delete all servers in the current tenant.
-
-        :param force: If True, force_delete will be used instead of delete.
-        """
-        atomic_name = ("nova.%sdelete_all_servers") % (force
-                                                       and "force_" or "")
-        with base.AtomicAction(self, atomic_name):
-            servers = self.clients("nova").servers.list()
-            for server in servers:
-                self._delete_server(server, force)
-
     @base.atomic_action_timer("nova.delete_image")
     def _delete_image(self, image):
         """Delete the given image.
