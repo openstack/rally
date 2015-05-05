@@ -1,0 +1,14 @@
+{
+  "NovaHypervisors.list_hypervisors": [
+    {
+      "runner": {
+        "type": "constant",
+        "concurrency": 2,
+        "times": 10
+      },
+      "args": {
+        "detailed": true
+      }
+    }
+  ]
+}

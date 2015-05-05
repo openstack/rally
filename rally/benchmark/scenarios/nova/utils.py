@@ -742,3 +742,8 @@ class NovaScenario(base.Scenario):
     def _delete_floating_ips_bulk(self, ip_range):
         """Delete floating IPs by range."""
         return self.admin_clients("nova").floating_ips_bulk.delete(ip_range)
+
+    @base.atomic_action_timer("nova.list_hypervisors")
+    def _list_hypervisors(self, detailed=True):
+        """List hypervisors."""
+        return self.admin_clients("nova").hypervisors.list(detailed)
