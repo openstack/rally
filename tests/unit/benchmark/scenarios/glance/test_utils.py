@@ -68,8 +68,7 @@ class GlanceScenarioTestCase(test.TestCase):
         image_location = tempfile.NamedTemporaryFile()
         mock_clients("glance").images.create.return_value = self.image
         scenario = utils.GlanceScenario()
-        return_image = scenario._create_image("image_name",
-                                              "container_format",
+        return_image = scenario._create_image("container_format",
                                               image_location.name,
                                               "disk_format")
         self.wait_for.mock.assert_called_once_with(self.image,
@@ -86,8 +85,7 @@ class GlanceScenarioTestCase(test.TestCase):
     def test_create_image_with_location(self, mock_clients):
         mock_clients("glance").images.create.return_value = self.image
         scenario = utils.GlanceScenario()
-        return_image = scenario._create_image("image_name",
-                                              "container_format",
+        return_image = scenario._create_image("container_format",
                                               "image_location",
                                               "disk_format")
         self.wait_for.mock.assert_called_once_with(self.image,

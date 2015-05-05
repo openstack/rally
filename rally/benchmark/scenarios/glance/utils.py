@@ -58,22 +58,27 @@ class GlanceScenario(base.Scenario):
         return list(self.clients("glance").images.list())
 
     @base.atomic_action_timer("glance.create_image")
-    def _create_image(self, image_name, container_format,
-                      image_location, disk_format, **kwargs):
+    def _create_image(self, container_format, image_location, disk_format,
+                      name=None, prefix=None, length=None, **kwargs):
         """Create a new image.
 
-        :param image_name: string used to name the image
         :param container_format: container format of image. Acceptable
                                  formats: ami, ari, aki, bare, and ovf
         :param image_location: image file location
         :param disk_format: disk format of image. Acceptable formats:
                             ami, ari, aki, vhd, vmdk, raw, qcow2, vdi, and iso
+        :param name: string used to name the image
+        :param prefix: prefix of generated image name if name not specified
+        ignore if name specified
+        :param length: length of autometic generated part in image name
+        ignore if name specified
         :param kwargs: optional parameters to create image
 
         :returns: image object
         """
+        name = name or self._generate_random_name(prefix, length)
         kw = {
-            "name": image_name,
+            "name": name,
             "container_format": container_format,
             "disk_format": disk_format,
         }
