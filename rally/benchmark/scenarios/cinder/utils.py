@@ -72,12 +72,19 @@ class CinderScenario(base.Scenario):
         Returns when the volume is actually created and is in the "Available"
         state.
 
-        :param size: int be size of volume in GB
+        :param size: int be size of volume in GB, or
+                     dictionary, must contain two values:
+                         min - minimum size volumes will be created as;
+                         max - maximum size volumes will be created as.
         :param kwargs: Other optional parameters to initialize the volume
         :returns: Created volume object
         """
         kwargs["display_name"] = kwargs.get("display_name",
                                             self._generate_random_name())
+
+        if isinstance(size, dict):
+            size = random.randint(size["min"], size["max"])
+
         volume = self.clients("cinder").volumes.create(size, **kwargs)
         # NOTE(msdubov): It is reasonable to wait 5 secs before starting to
         #                check whether the volume is ready => less API calls.
@@ -114,8 +121,16 @@ class CinderScenario(base.Scenario):
         Returns when the volume is actually extended.
 
         :param volume: volume object
-        :param new_size: new volume size in GB
+        :param new_size: new volume size in GB, or
+                         dictionary, must contain two values:
+                             min - minimum size volumes will be created as;
+                             max - maximum size volumes will be created as.
+                        Notice: should be bigger volume size
         """
+
+        if isinstance(new_size, dict):
+            new_size = random.randint(new_size["min"], new_size["max"])
+
         volume.extend(volume, new_size)
         volume = bench_utils.wait_for(
             volume,

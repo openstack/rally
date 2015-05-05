@@ -49,7 +49,10 @@ class CinderVolumes(utils.CinderScenario,
         performance of the "cinder volume-list" command depending on
         the number of images owned by users.
 
-        :param size: volume size (in GB)
+        :param size: volume size (integer, in GB) or
+                     dictionary, must contain two values:
+                         min - minimum size volumes will be created as;
+                         max - maximum size volumes will be created as.
         :param detailed: determines whether the volume listing should contain
                          detailed information about all of them
         :param image: image to be used to create volume
@@ -91,7 +94,10 @@ class CinderVolumes(utils.CinderScenario,
         between volume creation and deletion (of random duration from
         [min_sleep, max_sleep]).
 
-        :param size: volume size (in GB)
+        :param size: volume size (integer, in GB) or
+                     dictionary, must contain two values:
+                         min - minimum size volumes will be created as;
+                         max - maximum size volumes will be created as.
         :param image: image to be used to create volume
         :param min_sleep: minimum sleep time between volume creation and
                           deletion (in seconds)
@@ -117,7 +123,10 @@ class CinderVolumes(utils.CinderScenario,
         Good test to check how influence amount of active volumes on
         performance of creating new.
 
-        :param size: volume size (in GB)
+        :param size: volume size (integer, in GB) or
+                     dictionary, must contain two values:
+                         min - minimum size volumes will be created as;
+                         max - maximum size volumes will be created as.
         :param image: image to be used to create volume
         :param kwargs: optional args to create a volume
         """
@@ -134,8 +143,16 @@ class CinderVolumes(utils.CinderScenario,
         """Create and extend a volume and then delete it.
 
 
-        :param size: volume size (in GB)
-        :param new_size: volume new size (in GB) to extend
+        :param size: volume size (in GB) or
+                     dictionary, must contain two values:
+                         min - minimum size volumes will be created as;
+                         max - maximum size volumes will be created as.
+        :param new_size: volume new size (in GB) or
+                        dictionary, must contain two values:
+                             min - minimum size volumes will be created as;
+                             max - maximum size volumes will be created as.
+                        to extend.
+                        Notice: should be bigger volume size
         :param min_sleep: minimum sleep time between volume extension and
                           deletion (in seconds)
         :param max_sleep: maximum sleep time between volume extension and
@@ -159,8 +176,12 @@ class CinderVolumes(utils.CinderScenario,
         parameters allow the scenario to simulate a pause between volume
         creation and deletion (of random duration from [min_sleep, max_sleep]).
 
-        :param size: volume size (in GB). Should be equal or bigger
-                     source volume size
+        :param size: volume size (in GB), or
+                     dictionary, must contain two values:
+                         min - minimum size volumes will be created as;
+                         max - maximum size volumes will be created as.
+                     Should be equal or bigger source volume size
+
         :param min_sleep: minimum sleep time between volume creation and
                           deletion (in seconds)
         :param max_sleep: maximum sleep time between volume creation and
@@ -210,7 +231,10 @@ class CinderVolumes(utils.CinderScenario,
         Simple test to create a VM and attach a volume, then
         detach the volume and delete volume/VM.
 
-        :param size: volume size (in GB)
+        :param size: volume size (integer, in GB) or
+                     dictionary, must contain two values:
+                         min - minimum size volumes will be created as;
+                         max - maximum size volumes will be created as.
         :param image: Glance image name to use for the VM
         :param flavor: VM flavor name
         :param kwargs: optional arguments for VM creation
@@ -268,8 +292,6 @@ class CinderVolumes(utils.CinderScenario,
                 volume_types.append(s.name)
             selected_type = random.choice(volume_types)
 
-        size = random.randint(size["min"], size["max"])
-
         volume = self._create_volume(size, volume_type=selected_type)
         snapshot = self._create_snapshot(volume.id, False, **kwargs)
 
@@ -320,7 +342,6 @@ class CinderVolumes(utils.CinderScenario,
         if nested_level is None:
             nested_level = {"min": 5, "max": 10}
 
-        size = random.randint(size["min"], size["max"])
         nested_level = random.randint(nested_level["min"], nested_level["max"])
 
         source_vol = self._create_volume(size)
@@ -373,7 +394,10 @@ class CinderVolumes(utils.CinderScenario,
                                           **kwargs):
         """Create and upload a volume to image.
 
-        :param size: volume size (integers, in GB)
+        :param size: volume size (integers, in GB), or
+                     dictionary, must contain two values:
+                         min - minimum size volumes will be created as;
+                         max - maximum size volumes will be created as.
         :param force: when set to True volume that is attached to an instance
                       could be uploaded to image
         :param container_format: image container format

@@ -256,3 +256,73 @@ class MaxAverageDurationTestCase(test.TestCase):
         self.assertTrue(sla.add_iteration({"duration": 5.0}))   # avg = 3.667
         self.assertFalse(sla.add_iteration({"duration": 7.0}))  # avg = 4.5
         self.assertTrue(sla.add_iteration({"duration": 1.0}))   # avg = 3.8
+
+
+class OutliersTestCase(test.TestCase):
+
+    def test_config_schema(self):
+        base.Outliers.validate({"outliers": {"max": 0, "min_iterations": 5,
+                                             "sigmas": 2.5}})
+        self.assertRaises(jsonschema.ValidationError,
+                          base.Outliers.validate,
+                          {"outliers": {"max": -1}})
+        self.assertRaises(jsonschema.ValidationError,
+                          base.Outliers.validate,
+                          {"outliers": {"max": 0, "min_iterations": 2}})
+        self.assertRaises(jsonschema.ValidationError,
+                          base.Outliers.validate,
+                          {"outliers": {"max": 0, "sigmas": 0}})
+
+    def test_result(self):
+        sla1 = base.Outliers({"max": 1})
+        sla2 = base.Outliers({"max": 2})
+        iteration_durations = [3.1, 4.2, 3.6, 4.5, 2.8, 3.3, 4.1, 3.8, 4.3,
+                               2.9, 10.2, 11.2, 3.4]  # outliers: 10.2, 11.2
+        for sla in [sla1, sla2]:
+            for d in iteration_durations:
+                sla.add_iteration({"duration": d})
+        self.assertFalse(sla1.result()["success"])  # 2 outliers >  1
+        self.assertTrue(sla2.result()["success"])   # 2 outliers <= 2
+        self.assertEqual("Failed", sla1.status())
+        self.assertEqual("Passed", sla2.status())
+
+    def test_result_large_sigmas(self):
+        sla = base.Outliers({"max": 1, "sigmas": 5})
+        iteration_durations = [3.1, 4.2, 3.6, 4.5, 2.8, 3.3, 4.1, 3.8, 4.3,
+                               2.9, 10.2, 11.2, 3.4]
+        for d in iteration_durations:
+            sla.add_iteration({"duration": d})
+        # NOTE(msdubov): No outliers registered since sigmas = 5 (not 2)
+        self.assertTrue(sla.result()["success"])
+        self.assertEqual("Passed", sla.status())
+
+    def test_result_no_iterations(self):
+        sla = base.Outliers({"max": 0})
+        self.assertTrue(sla.result()["success"])
+
+    def test_result_few_iterations_large_min_iterations(self):
+        sla = base.Outliers({"max": 0, "min_iterations": 10})
+        iteration_durations = [3.1, 4.2, 4.7, 3.6, 15.14, 2.8]
+        for d in iteration_durations:
+            sla.add_iteration({"duration": d})
+        # NOTE(msdubov): SLA doesn't fail because it hasn't iterations < 10
+        self.assertTrue(sla.result()["success"])
+
+    def test_result_few_iterations_small_min_iterations(self):
+        sla = base.Outliers({"max": 0, "min_iterations": 5})
+        iteration_durations = [3.1, 4.2, 4.7, 3.6, 15.14, 2.8]
+        for d in iteration_durations:
+            sla.add_iteration({"duration": d})
+        # NOTE(msdubov): Now this SLA can fail with >= 5 iterations
+        self.assertFalse(sla.result()["success"])
+
+    def test_add_iteration(self):
+        sla = base.Outliers({"max": 1})
+        # NOTE(msdubov): One outlier in the first 11 iterations
+        first_iterations = [3.1, 4.2, 3.6, 4.5, 2.8, 3.3, 4.1, 3.8, 4.3,
+                            2.9, 10.2]
+        for d in first_iterations:
+            self.assertTrue(sla.add_iteration({"duration": d}))
+        # NOTE(msdubov): 12th iteration makes the SLA always failed
+        self.assertFalse(sla.add_iteration({"duration": 11.2}))
+        self.assertFalse(sla.add_iteration({"duration": 3.4}))

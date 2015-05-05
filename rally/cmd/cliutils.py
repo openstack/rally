@@ -86,7 +86,7 @@ def validate_args(fn, *args, **kwargs):
 
 def print_list(objs, fields, formatters=None, sortby_index=0,
                mixed_case_fields=None, field_labels=None,
-               print_header=True, print_border=True,
+               table_label=None, print_header=True, print_border=True,
                out=sys.stdout):
     """Print a list or objects as a table, one row per object.
 
@@ -98,6 +98,7 @@ def print_list(objs, fields, formatters=None, sortby_index=0,
         have mixed case names (e.g., 'serverId')
     :param field_labels: Labels to use in the heading of the table, default to
         fields.
+    :param table_label: Label to use as header for the whole table.
     :param print_header: print table header.
     :param print_border: print table border.
     :param out: stream to write output to.
@@ -136,14 +137,64 @@ def print_list(objs, fields, formatters=None, sortby_index=0,
         pt.left_padding_width = 0
         pt.right_padding_width = 1
 
-    outstr = pt.get_string(header=print_header,
-                           border=print_border,
-                           **kwargs) + "\n"
+    table_body = pt.get_string(header=print_header,
+                               border=print_border,
+                               **kwargs) + "\n"
+
+    table_header = ""
+
+    if table_label:
+        table_width = table_body.index("\n")
+        table_header = make_table_header(table_label, table_width)
+        table_header += "\n"
 
     if six.PY3:
-        out.write(encodeutils.safe_encode(outstr).decode())
+        if table_header:
+            out.write(encodeutils.safe_encode(table_header).decode())
+        out.write(encodeutils.safe_encode(table_body).decode())
     else:
-        out.write(encodeutils.safe_encode(outstr))
+        if table_header:
+            out.write(encodeutils.safe_encode(table_header))
+        out.write(encodeutils.safe_encode(table_body))
+
+
+def make_table_header(table_label, table_width,
+                      junction_char="+", horizontal_char="-",
+                      vertical_char="|"):
+    """Generalized way make a table header string.
+
+    :param table_label: label to print on header
+    :param table_width: total width of table
+    :param junction_char: character used where vertical and
+        horizontal lines meet.
+    :param horizontal_char: character used for horizontal lines.
+    :param vertical_char: character used for vertical lines.
+
+    :returns string
+    """
+
+    if len(table_label) >= (table_width - 2):
+        raise ValueError(_("Table header %s is longer than total"
+                           "width of the table."))
+
+    label_and_space_width = table_width - len(table_label) - 2
+    padding = 0 if label_and_space_width % 2 == 0 else 1
+
+    half_table_width = label_and_space_width // 2
+    left_spacing = (" " * half_table_width)
+    right_spacing = (" " * (half_table_width + padding))
+
+    border_line = "".join((junction_char,
+                           (horizontal_char * (table_width - 2)),
+                           junction_char,))
+
+    label_line = "".join((vertical_char,
+                          left_spacing,
+                          table_label,
+                          right_spacing,
+                          vertical_char,))
+
+    return "\n".join((border_line, label_line,))
 
 
 def make_header(text, size=80, symbol="-"):

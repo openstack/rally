@@ -234,14 +234,15 @@ def _get_atomic_action_durations(result):
         if durations:
             data = [action,
                     round(min(durations), 3),
-                    round(utils.mean(durations), 3),
-                    round(max(durations), 3),
+                    round(utils.median(durations), 3),
                     round(utils.percentile(durations, 0.90), 3),
                     round(utils.percentile(durations, 0.95), 3),
+                    round(max(durations), 3),
+                    round(utils.mean(durations), 3),
                     "%.1f%%" % (len(durations) * 100.0 / len(raw)),
                     len(raw)]
         else:
-            data = [action, None, None, None, None, None, 0, len(raw)]
+            data = [action, None, None, None, None, None, None, 0, len(raw)]
 
         # Save 'total' - it must be appended last
         if action == "total":
@@ -261,10 +262,11 @@ def _process_results(results):
     for result in results:
         table_cols = ["Action",
                       "Min (sec)",
-                      "Avg (sec)",
+                      "Median (sec)",
+                      "90%ile (sec)",
+                      "95%ile (sec)",
                       "Max (sec)",
-                      "90 percentile",
-                      "95 percentile",
+                      "Avg (sec)",
                       "Success",
                       "Count"]
         table_rows = _get_atomic_action_durations(result)

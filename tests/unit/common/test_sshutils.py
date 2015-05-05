@@ -13,6 +13,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import os
+
 import mock
 
 from rally.common import sshutils
@@ -188,6 +190,21 @@ class SSHRunTestCase(test.TestCase):
         self.fake_session.exec_command.assert_called_once_with("cmd")
 
     @mock.patch("rally.common.sshutils.select")
+    def test_execute_args(self, m_select):
+        m_select.select.return_value = ([], [], [])
+        self.fake_session.recv_ready.side_effect = [1, 0, 0]
+        self.fake_session.recv_stderr_ready.side_effect = [1, 0]
+        self.fake_session.recv.return_value = "ok"
+        self.fake_session.recv_stderr.return_value = "error"
+        self.fake_session.exit_status_ready.return_value = 1
+        self.fake_session.recv_exit_status.return_value = 127
+
+        result = self.ssh.execute(["cmd", "arg1", "arg2 with space"])
+        self.assertEqual((127, "ok", "error"), result)
+        self.fake_session.exec_command.assert_called_once_with(
+            "cmd arg1 'arg2 with space'")
+
+    @mock.patch("rally.common.sshutils.select")
     def test_run(self, m_select):
         m_select.select.return_value = ([], [], [])
         self.assertEqual(0, self.ssh.run("cmd"))
@@ -254,3 +271,25 @@ class SSHRunTestCase(test.TestCase):
         m_select.select.return_value = ([], [], [])
         self.fake_session.exit_status_ready.return_value = False
         self.assertRaises(sshutils.SSHTimeout, self.ssh.run, "cmd")
+
+    @mock.patch("rally.common.sshutils.os.stat")
+    def test_put_file(self, mock_stat):
+        sftp = self.fake_client.open_sftp.return_value = mock.Mock()
+
+        mock_stat.return_value = os.stat_result([0o753] + [0] * 9)
+
+        self.ssh.put_file("localfile", "remotefile")
+
+        sftp.put.assert_called_once_with("localfile", "remotefile")
+        mock_stat.assert_called_once_with("localfile")
+        sftp.chmod.assert_called_once_with("remotefile", 0o753)
+        sftp.close.assert_called_once_with()
+
+    def test_put_file_mode(self):
+        sftp = self.fake_client.open_sftp.return_value = mock.Mock()
+
+        self.ssh.put_file("localfile", "remotefile", mode=0o753)
+
+        sftp.put.assert_called_once_with("localfile", "remotefile")
+        sftp.chmod.assert_called_once_with("remotefile", 0o753)
+        sftp.close.assert_called_once_with()

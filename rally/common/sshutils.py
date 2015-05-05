@@ -57,6 +57,7 @@ Eventlet:
 
 """
 
+import os
 import select
 import socket
 import time
@@ -161,6 +162,9 @@ class SSH(object):
     def _run(self, client, cmd, stdin=None, stdout=None, stderr=None,
              raise_on_error=True, timeout=3600):
 
+        if isinstance(cmd, (list, tuple)):
+            cmd = " ".join(six.moves.shlex_quote(str(p)) for p in cmd)
+
         transport = client.get_transport()
         session = transport.open_session()
         session.exec_command(cmd)
@@ -229,7 +233,7 @@ class SSH(object):
     def execute(self, cmd, stdin=None, timeout=3600):
         """Execute the specified command on the server.
 
-        :param cmd:     Command to be executed.
+        :param cmd:     Command to be executed, can be a list.
         :param stdin:   Open file to be sent on process stdin.
         :param timeout: Timeout for execution of the command.
 
@@ -256,3 +260,20 @@ class SSH(object):
                 time.sleep(interval)
             if time.time() > (start_time + timeout):
                 raise SSHTimeout(_("Timeout waiting for '%s'") % self.host)
+
+    def put_file(self, localpath, remotepath, mode=None):
+        """Copy specified local file to the server.
+
+        :param localpath:   Local filename.
+        :param remotepath:  Remote filename.
+        :param mode:        Permissions to set after upload
+        """
+
+        client = self._get_client()
+
+        sftp = client.open_sftp()
+        sftp.put(localpath, remotepath)
+        if mode is None:
+            mode = 0o777 & os.stat(localpath).st_mode
+        sftp.chmod(remotepath, mode)
+        sftp.close()

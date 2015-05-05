@@ -763,6 +763,9 @@ class FakeSampleManager(FakeManager):
         sample = FakeSample(self, **kwargs)
         return [self._cache(sample)]
 
+    def list(self):
+        return ["fake-samples"]
+
 
 class FakeMeterManager(FakeManager):
 

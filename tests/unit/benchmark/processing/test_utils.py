@@ -44,6 +44,30 @@ class MathTestCase(test.TestCase):
         self.assertRaises(exceptions.InvalidArgumentsException,
                           utils.mean, lst)
 
+    def test_median_single_value(self):
+        lst = [5]
+        result = utils.median(lst)
+        self.assertEqual(5, result)
+
+    def test_median_odd_sized_list(self):
+        lst = [1, 2, 3, 4, 5]
+        result = utils.median(lst)
+        self.assertEqual(3, result)
+
+    def test_median_even_sized_list(self):
+        lst = [1, 2, 3, 4]
+        result = utils.median(lst)
+        self.assertEqual(2.5, result)
+
+    def test_median_empty_list(self):
+        lst = []
+        self.assertRaises(ValueError,
+                          utils.median, lst)
+
+        lst = None
+        self.assertRaises(ValueError,
+                          utils.median, lst)
+
     def _compare_items_lists(self, list1, list2):
         """Items lists comparison, compatible with Python 2.6/2.7.
 

@@ -189,25 +189,12 @@ class VMScenarioTestCase(test.TestCase):
         )
         scenario = utils.VMScenario(context={})
 
-        scenario._netwrap = mock.Mock()
         scenario._boot_server = mock.Mock(return_value=server)
         scenario._delete_server = mock.Mock()
         scenario._associate_floating_ip = mock.Mock()
         scenario._wait_for_ping = mock.Mock()
 
         return scenario, server
-
-    @mock.patch(VMTASKS_UTILS + ".network_wrapper")
-    def test__get_netwrap(self, mock_wrap):
-        scenario = utils.VMScenario(context={})
-        scenario.clients = "clients"
-        mock_wrap.wrap.return_value = "wrap"
-
-        ret = scenario._get_netwrap()
-
-        self.assertEqual("wrap", ret)
-
-        mock_wrap.wrap.assert_called_once_with("clients")
 
     def test__boot_server_with_fip_without_networks(self):
         scenario, server = self.get_scenario()
@@ -269,23 +256,27 @@ class VMScenarioTestCase(test.TestCase):
         scenario._delete_floating_ip.assert_called_once_with(server, fip)
         scenario._delete_server.assert_called_once_with(server, force=True)
 
-    def test__attach_floating_ip(self):
+    @mock.patch(VMTASKS_UTILS + ".network_wrapper.wrap")
+    def test__attach_floating_ip(self, mock_wrap):
         scenario, server = self.get_scenario()
 
-        scenario._netwrap.create_floating_ip.return_value = {
+        netwrap = mock_wrap.return_value
+        netwrap.create_floating_ip.return_value = {
             "id": "foo_id", "ip": "foo_ip"}
 
         scenario._attach_floating_ip(
             server, floating_network="bar_network")
 
-        scenario._netwrap.create_floating_ip.assert_called_once_with(
+        mock_wrap.assert_called_once_with(scenario.clients)
+        netwrap.create_floating_ip.assert_called_once_with(
             ext_network="bar_network", int_network="foo_net",
             tenant_id="foo_tenant", fixed_ip="foo_ip")
 
         scenario._associate_floating_ip.assert_called_once_with(
             server, "foo_ip", fixed_address="foo_ip")
 
-    def test__delete_floating_ip(self):
+    @mock.patch(VMTASKS_UTILS + ".network_wrapper.wrap")
+    def test__delete_floating_ip(self, mock_wrap):
         scenario, server = self.get_scenario()
 
         _check_addr = mock.Mock(return_value=True)
@@ -300,5 +291,6 @@ class VMScenarioTestCase(test.TestCase):
         _check_addr.assert_called_once_with(server)
         scenario._dissociate_floating_ip.assert_called_once_with(
             server, "foo_ip")
-        scenario._netwrap.delete_floating_ip.assert_called_once_with(
+        mock_wrap.assert_called_once_with(scenario.clients)
+        mock_wrap.return_value.delete_floating_ip.assert_called_once_with(
             "foo_id", wait=True)

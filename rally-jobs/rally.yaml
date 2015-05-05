@@ -296,6 +296,20 @@
         failure_rate:
           max: 0
 
+  CeilometerSamples.list_samples:
+    -
+      runner:
+        type: "constant"
+        times: 10
+        concurrency: 10
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+      sla:
+        failure_rate:
+          max: 0
+
   Dummy.dummy:
     -
       args:
@@ -307,6 +321,12 @@
       sla:
         failure_rate:
           max: 0
+        max_seconds_per_iteration: 1.0
+        max_avg_duration: 0.5
+        outliers:
+          max: 1
+          min_iterations: 10
+          sigmas: 10
 
     -
       args:
@@ -571,6 +591,8 @@
 
   HeatStacks.create_and_list_stack:
     -
+      args:
+        template_path: "/home/jenkins/.rally/extra/default.yaml.template"
       runner:
         type: "constant"
         times: 6
@@ -585,6 +607,8 @@
 
   HeatStacks.create_and_delete_stack:
     -
+      args:
+        template_path: "/home/jenkins/.rally/extra/default.yaml.template"
       runner:
         type: "constant"
         times: 6
@@ -1164,6 +1188,26 @@
         failure_rate:
           max: 0
 
+  NovaServers.boot_and_associate_floating_ip:
+    -
+      args:
+        flavor:
+          name: "m1.tiny"
+        image:
+          name: {{image_name}}
+      runner:
+        type: "constant"
+        times: 3
+        concurrency: 3
+      context:
+        users:
+          tenants: 3
+          users_per_tenant: 1
+        network: {}
+      sla:
+        failure_rate:
+          max: 0
+
   NovaServers.list_servers:
     -
       args:
@@ -1406,15 +1450,38 @@
         failure_rate:
           max: 0
 
-  Requests.check_response:
+  HttpRequests.check_request:
     -
       args:
-          url: "http://www.google.com"
-          response: 200
+        url: "http://www.example.com"
+        method: "GET"
+        status_code: 200
       runner:
         type: "constant"
-        times: 5
-        concurrency: 5
+        times: 2
+        concurrency: 2
+      sla:
+        failure_rate:
+          max: 0
+
+  HttpRequests.check_random_request:
+    -
+      args:
+        requests:
+          -
+            url: "http://www.example.com"
+            method: "GET"
+          -
+            url: "http://www.openstack.org"
+            method: "GET"
+        status_code: 200
+      runner:
+        type: "constant"
+        times: 2
+        concurrency: 2
+      sla:
+        failure_rate:
+          max: 0
 
   NovaSecGroup.create_and_delete_secgroups:
     -
@@ -1567,6 +1634,38 @@
         stacks:
           stacks_per_tenant: 2
           resources_per_stack: 10
+      sla:
+        failure_rate:
+          max: 0
+
+  NovaFloatingIpsBulk.create_and_list_floating_ips_bulk:
+    -
+      args:
+        start_cidr: "10.2.0.0/24"
+      runner:
+        type: "constant"
+        times: 5
+        concurrency: 2
+      context:
+        users:
+          tenants: 3
+          users_per_tenant: 2
+      sla:
+        failure_rate:
+          max: 0
+
+  NovaFloatingIpsBulk.create_and_delete_floating_ips_bulk:
+    -
+      args:
+        start_cidr: "10.2.0.0/24"
+      runner:
+        type: "constant"
+        times: 5
+        concurrency: 2
+      context:
+        users:
+          tenants: 3
+          users_per_tenant: 2
       sla:
         failure_rate:
           max: 0

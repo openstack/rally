@@ -129,8 +129,22 @@ def number(config, clients, deployment, param_name, minval=None, maxval=None,
             % {"name": param_name, "val": val, "type": num_func.__name__})
 
 
+def _file_access_ok(file_name, mode, param_name, required=True):
+    if not file_name:
+        return ValidationResult(
+            not required,
+            "Parameter %(param_name)s required" % {"param_name": param_name})
+    if not os.access(file_name, mode):
+        return ValidationResult(
+            False, "Could not open %(file_name)s with mode %(mode)s "
+            "for parameter %(param_name)s"
+            % {"file_name": file_name, "mode": mode, "param_name": param_name})
+    return ValidationResult(True)
+
+
 @validator
-def file_exists(config, clients, deployment, param_name, mode=os.R_OK):
+def file_exists(config, clients, deployment, param_name, mode=os.R_OK,
+                required=True):
     """Validator checks parameter is proper path to file with proper mode.
 
     Ensure a file exists and can be accessed with the specified mode.
@@ -144,14 +158,11 @@ def file_exists(config, clients, deployment, param_name, mode=os.R_OK):
 
         If multiple modes are required they can be added, eg:
             mode=os.R_OK+os.W_OK
+    :param required: Boolean indicating whether this argument is required.
     """
 
-    file_name = config.get("args", {}).get(param_name)
-    if not os.access(file_name, mode):
-        return ValidationResult(
-            False, "Could not open %(file_name)s with mode %(mode)s "
-            "for parameter %(param_name)s"
-            % {"file_name": file_name, "mode": mode, "param_name": param_name})
+    return _file_access_ok(config.get("args", {}).get(param_name), mode,
+                           param_name, required)
 
 
 def _get_validated_image(config, clients, param_name):
@@ -494,3 +505,11 @@ def volume_type_exists(config, clients, deployment, param_name):
             message = (_("Must have at least one volume type created "
                          "when specifying use of volume types."))
             return ValidationResult(False, message)
+
+
+@validator
+def restricted_parameters(config, clients, deployment, param_name):
+    """Validator that check that parameter is not set."""
+    if param_name in config.get("args", {}):
+        return ValidationResult(False, "You can't specify parameter `%s`" %
+                                param_name)

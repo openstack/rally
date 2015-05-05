@@ -21,6 +21,7 @@ from rally.benchmark.scenarios.nova import utils
 from rally.benchmark.scenarios import utils as scenario_utils
 from rally.benchmark import types as types
 from rally.benchmark import validation
+from rally.benchmark.wrappers import network as network_wrapper
 from rally.common import log as logging
 from rally import consts
 from rally import exceptions as rally_exceptions
@@ -567,3 +568,22 @@ class NovaServers(utils.NovaScenario,
         server = self._boot_server(from_image, flavor, **kwargs)
         self._rebuild_server(server, to_image)
         self._delete_server(server)
+
+    @types.set(image=types.ImageResourceType,
+               flavor=types.FlavorResourceType)
+    @validation.image_valid_on_flavor("flavor", "image")
+    @validation.required_services(consts.Service.NOVA)
+    @validation.required_openstack(users=True)
+    @validation.required_contexts("network")
+    @base.scenario(context={"cleanup": ["nova"]})
+    def boot_and_associate_floating_ip(self, image, flavor, **kwargs):
+        """Boot a server and associate a floating IP to it.
+
+        :param image: image to be used to boot an instance
+        :param flavor: flavor to be used to boot an instance
+        :param kwargs: Optional additional arguments for server creation
+        """
+        server = self._boot_server(image, flavor, **kwargs)
+        address = network_wrapper.wrap(self.clients).create_floating_ip(
+            tenant_id=server.tenant_id)
+        self._associate_floating_ip(server, address["ip"])

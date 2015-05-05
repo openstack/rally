@@ -21,6 +21,7 @@ from rally.cmd.commands import deployment
 from rally.cmd import envutils
 from rally import consts
 from rally import exceptions
+from rally import objects
 from tests.unit import fakes
 from tests.unit import test
 
@@ -271,3 +272,27 @@ class DeploymentCommandsTestCase(test.TestCase):
         mock_deployment_get.side_effect = exceptions.DeploymentNotFound(
             uuid=deployment_id)
         self.assertEqual(1, self.deployment.use(deployment_id))
+
+    @mock.patch("rally.osclients.Clients.verified_keystone")
+    @mock.patch("rally.cmd.commands.deployment.db.deployment_get")
+    def test_deployment_check(self, mock_deployment_get, mock_client):
+        deployment_id = "e87e4dca-b515-4477-888d-5f6103f13b42"
+        sample_endpoint = objects.Endpoint("http://192.168.1.1:5000/v2.0/",
+                                           "admin",
+                                           "adminpass").to_dict()
+        mock_deployment_get.return_value = {"admin": sample_endpoint}
+
+        mock_client.services.list.return_value = []
+        self.deployment.check(deployment_id)
+
+    @mock.patch("rally.osclients.Clients.verified_keystone")
+    @mock.patch("rally.cmd.commands.deployment.db.deployment_get")
+    def test_deployment_check_raise(self, mock_deployment_get, mock_client):
+        deployment_id = "e87e4dca-b515-4477-888d-5f6103f13b42"
+        sample_endpoint = objects.Endpoint("http://192.168.1.1:5000/v2.0/",
+                                           "admin",
+                                           "adminpass").to_dict()
+        sample_endpoint["not-exist-key"] = "error"
+        mock_deployment_get.return_value = {"admin": sample_endpoint}
+        mock_client.services.list.return_value = []
+        self.assertRaises(TypeError, self.deployment.check, deployment_id)

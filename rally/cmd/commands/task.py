@@ -285,6 +285,7 @@ class TaskCommands(object):
                 if r["atomic_actions"]:
                     for action in atomic_actions:
                         dlist.append(r["atomic_actions"].get(action) or 0)
+                table_rows.append(rutils.Struct(**dict(zip(headers, dlist))))
             cliutils.print_list(table_rows,
                                 fields=headers,
                                 formatters=formatters)
@@ -325,11 +326,12 @@ class TaskCommands(object):
             print(json.dumps(key["kw"], indent=2))
 
             raw = result["data"]["raw"]
-            table_cols = ["action", "min (sec)", "avg (sec)", "max (sec)",
-                          "90 percentile", "95 percentile", "success",
-                          "count"]
-            float_cols = ["min (sec)", "avg (sec)", "max (sec)",
-                          "90 percentile", "95 percentile"]
+            table_cols = ["action", "min", "median",
+                          "90%ile", "95%ile", "max",
+                          "avg", "success", "count"]
+            float_cols = ["min", "median",
+                          "90%ile", "95%ile", "max",
+                          "avg"]
             formatters = dict(zip(float_cols,
                                   [cliutils.pretty_float_formatter(col, 3)
                                    for col in float_cols]))
@@ -340,20 +342,22 @@ class TaskCommands(object):
                 durations = actions_data[action]
                 if durations:
                     data = [action,
-                            min(durations),
-                            utils.mean(durations),
-                            max(durations),
-                            utils.percentile(durations, 0.90),
-                            utils.percentile(durations, 0.95),
+                            round(min(durations), 3),
+                            round(utils.median(durations), 3),
+                            round(utils.percentile(durations, 0.90), 3),
+                            round(utils.percentile(durations, 0.95), 3),
+                            round(max(durations), 3),
+                            round(utils.mean(durations), 3),
                             "%.1f%%" % (len(durations) * 100.0 / len(raw)),
                             len(raw)]
                 else:
-                    data = [action, None, None, None, None, None,
+                    data = [action, None, None, None, None, None, None,
                             "0.0%", len(raw)]
                 table_rows.append(rutils.Struct(**dict(zip(table_cols, data))))
 
             cliutils.print_list(table_rows, fields=table_cols,
-                                formatters=formatters)
+                                formatters=formatters,
+                                table_label="Response Times (sec)")
 
             if iterations_data:
                 _print_iterations_data(raw)
@@ -371,10 +375,11 @@ class TaskCommands(object):
                 keys = set()
                 for ssr in ssrs:
                     keys.update(ssr.keys())
-                headers = ["key", "max", "avg", "min",
-                           "90 pecentile", "95 pecentile"]
-                float_cols = ["max", "avg", "min",
-                              "90 pecentile", "95 pecentile"]
+                headers = ["key", "min", "median",
+                           "90%ile", "95%ile", "max",
+                           "avg"]
+                float_cols = ["min", "median", "90%ile",
+                              "95%ile", "max", "avg"]
                 formatters = dict(zip(float_cols,
                                   [cliutils.pretty_float_formatter(col, 3)
                                    for col in float_cols]))
@@ -384,18 +389,20 @@ class TaskCommands(object):
 
                     if values:
                         row = [str(key),
-                               max(values),
-                               utils.mean(values),
-                               min(values),
-                               utils.percentile(values, 0.90),
-                               utils.percentile(values, 0.95)]
+                               round(min(values), 3),
+                               round(utils.median(values), 3),
+                               round(utils.percentile(values, 0.90), 3),
+                               round(utils.percentile(values, 0.95), 3),
+                               round(max(values), 3),
+                               round(utils.mean(values), 3)]
                     else:
-                        row = [str(key)] + ["n/a"] * 5
+                        row = [str(key)] + ["n/a"] * 6
                     table_rows.append(rutils.Struct(**dict(zip(headers, row))))
                 print("\nScenario Specific Results\n")
                 cliutils.print_list(table_rows,
                                     fields=headers,
-                                    formatters=formatters)
+                                    formatters=formatters,
+                                    table_label="Response Times (sec)")
 
                 for result in raw:
                     errors = result["scenario_output"].get("errors")
