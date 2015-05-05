@@ -50,7 +50,7 @@ class QuotaMixin(SynchronizedDeletion):
 
 # HEAT
 
-@base.resource("heat", "stacks", order=100)
+@base.resource("heat", "stacks", order=100, tenant_resource=True)
 class HeatStack(base.ResourceManager):
     pass
 
