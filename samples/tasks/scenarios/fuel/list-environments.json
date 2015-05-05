@@ -1,0 +1,11 @@
+{
+    "FuelEnvironments.list_environments": [
+        {
+            "runner": {
+                "type": "constant",
+                "times": 200,
+                "concurrency": 10
+            }
+        }
+    ]
+}
