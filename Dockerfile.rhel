@@ -12,8 +12,7 @@ RUN  yum -y install git wget bash-completion python-devel libffi-devel \
     cd /tmp/rally &&\
     ./install_rally.sh &&\
     sed 's|#*connection *=.*|connection = sqlite:////home/rally/.rally.sqlite|' -i /etc/rally/rally.conf &&\
-    # yum remove -y openssl-devel libxml2-devel libxslt-devel &&\
-    yum remove -y openssl-devel python-devel libxml2-devel libxslt-devel gcc &&\
+    yum remove -y openssl-devel libxml2-devel libxslt-devel &&\
     yum autoremove -y &&\
     yum clean all &&\
     mv doc /usr/share/doc/rally &&\
