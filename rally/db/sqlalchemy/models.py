@@ -20,6 +20,7 @@ import uuid
 
 from oslo_db.sqlalchemy.compat import utils as compat_utils
 from oslo_db.sqlalchemy import models
+from oslo_utils import timeutils
 import sqlalchemy as sa
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import schema
@@ -36,9 +37,11 @@ def UUID():
     return str(uuid.uuid4())
 
 
-class RallyBase(models.TimestampMixin,
-                models.ModelBase):
+class RallyBase(models.ModelBase):
     metadata = None
+    created_at = sa.Column(sa.DateTime, default=lambda: timeutils.utcnow())
+    updated_at = sa.Column(sa.DateTime, default=lambda: timeutils.utcnow(),
+                           onupdate=lambda: timeutils.utcnow())
 
     def save(self, session=None):
         from rally.db.sqlalchemy import api as sa_api
