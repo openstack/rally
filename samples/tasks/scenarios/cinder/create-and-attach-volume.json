@@ -29,7 +29,10 @@
                     "max": 5
                 },
                 "flavor": {
-                    "name": "m1.nano"
+                    "name": "m1.tiny"
+                },
+                "image": {
+                    "name": "^cirros.*uec$"
                 }
             },
             "runner": {
