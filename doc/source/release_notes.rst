@@ -22,5 +22,5 @@ Release Notes
    :maxdepth: 1
 
    release_notes/archive.rst
-   release_notes/v0.0.3.rst
+   release_notes/latest.rst
 
