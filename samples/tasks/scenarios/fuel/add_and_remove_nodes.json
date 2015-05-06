@@ -1,0 +1,24 @@
+{
+    "FuelNodes.add_and_remove_node": [
+        {
+            "args": {
+                "node_roles": ["compute"]
+            },
+            "context": {
+                "fuel_environments": {
+                    "environments": 5,
+                    "release_id": 1,
+                    "network_provider": "neutron",
+                    "deployment_mode": "ha_compact",
+                    "net_segment_type": "vlan",
+                    "resource_management_workers": 2
+                }
+            },
+            "runner": {
+                "type": "constant",
+                "times": 200,
+                "concurrency": 10
+            }
+        }
+    ]
+}
