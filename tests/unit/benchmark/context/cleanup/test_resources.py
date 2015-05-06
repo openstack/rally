@@ -82,6 +82,29 @@ class QuotaMixinTestCase(test.TestCase):
         self.assertEqual([quota.tenant_uuid], quota.list())
 
 
+class NovaServerTestCase(test.TestCase):
+
+    def test_delete(self):
+        server = resources.NovaServer()
+        server.raw_resource = mock.Mock()
+        server._manager = mock.Mock()
+        server.delete()
+
+        server._manager.return_value.delete.assert_called_once_with(
+            server.raw_resource.id)
+
+    def test_delete_locked(self):
+        server = resources.NovaServer()
+        server.raw_resource = mock.Mock()
+        setattr(server.raw_resource, "OS-EXT-STS:locked", True)
+        server._manager = mock.Mock()
+        server.delete()
+
+        server.raw_resource.unlock.assert_called_once_with()
+        server._manager.return_value.delete.assert_called_once_with(
+            server.raw_resource.id)
+
+
 class NovaSecurityGroupTestCase(test.TestCase):
 
     @mock.patch("%s.base.ResourceManager._manager" % BASE)

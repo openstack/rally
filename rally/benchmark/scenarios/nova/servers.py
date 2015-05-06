@@ -176,6 +176,37 @@ class NovaServers(utils.NovaScenario,
     @types.set(image=types.ImageResourceType,
                flavor=types.FlavorResourceType)
     @validation.image_valid_on_flavor("flavor", "image")
+    @validation.required_services(consts.Service.NOVA)
+    @validation.required_openstack(users=True)
+    @base.scenario(context={"cleanup": ["nova"]})
+    def boot_lock_unlock_and_delete(self, image, flavor,
+                                    min_sleep=0, max_sleep=0,
+                                    force_delete=False,
+                                    **kwargs):
+        """Boot a server, lock it, then unlock and delete it.
+
+        Optional 'min_sleep' and 'max_sleep' parameters allow the
+        scenario to simulate a pause between locking and unlocking the
+        server (of random duration from min_sleep to max_sleep).
+
+        :param image: image to be used to boot an instance
+        :param flavor: flavor to be used to boot an instance
+        :param min_sleep: Minimum sleep time between locking and unlocking
+                          in seconds
+        :param max_sleep: Maximum sleep time between locking and unlocking
+                          in seconds
+        :param force_delete: True if force_delete should be used
+        :param kwargs: Optional additional arguments for server creation
+        """
+        server = self._boot_server(image, flavor, **kwargs)
+        self._lock_server(server)
+        self.sleep_between(min_sleep, max_sleep)
+        self._unlock_server(server)
+        self._delete_server(server, force=force_delete)
+
+    @types.set(image=types.ImageResourceType,
+               flavor=types.FlavorResourceType)
+    @validation.image_valid_on_flavor("flavor", "image")
     @validation.required_services(consts.Service.NOVA, consts.Service.GLANCE)
     @validation.required_openstack(users=True)
     @base.scenario(context={"cleanup": ["nova", "glance"]})

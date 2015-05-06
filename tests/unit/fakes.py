@@ -105,9 +105,14 @@ class FakeResource(object):
 
 
 class FakeServer(FakeResource):
-
     def suspend(self):
         self.status = "SUSPENDED"
+
+    def lock(self):
+        setattr(self, "OS-EXT-STS:locked", True)
+
+    def unlock(self):
+        setattr(self, "OS-EXT-STS:locked", False)
 
 
 class FakeFailedServer(FakeResource):

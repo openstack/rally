@@ -757,3 +757,19 @@ class NovaScenarioTestCase(test.TestCase):
         mock_clients("nova").hypervisors.list.assert_called_once_with(False)
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.list_hypervisors")
+
+    def test__lock_server(self):
+        server = mock.Mock()
+        nova_scenario = utils.NovaScenario()
+        nova_scenario._lock_server(server)
+        server.lock.assert_called_once_with()
+        self._test_atomic_action_timer(nova_scenario.atomic_actions(),
+                                       "nova.lock_server")
+
+    def test__unlock_server(self):
+        server = mock.Mock()
+        nova_scenario = utils.NovaScenario()
+        nova_scenario._unlock_server(server)
+        server.unlock.assert_called_once_with()
+        self._test_atomic_action_timer(nova_scenario.atomic_actions(),
+                                       "nova.unlock_server")
