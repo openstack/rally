@@ -98,9 +98,6 @@
         users:
           tenants: 1
           users_per_tenant: 1
-      sla:
-        failure_rate:
-          max: 0
 
   HeatStacks.create_and_delete_stack:
     -
@@ -112,9 +109,6 @@
         users:
           tenants: 1
           users_per_tenant: 1
-      sla:
-        failure_rate:
-          max: 0
 
   Authenticate.keystone:
     -
