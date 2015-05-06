@@ -165,9 +165,10 @@ def main():
             if e.errno != errno.EEXIST:
                 raise
 
-    scenario = os.environ.get("RALLY_SCENARIO", project + ".yaml")
-    scenario_name, scenario_ext = scenario.split(".")
-    print("Processing scenario %s" % scenario)
+    scenario = os.environ.get("RALLY_SCENARIO", project).rsplit(".", 1)
+    scenario_name = scenario.pop(0)
+    scenario_ext = scenario.pop() if scenario else "yaml"
+    print("Processing scenario %s" % scenario_name)
 
     for fname in os.listdir(jobs_dir):
         print("Processing %s" % fname)
