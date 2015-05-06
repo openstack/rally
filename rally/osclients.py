@@ -429,3 +429,29 @@ class Clients(object):
             if service_type in consts.ServiceType:
                 services_data[service_type] = consts.ServiceType[service_type]
         return services_data
+
+    @classmethod
+    def register(cls, client_name, client_func):
+        """Add new OpenStack client dynamically.
+
+        :param client_name: str name how client will be named in Rally clients
+        :param client_func: function that implememnts client spawning.
+                            It will be added to Clients in runtime, so its
+                            sole argument is Clients instance
+        Example:
+          >>> def supernova(self):
+          ...   from novaclient import client as nova
+          ...   return nova.Client("2", auth_token=self.keystone().auth_token,
+          ...                      **self._get_auth_info(password_key="key"))
+          ...
+          >>> from rally import osclients
+          >>> osclients.Clients.register("supernova", supernova)
+          >>> clients = osclients.Clients.create_from_env()
+          >>> clients.supernova().services.list()[:2]
+          [<Service: nova-conductor>, <Service: nova-cert>]
+        """
+        if hasattr(cls, client_name):
+            raise ValueError(
+                _("Can not register client: name already exists: %s")
+                % client_name)
+        setattr(cls, client_name, cached(client_func))

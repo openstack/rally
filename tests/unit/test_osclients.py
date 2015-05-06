@@ -465,3 +465,22 @@ class OSClientsTestCase(test.TestCase):
                   "token": self.fake_keystone.auth_token}
             mock_murano.client.Client.assert_called_once_with("1", **kw)
             self.assertEqual(fake_murano, self.clients.cache["murano"])
+
+    @mock.patch("rally.osclients.cached")
+    def test_register(self, mock_cached):
+        client_func = mock.Mock(return_value="foo_client")
+        cached_client_func = mock.Mock(return_value="cached_foo_client")
+        mock_cached.return_value = cached_client_func
+        clients = osclients.Clients(mock.Mock())
+
+        self.assertFalse(hasattr(clients, "foo"))
+
+        osclients.Clients.register("foo", client_func)
+
+        mock_cached.assert_called_once_with(client_func)
+        self.assertEqual("cached_foo_client", clients.foo())
+        self.assertEqual(cached_client_func, clients.foo)
+
+        # Call second time with same name
+        self.assertRaises(ValueError,
+                          osclients.Clients.register, "foo", client_func)
