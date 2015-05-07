@@ -20,9 +20,9 @@ import jsonschema
 import mock
 
 from rally.benchmark.runners import base
-from rally.benchmark.runners import serial
 from rally.benchmark.scenarios import base as scenario_base
 from rally import exceptions
+from rally.plugins.common.runners import serial
 from tests.unit import fakes
 from tests.unit import test
 

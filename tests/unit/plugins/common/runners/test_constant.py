@@ -17,13 +17,14 @@ import jsonschema
 import mock
 
 from rally.benchmark.runners import base
-from rally.benchmark.runners import constant
 from rally import consts
+from rally.plugins.common.runners import constant
 from tests.unit import fakes
 from tests.unit import test
 
 
-RUNNERS = "rally.benchmark.runners."
+RUNNERS_BASE = "rally.benchmark.runners.base."
+RUNNERS = "rally.plugins.common.runners."
 
 
 class ConstantScenarioRunnerTestCase(test.TestCase):
@@ -52,8 +53,8 @@ class ConstantScenarioRunnerTestCase(test.TestCase):
                           constant.ConstantScenarioRunner.validate,
                           self.config)
 
-    @mock.patch(RUNNERS + "base.scenario_base")
-    @mock.patch(RUNNERS + "base.osclients")
+    @mock.patch(RUNNERS_BASE + "scenario_base")
+    @mock.patch(RUNNERS_BASE + "osclients")
     def test_get_constant_runner(self, mock_osclients, mock_base):
 
         mock_osclients.Clients.return_value = fakes.FakeClients()
