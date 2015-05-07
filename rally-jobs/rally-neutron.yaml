@@ -90,8 +90,8 @@
         router_create_args:
       runner:
         type: "constant"
-        times: 40
-        concurrency: 20
+        times: 20
+        concurrency: 10
       context:
         users:
           tenants: 1
@@ -113,8 +113,8 @@
         ports_per_network: 4
       runner:
         type: "constant"
-        times: 40
-        concurrency: 20
+        times: 20
+        concurrency: 10
       context:
         users:
           tenants: 1
@@ -138,8 +138,8 @@
             name: "_updated"
       runner:
         type: "constant"
-        times: 40
-        concurrency: 20
+        times: 20
+        concurrency: 10
       context:
         users:
           tenants: 1
@@ -163,8 +163,8 @@
             name: "_subnet_updated"
       runner:
         type: "constant"
-        times: 40
-        concurrency: 20
+        times: 20
+        concurrency: 10
       context:
         users:
           tenants: 5
@@ -190,8 +190,8 @@
             name: "_router_updated"
       runner:
         type: "constant"
-        times: 40
-        concurrency: 20
+        times: 20
+        concurrency: 10
       context:
         users:
           tenants: 1
@@ -218,8 +218,8 @@
             name: "_port_updated"
       runner:
         type: "constant"
-        times: 40
-        concurrency: 20
+        times: 20
+        concurrency: 10
       context:
         users:
           tenants: 1
@@ -238,8 +238,8 @@
         network_create_args: {}
       runner:
         type: "constant"
-        times: 40
-        concurrency: 20
+        times: 20
+        concurrency: 10
       context:
         users:
           tenants: 1
@@ -261,8 +261,8 @@
         subnets_per_network: 2
       runner:
         type: "constant"
-        times: 40
-        concurrency: 20
+        times: 20
+        concurrency: 10
       context:
         users:
           tenants: 1
@@ -906,6 +906,82 @@
           users_per_tenant: 1
         roles:
           - "admin"
+      sla:
+        failure_rate:
+          max: 0
+
+  GlanceImages.create_and_delete_image:
+    -
+      args:
+        image_location: "http://download.cirros-cloud.net/0.3.2/cirros-0.3.2-x86_64-disk.img"
+        container_format: "bare"
+        disk_format: "qcow2"
+      runner:
+        type: "constant"
+        times: 5
+        concurrency: 5
+      context:
+        users:
+          tenants: 2
+          users_per_tenant: 3
+      sla:
+        failure_rate:
+          max: 0
+
+  GlanceImages.create_and_list_image:
+    -
+      args:
+        image_location: "/home/jenkins/.rally/extra/fake-image.img"
+        container_format: "bare"
+        disk_format: "qcow2"
+      runner:
+        type: "constant"
+        times: 6
+        concurrency: 6
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+      sla:
+        failure_rate:
+          max: 0
+
+  GlanceImages.create_image_and_boot_instances:
+    -
+      args:
+        image_location: "http://download.cirros-cloud.net/0.3.2/cirros-0.3.2-x86_64-disk.img"
+        container_format: "bare"
+        disk_format: "qcow2"
+        flavor:
+            name: "m1.tiny"
+        number_instances: 2
+      runner:
+        type: "constant"
+        times: 3
+        concurrency: 3
+      context:
+        users:
+          tenants: 3
+          users_per_tenant: 1
+      sla:
+        failure_rate:
+          max: 0
+
+  GlanceImages.list_images:
+    -
+      runner:
+        type: "constant"
+        times: 4
+        concurrency: 4
+      context:
+        users:
+          tenants: 2
+          users_per_tenant: 2
+        images:
+          image_url: "http://download.cirros-cloud.net/0.3.1/cirros-0.3.1-x86_64-disk.img"
+          image_type: "qcow2"
+          image_container: "bare"
+          images_per_tenant: 2
       sla:
         failure_rate:
           max: 0
