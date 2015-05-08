@@ -431,27 +431,32 @@ class Clients(object):
         return services_data
 
     @classmethod
-    def register(cls, client_name, client_func):
-        """Add new OpenStack client dynamically.
+    def register(cls, client_name):
+        """Decorator that adds new OpenStack client dynamically.
 
         :param client_name: str name how client will be named in Rally clients
-        :param client_func: function that implememnts client spawning.
-                            It will be added to Clients in runtime, so its
-                            sole argument is Clients instance
+
+        Decorated function will be added to Clients in runtime, so its sole
+        argument is a Clients instance.
+
         Example:
-          >>> def supernova(self):
+          >>> from rally import osclients
+          >>> @osclients.Clients.register("supernova")
+          ... def another_nova_client(self):
           ...   from novaclient import client as nova
           ...   return nova.Client("2", auth_token=self.keystone().auth_token,
           ...                      **self._get_auth_info(password_key="key"))
           ...
-          >>> from rally import osclients
-          >>> osclients.Clients.register("supernova", supernova)
           >>> clients = osclients.Clients.create_from_env()
           >>> clients.supernova().services.list()[:2]
           [<Service: nova-conductor>, <Service: nova-cert>]
         """
-        if hasattr(cls, client_name):
-            raise ValueError(
-                _("Can not register client: name already exists: %s")
-                % client_name)
-        setattr(cls, client_name, cached(client_func))
+        def wrap(client_func):
+            if hasattr(cls, client_name):
+                raise ValueError(
+                    _("Can not register client: name already exists: %s")
+                    % client_name)
+            setattr(cls, client_name, cached(client_func))
+            return client_func
+
+        return wrap
