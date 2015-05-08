@@ -31,7 +31,7 @@ SAMPLE_CONFIG = {
     },
 }
 
-DEVSTACK_REPO = "https://git.openstack.org/cgit/openstack-dev/devstack.git"
+DEVSTACK_REPO = "https://git.openstack.org/openstack-dev/devstack"
 
 
 class DevstackEngineTestCase(test.TestCase):
@@ -93,7 +93,7 @@ class DevstackEngineTestCase(test.TestCase):
                                     info="fake_credentials",
                                     provider_name="DevstackEngine",
                                     type="credentials")
-        repo = "https://git.openstack.org/cgit/openstack-dev/devstack.git"
+        repo = "https://git.openstack.org/openstack-dev/devstack"
         cmd = "/bin/sh -e -s %s master" % repo
         server.ssh.run.assert_called_once_with(cmd, stdin="fake_script")
         ds_calls = [
