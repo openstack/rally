@@ -92,8 +92,8 @@ class NovaScenario(base.Scenario):
 
         Returns when the server is actually booted and in "ACTIVE" state.
 
-        If multiple networks are present, the first network found that
-        isn't associated with a floating IP pool is used.
+        If multiple networks created by Network context are present, the first
+        network found that isn't associated with a floating IP pool is used.
 
         :param image_id: int, image ID for server creation
         :param flavor_id: int, flavor ID for server creation
