@@ -16,6 +16,7 @@ from rally.benchmark.scenarios import base
 from rally.benchmark.scenarios.ceilometer import utils as ceilometerutils
 from rally.benchmark import validation
 from rally import consts
+from rally import exceptions
 
 
 class CeilometerResource(ceilometerutils.CeilometerScenario):
@@ -30,3 +31,20 @@ class CeilometerResource(ceilometerutils.CeilometerScenario):
         This scenario fetches list of all resources using GET /v2/resources.
         """
         self._list_resources()
+
+    @validation.required_services(consts.Service.CEILOMETER)
+    @validation.required_openstack(users=True)
+    @base.scenario()
+    def get_tenant_resources(self):
+        """Get all tenant resources.
+
+        This scenario retrieves information about tenant resources using
+        GET /v2/resources/(resource_id)
+        """
+        resources = self.context["tenant"].get("resources", [])
+        if not resources:
+            msg = ("No resources found for tenant: %s"
+                   % self.context["tenant"].get("name"))
+            raise exceptions.NotFoundException(message=msg)
+        for res_id in resources:
+            self._get_resource(res_id)

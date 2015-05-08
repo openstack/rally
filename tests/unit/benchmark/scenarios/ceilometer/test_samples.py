@@ -23,5 +23,4 @@ class CeilometerSamplesTestCase(test.TestCase):
         scenario = samples.CeilometerSamples()
         scenario._list_samples = mock.MagicMock()
         scenario.list_samples()
-
         scenario._list_samples.assert_called_once_with()

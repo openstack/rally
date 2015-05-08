@@ -15,6 +15,7 @@
 import mock
 
 from rally.benchmark.scenarios.ceilometer import resources
+from rally import exceptions
 from tests.unit import test
 
 
@@ -23,5 +24,24 @@ class CeilometerResourcesTestCase(test.TestCase):
         scenario = resources.CeilometerResource()
         scenario._list_resources = mock.MagicMock()
         scenario.list_resources()
-
         scenario._list_resources.assert_called_once_with()
+
+    def test_get_tenant_resources(self):
+        scenario = resources.CeilometerResource()
+        resource_list = ["id1", "id2", "id3", "id4"]
+        context = {"user": {"tenant_id": "fake"},
+                   "tenant": {"id": "fake", "resources": resource_list}}
+        scenario.context = context
+        scenario._get_resource = mock.MagicMock()
+        scenario.get_tenant_resources()
+        for resource_id in resource_list:
+            scenario._get_resource.assert_any_call(resource_id)
+
+    def test_get_tenant_resources_with_exception(self):
+        scenario = resources.CeilometerResource()
+        resource_list = []
+        context = {"user": {"tenant_id": "fake"},
+                   "tenant": {"id": "fake", "resources": resource_list}}
+        scenario.context = context
+        self.assertRaises(exceptions.NotFoundException,
+                          scenario.get_tenant_resources)

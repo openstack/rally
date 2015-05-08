@@ -1,10 +1,10 @@
 ---
-    CeilometerSamples.list_samples:
+    CeilometerResource.get_tenant_resources:
      -
        runner:
          type: "constant"
          times: 10
-         concurrency: 2
+         concurrency: 5
        context:
          users:
            tenants: 2
@@ -12,7 +12,5 @@
          ceilometer:
            counter_name: "cpu_util"
            counter_type: "gauge"
-           counter_unit: "instance"
            counter_volume: 1.0
-           resources_per_tenant: 3
-           samples_per_resource: 3
+           counter_unit: "instance"

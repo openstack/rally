@@ -224,6 +224,7 @@ class FakeAlarm(FakeResource):
         self.threshold = kwargs.get("threshold")
         self.state = kwargs.get("state", "fake-alarm-state")
         self.alarm_id = kwargs.get("alarm_id", "fake-alarm-id")
+        self.state = kwargs.get("state", "ok")
         self.optional_args = kwargs.get("optional_args", {})
 
 
@@ -234,7 +235,17 @@ class FakeSample(FakeResource):
         self.counter_type = kwargs.get("counter_type", "fake-counter-type")
         self.counter_unit = kwargs.get("counter_unit", "fake-counter-unit")
         self.counter_volume = kwargs.get("counter_volume", 100)
-        self.resource_id = kwargs.get("resource_id", "fake-resource-id")
+
+    @property
+    def resource_id(self):
+        return "fake-resource-id"
+
+    def to_dict(self):
+        return {"counter_name": self.counter_name,
+                "counter_type": self.counter_type,
+                "counter_unit": self.counter_unit,
+                "counter_volume": self.counter_volume,
+                "resource_id": self.resource_id}
 
 
 class FakeVolume(FakeResource):
@@ -779,6 +790,9 @@ class FakeMeterManager(FakeManager):
 
 
 class FakeCeilometerResourceManager(FakeManager):
+
+    def get(self, resource_id):
+        return ["fake-resource-info"]
 
     def list(self):
         return ["fake-resource"]

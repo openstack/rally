@@ -122,6 +122,10 @@ class CeilometerScenarioTestCase(test.TestCase):
         fake_samples = self.scenario._list_samples()
         self.assertEqual(fake_samples, ["fake-samples"])
 
+    def test__get_resource(self):
+        fake_resource_info = self.scenario._get_resource("fake-resource-id")
+        self.assertEqual(fake_resource_info, ["fake-resource-info"])
+
     def test__get_stats(self):
         """Test _get_stats function."""
         fake_statistics = self.scenario._get_stats("fake-meter")
