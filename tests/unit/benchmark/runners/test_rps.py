@@ -43,6 +43,21 @@ class RPSScenarioRunnerTestCase(test.TestCase):
         }
         rps.RPSScenarioRunner.validate(config)
 
+    def test_rps_parameter_validate(self):
+        config = {
+            "type": consts.RunnerType.RPS,
+            "rps": 0.0000001
+        }
+        rps.RPSScenarioRunner.validate(config)
+
+    def test_rps_parameter_validate_failed(self):
+        config = {
+            "type": consts.RunnerType.RPS,
+            "rps": 0
+        }
+        self.assertRaises(jsonschema.ValidationError,
+                          rps.RPSScenarioRunner.validate, config)
+
     def test_validate_failed(self):
         config = {"type": consts.RunnerType.RPS,
                   "a": 10}
@@ -91,10 +106,11 @@ class RPSScenarioRunnerTestCase(test.TestCase):
 
         context = {"users": [{"tenant_id": "t1", "endpoint": "e1",
                               "id": "uuid1"}]}
+        info = {"processes_to_start": 1, "processes_counter": 1}
 
         rps._worker_process(mock_queue, fake_ram_int, 1, 10, times,
                             max_concurrent, context, "Dummy", "dummy",
-                            (), mock_event)
+                            (), mock_event, info)
 
         self.assertEqual(times, mock_log.debug.call_count)
         self.assertEqual(times, mock_thread.call_count)

@@ -83,9 +83,11 @@ class ConstantScenarioRunnerTestCase(test.TestCase):
 
         context = {"users": [{"tenant_id": "t1", "endpoint": "e1",
                               "id": "uuid1"}]}
+        info = {"processes_to_start": 1, "processes_counter": 1}
 
         constant._worker_process(mock_queue, fake_ram_int, 1, 2, times,
-                                 context, "Dummy", "dummy", (), mock_event)
+                                 context, "Dummy", "dummy", (), mock_event,
+                                 info)
 
         self.assertEqual(times, mock_thread.call_count)
         self.assertEqual(times, mock_thread_instance.start.call_count)

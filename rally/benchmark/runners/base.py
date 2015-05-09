@@ -243,7 +243,8 @@ class ScenarioRunner(object):
         """Abort the execution of further benchmark scenario iterations."""
         self.aborted.set()
 
-    def _create_process_pool(self, processes_to_start, worker_process,
+    @staticmethod
+    def _create_process_pool(processes_to_start, worker_process,
                              worker_args_gen):
         """Create a pool of processes with some defined target function.
 
@@ -255,8 +256,11 @@ class ScenarioRunner(object):
         process_pool = collections.deque()
 
         for i in range(processes_to_start):
+            kwrgs = {"processes_to_start": processes_to_start,
+                     "processes_counter": i}
             process = multiprocessing.Process(target=worker_process,
-                                              args=next(worker_args_gen))
+                                              args=next(worker_args_gen),
+                                              kwargs={"info": kwrgs})
             process.start()
             process_pool.append(process)
 
