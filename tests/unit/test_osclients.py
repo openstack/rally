@@ -475,12 +475,13 @@ class OSClientsTestCase(test.TestCase):
 
         self.assertFalse(hasattr(clients, "foo"))
 
-        osclients.Clients.register("foo", client_func)
+        func = osclients.Clients.register("foo")(client_func)
 
         mock_cached.assert_called_once_with(client_func)
         self.assertEqual("cached_foo_client", clients.foo())
+        self.assertEqual(client_func, func)
         self.assertEqual(cached_client_func, clients.foo)
 
         # Call second time with same name
         self.assertRaises(ValueError,
-                          osclients.Clients.register, "foo", client_func)
+                          osclients.Clients.register("foo"), client_func)
