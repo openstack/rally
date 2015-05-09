@@ -3,7 +3,7 @@
     -
       args:
         flavor:
-            name: "m1.nano"
+            name: "m1.tiny"
         image:
             name: "^cirros.*uec$"
         to_flavor:

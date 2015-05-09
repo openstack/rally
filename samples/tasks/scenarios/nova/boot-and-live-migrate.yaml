@@ -2,7 +2,7 @@
 NovaServers.boot_and_live_migrate_server:
 - args:
     flavor:
-      name: m1.nano
+      name: m1.tiny
     image:
       name: "^cirros.*uec$"
     block_migration: false

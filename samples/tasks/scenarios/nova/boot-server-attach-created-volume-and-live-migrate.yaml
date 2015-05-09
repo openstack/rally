@@ -2,7 +2,7 @@
 NovaServers.boot_server_attach_created_volume_and_live_migrate:
 - args:
     flavor:
-      name: m1.nano
+      name: m1.tiny
     image:
       name: "^cirros.*uec$"
     size: 10
