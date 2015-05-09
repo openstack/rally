@@ -4,23 +4,20 @@
 
 *(Contributed by Neependra Khare, Red Hat)*
 
-Below we describe how we were able to get and verify a 4x better performance of Keysone inside Apache. To do that, we ran a Keystone token creation benchmark with Rally under different load (this benchmark scenario essentially just authenticates users with keystone to get tokens).
+Below we describe how we were able to get and verify a 4x better performance of Keysone inside Apache. To do that, we ran a Keystone token creation benchmark with Rally under different load (this benchmark scenario essentially just authenticate users with keystone to get tokens).
 
 Goal
 ----
 - Get the data about performance of token creation under different load.
-- Ensure that keystone with increased public_workers/admin_workers values
-  and under Apache works better than the default setup.
+- Ensure that keystone with increased public_workers/admin_workers values and under Apache works better than the default setup.
 
 Summary
 -------
 - As the concurrency increases, time to authenticate the user gets up.
-- Keystone is CPU bound process and by default only one thread of keystone-all process get
-  started. We can increase the parallelism by :-
-  1. increasing public_workers/admin_workers values in keystone.conf file
-  2. running keystone inside Apache
-- We configured Keystone with 4 public_workers and ran Keystone inside Apache. In both
-  cases we got upto 4x better performance as compared to default keystone configuration.
+- Keystone is CPU bound process and by default only one thread of keystone-all process get started. We can increase the parallelism by:
+    1. increasing public_workers/admin_workers values in keystone.conf file
+    2. running keystone inside Apache
+- We configured Keystone with 4 public_workers and ran Keystone inside Apache. In both cases we got upto 4x better performance as compared to default keystone configuration.
 
 Setup
 -----
