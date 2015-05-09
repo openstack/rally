@@ -24,7 +24,7 @@ class ScenarioPlugin(base.Scenario):
         """Sample of usage clients - list flavors
 
         You can use self.context, self.admin_clients and self.clients which are
-        initialized on scenario instanse creation.
+        initialized on scenario instance creation.
         """
         self.clients("nova").flavors.list()
 

@@ -32,7 +32,7 @@ Plugins can be quickly written and used, with no need to contribute them to the 
 Example: Benchmark scenario as a plugin
 ---------------------------------------
 
-Let's create as a plugin a simple scenario which lists flavors.
+Let's create as a plugin a simple scenario which list flavors.
 
 Creation
 ^^^^^^^^
@@ -52,7 +52,7 @@ Inherit a class for your plugin from the base *Scenario* class and implement a s
             """Sample of usage clients - list flavors
 
             You can use self.context, self.admin_clients and self.clients which are
-            initialized on scenario instanse creation"""
+            initialized on scenario instance creation"""
             self.clients("nova").flavors.list()
 
         @base.atomic_action_timer("list_flavors_as_admin")
