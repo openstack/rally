@@ -426,6 +426,14 @@ class MuranoEnvironments(base.ResourceManager):
     pass
 
 
+@base.resource("murano", "packages", tenant_resource=True,
+               order=next(_murano_order))
+class MuranoPackages(base.ResourceManager):
+    def list(self):
+        return filter(lambda x: x.name != "Core library",
+                      super(MuranoPackages, self).list())
+
+
 # KEYSTONE
 
 _keystone_order = get_order(9000)
