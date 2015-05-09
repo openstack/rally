@@ -36,7 +36,7 @@ class MistralWorkbooksTestCase(test.TestCase):
         fake_wb = mock.MagicMock()
         fake_wb.name = "wb"
         mock_create.return_value = fake_wb
-        mistral_scenario.create_delete_workbook(definition)
+        mistral_scenario.create_workbook(definition)
 
         self.assertEqual(1, mock_create.called)
 
@@ -48,7 +48,7 @@ class MistralWorkbooksTestCase(test.TestCase):
         fake_wb = mock.MagicMock()
         fake_wb.name = "wb"
         mock_create.return_value = fake_wb
-        mistral_scenario.create_delete_workbook(definition, do_delete=True)
+        mistral_scenario.create_workbook(definition, do_delete=True)
 
         self.assertEqual(1, mock_create.called)
         mock_delete.assert_called_once_with(fake_wb.name)
