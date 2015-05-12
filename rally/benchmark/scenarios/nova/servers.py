@@ -324,8 +324,8 @@ class NovaServers(utils.NovaScenario,
                       force_delete=False, **kwargs):
         """Boot a server, then resize and delete it.
 
-        The scenario first creates a volume and then a server.
-        Assumes that cleanup is done elsewhere.
+        This test will confirm the resize by default,
+        or revert the resize if confirm is set to false.
 
         :param image: image to be used to boot an instance
         :param flavor: flavor to be used to boot an instance
