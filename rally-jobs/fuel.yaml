@@ -1,7 +1,18 @@
 ---
-
-  FuelEnvironments.list_environments:
+  FuelEnvironments.create_and_list_environments:
     -
+      runner:
+        type: "constant"
+        times: 200
+        concurrency: 10
+      sla:
+        failure_rate:
+          max: 0
+
+  FuelEnvironments.create_and_delete_environment:
+    -
+      args:
+        delete_retries: 10
       runner:
         type: "constant"
         times: 200

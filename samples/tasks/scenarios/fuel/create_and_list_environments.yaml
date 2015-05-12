@@ -1,0 +1,12 @@
+---
+  FuelEnvironments.create_and_list_environments:
+    -
+      args:
+        release_id: 1
+        network_provider: "neutron"
+        deployment_mode: "ha_compact"
+        net_segment_type: "vlan"
+      runner:
+        type: "constant"
+        times: 200
+        concurrency: 10
