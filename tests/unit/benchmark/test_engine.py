@@ -178,7 +178,7 @@ class BenchmarkEngineTestCase(test.TestCase):
                           eng._validate_config_semantic_helper, "a", "u", "n",
                           "p", mock.MagicMock(), {})
 
-    @mock.patch("rally.benchmark.engine.existing_users_ctx.ExistingUsers")
+    @mock.patch("rally.benchmark.engine.existingusers_ctx.ExistingUsers")
     def test_get_user_ctx_for_validation_existing_users(self, mock_users_ctx):
 
         context = {"a": 10}

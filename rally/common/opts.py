@@ -14,7 +14,6 @@
 
 import itertools
 
-from rally.benchmark.context import users
 from rally.benchmark.scenarios.cinder import utils as cinder_utils
 from rally.benchmark.scenarios.ec2 import utils as ec2_utils
 from rally.benchmark.scenarios.glance import utils as glance_utils
@@ -24,6 +23,7 @@ from rally.benchmark.scenarios.sahara import utils as sahara_utils
 from rally.common import log
 from rally import exceptions
 from rally import osclients
+from rally.plugins.openstack.context import users
 from rally.verification.tempest import config as tempest_conf
 
 

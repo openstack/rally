@@ -22,8 +22,6 @@ import jsonschema
 import six
 
 from rally.benchmark.context import base as base_ctx
-from rally.benchmark.context import existing_users as existing_users_ctx
-from rally.benchmark.context import users as users_ctx
 from rally.benchmark.runners import base as base_runner
 from rally.benchmark.scenarios import base as base_scenario
 from rally.benchmark.sla import base as base_sla
@@ -34,6 +32,8 @@ from rally import consts
 from rally import exceptions
 from rally import objects
 from rally import osclients
+from rally.plugins.openstack.context import existing_users as existingusers_ctx
+from rally.plugins.openstack.context import users as users_ctx
 
 
 LOG = logging.getLogger(__name__)
@@ -157,7 +157,7 @@ class BenchmarkEngine(object):
     def _get_user_ctx_for_validation(self, context):
         if self.existing_users:
             context["config"] = {"existing_users": self.existing_users}
-            user_context = existing_users_ctx.ExistingUsers(context)
+            user_context = existingusers_ctx.ExistingUsers(context)
         else:
             user_context = users_ctx.UserGenerator(context)
 
