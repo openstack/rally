@@ -510,6 +510,7 @@ def run(argv, categories):
     try:
         utils.load_plugins("/opt/rally/plugins/")
         utils.load_plugins(os.path.expanduser("~/.rally/plugins/"))
+        utils.import_modules_from_package("rally.plugins")
 
         validate_deprecated_args(argv, fn)
 

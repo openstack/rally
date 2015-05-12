@@ -24,6 +24,7 @@ from rally.deploy.engines import existing as existing_cloud
 from rally.deploy import serverprovider
 from rally.deploy.serverprovider.providers import existing as existing_servers
 from rally import exceptions
+from rally.plugins.common.sla import failure_rate
 from tests.unit import test
 
 
@@ -64,14 +65,14 @@ class InfoCommandsTestCase(test.TestCase):
         mock_get_scenario_by_name.assert_called_once_with(query)
         self.assertEqual(1, status)
 
-    @mock.patch(SLA + ".get_by_name", return_value=sla_base.FailureRate)
+    @mock.patch(SLA + ".get_by_name", return_value=failure_rate.FailureRate)
     def test_find_failure_rate_sla(self, mock_get_by_name):
         query = "failure_rate"
         status = self.info.find(query)
         mock_get_by_name.assert_called_once_with(query)
         self.assertIsNone(status)
 
-    @mock.patch(SLA + ".get_by_name", return_value=sla_base.FailureRate)
+    @mock.patch(SLA + ".get_by_name", return_value=failure_rate.FailureRate)
     def test_find_failure_rate_sla_by_class_name(self, mock_get_by_name):
         query = "FailureRate"
         status = self.info.find(query)
@@ -113,7 +114,8 @@ class InfoCommandsTestCase(test.TestCase):
         mock_itersubclasses.assert_called_with(scenario_base.Scenario)
         self.assertIsNone(status)
 
-    @mock.patch(UTILS + ".itersubclasses", return_value=[sla_base.FailureRate])
+    @mock.patch(UTILS + ".itersubclasses",
+                return_value=[failure_rate.FailureRate])
     def test_SLA(self, mock_itersubclasses):
         status = self.info.SLA()
         mock_itersubclasses.assert_called_with(sla_base.SLA)
