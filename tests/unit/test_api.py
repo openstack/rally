@@ -1,7 +1,7 @@
 # Copyright 2013: Mirantis Inc.
 # All Rights Reserved.
 #
-#    Licensed under the Apache License, Version 2.0 (the "License"); you may
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
 #    a copy of the License at
 #
@@ -15,6 +15,7 @@
 
 """ Test for api. """
 
+import os
 
 import jsonschema
 import mock
@@ -44,7 +45,6 @@ FAKE_DEPLOYMENT_CONFIG = {
 
 
 class TaskAPITestCase(test.TestCase):
-
     def setUp(self):
         super(TaskAPITestCase, self).setUp()
         self.task_uuid = "b0d9cd6c-2c94-4417-a238-35c7019d0257"
@@ -110,7 +110,6 @@ class TaskAPITestCase(test.TestCase):
                                                   users=[]))
     @mock.patch("rally.api.engine.BenchmarkEngine")
     def test_start(self, mock_engine, mock_deployment_get, mock_task):
-
         api.Task.start(mock_deployment_get.return_value["uuid"], "config")
 
         mock_engine.assert_has_calls([
@@ -131,7 +130,6 @@ class TaskAPITestCase(test.TestCase):
     @mock.patch("rally.api.engine.BenchmarkEngine")
     def test_start_invalid_task_ignored(self, mock_engine,
                                         mock_deployment_get, mock_task):
-
         mock_engine().run.side_effect = (
             exceptions.InvalidTaskException())
 
@@ -143,7 +141,6 @@ class TaskAPITestCase(test.TestCase):
     @mock.patch("rally.api.engine.BenchmarkEngine")
     def test_start_exception(self, mock_engine, mock_deployment_get,
                              mock_task):
-
         mock_engine().run.side_effect = TypeError
         self.assertRaises(TypeError, api.Task.start, "deployment_uuid",
                           "config")
@@ -167,7 +164,6 @@ class TaskAPITestCase(test.TestCase):
 
 
 class BaseDeploymentTestCase(test.TestCase):
-
     def setUp(self):
         super(BaseDeploymentTestCase, self).setUp()
         self.deployment_config = FAKE_DEPLOYMENT_CONFIG
@@ -190,7 +186,6 @@ class BaseDeploymentTestCase(test.TestCase):
 
 
 class DeploymentAPITestCase(BaseDeploymentTestCase):
-
     @mock.patch("rally.objects.deploy.db.deployment_update")
     @mock.patch("rally.objects.deploy.db.deployment_create")
     @mock.patch("rally.deploy.engine.EngineFactory.validate")
@@ -253,7 +248,6 @@ class DeploymentAPITestCase(BaseDeploymentTestCase):
 
 
 class VerificationAPITestCase(BaseDeploymentTestCase):
-
     def setUp(self):
         super(VerificationAPITestCase, self).setUp()
         self.tempest = mock.Mock()
@@ -301,9 +295,31 @@ class VerificationAPITestCase(BaseDeploymentTestCase):
         api.Verification.uninstall_tempest(self.deployment_uuid)
         self.tempest.uninstall.assert_called_once_with()
 
+    @mock.patch("tempfile.gettempdir")
+    @mock.patch("shutil.move")
+    @mock.patch("shutil.copy2")
+    @mock.patch("rally.api.objects.Deployment.get")
+    @mock.patch("rally.api.tempest.Tempest")
+    def test_reinstall_tempest(self, mock_tempest, mock_d_get,
+                               mock_copy, mock_move, mock_tmp):
+
+        fake_source = "fake__source"
+        fake_conf = "/path/to/fake_conf"
+        fake_tmpdir = "/fake/tmp/path/to/dir"
+        tmp_file = os.path.join(fake_tmpdir, "fake_conf")
+        self.tempest.config_file = fake_conf
+        mock_tempest.return_value = self.tempest
+        mock_tmp.return_value = fake_tmpdir
+        api.Verification.reinstall_tempest(self.deployment_uuid,
+                                           source=fake_source)
+        self.tempest.uninstall.assert_called_once_with()
+        mock_copy.assert_called_once_with(fake_conf,
+                                          tmp_file)
+        self.tempest.install.assert_called_once_with()
+        mock_move.assert_called_once_with(tmp_file, fake_conf)
+
 
 class DeprecatedAPITestCase(test.TestCase):
-
     @mock.patch("rally.api.Deployment.create",
                 return_value="created_deployment")
     def test_create_deploy(self, mock_deployment_create):
@@ -359,10 +375,10 @@ class DeprecatedAPITestCase(test.TestCase):
     def test_verify(self, mock_verification_verify):
         api.verify("deployment", "set", "regex", "tempest_config")
         mock_verification_verify.assert_called_once_with(
-                                "deployment", "set", "regex", "tempest_config")
+            "deployment", "set", "regex", "tempest_config")
 
     @mock.patch("rally.api.Verification.install_tempest")
     def test_install_tempest(self, mock_verification_install_tempest):
         api.install_tempest("deployment", "source")
         mock_verification_install_tempest.assert_called_once_with(
-                                                        "deployment", "source")
+            "deployment", "source")

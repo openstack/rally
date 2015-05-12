@@ -12,9 +12,10 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-
-
+import os
 import re
+import shutil
+import tempfile
 
 import jinja2
 import jinja2.meta
@@ -269,6 +270,31 @@ class Verification(object):
         deployment_uuid = objects.Deployment.get(deployment)["uuid"]
         verifier = tempest.Tempest(deployment_uuid)
         verifier.uninstall()
+
+    @classmethod
+    def reinstall_tempest(cls, deployment, tempest_config=None, source=None):
+        """Uninstall Tempest and then reinstall from new source
+
+        :param deployment: UUID or name of the deployment
+        :param tempest_config: Tempest config file. Use previous file as
+        default
+        :param source: Source to fetch Tempest from. Use old source as default
+        """
+        deployment_uuid = objects.Deployment.get(deployment)["uuid"]
+        verifier = tempest.Tempest(deployment_uuid)
+        if not tempest_config:
+            config_path = verifier.config_file
+            filename = os.path.basename(config_path)
+            temp_location = tempfile.gettempdir()
+            tmp_conf_path = os.path.join(temp_location, filename)
+            shutil.copy2(config_path, tmp_conf_path)
+        source = source or verifier.tempest_source
+        verifier.uninstall()
+        verifier = tempest.Tempest(deployment_uuid, source=source,
+                                   tempest_config=tempest_config)
+        verifier.install()
+        if not tempest_config:
+            shutil.move(tmp_conf_path, verifier.config_file)
 
 
 # NOTE(msdubov): API methods below are deprecated and left for compability.

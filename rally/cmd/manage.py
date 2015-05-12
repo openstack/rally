@@ -57,6 +57,19 @@ class TempestCommands(object):
         """Removes deployment's local Tempest installation."""
         api.Verification.uninstall_tempest(deployment)
 
+    @cliutils.args("--deployment", type=str, dest="deployment",
+                   required=False, help="UUID or name of the deployment")
+    @cliutils.args("--tempest-config", dest="tempest_config", type=str,
+                   required=False,
+                   help="User specified Tempest config file location")
+    @cliutils.args("--source", type=str, dest="source",
+                   required=False, help="New Path/URL to repo to pull tempest "
+                                        "from. Use old source as default")
+    @envutils.with_default_deployment(cli_arg_name="deployment")
+    def reinstall(self, deployment=None, tempest_config=None, source=None):
+        """Uninstall Tempest and then reinstall from new source."""
+        api.Verification.reinstall_tempest(deployment, tempest_config, source)
+
 
 def main():
     categories = {"db": DBCommands,
