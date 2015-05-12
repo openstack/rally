@@ -16,11 +16,11 @@
 import jsonschema
 import mock
 
-from rally.benchmark.context.cleanup import context
+from rally.plugins.openstack.context.cleanup import context
 from tests.unit import test
 
 
-BASE = "rally.benchmark.context.cleanup.context"
+BASE = "rally.plugins.openstack.context.cleanup.context"
 
 
 class AdminCleanupTestCase(test.TestCase):

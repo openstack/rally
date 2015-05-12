@@ -13,13 +13,13 @@
 # under the License.
 
 from rally.benchmark.context import base
-from rally.benchmark.context.cleanup import manager as resource_manager
 from rally.benchmark.scenarios.glance import utils as glance_utils
 from rally.common.i18n import _
 from rally.common import log as logging
 from rally.common import utils as rutils
 from rally import consts
 from rally import osclients
+from rally.plugins.openstack.context.cleanup import manager as resource_manager
 
 
 LOG = logging.getLogger(__name__)

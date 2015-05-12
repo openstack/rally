@@ -17,13 +17,13 @@ from boto import exception as boto_exception
 import mock
 from neutronclient.common import exceptions as neutron_exceptions
 
-from rally.benchmark.context.cleanup import base
-from rally.benchmark.context.cleanup import resources
 from rally.benchmark.scenarios.keystone import utils as keystone_utils
 from rally.common import utils
+from rally.plugins.openstack.context.cleanup import base
+from rally.plugins.openstack.context.cleanup import resources
 from tests.unit import test
 
-BASE = "rally.benchmark.context.cleanup.resources"
+BASE = "rally.plugins.openstack.context.cleanup.resources"
 
 
 class AllResourceManagerTestCase(test.TestCase):

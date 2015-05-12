@@ -16,12 +16,12 @@
 import mock
 import six
 
-from rally.benchmark.context.cleanup import base
-from rally.benchmark.context.cleanup import manager
+from rally.plugins.openstack.context.cleanup import base
+from rally.plugins.openstack.context.cleanup import manager
 from tests.unit import test
 
 
-BASE = "rally.benchmark.context.cleanup.manager"
+BASE = "rally.plugins.openstack.context.cleanup.manager"
 
 
 class SeekAndDestroyTestCase(test.TestCase):
