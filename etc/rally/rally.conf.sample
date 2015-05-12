@@ -70,7 +70,7 @@
 #logging_exception_prefix = %(asctime)s.%(msecs)03d %(process)d TRACE %(name)s %(instance)s
 
 # List of logger=LEVEL pairs. (list value)
-#default_log_levels = amqp=WARN,amqplib=WARN,boto=WARN,qpid=WARN,sqlalchemy=WARN,suds=INFO,oslo.messaging=INFO,iso8601=WARN,requests.packages.urllib3.connectionpool=WARN,urllib3.connectionpool=WARN,websocket=WARN,keystonemiddleware=WARN,routes.middleware=WARN,stevedore=WARN
+#default_log_levels = amqp=WARN,amqplib=WARN,boto=WARN,qpid=WARN,sqlalchemy=WARN,suds=INFO,oslo.messaging=INFO,iso8601=WARN,requests.packages.urllib3.connectionpool=WARN,urllib3.connectionpool=WARN,websocket=WARN,requests.packages.urllib3.util.retry=WARN,urllib3.util.retry=WARN,keystonemiddleware=WARN,routes.middleware=WARN,stevedore=WARN
 
 # Enables or disables publication of error events. (boolean value)
 #publish_errors = false
@@ -150,26 +150,35 @@
 # point value)
 #glance_image_delete_poll_interval = 1.0
 
-# Time(in sec) to sleep after creating a resource before polling for it status.
-# (floating point value)
+# Time(in sec) to sleep after creating a resource before polling for
+# it status. (floating point value)
 #heat_stack_create_prepoll_delay = 2.0
 
-# Time(in sec) to wait for heat stack to be created. (floating point value)
+# Time(in sec) to wait for heat stack to be created. (floating point
+# value)
 #heat_stack_create_timeout = 3600.0
 
-# Time interval(in sec) between checks when waiting for stack creation.
-# (floating point value)
+# Time interval(in sec) between checks when waiting for stack
+# creation. (floating point value)
 #heat_stack_create_poll_interval = 1.0
 
-# Time(in sec) to wait for heat stack to be deleted. (floating point value)
+# Time(in sec) to wait for heat stack to be deleted. (floating point
+# value)
 #heat_stack_delete_timeout = 3600.0
 
-# Time interval(in sec) between checks when waiting for stack deletion.
-# (floating point value)
+# Time interval(in sec) between checks when waiting for stack
+# deletion. (floating point value)
 #heat_stack_delete_poll_interval = 1.0
 
-# Time(in sec) to sleep after updating a resource before polling for it status.
-# (floating point value)
+# Time(in sec) to wait for stack to be checked. (floating point value)
+#heat_stack_check_timeout = 3600.0
+
+# Time interval(in sec) between checks when waiting for stack
+# checking. (floating point value)
+#heat_stack_check_poll_interval = 1.0
+
+# Time(in sec) to sleep after updating a resource before polling for
+# it status. (floating point value)
 #heat_stack_update_prepoll_delay = 2.0
 
 # Time(in sec) to wait for stack to be updated. (floating point value)
@@ -179,7 +188,8 @@
 # (floating point value)
 #heat_stack_update_poll_interval = 1.0
 
-# Time(in sec) to wait for stack to be suspended. (floating point value)
+# Time(in sec) to wait for stack to be suspended. (floating point
+# value)
 #heat_stack_suspend_timeout = 3600.0
 
 # Time interval(in sec) between checks when waiting for stack suspend.
@@ -192,13 +202,6 @@
 # Time interval(in sec) between checks when waiting for stack resume.
 # (floating point value)
 #heat_stack_resume_poll_interval = 1.0
-
-# Time(in sec) to wait for stack to be checked. (floating point value)
-#heat_stack_check_timeout = 3600.0
-
-# Time interval(in sec) between checks when waiting for stack checking.
-# (floating point value)
-#heat_stack_check_poll_interval = 1.0
 
 # Time to sleep after start before polling for status (floating point
 # value)
@@ -250,9 +253,9 @@
 # Server reboot poll interval (floating point value)
 #nova_server_reboot_poll_interval = 2.0
 
-# Time to sleep after rebuild before polling for status (floating point
-# value)
-#nova_server_rebuild_prepoll_delay = 0.0
+# Time to sleep after rebuild before polling for status (floating
+# point value)
+#nova_server_rebuild_prepoll_delay = 1.0
 
 # Server rebuild timeout (floating point value)
 #nova_server_rebuild_timeout = 300.0
@@ -290,8 +293,8 @@
 # Server suspend poll interval (floating point value)
 #nova_server_suspend_poll_interval = 2.0
 
-# Time to sleep after resume before polling for status (floating
-# point value)
+# Time to sleep after resume before polling for status (floating point
+# value)
 #nova_server_resume_prepoll_delay = 2.0
 
 # Server resume timeout (floating point value)
@@ -300,8 +303,8 @@
 # Server resume poll interval (floating point value)
 #nova_server_resume_poll_interval = 2.0
 
-# Time to sleep after pause before polling for status (floating
-# point value)
+# Time to sleep after pause before polling for status (floating point
+# value)
 #nova_server_pause_prepoll_delay = 2.0
 
 # Server pause timeout (floating point value)
@@ -320,8 +323,8 @@
 # Server unpause poll interval (floating point value)
 #nova_server_unpause_poll_interval = 2.0
 
-# Time to sleep after shelve before polling for status (floating
-# point value)
+# Time to sleep after shelve before polling for status (floating point
+# value)
 #nova_server_shelve_prepoll_delay = 2.0
 
 # Server shelve timeout (floating point value)
@@ -409,6 +412,12 @@
 
 # Server migrate poll interval (floating point value)
 #nova_server_migrate_poll_interval = 2.0
+
+# Nova volume detach timeout (floating point value)
+#nova_detach_volume_timeout = 200.0
+
+# Nova volume detach poll interval (floating point value)
+#nova_detach_volume_poll_interval = 2.0
 
 # A timeout in seconds for a cluster create operation (integer value)
 #cluster_create_timeout = 1800
