@@ -26,12 +26,14 @@ Useful links
 - `Bugs <https://bugs.launchpad.net/rally>`_
 - `Patches on review <https://review.openstack.org/#/q/status:open+rally,n,z>`_
 - `Meeting logs <http://eavesdrop.openstack.org/meetings/rally/2015/>`_ (server: **irc.freenode.net**, channel: **#openstack-meeting**)
+- `Relase meeting logs <http://eavesdrop.openstack.org/meetings/rallyrelease/2015/>`_ (server: **irc.freenode.net**, channel: **#openstack-rally**)
 - `IRC logs <http://irclog.perlgeek.de/openstack-rally>`_ (server: **irc.freenode.net**, channel: **#openstack-rally**)
 
 
 Where can I discuss and propose changes?
 ----------------------------------------
 - Our IRC channel: **#openstack-rally** on **irc.freenode.net**;
-- Weekly Rally team meeting (in IRC): **#openstack-meeting** on **irc.freenode.net**, held on Tuesdays at 17:00 UTC;
+- Weekly Rally team meeting (in IRC): **#openstack-meeting** on **irc.freenode.net**, held on Mondays at 14:00 UTC;
+- Weekly release meeting (in IRC): **#openstack-rally** on **irc.freenode.net**, held on Mondays at 13:00 UTC;
 - Openstack mailing list: **openstack-dev@lists.openstack.org** (see `subscription and usage instructions <http://lists.openstack.org/cgi-bin/mailman/listinfo/openstack-dev>`_);
 - `Rally team on Launchpad <https://launchpad.net/rally>`_: Answers/Bugs/Blueprints.
