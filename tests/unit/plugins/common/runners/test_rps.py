@@ -17,13 +17,14 @@ import jsonschema
 import mock
 
 from rally.benchmark.runners import base
-from rally.benchmark.runners import rps
 from rally import consts
+from rally.plugins.common.runners import rps
 from tests.unit import fakes
 from tests.unit import test
 
 
-RUNNERS = "rally.benchmark.runners."
+RUNNERS_BASE = "rally.benchmark.runners.base."
+RUNNERS = "rally.plugins.common.runners."
 
 
 class RPSScenarioRunnerTestCase(test.TestCase):
@@ -64,8 +65,8 @@ class RPSScenarioRunnerTestCase(test.TestCase):
         self.assertRaises(jsonschema.ValidationError,
                           rps.RPSScenarioRunner.validate, config)
 
-    @mock.patch(RUNNERS + "base.scenario_base")
-    @mock.patch(RUNNERS + "base.osclients")
+    @mock.patch(RUNNERS_BASE + "scenario_base")
+    @mock.patch(RUNNERS_BASE + "osclients")
     def test_get_rps_runner(self, mock_osclients, mock_base):
 
         mock_osclients.Clients.return_value = fakes.FakeClients()

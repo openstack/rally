@@ -15,7 +15,7 @@
 
 import mock
 
-from rally.benchmark.runners import serial
+from rally.plugins.common.runners import serial
 from tests.unit import fakes
 from tests.unit import test
 
