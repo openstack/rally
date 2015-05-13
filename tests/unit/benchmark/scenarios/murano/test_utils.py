@@ -86,3 +86,39 @@ class MuranoScenarioTestCase(test.TestCase):
         self.assertEqual("sess", create_sess)
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "murano.create_session")
+
+    @mock.patch(MRN_UTILS + ".MuranoScenario.clients")
+    def test__create_service(self, mock_clients,):
+        mock_clients("murano").services.post.return_value = "app"
+        mock_env = mock.Mock(id="ip")
+        mock_sess = mock.Mock(id="ip")
+        scenario = utils.MuranoScenario()
+
+        create_app = scenario._create_service(mock_env, mock_sess,
+                                              "fake_full_name",
+                                              atomic_action=True)
+
+        self.assertEqual("app", create_app)
+        self._test_atomic_action_timer(scenario.atomic_actions(),
+                                       "murano.create_service")
+
+    @mock.patch(MRN_UTILS + ".MuranoScenario.clients")
+    def test_deploy_environment(self, mock_clients):
+        environment = mock.Mock(id="id")
+        session = mock.Mock(id="id")
+        mock_clients("murano").sessions.deploy.return_value = "ok"
+        scenario = utils.MuranoScenario()
+        scenario._deploy_environment(environment, session)
+
+        mock_clients("murano").sessions.deploy.assert_called_once_with(
+            environment.id, session.id
+        )
+
+        self.wait_for.mock.assert_called_once_with(
+            environment,
+            update_resource=self.gfm(),
+            is_ready=self.res_is.mock(),
+            check_interval=5.0,
+            timeout=1200.0)
+        self._test_atomic_action_timer(scenario.atomic_actions(),
+                                       "murano.deploy_environment")

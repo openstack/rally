@@ -25,6 +25,24 @@ MURANO_SCENARIO = ("rally.benchmark.scenarios.murano."
 
 class MuranoEnvironmentsTestCase(test.TestCase):
 
+    def _get_context(self):
+        return {
+            "tenant": {
+                "packages": [mock.MagicMock(fully_qualified_name="fake")]
+            },
+            "user": {
+                "tenant_id": "fake_tenant_id"
+            },
+            "config": {
+                "murano_packages": {
+                    "app_package": (
+                        "rally-jobs/extra/murano/"
+                        "applications/HelloReporter/"
+                        "io.murano.apps.HelloReporter.zip")
+                }
+            }
+        }
+
     @mock.patch(MURANO_SCENARIO + "._list_environments")
     def test_list_environments(self, mock_list):
         scenario = environments.MuranoEnvironments()
@@ -46,3 +64,34 @@ class MuranoEnvironmentsTestCase(test.TestCase):
         mock_create.assert_called_once_with()
         mock_session.assert_called_once_with(fake_environment.id)
         mock_delete.assert_called_once_with(fake_environment)
+
+    @mock.patch(MURANO_SCENARIO + "._create_environment")
+    @mock.patch(MURANO_SCENARIO + "._create_session")
+    @mock.patch(MURANO_SCENARIO + "._create_service")
+    @mock.patch(MURANO_SCENARIO + "._deploy_environment")
+    def test_create_and_deploy_environment(self, mock_deploy_env,
+                                           mock_create_service, mock_session,
+                                           mock_environment):
+
+        fake_environment = mock.MagicMock(id="fake_env_id")
+        mock_environment.return_value = fake_environment
+
+        fake_session = mock.Mock(id="fake_session_id")
+        mock_session.return_value = fake_session
+
+        scenario = environments.MuranoEnvironments()
+        scenario.context = self._get_context()
+        scenario.context["tenants"] = {
+            "fake_tenant_id": {
+                "packages": [mock.MagicMock()]
+            }
+        }
+
+        scenario.create_and_deploy_environment(1)
+
+        mock_environment.assert_called_once_with()
+        mock_session.assert_called_once_with(fake_environment.id)
+        mock_create_service.assert_called_once_with(
+            fake_environment, fake_session, "fake", atomic_action=False)
+        mock_deploy_env.assert_called_once_with(fake_environment,
+                                                fake_session)
