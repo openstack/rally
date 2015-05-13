@@ -1,4 +1,4 @@
-#!/bin/sh -e
+#!/bin/sh -ex
 #
 # Copyright 2013: Mirantis Inc.
 # All Rights Reserved.

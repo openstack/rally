@@ -27,7 +27,6 @@ PYTHON3="$(which python3 || true)"
 PYTHON=${PYTHON2:-$PYTHON3}
 BASE_PIP_URL="https://pypi.python.org/simple"
 VIRTUALENV_191_URL="https://raw.github.com/pypa/virtualenv/1.9.1/virtualenv.py"
-VIRTUALENV_CMD="virtualenv"
 
 RALLY_GIT_URL=https://github.com/openstack/rally
 RALLY_CONFIGURATION_DIR=/etc/rally
@@ -59,14 +58,6 @@ EX_TEMPFAIL=75
 
 # misused as: unexpected error in some script we call
 EX_PROTOCOL=76
-
-err () {
-  echo "$PROG: $@" >&2
-}
-
-say () {
-    echo "$PROG: $@";
-}
 
 # abort RC [MSG]
 #
@@ -119,7 +110,7 @@ __EOF__
 }
 
 script_interrupted () {
-    say "Interrupted by the user. Cleaning up..."
+    echo "Interrupted by the user. Cleaning up..."
     [ -n "${VIRTUAL_ENV}" -a "${VIRTUAL_ENV}" == "$VENVDIR" ] && deactivate
 
     case $CURRENT_ACTION in
@@ -146,9 +137,7 @@ script_interrupted () {
             ;;
     esac
 
-    die $EX_TEMPFAIL "Script interrupted by the user" <<__EOF__
-
-__EOF__
+    abort $EX_TEMPFAIL "Script interrupted by the user"
 }
 
 trap script_interrupted SIGINT
@@ -179,7 +168,7 @@ Options:
                          either 'mysql' or 'postgres'
   --db-name NAME         Name of the database. Only used when --dbtype is
                          either 'mysql' or 'postgres'
-  -p, --python EXE       The python interpreter to use. Default: $(which python).
+  -p, --python EXE       The python interpreter to use. Default: $PYTHON
 
 __EOF__
 }
@@ -202,7 +191,7 @@ ask_yn () {
         case "$REPLY" in
             [Yy]*)    REPLY='yes'; return 0 ;;
             [Nn]*|'') REPLY='no';  return 1 ;;
-            *)        say "Please type 'y' (yes) or 'n' (no)." ;;
+            *)        echo "Please type 'y' (yes) or 'n' (no)." ;;
         esac
     done
 }
@@ -219,11 +208,12 @@ require_command () {
 
 require_python () {
     require_command "$PYTHON"
-    if $PYTHON -c 'import sys; sys.exit(sys.version_info[:2] >= (2, 6))'; then
+    if "$PYTHON" -c 'import sys; sys.exit(sys.version_info[:2] >= (2, 6))'
+    then
         die $EX_UNAVAILABLE "Wrong version of python is installed" <<__EOF__
 
 Rally requires Python version 2.6+. Unfortunately, we do not support
-your version of python: $($PYTHON -V 2>&1|sed 's/python//gi').
+your version of python: $("$PYTHON" -V 2>&1 | sed 's/python//gi').
 
 If a version of Python suitable for using Rally is present in some
 non-standard location, you can specify it from the command line by
@@ -256,29 +246,13 @@ which_missing_packages () {
 }
 
 # Download command
-# TODO: move this logic into install_required_sw
-if ! have_command wget && ! have_command curl; then
-    if ask_yn "You need ether wget or curl to be installed. Install wget?"; then
-        apt-get install --yes wget || yum install -y wget
+download() {
+    if have_command wget; then
+        wget -nv $VERBOSE --no-check-certificate -O "$@";
+    elif have_command curl; then
+        curl $VERBOSE --insecure -L -s -o "$@";
     fi
-fi
-
-if have_command wget
-then
-    download () { wget -nv $VERBOSE --no-check-certificate -O "$@"; }
-elif have_command curl
-then
-    download () { curl $VERBOSE --insecure -L -s -o "$@"; }
-else
-    die $EX_UNAVAILABLE "Neither 'curl' nor 'wget' command found." <<__EOF__
-The script needs either one of the 'curl' or 'wget' commands to run.
-Please, install at least one of them using the software manager of
-your distribution, or downloading it from internet:
-
-- wget: http://www.gnu.org/software/wget/
-- curl: http://curl.haxx.se/
-__EOF__
-fi
+}
 
 download_from_pypi () {
     local pkg=$1
@@ -305,7 +279,6 @@ install_required_sw () {
         else
             pkg_manager="apt-get install"
         fi
-
     elif have_command yum; then
         # RHEL/CentOS
         missing=$(which_missing_packages gcc libffi-devel python-devel openssl-devel gmp-devel libxml2-devel libxslt-devel postgresql-devel git)
@@ -321,6 +294,9 @@ install_required_sw () {
     else
         # MacOSX maybe?
         warn "Cannot determine what package manager this Linux distribution has, so I cannot check if requisite software is installed. I'm proceeding anyway, but you may run into errors later."
+    fi
+    if ! have_command wget && ! have_command curl; then
+        missing="$missing wget"
     fi
 
     if ! have_command pip; then
@@ -347,22 +323,23 @@ __EOF__
             if ask_yn "Do you want me to install these packages for you?"; then
                 # install
                 if [[ "$missing" == *python-pip* ]]; then
-                    missing=$(echo "$missing" | sed 's/python-pip//')
+                    missing=${missing//python-pip/}
                     if ! $pkg_manager python-pip; then
                         if ask_yn "Error installing python-pip. Install from external source?"; then
                             local pdir=$(mktemp -d)
                             local getpip="$pdir/get-pip.py"
                             download "$getpip" https://raw.github.com/pypa/pip/master/contrib/get-pip.py
-                            if ! $PYTHON "$getpip"; then
-                                die $EX_PROTOCOL "Error while installing python-pip from external source."
+                            if ! "$PYTHON" "$getpip"; then
+                                abort $EX_PROTOCOL "Error while installing python-pip from external source."
                             fi
                         else
-                            die $EX_TEMPFAIL "Please install python-pip manually."
+                            abort $EX_TEMPFAIL \
+                                "Please install python-pip manually."
                         fi
                     fi
                 fi
                 if ! $pkg_manager $missing; then
-                    die $EX_UNAVAILABLE "Error while installing $missing"
+                    abort $EX_UNAVAILABLE "Error while installing $missing"
                 fi
                 # installation successful
             else # don't want to install the packages
@@ -428,14 +405,10 @@ __EOF__
     fi
 
     # Use the latest virtualenv that can use `.tar.gz` files
-    VIRTUALENV_URL=$VIRTUALENV_191_URL
     VIRTUALENV_DST="$DESTDIR/virtualenv-191.py"
-    mkdir -p $DESTDIR
-    download $VIRTUALENV_DST $VIRTUALENV_URL
-    VIRTUALENV_CMD="$PYTHON $VIRTUALENV_DST"
-
-    # python virtualenv.py --[no,system]-site-packages $DESTDIR
-    $VIRTUALENV_CMD $VERBOSE -p $PYTHON "$DESTDIR"
+    mkdir -p "$DESTDIR"
+    download "$VIRTUALENV_DST" "$VIRTUALENV_191_URL"
+    "$PYTHON" "$VIRTUALENV_DST" $VERBOSE -p "$PYTHON" "$DESTDIR"
 
     . "$DESTDIR"/bin/activate
 
@@ -447,7 +420,11 @@ __EOF__
     #
     if pip wheel --help 1>/dev/null 2>/dev/null; then
         (cd "$DESTDIR" && download_from_pypi setuptools)
-        if ! (cd "$DESTDIR" && tar -xzf setuptools-*.tar.gz && cd setuptools-* && python setup.py install);
+        # setup.py must be called with `python', which will be the
+        # python executable inside the virtualenv, not `$PYTHON',
+        # which is the system python.
+        if ! (cd "$DESTDIR" && tar -xzf setuptools-*.tar.gz && \
+              cd setuptools-* && python setup.py install);
         then
             die $EX_SOFTWARE \
                 "Failed to install the latest version of Python 'setuptools'" <<__EOF__
@@ -525,9 +502,8 @@ do
             case $DBTYPE in
                 sqlite|mysql|postgres) break ;;
                 *)
-                    err "Invalid database type $DBTYPE."
-                    print_usage
-                    exit $EX_USAGE
+                    print_usage | die $EX_USAGE \
+                        "An invalid option has been detected."
                     ;;
             esac
             ;;
@@ -556,9 +532,7 @@ do
             break
             ;;
         *)
-            err "An invalid option has been detected."
-            print_usage
-            exit $EX_USAGE
+            print_usage | die $EX_USAGE "An invalid option has been detected."
     esac
     shift
 done
@@ -634,7 +608,7 @@ if [ "$USEVIRTUALENV" = 'yes' ]; then
 
             if ! ask_yn "Do you want to wipe the installation directory '$VENVDIR'?"
             then
-                say "*Not* overwriting destination directory '$VENVDIR'."
+                echo "*Not* overwriting destination directory '$VENVDIR'."
                 OVERWRITEDIR=no
             fi
         elif [ $OVERWRITEDIR = 'no' ]
@@ -701,17 +675,14 @@ else
             echo
             if ! ask_yn "Do you want to wipe the source directory '$SOURCEDIR'?"
             then
-                say "*Not* overwriting destination directory '$SOURCEDIR'."
+                echo "*Not* overwriting destination directory '$SOURCEDIR'."
             fi
         fi
         if [ -d "$SOURCEDIR"/.git ]
         then
             echo "Assuming $SOURCEDIR already contains the Rally git repository."
         else
-            die $EX_CANTCREAT "Unable to download git repository" <<__EOF__
-Unable to download git repository.
-
-__EOF__
+            abort $EX_CANTCREAT "Unable to download git repository"
         fi
     fi
 
@@ -732,7 +703,6 @@ cd "$SOURCEDIR"
 pip install pbr
 pip install 'tox<=1.6.1'
 # Install rally
-# python setup.py install
 pip install .
 cd "$ORIG_WD"
 
