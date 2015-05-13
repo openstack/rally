@@ -17,6 +17,7 @@
 import subprocess
 
 import mock
+import netaddr
 from oslotest import mockpatch
 import six
 
@@ -64,14 +65,17 @@ class VMScenarioTestCase(test.TestCase):
         vm_scenario._wait_for_ssh(ssh)
         ssh.wait.assert_called_once_with()
 
+    @mock.patch(VMTASKS_UTILS + ".bench_utils.resource_is")
     @mock.patch(VMTASKS_UTILS + ".VMScenario._ping_ip_address",
                 return_value=True)
-    def test__wait_for_ping(self, mock__ping):
+    def test__wait_for_ping(self, mock__ping, mock_resource_is):
         vm_scenario = utils.VMScenario()
-        vm_scenario._wait_for_ping("1.2.3.4")
-        self.wait_for.mock.assert_called_once_with("1.2.3.4",
-                                                   is_ready=mock__ping,
-                                                   timeout=120)
+        vm_scenario._wait_for_ping(netaddr.IPAddress("1.2.3.4"))
+        self.wait_for.mock.assert_called_once_with(
+            netaddr.IPAddress("1.2.3.4"),
+            is_ready=mock_resource_is.return_value,
+            timeout=120)
+        mock_resource_is.assert_called_once_with("ICMP UP", mock__ping)
 
     @mock.patch(VMTASKS_UTILS + ".VMScenario._run_command_over_ssh")
     @mock.patch("rally.common.sshutils.SSH")
@@ -120,11 +124,11 @@ class VMScenarioTestCase(test.TestCase):
         mock_sys.platform = "linux2"
 
         vm_scenario = utils.VMScenario()
-        host_ip = "1.2.3.4"
+        host_ip = netaddr.IPAddress("1.2.3.4")
         self.assertTrue(vm_scenario._ping_ip_address(host_ip))
 
         mock_subprocess.assert_called_once_with(
-            ["ping", "-c1", "-w1", host_ip],
+            ["ping", "-c1", "-w1", str(host_ip)],
             stderr=subprocess.PIPE, stdout=subprocess.PIPE)
         ping_process.wait.assert_called_once_with()
 
@@ -137,11 +141,11 @@ class VMScenarioTestCase(test.TestCase):
         mock_sys.platform = "linux2"
 
         vm_scenario = utils.VMScenario()
-        host_ip = "1ce:c01d:bee2:15:a5:900d:a5:11fe"
+        host_ip = netaddr.IPAddress("1ce:c01d:bee2:15:a5:900d:a5:11fe")
         self.assertTrue(vm_scenario._ping_ip_address(host_ip))
 
         mock_subprocess.assert_called_once_with(
-            ["ping6", "-c1", "-w1", host_ip],
+            ["ping6", "-c1", "-w1", str(host_ip)],
             stderr=subprocess.PIPE, stdout=subprocess.PIPE)
         ping_process.wait.assert_called_once_with()
 
@@ -154,11 +158,11 @@ class VMScenarioTestCase(test.TestCase):
         mock_sys.platform = "freebsd10"
 
         vm_scenario = utils.VMScenario()
-        host_ip = "1.2.3.4"
+        host_ip = netaddr.IPAddress("1.2.3.4")
         self.assertTrue(vm_scenario._ping_ip_address(host_ip))
 
         mock_subprocess.assert_called_once_with(
-            ["ping", "-c1", host_ip],
+            ["ping", "-c1", str(host_ip)],
             stderr=subprocess.PIPE, stdout=subprocess.PIPE)
         ping_process.wait.assert_called_once_with()
 
@@ -171,11 +175,11 @@ class VMScenarioTestCase(test.TestCase):
         mock_sys.platform = "freebsd10"
 
         vm_scenario = utils.VMScenario()
-        host_ip = "1ce:c01d:bee2:15:a5:900d:a5:11fe"
+        host_ip = netaddr.IPAddress("1ce:c01d:bee2:15:a5:900d:a5:11fe")
         self.assertTrue(vm_scenario._ping_ip_address(host_ip))
 
         mock_subprocess.assert_called_once_with(
-            ["ping6", "-c1", host_ip],
+            ["ping6", "-c1", str(host_ip)],
             stderr=subprocess.PIPE, stdout=subprocess.PIPE)
         ping_process.wait.assert_called_once_with()
 

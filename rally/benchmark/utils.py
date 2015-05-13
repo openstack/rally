@@ -41,11 +41,12 @@ def get_status(resource):
 
 
 class resource_is(object):
-    def __init__(self, desired_status):
+    def __init__(self, desired_status, status_getter=None):
         self.desired_status = desired_status
+        self.status_getter = status_getter or get_status
 
     def __call__(self, resource):
-        return get_status(resource) == self.desired_status.upper()
+        return self.status_getter(resource) == self.desired_status.upper()
 
     def __str__(self):
         return str(self.desired_status)

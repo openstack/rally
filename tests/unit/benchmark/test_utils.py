@@ -46,9 +46,17 @@ class BenchmarkUtilsTestCase(test.TestCase):
 
     def test_resource_is(self):
         is_active = utils.resource_is("ACTIVE")
+        self.assertEqual(is_active.status_getter, utils.get_status)
         self.assertTrue(is_active(fakes.FakeResource(status="active")))
         self.assertTrue(is_active(fakes.FakeResource(status="aCtIvE")))
         self.assertFalse(is_active(fakes.FakeResource(status="ERROR")))
+
+    def test_resource_is_with_fake_status_getter(self):
+        fake_getter = mock.MagicMock(return_value="LGTM")
+        fake_res = mock.MagicMock()
+        is_lgtm = utils.resource_is("LGTM", fake_getter)
+        self.assertTrue(is_lgtm(fake_res))
+        fake_getter.assert_called_once_with(fake_res)
 
     def test_infinite_run_args_generator(self):
         args = lambda x: (x, "a", "b", 123)
