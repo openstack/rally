@@ -752,6 +752,7 @@ __EOF__
     setup_rally_configuration "$SOURCEDIR"
 else
     setup_rally_configuration "$SOURCEDIR"
+    ln -s /usr/local/etc/bash_completion.d/rally.bash_completion /etc/bash_completion.d/ 2> /dev/null || true
 
     cat <<__EOF__
 ==============================

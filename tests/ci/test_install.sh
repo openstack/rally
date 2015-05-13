@@ -19,12 +19,14 @@ env
 
 sudo ./install_rally.sh --system --yes
 rally deployment list
+[ -d /etc/bash_completion.d ] && cat /etc/bash_completion.d/rally.bash_completion || true
 
 sudo ./install_rally.sh --system --yes
 rally deployment list
 
 sudo ./install_rally.sh --yes -d /tmp/rallytest_root/
 /tmp/rallytest_root/bin/rally deployment list
+cat /tmp/rallytest_root/etc/bash_completion.d/rally.bash_completion
 
 sudo rm -fr ~/.rally
 

@@ -25,17 +25,6 @@ try:
 except ImportError:
     pass
 
-import os
-if os.getuid() == 0:
-    data_files = [
-        ('/etc/bash_completion.d', ['etc/rally.bash_completion']),
-        ]
-else:
-    data_files = [
-        ('etc/bash_completion.d', ['etc/rally.bash_completion']),
-        ]
-
 setuptools.setup(
     setup_requires=['pbr'],
-    data_files=data_files,
     pbr=True)
