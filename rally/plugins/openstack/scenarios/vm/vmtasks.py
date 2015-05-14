@@ -179,3 +179,23 @@ class VMTasks(vm_utils.VMScenario):
                                          force_delete=force_delete)
 
         return {"data": data, "errors": err}
+
+    @types.set(image=types.ImageResourceType,
+               flavor=types.FlavorResourceType)
+    @validation.number("port", minval=1, maxval=65535, nullable=True,
+                       integer_only=True)
+    @validation.valid_command("command")
+    @validation.external_network_exists("floating_network")
+    @validation.required_services(consts.Service.NOVA, consts.Service.CINDER)
+    @validation.required_openstack(users=True)
+    @validation.required_contexts("image_command_customizer")
+    @scenario.configure(context={"cleanup": ["nova", "cinder"],
+                                 "keypair": {}, "allow_ssh": {}})
+    def boot_runcommand_delete_custom_image(self, **kwargs):
+        """Boot a server from a custom image, run a command that outputs JSON.
+
+        Example Script in rally-jobs/extra/script_benchmark.sh
+        """
+
+        return self.boot_runcommand_delete(
+            image=self.context["tenant"]["custom_image"]["id"], **kwargs)

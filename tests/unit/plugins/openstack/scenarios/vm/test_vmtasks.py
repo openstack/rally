@@ -116,3 +116,31 @@ class VMTasksTestCase(test.TestCase):
                           "foo_script", "foo_username")
         self.scenario._delete_server_with_fip.assert_called_once_with(
             "foo_server", self.ip, force_delete=False)
+
+    def test_boot_runcommand_delete_custom_image(self):
+        context = {
+            "user": {
+                "tenant_id": "tenant_id",
+                "endpoint": mock.Mock()
+            },
+            "tenant": {
+                "custom_image": {"id": "image_id"}
+            }
+        }
+        scenario = vmtasks.VMTasks(context)
+
+        scenario.boot_runcommand_delete = mock.Mock()
+
+        scenario.boot_runcommand_delete_custom_image(
+            flavor="flavor_id",
+            command={
+                "script_file": "foo_script",
+                "interpreter": "bar_interpreter"},
+            username="username")
+
+        scenario.boot_runcommand_delete.assert_called_once_with(
+            image="image_id", flavor="flavor_id", username="username",
+            command={
+                "script_file": "foo_script",
+                "interpreter": "bar_interpreter"}
+        )
