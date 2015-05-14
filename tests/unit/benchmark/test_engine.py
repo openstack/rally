@@ -143,7 +143,7 @@ class BenchmarkEngineTestCase(test.TestCase):
         eng = engine.BenchmarkEngine(mock.MagicMock(), mock.MagicMock())
 
         mock_runner.validate = mock.MagicMock(
-                side_effect=jsonschema.ValidationError("a"))
+            side_effect=jsonschema.ValidationError("a"))
         self.assertRaises(exceptions.InvalidBenchmarkConfig,
                           eng._validate_config_syntax, config)
 
@@ -155,7 +155,7 @@ class BenchmarkEngineTestCase(test.TestCase):
         eng = engine.BenchmarkEngine(mock.MagicMock(), mock.MagicMock())
 
         mock_context.validate = mock.MagicMock(
-                side_effect=jsonschema.ValidationError("a"))
+            side_effect=jsonschema.ValidationError("a"))
         self.assertRaises(exceptions.InvalidBenchmarkConfig,
                           eng._validate_config_syntax, config)
 

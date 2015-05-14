@@ -114,8 +114,8 @@ class Scenario(functional.FunctionalMixin):
              for func in dir(scenario) if Scenario.is_scenario(scenario, func)]
             for scenario in scenario_classes
         ]
-        benchmark_scenarios_flattened = list(itertools.chain.from_iterable(
-                                                        benchmark_scenarios))
+        benchmark_scenarios_flattened = list(
+            itertools.chain.from_iterable(benchmark_scenarios))
         return benchmark_scenarios_flattened
 
     @staticmethod
@@ -222,7 +222,7 @@ class Scenario(functional.FunctionalMixin):
         """
         if not 0 <= min_sleep <= max_sleep:
             raise exceptions.InvalidArgumentsException(
-                                        "0 <= min_sleep <= max_sleep")
+                "0 <= min_sleep <= max_sleep")
 
         sleep_time = random.uniform(min_sleep, max_sleep)
         time.sleep(sleep_time)
@@ -295,7 +295,7 @@ class AtomicAction(utils.Timer):
             name_template = name + " (%i)"
             atomic_action_iteration = 2
             while self.scenario_instance._atomic_action_registered(
-                                    name_template % atomic_action_iteration):
+                    name_template % atomic_action_iteration):
                 atomic_action_iteration += 1
             return name_template % atomic_action_iteration
 

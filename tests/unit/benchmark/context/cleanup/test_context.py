@@ -78,7 +78,7 @@ class UserCleanupTestCase(test.TestCase):
         mock_manager.list_resource_names.return_value = set(["a", "b", "c"])
         context.UserCleanup.validate(["a"])
         mock_manager.list_resource_names.assert_called_once_with(
-                admin_required=False)
+            admin_required=False)
 
     @mock.patch("%s.manager" % BASE)
     def test_validate_no_such_cleanup(self, mock_manager):
@@ -86,7 +86,7 @@ class UserCleanupTestCase(test.TestCase):
         self.assertRaises(context.NoSuchCleanupResources,
                           context.UserCleanup.validate, ["a", "b", "d"])
         mock_manager.list_resource_names.assert_called_once_with(
-                admin_required=False)
+            admin_required=False)
 
     def test_validate_invalid_config(self):
         self.assertRaises(jsonschema.ValidationError,

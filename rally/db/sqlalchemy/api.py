@@ -311,7 +311,7 @@ class Connection(object):
             return worker
         except db_exc.DBDuplicateEntry:
             raise exceptions.WorkerAlreadyRegistered(
-                    worker=values["hostname"])
+                worker=values["hostname"])
 
     def get_worker(self, hostname):
         try:

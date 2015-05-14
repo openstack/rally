@@ -90,20 +90,20 @@ def hvariety(data):
         raise ValueError("Cannot calculate number of histrogram bins "
                          "for zero length array of data")
     return [
-            {
-                "method": "Square Root Choice",
-                "number_of_bins": calculate_number_of_bins_sqrt(data),
-            },
-            {
-                "method": "Sturges Formula",
-                "number_of_bins": calculate_number_of_bins_sturges(data),
-            },
-            {
-                "method": "Rice Rule",
-                "number_of_bins": calculate_number_of_bins_rice(data),
-            },
-            {
-                "method": "One Half",
-                "number_of_bins": calculate_number_of_bins_half(data),
-            }
+        {
+            "method": "Square Root Choice",
+            "number_of_bins": calculate_number_of_bins_sqrt(data),
+        },
+        {
+            "method": "Sturges Formula",
+            "number_of_bins": calculate_number_of_bins_sturges(data),
+        },
+        {
+            "method": "Rice Rule",
+            "number_of_bins": calculate_number_of_bins_rice(data),
+        },
+        {
+            "method": "One Half",
+            "number_of_bins": calculate_number_of_bins_half(data),
+        }
     ]

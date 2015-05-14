@@ -591,5 +591,5 @@ complete -F _rally rally
             args = " ".join(args_list)
 
             completion.append("""    OPTS["{cat}_{cmd}"]="{args}"\n""".format(
-                    cat=category, cmd=command_name, args=args))
+                cat=category, cmd=command_name, args=args))
     return bash_data % {"data": "".join(sorted(completion))}

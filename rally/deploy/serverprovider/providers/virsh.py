@@ -105,7 +105,7 @@ class VirshProvider(provider.ProviderFactory):
         subprocess.check_call(cmd, shell=True)
 
         cmd = "virsh --connect=%s undefine %s --remove-all-storage" % (
-                vconnection, vm_name)
+            vconnection, vm_name)
         subprocess.check_call(cmd, shell=True)
         return True
 

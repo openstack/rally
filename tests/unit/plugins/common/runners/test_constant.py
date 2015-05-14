@@ -268,7 +268,7 @@ class ConstantForDurationScenarioRunnerTestCase(test.TestCase):
 
     def test_run_scenario_constantly_for_duration(self):
         runner = constant.ConstantForDurationScenarioRunner(
-                        None, self.config)
+            None, self.config)
 
         runner._run_scenario(fakes.FakeScenario, "do_it",
                              self.context, self.args)
@@ -280,7 +280,7 @@ class ConstantForDurationScenarioRunnerTestCase(test.TestCase):
 
     def test_run_scenario_constantly_for_duration_exception(self):
         runner = constant.ConstantForDurationScenarioRunner(
-                        None, self.config)
+            None, self.config)
 
         runner._run_scenario(fakes.FakeScenario,
                              "something_went_wrong", self.context, self.args)

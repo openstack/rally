@@ -226,8 +226,7 @@ class ScenarioRunnerTestCase(test.TestCase):
         config = {"a": 10}
         base.ScenarioRunner.validate(config)
         mock_validate.assert_called_once_with(
-                config,
-                serial.SerialScenarioRunner.CONFIG_SCHEMA)
+            config, serial.SerialScenarioRunner.CONFIG_SCHEMA)
 
     @mock.patch(BASE + "rutils.Timer.duration", return_value=10)
     def test_run(self, mock_duration):
@@ -302,7 +301,7 @@ class ScenarioRunnerTestCase(test.TestCase):
         processes = 10
         process_pool = collections.deque([process] * processes)
         mock_result_queue = mock.MagicMock(
-                                    empty=mock.MagicMock(return_value=True))
+            empty=mock.MagicMock(return_value=True))
 
         runner = serial.SerialScenarioRunner(
             mock.MagicMock(),

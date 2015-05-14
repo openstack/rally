@@ -84,7 +84,7 @@ class NeutronScenarioTestCase(test.TestCase):
 
         result_network = scenario._update_network(network, network_update_args)
         mock_clients("neutron").update_network.assert_called_once_with(
-                                network["network"]["id"], expected_network)
+            network["network"]["id"], expected_network)
         self.assertEqual(result_network, expected_network)
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "neutron.update_network")
@@ -163,7 +163,7 @@ class NeutronScenarioTestCase(test.TestCase):
 
         result_subnet = scenario._update_subnet(subnet, subnet_update_args)
         mock_clients("neutron").update_subnet.assert_called_once_with(
-                                subnet["subnet"]["id"], expected_subnet)
+            subnet["subnet"]["id"], expected_subnet)
         self.assertEqual(result_subnet, expected_subnet)
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "neutron.update_subnet")
@@ -237,7 +237,7 @@ class NeutronScenarioTestCase(test.TestCase):
 
         result_router = scenario._update_router(router, router_update_args)
         mock_clients("neutron").update_router.assert_called_once_with(
-                                 router["router"]["id"], expected_router)
+            router["router"]["id"], expected_router)
         self.assertEqual(result_router, expected_router)
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "neutron.update_router")
@@ -248,7 +248,7 @@ class NeutronScenarioTestCase(test.TestCase):
         router = scenario._create_router({})
         scenario._delete_router(router)
         mock_clients("neutron").delete_router.assert_called_once_with(
-                router["router"]["id"])
+            router["router"]["id"])
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "neutron.delete_router")
 
@@ -262,7 +262,7 @@ class NeutronScenarioTestCase(test.TestCase):
         scenario._remove_interface_router(subnet, router)
         mock_remove_router = mock_clients("neutron").remove_interface_router
         mock_remove_router.assert_called_once_with(
-                                    router["id"], {"subnet_id": subnet["id"]})
+            router["id"], {"subnet_id": subnet["id"]})
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "neutron.remove_interface_router")
 
@@ -341,7 +341,7 @@ class NeutronScenarioTestCase(test.TestCase):
 
         result_port = scenario._update_port(port, port_update_args)
         mock_clients("neutron").update_port.assert_called_once_with(
-                                 port["port"]["id"], expected_port)
+            port["port"]["id"], expected_port)
         self.assertEqual(result_port, expected_port)
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "neutron.update_port")

@@ -90,9 +90,9 @@ class DevstackEngineTestCase(test.TestCase):
         m_endpoint.assert_called_once_with("http://host:5000/v2.0/", "admin",
                                            "secret", "admin", "admin")
         m_d.add_resource.assert_called_once_with(
-                                    info="fake_credentials",
-                                    provider_name="DevstackEngine",
-                                    type="credentials")
+            info="fake_credentials",
+            provider_name="DevstackEngine",
+            type="credentials")
         repo = "https://git.openstack.org/openstack-dev/devstack"
         cmd = "/bin/sh -e -s %s master" % repo
         server.ssh.run.assert_called_once_with(cmd, stdin="fake_script")

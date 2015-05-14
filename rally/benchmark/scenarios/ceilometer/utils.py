@@ -177,7 +177,7 @@ class CeilometerScenario(base.Scenario):
         :returns: queried alarms
         """
         return self.clients("ceilometer").query_alarms.query(
-                filter, orderby, limit)
+            filter, orderby, limit)
 
     @base.atomic_action_timer("ceilometer.query_alarm_history")
     def _query_alarm_history(self, filter, orderby, limit):
@@ -192,7 +192,7 @@ class CeilometerScenario(base.Scenario):
         :returns: alarm history
         """
         return self.clients("ceilometer").query_alarm_history.query(
-                filter, orderby, limit)
+            filter, orderby, limit)
 
     @base.atomic_action_timer("ceilometer.create_sample")
     def _create_sample(self, counter_name, counter_type, counter_unit,
@@ -229,4 +229,4 @@ class CeilometerScenario(base.Scenario):
         :returns: queried samples
         """
         return self.clients("ceilometer").query_samples.query(
-                filter, orderby, limit)
+            filter, orderby, limit)

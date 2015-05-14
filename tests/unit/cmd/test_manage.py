@@ -56,4 +56,4 @@ class TempestCommandsTestCase(test.TestCase):
         deployment_uuid = "deployment_uuid"
         self.tempest_commands.install(deployment_uuid)
         mock_api.Verification.install_tempest.assert_called_once_with(
-                                                        deployment_uuid, None)
+            deployment_uuid, None)

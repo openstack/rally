@@ -171,8 +171,7 @@ class RPSScenarioRunner(base.ScenarioRunner):
 
         # Determine concurrency per worker
         concurrency_per_worker, concurrency_overhead = divmod(
-                       self.config.get("max_concurrency", times),
-                       processes_to_start)
+            self.config.get("max_concurrency", times), processes_to_start)
 
         self._log_debug_info(times=times, timeout=timeout,
                              max_cpu_used=max_cpu_used,

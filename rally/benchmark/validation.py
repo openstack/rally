@@ -179,7 +179,7 @@ def _get_validated_image(config, clients, param_name):
         if "regex" in image_args:
             match = re.match(image_args.get("regex"), image_ctx_name)
         if image_ctx_name == image_args.get("name") or (
-                    "regex" in image_args and match):
+                "regex" in image_args and match):
             image = {
                 "size": image_context.get("min_disk", 0),
                 "min_ram": image_context.get("min_ram", 0),
@@ -301,7 +301,7 @@ def network_exists(config, clients, deployment, network_name):
                     "Available networks: %(networks)s") % {
                         "network": network,
                         "networks": networks
-                    }
+        }
         return ValidationResult(False, message)
 
 

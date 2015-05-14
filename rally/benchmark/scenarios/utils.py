@@ -118,7 +118,7 @@ class ActionBuilder(object):
             binding = self._bindings.get(action_key)
             dft_kwargs = dict(binding["kwargs"])
             dft_kwargs.update(kwargs or {})
-            bound_actions.append(self._build(
-                                    binding["action"], times,
-                                    *(binding["args"] + args), **dft_kwargs))
+            bound_actions.append(
+                self._build(binding["action"], times,
+                            *(binding["args"] + args), **dft_kwargs))
         return bound_actions

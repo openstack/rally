@@ -115,11 +115,11 @@ class DeploymentCommandsTestCase(test.TestCase):
         current_deployment_id = "26a3ce76-0efa-40e4-86e5-514574bd1ff6"
         mock_default.return_value = current_deployment_id
         fake_deployment_list = [
-                            {"uuid": "fa34aea2-ae2e-4cf7-a072-b08d67466e3e",
-                             "created_at": "03-12-2014",
-                             "name": "dep1",
-                             "status": "deploy->started",
-                             "active": "False"}]
+            {"uuid": "fa34aea2-ae2e-4cf7-a072-b08d67466e3e",
+             "created_at": "03-12-2014",
+             "name": "dep1",
+             "status": "deploy->started",
+             "active": "False"}]
 
         mock_deployments.return_value = fake_deployment_list
         self.deployment.list()
@@ -220,12 +220,12 @@ class DeploymentCommandsTestCase(test.TestCase):
         deployment_id = mock_deployment.return_value["uuid"]
 
         mock_deployment.return_value["admin"] = {
-                "auth_url": "fake_auth_url",
-                "username": "fake_username",
-                "password": "fake_password",
-                "tenant_name": "fake_tenant_name",
-                "endpoint": "fake_endpoint",
-                "region_name": None}
+            "auth_url": "fake_auth_url",
+            "username": "fake_username",
+            "password": "fake_password",
+            "tenant_name": "fake_tenant_name",
+            "endpoint": "fake_endpoint",
+            "region_name": None}
 
         with mock.patch("rally.cmd.commands.deployment.open", mock.mock_open(),
                         create=True) as mock_file:

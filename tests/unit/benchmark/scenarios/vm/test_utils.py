@@ -126,8 +126,8 @@ class VMScenarioTestCase(test.TestCase):
         self.assertTrue(vm_scenario._ping_ip_address(host_ip))
 
         mock_subprocess.assert_called_once_with(
-                ["ping", "-c1", "-w1", host_ip],
-                stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+            ["ping", "-c1", "-w1", host_ip],
+            stderr=subprocess.PIPE, stdout=subprocess.PIPE)
         ping_process.wait.assert_called_once_with()
 
     @mock.patch(VMTASKS_UTILS + ".sys")
@@ -143,8 +143,8 @@ class VMScenarioTestCase(test.TestCase):
         self.assertTrue(vm_scenario._ping_ip_address(host_ip))
 
         mock_subprocess.assert_called_once_with(
-                ["ping6", "-c1", "-w1", host_ip],
-                stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+            ["ping6", "-c1", "-w1", host_ip],
+            stderr=subprocess.PIPE, stdout=subprocess.PIPE)
         ping_process.wait.assert_called_once_with()
 
     @mock.patch(VMTASKS_UTILS + ".sys")
@@ -160,8 +160,8 @@ class VMScenarioTestCase(test.TestCase):
         self.assertTrue(vm_scenario._ping_ip_address(host_ip))
 
         mock_subprocess.assert_called_once_with(
-                ["ping", "-c1", host_ip],
-                stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+            ["ping", "-c1", host_ip],
+            stderr=subprocess.PIPE, stdout=subprocess.PIPE)
         ping_process.wait.assert_called_once_with()
 
     @mock.patch(VMTASKS_UTILS + ".sys")
@@ -177,8 +177,8 @@ class VMScenarioTestCase(test.TestCase):
         self.assertTrue(vm_scenario._ping_ip_address(host_ip))
 
         mock_subprocess.assert_called_once_with(
-                ["ping6", "-c1", host_ip],
-                stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+            ["ping6", "-c1", host_ip],
+            stderr=subprocess.PIPE, stdout=subprocess.PIPE)
         ping_process.wait.assert_called_once_with()
 
     def get_scenario(self):
@@ -203,8 +203,8 @@ class VMScenarioTestCase(test.TestCase):
                           scenario._boot_server_with_fip,
                           "foo_image", "foo_flavor", foo_arg="foo_value")
         scenario._boot_server.assert_called_once_with(
-              "foo_image", "foo_flavor",
-              foo_arg="foo_value", auto_assign_nic=True)
+            "foo_image", "foo_flavor",
+            foo_arg="foo_value", auto_assign_nic=True)
 
     def test__boot_server_with_fixed_ip(self):
         scenario, server = self.get_scenario()

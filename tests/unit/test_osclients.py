@@ -377,9 +377,9 @@ class OSClientsTestCase(test.TestCase):
             )
             fake_mistral_url = self.service_catalog.url_for.return_value
             mock_mistral.client.client.assert_called_once_with(
-                 mistral_url=fake_mistral_url,
-                 service_type="workflowv2",
-                 auth_token=self.fake_keystone.auth_token
+                mistral_url=fake_mistral_url,
+                service_type="workflowv2",
+                auth_token=self.fake_keystone.auth_token
             )
             self.assertEqual(fake_mistral, self.clients.cache["mistral"])
 
@@ -440,7 +440,7 @@ class OSClientsTestCase(test.TestCase):
                               consts.ServiceType.COMPUTE: {},
                               "unknown_service": {}}
         mock_keystone.return_value = mock.Mock(service_catalog=mock.Mock(
-                get_endpoints=lambda: available_services))
+            get_endpoints=lambda: available_services))
         clients = osclients.Clients(self.endpoint)
 
         self.assertEqual(

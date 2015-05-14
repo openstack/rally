@@ -81,9 +81,8 @@ class TasksTestCase(test.DBTestCase):
         FINISHED = consts.TaskStatus.FINISHED
         task_finished = sorted(self._create_task(
             {"status": FINISHED,
-             "deployment_uuid": self.deploy["uuid"]})[
-             "uuid"]
-                               for i in moves.range(3))
+             "deployment_uuid": self.deploy["uuid"]}
+        )["uuid"] for i in moves.range(3))
 
         task_all = sorted(task_init + task_finished)
 

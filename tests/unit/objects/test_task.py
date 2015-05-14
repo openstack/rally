@@ -38,7 +38,7 @@ class TaskTestCase(test.TestCase):
         mock_create.return_value = self.task
         task = objects.Task(status=consts.TaskStatus.FAILED)
         mock_create.assert_called_once_with({
-                    "status": consts.TaskStatus.FAILED})
+            "status": consts.TaskStatus.FAILED})
         self.assertEqual(task["uuid"], self.task["uuid"])
 
     @mock.patch("rally.objects.task.db.task_create")

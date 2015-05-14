@@ -76,11 +76,11 @@ def _prepare_open_secgroup(endpoint, secgroup_name):
         if not any(rule_match(new_rule, existing_rule) for existing_rule
                    in rally_open.rules):
             nova.security_group_rules.create(
-                        rally_open.id,
-                        from_port=new_rule["from_port"],
-                        to_port=new_rule["to_port"],
-                        ip_protocol=new_rule["ip_protocol"],
-                        cidr=new_rule["ip_range"]["cidr"])
+                rally_open.id,
+                from_port=new_rule["from_port"],
+                to_port=new_rule["to_port"],
+                ip_protocol=new_rule["ip_protocol"],
+                cidr=new_rule["ip_range"]["cidr"])
 
     return rally_open.to_dict()
 
@@ -121,4 +121,4 @@ class AllowSSH(base.Context):
                     user["secgroup"]["name"]):
                 clients = osclients.Clients(user["endpoint"])
                 clients.nova().security_groups.get(
-                     user["secgroup"]["id"]).delete()
+                    user["secgroup"]["id"]).delete()

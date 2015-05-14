@@ -91,8 +91,8 @@ class FlavorsGeneratorTestCase(test.TestCase):
         mock_osclients.assert_called_with(self.context["admin"]["endpoint"])
 
         mock_flavor_create.assert_called_once_with(
-                name="flavor_name", ram=2048, vcpus=3,
-                disk=10, ephemeral=3, swap=5)
+            name="flavor_name", ram=2048, vcpus=3,
+            disk=10, ephemeral=3, swap=5)
 
     @mock.patch("%s.flavors.osclients.Clients" % CTX)
     def test_cleanup(self, mock_osclients):

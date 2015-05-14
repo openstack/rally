@@ -43,7 +43,7 @@ class KeystoneScenario(base.Scenario):
         password = kwargs.pop("password", str(uuid.uuid4()))
         email = email or (name + "@rally.me")
         return self.admin_clients("keystone").users.create(
-                    name, password=password, email=email, **kwargs)
+            name, password=password, email=email, **kwargs)
 
     def _resource_delete(self, resource):
         """"Delete keystone resource."""
@@ -92,7 +92,7 @@ class KeystoneScenario(base.Scenario):
             password = name
             email = (name + "@rally.me")
             self.admin_clients("keystone").users.create(
-                    name, password=password, email=email, tenant_id=tenant.id)
+                name, password=password, email=email, tenant_id=tenant.id)
 
     @base.atomic_action_timer("keystone.create_role")
     def _role_create(self, name_length=5):

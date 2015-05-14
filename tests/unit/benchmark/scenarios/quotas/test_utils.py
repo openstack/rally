@@ -29,14 +29,14 @@ class QuotasScenarioTestCase(test.TestCase):
     def test__update_quotas(self):
         tenant_id = "fake_tenant"
         quotas = {
-                "metadata_items": 10,
-                "key_pairs": 10,
-                "injected_file_content_bytes": 1024,
-                "injected_file_path_bytes": 1024,
-                "ram": 5120,
-                "instances": 10,
-                "injected_files": 10,
-                "cores": 10,
+            "metadata_items": 10,
+            "key_pairs": 10,
+            "injected_file_content_bytes": 1024,
+            "injected_file_path_bytes": 1024,
+            "ram": 5120,
+            "instances": 10,
+            "injected_files": 10,
+            "cores": 10,
         }
         fake_nova = fakes.FakeNovaClient()
         fake_nova.quotas.update = mock.MagicMock(return_value=quotas)
@@ -55,14 +55,14 @@ class QuotasScenarioTestCase(test.TestCase):
     def test__update_quotas_fn(self):
         tenant_id = "fake_tenant"
         quotas = {
-                "metadata_items": 10,
-                "key_pairs": 10,
-                "injected_file_content_bytes": 1024,
-                "injected_file_path_bytes": 1024,
-                "ram": 5120,
-                "instances": 10,
-                "injected_files": 10,
-                "cores": 10,
+            "metadata_items": 10,
+            "key_pairs": 10,
+            "injected_file_content_bytes": 1024,
+            "injected_file_path_bytes": 1024,
+            "ram": 5120,
+            "instances": 10,
+            "injected_files": 10,
+            "cores": 10,
         }
         fake_nova = fakes.FakeNovaClient()
         fake_nova.quotas.update = mock.MagicMock(return_value=quotas)

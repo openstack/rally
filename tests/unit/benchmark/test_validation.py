@@ -630,8 +630,8 @@ class ValidatorsTestCase(test.TestCase):
 
     def test_required_cinder_services(self):
         validator = self._unwrap_validator(
-                validation.required_cinder_services,
-                service_name=six.text_type("cinder-service"))
+            validation.required_cinder_services,
+            service_name=six.text_type("cinder-service"))
 
         with mock.patch.object(rally.osclients.Clients, "cinder") as client:
             fake_service = mock.Mock(binary="cinder-service", state="up")

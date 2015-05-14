@@ -57,7 +57,7 @@ class NeutronScenario(base.Scenario):
         :returns: updated neutron network dict
         """
         suffix = network_update_args.get(
-                    "name", self._generate_random_name("_"))
+            "name", self._generate_random_name("_"))
         admin_state_up = network_update_args.get("admin_state_up", True)
         body = {
             "network": {
@@ -116,7 +116,7 @@ class NeutronScenario(base.Scenario):
         :returns: updated neutron subnet dict
         """
         suffix = subnet_update_args.get(
-                    "name", self._generate_random_name("_"))
+            "name", self._generate_random_name("_"))
         enable_dhcp = subnet_update_args.get("enable_dhcp", True)
         body = {
             "subnet": {
@@ -182,7 +182,7 @@ class NeutronScenario(base.Scenario):
         :returns: updated neutron router dict
         """
         suffix = router_update_args.get(
-                    "name", self._generate_random_name("_"))
+            "name", self._generate_random_name("_"))
         admin_state = router_update_args.get("admin_state_up", True)
         body = {
             "router": {
@@ -224,7 +224,7 @@ class NeutronScenario(base.Scenario):
         :returns: updated neutron port dict
         """
         suffix = port_update_args.get(
-                    "name", self._generate_random_name("_"))
+            "name", self._generate_random_name("_"))
         admin_state = port_update_args.get("admin_state_up", True)
         device_owner = port_update_args.get("device_owner", "compute:nova")
         device_id = port_update_args.get("device_id", uid.generate_uuid())
@@ -286,4 +286,4 @@ class NeutronScenario(base.Scenario):
         :param router: dict, neutron router
         """
         self.clients("neutron").remove_interface_router(
-             router["id"], {"subnet_id": subnet["id"]})
+            router["id"], {"subnet_id": subnet["id"]})

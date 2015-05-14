@@ -1150,12 +1150,11 @@ class FakeNeutronClient(object):
         return {"router": router}
 
     def create_subnet(self, data):
-        subnet = setup_dict(data["subnet"],
-                            required=["network_id", "cidr", "ip_version"],
-                            defaults={
-                                "name": generate_name("subnet_"),
-                                "dns_nameservers": ["8.8.8.8", "8.8.4.4"]
-                            })
+        subnet = setup_dict(
+            data["subnet"],
+            required=["network_id", "cidr", "ip_version"],
+            defaults={"name": generate_name("subnet_"),
+                      "dns_nameservers": ["8.8.8.8", "8.8.4.4"]})
         if subnet["network_id"] not in self.__networks:
             raise neutron_exceptions.NeutronClientException
 

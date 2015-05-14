@@ -260,7 +260,7 @@ def log_deprecated_args(message, rally_version, deprecated_args,
         def wrapper(*args, **kwargs):
             if (not once) or (not getattr(f, "_warned_dep_args", False)):
                 deprecated = ", ".join([
-                        "`%s'" % x for x in deprecated_args if x in kwargs])
+                    "`%s'" % x for x in deprecated_args if x in kwargs])
                 if deprecated:
                     log_function(
                         "%(msg)s (args %(args)s deprecated in Rally "
