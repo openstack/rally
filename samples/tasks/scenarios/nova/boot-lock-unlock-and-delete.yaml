@@ -5,7 +5,7 @@
         flavor:
             name: "m1.tiny"
         image:
-            name: "cirros-0.3.2-x86_64-uec"
+            name: "^cirros.*uec$"
       runner:
         type: "constant"
         times: 10
