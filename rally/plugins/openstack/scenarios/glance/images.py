@@ -115,6 +115,4 @@ class GlanceImages(utils.GlanceScenario, nova_utils.NovaScenario):
                                    image_location,
                                    disk_format)
         image_id = image.id
-        server_name = self._generate_random_name(prefix="rally_novaserver_")
-        self._boot_servers(server_name, image_id,
-                           flavor, number_instances, **kwargs)
+        self._boot_servers(image_id, flavor, number_instances, **kwargs)

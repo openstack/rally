@@ -433,7 +433,7 @@ class NovaScenarioTestCase(test.TestCase):
         mock_clients("nova").servers.list.return_value = [self.server,
                                                           self.server1]
         nova_scenario = utils.NovaScenario()
-        nova_scenario._boot_servers("prefix", "image", "flavor", 2)
+        nova_scenario._boot_servers("image", "flavor", 2)
         expected = [
             mock.call(
                 self.server, is_ready=self.res_is.mock(),

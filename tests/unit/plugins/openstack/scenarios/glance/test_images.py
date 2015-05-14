@@ -62,15 +62,13 @@ class GlanceImagesTestCase(test.TestCase):
                                             "url", "df", fakearg="f")
         mock_delete.assert_called_once_with(fake_image)
 
-    @mock.patch(GLANCE_IMAGES + "._generate_random_name")
     @mock.patch(GLANCE_IMAGES + "._boot_servers")
     @mock.patch(GLANCE_IMAGES + "._create_image")
     @mock.patch("rally.benchmark.runners.base.osclients")
     def test_create_image_and_boot_instances(self,
                                              mock_osclients,
                                              mock_create_image,
-                                             mock_boot_servers,
-                                             mock_random_name):
+                                             mock_boot_servers):
         glance_scenario = images.GlanceImages()
         nova_scenario = servers.NovaServers()
         fc = fakes.FakeClients()
@@ -85,7 +83,6 @@ class GlanceImagesTestCase(test.TestCase):
         fake_servers = [object() for i in range(5)]
         mock_create_image.return_value = fake_image
         mock_boot_servers.return_value = fake_servers
-        mock_random_name.return_value = "random_name"
         kwargs = {"fakearg": "f"}
         with mock.patch("rally.plugins.openstack.scenarios."
                         "glance.utils.time.sleep"):
@@ -94,6 +91,5 @@ class GlanceImagesTestCase(test.TestCase):
                                                             5, **kwargs)
             mock_create_image.assert_called_once_with("cf",
                                                       "url", "df")
-            mock_boot_servers.assert_called_once_with("random_name",
-                                                      "image-id-0",
+            mock_boot_servers.assert_called_once_with("image-id-0",
                                                       "fid", 5, **kwargs)

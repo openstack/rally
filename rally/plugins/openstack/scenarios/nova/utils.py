@@ -459,22 +459,24 @@ class NovaScenario(base.Scenario):
         self.clients("nova").keypairs.delete(keypair_name)
 
     @base.atomic_action_timer("nova.boot_servers")
-    def _boot_servers(self, name_prefix, image_id, flavor_id,
-                      requests, instances_amount=1, **kwargs):
+    def _boot_servers(self, image_id, flavor_id, requests, name_prefix=None,
+                      instances_amount=1, **kwargs):
         """Boot multiple servers.
 
         Returns when all the servers are actually booted and are in the
         "Active" state.
 
-        :param name_prefix: The prefix to use while naming the created servers.
-                            The rest of the server names will be '_No.'
         :param image_id: ID of the image to be used for server creation
         :param flavor_id: ID of the flavor to be used for server creation
         :param requests: Number of booting requests to perform
+        :param name_prefix: The prefix to use while naming the created servers.
+                            The rest of the server names will be '_<number>'
         :param instances_amount: Number of instances to boot per each request
 
         :returns: List of created server objects
         """
+        if not name_prefix:
+            name_prefix = self._generate_random_name()
         for i in range(requests):
             self.clients("nova").servers.create("%s_%d" % (name_prefix, i),
                                                 image_id, flavor_id,

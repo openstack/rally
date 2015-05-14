@@ -84,17 +84,16 @@ class ServerGenerator(base.Context):
                       % (user["tenant_id"]))
             clients = osclients.Clients(user["endpoint"])
             nova_scenario = nova_utils.NovaScenario(clients=clients)
-            server_name_prefix = nova_scenario._generate_random_name(
-                prefix="ctx_rally_server_")
 
-            LOG.debug("Calling _boot_servers with server_name_prefix=%s "
-                      "image_id=%s flavor_id=%s servers_per_tenant=%s"
-                      % (server_name_prefix, image_id,
-                         flavor_id, flavor_id))
+            LOG.debug("Calling _boot_servers with image_id=%(image_id)s "
+                      "flavor_id=%(flavor_id)s "
+                      "servers_per_tenant=%(servers_per_tenant)s"
+                      % {"image_id": image_id,
+                         "flavor_id": flavor_id,
+                         "servers_per_tenant": servers_per_tenant})
 
-            servers = nova_scenario._boot_servers(
-                server_name_prefix, image_id, flavor_id,
-                servers_per_tenant)
+            servers = nova_scenario._boot_servers(image_id, flavor_id,
+                                                  servers_per_tenant)
 
             current_servers = [server.id for server in servers]
 
