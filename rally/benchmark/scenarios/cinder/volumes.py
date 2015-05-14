@@ -412,3 +412,22 @@ class CinderVolumes(utils.CinderScenario,
         if do_delete:
             self._delete_volume(volume)
             self._delete_image(image)
+
+    @validation.required_cinder_services("cinder-backup")
+    @validation.required_services(consts.Service.CINDER)
+    @validation.required_openstack(users=True)
+    @base.scenario(context={"cleanup": ["cinder"]})
+    def create_volume_backup(self, size, do_delete=True, **kwargs):
+        """Create a volume backup.
+
+        :param size: volume size in GB
+        :param do_delete: if True, a volume and a volume backup will
+                          be deleted after creation.
+        :param kwargs: optional args to create a volume backup
+        """
+        volume = self._create_volume(size, **kwargs)
+        backup = self._create_backup(volume.id, **kwargs)
+
+        if do_delete:
+            self._delete_volume(volume)
+            self._delete_backup(backup)
