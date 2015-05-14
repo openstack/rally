@@ -155,9 +155,9 @@ class SeekAndDestroy(object):
 
                     visited_tenants.add(user["tenant_id"])
                     manager = self.manager_cls(
-                            admin=admin_client,
-                            user=self._get_cached_client(user),
-                            tenant_uuid=user["tenant_id"])
+                        admin=admin_client,
+                        user=self._get_cached_client(user),
+                        tenant_uuid=user["tenant_id"])
 
                     _publish(self.admin, user, manager)
 
@@ -171,10 +171,10 @@ class SeekAndDestroy(object):
             admin, user, raw_resource = args
 
             manager = self.manager_cls(
-                    resource=raw_resource,
-                    admin=self._get_cached_client(admin, cache=cache),
-                    user=self._get_cached_client(user, cache=cache),
-                    tenant_uuid=user and user["tenant_id"])
+                resource=raw_resource,
+                admin=self._get_cached_client(admin, cache=cache),
+                user=self._get_cached_client(user, cache=cache),
+                tenant_uuid=user and user["tenant_id"])
 
             self._delete_single_resource(manager)
 

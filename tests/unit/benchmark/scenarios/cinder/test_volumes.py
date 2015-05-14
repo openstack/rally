@@ -187,7 +187,7 @@ class CinderServersTestCase(test.TestCase):
 
         scenario._create_volume = mock.MagicMock(return_value=fake_volume)
         scenario._upload_volume_to_image = mock.MagicMock(
-                return_value=fake_image)
+            return_value=fake_image)
         scenario._delete_volume = mock.MagicMock()
         scenario._delete_image = mock.MagicMock()
 

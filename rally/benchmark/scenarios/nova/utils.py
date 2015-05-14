@@ -580,7 +580,7 @@ class NovaScenario(base.Scenario):
             update_resource=bench_utils.get_from_manager(),
             timeout=CONF.benchmark.nova_server_resize_revert_timeout,
             check_interval=(
-                    CONF.benchmark.nova_server_resize_revert_poll_interval)
+                CONF.benchmark.nova_server_resize_revert_poll_interval)
         )
 
     @base.atomic_action_timer("nova.attach_volume")
@@ -596,7 +596,7 @@ class NovaScenario(base.Scenario):
             update_resource=bench_utils.get_from_manager(),
             timeout=CONF.benchmark.nova_server_resize_revert_timeout,
             check_interval=(
-                    CONF.benchmark.nova_server_resize_revert_poll_interval)
+                CONF.benchmark.nova_server_resize_revert_poll_interval)
         )
 
     @base.atomic_action_timer("nova.detach_volume")
@@ -662,9 +662,9 @@ class NovaScenario(base.Scenario):
                 break
         try:
             new_host = random.choice(
-                            [key for key, value in six.iteritems(az.hosts)
-                             if key != host and
-                             value["nova-compute"]["available"] is True])
+                [key for key, value in six.iteritems(az.hosts)
+                    if key != host and
+                    value["nova-compute"]["available"] is True])
             return new_host
         except IndexError:
             raise exceptions.InvalidHostException(

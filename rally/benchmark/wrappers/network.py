@@ -190,7 +190,7 @@ class NeutronWrapper(NetworkWrapper):
     @property
     def external_networks(self):
         return self.client.list_networks(**{
-                "router:external": True})["networks"]
+            "router:external": True})["networks"]
 
     def get_network(self, net_id=None, name=None):
         net = None

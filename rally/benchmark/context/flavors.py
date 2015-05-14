@@ -126,6 +126,6 @@ class FlavorConfig(dict):
         :param extra_specs: is ignored
         """
         super(FlavorConfig, self).__init__(
-                name=name, ram=ram, vcpus=vcpus, disk=disk,
-                swap=swap, ephemeral=ephemeral)
+            name=name, ram=ram, vcpus=vcpus, disk=disk,
+            swap=swap, ephemeral=ephemeral)
         self.__dict__.update(self)

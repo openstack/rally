@@ -47,11 +47,11 @@ class NeutronNetworksTestCase(test.TestCase):
 
     @mock.patch(NEUTRON_NETWORKS + "._update_network")
     @mock.patch(NEUTRON_NETWORKS + "._create_network", return_value={
-         "network": {
-             "id": "network-id",
-             "name": "network-name",
-             "admin_state_up": False
-         }
+        "network": {
+            "id": "network-id",
+            "name": "network-name",
+            "admin_state_up": False
+        }
     })
     def test_create_and_update_networks(self,
                                         mock_create_network,
@@ -99,7 +99,7 @@ class NeutronNetworksTestCase(test.TestCase):
         # Explict network name is specified
         network_create_args = {"name": "given-name"}
         neutron_scenario.create_and_delete_networks(
-                                    network_create_args=network_create_args)
+            network_create_args=network_create_args)
         mock_create.assert_called_once_with(network_create_args)
         self.assertEqual(1, mock_delete.call_count)
 
@@ -540,17 +540,14 @@ class NeutronNetworksTestCase(test.TestCase):
     @mock.patch(NEUTRON_NETWORKS + "._generate_random_name")
     @mock.patch(NEUTRON_NETWORKS + "._update_port")
     @mock.patch(NEUTRON_NETWORKS + "._create_port", return_value={
-         "port": {
-             "name": "port-name",
-             "id": "port-id",
-             "admin_state_up": True
-         }
+        "port": {
+            "name": "port-name",
+            "id": "port-id",
+            "admin_state_up": True
+        }
     })
     @mock.patch(NEUTRON_NETWORKS + "._create_network", return_value={
-         "network": {
-             "id": "fake-id"
-         }
-    })
+        "network": {"id": "fake-id"}})
     def test_create_and_update_ports(self,
                                      mock_create_network,
                                      mock_create_port,

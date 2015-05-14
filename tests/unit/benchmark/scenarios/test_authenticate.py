@@ -44,12 +44,12 @@ class AuthenticateTestCase(test.TestCase):
         scenario = authenticate.Authenticate(admin_clients=mock_admin_clients,
                                              clients=mock_users_clients)
         scenario._clients.glance.images.list = mock.MagicMock(
-                                                return_value=images_list)
+            return_value=images_list)
         image_name = "__intentionally_non_existent_image___"
         with base.AtomicAction(scenario, "authenticate.validate_glance"):
             scenario.validate_glance(5)
         scenario._clients.glance().images.list.assert_called_with(
-                name=image_name)
+            name=image_name)
         self.assertEqual(scenario._clients.glance().images.list.call_count, 5)
 
     @mock.patch("rally.osclients")
@@ -62,7 +62,7 @@ class AuthenticateTestCase(test.TestCase):
         scenario = authenticate.Authenticate(admin_clients=mock_admin_clients,
                                              clients=mock_users_clients)
         scenario._clients.nova.flavors.list = mock.MagicMock(
-                                                return_value=flavors_list)
+            return_value=flavors_list)
         with base.AtomicAction(scenario, "authenticate.validate_nova"):
             scenario.validate_nova(5)
         self.assertEqual(scenario._clients.nova().flavors.list.call_count, 5)
@@ -77,7 +77,7 @@ class AuthenticateTestCase(test.TestCase):
         scenario = authenticate.Authenticate(admin_clients=mock_admin_clients,
                                              clients=mock_users_clients)
         scenario._clients.cinder.volume_types.list = mock.MagicMock(
-                                                return_value=volume_types_list)
+            return_value=volume_types_list)
         with base.AtomicAction(scenario, "authenticate.validate_cinder"):
             scenario.validate_cinder(5)
         self.assertEqual(scenario._clients.cinder().volume_types.
@@ -107,7 +107,7 @@ class AuthenticateTestCase(test.TestCase):
         scenario = authenticate.Authenticate(admin_clients=mock_admin_clients,
                                              clients=mock_users_clients)
         scenario._clients.heat.stacks.list = mock.MagicMock(
-                                                return_value=stacks_list)
+            return_value=stacks_list)
         with base.AtomicAction(scenario, "authenticate.validate_heat"):
             scenario.validate_heat(5)
         scenario._clients.heat().stacks.list.assert_called_with(limit=0)

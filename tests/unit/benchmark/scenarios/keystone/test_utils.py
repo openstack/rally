@@ -36,13 +36,9 @@ class KeystoneUtilsTestCase(test.TestCase):
     def test_is_temporary(self):
         prefix = utils.KeystoneScenario.RESOURCE_NAME_PREFIX
         tests = [
-            (fakes.FakeResource(
-                    name=prefix + "abc"),
-                True),
+            (fakes.FakeResource(name=prefix + "abc"), True),
             (fakes.FakeResource(name="another"), False),
-            (fakes.FakeResource(
-                    name=prefix[:-3] + "abc"),
-                False)
+            (fakes.FakeResource(name=prefix[:-3] + "abc"), False)
         ]
 
         for resource, is_valid in tests:
@@ -66,9 +62,9 @@ class KeystoneScenarioTestCase(test.TestCase):
 
         self.assertEqual(user, result)
         fake_keystone.users.create.assert_called_once_with(
-                    mock_gen_name.return_value,
-                    password=mock_uuid4.return_value,
-                    email=mock_gen_name.return_value + "@rally.me")
+            mock_gen_name.return_value,
+            password=mock_uuid4.return_value,
+            email=mock_gen_name.return_value + "@rally.me")
         mock_uuid4.assert_called_with()
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "keystone.create_user")
@@ -161,8 +157,8 @@ class KeystoneScenarioTestCase(test.TestCase):
         scenario._users_create(tenant, users_per_tenant=1, name_length=10)
 
         fake_keystone.users.create.assert_called_once_with(
-                    name, password=name, email=name + "@rally.me",
-                    tenant_id=tenant.id)
+            name, password=name, email=name + "@rally.me",
+            tenant_id=tenant.id)
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "keystone.create_users")
 

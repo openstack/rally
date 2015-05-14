@@ -63,7 +63,7 @@ class VolumeGenerator(base.Context):
             cinder_util = cinder_utils.CinderScenario(clients=clients)
             for i in range(volumes_per_tenant):
                 rnd_name = scenario_base.Scenario._generate_random_name(
-                                                    prefix="ctx_rally_volume_")
+                    prefix="ctx_rally_volume_")
                 vol = cinder_util._create_volume(size, display_name=rnd_name)
                 self.context["tenants"][tenant_id]["volumes"].append(vol._info)
 

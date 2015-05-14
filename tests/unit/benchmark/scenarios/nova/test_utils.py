@@ -126,9 +126,9 @@ class NovaScenarioTestCase(test.TestCase):
                     {"id": "bar_id", "external": False}]
         mock_clients("nova").networks.list.return_value = networks
         nova_scenario = utils.NovaScenario(context={
-                "iteration": 3,
-                "config": {"users": {"tenants": 2}},
-                "tenant": {"networks": networks}})
+            "iteration": 3,
+            "config": {"users": {"tenants": 2}},
+            "tenant": {"networks": networks}})
         return_server = nova_scenario._boot_server("image_id",
                                                    "flavor_id",
                                                    auto_assign_nic=True)
@@ -587,7 +587,7 @@ class NovaScenarioTestCase(test.TestCase):
         nova_scenario = utils.NovaScenario(admin_clients=fakes.FakeClients())
 
         self.assertIn(
-                nova_scenario._find_host_to_migrate(fake_server), ["b1", "b3"])
+            nova_scenario._find_host_to_migrate(fake_server), ["b1", "b3"])
 
     @mock.patch(NOVA_UTILS + ".NovaScenario.clients")
     def test__migrate_server(self, mock_clients):

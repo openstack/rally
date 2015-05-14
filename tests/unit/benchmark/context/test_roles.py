@@ -81,8 +81,8 @@ class RoleGeneratorTestCase(test.TestCase):
                                 {"id": "u2", "tenant_id": "t2"}]
         ctx._remove_role(mock.MagicMock(), role)
         calls = [
-                mock.call("u1", role["id"], tenant="t1"),
-                mock.call("u2", role["id"], tenant="t2"),
+            mock.call("u1", role["id"], tenant="t1"),
+            mock.call("u2", role["id"], tenant="t2"),
         ]
         mock_keystone = mock_osclients.Clients().keystone()
         mock_keystone.roles.remove_user_role.assert_has_calls(calls)

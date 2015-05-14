@@ -53,7 +53,7 @@ class Deployment(object):
             raise
 
         deployer = deploy.EngineFactory.get_engine(
-                                    deployment["config"]["type"], deployment)
+            deployment["config"]["type"], deployment)
         try:
             deployer.validate()
         except jsonschema.ValidationError:
@@ -79,7 +79,7 @@ class Deployment(object):
         #                is equal to "*->finished" or "deploy->inconsistent".
         deployment = objects.Deployment.get(deployment)
         deployer = deploy.EngineFactory.get_engine(
-                                    deployment["config"]["type"], deployment)
+            deployment["config"]["type"], deployment)
 
         tempest.Tempest(deployment["uuid"]).uninstall()
         with deployer:
@@ -94,7 +94,7 @@ class Deployment(object):
         """
         deployment = objects.Deployment.get(deployment)
         deployer = deploy.EngineFactory.get_engine(
-                                    deployment["config"]["type"], deployment)
+            deployment["config"]["type"], deployment)
         with deployer:
             deployer.make_cleanup()
             endpoints = deployer.make_deploy()

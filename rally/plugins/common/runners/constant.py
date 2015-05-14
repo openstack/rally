@@ -171,7 +171,7 @@ class ConstantScenarioRunner(base.ScenarioRunner):
 
         processes_to_start = min(max_cpu_used, times, concurrency)
         concurrency_per_worker, concurrency_overhead = divmod(
-                                            concurrency, processes_to_start)
+            concurrency, processes_to_start)
 
         self._log_debug_info(times=times, concurrency=concurrency,
                              timeout=timeout, max_cpu_used=max_cpu_used,
@@ -261,8 +261,8 @@ class ConstantForDurationScenarioRunner(base.ScenarioRunner):
         pool = multiprocessing.Pool(concurrency)
 
         run_args = butils.infinite_run_args_generator(
-                    self._iter_scenario_args(cls, method, context, args,
-                                             self.aborted))
+            self._iter_scenario_args(cls, method, context, args,
+                                     self.aborted))
         iter_result = pool.imap(base._run_scenario_once, run_args)
 
         start = time.time()

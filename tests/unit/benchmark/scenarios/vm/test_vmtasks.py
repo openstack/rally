@@ -37,14 +37,14 @@ class VMTasksTestCase(test.TestCase):
 
     def test_boot_runcommand_delete(self):
         self.scenario.boot_runcommand_delete(
-                "foo_image", "foo_flavor", "foo_script",
-                "foo_interpreter", "foo_username",
-                password="foo_password",
-                use_floating_ip="use_fip",
-                floating_network="ext_network",
-                force_delete="foo_force",
-                volume_args={"size": 16},
-                foo_arg="foo_value")
+            "foo_image", "foo_flavor", "foo_script",
+            "foo_interpreter", "foo_username",
+            password="foo_password",
+            use_floating_ip="use_fip",
+            floating_network="ext_network",
+            force_delete="foo_force",
+            volume_args={"size": 16},
+            foo_arg="foo_value")
 
         self.scenario._create_volume.assert_called_once_with(
             16, imageRef=None)

@@ -117,10 +117,10 @@ class NeutronNetworks(utils.NeutronScenario):
         :param subnets_per_network: int, number of subnets for one network
         """
         network, subnets = self._create_network_and_subnets(
-                              network_create_args or {},
-                              subnet_create_args or {},
-                              subnets_per_network,
-                              subnet_cidr_start)
+            network_create_args or {},
+            subnet_create_args or {},
+            subnets_per_network,
+            subnet_cidr_start)
 
         for subnet in subnets:
             self._update_subnet(subnet, subnet_update_args)
@@ -144,10 +144,10 @@ class NeutronNetworks(utils.NeutronScenario):
         :param subnets_per_network: int, number of subnets for one network
         """
         network, subnets = self._create_network_and_subnets(
-                              network_create_args or {},
-                              subnet_create_args or {},
-                              subnets_per_network,
-                              subnet_cidr_start)
+            network_create_args or {},
+            subnet_create_args or {},
+            subnets_per_network,
+            subnet_cidr_start)
 
         for subnet in subnets:
             self._delete_subnet(subnet)
@@ -174,10 +174,10 @@ class NeutronNetworks(utils.NeutronScenario):
         :param router_create_args: dict, POST /v2.0/routers request options
         """
         network, subnets = self._create_network_and_subnets(
-                              network_create_args or {},
-                              subnet_create_args or {},
-                              subnets_per_network,
-                              subnet_cidr_start)
+            network_create_args or {},
+            subnet_create_args or {},
+            subnets_per_network,
+            subnet_cidr_start)
 
         for subnet in subnets:
             router = self._create_router(router_create_args or {})
@@ -211,10 +211,10 @@ class NeutronNetworks(utils.NeutronScenario):
         :param router_create_args: dict, POST /v2.0/routers request options
         """
         network, subnets = self._create_network_and_subnets(
-                              network_create_args or {},
-                              subnet_create_args or {},
-                              subnets_per_network,
-                              subnet_cidr_start)
+            network_create_args or {},
+            subnet_create_args or {},
+            subnets_per_network,
+            subnet_cidr_start)
 
         for subnet in subnets:
             router = self._create_router(router_create_args or {})
@@ -244,10 +244,10 @@ class NeutronNetworks(utils.NeutronScenario):
         :param router_create_args: dict, POST /v2.0/routers request options
         """
         network, subnets = self._create_network_and_subnets(
-                              network_create_args or {},
-                              subnet_create_args or {},
-                              subnets_per_network,
-                              subnet_cidr_start)
+            network_create_args or {},
+            subnet_create_args or {},
+            subnets_per_network,
+            subnet_cidr_start)
 
         routers = []
         for subnet in subnets:
@@ -261,8 +261,8 @@ class NeutronNetworks(utils.NeutronScenario):
             router = routers[e]
             subnet = subnets[e]
             self.clients("neutron").remove_interface_router(
-                    router["router"]["id"],
-                    {"subnet_id": subnet["subnet"]["id"]})
+                router["router"]["id"],
+                {"subnet_id": subnet["subnet"]["id"]})
             self._delete_router(router)
 
     @validation.number("ports_per_network", minval=1, integer_only=True)

@@ -183,11 +183,11 @@ class UserGenerator(base.Context):
                                       "%s@email.me" % username,
                                       tenant_id, user_dom)
             user_endpoint = objects.Endpoint(
-                    client.auth_url, user.name, password,
-                    self.context["tenants"][tenant_id]["name"],
-                    consts.EndpointPermission.USER, client.region_name,
-                    project_domain_name=project_dom, user_domain_name=user_dom,
-                    endpoint_type=self.endpoint.endpoint_type)
+                client.auth_url, user.name, password,
+                self.context["tenants"][tenant_id]["name"],
+                consts.EndpointPermission.USER, client.region_name,
+                project_domain_name=project_dom, user_domain_name=user_dom,
+                endpoint_type=self.endpoint.endpoint_type)
             users.append({"id": user.id,
                           "endpoint": user_endpoint,
                           "tenant_id": tenant_id})
@@ -241,8 +241,8 @@ class UserGenerator(base.Context):
 
         if len(self.context["tenants"]) < self.config["tenants"]:
             raise exceptions.ContextSetupFailure(
-                    ctx_name=self.get_name(),
-                    msg=_("Failed to create the requested number of tenants."))
+                ctx_name=self.get_name(),
+                msg=_("Failed to create the requested number of tenants."))
 
         users_num = self.config["users_per_tenant"] * self.config["tenants"]
         LOG.debug("Creating %(users)d users using %(threads)s threads" %
@@ -251,8 +251,8 @@ class UserGenerator(base.Context):
 
         if len(self.context["users"]) < users_num:
             raise exceptions.ContextSetupFailure(
-                    ctx_name=self.get_name(),
-                    msg=_("Failed to create the requested number of users."))
+                ctx_name=self.get_name(),
+                msg=_("Failed to create the requested number of users."))
 
     @rutils.log_task_wrapper(LOG.info, _("Exit context: `users`"))
     def cleanup(self):

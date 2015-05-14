@@ -38,21 +38,18 @@ class FlavorResourceTypeTestCase(test.TestCase):
     def test_transform_by_id(self):
         resource_config = {"id": "42"}
         flavor_id = types.FlavorResourceType.transform(
-                    clients=self.clients,
-                    resource_config=resource_config)
+            clients=self.clients, resource_config=resource_config)
         self.assertEqual(flavor_id, "42")
 
     def test_transform_by_id_from_base_class(self):
         resource_config = {}
         types.ResourceType.transform(
-                    clients=self.clients,
-                    resource_config=resource_config)
+            clients=self.clients, resource_config=resource_config)
 
     def test_transform_by_name(self):
         resource_config = {"name": "m1.nano"}
         flavor_id = types.FlavorResourceType.transform(
-                    clients=self.clients,
-                    resource_config=resource_config)
+            clients=self.clients, resource_config=resource_config)
         self.assertEqual(flavor_id, "42")
 
     def test_transform_by_name_no_match(self):
@@ -70,8 +67,7 @@ class FlavorResourceTypeTestCase(test.TestCase):
     def test_transform_by_regex(self):
         resource_config = {"regex": "m(1|2)\.nano"}
         flavor_id = types.FlavorResourceType.transform(
-                    clients=self.clients,
-                    resource_config=resource_config)
+            clients=self.clients, resource_config=resource_config)
         self.assertEqual(flavor_id, "42")
 
     def test_transform_by_regex_multiple_match(self):
@@ -104,15 +100,13 @@ class EC2FlavorResourceTypeTestCase(test.TestCase):
     def test_transform_by_name(self):
         resource_config = {"name": "m1.nano"}
         flavor_name = types.EC2FlavorResourceType.transform(
-                      clients=self.clients,
-                      resource_config=resource_config)
+            clients=self.clients, resource_config=resource_config)
         self.assertEqual(flavor_name, "m1.nano")
 
     def test_transform_by_id(self):
         resource_config = {"id": "2"}
         flavor_name = types.EC2FlavorResourceType.transform(
-                      clients=self.clients,
-                      resource_config=resource_config)
+            clients=self.clients, resource_config=resource_config)
         self.assertEqual(flavor_name, "m1.nano")
 
     def test_transform_by_id_no_match(self):
@@ -147,15 +141,13 @@ class ImageResourceTypeTestCase(test.TestCase):
     def test_transform_by_id(self):
         resource_config = {"id": "100"}
         image_id = types.ImageResourceType.transform(
-                    clients=self.clients,
-                    resource_config=resource_config)
+            clients=self.clients, resource_config=resource_config)
         self.assertEqual(image_id, "100")
 
     def test_transform_by_name(self):
         resource_config = {"name": "^cirros-0.3.1-uec$"}
         image_id = types.ImageResourceType.transform(
-                    clients=self.clients,
-                    resource_config=resource_config)
+            clients=self.clients, resource_config=resource_config)
         self.assertEqual(image_id, "100")
 
     def test_transform_by_name_no_match(self):
@@ -173,8 +165,7 @@ class ImageResourceTypeTestCase(test.TestCase):
     def test_transform_by_regex(self):
         resource_config = {"regex": "-uec$"}
         image_id = types.ImageResourceType.transform(
-                    clients=self.clients,
-                    resource_config=resource_config)
+            clients=self.clients, resource_config=resource_config)
         self.assertEqual(image_id, "100")
 
     def test_transform_by_regex_match_multiple(self):
@@ -220,15 +211,13 @@ class EC2ImageResourceTypeTestCase(test.TestCase):
     def test_transform_by_name(self):
         resource_config = {"name": "^cirros-0.3.1-uec$"}
         ec2_image_id = types.EC2ImageResourceType.transform(
-                       clients=self.clients,
-                       resource_config=resource_config)
+            clients=self.clients, resource_config=resource_config)
         self.assertEqual(ec2_image_id, "200")
 
     def test_transform_by_id(self):
         resource_config = {"id": "100"}
         ec2_image_id = types.EC2ImageResourceType.transform(
-                       clients=self.clients,
-                       resource_config=resource_config)
+            clients=self.clients, resource_config=resource_config)
         self.assertEqual(ec2_image_id, "200")
 
     def test_transform_by_id_no_match(self):
@@ -258,8 +247,7 @@ class EC2ImageResourceTypeTestCase(test.TestCase):
     def test_transform_by_regex(self):
         resource_config = {"regex": "-uec$"}
         ec2_image_id = types.EC2ImageResourceType.transform(
-                       clients=self.clients,
-                       resource_config=resource_config)
+            clients=self.clients, resource_config=resource_config)
         self.assertEqual(ec2_image_id, "200")
 
     def test_transform_by_regex_match_multiple(self):
@@ -286,15 +274,13 @@ class VolumeTypeResourceTypeTestCase(test.TestCase):
     def test_transform_by_id(self):
         resource_config = {"id": 100}
         volumetype_id = types.VolumeTypeResourceType.transform(
-                        clients=self.clients,
-                        resource_config=resource_config)
+            clients=self.clients, resource_config=resource_config)
         self.assertEqual(volumetype_id, 100)
 
     def test_transform_by_name(self):
         resource_config = {"name": "lvmdriver-1"}
         volumetype_id = types.VolumeTypeResourceType.transform(
-                        clients=self.clients,
-                        resource_config=resource_config)
+            clients=self.clients, resource_config=resource_config)
         self.assertEqual(volumetype_id, 100)
 
     def test_transform_by_name_no_match(self):
@@ -306,8 +292,7 @@ class VolumeTypeResourceTypeTestCase(test.TestCase):
     def test_transform_by_regex(self):
         resource_config = {"regex": "^lvm.*-1"}
         volumetype_id = types.VolumeTypeResourceType.transform(
-                        clients=self.clients,
-                        resource_config=resource_config)
+            clients=self.clients, resource_config=resource_config)
         self.assertEqual(volumetype_id, 100)
 
     def test_transform_by_regex_no_match(self):
@@ -331,15 +316,13 @@ class NeutronNetworkResourceTypeTestCase(test.TestCase):
     def test_transform_by_id(self):
         resource_config = {"id": self.net1_id}
         network_id = types.NeutronNetworkResourceType.transform(
-            clients=self.clients,
-            resource_config=resource_config)
+            clients=self.clients, resource_config=resource_config)
         self.assertEqual(network_id, self.net1_id)
 
     def test_transform_by_name(self):
         resource_config = {"name": "net1"}
         network_id = types.NeutronNetworkResourceType.transform(
-            clients=self.clients,
-            resource_config=resource_config)
+            clients=self.clients, resource_config=resource_config)
         self.assertEqual(network_id, self.net1_id)
 
     def test_transform_by_name_no_match(self):
@@ -387,8 +370,7 @@ class FileTypeTestCase(test.TestCase):
     def test_transform_by_path(self, mock_open):
         resource_config = "file.yaml"
         file_context = types.FileType.transform(
-                           clients=None,
-                           resource_config=resource_config)
+            clients=None, resource_config=resource_config)
         self.assertEqual(file_context, "file_context")
 
     @mock.patch("rally.benchmark.types.open",

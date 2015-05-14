@@ -28,7 +28,7 @@ def mean(values):
     """
     if not values:
         raise exceptions.InvalidArgumentsException(
-                                        "the list should be non-empty")
+            "the list should be non-empty")
     return math.fsum(values) / len(values)
 
 

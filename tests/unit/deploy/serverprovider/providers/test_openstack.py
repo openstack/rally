@@ -76,7 +76,7 @@ class OpenStackProviderTestCase(test.TestCase):
 
         self.nova_client = mock.MagicMock()
         self.nova_client.servers.create = mock.MagicMock(
-                                return_value=self.instance)
+            return_value=self.instance)
 
         self.clients.nova = mock.MagicMock(return_value=self.nova_client)
 

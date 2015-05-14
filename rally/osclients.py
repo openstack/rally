@@ -254,13 +254,13 @@ class Clients(object):
             auth_token = lambda: kc.auth_token
 
         client = ceilometer.get_client(
-                    version,
-                    os_endpoint=metering_api_url,
-                    token=auth_token,
-                    timeout=CONF.openstack_client_http_timeout,
-                    insecure=self.endpoint.insecure,
-                    cacert=self.endpoint.cacert,
-                    **self._get_auth_info(project_name_key="tenant_name"))
+            version,
+            os_endpoint=metering_api_url,
+            token=auth_token,
+            timeout=CONF.openstack_client_http_timeout,
+            insecure=self.endpoint.insecure,
+            cacert=self.endpoint.cacert,
+            **self._get_auth_info(project_name_key="tenant_name"))
         return client
 
     @cached
