@@ -237,6 +237,27 @@ class CinderScenarioTestCase(test.TestCase):
         self._test_atomic_action_timer(self.scenario.atomic_actions(),
                                        "cinder.delete_backup")
 
+    @mock.patch(CINDER_UTILS + ".CinderScenario.clients")
+    def test__restore_backup(self, mock_clients):
+        backup = mock.Mock()
+        restore = mock.Mock()
+        mock_clients("cinder").restores.restore.return_value = backup
+        mock_clients("cinder").volumes.get.return_value = restore
+
+        return_restore = self.scenario._restore_backup(backup.id, None)
+
+        self.wait_for.mock.assert_called_once_with(
+            restore,
+            is_ready=self.res_is.mock(),
+            update_resource=self.gfm(),
+            timeout=cfg.CONF.benchmark.cinder_volume_create_timeout,
+            check_interval=cfg.CONF.benchmark
+            .cinder_volume_create_poll_interval)
+        self.res_is.mock.assert_has_calls([mock.call("available")])
+        self.assertEqual(self.wait_for.mock(), return_restore)
+        self._test_atomic_action_timer(self.scenario.atomic_actions(),
+                                       "cinder.restore_backup")
+
     def test__get_random_server(self):
         servers = [1, 2, 3]
         context = {"user": {"tenant_id": "fake"},
