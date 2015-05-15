@@ -257,7 +257,7 @@ which_missing_packages () {
 # TODO: move this logic into install_required_sw
 if ! have_command wget && ! have_command curl; then
     if ask_yn "You need ether wget or curl to be installed. Install wget?"; then
-        apt-get install -yes wget || yum install -y wget
+        apt-get install --yes wget || yum install -y wget
     fi
 fi
 
