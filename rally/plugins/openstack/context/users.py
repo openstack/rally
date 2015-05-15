@@ -108,12 +108,11 @@ class UserGenerator(base.Context):
     def _remove_default_security_group(self):
         """Delete default security group for tenants."""
         clients = osclients.Clients(self.endpoint)
-        net_wrapper = network.wrap(clients)
 
-        if net_wrapper.SERVICE_IMPL != consts.Service.NEUTRON:
+        if consts.Service.NEUTRON not in clients.services().values():
             return
 
-        use_sg, msg = net_wrapper.supports_security_group()
+        use_sg, msg = network.wrap(clients).supports_security_group()
         if not use_sg:
             LOG.debug("Security group context is disabled: %(message)s" %
                       {"message": msg})
