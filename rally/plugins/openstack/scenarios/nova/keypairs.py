@@ -58,6 +58,7 @@ class NovaKeypair(utils.NovaScenario):
     @validation.required_openstack(users=True)
     @scenario.configure(context={"cleanup": ["nova"]})
     def boot_and_delete_server_with_keypair(self, image, flavor,
+                                            server_kwargs=None,
                                             **kwargs):
         """Boot and delete server with keypair.
 
@@ -69,11 +70,15 @@ class NovaKeypair(utils.NovaScenario):
 
         :param image: ID of the image to be used for server creation
         :param flavor: ID of the flavor to be used for server creation
+        :param server_kwargs: Optional additional arguments for VM creation
         :param kwargs: Optional additional arguments for keypair creation
         """
 
+        server_kwargs = server_kwargs or {}
+
         keypair = self._create_keypair(**kwargs)
         server = self._boot_server(image, flavor,
-                                   key_name=keypair)
+                                   key_name=keypair,
+                                   **server_kwargs)
         self._delete_server(server)
         self._delete_keypair(keypair)
