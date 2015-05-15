@@ -430,11 +430,16 @@ def required_cinder_services(config, clients, deployment, service_name):
 
 
 @validator
-def required_clients(config, clients, task, *components):
+def required_clients(config, clients, deployment, *components, **kwargs):
     """Validator checks if specified OpenStack clients are available.
 
     :param *components: list of client components names
+    :param **kwargs: optional parameters:
+                     admin - bool, whether to use admin clients
     """
+    if kwargs.get("admin", False):
+        clients = osclients.Clients(objects.Endpoint(**deployment["admin"]))
+
     for client_component in components:
         try:
             getattr(clients, client_component)()
