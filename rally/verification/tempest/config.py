@@ -41,6 +41,9 @@ IMAGE_OPTS = [
     cfg.StrOpt("cirros_image",
                default="cirros-0.3.2-x86_64-disk.img",
                help="Cirros image name"),
+    cfg.StrOpt("cirros_base_url",
+               default="http://download.cirros-cloud.net",
+               help="Cirros image base URL"),
 ]
 CONF = cfg.CONF
 CONF.register_opts(IMAGE_OPTS, "image")
@@ -78,8 +81,9 @@ class TempestConf(object):
             self._load_img()
 
     def _load_img(self):
-        cirros_url = ("http://download.cirros-cloud.net/%s/%s" %
-                      (CONF.image.cirros_version,
+        cirros_url = ("%s/%s/%s" %
+                      (CONF.image.cirros_base_url,
+                       CONF.image.cirros_version,
                        CONF.image.cirros_image))
         try:
             response = requests.get(cirros_url, stream=True)

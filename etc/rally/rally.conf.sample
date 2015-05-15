@@ -45,9 +45,9 @@
 
 # (Optional) Enables or disables syslog rfc5424 format for logging. If
 # enabled, prefixes the MSG part of the syslog message with APP-NAME
-# (RFC5424). The format without the APP-NAME is deprecated in I, and
-# will be removed in J. (boolean value)
-#use_syslog_rfc_format = false
+# (RFC5424). The format without the APP-NAME is deprecated in K, and
+# will be removed in L, along with this option. (boolean value)
+#use_syslog_rfc_format = true
 
 # Syslog facility to receive log lines. (string value)
 #syslog_log_facility = LOG_USER
@@ -102,9 +102,13 @@
 #openstack_client_http_timeout = 180.0
 
 # Use SSL for all OpenStack API interfaces (boolean value)
+# This option is deprecated for removal.
+# Its value may be silently ignored in the future.
 #https_insecure = false
 
 # Path to CA server cetrificate for SSL (string value)
+# This option is deprecated for removal.
+# Its value may be silently ignored in the future.
 #https_cacert = <None>
 
 
@@ -562,6 +566,9 @@
 
 # Cirros image name (string value)
 #cirros_image = cirros-0.3.2-x86_64-disk.img
+
+# Cirros image base URL (string value)
+#cirros_base_url = http://download.cirros-cloud.net
 
 
 [users_context]
