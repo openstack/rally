@@ -1,0 +1,18 @@
+{
+    "FakeScenarioPlugin1.list": [
+        {
+            "runner": {
+                "type": "constant",
+                "times": 5
+            }
+        }
+    ],
+    "FakeScenarioPlugin2.list": [
+        {
+            "runner": {
+                "type": "constant",
+                "times": 5
+            }
+        }
+    ]
+}
