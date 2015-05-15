@@ -22,7 +22,9 @@ ASKCONFIRMATION=1
 OVERWRITEDIR="ask"
 USEVIRTUALENV="yes"
 
-PYTHON="$(which python)"
+PYTHON2="$(which python || true)"
+PYTHON3="$(which python3 || true)"
+PYTHON=${PYTHON2:-$PYTHON3}
 BASE_PIP_URL="https://pypi.python.org/simple"
 VIRTUALENV_191_URL="https://raw.github.com/pypa/virtualenv/1.9.1/virtualenv.py"
 VIRTUALENV_CMD="virtualenv"
