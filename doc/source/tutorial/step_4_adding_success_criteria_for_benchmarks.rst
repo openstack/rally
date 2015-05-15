@@ -13,10 +13,13 @@
       License for the specific language governing permissions and limitations
       under the License.
 
-.. _tutorial_step_3_adding_success_criteria_for_benchmarks:
+.. _tutorial_step_4_adding_success_criteria_for_benchmarks:
 
-Step 3. Adding success criteria (SLA) for benchmarks
+Step 4. Adding success criteria (SLA) for benchmarks
 ====================================================
+
+.. contents::
+   :local:
 
 SLA - Service-Level Agreement (Success Criteria)
 ------------------------------------------------
@@ -141,4 +144,4 @@ Somewhat more detailed information about SLA is displayed on the scenario pages:
 .. image:: ../images/Report-SLA-Scenario.png
    :align: center
 
-Success criteria present a very useful concept that enables not only to analyze the outcome of your benchmark tasks, but also to control their execution. In :ref:`one of the next sections <tutorial_step_5_aborting_load_generation_on_sla_failure>` of our tutorial, we will show how to use SLA to abort the load generation before your OpenStack goes wrong.
+Success criteria present a very useful concept that enables not only to analyze the outcome of your benchmark tasks, but also to control their execution. In :ref:`one of the next sections <tutorial_step_6_aborting_load_generation_on_sla_failure>` of our tutorial, we will show how to use SLA to abort the load generation before your OpenStack goes wrong.

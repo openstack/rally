@@ -13,9 +13,9 @@
       License for the specific language governing permissions and limitations
       under the License.
 
-.. _tutorial_step_8_working_with_multple_openstack_clouds:
+.. _tutorial_step_9_deploying_openstack:
 
-Step 8. Deploying OpenStack from Rally
+Step 9. Deploying OpenStack from Rally
 ======================================
 
 Along with supporting already existing OpenStack deployments, Rally itself can **deploy OpenStack automatically** by using one of its *deployment engines*. Take a look at other `deployment configuration file samples <https://github.com/openstack/rally/tree/master/samples/deployments>`_. For example, *devstack-in-existing-servers.json* is a deployment configuration file that tells Rally to deploy OpenStack with **Devstack** on the existing servers with given credentials:
@@ -34,7 +34,7 @@ You can try to deploy OpenStack in your Virtual Machine using this script. Edit 
 
 .. code-block:: none
 
-   $ rally deployment create --file=samples/deployments/devstack-in-existing-servers.json --name=new-devstack
+   $ rally deployment create --file=samples/deployments/for_deploying_openstack_with_rally/devstack-in-existing-servers.json --name=new-devstack
    +---------------------------+----------------------------+--------------+------------------+
    |            uuid           |         created_at         |     name     |      status      |
    +---------------------------+----------------------------+--------------+------------------+

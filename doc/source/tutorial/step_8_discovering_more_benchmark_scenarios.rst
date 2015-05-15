@@ -13,10 +13,13 @@
       License for the specific language governing permissions and limitations
       under the License.
 
-.. _tutorial_step_7_discovering_more_benchmark_scenarios:
+.. _tutorial_step_8_discovering_more_benchmark_scenarios:
 
-Step 7. Discovering more benchmark scenarios in Rally
+Step 8. Discovering more benchmark scenarios in Rally
 =====================================================
+
+.. contents::
+   :local:
 
 Scenarios in the Rally repository
 ---------------------------------

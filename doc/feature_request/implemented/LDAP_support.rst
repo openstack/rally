@@ -19,5 +19,12 @@ produce load.
 Possible Solution
 -----------------
 
-* Drop admin requirements
-* Add way to pass already existing users
+* Add some way to pass already existing users
+
+
+Current Solution
+----------------
+
+* Allow the user to specify existing users in the configuration of the *ExistingCloud* deployment plugin
+* When such an *ExistingCloud* deployment is active, and the benchmark task file does not specify the *"users"* context, use the existing users instead of creating the temporary ones.
+* Modify the *rally show ...* commands to list resources for each user separately.
