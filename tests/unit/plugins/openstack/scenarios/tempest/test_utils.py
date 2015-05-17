@@ -15,11 +15,11 @@
 
 import mock
 
-from rally.benchmark.scenarios.tempest import tempest
-from rally.benchmark.scenarios.tempest import utils
+from rally.plugins.openstack.scenarios.tempest import tempest
+from rally.plugins.openstack.scenarios.tempest import utils
 from tests.unit import test
 
-TS = "rally.benchmark.scenarios.tempest"
+TS = "rally.plugins.openstack.scenarios.tempest"
 
 
 class TempestLogWrappersTestCase(test.TestCase):

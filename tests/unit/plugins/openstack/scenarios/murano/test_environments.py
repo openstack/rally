@@ -15,11 +15,11 @@
 
 import mock
 
-from rally.benchmark.scenarios.murano import environments
+from rally.plugins.openstack.scenarios.murano import environments
 from tests.unit import test
 
 CTX = "rally.benchmark.context"
-MURANO_SCENARIO = ("rally.benchmark.scenarios.murano."
+MURANO_SCENARIO = ("rally.plugins.openstack.scenarios.murano."
                    "environments.MuranoEnvironments")
 
 

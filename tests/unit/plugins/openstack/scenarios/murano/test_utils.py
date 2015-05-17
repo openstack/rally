@@ -16,11 +16,11 @@
 import mock
 from oslotest import mockpatch
 
-from rally.benchmark.scenarios.murano import utils
+from rally.plugins.openstack.scenarios.murano import utils
 from tests.unit import test
 
 BM_UTILS = "rally.benchmark.utils"
-MRN_UTILS = "rally.benchmark.scenarios.murano.utils"
+MRN_UTILS = "rally.plugins.openstack.scenarios.murano.utils"
 
 
 class MuranoScenarioTestCase(test.TestCase):
