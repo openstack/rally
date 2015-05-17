@@ -14,11 +14,11 @@
 #    under the License.
 
 from rally.benchmark.scenarios import base
-from rally.benchmark.scenarios.glance import utils
 from rally.benchmark.scenarios.nova import utils as nova_utils
 from rally.benchmark import types as types
 from rally.benchmark import validation
 from rally import consts
+from rally.plugins.openstack.scenarios.glance import utils
 
 
 class GlanceImages(utils.GlanceScenario, nova_utils.NovaScenario):

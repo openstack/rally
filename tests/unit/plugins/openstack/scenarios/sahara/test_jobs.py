@@ -16,14 +16,13 @@
 import mock
 from oslo_config import cfg
 
-from rally.benchmark.scenarios.sahara import jobs
+from rally.plugins.openstack.scenarios.sahara import jobs
 from tests.unit import test
-
 
 CONF = cfg.CONF
 
-SAHARA_JOB = "rally.benchmark.scenarios.sahara.jobs.SaharaJob"
-SAHARA_UTILS = "rally.benchmark.scenarios.sahara.utils"
+SAHARA_JOB = "rally.plugins.openstack.scenarios.sahara.jobs.SaharaJob"
+SAHARA_UTILS = "rally.plugins.openstack.scenarios.sahara.utils"
 
 
 class SaharaJobTestCase(test.TestCase):

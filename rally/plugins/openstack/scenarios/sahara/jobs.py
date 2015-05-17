@@ -14,10 +14,10 @@
 #    under the License.
 
 from rally.benchmark.scenarios import base
-from rally.benchmark.scenarios.sahara import utils
 from rally.benchmark import validation
 from rally.common import log as logging
 from rally import consts
+from rally.plugins.openstack.scenarios.sahara import utils
 
 LOG = logging.getLogger(__name__)
 

@@ -22,7 +22,6 @@ from tests.unit import test
 CONF = cfg.CONF
 
 CTX = "rally.plugins.openstack.context.sahara"
-SCN = "rally.benchmark.scenarios"
 
 
 class SaharaClusterTestCase(test.TestCase):

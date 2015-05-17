@@ -14,10 +14,10 @@
 #    under the License.
 
 from rally.benchmark.scenarios import base
-from rally.benchmark.scenarios.sahara import utils
 from rally.benchmark import types
 from rally.benchmark import validation
 from rally import consts
+from rally.plugins.openstack.scenarios.sahara import utils
 
 
 class SaharaNodeGroupTemplates(utils.SaharaScenario):

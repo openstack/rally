@@ -15,7 +15,7 @@
 
 import mock
 
-from rally.benchmark.scenarios.swift import objects
+from rally.plugins.openstack.scenarios.swift import objects
 from tests.unit import fakes
 from tests.unit import test
 

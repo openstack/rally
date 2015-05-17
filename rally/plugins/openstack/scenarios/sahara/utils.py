@@ -20,12 +20,12 @@ from oslo_utils import uuidutils
 from saharaclient.api import base as sahara_base
 
 from rally.benchmark.scenarios import base
-from rally.benchmark.scenarios.sahara import consts as sahara_consts
 from rally.benchmark import utils as bench_utils
 from rally.common.i18n import _
 from rally.common import log as logging
 from rally import consts
 from rally import exceptions
+from rally.plugins.openstack.scenarios.sahara import consts as sahara_consts
 
 LOG = logging.getLogger(__name__)
 CONF = cfg.CONF

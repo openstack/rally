@@ -17,14 +17,14 @@ import tempfile
 import mock
 from oslotest import mockpatch
 
-from rally.benchmark.scenarios.glance import utils
 from rally.benchmark import utils as butils
 from rally import exceptions as rally_exceptions
+from rally.plugins.openstack.scenarios.glance import utils
 from tests.unit import fakes
 from tests.unit import test
 
 BM_UTILS = "rally.benchmark.utils"
-GLANCE_UTILS = "rally.benchmark.scenarios.glance.utils"
+GLANCE_UTILS = "rally.plugins.openstack.scenarios.glance.utils"
 
 
 class GlanceScenarioTestCase(test.TestCase):

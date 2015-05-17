@@ -18,7 +18,6 @@ from rally.plugins.openstack.context.sahara import sahara_edp
 from tests.unit import test
 
 CTX = "rally.plugins.openstack.context.sahara"
-SCN = "rally.benchmark.scenarios"
 
 
 class SaharaEDPTestCase(test.TestCase):

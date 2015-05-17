@@ -22,7 +22,7 @@ from tests.unit import test
 BASE_CTX = "rally.benchmark.context"
 CTX = "rally.plugins.openstack.context.sahara.sahara_image"
 BASE_SCN = "rally.benchmark.scenarios"
-SCN = "rally.benchmark.scenarios"
+SCN = "rally.plugins.openstack.scenarios"
 
 
 class SaharaImageTestCase(test.TestCase):

@@ -15,10 +15,11 @@
 
 import mock
 
-from rally.benchmark.scenarios.sahara import node_group_templates as ngts
+from rally.plugins.openstack.scenarios.sahara import (node_group_templates
+                                                      as ngts)
 from tests.unit import test
 
-SAHARA_NGTS = ("rally.benchmark.scenarios.sahara.node_group_templates"
+SAHARA_NGTS = ("rally.plugins.openstack.scenarios.sahara.node_group_templates"
                ".SaharaNodeGroupTemplates")
 
 

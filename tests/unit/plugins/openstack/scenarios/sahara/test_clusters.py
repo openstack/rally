@@ -15,11 +15,12 @@
 
 import mock
 
-from rally.benchmark.scenarios.sahara import clusters
+from rally.plugins.openstack.scenarios.sahara import clusters
 from tests.unit import test
 
-SAHARA_CLUSTERS = "rally.benchmark.scenarios.sahara.clusters.SaharaClusters"
-SAHARA_UTILS = "rally.benchmark.scenarios.sahara.utils"
+SAHARA_CLUSTERS = ("rally.plugins.openstack.scenarios.sahara.clusters"
+                   ".SaharaClusters")
+SAHARA_UTILS = "rally.plugins.openstack.scenarios.sahara.utils"
 
 
 class SaharaClustersTestCase(test.TestCase):

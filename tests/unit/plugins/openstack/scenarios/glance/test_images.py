@@ -15,14 +15,14 @@
 
 import mock
 
-from rally.benchmark.scenarios.glance import images
 from rally.benchmark.scenarios.nova import servers
 from rally import objects
 from rally import osclients
+from rally.plugins.openstack.scenarios.glance import images
 from tests.unit import fakes
 from tests.unit import test
 
-GLANCE_IMAGES = "rally.benchmark.scenarios.glance.images.GlanceImages"
+GLANCE_IMAGES = "rally.plugins.openstack.scenarios.glance.images.GlanceImages"
 
 
 class GlanceImagesTestCase(test.TestCase):
@@ -87,7 +87,8 @@ class GlanceImagesTestCase(test.TestCase):
         mock_boot_servers.return_value = fake_servers
         mock_random_name.return_value = "random_name"
         kwargs = {"fakearg": "f"}
-        with mock.patch("rally.benchmark.scenarios.glance.utils.time.sleep"):
+        with mock.patch("rally.plugins.openstack.scenarios."
+                        "glance.utils.time.sleep"):
             glance_scenario.create_image_and_boot_instances("cf", "url",
                                                             "df", "fid",
                                                             5, **kwargs)

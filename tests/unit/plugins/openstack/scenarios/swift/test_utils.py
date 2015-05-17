@@ -15,10 +15,10 @@
 
 import mock
 
-from rally.benchmark.scenarios.swift import utils
+from rally.plugins.openstack.scenarios.swift import utils
 from tests.unit import test
 
-SWIFT_UTILS = "rally.benchmark.scenarios.swift.utils"
+SWIFT_UTILS = "rally.plugins.openstack.scenarios.swift.utils"
 
 
 class SwiftScenarioTestCase(test.TestCase):

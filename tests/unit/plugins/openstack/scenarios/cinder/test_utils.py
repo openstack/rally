@@ -17,11 +17,11 @@ import mock
 from oslo_config import cfg
 from oslotest import mockpatch
 
-from rally.benchmark.scenarios.cinder import utils
+from rally.plugins.openstack.scenarios.cinder import utils
 from tests.unit import test
 
 BM_UTILS = "rally.benchmark.utils"
-CINDER_UTILS = "rally.benchmark.scenarios.cinder.utils"
+CINDER_UTILS = "rally.plugins.openstack.scenarios.cinder.utils"
 
 
 class CinderScenarioTestCase(test.TestCase):
@@ -77,7 +77,7 @@ class CinderScenarioTestCase(test.TestCase):
         self._test_atomic_action_timer(self.scenario.atomic_actions(),
                                        "cinder.create_volume")
 
-    @mock.patch("rally.benchmark.scenarios.cinder.utils.random")
+    @mock.patch("rally.plugins.openstack.scenarios.cinder.utils.random")
     @mock.patch(CINDER_UTILS + ".CinderScenario.clients")
     def test__create_volume_with_size_range(self, mock_clients, mock_random):
         CONF = cfg.CONF
@@ -117,7 +117,7 @@ class CinderScenarioTestCase(test.TestCase):
         self._test_atomic_action_timer(self.scenario.atomic_actions(),
                                        "cinder.delete_volume")
 
-    @mock.patch("rally.benchmark.scenarios.cinder.utils.random")
+    @mock.patch("rally.plugins.openstack.scenarios.cinder.utils.random")
     @mock.patch(CINDER_UTILS + ".CinderScenario.clients")
     def test__extend_volume_with_size_range(self, mock_clients, mock_random):
         CONF = cfg.CONF

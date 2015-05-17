@@ -13,16 +13,16 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import random
+
 from rally.benchmark.scenarios import base
-from rally.benchmark.scenarios.cinder import utils
-from rally.benchmark.scenarios.glance import utils as glance_utils
 from rally.benchmark.scenarios.nova import utils as nova_utils
 from rally.benchmark import types as types
 from rally.benchmark import validation
 from rally.common import log as logging
 from rally import consts
-
-import random
+from rally.plugins.openstack.scenarios.cinder import utils
+from rally.plugins.openstack.scenarios.glance import utils as glance_utils
 
 LOG = logging.getLogger(__name__)
 

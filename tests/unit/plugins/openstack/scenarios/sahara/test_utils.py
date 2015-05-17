@@ -18,14 +18,14 @@ from oslo_config import cfg
 from oslo_utils import uuidutils
 from saharaclient.api import base as sahara_base
 
-from rally.benchmark.scenarios.sahara import utils
 from rally import consts
 from rally import exceptions
+from rally.plugins.openstack.scenarios.sahara import utils
 from tests.unit import test
 
 CONF = cfg.CONF
 
-SAHARA_UTILS = "rally.benchmark.scenarios.sahara.utils"
+SAHARA_UTILS = "rally.plugins.openstack.scenarios.sahara.utils"
 
 
 class SaharaUtilsTestCase(test.TestCase):

@@ -15,11 +15,12 @@
 
 import mock
 
-from rally.benchmark.scenarios.cinder import volumes
+from rally.plugins.openstack.scenarios.cinder import volumes
 from tests.unit import fakes
 from tests.unit import test
 
-CINDER_VOLUMES = "rally.benchmark.scenarios.cinder.volumes.CinderVolumes"
+CINDER_VOLUMES = ("rally.plugins.openstack.scenarios.cinder.volumes"
+                  ".CinderVolumes")
 
 
 class fake_type(object):
