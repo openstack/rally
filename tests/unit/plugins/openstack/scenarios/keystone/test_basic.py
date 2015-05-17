@@ -15,10 +15,10 @@
 
 import mock
 
-from rally.benchmark.scenarios.keystone import basic
+from rally.plugins.openstack.scenarios.keystone import basic
 from tests.unit import test
 
-BASE = "rally.benchmark.scenarios.keystone."
+BASE = "rally.plugins.openstack.scenarios.keystone."
 BASIC = BASE + "basic.KeystoneBasic."
 
 

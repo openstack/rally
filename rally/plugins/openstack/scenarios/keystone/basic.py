@@ -14,8 +14,8 @@
 #    under the License.
 
 from rally.benchmark.scenarios import base
-from rally.benchmark.scenarios.keystone import utils as kutils
 from rally.benchmark import validation
+from rally.plugins.openstack.scenarios.keystone import utils as kutils
 
 
 class KeystoneBasic(kutils.KeystoneScenario):

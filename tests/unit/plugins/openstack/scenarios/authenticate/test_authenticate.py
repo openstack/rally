@@ -15,7 +15,7 @@
 
 import mock
 
-from rally.benchmark.scenarios.authenticate import authenticate
+from rally.plugins.openstack.scenarios.authenticate import authenticate
 from tests.unit import fakes
 from tests.unit import test
 

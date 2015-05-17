@@ -14,11 +14,11 @@
 
 import mock
 
-from rally.benchmark.scenarios.ec2 import servers
+from rally.plugins.openstack.scenarios.ec2 import servers
 from tests.unit import test
 
 
-UTILS = "rally.benchmark.scenarios.ec2.utils."
+UTILS = "rally.plugins.openstack.scenarios.ec2.utils."
 
 
 class EC2ServersTestCase(test.TestCase):

@@ -14,9 +14,9 @@
 #    under the License.
 
 from rally.benchmark.scenarios import base
-from rally.benchmark.scenarios.quotas import utils
 from rally.benchmark import validation
 from rally import consts
+from rally.plugins.openstack.scenarios.quotas import utils
 
 
 class Quotas(utils.QuotasScenario):

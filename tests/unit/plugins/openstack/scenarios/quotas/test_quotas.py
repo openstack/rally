@@ -15,7 +15,7 @@
 
 import mock
 
-from rally.benchmark.scenarios.quotas import quotas
+from rally.plugins.openstack.scenarios.quotas import quotas
 from tests.unit import test
 
 

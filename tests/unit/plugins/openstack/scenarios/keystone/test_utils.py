@@ -16,11 +16,11 @@
 import mock
 import six
 
-from rally.benchmark.scenarios.keystone import utils
+from rally.plugins.openstack.scenarios.keystone import utils
 from tests.unit import fakes
 from tests.unit import test
 
-UTILS = "rally.benchmark.scenarios.keystone.utils."
+UTILS = "rally.plugins.openstack.scenarios.keystone.utils."
 
 
 class KeystoneUtilsTestCase(test.TestCase):

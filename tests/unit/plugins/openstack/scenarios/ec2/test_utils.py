@@ -16,10 +16,10 @@ import mock
 from oslo_config import cfg
 from oslotest import mockpatch
 
-from rally.benchmark.scenarios.ec2 import utils
+from rally.plugins.openstack.scenarios.ec2 import utils
 from tests.unit import test
 
-EC2_UTILS = "rally.benchmark.scenarios.ec2.utils"
+EC2_UTILS = "rally.plugins.openstack.scenarios.ec2.utils"
 CONF = cfg.CONF
 
 
