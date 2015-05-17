@@ -13,13 +13,13 @@
 
 import mock
 
-from rally.benchmark.scenarios.dummy import dummy
+from rally.plugins.common.scenarios.dummy import dummy
 from tests.unit import test
 
 
 class DummyTestCase(test.TestCase):
 
-    @mock.patch("rally.benchmark.scenarios.dummy.dummy.time")
+    @mock.patch("rally.plugins.common.scenarios.dummy.dummy.time")
     def test_dummy(self, mock_sleep):
         scenario = dummy.Dummy()
         scenario.sleep_between = mock.MagicMock()
@@ -29,7 +29,7 @@ class DummyTestCase(test.TestCase):
         scenario.dummy(sleep=10)
         mock_sleep.sleep.assert_called_once_with(10)
 
-    @mock.patch("rally.benchmark.scenarios.dummy.dummy.time")
+    @mock.patch("rally.plugins.common.scenarios.dummy.dummy.time")
     def test_dummy_exception(self, mock_sleep):
         scenario = dummy.Dummy()
 

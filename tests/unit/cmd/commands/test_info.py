@@ -16,7 +16,6 @@
 import mock
 
 from rally.benchmark.scenarios import base as scenario_base
-from rally.benchmark.scenarios.dummy import dummy
 from rally.benchmark.sla import base as sla_base
 from rally.cmd.commands import info
 from rally import deploy
@@ -24,6 +23,7 @@ from rally.deploy.engines import existing as existing_cloud
 from rally.deploy import serverprovider
 from rally.deploy.serverprovider.providers import existing as existing_servers
 from rally import exceptions
+from rally.plugins.common.scenarios.dummy import dummy
 from rally.plugins.common.sla import failure_rate
 from tests.unit import test
 

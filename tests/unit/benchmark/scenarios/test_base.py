@@ -20,10 +20,10 @@ import six
 
 from rally.benchmark.context import base as base_ctx
 from rally.benchmark.scenarios import base
-from rally.benchmark.scenarios.dummy import dummy
 from rally.benchmark import validation
 from rally import consts
 from rally import exceptions
+from rally.plugins.common.scenarios.dummy import dummy
 from tests.unit import fakes
 from tests.unit import test
 
