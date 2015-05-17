@@ -16,11 +16,10 @@
 
 import mock
 
-from rally.benchmark.scenarios.designate import utils
+from rally.plugins.openstack.scenarios.designate import utils
 from tests.unit import test
 
-
-DESIGNATE_UTILS = "rally.benchmark.scenarios.designate.utils."
+DESIGNATE_UTILS = "rally.plugins.openstack.scenarios.designate.utils."
 
 
 class DesignateScenarioTestCase(test.TestCase):

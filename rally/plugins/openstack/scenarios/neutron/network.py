@@ -14,9 +14,9 @@
 #    under the License.
 
 from rally.benchmark.scenarios import base
-from rally.benchmark.scenarios.neutron import utils
 from rally.benchmark import validation
 from rally import consts
+from rally.plugins.openstack.scenarios.neutron import utils
 
 
 class NeutronNetworks(utils.NeutronScenario):

@@ -15,12 +15,12 @@
 
 import mock
 
-from rally.benchmark.scenarios.neutron import utils
+from rally.plugins.openstack.scenarios.neutron import utils
 from tests.unit import fakes
 from tests.unit import test
 
 
-NEUTRON_UTILS = "rally.benchmark.scenarios.neutron.utils."
+NEUTRON_UTILS = "rally.plugins.openstack.scenarios.neutron.utils."
 
 
 class NeutronScenarioTestCase(test.TestCase):

@@ -18,8 +18,6 @@ import abc
 import six
 
 from rally.benchmark.context import base
-from rally.benchmark.scenarios.nova import utils as nova_utils
-from rally.benchmark.scenarios.vm import vmtasks
 from rally.benchmark import types
 from rally.common import broker
 from rally.common.i18n import _
@@ -27,6 +25,8 @@ from rally.common import log as logging
 from rally.common import utils
 from rally import consts
 from rally import osclients
+from rally.plugins.openstack.scenarios.nova import utils as nova_utils
+from rally.plugins.openstack.scenarios.vm import vmtasks
 
 LOG = logging.getLogger(__name__)
 

@@ -15,7 +15,7 @@
 
 import mock
 
-from rally.benchmark.scenarios.nova import floating_ips_bulk
+from rally.plugins.openstack.scenarios.nova import floating_ips_bulk
 from tests.unit import test
 
 

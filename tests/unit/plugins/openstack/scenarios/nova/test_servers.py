@@ -15,15 +15,15 @@
 
 import mock
 
-from rally.benchmark.scenarios.nova import servers
 from rally import exceptions as rally_exceptions
 from rally import objects
 from rally import osclients
+from rally.plugins.openstack.scenarios.nova import servers
 from tests.unit import fakes
 from tests.unit import test
 
 
-NOVA_SERVERS_MODULE = "rally.benchmark.scenarios.nova.servers"
+NOVA_SERVERS_MODULE = "rally.plugins.openstack.scenarios.nova.servers"
 NOVA_SERVERS = NOVA_SERVERS_MODULE + ".NovaServers"
 
 
@@ -341,7 +341,8 @@ class NovaServersTestCase(test.TestCase):
         scenario._boot_server.assert_called_once_with(
             "img", 0, auto_assign_nic=False, **expected_kwargs)
 
-    @mock.patch("rally.benchmark.scenarios.nova.servers.NovaServers.clients")
+    @mock.patch("rally.plugins.openstack.scenarios"
+                ".nova.servers.NovaServers.clients")
     @mock.patch("rally.benchmark.runners.base.osclients")
     def test_boot_server_no_nics(self, mock_osclients, mock_nova_clients):
         mock_nova_clients.return_value = fakes.FakeNovaClient()

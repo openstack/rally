@@ -15,11 +15,11 @@
 
 import mock
 
-from rally.benchmark.scenarios.nova import hypervisors
+from rally.plugins.openstack.scenarios.nova import hypervisors
 from tests.unit import test
 
 
-NOVA_HYPERVISORS_MODULE = "rally.benchmark.scenarios.nova.hypervisors"
+NOVA_HYPERVISORS_MODULE = "rally.plugins.openstack.scenarios.nova.hypervisors"
 NOVA_HYPERVISORS = NOVA_HYPERVISORS_MODULE + ".NovaHypervisors"
 
 

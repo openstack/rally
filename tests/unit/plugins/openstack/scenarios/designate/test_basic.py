@@ -16,10 +16,11 @@
 
 import mock
 
-from rally.benchmark.scenarios.designate import basic
+from rally.plugins.openstack.scenarios.designate import basic
 from tests.unit import test
 
-DESIGNATE_BASIC = "rally.benchmark.scenarios.designate.basic.DesignateBasic"
+DESIGNATE_BASIC = ("rally.plugins.openstack.scenarios.designate.basic"
+                   ".DesignateBasic")
 
 
 class DesignateBasicTestCase(test.TestCase):

@@ -15,9 +15,9 @@
 # under the License.
 
 from rally.benchmark.scenarios import base
-from rally.benchmark.scenarios.designate import utils
 from rally.benchmark import validation
 from rally import consts
+from rally.plugins.openstack.scenarios.designate import utils
 
 
 class DesignateBasic(utils.DesignateScenario):

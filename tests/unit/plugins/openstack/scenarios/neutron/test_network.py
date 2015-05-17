@@ -15,10 +15,11 @@
 
 import mock
 
-from rally.benchmark.scenarios.neutron import network
+from rally.plugins.openstack.scenarios.neutron import network
 from tests.unit import test
 
-NEUTRON_NETWORKS = "rally.benchmark.scenarios.neutron.network.NeutronNetworks"
+NEUTRON_NETWORKS = ("rally.plugins.openstack.scenarios.neutron.network"
+                    ".NeutronNetworks")
 
 
 class NeutronNetworksTestCase(test.TestCase):

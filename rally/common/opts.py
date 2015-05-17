@@ -14,7 +14,6 @@
 
 import itertools
 
-from rally.benchmark.scenarios.nova import utils as nova_utils
 from rally.common import log
 from rally import exceptions
 from rally import osclients
@@ -23,6 +22,7 @@ from rally.plugins.openstack.scenarios.cinder import utils as cinder_utils
 from rally.plugins.openstack.scenarios.ec2 import utils as ec2_utils
 from rally.plugins.openstack.scenarios.glance import utils as glance_utils
 from rally.plugins.openstack.scenarios.heat import utils as heat_utils
+from rally.plugins.openstack.scenarios.nova import utils as nova_utils
 from rally.plugins.openstack.scenarios.sahara import utils as sahara_utils
 from rally.verification.tempest import config as tempest_conf
 

@@ -15,7 +15,7 @@
 
 import mock
 
-from rally.benchmark.scenarios.nova import keypairs
+from rally.plugins.openstack.scenarios.nova import keypairs
 from tests.unit import test
 
 

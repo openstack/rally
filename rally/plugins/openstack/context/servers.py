@@ -13,7 +13,6 @@
 # under the License.
 
 from rally.benchmark.context import base
-from rally.benchmark.scenarios.nova import utils as nova_utils
 from rally.benchmark import types as types
 from rally.common.i18n import _
 from rally.common import log as logging
@@ -21,6 +20,7 @@ from rally.common import utils as rutils
 from rally import consts
 from rally import osclients
 from rally.plugins.openstack.context.cleanup import manager as resource_manager
+from rally.plugins.openstack.scenarios.nova import utils as nova_utils
 
 
 LOG = logging.getLogger(__name__)

@@ -15,12 +15,12 @@
 
 import mock
 
-from rally.benchmark.scenarios.nova import security_group
+from rally.plugins.openstack.scenarios.nova import security_group
 from tests.unit import fakes
 from tests.unit import test
 
 
-SECGROUP = "rally.benchmark.scenarios.nova.security_group"
+SECGROUP = "rally.plugins.openstack.scenarios.nova.security_group"
 
 
 class FakeNeutronScenario():

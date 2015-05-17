@@ -17,15 +17,14 @@ import mock
 from oslo_config import cfg
 from oslotest import mockpatch
 
-from rally.benchmark.scenarios.nova import utils
 from rally.benchmark import utils as butils
 from rally import exceptions as rally_exceptions
+from rally.plugins.openstack.scenarios.nova import utils
 from tests.unit import fakes
 from tests.unit import test
 
-
 BM_UTILS = "rally.benchmark.utils"
-NOVA_UTILS = "rally.benchmark.scenarios.nova.utils"
+NOVA_UTILS = "rally.plugins.openstack.scenarios.nova.utils"
 SCN = "rally.benchmark.scenarios.base"
 CONF = cfg.CONF
 

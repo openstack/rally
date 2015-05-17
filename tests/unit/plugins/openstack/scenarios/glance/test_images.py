@@ -15,10 +15,10 @@
 
 import mock
 
-from rally.benchmark.scenarios.nova import servers
 from rally import objects
 from rally import osclients
 from rally.plugins.openstack.scenarios.glance import images
+from rally.plugins.openstack.scenarios.nova import servers
 from tests.unit import fakes
 from tests.unit import test
 

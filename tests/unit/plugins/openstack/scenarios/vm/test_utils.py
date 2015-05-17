@@ -16,17 +16,15 @@
 
 import subprocess
 
-
 import mock
 from oslotest import mockpatch
 import six
 
-from rally.benchmark.scenarios.vm import utils
 from rally import exceptions
+from rally.plugins.openstack.scenarios.vm import utils
 from tests.unit import test
 
-
-VMTASKS_UTILS = "rally.benchmark.scenarios.vm.utils"
+VMTASKS_UTILS = "rally.plugins.openstack.scenarios.vm.utils"
 
 
 class VMScenarioTestCase(test.TestCase):

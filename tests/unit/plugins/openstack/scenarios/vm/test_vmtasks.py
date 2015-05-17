@@ -15,8 +15,8 @@
 
 import mock
 
-from rally.benchmark.scenarios.vm import vmtasks
 from rally import exceptions
+from rally.plugins.openstack.scenarios.vm import vmtasks
 from tests.unit import test
 
 
@@ -70,7 +70,7 @@ class VMTasksTestCase(test.TestCase):
         self.scenario._delete_server_with_fip.assert_called_once_with(
             "foo_server", self.ip, force_delete=False)
 
-    @mock.patch("rally.benchmark.scenarios.vm.vmtasks.json")
+    @mock.patch("rally.plugins.openstack.scenarios.vm.vmtasks.json")
     def test_boot_runcommand_delete_json_fails(self, mock_json):
         mock_json.loads.side_effect = ValueError()
         self.assertRaises(exceptions.ScriptError,
