@@ -12,15 +12,21 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import mock
+from rally.benchmark.scenarios import base
+from rally.benchmark import validation
+from rally import consts
+from rally.plugins.openstack.scenarios.ceilometer import utils as ceiloutils
 
-from rally.benchmark.scenarios.ceilometer import samples
-from tests.unit import test
 
+class CeilometerSamples(ceiloutils.CeilometerScenario):
+    """Benchmark scenarios for Ceilometer Samples API."""
 
-class CeilometerSamplesTestCase(test.TestCase):
-    def test_list_samples(self):
-        scenario = samples.CeilometerSamples()
-        scenario._list_samples = mock.MagicMock()
-        scenario.list_samples()
-        scenario._list_samples.assert_called_once_with()
+    @validation.required_services(consts.Service.CEILOMETER)
+    @validation.required_openstack(users=True)
+    @base.scenario()
+    def list_samples(self):
+        """Fetch all samples.
+
+        This scenario fetches list of all samples.
+        """
+        self._list_samples()

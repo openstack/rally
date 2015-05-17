@@ -14,8 +14,8 @@
 
 import mock
 
-from rally.benchmark.scenarios.ceilometer import resources
 from rally import exceptions
+from rally.plugins.openstack.scenarios.ceilometer import resources
 from tests.unit import test
 
 

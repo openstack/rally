@@ -13,9 +13,9 @@
 #    under the License.
 
 from rally.benchmark.scenarios import base
-from rally.benchmark.scenarios.ceilometer import utils
 from rally.benchmark import validation
 from rally import consts
+from rally.plugins.openstack.scenarios.ceilometer import utils
 
 
 class CeilometerStats(utils.CeilometerScenario):

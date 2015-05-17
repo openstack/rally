@@ -14,7 +14,7 @@
 
 import mock
 
-from rally.benchmark.scenarios.ceilometer import alarms
+from rally.plugins.openstack.scenarios.ceilometer import alarms
 from tests.unit import test
 
 

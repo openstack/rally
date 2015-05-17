@@ -14,11 +14,11 @@
 
 import mock
 
-from rally.benchmark.scenarios.zaqar import utils
+from rally.plugins.openstack.scenarios.zaqar import utils
 from tests.unit import fakes
 from tests.unit import test
 
-UTILS = "rally.benchmark.scenarios.zaqar.utils."
+UTILS = "rally.plugins.openstack.scenarios.zaqar.utils."
 
 
 class ZaqarScenarioTestCase(test.TestCase):

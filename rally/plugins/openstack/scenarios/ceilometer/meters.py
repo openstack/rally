@@ -13,20 +13,17 @@
 #    under the License.
 
 from rally.benchmark.scenarios import base
-from rally.benchmark.scenarios.ceilometer import utils as ceilometerutils
 from rally.benchmark import validation
 from rally import consts
+from rally.plugins.openstack.scenarios.ceilometer import utils as ceiloutils
 
 
-class CeilometerSamples(ceilometerutils.CeilometerScenario):
-    """Benchmark scenarios for Ceilometer Samples API."""
+class CeilometerMeters(ceiloutils.CeilometerScenario):
+    """Benchmark scenarios for Ceilometer Meters API."""
 
     @validation.required_services(consts.Service.CEILOMETER)
     @validation.required_openstack(users=True)
     @base.scenario()
-    def list_samples(self):
-        """Fetch all samples.
-
-        This scenario fetches list of all samples.
-        """
-        self._list_samples()
+    def list_meters(self):
+        """Fetch user's meters."""
+        self._list_meters()

@@ -14,10 +14,10 @@
 #    under the License.
 
 from rally.benchmark.scenarios import base
-from rally.benchmark.scenarios.heat import utils
 from rally.benchmark import types
 from rally.benchmark import validation
 from rally import consts
+from rally.plugins.openstack.scenarios.heat import utils
 
 
 class HeatStacks(utils.HeatScenario):

@@ -20,7 +20,7 @@ from tests.unit import fakes
 from tests.unit import test
 
 CTX = "rally.plugins.openstack.context"
-SCN = "rally.benchmark.scenarios"
+SCN = "rally.plugins.openstack.scenarios"
 
 
 class TestStackGenerator(test.TestCase):

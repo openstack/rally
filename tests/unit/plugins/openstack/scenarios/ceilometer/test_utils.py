@@ -15,12 +15,12 @@
 import mock
 from oslotest import mockpatch
 
-from rally.benchmark.scenarios.ceilometer import utils
+from rally.plugins.openstack.scenarios.ceilometer import utils
 from tests.unit import fakes
 from tests.unit import test
 
 BM_UTILS = "rally.benchmark.utils"
-CEILOMETER_UTILS = "rally.benchmark.scenarios.ceilometer.utils"
+CEILOMETER_UTILS = "rally.plugins.openstack.scenarios.ceilometer.utils"
 
 
 class CeilometerScenarioTestCase(test.TestCase):

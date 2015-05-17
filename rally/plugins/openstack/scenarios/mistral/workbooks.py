@@ -14,10 +14,10 @@
 #    under the License.
 
 from rally.benchmark.scenarios import base
-from rally.benchmark.scenarios.mistral import utils
 from rally.benchmark import types as types
 from rally.benchmark import validation
 from rally import consts
+from rally.plugins.openstack.scenarios.mistral import utils
 
 
 class MistralWorkbooks(utils.MistralScenario):

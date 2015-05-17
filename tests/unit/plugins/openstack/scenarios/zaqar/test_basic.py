@@ -14,10 +14,10 @@
 
 import mock
 
-from rally.benchmark.scenarios.zaqar import basic
+from rally.plugins.openstack.scenarios.zaqar import basic
 from tests.unit import test
 
-BASE = "rally.benchmark.scenarios.zaqar."
+BASE = "rally.plugins.openstack.scenarios.zaqar."
 BASIC = BASE + "basic.ZaqarBasic."
 
 

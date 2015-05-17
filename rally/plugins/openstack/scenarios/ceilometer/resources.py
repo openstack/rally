@@ -13,13 +13,13 @@
 #    under the License.
 
 from rally.benchmark.scenarios import base
-from rally.benchmark.scenarios.ceilometer import utils as ceilometerutils
 from rally.benchmark import validation
 from rally import consts
 from rally import exceptions
+from rally.plugins.openstack.scenarios.ceilometer import utils as ceiloutils
 
 
-class CeilometerResource(ceilometerutils.CeilometerScenario):
+class CeilometerResource(ceiloutils.CeilometerScenario):
     """Benchmark scenarios for Ceilometer Resource API."""
 
     @validation.required_services(consts.Service.CEILOMETER)

@@ -15,10 +15,11 @@
 
 import mock
 
-from rally.benchmark.scenarios.mistral import workbooks
+from rally.plugins.openstack.scenarios.mistral import workbooks
 from tests.unit import test
 
-MISTRAL_WBS = "rally.benchmark.scenarios.mistral.workbooks.MistralWorkbooks"
+MISTRAL_WBS = ("rally.plugins.openstack.scenarios."
+               "mistral.workbooks.MistralWorkbooks")
 
 
 class MistralWorkbooksTestCase(test.TestCase):

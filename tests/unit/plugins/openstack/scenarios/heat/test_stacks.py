@@ -15,10 +15,10 @@
 
 import mock
 
-from rally.benchmark.scenarios.heat import stacks
+from rally.plugins.openstack.scenarios.heat import stacks
 from tests.unit import test
 
-HEAT_STACKS = "rally.benchmark.scenarios.heat.stacks.HeatStacks"
+HEAT_STACKS = "rally.plugins.openstack.scenarios.heat.stacks.HeatStacks"
 
 
 class HeatStacksTestCase(test.TestCase):

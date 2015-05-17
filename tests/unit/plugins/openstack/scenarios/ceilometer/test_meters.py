@@ -14,17 +14,13 @@
 
 import mock
 
-from rally.benchmark.scenarios.ceilometer import stats
+from rally.plugins.openstack.scenarios.ceilometer import meters
 from tests.unit import test
 
 
-class CeilometerStatsTestCase(test.TestCase):
-    def test_create_meter_and_get_stats(self):
-        fake_meter = mock.MagicMock()
-        kwargs = mock.MagicMock()
-        scenario = stats.CeilometerStats()
-        scenario._create_meter = mock.MagicMock(return_value=fake_meter)
-        scenario._get_stats = mock.MagicMock()
-        scenario.create_meter_and_get_stats(**kwargs)
-        scenario._create_meter.assert_called_once_with(**kwargs)
-        scenario._get_stats.assert_called_once_with(fake_meter.counter_name)
+class CeilometerMetersTestCase(test.TestCase):
+    def test_list_meters(self):
+        scenario = meters.CeilometerMeters()
+        scenario._list_meters = mock.MagicMock()
+        scenario.list_meters()
+        scenario._list_meters.assert_called_once_with()

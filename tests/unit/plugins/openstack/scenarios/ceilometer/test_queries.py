@@ -16,7 +16,7 @@ import json
 
 import mock
 
-from rally.benchmark.scenarios.ceilometer import queries
+from rally.plugins.openstack.scenarios.ceilometer import queries
 from tests.unit import test
 
 

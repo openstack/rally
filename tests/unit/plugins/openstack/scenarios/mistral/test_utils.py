@@ -15,10 +15,10 @@
 
 import mock
 
-from rally.benchmark.scenarios.mistral import utils
+from rally.plugins.openstack.scenarios.mistral import utils
 from tests.unit import test
 
-MISTRAL_UTILS = "rally.benchmark.scenarios.mistral.utils"
+MISTRAL_UTILS = "rally.plugins.openstack.scenarios.mistral.utils"
 
 
 class MistralScenarioTestCase(test.TestCase):

@@ -16,12 +16,12 @@
 import mock
 from oslotest import mockpatch
 
-from rally.benchmark.scenarios.heat import utils
 from rally import exceptions
+from rally.plugins.openstack.scenarios.heat import utils
 from tests.unit import test
 
 BM_UTILS = "rally.benchmark.utils"
-HEAT_UTILS = "rally.benchmark.scenarios.heat.utils"
+HEAT_UTILS = "rally.plugins.openstack.scenarios.heat.utils"
 
 CONF = utils.CONF
 

@@ -13,12 +13,12 @@
 # under the License.
 
 from rally.benchmark.context import base
-from rally.benchmark.scenarios.ceilometer import utils as ceilometer_utils
 from rally.common.i18n import _
 from rally.common import log as logging
 from rally.common import utils as rutils
 from rally import consts
 from rally import osclients
+from rally.plugins.openstack.scenarios.ceilometer import utils as ceilo_utils
 
 
 LOG = logging.getLogger(__name__)
@@ -77,7 +77,7 @@ class CeilometerSampleGenerator(base.Context):
             self.context["tenants"][tenant_id]["samples"] = []
             self.context["tenants"][tenant_id]["resources"] = []
             clients = osclients.Clients(user["endpoint"])
-            scenario = ceilometer_utils.CeilometerScenario(
+            scenario = ceilo_utils.CeilometerScenario(
                 clients=clients)
             for i in range(resources_per_tenant):
                 for j in range(samples_per_resource):
