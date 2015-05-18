@@ -46,10 +46,8 @@ def cached(func):
         key = "{0}{1}{2}".format(func.__name__,
                                  str(args) if args else "",
                                  str(kwargs) if kwargs else "")
-
-        if key in self.cache:
-            return self.cache[key]
-        self.cache[key] = func(self, *args, **kwargs)
+        if key not in self.cache:
+            self.cache[key] = func(self, *args, **kwargs)
         return self.cache[key]
 
     return wrapper

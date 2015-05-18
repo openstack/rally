@@ -26,6 +26,28 @@ from tests.unit import fakes
 from tests.unit import test
 
 
+class CachedTestCase(test.TestCase):
+
+    def test_cached(self):
+        foo_client = mock.Mock(
+            __name__="foo_client",
+            side_effect=lambda ins, *args, **kw: (args, kw))
+        ins = mock.Mock(cache={})
+        cached = osclients.cached(foo_client)
+        self.assertEqual(((), {}), cached(ins))
+        self.assertEqual({"foo_client": ((), {})}, ins.cache)
+        self.assertEqual((("foo",), {"bar": "spam"}),
+                         cached(ins, "foo", bar="spam"))
+        self.assertEqual(
+            {"foo_client": ((), {}),
+             "foo_client('foo',){'bar': 'spam'}": (("foo",),
+                                                   {"bar": "spam"})},
+            ins.cache)
+        ins.cache["foo_client('foo',){'bar': 'spam'}"] = "foo_cached"
+        self.assertEqual(
+            "foo_cached", cached(ins, "foo", bar="spam"))
+
+
 class TestCreateKeystoneClient(test.TestCase):
 
     def setUp(self):
