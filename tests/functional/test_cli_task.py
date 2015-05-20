@@ -20,7 +20,7 @@ import unittest
 
 import mock
 
-from rally.cmd import envutils
+from rally.cli import envutils
 from tests.functional import utils
 
 
@@ -95,37 +95,37 @@ class TaskTestCase(unittest.TestCase):
 
     def test_results_with_wrong_task_id(self):
         rally = utils.Rally()
-        self.assertRaises(utils.RallyCmdError,
+        self.assertRaises(utils.RallyCliError,
                           rally, "task results --uuid %s" % FAKE_TASK_UUID)
 
     def test_abort_with_wrong_task_id(self):
         rally = utils.Rally()
-        self.assertRaises(utils.RallyCmdError,
+        self.assertRaises(utils.RallyCliError,
                           rally, "task abort --uuid %s" % FAKE_TASK_UUID)
 
     def test_delete_with_wrong_task_id(self):
         rally = utils.Rally()
-        self.assertRaises(utils.RallyCmdError,
+        self.assertRaises(utils.RallyCliError,
                           rally, "task delete --uuid %s" % FAKE_TASK_UUID)
 
     def test_detailed_with_wrong_task_id(self):
         rally = utils.Rally()
-        self.assertRaises(utils.RallyCmdError,
+        self.assertRaises(utils.RallyCliError,
                           rally, "task detailed --uuid %s" % FAKE_TASK_UUID)
 
     def test_report_with_wrong_task_id(self):
         rally = utils.Rally()
-        self.assertRaises(utils.RallyCmdError,
+        self.assertRaises(utils.RallyCliError,
                           rally, "task report --tasks %s" % FAKE_TASK_UUID)
 
     def test_sla_check_with_wrong_task_id(self):
         rally = utils.Rally()
-        self.assertRaises(utils.RallyCmdError,
+        self.assertRaises(utils.RallyCliError,
                           rally, "task sla_check --uuid %s" % FAKE_TASK_UUID)
 
     def test_status_with_wrong_task_id(self):
         rally = utils.Rally()
-        self.assertRaises(utils.RallyCmdError,
+        self.assertRaises(utils.RallyCliError,
                           rally, "task status --uuid %s" % FAKE_TASK_UUID)
 
     def test_report_one_uuid(self):
@@ -136,7 +136,7 @@ class TaskTestCase(unittest.TestCase):
         rally("task report --out %s" % rally.gen_report_path(extension="html"))
         self.assertTrue(os.path.exists(
             rally.gen_report_path(extension="html")))
-        self.assertRaises(utils.RallyCmdError,
+        self.assertRaises(utils.RallyCliError,
                           rally, "task report --report %s" % FAKE_TASK_UUID)
 
     def test_report_bunch_uuids(self):
@@ -196,7 +196,7 @@ class TaskTestCase(unittest.TestCase):
                                    rally.gen_report_path(extension="html")))
         self.assertTrue(os.path.exists(
             rally.gen_report_path(extension="html")))
-        self.assertRaises(utils.RallyCmdError,
+        self.assertRaises(utils.RallyCliError,
                           rally, "task report --report %s" % FAKE_TASK_UUID)
 
     def test_delete(self):
@@ -228,7 +228,7 @@ class TaskTestCase(unittest.TestCase):
         self.assertIn(
             "deployment_name", rally("task list --all-deployments"))
 
-        self.assertRaises(utils.RallyCmdError,
+        self.assertRaises(utils.RallyCliError,
                           rally, "task list --status not_existing_status")
 
     def test_list_with_print_uuids_option(self):
@@ -274,7 +274,7 @@ class TaskTestCase(unittest.TestCase):
             deployment_id = envutils.get_global("RALLY_DEPLOYMENT")
         cfg = {"invalid": "config"}
         config = utils.TaskConfig(cfg)
-        self.assertRaises(utils.RallyCmdError,
+        self.assertRaises(utils.RallyCliError,
                           rally,
                           ("task validate --task %(task_file)s "
                            "--deployment %(deployment_id)s") %
@@ -556,7 +556,7 @@ class SLATestCase(unittest.TestCase):
         cfg = self._get_sample_task_config(max_seconds_per_iteration=0.001)
         config = utils.TaskConfig(cfg)
         rally("task start --task %s" % config.filename)
-        self.assertRaises(utils.RallyCmdError, rally, "task sla_check")
+        self.assertRaises(utils.RallyCliError, rally, "task sla_check")
 
     def test_sla_success(self):
         rally = utils.Rally()
@@ -609,7 +609,7 @@ class SLAExtraFlagsTestCase(unittest.TestCase):
         ]
         try:
             rally("task sla_check --json", getjson=True)
-        except utils.RallyCmdError as expected_error:
+        except utils.RallyCliError as expected_error:
             self.assertEqual(json.loads(expected_error.output), expected)
         else:
             self.fail("`rally task sla_check` command should return non-zero "
@@ -637,7 +637,7 @@ class SLAExtraFlagsTestCase(unittest.TestCase):
         ]
         try:
             rally("task sla_check --json", getjson=True)
-        except utils.RallyCmdError as expected_error:
+        except utils.RallyCliError as expected_error:
             self.assertEqual(json.loads(expected_error.output), expected)
         else:
             self.fail("`rally task sla_check` command should return non-zero "

@@ -17,13 +17,13 @@ import sys
 
 import mock
 
-from rally.cmd import manage
+from rally.cli import manage
 from tests.unit import test
 
 
 class CmdManageTestCase(test.TestCase):
 
-    @mock.patch("rally.cmd.manage.cliutils")
+    @mock.patch("rally.cli.manage.cliutils")
     def test_main(self, cli_mock):
         manage.main()
         categories = {"db": manage.DBCommands,
@@ -37,7 +37,7 @@ class DBCommandsTestCase(test.TestCase):
         super(DBCommandsTestCase, self).setUp()
         self.db_commands = manage.DBCommands()
 
-    @mock.patch("rally.cmd.manage.db")
+    @mock.patch("rally.cli.manage.db")
     def test_recreate(self, mock_db):
         self.db_commands.recreate()
         calls = [mock.call.db_drop(), mock.call.db_create()]
@@ -51,7 +51,7 @@ class TempestCommandsTestCase(test.TestCase):
         self.tempest_commands = manage.TempestCommands()
         self.tempest = mock.Mock()
 
-    @mock.patch("rally.cmd.manage.api")
+    @mock.patch("rally.cli.manage.api")
     def test_install(self, mock_api):
         deployment_uuid = "deployment_uuid"
         self.tempest_commands.install(deployment_uuid)

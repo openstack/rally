@@ -534,7 +534,7 @@ def run(argv, categories):
 
 
 def _generate_bash_completion_script():
-    from rally.cmd import main
+    from rally.cli import main
     bash_data = """
 #!/bin/bash
 

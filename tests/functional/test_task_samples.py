@@ -45,7 +45,7 @@ class TestTaskSamples(unittest.TestCase):
                     continue
                 try:
                     rally("task validate --task %s" % full_path)
-                except utils.RallyCmdError as e:
+                except utils.RallyCliError as e:
                     if re.search(
                             "[Ss]ervice is not available", e.output) is None:
                         raise e

@@ -34,7 +34,7 @@ TEST_ENV = {
 DEPLOYMENT_FILE = "/tmp/rally_functests_main_deployment.json"
 
 
-class RallyCmdError(Exception):
+class RallyCliError(Exception):
 
     def __init__(self, code, output):
         self.code = code
@@ -184,4 +184,4 @@ class Rally(object):
                 return json.loads(output)
             return output
         except subprocess.CalledProcessError as e:
-            raise RallyCmdError(e.returncode, e.output)
+            raise RallyCliError(e.returncode, e.output)

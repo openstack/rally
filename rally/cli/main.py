@@ -19,13 +19,13 @@ from __future__ import print_function
 
 import sys
 
-from rally.cmd import cliutils
-from rally.cmd.commands import deployment
-from rally.cmd.commands import info
-from rally.cmd.commands import show
-from rally.cmd.commands import task
-from rally.cmd.commands import use
-from rally.cmd.commands import verify
+from rally.cli import cliutils
+from rally.cli.commands import deployment
+from rally.cli.commands import info
+from rally.cli.commands import show
+from rally.cli.commands import task
+from rally.cli.commands import use
+from rally.cli.commands import verify
 
 
 categories = {

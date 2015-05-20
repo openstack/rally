@@ -17,7 +17,7 @@ import mock
 
 from rally.benchmark.scenarios import base as scenario_base
 from rally.benchmark.sla import base as sla_base
-from rally.cmd.commands import info
+from rally.cli.commands import info
 from rally import deploy
 from rally.deploy.engines import existing as existing_cloud
 from rally.deploy import serverprovider
@@ -28,12 +28,12 @@ from rally.plugins.common.sla import failure_rate
 from tests.unit import test
 
 
-SCENARIO = "rally.cmd.commands.info.scenario_base.Scenario"
-SLA = "rally.cmd.commands.info.sla_base.SLA"
-ENGINE = "rally.cmd.commands.info.deploy.EngineFactory"
-PROVIDER = "rally.cmd.commands.info.serverprovider.ProviderFactory"
-UTILS = "rally.cmd.commands.info.utils"
-COMMANDS = "rally.cmd.commands.info.InfoCommands"
+SCENARIO = "rally.cli.commands.info.scenario_base.Scenario"
+SLA = "rally.cli.commands.info.sla_base.SLA"
+ENGINE = "rally.cli.commands.info.deploy.EngineFactory"
+PROVIDER = "rally.cli.commands.info.serverprovider.ProviderFactory"
+UTILS = "rally.cli.commands.info.utils"
+COMMANDS = "rally.cli.commands.info.InfoCommands"
 
 
 class InfoCommandsTestCase(test.TestCase):

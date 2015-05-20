@@ -15,7 +15,7 @@
 
 import mock
 
-from rally.cmd.commands import show
+from rally.cli.commands import show
 from tests.unit import fakes
 from tests.unit import test
 
@@ -43,12 +43,12 @@ class ShowCommandsTestCase(test.TestCase):
         self.fake_glance_client = fakes.FakeGlanceClient()
         self.fake_nova_client = fakes.FakeNovaClient()
 
-    @mock.patch("rally.cmd.commands.show.print", create=True)
-    @mock.patch("rally.cmd.commands.show.cliutils.print_list")
-    @mock.patch("rally.cmd.commands.show.cliutils.pretty_float_formatter")
-    @mock.patch("rally.cmd.commands.show.utils.Struct")
-    @mock.patch("rally.cmd.commands.show.osclients.Clients.glance")
-    @mock.patch("rally.cmd.commands.show.db.deployment_get")
+    @mock.patch("rally.cli.commands.show.print", create=True)
+    @mock.patch("rally.cli.commands.show.cliutils.print_list")
+    @mock.patch("rally.cli.commands.show.cliutils.pretty_float_formatter")
+    @mock.patch("rally.cli.commands.show.utils.Struct")
+    @mock.patch("rally.cli.commands.show.osclients.Clients.glance")
+    @mock.patch("rally.cli.commands.show.db.deployment_get")
     def test_images(self, mock_deployment_get, mock_get_glance,
                     mock_struct, mock_formatter, mock_print_list, mock_print):
         self.fake_glance_client.images.create("image", None, None, None)
@@ -82,11 +82,11 @@ class ShowCommandsTestCase(test.TestCase):
         )] * 3)
         self.assertEqual(3, mock_print.call_count)
 
-    @mock.patch("rally.cmd.commands.show.cliutils.print_list")
-    @mock.patch("rally.cmd.commands.show.cliutils.pretty_float_formatter")
-    @mock.patch("rally.cmd.commands.show.utils.Struct")
-    @mock.patch("rally.cmd.commands.show.osclients.Clients.nova")
-    @mock.patch("rally.cmd.commands.show.db.deployment_get")
+    @mock.patch("rally.cli.commands.show.cliutils.print_list")
+    @mock.patch("rally.cli.commands.show.cliutils.pretty_float_formatter")
+    @mock.patch("rally.cli.commands.show.utils.Struct")
+    @mock.patch("rally.cli.commands.show.osclients.Clients.nova")
+    @mock.patch("rally.cli.commands.show.db.deployment_get")
     def test_flavors(self, mock_deployment_get, mock_get_nova,
                      mock_struct, mock_formatter, mock_print_list):
         self.fake_nova_client.flavors.create()
@@ -123,10 +123,10 @@ class ShowCommandsTestCase(test.TestCase):
             mixed_case_fields=mixed_case_fields
         )] * 3)
 
-    @mock.patch("rally.cmd.commands.show.cliutils.print_list")
-    @mock.patch("rally.cmd.commands.show.utils.Struct")
-    @mock.patch("rally.cmd.commands.show.osclients.Clients.nova")
-    @mock.patch("rally.cmd.commands.show.db.deployment_get")
+    @mock.patch("rally.cli.commands.show.cliutils.print_list")
+    @mock.patch("rally.cli.commands.show.utils.Struct")
+    @mock.patch("rally.cli.commands.show.osclients.Clients.nova")
+    @mock.patch("rally.cli.commands.show.db.deployment_get")
     def test_networks(self, mock_deployment_get, mock_get_nova,
                       mock_struct, mock_print_list):
         self.fake_nova_client.networks.create(1234)
@@ -157,10 +157,10 @@ class ShowCommandsTestCase(test.TestCase):
             mixed_case_fields=mixed_case_fields
         )] * 3)
 
-    @mock.patch("rally.cmd.commands.show.cliutils.print_list")
-    @mock.patch("rally.cmd.commands.show.utils.Struct")
-    @mock.patch("rally.cmd.commands.show.osclients.Clients.nova")
-    @mock.patch("rally.cmd.commands.show.db.deployment_get")
+    @mock.patch("rally.cli.commands.show.cliutils.print_list")
+    @mock.patch("rally.cli.commands.show.utils.Struct")
+    @mock.patch("rally.cli.commands.show.osclients.Clients.nova")
+    @mock.patch("rally.cli.commands.show.db.deployment_get")
     def test_secgroups(self, mock_deployment_get, mock_get_nova,
                        mock_struct, mock_print_list):
         self.fake_nova_client.security_groups.create("othersg")
@@ -194,10 +194,10 @@ class ShowCommandsTestCase(test.TestCase):
             mixed_case_fields=mixed_case_fields
         )] * 2)
 
-    @mock.patch("rally.cmd.commands.show.cliutils.print_list")
-    @mock.patch("rally.cmd.commands.show.utils.Struct")
-    @mock.patch("rally.cmd.commands.show.osclients.Clients.nova")
-    @mock.patch("rally.cmd.commands.show.db.deployment_get")
+    @mock.patch("rally.cli.commands.show.cliutils.print_list")
+    @mock.patch("rally.cli.commands.show.utils.Struct")
+    @mock.patch("rally.cli.commands.show.osclients.Clients.nova")
+    @mock.patch("rally.cli.commands.show.db.deployment_get")
     def test_keypairs(self, mock_deployment_get, mock_get_nova,
                       mock_struct, mock_print_list):
         self.fake_nova_client.keypairs.create("keypair")

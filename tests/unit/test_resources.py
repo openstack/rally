@@ -19,7 +19,7 @@ import os
 from oslo_utils import encodeutils
 
 import rally
-from rally.cmd import cliutils
+from rally.cli import cliutils
 from tests.unit import test
 
 RES_PATH = os.path.join(os.path.dirname(rally.__file__), os.pardir, "etc")

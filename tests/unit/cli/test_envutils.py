@@ -18,7 +18,7 @@ import os
 import mock
 from six import moves
 
-from rally.cmd import envutils
+from rally.cli import envutils
 from rally import exceptions
 from tests.unit import test
 
@@ -47,7 +47,7 @@ class EnvUtilsTestCase(test.TestCase):
         self.assertEqual("my_deployment_id", deployment_id)
 
     @mock.patch.dict(os.environ, values={}, clear=True)
-    @mock.patch("rally.cmd.envutils.fileutils.load_env_file")
+    @mock.patch("rally.cli.envutils.fileutils.load_env_file")
     def test_get_deployment_id_with_exception(self, mock_file):
         self.assertRaises(exceptions.InvalidArgumentsException,
                           envutils.get_global, envutils.ENV_DEPLOYMENT, True)
@@ -55,7 +55,7 @@ class EnvUtilsTestCase(test.TestCase):
             "~/.rally/globals"))
 
     @mock.patch.dict(os.environ, values={}, clear=True)
-    @mock.patch("rally.cmd.envutils.fileutils.load_env_file")
+    @mock.patch("rally.cli.envutils.fileutils.load_env_file")
     def test_get_deployment_id_with_none(self, mock_file):
         self.assertIsNone(envutils.get_global(envutils.ENV_DEPLOYMENT))
         mock_file.assert_called_once_with(os.path.expanduser(
@@ -67,7 +67,7 @@ class EnvUtilsTestCase(test.TestCase):
         self.assertEqual("my_task_id", envutils.get_global(envutils.ENV_TASK))
 
     @mock.patch.dict(os.environ, values={}, clear=True)
-    @mock.patch("rally.cmd.envutils.fileutils.load_env_file")
+    @mock.patch("rally.cli.envutils.fileutils.load_env_file")
     def test_get_task_id_with_exception(self, mock_file):
         self.assertRaises(exceptions.InvalidArgumentsException,
                           envutils.get_global, envutils.ENV_TASK, True)
@@ -75,7 +75,7 @@ class EnvUtilsTestCase(test.TestCase):
             "~/.rally/globals"))
 
     @mock.patch.dict(os.environ, values={}, clear=True)
-    @mock.patch("rally.cmd.envutils.fileutils.load_env_file")
+    @mock.patch("rally.cli.envutils.fileutils.load_env_file")
     def test_get_task_id_with_none(self, mock_file):
         self.assertIsNone(envutils.get_global("RALLY_TASK"))
         mock_file.assert_called_once_with(os.path.expanduser(
@@ -85,7 +85,7 @@ class EnvUtilsTestCase(test.TestCase):
                      values={envutils.ENV_DEPLOYMENT: "test_deployment_id"},
                      clear=True)
     @mock.patch("os.path.exists")
-    @mock.patch("rally.cmd.envutils.fileutils.update_env_file",
+    @mock.patch("rally.cli.envutils.fileutils.update_env_file",
                 return_value=True)
     def test_clear_global(self, mock_file, mock_file_status):
         envutils.clear_global(envutils.ENV_DEPLOYMENT)
@@ -98,7 +98,7 @@ class EnvUtilsTestCase(test.TestCase):
                              envutils.ENV_TASK: "test_task_id"},
                      clear=True)
     @mock.patch("os.path.exists")
-    @mock.patch("rally.cmd.envutils.fileutils.update_env_file",
+    @mock.patch("rally.cli.envutils.fileutils.update_env_file",
                 return_value=True)
     def test_clear_env(self, mock_file, mock_file_status):
         envutils.clear_env()

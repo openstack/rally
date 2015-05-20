@@ -34,7 +34,7 @@ class InfoTestCase(unittest.TestCase):
     def test_find_scenario_group_base_class(self):
         # NOTE(msdubov): We shouldn't display info about base scenario classes
         #                containing no end-user scenarios
-        self.assertRaises(utils.RallyCmdError, self.rally,
+        self.assertRaises(utils.RallyCliError, self.rally,
                           ("info find CeilometerScenario"))
 
     def test_find_scenario(self):
@@ -76,7 +76,7 @@ class InfoTestCase(unittest.TestCase):
         self.assertIn(marker_string, self.rally("info find ExistingServer"))
 
     def test_find_fails(self):
-        self.assertRaises(utils.RallyCmdError, self.rally,
+        self.assertRaises(utils.RallyCliError, self.rally,
                           ("info find NonExistingStuff"))
 
     def test_find_misspelling_truncated(self):
@@ -88,7 +88,7 @@ class InfoTestCase(unittest.TestCase):
     def test_find_misspelling_truncated_many_substitutions(self):
         try:
             self.rally("info find Nova")
-        except utils.RallyCmdError as e:
+        except utils.RallyCliError as e:
             self.assertIn("NovaServers", e.output)
             self.assertIn("NovaServers.boot_and_delete_server", e.output)
             self.assertIn("NovaServers.snapshot_server", e.output)

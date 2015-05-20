@@ -18,7 +18,7 @@ import unittest
 
 import mock
 
-from rally.cmd import envutils
+from rally.cli import envutils
 from tests.functional import utils
 
 
@@ -34,7 +34,7 @@ class CliUtilsTestCase(unittest.TestCase):
             output).group("uuid")
 
     def test_missing_argument(self):
-        with self.assertRaises(utils.RallyCmdError) as e:
+        with self.assertRaises(utils.RallyCliError) as e:
             self.rally("use task")
         self.assertIn("--uuid", e.exception.output)
 

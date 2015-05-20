@@ -18,13 +18,13 @@ import mock
 from oslo_config import cfg
 from six import moves
 
-from rally.cmd import cliutils
-from rally.cmd.commands import deployment
-from rally.cmd.commands import info
-from rally.cmd.commands import show
-from rally.cmd.commands import task
-from rally.cmd.commands import use
-from rally.cmd.commands import verify
+from rally.cli import cliutils
+from rally.cli.commands import deployment
+from rally.cli.commands import info
+from rally.cli.commands import show
+from rally.cli.commands import task
+from rally.cli.commands import use
+from rally.cli.commands import verify
 from rally import exceptions
 from tests.unit import test
 
@@ -158,7 +158,7 @@ class CliUtilsTestCase(test.TestCase):
                                          )
         CONF.unregister_opt(category_opt)
 
-    @mock.patch("rally.cmd.cliutils.CONF", config_file=None,
+    @mock.patch("rally.cli.cliutils.CONF", config_file=None,
                 side_effect=cfg.ConfigFilesNotFoundError("config_file"))
     def test_run_fails(self, mock_cmd_cliutils_conf):
         ret = cliutils.run(["rally", "show", "flavors"], self.categories)
@@ -189,7 +189,7 @@ class CliUtilsTestCase(test.TestCase):
         self.assertTrue(mock_task_get.called)
         self.assertEqual(ret, 1)
 
-    @mock.patch("rally.cmd.cliutils.validate_args",
+    @mock.patch("rally.cli.cliutils.validate_args",
                 side_effect=cliutils.MissingArgs("missing"))
     def test_run_show_fails(self, mock_validate_args):
         ret = cliutils.run(["rally", "show", "keypairs"], self.categories)

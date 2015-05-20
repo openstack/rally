@@ -20,8 +20,8 @@ from __future__ import print_function
 import sys
 
 from rally import api
-from rally.cmd import cliutils
-from rally.cmd import envutils
+from rally.cli import cliutils
+from rally.cli import envutils
 from rally import db
 
 

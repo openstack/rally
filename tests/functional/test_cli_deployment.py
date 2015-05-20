@@ -19,7 +19,7 @@ import unittest
 
 import mock
 
-from rally.cmd import envutils
+from rally.cli import envutils
 from tests.functional import utils
 
 
@@ -71,7 +71,7 @@ class DeploymentTestCase(unittest.TestCase):
     def test_check_fail(self):
         with mock.patch.dict("os.environ", utils.TEST_ENV):
             self.rally("deployment create --name t_create_env --fromenv")
-        self.assertRaises(utils.RallyCmdError, self.rally,
+        self.assertRaises(utils.RallyCliError, self.rally,
                           ("deployment check"))
 
     def test_recreate(self):

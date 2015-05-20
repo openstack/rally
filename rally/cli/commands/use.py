@@ -15,10 +15,10 @@
 
 """ Rally command: use """
 
-from rally.cmd import cliutils
-from rally.cmd.commands import deployment as cmd_deployment
-from rally.cmd.commands import task
-from rally.cmd.commands import verify
+from rally.cli import cliutils
+from rally.cli.commands import deployment as cli_deployment
+from rally.cli.commands import task
+from rally.cli.commands import verify
 from rally.common import log as logging
 
 
@@ -47,7 +47,7 @@ class UseCommands(object):
         """
         LOG.warning("Deprecated command 'rally use deployment', "
                     "'rally deployment use' should be used instead.")
-        cmd_deployment.DeploymentCommands().use(deployment)
+        cli_deployment.DeploymentCommands().use(deployment)
 
     @cliutils.args("--uuid", type=str, dest="task_id", required=False,
                    help="UUID of the task")

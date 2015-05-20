@@ -20,7 +20,7 @@ import tempfile
 import mock
 import six
 
-from rally.cmd.commands import verify
+from rally.cli.commands import verify
 from rally import consts
 from rally import exceptions
 from rally import objects
@@ -95,7 +95,7 @@ class VerifyCommandsTestCase(test.TestCase):
                          consts.TempestTestsAPI)
         self.assertFalse(mock_verify.called)
 
-    @mock.patch("rally.cmd.cliutils.print_list")
+    @mock.patch("rally.cli.cliutils.print_list")
     @mock.patch("rally.db.verification_list")
     def test_list(self, mock_db_verification_list, mock_print_list):
         fields = ["UUID", "Deployment UUID", "Set name", "Tests", "Failures",
@@ -114,7 +114,7 @@ class VerifyCommandsTestCase(test.TestCase):
                                                 sortby_index=fields.index(
                                                     "Created at"))
 
-    @mock.patch("rally.cmd.cliutils.print_list")
+    @mock.patch("rally.cli.cliutils.print_list")
     @mock.patch("rally.db.verification_get")
     @mock.patch("rally.db.verification_result_get")
     @mock.patch("rally.objects.Verification")
@@ -168,7 +168,7 @@ class VerifyCommandsTestCase(test.TestCase):
 
         mock_db_result_get.assert_called_once_with(verification_uuid)
 
-    @mock.patch("rally.cmd.commands.verify.open",
+    @mock.patch("rally.cli.commands.verify.open",
                 side_effect=mock.mock_open(), create=True)
     @mock.patch("rally.db.verification_result_get", return_value={"data": {}})
     def test_results_with_output_json_and_output_file(self,
@@ -183,7 +183,7 @@ class VerifyCommandsTestCase(test.TestCase):
         mock_open.assert_called_once_with("results", "wb")
         mock_open.side_effect().write.assert_called_once_with("{}")
 
-    @mock.patch("rally.cmd.commands.verify.open",
+    @mock.patch("rally.cli.commands.verify.open",
                 side_effect=mock.mock_open(), create=True)
     @mock.patch("rally.db.verification_result_get")
     @mock.patch("rally.verification.tempest.json2html.HtmlOutput")
@@ -234,7 +234,7 @@ class VerifyCommandsTestCase(test.TestCase):
 
         mock_db_result_get.assert_called_once_with(uuid1)
 
-    @mock.patch("rally.cmd.commands.verify.open",
+    @mock.patch("rally.cli.commands.verify.open",
                 side_effect=mock.mock_open(), create=True)
     @mock.patch("rally.db.verification_result_get",
                 return_value={"data": {"test_cases": {}}})
@@ -255,7 +255,7 @@ class VerifyCommandsTestCase(test.TestCase):
         mock_open.assert_called_once_with("results", "wb")
         mock_open.side_effect().write.assert_called_once_with(fake_string)
 
-    @mock.patch("rally.cmd.commands.verify.open",
+    @mock.patch("rally.cli.commands.verify.open",
                 side_effect=mock.mock_open(), create=True)
     @mock.patch("rally.db.verification_result_get",
                 return_value={"data": {"test_cases": {}}})
@@ -275,7 +275,7 @@ class VerifyCommandsTestCase(test.TestCase):
         mock_open.assert_called_once_with("results", "wb")
         mock_open.side_effect().write.assert_called_once_with(fake_json_string)
 
-    @mock.patch("rally.cmd.commands.verify.open",
+    @mock.patch("rally.cli.commands.verify.open",
                 side_effect=mock.mock_open(), create=True)
     @mock.patch("rally.db.verification_result_get")
     @mock.patch(("rally.verification.tempest."
@@ -303,7 +303,7 @@ class VerifyCommandsTestCase(test.TestCase):
         mock_open.side_effect().write.assert_called_once_with("")
 
     @mock.patch("rally.common.fileutils._rewrite_env_file")
-    @mock.patch("rally.cmd.commands.verify.db.verification_get",
+    @mock.patch("rally.cli.commands.verify.db.verification_get",
                 return_value=True)
     def test_use(self, mock_task, mock_file):
         verification_id = "80422553-5774-44bd-98ac-38bd8c7a0feb"
@@ -312,7 +312,7 @@ class VerifyCommandsTestCase(test.TestCase):
             os.path.expanduser("~/.rally/globals"),
             ["RALLY_VERIFICATION=%s\n" % verification_id])
 
-    @mock.patch("rally.cmd.commands.verify.db.verification_get")
+    @mock.patch("rally.cli.commands.verify.db.verification_get")
     def test_use_not_found(self, mock_verification_get):
         verification_id = "ddc3f8ba-082a-496d-b18f-72cdf5c10a14"
         mock_verification_get.side_effect = exceptions.NotFoundException(

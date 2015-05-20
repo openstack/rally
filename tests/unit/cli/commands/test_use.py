@@ -15,10 +15,10 @@
 
 import mock
 
-from rally.cmd.commands import use
+from rally.cli.commands import use
 from tests.unit import test
 
-MOD = "rally.cmd.commands.use."
+MOD = "rally.cli.commands.use."
 
 
 class UseCommandsTestCase(test.TestCase):
@@ -26,17 +26,17 @@ class UseCommandsTestCase(test.TestCase):
         super(UseCommandsTestCase, self).setUp()
         self.use = use.UseCommands()
 
-    @mock.patch("rally.cmd.commands.deployment.DeploymentCommands.use")
+    @mock.patch("rally.cli.commands.deployment.DeploymentCommands.use")
     def test_deployment(self, mock_deployment_use):
         self.use.deployment("fake_id")
         mock_deployment_use.assert_called_once_with("fake_id")
 
-    @mock.patch("rally.cmd.commands.task.TaskCommands.use")
+    @mock.patch("rally.cli.commands.task.TaskCommands.use")
     def test_task(self, mock_task_use):
         self.use.task("fake_id")
         mock_task_use.assert_called_once_with("fake_id")
 
-    @mock.patch("rally.cmd.commands.verify.VerifyCommands.use")
+    @mock.patch("rally.cli.commands.verify.VerifyCommands.use")
     def test_verification(self, mock_verify_use):
         self.use.verification("fake_id")
         mock_verify_use.assert_called_once_with("fake_id")
