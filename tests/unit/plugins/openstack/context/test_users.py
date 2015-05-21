@@ -55,21 +55,24 @@ class UserGeneratorTestCase(test.TestCase):
 
     @mock.patch("rally.plugins.openstack.context.users.network.wrap")
     def test__remove_default_security_group_not_needed(self, mock_wrap):
+        services = {"compute": consts.Service.NOVA}
+        self.osclients.Clients().services.return_value = services
         user_generator = users.UserGenerator(self.context)
         user_generator._remove_default_security_group()
-        mock_wrap.assert_called_once_with(self.osclients.Clients.return_value)
+        self.assertFalse(mock_wrap.called)
 
     @mock.patch("rally.plugins.openstack.context.users.network.wrap")
     def test__remove_default_security_group_neutron_no_sg(self, mock_wrap):
-        net_wrapper = mock.Mock()
+        net_wrapper = mock.Mock(SERVICE_IMPL=consts.Service.NEUTRON)
         net_wrapper.supports_security_group.return_value = (False, None)
-        net_wrapper.SERVICE_IMPL = consts.Service.NEUTRON
         mock_wrap.return_value = net_wrapper
 
         user_generator = users.UserGenerator(self.context)
 
         admin_clients = mock.Mock()
-        admin_clients.services.return_value = {"compute": consts.Service.NOVA}
+        admin_clients.services.return_value = {
+            "compute": consts.Service.NOVA,
+            "neutron": consts.Service.NEUTRON}
         user_clients = [mock.Mock(), mock.Mock()]
         self.osclients.Clients.side_effect = [admin_clients] + user_clients
 
@@ -85,15 +88,16 @@ class UserGeneratorTestCase(test.TestCase):
     def test__remove_default_security_group(self, mock_check_service_status,
                                             mock_netwrap,
                                             mock_iterate_per_tenants):
-        net_wrapper = mock.Mock()
+        net_wrapper = mock.Mock(SERVICE_IMPL=consts.Service.NEUTRON)
         net_wrapper.supports_security_group.return_value = (True, None)
-        net_wrapper.SERVICE_IMPL = consts.Service.NEUTRON
         mock_netwrap.wrap.return_value = net_wrapper
 
         user_generator = users.UserGenerator(self.context)
 
         admin_clients = mock.Mock()
-        admin_clients.services.return_value = {"compute": consts.Service.NOVA}
+        admin_clients.services.return_value = {
+            "compute": consts.Service.NOVA,
+            "neutron": consts.Service.NEUTRON}
         user_clients = [mock.Mock(), mock.Mock()]
         self.osclients.Clients.side_effect = [admin_clients] + user_clients
 
