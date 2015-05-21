@@ -13,10 +13,10 @@
 
 import mock
 
-from rally.benchmark.scenarios.requests import http_requests
+from rally.plugins.common.scenarios.requests import http_requests
 from tests.unit import test
 
-SCN = "rally.benchmark.scenarios"
+SCN = "rally.plugins.common.scenarios"
 
 
 class RequestsTestCase(test.TestCase):

@@ -13,7 +13,7 @@
 import random
 
 from rally.benchmark.scenarios import base
-from rally.benchmark.scenarios.requests import utils
+from rally.plugins.common.scenarios.requests import utils
 
 
 class HttpRequests(utils.RequestScenario):
