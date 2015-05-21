@@ -272,26 +272,44 @@ class SSHRunTestCase(test.TestCase):
         self.fake_session.exit_status_ready.return_value = False
         self.assertRaises(sshutils.SSHTimeout, self.ssh.run, "cmd")
 
+    @mock.patch("rally.common.sshutils.open", create=True)
+    def test__put_file_shell(self, mock_open):
+        self.ssh.run = mock.Mock()
+        self.ssh._put_file_shell("localfile", "remotefile", 0o42)
+
+        self.ssh.run.assert_called_once_with(
+            "cat > remotefile; chmod 042 remotefile",
+            stdin=mock_open.return_value.__enter__.return_value)
+
     @mock.patch("rally.common.sshutils.os.stat")
-    def test_put_file(self, mock_stat):
+    def test__put_file_sftp(self, mock_stat):
         sftp = self.fake_client.open_sftp.return_value = mock.MagicMock()
         sftp.__enter__.return_value = sftp
 
         mock_stat.return_value = os.stat_result([0o753] + [0] * 9)
 
-        self.ssh.put_file("localfile", "remotefile")
+        self.ssh._put_file_sftp("localfile", "remotefile")
 
         sftp.put.assert_called_once_with("localfile", "remotefile")
         mock_stat.assert_called_once_with("localfile")
         sftp.chmod.assert_called_once_with("remotefile", 0o753)
         sftp.__exit__.assert_called_once_with(None, None, None)
 
-    def test_put_file_mode(self):
+    def test__put_file_sftp_mode(self):
         sftp = self.fake_client.open_sftp.return_value = mock.MagicMock()
         sftp.__enter__.return_value = sftp
 
-        self.ssh.put_file("localfile", "remotefile", mode=0o753)
+        self.ssh._put_file_sftp("localfile", "remotefile", mode=0o753)
 
         sftp.put.assert_called_once_with("localfile", "remotefile")
         sftp.chmod.assert_called_once_with("remotefile", 0o753)
         sftp.__exit__.assert_called_once_with(None, None, None)
+
+    def test_put_file(self):
+        self.ssh._put_file_sftp = mock.Mock(
+            side_effect=sshutils.paramiko.SSHException())
+        self.ssh._put_file_shell = mock.Mock()
+
+        self.ssh.put_file("foo", "bar", 42)
+        self.ssh._put_file_sftp.assert_called_once_with("foo", "bar", mode=42)
+        self.ssh._put_file_shell.assert_called_once_with("foo", "bar", mode=42)
