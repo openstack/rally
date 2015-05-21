@@ -28,6 +28,9 @@ from rally.verification.tempest import tempest
 from tests.unit import test
 
 
+MODULE = "rally.benchmark.validation."
+
+
 class ValidationUtilsTestCase(test.TestCase):
 
     def _get_scenario_validators(self, func_, scenario_, reset=True):
@@ -104,21 +107,21 @@ class ValidatorsTestCase(test.TestCase):
         result = validator({"args": {"b": 3}}, None, None)
         self.assertTrue(result.is_valid, result.msg)
 
-    @mock.patch("rally.benchmark.validation.os.access")
+    @mock.patch(MODULE + "os.access")
     def test__file_access_ok(self, mock_access):
         mock_access.return_value = True
         result = validation._file_access_ok(
             "foobar", os.R_OK, "p", False)
         self.assertTrue(result.is_valid, result.msg)
 
-    @mock.patch("rally.benchmark.validation.os.access")
+    @mock.patch(MODULE + "os.access")
     def test__file_access_not_found(self, mock_access):
         mock_access.return_value = False
         result = validation._file_access_ok(
             "foobar", os.R_OK, "p", False)
         self.assertFalse(result.is_valid, result.msg)
 
-    @mock.patch("rally.benchmark.validation._file_access_ok")
+    @mock.patch(MODULE + "_file_access_ok")
     def test_file_exists(self, mock__file_access_ok):
         mock__file_access_ok.return_value = "foobar"
         validator = self._unwrap_validator(validation.file_exists,
@@ -158,7 +161,7 @@ class ValidatorsTestCase(test.TestCase):
         self.assertTrue(result[0].is_valid, result[0].msg)
         self.assertEqual(result[1], image)
 
-    @mock.patch("rally.benchmark.validation.types.ImageResourceType.transform")
+    @mock.patch(MODULE + "types.ImageResourceType.transform")
     def test__get_validated_image(self, mock_transform):
         mock_transform.return_value = "image_id"
         clients = mock.MagicMock()
@@ -175,14 +178,14 @@ class ValidatorsTestCase(test.TestCase):
                                                resource_config="test")
         clients.glance().images.get.assert_called_with(image="image_id")
 
-    @mock.patch("rally.benchmark.validation.types.ImageResourceType.transform")
+    @mock.patch(MODULE + "types.ImageResourceType.transform")
     def test__get_validated_image_transform_error(self, mock_transform):
         mock_transform.side_effect = exceptions.InvalidScenarioArgument
         result = validation._get_validated_image({"args": {"a": "test"}},
                                                  None, "a")
         self.assertFalse(result[0].is_valid, result[0].msg)
 
-    @mock.patch("rally.benchmark.validation.types.ImageResourceType.transform")
+    @mock.patch(MODULE + "types.ImageResourceType.transform")
     def test__get_validated_image_not_found(self, mock_transform):
         clients = mock.MagicMock()
         clients.glance().images.get().to_dict.side_effect = (
@@ -195,8 +198,7 @@ class ValidatorsTestCase(test.TestCase):
         result = validation._get_validated_flavor({}, None, "non_existing")
         self.assertFalse(result[0].is_valid, result[0].msg)
 
-    @mock.patch("rally.benchmark.validation.types.FlavorResourceType."
-                "transform")
+    @mock.patch(MODULE + "types.FlavorResourceType.transform")
     def test__get_validated_flavor(self, mock_transform):
         mock_transform.return_value = "flavor_id"
         clients = mock.MagicMock()
@@ -210,16 +212,14 @@ class ValidatorsTestCase(test.TestCase):
                                                resource_config="test")
         clients.nova().flavors.get.assert_called_once_with(flavor="flavor_id")
 
-    @mock.patch("rally.benchmark.validation.types.FlavorResourceType."
-                "transform")
+    @mock.patch(MODULE + "types.FlavorResourceType.transform")
     def test__get_validated_flavor_transform_error(self, mock_transform):
         mock_transform.side_effect = exceptions.InvalidScenarioArgument
         result = validation._get_validated_flavor({"args": {"a": "test"}},
                                                   None, "a")
         self.assertFalse(result[0].is_valid, result[0].msg)
 
-    @mock.patch("rally.benchmark.validation.types.FlavorResourceType."
-                "transform")
+    @mock.patch(MODULE + "types.FlavorResourceType.transform")
     def test__get_validated_flavor_not_found(self, mock_transform):
         clients = mock.MagicMock()
         clients.nova().flavors.get.side_effect = nova_exc.NotFound("")
@@ -227,8 +227,7 @@ class ValidatorsTestCase(test.TestCase):
                                                   clients, "a")
         self.assertFalse(result[0].is_valid, result[0].msg)
 
-    @mock.patch("rally.benchmark.validation.types.FlavorResourceType."
-                "transform")
+    @mock.patch(MODULE + "types.FlavorResourceType.transform")
     def test__get_validated_flavor_from_context(self, mock_transform):
         clients = mock.MagicMock()
         clients.nova().flavors.get.side_effect = nova_exc.NotFound("")
@@ -244,8 +243,7 @@ class ValidatorsTestCase(test.TestCase):
         result = validation._get_validated_flavor(config, clients, "flavor")
         self.assertTrue(result[0].is_valid, result[0].msg)
 
-    @mock.patch("rally.benchmark.validation.types.FlavorResourceType."
-                "transform")
+    @mock.patch(MODULE + "types.FlavorResourceType.transform")
     def test__get_validated_flavor_from_context_failed(self, mock_transform):
         clients = mock.MagicMock()
         clients.nova().flavors.get.side_effect = nova_exc.NotFound("")
@@ -293,8 +291,8 @@ class ValidatorsTestCase(test.TestCase):
                            None)
         self.assertFalse(result.is_valid, result.msg)
 
-    @mock.patch("rally.benchmark.validation._get_validated_image")
-    @mock.patch("rally.benchmark.validation._get_validated_flavor")
+    @mock.patch(MODULE + "_get_validated_image")
+    @mock.patch(MODULE + "_get_validated_flavor")
     def test_image_valid_on_flavor(self, mock_get_flavor, mock_get_image):
         image = {
             "id": "fake_id",
@@ -336,9 +334,8 @@ class ValidatorsTestCase(test.TestCase):
         result = validator(None, None, None)
         self.assertFalse(result.is_valid, result.msg)
 
-    @mock.patch("rally.benchmark.validation.types.FlavorResourceType."
-                "transform")
-    @mock.patch("rally.benchmark.validation._get_validated_image")
+    @mock.patch(MODULE + "types.FlavorResourceType.transform")
+    @mock.patch(MODULE + "_get_validated_image")
     def test_image_valid_on_flavor_context(self, mock_get_image,
                                            mock_transform):
         clients = mock.MagicMock()
@@ -417,7 +414,7 @@ class ValidatorsTestCase(test.TestCase):
         result = validator({}, None, None)
         self.assertFalse(result.is_valid, result.msg)
 
-    @mock.patch("rally.benchmark.validation.tempest.Tempest")
+    @mock.patch(MODULE + "tempest.Tempest")
     def test_tempest_tests_exists(self, mock_tempest):
         mock_tempest().is_installed.return_value = False
         mock_tempest().is_configured.return_value = False
@@ -451,7 +448,7 @@ class ValidatorsTestCase(test.TestCase):
                            None, deployment)
         self.assertFalse(result.is_valid, result.msg)
 
-    @mock.patch("rally.benchmark.validation.tempest.Tempest")
+    @mock.patch(MODULE + "tempest.Tempest")
     def test_tempest_tests_exists_tempest_installation_failed(self,
                                                               mock_tempest):
         mock_tempest().is_installed.return_value = False
@@ -614,18 +611,37 @@ class ValidatorsTestCase(test.TestCase):
         result = validator(context, clients, mock.MagicMock())
         self.assertFalse(result.is_valid, result.msg)
 
-    def test_required_clients(self):
+    @mock.patch(MODULE + "osclients")
+    def test_required_clients(self, mock_clients):
         validator = self._unwrap_validator(validation.required_clients,
                                            "keystone", "nova")
-
         clients = mock.MagicMock()
         clients.keystone.return_value = "keystone"
         clients.nova.return_value = "nova"
-        result = validator({}, clients, None)
+        result = validator({}, clients, {})
         self.assertTrue(result.is_valid, result.msg)
+        self.assertFalse(mock_clients.Clients.called)
 
         clients.nova.side_effect = ImportError
-        result = validator({}, clients, None)
+        result = validator({}, clients, {})
+        self.assertFalse(result.is_valid, result.msg)
+
+    @mock.patch(MODULE + "objects")
+    @mock.patch(MODULE + "osclients")
+    def test_required_clients_with_admin(self, mock_clients, mock_objects):
+        validator = self._unwrap_validator(validation.required_clients,
+                                           "keystone", "nova", admin=True)
+        clients = mock.Mock()
+        clients.keystone.return_value = "keystone"
+        clients.nova.return_value = "nova"
+        mock_clients.Clients.return_value = clients
+        mock_objects.Endpoint.return_value = "foo_endpoint"
+        result = validator({}, clients, {"admin": {"foo": "bar"}})
+        self.assertTrue(result.is_valid, result.msg)
+        mock_objects.Endpoint.assert_called_once_with(foo="bar")
+        mock_clients.Clients.assert_called_once_with("foo_endpoint")
+        clients.nova.side_effect = ImportError
+        result = validator({}, clients, {"admin": {"foo": "bar"}})
         self.assertFalse(result.is_valid, result.msg)
 
     def test_required_cinder_services(self):
