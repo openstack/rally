@@ -72,6 +72,14 @@ class NovaQuotas(object):
             "security_group_rules": {
                 "type": "integer",
                 "minimum": -1
+            },
+            "server_groups": {
+                "type": "integer",
+                "minimum": -1
+            },
+            "server_group_members": {
+                "type": "integer",
+                "minimum": -1
             }
         }
     }
