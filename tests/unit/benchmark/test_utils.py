@@ -120,7 +120,7 @@ class BenchmarkUtilsTestCase(test.TestCase):
             http_status = 404
 
         manager.get = mock.MagicMock(side_effect=NotFoundException)
-        self.assertRaises(exceptions.GetResourceFailure,
+        self.assertRaises(exceptions.GetResourceNotFound,
                           get_from_manager, resource)
 
     def test_get_from_manager_http_exception(self):

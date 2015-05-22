@@ -60,7 +60,7 @@ def get_from_manager(error_statuses=None):
         try:
             res = resource.manager.get(resource.id)
         except Exception as e:
-            if getattr(e, "code", 400) == 404:
+            if getattr(e, "code", getattr(e, "http_status", 400)) == 404:
                 raise exceptions.GetResourceNotFound(resource=resource)
             raise exceptions.GetResourceFailure(resource=resource, err=e)
 
