@@ -189,6 +189,12 @@ class NeutronRouter(NeutronMixin):
     pass
 
 
+@base.resource("neutron", "pool", order=next(_neutron_order),
+               tenant_resource=True)
+class NeutronV1Pool(NeutronMixin):
+    pass
+
+
 @base.resource("neutron", "subnet", order=next(_neutron_order),
                tenant_resource=True)
 class NeutronSubnet(NeutronMixin):

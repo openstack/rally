@@ -91,6 +91,28 @@
         failure_rate:
           max: 20
 
+  NeutronLoadbalancerV1.create_and_list_pools:
+    -
+      args:
+        pool_create_args: {}
+      runner:
+        type: "constant"
+        times: 20
+        concurrency: 10
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+        network: {}
+        quotas:
+          neutron:
+            network: -1
+            subnet: -1
+            pool: -1
+      sla:
+        failure_rate:
+          max: 0
+
   NeutronNetworks.create_and_update_networks:
     -
       args:

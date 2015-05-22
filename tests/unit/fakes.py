@@ -1064,6 +1064,7 @@ class FakeNeutronClient(object):
         self.__subnets = {}
         self.__routers = {}
         self.__ports = {}
+        self.__pools = {}
         self.__tenant_id = kwargs.get("tenant_id", generate_uuid())
 
         self.format = "json"
@@ -1111,6 +1112,21 @@ class FakeNeutronClient(object):
                         "provider:segmentation_id": None})
         self.__networks[network_id] = network
         return {"network": network}
+
+    def create_pool(self, data):
+        pool = setup_dict(data["pool"],
+                          required=["lb_method", "protocol", "subnet_id"],
+                          defaults={"name": generate_name("pool_"),
+                          "admin_state_up": True})
+        if pool["subnet_id"] not in self.__subnets:
+            raise neutron_exceptions.NeutronClientException
+        pool_id = generate_uuid()
+
+        pool.update({"id": pool_id,
+                     "status": "PENDING_CREATE",
+                     "tenant_id": self.__tenant_id})
+        self.__pools[pool_id] = pool
+        return {"pool": pool}
 
     def create_port(self, data):
         port = setup_dict(data["port"],
@@ -1237,6 +1253,10 @@ class FakeNeutronClient(object):
     def list_networks(self, **search_opts):
         nets = self._filter(self.__networks.values(), search_opts)
         return {"networks": nets}
+
+    def list_pools(self, **search_opts):
+        pools = self._filter(self.__pools.values(), search_opts)
+        return {"pools": pools}
 
     def list_ports(self, **search_opts):
         ports = self._filter(self.__ports.values(), search_opts)
