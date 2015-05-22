@@ -1,43 +1,5 @@
 {% set image_name = "^cirros.*uec$" %}
 ---
-  Dummy.dummy:
-    -
-      args:
-        sleep: 0.01
-      runner:
-        type: "constant"
-        times: 1
-        concurrency: 1
-      context:
-        users:
-          tenants: 5
-          users_per_tenant: 5
-        quotas:
-          nova:
-            instances: 200
-            cores: 200
-            ram: -1
-            metadata_items: -1
-            injected_files: -1
-            injected_file_content_bytes: -1
-            injected_file_path_bytes: -1
-            key_pairs: 500
-          cinder:
-            gigabytes: -1
-            snapshots: -1
-            volumes: -1
-          neutron:
-            network: -1
-            subnet: -1
-            port: 200
-            router: 300
-            floatingip: -1
-            security_group: -1
-            security_group_rule: -1
-      sla:
-        failure_rate:
-          max: 0
-
   NeutronNetworks.create_and_list_networks:
     -
       args:
@@ -66,8 +28,8 @@
         subnets_per_network: 2
       runner:
         type: "constant"
-        times: 30
-        concurrency: 30
+        times: 15
+        concurrency: 10
       context:
         users:
           tenants: 1
@@ -90,8 +52,8 @@
         router_create_args:
       runner:
         type: "constant"
-        times: 20
-        concurrency: 10
+        times: 15
+        concurrency: 5
       context:
         users:
           tenants: 1
@@ -113,8 +75,8 @@
         ports_per_network: 4
       runner:
         type: "constant"
-        times: 20
-        concurrency: 10
+        times: 15
+        concurrency: 5
       context:
         users:
           tenants: 1
@@ -190,8 +152,8 @@
             name: "_router_updated"
       runner:
         type: "constant"
-        times: 20
-        concurrency: 10
+        times: 15
+        concurrency: 5
       context:
         users:
           tenants: 1
@@ -285,8 +247,8 @@
         router_create_args: {}
       runner:
         type: "constant"
-        times: 40
-        concurrency: 20
+        times: 15
+        concurrency: 5
       context:
         users:
           tenants: 1
@@ -308,8 +270,8 @@
         ports_per_network: 10
       runner:
         type: "constant"
-        times: 40
-        concurrency: 20
+        times: 8
+        concurrency: 4
       context:
         users:
           tenants: 1
@@ -338,25 +300,6 @@
         failure_rate:
           max: 0
 
-  NovaServers.boot_server:
-    -
-      args:
-        flavor:
-            name: "m1.tiny"
-        image:
-            name: {{image_name}}
-      runner:
-        type: "constant"
-        times: 4
-        concurrency: 4
-      context:
-        users:
-          tenants: 3
-          users_per_tenant: 2
-      sla:
-        failure_rate:
-          max: 0
-
   NovaServers.boot_and_delete_server:
     -
       args:
@@ -366,8 +309,8 @@
             name: {{image_name}}
       runner:
         type: "constant"
-        times: 4
-        concurrency: 4
+        times: 1
+        concurrency: 1
       context:
         users:
           tenants: 3
@@ -385,8 +328,8 @@
             name: {{image_name}}
       runner:
         type: "constant"
-        times: 4
-        concurrency: 4
+        times: 1
+        concurrency: 1
       context:
         users:
           tenants: 3
@@ -394,95 +337,6 @@
         network:
           start_cidr: "10.2.0.0/24"
           networks_per_tenant: 2
-      sla:
-        failure_rate:
-          max: 0
-
-  NovaServers.boot_and_list_server:
-    -
-      args:
-        flavor:
-            name: "m1.tiny"
-        image:
-            name: {{image_name}}
-        detailed: True
-      runner:
-        type: "constant"
-        times: 4
-        concurrency: 4
-      context:
-        users:
-          tenants: 3
-          users_per_tenant: 1
-      sla:
-        failure_rate:
-          max: 0
-
-  NovaServers.boot_and_bounce_server:
-    -
-      args:
-        flavor:
-            name: "m1.tiny"
-        image:
-            name: {{image_name}}
-        actions:
-          -
-            hard_reboot: 1
-          -
-            soft_reboot: 1
-          -
-            stop_start: 1
-          -
-            rescue_unrescue: 1
-      runner:
-        type: "constant"
-        times: 2
-        concurrency: 2
-      context:
-        users:
-          tenants: 2
-          users_per_tenant: 2
-      sla:
-        failure_rate:
-          max: 0
-
-  NovaServers.snapshot_server:
-    -
-      args:
-        flavor:
-            name: "m1.tiny"
-        image:
-            name: {{image_name}}
-      runner:
-        type: "constant"
-        times: 3
-        concurrency: 3
-      context:
-        users:
-          tenants: 3
-          users_per_tenant: 2
-      sla:
-        failure_rate:
-          max: 0
-
-  NovaServers.resize_server:
-    -
-      args:
-        flavor:
-            name: "m1.tiny"
-        image:
-            name: {{image_name}}
-        to_flavor:
-            name: "m1.small"
-        confirm: true
-      runner:
-        type: "constant"
-        times: 2
-        concurrency: 2
-      context:
-        users:
-          tenants: 2
-          users_per_tenant: 2
       sla:
         failure_rate:
           max: 0
@@ -515,8 +369,8 @@
         rules_per_security_group: 5
       runner:
         type: "constant"
-        times: 4
-        concurrency: 4
+        times: 2
+        concurrency: 1
       context:
         users:
           tenants: 3
@@ -525,386 +379,6 @@
           neutron:
             security_group: -1
             security_group_rule: -1
-      sla:
-        failure_rate:
-          max: 0
-
-  CinderVolumes.create_and_delete_volume:
-    -
-      args:
-        size: 1
-      runner:
-        type: "constant"
-        times: 3
-        concurrency: 3
-      context:
-        users:
-          tenants: 2
-          users_per_tenant: 2
-      sla:
-        failure_rate:
-          max: 0
-    -
-      args:
-        size: 1
-        image:
-          name: {{image_name}}
-      runner:
-        type: "constant"
-        times: 3
-        concurrency: 3
-      context:
-        users:
-          tenants: 2
-          users_per_tenant: 2
-      sla:
-        failure_rate:
-          max: 0
-    -
-      args:
-        size:
-          min: 1
-          max: 3
-      runner:
-        type: "constant"
-        times: 3
-        concurrency: 3
-      context:
-        users:
-          tenants: 2
-          users_per_tenant: 2
-      sla:
-        failure_rate:
-          max: 0
-
-  CinderVolumes.create_and_list_volume:
-    -
-      args:
-        size: 1
-        detailed: True
-      runner:
-        type: "constant"
-        times: 3
-        concurrency: 3
-      context:
-        users:
-          tenants: 1
-          users_per_tenant: 1
-      sla:
-        failure_rate:
-          max: 0
-    -
-      args:
-        size:
-          min: 1
-          max: 3
-        detailed: True
-      runner:
-        type: "constant"
-        times: 3
-        concurrency: 3
-      context:
-        users:
-          tenants: 1
-          users_per_tenant: 1
-      sla:
-        failure_rate:
-          max: 0
-    -
-      args:
-        size: 1
-        detailed: True
-        image:
-          name: {{image_name}}
-      runner:
-        type: "constant"
-        times: 3
-        concurrency: 3
-      context:
-        users:
-          tenants: 1
-          users_per_tenant: 1
-      sla:
-        failure_rate:
-          max: 0
-
-  CinderVolumes.modify_volume_metadata:
-    -
-      args: {}
-      runner:
-        type: "constant"
-        times: 3
-        concurrency: 3
-      context:
-        volumes:
-          size: 1
-        users:
-          tenants: 1
-          users_per_tenant: 1
-      sla:
-        failure_rate:
-          max: 0
-
-  CinderVolumes.list_volumes:
-    -
-      args:
-        detailed: True
-      runner:
-        type: "constant"
-        times: 3
-        concurrency: 3
-      context:
-        users:
-          tenants: 2
-          users_per_tenant: 1
-        volumes:
-          size: 1
-          volumes_per_tenant: 2
-      sla:
-        failure_rate:
-          max: 0
-
-  CinderVolumes.create_volume:
-    -
-      args:
-        size: 1
-      runner:
-        type: "constant"
-        times: 2
-        concurrency: 2
-      context:
-        users:
-          tenants: 2
-          users_per_tenant: 2
-      sla:
-        failure_rate:
-          max: 0
-    -
-      args:
-        size:
-          min: 1
-          max: 3
-      runner:
-        type: "constant"
-        times: 2
-        concurrency: 2
-      context:
-        users:
-          tenants: 2
-          users_per_tenant: 2
-      sla:
-        failure_rate:
-          max: 0
-    -
-      args:
-        size: 1
-        image:
-          name: {{image_name}}
-      runner:
-        type: "constant"
-        times: 2
-        concurrency: 2
-      context:
-        users:
-          tenants: 2
-          users_per_tenant: 2
-      sla:
-        failure_rate:
-          max: 0
-
-  CinderVolumes.create_and_extend_volume:
-    -
-      args:
-        size: 1
-        new_size: 2
-      runner:
-        type: "constant"
-        times: 2
-        concurrency: 2
-      context:
-        users:
-          tenants: 1
-          users_per_tenant: 1
-      sla:
-        failure_rate:
-          max: 0
-    -
-      args:
-        size:
-          min: 1
-          max: 2
-        new_size:
-          min: 3
-          max: 4
-      runner:
-        type: "constant"
-        times: 2
-        concurrency: 2
-      context:
-        users:
-          tenants: 1
-          users_per_tenant: 1
-      sla:
-        failure_rate:
-          max: 0
-
-  CinderVolumes.create_from_volume_and_delete_volume:
-    -
-      args:
-        size: 1
-      runner:
-        type: "constant"
-        times: 2
-        concurrency: 2
-      context:
-        users:
-          tenants: 1
-          users_per_tenant: 1
-        volumes:
-          size: 1
-      sla:
-        failure_rate:
-          max: 0
-    -
-      args:
-        size:
-          min: 1
-          max: 2
-      runner:
-        type: "constant"
-        times: 2
-        concurrency: 2
-      context:
-        users:
-          tenants: 1
-          users_per_tenant: 1
-        volumes:
-          size: 1
-      sla:
-        failure_rate:
-          max: 0
-
-  CinderVolumes.create_and_delete_snapshot:
-    -
-      args:
-        force: false
-      runner:
-        type: "constant"
-        times: 3
-        concurrency: 3
-      context:
-        users:
-          tenants: 2
-          users_per_tenant: 2
-        volumes:
-          size: 1
-      sla:
-        failure_rate:
-          max: 0
-
-  CinderVolumes.create_and_list_snapshots:
-    -
-      args:
-        force: False
-        detailed: True
-      runner:
-        type: "constant"
-        times: 2
-        concurrency: 2
-      context:
-        users:
-          tenants: 1
-          users_per_tenant: 1
-        volumes:
-          size: 1
-      sla:
-        failure_rate:
-          max: 0
-
-  CinderVolumes.create_and_upload_volume_to_image:
-    -
-      args:
-        size: 1
-      runner:
-        type: "constant"
-        times: 1
-        concurrency: 1
-      context:
-        users:
-          tenants: 1
-          users_per_tenant: 1
-      sla:
-        failure_rate:
-          max: 0
-
-  CinderVolumes.create_volume_backup:
-    -
-      args:
-        size: 1
-        do_delete: True
-      runner:
-        type: "constant"
-        times: 2
-        concurrency: 2
-      context:
-        users:
-          tenants: 1
-          users_per_tenant: 1
-        roles:
-          - "Member"
-      sla:
-        failure_rate:
-          max: 0
-    -
-      args:
-        size: 1
-        do_delete: False
-      runner:
-        type: "constant"
-        times: 2
-        concurrency: 2
-      context:
-        users:
-          tenants: 1
-          users_per_tenant: 1
-        roles:
-          - "Member"
-      sla:
-        failure_rate:
-          max: 0
-
-  CinderVolumes.create_and_restore_volume_backup:
-    -
-      args:
-        size: 1
-        do_delete: True
-      runner:
-        type: "constant"
-        times: 2
-        concurrency: 2
-      context:
-        users:
-          tenants: 1
-          users_per_tenant: 1
-        roles:
-          - "Member"
-      sla:
-        failure_rate:
-          max: 0
-    -
-      args:
-        size: 1
-        do_delete: False
-      runner:
-        type: "constant"
-        times: 2
-        concurrency: 2
-      context:
-        users:
-          tenants: 1
-          users_per_tenant: 1
-        roles:
-          - "Member"
       sla:
         failure_rate:
           max: 0
@@ -928,149 +402,3 @@
           tenants: 3
           users_per_tenant: 2
         network: {}
-
-  HeatStacks.create_and_delete_stack:
-    -
-      args:
-        template_path: '/home/jenkins/.rally/extra/server_with_ports.yaml.template'
-      runner:
-        type: "constant"
-        times: 3
-        concurrency: 3
-      context:
-        users:
-          tenants: 2
-          users_per_tenant: 2
-
-  SwiftObjects.create_container_and_object_then_list_objects:
-    -
-      args:
-        objects_per_container: 2
-        object_size: 5120
-      runner:
-        type: "constant"
-        times: 2
-        concurrency: 2
-      context:
-        users:
-          tenants: 1
-          users_per_tenant: 1
-        roles:
-          - "admin"
-      sla:
-        failure_rate:
-          max: 0
-
-  SwiftObjects.create_container_and_object_then_delete_all:
-    -
-      args:
-        objects_per_container: 5
-        object_size: 102400
-      runner:
-        type: "constant"
-        times: 4
-        concurrency: 2
-      context:
-        users:
-          tenants: 1
-          users_per_tenant: 1
-        roles:
-          - "admin"
-      sla:
-        failure_rate:
-          max: 0
-
-  SwiftObjects.create_container_and_object_then_download_object:
-    -
-      args:
-        objects_per_container: 5
-        object_size: 1024
-      runner:
-        type: "constant"
-        times: 6
-        concurrency: 3
-      context:
-        users:
-          tenants: 1
-          users_per_tenant: 1
-        roles:
-          - "admin"
-      sla:
-        failure_rate:
-          max: 0
-
-  GlanceImages.create_and_delete_image:
-    -
-      args:
-        image_location: "http://download.cirros-cloud.net/0.3.2/cirros-0.3.2-x86_64-disk.img"
-        container_format: "bare"
-        disk_format: "qcow2"
-      runner:
-        type: "constant"
-        times: 5
-        concurrency: 5
-      context:
-        users:
-          tenants: 2
-          users_per_tenant: 3
-      sla:
-        failure_rate:
-          max: 0
-
-  GlanceImages.create_and_list_image:
-    -
-      args:
-        image_location: "/home/jenkins/.rally/extra/fake-image.img"
-        container_format: "bare"
-        disk_format: "qcow2"
-      runner:
-        type: "constant"
-        times: 6
-        concurrency: 6
-      context:
-        users:
-          tenants: 1
-          users_per_tenant: 1
-      sla:
-        failure_rate:
-          max: 0
-
-  GlanceImages.create_image_and_boot_instances:
-    -
-      args:
-        image_location: "http://download.cirros-cloud.net/0.3.2/cirros-0.3.2-x86_64-disk.img"
-        container_format: "bare"
-        disk_format: "qcow2"
-        flavor:
-            name: "m1.tiny"
-        number_instances: 2
-      runner:
-        type: "constant"
-        times: 3
-        concurrency: 3
-      context:
-        users:
-          tenants: 3
-          users_per_tenant: 1
-      sla:
-        failure_rate:
-          max: 0
-
-  GlanceImages.list_images:
-    -
-      runner:
-        type: "constant"
-        times: 4
-        concurrency: 4
-      context:
-        users:
-          tenants: 2
-          users_per_tenant: 2
-        images:
-          image_url: "http://download.cirros-cloud.net/0.3.1/cirros-0.3.1-x86_64-disk.img"
-          image_type: "qcow2"
-          image_container: "bare"
-          images_per_tenant: 2
-      sla:
-        failure_rate:
-          max: 0

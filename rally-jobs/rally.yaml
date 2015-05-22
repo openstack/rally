@@ -1,5 +1,4 @@
 ---
-
   KeystoneBasic.create_user:
     -
       args:
@@ -398,9 +397,9 @@
         sleep: 0.25
       runner:
         type: "constant"
-        times: 20
-        concurrency: 5
-        max_cpu_count: 3
+        times: 8
+        concurrency: 4
+        max_cpu_count: 2
       sla:
         failure_rate:
           max: 0
@@ -511,8 +510,8 @@
         concurrency: 1
       context:
           users:
-            tenants: 30
-            users_per_tenant: 15
+            tenants: 8
+            users_per_tenant: 4
       sla:
         failure_rate:
           max: 0
@@ -676,198 +675,6 @@
         failure_rate:
           max: 0
 
-  HeatStacks.create_and_list_stack:
-    -
-      args:
-        template_path: "/home/jenkins/.rally/extra/default.yaml.template"
-      runner:
-        type: "constant"
-        times: 6
-        concurrency: 3
-      context:
-        users:
-          tenants: 1
-          users_per_tenant: 1
-      sla:
-        failure_rate:
-          max: 0
-
-  HeatStacks.create_and_delete_stack:
-    -
-      args:
-        template_path: "/home/jenkins/.rally/extra/default.yaml.template"
-      runner:
-        type: "constant"
-        times: 6
-        concurrency: 3
-      context:
-        users:
-          tenants: 2
-          users_per_tenant: 3
-      sla:
-        failure_rate:
-          max: 0
-
-    -
-      args:
-        template_path: "/home/jenkins/.rally/extra/server_with_volume.yaml.template"
-      runner:
-        type: "constant"
-        times: 2
-        concurrency: 2
-      context:
-        users:
-          tenants: 2
-          users_per_tenant: 2
-      sla:
-        failure_rate:
-          max: 0
-
-  HeatStacks.create_check_delete_stack:
-    -
-      args:
-        template_path: "/home/jenkins/.rally/extra/random_strings.yaml.template"
-      runner:
-        type: "constant"
-        times: 6
-        concurrency: 2
-      context:
-        users:
-          tenants: 2
-          users_per_tenant: 2
-      sla:
-        failure_rate:
-          max: 0
-
-  HeatStacks.create_update_delete_stack:
-    -
-      args:
-        template_path: "/home/jenkins/.rally/extra/random_strings.yaml.template"
-        updated_template_path: "/home/jenkins/.rally/extra/updated_random_strings_add.yaml.template"
-      runner:
-        type: "constant"
-        times: 6
-        concurrency: 3
-      context:
-        users:
-          tenants: 2
-          users_per_tenant: 3
-      sla:
-        failure_rate:
-          max: 0
-
-    -
-      args:
-        template_path: "/home/jenkins/.rally/extra/random_strings.yaml.template"
-        updated_template_path: "/home/jenkins/.rally/extra/updated_random_strings_delete.yaml.template"
-      runner:
-        type: "constant"
-        times: 6
-        concurrency: 3
-      context:
-        users:
-          tenants: 2
-          users_per_tenant: 3
-      sla:
-        failure_rate:
-          max: 0
-
-    -
-      args:
-        template_path: "/home/jenkins/.rally/extra/random_strings.yaml.template"
-        updated_template_path: "/home/jenkins/.rally/extra/updated_random_strings_replace.yaml.template"
-      runner:
-        type: "constant"
-        times: 6
-        concurrency: 3
-      context:
-        users:
-          tenants: 2
-          users_per_tenant: 3
-      sla:
-        failure_rate:
-          max: 0
-
-    -
-      args:
-        template_path: "/home/jenkins/.rally/extra/autoscaling_policy.yaml.template"
-        updated_template_path: "/home/jenkins/.rally/extra/updated_autoscaling_policy_inplace.yaml.template"
-      runner:
-        type: "constant"
-        times: 6
-        concurrency: 3
-      context:
-        users:
-          tenants: 2
-          users_per_tenant: 3
-      sla:
-        failure_rate:
-          max: 0
-
-    -
-      args:
-        template_path: "/home/jenkins/.rally/extra/resource_group.yaml.template"
-        updated_template_path: "/home/jenkins/.rally/extra/updated_resource_group_increase.yaml.template"
-      runner:
-        type: "constant"
-        times: 6
-        concurrency: 3
-      context:
-        users:
-          tenants: 2
-          users_per_tenant: 3
-      sla:
-        failure_rate:
-          max: 0
-
-    -
-      args:
-        template_path: "/home/jenkins/.rally/extra/resource_group.yaml.template"
-        updated_template_path: "/home/jenkins/.rally/extra/updated_resource_group_reduce.yaml.template"
-      runner:
-        type: "constant"
-        times: 6
-        concurrency: 3
-      context:
-        users:
-          tenants: 2
-          users_per_tenant: 3
-      sla:
-        failure_rate:
-          max: 0
-
-  HeatStacks.list_stacks_and_resources:
-    -
-      runner:
-        type: "constant"
-        times: 6
-        concurrency: 3
-      context:
-        users:
-          tenants: 2
-          users_per_tenant: 3
-        stacks:
-          stacks_per_tenant: 2
-          resources_per_stack: 10
-      sla:
-        failure_rate:
-          max: 0
-
-  HeatStacks.create_suspend_resume_delete_stack:
-    -
-      args:
-        template_path: "/home/jenkins/.rally/extra/random_strings.yaml.template"
-      runner:
-        type: "constant"
-        times: 6
-        concurrency: 3
-      context:
-        users:
-          tenants: 2
-          users_per_tenant: 3
-      sla:
-        failure_rate:
-          max: 0
 
   Authenticate.keystone:
     -
@@ -917,22 +724,6 @@
         failure_rate:
           max: 0
 
-  Authenticate.validate_cinder:
-    -
-      args:
-        repetitions: 2
-      runner:
-        type: "constant"
-        times: 10
-        concurrency: 5
-      context:
-        users:
-          tenants: 3
-          users_per_tenant: 5
-      sla:
-        failure_rate:
-          max: 0
-
   Authenticate.validate_glance:
     -
       args:
@@ -961,554 +752,6 @@
         users:
           tenants: 3
           users_per_tenant: 5
-      sla:
-        failure_rate:
-          max: 0
-
-  Authenticate.validate_nova:
-    -
-      args:
-        repetitions: 2
-      runner:
-        type: "constant"
-        times: 10
-        concurrency: 5
-      context:
-        users:
-          tenants: 3
-          users_per_tenant: 5
-      sla:
-        failure_rate:
-          max: 0
-
-  Quotas.cinder_update_and_delete:
-    -
-      args:
-        max_quota: 1024
-      runner:
-        type: "constant"
-        times: 4
-        concurrency: 1
-      context:
-        users:
-          tenants: 3
-          users_per_tenant: 2
-      sla:
-        failure_rate:
-          max: 0
-
-  Quotas.cinder_update:
-    -
-      args:
-        max_quota: 1024
-      runner:
-        type: "constant"
-        times: 10
-        concurrency: 2
-      context:
-        users:
-          tenants: 3
-          users_per_tenant: 2
-      sla:
-        failure_rate:
-          max: 0
-
-  Quotas.nova_update_and_delete:
-    -
-      args:
-        max_quota: 1024
-      runner:
-        type: "constant"
-        times: 4
-        concurrency: 1
-      context:
-        users:
-          tenants: 3
-          users_per_tenant: 2
-      sla:
-        failure_rate:
-          max: 0
-
-  Quotas.nova_update:
-    -
-      args:
-        max_quota: 1024
-      runner:
-        type: "constant"
-        times: 10
-        concurrency: 2
-      context:
-        users:
-          tenants: 3
-          users_per_tenant: 2
-      sla:
-        failure_rate:
-          max: 0
-
-
-  NovaServers.boot_and_delete_server:
-    -
-      args:
-        flavor:
-            name: "m1.tiny"
-        image:
-            name: {{image_name}}
-      runner:
-        type: "constant"
-        times: 3
-        concurrency: 3
-      context:
-        users:
-          tenants: 3
-          users_per_tenant: 2
-      sla:
-        failure_rate:
-          max: 0
-
-    -
-      args:
-        flavor:
-            name: "m1.tiny"
-        image:
-            name: {{image_name}}
-      runner:
-        type: "constant"
-        times: 3
-        concurrency: 3
-      context:
-        users:
-          tenants: 3
-          users_per_tenant: 2
-        network:
-          start_cidr: "10.2.0.0/24"
-          networks_per_tenant: 2
-
-    -
-      args:
-        flavor:
-            name: "m1.tiny"
-        image:
-            name: {{image_name}}
-        force_delete: true
-      runner:
-        type: "constant"
-        times: 3
-        concurrency: 3
-      context:
-        users:
-          tenants: 3
-          users_per_tenant: 2
-      sla:
-        failure_rate:
-          max: 0
-
-  NovaServers.boot_and_delete_multiple_servers:
-    -
-      args:
-        image:
-          name: {{image_name}}
-        flavor:
-          name: "m1.tiny"
-        count: 3
-      runner:
-        type: "constant"
-        times: 3
-        concurrency: 3
-      context:
-        users:
-          tenants: 1
-          users_per_tenant: 1
-      sla:
-        failure_rate:
-          max: 0
-
-  NovaServers.boot_and_list_server:
-    -
-      args:
-        flavor:
-            name: "m1.tiny"
-        image:
-            name: {{image_name}}
-        detailed: True
-      runner:
-        type: "constant"
-        times: 3
-        concurrency: 3
-      context:
-        users:
-          tenants: 3
-          users_per_tenant: 1
-      sla:
-        failure_rate:
-          max: 0
-
-  NovaServers.suspend_and_resume_server:
-    -
-      args:
-        flavor:
-            name: "m1.tiny"
-        image:
-            name: {{image_name}}
-      runner:
-        type: "constant"
-        times: 3
-        concurrency: 3
-      context:
-        users:
-          tenants: 3
-          users_per_tenant: 1
-      sla:
-        failure_rate:
-          max: 0
-
-  NovaServers.pause_and_unpause_server:
-    -
-      args:
-        flavor:
-            name: "m1.tiny"
-        image:
-            name: {{image_name}}
-      runner:
-        type: "constant"
-        times: 3
-        concurrency: 3
-      context:
-        users:
-          tenants: 3
-          users_per_tenant: 1
-      sla:
-        failure_rate:
-          max: 0
-
-  NovaServers.shelve_and_unshelve_server:
-    -
-      args:
-        flavor:
-            name: "m1.tiny"
-        image:
-            name: {{image_name}}
-      runner:
-        type: "constant"
-        times: 3
-        concurrency: 3
-      context:
-        users:
-          tenants: 3
-          users_per_tenant: 1
-      sla:
-        failure_rate:
-          max: 0
-
-  NovaServers.boot_and_rebuild_server:
-    -
-      args:
-        flavor:
-          name: "m1.tiny"
-        from_image:
-          name: {{image_name}}
-        to_image:
-          name: {{image_name}}
-      runner:
-        type: "constant"
-        times: 3
-        concurrency: 3
-      context:
-        users:
-          tenants: 3
-          users_per_tenant: 1
-      sla:
-        failure_rate:
-          max: 0
-
-  NovaServers.boot_and_associate_floating_ip:
-    -
-      args:
-        flavor:
-          name: "m1.tiny"
-        image:
-          name: {{image_name}}
-      runner:
-        type: "constant"
-        times: 3
-        concurrency: 3
-      context:
-        users:
-          tenants: 3
-          users_per_tenant: 1
-        network: {}
-      sla:
-        failure_rate:
-          max: 0
-
-  NovaServers.list_servers:
-    -
-      args:
-        detailed: True
-      runner:
-        type: "constant"
-        times: 3
-        concurrency: 3
-      context:
-        users:
-          tenants: 3
-          users_per_tenant: 1
-        servers:
-          flavor:
-              name: "m1.tiny"
-          image:
-              name: {{image_name}}
-          servers_per_tenant: 2
-      sla:
-        failure_rate:
-          max: 0
-
-  NovaServers.resize_server:
-    -
-      args:
-        flavor:
-            name: "m1.tiny"
-        image:
-            name: {{image_name}}
-        to_flavor:
-            name: "m1.small"
-        confirm: true
-      runner:
-        type: "constant"
-        times: 2
-        concurrency: 2
-      context:
-        users:
-          tenants: 2
-          users_per_tenant: 1
-      sla:
-        failure_rate:
-          max: 0
-
-  NovaServers.boot_and_bounce_server:
-    -
-      args:
-        flavor:
-            name: "m1.tiny"
-        image:
-            name: {{image_name}}
-        actions:
-          -
-            hard_reboot: 1
-          -
-            stop_start: 1
-          -
-            rescue_unrescue: 1
-      runner:
-        type: "constant"
-        times: 2
-        concurrency: 2
-      context:
-        users:
-          tenants: 2
-          users_per_tenant: 1
-      sla:
-        failure_rate:
-          max: 0
-
-  NovaServers.boot_lock_unlock_and_delete:
-    -
-      args:
-        flavor:
-            name: "m1.tiny"
-        image:
-            name: {{image_name}}
-      runner:
-        type: "constant"
-        times: 4
-        concurrency: 4
-      context:
-        users:
-          tenants: 2
-          users_per_tenant: 1
-      sla:
-        failure_rate:
-          max: 0
-
-  NovaServers.boot_server_from_volume_and_delete:
-    -
-      args:
-        flavor:
-            name: "m1.tiny"
-        image:
-            name: {{image_name}}
-        volume_size: 1
-      runner:
-        type: "constant"
-        times: 3
-        concurrency: 3
-      context:
-        users:
-          tenants: 3
-          users_per_tenant: 3
-      sla:
-        failure_rate:
-          max: 0
-
-
-  NovaServers.boot_server_from_volume:
-    -
-      args:
-        flavor:
-            name: "m1.tiny"
-        image:
-            name: {{image_name}}
-        volume_size: 1
-      runner:
-        type: "constant"
-        times: 3
-        concurrency: 3
-      context:
-        users:
-          tenants: 2
-          users_per_tenant: 2
-      sla:
-        failure_rate:
-          max: 0
-
-
-  NovaServers.snapshot_server:
-    -
-      args:
-        flavor:
-            name: "m1.tiny"
-        image:
-            name: {{image_name}}
-      runner:
-        type: "constant"
-        times: 2
-        concurrency: 2
-      context:
-        users:
-          tenants: 2
-          users_per_tenant: 2
-      sla:
-        failure_rate:
-          max: 0
-
-  NovaServers.boot_server:
-    -
-      args:
-        flavor:
-            name: "^ram64$"
-        image:
-            name: {{image_name}}
-        auto_assign_nics: false
-      runner:
-        type: "constant"
-        times: 3
-        concurrency: 3
-      context:
-        users:
-          tenants: 3
-          users_per_tenant: 2
-        flavors:
-          -
-            name: "ram64"
-            ram: 64
-      sla:
-        failure_rate:
-          max: 0
-    -
-      args:
-        flavor:
-            name: "m1.tiny"
-        image:
-            name: {{image_name}}
-      runner:
-        type: "constant"
-        times: 3
-        concurrency: 3
-      context:
-        users:
-          tenants: 3
-          users_per_tenant: 2
-      sla:
-        failure_rate:
-          max: 0
-
-  NovaHypervisors.list_hypervisors:
-    -
-      args:
-        detailed: True
-      runner:
-        type: "constant"
-        times: 5
-        concurrency: 2
-      sla:
-        failure_rate:
-          max: 0
-
-  VMTasks.boot_runcommand_delete:
-    -
-      args:
-        flavor:
-          name: "m1.tiny"
-        image:
-          name: {{image_name}}
-        floating_network: "public"
-        use_floatingip: true
-        script: "/home/jenkins/.rally/extra/instance_dd_test.sh"
-        interpreter: "/bin/sh"
-        username: "cirros"
-      runner:
-        type: "constant"
-        times: 2
-        concurrency: 2
-      context:
-        users:
-          tenants: 1
-          users_per_tenant: 1
-      sla:
-        failure_rate:
-          max: 0
-
-    -
-      args:
-        flavor:
-          name: "m1.tiny"
-        image:
-          name: {{image_name}}
-        volume_args:
-            size: 2
-        use_floatingip: true
-        script: "/home/jenkins/.rally/extra/instance_dd_test.sh"
-        interpreter: "/bin/sh"
-        username: "cirros"
-      runner:
-        type: "constant"
-        times: 2
-        concurrency: 2
-      context:
-        users:
-          tenants: 1
-          users_per_tenant: 1
-      sla:
-        failure_rate:
-          max: 0
-
-    -
-      args:
-        flavor:
-          name: "m1.tiny"
-        image:
-          name: {{image_name}}
-        use_floatingip: false
-        script: "/home/jenkins/.rally/extra/instance_dd_test.sh"
-        interpreter: "/bin/sh"
-        username: "cirros"
-      runner:
-        type: "constant"
-        times: 2
-        concurrency: 2
-      context:
-        users:
-          tenants: 1
-          users_per_tenant: 1
       sla:
         failure_rate:
           max: 0
@@ -1546,136 +789,74 @@
         failure_rate:
           max: 0
 
-  NovaSecGroup.create_and_delete_secgroups:
+  GlanceImages.list_images:
     -
-      args:
-        security_group_count: 5
-        rules_per_security_group: 5
       runner:
         type: "constant"
-        times: 4
-        concurrency: 4
+        times: 5
+        concurrency: 10
       context:
         users:
-          tenants: 3
+          tenants: 1
           users_per_tenant: 2
-        quotas:
-          nova:
-            security_groups: -1
-            security_group_rules: -1
+        images:
+          image_url: "/home/jenkins/.rally/extra/fake-image.img"
+          image_type: "qcow2"
+          image_container: "bare"
+          images_per_tenant: 1
       sla:
         failure_rate:
           max: 0
 
-  NovaSecGroup.create_and_list_secgroups:
+  GlanceImages.create_and_delete_image:
     -
       args:
-        security_group_count: 5
-        rules_per_security_group: 5
+        image_location: "http://download.cirros-cloud.net/0.3.2/cirros-0.3.2-x86_64-disk.img"
+        container_format: "bare"
+        disk_format: "qcow2"
       runner:
         type: "constant"
-        times: 4
-        concurrency: 4
+        times: 1
+        concurrency: 1
       context:
         users:
-          tenants: 3
-          users_per_tenant: 2
-        quotas:
-          nova:
-            security_groups: -1
-            security_group_rules: -1
+          tenants: 2
+          users_per_tenant: 3
       sla:
         failure_rate:
           max: 0
 
-
-  NovaSecGroup.boot_and_delete_server_with_secgroups:
+  GlanceImages.create_and_list_image:
     -
       args:
+        image_location: "/home/jenkins/.rally/extra/fake-image.img"
+        container_format: "bare"
+        disk_format: "qcow2"
+      runner:
+        type: "constant"
+        times: 1
+        concurrency: 1
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+      sla:
+        failure_rate:
+          max: 0
+
+  GlanceImages.create_image_and_boot_instances:
+    -
+      args:
+        image_location: "http://download.cirros-cloud.net/0.3.2/cirros-0.3.2-x86_64-disk.img"
+        container_format: "bare"
+        disk_format: "qcow2"
         flavor:
-          name: "m1.tiny"
-        image:
-          name: {{image_name}}
-        security_group_count: 5
-        rules_per_security_group: 5
+            name: "m1.tiny"
+        number_instances: 2
       runner:
         type: "constant"
-        times: 4
-        concurrency: 4
-      context:
-        users:
-          tenants: 3
-          users_per_tenant: 2
-        network:
-          start_cidr: "10.2.0.0/24"
-        quotas:
-          nova:
-            security_groups: -1
-            security_group_rules: -1
-
-
-  NovaKeypair.create_and_delete_keypair:
-    -
-      runner:
-        type: "constant"
-        times: 4
-        concurrency: 4
-      context:
-        users:
-          tenants: 3
-          users_per_tenant: 2
-      sla:
-        failure_rate:
-          max: 0
-
-
-  NovaKeypair.create_and_list_keypairs:
-    -
-      runner:
-        type: "constant"
-        times: 4
-        concurrency: 4
-      context:
-        users:
-          tenants: 3
-          users_per_tenant: 2
-      sla:
-        failure_rate:
-          max: 0
-
-
-  NovaKeypair.boot_and_delete_server_with_keypair:
-    -
-      args:
-        flavor:
-          name: "m1.tiny"
-        image:
-          name: {{image_name}}
-      runner:
-        type: "constant"
-        times: 4
-        concurrency: 4
-      context:
-        users:
-          tenants: 3
-          users_per_tenant: 2
-        network:
-          start_cidr: "10.2.0.0/24"
-      sla:
-        failure_rate:
-          max: 0
-
-  EC2Servers.boot_server:
-    -
-      args:
-        flavor:
-          name: "m1.tiny"
-        image:
-          name: {{image_name}}
-      runner:
-        type: "constant"
-        times: 3
-        concurrency: 3
+        times: 1
+        concurrency: 1
       context:
         users:
           tenants: 3
@@ -1684,51 +865,60 @@
         failure_rate:
           max: 0
 
-  HeatStacks.list_stacks_and_events:
+
+  SwiftObjects.create_container_and_object_then_list_objects:
     -
+      args:
+        objects_per_container: 2
+        object_size: 5120
+      runner:
+        type: "constant"
+        times: 2
+        concurrency: 2
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+        roles:
+          - "admin"
+      sla:
+        failure_rate:
+          max: 0
+
+  SwiftObjects.create_container_and_object_then_delete_all:
+    -
+      args:
+        objects_per_container: 5
+        object_size: 102400
+      runner:
+        type: "constant"
+        times: 4
+        concurrency: 2
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+        roles:
+          - "admin"
+      sla:
+        failure_rate:
+          max: 0
+
+  SwiftObjects.create_container_and_object_then_download_object:
+    -
+      args:
+        objects_per_container: 5
+        object_size: 1024
       runner:
         type: "constant"
         times: 6
         concurrency: 3
       context:
         users:
-          tenants: 2
-          users_per_tenant: 3
-        stacks:
-          stacks_per_tenant: 2
-          resources_per_stack: 10
-      sla:
-        failure_rate:
-          max: 0
-
-  NovaFloatingIpsBulk.create_and_list_floating_ips_bulk:
-    -
-      args:
-        start_cidr: "10.2.0.0/27"
-      runner:
-        type: "constant"
-        times: 4
-        concurrency: 2
-      context:
-        users:
-          tenants: 2
-          users_per_tenant: 2
-      sla:
-        failure_rate:
-          max: 0
-
-  NovaFloatingIpsBulk.create_and_delete_floating_ips_bulk:
-    -
-      args:
-        start_cidr: "10.2.0.0/27"
-      runner:
-        type: "constant"
-        times: 4
-        concurrency: 2
-      context:
-        users:
-          tenants: 2
-          users_per_tenant: 2
+          tenants: 1
+          users_per_tenant: 1
+        roles:
+          - "admin"
       sla:
         failure_rate:
           max: 0
