@@ -19,13 +19,13 @@ SLA (Service-level agreement) is set of details for determining compliance
 with contracted values such as maximum error rate or minimum response time.
 """
 
-from rally.benchmark.sla import base
+from rally.benchmark import sla
 from rally.common.i18n import _
 from rally.common import streaming_algorithms
 from rally import consts
 
 
-class Outliers(base.SLA):
+class Outliers(sla.SLA):
     """Limit the number of outliers (iterations that take too much time).
 
     The outliers are detected automatically using the computation of the mean

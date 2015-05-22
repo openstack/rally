@@ -365,7 +365,7 @@ class BenchmarkEngineTestCase(test.TestCase):
         self.assertEqual(result, expected_result)
         mock_meta.assert_called_once_with(name, "context")
 
-    @mock.patch("rally.benchmark.sla.base.SLAChecker")
+    @mock.patch("rally.benchmark.sla.SLAChecker")
     def test_consume_results(self, mock_sla):
         mock_sla_instance = mock.MagicMock()
         mock_sla.return_value = mock_sla_instance
@@ -387,7 +387,7 @@ class BenchmarkEngineTestCase(test.TestCase):
         self.assertEqual(expected_iteration_calls,
                          mock_sla_instance.add_iteration.mock_calls)
 
-    @mock.patch("rally.benchmark.sla.base.SLAChecker")
+    @mock.patch("rally.benchmark.sla.SLAChecker")
     def test_consume_results_sla_failure_abort(self, mock_sla):
         mock_sla_instance = mock.MagicMock()
         mock_sla.return_value = mock_sla_instance
@@ -409,7 +409,7 @@ class BenchmarkEngineTestCase(test.TestCase):
         mock_sla.assert_called_once_with({"fake": 2})
         self.assertTrue(runner.abort.called)
 
-    @mock.patch("rally.benchmark.sla.base.SLAChecker")
+    @mock.patch("rally.benchmark.sla.SLAChecker")
     def test_consume_results_sla_failure_continue(self, mock_sla):
         mock_sla_instance = mock.MagicMock()
         mock_sla.return_value = mock_sla_instance

@@ -24,7 +24,7 @@ import six
 from rally.benchmark.context import base as base_ctx
 from rally.benchmark.runners import base as base_runner
 from rally.benchmark.scenarios import base as base_scenario
-from rally.benchmark.sla import base as base_sla
+from rally.benchmark import sla
 from rally.common.i18n import _
 from rally.common import log as logging
 from rally.common import utils as rutils
@@ -134,7 +134,7 @@ class BenchmarkEngine(object):
                     base_runner.ScenarioRunner.validate(kw.get("runner", {}))
                     base_ctx.ContextManager.validate(kw.get("context", {}),
                                                      non_hidden=True)
-                    base_sla.SLA.validate(kw.get("sla", {}))
+                    sla.SLA.validate(kw.get("sla", {}))
                 except (exceptions.RallyException,
                         jsonschema.ValidationError) as e:
                     raise exceptions.InvalidBenchmarkConfig(
@@ -279,7 +279,7 @@ class BenchmarkEngine(object):
         :param runner: ScenarioRunner object that was used to run a task
         """
         results = []
-        sla_checker = base_sla.SLAChecker(key["kw"])
+        sla_checker = sla.SLAChecker(key["kw"])
         while True:
             if runner.result_queue:
                 result = runner.result_queue.popleft()

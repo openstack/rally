@@ -50,7 +50,7 @@ Samples:
 from __future__ import print_function
 
 from rally.benchmark.scenarios import base as scenario_base
-from rally.benchmark.sla import base as sla_base
+from rally.benchmark import sla
 from rally.cli import cliutils
 from rally.common import utils
 from rally import deploy
@@ -141,12 +141,12 @@ class InfoCommands(object):
 
     def SLA(self):
         """Get information about SLA available in Rally."""
-        sla = self._get_descriptions(sla_base.SLA)
+        sla_descrs = self._get_descriptions(sla.SLA)
         # NOTE(msdubov): Add config option names to the "Name" column
-        for i in range(len(sla)):
-            description = sla[i]
-            sla_cls = sla_base.SLA.get_by_name(description[0])
-            sla[i] = (sla_cls.OPTION_NAME, description[1])
+        for i in range(len(sla_descrs)):
+            description = sla_descrs[i]
+            sla_cls = sla.SLA.get_by_name(description[0])
+            sla_descrs[i] = (sla_cls.OPTION_NAME, description[1])
         info = (self._make_header("Rally - SLA checks "
                                   "(Service-Level Agreements)") +
                 "\n\n"
@@ -165,7 +165,7 @@ class InfoCommands(object):
                 "    failure_rate:\n"
                 "      max: 1"
                 "\n\n" +
-                self._compose_table("List of SLA checks", sla) +
+                self._compose_table("List of SLA checks", sla_descrs) +
                 "To get information about specific SLA checks, run:\n"
                 "  $ rally info find <sla_check_name>\n")
         print(info)
@@ -261,10 +261,9 @@ class InfoCommands(object):
         scenarios = scenario_base.Scenario.list_benchmark_scenarios()
         scenario_groups = list(set(s.split(".")[0] for s in scenarios))
         scenario_methods = list(set(s.split(".")[1] for s in scenarios))
-        sla_info = [cls.__name__ for cls in utils.itersubclasses(
-            sla_base.SLA)]
+        sla_info = [cls.__name__ for cls in utils.itersubclasses(sla.SLA)]
         sla_info.extend([cls.OPTION_NAME for cls in utils.itersubclasses(
-            sla_base.SLA)])
+            sla.SLA)])
         deploy_engines = [cls.__name__ for cls in utils.itersubclasses(
             deploy.EngineFactory)]
         server_providers = [cls.__name__ for cls in utils.itersubclasses(
@@ -331,11 +330,11 @@ class InfoCommands(object):
 
     def _get_sla_info(self, query):
         try:
-            sla = sla_base.SLA.get_by_name(query)
-            header = "%s (SLA)" % sla.OPTION_NAME
+            found_sla = sla.SLA.get_by_name(query)
+            header = "%s (SLA)" % found_sla.OPTION_NAME
             info = self._make_header(header)
             info += "\n\n"
-            info += utils.format_docstring(sla.__doc__) + "\n"
+            info += utils.format_docstring(found_sla.__doc__) + "\n"
             return info
         except exceptions.NoSuchSLA:
             return None

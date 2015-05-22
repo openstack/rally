@@ -32,7 +32,7 @@ class SLAPluginTestCase(test.TestCase):
 
     def test_validate(self):
         cnf = {"test_criterion": 42}
-        failure_rate.base.SLA.validate(cnf)
+        failure_rate.sla.SLA.validate(cnf)
 
     def test_validate_invalid_name(self):
         self.assertRaises(jsonschema.ValidationError,

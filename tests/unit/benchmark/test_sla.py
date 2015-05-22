@@ -14,11 +14,11 @@
 #    under the License.
 
 
-from rally.benchmark.sla import base
+from rally.benchmark import sla
 from tests.unit import test
 
 
-class TestCriterion(base.SLA):
+class TestCriterion(sla.SLA):
     """Test SLA."""
     OPTION_NAME = "test_criterion"
     CONFIG_SCHEMA = {"type": "integer"}
@@ -34,7 +34,7 @@ class TestCriterion(base.SLA):
 class SLACheckerTestCase(test.TestCase):
 
     def test_add_iteration_and_results(self):
-        sla_checker = base.SLAChecker({"sla": {"test_criterion": 42}})
+        sla_checker = sla.SLAChecker({"sla": {"test_criterion": 42}})
 
         iteration = {"key": {"name": "fake", "pos": 0}, "data": 42}
         self.assertTrue(sla_checker.add_iteration(iteration["data"]))
@@ -52,7 +52,7 @@ class SLACheckerTestCase(test.TestCase):
 
     def test_set_unexpected_failure(self):
         exc = "error;("
-        sla_checker = base.SLAChecker({"sla": {}})
+        sla_checker = sla.SLAChecker({"sla": {}})
         self.assertEqual([], sla_checker.results())
         sla_checker.set_unexpected_failure(exc)
         self.assertEqual([{"criterion": "something_went_wrong",
@@ -61,7 +61,7 @@ class SLACheckerTestCase(test.TestCase):
                          sla_checker.results())
 
     def test_set_aborted(self):
-        sla_checker = base.SLAChecker({"sla": {}})
+        sla_checker = sla.SLAChecker({"sla": {}})
         self.assertEqual([], sla_checker.results())
         sla_checker.set_aborted()
         self.assertEqual(
@@ -76,4 +76,4 @@ class SLACheckerTestCase(test.TestCase):
         self.assertEqual({"criterion": name,
                           "success": success,
                           "detail": detail},
-                         base._format_result(name, success, detail))
+                         sla._format_result(name, success, detail))

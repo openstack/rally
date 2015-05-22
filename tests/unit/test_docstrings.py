@@ -14,7 +14,7 @@
 #    under the License.
 
 from rally.benchmark.scenarios import base
-from rally.benchmark.sla import base as sla_base
+from rally.benchmark import sla
 from rally.common import utils
 from rally import deploy
 from rally.deploy import serverprovider
@@ -88,5 +88,5 @@ class DocstringsTestCase(test.TestCase):
             self._assert_class_has_docstrings(provider)
 
     def test_all_SLA_have_docstrings(self):
-        for sla in utils.itersubclasses(sla_base.SLA):
-            self._assert_class_has_docstrings(sla, long_description=False)
+        for s in utils.itersubclasses(sla.SLA):
+            self._assert_class_has_docstrings(s, long_description=False)

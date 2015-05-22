@@ -16,7 +16,7 @@
 import mock
 
 from rally.benchmark.scenarios import base as scenario_base
-from rally.benchmark.sla import base as sla_base
+from rally.benchmark import sla
 from rally.cli.commands import info
 from rally import deploy
 from rally.deploy.engines import existing as existing_cloud
@@ -29,7 +29,7 @@ from tests.unit import test
 
 
 SCENARIO = "rally.cli.commands.info.scenario_base.Scenario"
-SLA = "rally.cli.commands.info.sla_base.SLA"
+SLA = "rally.cli.commands.info.sla.SLA"
 ENGINE = "rally.cli.commands.info.deploy.EngineFactory"
 PROVIDER = "rally.cli.commands.info.serverprovider.ProviderFactory"
 UTILS = "rally.cli.commands.info.utils"
@@ -118,7 +118,7 @@ class InfoCommandsTestCase(test.TestCase):
                 return_value=[failure_rate.FailureRate])
     def test_SLA(self, mock_itersubclasses):
         status = self.info.SLA()
-        mock_itersubclasses.assert_called_with(sla_base.SLA)
+        mock_itersubclasses.assert_called_with(sla.SLA)
         self.assertIsNone(status)
 
     @mock.patch(UTILS + ".itersubclasses",

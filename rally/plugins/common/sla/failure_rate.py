@@ -19,12 +19,12 @@ SLA (Service-level agreement) is set of details for determining compliance
 with contracted values such as maximum error rate or minimum response time.
 """
 
-from rally.benchmark.sla import base
+from rally.benchmark import sla
 from rally.common.i18n import _
 from rally import consts
 
 
-class FailureRateDeprecated(base.SLA):
+class FailureRateDeprecated(sla.SLA):
     """[Deprecated] Failure rate in percents."""
     OPTION_NAME = "max_failure_percent"
     CONFIG_SCHEMA = {"type": "number", "minimum": 0.0, "maximum": 100.0}
@@ -48,7 +48,7 @@ class FailureRateDeprecated(base.SLA):
                 (self.criterion_value, self.error_rate, self.status()))
 
 
-class FailureRate(base.SLA):
+class FailureRate(sla.SLA):
     """Failure rate minimum and maximum in percents."""
     OPTION_NAME = "failure_rate"
     CONFIG_SCHEMA = {
