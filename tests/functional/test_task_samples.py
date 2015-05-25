@@ -24,6 +24,22 @@ from tests.functional import utils
 
 class TestTaskSamples(unittest.TestCase):
 
+    def _skip(self, validation_output):
+        """Help to decide do we want to skip this result or not.
+
+        :param validation_output: string representation of the
+        error that we want to check
+        :return: True if we want to skip this error
+        of task sample validation, otherwise False.
+        """
+
+        skip_lst = ["[Ss]ervice is not available",
+                    "is not installed. To install it run"]
+        for check_str in skip_lst:
+            if re.search(check_str, validation_output) is not None:
+                return True
+        return False
+
     def test_task_samples_is_valid(self):
         rally = utils.Rally()
         samples_path = os.path.join(
@@ -46,8 +62,7 @@ class TestTaskSamples(unittest.TestCase):
                 try:
                     rally("task validate --task %s" % full_path)
                 except utils.RallyCliError as e:
-                    if re.search(
-                            "[Ss]ervice is not available", e.output) is None:
+                    if not self._skip(e.output):
                         raise e
                 except Exception:
                     print(traceback.format_exc())
