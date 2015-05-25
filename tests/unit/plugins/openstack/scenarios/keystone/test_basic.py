@@ -24,6 +24,13 @@ BASIC = BASE + "basic.KeystoneBasic."
 
 class KeystoneBasicTestCase(test.TestCase):
 
+    @staticmethod
+    def _get_context():
+        return {
+            "user": {"id": "fake"},
+            "tenant": {"id": "fake"}
+        }
+
     @mock.patch(BASIC + "_generate_random_name")
     def test_create_user(self, mock_gen_name):
         scenario = basic.KeystoneBasic()
@@ -97,6 +104,53 @@ class KeystoneBasicTestCase(test.TestCase):
         scenario._tenant_create.assert_called_once_with(name_length=20,
                                                         enabled=True)
         scenario._list_tenants.assert_called_with()
+
+    def test_assign_and_remove_user_role(self):
+        context = self._get_context()
+        scenario = basic.KeystoneBasic(context)
+        fake_tenant = context["tenant"]["id"]
+        fake_user = context["user"]["id"]
+        fake_role = mock.MagicMock()
+        scenario._tenant_create = mock.MagicMock(return_value=fake_tenant)
+        scenario._user_create = mock.MagicMock(return_value=fake_user)
+        scenario._role_create = mock.MagicMock(return_value=fake_role)
+        scenario._role_add = mock.MagicMock()
+        scenario._role_remove = mock.MagicMock()
+        scenario.add_and_remove_user_role()
+        scenario._role_create.assert_called_once_with()
+        scenario._role_add.assert_called_once_with(fake_user,
+                                                   fake_role,
+                                                   fake_tenant)
+        scenario._role_remove.assert_called_once_with(fake_user,
+                                                      fake_role,
+                                                      fake_tenant)
+
+    def test_create_and_delete_role(self):
+        scenario = basic.KeystoneBasic()
+        fake_role = mock.MagicMock()
+        scenario._role_create = mock.MagicMock(return_value=fake_role)
+        scenario._resource_delete = mock.MagicMock()
+        scenario.create_and_delete_role()
+        scenario._role_create.assert_called_once_with()
+        scenario._resource_delete.assert_called_once_with(fake_role)
+
+    def test_create_and_list_user_roles(self):
+        context = self._get_context()
+        scenario = basic.KeystoneBasic(context)
+        fake_tenant = context["tenant"]["id"]
+        fake_user = context["user"]["id"]
+        fake_role = mock.MagicMock()
+        scenario._tenant_create = mock.MagicMock(return_value=fake_tenant)
+        scenario._user_create = mock.MagicMock(return_value=fake_user)
+        scenario._role_create = mock.MagicMock(return_value=fake_role)
+        scenario._role_add = mock.MagicMock()
+        scenario._list_roles_for_user = mock.MagicMock()
+        scenario.create_add_and_list_user_roles()
+        scenario._role_create.assert_called_once_with()
+        scenario._role_add.assert_called_once_with(fake_user,
+                                                   fake_role, fake_tenant)
+        scenario._list_roles_for_user.assert_called_once_with(fake_user,
+                                                              fake_tenant)
 
     @mock.patch(BASIC + "_generate_random_name")
     def test_get_entities(self, mock_gen_name):

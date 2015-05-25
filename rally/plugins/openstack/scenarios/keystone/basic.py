@@ -99,6 +99,33 @@ class KeystoneBasic(kutils.KeystoneScenario):
         self._tenant_create(name_length=name_length, **kwargs)
         self._list_tenants()
 
+    @validation.required_openstack(admin=True, users=True)
+    @base.scenario(context={"admin_cleanup": ["keystone"]})
+    def add_and_remove_user_role(self):
+        """Create a user role add to a user and disassociate."""
+        tenant_id = self.context["tenant"]["id"]
+        user_id = self.context["user"]["id"]
+        role = self._role_create()
+        self._role_add(user_id, role, tenant_id)
+        self._role_remove(user_id, role, tenant_id)
+
+    @validation.required_openstack(admin=True)
+    @base.scenario(context={"admin_cleanup": ["keystone"]})
+    def create_and_delete_role(self):
+        """Create a user role and delete it."""
+        role = self._role_create()
+        self._resource_delete(role)
+
+    @validation.required_openstack(admin=True, users=True)
+    @base.scenario(context={"admin_cleanup": ["keystone"]})
+    def create_add_and_list_user_roles(self):
+        """Create user role, add it and list user roles for given user."""
+        tenant_id = self.context["tenant"]["id"]
+        user_id = self.context["user"]["id"]
+        role = self._role_create()
+        self._role_add(user_id, role, tenant_id)
+        self._list_roles_for_user(user_id, tenant_id)
+
     @validation.required_openstack(admin=True)
     @base.scenario(context={"admin_cleanup": ["keystone"]})
     def get_entities(self):

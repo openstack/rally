@@ -732,6 +732,9 @@ class FakeRolesManager(FakeManager):
         role.name = "admin"
         return [role, ]
 
+    def add_user_role(self, user, role, tenant):
+        pass
+
 
 class FakeAlarmManager(FakeManager):
 

@@ -46,6 +46,44 @@
         failure_rate:
           max: 0
 
+  KeystoneBasic.add_and_remove_user_role:
+    -
+      runner:
+        type: "constant"
+        times: 10
+        concurrency: 5
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+      sla:
+        failure_rate:
+          max: 0
+
+  KeystoneBasic.create_and_delete_role:
+    -
+      runner:
+        type: "constant"
+        times: 10
+        concurrency: 5
+      sla:
+        failure_rate:
+          max: 0
+
+  KeystoneBasic.create_add_and_list_user_roles:
+    -
+      runner:
+        type: "constant"
+        times: 10
+        concurrency: 5
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+      sla:
+        failure_rate:
+          max: 0
+
   KeystoneBasic.create_and_list_users:
     -
       args:
