@@ -523,7 +523,7 @@ do
             shift
             DBTYPE=$1
             case $DBTYPE in
-                sqlite|mysql|postgres) break ;;
+                sqlite|mysql|postgres);;
                 *)
                     err "Invalid database type $DBTYPE."
                     print_usage
