@@ -235,10 +235,10 @@ Inherit a class for your plugin from the base *SLA* class and implement its API 
 
 .. code-block:: none
 
-    from rally.benchmark.sla import base
+    from rally.benchmark import sla
 
 
-    class MaxDurationRange(base.SLA):
+    class MaxDurationRange(sla.SLA):
         """Maximum allowed duration range in seconds."""
         OPTION_NAME = "max_duration_range"
         CONFIG_SCHEMA = {"type": "number", "minimum": 0.0,

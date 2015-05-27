@@ -13,11 +13,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from rally.benchmark.sla import base
+from rally.benchmark import sla
 from rally.common.i18n import _
 
 
-class MaxDurationRange(base.SLA):
+class MaxDurationRange(sla.SLA):
     """Maximum allowed duration range in seconds."""
     OPTION_NAME = "max_duration_range"
     CONFIG_SCHEMA = {"type": "number", "minimum": 0.0,
@@ -30,4 +30,4 @@ class MaxDurationRange(base.SLA):
         success = durations_range <= criterion_value
         msg = (_("Maximum duration range per iteration %ss, actual %ss")
                % (criterion_value, durations_range))
-        return base.SLAResult(success, msg)
+        return sla.SLAResult(success, msg)
