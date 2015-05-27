@@ -28,7 +28,7 @@ uncommited=$(git status --porcelain | grep -v "^??")
 git checkout HEAD^
 
 baseline_report=$(mktemp -t rally_coverageXXXXXXX)
-python setup.py testr --coverage --testr-args="$*"
+find . -type f -name "*.pyc" -delete && python setup.py testr --coverage --testr-args="$*"
 coverage report > $baseline_report
 baseline_missing=$(awk 'END { print $3 }' $baseline_report)
 
@@ -38,7 +38,7 @@ git checkout -
 
 # Generate and save coverage report
 current_report=$(mktemp -t rally_coverageXXXXXXX)
-python setup.py testr --coverage --testr-args="$*"
+find . -type f -name "*.pyc" -delete && python setup.py testr --coverage --testr-args="$*"
 coverage report > $current_report
 current_missing=$(awk 'END { print $3 }' $current_report)
 
