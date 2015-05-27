@@ -290,7 +290,13 @@ install_required_sw () {
         fi
     elif have_command zypper; then
         # SuSE
-        warn "Cannot check if requisite software is installed: SuSE and compatible Linux distributions are not yet supported. I'm proceeding anyway, but you may run into errors later."
+        missing=$(which_missing_packages gcc libffi48-devel python-devel openssl-devel gmp-devel libxml2-devel libxslt-devel postgresql93-devel git)
+
+        if [ "$ASKCONFIRMATION" -eq 0 ]; then
+            pkg_manager="zypper -n --no-gpg-checks --non-interactive install --auto-agree-with-licenses"
+        else
+            pkg_manager="zypper install"
+        fi
     else
         # MacOSX maybe?
         warn "Cannot determine what package manager this Linux distribution has, so I cannot check if requisite software is installed. I'm proceeding anyway, but you may run into errors later."
