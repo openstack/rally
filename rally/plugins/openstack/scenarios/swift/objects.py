@@ -123,3 +123,50 @@ class SwiftObjects(utils.SwiftScenario):
             for object_name in objects_list:
                 self._download_object(container_name, object_name,
                                       atomic_action=False)
+
+    @validation.required_services(consts.Service.SWIFT)
+    @validation.required_openstack(users=True)
+    @scenario.configure(context={"swift_objects": {}})
+    def list_objects_in_containers(self):
+        """List objects in all containers."""
+        containers = self._list_containers()[1]
+
+        key_suffix = "container"
+        if len(containers) > 1:
+            key_suffix = "%i_containers" % len(containers)
+
+        with atomic.ActionTimer(self, "swift.list_objects_in_%s" % key_suffix):
+            for container in containers:
+                self._list_objects(container["name"], atomic_action=False)
+
+    @validation.required_services(consts.Service.SWIFT)
+    @validation.required_openstack(users=True)
+    @scenario.configure(context={"swift_objects": {}})
+    def list_and_download_objects_in_containers(self):
+        """List and download objects in all containers."""
+        containers = self._list_containers()[1]
+
+        list_key_suffix = "container"
+        if len(containers) > 1:
+            list_key_suffix = "%i_containers" % len(containers)
+
+        objects_dict = {}
+        with atomic.ActionTimer(self,
+                                "swift.list_objects_in_%s" % list_key_suffix):
+            for container in containers:
+                container_name = container["name"]
+                objects_dict[container_name] = self._list_objects(
+                    container_name,
+                    atomic_action=False)[1]
+
+        objects_total = sum(map(len, objects_dict.values()))
+        download_key_suffix = "object"
+        if objects_total > 1:
+            download_key_suffix = "%i_objects" % objects_total
+
+        with atomic.ActionTimer(self,
+                                "swift.download_%s" % download_key_suffix):
+            for container_name, objects in objects_dict.items():
+                for obj in objects:
+                    self._download_object(container_name, obj["name"],
+                                          atomic_action=False)

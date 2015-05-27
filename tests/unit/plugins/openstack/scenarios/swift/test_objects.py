@@ -13,12 +13,14 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import ddt
 import mock
 
 from rally.plugins.openstack.scenarios.swift import objects
 from tests.unit import test
 
 
+@ddt.ddt
 class SwiftObjectsTestCase(test.ScenarioTestCase):
 
     def test_create_container_and_object_then_list_objects(self):
@@ -83,6 +85,63 @@ class SwiftObjectsTestCase(test.ScenarioTestCase):
                                        "swift.create_2_objects")
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "swift.download_2_objects")
+
+    @ddt.data(1, 5)
+    def test_list_objects_in_containers(self, num_cons):
+        con_list = [{"name": "cooon_%s" % i} for i in range(num_cons)]
+        scenario = objects.SwiftObjects()
+        scenario._list_containers = mock.MagicMock(return_value=("header",
+                                                                 con_list))
+        scenario._list_objects = mock.MagicMock()
+
+        scenario.list_objects_in_containers()
+        scenario._list_containers.assert_called_once_with()
+        con_calls = [mock.call(container["name"], atomic_action=False)
+                     for container in con_list]
+        scenario._list_objects.assert_has_calls(con_calls)
+
+        key_suffix = "container"
+        if num_cons > 1:
+            key_suffix = "%i_containers" % num_cons
+        self._test_atomic_action_timer(scenario.atomic_actions(),
+                                       "swift.list_objects_in_%s" % key_suffix)
+
+    @ddt.data([1, 1], [1, 2], [2, 1], [3, 5])
+    @ddt.unpack
+    def test_list_and_download_objects_in_containers(self, num_cons, num_objs):
+        con_list = [{"name": "connn_%s" % i} for i in range(num_cons)]
+        obj_list = [{"name": "ooobj_%s" % i} for i in range(num_objs)]
+        scenario = objects.SwiftObjects()
+        scenario._list_containers = mock.MagicMock(return_value=("header",
+                                                                 con_list))
+        scenario._list_objects = mock.MagicMock(return_value=("header",
+                                                              obj_list))
+        scenario._download_object = mock.MagicMock()
+
+        scenario.list_and_download_objects_in_containers()
+        scenario._list_containers.assert_called_once_with()
+        con_calls = [mock.call(container["name"], atomic_action=False)
+                     for container in con_list]
+        scenario._list_objects.assert_has_calls(con_calls)
+        obj_calls = []
+        for container in con_list:
+            for obj in obj_list:
+                obj_calls.append(mock.call(container["name"], obj["name"],
+                                           atomic_action=False))
+        scenario._download_object.assert_has_calls(obj_calls, any_order=True)
+
+        list_key_suffix = "container"
+        if num_cons > 1:
+            list_key_suffix = "%i_containers" % num_cons
+        self._test_atomic_action_timer(
+            scenario.atomic_actions(),
+            "swift.list_objects_in_%s" % list_key_suffix)
+        download_key_suffix = "object"
+        if num_cons * num_objs > 1:
+            download_key_suffix = "%i_objects" % (num_cons * num_objs)
+        self._test_atomic_action_timer(
+            scenario.atomic_actions(),
+            "swift.download_%s" % download_key_suffix)
 
     def test_functional_create_container_and_object_then_list_objects(self):
         names_list = ["AA", "BB", "CC", "DD"]
