@@ -500,7 +500,7 @@ do
             shift
             DBTYPE=$1
             case $DBTYPE in
-                sqlite|mysql|postgres) break ;;
+                sqlite|mysql|postgres);;
                 *)
                     print_usage | die $EX_USAGE \
                         "An invalid option has been detected."

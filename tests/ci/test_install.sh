@@ -30,3 +30,5 @@ sudo rm -fr ~/.rally
 
 ./install_rally.sh --yes -d /tmp/rallytest_user
 /tmp/rallytest_user/bin/rally deployment list
+
+./install_rally.sh --overwrite --dbtype sqlite
