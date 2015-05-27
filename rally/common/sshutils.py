@@ -261,6 +261,24 @@ class SSH(object):
             if time.time() > (start_time + timeout):
                 raise SSHTimeout(_("Timeout waiting for '%s'") % self.host)
 
+    def _put_file_sftp(self, localpath, remotepath, mode=None):
+        client = self._get_client()
+
+        with client.open_sftp() as sftp:
+            sftp.put(localpath, remotepath)
+            if mode is None:
+                mode = 0o777 & os.stat(localpath).st_mode
+            sftp.chmod(remotepath, mode)
+
+    def _put_file_shell(self, localpath, remotepath, mode=None):
+        cmd = ["cat > %s" % remotepath]
+        if mode is not None:
+            cmd.append("chmod 0%o %s" % (mode, remotepath))
+
+        with open(localpath, "rb") as localfile:
+            cmd = "; ".join(cmd)
+            self.run(cmd, stdin=localfile)
+
     def put_file(self, localpath, remotepath, mode=None):
         """Copy specified local file to the server.
 
@@ -269,10 +287,7 @@ class SSH(object):
         :param mode:        Permissions to set after upload
         """
 
-        client = self._get_client()
-
-        with client.open_sftp() as sftp:
-            sftp.put(localpath, remotepath)
-            if mode is None:
-                mode = 0o777 & os.stat(localpath).st_mode
-            sftp.chmod(remotepath, mode)
+        try:
+            self._put_file_sftp(localpath, remotepath, mode=mode)
+        except paramiko.SSHException:
+            self._put_file_shell(localpath, remotepath, mode=mode)
