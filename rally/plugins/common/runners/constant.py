@@ -18,7 +18,7 @@ import multiprocessing
 import threading
 import time
 
-from rally.benchmark.runners import base
+from rally.benchmark import runner
 from rally.benchmark import utils as butils
 from rally.common import log as logging
 from rally.common import utils
@@ -49,24 +49,24 @@ def _worker_process(queue, iteration_gen, timeout, concurrency, times, context,
     :param args: scenario args
     :param aborted: multiprocessing.Event that aborts load generation if
                     the flag is set
-    :param info: info about all processes count and counter of runned process
+    :param info: info about all processes count and counter of launched process
     """
 
     pool = collections.deque()
     alive_threads_in_pool = 0
     finished_threads_in_pool = 0
 
-    base._log_worker_info(times=times, concurrency=concurrency,
-                          timeout=timeout, cls=cls, method_name=method_name,
-                          args=args)
+    runner._log_worker_info(times=times, concurrency=concurrency,
+                            timeout=timeout, cls=cls, method_name=method_name,
+                            args=args)
 
     iteration = next(iteration_gen)
     while iteration < times and not aborted.is_set():
-        scenario_context = base._get_scenario_context(context)
+        scenario_context = runner._get_scenario_context(context)
         scenario_args = (iteration, cls, method_name, scenario_context, args)
         worker_args = (queue, scenario_args)
 
-        thread = threading.Thread(target=base._worker_thread,
+        thread = threading.Thread(target=runner._worker_thread,
                                   args=worker_args)
         thread.start()
         pool.append((thread, time.time()))
@@ -100,7 +100,7 @@ def _worker_process(queue, iteration_gen, timeout, concurrency, times, context,
         pool.popleft()[0].join()
 
 
-class ConstantScenarioRunner(base.ScenarioRunner):
+class ConstantScenarioRunner(runner.ScenarioRunner):
     """Creates constant load executing a scenario a specified number of times.
 
     This runner will place a constant load on the cloud under test by
@@ -195,7 +195,7 @@ class ConstantScenarioRunner(base.ScenarioRunner):
         self._join_processes(process_pool, result_queue)
 
 
-class ConstantForDurationScenarioRunner(base.ScenarioRunner):
+class ConstantForDurationScenarioRunner(runner.ScenarioRunner):
     """Creates constant load executing a scenario for an interval of time.
 
     This runner will place a constant load on the cloud under test by
@@ -239,7 +239,7 @@ class ConstantForDurationScenarioRunner(base.ScenarioRunner):
         def _scenario_args(i):
             if aborted.is_set():
                 raise StopIteration()
-            return (i, cls, method, base._get_scenario_context(ctx), args)
+            return (i, cls, method, runner._get_scenario_context(ctx), args)
         return _scenario_args
 
     def _run_scenario(self, cls, method, context, args):
@@ -263,14 +263,14 @@ class ConstantForDurationScenarioRunner(base.ScenarioRunner):
         run_args = butils.infinite_run_args_generator(
             self._iter_scenario_args(cls, method, context, args,
                                      self.aborted))
-        iter_result = pool.imap(base._run_scenario_once, run_args)
+        iter_result = pool.imap(runner._run_scenario_once, run_args)
 
         start = time.time()
         while True:
             try:
                 result = iter_result.next(timeout)
             except multiprocessing.TimeoutError as e:
-                result = base.format_result_on_timeout(e, timeout)
+                result = runner.format_result_on_timeout(e, timeout)
             except StopIteration:
                 break
 

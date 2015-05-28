@@ -251,7 +251,7 @@ Inherit a class for your plugin from the base *SLA* class and implement its API 
             success = durations_range <= criterion_value
             msg = (_("Maximum duration range per iteration %ss, actual %ss")
                    % (criterion_value, durations_range))
-            return base.SLAResult(success, msg)
+            return sla.SLAResult(success, msg)
 
 
 
@@ -307,14 +307,14 @@ Inherit a class for your plugin from the base *ScenarioRunner* class and impleme
 
     import random
 
-    from rally.benchmark.runners import base
+    from rally.benchmark import runner
     from rally import consts
 
 
-    class RandomTimesScenarioRunner(base.ScenarioRunner):
+    class RandomTimesScenarioRunner(runner.ScenarioRunner):
         """Sample of scenario runner plugin.
 
-        Run scenario random number of times, which is choosen between min_times and
+        Run scenario random number of times, which is chosen between min_times and
         max_times.
         """
 
@@ -346,8 +346,8 @@ Inherit a class for your plugin from the base *ScenarioRunner* class and impleme
 
             for i in range(random.randrange(min_times, max_times)):
                 run_args = (i, cls, method_name,
-                            base._get_scenario_context(context), args)
-                result = base._run_scenario_once(run_args)
+                            runner._get_scenario_context(context), args)
+                result = runner._run_scenario_once(run_args)
                 # use self.send_result for result of each iteration
                 self._send_result(result)
 

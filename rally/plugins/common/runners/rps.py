@@ -18,7 +18,7 @@ import multiprocessing
 import threading
 import time
 
-from rally.benchmark.runners import base
+from rally.benchmark import runner
 from rally.common import log as logging
 from rally.common import utils
 from rally import consts
@@ -55,19 +55,19 @@ def _worker_process(queue, iteration_gen, timeout, rps, times,
     start = time.time()
     sleep = 1.0 / rps
 
-    base._log_worker_info(times=times, rps=rps, timeout=timeout,
-                          cls=cls, method_name=method_name, args=args)
+    runner._log_worker_info(times=times, rps=rps, timeout=timeout,
+                            cls=cls, method_name=method_name, args=args)
 
     time.sleep(
         (sleep * info["processes_counter"]) / info["processes_to_start"])
 
     i = 0
     while i < times and not aborted.is_set():
-        scenario_context = base._get_scenario_context(context)
+        scenario_context = runner._get_scenario_context(context)
         scenario_args = (next(iteration_gen), cls, method_name,
                          scenario_context, args)
         worker_args = (queue, scenario_args)
-        thread = threading.Thread(target=base._worker_thread,
+        thread = threading.Thread(target=runner._worker_thread,
                                   args=worker_args)
         i += 1
         thread.start()
@@ -94,7 +94,7 @@ def _worker_process(queue, iteration_gen, timeout, rps, times,
         thr.join()
 
 
-class RPSScenarioRunner(base.ScenarioRunner):
+class RPSScenarioRunner(runner.ScenarioRunner):
     """Scenario runner that does the job with specified frequency.
 
     Every single benchmark scenario iteration is executed with specified

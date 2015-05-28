@@ -16,14 +16,14 @@
 import jsonschema
 import mock
 
-from rally.benchmark.runners import base
+from rally.benchmark import runner
 from rally import consts
 from rally.plugins.common.runners import rps
 from tests.unit import fakes
 from tests.unit import test
 
 
-RUNNERS_BASE = "rally.benchmark.runners.base."
+RUNNERS_BASE = "rally.benchmark.runner."
 RUNNERS = "rally.plugins.common.runners."
 
 
@@ -71,16 +71,15 @@ class RPSScenarioRunnerTestCase(test.TestCase):
 
         mock_osclients.Clients.return_value = fakes.FakeClients()
 
-        runner = base.ScenarioRunner.get_runner(mock.MagicMock(),
-                                                {"type":
-                                                 consts.RunnerType.RPS})
-        self.assertIsNotNone(runner)
+        runner_obj = runner.ScenarioRunner.get_runner(
+            mock.MagicMock(), {"type": consts.RunnerType.RPS})
+        self.assertIsNotNone(runner_obj)
 
     @mock.patch(RUNNERS + "rps.LOG")
     @mock.patch(RUNNERS + "rps.time")
     @mock.patch(RUNNERS + "rps.threading.Thread")
     @mock.patch(RUNNERS + "rps.multiprocessing.Queue")
-    @mock.patch(RUNNERS + "rps.base")
+    @mock.patch(RUNNERS + "rps.runner")
     def test__worker_process(self, mock_base, mock_queue, mock_thread,
                              mock_time, mock_log):
 
@@ -130,13 +129,13 @@ class RPSScenarioRunnerTestCase(test.TestCase):
                              target=mock_base._worker_thread)
             self.assertIn(call, mock_thread.mock_calls)
 
-    @mock.patch(RUNNERS + "rps.base._run_scenario_once")
+    @mock.patch(RUNNERS + "rps.runner._run_scenario_once")
     def test__worker_thread(self, mock_run_scenario_once):
         mock_queue = mock.MagicMock()
 
         args = ("some_args",)
 
-        base._worker_thread(mock_queue, args)
+        runner._worker_thread(mock_queue, args)
 
         self.assertEqual(1, mock_queue.put.call_count)
 
@@ -149,14 +148,14 @@ class RPSScenarioRunnerTestCase(test.TestCase):
         context["task"] = {"uuid": "fake_uuid"}
 
         config = {"times": 20, "rps": 20, "timeout": 5, "max_concurrency": 15}
-        runner = rps.RPSScenarioRunner(self.task, config)
+        runner_obj = rps.RPSScenarioRunner(self.task, config)
 
-        runner._run_scenario(fakes.FakeScenario, "do_it", context, {})
+        runner_obj._run_scenario(fakes.FakeScenario, "do_it", context, {})
 
-        self.assertEqual(len(runner.result_queue), config["times"])
+        self.assertEqual(len(runner_obj.result_queue), config["times"])
 
-        for result in runner.result_queue:
-            self.assertIsNotNone(base.ScenarioRunnerResult(result))
+        for result in runner_obj.result_queue:
+            self.assertIsNotNone(runner.ScenarioRunnerResult(result))
 
     @mock.patch(RUNNERS + "rps.time.sleep")
     def test__run_scenario_exception(self, mock_sleep):
@@ -164,13 +163,13 @@ class RPSScenarioRunnerTestCase(test.TestCase):
         context["task"] = {"uuid": "fake_uuid"}
 
         config = {"times": 4, "rps": 10}
-        runner = rps.RPSScenarioRunner(self.task, config)
+        runner_obj = rps.RPSScenarioRunner(self.task, config)
 
-        runner._run_scenario(fakes.FakeScenario,
-                             "something_went_wrong", context, {})
-        self.assertEqual(len(runner.result_queue), config["times"])
-        for result in runner.result_queue:
-            self.assertIsNotNone(base.ScenarioRunnerResult(result))
+        runner_obj._run_scenario(fakes.FakeScenario, "something_went_wrong",
+                                 context, {})
+        self.assertEqual(len(runner_obj.result_queue), config["times"])
+        for result in runner_obj.result_queue:
+            self.assertIsNotNone(runner.ScenarioRunnerResult(result))
 
     @mock.patch(RUNNERS + "rps.time.sleep")
     def test__run_scenario_aborted(self, mock_sleep):
@@ -178,15 +177,15 @@ class RPSScenarioRunnerTestCase(test.TestCase):
         context["task"] = {"uuid": "fake_uuid"}
 
         config = {"times": 20, "rps": 20, "timeout": 5}
-        runner = rps.RPSScenarioRunner(self.task, config)
+        runner_obj = rps.RPSScenarioRunner(self.task, config)
 
-        runner.abort()
-        runner._run_scenario(fakes.FakeScenario, "do_it", context, {})
+        runner_obj.abort()
+        runner_obj._run_scenario(fakes.FakeScenario, "do_it", context, {})
 
-        self.assertEqual(len(runner.result_queue), 0)
+        self.assertEqual(len(runner_obj.result_queue), 0)
 
-        for result in runner.result_queue:
-            self.assertIsNotNone(base.ScenarioRunnerResult(result))
+        for result in runner_obj.result_queue:
+            self.assertIsNotNone(runner.ScenarioRunnerResult(result))
 
     @mock.patch(RUNNERS + "constant.multiprocessing.Queue")
     @mock.patch(RUNNERS + "rps.multiprocessing.cpu_count")
@@ -271,9 +270,9 @@ class RPSScenarioRunnerTestCase(test.TestCase):
 
             mock_cpu_count.return_value = sample["real_cpu"]
 
-            runner = rps.RPSScenarioRunner(self.task, sample["input"])
+            runner_obj = rps.RPSScenarioRunner(self.task, sample["input"])
 
-            runner._run_scenario(fakes.FakeScenario, "do_it", context, {})
+            runner_obj._run_scenario(fakes.FakeScenario, "do_it", context, {})
 
             mock_cpu_count.assert_called_once_with()
             mock_log.assert_called_once_with(
@@ -300,8 +299,8 @@ class RPSScenarioRunnerTestCase(test.TestCase):
         context["task"] = {"uuid": "fake_uuid"}
 
         config = {"times": 4, "rps": 10}
-        runner = rps.RPSScenarioRunner(self.task, config)
+        runner_obj = rps.RPSScenarioRunner(self.task, config)
 
-        self.assertFalse(runner.aborted.is_set())
-        runner.abort()
-        self.assertTrue(runner.aborted.is_set())
+        self.assertFalse(runner_obj.aborted.is_set())
+        runner_obj.abort()
+        self.assertTrue(runner_obj.aborted.is_set())
