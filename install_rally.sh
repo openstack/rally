@@ -25,7 +25,7 @@ USEVIRTUALENV="yes"
 PYTHON2="$(which python || true)"
 PYTHON3="$(which python3 || true)"
 PYTHON=${PYTHON2:-$PYTHON3}
-BASE_PIP_URL="https://pypi.python.org/simple"
+BASE_PIP_URL=${BASE_PIP_URL:-"https://pypi.python.org/simple"}
 VIRTUALENV_191_URL="https://raw.github.com/pypa/virtualenv/1.9.1/virtualenv.py"
 
 RALLY_GIT_URL=https://github.com/openstack/rally
@@ -706,10 +706,9 @@ install_db_connector
 # Install rally
 cd "$SOURCEDIR"
 # Install dependencies
-pip install pbr
-pip install 'tox<=1.6.1'
+pip install -i $BASE_PIP_URL pbr 'tox<=1.6.1'
 # Install rally
-pip install .
+pip install -i $BASE_PIP_URL .
 cd "$ORIG_WD"
 
 # Post-installation
