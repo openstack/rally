@@ -397,3 +397,44 @@ class CinderServersTestCase(test.TestCase):
                                                         fakearg="f")
         self.assertFalse(scenario._delete_volume.called)
         self.assertFalse(scenario._delete_backup.called)
+
+    def _get_scenario(self, fake_volume, fake_backup, fake_restore):
+        scenario = volumes.CinderVolumes()
+
+        scenario._create_volume = mock.MagicMock(return_value=fake_volume)
+        scenario._create_backup = mock.MagicMock(return_value=fake_backup)
+        scenario._restore_backup = mock.MagicMock(return_value=fake_restore)
+        scenario._delete_volume = mock.MagicMock()
+        scenario._delete_backup = mock.MagicMock()
+
+        return scenario
+
+    def test_create_and_restore_volume_backup(self):
+        fake_volume = mock.MagicMock()
+        fake_backup = mock.MagicMock()
+        fake_restore = mock.MagicMock()
+        scenario = self._get_scenario(fake_volume, fake_backup, fake_restore)
+
+        volume_kwargs = {"some_var": "zaq"}
+        scenario.create_and_restore_volume_backup(
+            1, do_delete=True, create_volume_kwargs=volume_kwargs)
+        scenario._create_volume.assert_called_once_with(1, **volume_kwargs)
+        scenario._create_backup.assert_called_once_with(fake_volume.id)
+        scenario._restore_backup.assert_called_once_with(fake_backup.id)
+        scenario._delete_volume.assert_called_once_with(fake_volume)
+        scenario._delete_backup.assert_called_once_with(fake_backup)
+
+    def test_create_and_restore_volume_backup_no_delete(self):
+        fake_volume = mock.MagicMock()
+        fake_backup = mock.MagicMock()
+        fake_restore = mock.MagicMock()
+        scenario = self._get_scenario(fake_volume, fake_backup, fake_restore)
+
+        volume_kwargs = {"some_var": "zaq"}
+        scenario.create_and_restore_volume_backup(
+            1, do_delete=False, create_volume_kwargs=volume_kwargs)
+        scenario._create_volume.assert_called_once_with(1, **volume_kwargs)
+        scenario._create_backup.assert_called_once_with(fake_volume.id)
+        scenario._restore_backup.assert_called_once_with(fake_backup.id)
+        self.assertFalse(scenario._delete_volume.called)
+        self.assertFalse(scenario._delete_backup.called)
