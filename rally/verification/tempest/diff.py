@@ -69,15 +69,19 @@ class Diff(object):
         return diffs
 
     def _diff_values(self, name, result1, result2):
-        th = self.threshold
         fields = ["status", "time", "output"]
         diffs = []
         for field in fields:
             val1 = result1[field]
             val2 = result2[field]
-            if val1 != val2 and not (field == "time"
-                                     and abs(((val2 - val1) / val1) * 100)
-                                     < th):
+            if val1 != val2:
+                if field == "time":
+                    max_ = max(val1, val2)
+                    min_ = min(val1, val2)
+                    time_threshold = ((max_ - min_) / (min_ or 1)) * 100
+                    if time_threshold < self.threshold:
+                        continue
+
                 diffs.append({
                     "field": field,
                     "type": "value_changed",
