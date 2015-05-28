@@ -87,6 +87,13 @@ class TaskAPITestCase(test.TestCase):
         self.assertEqual(
             "5 = 5", api.Task.render_template(template, a=2, b=3, c=5))
 
+    def test_render_template_default_filter(self):
+        template = "{{ c | default(3) }}"
+
+        self.assertEqual("3", api.Task.render_template(template))
+
+        self.assertEqual("5", api.Task.render_template(template, c=5))
+
     def test_render_template_builtin(self):
         template = "{% for i in range(4) %}{{i}}{% endfor %}"
         self.assertEqual("0123", api.Task.render_template(template))
