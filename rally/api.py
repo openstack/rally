@@ -112,6 +112,19 @@ class Task(object):
         :returns: rendered template str
         """
 
+        def is_really_missing(mis, task_template):
+            # NOTE(boris-42): Removing variables that have default values from
+            #                 missing. Construction that won't be properly
+            #                 checked is {% set x = x or 1}
+            if re.search(mis.join(["{%\s*set\s+", "\s*=\s*", "[^\w]+"]),
+                         task_template):
+                return False
+            # NOTE(jlk): Also check for a default filter which can show up as
+            #            a missing variable
+            if re.search(mis + "\s*\|\s*default\(", task_template):
+                return False
+            return True
+
         # NOTE(boris-42): We have to import builtins to get the full list of
         #                 builtin functions (e.g. range()). Unfortunately,
         #                 __builtins__ doesn't return them (when it is not
@@ -122,14 +135,8 @@ class Task(object):
         required_kwargs = jinja2.meta.find_undeclared_variables(ast)
 
         missing = set(required_kwargs) - set(kwargs) - set(dir(builtins))
-        # NOTE(boris-42): Removing variables that have default values from
-        #                 missing. Construction that won't be properly checked
-        #                 is {% set x = x or 1}
-        real_missing = []
-        for mis in missing:
-            if not re.search(mis.join(["{%\s*set\s+", "\s*=\s*", "[^\w]+"]),
-                             task_template):
-                real_missing.append(mis)
+        real_missing = [mis for mis in missing
+                        if is_really_missing(mis, task_template)]
 
         if real_missing:
             multi_msg = _("Please specify next template task arguments: %s")
