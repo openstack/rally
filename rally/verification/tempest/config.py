@@ -200,6 +200,8 @@ class TempestConf(object):
         self.conf.set(section_name, "uri", self.endpoint["auth_url"])
         self.conf.set(section_name, "uri_v3",
                       self.endpoint["auth_url"].replace("/v2.0", "/v3"))
+        self.conf.set(section_name, "admin_domain_name",
+                      self.endpoint["admin_domain_name"])
 
     def _set_network(self, section_name="network"):
         if "neutron" in self.available_services:
