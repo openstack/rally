@@ -661,6 +661,12 @@ BASEDIR=$(dirname "$(readlink -e "$0")")
 if [ -d "$BASEDIR"/.git ]
 then
     SOURCEDIR=$BASEDIR
+    if find . -regex '.+\.py[co]$' -delete
+    then
+        echo "Wiped python compiled files."
+    else
+        echo "Warning! Unable to wipe python compiled files"
+    fi
 else
     if [ "$USEVIRTUALENV" = 'yes' ]
     then
@@ -707,6 +713,8 @@ install_db_connector
 cd "$SOURCEDIR"
 # Install dependencies
 pip install -i $BASE_PIP_URL pbr 'tox<=1.6.1'
+# Uninstall possible previous version
+pip uninstall -y rally || true
 # Install rally
 pip install -i $BASE_PIP_URL .
 cd "$ORIG_WD"
