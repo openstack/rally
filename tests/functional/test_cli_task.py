@@ -138,6 +138,12 @@ class TaskTestCase(unittest.TestCase):
             rally.gen_report_path(extension="html")))
         self.assertRaises(utils.RallyCliError,
                           rally, "task report --report %s" % FAKE_TASK_UUID)
+        rally("task report --junit --out %s" %
+              rally.gen_report_path(extension="junit"))
+        self.assertTrue(os.path.exists(
+            rally.gen_report_path(extension="junit")))
+        self.assertRaises(utils.RallyCliError,
+                          rally, "task report --report %s" % FAKE_TASK_UUID)
 
     def test_report_bunch_uuids(self):
         rally = utils.Rally()
