@@ -768,6 +768,12 @@ class FakeMeterManager(FakeManager):
         return ["fake-meter"]
 
 
+class FakeMetricsManager(FakeManager):
+
+    def list(self):
+        return ["fake-metric"]
+
+
 class FakeCeilometerResourceManager(FakeManager):
 
     def get(self, resource_id):
@@ -916,7 +922,8 @@ class FakeObjectManager(FakeManager):
 class FakeServiceCatalog(object):
     def get_endpoints(self):
         return {"image": [{"publicURL": "http://fake.to"}],
-                "metering": [{"publicURL": "http://fake.to"}]}
+                "metering": [{"publicURL": "http://fake.to"}],
+                "monitoring": [{"publicURL": "http://fake.to"}]}
 
     def url_for(self, **kwargs):
         return "http://fake.to"
@@ -1025,6 +1032,12 @@ class FakeCeilometerClient(object):
         self.query_alarms = FakeQueryManager()
         self.query_samples = FakeQueryManager()
         self.query_alarm_history = FakeQueryManager()
+
+
+class FakeMonascaClient(object):
+
+    def __init__(self):
+        self.metrics = FakeMetricsManager()
 
 
 class FakeNeutronClient(object):
@@ -1453,6 +1466,7 @@ class FakeClients(object):
         self._mistral = None
         self._swift = None
         self._murano = None
+        self._monasca = None
         self._ec2 = None
         self._endpoint = endpoint_ or objects.Endpoint(
             "http://fake.example.org:5000/v2.0/",
@@ -1507,6 +1521,11 @@ class FakeClients(object):
         if not self._ceilometer:
             self._ceilometer = FakeCeilometerClient()
         return self._ceilometer
+
+    def monasca(self):
+        if not self._monasca:
+            self._monasca = FakeMonascaClient()
+        return self._monasca
 
     def zaqar(self):
         if not self._zaqar:

@@ -1,3 +1,4 @@
 python-mistralclient
 python-fuelclient==6.1.0
 python-muranoclient>=0.5.5
+python-monascaclient>=1.0.22

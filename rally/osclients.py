@@ -283,6 +283,26 @@ class Clients(object):
         return client
 
     @cached
+    def monasca(self, version="2_0"):
+        """Return monasca client."""
+        from monascaclient import client as monasca
+        kc = self.keystone()
+        monitoring_api_url = kc.service_catalog.url_for(
+            service_type="monitoring",
+            endpoint_type=self.endpoint.endpoint_type,
+            region_name=self.endpoint.region_name)
+        auth_token = kc.auth_token
+        client = monasca.Client(
+            version,
+            monitoring_api_url,
+            token=auth_token,
+            timeout=CONF.openstack_client_http_timeout,
+            insecure=self.endpoint.insecure,
+            cacert=self.endpoint.cacert,
+            **self._get_auth_info(project_name_key="tenant_name"))
+        return client
+
+    @cached
     def ironic(self, version="1"):
         """Return Ironic client."""
         from ironicclient import client as ironic

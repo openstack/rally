@@ -104,6 +104,7 @@ class _Service(utils.ImmutableMixin, utils.EnumMixin):
     NEUTRON = "neutron"
     DESIGNATE = "designate"
     CEILOMETER = "ceilometer"
+    MONASCA = "monasca"
     S3 = "s3"
     TROVE = "trove"
     SAHARA = "sahara"
@@ -130,6 +131,7 @@ class _ServiceType(utils.ImmutableMixin, utils.EnumMixin):
     NETWORK = "network"
     DNS = "dns"
     METERING = "metering"
+    MONITORING = "monitoring"
     S3 = "s3"
     DATABASE = "database"
     DATA_PROCESSING = "data_processing"
@@ -154,6 +156,7 @@ class _ServiceType(utils.ImmutableMixin, utils.EnumMixin):
             self.NETWORK: _Service.NEUTRON,
             self.DNS: _Service.DESIGNATE,
             self.METERING: _Service.CEILOMETER,
+            self.MONITORING: _Service.MONASCA,
             self.S3: _Service.S3,
             self.DATABASE: _Service.TROVE,
             self.DATA_PROCESSING: _Service.SAHARA,
