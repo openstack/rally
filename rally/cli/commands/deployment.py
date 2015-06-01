@@ -236,20 +236,21 @@ class DeploymentCommands(object):
 
         :param deployment: a UUID or name of the deployment
         """
-
         headers = ["services", "type", "status"]
         table_rows = []
         try:
-            admin = db.deployment_get(deployment)["admin"]
-            # TODO(boris-42): make this work for users in future
-            for endpoint_dict in [admin]:
-                clients = osclients.Clients(objects.Endpoint(**endpoint_dict))
-                client = clients.verified_keystone()
-                print("keystone endpoints are valid and following "
-                      "services are available:")
-                for service in client.services.list():
-                    data = [service.name, service.type, "Available"]
-                    table_rows.append(utils.Struct(**dict(zip(headers, data))))
+            deployment = db.deployment_get(deployment)
+            admin = deployment.get("admin")
+            clients = osclients.Clients(objects.Endpoint(**admin))
+            client = clients.verified_keystone()
+            for service in client.services.list():
+                data = [service.name, service.type, "Available"]
+                table_rows.append(utils.Struct(**dict(zip(headers, data))))
+            users = deployment.get("users")
+            for endpoint_dict in users:
+                osclients.Clients(objects.Endpoint(**endpoint_dict)).keystone()
+            print(_("keystone endpoints are valid and following"
+                  " services are available:"))
         except exceptions.InvalidArgumentsException:
             data = ["keystone", "identity", "Error"]
             table_rows.append(utils.Struct(**dict(zip(headers, data))))
