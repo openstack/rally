@@ -36,7 +36,8 @@ class EndpointTestCase(test.TestCase):
                           "https_insecure": None,
                           "https_cacert": None,
                           "project_domain_name": "Default",
-                          "user_domain_name": "Default"})
+                          "user_domain_name": "Default",
+                          "admin_domain_name": "Default"})
 
     def test_to_dict_with_include_permission(self):
         endpoint = objects.Endpoint("foo_url", "foo_user", "foo_password",
@@ -55,7 +56,8 @@ class EndpointTestCase(test.TestCase):
                           "https_insecure": None,
                           "https_cacert": None,
                           "project_domain_name": "Default",
-                          "user_domain_name": "Default"})
+                          "user_domain_name": "Default",
+                          "admin_domain_name": "Default"})
 
     def test_to_dict_with_kwarg_endpoint(self):
         endpoint = objects.Endpoint("foo_url", "foo_user", "foo_password",
@@ -74,4 +76,5 @@ class EndpointTestCase(test.TestCase):
                           "https_insecure": None,
                           "https_cacert": None,
                           "project_domain_name": "Default",
-                          "user_domain_name": "Default"})
+                          "user_domain_name": "Default",
+                          "admin_domain_name": "Default"})
