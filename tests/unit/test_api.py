@@ -37,7 +37,8 @@ FAKE_DEPLOYMENT_CONFIG = {
         "tenant_name": "demo",
         "domain_name": None,
         "project_domain_name": "Default",
-        "user_domain_name": "Default"
+        "user_domain_name": "Default",
+        "admin_domain_name": "Default"
     },
     "region_name": "RegionOne",
     "endpoint_type": consts.EndpointType.INTERNAL,
