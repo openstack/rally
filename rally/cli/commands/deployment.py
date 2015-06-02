@@ -221,7 +221,8 @@ class DeploymentCommands(object):
         endpoints = users + [admin] if admin else users
 
         for ep in endpoints:
-            data = [ep.get(m, "") for m in headers]
+            data = ["***" if m == "password" else ep.get(m, "")
+                    for m in headers]
             table_rows.append(utils.Struct(**dict(zip(headers, data))))
         cliutils.print_list(table_rows, headers)
 
