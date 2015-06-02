@@ -114,7 +114,8 @@ Then, configure DevStack to run Rally:
    cp rally/contrib/devstack/lib/rally devstack/lib/
    cp rally/contrib/devstack/extras.d/70-rally.sh devstack/extras.d/
    cd devstack
-   echo "enable_service rally" >> localrc
+   cp samples/local.conf local.conf
+   echo "enable_service rally" >> local.conf
 
 Finally, run DevStack as usually:
 
@@ -181,7 +182,7 @@ In case you have SELinux enabled and rally fails to create database, try
 executing the following commands to put SELinux into Permissive Mode on the host machine.
 
 .. code-block:: none
-   
+
    $ sed -i 's/SELINUX=enforcing/SELINUX=permissive/' /etc/selinux/config
    $ setenforce permissive
 
