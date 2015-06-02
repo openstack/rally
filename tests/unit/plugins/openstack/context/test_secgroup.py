@@ -93,7 +93,7 @@ class SecGroupContextTestCase(test.TestCase):
     @mock.patch("rally.plugins.openstack.context.secgroup.osclients.Clients")
     @mock.patch("rally.plugins.openstack.context."
                 "secgroup._prepare_open_secgroup")
-    @mock.patch("rally.benchmark.wrappers.network.wrap")
+    @mock.patch("rally.plugins.openstack.wrappers.network.wrap")
     def test_secgroup_setup_cleanup_with_secgroup_supported(
             self, mock_network_wrap, mock_prepare_open_secgroup,
             mock_osclients):
@@ -125,7 +125,7 @@ class SecGroupContextTestCase(test.TestCase):
             mock_osclients.return_value, {})
 
     @mock.patch("rally.plugins.openstack.context.secgroup.osclients.Clients")
-    @mock.patch("rally.benchmark.wrappers.network.wrap")
+    @mock.patch("rally.plugins.openstack.wrappers.network.wrap")
     def test_secgroup_setup_with_secgroup_unsupported(self,
                                                       mock_network_wrap,
                                                       mock_osclients):

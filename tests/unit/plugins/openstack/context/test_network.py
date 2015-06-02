@@ -19,7 +19,7 @@ import netaddr
 from rally.plugins.openstack.context import network as network_context
 from tests.unit import test
 
-NET = "rally.benchmark.wrappers.network."
+NET = "rally.plugins.openstack.wrappers.network."
 
 
 class NetworkTestCase(test.TestCase):
