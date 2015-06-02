@@ -198,7 +198,7 @@ class DeploymentCommandsTestCase(test.TestCase):
 
         headers = ["auth_url", "username", "password", "tenant_name",
                    "region_name", "endpoint_type"]
-        fake_data = ["url", "u", "p", "t", "r", consts.EndpointType.INTERNAL]
+        fake_data = ["url", "u", "***", "t", "r", consts.EndpointType.INTERNAL]
         mock_struct.assert_called_once_with(**dict(zip(headers, fake_data)))
         mock_print_list.assert_called_once_with([mock_struct()], headers)
 
