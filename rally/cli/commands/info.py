@@ -49,6 +49,8 @@ Samples:
 
 from __future__ import print_function
 
+import inspect
+
 from rally.cli import cliutils
 from rally.common.plugin import discover
 from rally.common import utils
@@ -319,9 +321,23 @@ class InfoCommands(object):
             if doc["long_description"]:
                 info += doc["long_description"] + "\n\n"
             if doc["params"]:
+                args = inspect.getargspec(scenario)
+                if args.defaults:
+                    default_values = dict(zip(args.args[-len(args.defaults):],
+                                              args.defaults))
+                else:
+                    default_values = {}
                 info += "Parameters:\n"
                 for param in doc["params"]:
-                    info += "    - %(name)s: %(doc)s" % param + "\n"
+                    info += "    - %(name)s: %(doc)s" % param
+
+                    name = param["name"]
+                    if name in default_values:
+                        if default_values[name] is not None:
+                            info += " [Default: %s]" % default_values[name]
+                        else:
+                            info += " [optional]"
+                    info += "\n"
             if doc["returns"]:
                 info += "Returns: %s" % doc["returns"]
             return info
