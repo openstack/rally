@@ -9,6 +9,7 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+
 from rally.verification.tempest import diff
 from tests.unit import test
 
@@ -87,3 +88,20 @@ class DiffTestCase(test.TestCase):
         assert diff_.to_csv() != ""
         assert diff_.to_html() != ""
         assert diff_.to_json() != ""
+
+    def test_zero_values(self):
+        results1 = {"test.one": {"name": "test.one",
+                                 "output": "test.one",
+                                 "status": "OK",
+                                 "time": 1}}
+
+        results2 = {"test.one": {"name": "test.one",
+                                 "output": "test.one",
+                                 "status": "FAIL",
+                                 "time": 0}}
+
+        # This must NOT raise ZeroDivisionError
+        diff_ = diff.Diff(results1, results2, 0)
+        self.assertEqual(2, len(diff_.diffs))
+        diff_ = diff.Diff(results2, results1, 0)
+        self.assertEqual(2, len(diff_.diffs))
