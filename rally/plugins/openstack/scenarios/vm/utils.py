@@ -21,11 +21,11 @@ import six
 
 from rally.benchmark.scenarios import base
 from rally.benchmark import utils as bench_utils
-from rally.benchmark.wrappers import network as network_wrapper
 from rally.common.i18n import _
 from rally.common import log as logging
 from rally.common import sshutils
 from rally import exceptions
+from rally.plugins.openstack.wrappers import network as network_wrapper
 
 LOG = logging.getLogger(__name__)
 

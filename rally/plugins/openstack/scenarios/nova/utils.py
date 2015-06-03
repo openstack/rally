@@ -21,9 +21,8 @@ import six
 
 from rally.benchmark.scenarios import base
 from rally.benchmark import utils as bench_utils
-from rally.benchmark.wrappers import network as network_wrapper
 from rally import exceptions
-
+from rally.plugins.openstack.wrappers import network as network_wrapper
 
 NOVA_BENCHMARK_OPTS = []
 option_names_and_defaults = [

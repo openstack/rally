@@ -16,7 +16,7 @@
 from keystoneclient import exceptions
 import mock
 
-from rally.benchmark.wrappers import keystone
+from rally.plugins.openstack.wrappers import keystone
 from tests.unit import test
 
 

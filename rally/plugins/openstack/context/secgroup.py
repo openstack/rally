@@ -16,11 +16,11 @@
 import six
 
 from rally.benchmark.context import base
-from rally.benchmark.wrappers import network
 from rally.common.i18n import _
 from rally.common import log as logging
 from rally.common import utils
 from rally import osclients
+from rally.plugins.openstack.wrappers import network
 
 
 LOG = logging.getLogger(__name__)

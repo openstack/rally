@@ -15,16 +15,15 @@
 
 import mock
 
-from rally.benchmark.wrappers import network
 from rally import consts
 from rally import exceptions
+from rally.plugins.openstack.wrappers import network
 from tests.unit import test
 
 from neutronclient.common import exceptions as neutron_exceptions
 from novaclient import exceptions as nova_exceptions
 
-
-SVC = "rally.benchmark.wrappers.network."
+SVC = "rally.plugins.openstack.wrappers.network."
 
 
 class NovaNetworkWrapperTestCase(test.TestCase):
@@ -45,7 +44,7 @@ class NovaNetworkWrapperTestCase(test.TestCase):
         self.assertEqual(service.skip_cidrs, skip_cidrs)
         service.client.networks.list.assert_called_once_with()
 
-    @mock.patch("rally.benchmark.wrappers.network.generate_cidr")
+    @mock.patch("rally.plugins.openstack.wrappers.network.generate_cidr")
     def test__generate_cidr(self, mock_cidr):
         skip_cidrs = [5, 7]
         cidrs = iter(range(7))
@@ -152,7 +151,7 @@ class NeutronWrapperTestCase(test.TestCase):
     def test_SUBNET_IP_VERSION(self):
         self.assertEqual(network.NeutronWrapper.SUBNET_IP_VERSION, 4)
 
-    @mock.patch("rally.benchmark.wrappers.network.generate_cidr")
+    @mock.patch("rally.plugins.openstack.wrappers.network.generate_cidr")
     def test__generate_cidr(self, mock_cidr):
         cidrs = iter(range(5))
         mock_cidr.side_effect = lambda start_cidr: start_cidr + next(cidrs)
@@ -469,13 +468,13 @@ class NeutronWrapperTestCase(test.TestCase):
 class FunctionsTestCase(test.TestCase):
 
     def test_generate_cidr(self):
-        with mock.patch("rally.benchmark.wrappers.network.cidr_incr",
+        with mock.patch("rally.plugins.openstack.wrappers.network.cidr_incr",
                         iter(range(1, 4))):
             self.assertEqual(network.generate_cidr(), "10.2.1.0/24")
             self.assertEqual(network.generate_cidr(), "10.2.2.0/24")
             self.assertEqual(network.generate_cidr(), "10.2.3.0/24")
 
-        with mock.patch("rally.benchmark.wrappers.network.cidr_incr",
+        with mock.patch("rally.plugins.openstack.wrappers.network.cidr_incr",
                         iter(range(1, 4))):
             start_cidr = "1.1.0.0/26"
             self.assertEqual(network.generate_cidr(start_cidr), "1.1.0.64/26")

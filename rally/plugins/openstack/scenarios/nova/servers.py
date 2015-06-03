@@ -19,12 +19,12 @@ from rally.benchmark.scenarios import base
 from rally.benchmark.scenarios import utils as scenario_utils
 from rally.benchmark import types as types
 from rally.benchmark import validation
-from rally.benchmark.wrappers import network as network_wrapper
 from rally.common import log as logging
 from rally import consts
 from rally import exceptions as rally_exceptions
 from rally.plugins.openstack.scenarios.cinder import utils as cinder_utils
 from rally.plugins.openstack.scenarios.nova import utils
+from rally.plugins.openstack.wrappers import network as network_wrapper
 
 LOG = logging.getLogger(__name__)
 

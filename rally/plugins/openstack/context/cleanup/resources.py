@@ -17,10 +17,10 @@ from boto import exception as boto_exception
 from neutronclient.common import exceptions as neutron_exceptions
 from saharaclient.api import base as saharaclient_base
 
-from rally.benchmark.wrappers import keystone as keystone_wrapper
 from rally.common import log as logging
 from rally.plugins.openstack.context.cleanup import base
 from rally.plugins.openstack.scenarios.keystone import utils as kutils
+from rally.plugins.openstack.wrappers import keystone as keystone_wrapper
 
 LOG = logging.getLogger(__name__)
 
