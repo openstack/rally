@@ -628,6 +628,23 @@
         failure_rate:
           max: 0
 
+  CinderVolumes.modify_volume_metadata:
+    -
+      args: {}
+      runner:
+        type: "constant"
+        times: 3
+        concurrency: 3
+      context:
+        volumes:
+          size: 1
+        users:
+          tenants: 1
+          users_per_tenant: 1
+      sla:
+        failure_rate:
+          max: 0
+
   CinderVolumes.list_volumes:
     -
       args:

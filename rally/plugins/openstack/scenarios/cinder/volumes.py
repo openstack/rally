@@ -20,6 +20,7 @@ from rally.benchmark import types as types
 from rally.benchmark import validation
 from rally.common import log as logging
 from rally import consts
+from rally import exceptions
 from rally.plugins.openstack.scenarios.cinder import utils
 from rally.plugins.openstack.scenarios.glance import utils as glance_utils
 from rally.plugins.openstack.scenarios.nova import utils as nova_utils
@@ -134,6 +135,36 @@ class CinderVolumes(utils.CinderScenario,
             kwargs["imageRef"] = image
 
         self._create_volume(size, **kwargs)
+
+    @validation.required_services(consts.Service.CINDER)
+    @validation.required_openstack(users=True)
+    @validation.required_contexts("volumes")
+    @base.scenario(context={"cleanup": ["cinder"]})
+    def modify_volume_metadata(self, sets=10, set_size=3,
+                               deletes=5, delete_size=3):
+        """Modify a volume's metadata.
+
+        This requires a volume to be created with the volumes
+        context. Additionally, ``sets * set_size`` must be greater
+        than or equal to ``deletes * delete_size``.
+
+        :param sets: how many set_metadata operations to perform
+        :param set_size: number of metadata keys to set in each
+                         set_metadata operation
+        :param deletes: how many delete_metadata operations to perform
+        :param delete_size: number of metadata keys to delete in each
+                            delete_metadata operation
+        """
+        if sets * set_size < deletes * delete_size:
+            raise exceptions.InvalidArgumentsException(
+                "Not enough metadata keys will be created: "
+                "Setting %(num_keys)s keys, but deleting %(num_deletes)s" %
+                {"num_keys": sets * set_size,
+                 "num_deletes": deletes * delete_size})
+
+        volume = random.choice(self.context["tenant"]["volumes"])
+        keys = self._set_metadata(volume["id"], sets, set_size)
+        self._delete_metadata(volume["id"], keys, deletes, delete_size)
 
     @validation.required_services(consts.Service.CINDER)
     @validation.required_openstack(users=True)

@@ -20,7 +20,7 @@ from oslo_config import cfg
 
 from rally.benchmark.scenarios import base
 from rally.benchmark import utils as bench_utils
-
+from rally import exceptions
 
 CINDER_BENCHMARK_OPTS = [
     cfg.FloatOpt("cinder_volume_create_prepoll_delay",
@@ -64,6 +64,55 @@ class CinderScenario(base.Scenario):
         """Returns user snapshots list."""
 
         return self.clients("cinder").volume_snapshots.list(detailed)
+
+    def _set_metadata(self, volume, sets=10, set_size=3):
+        """Set volume metadata.
+
+        :param volume: The volume to set metadata on
+        :param sets: how many operations to perform
+        :param set_size: number of metadata keys to set in each operation
+        :returns: A list of keys that were set
+        """
+        key = "cinder.set_%s_metadatas_%s_times" % (set_size, sets)
+        with base.AtomicAction(self, key):
+            keys = []
+            for i in range(sets):
+                metadata = {}
+                for j in range(set_size):
+                    key = self._generate_random_name()
+                    keys.append(key)
+                    metadata[key] = self._generate_random_name()
+
+                self.clients("cinder").volumes.set_metadata(volume, metadata)
+            return keys
+
+    def _delete_metadata(self, volume, keys, deletes=10, delete_size=3):
+        """Delete volume metadata keys.
+
+        Note that ``len(keys)`` must be greater than or equal to
+        ``deletes * delete_size``.
+
+        :param volume: The volume to delete metadata from
+        :param deletes: how many operations to perform
+        :param delete_size: number of metadata keys to delete in each operation
+        :param keys: a list of keys to choose deletion candidates from
+        """
+        if len(keys) < deletes * delete_size:
+            raise exceptions.InvalidArgumentsException(
+                "Not enough metadata keys to delete: "
+                "%(num_keys)s keys, but asked to delete %(num_deletes)s" %
+                {"num_keys": len(keys),
+                 "num_deletes": deletes * delete_size})
+        # make a shallow copy of the list of keys so that, when we pop
+        # from it later, we don't modify the original list.
+        keys = list(keys)
+        random.shuffle(keys)
+        action_name = "cinder.delete_%s_metadatas_%s_times" % (delete_size,
+                                                               deletes)
+        with base.AtomicAction(self, action_name):
+            for i in range(deletes):
+                to_del = keys[i * delete_size:(i + 1) * delete_size]
+                self.clients("cinder").volumes.delete_metadata(volume, to_del)
 
     @base.atomic_action_timer("cinder.create_volume")
     def _create_volume(self, size, **kwargs):

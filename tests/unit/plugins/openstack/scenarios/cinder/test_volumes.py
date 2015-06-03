@@ -66,6 +66,21 @@ class CinderServersTestCase(test.TestCase):
         scenario.create_volume(1, fakearg="f")
         scenario._create_volume.assert_called_once_with(1, fakearg="f")
 
+    def test_create_volume_and_modify_metadata(self):
+        scenario = volumes.CinderVolumes(
+            context={"user": {"tenant_id": "fake"},
+                     "tenant": {"id": "fake", "name": "fake",
+                                "volumes": [{"id": "uuid"}]}})
+        scenario._set_metadata = mock.Mock()
+        scenario._delete_metadata = mock.Mock()
+
+        scenario.modify_volume_metadata(sets=5, set_size=4,
+                                        deletes=3, delete_size=2)
+        scenario._set_metadata.assert_called_once_with("uuid", 5, 4)
+        scenario._delete_metadata.assert_called_once_with(
+            "uuid",
+            scenario._set_metadata.return_value, 3, 2)
+
     def test_create_and_extend_volume(self):
         fake_volume = mock.MagicMock()
 

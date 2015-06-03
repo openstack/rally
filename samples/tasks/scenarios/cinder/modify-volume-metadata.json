@@ -1,0 +1,21 @@
+{
+    "CinderVolumes.modify_volume_metadata": [
+        {
+            "args": {},
+            "runner": {
+                "type": "constant",
+                "times": 10,
+                "concurrency": 2
+            },
+            "context": {
+                "volumes": {
+                    "size": 1
+                },
+                "users": {
+                    "tenants": 2,
+                    "users_per_tenant": 2
+                }
+            }
+        }
+    ]
+}
