@@ -15,11 +15,11 @@
 
 import random
 
-from rally.benchmark.runners import base
+from rally.benchmark import runner
 from rally import consts
 
 
-class RandomTimesScenarioRunner(base.ScenarioRunner):
+class RandomTimesScenarioRunner(runner.ScenarioRunner):
     """Sample of scenario runner plugin.
 
     Run scenario random number of times, which is choosen between min_times and
@@ -54,7 +54,7 @@ class RandomTimesScenarioRunner(base.ScenarioRunner):
 
         for i in range(random.randrange(min_times, max_times)):
             run_args = (i, cls, method_name,
-                        base._get_scenario_context(context), args)
-            result = base._run_scenario_once(run_args)
+                        runner._get_scenario_context(context), args)
+            result = runner._run_scenario_once(run_args)
             # use self.send_result for result of each iteration
             self._send_result(result)

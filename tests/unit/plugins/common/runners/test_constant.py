@@ -16,14 +16,14 @@
 import jsonschema
 import mock
 
-from rally.benchmark.runners import base
+from rally.benchmark import runner
 from rally import consts
 from rally.plugins.common.runners import constant
 from tests.unit import fakes
 from tests.unit import test
 
 
-RUNNERS_BASE = "rally.benchmark.runners.base."
+RUNNERS_BASE = "rally.benchmark.runner."
 RUNNERS = "rally.plugins.common.runners."
 
 
@@ -59,15 +59,14 @@ class ConstantScenarioRunnerTestCase(test.TestCase):
 
         mock_osclients.Clients.return_value = fakes.FakeClients()
 
-        runner = base.ScenarioRunner.get_runner(mock.MagicMock(),
-                                                {"type":
-                                                 consts.RunnerType.CONSTANT})
-        self.assertIsNotNone(runner)
+        runner_obj = runner.ScenarioRunner.get_runner(
+            mock.MagicMock(), {"type": consts.RunnerType.CONSTANT})
+        self.assertIsNotNone(runner_obj)
 
     @mock.patch(RUNNERS + "constant.time")
     @mock.patch(RUNNERS + "constant.threading.Thread")
     @mock.patch(RUNNERS + "constant.multiprocessing.Queue")
-    @mock.patch(RUNNERS + "constant.base")
+    @mock.patch(RUNNERS + "constant.runner")
     def test__worker_process(self, mock_base, mock_queue, mock_thread,
                              mock_time):
 
@@ -103,13 +102,13 @@ class ConstantScenarioRunnerTestCase(test.TestCase):
                              target=mock_base._worker_thread)
             self.assertIn(call, mock_thread.mock_calls)
 
-    @mock.patch(RUNNERS + "constant.base._run_scenario_once")
+    @mock.patch(RUNNERS_BASE + "_run_scenario_once")
     def test__worker_thread(self, mock_run_scenario_once):
         mock_queue = mock.MagicMock()
 
         args = ("some_args",)
 
-        base._worker_thread(mock_queue, args)
+        runner._worker_thread(mock_queue, args)
 
         self.assertEqual(1, mock_queue.put.call_count)
 
@@ -117,31 +116,31 @@ class ConstantScenarioRunnerTestCase(test.TestCase):
         self.assertEqual(expected_calls, mock_run_scenario_once.mock_calls)
 
     def test__run_scenario(self):
-        runner = constant.ConstantScenarioRunner(self.task, self.config)
+        runner_obj = constant.ConstantScenarioRunner(self.task, self.config)
 
-        runner._run_scenario(fakes.FakeScenario,
-                             "do_it", self.context, self.args)
-        self.assertEqual(len(runner.result_queue), self.config["times"])
-        for result in runner.result_queue:
-            self.assertIsNotNone(base.ScenarioRunnerResult(result))
+        runner_obj._run_scenario(
+            fakes.FakeScenario, "do_it", self.context, self.args)
+        self.assertEqual(len(runner_obj.result_queue), self.config["times"])
+        for result in runner_obj.result_queue:
+            self.assertIsNotNone(runner.ScenarioRunnerResult(result))
 
     def test__run_scenario_exception(self):
-        runner = constant.ConstantScenarioRunner(self.task, self.config)
+        runner_obj = constant.ConstantScenarioRunner(self.task, self.config)
 
-        runner._run_scenario(fakes.FakeScenario,
-                             "something_went_wrong", self.context, self.args)
-        self.assertEqual(len(runner.result_queue), self.config["times"])
-        for result in runner.result_queue:
-            self.assertIsNotNone(base.ScenarioRunnerResult(result))
-        self.assertIn("error", runner.result_queue[0])
+        runner_obj._run_scenario(fakes.FakeScenario, "something_went_wrong",
+                                 self.context, self.args)
+        self.assertEqual(len(runner_obj.result_queue), self.config["times"])
+        for result in runner_obj.result_queue:
+            self.assertIsNotNone(runner.ScenarioRunnerResult(result))
+        self.assertIn("error", runner_obj.result_queue[0])
 
     def test__run_scenario_aborted(self):
-        runner = constant.ConstantScenarioRunner(self.task, self.config)
+        runner_obj = constant.ConstantScenarioRunner(self.task, self.config)
 
-        runner.abort()
-        runner._run_scenario(fakes.FakeScenario,
-                             "do_it", self.context, self.args)
-        self.assertEqual(len(runner.result_queue), 0)
+        runner_obj.abort()
+        runner_obj._run_scenario(fakes.FakeScenario, "do_it", self.context,
+                                 self.args)
+        self.assertEqual(len(runner_obj.result_queue), 0)
 
     @mock.patch(RUNNERS + "constant.multiprocessing.Queue")
     @mock.patch(RUNNERS + "constant.multiprocessing.cpu_count")
@@ -212,11 +211,11 @@ class ConstantScenarioRunnerTestCase(test.TestCase):
 
             mock_cpu_count.return_value = sample["real_cpu"]
 
-            runner = constant.ConstantScenarioRunner(self.task,
-                                                     sample["input"])
+            runner_obj = constant.ConstantScenarioRunner(self.task,
+                                                         sample["input"])
 
-            runner._run_scenario(fakes.FakeScenario, "do_it", self.context,
-                                 self.args)
+            runner_obj._run_scenario(fakes.FakeScenario, "do_it", self.context,
+                                     self.args)
 
             mock_cpu_count.assert_called_once_with()
             mock_log.assert_called_once_with(
@@ -237,10 +236,10 @@ class ConstantScenarioRunnerTestCase(test.TestCase):
                 mock_queue())
 
     def test_abort(self):
-        runner = constant.ConstantScenarioRunner(self.task, self.config)
-        self.assertFalse(runner.aborted.is_set())
-        runner.abort()
-        self.assertTrue(runner.aborted.is_set())
+        runner_obj = constant.ConstantScenarioRunner(self.task, self.config)
+        self.assertFalse(runner_obj.aborted.is_set())
+        runner_obj.abort()
+        self.assertTrue(runner_obj.aborted.is_set())
 
 
 class ConstantForDurationScenarioRunnerTestCase(test.TestCase):
@@ -267,53 +266,55 @@ class ConstantForDurationScenarioRunnerTestCase(test.TestCase):
                           self.config)
 
     def test_run_scenario_constantly_for_duration(self):
-        runner = constant.ConstantForDurationScenarioRunner(
+        runner_obj = constant.ConstantForDurationScenarioRunner(
             None, self.config)
 
-        runner._run_scenario(fakes.FakeScenario, "do_it",
-                             self.context, self.args)
+        runner_obj._run_scenario(fakes.FakeScenario, "do_it",
+                                 self.context, self.args)
         # NOTE(mmorais): when duration is 0, scenario executes exactly 1 time
         expected_times = 1
-        self.assertEqual(len(runner.result_queue), expected_times)
-        for result in runner.result_queue:
-            self.assertIsNotNone(base.ScenarioRunnerResult(result))
+        self.assertEqual(len(runner_obj.result_queue), expected_times)
+        for result in runner_obj.result_queue:
+            self.assertIsNotNone(runner.ScenarioRunnerResult(result))
 
     def test_run_scenario_constantly_for_duration_exception(self):
-        runner = constant.ConstantForDurationScenarioRunner(
+        runner_obj = constant.ConstantForDurationScenarioRunner(
             None, self.config)
 
-        runner._run_scenario(fakes.FakeScenario,
-                             "something_went_wrong", self.context, self.args)
+        runner_obj._run_scenario(fakes.FakeScenario, "something_went_wrong",
+                                 self.context, self.args)
         # NOTE(mmorais): when duration is 0, scenario executes exactly 1 time
         expected_times = 1
-        self.assertEqual(len(runner.result_queue), expected_times)
-        for result in runner.result_queue:
-            self.assertIsNotNone(base.ScenarioRunnerResult(result))
-        self.assertIn("error", runner.result_queue[0])
+        self.assertEqual(len(runner_obj.result_queue), expected_times)
+        for result in runner_obj.result_queue:
+            self.assertIsNotNone(runner.ScenarioRunnerResult(result))
+        self.assertIn("error", runner_obj.result_queue[0])
 
     def test_run_scenario_constantly_for_duration_timeout(self):
-        runner = constant.ConstantForDurationScenarioRunner(
+        runner_obj = constant.ConstantForDurationScenarioRunner(
             None, self.config)
 
-        runner._run_scenario(fakes.FakeScenario,
-                             "raise_timeout", self.context, self.args)
+        runner_obj._run_scenario(fakes.FakeScenario, "raise_timeout",
+                                 self.context, self.args)
         # NOTE(mmorais): when duration is 0, scenario executes exactly 1 time
         expected_times = 1
-        self.assertEqual(len(runner.result_queue), expected_times)
-        for result in runner.result_queue:
-            self.assertIsNotNone(base.ScenarioRunnerResult(result))
-        self.assertIn("error", runner.result_queue[0])
+        self.assertEqual(len(runner_obj.result_queue), expected_times)
+        for result in runner_obj.result_queue:
+            self.assertIsNotNone(runner.ScenarioRunnerResult(result))
+        self.assertIn("error", runner_obj.result_queue[0])
 
     def test__run_scenario_constantly_aborted(self):
-        runner = constant.ConstantForDurationScenarioRunner(None, self.config)
+        runner_obj = constant.ConstantForDurationScenarioRunner(None,
+                                                                self.config)
 
-        runner.abort()
-        runner._run_scenario(fakes.FakeScenario,
-                             "do_it", self.context, self.args)
-        self.assertEqual(len(runner.result_queue), 0)
+        runner_obj.abort()
+        runner_obj._run_scenario(fakes.FakeScenario, "do_it",
+                                 self.context, self.args)
+        self.assertEqual(len(runner_obj.result_queue), 0)
 
     def test_abort(self):
-        runner = constant.ConstantForDurationScenarioRunner(None, self.config)
-        self.assertFalse(runner.aborted.is_set())
-        runner.abort()
-        self.assertTrue(runner.aborted.is_set())
+        runner_obj = constant.ConstantForDurationScenarioRunner(None,
+                                                                self.config)
+        self.assertFalse(runner_obj.aborted.is_set())
+        runner_obj.abort()
+        self.assertTrue(runner_obj.aborted.is_set())

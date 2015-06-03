@@ -22,7 +22,7 @@ import jsonschema
 import six
 
 from rally.benchmark.context import base as base_ctx
-from rally.benchmark.runners import base as base_runner
+from rally.benchmark import runner
 from rally.benchmark.scenarios import base as base_scenario
 from rally.benchmark import sla
 from rally.common.i18n import _
@@ -131,7 +131,7 @@ class BenchmarkEngine(object):
         for scenario, values in six.iteritems(config):
             for pos, kw in enumerate(values):
                 try:
-                    base_runner.ScenarioRunner.validate(kw.get("runner", {}))
+                    runner.ScenarioRunner.validate(kw.get("runner", {}))
                     base_ctx.ContextManager.validate(kw.get("context", {}),
                                                      non_hidden=True)
                     sla.SLA.validate(kw.get("sla", {}))
@@ -202,10 +202,9 @@ class BenchmarkEngine(object):
             raise exceptions.InvalidTaskException(str(e))
 
     def _get_runner(self, config):
-        runner = config.get("runner", {})
-        runner.setdefault("type", consts.RunnerType.SERIAL)
-        return base_runner.ScenarioRunner.get_runner(self.task,
-                                                     runner)
+        runner_cfg = config.get("runner", {})
+        runner_cfg.setdefault("type", consts.RunnerType.SERIAL)
+        return runner.ScenarioRunner.get_runner(self.task, runner_cfg)
 
     def _prepare_context(self, context, name, endpoint):
         scenario_context = base_scenario.Scenario.meta(name, "context")
@@ -239,12 +238,13 @@ class BenchmarkEngine(object):
                 key = {"name": name, "pos": n, "kw": kw}
                 LOG.info("Running benchmark with key: \n%s"
                          % json.dumps(key, indent=2))
-                runner = self._get_runner(kw)
+                runner_obj = self._get_runner(kw)
                 is_done = threading.Event()
                 unexpected_failure = {}
                 consumer = threading.Thread(
                     target=self.consume_results,
-                    args=(key, self.task, is_done, unexpected_failure, runner))
+                    args=(key, self.task, is_done, unexpected_failure,
+                          runner_obj))
                 consumer.start()
                 context_obj = self._prepare_context(kw.get("context", {}),
                                                     name, self.admin)
@@ -253,8 +253,8 @@ class BenchmarkEngine(object):
                 try:
                     with rutils.Timer() as timer:
                         with base_ctx.ContextManager(context_obj):
-                            self.duration = runner.run(name, context_obj,
-                                                       kw.get("args", {}))
+                            self.duration = runner_obj.run(
+                                name, context_obj, kw.get("args", {}))
                 except Exception as e:
                     LOG.exception(e)
                     unexpected_failure["exc"] = e
@@ -264,7 +264,8 @@ class BenchmarkEngine(object):
                     consumer.join()
         self.task.update_status(consts.TaskStatus.FINISHED)
 
-    def consume_results(self, key, task, is_done, unexpected_failure, runner):
+    def consume_results(self, key, task, is_done, unexpected_failure,
+                        runner_obj):
         """Consume scenario runner results from queue and send them to db.
 
         Has to be run from different thread simultaneously with the runner.run
@@ -276,18 +277,18 @@ class BenchmarkEngine(object):
                         runner finishes it's work.
         :param unexpected_failure: Dictionary object with information about
                                    unexpected exception.
-        :param runner: ScenarioRunner object that was used to run a task
+        :param runner_obj: ScenarioRunner object that was used to run a task
         """
         results = []
         sla_checker = sla.SLAChecker(key["kw"])
         while True:
-            if runner.result_queue:
-                result = runner.result_queue.popleft()
+            if runner_obj.result_queue:
+                result = runner_obj.result_queue.popleft()
                 results.append(result)
                 success = sla_checker.add_iteration(result)
                 if self.abort_on_sla_failure and not success:
                     sla_checker.set_aborted()
-                    runner.abort()
+                    runner_obj.abort()
             elif is_done.isSet():
                 break
             else:

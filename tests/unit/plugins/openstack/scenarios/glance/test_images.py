@@ -64,7 +64,7 @@ class GlanceImagesTestCase(test.TestCase):
 
     @mock.patch(GLANCE_IMAGES + "._boot_servers")
     @mock.patch(GLANCE_IMAGES + "._create_image")
-    @mock.patch("rally.benchmark.runners.base.osclients")
+    @mock.patch("rally.benchmark.runner.osclients")
     def test_create_image_and_boot_instances(self,
                                              mock_osclients,
                                              mock_create_image,

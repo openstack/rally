@@ -167,14 +167,14 @@ Also, all scenario runners can be provided (again, through the **"runner"** sect
 Developer's view
 ^^^^^^^^^^^^^^^^
 
-It is possible to extend Rally with new Scenario Runner types, if needed. Basically, each scenario runner should be implemented as a subclass of the base `ScenarioRunner <https://github.com/openstack/rally/blob/master/rally/benchmark/runners/base.py#L137>`_ class and located in the `rally.benchmark.runners package <https://github.com/openstack/rally/tree/master/rally/benchmark/runners>`_. The interface each scenario runner class should support is fairly easy:
+It is possible to extend Rally with new Scenario Runner types, if needed. Basically, each scenario runner should be implemented as a subclass of the base `ScenarioRunner <https://github.com/openstack/rally/blob/master/rally/benchmark/runner.py#L113>`_ class and located in the `rally.plugins.common.runners package <https://github.com/openstack/rally/tree/master/rally/plugins/common/runners>`_. The interface each scenario runner class should support is fairly easy:
 
 .. parsed-literal::
 
-    from rally.benchmark.runners import base
+    from rally.benchmark import runner
     from rally import consts
 
-    class MyScenarioRunner(base.ScenarioRunner):
+    class MyScenarioRunner(runner.ScenarioRunner):
         *"""My scenario runner."""*
 
         *# This string is what the user will have to specify in the task*
@@ -203,11 +203,11 @@ It is possible to extend Rally with new Scenario Runner types, if needed. Basica
             with arguments 'args', given a context 'ctx'.
 
             This method should return the results dictionary wrapped in
-            a base.ScenarioRunnerResult object (not plain JSON)
+            a runner.ScenarioRunnerResult object (not plain JSON)
             """*
             results = ...
 
-            return base.ScenarioRunnerResult(results)
+            return runner.ScenarioRunnerResult(results)
 
 
 

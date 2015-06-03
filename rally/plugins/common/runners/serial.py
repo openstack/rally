@@ -13,11 +13,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from rally.benchmark.runners import base
+from rally.benchmark import runner
 from rally import consts
 
 
-class SerialScenarioRunner(base.ScenarioRunner):
+class SerialScenarioRunner(runner.ScenarioRunner):
     """Scenario runner that executes benchmark scenarios serially.
 
     Unlike scenario runners that execute in parallel, the serial scenario
@@ -70,6 +70,6 @@ class SerialScenarioRunner(base.ScenarioRunner):
             if self.aborted.is_set():
                 break
             run_args = (i, cls, method_name,
-                        base._get_scenario_context(context), args)
-            result = base._run_scenario_once(run_args)
+                        runner._get_scenario_context(context), args)
+            result = runner._run_scenario_once(run_args)
             self._send_result(result)

@@ -343,13 +343,13 @@ class NovaServersTestCase(test.TestCase):
 
     @mock.patch("rally.plugins.openstack.scenarios"
                 ".nova.servers.NovaServers.clients")
-    @mock.patch("rally.benchmark.runners.base.osclients")
+    @mock.patch("rally.benchmark.runner.osclients")
     def test_boot_server_no_nics(self, mock_osclients, mock_nova_clients):
         mock_nova_clients.return_value = fakes.FakeNovaClient()
         self._verify_boot_server(mock_osclients=mock_osclients,
                                  nic=None, assert_nic=False)
 
-    @mock.patch("rally.benchmark.runners.base.osclients")
+    @mock.patch("rally.benchmark.runner.osclients")
     def test_boot_server_with_nic(self, mock_osclients):
         self._verify_boot_server(mock_osclients=mock_osclients,
                                  nic=[{"net-id": "net-1"}], assert_nic=True)

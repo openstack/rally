@@ -19,7 +19,7 @@ import multiprocessing
 import jsonschema
 import mock
 
-from rally.benchmark.runners import base
+from rally.benchmark import runner
 from rally.benchmark.scenarios import base as scenario_base
 from rally import exceptions
 from rally.plugins.common.runners import serial
@@ -27,7 +27,7 @@ from tests.unit import fakes
 from tests.unit import test
 
 
-BASE = "rally.benchmark.runners.base."
+BASE = "rally.benchmark.runner."
 
 
 class ScenarioHelpersTestCase(test.TestCase):
@@ -44,7 +44,7 @@ class ScenarioHelpersTestCase(test.TestCase):
             "error": mock_format_exc.return_value
         }
 
-        self.assertEqual(base.format_result_on_timeout(mock_exc, 100),
+        self.assertEqual(runner.format_result_on_timeout(mock_exc, 100),
                          expected)
         mock_format_exc.assert_called_once_with(mock_exc)
 
@@ -77,16 +77,18 @@ class ScenarioHelpersTestCase(test.TestCase):
             "some_random_key": context["some_random_key"]
         }
 
-        self.assertEqual(expected_context, base._get_scenario_context(context))
+        self.assertEqual(expected_context,
+                         runner._get_scenario_context(context))
 
     @mock.patch(BASE + "osclients")
     def test_run_scenario_once_internal_logic(self, mock_clients):
         mock_clients.Clients.return_value = "cl"
 
-        context = base._get_scenario_context(fakes.FakeUserContext({}).context)
+        context = runner._get_scenario_context(
+            fakes.FakeUserContext({}).context)
         scenario_cls = mock.MagicMock()
         args = (2, scenario_cls, "test", context, {})
-        base._run_scenario_once(args)
+        runner._run_scenario_once(args)
 
         expected_calls = [
             mock.call(context=context, admin_clients="cl", clients="cl"),
@@ -101,9 +103,10 @@ class ScenarioHelpersTestCase(test.TestCase):
     @mock.patch(BASE + "osclients")
     def test_run_scenario_once_without_scenario_output(self, mock_clients,
                                                        mock_rtimer):
-        context = base._get_scenario_context(fakes.FakeUserContext({}).context)
+        context = runner._get_scenario_context(
+            fakes.FakeUserContext({}).context)
         args = (1, fakes.FakeScenario, "do_it", context, {})
-        result = base._run_scenario_once(args)
+        result = runner._run_scenario_once(args)
 
         expected_result = {
             "duration": fakes.FakeTimer().duration(),
@@ -119,9 +122,10 @@ class ScenarioHelpersTestCase(test.TestCase):
     @mock.patch(BASE + "osclients")
     def test_run_scenario_once_with_scenario_output(self, mock_clients,
                                                     mock_rtimer):
-        context = base._get_scenario_context(fakes.FakeUserContext({}).context)
+        context = runner._get_scenario_context(
+            fakes.FakeUserContext({}).context)
         args = (1, fakes.FakeScenario, "with_output", context, {})
-        result = base._run_scenario_once(args)
+        result = runner._run_scenario_once(args)
 
         expected_result = {
             "duration": fakes.FakeTimer().duration(),
@@ -136,9 +140,10 @@ class ScenarioHelpersTestCase(test.TestCase):
     @mock.patch(BASE + "rutils.Timer", side_effect=fakes.FakeTimer)
     @mock.patch(BASE + "osclients")
     def test_run_scenario_once_exception(self, mock_clients, mock_rtimer):
-        context = base._get_scenario_context(fakes.FakeUserContext({}).context)
+        context = runner._get_scenario_context(
+            fakes.FakeUserContext({}).context)
         args = (1, fakes.FakeScenario, "something_went_wrong", context, {})
-        result = base._run_scenario_once(args)
+        result = runner._run_scenario_once(args)
         expected_error = result.pop("error")
         expected_result = {
             "duration": fakes.FakeTimer().duration(),
@@ -178,13 +183,13 @@ class ScenarioRunnerResultTestCase(test.TestCase):
             }
         ]
 
-        self.assertEqual(config[0], base.ScenarioRunnerResult(config[0]))
-        self.assertEqual(config[1], base.ScenarioRunnerResult(config[1]))
+        self.assertEqual(config[0], runner.ScenarioRunnerResult(config[0]))
+        self.assertEqual(config[1], runner.ScenarioRunnerResult(config[1]))
 
     def test_validate_failed(self):
         config = {"a": 10}
         self.assertRaises(jsonschema.ValidationError,
-                          base.ScenarioRunnerResult, config)
+                          runner.ScenarioRunnerResult, config)
 
 
 class ScenarioRunnerTestCase(test.TestCase):
@@ -198,49 +203,49 @@ class ScenarioRunnerTestCase(test.TestCase):
         mock_get_cls.return_value = fakes.FakeRunner
 
         config = {"type": "fake", "a": 10}
-        base.ScenarioRunner.validate(config)
+        runner.ScenarioRunner.validate(config)
         mock_get_cls.assert_called_once_with("fake")
         mock_validate.assert_called_once_with(config,
                                               fakes.FakeRunner.CONFIG_SCHEMA)
 
     def test_get_runner(self):
 
-        class NewRunner(base.ScenarioRunner):
+        class NewRunner(runner.ScenarioRunner):
             __execution_type__ = "new_runner"
 
         task = mock.MagicMock()
         config = {"type": "new_runner", "a": 123}
-        runner = base.ScenarioRunner.get_runner(task, config)
+        runner_obj = runner.ScenarioRunner.get_runner(task, config)
 
-        self.assertEqual(runner.task, task)
-        self.assertEqual(runner.config, config)
-        self.assertIsInstance(runner, NewRunner)
+        self.assertEqual(runner_obj.task, task)
+        self.assertEqual(runner_obj.config, config)
+        self.assertIsInstance(runner_obj, NewRunner)
 
     def test_get_runner_no_such(self):
         self.assertRaises(exceptions.NoSuchRunner,
-                          base.ScenarioRunner.get_runner,
+                          runner.ScenarioRunner.get_runner,
                           None, {"type": "NoSuchRunner"})
 
     @mock.patch(BASE + "jsonschema.validate")
     def test_validate_default_runner(self, mock_validate):
         config = {"a": 10}
-        base.ScenarioRunner.validate(config)
+        runner.ScenarioRunner.validate(config)
         mock_validate.assert_called_once_with(
             config, serial.SerialScenarioRunner.CONFIG_SCHEMA)
 
     @mock.patch(BASE + "rutils.Timer.duration", return_value=10)
     def test_run(self, mock_duration):
-        runner = serial.SerialScenarioRunner(
+        runner_obj = serial.SerialScenarioRunner(
             mock.MagicMock(),
             mock.MagicMock())
 
-        runner._run_scenario = mock.MagicMock()
+        runner_obj._run_scenario = mock.MagicMock()
 
         scenario_name = "NovaServers.boot_server_from_volume_and_delete"
         config_kwargs = {"image": {"id": 1}, "flavor": {"id": 1}}
 
         context_obj = {
-            "task": runner.task,
+            "task": runner_obj.task,
             "scenario_name": scenario_name,
             "admin": {"endpoint": mock.MagicMock()},
             "config": {
@@ -248,36 +253,36 @@ class ScenarioRunnerTestCase(test.TestCase):
             }
         }
 
-        result = runner.run(scenario_name, context_obj, config_kwargs)
+        result = runner_obj.run(scenario_name, context_obj, config_kwargs)
 
         self.assertEqual(result, mock_duration.return_value)
-        self.assertEqual(list(runner.result_queue), [])
+        self.assertEqual(list(runner_obj.result_queue), [])
 
         cls_name, method_name = scenario_name.split(".", 1)
         cls = scenario_base.Scenario.get_by_name(cls_name)
 
         expected_config_kwargs = {"image": 1, "flavor": 1}
-        runner._run_scenario.assert_called_once_with(
+        runner_obj._run_scenario.assert_called_once_with(
             cls, method_name, context_obj, expected_config_kwargs)
 
     def test_runner_send_result_exception(self):
-        runner = serial.SerialScenarioRunner(
+        runner_obj = serial.SerialScenarioRunner(
             mock.MagicMock(),
             mock.MagicMock())
         self.assertRaises(
             jsonschema.ValidationError,
-            lambda: runner._send_result(mock.MagicMock()))
+            lambda: runner_obj._send_result(mock.MagicMock()))
 
     def test_abort(self):
-        runner = serial.SerialScenarioRunner(
+        runner_obj = serial.SerialScenarioRunner(
             mock.MagicMock(),
             mock.MagicMock())
-        self.assertFalse(runner.aborted.is_set())
-        runner.abort()
-        self.assertTrue(runner.aborted.is_set())
+        self.assertFalse(runner_obj.aborted.is_set())
+        runner_obj.abort()
+        self.assertTrue(runner_obj.aborted.is_set())
 
     def test__create_process_pool(self):
-        runner = serial.SerialScenarioRunner(
+        runner_obj = serial.SerialScenarioRunner(
             mock.MagicMock(),
             mock.MagicMock())
 
@@ -288,9 +293,8 @@ class ScenarioRunnerTestCase(test.TestCase):
 
         counter = ((i,) for i in range(100))
 
-        process_pool = runner._create_process_pool(processes_to_start,
-                                                   worker_process,
-                                                   counter)
+        process_pool = runner_obj._create_process_pool(
+            processes_to_start, worker_process, counter)
         self.assertEqual(processes_to_start, len(process_pool))
         for process in process_pool:
             self.assertIsInstance(process, multiprocessing.Process)
@@ -303,11 +307,11 @@ class ScenarioRunnerTestCase(test.TestCase):
         mock_result_queue = mock.MagicMock(
             empty=mock.MagicMock(return_value=True))
 
-        runner = serial.SerialScenarioRunner(
+        runner_obj = serial.SerialScenarioRunner(
             mock.MagicMock(),
             mock.MagicMock())
 
-        runner._join_processes(process_pool, mock_result_queue)
+        runner_obj._join_processes(process_pool, mock_result_queue)
 
         self.assertEqual(processes, process.join.call_count)
         mock_result_queue.close.assert_called_once_with()
