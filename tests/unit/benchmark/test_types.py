@@ -381,3 +381,25 @@ class FileTypeTestCase(test.TestCase):
                           types.FileType.transform,
                           clients=None,
                           resource_config=resource_config)
+
+
+class FileTypeDictTestCase(test.TestCase):
+
+    @mock.patch("rally.benchmark.types.open",
+                side_effect=mock.mock_open(read_data="file_context"),
+                create=True)
+    def test_transform_by_path(self, mock_open):
+        resource_config = ["file.yaml"]
+        file_context = types.FileTypeDict.transform(
+            clients=None,
+            resource_config=resource_config)
+        self.assertEqual(file_context, {"file.yaml": "file_context"})
+
+    @mock.patch("rally.benchmark.types.open",
+                side_effect=IOError, create=True)
+    def test_transform_by_path_no_match(self, mock_open):
+        resource_config = ["nonexistant.yaml"]
+        self.assertRaises(IOError,
+                          types.FileTypeDict.transform,
+                          clients=None,
+                          resource_config=resource_config)

@@ -353,3 +353,23 @@ class FileType(ResourceType):
 
         with open(resource_config, "r") as f:
             return f.read()
+
+
+class FileTypeDict(ResourceType):
+
+    @classmethod
+    def transform(cls, clients, resource_config):
+        """Returns the dictionary of items with file path and file content.
+
+        :param clients: openstack admin client handles
+        :param resource_config: list of file paths
+
+        :return: dictionary {file_path: file_content, ...}
+        """
+
+        file_type_dict = {}
+        for file_path in resource_config:
+            with open(file_path, "r") as f:
+                file_type_dict[file_path] = f.read()
+
+        return file_type_dict
