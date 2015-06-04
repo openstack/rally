@@ -513,8 +513,16 @@ def volume_type_exists(config, clients, deployment, param_name):
 
 
 @validator
-def restricted_parameters(config, clients, deployment, param_name):
-    """Validator that check that parameter is not set."""
-    if param_name in config.get("args", {}):
-        return ValidationResult(False, "You can't specify parameter `%s`" %
-                                param_name)
+def restricted_parameters(config, clients, deployment, param_name,
+                          subdict=None):
+    """Validates that parameter is not set.
+
+    :param subdict: sub-dict of "config" to search for param_name. if
+    not defined - will search in "config"
+    """
+    args = config.get("args", {})
+    a_dict, a_key = (args, subdict) if subdict else (config, "args")
+    if param_name in a_dict.get(a_key, {}):
+        return ValidationResult(
+            False, _("You can't specify parameter '%(param)s' in '%(a_dict)s'")
+            % {"param": param_name, "a_dict": subdict if subdict else "args"})
