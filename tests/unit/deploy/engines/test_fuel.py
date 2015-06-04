@@ -85,17 +85,20 @@ class FuelEngineTestCase(test.TestCase):
 
     @mock.patch("rally.deploy.fuel.fuelclient.FuelClient")
     @mock.patch("rally.deploy.fuel.fuelclient.FuelCluster")
-    def test_deploy(self, m_cluster, m_client):
+    def test_deploy(self, mock_fuel_cluster, mock_fuel_client):
         attributes = {"editable": {"access": {"user": {"value": "user"},
                                               "password": {"value": "pw"},
                                               "tenant": {"value": "tn"}}}}
         client = mock.Mock()
-        cluster = mock.Mock()
-        cluster.cluster = {"id": 42}
-        cluster.get_endpoint_ip = mock.Mock(return_value="2.3.4.5")
-        cluster.get_attributes = mock.Mock(return_value=attributes)
-        m_client.return_value = client
-        m_cluster.return_value = cluster
+        cluster = mock.Mock(
+            cluster={"id": 42},
+            **{
+                "get_endpoint_ip.return_value": "2.3.4.5",
+                "get_attributes.return_value": attributes
+            }
+        )
+        mock_fuel_client.return_value = client
+        mock_fuel_cluster.return_value = cluster
         self.deployment.add_resource = mock.Mock()
 
         engine = fuel.FuelEngine(self.deployment)
@@ -128,7 +131,7 @@ class FuelEngineTestCase(test.TestCase):
 
     @mock.patch("rally.deploy.fuel.fuelclient.FuelClient")
     @mock.patch("rally.deploy.engines.fuel.objects.Deployment")
-    def test_cleanup(self, m_deployment, m_client):
+    def test_cleanup(self, mock_deployment, mock_fuel_client):
         fake_resources = [{"id": 41, "info": {"id": 42}}]
         self.deployment.get_resources = mock.Mock(return_value=fake_resources)
 
@@ -137,4 +140,4 @@ class FuelEngineTestCase(test.TestCase):
         engine.cleanup()
 
         engine.client.delete_cluster.assert_called_once_with(42)
-        m_deployment.delete_resource.assert_called_once_with(41)
+        mock_deployment.delete_resource.assert_called_once_with(41)

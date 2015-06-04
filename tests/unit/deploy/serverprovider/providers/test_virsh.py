@@ -42,13 +42,13 @@ class VirshProviderTestCase(test.TestCase):
         "rally.deploy.serverprovider.providers.virsh.netaddr.IPAddress")
     @mock.patch("rally.deploy.serverprovider.providers.virsh.subprocess")
     @mock.patch("time.sleep")
-    def test_create_vm(self, mock_sleep, mock_subp, mock_ipaddress):
-        mock_subp.check_output.return_value = "10.0.0.1"
-        mock_ipaddress.return_value = "10.0.0.2"
+    def test_create_vm(self, mock_sleep, mock_subprocess, mock_ip_address):
+        mock_subprocess.check_output.return_value = "10.0.0.1"
+        mock_ip_address.return_value = "10.0.0.2"
         server = self.provider.create_vm("name")
         script_path = ("%s/virsh/get_domain_ip.sh" %
                        os.path.split(virsh.__file__)[0])
-        mock_subp.assert_has_calls([
+        mock_subprocess.assert_has_calls([
             mock.call.check_call("virt-clone --connect=qemu+ssh://user@host/"
                                  "system -o prefix -n name --auto-clone",
                                  shell=True),
@@ -60,7 +60,7 @@ class VirshProviderTestCase(test.TestCase):
             mock.call.check_output("ssh -o StrictHostKeyChecking=no user@host "
                                    "./get_domain_ip.sh name", shell=True),
         ])
-        mock_ipaddress.assert_called_once_with("10.0.0.1")
+        mock_ip_address.assert_called_once_with("10.0.0.1")
         self.assertEqual(server.host, "10.0.0.2")
         self.assertEqual(server.user, "user")
         self.assertIsNone(server.key)
@@ -73,19 +73,20 @@ class VirshProviderTestCase(test.TestCase):
         "rally.deploy.serverprovider.providers.virsh.netaddr.IPAddress")
     @mock.patch("rally.deploy.serverprovider.providers.virsh.subprocess")
     @mock.patch("time.sleep")
-    def test_create_vm_ip_failed(self, mock_sleep, mock_subp, mock_ipaddress):
-        mock_ipaddress.side_effect = netaddr.core.AddrFormatError
+    def test_create_vm_ip_failed(self, mock_sleep, mock_subprocess,
+                                 mock_ip_address):
+        mock_ip_address.side_effect = netaddr.core.AddrFormatError
         server = self.provider.create_vm("name")
-        mock_subp.assert_has_calls(3 * [
+        mock_subprocess.assert_has_calls(3 * [
             mock.call.check_output("ssh -o StrictHostKeyChecking=no user@host "
                                    "./get_domain_ip.sh name", shell=True),
         ])
         self.assertEqual(server.host, "None")
 
     @mock.patch("rally.deploy.serverprovider.providers.virsh.subprocess")
-    def test_destroy_vm(self, mock_subp):
+    def test_destroy_vm(self, mock_subprocess):
         self.provider.destroy_vm("uuid")
-        mock_subp.assert_has_calls([
+        mock_subprocess.assert_has_calls([
             mock.call.check_call("virsh --connect=qemu+ssh://user@host/system "
                                  "destroy uuid", shell=True),
             mock.call.check_call("virsh --connect=qemu+ssh://user@host/system "
@@ -95,26 +96,26 @@ class VirshProviderTestCase(test.TestCase):
 
     @mock.patch("rally.deploy.serverprovider.providers.virsh.uuid")
     @mock.patch.object(virsh.VirshProvider, "create_vm")
-    def test_create_servers(self, mock_create, mock_uuid):
+    def test_create_servers(self, mock_create_vm, mock_uuid):
         mock_uuid.uuid4.side_effect = ["1", "2", "3"]
-        mock_create.side_effect = ["s1", "s2", "s3"]
+        mock_create_vm.side_effect = ["s1", "s2", "s3"]
         servers = self.provider.create_servers(amount=3)
         self.assertEqual(servers, ["s1", "s2", "s3"])
-        mock_create.assert_has_calls([
+        mock_create_vm.assert_has_calls([
             mock.call("1"),
             mock.call("2"),
             mock.call("3"),
         ])
 
     @mock.patch.object(virsh.VirshProvider, "destroy_vm")
-    def test_destroy_servers(self, mock_destroy):
+    def test_destroy_servers(self, mock_destroy_vm):
         self.provider.resources.get_all.return_value = [
             {"info": {"name": "1"}},
             {"info": {"name": "2"}},
             {"info": {"name": "3"}},
         ]
         self.provider.destroy_servers()
-        mock_destroy.assert_has_calls([
+        mock_destroy_vm.assert_has_calls([
             mock.call("1"),
             mock.call("2"),
             mock.call("3"),

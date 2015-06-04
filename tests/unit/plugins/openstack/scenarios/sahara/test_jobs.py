@@ -33,11 +33,12 @@ class SaharaJobTestCase(test.ClientsTestCase):
         CONF.set_override("cluster_check_interval", 0, "benchmark")
         CONF.set_override("job_check_interval", 0, "benchmark")
 
-    @mock.patch(SAHARA_UTILS + ".SaharaScenario._generate_random_name",
+    @mock.patch("rally.common.utils.generate_random_name",
                 return_value="job_42")
     @mock.patch(SAHARA_JOB + "._run_job_execution")
-    def test_create_launch_job_java(self, mock_run_execution,
-                                    mock_random_name):
+    def test_create_launch_job_java(self, mock__run_job_execution,
+                                    mock_generate_random_name):
+
         self.clients("sahara").jobs.create.return_value = mock.MagicMock(
             id="42")
 
@@ -58,14 +59,14 @@ class SaharaJobTestCase(test.ClientsTestCase):
             job_idx=0
         )
         self.clients("sahara").jobs.create.assert_called_once_with(
-            name=mock_random_name.return_value,
+            name=mock_generate_random_name.return_value,
             type="java",
             description="",
             mains=["main_42"],
             libs=["lib_42"]
         )
 
-        mock_run_execution.assert_called_once_with(
+        mock__run_job_execution.assert_called_once_with(
             job_id="42",
             cluster_id="cl_42",
             input_id=None,
@@ -74,13 +75,15 @@ class SaharaJobTestCase(test.ClientsTestCase):
             job_idx=0
         )
 
-    @mock.patch(SAHARA_UTILS + ".SaharaScenario._generate_random_name",
+    @mock.patch("rally.common.utils.generate_random_name",
                 return_value="job_42")
     @mock.patch(SAHARA_JOB + "._run_job_execution")
     @mock.patch(SAHARA_JOB + "._create_output_ds",
                 return_value=mock.MagicMock(id="out_42"))
-    def test_create_launch_job_pig(self, mock_create_ds,
-                                   mock_run_execution, mock_random_name):
+    def test_create_launch_job_pig(self, mock__create_output_ds,
+                                   mock__run_job_execution,
+                                   mock_generate_random_name):
+
         self.clients("sahara").jobs.create.return_value = mock.MagicMock(
             id="42")
 
@@ -101,14 +104,14 @@ class SaharaJobTestCase(test.ClientsTestCase):
             job_idx=0
         )
         self.clients("sahara").jobs.create.assert_called_once_with(
-            name=mock_random_name.return_value,
+            name=mock_generate_random_name.return_value,
             type="pig",
             description="",
             mains=["main_42"],
             libs=["lib_42"]
         )
 
-        mock_run_execution.assert_called_once_with(
+        mock__run_job_execution.assert_called_once_with(
             job_id="42",
             cluster_id="cl_42",
             input_id="in_42",
@@ -117,11 +120,12 @@ class SaharaJobTestCase(test.ClientsTestCase):
             job_idx=0
         )
 
-    @mock.patch(SAHARA_UTILS + ".SaharaScenario._generate_random_name",
+    @mock.patch("rally.common.utils.generate_random_name",
                 return_value="job_42")
     @mock.patch(SAHARA_JOB + "._run_job_execution")
-    def test_create_launch_job_sequence(self, mock_run_execution,
-                                        mock_random_name):
+    def test_create_launch_job_sequence(self, mock__run_job_execution,
+                                        mock_generate_random_name):
+
         self.clients("sahara").jobs.create.return_value = mock.MagicMock(
             id="42")
 
@@ -147,7 +151,7 @@ class SaharaJobTestCase(test.ClientsTestCase):
                 }])
 
         jobs_create_call = mock.call(
-            name=mock_random_name.return_value,
+            name=mock_generate_random_name.return_value,
             type="java",
             description="",
             mains=["main_42"],
@@ -156,7 +160,7 @@ class SaharaJobTestCase(test.ClientsTestCase):
         self.clients("sahara").jobs.create.assert_has_calls([jobs_create_call,
                                                              jobs_create_call])
 
-        mock_run_execution.assert_has_calls([
+        mock__run_job_execution.assert_has_calls([
             mock.call(
                 job_id="42",
                 cluster_id="cl_42",
@@ -173,18 +177,18 @@ class SaharaJobTestCase(test.ClientsTestCase):
                 job_idx=1)]
         )
 
-    @mock.patch(SAHARA_UTILS + ".SaharaScenario._generate_random_name",
+    @mock.patch("rally.common.utils.generate_random_name",
                 return_value="job_42")
     @mock.patch(SAHARA_JOB + "._run_job_execution")
     @mock.patch(SAHARA_JOB + "._scale_cluster")
-    def test_create_launch_job_sequence_with_scaling(self, mock_scale,
-                                                     mock_run_execution,
-                                                     mock_random_name):
+    def test_create_launch_job_sequence_with_scaling(
+            self, mock__scale_cluster, mock__run_job_execution,
+            mock_generate_random_name):
+
         self.clients("sahara").jobs.create.return_value = mock.MagicMock(
             id="42")
         self.clients("sahara").clusters.get.return_value = mock.MagicMock(
-            id="cl_42",
-            status="active")
+            id="cl_42", status="active")
 
         jobs_scenario = jobs.SaharaJob()
 
@@ -209,7 +213,7 @@ class SaharaJobTestCase(test.ClientsTestCase):
             deltas=[1, -1])
 
         jobs_create_call = mock.call(
-            name=mock_random_name.return_value,
+            name=mock_generate_random_name.return_value,
             type="java",
             description="",
             mains=["main_42"],
@@ -224,5 +228,5 @@ class SaharaJobTestCase(test.ClientsTestCase):
         je_1 = mock.call(job_id="42", cluster_id="cl_42", input_id=None,
                          output_id=None,
                          configs={"conf_key2": "conf_val2"}, job_idx=1)
-        mock_run_execution.assert_has_calls([je_0, je_1, je_0, je_1, je_0,
-                                             je_1])
+        mock__run_job_execution.assert_has_calls(
+            [je_0, je_1, je_0, je_1, je_0, je_1])

@@ -64,10 +64,10 @@ class ResourceManagerTestCase(test.TestCase):
         self.assertEqual(resource.id, manager.id())
 
     @mock.patch("%s.ResourceManager._manager" % BASE)
-    def test_is_deleted(self, mock_manager):
+    def test_is_deleted(self, mock_resource_manager__manager):
         raw_res = mock.MagicMock(status="deleted")
-        mock_manager().get.return_value = raw_res
-        mock_manager.reset_mock()
+        mock_resource_manager__manager().get.return_value = raw_res
+        mock_resource_manager__manager.reset_mock()
 
         resource = mock.MagicMock(id="test_id")
 
@@ -78,12 +78,12 @@ class ResourceManagerTestCase(test.TestCase):
         raw_res.status = "ACTIVE"
         self.assertFalse(manager.is_deleted())
 
-        mock_manager.assert_has_calls(
+        mock_resource_manager__manager.assert_has_calls(
             [mock.call(), mock.call().get(resource.id)] * 3)
-        self.assertEqual(mock_manager.call_count, 3)
+        self.assertEqual(mock_resource_manager__manager.call_count, 3)
 
     @mock.patch("%s.ResourceManager._manager" % BASE)
-    def test_is_deleted_exceptions(self, mock_manager):
+    def test_is_deleted_exceptions(self, mock_resource_manager__manager):
 
         class Fake500Exc(Exception):
             code = 500
@@ -91,7 +91,8 @@ class ResourceManagerTestCase(test.TestCase):
         class Fake404Exc(Exception):
             code = 404
 
-        mock_manager.side_effect = [Exception, Fake500Exc, Fake404Exc]
+        mock_resource_manager__manager.side_effect = [
+            Exception, Fake500Exc, Fake404Exc]
 
         manager = base.ResourceManager(resource=mock.MagicMock())
         self.assertFalse(manager.is_deleted())
@@ -99,16 +100,17 @@ class ResourceManagerTestCase(test.TestCase):
         self.assertTrue(manager.is_deleted())
 
     @mock.patch("%s.ResourceManager._manager" % BASE)
-    def test_delete(self, mock_manager):
+    def test_delete(self, mock_resource_manager__manager):
         res = mock.MagicMock(id="test_id")
 
         manager = base.ResourceManager(resource=res)
         manager.delete()
 
-        mock_manager.assert_has_calls(
+        mock_resource_manager__manager.assert_has_calls(
             [mock.call(), mock.call().delete(res.id)])
 
     @mock.patch("%s.ResourceManager._manager" % BASE)
-    def test_list(self, mock_manager):
+    def test_list(self, mock_resource_manager__manager):
         base.ResourceManager().list()
-        mock_manager.assert_has_calls([mock.call(), mock.call().list()])
+        mock_resource_manager__manager.assert_has_calls(
+            [mock.call(), mock.call().list()])

@@ -147,23 +147,25 @@ class OSClientsTestCase(test.TestCase):
         self.assertEqual(self.fake_keystone, self.clients.cache["keystone"])
 
     @mock.patch("rally.osclients.Clients.keystone")
-    def test_verified_keystone_user_not_admin(self, mock_keystone):
-        mock_keystone.return_value = fakes.FakeKeystoneClient()
-        mock_keystone.return_value.auth_ref.role_names = ["notadmin"]
+    def test_verified_keystone_user_not_admin(self, mock_clients_keystone):
+        mock_clients_keystone.return_value = fakes.FakeKeystoneClient()
+        mock_clients_keystone.return_value.auth_ref.role_names = ["notadmin"]
         self.assertRaises(exceptions.InvalidAdminException,
                           self.clients.verified_keystone)
 
     @mock.patch("rally.osclients.Clients.keystone")
-    def test_verified_keystone_unauthorized(self, mock_keystone):
-        mock_keystone.return_value = fakes.FakeKeystoneClient()
-        mock_keystone.side_effect = keystone_exceptions.Unauthorized
+    def test_verified_keystone_unauthorized(self, mock_clients_keystone):
+        mock_clients_keystone.return_value = fakes.FakeKeystoneClient()
+        mock_clients_keystone.side_effect = keystone_exceptions.Unauthorized
         self.assertRaises(exceptions.InvalidEndpointsException,
                           self.clients.verified_keystone)
 
     @mock.patch("rally.osclients.Clients.keystone")
-    def test_verified_keystone_unreachable(self, mock_keystone):
-        mock_keystone.return_value = fakes.FakeKeystoneClient()
-        mock_keystone.side_effect = keystone_exceptions.AuthorizationFailure
+    def test_verified_keystone_unreachable(self, mock_clients_keystone):
+        mock_clients_keystone.return_value = fakes.FakeKeystoneClient()
+        mock_clients_keystone.side_effect = (
+            keystone_exceptions.AuthorizationFailure
+        )
         self.assertRaises(exceptions.HostUnreachableException,
                           self.clients.verified_keystone)
 
@@ -487,12 +489,13 @@ class OSClientsTestCase(test.TestCase):
             self.assertEqual(fake_ec2, self.clients.cache["ec2"])
 
     @mock.patch("rally.osclients.Clients.keystone")
-    def test_services(self, mock_keystone):
+    def test_services(self, mock_clients_keystone):
         available_services = {consts.ServiceType.IDENTITY: {},
                               consts.ServiceType.COMPUTE: {},
                               "unknown_service": {}}
-        mock_keystone.return_value = mock.Mock(service_catalog=mock.Mock(
-            get_endpoints=lambda: available_services))
+        mock_clients_keystone.return_value = mock.Mock(
+            service_catalog=mock.Mock(
+                get_endpoints=lambda: available_services))
         clients = osclients.Clients(self.endpoint)
 
         self.assertEqual(

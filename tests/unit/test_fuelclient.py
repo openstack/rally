@@ -154,7 +154,7 @@ class FuelClusterTestCase(test.TestCase):
                            "key2": "val2"}]})
 
     @mock.patch("rally.deploy.fuel.fuelclient.time.sleep")
-    def test_deploy(self, m_sleep):
+    def test_deploy(self, mock_sleep):
         call1 = {"progress": 50}
         call2 = {"progress": 100}
         self.client.get_task.side_effect = [call1, call2]
@@ -190,7 +190,7 @@ class FuelClusterTestCase(test.TestCase):
         self.cluster.verify_network.assert_called_once_with({"key": "val"})
 
     @mock.patch("rally.deploy.fuel.fuelclient.time.sleep")
-    def test_verify_network(self, m_sleep):
+    def test_verify_network(self, mock_sleep):
         call1 = {"progress": 50}
         call2 = {"progress": 100, "message": ""}
 
@@ -207,7 +207,7 @@ class FuelClusterTestCase(test.TestCase):
                          self.client.get_task.mock_calls)
 
     @mock.patch("rally.deploy.fuel.fuelclient.time.sleep")
-    def test_verify_network_fail(self, m_sleep):
+    def test_verify_network_fail(self, mock_sleep):
         self.client.put.return_value = {"id": 42}
         self.client.get_task.return_value = {"progress": 100,
                                              "message": "error"}
@@ -245,94 +245,96 @@ class FuelClientTestCase(test.TestCase):
         self.client = fuelclient.FuelClient("http://10.20.0.2:8000/api/v1/")
 
     @mock.patch("rally.deploy.fuel.fuelclient.requests")
-    def test__request_non_json(self, fake_req):
+    def test__request_non_json(self, mock_requests):
         reply = mock.Mock()
         reply.status_code = 200
         reply.headers = {"content-type": "application/x-httpd-php"}
         reply.text = "{\"reply\": \"ok\"}"
-        fake_req.method = mock.Mock(return_value=reply)
+        mock_requests.method.return_value = reply
 
         retval = self.client._request("method", "url", data={"key": "value"})
 
         self.assertEqual(retval, reply)
 
     @mock.patch("rally.deploy.fuel.fuelclient.requests")
-    def test__request_non_2xx(self, fake_req):
+    def test__request_non_2xx(self, mock_requests):
         reply = mock.Mock()
         reply.status_code = 300
         reply.headers = {"content-type": "application/json"}
         reply.text = "{\"reply\": \"ok\"}"
-        fake_req.method = mock.Mock(return_value=reply)
+        mock_requests.method.return_value = reply
         self.assertRaises(fuelclient.FuelClientException,
                           self.client._request, "method", "url",
                           data={"key": "value"})
 
     @mock.patch("rally.deploy.fuel.fuelclient.requests")
-    def test__request(self, fake_req):
+    def test__request(self, mock_requests):
         reply = mock.Mock()
         reply.status_code = 202
         reply.headers = {"content-type": "application/json"}
         reply.text = "{\"reply\": \"ok\"}"
-        fake_req.method = mock.Mock(return_value=reply)
+        mock_requests.method.return_value = reply
 
         retval = self.client._request("method", "url", data={"key": "value"})
-        fake_req.method.assert_called_once_with(
+        mock_requests.method.assert_called_once_with(
             "http://10.20.0.2:8000/api/v1/url",
             headers={"content-type": "application/json"},
             data="{\"key\": \"value\"}")
         self.assertEqual(retval, {"reply": "ok"})
 
     @mock.patch.object(fuelclient.FuelClient, "_request")
-    def test_get(self, m_request):
+    def test_get(self, mock_fuel_client__request):
         self.client.get("url")
-        m_request.assert_called_once_with("get", "url")
+        mock_fuel_client__request.assert_called_once_with("get", "url")
 
     @mock.patch.object(fuelclient.FuelClient, "_request")
-    def test_delete(self, m_request):
+    def test_delete(self, mock_fuel_client__request):
         self.client.delete("url")
-        m_request.assert_called_once_with("delete", "url")
+        mock_fuel_client__request.assert_called_once_with("delete", "url")
 
     @mock.patch.object(fuelclient.FuelClient, "_request")
-    def test_post(self, m_request):
+    def test_post(self, mock_fuel_client__request):
         self.client.post("url", {"key": "val"})
-        m_request.assert_called_once_with("post", "url", {"key": "val"})
+        mock_fuel_client__request.assert_called_once_with(
+            "post", "url", {"key": "val"})
 
     @mock.patch.object(fuelclient.FuelClient, "_request")
-    def test_put(self, m_request):
+    def test_put(self, mock_fuel_client__request):
         self.client.put("url", {"key": "val"})
-        m_request.assert_called_once_with("put", "url", {"key": "val"})
+        mock_fuel_client__request.assert_called_once_with(
+            "put", "url", {"key": "val"})
 
     @mock.patch.object(fuelclient.FuelClient, "get")
-    def test_get_releases(self, m_get):
+    def test_get_releases(self, mock_fuel_client_get):
         self.client.get_releases()
-        m_get.assert_called_once_with("releases")
+        mock_fuel_client_get.assert_called_once_with("releases")
 
     @mock.patch.object(fuelclient.FuelClient, "get")
-    def test_get_task(self, m_get):
+    def test_get_task(self, mock_fuel_client_get):
         self.client.get_task(42)
-        m_get.assert_called_once_with("tasks/42")
+        mock_fuel_client_get.assert_called_once_with("tasks/42")
 
     @mock.patch.object(fuelclient.FuelClient, "get")
-    def test_get_tasks(self, m_get):
+    def test_get_tasks(self, mock_fuel_client_get):
         self.client.get_tasks(42)
-        m_get.assert_called_once_with("tasks?cluster_id=42")
+        mock_fuel_client_get.assert_called_once_with("tasks?cluster_id=42")
 
     @mock.patch.object(fuelclient.FuelClient, "get")
-    def test_get_node(self, m_get):
+    def test_get_node(self, mock_fuel_client_get):
         self.client.get_node(42)
-        m_get.assert_called_once_with("nodes/42")
+        mock_fuel_client_get.assert_called_once_with("nodes/42")
 
     @mock.patch.object(fuelclient, "FuelNodesCollection")
     @mock.patch.object(fuelclient.FuelClient, "get")
-    def test_get_nodes(self, m_get, m_collection):
-        m_get.return_value = "fake_nodes"
-        m_collection.return_value = "fake_collection"
+    def test_get_nodes(self, mock_fuel_client_get, mock_fuel_nodes_collection):
+        mock_fuel_client_get.return_value = "fake_nodes"
+        mock_fuel_nodes_collection.return_value = "fake_collection"
         retval = self.client.get_nodes()
         self.assertEqual("fake_collection", retval)
-        m_collection.assert_called_once_with("fake_nodes")
-        m_get.assert_called_once_with("nodes")
+        mock_fuel_nodes_collection.assert_called_once_with("fake_nodes")
+        mock_fuel_client_get.assert_called_once_with("nodes")
 
     @mock.patch.object(fuelclient.FuelClient, "delete")
-    def test_delete_cluster(self, m_delete):
+    def test_delete_cluster(self, mock_fuel_client_delete):
         self.client.delete_cluster(42)
-        m_delete.assert_called_once_with("clusters/42")
+        mock_fuel_client_delete.assert_called_once_with("clusters/42")

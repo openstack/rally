@@ -38,43 +38,46 @@ class VerificationTestCase(test.TestCase):
                      "time": "0.29"}]}}
 
     @mock.patch("rally.objects.verification.db.verification_create")
-    def test_init_with_create(self, mock_create):
+    def test_init_with_create(self, mock_verification_create):
         objects.Verification(deployment_uuid="some_deployment_uuid")
-        mock_create.assert_called_once_with("some_deployment_uuid")
+        mock_verification_create.assert_called_once_with(
+            "some_deployment_uuid")
 
     @mock.patch("rally.objects.verification.db.verification_create")
-    def test_init_without_create(self, mock_create):
+    def test_init_without_create(self, mock_verification_create):
         verification = objects.Verification(db_object=self.db_obj)
 
-        self.assertEqual(0, mock_create.call_count)
+        self.assertEqual(0, mock_verification_create.call_count)
         self.assertEqual(self.db_obj["failures"], verification.failures)
         self.assertEqual(self.db_obj["tests"], verification.tests)
         self.assertEqual(self.db_obj["errors"], verification.errors)
         self.assertEqual(self.db_obj["time"], verification.time)
 
     @mock.patch("rally.objects.verification.db.verification_get")
-    def test_get(self, mock_get):
+    def test_get(self, mock_verification_get):
         objects.Verification.get(self.db_obj["id"])
-        mock_get.assert_called_once_with(self.db_obj["id"])
+        mock_verification_get.assert_called_once_with(self.db_obj["id"])
 
     @mock.patch("rally.objects.verification.db.verification_delete")
     @mock.patch("rally.objects.verification.db.verification_create")
-    def test_create_and_delete(self, mock_create, mock_delete):
+    def test_create_and_delete(self, mock_verification_create,
+                               mock_verification_delete):
         verification = objects.Verification(db_object=self.db_obj)
         verification.delete()
-        mock_delete.assert_called_once_with(self.db_obj["uuid"])
+        mock_verification_delete.assert_called_once_with(self.db_obj["uuid"])
 
     @mock.patch("rally.objects.verification.db.verification_update")
-    def test_set_failed(self, mock_update):
-        mock_update.return_value = self.db_obj
+    def test_set_failed(self, mock_verification_update):
+        mock_verification_update.return_value = self.db_obj
         verification = objects.Verification(db_object=self.db_obj)
         verification.set_failed()
-        mock_update.assert_called_once_with(self.db_obj["uuid"],
-                                            {"status": "failed"})
+        mock_verification_update.assert_called_once_with(
+            self.db_obj["uuid"], {"status": "failed"})
 
     @mock.patch("rally.objects.verification.db.verification_result_create")
     @mock.patch("rally.objects.verification.db.verification_update")
-    def test_finish_verification(self, mock_update, mock_create):
+    def test_finish_verification(self, mock_verification_update,
+                                 mock_verification_result_create):
         verification = objects.Verification(db_object=self.db_obj)
         fake_results = fakes.get_fake_test_case()
         verification.finish_verification(
@@ -83,8 +86,10 @@ class VerificationTestCase(test.TestCase):
 
         expected_values = {"status": "finished"}
         expected_values.update(fake_results["total"])
-        mock_update.assert_called_with(self.db_obj["uuid"], expected_values)
+        mock_verification_update.assert_called_with(
+            self.db_obj["uuid"], expected_values)
 
         expected_data = fake_results["total"].copy()
         expected_data["test_cases"] = fake_results["test_cases"]
-        mock_create.assert_called_once_with(verification.uuid, expected_data)
+        mock_verification_result_create.assert_called_once_with(
+            verification.uuid, expected_data)

@@ -27,119 +27,131 @@ class DesignateBasicTestCase(test.TestCase):
 
     @mock.patch(DESIGNATE_BASIC + "._list_domains")
     @mock.patch(DESIGNATE_BASIC + "._create_domain")
-    def test_create_and_list_domains(self, mock_create, mock_list):
+    def test_create_and_list_domains(self, mock_designate_basic__create_domain,
+                                     mock_designate_basic__list_domains):
         scenario = basic.DesignateBasic()
 
         # Default options
         scenario.create_and_list_domains()
-        mock_create.assert_called_once_with()
-        mock_list.assert_called_once_with()
+        mock_designate_basic__create_domain.assert_called_once_with()
+        mock_designate_basic__list_domains.assert_called_once_with()
 
     @mock.patch(DESIGNATE_BASIC + "._delete_domain")
     @mock.patch(DESIGNATE_BASIC + "._create_domain")
-    def test_create_and_delete_domain(self, mock_create, mock_delete):
+    def test_create_and_delete_domain(
+            self, mock_designate_basic__create_domain,
+            mock_designate_basic__delete_domain):
+
         scenario = basic.DesignateBasic()
 
-        mock_create.return_value = {"id": "123"}
+        mock_designate_basic__create_domain.return_value = {"id": "123"}
 
         # Default options
         scenario.create_and_delete_domain()
 
-        mock_create.assert_called_once_with()
-        mock_delete.assert_called_once_with("123")
+        mock_designate_basic__create_domain.assert_called_once_with()
+        mock_designate_basic__delete_domain.assert_called_once_with("123")
 
     @mock.patch(DESIGNATE_BASIC + "._list_domains")
-    def test_list_domains(self, mock_list):
+    def test_list_domains(self, mock_designate_basic__list_domains):
         scenario = basic.DesignateBasic()
 
         # Default options
         scenario.list_domains()
-        mock_list.assert_called_once_with()
+        mock_designate_basic__list_domains.assert_called_once_with()
 
     @mock.patch(DESIGNATE_BASIC + "._list_records")
     @mock.patch(DESIGNATE_BASIC + "._create_record")
     @mock.patch(DESIGNATE_BASIC + "._create_domain")
-    def test_create_and_list_records(self,
-                                     mock_create_domain,
-                                     mock_create_record,
-                                     mock_list):
+    def test_create_and_list_records(
+            self, mock_designate_basic__create_domain,
+            mock_designate_basic__create_record,
+            mock_designate_basic__list_records):
         scenario = basic.DesignateBasic()
         domain = {
             "name": "zone.name",
             "email": "email@zone.name",
             "id": "123"}
-        mock_create_domain.return_value = domain
+        mock_designate_basic__create_domain.return_value = domain
         records_per_domain = 5
 
         scenario.create_and_list_records(
             records_per_domain=records_per_domain)
-        mock_create_domain.assert_called_once_with()
-        self.assertEqual(mock_create_record.mock_calls,
-                         [mock.call(domain, atomic_action=False)]
-                         * records_per_domain)
-        mock_list.assert_called_once_with(domain["id"])
+        mock_designate_basic__create_domain.assert_called_once_with()
+        self.assertEqual(
+            mock_designate_basic__create_record.mock_calls,
+            [mock.call(domain, atomic_action=False)]
+            * records_per_domain)
+        mock_designate_basic__list_records.assert_called_once_with(
+            domain["id"])
 
     @mock.patch(DESIGNATE_BASIC + "._delete_record")
     @mock.patch(DESIGNATE_BASIC + "._create_record")
     @mock.patch(DESIGNATE_BASIC + "._create_domain")
-    def test_create_and_delete_records(self,
-                                       mock_create_domain,
-                                       mock_create_record,
-                                       mock_delete):
+    def test_create_and_delete_records(
+            self, mock_designate_basic__create_domain,
+            mock_designate_basic__create_record,
+            mock_designate_basic__delete_record):
         scenario = basic.DesignateBasic()
         domain = {
             "name": "zone.name",
             "email": "email@zone.name",
             "id": "123"}
-        mock_create_domain.return_value = domain
-        mock_create_record.return_value = {"id": "321"}
+        mock_designate_basic__create_domain.return_value = domain
+        mock_designate_basic__create_record.return_value = {"id": "321"}
         records_per_domain = 5
 
         scenario.create_and_delete_records(
             records_per_domain=records_per_domain)
-        mock_create_domain.assert_called_once_with()
-        self.assertEqual(mock_create_record.mock_calls,
-                         [mock.call(domain, atomic_action=False)]
-                         * records_per_domain)
-        self.assertEqual(mock_delete.mock_calls,
-                         [mock.call(domain["id"], "321", atomic_action=False)]
-                         * records_per_domain)
+        mock_designate_basic__create_domain.assert_called_once_with()
+        self.assertEqual(
+            mock_designate_basic__create_record.mock_calls,
+            [mock.call(domain, atomic_action=False)]
+            * records_per_domain)
+        self.assertEqual(
+            mock_designate_basic__delete_record.mock_calls,
+            [mock.call(domain["id"], "321", atomic_action=False)]
+            * records_per_domain)
 
     @mock.patch(DESIGNATE_BASIC + "._list_records")
-    def test_list_records(self, mock_list):
+    def test_list_records(self, mock_designate_basic__list_records):
         scenario = basic.DesignateBasic()
 
         # Default options
         scenario.list_records("123")
-        mock_list.assert_called_once_with("123")
+        mock_designate_basic__list_records.assert_called_once_with("123")
 
     @mock.patch(DESIGNATE_BASIC + "._list_servers")
     @mock.patch(DESIGNATE_BASIC + "._create_server")
-    def test_create_and_list_servers(self, mock_create, mock_list):
+    def test_create_and_list_servers(
+            self, mock_designate_basic__create_server,
+            mock_designate_basic__list_servers):
         scenario = basic.DesignateBasic()
 
         # Default options
         scenario.create_and_list_servers()
-        mock_create.assert_called_once_with()
-        mock_list.assert_called_once_with()
+        mock_designate_basic__create_server.assert_called_once_with()
+        mock_designate_basic__list_servers.assert_called_once_with()
 
     @mock.patch(DESIGNATE_BASIC + "._delete_server")
     @mock.patch(DESIGNATE_BASIC + "._create_server")
-    def test_create_and_delete_server(self, mock_create, mock_delete):
+    def test_create_and_delete_server(
+            self, mock_designate_basic__create_server,
+            mock_designate_basic__delete_server):
         scenario = basic.DesignateBasic()
 
-        mock_create.return_value = {"id": "123"}
+        mock_designate_basic__create_server.return_value = {"id": "123"}
 
         # Default options
         scenario.create_and_delete_server()
 
-        mock_create.assert_called_once_with()
-        mock_delete.assert_called_once_with("123")
+        mock_designate_basic__create_server.assert_called_once_with()
+        mock_designate_basic__delete_server.assert_called_once_with("123")
 
     @mock.patch(DESIGNATE_BASIC + "._list_servers")
-    def test_list_servers(self, mock_list):
+    def test_list_servers(self, mock_designate_basic__list_servers):
         scenario = basic.DesignateBasic()
 
         # Default options
         scenario.list_servers()
-        mock_list.assert_called_once_with()
+        mock_designate_basic__list_servers.assert_called_once_with()

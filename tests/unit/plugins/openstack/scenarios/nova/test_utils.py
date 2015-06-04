@@ -25,7 +25,6 @@ from tests.unit import test
 
 BM_UTILS = "rally.benchmark.utils"
 NOVA_UTILS = "rally.plugins.openstack.scenarios.nova.utils"
-SCN = "rally.benchmark.scenarios.base"
 CONF = cfg.CONF
 
 
@@ -95,9 +94,9 @@ class NovaScenarioTestCase(test.ClientsTestCase):
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.list_servers")
 
-    @mock.patch(SCN + ".Scenario._generate_random_name",
+    @mock.patch(NOVA_UTILS + ".NovaScenario._generate_random_name",
                 return_value="foo_server_name")
-    def test__boot_server(self, mock_generate_random_name):
+    def test__boot_server(self, mock__generate_random_name):
         self.clients("nova").servers.create.return_value = self.server
         nova_scenario = utils.NovaScenario(context={})
         return_server = nova_scenario._boot_server("image_id",
@@ -113,9 +112,9 @@ class NovaScenarioTestCase(test.ClientsTestCase):
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.boot_server")
 
-    @mock.patch(SCN + ".Scenario._generate_random_name",
+    @mock.patch(NOVA_UTILS + ".NovaScenario._generate_random_name",
                 return_value="foo_server_name")
-    def test__boot_server_with_network(self, mock_generate_random_name):
+    def test__boot_server_with_network(self, mock__generate_random_name):
         self.clients("nova").servers.create.return_value = self.server
         networks = [{"id": "foo_id", "external": False},
                     {"id": "bar_id", "external": False}]
@@ -147,9 +146,9 @@ class NovaScenarioTestCase(test.ClientsTestCase):
                           "image_id", "flavor_id",
                           auto_assign_nic=True)
 
-    @mock.patch(SCN + ".Scenario._generate_random_name",
+    @mock.patch(NOVA_UTILS + ".NovaScenario._generate_random_name",
                 return_value="foo_server_name")
-    def test__boot_server_with_ssh(self, mock_generate_random_name):
+    def test__boot_server_with_ssh(self, mock__generate_random_name):
         self.clients("nova").servers.create.return_value = self.server
         nova_scenario = utils.NovaScenario(context={
             "user": {"secgroup": {"name": "test"}}}
@@ -167,9 +166,9 @@ class NovaScenarioTestCase(test.ClientsTestCase):
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.boot_server")
 
-    @mock.patch(SCN + ".Scenario._generate_random_name",
+    @mock.patch(NOVA_UTILS + ".NovaScenario._generate_random_name",
                 return_value="foo_server_name")
-    def test__boot_server_with_sec_group(self, mock_generate_random_name):
+    def test__boot_server_with_sec_group(self, mock__generate_random_name):
         self.clients("nova").servers.create.return_value = self.server
         nova_scenario = utils.NovaScenario(context={
             "user": {"secgroup": {"name": "new"}}}
@@ -189,10 +188,10 @@ class NovaScenarioTestCase(test.ClientsTestCase):
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.boot_server")
 
-    @mock.patch(SCN + ".Scenario._generate_random_name",
+    @mock.patch(NOVA_UTILS + ".NovaScenario._generate_random_name",
                 return_value="foo_server_name")
     def test__boot_server_with_similar_sec_group(self,
-                                                 mock_generate_random_name):
+                                                 mock__generate_random_name):
         self.clients("nova").servers.create.return_value = self.server
         nova_scenario = utils.NovaScenario(context={
             "user": {"secgroup": {"name": "test1"}}}
@@ -714,7 +713,7 @@ class NovaScenarioTestCase(test.ClientsTestCase):
                                        "nova.list_floating_ips_bulk")
 
     @mock.patch(NOVA_UTILS + ".network_wrapper.generate_cidr")
-    def test__create_floating_ips_bulk(self, mock_gencidr):
+    def test__create_floating_ips_bulk(self, mock_generate_cidr):
         fake_cidr = "10.2.0.0/24"
         fake_pool = "test1"
         fake_floating_ips_bulk = mock.MagicMock()
@@ -724,7 +723,7 @@ class NovaScenarioTestCase(test.ClientsTestCase):
             fake_floating_ips_bulk)
         nova_scenario = utils.NovaScenario()
         return_iprange = nova_scenario._create_floating_ips_bulk(fake_cidr)
-        mock_gencidr.assert_called_once_with(start_cidr=fake_cidr)
+        mock_generate_cidr.assert_called_once_with(start_cidr=fake_cidr)
         self.assertEqual(return_iprange, fake_floating_ips_bulk)
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.create_floating_ips_bulk")

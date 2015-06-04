@@ -29,11 +29,11 @@ class NeutronScenarioTestCase(test.ClientsTestCase):
         self.network = mock.Mock()
 
     @mock.patch(NEUTRON_UTILS + "NeutronScenario._generate_random_name")
-    def test_create_network(self, mock_random_name):
+    def test_create_network(self, mock__generate_random_name):
         neutron_scenario = utils.NeutronScenario()
         explicit_name = "explicit_name"
         random_name = "random_name"
-        mock_random_name.return_value = random_name
+        mock__generate_random_name.return_value = random_name
         self.clients("neutron").create_network.return_value = self.network
 
         # Network name is specified
@@ -96,7 +96,7 @@ class NeutronScenarioTestCase(test.ClientsTestCase):
 
     @mock.patch(NEUTRON_UTILS + "NeutronScenario._generate_random_name",
                 return_value="test_subnet")
-    def test_create_subnet(self, mock_random_name):
+    def test_create_subnet(self, mock__generate_random_name):
         scenario = utils.NeutronScenario()
         network_id = "fake-id"
         start_cidr = "192.168.0.0/24"
@@ -107,7 +107,7 @@ class NeutronScenarioTestCase(test.ClientsTestCase):
                 "network_id": network_id,
                 "cidr": start_cidr,
                 "ip_version": scenario.SUBNET_IP_VERSION,
-                "name": mock_random_name.return_value
+                "name": mock__generate_random_name.return_value
             }
         }
 
@@ -171,12 +171,12 @@ class NeutronScenarioTestCase(test.ClientsTestCase):
                                        "neutron.delete_subnet")
 
     @mock.patch(NEUTRON_UTILS + "NeutronScenario._generate_random_name")
-    def test_create_router(self, mock_random_name):
+    def test_create_router(self, mock__generate_random_name):
         scenario = utils.NeutronScenario()
         router = mock.Mock()
         explicit_name = "explicit_name"
         random_name = "random_name"
-        mock_random_name.return_value = random_name
+        mock__generate_random_name.return_value = random_name
         self.clients("neutron").create_router.return_value = router
 
         # Default options
@@ -257,13 +257,13 @@ class NeutronScenarioTestCase(test.ClientsTestCase):
         self.assertEqual(utils.NeutronScenario.SUBNET_IP_VERSION, 4)
 
     @mock.patch(NEUTRON_UTILS + "NeutronScenario._generate_random_name")
-    def test_create_port(self, mock_rand_name):
+    def test_create_port(self, mock__generate_random_name):
         scenario = utils.NeutronScenario()
 
         net_id = "network-id"
         net = {"network": {"id": net_id}}
         rand_name = "random-name"
-        mock_rand_name.return_value = rand_name
+        mock__generate_random_name.return_value = rand_name
         expected_port_args = {
             "port": {
                 "network_id": net_id,
@@ -354,15 +354,12 @@ class NeutronScenarioTestCase(test.ClientsTestCase):
                     }
                 })
     def test_create_network_and_subnets(self,
-                                        mock_create_network,
-                                        mock_create_subnet):
+                                        mock__create_network,
+                                        mock__create_subnet):
         scenario = utils.NeutronScenario()
         network_create_args = {}
         subnet_create_args = {}
         subnets_per_network = 4
-
-        mock_create_network.reset_mock()
-        mock_create_subnet.reset_mock()
 
         # Default options
         scenario._create_network_and_subnets(
@@ -370,13 +367,13 @@ class NeutronScenarioTestCase(test.ClientsTestCase):
             subnet_create_args=subnet_create_args,
             subnets_per_network=subnets_per_network)
 
-        mock_create_network.assert_called_once_with({})
-        mock_create_subnet.assert_has_calls(
+        mock__create_network.assert_called_once_with({})
+        mock__create_subnet.assert_has_calls(
             [mock.call({"network": {"id": "fake-id"}},
                        {}, "1.0.0.0/24")] * subnets_per_network)
 
-        mock_create_network.reset_mock()
-        mock_create_subnet.reset_mock()
+        mock__create_network.reset_mock()
+        mock__create_subnet.reset_mock()
 
         # Custom options
         scenario._create_network_and_subnets(
@@ -385,8 +382,8 @@ class NeutronScenarioTestCase(test.ClientsTestCase):
             subnet_cidr_start="10.10.10.0/24",
             subnets_per_network=subnets_per_network)
 
-        mock_create_network.assert_called_once_with({})
-        mock_create_subnet.assert_has_calls(
+        mock__create_network.assert_called_once_with({})
+        mock__create_subnet.assert_has_calls(
             [mock.call({"network": {"id": "fake-id"}},
                        {"allocation_pools": []},
                        "10.10.10.0/24")] * subnets_per_network)
@@ -411,13 +408,13 @@ class NeutronScenarioTestCase(test.ClientsTestCase):
             neutron_scenario.atomic_actions(), "neutron.create_pool")
 
     @mock.patch(NEUTRON_UTILS + "NeutronScenario._generate_random_name")
-    def test_create_v1_pool_default(self, mock_random_name):
+    def test_create_v1_pool_default(self, mock__generate_random_name):
         neutron_scenario = utils.NeutronScenario()
         random_name = "random_name"
         subnet = "fake-id"
         pool = mock.Mock()
         self.clients("neutron").create_pool.return_value = pool
-        mock_random_name.return_value = random_name
+        mock__generate_random_name.return_value = random_name
         # Random pool name
         pool_data = {}
         args = {"lb_method": "ROUND_ROBIN", "protocol": "HTTP",

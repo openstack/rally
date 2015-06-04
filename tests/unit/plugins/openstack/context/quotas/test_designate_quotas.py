@@ -22,8 +22,8 @@ class DesignateQuotasTestCase(test.TestCase):
 
     @mock.patch("rally.plugins.openstack.context."
                 "quotas.quotas.osclients.Clients")
-    def test_update(self, client_mock):
-        quotas = designate_quotas.DesignateQuotas(client_mock)
+    def test_update(self, mock_clients):
+        quotas = designate_quotas.DesignateQuotas(mock_clients)
         tenant_id = mock.MagicMock()
         quotas_values = {
             "domains": 5,
@@ -32,14 +32,14 @@ class DesignateQuotasTestCase(test.TestCase):
             "recordset_records": 20,
         }
         quotas.update(tenant_id, **quotas_values)
-        client_mock.designate().quotas.update.assert_called_once_with(
+        mock_clients.designate().quotas.update.assert_called_once_with(
             tenant_id, quotas_values)
 
     @mock.patch("rally.plugins.openstack.context."
                 "quotas.quotas.osclients.Clients")
-    def test_delete(self, client_mock):
-        quotas = designate_quotas.DesignateQuotas(client_mock)
+    def test_delete(self, mock_clients):
+        quotas = designate_quotas.DesignateQuotas(mock_clients)
         tenant_id = mock.MagicMock()
         quotas.delete(tenant_id)
-        client_mock.designate().quotas.reset.assert_called_once_with(
+        mock_clients.designate().quotas.reset.assert_called_once_with(
             tenant_id)

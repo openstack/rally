@@ -47,7 +47,7 @@ class AdminCleanupTestCase(test.TestCase):
     @mock.patch("%s.manager.find_resource_managers" % BASE,
                 return_value=[mock.MagicMock(), mock.MagicMock()])
     @mock.patch("%s.manager.SeekAndDestroy" % BASE)
-    def test_cleanup(self, mock_seek_and_destroy, mock_find_res_mgr):
+    def test_cleanup(self, mock_seek_and_destroy, mock_find_resource_managers):
 
         ctx = {
             "config": {"admin_cleanup": ["a", "b"]},
@@ -60,13 +60,17 @@ class AdminCleanupTestCase(test.TestCase):
         admin_cleanup.setup()
         admin_cleanup.cleanup()
 
-        mock_find_res_mgr.assert_called_once_with(["a", "b"], True)
+        mock_find_resource_managers.assert_called_once_with(["a", "b"], True)
         mock_seek_and_destroy.assert_has_calls([
-            mock.call(mock_find_res_mgr.return_value[0], ctx["admin"],
-                      ctx["users"]),
+            mock.call(
+                mock_find_resource_managers.return_value[0],
+                ctx["admin"],
+                ctx["users"]),
             mock.call().exterminate(),
-            mock.call(mock_find_res_mgr.return_value[1], ctx["admin"],
-                      ctx["users"]),
+            mock.call(
+                mock_find_resource_managers.return_value[1],
+                ctx["admin"],
+                ctx["users"]),
             mock.call().exterminate()
         ])
 
@@ -95,7 +99,7 @@ class UserCleanupTestCase(test.TestCase):
     @mock.patch("%s.manager.find_resource_managers" % BASE,
                 return_value=[mock.MagicMock(), mock.MagicMock()])
     @mock.patch("%s.manager.SeekAndDestroy" % BASE)
-    def test_cleanup(self, mock_seek_and_destroy, mock_find_res_mgr):
+    def test_cleanup(self, mock_seek_and_destroy, mock_find_resource_managers):
 
         ctx = {
             "config": {"cleanup": ["a", "b"]},
@@ -107,11 +111,15 @@ class UserCleanupTestCase(test.TestCase):
         admin_cleanup.setup()
         admin_cleanup.cleanup()
 
-        mock_find_res_mgr.assert_called_once_with(["a", "b"], False)
+        mock_find_resource_managers.assert_called_once_with(["a", "b"], False)
 
         mock_seek_and_destroy.assert_has_calls([
-            mock.call(mock_find_res_mgr.return_value[0], None, ctx["users"]),
+            mock.call(
+                mock_find_resource_managers.return_value[0],
+                None, ctx["users"]),
             mock.call().exterminate(),
-            mock.call(mock_find_res_mgr.return_value[1], None, ctx["users"]),
+            mock.call(
+                mock_find_resource_managers.return_value[1],
+                None, ctx["users"]),
             mock.call().exterminate()
         ])

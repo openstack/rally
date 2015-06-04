@@ -62,8 +62,9 @@ class ServerGeneratorTestCase(test.TestCase):
     @mock.patch("%s.FlavorResourceType.transform" % TYP,
                 return_value=mock.MagicMock())
     @mock.patch("%s.servers.osclients" % CTX, return_value=fakes.FakeClients())
-    def test_setup(self, mock_osclients, mock_flavor_transform,
-                   mock_image_transform, mock_boot_servers):
+    def test_setup(self, mock_osclients, mock_flavor_resource_type_transform,
+                   mock_image_resource_type_transform,
+                   mock_nova_scenario__boot_servers):
 
         tenants_count = 2
         users_per_tenant = 5

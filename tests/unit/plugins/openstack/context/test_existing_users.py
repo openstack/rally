@@ -24,12 +24,12 @@ class ExistingUserTestCase(test.TestCase):
                 "existing_users.osclients.Clients")
     @mock.patch("rally.plugins.openstack.context."
                 "existing_users.objects.Endpoint")
-    def test_setup(self, mock_endpoint, mock_osclients):
+    def test_setup(self, mock_endpoint, mock_clients):
         user1 = mock.MagicMock(tenant_id="1")
         user2 = mock.MagicMock(tenant_id="1")
         user3 = mock.MagicMock(tenant_id="2")
 
-        mock_osclients.return_value.keystone.side_effect = [
+        mock_clients.return_value.keystone.side_effect = [
             user1, user2, user3
         ]
 

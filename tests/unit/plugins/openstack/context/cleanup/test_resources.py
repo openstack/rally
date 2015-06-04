@@ -108,13 +108,13 @@ class NovaServerTestCase(test.TestCase):
 class NovaSecurityGroupTestCase(test.TestCase):
 
     @mock.patch("%s.base.ResourceManager._manager" % BASE)
-    def test_list(self, mock_manager):
+    def test_list(self, mock_resource_manager__manager):
         secgroups = [mock.MagicMock(), mock.MagicMock(), mock.MagicMock()]
         secgroups[0].name = "a"
         secgroups[1].name = "b"
         secgroups[2].name = "default"
 
-        mock_manager().list.return_value = secgroups
+        mock_resource_manager__manager().list.return_value = secgroups
         self.assertSequenceEqual(secgroups[:2],
                                  resources.NovaSecurityGroup().list())
 
@@ -127,13 +127,13 @@ class NovaFloatingIpsBulkTestCase(test.TestCase):
         self.assertEqual(ip_range.raw_resource.address, ip_range.id())
 
     @mock.patch("%s.base.ResourceManager._manager" % BASE)
-    def test_list(self, mock_manager):
+    def test_list(self, mock_resource_manager__manager):
         ip_range = [mock.MagicMock(), mock.MagicMock(), mock.MagicMock()]
         ip_range[0].pool = "a"
         ip_range[1].pool = "rally_fip_pool_a"
         ip_range[2].pool = "rally_fip_pool_b"
 
-        mock_manager().list.return_value = ip_range
+        mock_resource_manager__manager().list.return_value = ip_range
         self.assertEqual(ip_range[1:], resources.NovaFloatingIpsBulk().list())
 
 
@@ -153,30 +153,31 @@ class EC2MixinTestCase(test.TestCase):
 class EC2ServerTestCase(test.TestCase):
 
     @mock.patch("%s.EC2Server._manager" % BASE)
-    def test_is_deleted(self, mock_manager):
+    def test_is_deleted(self, mock_ec2_server__manager):
         raw_res1 = mock.MagicMock(state="terminated")
         raw_res2 = mock.MagicMock(state="terminated")
         resource = mock.MagicMock(id="test_id")
         manager = resources.EC2Server(resource=resource)
 
-        mock_manager().get_only_instances.return_value = [raw_res1]
+        mock_ec2_server__manager().get_only_instances.return_value = [raw_res1]
         self.assertTrue(manager.is_deleted())
 
         raw_res1.state = "running"
         self.assertFalse(manager.is_deleted())
 
-        mock_manager().get_only_instances.return_value = [raw_res1, raw_res2]
+        mock_ec2_server__manager().get_only_instances.return_value = [
+            raw_res1, raw_res2]
         self.assertFalse(manager.is_deleted())
 
         raw_res1.state = "terminated"
         self.assertTrue(manager.is_deleted())
 
-        mock_manager().get_only_instances.return_value = []
+        mock_ec2_server__manager().get_only_instances.return_value = []
         self.assertTrue(manager.is_deleted())
 
     @mock.patch("%s.EC2Server._manager" % BASE)
-    def test_is_deleted_exceptions(self, mock_manager):
-        mock_manager.side_effect = [
+    def test_is_deleted_exceptions(self, mock_ec2_server__manager):
+        mock_ec2_server__manager.side_effect = [
             boto_exception.EC2ResponseError(
                 status="fake", reason="fake",
                 body={"Error": {"Code": "fake_code"}}),
@@ -189,17 +190,18 @@ class EC2ServerTestCase(test.TestCase):
         self.assertTrue(manager.is_deleted())
 
     @mock.patch("%s.EC2Server._manager" % BASE)
-    def test_delete(self, mock_manager):
+    def test_delete(self, mock_ec2_server__manager):
         resource = mock.MagicMock(id="test_id")
         manager = resources.EC2Server(resource=resource)
         manager.delete()
-        mock_manager().terminate_instances.assert_called_once_with(
+        mock_ec2_server__manager().terminate_instances.assert_called_once_with(
             instance_ids=["test_id"])
 
     @mock.patch("%s.EC2Server._manager" % BASE)
-    def test_list(self, mock_manager):
+    def test_list(self, mock_ec2_server__manager):
         manager = resources.EC2Server()
-        mock_manager().get_only_instances.return_value = ["a", "b", "c"]
+        mock_ec2_server__manager().get_only_instances.return_value = [
+            "a", "b", "c"]
         self.assertEqual(["a", "b", "c"], manager.list())
 
 
@@ -283,10 +285,11 @@ class NeutronPortTestCase(test.TestCase):
 class NeutronQuotaTestCase(test.TestCase):
 
     @mock.patch("%s.NeutronQuota._manager" % BASE)
-    def test_delete(self, mock_manager):
+    def test_delete(self, mock_neutron_quota__manager):
         user = mock.MagicMock()
         resources.NeutronQuota(user=user, tenant_uuid="fake").delete()
-        mock_manager().delete_quota.assert_called_once_with("fake")
+        mock_neutron_quota__manager().delete_quota.assert_called_once_with(
+            "fake")
 
     def test__manager(self):
         admin = mock.MagicMock(neutron=mock.Mock(return_value="foo"))
@@ -298,14 +301,15 @@ class NeutronQuotaTestCase(test.TestCase):
 class GlanceImageTestCase(test.TestCase):
 
     @mock.patch("%s.GlanceImage._manager" % BASE)
-    def test_list(self, mock_manager):
+    def test_list(self, mock_glance_image__manager):
         glance = resources.GlanceImage()
         glance.tenant_uuid = mock.MagicMock()
 
-        mock_manager().list.return_value = ["a", "b", "c"]
+        mock_glance_image__manager().list.return_value = ["a", "b", "c"]
 
         self.assertEqual(["a", "b", "c"], glance.list())
-        mock_manager().list.assert_called_once_with(owner=glance.tenant_uuid)
+        mock_glance_image__manager().list.assert_called_once_with(
+            owner=glance.tenant_uuid)
 
 
 class CeilometerTestCase(test.TestCase):
@@ -316,15 +320,15 @@ class CeilometerTestCase(test.TestCase):
         self.assertEqual(ceil.raw_resource.alarm_id, ceil.id())
 
     @mock.patch("%s.CeilometerAlarms._manager" % BASE)
-    def test_list(self, mock_manager):
+    def test_list(self, mock_ceilometer_alarms__manager):
 
         ceil = resources.CeilometerAlarms()
         ceil.tenant_uuid = mock.MagicMock()
-        mock_manager().list.return_value = ["a", "b", "c"]
-        mock_manager.reset_mock()
+        mock_ceilometer_alarms__manager().list.return_value = ["a", "b", "c"]
+        mock_ceilometer_alarms__manager.reset_mock()
 
         self.assertEqual(["a", "b", "c"], ceil.list())
-        mock_manager().list.assert_called_once_with(
+        mock_ceilometer_alarms__manager().list.assert_called_once_with(
             q=[{"field": "project_id", "op": "eq", "value": ceil.tenant_uuid}])
 
 
@@ -416,11 +420,13 @@ class SwiftMixinTestCase(test.TestCase):
 class SwiftObjectTestCase(test.TestCase):
 
     @mock.patch("%s.SwiftMixin._manager" % BASE)
-    def test_list(self, mock_manager):
+    def test_list(self, mock_swift_mixin__manager):
         containers = [mock.MagicMock(), mock.MagicMock()]
         objects = [mock.MagicMock(), mock.MagicMock(), mock.MagicMock()]
-        mock_manager().get_account.return_value = ("header", containers)
-        mock_manager().get_container.return_value = ("header", objects)
+        mock_swift_mixin__manager().get_account.return_value = (
+            "header", containers)
+        mock_swift_mixin__manager().get_container.return_value = (
+            "header", objects)
         self.assertEqual(len(containers),
                          len(resources.SwiftContainer().list()))
         self.assertEqual(len(containers) * len(objects),
@@ -430,8 +436,9 @@ class SwiftObjectTestCase(test.TestCase):
 class SwiftContainerTestCase(test.TestCase):
 
     @mock.patch("%s.SwiftMixin._manager" % BASE)
-    def test_list(self, mock_manager):
+    def test_list(self, mock_swift_mixin__manager):
         containers = [mock.MagicMock(), mock.MagicMock(), mock.MagicMock()]
-        mock_manager().get_account.return_value = ("header", containers)
+        mock_swift_mixin__manager().get_account.return_value = (
+            "header", containers)
         self.assertEqual(len(containers),
                          len(resources.SwiftContainer().list()))

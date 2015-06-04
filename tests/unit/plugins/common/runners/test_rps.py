@@ -68,7 +68,7 @@ class RPSScenarioRunnerTestCase(test.TestCase):
     @mock.patch(RUNNERS + "rps.threading.Thread")
     @mock.patch(RUNNERS + "rps.multiprocessing.Queue")
     @mock.patch(RUNNERS + "rps.runner")
-    def test__worker_process(self, mock_base, mock_queue, mock_thread,
+    def test__worker_process(self, mock_runner, mock_queue, mock_thread,
                              mock_time, mock_log):
 
         def time_side():
@@ -107,18 +107,18 @@ class RPSScenarioRunnerTestCase(test.TestCase):
         self.assertEqual(times - 1, mock_time.sleep.call_count)
         self.assertEqual(times, mock_thread_instance.isAlive.call_count)
         self.assertEqual(times * 4 - 1, mock_time.time.count)
-        self.assertEqual(times, mock_base._get_scenario_context.call_count)
+        self.assertEqual(times, mock_runner._get_scenario_context.call_count)
 
         for i in range(times):
-            scenario_context = mock_base._get_scenario_context(context)
+            scenario_context = mock_runner._get_scenario_context(context)
             call = mock.call(args=(mock_queue,
                                    (i, "Dummy", "dummy",
                                     scenario_context, ())),
-                             target=mock_base._worker_thread)
+                             target=mock_runner._worker_thread)
             self.assertIn(call, mock_thread.mock_calls)
 
     @mock.patch(RUNNERS + "rps.runner._run_scenario_once")
-    def test__worker_thread(self, mock_run_scenario_once):
+    def test__worker_thread(self, mock__run_scenario_once):
         mock_queue = mock.MagicMock()
 
         args = ("some_args",)
@@ -128,7 +128,7 @@ class RPSScenarioRunnerTestCase(test.TestCase):
         self.assertEqual(1, mock_queue.put.call_count)
 
         expected_calls = [mock.call(("some_args",))]
-        self.assertEqual(expected_calls, mock_run_scenario_once.mock_calls)
+        self.assertEqual(expected_calls, mock__run_scenario_once.mock_calls)
 
     @mock.patch(RUNNERS + "rps.time.sleep")
     def test__run_scenario(self, mock_sleep):
@@ -181,9 +181,9 @@ class RPSScenarioRunnerTestCase(test.TestCase):
     @mock.patch(RUNNERS +
                 "rps.RPSScenarioRunner._create_process_pool")
     @mock.patch(RUNNERS + "rps.RPSScenarioRunner._join_processes")
-    def test_that_cpu_count_is_adjusted_properly(self, mock_join_processes,
-                                                 mock_create_pool, mock_log,
-                                                 mock_cpu_count, mock_queue):
+    def test_that_cpu_count_is_adjusted_properly(
+            self, mock__join_processes, mock__create_process_pool,
+            mock__log_debug_info, mock_cpu_count, mock_queue):
         context = fakes.FakeUserContext({}).context
         context["task"] = {"uuid": "fake_uuid"}
 
@@ -250,10 +250,10 @@ class RPSScenarioRunnerTestCase(test.TestCase):
         ]
 
         for sample in samples:
-            mock_log.reset_mock()
+            mock__log_debug_info.reset_mock()
             mock_cpu_count.reset_mock()
-            mock_create_pool.reset_mock()
-            mock_join_processes.reset_mock()
+            mock__create_process_pool.reset_mock()
+            mock__join_processes.reset_mock()
             mock_queue.reset_mock()
 
             mock_cpu_count.return_value = sample["real_cpu"]
@@ -263,7 +263,7 @@ class RPSScenarioRunnerTestCase(test.TestCase):
             runner_obj._run_scenario(fakes.FakeScenario, "do_it", context, {})
 
             mock_cpu_count.assert_called_once_with()
-            mock_log.assert_called_once_with(
+            mock__log_debug_info.assert_called_once_with(
                 times=sample["input"]["times"],
                 timeout=0,
                 max_cpu_used=sample["expected"]["max_cpu_used"],
@@ -275,12 +275,12 @@ class RPSScenarioRunnerTestCase(test.TestCase):
                     sample["expected"]["concurrency_per_worker"]),
                 concurrency_overhead=(
                     sample["expected"]["concurrency_overhead"]))
-            args, kwargs = mock_create_pool.call_args
+            args, kwargs = mock__create_process_pool.call_args
             self.assertIn(sample["expected"]["processes_to_start"], args)
             self.assertIn(rps._worker_process, args)
-            mock_join_processes.assert_called_once_with(
-                mock_create_pool(),
-                mock_queue())
+            mock__join_processes.assert_called_once_with(
+                mock__create_process_pool.return_value,
+                mock_queue.return_value)
 
     def test_abort(self):
         context = fakes.FakeUserContext({}).context

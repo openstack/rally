@@ -58,12 +58,12 @@ class ProviderC(ProviderB):
 FAKE_PROVIDERS = [ProviderA, ProviderB, ProviderC]
 
 
-class ProviderTestCase(test.TestCase):
+class ProviderFactoryTestCase(test.TestCase):
 
     @mock.patch.object(provider.ProviderFactory, "validate")
-    def test_init(self, fake_validate):
+    def test_init(self, mock_validate):
         ProviderA(None, None)
-        fake_validate.assert_called_once_with()
+        mock_validate.assert_called_once_with()
 
     def test_get_provider_not_found(self):
         self.assertRaises(exceptions.PluginNotFound,

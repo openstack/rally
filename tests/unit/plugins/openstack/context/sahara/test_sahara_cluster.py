@@ -71,8 +71,9 @@ class SaharaClusterTestCase(test.TestCase):
     @mock.patch("%s.sahara_cluster.utils.SaharaScenario._launch_cluster" % CTX,
                 return_value=mock.MagicMock(id=42))
     @mock.patch("%s.sahara_cluster.osclients" % CTX)
-    def test_setup_and_cleanup(self, mock_osclients,
-                               mock_launch, mock_cleanup):
+    def test_setup_and_cleanup(
+            self, mock_osclients, mock_sahara_scenario__launch_cluster,
+            mock_cleanup):
 
         mock_sahara = mock_osclients.Clients(mock.MagicMock()).sahara()
 
@@ -104,7 +105,8 @@ class SaharaClusterTestCase(test.TestCase):
             mock.MagicMock(status="active")]
         sahara_ctx.setup()
 
-        mock_launch.assert_has_calls(launch_cluster_calls)
+        mock_sahara_scenario__launch_cluster.assert_has_calls(
+            launch_cluster_calls)
         sahara_ctx.cleanup()
         mock_cleanup.assert_called_once_with(names=["sahara.clusters"],
                                              users=ctx["users"])
@@ -112,7 +114,8 @@ class SaharaClusterTestCase(test.TestCase):
     @mock.patch("%s.sahara_cluster.utils.SaharaScenario._launch_cluster" % CTX,
                 return_value=mock.MagicMock(id=42))
     @mock.patch("%s.sahara_cluster.osclients" % CTX)
-    def test_setup_and_cleanup_error(self, mock_osclients, mock_launch):
+    def test_setup_and_cleanup_error(
+            self, mock_osclients, mock_sahara_scenario__launch_cluster):
 
         mock_sahara = mock_osclients.Clients(mock.MagicMock()).sahara()
 

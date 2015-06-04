@@ -31,24 +31,22 @@ class KeystoneBasicTestCase(test.TestCase):
             "tenant": {"id": "fake"}
         }
 
-    @mock.patch(BASIC + "_generate_random_name")
-    def test_create_user(self, mock_gen_name):
+    @mock.patch("rally.common.utils.generate_random_name")
+    def test_create_user(self, mock_generate_random_name):
         scenario = basic.KeystoneBasic()
-        mock_gen_name.return_value = "teeeest"
         scenario._user_create = mock.MagicMock()
         scenario.create_user(name_length=20, password="tttt", tenant_id="id")
         scenario._user_create.assert_called_once_with(name_length=20,
                                                       password="tttt",
                                                       tenant_id="id")
 
-    @mock.patch(BASIC + "_generate_random_name")
-    def test_create_delete_user(self, mock_gen_name):
+    @mock.patch("rally.common.utils.generate_random_name")
+    def test_create_delete_user(self, mock_generate_random_name):
         create_result = mock.MagicMock()
 
         scenario = basic.KeystoneBasic()
         scenario._user_create = mock.MagicMock(return_value=create_result)
         scenario._resource_delete = mock.MagicMock()
-        mock_gen_name.return_value = "teeeest"
 
         scenario.create_delete_user(name_length=30, email="abcd", enabled=True)
 
@@ -57,19 +55,17 @@ class KeystoneBasicTestCase(test.TestCase):
                                                       enabled=True)
         scenario._resource_delete.assert_called_once_with(create_result)
 
-    @mock.patch(BASIC + "_generate_random_name")
-    def test_create_tenant(self, mock_gen_name):
+    @mock.patch("rally.common.utils.generate_random_name")
+    def test_create_tenant(self, mock_generate_random_name):
         scenario = basic.KeystoneBasic()
-        mock_gen_name.return_value = "teeeest"
         scenario._tenant_create = mock.MagicMock()
         scenario.create_tenant(name_length=20, enabled=True)
         scenario._tenant_create.assert_called_once_with(name_length=20,
                                                         enabled=True)
 
-    @mock.patch(BASIC + "_generate_random_name")
-    def test_create_tenant_with_users(self, mock_gen_name):
+    @mock.patch("rally.common.utils.generate_random_name")
+    def test_create_tenant_with_users(self, mock_generate_random_name):
         scenario = basic.KeystoneBasic()
-        mock_gen_name.return_value = "teeeest"
         fake_tenant = mock.MagicMock()
         scenario._tenant_create = mock.MagicMock(return_value=fake_tenant)
         scenario._users_create = mock.MagicMock()
@@ -81,10 +77,9 @@ class KeystoneBasicTestCase(test.TestCase):
                                                        users_per_tenant=1,
                                                        name_length=20)
 
-    @mock.patch(BASIC + "_generate_random_name")
-    def test_create_and_list_users(self, mock_gen_name):
+    @mock.patch("rally.common.utils.generate_random_name")
+    def test_create_and_list_users(self, mock_generate_random_name):
         scenario = basic.KeystoneBasic()
-        mock_gen_name.return_value = "teeeest"
         scenario._user_create = mock.MagicMock()
         scenario._list_users = mock.MagicMock()
         scenario.create_and_list_users(name_length=20, password="tttt",
@@ -94,10 +89,9 @@ class KeystoneBasicTestCase(test.TestCase):
                                                       tenant_id="id")
         scenario._list_users.assert_called_once_with()
 
-    @mock.patch(BASIC + "_generate_random_name")
-    def test_create_and_list_tenants(self, mock_gen_name):
+    @mock.patch("rally.common.utils.generate_random_name")
+    def test_create_and_list_tenants(self, mock_generate_random_name):
         scenario = basic.KeystoneBasic()
-        mock_gen_name.return_value = "teeeest"
         scenario._tenant_create = mock.MagicMock()
         scenario._list_tenants = mock.MagicMock()
         scenario.create_and_list_tenants(name_length=20, enabled=True)
@@ -152,10 +146,9 @@ class KeystoneBasicTestCase(test.TestCase):
         scenario._list_roles_for_user.assert_called_once_with(fake_user,
                                                               fake_tenant)
 
-    @mock.patch(BASIC + "_generate_random_name")
-    def test_get_entities(self, mock_gen_name):
+    @mock.patch("rally.common.utils.generate_random_name")
+    def test_get_entities(self, mock_generate_random_name):
         scenario = basic.KeystoneBasic()
-        mock_gen_name.return_value = "teeeeest"
         fake_tenant = mock.MagicMock()
         fake_user = mock.MagicMock()
         fake_role = mock.MagicMock()

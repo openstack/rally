@@ -27,55 +27,56 @@ class GlanceImagesTestCase(test.TestCase):
     @mock.patch(GLANCE_IMAGES + "._generate_random_name")
     @mock.patch(GLANCE_IMAGES + "._list_images")
     @mock.patch(GLANCE_IMAGES + "._create_image")
-    def test_create_and_list_image(self, mock_create, mock_list,
-                                   mock_random_name):
+    def test_create_and_list_image(self, mock__create_image,
+                                   mock__list_images,
+                                   mock__generate_random_name):
         glance_scenario = images.GlanceImages()
-        mock_random_name.return_value = "test-rally-image"
+        mock__generate_random_name.return_value = "test-rally-image"
         glance_scenario.create_and_list_image("cf", "url", "df",
                                               fakearg="f")
-        mock_create.assert_called_once_with("cf", "url", "df",
-                                            fakearg="f")
-        mock_list.assert_called_once_with()
+        mock__create_image.assert_called_once_with(
+            "cf", "url", "df", fakearg="f")
+        mock__list_images.assert_called_once_with()
 
     @mock.patch(GLANCE_IMAGES + "._list_images")
-    def test_list_images(self, mock_list):
+    def test_list_images(self, mock__list_images):
         glance_scenario = images.GlanceImages()
         glance_scenario.list_images()
-        mock_list.assert_called_once_with()
+        mock__list_images.assert_called_once_with()
 
     @mock.patch(GLANCE_IMAGES + "._generate_random_name")
     @mock.patch(GLANCE_IMAGES + "._delete_image")
     @mock.patch(GLANCE_IMAGES + "._create_image")
-    def test_create_and_delete_image(self, mock_create, mock_delete,
-                                     mock_random_name):
+    def test_create_and_delete_image(
+            self, mock__create_image, mock__delete_image,
+            mock__generate_random_name):
         glance_scenario = images.GlanceImages()
         fake_image = object()
-        mock_create.return_value = fake_image
-        mock_random_name.return_value = "test-rally-image"
+        mock__create_image.return_value = fake_image
+        mock__generate_random_name.return_value = "test-rally-image"
         glance_scenario.create_and_delete_image("cf", "url", "df",
                                                 fakearg="f")
 
-        mock_create.assert_called_once_with("cf",
-                                            "url", "df", fakearg="f")
-        mock_delete.assert_called_once_with(fake_image)
+        mock__create_image.assert_called_once_with(
+            "cf", "url", "df", fakearg="f")
+        mock__delete_image.assert_called_once_with(fake_image)
 
     @mock.patch(GLANCE_IMAGES + "._boot_servers")
     @mock.patch(GLANCE_IMAGES + "._create_image")
-    def test_create_image_and_boot_instances(self,
-                                             mock_create_image,
-                                             mock_boot_servers):
+    def test_create_image_and_boot_instances(
+            self, mock__create_image, mock__boot_servers):
         glance_scenario = images.GlanceImages()
         fake_image = fakes.FakeImage()
         fake_servers = [mock.Mock() for i in range(5)]
-        mock_create_image.return_value = fake_image
-        mock_boot_servers.return_value = fake_servers
+        mock__create_image.return_value = fake_image
+        mock__boot_servers.return_value = fake_servers
         kwargs = {"fakearg": "f"}
         with mock.patch("rally.plugins.openstack.scenarios."
                         "glance.utils.time.sleep"):
             glance_scenario.create_image_and_boot_instances("cf", "url",
                                                             "df", "fid",
                                                             5, **kwargs)
-            mock_create_image.assert_called_once_with("cf",
-                                                      "url", "df")
-            mock_boot_servers.assert_called_once_with("image-id-0",
-                                                      "fid", 5, **kwargs)
+            mock__create_image.assert_called_once_with(
+                "cf", "url", "df")
+            mock__boot_servers.assert_called_once_with(
+                "image-id-0", "fid", 5, **kwargs)

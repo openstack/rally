@@ -26,11 +26,11 @@ class SerialScenarioRunnerTestCase(test.TestCase):
         super(SerialScenarioRunnerTestCase, self).setUp()
 
     @mock.patch("rally.benchmark.runner._run_scenario_once")
-    def test__run_scenario(self, mock_run_once):
+    def test__run_scenario(self, mock__run_scenario_once):
         times = 5
         result = {"duration": 10, "idle_duration": 0, "error": [],
                   "scenario_output": {}, "atomic_actions": {}}
-        mock_run_once.return_value = result
+        mock__run_scenario_once.return_value = result
         expected_results = [result for i in range(times)]
 
         runner = serial.SerialScenarioRunner(mock.MagicMock(),

@@ -35,10 +35,10 @@ class ImageGeneratorTestCase(test.TestCase):
         return tenants
 
     @mock.patch("%s.images.context.Context.__init__" % CTX)
-    def test_init(self, mock_base_context_init):
-        ctx = {}
-        ctx["task"] = mock.MagicMock()
-        ctx["config"] = {
+    def test_init(self, mock_context___init__):
+        context = {}
+        context["task"] = mock.MagicMock()
+        context["config"] = {
             "images": {
                 "image_url": "mock_url",
                 "image_type": "qcow2",
@@ -50,8 +50,8 @@ class ImageGeneratorTestCase(test.TestCase):
             }
         }
 
-        images.ImageGenerator(ctx)
-        mock_base_context_init.assert_called_once_with(ctx)
+        images.ImageGenerator(context)
+        mock_context___init__.assert_called_once_with(context)
 
     def test_init_validation(self):
         context = {}
@@ -68,7 +68,7 @@ class ImageGeneratorTestCase(test.TestCase):
     @mock.patch("%s.glance.utils.GlanceScenario._create_image" % SCN,
                 return_value=fakes.FakeImage(id="uuid"))
     @mock.patch("%s.images.osclients" % CTX)
-    def test_setup(self, mock_osclients, mock_image_create):
+    def test_setup(self, mock_osclients, mock_glance_scenario__create_image):
 
         tenants_count = 2
         users_per_tenant = 5

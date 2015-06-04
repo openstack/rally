@@ -28,8 +28,8 @@ class SaharaClustersTestCase(test.ClientsTestCase):
     @mock.patch(SAHARA_CLUSTERS + "._delete_cluster")
     @mock.patch(SAHARA_CLUSTERS + "._launch_cluster",
                 return_value=mock.MagicMock(id=42))
-    def test_create_and_delete_cluster(self, mock_launch_cluster,
-                                       mock_delete_cluster):
+    def test_create_and_delete_cluster(
+            self, mock__launch_cluster, mock__delete_cluster):
         clusters_scenario = clusters.SaharaClusters()
 
         clusters_scenario.context = {
@@ -43,7 +43,7 @@ class SaharaClustersTestCase(test.ClientsTestCase):
             plugin_name="test_plugin",
             hadoop_version="test_version")
 
-        mock_launch_cluster.assert_called_once_with(
+        mock__launch_cluster.assert_called_once_with(
             flavor_id="test_flavor",
             image_id="test_image",
             workers_count=5,
@@ -58,16 +58,16 @@ class SaharaClustersTestCase(test.ClientsTestCase):
             cluster_configs=None,
             enable_anti_affinity=False)
 
-        mock_delete_cluster.assert_called_once_with(
-            mock_launch_cluster.return_value)
+        mock__delete_cluster.assert_called_once_with(
+            mock__launch_cluster.return_value)
 
     @mock.patch(SAHARA_CLUSTERS + "._delete_cluster")
     @mock.patch(SAHARA_CLUSTERS + "._scale_cluster")
     @mock.patch(SAHARA_CLUSTERS + "._launch_cluster",
                 return_value=mock.MagicMock(id=42))
-    def test_create_scale_delete_cluster(self, mock_launch_cluster,
-                                         mock_scale_cluster,
-                                         mock_delete_cluster):
+    def test_create_scale_delete_cluster(
+            self, mock__launch_cluster, mock__scale_cluster,
+            mock__delete_cluster):
         self.clients("sahara").clusters.get.return_value = mock.MagicMock(
             id=42, status="active"
         )
@@ -86,7 +86,7 @@ class SaharaClustersTestCase(test.ClientsTestCase):
             plugin_name="test_plugin",
             hadoop_version="test_version")
 
-        mock_launch_cluster.assert_called_once_with(
+        mock__launch_cluster.assert_called_once_with(
             flavor_id="test_flavor",
             image_id="test_image",
             workers_count=5,
@@ -101,10 +101,10 @@ class SaharaClustersTestCase(test.ClientsTestCase):
             cluster_configs=None,
             enable_anti_affinity=False)
 
-        mock_scale_cluster.assert_has_calls([
+        mock__scale_cluster.assert_has_calls([
             mock.call(self.clients("sahara").clusters.get.return_value, 1),
             mock.call(self.clients("sahara").clusters.get.return_value, -1),
         ])
 
-        mock_delete_cluster.assert_called_once_with(
+        mock__delete_cluster.assert_called_once_with(
             self.clients("sahara").clusters.get.return_value)

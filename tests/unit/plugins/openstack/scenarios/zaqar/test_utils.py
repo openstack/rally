@@ -25,7 +25,7 @@ class ZaqarScenarioTestCase(test.ClientsTestCase):
 
     @mock.patch(UTILS + "ZaqarScenario._generate_random_name",
                 return_value="kitkat")
-    def test_queue_create(self, mock_gen_name):
+    def test_queue_create(self, mock__generate_random_name):
         scenario = utils.ZaqarScenario()
         result = scenario._queue_create(name_length=10)
 

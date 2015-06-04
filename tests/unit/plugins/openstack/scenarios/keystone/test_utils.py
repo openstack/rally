@@ -48,31 +48,31 @@ class KeystoneUtilsTestCase(test.TestCase):
 class KeystoneScenarioTestCase(test.ClientsTestCase):
 
     @mock.patch(UTILS + "uuid.uuid4", return_value="pwd")
-    @mock.patch(UTILS + "KeystoneScenario._generate_random_name",
-                return_value="abc")
-    def test_user_create(self, mock_gen_name, mock_uuid4):
+    @mock.patch("rally.common.utils.generate_random_name",
+                return_value="foobarov")
+    def test_user_create(self, mock_generate_random_name, mock_uuid4):
         scenario = utils.KeystoneScenario()
         result = scenario._user_create()
 
         self.assertEqual(
             self.admin_clients("keystone").users.create.return_value, result)
         self.admin_clients("keystone").users.create.assert_called_once_with(
-            mock_gen_name.return_value,
+            "foobarov",
             password=mock_uuid4.return_value,
-            email=mock_gen_name.return_value + "@rally.me")
+            email="foobarov@rally.me")
         mock_uuid4.assert_called_with()
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "keystone.create_user")
 
-    @mock.patch(UTILS + "KeystoneScenario._generate_random_name")
-    def test_role_create(self, mock_gen_name):
+    @mock.patch("rally.common.utils.generate_random_name")
+    def test_role_create(self, mock_generate_random_name):
         scenario = utils.KeystoneScenario()
         result = scenario._role_create()
 
         self.assertEqual(
             self.admin_clients("keystone").roles.create.return_value, result)
         self.admin_clients("keystone").roles.create.assert_called_once_with(
-            mock_gen_name.return_value)
+            mock_generate_random_name.return_value)
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "keystone.create_role")
 
@@ -129,21 +129,21 @@ class KeystoneScenarioTestCase(test.ClientsTestCase):
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "keystone.remove_role")
 
-    @mock.patch(UTILS + "KeystoneScenario._generate_random_name")
-    def test_tenant_create(self, mock_gen_name):
+    @mock.patch("rally.common.utils.generate_random_name")
+    def test_tenant_create(self, mock_generate_random_name):
         scenario = utils.KeystoneScenario()
         result = scenario._tenant_create()
 
         self.assertEqual(
             self.admin_clients("keystone").tenants.create.return_value, result)
         self.admin_clients("keystone").tenants.create.assert_called_once_with(
-            mock_gen_name.return_value)
+            mock_generate_random_name.return_value)
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "keystone.create_tenant")
 
     def test_service_create(self):
         name = "abc"
-        service_type = name + "service_type"
+        service_type = name + "_service_type"
         description = name + "_description"
 
         scenario = utils.KeystoneScenario()
@@ -160,18 +160,16 @@ class KeystoneScenarioTestCase(test.ClientsTestCase):
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "keystone.create_service")
 
-    @mock.patch(UTILS + "KeystoneScenario._generate_random_name")
-    def test_tenant_create_with_users(self, mock_gen_name):
-        name = "abc"
-        mock_gen_name.return_value = name
-
+    @mock.patch("rally.common.utils.generate_random_name",
+                return_value="foobarov")
+    def test_tenant_create_with_users(self, mock_generate_random_name):
         tenant = mock.MagicMock()
         scenario = utils.KeystoneScenario()
 
         scenario._users_create(tenant, users_per_tenant=1, name_length=10)
 
         self.admin_clients("keystone").users.create.assert_called_once_with(
-            name, password=name, email=name + "@rally.me",
+            "foobarov", password="foobarov", email="foobarov@rally.me",
             tenant_id=tenant.id)
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "keystone.create_users")

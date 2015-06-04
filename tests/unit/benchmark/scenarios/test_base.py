@@ -98,29 +98,29 @@ class ScenarioTestCase(test.TestCase):
                           validators, clients, args, "fake_uuid")
 
     @mock.patch("rally.benchmark.scenarios.base.Scenario.get_by_name")
-    def test_validate__no_validators(self, mock_base_get_by_name):
+    def test_validate__no_validators(self, mock_scenario_get_by_name):
 
         class FakeScenario(fakes.FakeScenario):
             pass
 
         FakeScenario.do_it = mock.MagicMock()
         FakeScenario.do_it.validators = []
-        mock_base_get_by_name.return_value = FakeScenario
+        mock_scenario_get_by_name.return_value = FakeScenario
 
         base.Scenario.validate("FakeScenario.do_it", {"a": 1, "b": 2})
 
-        mock_base_get_by_name.assert_called_once_with("FakeScenario")
+        mock_scenario_get_by_name.assert_called_once_with("FakeScenario")
 
     @mock.patch("rally.benchmark.scenarios.base.Scenario._validate_helper")
     @mock.patch("rally.benchmark.scenarios.base.Scenario.get_by_name")
-    def test_validate__admin_validators(self, mock_base_get_by_name,
-                                        mock_validate_helper):
+    def test_validate__admin_validators(self, mock_scenario_get_by_name,
+                                        mock_scenario__validate_helper):
 
         class FakeScenario(fakes.FakeScenario):
             pass
 
         FakeScenario.do_it = mock.MagicMock()
-        mock_base_get_by_name.return_value = FakeScenario
+        mock_scenario_get_by_name.return_value = FakeScenario
 
         validators = [mock.MagicMock(), mock.MagicMock()]
         for validator in validators:
@@ -131,19 +131,19 @@ class ScenarioTestCase(test.TestCase):
         args = {"a": 1, "b": 2}
         base.Scenario.validate(
             "FakeScenario.do_it", args, admin="admin", deployment=deployment)
-        mock_validate_helper.assert_called_once_with(validators, "admin", args,
-                                                     deployment)
+        mock_scenario__validate_helper.assert_called_once_with(
+            validators, "admin", args, deployment)
 
     @mock.patch("rally.benchmark.scenarios.base.Scenario._validate_helper")
     @mock.patch("rally.benchmark.scenarios.base.Scenario.get_by_name")
-    def test_validate_user_validators(self, mock_base_get_by_name,
-                                      mock_validate_helper):
+    def test_validate_user_validators(self, mock_scenario_get_by_name,
+                                      mock_scenario__validate_helper):
 
         class FakeScenario(fakes.FakeScenario):
             pass
 
         FakeScenario.do_it = mock.MagicMock()
-        mock_base_get_by_name.return_value = FakeScenario
+        mock_scenario_get_by_name.return_value = FakeScenario
 
         validators = [mock.MagicMock(), mock.MagicMock()]
         for validator in validators:
@@ -154,7 +154,7 @@ class ScenarioTestCase(test.TestCase):
         base.Scenario.validate(
             "FakeScenario.do_it", args, users=["u1", "u2"])
 
-        mock_validate_helper.assert_has_calls([
+        mock_scenario__validate_helper.assert_has_calls([
             mock.call(validators, "u1", args, None),
             mock.call(validators, "u2", args, None)
         ])
@@ -288,9 +288,6 @@ class ScenarioTestCase(test.TestCase):
         self.assertIsInstance(base.Scenario.RESOURCE_NAME_LENGTH, int)
         self.assertTrue(base.Scenario.RESOURCE_NAME_LENGTH > 4)
 
-    @mock.patch(
-        "rally.benchmark.scenarios.base."
-        "Scenario.RESOURCE_NAME_PREFIX", "prefix_")
     def test_generate_random_name(self):
         set_by_length = lambda lst: set(map(len, lst))
         len_by_prefix = (lambda lst, prefix:
@@ -345,10 +342,11 @@ class AtomicActionTestCase(test.TestCase):
 
     @mock.patch("tests.unit.fakes.FakeScenario._add_atomic_actions")
     @mock.patch("rally.common.utils.time")
-    def test__exit__(self, mock_time, mock__add_atomic_actions):
+    def test__exit__(self, mock_time, mock_fake_scenario__add_atomic_actions):
         fake_scenario_instance = fakes.FakeScenario()
         self.start = mock_time.time()
         with base.AtomicAction(fake_scenario_instance, "asdf"):
             pass
         duration = mock_time.time() - self.start
-        mock__add_atomic_actions.assert_called_once_with("asdf", duration)
+        mock_fake_scenario__add_atomic_actions.assert_called_once_with(
+            "asdf", duration)

@@ -51,7 +51,7 @@ class LoadExtraModulesTestCase(test.TestCase):
         ("/somewhere/subdir", ("/subsubdir", ), ("plugin2.py",
                                                  "withoutextension")),
         ("/somewhere/subdir/subsubdir", [], ("plugin3.py", ))])
-    def test_load_plugins_from_dir_successful(self, mock_oswalk,
+    def test_load_plugins_from_dir_successful(self, mock_os_walk,
                                               mock_find_module,
                                               mock_load_module, mock_isdir):
         test_path = "/somewhere"
@@ -96,8 +96,8 @@ class LoadExtraModulesTestCase(test.TestCase):
     @mock.patch("%s.os.path" % DISCOVER, return_value=True)
     @mock.patch("%s.os.walk" % DISCOVER,
                 return_value=[("/etc/.rally/plugins", [], ("load_it.py", ))])
-    def test_load_plugins_fails(self, mock_oswalk, mock_ospath,
-                                mock_load_module, mock_find_module):
+    def test_load_plugins_fails(self, mock_os_walk, mock_os_path,
+                                mock_find_module, mock_load_module):
         # test no fails if module is broken
         # TODO(olkonami): check exception is handled correct
         discover.load_plugins("/somwhere")

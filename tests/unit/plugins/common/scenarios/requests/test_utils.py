@@ -20,18 +20,18 @@ from tests.unit import test
 class RequestsTestCase(test.TestCase):
 
     @mock.patch("requests.request")
-    def test__check_request(self, mock_requests):
-        mock_requests.return_value = mock.MagicMock(status_code=200)
+    def test__check_request(self, mock_request):
+        mock_request.return_value = mock.MagicMock(status_code=200)
         scenario = utils.RequestScenario()
         scenario._check_request(status_code=200, url="sample", method="GET")
 
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "requests.check_request")
-        mock_requests.assert_called_once_with("GET", "sample")
+        mock_request.assert_called_once_with("GET", "sample")
 
     @mock.patch("requests.request")
-    def test_check_wrong_request(self, mock_requests):
-        mock_requests.return_value = mock.MagicMock(status_code=200)
+    def test_check_wrong_request(self, mock_request):
+        mock_request.return_value = mock.MagicMock(status_code=200)
         scenario = utils.RequestScenario()
 
         self.assertRaises(ValueError, scenario._check_request,

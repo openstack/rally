@@ -139,7 +139,7 @@ class QuotasTestCase(test.TestCase):
                 "quotas.quotas.osclients.Clients")
     @mock.patch("rally.plugins.openstack.context."
                 "quotas.cinder_quotas.CinderQuotas")
-    def test_cinder_quotas(self, mock_quotas, mock_osclients):
+    def test_cinder_quotas(self, mock_cinder_quotas, mock_clients):
         ctx = copy.deepcopy(self.context)
         ctx["config"]["quotas"] = {
             "cinder": {
@@ -158,19 +158,21 @@ class QuotasTestCase(test.TestCase):
                 expected_setup_calls.append(mock.call()
                                                 .update(tenant,
                                                         **cinder_quotas))
-            mock_quotas.assert_has_calls(expected_setup_calls, any_order=True)
-            mock_quotas.reset_mock()
+            mock_cinder_quotas.assert_has_calls(
+                expected_setup_calls, any_order=True)
+            mock_cinder_quotas.reset_mock()
 
         expected_cleanup_calls = []
         for tenant in tenants:
             expected_cleanup_calls.append(mock.call().delete(tenant))
-        mock_quotas.assert_has_calls(expected_cleanup_calls, any_order=True)
+        mock_cinder_quotas.assert_has_calls(
+            expected_cleanup_calls, any_order=True)
 
     @mock.patch("rally.plugins.openstack.context."
                 "quotas.quotas.osclients.Clients")
     @mock.patch("rally.plugins.openstack.context."
                 "quotas.nova_quotas.NovaQuotas")
-    def test_nova_quotas(self, mock_quotas, mock_osclients):
+    def test_nova_quotas(self, mock_nova_quotas, mock_clients):
         ctx = copy.deepcopy(self.context)
 
         ctx["config"]["quotas"] = {
@@ -198,19 +200,21 @@ class QuotasTestCase(test.TestCase):
                 expected_setup_calls.append(mock.call()
                                                 .update(tenant,
                                                         **nova_quotas))
-            mock_quotas.assert_has_calls(expected_setup_calls, any_order=True)
-            mock_quotas.reset_mock()
+            mock_nova_quotas.assert_has_calls(
+                expected_setup_calls, any_order=True)
+            mock_nova_quotas.reset_mock()
 
         expected_cleanup_calls = []
         for tenant in ctx["tenants"]:
             expected_cleanup_calls.append(mock.call().delete(tenant))
-        mock_quotas.assert_has_calls(expected_cleanup_calls, any_order=True)
+        mock_nova_quotas.assert_has_calls(
+            expected_cleanup_calls, any_order=True)
 
     @mock.patch("rally.plugins.openstack.context."
                 "quotas.quotas.osclients.Clients")
     @mock.patch("rally.plugins.openstack.context."
                 "quotas.neutron_quotas.NeutronQuotas")
-    def test_neutron_quotas(self, mock_quotas, mock_osclients):
+    def test_neutron_quotas(self, mock_neutron_quotas, mock_clients):
         ctx = copy.deepcopy(self.context)
 
         ctx["config"]["quotas"] = {
@@ -233,13 +237,15 @@ class QuotasTestCase(test.TestCase):
                 expected_setup_calls.append(mock.call()
                                                 .update(tenant,
                                                         **neutron_quotas))
-            mock_quotas.assert_has_calls(expected_setup_calls, any_order=True)
-            mock_quotas.reset_mock()
+            mock_neutron_quotas.assert_has_calls(
+                expected_setup_calls, any_order=True)
+            mock_neutron_quotas.reset_mock()
 
         expected_cleanup_calls = []
         for tenant in ctx["tenants"]:
             expected_cleanup_calls.append(mock.call().delete(tenant))
-        mock_quotas.assert_has_calls(expected_cleanup_calls, any_order=True)
+        mock_neutron_quotas.assert_has_calls(
+            expected_cleanup_calls, any_order=True)
 
     @mock.patch("rally.plugins.openstack.context."
                 "quotas.quotas.osclients.Clients")
@@ -249,8 +255,8 @@ class QuotasTestCase(test.TestCase):
                 "quotas.cinder_quotas.CinderQuotas")
     @mock.patch("rally.plugins.openstack.context."
                 "quotas.neutron_quotas.NeutronQuotas")
-    def test_no_quotas(self, mock_neutron_quota, mock_cinder_quotas,
-                       mock_nova_quotas, mock_osclients):
+    def test_no_quotas(self, mock_neutron_quotas, mock_cinder_quotas,
+                       mock_nova_quotas, mock_clients):
         ctx = copy.deepcopy(self.context)
         if "quotas" in ctx["config"]:
             del ctx["config"]["quotas"]
@@ -259,11 +265,11 @@ class QuotasTestCase(test.TestCase):
             quotas_ctx.setup()
             self.assertFalse(mock_cinder_quotas.update.called)
             self.assertFalse(mock_nova_quotas.update.called)
-            self.assertFalse(mock_neutron_quota.update.called)
+            self.assertFalse(mock_neutron_quotas.update.called)
 
         self.assertFalse(mock_cinder_quotas.delete.called)
         self.assertFalse(mock_nova_quotas.delete.called)
-        self.assertFalse(mock_neutron_quota.delete.called)
+        self.assertFalse(mock_neutron_quotas.delete.called)
 
     @ddt.data(
         {"quotas_ctxt": {"nova": {"cpu": 1}},

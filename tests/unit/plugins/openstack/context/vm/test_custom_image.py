@@ -68,16 +68,16 @@ class BaseCustomImageContextVMTestCase(test.TestCase):
                 return_value="image")
     @mock.patch("%s.types.FlavorResourceType.transform" % BASE,
                 return_value="flavor")
-    def test_create_one_image(self, mock_flavor_transform,
-                              mock_image_transform, mock_osclients,
-                              mock_vmtasks):
+    def test_create_one_image(
+            self, mock_flavor_resource_type_transform,
+            mock_image_resource_type_transform, mock_clients, mock_vm_tasks):
         ip = {"ip": "foo_ip", "id": "foo_id", "is_floating": True}
         fake_server = mock.Mock()
 
         fake_image = mock.MagicMock(
             to_dict=mock.MagicMock(return_value={"id": "image"}))
 
-        mock_vm_scenario = mock_vmtasks.return_value = mock.MagicMock(
+        mock_vm_scenario = mock_vm_tasks.return_value = mock.MagicMock(
             _create_image=mock.MagicMock(return_value=fake_image),
             _boot_server_with_fip=mock.MagicMock(
                 return_value=(fake_server, ip)),
@@ -96,14 +96,14 @@ class BaseCustomImageContextVMTestCase(test.TestCase):
         custom_image = generator_ctx.create_one_image(user,
                                                       foo_arg="foo_value")
 
-        mock_flavor_transform.assert_called_once_with(
-            clients=mock_osclients.return_value,
+        mock_flavor_resource_type_transform.assert_called_once_with(
+            clients=mock_clients.return_value,
             resource_config={"name": "flavor"})
-        mock_image_transform.assert_called_once_with(
-            clients=mock_osclients.return_value,
+        mock_image_resource_type_transform.assert_called_once_with(
+            clients=mock_clients.return_value,
             resource_config={"name": "image"})
-        mock_vmtasks.assert_called_once_with(
-            self.context, clients=mock_osclients.return_value)
+        mock_vm_tasks.assert_called_once_with(
+            self.context, clients=mock_clients.return_value)
 
         mock_vm_scenario._boot_server_with_fip.assert_called_once_with(
             image="image", flavor="flavor",
@@ -124,16 +124,16 @@ class BaseCustomImageContextVMTestCase(test.TestCase):
         self.assertEqual({"id": "image"}, custom_image)
 
     @mock.patch("%s.osclients.Clients" % BASE)
-    def test_make_image_public(self, mock_osclients):
+    def test_make_image_public(self, mock_clients):
         fc = mock.MagicMock()
-        mock_osclients.return_value = fc
+        mock_clients.return_value = fc
 
         generator_ctx = TestImageGenerator(self.context)
         custom_image = {"id": "image"}
 
         generator_ctx.make_image_public(custom_image=custom_image)
 
-        mock_osclients.assert_called_once_with(
+        mock_clients.assert_called_once_with(
             self.context["admin"]["endpoint"])
 
         fc.glance.assert_called_once_with()
@@ -143,7 +143,7 @@ class BaseCustomImageContextVMTestCase(test.TestCase):
 
     @mock.patch("%s.nova_utils.NovaScenario" % BASE)
     @mock.patch("%s.osclients.Clients" % BASE)
-    def test_delete_one_image(self, mock_osclients, mock_nova_scenario):
+    def test_delete_one_image(self, mock_clients, mock_nova_scenario):
         nova_scenario = mock_nova_scenario.return_value = mock.MagicMock()
         nova_client = nova_scenario.clients.return_value
         nova_client.images.get.return_value = "image_obj"
@@ -156,7 +156,7 @@ class BaseCustomImageContextVMTestCase(test.TestCase):
         generator_ctx.delete_one_image(user, custom_image)
 
         mock_nova_scenario.assert_called_once_with(
-            context=self.context, clients=mock_osclients.return_value)
+            context=self.context, clients=mock_clients.return_value)
 
         nova_scenario.clients.assert_called_once_with("nova")
         nova_client.images.get.assert_called_once_with("image")

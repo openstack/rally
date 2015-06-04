@@ -29,15 +29,15 @@ class DesignateScenarioTestCase(test.ClientsTestCase):
         self.domain = mock.Mock()
         self.server = mock.Mock()
 
-    @mock.patch(DESIGNATE_UTILS + "DesignateScenario._generate_random_name")
-    def test_create_domain(self, mock_random_name):
+    @mock.patch("rally.common.utils.generate_random_name")
+    def test_create_domain(self, mock_generate_random_name):
         scenario = utils.DesignateScenario()
 
         random_name = "foo"
         explicit_name = "bar.io."
         email = "root@zone.name"
 
-        mock_random_name.return_value = random_name
+        mock_generate_random_name.return_value = random_name
         self.clients("designate").domains.create.return_value = self.domain
 
         # Check that the defaults / randoms are used if nothing is specified
@@ -72,15 +72,15 @@ class DesignateScenarioTestCase(test.ClientsTestCase):
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "designate.delete_domain")
 
-    @mock.patch(DESIGNATE_UTILS + "DesignateScenario._generate_random_name")
-    def test_create_record(self, mock_random_name):
+    @mock.patch("rally.common.utils.generate_random_name")
+    def test_create_record(self, mock_generate_random_name):
         scenario = utils.DesignateScenario()
 
         random_name = "foo"
         domain_name = "zone.name."
         random_record_name = "%s.%s" % (random_name, domain_name)
 
-        mock_random_name.return_value = random_name
+        mock_generate_random_name.return_value = random_name
 
         domain = {"name": domain_name, "id": "123"}
 
@@ -125,14 +125,14 @@ class DesignateScenarioTestCase(test.ClientsTestCase):
         self.clients("designate").records.delete.assert_called_once_with(
             domain_id, record_id)
 
-    @mock.patch(DESIGNATE_UTILS + "DesignateScenario._generate_random_name")
-    def test_create_server(self, mock_random_name):
+    @mock.patch("rally.common.utils.generate_random_name")
+    def test_create_server(self, mock_generate_random_name):
         scenario = utils.DesignateScenario()
 
         random_name = "foo"
         explicit_name = "bar.io."
 
-        mock_random_name.return_value = random_name
+        mock_generate_random_name.return_value = random_name
         self.admin_clients(
             "designate").servers.create.return_value = self.server
 

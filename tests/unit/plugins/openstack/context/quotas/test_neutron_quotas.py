@@ -22,8 +22,8 @@ class NeutronQuotasTestCase(test.TestCase):
 
     @mock.patch("rally.plugins.openstack.context."
                 "quotas.quotas.osclients.Clients")
-    def test_update(self, client_mock):
-        neutron_quotas = quotas.NeutronQuotas(client_mock)
+    def test_update(self, mock_clients):
+        neutron_quotas = quotas.NeutronQuotas(mock_clients)
         tenant_id = mock.MagicMock()
         quotas_values = {
             "network": 20,
@@ -36,13 +36,13 @@ class NeutronQuotasTestCase(test.TestCase):
         }
         neutron_quotas.update(tenant_id, **quotas_values)
         body = {"quota": quotas_values}
-        client_mock.neutron().update_quota.assert_called_once_with(tenant_id,
-                                                                   body=body)
+        mock_clients.neutron().update_quota.assert_called_once_with(tenant_id,
+                                                                    body=body)
 
     @mock.patch("rally.plugins.openstack.context."
                 "quotas.quotas.osclients.Clients")
-    def test_delete(self, client_mock):
-        neutron_quotas = quotas.NeutronQuotas(client_mock)
+    def test_delete(self, mock_clients):
+        neutron_quotas = quotas.NeutronQuotas(mock_clients)
         tenant_id = mock.MagicMock()
         neutron_quotas.delete(tenant_id)
-        client_mock.neutron().delete_quota.assert_called_once_with(tenant_id)
+        mock_clients.neutron().delete_quota.assert_called_once_with(tenant_id)

@@ -232,9 +232,9 @@ class ValidatorsTestCase(test.TestCase):
         self.assertTrue(result[0].is_valid, result[0].msg)
         self.assertEqual(result[1], image)
 
-    @mock.patch(MODULE + "types.ImageResourceType.transform")
-    def test__get_validated_image(self, mock_transform):
-        mock_transform.return_value = "image_id"
+    @mock.patch(MODULE + "types.ImageResourceType.transform",
+                return_value="image_id")
+    def test__get_validated_image(self, mock_image_resource_type_transform):
         clients = mock.MagicMock()
         clients.glance().images.get().to_dict.return_value = {
             "image": "image_id"}
@@ -245,19 +245,21 @@ class ValidatorsTestCase(test.TestCase):
                                                  clients, "a")
         self.assertTrue(result[0].is_valid, result[0].msg)
         self.assertEqual(result[1], {"image": "image_id"})
-        mock_transform.assert_called_once_with(clients=clients,
-                                               resource_config="test")
+        mock_image_resource_type_transform.assert_called_once_with(
+            clients=clients, resource_config="test")
         clients.glance().images.get.assert_called_with(image="image_id")
 
-    @mock.patch(MODULE + "types.ImageResourceType.transform")
-    def test__get_validated_image_transform_error(self, mock_transform):
-        mock_transform.side_effect = exceptions.InvalidScenarioArgument
+    @mock.patch(MODULE + "types.ImageResourceType.transform",
+                side_effect=exceptions.InvalidScenarioArgument)
+    def test__get_validated_image_transform_error(
+            self, mock_image_resource_type_transform):
         result = validation._get_validated_image({"args": {"a": "test"}},
                                                  None, "a")
         self.assertFalse(result[0].is_valid, result[0].msg)
 
     @mock.patch(MODULE + "types.ImageResourceType.transform")
-    def test__get_validated_image_not_found(self, mock_transform):
+    def test__get_validated_image_not_found(
+            self, mock_image_resource_type_transform):
         clients = mock.MagicMock()
         clients.glance().images.get().to_dict.side_effect = (
             glance_exc.HTTPNotFound(""))
@@ -269,9 +271,10 @@ class ValidatorsTestCase(test.TestCase):
         result = validation._get_validated_flavor({}, None, "non_existing")
         self.assertFalse(result[0].is_valid, result[0].msg)
 
-    @mock.patch(MODULE + "types.FlavorResourceType.transform")
-    def test__get_validated_flavor(self, mock_transform):
-        mock_transform.return_value = "flavor_id"
+    @mock.patch(MODULE + "types.FlavorResourceType.transform",
+                return_value="flavor_id")
+    def test__get_validated_flavor(
+            self, mock_flavor_resource_type_transform):
         clients = mock.MagicMock()
         clients.nova().flavors.get.return_value = "flavor"
 
@@ -279,19 +282,21 @@ class ValidatorsTestCase(test.TestCase):
                                                   clients, "a")
         self.assertTrue(result[0].is_valid, result[0].msg)
         self.assertEqual(result[1], "flavor")
-        mock_transform.assert_called_once_with(clients=clients,
-                                               resource_config="test")
+        mock_flavor_resource_type_transform.assert_called_once_with(
+            clients=clients, resource_config="test")
         clients.nova().flavors.get.assert_called_once_with(flavor="flavor_id")
 
-    @mock.patch(MODULE + "types.FlavorResourceType.transform")
-    def test__get_validated_flavor_transform_error(self, mock_transform):
-        mock_transform.side_effect = exceptions.InvalidScenarioArgument
+    @mock.patch(MODULE + "types.FlavorResourceType.transform",
+                side_effect=exceptions.InvalidScenarioArgument)
+    def test__get_validated_flavor_transform_error(
+            self, mock_flavor_resource_type_transform):
         result = validation._get_validated_flavor({"args": {"a": "test"}},
                                                   None, "a")
         self.assertFalse(result[0].is_valid, result[0].msg)
 
     @mock.patch(MODULE + "types.FlavorResourceType.transform")
-    def test__get_validated_flavor_not_found(self, mock_transform):
+    def test__get_validated_flavor_not_found(
+            self, mock_flavor_resource_type_transform):
         clients = mock.MagicMock()
         clients.nova().flavors.get.side_effect = nova_exc.NotFound("")
         result = validation._get_validated_flavor({"args": {"a": "test"}},
@@ -299,7 +304,8 @@ class ValidatorsTestCase(test.TestCase):
         self.assertFalse(result[0].is_valid, result[0].msg)
 
     @mock.patch(MODULE + "types.FlavorResourceType.transform")
-    def test__get_validated_flavor_from_context(self, mock_transform):
+    def test__get_validated_flavor_from_context(
+            self, mock_flavor_resource_type_transform):
         clients = mock.MagicMock()
         clients.nova().flavors.get.side_effect = nova_exc.NotFound("")
         config = {
@@ -315,7 +321,8 @@ class ValidatorsTestCase(test.TestCase):
         self.assertTrue(result[0].is_valid, result[0].msg)
 
     @mock.patch(MODULE + "types.FlavorResourceType.transform")
-    def test__get_validated_flavor_from_context_failed(self, mock_transform):
+    def test__get_validated_flavor_from_context_failed(
+            self, mock_flavor_resource_type_transform):
         clients = mock.MagicMock()
         clients.nova().flavors.get.side_effect = nova_exc.NotFound("")
         config = {
@@ -364,7 +371,8 @@ class ValidatorsTestCase(test.TestCase):
 
     @mock.patch(MODULE + "_get_validated_image")
     @mock.patch(MODULE + "_get_validated_flavor")
-    def test_image_valid_on_flavor(self, mock_get_flavor, mock_get_image):
+    def test_image_valid_on_flavor(self, mock__get_validated_flavor,
+                                   mock__get_validated_image):
         image = {
             "id": "fake_id",
             "min_ram": None,
@@ -373,8 +381,8 @@ class ValidatorsTestCase(test.TestCase):
         }
         flavor = mock.MagicMock()
         success = validation.ValidationResult(True)
-        mock_get_flavor.return_value = (success, flavor)
-        mock_get_image.return_value = (success, image)
+        mock__get_validated_flavor.return_value = (success, flavor)
+        mock__get_validated_image.return_value = (success, image)
 
         validator = self._unwrap_validator(validation.image_valid_on_flavor,
                                            "flavor", "image")
@@ -407,14 +415,15 @@ class ValidatorsTestCase(test.TestCase):
 
     @mock.patch(MODULE + "types.FlavorResourceType.transform")
     @mock.patch(MODULE + "_get_validated_image")
-    def test_image_valid_on_flavor_context(self, mock_get_image,
-                                           mock_transform):
+    def test_image_valid_on_flavor_context(
+            self, mock__get_validated_image,
+            mock_flavor_resource_type_transform):
         clients = mock.MagicMock()
         clients.nova().flavors.get.side_effect = nova_exc.NotFound("")
 
         image = {"min_ram": 24, "id": "fake_id"}
         success = validation.ValidationResult(True)
-        mock_get_image.return_value = (success, image)
+        mock__get_validated_image.return_value = (success, image)
 
         validator = self._unwrap_validator(validation.image_valid_on_flavor,
                                            "flavor", "image")
@@ -683,7 +692,7 @@ class ValidatorsTestCase(test.TestCase):
         self.assertFalse(result.is_valid, result.msg)
 
     @mock.patch(MODULE + "osclients")
-    def test_required_clients(self, mock_clients):
+    def test_required_clients(self, mock_osclients):
         validator = self._unwrap_validator(validation.required_clients,
                                            "keystone", "nova")
         clients = mock.MagicMock()
@@ -691,7 +700,7 @@ class ValidatorsTestCase(test.TestCase):
         clients.nova.return_value = "nova"
         result = validator({}, clients, {})
         self.assertTrue(result.is_valid, result.msg)
-        self.assertFalse(mock_clients.Clients.called)
+        self.assertFalse(mock_osclients.Clients.called)
 
         clients.nova.side_effect = ImportError
         result = validator({}, clients, {})
@@ -699,18 +708,18 @@ class ValidatorsTestCase(test.TestCase):
 
     @mock.patch(MODULE + "objects")
     @mock.patch(MODULE + "osclients")
-    def test_required_clients_with_admin(self, mock_clients, mock_objects):
+    def test_required_clients_with_admin(self, mock_osclients, mock_objects):
         validator = self._unwrap_validator(validation.required_clients,
                                            "keystone", "nova", admin=True)
         clients = mock.Mock()
         clients.keystone.return_value = "keystone"
         clients.nova.return_value = "nova"
-        mock_clients.Clients.return_value = clients
+        mock_osclients.Clients.return_value = clients
         mock_objects.Endpoint.return_value = "foo_endpoint"
         result = validator({}, clients, {"admin": {"foo": "bar"}})
         self.assertTrue(result.is_valid, result.msg)
         mock_objects.Endpoint.assert_called_once_with(foo="bar")
-        mock_clients.Clients.assert_called_once_with("foo_endpoint")
+        mock_osclients.Clients.assert_called_once_with("foo_endpoint")
         clients.nova.side_effect = ImportError
         result = validator({}, clients, {"admin": {"foo": "bar"}})
         self.assertFalse(result.is_valid, result.msg)

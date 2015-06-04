@@ -44,62 +44,62 @@ class InfoCommandsTestCase(test.TestCase):
 
     @mock.patch(SCENARIO + ".get_by_name",
                 return_value=dummy.Dummy)
-    def test_find_dummy_scenario_group(self, mock_get):
+    def test_find_dummy_scenario_group(self, mock_scenario_get_by_name):
         query = "Dummy"
         status = self.info.find(query)
-        mock_get.assert_called_once_with(query)
+        mock_scenario_get_by_name.assert_called_once_with(query)
         self.assertIsNone(status)
 
     @mock.patch(SCENARIO + ".get_scenario_by_name",
                 return_value=dummy.Dummy.dummy)
-    def test_find_dummy_scenario(self, mock_get_scenario_by_name):
+    def test_find_dummy_scenario(self, mock_scenario_get_scenario_by_name):
         query = "Dummy.dummy"
         status = self.info.find(query)
-        mock_get_scenario_by_name.assert_called_once_with(query)
+        mock_scenario_get_scenario_by_name.assert_called_once_with(query)
         self.assertIsNone(status)
 
     @mock.patch(SCENARIO + ".get_scenario_by_name",
                 side_effect=exceptions.NoSuchScenario)
-    def test_find_failure_status(self, mock_get_scenario_by_name):
+    def test_find_failure_status(self, mock_scenario_get_scenario_by_name):
         query = "Dummy.non_existing"
         status = self.info.find(query)
-        mock_get_scenario_by_name.assert_called_once_with(query)
+        mock_scenario_get_scenario_by_name.assert_called_once_with(query)
         self.assertEqual(1, status)
 
     @mock.patch(SLA + ".get", return_value=failure_rate.FailureRate)
-    def test_find_failure_rate_sla(self, mock_get):
+    def test_find_failure_rate_sla(self, mock_sla_get):
         query = "failure_rate"
         status = self.info.find(query)
-        mock_get.assert_called_once_with(query)
+        mock_sla_get.assert_called_once_with(query)
         self.assertIsNone(status)
 
     @mock.patch(ENGINE + ".get",
                 return_value=existing_cloud.ExistingCloud)
-    def test_find_existing_cloud(self, mock_get):
+    def test_find_existing_cloud(self, mock_engine_factory_get):
         query = "ExistingCloud"
         status = self.info.find(query)
-        mock_get.assert_called_once_with(query)
+        mock_engine_factory_get.assert_called_once_with(query)
         self.assertIsNone(status)
 
     @mock.patch(PROVIDER + ".get",
                 return_value=existing_servers.ExistingServers)
-    def test_find_existing_servers(self, mock_get):
+    def test_find_existing_servers(self, mock_provider_factory_get):
         query = "ExistingServers"
         status = self.info.find(query)
-        mock_get.assert_called_once_with(query)
+        mock_provider_factory_get.assert_called_once_with(query)
         self.assertIsNone(status)
 
     @mock.patch(COMMANDS + ".ServerProviders")
     @mock.patch(COMMANDS + ".DeploymentEngines")
     @mock.patch(COMMANDS + ".SLA")
     @mock.patch(COMMANDS + ".BenchmarkScenarios")
-    def test_list(self, mock_BenchmarkScenarios, mock_SLA,
-                  mock_DeploymentEngines, mock_ServerProviders):
+    def test_list(self, mock_benchmark_scenarios, mock_sla,
+                  mock_deployment_engines, mock_server_providers):
         status = self.info.list()
-        mock_BenchmarkScenarios.assert_called_once_with()
-        mock_SLA.assert_called_once_with()
-        mock_DeploymentEngines.assert_called_once_with()
-        mock_ServerProviders.assert_called_once_with()
+        mock_benchmark_scenarios.assert_called_once_with()
+        mock_sla.assert_called_once_with()
+        mock_deployment_engines.assert_called_once_with()
+        mock_server_providers.assert_called_once_with()
         self.assertIsNone(status)
 
     @mock.patch(DISCOVER + ".itersubclasses", return_value=[dummy.Dummy])
