@@ -127,9 +127,13 @@ class SSH(object):
             return self._client
         except Exception as e:
             message = _("Exception %(exception_type)s was raised "
-                        "during connect. Exception value is: %(exception)r")
+                        "during connect to %(user)s@%(host)s:%(port)s. "
+                        "Exception value is: %(exception)r")
             self._client = False
             raise SSHError(message % {"exception": e,
+                                      "user": self.user,
+                                      "host": self.host,
+                                      "port": self.port,
                                       "exception_type": type(e)})
 
     def close(self):
