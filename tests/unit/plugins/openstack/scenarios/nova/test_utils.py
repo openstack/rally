@@ -416,6 +416,36 @@ class NovaScenarioTestCase(test.TestCase):
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.unrescue_server")
 
+    @mock.patch(NOVA_UTILS + ".NovaScenario.clients")
+    def _test_delete_servers(self, mock_clients, force=False):
+        servers = [self.server, self.server1]
+        nova_scenario = utils.NovaScenario()
+        nova_scenario._delete_servers(servers, force=force)
+        check_interval = CONF.benchmark.nova_server_delete_poll_interval
+        expected = []
+        for server in servers:
+            expected.append(mock.call(
+                server, update_resource=self.gfm(),
+                check_interval=check_interval,
+                timeout=CONF.benchmark.nova_server_delete_timeout))
+            if force:
+                server.force_delete.assert_called_once_with()
+                self.assertFalse(server.delete.called)
+            else:
+                server.delete.assert_called_once_with()
+                self.assertFalse(server.force_delete.called)
+
+        self.assertEqual(expected, self.wait_for_delete.mock.mock_calls)
+        timer_name = "nova.%sdelete_servers" % ("force_" if force else "")
+        self._test_atomic_action_timer(nova_scenario.atomic_actions(),
+                                       timer_name)
+
+    def test__default_delete_servers(self):
+        self._test_delete_servers()
+
+    def test__force_delete_servers(self):
+        self._test_delete_servers(force=True)
+
     def test__delete_image(self):
         nova_scenario = utils.NovaScenario()
         nova_scenario._delete_image(self.image)

@@ -106,6 +106,33 @@ class NovaServers(utils.NovaScenario,
     @types.set(image=types.ImageResourceType,
                flavor=types.FlavorResourceType)
     @validation.image_valid_on_flavor("flavor", "image")
+    @validation.required_services(consts.Service.NOVA)
+    @validation.required_openstack(admin=True, users=True)
+    @base.scenario(context={"cleanup": ["nova"]})
+    def boot_and_delete_multiple_servers(self, image, flavor, count=2,
+                                         min_sleep=0, max_sleep=0,
+                                         force_delete=False, **kwargs):
+        """Boot multiple servers in a single request and delete them.
+
+        Deletion is done in parallel with one request per server, not
+        with a single request for all servers.
+
+        :param image: The image to boot from
+        :param flavor: Flavor used to boot instance
+        :param count: Number of instances to boot
+        :param min_sleep: Minimum sleep time in seconds (non-negative)
+        :param max_sleep: Maximum sleep time in seconds (non-negative)
+        :param force_delete: True if force_delete should be used
+        :param kwargs: Optional additional arguments for instance creation
+        """
+        servers = self._boot_servers(image, flavor, 1, instances_amount=count,
+                                     **kwargs)
+        self.sleep_between(min_sleep, max_sleep)
+        self._delete_servers(servers, force=force_delete)
+
+    @types.set(image=types.ImageResourceType,
+               flavor=types.FlavorResourceType)
+    @validation.image_valid_on_flavor("flavor", "image")
     @validation.required_services(consts.Service.NOVA, consts.Service.CINDER)
     @validation.required_openstack(users=True)
     @base.scenario(context={"cleanup": ["nova", "cinder"]})

@@ -202,6 +202,27 @@ class NovaServersTestCase(test.TestCase):
         scenario._delete_server.assert_called_once_with(fake_server,
                                                         force=False)
 
+    @mock.patch(NOVA_SERVERS_MODULE + ".NovaServers.clients")
+    def test_boot_and_delete_multiple_servers(self, mock_nova_clients):
+        mock_nova_clients.return_value = fakes.FakeNovaClient()
+
+        scenario = servers.NovaServers()
+        scenario._boot_servers = mock.Mock()
+        scenario._delete_servers = mock.Mock()
+        scenario.sleep_between = mock.Mock()
+
+        scenario.boot_and_delete_multiple_servers("img", "flavor", count=15,
+                                                  min_sleep=10,
+                                                  max_sleep=20,
+                                                  fakearg="fakearg")
+
+        scenario._boot_servers.assert_called_once_with("img", "flavor", 1,
+                                                       instances_amount=15,
+                                                       fakearg="fakearg")
+        scenario.sleep_between.assert_called_once_with(10, 20)
+        scenario._delete_servers.assert_called_once_with(
+            scenario._boot_servers.return_value, force=False)
+
     def test_boot_and_list_server(self):
         scenario = servers.NovaServers()
         scenario._generate_random_name = mock.MagicMock(return_value="name")
