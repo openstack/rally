@@ -373,6 +373,12 @@ class CinderVolumes(utils.CinderScenario,
         if nested_level is None:
             nested_level = {"min": 5, "max": 10}
 
+        # NOTE: Volume size cannot be smaller than the snapshot size, so
+        #       volume with specified size should be created to avoid
+        #       size mismatching between volume and snapshot due random
+        #       size in _create_volume method.
+        size = random.randint(size["min"], size["max"])
+
         nested_level = random.randint(nested_level["min"], nested_level["max"])
 
         source_vol = self._create_volume(size)
