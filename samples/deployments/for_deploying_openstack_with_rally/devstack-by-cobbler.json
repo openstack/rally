@@ -1,0 +1,57 @@
+{
+    "type": "MultihostEngine",
+    "controller": {
+        "type": "DevstackEngine",
+        "localrc": {
+            "ENABLED_SERVICES+": ",-n-cpu,-n-net",
+            "MULTI_HOST": "1"
+        },
+        "provider": {
+            "type": "CobblerProvider",
+            "host": "172.29.74.8",
+            "user": "cobbler",
+            "password": "cobbler",
+            "selector": {
+                "profile": "OpenStackController",
+                "owners": "Owner"
+            }
+        }
+    },
+    "nodes": [
+        {
+            "type": "DevstackEngine",
+            "count": 1,
+            "localrc": {
+                "ENABLED_SERVICES": "n-net"
+            },
+            "provider": {
+                "type": "CobblerProvider",
+                "host": "172.29.74.8",
+                "user": "cobbler",
+                "password": "cobbler",
+                "selector": {
+                    "profile": "OpenStackNetwork",
+                    "owners": "Owner"
+                }
+            }
+        },
+        {
+            "type": "DevstackEngine",
+            "count": 1,
+            "localrc": {
+                "ENABLED_SERVICES": "n-cpu"
+            },
+            "provider": {
+                "type": "CobblerProvider",
+                "host": "172.29.74.8",
+                "user": "cobbler",
+                "password": "cobbler",
+                "selector": {
+                    "profile": "OpenStackCompute",
+                    "owners": "Owner"
+                }
+            }
+
+        }
+    ]
+}
