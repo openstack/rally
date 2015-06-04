@@ -124,6 +124,18 @@ class KeystoneV2WrapperTestCase(test.TestCase, KeystoneWrapperTestBase):
         self.assertEqual("default", result[0].domain_id)
         self.assertFalse(hasattr(result[0], "extra_field"))
 
+    def test_add_role(self):
+        self.wrapped_client.add_role("fake_role_id", "fake_user_id",
+                                     "fake_project_id")
+        self.client.roles.add_user_role.assert_called_once_with(
+            "fake_role_id", "fake_user_id", tenant="fake_project_id")
+
+    def test_remove_role(self):
+        self.wrapped_client.remove_role("fake_role_id", "fake_user_id",
+                                        "fake_project_id")
+        self.client.roles.remove_user_role.assert_called_once_with(
+            "fake_role_id", "fake_user_id", tenant="fake_project_id")
+
 
 class KeystoneV3WrapperTestCase(test.TestCase, KeystoneWrapperTestBase):
     def setUp(self):
@@ -206,3 +218,15 @@ class KeystoneV3WrapperTestCase(test.TestCase, KeystoneWrapperTestBase):
         self.assertEqual("project_id", result[0].project_id)
         self.assertEqual("domain_id", result[0].domain_id)
         self.assertFalse(hasattr(result[0], "extra_field"))
+
+    def test_add_role(self):
+        self.wrapped_client.add_role("fake_role_id", "fake_user_id",
+                                     "fake_project_id")
+        self.client.roles.grant.assert_called_once_with(
+            "fake_role_id", user="fake_user_id", project="fake_project_id")
+
+    def test_remove_role(self):
+        self.wrapped_client.remove_role("fake_role_id", "fake_user_id",
+                                        "fake_project_id")
+        self.client.roles.revoke.assert_called_once_with(
+            "fake_role_id", user="fake_user_id", project="fake_project_id")

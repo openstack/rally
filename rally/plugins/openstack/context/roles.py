@@ -20,7 +20,7 @@ from rally.common import utils as rutils
 from rally import consts
 from rally import exceptions
 from rally import osclients
-
+from rally.plugins.openstack.wrappers import keystone
 
 LOG = logging.getLogger(__name__)
 
@@ -49,8 +49,8 @@ class RoleGenerator(base.Context):
         :param admin_endpoint: The base url.
         :param context_role: name of existing role.
         """
-        client = osclients.Clients(admin_endpoint).keystone()
-        default_roles = client.roles.list()
+        client = keystone.wrap(osclients.Clients(admin_endpoint).keystone())
+        default_roles = client.list_roles()
         for def_role in default_roles:
             if str(def_role.name) == context_role:
                 role = def_role
@@ -60,8 +60,8 @@ class RoleGenerator(base.Context):
 
         LOG.debug("Adding role %s to all users" % (role.id))
         for user in self.context["users"]:
-            client.roles.add_user_role(user["id"], role.id,
-                                       tenant=user["tenant_id"])
+            client.add_role(user_id=user["id"], role_id=role.id,
+                            project_id=user["tenant_id"])
 
         return {"id": str(role.id), "name": str(role.name)}
 
@@ -71,13 +71,14 @@ class RoleGenerator(base.Context):
         :param admin_endpoint: The base url.
         :param role: dictionary with role parameters (id, name).
         """
-        client = osclients.Clients(admin_endpoint).keystone()
+        client = keystone.wrap(osclients.Clients(admin_endpoint).keystone())
 
         for user in self.context["users"]:
             with logging.ExceptionLogger(
                     LOG, _("Failed to remove role: %s") % role["id"]):
-                client.roles.remove_user_role(
-                    user["id"], role["id"], tenant=user["tenant_id"])
+                client.remove_role(
+                    user_id=user["id"], role_id=role["id"],
+                    project_id=user["tenant_id"])
 
     @rutils.log_task_wrapper(LOG.info, _("Enter context: `roles`"))
     def setup(self):
