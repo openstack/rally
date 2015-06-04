@@ -13,7 +13,7 @@
 # under the License.
 
 
-from rally.benchmark.context import base
+from rally.benchmark import context
 from rally.common.i18n import _
 from rally.common import log as logging
 from rally.common import utils as rutils
@@ -27,8 +27,8 @@ LOG = logging.getLogger(__name__)
 # NOTE(boris-42): This context should be hidden for now and used only by
 #                 benchmark engine.  In future during various refactoring of
 #                 validation system and rally CI testing we will make it public
-@base.context(name="existing_users", order=99, hidden=True)
-class ExistingUsers(base.Context):
+@context.context(name="existing_users", order=99, hidden=True)
+class ExistingUsers(context.Context):
     """This context supports using existing users in Rally.
 
        It uses information about deployment to properly
@@ -42,8 +42,8 @@ class ExistingUsers(base.Context):
     #                 this is used only by benchmark engine
     CONFIG_SCHEMA = {}
 
-    def __init__(self, context):
-        super(ExistingUsers, self).__init__(context)
+    def __init__(self, ctx):
+        super(ExistingUsers, self).__init__(ctx)
         self.context["users"] = []
         self.context["tenants"] = {}
 

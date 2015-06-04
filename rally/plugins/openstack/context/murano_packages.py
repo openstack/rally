@@ -15,7 +15,7 @@
 
 import zipfile
 
-from rally.benchmark.context import base
+from rally.benchmark import context
 from rally.common.i18n import _, _LE
 from rally.common import log as logging
 from rally.common import utils
@@ -27,8 +27,8 @@ from rally.plugins.openstack.context.cleanup import manager as resource_manager
 LOG = logging.getLogger(__name__)
 
 
-@base.context(name="murano_packages", order=401)
-class PackageGenerator(base.Context):
+@context.context(name="murano_packages", order=401)
+class PackageGenerator(context.Context):
     """Context class for uploading applications for murano."""
 
     CONFIG_SCHEMA = {

@@ -17,7 +17,7 @@ import os
 import shutil
 import tempfile
 
-from rally.benchmark.context import base
+from rally.benchmark import context
 from rally.common.i18n import _
 from rally.common import log as logging
 from rally.common import utils
@@ -29,8 +29,8 @@ from rally.verification.tempest import tempest
 LOG = logging.getLogger(__name__)
 
 
-@base.context(name="tempest", order=666)
-class Tempest(base.Context):
+@context.context(name="tempest", order=666)
+class Tempest(context.Context):
     CONFIG_SCHEMA = {
         "type": "object",
         "$schema": consts.JSON_SCHEMA,

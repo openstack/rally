@@ -34,11 +34,11 @@ class ImageGeneratorTestCase(test.TestCase):
             tenants[str(id_)] = dict(name=str(id_))
         return tenants
 
-    @mock.patch("rally.plugins.openstack.context.images.base.Context.__init__")
+    @mock.patch("%s.images.context.Context.__init__" % CTX)
     def test_init(self, mock_base_context_init):
-        context = {}
-        context["task"] = mock.MagicMock()
-        context["config"] = {
+        ctx = {}
+        ctx["task"] = mock.MagicMock()
+        ctx["config"] = {
             "images": {
                 "image_url": "mock_url",
                 "image_type": "qcow2",
@@ -50,8 +50,8 @@ class ImageGeneratorTestCase(test.TestCase):
             }
         }
 
-        images.ImageGenerator(context)
-        mock_base_context_init.assert_called_once_with(context)
+        images.ImageGenerator(ctx)
+        mock_base_context_init.assert_called_once_with(ctx)
 
     def test_init_validation(self):
         context = {}

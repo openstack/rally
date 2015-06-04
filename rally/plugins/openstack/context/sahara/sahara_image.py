@@ -12,7 +12,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from rally.benchmark.context import base
+from rally.benchmark import context
 from rally.common.i18n import _
 from rally.common import log as logging
 from rally.common import utils as rutils
@@ -26,8 +26,8 @@ from rally.plugins.openstack.scenarios.glance import utils as glance_utils
 LOG = logging.getLogger(__name__)
 
 
-@base.context(name="sahara_image", order=440)
-class SaharaImage(base.Context):
+@context.context(name="sahara_image", order=440)
+class SaharaImage(context.Context):
     """Context class for adding and tagging Sahara images."""
 
     CONFIG_SCHEMA = {
@@ -58,8 +58,8 @@ class SaharaImage(base.Context):
         "additionalProperties": False
     }
 
-    def __init__(self, context):
-        super(SaharaImage, self).__init__(context)
+    def __init__(self, ctx):
+        super(SaharaImage, self).__init__(ctx)
         self.context["sahara_images"] = {}
 
     def _create_image(self, hadoop_version, image_url, plugin_name, user,

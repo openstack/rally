@@ -18,7 +18,7 @@ import uuid
 
 from oslo_config import cfg
 
-from rally.benchmark.context import base
+from rally.benchmark import context
 from rally.benchmark import utils
 from rally.common import broker
 from rally.common.i18n import _
@@ -52,8 +52,8 @@ CONF.register_opts(USER_CONTEXT_OPTS,
                                       title="benchmark context options"))
 
 
-@base.context(name="users", order=100)
-class UserGenerator(base.Context):
+@context.context(name="users", order=100)
+class UserGenerator(context.Context):
     """Context class for generating temporary users/tenants for benchmarks."""
 
     CONFIG_SCHEMA = {

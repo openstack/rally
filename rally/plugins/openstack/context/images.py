@@ -12,7 +12,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from rally.benchmark.context import base
+from rally.benchmark import context
 from rally.common.i18n import _
 from rally.common import log as logging
 from rally.common import utils as rutils
@@ -25,8 +25,8 @@ from rally.plugins.openstack.scenarios.glance import utils as glance_utils
 LOG = logging.getLogger(__name__)
 
 
-@base.context(name="images", order=410)
-class ImageGenerator(base.Context):
+@context.context(name="images", order=410)
+class ImageGenerator(context.Context):
     """Context class for adding images to each user for benchmarks."""
 
     CONFIG_SCHEMA = {
@@ -64,8 +64,8 @@ class ImageGenerator(base.Context):
         "additionalProperties": False
     }
 
-    def __init__(self, context):
-        super(ImageGenerator, self).__init__(context)
+    def __init__(self, ctx):
+        super(ImageGenerator, self).__init__(ctx)
 
     @rutils.log_task_wrapper(LOG.info, _("Enter context: `Images`"))
     def setup(self):

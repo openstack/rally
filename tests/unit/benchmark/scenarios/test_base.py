@@ -18,7 +18,7 @@ import traceback
 import mock
 import six
 
-from rally.benchmark.context import base as base_ctx
+from rally.benchmark import context
 from rally.benchmark.scenarios import base
 from rally.benchmark import validation
 from rally import consts
@@ -248,9 +248,9 @@ class ScenarioTestCase(test.TestCase):
         self.assertEqual(scenario.idle_duration(), mock_uniform.return_value)
 
     def test_context(self):
-        context = {}
-        scenario = base.Scenario(context=context)
-        self.assertEqual(context, scenario.context)
+        ctx = {}
+        scenario = base.Scenario(context=ctx)
+        self.assertEqual(ctx, scenario.context)
 
     def test_clients(self):
         clients = fakes.FakeClients()
@@ -272,9 +272,9 @@ class ScenarioTestCase(test.TestCase):
         for scenario in scenarios:
             cls_name, method_name = scenario.split(".", 1)
             cls = base.Scenario.get_by_name(cls_name)
-            context = getattr(cls, method_name).context
+            ctx = getattr(cls, method_name).context
             try:
-                base_ctx.ContextManager.validate(context)
+                context.ContextManager.validate(ctx)
             except Exception:
                 print(traceback.format_exc())
                 self.assertTrue(False,

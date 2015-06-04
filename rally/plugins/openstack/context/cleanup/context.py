@@ -15,7 +15,7 @@
 
 import sys
 
-from rally.benchmark.context import base
+from rally.benchmark import context
 from rally.common.i18n import _
 from rally.common import log as logging
 from rally.common import utils as rutils
@@ -47,8 +47,8 @@ class CleanupMixin(object):
 
 
 # NOTE(amaretskiy): Set order to run this just before UserCleanup
-@base.context(name="admin_cleanup", order=(sys.maxsize - 1), hidden=True)
-class AdminCleanup(CleanupMixin, base.Context):
+@context.context(name="admin_cleanup", order=(sys.maxsize - 1), hidden=True)
+class AdminCleanup(CleanupMixin, context.Context):
     """Context class for admin resources cleanup."""
 
     @classmethod
@@ -72,8 +72,8 @@ class AdminCleanup(CleanupMixin, base.Context):
 
 
 # NOTE(amaretskiy): Set maximum order to run this last
-@base.context(name="cleanup", order=sys.maxsize, hidden=True)
-class UserCleanup(CleanupMixin, base.Context):
+@context.context(name="cleanup", order=sys.maxsize, hidden=True)
+class UserCleanup(CleanupMixin, context.Context):
     """Context class for user resources cleanup."""
 
     @classmethod

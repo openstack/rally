@@ -15,7 +15,7 @@
 
 from novaclient import exceptions as nova_exceptions
 
-from rally.benchmark.context import base
+from rally.benchmark import context
 from rally.common.i18n import _
 from rally.common import log as logging
 from rally.common import utils as rutils
@@ -25,8 +25,8 @@ from rally import osclients
 LOG = logging.getLogger(__name__)
 
 
-@base.context(name="flavors", order=340)
-class FlavorsGenerator(base.Context):
+@context.context(name="flavors", order=340)
+class FlavorsGenerator(context.Context):
     """Context creates a list of flavors."""
 
     CONFIG_SCHEMA = {

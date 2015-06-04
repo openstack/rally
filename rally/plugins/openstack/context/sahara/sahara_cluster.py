@@ -15,7 +15,7 @@
 
 from oslo_config import cfg
 
-from rally.benchmark.context import base
+from rally.benchmark import context
 from rally.benchmark import utils as bench_utils
 from rally.common.i18n import _
 from rally.common import log as logging
@@ -31,8 +31,8 @@ CONF = cfg.CONF
 LOG = logging.getLogger(__name__)
 
 
-@base.context(name="sahara_cluster", order=441)
-class SaharaCluster(base.Context):
+@context.context(name="sahara_cluster", order=441)
+class SaharaCluster(context.Context):
     """Context class for setting up the Cluster an EDP job."""
 
     CONFIG_SCHEMA = {
@@ -87,8 +87,8 @@ class SaharaCluster(base.Context):
                      "flavor_id"]
     }
 
-    def __init__(self, context):
-        super(SaharaCluster, self).__init__(context)
+    def __init__(self, ctx):
+        super(SaharaCluster, self).__init__(ctx)
         self.context["sahara_clusters"] = {}
 
     @rutils.log_task_wrapper(LOG.info, _("Enter context: `Sahara Cluster`"))

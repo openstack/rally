@@ -13,7 +13,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from rally.benchmark.context import base
+from rally.benchmark import context
 from rally.common import log as logging
 from rally import consts
 from rally import osclients
@@ -21,14 +21,14 @@ from rally import osclients
 LOG = logging.getLogger(__name__)
 
 
-@base.context(name="create_flavor", order=1000)
-class CreateFlavorContext(base.Context):
+@context.context(name="create_flavor", order=1000)
+class CreateFlavorContext(context.Context):
     """Create sample flavor
 
     This sample create flavor with specified options before task starts and
     delete it after task completion.
     To create your own context plugin, inherit it from
-    rally.benchmark.context.base.Context
+    rally.benchmark.context.Context
     """
 
     CONFIG_SCHEMA = {
@@ -57,7 +57,7 @@ class CreateFlavorContext(base.Context):
     def setup(self):
         """This method is called before the task start."""
         try:
-            # use rally.osclients to get nessesary client instance
+            # use rally.osclients to get necessary client instance
             nova = osclients.Clients(self.context["admin"]["endpoint"]).nova()
             # and than do what you need with this client
             self.context["flavor"] = nova.flavors.create(

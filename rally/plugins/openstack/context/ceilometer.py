@@ -12,7 +12,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from rally.benchmark.context import base
+from rally.benchmark import context
 from rally.common.i18n import _
 from rally.common import log as logging
 from rally.common import utils as rutils
@@ -24,8 +24,8 @@ from rally.plugins.openstack.scenarios.ceilometer import utils as ceilo_utils
 LOG = logging.getLogger(__name__)
 
 
-@base.context(name="ceilometer", order=450)
-class CeilometerSampleGenerator(base.Context):
+@context.context(name="ceilometer", order=450)
+class CeilometerSampleGenerator(context.Context):
     """Context for creating samples and collecting resources for benchmarks."""
 
     CONFIG_SCHEMA = {

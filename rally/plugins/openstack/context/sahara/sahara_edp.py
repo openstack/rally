@@ -15,7 +15,7 @@
 
 import requests
 
-from rally.benchmark.context import base
+from rally.benchmark import context
 from rally.common.i18n import _
 from rally.common import log as logging
 from rally.common import utils as rutils
@@ -28,8 +28,8 @@ from rally.plugins.openstack.context.cleanup import manager as resource_manager
 LOG = logging.getLogger(__name__)
 
 
-@base.context(name="sahara_edp", order=442)
-class SaharaEDP(base.Context):
+@context.context(name="sahara_edp", order=442)
+class SaharaEDP(context.Context):
     """Context class for setting up the environment for an EDP job."""
 
     CONFIG_SCHEMA = {
@@ -86,8 +86,8 @@ class SaharaEDP(base.Context):
                      "output_type", "output_url_prefix"]
     }
 
-    def __init__(self, context):
-        super(SaharaEDP, self).__init__(context)
+    def __init__(self, ctx):
+        super(SaharaEDP, self).__init__(ctx)
         self.context["sahara_output_conf"] = {
             "output_type": self.config["output_type"],
             "output_url_prefix": self.config["output_url_prefix"]

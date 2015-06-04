@@ -15,7 +15,7 @@
 
 import novaclient.exceptions
 
-from rally.benchmark.context import base
+from rally.benchmark import context
 from rally.common.i18n import _
 from rally.common import log as logging
 from rally.common import utils
@@ -26,8 +26,8 @@ from rally.plugins.openstack.context.cleanup import manager as resource_manager
 LOG = logging.getLogger(__name__)
 
 
-@base.context(name="keypair", order=310)
-class Keypair(base.Context):
+@context.context(name="keypair", order=310)
+class Keypair(context.Context):
     KEYPAIR_NAME = "rally_ssh_key"
 
     def _generate_keypair(self, endpoint):

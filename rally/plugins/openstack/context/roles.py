@@ -13,7 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from rally.benchmark.context import base
+from rally.benchmark import context
 from rally.common.i18n import _
 from rally.common import log as logging
 from rally.common import utils as rutils
@@ -25,8 +25,8 @@ from rally import osclients
 LOG = logging.getLogger(__name__)
 
 
-@base.context(name="roles", order=330)
-class RoleGenerator(base.Context):
+@context.context(name="roles", order=330)
+class RoleGenerator(context.Context):
     """Context class for adding temporary roles for benchmarks."""
 
     CONFIG_SCHEMA = {
@@ -38,8 +38,8 @@ class RoleGenerator(base.Context):
         "additionalProperties": False
     }
 
-    def __init__(self, context):
-        super(RoleGenerator, self).__init__(context)
+    def __init__(self, ctx):
+        super(RoleGenerator, self).__init__(ctx)
         self.context["roles"] = []
         self.endpoint = self.context["admin"]["endpoint"]
 
