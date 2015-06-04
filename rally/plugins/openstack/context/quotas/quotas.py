@@ -21,6 +21,7 @@ from rally import consts
 from rally import osclients
 from rally.plugins.openstack.context.quotas import cinder_quotas
 from rally.plugins.openstack.context.quotas import designate_quotas
+from rally.plugins.openstack.context.quotas import manila_quotas
 from rally.plugins.openstack.context.quotas import neutron_quotas
 from rally.plugins.openstack.context.quotas import nova_quotas
 
@@ -39,6 +40,7 @@ class Quotas(context.Context):
         "properties": {
             "nova": nova_quotas.NovaQuotas.QUOTAS_SCHEMA,
             "cinder": cinder_quotas.CinderQuotas.QUOTAS_SCHEMA,
+            "manila": manila_quotas.ManilaQuotas.QUOTAS_SCHEMA,
             "designate": designate_quotas.DesignateQuotas.QUOTAS_SCHEMA,
             "neutron": neutron_quotas.NeutronQuotas.QUOTAS_SCHEMA
         }
@@ -51,6 +53,7 @@ class Quotas(context.Context):
         self.manager = {
             "nova": nova_quotas.NovaQuotas(self.clients),
             "cinder": cinder_quotas.CinderQuotas(self.clients),
+            "manila": manila_quotas.ManilaQuotas(self.clients),
             "designate": designate_quotas.DesignateQuotas(self.clients),
             "neutron": neutron_quotas.NeutronQuotas(self.clients)
         }

@@ -16,13 +16,17 @@
 import copy
 import random
 
+import ddt
 import jsonschema
 import mock
 
 from rally.plugins.openstack.context.quotas import quotas
 from tests.unit import test
 
+QUOTAS_PATH = "rally.plugins.openstack.context.quotas."
 
+
+@ddt.ddt
 class QuotasTestCase(test.TestCase):
 
     def setUp(self):
@@ -261,32 +265,29 @@ class QuotasTestCase(test.TestCase):
         self.assertFalse(mock_nova_quotas.delete.called)
         self.assertFalse(mock_neutron_quota.delete.called)
 
-    @mock.patch("rally.plugins.openstack.context"
-                ".quotas.nova_quotas.NovaQuotas")
-    def test_exception_during_cleanup_nova(self, mock_nova_quotas):
+    @ddt.data(
+        {"quotas_ctxt": {"nova": {"cpu": 1}},
+         "quotas_class_path": "nova_quotas.NovaQuotas"},
+        {"quotas_ctxt": {"neutron": {"network": 2}},
+         "quotas_class_path": "neutron_quotas.NeutronQuotas"},
+        {"quotas_ctxt": {"cinder": {"volumes": 3}},
+         "quotas_class_path": "cinder_quotas.CinderQuotas"},
+        {"quotas_ctxt": {"manila": {"shares": 4}},
+         "quotas_class_path": "manila_quotas.ManilaQuotas"},
+        {"quotas_ctxt": {"designate": {"domains": 5}},
+         "quotas_class_path": "designate_quotas.DesignateQuotas"},
+    )
+    @ddt.unpack
+    def test_exception_during_cleanup(self, quotas_ctxt, quotas_class_path):
+        with mock.patch(QUOTAS_PATH + quotas_class_path) as mock_quotas:
+            mock_quotas.delete.side_effect = type(
+                "ExceptionDuringCleanup", (Exception, ), {})
 
-        mock_nova_quotas.delete.side_effect = Exception("boom")
+            ctx = copy.deepcopy(self.context)
+            ctx["config"]["quotas"] = quotas_ctxt
 
-        ctx = copy.deepcopy(self.context)
-        ctx["config"]["quotas"] = {"nova": {"cpu": 1}}
+            # NOTE(boris-42): ensure that cleanup didn't raise exceptions.
+            quotas.Quotas(ctx).cleanup()
 
-        # NOTE(boris-42): ensure that cleanup didn't raise exceptions.
-        quotas.Quotas(ctx).cleanup()
-
-        self.assertEqual(mock_nova_quotas().delete.call_count,
-                         len(self.context["tenants"]))
-
-    @mock.patch("rally.plugins.openstack.context"
-                ".quotas.neutron_quotas.NeutronQuotas")
-    def test_exception_during_cleanup_neutron(self, mock_neutron_quota):
-
-        mock_neutron_quota.delete.side_effect = Exception("boom")
-
-        ctx = copy.deepcopy(self.context)
-        ctx["config"]["quotas"] = {"neutron": {"cpu": 1}}
-
-        # NOTE(boris-42): ensure that cleanup didn't raise exceptions.
-        quotas.Quotas(ctx).cleanup()
-
-        self.assertEqual(mock_neutron_quota().delete.call_count,
-                         len(self.context["tenants"]))
+            self.assertEqual(mock_quotas.return_value.delete.call_count,
+                             len(self.context["tenants"]))
