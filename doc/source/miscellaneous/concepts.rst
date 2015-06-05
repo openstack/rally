@@ -86,7 +86,7 @@ In a toy example below, we define a scenario class *MyScenario* with one benchma
 ::
 
     from rally.benchmark.scenarios import base
-    from rally.benchmark.scenarios import utils
+    from rally.benchmark import utils
 
 
     class MyScenario(base.Scenario):
