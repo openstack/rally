@@ -202,6 +202,7 @@ class LogTestCase(test.TestCase):
 
 class LoadExtraModulesTestCase(test.TestCase):
 
+    @mock.patch("rally.common.utils.os.path.isdir", return_value=True)
     @mock.patch("rally.common.utils.imp.load_module")
     @mock.patch("rally.common.utils.imp.find_module",
                 return_value=(mock.MagicMock(), None, None))
@@ -210,10 +211,10 @@ class LoadExtraModulesTestCase(test.TestCase):
         ("/somewhere/subdir", ("/subsubdir", ), ("plugin2.py",
                                                  "withoutextension")),
         ("/somewhere/subdir/subsubdir", [], ("plugin3.py", ))])
-    @mock.patch("rally.common.utils.os.path.exists", return_value=True)
-    def test_load_plugins_successfull(self, mock_exists,
-                                      mock_oswalk, mock_find_module,
-                                      mock_load_module):
+    @mock.patch("rally.common.utils.os.path.isdir", return_value=True)
+    def test_load_plugins_from_dir_successful(self, mock_exists,
+                                              mock_oswalk, mock_find_module,
+                                              mock_load_module, mock_isdir):
         test_path = "/somewhere"
         utils.load_plugins(test_path)
         expected = [
@@ -221,18 +222,35 @@ class LoadExtraModulesTestCase(test.TestCase):
             mock.call("plugin2", ["/somewhere/subdir"]),
             mock.call("plugin3", ["/somewhere/subdir/subsubdir"])
         ]
-        self.assertEqual(mock_find_module.mock_calls, expected)
-        self.assertEqual(len(mock_load_module.mock_calls), 3)
+        self.assertEqual(expected, mock_find_module.mock_calls)
+        self.assertEqual(3, len(mock_load_module.mock_calls))
+
+    @mock.patch("rally.common.utils.os.path.isfile", return_value=True)
+    @mock.patch("rally.common.utils.imp.load_source")
+    def test_load_plugins_from_file_successful(self, mock_load_source,
+                                               mock_isfile):
+        utils.load_plugins("/somewhere/plugin.py")
+        expected = [mock.call("plugin", "/somewhere/plugin.py")]
+        self.assertEqual(expected, mock_load_source.mock_calls)
 
     @mock.patch("rally.common.utils.os")
     def test_load_plugins_from_nonexisting_and_empty_dir(self, mock_os):
         # test no fails for nonexisting directory
-        mock_os.path.exists.return_value = False
+        mock_os.path.isdir.return_value = False
         utils.load_plugins("/somewhere")
         # test no fails for empty directory
-        mock_os.path.exists.return_value = True
+        mock_os.path.isdir.return_value = True
         mock_os.walk.return_value = []
         utils.load_plugins("/somewhere")
+
+    @mock.patch("rally.common.utils.os.path.isfile", return_value=True)
+    def test_load_plugins_from_file_fails(self, mock_isfile):
+        utils.load_plugins("/somwhere/plugin.py")
+
+    @mock.patch("rally.common.utils.os.path.isfile", return_value=False)
+    def test_load_plugins_from_nonexisting_file(self, mock_isfile):
+        # test no fails for nonexisting file
+        utils.load_plugins("/somewhere/plugin.py")
 
     @mock.patch("rally.common.utils.imp.load_module", side_effect=Exception())
     @mock.patch("rally.common.utils.imp.find_module")
