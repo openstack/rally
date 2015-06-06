@@ -48,7 +48,7 @@ Make a new format that address all issues.
 
 Old format JSON schema:
 
-.. code-block:: none
+.. code-block:: python
 
     {
         "type": "object",
@@ -85,7 +85,7 @@ Old format JSON schema:
 
 Old format sample:
 
-.. code-block:: none
+.. code-block:: yaml
 
     ---
         <ScenarioName>:
@@ -111,7 +111,7 @@ Old format sample:
 
 New format JSON schema:
 
-.. code-block:: none
+.. code-block:: python
 
     {
         "type": "object",
@@ -182,7 +182,7 @@ New format JSON schema:
 
 New format sample:
 
-.. code-block:: none
+.. code-block:: yaml
 
     ---
 
@@ -203,7 +203,7 @@ New format sample:
       # Explicit usage "rally task start --tag" --tag attribute
       tags: ["periodic", "nova", "cinder", "ha"]
 
-      tasks:
+      subtasks:
       # Note every task is executed serially (one by one)
       #
       # Using list for describing what benchmarks (tasks) to run is much
