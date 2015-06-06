@@ -41,6 +41,7 @@ class TestExistingCloud(test.TestCase):
                     "domain_name": None,
                     "project_domain_name": "Default",
                     "user_domain_name": "Default",
+                    "admin_domain_name": "Default",
                 }
             }
         }

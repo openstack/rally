@@ -22,7 +22,8 @@ class Endpoint(object):
                  permission=consts.EndpointPermission.USER,
                  region_name=None, endpoint_type=consts.EndpointType.PUBLIC,
                  admin_port=None, domain_name=None, endpoint=None,
-                 user_domain_name="Default", project_domain_name="Default",
+                 user_domain_name="Default", admin_domain_name="Default",
+                 project_domain_name="Default",
                  https_insecure=None, https_cacert=None):
         self.auth_url = auth_url
         self.username = username
@@ -33,6 +34,7 @@ class Endpoint(object):
         self.endpoint_type = endpoint_type
         self.domain_name = domain_name
         self.user_domain_name = user_domain_name
+        self.admin_domain_name = admin_domain_name
         self.project_domain_name = project_domain_name
         self.endpoint = endpoint
         self.insecure = https_insecure
@@ -52,6 +54,7 @@ class Endpoint(object):
                "https_insecure": self.insecure,
                "https_cacert": self.cacert,
                "user_domain_name": self.user_domain_name,
+               "admin_domain_name": self.admin_domain_name,
                "project_domain_name": self.project_domain_name}
         if include_permission:
             dct["permission"] = self.permission

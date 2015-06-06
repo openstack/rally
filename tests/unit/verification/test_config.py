@@ -41,7 +41,8 @@ class ConfigTestCase(test.TestCase):
                          "tenant_name": "test",
                          "password": "test",
                          "auth_url": "http://test/v2.0",
-                         "permission": "admin"}
+                         "permission": "admin",
+                         "admin_domain_name": "Default"}
         mock_get.return_value = {"admin": self.endpoint}
         self.deployment = "fake_deployment"
         self.conf_generator = config.TempestConf(self.deployment)
@@ -241,6 +242,7 @@ class ConfigTestCase(test.TestCase):
                     ("admin_username", self.endpoint["username"]),
                     ("admin_password", self.endpoint["password"]),
                     ("admin_tenant_name", self.endpoint["username"]),
+                    ("admin_domain_name", self.endpoint["admin_domain_name"]),
                     ("uri", self.endpoint["auth_url"]),
                     ("uri_v3", self.endpoint["auth_url"].replace("/v2.0",
                                                                  "/v3")))
