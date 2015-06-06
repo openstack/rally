@@ -18,6 +18,84 @@
 Project Info
 ============
 
+Maintainers
+-----------
+
+Project Technical Lead (PTL)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
++----------------------------+------------------------------------------------+
+|     Contact                |             Area of interest                   |
++----------------------------+------------------------------------------------+
+| Boris Pavlovic             |  * Road Map                                    |
+| boris-42 (irc)             |  * Release management                          |
+| boris|at|pavlovic.me       |  * Community management                        |
+|                            |  * Core team management                        |
+|                            |  * Chef Architect                              |
++----------------------------+------------------------------------------------+
+
+*If you would like to refactor whole Rally or have UX/community/other
+ issues please contact me.*
+
+
+Project Core maintainers
+~~~~~~~~~~~~~~~~~~~~~~~~
+
++----------------------------+------------------------------------------------+
+|     Contact                |             Area of interest                   |
++----------------------------+------------------------------------------------+
+| Andrey Kurilin             |  * Rally-Tempest Integration                   |
+| andreykurilin (irc)        |  * Rally verify                                |
+| akurilin|at|mirantis.com   |                                                |
++----------------------------+------------------------------------------------+
+| Sergey Skripnick           |  * Rally CI/CD                                 |
+| redixin (irc)              |  * Rally deploy                                |
+| sskripnick|at|mirantis.com |  * Automation of everything                    |
++----------------------------+------------------------------------------------+
+| Mike Dubov                 |  * Rally docs                                  |
+| msdubov (irc)              |  * Rally info                                  |
+| mdubov|at|mirantis.com     |                                                |
++----------------------------+------------------------------------------------+
+| Yair Fried                 |  * Rally-Tempest integration                   |
+| yfried (irc)               |  * Rally task & benchmark                      |
+| yfried@redhat.com          |                                                |
++----------------------------+------------------------------------------------+
+| Chris St. Pierre           |  * Rally task & benchmark                      |
+| stpierre (irc)             |  * Bash guru ;)                                |
+| cstpierr@cisco.com         |                                                |
++----------------------------+------------------------------------------------+
+| Li Yingjun                 |  * Rally task & benchmark                      |
+| liyingjun (irc)            |                                                |
+| yingjun.li@kylin-cloud.com |                                                |
++----------------------------+------------------------------------------------+
+
+*All cores from this list are reviewing all changes that are proposed to Rally
+ To avoid duplication of efforts, please contact them before starting work on
+ your code.*
+
+
+Plugin Core reviewers
+~~~~~~~~~~~~~~~~~~~~~
+
++----------------------------+------------------------------------------------+
+|     Contact                |             Area of interest                   |
++----------------------------+------------------------------------------------+
+| Ivan Kolodyazhny           |  * Cinder plugins                              |
+| e0ne (irc)                 |                                                |
+| e0ne@e0ne.info             |                                                |
++----------------------------+------------------------------------------------+
+| Nikita Konovalov           |  * Sahara plugins                              |
+| NikitaKonovalov (irc)      |                                                |
+| nkonovalov@mirantis.com    |                                                |
++----------------------------+------------------------------------------------+
+
+
+*All cores from this list are responsible for their component plugins.
+ To avoid duplication of efforts, please contact them before starting working
+ on your own plugins.*
+
+
 Useful links
 ------------
 - `Source code <https://github.com/openstack/rally>`_
