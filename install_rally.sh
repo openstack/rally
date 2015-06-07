@@ -483,7 +483,7 @@ do
     case "$1" in
         -d|--target)
             shift
-            VENVDIR=$1
+            VENVDIR=$(readlink -m "$1")
             ;;
         -h|--help)
             print_usage
