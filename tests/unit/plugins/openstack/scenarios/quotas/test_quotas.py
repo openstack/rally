@@ -19,7 +19,7 @@ from rally.plugins.openstack.scenarios.quotas import quotas
 from tests.unit import test
 
 
-class QuotasTestCase(test.TestCase):
+class QuotasTestCase(test.ClientsTestCase):
 
     def setUp(self):
         super(QuotasTestCase, self).setUp()
@@ -56,12 +56,11 @@ class QuotasTestCase(test.TestCase):
         scenario._update_quotas.assert_called_once_with("cinder", "fake", 1024)
         scenario._delete_quotas.assert_called_once_with("cinder", "fake")
 
-    @mock.patch("rally.benchmark.scenarios.base.Scenario.admin_clients")
-    def test_neutron_update(self, mock_clients):
+    def test_neutron_update(self):
         scenario = quotas.Quotas(self.context)
 
         scenario._update_quotas = mock.MagicMock()
-        mock_quota_update_fn = mock_clients().update_quota
+        mock_quota_update_fn = self.admin_clients("neutron").update_quota
         scenario.neutron_update(max_quota=1024)
         scenario._update_quotas.assert_called_once_with("neutron", "fake",
                                                         1024,

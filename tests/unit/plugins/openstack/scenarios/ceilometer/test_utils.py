@@ -23,7 +23,7 @@ BM_UTILS = "rally.benchmark.utils"
 CEILOMETER_UTILS = "rally.plugins.openstack.scenarios.ceilometer.utils"
 
 
-class CeilometerScenarioTestCase(test.TestCase):
+class CeilometerScenarioTestCase(test.ClientsTestCase):
     def setUp(self):
         super(CeilometerScenarioTestCase, self).setUp()
         self.scenario = utils.CeilometerScenario()
@@ -92,10 +92,9 @@ class CeilometerScenarioTestCase(test.TestCase):
         fake_state = self.scenario._get_alarm_state(fake_alarm.alarm_id)
         self.assertEqual(fake_state, "alarm-state")
 
-    @mock.patch(CEILOMETER_UTILS + ".CeilometerScenario.clients")
-    def test__set_alarm_state(self, mock_clients):
+    def test__set_alarm_state(self):
         alarm = mock.Mock()
-        mock_clients("ceilometer").alarms.create.return_value = alarm
+        self.clients("ceilometer").alarms.create.return_value = alarm
         return_alarm = self.scenario._set_alarm_state(alarm, "ok", 100)
         self.wait_for.mock.assert_called_once_with(
             alarm,

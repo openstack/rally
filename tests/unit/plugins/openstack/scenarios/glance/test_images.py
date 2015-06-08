@@ -15,10 +15,7 @@
 
 import mock
 
-from rally import objects
-from rally import osclients
 from rally.plugins.openstack.scenarios.glance import images
-from rally.plugins.openstack.scenarios.nova import servers
 from tests.unit import fakes
 from tests.unit import test
 
@@ -64,23 +61,12 @@ class GlanceImagesTestCase(test.TestCase):
 
     @mock.patch(GLANCE_IMAGES + "._boot_servers")
     @mock.patch(GLANCE_IMAGES + "._create_image")
-    @mock.patch("rally.benchmark.runner.osclients")
     def test_create_image_and_boot_instances(self,
-                                             mock_osclients,
                                              mock_create_image,
                                              mock_boot_servers):
         glance_scenario = images.GlanceImages()
-        nova_scenario = servers.NovaServers()
-        fc = fakes.FakeClients()
-        mock_osclients.Clients.return_value = fc
-        fake_glance = fakes.FakeGlanceClient()
-        fc.glance = lambda: fake_glance
-        fake_nova = fakes.FakeNovaClient()
-        fc.nova = lambda: fake_nova
-        user_endpoint = objects.Endpoint("url", "user", "password", "tenant")
-        nova_scenario._clients = osclients.Clients(user_endpoint)
         fake_image = fakes.FakeImage()
-        fake_servers = [object() for i in range(5)]
+        fake_servers = [mock.Mock() for i in range(5)]
         mock_create_image.return_value = fake_image
         mock_boot_servers.return_value = fake_servers
         kwargs = {"fakearg": "f"}

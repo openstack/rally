@@ -16,8 +16,6 @@
 import mock
 
 from rally import exceptions as rally_exceptions
-from rally import objects
-from rally import osclients
 from rally.plugins.openstack.scenarios.nova import servers
 from tests.unit import fakes
 from tests.unit import test
@@ -27,7 +25,7 @@ NOVA_SERVERS_MODULE = "rally.plugins.openstack.scenarios.nova.servers"
 NOVA_SERVERS = NOVA_SERVERS_MODULE + ".NovaServers"
 
 
-class NovaServersTestCase(test.TestCase):
+class NovaServersTestCase(test.ClientsTestCase):
 
     def test_boot_rescue_unrescue(self):
         actions = [{"rescue_unrescue": 5}]
@@ -202,10 +200,7 @@ class NovaServersTestCase(test.TestCase):
         scenario._delete_server.assert_called_once_with(fake_server,
                                                         force=False)
 
-    @mock.patch(NOVA_SERVERS_MODULE + ".NovaServers.clients")
-    def test_boot_and_delete_multiple_servers(self, mock_nova_clients):
-        mock_nova_clients.return_value = fakes.FakeNovaClient()
-
+    def test_boot_and_delete_multiple_servers(self):
         scenario = servers.NovaServers()
         scenario._boot_servers = mock.Mock()
         scenario._delete_servers = mock.Mock()
@@ -323,17 +318,10 @@ class NovaServersTestCase(test.TestCase):
         scenario._delete_server.assert_called_once_with(fake_server,
                                                         force=False)
 
-    def _prepare_boot(self, mock_osclients, nic=None, assert_nic=False):
+    def _prepare_boot(self, nic=None, assert_nic=False):
         fake_server = mock.MagicMock()
 
-        fc = fakes.FakeClients()
-        mock_osclients.Clients.return_value = fc
-        nova = fakes.FakeNovaClient()
-        fc.nova = lambda: nova
-
-        user_endpoint = objects.Endpoint("url", "user", "password", "tenant")
-        clients = osclients.Clients(user_endpoint)
-        scenario = servers.NovaServers(clients=clients)
+        scenario = servers.NovaServers()
 
         scenario._boot_server = mock.MagicMock(return_value=fake_server)
         scenario._generate_random_name = mock.MagicMock(return_value="name")
@@ -345,35 +333,24 @@ class NovaServersTestCase(test.TestCase):
         if nic:
             kwargs["nics"] = nic
         if assert_nic:
-            nova.networks.create("net-1")
+            self.clients("nova").networks.create("net-1")
             expected_kwargs["nics"] = nic or [{"net-id": "net-2"}]
-
-        print(kwargs)
-        print(expected_kwargs)
 
         return scenario, kwargs, expected_kwargs
 
-    def _verify_boot_server(self, mock_osclients, nic=None, assert_nic=False):
+    def _verify_boot_server(self, nic=None, assert_nic=False):
         scenario, kwargs, expected_kwargs = self._prepare_boot(
-            mock_osclients=mock_osclients,
             nic=nic, assert_nic=assert_nic)
 
         scenario.boot_server("img", 0, **kwargs)
         scenario._boot_server.assert_called_once_with(
             "img", 0, auto_assign_nic=False, **expected_kwargs)
 
-    @mock.patch("rally.plugins.openstack.scenarios"
-                ".nova.servers.NovaServers.clients")
-    @mock.patch("rally.benchmark.runner.osclients")
-    def test_boot_server_no_nics(self, mock_osclients, mock_nova_clients):
-        mock_nova_clients.return_value = fakes.FakeNovaClient()
-        self._verify_boot_server(mock_osclients=mock_osclients,
-                                 nic=None, assert_nic=False)
+    def test_boot_server_no_nics(self):
+        self._verify_boot_server(nic=None, assert_nic=False)
 
-    @mock.patch("rally.benchmark.runner.osclients")
-    def test_boot_server_with_nic(self, mock_osclients):
-        self._verify_boot_server(mock_osclients=mock_osclients,
-                                 nic=[{"net-id": "net-1"}], assert_nic=True)
+    def test_boot_server_with_nic(self):
+        self._verify_boot_server(nic=[{"net-id": "net-1"}], assert_nic=True)
 
     def test_snapshot_server(self):
         fake_server = object()

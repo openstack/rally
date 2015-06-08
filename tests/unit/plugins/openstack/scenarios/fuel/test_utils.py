@@ -79,17 +79,14 @@ class FuelClientTestCase(test.TestCase):
                              client.task)
 
 
-class FuelScenarioTestCase(test.TestCase):
+class FuelScenarioTestCase(test.ClientsTestCase):
 
-    @mock.patch(UTILS + "FuelScenario.admin_clients")
-    def test__list_environments(self, mock_clients):
-        mock_admin = mock.Mock()
-        mock_clients.return_value = mock_admin
-        mock_admin.environment.get_all.return_value = (
-            "foo_environments_list")
+    def test__list_environments(self):
         scenario = utils.FuelScenario()
-        self.assertEqual("foo_environments_list",
-                         scenario._list_environments())
-        mock_admin.environment.get_all.assert_called_once_with()
+        self.assertEqual(
+            self.admin_clients("fuel").environment.get_all.return_value,
+            scenario._list_environments())
+        self.admin_clients(
+            "fuel").environment.get_all.assert_called_once_with()
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "fuel.list_environments")

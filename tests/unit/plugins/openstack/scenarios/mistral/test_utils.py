@@ -13,50 +13,35 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import mock
-
 from rally.plugins.openstack.scenarios.mistral import utils
 from tests.unit import test
 
 MISTRAL_UTILS = "rally.plugins.openstack.scenarios.mistral.utils"
 
 
-class MistralScenarioTestCase(test.TestCase):
+class MistralScenarioTestCase(test.ClientsTestCase):
 
-    def _test_atomic_action_timer(self, atomic_actions, name):
-        action_duration = atomic_actions.get(name)
-        self.assertIsNotNone(action_duration)
-        self.assertIsInstance(action_duration, float)
-
-    @mock.patch(MISTRAL_UTILS + ".MistralScenario.clients")
-    def test_list_workbooks(self, mock_clients):
-        wbs_list = []
-        mock_clients("mistral").workbooks.list.return_value = wbs_list
+    def test_list_workbooks(self):
         scenario = utils.MistralScenario()
         return_wbs_list = scenario._list_workbooks()
-        self.assertEqual(wbs_list, return_wbs_list)
+        self.assertEqual(
+            self.clients("mistral").workbooks.list.return_value,
+            return_wbs_list)
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "mistral.list_workbooks")
 
-    @mock.patch(MISTRAL_UTILS + ".MistralScenario.clients")
-    def test_create_workbook(self, mock_clients):
+    def test_create_workbook(self):
         definition = "version: \"2.0\"\nname: wb"
-        mock_clients("mistral").workbooks.create.return_value = "wb"
         scenario = utils.MistralScenario()
-        wb = scenario._create_workbook(definition)
-        self.assertEqual("wb", wb)
+        self.assertEqual(scenario._create_workbook(definition),
+                         self.clients("mistral").workbooks.create.return_value)
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "mistral.create_workbook")
 
-    @mock.patch(MISTRAL_UTILS + ".MistralScenario.clients")
-    def test_delete_workbook(self, mock_clients):
-        wb = mock.Mock()
-        wb.name = "wb"
-        mock_clients("mistral").workbooks.delete.return_value = "ok"
+    def test_delete_workbook(self):
         scenario = utils.MistralScenario()
-        scenario._delete_workbook(wb.name)
-        mock_clients("mistral").workbooks.delete.assert_called_once_with(
-            wb.name
-        )
+        scenario._delete_workbook("wb_name")
+        self.clients("mistral").workbooks.delete.assert_called_once_with(
+            "wb_name")
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "mistral.delete_workbook")

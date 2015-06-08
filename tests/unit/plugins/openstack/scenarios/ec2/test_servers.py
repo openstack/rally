@@ -21,7 +21,7 @@ from tests.unit import test
 UTILS = "rally.plugins.openstack.scenarios.ec2.utils."
 
 
-class EC2ServersTestCase(test.TestCase):
+class EC2ServersTestCase(test.ClientsTestCase):
 
     @mock.patch("rally.benchmark.utils.wait_for",
                 return_value="running_server")
@@ -36,8 +36,7 @@ class EC2ServersTestCase(test.TestCase):
         scenario = servers.EC2Servers()
         scenario._update_resource = "foo_update"
         mock_instances = mock.Mock(instances=["foo_inst"])
-        scenario.clients = mock.Mock()
-        scenario.clients("ec2").run_instances.return_value = mock_instances
+        self.clients("ec2").run_instances.return_value = mock_instances
         server = scenario._boot_server("foo_image", "foo_flavor", foo="bar")
 
         mock_wait.assert_called_once_with("foo_inst", is_ready="foo_state",

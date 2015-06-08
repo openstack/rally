@@ -27,7 +27,7 @@ BM_UTILS = "rally.benchmark.utils"
 GLANCE_UTILS = "rally.plugins.openstack.scenarios.glance.utils"
 
 
-class GlanceScenarioTestCase(test.TestCase):
+class GlanceScenarioTestCase(test.ClientsTestCase):
 
     def setUp(self):
         super(GlanceScenarioTestCase, self).setUp()
@@ -53,20 +53,18 @@ class GlanceScenarioTestCase(test.TestCase):
                           butils.get_from_manager(),
                           image_manager.create("fails", "url", "cf", "df"))
 
-    @mock.patch(GLANCE_UTILS + ".GlanceScenario.clients")
-    def test_list_images(self, mock_clients):
-        images_list = []
-        mock_clients("glance").images.list.return_value = images_list
+    def test_list_images(self):
         scenario = utils.GlanceScenario()
         return_images_list = scenario._list_images()
-        self.assertEqual(images_list, return_images_list)
+        self.clients("glance").images.list.assert_called_once_with()
+        self.assertEqual(list(self.clients("glance").images.list.return_value),
+                         return_images_list)
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "glance.list_images")
 
-    @mock.patch(GLANCE_UTILS + ".GlanceScenario.clients")
-    def test_create_image(self, mock_clients):
+    def test_create_image(self):
         image_location = tempfile.NamedTemporaryFile()
-        mock_clients("glance").images.create.return_value = self.image
+        self.clients("glance").images.create.return_value = self.image
         scenario = utils.GlanceScenario()
         return_image = scenario._create_image("container_format",
                                               image_location.name,
@@ -81,9 +79,8 @@ class GlanceScenarioTestCase(test.TestCase):
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "glance.create_image")
 
-    @mock.patch(GLANCE_UTILS + ".GlanceScenario.clients")
-    def test_create_image_with_location(self, mock_clients):
-        mock_clients("glance").images.create.return_value = self.image
+    def test_create_image_with_location(self):
+        self.clients("glance").images.create.return_value = self.image
         scenario = utils.GlanceScenario()
         return_image = scenario._create_image("container_format",
                                               "image_location",

@@ -21,7 +21,7 @@ from tests.unit import test
 HEAT_STACKS = "rally.plugins.openstack.scenarios.heat.stacks.HeatStacks"
 
 
-class HeatStacksTestCase(test.TestCase):
+class HeatStacksTestCase(test.ClientsTestCase):
 
     def setUp(self):
         super(HeatStacksTestCase, self).setUp()
@@ -49,25 +49,23 @@ class HeatStacksTestCase(test.TestCase):
                                             self.default_environment)
         mock_list.assert_called_once_with()
 
-    @mock.patch(HEAT_STACKS + ".clients")
     @mock.patch(HEAT_STACKS + "._list_stacks")
-    def test_list_stack_and_resources(self, mock_list_stack, mock_clients):
+    def test_list_stack_and_resources(self, mock_list_stack):
         stack = mock.Mock()
         mock_list_stack.return_value = [stack]
         heat_scenario = stacks.HeatStacks()
         heat_scenario.list_stacks_and_resources()
-        mock_clients("heat").resources.list.assert_called_once_with(stack.id)
+        self.clients("heat").resources.list.assert_called_once_with(stack.id)
         self._test_atomic_action_timer(
             heat_scenario.atomic_actions(), "heat.list_resources_of_1_stacks")
 
-    @mock.patch(HEAT_STACKS + ".clients")
     @mock.patch(HEAT_STACKS + "._list_stacks")
-    def test_list_stack_and_events(self, mock_list_stack, mock_clients):
+    def test_list_stack_and_events(self, mock_list_stack):
         stack = mock.Mock()
         mock_list_stack.return_value = [stack]
         heat_scenario = stacks.HeatStacks()
         heat_scenario.list_stacks_and_events()
-        mock_clients("heat").events.list.assert_called_once_with(stack.id)
+        self.clients("heat").events.list.assert_called_once_with(stack.id)
         self._test_atomic_action_timer(
             heat_scenario.atomic_actions(), "heat.list_events_of_1_stacks")
 

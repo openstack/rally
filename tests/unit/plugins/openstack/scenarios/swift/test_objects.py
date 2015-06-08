@@ -16,11 +16,10 @@
 import mock
 
 from rally.plugins.openstack.scenarios.swift import objects
-from tests.unit import fakes
 from tests.unit import test
 
 
-class SwiftObjectsTestCase(test.TestCase):
+class SwiftObjectsTestCase(test.ClientsTestCase):
 
     def test_create_container_and_object_then_list_objects(self):
         scenario = objects.SwiftObjects()
@@ -88,7 +87,7 @@ class SwiftObjectsTestCase(test.TestCase):
     def test_functional_create_container_and_object_then_list_objects(self):
         names_list = ["AA", "BB", "CC", "DD"]
 
-        scenario = objects.SwiftObjects(clients=fakes.FakeClients())
+        scenario = objects.SwiftObjects()
         scenario._generate_random_name = mock.MagicMock(side_effect=names_list)
         scenario._list_objects = mock.MagicMock()
 
@@ -104,7 +103,7 @@ class SwiftObjectsTestCase(test.TestCase):
     def test_functional_create_container_and_object_then_delete_all(self):
         names_list = ["111", "222", "333", "444", "555"]
 
-        scenario = objects.SwiftObjects(clients=fakes.FakeClients())
+        scenario = objects.SwiftObjects()
         scenario._generate_random_name = mock.MagicMock(side_effect=names_list)
         scenario._delete_object = mock.MagicMock()
         scenario._delete_container = mock.MagicMock()
@@ -126,7 +125,7 @@ class SwiftObjectsTestCase(test.TestCase):
     def test_functional_create_container_and_object_then_download_object(self):
         names_list = ["aaa", "bbb", "ccc", "ddd", "eee", "fff"]
 
-        scenario = objects.SwiftObjects(clients=fakes.FakeClients())
+        scenario = objects.SwiftObjects()
         scenario._generate_random_name = mock.MagicMock(side_effect=names_list)
         scenario._download_object = mock.MagicMock()
 

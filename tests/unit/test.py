@@ -20,6 +20,7 @@ from oslo_config import fixture
 from oslotest import base
 
 from rally import db
+from tests.unit import fakes
 
 
 class DatabaseFixture(fixture.Config):
@@ -55,3 +56,64 @@ class DBTestCase(TestCase):
     def setUp(self):
         super(DBTestCase, self).setUp()
         self.useFixture(DatabaseFixture())
+
+
+class ClientsTestCase(TestCase):
+    """Base class for Scenario tests using mocked self.clients."""
+
+    def client_factory(self, client_type, version=None, admin=False):
+        """Create a new client object."""
+        return mock.MagicMock(client_type=client_type,
+                              version=version,
+                              admin=admin)
+
+    def clients(self, client_type, version=None, admin=False):
+        """Get a mocked client."""
+        key = (client_type, version, admin)
+        if key not in self._clients:
+            self._clients[key] = self.client_factory(client_type,
+                                                     version=version,
+                                                     admin=admin)
+        return self._clients[key]
+
+    def admin_clients(self, client_type, version=None):
+        """Get a mocked admin client."""
+        return self.clients(client_type, version=version, admin=True)
+
+    def client_created(self, client_type, version=None, admin=False):
+        """Determine if a client has been created.
+
+        This can be used to see if a scenario calls
+        'self.clients("foo")', without checking to see what was done
+        with the client object returned by that call.
+        """
+        key = (client_type, version, admin)
+        return key in self._clients
+
+    def setUp(self):
+        super(ClientsTestCase, self).setUp()
+        self._clients = {}
+        self._client_mocks = [
+            mock.patch("rally.benchmark.scenarios.base.Scenario.clients",
+                       mock.Mock(side_effect=self.clients)),
+            mock.patch("rally.benchmark.scenarios.base.Scenario.admin_clients",
+                       mock.Mock(side_effect=self.admin_clients))
+        ]
+        for patcher in self._client_mocks:
+            patcher.start()
+
+    def tearDown(self):
+        for patcher in self._client_mocks:
+            patcher.stop()
+        super(ClientsTestCase, self).tearDown()
+
+
+class FakeClientsTestCase(ClientsTestCase):
+    """Base class for Scenario tests using fake (not mocked) self.clients."""
+
+    def client_factory(self, client_type, version=None, admin=False):
+        return getattr(self._fake_clients, client_type)()
+
+    def setUp(self):
+        super(FakeClientsTestCase, self).setUp()
+        self._fake_clients = fakes.FakeClients()

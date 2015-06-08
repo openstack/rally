@@ -23,7 +23,7 @@ BM_UTILS = "rally.benchmark.utils"
 MRN_UTILS = "rally.plugins.openstack.scenarios.murano.utils"
 
 
-class MuranoScenarioTestCase(test.TestCase):
+class MuranoScenarioTestCase(test.ClientsTestCase):
 
     def setUp(self):
         super(MuranoScenarioTestCase, self).setUp()
@@ -39,20 +39,17 @@ class MuranoScenarioTestCase(test.TestCase):
         self.gfm = self.get_fm.mock
         self.useFixture(mockpatch.Patch("time.sleep"))
 
-    @mock.patch(MRN_UTILS + ".MuranoScenario.clients")
-    def test_list_environments(self, mock_clients):
-
-        mock_clients("murano").environments.list.return_value = []
+    def test_list_environments(self):
+        self.clients("murano").environments.list.return_value = []
         scenario = utils.MuranoScenario()
         return_environments_list = scenario._list_environments()
         self.assertEqual([], return_environments_list)
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "murano.list_environments")
 
-    @mock.patch(MRN_UTILS + ".MuranoScenario.clients")
-    def test_create_environments(self, mock_clients):
+    def test_create_environments(self):
         mock_create = mock.Mock(return_value="foo_env")
-        mock_clients("murano").environments.create = mock_create
+        self.clients("murano").environments.create = mock_create
         scenario = utils.MuranoScenario()
         create_env = scenario._create_environment("env_name")
         self.assertEqual("foo_env", create_env)
@@ -60,13 +57,12 @@ class MuranoScenarioTestCase(test.TestCase):
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "murano.create_environment")
 
-    @mock.patch(MRN_UTILS + ".MuranoScenario.clients")
-    def test_delete_environment(self, mock_clients):
+    def test_delete_environment(self):
         environment = mock.Mock(id="id")
-        mock_clients("murano").environments.delete.return_value = "ok"
+        self.clients("murano").environments.delete.return_value = "ok"
         scenario = utils.MuranoScenario()
         scenario._delete_environment(environment)
-        mock_clients("murano").environments.delete.assert_called_once_with(
+        self.clients("murano").environments.delete.assert_called_once_with(
             environment.id
         )
 
@@ -78,18 +74,16 @@ class MuranoScenarioTestCase(test.TestCase):
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "murano.delete_environment")
 
-    @mock.patch(MRN_UTILS + ".MuranoScenario.clients")
-    def test_create_session(self, mock_clients):
-        mock_clients("murano").sessions.configure.return_value = "sess"
+    def test_create_session(self):
+        self.clients("murano").sessions.configure.return_value = "sess"
         scenario = utils.MuranoScenario()
         create_sess = scenario._create_session("id")
         self.assertEqual("sess", create_sess)
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "murano.create_session")
 
-    @mock.patch(MRN_UTILS + ".MuranoScenario.clients")
-    def test__create_service(self, mock_clients,):
-        mock_clients("murano").services.post.return_value = "app"
+    def test__create_service(self,):
+        self.clients("murano").services.post.return_value = "app"
         mock_env = mock.Mock(id="ip")
         mock_sess = mock.Mock(id="ip")
         scenario = utils.MuranoScenario()
@@ -102,15 +96,14 @@ class MuranoScenarioTestCase(test.TestCase):
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "murano.create_service")
 
-    @mock.patch(MRN_UTILS + ".MuranoScenario.clients")
-    def test_deploy_environment(self, mock_clients):
+    def test_deploy_environment(self):
         environment = mock.Mock(id="id")
         session = mock.Mock(id="id")
-        mock_clients("murano").sessions.deploy.return_value = "ok"
+        self.clients("murano").sessions.deploy.return_value = "ok"
         scenario = utils.MuranoScenario()
         scenario._deploy_environment(environment, session)
 
-        mock_clients("murano").sessions.deploy.assert_called_once_with(
+        self.clients("murano").sessions.deploy.assert_called_once_with(
             environment.id, session.id
         )
 
