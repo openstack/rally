@@ -1,0 +1,210 @@
+---
+  HeatStacks.create_and_list_stack:
+    -
+      args:
+        template_path: "/home/jenkins/.rally/extra/default.yaml.template"
+      runner:
+        type: "constant"
+        times: 6
+        concurrency: 3
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+      sla:
+        failure_rate:
+          max: 0
+
+  HeatStacks.create_and_delete_stack:
+    -
+      args:
+        template_path: "/home/jenkins/.rally/extra/default.yaml.template"
+      runner:
+        type: "constant"
+        times: 6
+        concurrency: 3
+      context:
+        users:
+          tenants: 2
+          users_per_tenant: 3
+      sla:
+        failure_rate:
+          max: 0
+
+    -
+      args:
+        template_path: "/home/jenkins/.rally/extra/server_with_volume.yaml.template"
+      runner:
+        type: "constant"
+        times: 2
+        concurrency: 2
+      context:
+        users:
+          tenants: 2
+          users_per_tenant: 2
+      sla:
+        failure_rate:
+          max: 0
+
+  HeatStacks.create_check_delete_stack:
+    -
+      args:
+        template_path: "/home/jenkins/.rally/extra/random_strings.yaml.template"
+      runner:
+        type: "constant"
+        times: 6
+        concurrency: 2
+      context:
+        users:
+          tenants: 2
+          users_per_tenant: 2
+      sla:
+        failure_rate:
+          max: 0
+
+  HeatStacks.create_update_delete_stack:
+    -
+      args:
+        template_path: "/home/jenkins/.rally/extra/random_strings.yaml.template"
+        updated_template_path: "/home/jenkins/.rally/extra/updated_random_strings_add.yaml.template"
+      runner:
+        type: "constant"
+        times: 6
+        concurrency: 3
+      context:
+        users:
+          tenants: 2
+          users_per_tenant: 3
+      sla:
+        failure_rate:
+          max: 0
+
+    -
+      args:
+        template_path: "/home/jenkins/.rally/extra/random_strings.yaml.template"
+        updated_template_path: "/home/jenkins/.rally/extra/updated_random_strings_delete.yaml.template"
+      runner:
+        type: "constant"
+        times: 6
+        concurrency: 3
+      context:
+        users:
+          tenants: 2
+          users_per_tenant: 3
+      sla:
+        failure_rate:
+          max: 0
+
+    -
+      args:
+        template_path: "/home/jenkins/.rally/extra/random_strings.yaml.template"
+        updated_template_path: "/home/jenkins/.rally/extra/updated_random_strings_replace.yaml.template"
+      runner:
+        type: "constant"
+        times: 6
+        concurrency: 3
+      context:
+        users:
+          tenants: 2
+          users_per_tenant: 3
+      sla:
+        failure_rate:
+          max: 0
+
+    -
+      args:
+        template_path: "/home/jenkins/.rally/extra/autoscaling_policy.yaml.template"
+        updated_template_path: "/home/jenkins/.rally/extra/updated_autoscaling_policy_inplace.yaml.template"
+      runner:
+        type: "constant"
+        times: 6
+        concurrency: 3
+      context:
+        users:
+          tenants: 2
+          users_per_tenant: 3
+      sla:
+        failure_rate:
+          max: 0
+
+    -
+      args:
+        template_path: "/home/jenkins/.rally/extra/resource_group.yaml.template"
+        updated_template_path: "/home/jenkins/.rally/extra/updated_resource_group_increase.yaml.template"
+      runner:
+        type: "constant"
+        times: 6
+        concurrency: 3
+      context:
+        users:
+          tenants: 2
+          users_per_tenant: 3
+      sla:
+        failure_rate:
+          max: 0
+
+    -
+      args:
+        template_path: "/home/jenkins/.rally/extra/resource_group.yaml.template"
+        updated_template_path: "/home/jenkins/.rally/extra/updated_resource_group_reduce.yaml.template"
+      runner:
+        type: "constant"
+        times: 6
+        concurrency: 3
+      context:
+        users:
+          tenants: 2
+          users_per_tenant: 3
+      sla:
+        failure_rate:
+          max: 0
+
+  HeatStacks.list_stacks_and_resources:
+    -
+      runner:
+        type: "constant"
+        times: 6
+        concurrency: 3
+      context:
+        users:
+          tenants: 2
+          users_per_tenant: 3
+        stacks:
+          stacks_per_tenant: 2
+          resources_per_stack: 10
+      sla:
+        failure_rate:
+          max: 0
+
+  HeatStacks.create_suspend_resume_delete_stack:
+    -
+      args:
+        template_path: "/home/jenkins/.rally/extra/random_strings.yaml.template"
+      runner:
+        type: "constant"
+        times: 6
+        concurrency: 3
+      context:
+        users:
+          tenants: 2
+          users_per_tenant: 3
+      sla:
+        failure_rate:
+          max: 0
+
+  HeatStacks.list_stacks_and_events:
+    -
+      runner:
+        type: "constant"
+        times: 6
+        concurrency: 3
+      context:
+        users:
+          tenants: 2
+          users_per_tenant: 3
+        stacks:
+          stacks_per_tenant: 2
+          resources_per_stack: 10
+      sla:
+        failure_rate:
+          max: 0
