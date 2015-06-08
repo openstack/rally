@@ -57,8 +57,8 @@ class Deployment(object):
         try:
             deployer.validate()
         except jsonschema.ValidationError:
-            LOG.error(_("Deployment %(uuid)s: Schema validation error.") %
-                      {"uuid": deployment["uuid"]})
+            LOG.error(_("Deployment %s: Schema validation error.") %
+                      deployment["uuid"])
             deployment.update_status(consts.DeployStatus.DEPLOY_FAILED)
             raise
 

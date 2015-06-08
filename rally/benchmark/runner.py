@@ -106,8 +106,7 @@ def _log_worker_info(**info):
     """
     info_message = "\n\t".join(["%s: %s" % (k, v)
                                 for k, v in info.items()])
-    LOG.debug("Starting a worker."
-              "\n\t%(info)s" % {"info": info_message})
+    LOG.debug("Starting a worker.\n\t%s" % info_message)
 
 
 class ScenarioRunnerResult(dict):

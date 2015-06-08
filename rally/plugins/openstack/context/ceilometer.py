@@ -88,9 +88,8 @@ class CeilometerSampleGenerator(context.Context):
                                                          counter_volume)
                         self.context["tenants"][tenant_id]["samples"].append(
                             sample[0].to_dict())
-                    except Exception as e:
-                        LOG.error("Creating a sample failed: %(error)s"
-                                  % {"error": e})
+                    except Exception as err:
+                        LOG.error("Creating a sample failed: %s" % err)
                 self.context["tenants"][tenant_id]["resources"].append(
                     sample[0].resource_id)
 

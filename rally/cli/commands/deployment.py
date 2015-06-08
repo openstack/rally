@@ -269,11 +269,11 @@ class DeploymentCommands(object):
                            "export OS_TENANT_NAME=%(tenant_name)s\n"
                            % endpoint)
             if endpoint.get("region_name"):
-                env_file.write("export OS_REGION_NAME=%(region_name)s\n"
-                               % endpoint)
+                env_file.write("export OS_REGION_NAME=%s\n" %
+                               endpoint["region_name"])
             if endpoint.get("endpoint"):
-                env_file.write("export OS_ENDPOINT=%(endpoint)s\n"
-                               % endpoint)
+                env_file.write("export OS_ENDPOINT=%s\n" %
+                               endpoint["endpoint"])
         expanded_path = os.path.expanduser("~/.rally/openrc")
         if os.path.exists(expanded_path):
             os.remove(expanded_path)

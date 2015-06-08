@@ -77,10 +77,10 @@ class VMScenario(base.Scenario):
 
         if not server.networks:
             raise RuntimeError(
-                "Server `%(server)s' is not connected to any network. "
+                "Server `%s' is not connected to any network. "
                 "Use network context for auto-assigning networks "
-                "or provide `nics' argument with specific net-id." % {
-                    "server": server.name})
+                "or provide `nics' argument with specific net-id." %
+                server.name)
 
         if use_floating_ip:
             fip = self._attach_floating_ip(server, floating_network)

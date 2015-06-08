@@ -26,7 +26,7 @@ Guidelines for writing new hacking checks
 
 import functools
 import re
-
+import tokenize
 
 re_assert_true_instance = re.compile(
     r"(.)*assertTrue\(isinstance\((\w|\.|\'|\"|\[|\])+, "
@@ -50,6 +50,14 @@ re_no_construct_dict = re.compile(
     r"=\sdict\(\)")
 re_no_construct_list = re.compile(
     r"=\slist\(\)")
+re_str_format = re.compile(r"""
+%            # start of specifier
+\(([^)]+)\)  # mapping key, in group 1
+[#0 +\-]?    # optional conversion flag
+(?:-?\d*)?   # optional minimum field width
+(?:\.\d*)?   # optional precision
+[hLl]?       # optional length modifier
+[A-z%]       # conversion modifier""", re.X)
 
 
 def skip_ignored_lines(func):
@@ -107,9 +115,9 @@ def check_assert_methods_from_mock(logical_line, filename):
                     #    https://bugs.launchpad.net/rally/+bug/1305991
                     error_number = "N303"
                     custom_msg = ("Maybe, you should try to use "
-                                  "'assertEqual(1, %(obj_name)s.call_count)' "
-                                  "or '%(obj_name)s.assert_called_once_with()'"
-                                  " instead." % {"obj_name": obj_name})
+                                  "'assertEqual(1, %s.call_count)' "
+                                  "or '%s.assert_called_once_with()'"
+                                  " instead." % (obj_name, obj_name))
                 else:
                     custom_msg = ("Correct 'assert_*' methods: '%s'."
                                   % "', '".join(correct_names))
@@ -352,6 +360,73 @@ def check_no_constructor_data_struct(logical_line, filename):
         yield (0, "N351 Remove list() construct and use literal []")
 
 
+def check_dict_formatting_in_string(logical_line, tokens):
+    """Check that strings do not use dict-formatting with a single replacement
+
+    N352
+    """
+    # NOTE(stpierre): Can't use @skip_ignored_lines here because it's
+    # a stupid decorator that only works on functions that take
+    # (logical_line, filename) as arguments.
+    if (not logical_line or
+            logical_line.startswith("#") or
+            logical_line.endswith("# noqa")):
+        return
+
+    current_string = ""
+    in_string = False
+    for token_type, text, start, end, line in tokens:
+        if token_type == tokenize.STRING:
+            if not in_string:
+                current_string = ""
+                in_string = True
+            current_string += text.strip("\"")
+        elif token_type == tokenize.OP:
+            if not current_string:
+                continue
+            # NOTE(stpierre): The string formatting operator % has
+            # lower precedence than +, so we assume that the logical
+            # string has concluded whenever we hit an operator of any
+            # sort. (Most operators don't work for strings anyway.)
+            # Some string operators do have higher precedence than %,
+            # though, so you can technically trick this check by doing
+            # things like:
+            #
+            #     "%(foo)s" * 1 % {"foo": 1}
+            #     "%(foo)s"[:] % {"foo": 1}
+            #
+            # It also will produce false positives if you use explicit
+            # parenthesized addition for two strings instead of
+            # concatenation by juxtaposition, e.g.:
+            #
+            #     ("%(foo)s" + "%(bar)s") % vals
+            #
+            # But if you do any of those things, then you deserve all
+            # of the horrible things that happen to you, and probably
+            # many more.
+            in_string = False
+            if text == "%":
+                format_keys = set()
+                for match in re_str_format.finditer(current_string):
+                    format_keys.add(match.group(1))
+                if len(format_keys) == 1:
+                    yield (0,
+                           "N353 Do not use mapping key string formatting "
+                           "with a single key")
+            if text != ")":
+                # NOTE(stpierre): You can have a parenthesized string
+                # followed by %, so a closing paren doesn't obviate
+                # the possibility for a substitution operator like
+                # every other operator does.
+                current_string = ""
+        elif token_type in (tokenize.NL, tokenize.COMMENT):
+            continue
+        else:
+            in_string = False
+            if token_type == tokenize.NEWLINE:
+                current_string = ""
+
+
 def factory(register):
     register(check_assert_methods_from_mock)
     register(check_import_of_logging)
@@ -366,3 +441,4 @@ def factory(register):
     register(check_no_oslo_deprecated_import)
     register(check_quotes)
     register(check_no_constructor_data_struct)
+    register(check_dict_formatting_in_string)

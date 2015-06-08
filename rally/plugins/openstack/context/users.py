@@ -113,8 +113,7 @@ class UserGenerator(context.Context):
 
         use_sg, msg = network.wrap(clients).supports_security_group()
         if not use_sg:
-            LOG.debug("Security group context is disabled: %(message)s" %
-                      {"message": msg})
+            LOG.debug("Security group context is disabled: %s" % msg)
             return
 
         for user, tenant_id in rutils.iterate_per_tenants(

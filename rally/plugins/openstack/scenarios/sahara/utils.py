@@ -126,7 +126,7 @@ class SaharaScenario(base.Scenario):
                         return net["id"]
                 # If the name is not found in the list. Exit with error.
                 raise exceptions.BenchmarkSetupFailure(
-                    "Could not resolve Floating IP Pool name %(name)s to id" %
+                    "Could not resolve Floating IP Pool name %s to id" %
                     name_or_id)
         else:
             # Pool is not provided. Using the one set as GW for current router.

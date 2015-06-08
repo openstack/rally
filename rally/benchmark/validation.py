@@ -134,9 +134,8 @@ def number(config, clients, deployment, param_name, minval=None, maxval=None,
 
 def _file_access_ok(file_name, mode, param_name, required=True):
     if not file_name:
-        return ValidationResult(
-            not required,
-            "Parameter %(param_name)s required" % {"param_name": param_name})
+        return ValidationResult(not required,
+                                "Parameter %s required" % param_name)
     if not os.access(file_name, mode):
         return ValidationResult(
             False, "Could not open %(file_name)s with mode %(mode)s "

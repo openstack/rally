@@ -152,8 +152,7 @@ class LogCatcher(object):
         in_logs = [record.msg
                    for record in self.handler.buffer if msg in record.msg]
         if not in_logs:
-            raise AssertionError("Expected `%(expected)s' is not in logs"
-                                 % {"expected": msg})
+            raise AssertionError("Expected `%s' is not in logs" % msg)
         return in_logs
 
     def fetchLogRecords(self):
