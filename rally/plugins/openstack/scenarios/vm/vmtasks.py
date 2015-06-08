@@ -84,8 +84,9 @@ class VMTasks(nova_utils.NovaScenario, vm_utils.VMScenario,
             key_name=self.context["user"]["keypair"]["name"],
             **kwargs)
         try:
-            code, out, err = self._run_command(fip["ip"], port, username,
-                                               password, interpreter, script)
+            code, out, err = self._run_command(
+                fip["ip"], port, username, password,
+                command={"script_file": script, "interpreter": interpreter})
             if code:
                 raise exceptions.ScriptError(
                     "Error running script %(script)s. "

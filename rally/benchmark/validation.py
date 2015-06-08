@@ -31,6 +31,9 @@ from rally import osclients
 from rally.plugins.openstack.context import flavors as flavors_ctx
 from rally.verification.tempest import tempest
 
+# TODO(boris-42): make the validators usable as a functions as well.
+# At the moment validators can only be used as decorators.
+
 
 class ValidationResult(object):
 
@@ -163,6 +166,87 @@ def file_exists(config, clients, deployment, param_name, mode=os.R_OK,
 
     return _file_access_ok(config.get("args", {}).get(param_name), mode,
                            param_name, required)
+
+
+def check_command_dict(command):
+    """Check command-specifying dict `command', raise ValueError on error."""
+
+    # NOTE(pboldin): Here we check for the values not for presence of the keys
+    # due to template-driven configuration generation that can leave keys
+    # defined but values empty.
+    if len([1 for k in ("remote_path", "script_file", "script_inline")
+           if command.get(k)]) != 1:
+        raise ValueError(
+            "Exactly one of script_inline, script_file or remote_path"
+            " is expected: %r" % command)
+    if ((command.get("script_file") or command.get("script_inline")) and
+       "interpreter" not in command):
+        raise ValueError(
+            "An `interpreter' is required for both script_file and"
+            " script_inline: %r" % command)
+
+
+@validator
+def valid_command(config, clients, deployment, param_name, required=True):
+    """Checks that parameter is a proper command-specifying dictionary.
+
+    Ensure that the command dictionary either specifies remote command path
+    via `remote_path' (optionally copied from a local file specified by
+    `local_path`), an inline script via `script_inline' or a local script
+    file path using `script_file'. `script_file' and `local_path' are checked
+    to be accessible like in `file_exists' validator.
+
+    The `script_inline' and `script_file' both require an `interpreter' value
+    to specify the interpreter script should be run with.
+
+    Note that `interpreter' and `remote_path' can be an array specifying
+    environment variables and args.
+
+    Examples::
+
+        # Run a `local_script.pl' file sending it to a remote Perl interpreter
+        command = {
+            "script_file": "local_script.pl",
+            "interpreter": "/usr/bin/perl"
+        }
+
+        # Run an inline script sending it to a remote interpreter
+        command = {
+            "script_inline": "echo 'Hello, World!'",
+            "interpreter": "/bin/sh"
+        }
+
+        # Run a remote command
+        command = {
+            "remote_path": "/bin/false"
+        }
+
+        # Run an inline script sending it to a remote interpreter
+        command = {
+            "script_inline": "echo \"Hello, ${NAME:-World}\"",
+            "interpreter": ["NAME=Earth", "/bin/sh"]
+        }
+
+    :param param_name: Name of parameter to validate
+    :param required: Boolean indicating that the command dictionary is required
+    """
+    # TODO(pboldin): Make that a `jsonschema' check once generic validator
+    # is available.
+
+    command = config.get("args", {}).get(param_name)
+    if command is None:
+        return ValidationResult(not required,
+                                "Command dicitionary is required")
+    try:
+        check_command_dict(command)
+    except ValueError as e:
+        return ValidationResult(False, str(e))
+
+    if command.get("script_file"):
+        return _file_access_ok(command["script_file"], os.R_OK,
+                               param_name + ".script_file", True)
+
+    return ValidationResult(True)
 
 
 def _get_validated_image(config, clients, param_name):

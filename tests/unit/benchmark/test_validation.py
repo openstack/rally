@@ -132,6 +132,77 @@ class ValidatorsTestCase(test.TestCase):
         mock__file_access_ok.assert_called_once_with(
             "test_file", os.R_OK, "p", False)
 
+    def test_check_command_valid(self):
+
+        e = self.assertRaises(
+            ValueError, validation.check_command_dict,
+            {"script_file": "foo", "remote_path": "bar"})
+        self.assertIn("Exactly one of ", str(e))
+
+        e = self.assertRaises(
+            ValueError, validation.check_command_dict,
+            {"script_file": "foobar"})
+        self.assertIn("An `interpreter' is required for", str(e))
+
+        e = self.assertRaises(
+            ValueError, validation.check_command_dict,
+            {"script_inline": "foobar"})
+        self.assertIn("An `interpreter' is required for", str(e))
+
+        command = {"script_inline": "foobar", "interpreter": "foo"}
+        result = validation.check_command_dict(command)
+        self.assertIsNone(result)
+
+    @mock.patch("rally.benchmark.validation._file_access_ok")
+    def test_valid_command(self, mock__file_access_ok):
+        validator = self._unwrap_validator(validation.valid_command,
+                                           param_name="p")
+
+        mock__file_access_ok.return_value = validation.ValidationResult(True)
+        command = {"script_file": "foobar", "interpreter": "foo"}
+        result = validator({"args": {"p": command}}, None, None)
+        self.assertTrue(result.is_valid, result.msg)
+        mock__file_access_ok.assert_called_once_with(
+            "foobar", os.R_OK, "p.script_file", True)
+
+    def test_valid_command_required(self):
+        validator = self._unwrap_validator(validation.valid_command,
+                                           param_name="p")
+
+        result = validator({"args": {"p": None}}, None, None)
+        self.assertFalse(result.is_valid, result.msg)
+
+    @mock.patch("rally.benchmark.validation._file_access_ok")
+    def test_valid_command_unreadable_script_file(self, mock__file_access_ok):
+        mock__file_access_ok.return_value = validation.ValidationResult(False)
+
+        validator = self._unwrap_validator(validation.valid_command,
+                                           param_name="p")
+
+        command = {"script_file": "foobar", "interpreter": "foo"}
+        result = validator({"args": {"p": command}}, None, None)
+        self.assertFalse(result.is_valid, result.msg)
+
+    @mock.patch("rally.benchmark.validation.check_command_dict")
+    def test_valid_command_fail_check_command_dict(self,
+                                                   mock_check_command_dict):
+        validator = self._unwrap_validator(validation.valid_command,
+                                           param_name="p")
+
+        mock_check_command_dict.side_effect = ValueError("foobar")
+        command = {"foo": "bar"}
+        result = validator({"args": {"p": command}}, None, None)
+        self.assertFalse(result.is_valid, result.msg)
+        self.assertEqual("foobar", result.msg)
+
+    def test_valid_command_script_inline(self):
+        validator = self._unwrap_validator(validation.valid_command,
+                                           param_name="p")
+
+        command = {"script_inline": "bar", "interpreter": "/bin/sh"}
+        result = validator({"args": {"p": command}}, None, None)
+        self.assertTrue(result.is_valid, result.msg)
+
     def test__get_validated_image_no_value_in_config(self):
         result = validation._get_validated_image({}, None, "non_existing")
         self.assertFalse(result[0].is_valid, result[0].msg)
