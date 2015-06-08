@@ -15,7 +15,7 @@
 
 import six
 
-from rally.benchmark.context import base
+from rally.benchmark import context
 from rally.common.i18n import _
 from rally.common import log as logging
 from rally.common import utils
@@ -27,8 +27,8 @@ from rally.plugins.openstack.wrappers import network as network_wrapper
 LOG = logging.getLogger(__name__)
 
 
-@base.context(name="network", order=350)
-class Network(base.Context):
+@context.context(name="network", order=350)
+class Network(context.Context):
     CONFIG_SCHEMA = {
         "type": "object",
         "$schema": consts.JSON_SCHEMA,
@@ -49,10 +49,10 @@ class Network(base.Context):
         "networks_per_tenant": 1
     }
 
-    def __init__(self, context):
-        super(Network, self).__init__(context)
+    def __init__(self, ctx):
+        super(Network, self).__init__(ctx)
         self.net_wrapper = network_wrapper.wrap(
-            osclients.Clients(context["admin"]["endpoint"]),
+            osclients.Clients(ctx["admin"]["endpoint"]),
             self.config)
 
     @utils.log_task_wrapper(LOG.info, _("Enter context: `network`"))

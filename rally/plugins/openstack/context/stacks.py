@@ -13,7 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from rally.benchmark.context import base
+from rally.benchmark import context
 from rally.common.i18n import _
 from rally.common import log as logging
 from rally.common import utils as rutils
@@ -25,8 +25,8 @@ from rally.plugins.openstack.scenarios.heat import utils as heat_utils
 LOG = logging.getLogger(__name__)
 
 
-@base.context(name="stacks", order=435)
-class StackGenerator(base.Context):
+@context.context(name="stacks", order=435)
+class StackGenerator(context.Context):
     """Context class for create temporary stacks with resources.
 
        Stack generator allows to generate arbitrary number of stacks for

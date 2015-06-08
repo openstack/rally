@@ -66,13 +66,13 @@ class Context(functional.FunctionalMixin):
     """
     CONFIG_SCHEMA = {}
 
-    def __init__(self, context):
-        self.config = context.get("config", {}).get(self.get_name(), {})
+    def __init__(self, ctx):
+        self.config = ctx.get("config", {}).get(self.get_name(), {})
         if hasattr(self, "DEFAULT_CONFIG"):
             for key, value in self.DEFAULT_CONFIG.items():
                 self.config.setdefault(key, value)
-        self.context = context
-        self.task = context["task"]
+        self.context = ctx
+        self.task = self.context["task"]
 
     def __lt__(self, other):
         return self.get_order() < other.get_order()
@@ -100,9 +100,9 @@ class Context(functional.FunctionalMixin):
     @staticmethod
     def get_by_name(name):
         """Return Context class by name."""
-        for context in utils.itersubclasses(Context):
-            if name == context.get_name():
-                return context
+        for ctx in utils.itersubclasses(Context):
+            if name == ctx.get_name():
+                return ctx
         raise exceptions.NoSuchContext(name=name)
 
     @abc.abstractmethod
@@ -128,8 +128,8 @@ class ContextManager(object):
         self.context_obj = context_obj
 
     @staticmethod
-    def validate(context, non_hidden=False):
-        for name, config in six.iteritems(context):
+    def validate(ctx, non_hidden=False):
+        for name, config in six.iteritems(ctx):
             Context.get_by_name(name).validate(config, non_hidden=non_hidden)
 
     def _get_sorted_context_lst(self):

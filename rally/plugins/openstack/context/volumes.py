@@ -12,7 +12,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from rally.benchmark.context import base
+from rally.benchmark import context
 from rally.benchmark.scenarios import base as scenario_base
 from rally.common.i18n import _
 from rally.common import log as logging
@@ -26,8 +26,8 @@ from rally.plugins.openstack.scenarios.cinder import utils as cinder_utils
 LOG = logging.getLogger(__name__)
 
 
-@base.context(name="volumes", order=420)
-class VolumeGenerator(base.Context):
+@context.context(name="volumes", order=420)
+class VolumeGenerator(context.Context):
     """Context class for adding volumes to each user for benchmarks."""
 
     CONFIG_SCHEMA = {

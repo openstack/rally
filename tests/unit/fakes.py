@@ -27,7 +27,7 @@ from novaclient import exceptions as nova_exceptions
 import six
 from swiftclient import exceptions as swift_exceptions
 
-from rally.benchmark.context import base as base_ctx
+from rally.benchmark import context
 from rally.benchmark.scenarios import base
 from rally.common import utils as rally_utils
 from rally import consts
@@ -1498,8 +1498,8 @@ class FakeTimer(rally_utils.Timer):
         return 0
 
 
-@base_ctx.context("fake", order=1)
-class FakeContext(base_ctx.Context):
+@context.context("fake", order=1)
+class FakeContext(context.Context):
 
     CONFIG_SCHEMA = {
         "type": "object",
@@ -1532,15 +1532,15 @@ class FakeUserContext(FakeContext):
     }
     tenants = {"uuid": {"name": "tenant"}}
 
-    def __init__(self, context):
-        context.setdefault("task", mock.MagicMock())
-        super(FakeUserContext, self).__init__(context)
+    def __init__(self, ctx):
+        ctx.setdefault("task", mock.MagicMock())
+        super(FakeUserContext, self).__init__(ctx)
 
-        context.setdefault("admin", FakeUserContext.admin)
-        context.setdefault("users", [FakeUserContext.user])
-        context.setdefault("tenants", FakeUserContext.tenants)
-        context.setdefault("scenario_name",
-                           "NovaServers.boot_server_from_volume_and_delete")
+        self.context.setdefault("admin", FakeUserContext.admin)
+        self.context.setdefault("users", [FakeUserContext.user])
+        self.context.setdefault("tenants", FakeUserContext.tenants)
+        self.context.setdefault(
+            "scenario_name", "NovaServers.boot_server_from_volume_and_delete")
 
 
 class FakeDeployment(dict):

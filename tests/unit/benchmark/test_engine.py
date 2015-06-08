@@ -124,7 +124,7 @@ class BenchmarkEngineTestCase(test.TestCase):
                           eng._validate_config_scenarios_name, config)
 
     @mock.patch("rally.benchmark.engine.runner.ScenarioRunner.validate")
-    @mock.patch("rally.benchmark.engine.base_ctx.ContextManager.validate")
+    @mock.patch("rally.benchmark.engine.context.ContextManager.validate")
     def test__validate_config_syntax(self, mock_context, mock_runner):
         config = {"sca": [{"context": "a"}], "scb": [{"runner": "b"}]}
         eng = engine.BenchmarkEngine(mock.MagicMock(), mock.MagicMock())
@@ -136,7 +136,7 @@ class BenchmarkEngineTestCase(test.TestCase):
                                       any_order=True)
 
     @mock.patch("rally.benchmark.engine.runner.ScenarioRunner")
-    @mock.patch("rally.benchmark.engine.base_ctx.ContextManager.validate")
+    @mock.patch("rally.benchmark.engine.context.ContextManager.validate")
     def test__validate_config_syntax__wrong_runner(self, mock_context,
                                                    mock_runner):
         config = {"sca": [{"context": "a"}], "scb": [{"runner": "b"}]}
@@ -148,7 +148,7 @@ class BenchmarkEngineTestCase(test.TestCase):
                           eng._validate_config_syntax, config)
 
     @mock.patch("rally.benchmark.engine.runner.ScenarioRunner.validate")
-    @mock.patch("rally.benchmark.engine.base_ctx.ContextManager")
+    @mock.patch("rally.benchmark.engine.context.ContextManager")
     def test__validate_config_syntax__wrong_context(self, mock_context,
                                                     mock_runner):
         config = {"sca": [{"context": "a"}], "scb": [{"runner": "b"}]}
@@ -235,8 +235,8 @@ class BenchmarkEngineTestCase(test.TestCase):
         mock_helper.assert_has_calls(expected_calls, any_order=True)
 
     @mock.patch("rally.benchmark.engine.BenchmarkEngine.consume_results")
-    @mock.patch("rally.benchmark.engine.base_ctx.ContextManager.cleanup")
-    @mock.patch("rally.benchmark.engine.base_ctx.ContextManager.setup")
+    @mock.patch("rally.benchmark.engine.context.ContextManager.cleanup")
+    @mock.patch("rally.benchmark.engine.context.ContextManager.setup")
     @mock.patch("rally.benchmark.engine.base_scenario.Scenario")
     @mock.patch("rally.benchmark.engine.runner.ScenarioRunner")
     def test_run__update_status(self, mock_runner, mock_scenario,
@@ -252,8 +252,8 @@ class BenchmarkEngineTestCase(test.TestCase):
     @mock.patch("rally.benchmark.engine.BenchmarkEngine.consume_results")
     @mock.patch("rally.benchmark.engine.base_scenario.Scenario")
     @mock.patch("rally.benchmark.engine.runner.ScenarioRunner")
-    @mock.patch("rally.benchmark.engine.base_ctx.ContextManager.cleanup")
-    @mock.patch("rally.benchmark.engine.base_ctx.ContextManager.setup")
+    @mock.patch("rally.benchmark.engine.context.ContextManager.cleanup")
+    @mock.patch("rally.benchmark.engine.context.ContextManager.setup")
     def test_run__config_has_args(self, mock_setup, mock_cleanup,
                                   mock_runner, mock_scenario, mock_consume):
         config = {
@@ -267,8 +267,8 @@ class BenchmarkEngineTestCase(test.TestCase):
     @mock.patch("rally.benchmark.engine.BenchmarkEngine.consume_results")
     @mock.patch("rally.benchmark.engine.base_scenario.Scenario")
     @mock.patch("rally.benchmark.engine.runner.ScenarioRunner")
-    @mock.patch("rally.benchmark.engine.base_ctx.ContextManager.cleanup")
-    @mock.patch("rally.benchmark.engine.base_ctx.ContextManager.setup")
+    @mock.patch("rally.benchmark.engine.context.ContextManager.cleanup")
+    @mock.patch("rally.benchmark.engine.context.ContextManager.setup")
     def test_run__config_has_runner(self, mock_setup, mock_cleanup,
                                     mock_runner, mock_scenario, mock_consume):
         config = {
@@ -282,8 +282,8 @@ class BenchmarkEngineTestCase(test.TestCase):
     @mock.patch("rally.benchmark.engine.BenchmarkEngine.consume_results")
     @mock.patch("rally.benchmark.engine.base_scenario.Scenario")
     @mock.patch("rally.benchmark.engine.runner.ScenarioRunner")
-    @mock.patch("rally.benchmark.engine.base_ctx.ContextManager.cleanup")
-    @mock.patch("rally.benchmark.engine.base_ctx.ContextManager.setup")
+    @mock.patch("rally.benchmark.engine.context.ContextManager.cleanup")
+    @mock.patch("rally.benchmark.engine.context.ContextManager.setup")
     def test_run__config_has_context(self, mock_ctx_setup, mock_ctx_cleanup,
                                      mock_runner, mock_scenario, mock_consume):
         config = {
@@ -298,8 +298,8 @@ class BenchmarkEngineTestCase(test.TestCase):
     @mock.patch("rally.benchmark.engine.BenchmarkEngine.consume_results")
     @mock.patch("rally.benchmark.engine.base_scenario.Scenario")
     @mock.patch("rally.benchmark.engine.runner.ScenarioRunner")
-    @mock.patch("rally.benchmark.engine.base_ctx.ContextManager.cleanup")
-    @mock.patch("rally.benchmark.engine.base_ctx.ContextManager.setup")
+    @mock.patch("rally.benchmark.engine.context.ContextManager.cleanup")
+    @mock.patch("rally.benchmark.engine.context.ContextManager.setup")
     def test_run_exception_is_logged(self, mock_ctx_setup, mock_ctx_cleanup,
                                      mock_runner, mock_scenario, mock_consume,
                                      mock_log):

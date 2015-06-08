@@ -13,13 +13,13 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from rally.benchmark.context import base
+from rally.benchmark import context
 from rally import consts
 from rally import exceptions
 
 
-@base.context(name="dummy_context", order=750)
-class DummyContext(base.Context):
+@context.context(name="dummy_context", order=750)
+class DummyContext(context.Context):
     """Dummy context."""
     CONFIG_SCHEMA = {
         "type": "object",
@@ -29,9 +29,6 @@ class DummyContext(base.Context):
             "fail_cleanup": {"type": "boolean"}
         },
     }
-
-    def __init__(self, context):
-        super(DummyContext, self).__init__(context)
 
     def setup(self):
         if self.config.get("fail_setup", False):

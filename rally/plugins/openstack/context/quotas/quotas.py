@@ -13,7 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from rally.benchmark.context import base
+from rally.benchmark import context
 from rally.common.i18n import _
 from rally.common import log as logging
 from rally.common import utils
@@ -28,8 +28,8 @@ from rally.plugins.openstack.context.quotas import nova_quotas
 LOG = logging.getLogger(__name__)
 
 
-@base.context(name="quotas", order=300)
-class Quotas(base.Context):
+@context.context(name="quotas", order=300)
+class Quotas(context.Context):
     """Context class for updating benchmarks' tenants quotas."""
 
     CONFIG_SCHEMA = {
@@ -44,9 +44,9 @@ class Quotas(base.Context):
         }
     }
 
-    def __init__(self, context):
-        super(Quotas, self).__init__(context)
-        self.clients = osclients.Clients(context["admin"]["endpoint"])
+    def __init__(self, ctx):
+        super(Quotas, self).__init__(ctx)
+        self.clients = osclients.Clients(self.context["admin"]["endpoint"])
 
         self.manager = {
             "nova": nova_quotas.NovaQuotas(self.clients),

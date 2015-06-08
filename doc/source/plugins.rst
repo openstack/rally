@@ -111,7 +111,7 @@ Inherit a class for your plugin from the base *Context* class. Then, implement t
 
 .. code-block:: none
 
-    from rally.benchmark.context import base
+    from rally.benchmark import context
     from rally.common import log as logging
     from rally import consts
     from rally import osclients
@@ -119,13 +119,13 @@ Inherit a class for your plugin from the base *Context* class. Then, implement t
     LOG = logging.getLogger(__name__)
 
 
-    @base.context(name="create_flavor", order=1000)
-    class CreateFlavorContext(base.Context):
+    @context.context(name="create_flavor", order=1000)
+    class CreateFlavorContext(context.Context):
         """This sample create flavor with specified options before task starts and
         delete it after task completion.
 
         To create your own context plugin, inherit it from
-        rally.benchmark.context.base.Context
+        rally.benchmark.context.Context
         """
 
         CONFIG_SCHEMA = {

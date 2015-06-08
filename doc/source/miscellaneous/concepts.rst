@@ -263,17 +263,17 @@ In the example below, the **"users" context** specifies that the *"NovaServers.b
 Developer's view
 ^^^^^^^^^^^^^^^^
 
-From the developer's view, contexts management is implemented via **Context classes**. Each context type that can be specified in the task configuration file corresponds to a certain subclass of the base [https://github.com/openstack/rally/blob/master/rally/benchmark/context/base.py **Context**] class, located in the [https://github.com/openstack/rally/tree/master/rally/benchmark/context **rally.benchmark.context**] module. Every context class should implement a fairly simple **interface**:
+From the developer's view, contexts management is implemented via **Context classes**. Each context type that can be specified in the task configuration file corresponds to a certain subclass of the base [https://github.com/openstack/rally/blob/master/rally/benchmark/context.py **Context**] class. Every context class should implement a fairly simple **interface**:
 
 .. parsed-literal::
 
-    from rally.benchmark.context import base
+    from rally.benchmark import context
     from rally import consts
 
-    @base.context(name="your_context", *# Corresponds to the context field name in task configuration files*
-                  order=100500,        *# a number specifying the priority with which the context should be set up*
-                  hidden=False)        *# True if the context cannot be configured through the input task file*
-    class YourContext(base.Context):
+    @context.context(name="your_context", *# Corresponds to the context field name in task configuration files*
+                     order=100500,        *# a number specifying the priority with which the context should be set up*
+                     hidden=False)        *# True if the context cannot be configured through the input task file*
+    class YourContext(context.Context):
         *"""Yet another context class."""*
 
         *# The schema of the context configuration format*
@@ -320,4 +320,4 @@ Consequently, the algorithm of initiating the contexts can be roughly seen as fo
 The *hidden* attribute defines whether the context should be a *hidden* one. **Hidden contexts** cannot be configured by end-users through the task configuration file as shown above, but should be specified by a benchmark scenario developer through a special *@base.scenario(context={...})* decorator. Hidden contexts are typically needed to satisfy some specific benchmark scenario-specific needs, which don't require the end-user's attention. For example, the hidden **"cleanup" context** (:mod:`rally.plugins.openstack.context.cleanup.context`) is used to make generic cleanup after running benchmark. So user can't change
 it configuration via task and break his cloud.
 
-If you want to dive deeper, also see the context manager (:mod:`rally.benchmark.context.base`) class that actually implements the algorithm described above.
+If you want to dive deeper, also see the context manager (:mod:`rally.benchmark.context`) class that actually implements the algorithm described above.

@@ -17,7 +17,7 @@ import abc
 
 import six
 
-from rally.benchmark.context import base
+from rally.benchmark import context
 from rally.benchmark import types
 from rally.common import broker
 from rally.common.i18n import _
@@ -32,8 +32,8 @@ LOG = logging.getLogger(__name__)
 
 
 @six.add_metaclass(abc.ABCMeta)
-@base.context(name="custom_image", order=500, hidden=True)
-class BaseCustomImageGenerator(base.Context):
+@context.context(name="custom_image", order=500, hidden=True)
+class BaseCustomImageGenerator(context.Context):
     """Base class for the contexts providing customized image with.
 
     Every context class for the specific customization must implement

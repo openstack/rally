@@ -15,7 +15,7 @@
 
 import six
 
-from rally.benchmark.context import base
+from rally.benchmark import context
 from rally.common.i18n import _
 from rally.common import log as logging
 from rally.common import utils
@@ -85,11 +85,8 @@ def _prepare_open_secgroup(endpoint, secgroup_name):
     return rally_open.to_dict()
 
 
-@base.context(name="allow_ssh", order=320)
-class AllowSSH(base.Context):
-
-    def __init__(self, context):
-        super(AllowSSH, self).__init__(context)
+@context.context(name="allow_ssh", order=320)
+class AllowSSH(context.Context):
 
     @utils.log_task_wrapper(LOG.info, _("Enter context: `allow_ssh`"))
     def setup(self):
