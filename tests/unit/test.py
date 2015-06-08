@@ -53,5 +53,5 @@ class DBTestCase(TestCase):
     """Base class for tests which use DB."""
 
     def setUp(self):
-        super(TestCase, self).setUp()
+        super(DBTestCase, self).setUp()
         self.useFixture(DatabaseFixture())
