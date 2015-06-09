@@ -1,0 +1,11 @@
+---
+  CeilometerTraits.create_user_and_list_traits:
+    -
+      runner:
+        type: "constant"
+        times: 10
+        concurrency: 10
+      context:
+        users:
+          tenants: 2
+          users_per_tenant: 2
