@@ -23,7 +23,6 @@ from rally.cli.commands import deployment
 from rally.cli.commands import info
 from rally.cli.commands import show
 from rally.cli.commands import task
-from rally.cli.commands import use
 from rally.cli.commands import verify
 from rally import exceptions
 from tests.unit import test
@@ -42,7 +41,6 @@ class CliUtilsTestCase(test.TestCase):
             "info": info.InfoCommands,
             "show": show.ShowCommands,
             "task": task.TaskCommands,
-            "use": use.UseCommands,
             "verify": verify.VerifyCommands
         }
 

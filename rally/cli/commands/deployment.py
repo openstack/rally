@@ -127,9 +127,6 @@ class DeploymentCommands(object):
         if do_use:
             self.use(deployment["uuid"])
 
-    @cliutils.deprecated_args(
-        "--uuid", dest="deployment", type=str,
-        required=False, help="UUID of the deployment.")
     @cliutils.args("--deployment", dest="deployment", type=str,
                    required=False, help="UUID or name of a deployment.")
     @envutils.with_default_deployment()
@@ -143,9 +140,6 @@ class DeploymentCommands(object):
         """
         api.Deployment.recreate(deployment)
 
-    @cliutils.deprecated_args(
-        "--uuid", dest="deployment", type=str,
-        required=False, help="UUID of the deployment.")
     @cliutils.args("--deployment", dest="deployment", type=str,
                    required=False, help="UUID or name of a deployment.")
     @envutils.with_default_deployment()
@@ -180,9 +174,6 @@ class DeploymentCommands(object):
                     "To create a new deployment, use:"
                     "\nrally deployment create"))
 
-    @cliutils.deprecated_args(
-        "--uuid", dest="deployment", type=str,
-        required=False, help="UUID of the deployment.")
     @cliutils.args("--deployment", dest="deployment", type=str,
                    required=False, help="UUID or name of a deployment.")
     @envutils.with_default_deployment()
@@ -199,9 +190,6 @@ class DeploymentCommands(object):
         result = deploy["config"]
         print(json.dumps(result, sort_keys=True, indent=4))
 
-    @cliutils.deprecated_args(
-        "--uuid", dest="deployment", type=str,
-        required=False, help="UUID of the deployment.")
     @cliutils.args("--deployment", dest="deployment", type=str,
                    required=False, help="UUID or name of a deployment.")
     @envutils.with_default_deployment()
@@ -226,9 +214,6 @@ class DeploymentCommands(object):
             table_rows.append(utils.Struct(**dict(zip(headers, data))))
         cliutils.print_list(table_rows, headers)
 
-    @cliutils.deprecated_args(
-        "--uuid", dest="deployment", type=str,
-        required=False, help="UUID of the deployment.")
     @cliutils.args("--deployment", dest="deployment", type=str,
                    required=False, help="UUID or name of a deployment.")
     @envutils.with_default_deployment()

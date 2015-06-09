@@ -37,9 +37,6 @@ class DBCommands(object):
 class TempestCommands(object):
     """Commands for Tempest management."""
 
-    @cliutils.deprecated_args(
-        "--deploy-id", dest="deployment", type=str,
-        required=False, help="UUID of the deployment.")
     @cliutils.args("--deployment", type=str, dest="deployment",
                    required=False, help="UUID or name of the deployment")
     @cliutils.args("--source", type=str, dest="source",

@@ -41,9 +41,6 @@ class VerifyCommands(object):
     OpenStack live cloud.
     """
 
-    @cliutils.deprecated_args(
-        "--deploy-id", dest="deployment", type=str,
-        required=False, help="UUID of the deployment.")
     @cliutils.args("--deployment", dest="deployment", type=str,
                    required=False, help="UUID or name of a deployment.")
     @cliutils.args("--set", dest="set_name", type=str, required=False,
