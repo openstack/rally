@@ -92,9 +92,9 @@ class DesignateScenario(base.Scenario):
 
         if atomic_action:
             with base.AtomicAction(self, "designate.delete_record"):
-                client.records.create(domain_id, record_id)
-
-        client.records.delete(domain_id, record_id)
+                client.records.delete(domain_id, record_id)
+        else:
+            client.records.delete(domain_id, record_id)
 
     @base.atomic_action_timer("designate.create_server")
     def _create_server(self, server=None):
