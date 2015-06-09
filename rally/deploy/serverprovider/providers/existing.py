@@ -17,6 +17,7 @@
 from rally.deploy.serverprovider import provider
 
 
+@provider.configure(name="ExistingServers")
 class ExistingServers(provider.ProviderFactory):
     """Just return endpoints from its own configuration.
 

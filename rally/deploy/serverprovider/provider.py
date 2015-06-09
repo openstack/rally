@@ -18,9 +18,9 @@ import abc
 import jsonschema
 import six
 
+from rally.common.plugin import plugin
 from rally.common import sshutils
 from rally.common import utils
-from rally import exceptions
 
 
 class Server(utils.ImmutableMixin):
@@ -91,8 +91,13 @@ class ResourceManager(object):
         self.deployment.delete_resource(resource_id)
 
 
+def configure(name, namespace="default"):
+    return plugin.configure(name, namespace=namespace)
+
+
 @six.add_metaclass(abc.ABCMeta)
-class ProviderFactory(object):
+@configure(name="ProviderFactory")
+class ProviderFactory(plugin.Plugin):
     """Base class of all server providers.
 
     It's a base class with self-discovery of subclasses. Each subclass
@@ -131,29 +136,12 @@ class ProviderFactory(object):
         if hasattr(self, "CONFIG_SCHEMA"):
             jsonschema.validate(self.config, self.CONFIG_SCHEMA)
 
-    @staticmethod
-    def get_by_name(name):
-        """Return Server Provider class by type."""
-        for provider in utils.itersubclasses(ProviderFactory):
-            if name == provider.__name__:
-                return provider
-        raise exceptions.NoSuchVMProvider(vm_provider_name=name)
-
-    # TODO(boris-42): Remove after switching to plugin base.
-    @classmethod
-    def get_name(cls):
-        return cls.__name__
-
+    # FIXME(boris-42): Remove this method. And explicit create provider
     @staticmethod
     def get_provider(config, deployment):
         """Returns instance of server provider by name."""
-        provider_cls = ProviderFactory.get_by_name(config["type"])
+        provider_cls = ProviderFactory.get(config["type"])
         return provider_cls(deployment, config)
-
-    @staticmethod
-    def get_available_providers():
-        """Returns list of names of available engines."""
-        return [e.__name__ for e in utils.itersubclasses(ProviderFactory)]
 
     @abc.abstractmethod
     def create_servers(self, image_uuid=None, type_id=None, amount=1):

@@ -262,10 +262,11 @@ class InfoCommands(object):
         scenario_groups = list(set(s.split(".")[0] for s in scenarios))
         scenario_methods = list(set(s.split(".")[1] for s in scenarios))
         sla_info = [cls.get_name() for cls in sla.SLA.get_all()]
-        deploy_engines = [cls.get_name() for cls in utils.itersubclasses(
-            deploy.EngineFactory)]
-        server_providers = [cls.get_name() for cls in utils.itersubclasses(
-            serverprovider.ProviderFactory)]
+        deploy_engines = [cls.get_name() for cls in
+                          deploy.EngineFactory.get_all()]
+        server_providers = [cls.get_name() for cls in
+                            serverprovider.ProviderFactory.get_all()]
+
         candidates = (scenarios + scenario_groups + scenario_methods +
                       sla_info + deploy_engines + server_providers)
         suggestions = []
@@ -339,24 +340,24 @@ class InfoCommands(object):
 
     def _get_deploy_engine_info(self, query):
         try:
-            deploy_engine = deploy.EngineFactory.get_by_name(query)
+            deploy_engine = deploy.EngineFactory.get(query)
             header = "%s (deploy engine)" % deploy_engine.get_name()
             info = self._make_header(header)
             info += "\n\n"
             info += utils.format_docstring(deploy_engine.__doc__)
             return info
-        except exceptions.NoSuchEngine:
+        except exceptions.PluginNotFound:
             return None
 
     def _get_server_provider_info(self, query):
         try:
-            server_provider = serverprovider.ProviderFactory.get_by_name(query)
+            server_provider = serverprovider.ProviderFactory.get(query)
             header = "%s (server provider)" % server_provider.get_name()
             info = self._make_header(header)
             info += "\n\n"
             info += utils.format_docstring(server_provider.__doc__)
             return info
-        except exceptions.NoSuchVMProvider:
+        except exceptions.PluginNotFound:
             return None
 
     def _make_header(self, string):

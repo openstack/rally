@@ -20,6 +20,7 @@ import six
 
 from rally.common.i18n import _
 from rally.common import log as logging
+from rally.common.plugin import plugin
 from rally.common import utils
 from rally import consts
 from rally.deploy.serverprovider import provider
@@ -29,8 +30,17 @@ from rally import exceptions
 LOG = logging.getLogger(__name__)
 
 
+def configure(name, namespace="default"):
+    return plugin.configure(name, namespace=namespace)
+
+
+# FIXME(boris-42): We should make decomposition of this class.
+#                  it should be called DeploymentManager
+#                  and it should just manages server providers and engines
+#                  engines class should have own base.
 @six.add_metaclass(abc.ABCMeta)
-class EngineFactory(object):
+@configure("base_engine")
+class EngineFactory(plugin.Plugin):
     """Base class of all deployment engines.
 
     It's a base class with self-discovery of subclasses. Each subclass
@@ -73,41 +83,25 @@ class EngineFactory(object):
         if hasattr(self, "CONFIG_SCHEMA"):
             jsonschema.validate(self.config, self.CONFIG_SCHEMA)
 
+    # FIXME(boris-42): Get rid of this method
     def get_provider(self):
         if "provider" in self.config:
             return provider.ProviderFactory.get_provider(
                 self.config["provider"], self.deployment)
 
-    @staticmethod
-    def get_by_name(name):
-        """Return Engine class by name."""
-        for engine in utils.itersubclasses(EngineFactory):
-            if name == engine.__name__:
-                return engine
-        raise exceptions.NoSuchEngine(engine_name=name)
-
-    # TODO(boris-42): Remove after switching to plugin base.
-    @classmethod
-    def get_name(cls):
-        return cls.__name__
-
+    # FIXME(boris-42): Get rid of this method
     @staticmethod
     def get_engine(name, deployment):
         """Returns instance of a deploy engine with corresponding name."""
         try:
-            engine_cls = EngineFactory.get_by_name(name)
+            engine_cls = EngineFactory.get(name)
             return engine_cls(deployment)
-        except exceptions.NoSuchEngine:
+        except exceptions.PluginNotFound:
             LOG.error(_("Deployment %(uuid)s: Deploy engine for %(name)s "
                         "does not exist.") %
                       {"uuid": deployment["uuid"], "name": name})
             deployment.update_status(consts.DeployStatus.DEPLOY_FAILED)
-            raise exceptions.NoSuchEngine(engine_name=name)
-
-    @staticmethod
-    def get_available_engines():
-        """Returns a list of names of available engines."""
-        return [e.__name__ for e in utils.itersubclasses(EngineFactory)]
+            raise exceptions.PluginNotFound(engine_name=name)
 
     @abc.abstractmethod
     def deploy(self):

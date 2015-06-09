@@ -252,6 +252,7 @@ class LxcHost(object):
             yield self.get_server_object(name, wait)
 
 
+@provider.configure(name="LxcProvider")
 class LxcProvider(provider.ProviderFactory):
     """Provide lxc container(s) on given host.
 

@@ -43,10 +43,10 @@ class InfoCommandsTestCase(test.TestCase):
 
     @mock.patch(SCENARIO + ".get_by_name",
                 return_value=dummy.Dummy)
-    def test_find_dummy_scenario_group(self, mock_get_by_name):
+    def test_find_dummy_scenario_group(self, mock_get):
         query = "Dummy"
         status = self.info.find(query)
-        mock_get_by_name.assert_called_once_with(query)
+        mock_get.assert_called_once_with(query)
         self.assertIsNone(status)
 
     @mock.patch(SCENARIO + ".get_scenario_by_name",
@@ -72,20 +72,20 @@ class InfoCommandsTestCase(test.TestCase):
         mock_get.assert_called_once_with(query)
         self.assertIsNone(status)
 
-    @mock.patch(ENGINE + ".get_by_name",
+    @mock.patch(ENGINE + ".get",
                 return_value=existing_cloud.ExistingCloud)
-    def test_find_existing_cloud(self, mock_get_by_name):
+    def test_find_existing_cloud(self, mock_get):
         query = "ExistingCloud"
         status = self.info.find(query)
-        mock_get_by_name.assert_called_once_with(query)
+        mock_get.assert_called_once_with(query)
         self.assertIsNone(status)
 
-    @mock.patch(PROVIDER + ".get_by_name",
+    @mock.patch(PROVIDER + ".get",
                 return_value=existing_servers.ExistingServers)
-    def test_find_existing_servers(self, mock_get_by_name):
+    def test_find_existing_servers(self, mock_get):
         query = "ExistingServers"
         status = self.info.find(query)
-        mock_get_by_name.assert_called_once_with(query)
+        mock_get.assert_called_once_with(query)
         self.assertIsNone(status)
 
     @mock.patch(COMMANDS + ".ServerProviders")
