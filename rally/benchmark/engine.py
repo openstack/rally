@@ -202,9 +202,8 @@ class BenchmarkEngine(object):
             raise exceptions.InvalidTaskException(str(e))
 
     def _get_runner(self, config):
-        runner_cfg = config.get("runner", {})
-        runner_cfg.setdefault("type", consts.RunnerType.SERIAL)
-        return runner.ScenarioRunner.get_runner(self.task, runner_cfg)
+        cfg = config.get("runner", {"type": "serial"})
+        return runner.ScenarioRunner.get(cfg["type"])(self.task, cfg)
 
     def _prepare_context(self, ctx, name, endpoint):
         scenario_context = base_scenario.Scenario.meta(name, "context")

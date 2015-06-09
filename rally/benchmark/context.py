@@ -20,7 +20,7 @@ import six
 
 from rally.benchmark import functional
 from rally.common import log as logging
-from rally.common import utils
+from rally.common.plugin import plugin
 from rally import exceptions
 
 LOG = logging.getLogger(__name__)
@@ -41,17 +41,16 @@ def context(name, order, hidden=False):
                    task config
     """
     def wrapper(cls):
-        cls._ctx_name = name
-        cls._ctx_order = order
-        cls._ctx_hidden = hidden
+        cls = plugin.configure(name=name)(cls)
+        cls._meta_set("order", order)
+        cls._meta_set("hidden", hidden)
         return cls
 
     return wrapper
 
 
-@six.add_metaclass(abc.ABCMeta)
-@context(name="base", order=0, hidden=True)
-class Context(functional.FunctionalMixin):
+@context(name="base_context", order=0, hidden=True)
+class Context(plugin.Plugin, functional.FunctionalMixin):
     """This class is a factory for context classes.
 
     Every context class should be a subclass of this class and implement
@@ -85,25 +84,13 @@ class Context(functional.FunctionalMixin):
 
     @classmethod
     def validate(cls, config, non_hidden=False):
-        if non_hidden and cls._ctx_hidden:
+        if non_hidden and cls._meta_get("hidden"):
             raise exceptions.NoSuchContext(name=cls.get_name())
         jsonschema.validate(config, cls.CONFIG_SCHEMA)
 
     @classmethod
-    def get_name(cls):
-        return cls._ctx_name
-
-    @classmethod
     def get_order(cls):
-        return cls._ctx_order
-
-    @staticmethod
-    def get_by_name(name):
-        """Return Context class by name."""
-        for ctx in utils.itersubclasses(Context):
-            if name == ctx.get_name():
-                return ctx
-        raise exceptions.NoSuchContext(name=name)
+        return cls._meta_get("order")
 
     @abc.abstractmethod
     def setup(self):
@@ -130,10 +117,10 @@ class ContextManager(object):
     @staticmethod
     def validate(ctx, non_hidden=False):
         for name, config in six.iteritems(ctx):
-            Context.get_by_name(name).validate(config, non_hidden=non_hidden)
+            Context.get(name).validate(config, non_hidden=non_hidden)
 
     def _get_sorted_context_lst(self):
-        ctxlst = map(Context.get_by_name, self.context_obj["config"])
+        ctxlst = map(Context.get, self.context_obj["config"])
         return sorted(map(lambda ctx: ctx(self.context_obj), ctxlst))
 
     def setup(self):

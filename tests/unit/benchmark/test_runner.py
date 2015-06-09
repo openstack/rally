@@ -21,7 +21,6 @@ import mock
 
 from rally.benchmark import runner
 from rally.benchmark.scenarios import base as scenario_base
-from rally import exceptions
 from rally.plugins.common.runners import serial
 from tests.unit import fakes
 from tests.unit import test
@@ -193,45 +192,6 @@ class ScenarioRunnerResultTestCase(test.TestCase):
 
 
 class ScenarioRunnerTestCase(test.TestCase):
-
-    def setUp(self):
-        super(ScenarioRunnerTestCase, self).setUp()
-
-    @mock.patch(BASE + "jsonschema.validate")
-    @mock.patch(BASE + "ScenarioRunner._get_cls")
-    def test_validate(self, mock_get_cls, mock_validate):
-        mock_get_cls.return_value = fakes.FakeRunner
-
-        config = {"type": "fake", "a": 10}
-        runner.ScenarioRunner.validate(config)
-        mock_get_cls.assert_called_once_with("fake")
-        mock_validate.assert_called_once_with(config,
-                                              fakes.FakeRunner.CONFIG_SCHEMA)
-
-    def test_get_runner(self):
-
-        class NewRunner(runner.ScenarioRunner):
-            __execution_type__ = "new_runner"
-
-        task = mock.MagicMock()
-        config = {"type": "new_runner", "a": 123}
-        runner_obj = runner.ScenarioRunner.get_runner(task, config)
-
-        self.assertEqual(runner_obj.task, task)
-        self.assertEqual(runner_obj.config, config)
-        self.assertIsInstance(runner_obj, NewRunner)
-
-    def test_get_runner_no_such(self):
-        self.assertRaises(exceptions.NoSuchRunner,
-                          runner.ScenarioRunner.get_runner,
-                          None, {"type": "NoSuchRunner"})
-
-    @mock.patch(BASE + "jsonschema.validate")
-    def test_validate_default_runner(self, mock_validate):
-        config = {"a": 10}
-        runner.ScenarioRunner.validate(config)
-        mock_validate.assert_called_once_with(
-            config, serial.SerialScenarioRunner.CONFIG_SCHEMA)
 
     @mock.patch(BASE + "rutils.Timer.duration", return_value=10)
     def test_run(self, mock_duration):

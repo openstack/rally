@@ -17,7 +17,6 @@ import jsonschema
 import mock
 
 from rally.benchmark import runner
-from rally import consts
 from rally.plugins.common.runners import rps
 from tests.unit import fakes
 from tests.unit import test
@@ -35,7 +34,7 @@ class RPSScenarioRunnerTestCase(test.TestCase):
 
     def test_validate(self):
         config = {
-            "type": consts.RunnerType.RPS,
+            "type": "rps",
             "times": 1,
             "rps": 100,
             "max_concurrency": 50,
@@ -46,34 +45,23 @@ class RPSScenarioRunnerTestCase(test.TestCase):
 
     def test_rps_parameter_validate(self):
         config = {
-            "type": consts.RunnerType.RPS,
+            "type": "rps",
             "rps": 0.0000001
         }
         rps.RPSScenarioRunner.validate(config)
 
     def test_rps_parameter_validate_failed(self):
         config = {
-            "type": consts.RunnerType.RPS,
+            "type": "rps",
             "rps": 0
         }
         self.assertRaises(jsonschema.ValidationError,
                           rps.RPSScenarioRunner.validate, config)
 
     def test_validate_failed(self):
-        config = {"type": consts.RunnerType.RPS,
-                  "a": 10}
+        config = {"type": "rps", "a": 10}
         self.assertRaises(jsonschema.ValidationError,
                           rps.RPSScenarioRunner.validate, config)
-
-    @mock.patch(RUNNERS_BASE + "scenario_base")
-    @mock.patch(RUNNERS_BASE + "osclients")
-    def test_get_rps_runner(self, mock_osclients, mock_base):
-
-        mock_osclients.Clients.return_value = fakes.FakeClients()
-
-        runner_obj = runner.ScenarioRunner.get_runner(
-            mock.MagicMock(), {"type": consts.RunnerType.RPS})
-        self.assertIsNotNone(runner_obj)
 
     @mock.patch(RUNNERS + "rps.LOG")
     @mock.patch(RUNNERS + "rps.time")

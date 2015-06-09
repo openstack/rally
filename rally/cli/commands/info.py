@@ -145,8 +145,8 @@ class InfoCommands(object):
         # NOTE(msdubov): Add config option names to the "Name" column
         for i in range(len(sla_descrs)):
             description = sla_descrs[i]
-            sla_cls = sla.SLA.get_by_name(description[0])
-            sla_descrs[i] = (sla_cls.OPTION_NAME, description[1])
+            sla_cls = sla.SLA.get(description[0])
+            sla_descrs[i] = (sla_cls.get_name(), description[1])
         info = (self._make_header("Rally - SLA checks "
                                   "(Service-Level Agreements)") +
                 "\n\n"
@@ -242,7 +242,7 @@ class InfoCommands(object):
         if subclass_filter:
             subclasses = filter(subclass_filter, subclasses)
         for entity in subclasses:
-            name = entity.__name__
+            name = entity.get_name()
             doc = utils.parse_docstring(entity.__doc__)
             description = doc["short_description"] or ""
             descriptions.append((name, description))
@@ -261,12 +261,10 @@ class InfoCommands(object):
         scenarios = scenario_base.Scenario.list_benchmark_scenarios()
         scenario_groups = list(set(s.split(".")[0] for s in scenarios))
         scenario_methods = list(set(s.split(".")[1] for s in scenarios))
-        sla_info = [cls.__name__ for cls in utils.itersubclasses(sla.SLA)]
-        sla_info.extend([cls.OPTION_NAME for cls in utils.itersubclasses(
-            sla.SLA)])
-        deploy_engines = [cls.__name__ for cls in utils.itersubclasses(
+        sla_info = [cls.get_name() for cls in sla.SLA.get_all()]
+        deploy_engines = [cls.get_name() for cls in utils.itersubclasses(
             deploy.EngineFactory)]
-        server_providers = [cls.__name__ for cls in utils.itersubclasses(
+        server_providers = [cls.get_name() for cls in utils.itersubclasses(
             serverprovider.ProviderFactory)]
         candidates = (scenarios + scenario_groups + scenario_methods +
                       sla_info + deploy_engines + server_providers)
@@ -285,7 +283,7 @@ class InfoCommands(object):
                        for m in dir(scenario_group)):
                 return None
             info = self._make_header("%s (benchmark scenario group)" %
-                                     scenario_group.__name__)
+                                     scenario_group.get_name())
             info += "\n\n"
             info += utils.format_docstring(scenario_group.__doc__)
             scenarios = scenario_group.list_benchmark_scenarios()
@@ -305,7 +303,7 @@ class InfoCommands(object):
     def _get_scenario_info(self, query):
         try:
             scenario = scenario_base.Scenario.get_scenario_by_name(query)
-            scenario_group_name = utils.get_method_class(scenario).__name__
+            scenario_group_name = utils.get_method_class(scenario).get_name()
             header = ("%(scenario_group)s.%(scenario_name)s "
                       "(benchmark scenario)" %
                       {"scenario_group": scenario_group_name,
@@ -330,19 +328,19 @@ class InfoCommands(object):
 
     def _get_sla_info(self, query):
         try:
-            found_sla = sla.SLA.get_by_name(query)
-            header = "%s (SLA)" % found_sla.OPTION_NAME
+            found_sla = sla.SLA.get(query)
+            header = "%s (SLA)" % found_sla.get_name()
             info = self._make_header(header)
             info += "\n\n"
             info += utils.format_docstring(found_sla.__doc__) + "\n"
             return info
-        except exceptions.NoSuchSLA:
+        except exceptions.PluginNotFound:
             return None
 
     def _get_deploy_engine_info(self, query):
         try:
             deploy_engine = deploy.EngineFactory.get_by_name(query)
-            header = "%s (deploy engine)" % deploy_engine.__name__
+            header = "%s (deploy engine)" % deploy_engine.get_name()
             info = self._make_header(header)
             info += "\n\n"
             info += utils.format_docstring(deploy_engine.__doc__)
@@ -353,7 +351,7 @@ class InfoCommands(object):
     def _get_server_provider_info(self, query):
         try:
             server_provider = serverprovider.ProviderFactory.get_by_name(query)
-            header = "%s (server provider)" % server_provider.__name__
+            header = "%s (server provider)" % server_provider.get_name()
             info = self._make_header(header)
             info += "\n\n"
             info += utils.format_docstring(server_provider.__doc__)

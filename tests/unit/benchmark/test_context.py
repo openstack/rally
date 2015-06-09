@@ -55,34 +55,9 @@ class BaseContextTestCase(test.TestCase):
         self.assertRaises(jsonschema.ValidationError,
                           fakes.FakeContext.validate, {"nonexisting": 2})
 
-    @mock.patch("rally.benchmark.context.utils.itersubclasses")
-    def test_get_by_name(self, mock_itersubclasses):
-
-        @context.context(name="some_fake1", order=1)
-        class SomeFake1(context.Context):
-            pass
-
-        @context.context(name="some_fake2", order=1)
-        class SomeFake2(context.Context):
-            pass
-
-        mock_itersubclasses.return_value = [SomeFake1, SomeFake2]
-
-        self.assertEqual(SomeFake1, context.Context.get_by_name("some_fake1"))
-        self.assertEqual(SomeFake2, context.Context.get_by_name("some_fake2"))
-
-    @mock.patch("rally.benchmark.context.utils.itersubclasses")
-    def test_get_by_name_non_existing(self, mock_itersubclasses):
-        mock_itersubclasses.return_value = []
-        self.assertRaises(exceptions.NoSuchContext,
-                          context.Context.get_by_name, "nonexisting")
-
-    def test_get_by_name_hidder(self):
-        self.assertRaises(exceptions.NoSuchContext,
-                          context.Context.validate, {}, non_hidden=True)
-
     def test_setup_is_abstract(self):
 
+        @context.context("test_abstract_setup", 0)
         class A(context.Context):
 
             def cleanup(self):
@@ -91,6 +66,8 @@ class BaseContextTestCase(test.TestCase):
         self.assertRaises(TypeError, A)
 
     def test_cleanup_is_abstract(self):
+
+        @context.context("test_abstract_cleanup", 0)
         class A(context.Context):
 
             def setup(self):
@@ -146,7 +123,7 @@ class BaseContextTestCase(test.TestCase):
 
 class ContextManagerTestCase(test.TestCase):
 
-    @mock.patch("rally.benchmark.context.Context.get_by_name")
+    @mock.patch("rally.benchmark.context.Context.get")
     def test_validate(self, mock_get):
         config = {
             "ctx1": mock.MagicMock(),
@@ -160,7 +137,7 @@ class ContextManagerTestCase(test.TestCase):
                 mock.call().validate(config[ctx], non_hidden=False),
             ])
 
-    @mock.patch("rally.benchmark.context.Context.get_by_name")
+    @mock.patch("rally.benchmark.context.Context.get")
     def test_validate_non_hidden(self, mock_get):
         config = {
             "ctx1": mock.MagicMock(),
@@ -178,22 +155,22 @@ class ContextManagerTestCase(test.TestCase):
         config = {
             "nonexisting": {"nonexisting": 2}
         }
-        self.assertRaises(exceptions.NoSuchContext,
+        self.assertRaises(exceptions.PluginNotFound,
                           context.ContextManager.validate, config)
 
-    @mock.patch("rally.benchmark.context.Context.get_by_name")
-    def test_setup(self, mock_get_by_name):
+    @mock.patch("rally.benchmark.context.Context.get")
+    def test_setup(self, mock_get):
         mock_context = mock.MagicMock()
         mock_context.return_value = mock.MagicMock(__lt__=lambda x, y: True)
-        mock_get_by_name.return_value = mock_context
+        mock_get.return_value = mock_context
         ctx_object = {"config": {"a": [], "b": []}}
 
         manager = context.ContextManager(ctx_object)
         result = manager.setup()
 
         self.assertEqual(result, ctx_object)
-        mock_get_by_name.assert_has_calls([mock.call("a"), mock.call("b")],
-                                          any_order=True)
+        mock_get.assert_has_calls([mock.call("a"), mock.call("b")],
+                                  any_order=True)
         mock_context.assert_has_calls([mock.call(ctx_object),
                                        mock.call(ctx_object)], any_order=True)
         self.assertEqual([mock_context(), mock_context()], manager._visited)
@@ -201,35 +178,35 @@ class ContextManagerTestCase(test.TestCase):
                                                     mock.call.setup()],
                                                    any_order=True)
 
-    @mock.patch("rally.benchmark.context.Context.get_by_name")
-    def test_cleanup(self, mock_get_by_name):
+    @mock.patch("rally.benchmark.context.Context.get")
+    def test_cleanup(self, mock_get):
         mock_context = mock.MagicMock()
         mock_context.return_value = mock.MagicMock(__lt__=lambda x, y: True)
-        mock_get_by_name.return_value = mock_context
+        mock_get.return_value = mock_context
         ctx_object = {"config": {"a": [], "b": []}}
 
         manager = context.ContextManager(ctx_object)
         manager.cleanup()
-        mock_get_by_name.assert_has_calls([mock.call("a"), mock.call("b")],
-                                          any_order=True)
+        mock_get.assert_has_calls([mock.call("a"), mock.call("b")],
+                                  any_order=True)
         mock_context.assert_has_calls([mock.call(ctx_object),
                                        mock.call(ctx_object)], any_order=True)
         mock_context.return_value.assert_has_calls([mock.call.cleanup(),
                                                     mock.call.cleanup()],
                                                    any_order=True)
 
-    @mock.patch("rally.benchmark.context.Context.get_by_name")
-    def test_cleanup_exception(self, mock_get_by_name):
+    @mock.patch("rally.benchmark.context.Context.get")
+    def test_cleanup_exception(self, mock_get):
         mock_context = mock.MagicMock()
         mock_context.return_value = mock.MagicMock(__lt__=lambda x, y: True)
         mock_context.cleanup.side_effect = Exception()
-        mock_get_by_name.return_value = mock_context
+        mock_get.return_value = mock_context
         ctx_object = {"config": {"a": [], "b": []}}
         manager = context.ContextManager(ctx_object)
         manager.cleanup()
 
-        mock_get_by_name.assert_has_calls([mock.call("a"), mock.call("b")],
-                                          any_order=True)
+        mock_get.assert_has_calls([mock.call("a"), mock.call("b")],
+                                  any_order=True)
         mock_context.assert_has_calls([mock.call(ctx_object),
                                        mock.call(ctx_object)], any_order=True)
         mock_context.return_value.assert_has_calls([mock.call.cleanup(),

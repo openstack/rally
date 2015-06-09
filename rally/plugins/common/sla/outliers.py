@@ -25,13 +25,13 @@ from rally.common import streaming_algorithms
 from rally import consts
 
 
+@sla.configure(name="outliers")
 class Outliers(sla.SLA):
     """Limit the number of outliers (iterations that take too much time).
 
     The outliers are detected automatically using the computation of the mean
     and standard deviation (std) of the data.
     """
-    OPTION_NAME = "outliers"
     CONFIG_SCHEMA = {
         "type": "object",
         "$schema": consts.JSON_SCHEMA,

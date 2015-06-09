@@ -94,6 +94,7 @@ def _worker_process(queue, iteration_gen, timeout, rps, times,
         thr.join()
 
 
+@runner.configure(name="rps")
 class RPSScenarioRunner(runner.ScenarioRunner):
     """Scenario runner that does the job with specified frequency.
 
@@ -105,8 +106,6 @@ class RPSScenarioRunner(runner.ScenarioRunner):
     execution type is thus very helpful in understanding the maximal load that
     a certain cloud can handle.
     """
-
-    __execution_type__ = consts.RunnerType.RPS
 
     CONFIG_SCHEMA = {
         "type": "object",

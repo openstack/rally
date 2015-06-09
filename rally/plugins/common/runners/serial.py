@@ -17,6 +17,7 @@ from rally.benchmark import runner
 from rally import consts
 
 
+@runner.configure(name="serial")
 class SerialScenarioRunner(runner.ScenarioRunner):
     """Scenario runner that executes benchmark scenarios serially.
 
@@ -26,8 +27,6 @@ class SerialScenarioRunner(runner.ScenarioRunner):
     any concurrent operations as well as interactively debug the scenario
     from the same command that you use to start Rally.
     """
-
-    __execution_type__ = consts.RunnerType.SERIAL
 
     # NOTE(mmorais): additionalProperties is set True to allow switching
     # between parallel and serial runners by modifying only *type* property

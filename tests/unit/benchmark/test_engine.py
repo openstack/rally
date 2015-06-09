@@ -273,7 +273,7 @@ class BenchmarkEngineTestCase(test.TestCase):
                                     mock_runner, mock_scenario, mock_consume):
         config = {
             "a.benchmark": [{"runner": {"type": "a", "b": 1}}],
-            "b.benchmark": [{"runner": {"a": 1}}]
+            "b.benchmark": [{"runner": {"type": "c", "a": 1}}]
         }
         task = mock.MagicMock()
         eng = engine.BenchmarkEngine(config, task)

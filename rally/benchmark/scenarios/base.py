@@ -77,6 +77,11 @@ class Scenario(functional.FunctionalMixin):
                 return scenario
         raise exceptions.NoSuchScenario(name=name)
 
+    # TODO(boris-42): Remove after switching to plugin base.
+    @classmethod
+    def get_name(cls):
+        return cls.__name__
+
     @staticmethod
     def get_scenario_by_name(name):
         """Return benchmark scenario method by name.

@@ -86,6 +86,11 @@ class EngineFactory(object):
                 return engine
         raise exceptions.NoSuchEngine(engine_name=name)
 
+    # TODO(boris-42): Remove after switching to plugin base.
+    @classmethod
+    def get_name(cls):
+        return cls.__name__
+
     @staticmethod
     def get_engine(name, deployment):
         """Returns instance of a deploy engine with corresponding name."""

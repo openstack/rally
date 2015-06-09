@@ -23,9 +23,9 @@ from rally.benchmark import sla
 from rally.common.i18n import _
 
 
+@sla.configure(name="max_seconds_per_iteration")
 class IterationTime(sla.SLA):
     """Maximum time for one iteration in seconds."""
-    OPTION_NAME = "max_seconds_per_iteration"
     CONFIG_SCHEMA = {"type": "number", "minimum": 0.0,
                      "exclusiveMinimum": True}
 

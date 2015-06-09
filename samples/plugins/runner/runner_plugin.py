@@ -16,17 +16,17 @@
 import random
 
 from rally.benchmark import runner
+from rally.common.plugin import plugin
 from rally import consts
 
 
+@plugin.configure(name="random_times")
 class RandomTimesScenarioRunner(runner.ScenarioRunner):
     """Sample of scenario runner plugin.
 
     Run scenario random number of times, which is choosen between min_times and
     max_times.
     """
-
-    __execution_type__ = "random_times"
 
     CONFIG_SCHEMA = {
         "type": "object",

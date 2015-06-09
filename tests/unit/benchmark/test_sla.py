@@ -15,12 +15,12 @@
 
 
 from rally.benchmark import sla
+from rally.common.plugin import plugin
 from tests.unit import test
 
 
+@plugin.configure(name="test_criterion")
 class TestCriterion(sla.SLA):
-    """Test SLA."""
-    OPTION_NAME = "test_criterion"
     CONFIG_SCHEMA = {"type": "integer"}
 
     def add_iteration(self, iteration):

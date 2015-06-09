@@ -24,9 +24,9 @@ from rally.common.i18n import _
 from rally import consts
 
 
+@sla.configure(name="max_failure_percent")
 class FailureRateDeprecated(sla.SLA):
     """[Deprecated] Failure rate in percents."""
-    OPTION_NAME = "max_failure_percent"
     CONFIG_SCHEMA = {"type": "number", "minimum": 0.0, "maximum": 100.0}
 
     def __init__(self, criterion_value):
@@ -48,9 +48,9 @@ class FailureRateDeprecated(sla.SLA):
                 (self.criterion_value, self.error_rate, self.status()))
 
 
+@sla.configure(name="failure_rate")
 class FailureRate(sla.SLA):
     """Failure rate minimum and maximum in percents."""
-    OPTION_NAME = "failure_rate"
     CONFIG_SCHEMA = {
         "type": "object",
         "$schema": consts.JSON_SCHEMA,

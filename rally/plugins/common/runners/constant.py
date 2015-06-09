@@ -24,7 +24,6 @@ from rally.common import log as logging
 from rally.common import utils
 from rally import consts
 
-
 LOG = logging.getLogger(__name__)
 
 
@@ -100,6 +99,7 @@ def _worker_process(queue, iteration_gen, timeout, concurrency, times, context,
         pool.popleft()[0].join()
 
 
+@runner.configure(name="constant")
 class ConstantScenarioRunner(runner.ScenarioRunner):
     """Creates constant load executing a scenario a specified number of times.
 
@@ -112,8 +112,6 @@ class ConstantScenarioRunner(runner.ScenarioRunner):
     iteration in order to simulate the activities of multiple users
     placing load on the cloud under test.
     """
-
-    __execution_type__ = consts.RunnerType.CONSTANT
 
     CONFIG_SCHEMA = {
         "type": "object",
@@ -195,6 +193,7 @@ class ConstantScenarioRunner(runner.ScenarioRunner):
         self._join_processes(process_pool, result_queue)
 
 
+@runner.configure(name="constant_for_duration")
 class ConstantForDurationScenarioRunner(runner.ScenarioRunner):
     """Creates constant load executing a scenario for an interval of time.
 
@@ -207,8 +206,6 @@ class ConstantForDurationScenarioRunner(runner.ScenarioRunner):
     iteration in order to simulate the activities of multiple users
     placing load on the cloud under test.
     """
-
-    __execution_type__ = consts.RunnerType.CONSTANT_FOR_DURATION
 
     CONFIG_SCHEMA = {
         "type": "object",
