@@ -21,6 +21,10 @@ if [ ! -d $RALLY_JOB_DIR ]; then
     RALLY_JOB_DIR=$BASE/new/$PROJECT/rally-jobs
 fi
 
+echo $RALLY_JOB_DIR
+echo $RALLY_DIR
+ls $BASE/new/$PROJECT
+
 BASE_FOR_TASK=${RALLY_JOB_DIR}/${RALLY_SCENARIO}
 
 TASK=${BASE_FOR_TASK}.yaml

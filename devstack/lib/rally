@@ -10,7 +10,6 @@
 #
 # - install_rally
 # - configure_rally
-# - create_rally_accounts
 # - init_rally
 
 # Save trace setting
@@ -21,10 +20,6 @@ set +o xtrace
 # Defaults
 # --------
 
-# Set up default repos
-RALLY_REPO=${RALLY_REPO:-${GIT_BASE}/openstack/rally.git}
-RALLY_BRANCH=${RALLY_BRANCH:-master}
-
 # Set up default directories
 RALLY_DIR=$DEST/rally
 RALLY_CONF_DIR=${RALLY_CONF_DIR:-/etc/rally}
@@ -32,16 +27,6 @@ RALLY_CONF_FILE=rally.conf
 
 # Debug mode
 RALLY_DEBUG=${RALLY_DEBUG:-False}
-
-# Support entry points installation of console scripts
-if [[ -d $RALLY_DIR/bin ]]; then
-    RALLY_BIN_DIR=$NOVA_DIR/bin
-else
-    RALLY_BIN_DIR=$(get_python_exec_prefix)
-fi
-
-# Benchmark accounts
-BENCHMARK_TENANT=${BENCHMARK_TENANT:-benchmark}
 
 # Create deployment
 RALLY_ADD_DEPLOYMENT=${RALLY_ADD_DEPLOYMENT:-"True"}
@@ -66,7 +51,7 @@ function _create_deployment_config() {
     "admin": {
         "username": "admin",
         "password": "$ADMIN_PASSWORD",
-        "tenant_name": "benchmark"
+        "tenant_name": "admin"
     }
 }
 EOF
@@ -74,7 +59,6 @@ EOF
 
 # install_rally() - Collect source and prepare
 function install_rally() {
-    git_clone $RALLY_REPO $RALLY_DIR $RALLY_BRANCH
     setup_develop $RALLY_DIR
 }
 
@@ -96,30 +80,17 @@ function configure_rally() {
     iniset $RALLY_CONF_DIR/$RALLY_CONF_FILE DEFAULT use_syslog $SYSLOG
 }
 
-# create_rally_accounts() - Sets up common required rally accounts
-create_rally_accounts() {
-    ADMIN_USER=$(keystone user-list | awk "/ admin / { print \$2 }")
-    ADMIN_ROLE=$(keystone role-list | awk "/ admin / { print \$2 }")
-
-    BENHCMARK_TENANT=$(keystone tenant-create \
-        --name benchmark \
-        | grep " id " | get_field 2)
-    keystone user-role-add \
-        --user-id $ADMIN_USER \
-        --role-id $ADMIN_ROLE \
-        --tenant-id $BENHCMARK_TENANT
-}
 
 # init_rally() - Initialize databases, etc.
 function init_rally() {
     recreate_database rally utf8
     # Recreate rally database
-    $RALLY_BIN_DIR/rally-manage --config-file $RALLY_CONF_DIR/$RALLY_CONF_FILE db recreate
+    rally-manage --config-file $RALLY_CONF_DIR/$RALLY_CONF_FILE db recreate
     # Add current DevStack deployment to Rally
     if [ "$RALLY_ADD_DEPLOYMENT" = "True" ]; then
         local tmpfile=$(mktemp)
         _create_deployment_config $tmpfile
-        $RALLY_BIN_DIR/rally --config-file $RALLY_CONF_DIR/$RALLY_CONF_FILE deployment create --name devstack --filename $tmpfile
+        rally --config-file $RALLY_CONF_DIR/$RALLY_CONF_FILE deployment create --name devstack --filename $tmpfile
     fi
 }
 

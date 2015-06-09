@@ -17,6 +17,7 @@ sdist
 develop-eggs
 .installed.cfg
 lib
+!devstack/lib
 lib64
 
 # Installer logs

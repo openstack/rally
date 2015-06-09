@@ -590,37 +590,6 @@
       sla:
         failure_rate:
           max: 0
-
-    -
-      args:
-        sleep: 0.01
-      runner:
-        type: "constant"
-        times: 1
-        concurrency: 1
-      context:
-        quotas:
-          nova:
-            instances: 200
-            cores: 200
-            ram: -1
-            floating_ips: 200
-            fixed_ips: 200
-            metadata_items: -1
-            injected_files: -1
-            injected_file_content_bytes: -1
-            injected_file_path_bytes: -1
-            key_pairs: 500
-            security_groups: 400
-            security_group_rules: 600
-          cinder:
-            gigabytes: -1
-            snapshots: -1
-            volumes: -1
-      sla:
-        failure_rate:
-          max: 0
-
     -
       args:
         sleep: 0.01
@@ -805,40 +774,6 @@
         users:
           tenants: 2
           users_per_tenant: 10
-      sla:
-        failure_rate:
-          max: 0
-
-  SaharaNodeGroupTemplates.create_and_list_node_group_templates:
-    -
-      args:
-        flavor:
-         name: "m1.small"
-      runner:
-        type: "constant"
-        times: 20
-        concurrency: 20
-      context:
-        users:
-          tenants: 1
-          users_per_tenant: 1
-      sla:
-        failure_rate:
-          max: 0
-
-  SaharaNodeGroupTemplates.create_delete_node_group_templates:
-    -
-      args:
-        flavor:
-         name: "m1.small"
-      runner:
-        type: "constant"
-        times: 20
-        concurrency: 20
-      context:
-        users:
-          tenants: 1
-          users_per_tenant: 1
       sla:
         failure_rate:
           max: 0
