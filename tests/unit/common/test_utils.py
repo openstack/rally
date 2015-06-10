@@ -316,10 +316,10 @@ description.
             "short_description": "One-line description.",
             "long_description": "Multi-\nline-\ndescription.",
             "params": [{"name": "p1", "doc": "Param 1 description."},
-                       {"name": "p2", "doc": "Param 2 description."}],
-            "returns": "Return value description."
+                       {"name": "p2", "doc": "Param 2\n\tdescription."}],
+            "returns": "Return value\n\tdescription."
         }
-        self.assertEqual(dct, expected)
+        self.assertEqual(expected, dct)
 
     def test_parse_incomplete_docstring(self):
         docstring = """One-line description.
@@ -334,10 +334,10 @@ description.
             "short_description": "One-line description.",
             "long_description": None,
             "params": [{"name": "p1", "doc": "Param 1 description."},
-                       {"name": "p2", "doc": "Param 2 description."}],
+                       {"name": "p2", "doc": "Param 2\n\tdescription."}],
             "returns": None
         }
-        self.assertEqual(dct, expected)
+        self.assertEqual(expected, dct)
 
     def test_parse_docstring_with_no_params(self):
         docstring = """One-line description.
@@ -355,9 +355,21 @@ description.
             "short_description": "One-line description.",
             "long_description": "Multi-\nline-\ndescription.",
             "params": [],
-            "returns": "Return value description."
+            "returns": "Return value\n\tdescription."
         }
-        self.assertEqual(dct, expected)
+        self.assertEqual(expected, dct)
+
+    def test_parse_docstring_short_only(self):
+        docstring = """One-line description."""
+
+        dct = utils.parse_docstring(docstring)
+        expected = {
+            "short_description": "One-line description.",
+            "long_description": None,
+            "params": [],
+            "returns": None
+        }
+        self.assertEqual(expected, dct)
 
 
 class EditDistanceTestCase(test.TestCase):
