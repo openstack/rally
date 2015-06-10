@@ -24,6 +24,7 @@ from rally.deploy import engine
 from rally import objects
 
 
+@engine.configure(name="MultihostEngine")
 class MultihostEngine(engine.EngineFactory):
     """Deploy multihost cloud with existing engines.
 

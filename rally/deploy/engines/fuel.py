@@ -76,6 +76,7 @@ NETWORKS_SCHEMA = {
 }
 
 
+@engine.configure(name="FuelEngine")
 class FuelEngine(engine.EngineFactory):
     """Deploy with FuelWeb.
 

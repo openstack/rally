@@ -43,6 +43,7 @@ def get_updated_server(server, **kwargs):
     return provider.Server.from_credentials(credentials)
 
 
+@engine.configure(name="DevstackEngine")
 class DevstackEngine(engine.EngineFactory):
     """Deploy Devstack cloud.
 

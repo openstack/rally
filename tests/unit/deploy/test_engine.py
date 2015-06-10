@@ -55,6 +55,7 @@ class FakeDeployment(object):
         pass
 
 
+@deploy.configure(name="FakeEngine")
 class FakeEngine(deploy.EngineFactory):
     """Fake deployment engine.
 
@@ -83,36 +84,11 @@ class EngineMixIn(object):
         pass
 
 
-class EngineFake1(EngineMixIn, deploy.EngineFactory):
-    """Fake deployment engine.
-
-    Used for tests.
-    """
-    pass
-
-
-class EngineFake2(EngineMixIn, deploy.EngineFactory):
-    """Fake deployment engine.
-
-    Used for tests.
-    """
-    pass
-
-
-class EngineFake3(EngineFake2):
-    """Fake deployment engine.
-
-    Used for tests.
-    """
-    pass
-
-
 class EngineFactoryTestCase(test.TestCase):
-    FAKE_ENGINES = [EngineFake1, EngineFake2, EngineFake3]
 
     def test_get_engine_not_found(self):
         deployment = make_fake_deployment()
-        self.assertRaises(exceptions.NoSuchEngine,
+        self.assertRaises(exceptions.PluginNotFound,
                           deploy.EngineFactory.get_engine,
                           "non_existing_engine", deployment)
         self.assertEqual(consts.DeployStatus.DEPLOY_FAILED,
@@ -228,26 +204,9 @@ class EngineFactoryTestCase(test.TestCase):
 
     def test_get_engine(self):
         deployment = make_fake_deployment()
-        engines = EngineFactoryTestCase.FAKE_ENGINES
-        for e in engines:
-            engine_inst = deploy.EngineFactory.get_engine(e.__name__,
-                                                          deployment)
-            self.assertIsInstance(engine_inst, e)
-
-    def test_get_by_name(self):
-        engines = EngineFactoryTestCase.FAKE_ENGINES
-        for e in engines:
-            self.assertEqual(e, deploy.EngineFactory.get_by_name(e.__name__))
-
-    def test_get_by_name_not_found(self):
-        self.assertRaises(exceptions.NoSuchEngine,
-                          deploy.EngineFactory.get_by_name,
-                          "NonExistingEngine")
-
-    def test_get_available_engines(self):
-        engines = set([e.__name__ for e in EngineFactoryTestCase.FAKE_ENGINES])
-        real_engines = set(deploy.EngineFactory.get_available_engines())
-        self.assertEqual(engines & real_engines, engines)
+        engine_inst = deploy.EngineFactory.get_engine("FakeEngine",
+                                                      deployment)
+        self.assertIsInstance(engine_inst, FakeEngine)
 
     def test_engine_factory_is_abstract(self):
         self.assertRaises(TypeError, deploy.EngineFactory)

@@ -36,6 +36,7 @@ def get_script_path(name):
                         "lxc", name)
 
 
+@engine.configure(name="LxcEngine")
 class LxcEngine(engine.EngineFactory):
     """Deploy with other engines in lxc containers.
 

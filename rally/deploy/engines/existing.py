@@ -18,6 +18,7 @@ from rally.deploy import engine
 from rally import objects
 
 
+@engine.configure(name="ExistingCloud")
 class ExistingCloud(engine.EngineFactory):
     """Just use an existing OpenStack deployment without deploying anything.
 

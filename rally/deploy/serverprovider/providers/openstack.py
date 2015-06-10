@@ -34,6 +34,7 @@ SERVER_TYPE = "server"
 KEYPAIR_TYPE = "keypair"
 
 
+@provider.configure(name="OpenStackProvider")
 class OpenStackProvider(provider.ProviderFactory):
     """Provide VMs using an existing OpenStack cloud.
 

@@ -125,14 +125,6 @@ class PluginWithSuchNameExists(RallyException):
                 "`%(namespace)s` namespace")
 
 
-class NoSuchEngine(NotFoundException):
-    msg_fmt = _("There is no engine with name `%(engine_name)s`.")
-
-
-class NoSuchVMProvider(NotFoundException):
-    msg_fmt = _("There is no vm provider with name `%(vm_provider_name)s`.")
-
-
 class NoSuchScenario(NotFoundException):
     msg_fmt = _("There is no benchmark scenario with name `%(name)s`.")
 

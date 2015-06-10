@@ -23,6 +23,7 @@ import netaddr
 from rally.deploy.serverprovider import provider
 
 
+@provider.configure(name="VirshProvider")
 class VirshProvider(provider.ProviderFactory):
     """Create VMs from prebuilt templates.
 
