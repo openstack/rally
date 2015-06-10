@@ -43,12 +43,9 @@ RESULTS+="install=$(do_status $?) "
 
 gzip -9 ${RESULTS_DIR}/tempest_installation.txt
 
-# Run to verification for one SET_NAME and then compare them.
-SET_NAME="compute"
-
 function do_verification {
     OUTPUT_FILE=${RESULTS_DIR}/${1}_verification_${SET_NAME}_set.txt
-    rally --rally-debug verify start --set ${SET_NAME} > ${OUTPUT_FILE} 2>&1
+    rally --rally-debug verify start --regex tempest.api.compute.servers.test_servers > ${OUTPUT_FILE} 2>&1
     RESULTS+="v${1}=$(do_status $?) "
     gzip -9 ${OUTPUT_FILE}
     source ~/.rally/globals && VERIFICATIONS[${1}]=${RALLY_VERIFICATION}
