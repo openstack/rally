@@ -29,10 +29,10 @@ SSH_GROUP_NAME = "rally_ssh_open"
 
 
 def _prepare_open_secgroup(endpoint, secgroup_name):
-    """Generate secgroup allowing all tcp/udp/icmp access.
+    """Generate secgroup allowing SSH access and ICMP.
 
     In order to run tests on instances it is necessary to have SSH access.
-    This function generates a secgroup which allows all tcp/udp/icmp access.
+    This function generates a secgroup which allows SSH access as well as ICMP.
 
     :param endpoint: clients endpoint
     :param secgroup_name: security group name
@@ -50,14 +50,8 @@ def _prepare_open_secgroup(endpoint, secgroup_name):
     rules_to_add = [
         {
             "ip_protocol": "tcp",
-            "to_port": 65535,
-            "from_port": 1,
-            "ip_range": {"cidr": "0.0.0.0/0"}
-        },
-        {
-            "ip_protocol": "udp",
-            "to_port": 65535,
-            "from_port": 1,
+            "to_port": 22,
+            "from_port": 22,
             "ip_range": {"cidr": "0.0.0.0/0"}
         },
         {
