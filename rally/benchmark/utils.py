@@ -74,7 +74,7 @@ def get_from_manager(error_statuses=None):
             raise exceptions.GetResourceNotFound(resource=res)
         if status in error_statuses:
             raise exceptions.GetResourceErrorStatus(resource=res,
-                                                    status=status, fault="")
+                                                    status=status)
 
         return res
 
