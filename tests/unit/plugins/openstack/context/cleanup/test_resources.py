@@ -458,3 +458,26 @@ class ManilaShareTestCase(test.TestCase):
         self.assertEqual("shares", share_resource._resource)
         share_resource._manager.return_value.delete.assert_called_once_with(
             "fake_id")
+
+
+class ManilaShareNetworkTestCase(test.TestCase):
+
+    def test_list(self):
+        sn_resource = resources.ManilaShareNetwork()
+        sn_resource._manager = mock.MagicMock()
+
+        sn_resource.list()
+
+        self.assertEqual("share_networks", sn_resource._resource)
+        sn_resource._manager.return_value.list.assert_called_once_with()
+
+    def test_delete(self):
+        sn_resource = resources.ManilaShareNetwork()
+        sn_resource._manager = mock.MagicMock()
+        sn_resource.id = lambda: "fake_id"
+
+        sn_resource.delete()
+
+        self.assertEqual("share_networks", sn_resource._resource)
+        sn_resource._manager.return_value.delete.assert_called_once_with(
+            "fake_id")

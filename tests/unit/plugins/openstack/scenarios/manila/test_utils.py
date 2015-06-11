@@ -81,3 +81,35 @@ class ManilaScenarioTestCase(test.ClientsTestCase):
         self.clients("manila").shares.list.assert_called_once_with(
             detailed=params.get("detailed", True),
             search_opts=params.get("search_opts", None))
+
+    @ddt.data(None, "", "SomeName")
+    def test__create_share_network(self, name):
+        fake_sn = mock.Mock()
+        self.scenario._generate_random_name = mock.Mock()
+        self.clients("manila").share_networks.create.return_value = fake_sn
+        data = {
+            "neutron_net_id": "fake_neutron_net_id",
+            "neutron_subnet_id": "fake_neutron_subnet_id",
+            "nova_net_id": "fake_nova_net_id",
+            "name": name or self.scenario._generate_random_name.return_value,
+            "description": "fake_description",
+        }
+
+        result = self.scenario._create_share_network(**data)
+
+        self.assertEqual(fake_sn, result)
+        self.clients("manila").share_networks.create.assert_called_once_with(
+            **data)
+
+    @mock.patch(BM_UTILS + "get_from_manager")
+    @mock.patch(BM_UTILS + "wait_for_delete")
+    def test__delete_share_network(self, mock_wait_for_delete,
+                                   mock_get_from_manager):
+        fake_sn = mock.MagicMock()
+
+        self.scenario._delete_share_network(fake_sn)
+
+        fake_sn.delete.assert_called_once_with()
+        mock_get_from_manager.assert_called_once_with()
+        mock_wait_for_delete.assert_called_once_with(
+            fake_sn, update_resource=mock.ANY, timeout=180, check_interval=2)

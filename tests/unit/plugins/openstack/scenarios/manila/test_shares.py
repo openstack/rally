@@ -62,3 +62,36 @@ class ManilaSharesTestCase(test.TestCase):
 
         scenario._list_shares.assert_called_once_with(
             detailed=detailed, search_opts=search_opts)
+
+    @ddt.data(
+        {},
+        {"name": "foo_name"},
+        {"description": "foo_description"},
+        {"neutron_net_id": "foo_neutron_net_id"},
+        {"neutron_subnet_id": "foo_neutron_subnet_id"},
+        {"nova_net_id": "foo_nova_net_id"},
+        {"name": "foo_name",
+         "description": "foo_description",
+         "neutron_net_id": "foo_neutron_net_id",
+         "neutron_subnet_id": "foo_neutron_subnet_id",
+         "nova_net_id": "foo_nova_net_id"},
+    )
+    def test_create_share_network_and_delete(self, params):
+        fake_sn = mock.MagicMock()
+        scenario = shares.ManilaShares()
+        scenario._create_share_network = mock.MagicMock(return_value=fake_sn)
+        scenario._delete_share_network = mock.MagicMock()
+        expected_params = {
+            "name": None,
+            "description": None,
+            "neutron_net_id": None,
+            "neutron_subnet_id": None,
+            "nova_net_id": None,
+        }
+        expected_params.update(params)
+
+        scenario.create_share_network_and_delete(**params)
+
+        scenario._create_share_network.assert_called_once_with(
+            **expected_params)
+        scenario._delete_share_network.assert_called_once_with(fake_sn)
