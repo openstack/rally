@@ -23,15 +23,13 @@ SAHARA_CLUSTERS = ("rally.plugins.openstack.scenarios.sahara.clusters"
 SAHARA_UTILS = "rally.plugins.openstack.scenarios.sahara.utils"
 
 
-class SaharaClustersTestCase(test.TestCase):
+class SaharaClustersTestCase(test.ClientsTestCase):
 
     @mock.patch(SAHARA_CLUSTERS + "._delete_cluster")
     @mock.patch(SAHARA_CLUSTERS + "._launch_cluster",
                 return_value=mock.MagicMock(id=42))
-    @mock.patch(SAHARA_UTILS + ".SaharaScenario.clients")
-    def test_create_and_delete_cluster(self, mock_clients, mock_launch_cluster,
+    def test_create_and_delete_cluster(self, mock_launch_cluster,
                                        mock_delete_cluster):
-
         clusters_scenario = clusters.SaharaClusters()
 
         clusters_scenario.context = {
@@ -67,14 +65,10 @@ class SaharaClustersTestCase(test.TestCase):
     @mock.patch(SAHARA_CLUSTERS + "._scale_cluster")
     @mock.patch(SAHARA_CLUSTERS + "._launch_cluster",
                 return_value=mock.MagicMock(id=42))
-    @mock.patch(SAHARA_UTILS + ".SaharaScenario.clients")
-    def test_create_scale_delete_cluster(self, mock_clients,
-                                         mock_launch_cluster,
+    def test_create_scale_delete_cluster(self, mock_launch_cluster,
                                          mock_scale_cluster,
                                          mock_delete_cluster):
-
-        mock_sahara = mock_clients("sahara")
-        mock_sahara.clusters.get.return_value = mock.MagicMock(
+        self.clients("sahara").clusters.get.return_value = mock.MagicMock(
             id=42, status="active"
         )
         clusters_scenario = clusters.SaharaClusters()
@@ -108,9 +102,9 @@ class SaharaClustersTestCase(test.TestCase):
             enable_anti_affinity=False)
 
         mock_scale_cluster.assert_has_calls([
-            mock.call(mock_sahara.clusters.get.return_value, 1),
-            mock.call(mock_sahara.clusters.get.return_value, -1),
+            mock.call(self.clients("sahara").clusters.get.return_value, 1),
+            mock.call(self.clients("sahara").clusters.get.return_value, -1),
         ])
 
         mock_delete_cluster.assert_called_once_with(
-            mock_sahara.clusters.get.return_value)
+            self.clients("sahara").clusters.get.return_value)

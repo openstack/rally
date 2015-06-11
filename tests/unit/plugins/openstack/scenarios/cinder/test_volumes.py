@@ -16,7 +16,6 @@
 import mock
 
 from rally.plugins.openstack.scenarios.cinder import volumes
-from tests.unit import fakes
 from tests.unit import test
 
 CINDER_VOLUMES = ("rally.plugins.openstack.scenarios.cinder.volumes"
@@ -27,7 +26,7 @@ class fake_type(object):
     name = "fake"
 
 
-class CinderServersTestCase(test.TestCase):
+class CinderServersTestCase(test.ClientsTestCase):
 
     def test_create_and_list_volume(self):
         scenario = volumes.CinderVolumes()
@@ -250,8 +249,7 @@ class CinderServersTestCase(test.TestCase):
         scenario._create_snapshot = mock.MagicMock(return_value=fake_snapshot)
         scenario._delete_snapshot = mock.MagicMock()
 
-        scenario.clients = mock.MagicMock()
-        scenario.clients("nova").servers.get = mock.MagicMock(
+        self.clients("nova").servers.get = mock.MagicMock(
             return_value=fake_server)
 
         scenario.create_snapshot_and_attach_volume()
@@ -286,10 +284,9 @@ class CinderServersTestCase(test.TestCase):
         scenario._delete_snapshot = mock.MagicMock()
         fake = fake_type()
 
-        scenario.clients = mock.MagicMock()
-        scenario.clients("cinder").volume_types.list = mock.MagicMock(
+        self.clients("cinder").volume_types.list = mock.MagicMock(
             return_value=[fake])
-        scenario.clients("nova").servers.get = mock.MagicMock(
+        self.clients("nova").servers.get = mock.MagicMock(
             return_value=fake_server)
 
         scenario.create_snapshot_and_attach_volume(volume_type=True)
@@ -311,12 +308,8 @@ class CinderServersTestCase(test.TestCase):
     def test_create_nested_snapshots_and_attach_volume(self):
         fake_volume = mock.MagicMock()
         fake_snapshot = mock.MagicMock()
-        fake_clients = fakes.FakeClients()
-        fake_server = fake_clients.nova().servers.create("test_server",
-                                                         "image_id_01",
-                                                         "flavor_id_01")
+        fake_server = mock.MagicMock()
         scenario = volumes.CinderVolumes(
-
             context={"user": {"tenant_id": "fake"},
                      "users": [{"tenant_id": "fake", "users_per_tenant": 1}],
                      "tenant": {"id": "fake", "name": "fake",
@@ -329,8 +322,6 @@ class CinderServersTestCase(test.TestCase):
         scenario._delete_volume = mock.MagicMock()
         scenario._create_snapshot = mock.MagicMock(return_value=fake_snapshot)
         scenario._delete_snapshot = mock.MagicMock()
-
-        scenario._clients = fake_clients
 
         scenario.create_nested_snapshots_and_attach_volume()
 
@@ -347,12 +338,9 @@ class CinderServersTestCase(test.TestCase):
         fake_volume2 = mock.MagicMock()
         fake_snapshot1 = mock.MagicMock()
         fake_snapshot2 = mock.MagicMock()
-        fake_clients = fakes.FakeClients()
-        fake_server = fake_clients.nova().servers.create("test_server",
-                                                         "image_id_01",
-                                                         "flavor_id_01")
-        scenario = volumes.CinderVolumes(
+        fake_server = mock.MagicMock()
 
+        scenario = volumes.CinderVolumes(
             context={"user": {"tenant_id": "fake"},
                      "users": [{"tenant_id": "fake", "users_per_tenant": 1}],
                      "tenant": {"id": "fake", "name": "fake",
@@ -367,7 +355,6 @@ class CinderServersTestCase(test.TestCase):
         scenario._create_snapshot = mock.MagicMock(
             side_effect=[fake_snapshot1, fake_snapshot2])
         scenario._delete_snapshot = mock.MagicMock()
-        scenario._clients = fake_clients
 
         scenario.create_nested_snapshots_and_attach_volume(
             nested_level={"min": 2, "max": 2})
@@ -384,12 +371,9 @@ class CinderServersTestCase(test.TestCase):
         mock_random.randint.return_value = 3
         fake_volume = mock.MagicMock()
         fake_snapshot = mock.MagicMock()
-        fake_clients = fakes.FakeClients()
-        fake_server = fake_clients.nova().servers.create("test_server",
-                                                         "image_id_01",
-                                                         "flavor_id_01")
-        scenario = volumes.CinderVolumes(
+        fake_server = mock.MagicMock()
 
+        scenario = volumes.CinderVolumes(
             context={"user": {"tenant_id": "fake"},
                      "users": [{"tenant_id": "fake", "users_per_tenant": 1}],
                      "tenant": {"id": "fake", "name": "fake",
@@ -403,7 +387,6 @@ class CinderServersTestCase(test.TestCase):
         scenario._delete_volume = mock.MagicMock()
         scenario._create_snapshot = mock.MagicMock(return_value=fake_snapshot)
         scenario._delete_snapshot = mock.MagicMock()
-        scenario._clients = fake_clients
 
         scenario.create_nested_snapshots_and_attach_volume()
 

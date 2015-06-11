@@ -17,14 +17,10 @@ import mock
 import six
 
 from rally.plugins.openstack.scenarios.quotas import utils
-from tests.unit import fakes
 from tests.unit import test
 
 
-class QuotasScenarioTestCase(test.TestCase):
-
-    def setUp(self):
-        super(QuotasScenarioTestCase, self).setUp()
+class QuotasScenarioTestCase(test.ClientsTestCase):
 
     def test__update_quotas(self):
         tenant_id = "fake_tenant"
@@ -38,17 +34,15 @@ class QuotasScenarioTestCase(test.TestCase):
             "injected_files": 10,
             "cores": 10,
         }
-        fake_nova = fakes.FakeNovaClient()
-        fake_nova.quotas.update = mock.MagicMock(return_value=quotas)
-        fake_clients = fakes.FakeClients()
-        fake_clients._nova = fake_nova
-        scenario = utils.QuotasScenario(admin_clients=fake_clients)
+        self.admin_clients("nova").quotas.update.return_value = quotas
+        scenario = utils.QuotasScenario()
         scenario._generate_quota_values = mock.MagicMock(return_value=quotas)
 
         result = scenario._update_quotas("nova", tenant_id)
 
         self.assertEqual(quotas, result)
-        fake_nova.quotas.update.assert_called_once_with(tenant_id, **quotas)
+        self.admin_clients("nova").quotas.update.assert_called_once_with(
+            tenant_id, **quotas)
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "quotas.update_quotas")
 
@@ -64,11 +58,8 @@ class QuotasScenarioTestCase(test.TestCase):
             "injected_files": 10,
             "cores": 10,
         }
-        fake_nova = fakes.FakeNovaClient()
-        fake_nova.quotas.update = mock.MagicMock(return_value=quotas)
-        fake_clients = fakes.FakeClients()
-        fake_clients._nova = fake_nova
-        scenario = utils.QuotasScenario(admin_clients=fake_clients)
+        self.admin_clients("nova").quotas.update.return_value = quotas
+        scenario = utils.QuotasScenario()
         scenario._generate_quota_values = mock.MagicMock(return_value=quotas)
 
         mock_quota = mock.Mock(return_value=quotas)
@@ -82,21 +73,21 @@ class QuotasScenarioTestCase(test.TestCase):
 
     def test__generate_quota_values_nova(self):
         max_quota = 1024
-        scenario = utils.QuotasScenario(admin_clients=fakes.FakeClients())
+        scenario = utils.QuotasScenario()
         quotas = scenario._generate_quota_values(max_quota, "nova")
         for k, v in six.iteritems(quotas):
             self.assertTrue(-1 <= v <= max_quota)
 
     def test__generate_quota_values_cinder(self):
         max_quota = 1024
-        scenario = utils.QuotasScenario(admin_clients=fakes.FakeClients())
+        scenario = utils.QuotasScenario()
         quotas = scenario._generate_quota_values(max_quota, "cinder")
         for k, v in six.iteritems(quotas):
             self.assertTrue(-1 <= v <= max_quota)
 
     def test__generate_quota_values_neutron(self):
         max_quota = 1024
-        scenario = utils.QuotasScenario(admin_clients=fakes.FakeClients())
+        scenario = utils.QuotasScenario()
         quotas = scenario._generate_quota_values(max_quota, "neutron")
         for v in six.itervalues(quotas):
             for v1 in six.itervalues(v):
@@ -105,14 +96,10 @@ class QuotasScenarioTestCase(test.TestCase):
 
     def test__delete_quotas(self):
         tenant_id = "fake_tenant"
-        fake_nova = fakes.FakeNovaClient()
-        fake_nova.quotas.delete = mock.MagicMock()
-        fake_clients = fakes.FakeClients()
-        fake_clients._nova = fake_nova
-        scenario = utils.QuotasScenario(admin_clients=fake_clients)
-
+        scenario = utils.QuotasScenario()
         scenario._delete_quotas("nova", tenant_id)
 
-        fake_nova.quotas.delete.assert_called_once_with(tenant_id)
+        self.admin_clients("nova").quotas.delete.assert_called_once_with(
+            tenant_id)
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "quotas.delete_quotas")

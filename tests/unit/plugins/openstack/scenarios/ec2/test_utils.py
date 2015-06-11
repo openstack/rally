@@ -38,7 +38,7 @@ class EC2UtilsTestCase(test.TestCase):
         resource.update.assert_called_once_with()
 
 
-class EC2ScenarioTestCase(test.TestCase):
+class EC2ScenarioTestCase(test.ClientsTestCase):
 
     def setUp(self):
         super(EC2ScenarioTestCase, self).setUp()
@@ -58,9 +58,8 @@ class EC2ScenarioTestCase(test.TestCase):
         self.assertIsNotNone(action_duration)
         self.assertIsInstance(action_duration, float)
 
-    @mock.patch(EC2_UTILS + ".EC2Scenario.clients")
-    def test__boot_server(self, mock_clients):
-        mock_clients("ec2").run_instances.return_value = self.reservation
+    def test__boot_server(self):
+        self.clients("ec2").run_instances.return_value = self.reservation
         ec2_scenario = utils.EC2Scenario(context={})
         return_server = ec2_scenario._boot_server("image", "flavor")
         expected = mock.call(

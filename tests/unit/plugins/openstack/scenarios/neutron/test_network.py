@@ -22,7 +22,7 @@ NEUTRON_NETWORKS = ("rally.plugins.openstack.scenarios.neutron.network"
                     ".NeutronNetworks")
 
 
-class NeutronNetworksTestCase(test.TestCase):
+class NeutronNetworksTestCase(test.ClientsTestCase):
 
     @mock.patch(NEUTRON_NETWORKS + "._list_networks")
     @mock.patch(NEUTRON_NETWORKS + "._create_network")
@@ -248,9 +248,7 @@ class NeutronNetworksTestCase(test.TestCase):
     @mock.patch(NEUTRON_NETWORKS + "._list_routers")
     @mock.patch(NEUTRON_NETWORKS + "._create_router")
     @mock.patch(NEUTRON_NETWORKS + "._create_network_and_subnets")
-    @mock.patch(NEUTRON_NETWORKS + ".clients")
     def test_create_and_list_routers(self,
-                                     mock_clients,
                                      mock_create_network_and_subnets,
                                      mock_create_router,
                                      mock_list):
@@ -271,7 +269,7 @@ class NeutronNetworksTestCase(test.TestCase):
             }
         }
         mock_create_network_and_subnets.return_value = (net, [subnet])
-        mock_clients("neutron").add_interface_router = mock.Mock()
+        self.clients("neutron").add_interface_router = mock.Mock()
         router = {
             "router": {
                 "name": "router-name",
@@ -290,7 +288,7 @@ class NeutronNetworksTestCase(test.TestCase):
         mock_create_router.assert_has_calls(
             [mock.call({})] * subnets_per_network)
 
-        mock_clients("neutron").add_interface_router.assert_has_calls(
+        self.clients("neutron").add_interface_router.assert_has_calls(
             [mock.call(router["router"]["id"],
                        {"subnet_id": subnet["subnet"]["id"]})
              ] * subnets_per_network)
@@ -298,7 +296,7 @@ class NeutronNetworksTestCase(test.TestCase):
         mock_create_network_and_subnets.reset_mock()
         mock_create_router.reset_mock()
 
-        mock_clients("neutron").add_interface_router.reset_mock()
+        self.clients("neutron").add_interface_router.reset_mock()
         mock_list.reset_mock()
 
         # Custom options
@@ -317,7 +315,7 @@ class NeutronNetworksTestCase(test.TestCase):
 
         mock_create_router.assert_has_calls(
             [mock.call(router_create_args)] * subnets_per_network)
-        mock_clients("neutron").add_interface_router.assert_has_calls(
+        self.clients("neutron").add_interface_router.assert_has_calls(
             [mock.call(router["router"]["id"],
                        {"subnet_id": subnet["subnet"]["id"]})
              ] * subnets_per_network)
@@ -327,9 +325,7 @@ class NeutronNetworksTestCase(test.TestCase):
     @mock.patch(NEUTRON_NETWORKS + "._update_router")
     @mock.patch(NEUTRON_NETWORKS + "._create_router")
     @mock.patch(NEUTRON_NETWORKS + "._create_network_and_subnets")
-    @mock.patch(NEUTRON_NETWORKS + ".clients")
     def test_create_and_update_routers(self,
-                                       mock_clients,
                                        mock_create_network_and_subnets,
                                        mock_create_router,
                                        mock_update_router):
@@ -361,7 +357,7 @@ class NeutronNetworksTestCase(test.TestCase):
         }
         mock_create_router.return_value = router
         mock_create_network_and_subnets.return_value = (net, [subnet])
-        mock_clients("neutron").add_interface_router = mock.Mock()
+        self.clients("neutron").add_interface_router = mock.Mock()
 
         # Default options
         scenario.create_and_update_routers(
@@ -374,7 +370,7 @@ class NeutronNetworksTestCase(test.TestCase):
 
         mock_create_router.assert_has_calls(
             [mock.call({})] * subnets_per_network)
-        mock_clients("neutron").add_interface_router.assert_has_calls(
+        self.clients("neutron").add_interface_router.assert_has_calls(
             [mock.call(router["router"]["id"],
                        {"subnet_id": subnet["subnet"]["id"]})
              ] * subnets_per_network)
@@ -385,7 +381,7 @@ class NeutronNetworksTestCase(test.TestCase):
 
         mock_create_network_and_subnets.reset_mock()
         mock_create_router.reset_mock()
-        mock_clients("neutron").add_interface_router.reset_mock()
+        self.clients("neutron").add_interface_router.reset_mock()
         mock_update_router.reset_mock()
 
         # Custom options
@@ -405,7 +401,7 @@ class NeutronNetworksTestCase(test.TestCase):
 
         mock_create_router.assert_has_calls(
             [mock.call(router_create_args)] * subnets_per_network)
-        mock_clients("neutron").add_interface_router.assert_has_calls(
+        self.clients("neutron").add_interface_router.assert_has_calls(
             [mock.call(router["router"]["id"],
                        {"subnet_id": subnet["subnet"]["id"]})
              ] * subnets_per_network)
@@ -417,9 +413,7 @@ class NeutronNetworksTestCase(test.TestCase):
     @mock.patch(NEUTRON_NETWORKS + "._delete_router")
     @mock.patch(NEUTRON_NETWORKS + "._create_router")
     @mock.patch(NEUTRON_NETWORKS + "._create_network_and_subnets")
-    @mock.patch(NEUTRON_NETWORKS + ".clients")
     def test_create_and_delete_routers(self,
-                                       mock_clients,
                                        mock_create_network_and_subnets,
                                        mock_create_router,
                                        mock_delete_router):
@@ -448,7 +442,7 @@ class NeutronNetworksTestCase(test.TestCase):
 
         mock_create_router.return_value = router
         mock_create_network_and_subnets.return_value = (net, [subnet])
-        mock_clients("neutron").add_interface_router = mock.Mock()
+        self.clients("neutron").add_interface_router = mock.Mock()
 
         # Default options
         scenario.create_and_delete_routers(
@@ -460,7 +454,7 @@ class NeutronNetworksTestCase(test.TestCase):
 
         mock_create_router.assert_has_calls(
             [mock.call({})] * subnets_per_network)
-        mock_clients("neutron").add_interface_router.assert_has_calls(
+        self.clients("neutron").add_interface_router.assert_has_calls(
             [mock.call(router["router"]["id"],
                        {"subnet_id": subnet["subnet"]["id"]})
              ] * subnets_per_network)
@@ -470,7 +464,7 @@ class NeutronNetworksTestCase(test.TestCase):
 
         mock_create_network_and_subnets.reset_mock()
         mock_create_router.reset_mock()
-        mock_clients("neutron").add_interface_router.reset_mock()
+        self.clients("neutron").add_interface_router.reset_mock()
         mock_delete_router.reset_mock()
 
         # Custom options
@@ -489,7 +483,7 @@ class NeutronNetworksTestCase(test.TestCase):
 
         mock_create_router.assert_has_calls(
             [mock.call(router_create_args)] * subnets_per_network)
-        mock_clients("neutron").add_interface_router.assert_has_calls(
+        self.clients("neutron").add_interface_router.assert_has_calls(
             [mock.call(router["router"]["id"],
                        {"subnet_id": subnet["subnet"]["id"]})
              ] * subnets_per_network)

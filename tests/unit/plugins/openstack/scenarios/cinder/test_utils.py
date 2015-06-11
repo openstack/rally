@@ -26,7 +26,7 @@ BM_UTILS = "rally.benchmark.utils"
 CINDER_UTILS = "rally.plugins.openstack.scenarios.cinder.utils"
 
 
-class CinderScenarioTestCase(test.TestCase):
+class CinderScenarioTestCase(test.ClientsTestCase):
 
     def setUp(self):
         super(CinderScenarioTestCase, self).setUp()
@@ -43,30 +43,26 @@ class CinderScenarioTestCase(test.TestCase):
         self.useFixture(mockpatch.Patch("time.sleep"))
         self.scenario = utils.CinderScenario()
 
-    @mock.patch(CINDER_UTILS + ".CinderScenario.clients")
-    def test__list_volumes(self, mock_clients):
-        volumes_list = mock.Mock()
-        mock_clients("cinder").volumes.list.return_value = volumes_list
+    def test__list_volumes(self):
         return_volumes_list = self.scenario._list_volumes()
-        self.assertEqual(volumes_list, return_volumes_list)
+        self.assertEqual(self.clients("cinder").volumes.list.return_value,
+                         return_volumes_list)
         self._test_atomic_action_timer(self.scenario.atomic_actions(),
                                        "cinder.list_volumes")
 
-    @mock.patch(CINDER_UTILS + ".CinderScenario.clients")
-    def test__list_snapshots(self, mock_clients):
-        snapsht_lst = mock.Mock()
-        mock_clients("cinder").volume_snapshots.list.return_value = snapsht_lst
+    def test__list_snapshots(self):
         return_snapshots_list = self.scenario._list_snapshots()
-        self.assertEqual(snapsht_lst, return_snapshots_list)
+        self.assertEqual(
+            self.clients("cinder").volume_snapshots.list.return_value,
+            return_snapshots_list)
         self._test_atomic_action_timer(self.scenario.atomic_actions(),
                                        "cinder.list_snapshots")
 
-    @mock.patch(CINDER_UTILS + ".CinderScenario.clients")
-    def test__set_metadata(self, mock_clients):
+    def test__set_metadata(self):
         volume = fakes.FakeVolume()
 
         self.scenario._set_metadata(volume, sets=2, set_size=4)
-        calls = mock_clients("cinder").volumes.set_metadata.call_args_list
+        calls = self.clients("cinder").volumes.set_metadata.call_args_list
         self.assertEqual(len(calls), 2)
         for call in calls:
             call_volume, metadata = call[0]
@@ -76,13 +72,12 @@ class CinderScenarioTestCase(test.TestCase):
         self._test_atomic_action_timer(self.scenario.atomic_actions(),
                                        "cinder.set_4_metadatas_2_times")
 
-    @mock.patch(CINDER_UTILS + ".CinderScenario.clients")
-    def test__delete_metadata(self, mock_clients):
+    def test__delete_metadata(self):
         volume = fakes.FakeVolume()
 
         keys = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l"]
         self.scenario._delete_metadata(volume, keys, deletes=3, delete_size=4)
-        calls = mock_clients("cinder").volumes.delete_metadata.call_args_list
+        calls = self.clients("cinder").volumes.delete_metadata.call_args_list
         self.assertEqual(len(calls), 3)
         all_deleted = []
         for call in calls:
@@ -97,8 +92,7 @@ class CinderScenarioTestCase(test.TestCase):
         self._test_atomic_action_timer(self.scenario.atomic_actions(),
                                        "cinder.delete_4_metadatas_3_times")
 
-    @mock.patch(CINDER_UTILS + ".CinderScenario.clients")
-    def test__delete_metadata_not_enough_keys(self, mock_clients):
+    def test__delete_metadata_not_enough_keys(self):
         volume = fakes.FakeVolume()
 
         keys = ["a", "b", "c", "d", "e"]
@@ -106,14 +100,11 @@ class CinderScenarioTestCase(test.TestCase):
                           self.scenario._delete_metadata,
                           volume, keys, deletes=2, delete_size=3)
 
-    @mock.patch(CINDER_UTILS + ".CinderScenario.clients")
-    def test__create_volume(self, mock_clients):
+    def test__create_volume(self):
         CONF = cfg.CONF
-        volume = mock.Mock()
-        mock_clients("cinder").volumes.create.return_value = volume
         return_volume = self.scenario._create_volume(1)
         self.wait_for.mock.assert_called_once_with(
-            volume,
+            self.clients("cinder").volumes.create.return_value,
             is_ready=self.res_is.mock(),
             update_resource=self.gfm(),
             timeout=CONF.benchmark.cinder_volume_create_timeout,
@@ -125,22 +116,19 @@ class CinderScenarioTestCase(test.TestCase):
                                        "cinder.create_volume")
 
     @mock.patch("rally.plugins.openstack.scenarios.cinder.utils.random")
-    @mock.patch(CINDER_UTILS + ".CinderScenario.clients")
-    def test__create_volume_with_size_range(self, mock_clients, mock_random):
+    def test__create_volume_with_size_range(self, mock_random):
         CONF = cfg.CONF
-        volume = mock.Mock()
-        mock_clients("cinder").volumes.create.return_value = volume
         mock_random.randint.return_value = 3
 
         return_volume = self.scenario._create_volume(
             size={"min": 1, "max": 5},
             display_name="TestVolume")
 
-        mock_clients("cinder").volumes.create.assert_called_once_with(
+        self.clients("cinder").volumes.create.assert_called_once_with(
             3, display_name="TestVolume")
 
         self.wait_for.mock.assert_called_once_with(
-            volume,
+            self.clients("cinder").volumes.create.return_value,
             is_ready=self.res_is.mock(),
             update_resource=self.gfm(),
             timeout=CONF.benchmark.cinder_volume_create_timeout,
@@ -165,12 +153,11 @@ class CinderScenarioTestCase(test.TestCase):
                                        "cinder.delete_volume")
 
     @mock.patch("rally.plugins.openstack.scenarios.cinder.utils.random")
-    @mock.patch(CINDER_UTILS + ".CinderScenario.clients")
-    def test__extend_volume_with_size_range(self, mock_clients, mock_random):
+    def test__extend_volume_with_size_range(self, mock_random):
         CONF = cfg.CONF
         volume = mock.Mock()
         mock_random.randint.return_value = 3
-        mock_clients("cinder").volumes.extend.return_value = volume
+        self.clients("cinder").volumes.extend.return_value = volume
 
         self.scenario._extend_volume(volume, new_size={"min": 1, "max": 5})
 
@@ -186,11 +173,10 @@ class CinderScenarioTestCase(test.TestCase):
         self._test_atomic_action_timer(self.scenario.atomic_actions(),
                                        "cinder.extend_volume")
 
-    @mock.patch(CINDER_UTILS + ".CinderScenario.clients")
-    def test__extend_volume(self, mock_clients):
+    def test__extend_volume(self):
         CONF = cfg.CONF
         volume = mock.Mock()
-        mock_clients("cinder").volumes.extend.return_value = volume
+        self.clients("cinder").volumes.extend.return_value = volume
         self.scenario._extend_volume(volume, 2)
         self.wait_for.mock.assert_called_once_with(
             volume,
@@ -203,12 +189,11 @@ class CinderScenarioTestCase(test.TestCase):
         self._test_atomic_action_timer(self.scenario.atomic_actions(),
                                        "cinder.extend_volume")
 
-    @mock.patch(CINDER_UTILS + ".CinderScenario.clients")
-    def test__upload_volume_to_image(self, mock_clients):
+    def test__upload_volume_to_image(self):
         volume = mock.Mock()
         image = {"os-volume_upload_image": {"image_id": 1}}
         volume.upload_to_image.return_value = (None, image)
-        mock_clients("cinder").images.get.return_value = image
+        self.clients("cinder").images.get.return_value = image
 
         self.scenario._generate_random_name = mock.Mock(
             return_value="test_vol")
@@ -220,15 +205,11 @@ class CinderScenarioTestCase(test.TestCase):
         self.assertTrue(self.wait_for.mock.called)
         self.assertEqual(2, self.wait_for.mock.call_count)
 
-    @mock.patch(CINDER_UTILS + ".CinderScenario.clients")
-    def test__create_snapshot(self, mock_clients):
-        snapshot = mock.Mock()
-        mock_clients("cinder").volume_snapshots.create.return_value = snapshot
-
+    def test__create_snapshot(self):
         return_snapshot = self.scenario._create_snapshot("uuid", False)
 
         self.wait_for.mock.assert_called_once_with(
-            snapshot,
+            self.clients("cinder").volume_snapshots.create.return_value,
             is_ready=self.res_is.mock(),
             update_resource=self.gfm(),
             timeout=cfg.CONF.benchmark.cinder_volume_create_timeout,
@@ -252,15 +233,11 @@ class CinderScenarioTestCase(test.TestCase):
         self._test_atomic_action_timer(self.scenario.atomic_actions(),
                                        "cinder.delete_snapshot")
 
-    @mock.patch(CINDER_UTILS + ".CinderScenario.clients")
-    def test__create_backup(self, mock_clients):
-        backup = mock.Mock()
-        mock_clients("cinder").backups.create.return_value = backup
-
+    def test__create_backup(self):
         return_backup = self.scenario._create_backup("uuid")
 
         self.wait_for.mock.assert_called_once_with(
-            backup,
+            self.clients("cinder").backups.create.return_value,
             is_ready=self.res_is.mock(),
             update_resource=self.gfm(),
             timeout=cfg.CONF.benchmark.cinder_volume_create_timeout,
@@ -284,12 +261,11 @@ class CinderScenarioTestCase(test.TestCase):
         self._test_atomic_action_timer(self.scenario.atomic_actions(),
                                        "cinder.delete_backup")
 
-    @mock.patch(CINDER_UTILS + ".CinderScenario.clients")
-    def test__restore_backup(self, mock_clients):
+    def test__restore_backup(self):
         backup = mock.Mock()
         restore = mock.Mock()
-        mock_clients("cinder").restores.restore.return_value = backup
-        mock_clients("cinder").volumes.get.return_value = restore
+        self.clients("cinder").restores.restore.return_value = backup
+        self.clients("cinder").volumes.get.return_value = restore
 
         return_restore = self.scenario._restore_backup(backup.id, None)
 

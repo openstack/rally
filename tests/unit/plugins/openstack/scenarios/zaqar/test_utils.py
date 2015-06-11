@@ -21,24 +21,16 @@ from tests.unit import test
 UTILS = "rally.plugins.openstack.scenarios.zaqar.utils."
 
 
-class ZaqarScenarioTestCase(test.TestCase):
+class ZaqarScenarioTestCase(test.ClientsTestCase):
 
     @mock.patch(UTILS + "ZaqarScenario._generate_random_name",
                 return_value="kitkat")
     def test_queue_create(self, mock_gen_name):
-        queue = {}
-        fake_zaqar = fakes.FakeZaqarClient()
-        fake_zaqar.queue = mock.MagicMock(return_value=queue)
-
-        fake_clients = fakes.FakeClients()
-        fake_clients._zaqar = fake_zaqar
-        scenario = utils.ZaqarScenario(clients=fake_clients)
-
+        scenario = utils.ZaqarScenario()
         result = scenario._queue_create(name_length=10)
 
-        self.assertEqual(queue, result)
-
-        fake_zaqar.queue.assert_called_once_with("kitkat")
+        self.assertEqual(self.clients("zaqar").queue.return_value, result)
+        self.clients("zaqar").queue.assert_called_once_with("kitkat")
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "zaqar.create_queue")
 

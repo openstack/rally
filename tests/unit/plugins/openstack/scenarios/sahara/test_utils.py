@@ -28,7 +28,7 @@ CONF = cfg.CONF
 SAHARA_UTILS = "rally.plugins.openstack.scenarios.sahara.utils"
 
 
-class SaharaUtilsTestCase(test.TestCase):
+class SaharaUtilsTestCase(test.ClientsTestCase):
 
     def setUp(self):
         super(SaharaUtilsTestCase, self).setUp()
@@ -36,10 +36,9 @@ class SaharaUtilsTestCase(test.TestCase):
         CONF.set_override("cluster_check_interval", 0, "benchmark")
         CONF.set_override("job_check_interval", 0, "benchmark")
 
-    @mock.patch(SAHARA_UTILS + ".SaharaScenario.clients")
-    def test_list_node_group_templates(self, mock_clients):
+    def test_list_node_group_templates(self):
         ngts = []
-        mock_clients("sahara").node_group_templates.list.return_value = ngts
+        self.clients("sahara").node_group_templates.list.return_value = ngts
 
         scenario = utils.SaharaScenario()
         return_ngts_list = scenario._list_node_group_templates()
@@ -50,11 +49,9 @@ class SaharaUtilsTestCase(test.TestCase):
 
     @mock.patch(SAHARA_UTILS + ".SaharaScenario._generate_random_name",
                 return_value="random_name")
-    @mock.patch(SAHARA_UTILS + ".SaharaScenario.clients")
     @mock.patch(SAHARA_UTILS + ".sahara_consts")
-    def test_create_node_group_templates(self, mock_constants, mock_clients,
+    def test_create_node_group_templates(self, mock_constants,
                                          mock_random_name):
-
         scenario = utils.SaharaScenario()
         mock_processes = {
             "test_plugin": {
@@ -92,7 +89,7 @@ class SaharaUtilsTestCase(test.TestCase):
                 flavor_id="test_flavor",
                 node_processes=["p2"]
             )]
-        mock_clients("sahara").node_group_templates.create.assert_has_calls(
+        self.clients("sahara").node_group_templates.create.assert_has_calls(
             create_calls)
 
         self._test_atomic_action_timer(
@@ -102,15 +99,13 @@ class SaharaUtilsTestCase(test.TestCase):
             scenario.atomic_actions(),
             "sahara.create_worker_node_group_template")
 
-    @mock.patch(SAHARA_UTILS + ".SaharaScenario.clients")
-    def test_delete_node_group_templates(self, mock_clients):
-
+    def test_delete_node_group_templates(self):
         scenario = utils.SaharaScenario()
         ng = mock.MagicMock(id=42)
 
         scenario._delete_node_group_template(ng)
 
-        delete_mock = mock_clients("sahara").node_group_templates.delete
+        delete_mock = self.clients("sahara").node_group_templates.delete
         delete_mock.assert_called_once_with(42)
 
         self._test_atomic_action_timer(scenario.atomic_actions(),
@@ -118,14 +113,8 @@ class SaharaUtilsTestCase(test.TestCase):
 
     @mock.patch(SAHARA_UTILS + ".SaharaScenario._generate_random_name",
                 return_value="random_name")
-    @mock.patch(SAHARA_UTILS + ".SaharaScenario.clients")
     @mock.patch(SAHARA_UTILS + ".sahara_consts")
-    def test_launch_cluster(self, mock_constants,
-                            mock_clients, mock_random_name):
-
-        clients_values = mock.MagicMock(return_value=[consts.Service.NEUTRON])
-        mock_clients.services.return_value = mock.MagicMock(
-            values=clients_values)
+    def test_launch_cluster(self, mock_constants, mock_random_name):
 
         context = {
             "tenant": {
@@ -138,7 +127,10 @@ class SaharaUtilsTestCase(test.TestCase):
             }
         }
 
-        scenario = utils.SaharaScenario(context=context, clients=mock_clients)
+        clients = mock.Mock(services=mock.Mock(
+            return_value={"neutron": consts.Service.NEUTRON}))
+        scenario = utils.SaharaScenario(context=context,
+                                        clients=clients)
 
         mock_processes = {
             "test_plugin": {
@@ -188,10 +180,10 @@ class SaharaUtilsTestCase(test.TestCase):
         mock_constants.NODE_PROCESSES = mock_processes
         mock_constants.REPLICATION_CONFIGS = mock_configs
 
-        mock_clients("sahara").clusters.create.return_value = mock.MagicMock(
+        self.clients("sahara").clusters.create.return_value = mock.MagicMock(
             id="test_cluster_id")
 
-        mock_clients("sahara").clusters.get.return_value = mock.MagicMock(
+        self.clients("sahara").clusters.get.return_value = mock.MagicMock(
             status="active")
 
         scenario._launch_cluster(
@@ -208,7 +200,7 @@ class SaharaUtilsTestCase(test.TestCase):
             node_configs={"HDFS": {"local_config": "local_value"}}
         )
 
-        mock_clients("sahara").clusters.create.assert_called_once_with(
+        self.clients("sahara").clusters.create.assert_called_once_with(
             name="random_name",
             plugin_name="test_plugin",
             hadoop_version="test_version",
@@ -224,11 +216,8 @@ class SaharaUtilsTestCase(test.TestCase):
 
     @mock.patch(SAHARA_UTILS + ".SaharaScenario._generate_random_name",
                 return_value="random_name")
-    @mock.patch(SAHARA_UTILS + ".SaharaScenario.clients")
     @mock.patch(SAHARA_UTILS + ".sahara_consts")
-    def test_launch_cluster_error(self, mock_constants, mock_clients,
-                                  mock_random_name):
-
+    def test_launch_cluster_error(self, mock_constants, mock_random_name):
         scenario = utils.SaharaScenario(clients=mock.MagicMock())
         mock_processes = {
             "test_plugin": {
@@ -251,10 +240,10 @@ class SaharaUtilsTestCase(test.TestCase):
         mock_constants.NODE_PROCESSES = mock_processes
         mock_constants.REPLICATION_CONFIGS = mock_configs
 
-        mock_clients("sahara").clusters.create.return_value = mock.MagicMock(
+        self.clients("sahara").clusters.create.return_value = mock.MagicMock(
             id="test_cluster_id")
 
-        mock_clients("sahara").clusters.get.return_value = mock.MagicMock(
+        self.clients("sahara").clusters.get.return_value = mock.MagicMock(
             status="error")
 
         self.assertRaises(exceptions.SaharaClusterFailure,
@@ -270,9 +259,7 @@ class SaharaUtilsTestCase(test.TestCase):
                           node_configs={"HDFS": {"local_config":
                                                  "local_value"}})
 
-    @mock.patch(SAHARA_UTILS + ".SaharaScenario.clients")
-    def test_scale_cluster(self, mock_clients):
-
+    def test_scale_cluster(self):
         scenario = utils.SaharaScenario()
         cluster = mock.MagicMock(id=42, node_groups=[{
             "name": "random_master",
@@ -281,7 +268,7 @@ class SaharaUtilsTestCase(test.TestCase):
             "name": "random_worker",
             "count": 41
         }])
-        mock_clients("sahara").clusters.get.return_value = mock.MagicMock(
+        self.clients("sahara").clusters.get.return_value = mock.MagicMock(
             id=42,
             status="active")
 
@@ -293,25 +280,22 @@ class SaharaUtilsTestCase(test.TestCase):
         }
 
         scenario._scale_cluster(cluster, 1)
-        mock_clients("sahara").clusters.scale.assert_called_once_with(
+        self.clients("sahara").clusters.scale.assert_called_once_with(
             42, expected_scale_object)
 
-    @mock.patch(SAHARA_UTILS + ".SaharaScenario.clients")
-    def test_delete_cluster(self, mock_clients):
-
+    def test_delete_cluster(self):
         scenario = utils.SaharaScenario()
         cluster = mock.MagicMock(id=42)
-        mock_clients("sahara").clusters.get.side_effect = [
+        self.clients("sahara").clusters.get.side_effect = [
             cluster, sahara_base.APIException()
         ]
 
         scenario._delete_cluster(cluster)
-
-        delete_mock = mock_clients("sahara").clusters.delete
+        delete_mock = self.clients("sahara").clusters.delete
         delete_mock.assert_called_once_with(42)
 
         cl_get_expected = mock.call(42)
-        mock_clients("sahara").clusters.get.assert_has_calls([cl_get_expected,
+        self.clients("sahara").clusters.get.assert_has_calls([cl_get_expected,
                                                               cl_get_expected])
 
         self._test_atomic_action_timer(scenario.atomic_actions(),
@@ -319,9 +303,7 @@ class SaharaUtilsTestCase(test.TestCase):
 
     @mock.patch(SAHARA_UTILS + ".SaharaScenario._generate_random_name",
                 return_value="42")
-    @mock.patch(SAHARA_UTILS + ".SaharaScenario.clients")
-    def test_create_output_ds(self, mock_clients, mock_random_name):
-
+    def test_create_output_ds(self, mock_random_name):
         ctxt = {
             "sahara_output_conf": {
                 "output_type": "hdfs",
@@ -332,7 +314,7 @@ class SaharaUtilsTestCase(test.TestCase):
         scenario = utils.SaharaScenario(ctxt)
         scenario._create_output_ds()
 
-        mock_clients("sahara").data_sources.create.assert_called_once_with(
+        self.clients("sahara").data_sources.create.assert_called_once_with(
             name="42",
             description="",
             data_source_type="hdfs",
@@ -341,9 +323,7 @@ class SaharaUtilsTestCase(test.TestCase):
 
     @mock.patch(SAHARA_UTILS + ".SaharaScenario._generate_random_name",
                 return_value="42")
-    @mock.patch(SAHARA_UTILS + ".SaharaScenario.clients")
-    def test_create_output_ds_swift(self, mock_clients, mock_random_name):
-
+    def test_create_output_ds_swift(self, mock_random_name):
         ctxt = {
             "sahara_output_conf": {
                 "output_type": "swift",
@@ -355,14 +335,12 @@ class SaharaUtilsTestCase(test.TestCase):
         self.assertRaises(exceptions.RallyException,
                           scenario._create_output_ds)
 
-    @mock.patch(SAHARA_UTILS + ".SaharaScenario.clients")
-    def test_run_job_execution(self, mock_clients):
-
-        mock_clients("sahara").job_executions.get.side_effect = [
+    def test_run_job_execution(self):
+        self.clients("sahara").job_executions.get.side_effect = [
             mock.MagicMock(info={"status": "pending"}, id="42"),
             mock.MagicMock(info={"status": "SUCCESS"}, id="42")]
 
-        mock_clients("sahara").job_executions.create.return_value = (
+        self.clients("sahara").job_executions.create.return_value = (
             mock.MagicMock(id="42"))
 
         scenario = utils.SaharaScenario()
@@ -373,7 +351,7 @@ class SaharaUtilsTestCase(test.TestCase):
                                     configs={"k": "v"},
                                     job_idx=0)
 
-        mock_clients("sahara").job_executions.create.assert_called_once_with(
+        self.clients("sahara").job_executions.create.assert_called_once_with(
             job_id="test_job_id",
             cluster_id="test_cluster_id",
             input_id="test_input_id",
@@ -382,18 +360,16 @@ class SaharaUtilsTestCase(test.TestCase):
         )
 
         je_get_expected = mock.call("42")
-        mock_clients("sahara").job_executions.get.assert_has_calls(
+        self.clients("sahara").job_executions.get.assert_has_calls(
             [je_get_expected, je_get_expected]
         )
 
-    @mock.patch(SAHARA_UTILS + ".SaharaScenario.clients")
-    def test_run_job_execution_fail(self, mock_clients):
-
-        mock_clients("sahara").job_executions.get.side_effect = [
+    def test_run_job_execution_fail(self):
+        self.clients("sahara").job_executions.get.side_effect = [
             mock.MagicMock(info={"status": "pending"}, id="42"),
             mock.MagicMock(info={"status": "killed"}, id="42")]
 
-        mock_clients("sahara").job_executions.create.return_value = (
+        self.clients("sahara").job_executions.create.return_value = (
             mock.MagicMock(id="42"))
 
         scenario = utils.SaharaScenario()
@@ -406,7 +382,7 @@ class SaharaUtilsTestCase(test.TestCase):
                           configs={"k": "v"},
                           job_idx=0)
 
-        mock_clients("sahara").job_executions.create.assert_called_once_with(
+        self.clients("sahara").job_executions.create.assert_called_once_with(
             job_id="test_job_id",
             cluster_id="test_cluster_id",
             input_id="test_input_id",
