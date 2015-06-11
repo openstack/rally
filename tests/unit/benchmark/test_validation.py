@@ -15,6 +15,7 @@
 
 import os
 
+import ddt
 from glanceclient import exc as glance_exc
 import mock
 from novaclient import exceptions as nova_exc
@@ -70,6 +71,7 @@ class ValidationUtilsTestCase(test.TestCase):
         self.assertFalse(validator(None, None, None).is_valid)
 
 
+@ddt.ddt
 class ValidatorsTestCase(test.TestCase):
 
     def _unwrap_validator(self, validator, *args, **kwargs):
@@ -335,6 +337,23 @@ class ValidatorsTestCase(test.TestCase):
         }
         result = validation._get_validated_flavor(config, clients, "flavor")
         self.assertFalse(result[0].is_valid, result[0].msg)
+
+    @ddt.data("nfS", "Cifs", "GLUSTERFS", "hdfs")
+    def test_validate_share_proto_valid(self, share_proto):
+        validator = self._unwrap_validator(validation.validate_share_proto)
+        result = validator(
+            {"args": {"share_proto": share_proto}}, "clients", "deployment")
+        self.assertTrue(result.is_valid, result.msg)
+
+    @ddt.data(
+        *([{"args": {"share_proto": v}} for v in (
+           None, "", "nfsfoo", "foonfs", "nfscifs", )] +
+          [{}, {"args": {}}])
+    )
+    def test_validate_share_proto_invalid(self, config):
+        validator = self._unwrap_validator(validation.validate_share_proto)
+        result = validator(config, "clients", "deployment")
+        self.assertFalse(result.is_valid, result.msg)
 
     def test_image_exists(self):
         validator = self._unwrap_validator(validation.image_exists, "param")

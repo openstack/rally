@@ -207,6 +207,24 @@
 # (floating point value)
 #heat_stack_resume_poll_interval = 1.0
 
+# Delay between creating Manila share and polling for its status.
+# (floating point value)
+#manila_share_create_prepoll_delay = 2.0
+
+# Timeout for Manila share creation. (floating point value)
+#manila_share_create_timeout = 300.0
+
+# Interval between checks when waiting for Manila share creation.
+# (floating point value)
+#manila_share_create_poll_interval = 3.0
+
+# Timeout for Manila share deletion. (floating point value)
+#manila_share_delete_timeout = 180.0
+
+# Interval between checks when waiting for Manila share deletion.
+# (floating point value)
+#manila_share_delete_poll_interval = 2.0
+
 # Time to sleep after start before polling for status (floating point
 # value)
 #nova_server_start_prepoll_delay = 0.0

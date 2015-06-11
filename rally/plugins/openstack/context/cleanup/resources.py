@@ -250,6 +250,17 @@ class CinderQuotas(QuotaMixin, base.ResourceManager):
     pass
 
 
+# MANILA
+
+_manila_order = get_order(450)
+
+
+@base.resource("manila", "shares", order=next(_manila_order),
+               tenant_resource=True)
+class ManilaShare(base.ResourceManager):
+    pass
+
+
 # GLANCE
 
 @base.resource("glance", "images", order=500, tenant_resource=True)

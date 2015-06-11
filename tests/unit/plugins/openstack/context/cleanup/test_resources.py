@@ -435,3 +435,26 @@ class SwiftContainerTestCase(test.TestCase):
         mock_manager().get_account.return_value = ("header", containers)
         self.assertEqual(len(containers),
                          len(resources.SwiftContainer().list()))
+
+
+class ManilaShareTestCase(test.TestCase):
+
+    def test_list(self):
+        share_resource = resources.ManilaShare()
+        share_resource._manager = mock.MagicMock()
+
+        share_resource.list()
+
+        self.assertEqual("shares", share_resource._resource)
+        share_resource._manager.return_value.list.assert_called_once_with()
+
+    def test_delete(self):
+        share_resource = resources.ManilaShare()
+        share_resource._manager = mock.MagicMock()
+        share_resource.id = lambda: "fake_id"
+
+        share_resource.delete()
+
+        self.assertEqual("shares", share_resource._resource)
+        share_resource._manager.return_value.delete.assert_called_once_with(
+            "fake_id")
