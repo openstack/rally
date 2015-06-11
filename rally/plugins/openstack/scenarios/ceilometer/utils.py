@@ -59,9 +59,9 @@ class CeilometerScenario(base.Scenario):
         :param kwargs: contains optional features of alarm to be created
         :returns: alarm
         """
-        kwargs.update({"meter_name": meter_name,
-                       "threshold": threshold})
         alarm_dict = self._get_alarm_dict(**kwargs)
+        alarm_dict.update({"meter_name": meter_name,
+                           "threshold": threshold})
         alarm = self.clients("ceilometer").alarms.create(**alarm_dict)
         return alarm
 
@@ -117,7 +117,7 @@ class CeilometerScenario(base.Scenario):
                                     .get_from_manager(),
                                     timeout=timeout, check_interval=1)
 
-    @base.atomic_action_timer("ceilometer.get_meters")
+    @base.atomic_action_timer("ceilometer.list_meters")
     def _list_meters(self):
         """Get list of user's meters."""
         return self.clients("ceilometer").meters.list()
@@ -213,7 +213,7 @@ class CeilometerScenario(base.Scenario):
                        "counter_volume": counter_volume,
                        "resource_id": resource_id if resource_id
                        else self._generate_random_name(
-                           prefix="rally_ctx_resource_")})
+                           prefix="rally_resource_")})
         return self.clients("ceilometer").samples.create(**kwargs)
 
     @base.atomic_action_timer("ceilometer.query_samples")
