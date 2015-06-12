@@ -18,7 +18,7 @@ import mock
 from rally.benchmark.scenarios import base as scenario_base
 from rally.benchmark import sla
 from rally.cli.commands import info
-from rally import deploy
+from rally.deploy import engine
 from rally.deploy.engines import existing as existing_cloud
 from rally.deploy.serverprovider import provider
 from rally.deploy.serverprovider.providers import existing as existing_servers
@@ -30,7 +30,7 @@ from tests.unit import test
 
 SCENARIO = "rally.cli.commands.info.scenario_base.Scenario"
 SLA = "rally.cli.commands.info.sla.SLA"
-ENGINE = "rally.cli.commands.info.deploy.EngineFactory"
+ENGINE = "rally.cli.commands.info.engine.EngineFactory"
 PROVIDER = "rally.cli.commands.info.provider.ProviderFactory"
 UTILS = "rally.cli.commands.info.utils"
 DISCOVER = "rally.cli.commands.info.discover"
@@ -119,7 +119,7 @@ class InfoCommandsTestCase(test.TestCase):
                 return_value=[existing_cloud.ExistingCloud])
     def test_DeploymentEngines(self, mock_itersubclasses):
         status = self.info.DeploymentEngines()
-        mock_itersubclasses.assert_called_with(deploy.EngineFactory)
+        mock_itersubclasses.assert_called_with(engine.EngineFactory)
         self.assertIsNone(status)
 
     @mock.patch(DISCOVER + ".itersubclasses",

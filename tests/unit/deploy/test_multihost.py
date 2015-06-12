@@ -17,7 +17,7 @@
 import mock
 
 from rally import consts
-from rally import deploy
+from rally.deploy import engine
 from tests.unit import fakes
 from tests.unit import test
 
@@ -49,8 +49,8 @@ class TestMultihostEngine(test.TestCase):
             uuid="905b2f16-6453-4b86-8ba5-6d32025fcfa6",
             config=self.config,
         )
-        self.engine = deploy.engine.EngineFactory.get_engine("MultihostEngine",
-                                                             self.deployment)
+        self.engine = engine.EngineFactory.get_engine("MultihostEngine",
+                                                      self.deployment)
 
     @mock.patch(MOD + "objects.Deployment")
     @mock.patch(MOD + "engine.EngineFactory")

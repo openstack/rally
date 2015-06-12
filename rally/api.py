@@ -25,7 +25,7 @@ from rally.benchmark import engine
 from rally.common.i18n import _
 from rally.common import log as logging
 from rally import consts
-from rally import deploy
+from rally.deploy import engine as deploy_engine
 from rally import exceptions
 from rally import objects
 from rally.verification.tempest import tempest
@@ -51,7 +51,7 @@ class Deployment(object):
                 LOG.exception(e)
             raise
 
-        deployer = deploy.EngineFactory.get_engine(
+        deployer = deploy_engine.EngineFactory.get_engine(
             deployment["config"]["type"], deployment)
         try:
             deployer.validate()
@@ -77,7 +77,7 @@ class Deployment(object):
         # TODO(akscram): Check that the deployment have got a status that
         #                is equal to "*->finished" or "deploy->inconsistent".
         deployment = objects.Deployment.get(deployment)
-        deployer = deploy.EngineFactory.get_engine(
+        deployer = deploy_engine.EngineFactory.get_engine(
             deployment["config"]["type"], deployment)
 
         tempest.Tempest(deployment["uuid"]).uninstall()
@@ -92,7 +92,7 @@ class Deployment(object):
         :param deployment: UUID or name of the deployment
         """
         deployment = objects.Deployment.get(deployment)
-        deployer = deploy.EngineFactory.get_engine(
+        deployer = deploy_engine.EngineFactory.get_engine(
             deployment["config"]["type"], deployment)
         with deployer:
             deployer.make_cleanup()
@@ -247,9 +247,9 @@ class Verification(object):
                                    tempest_config=tempest_config)
         if not verifier.is_installed():
             print("Tempest is not installed for specified deployment.")
-            print("Installing Tempest for deployment %s" % deploy)
+            print("Installing Tempest for deployment %s" % deployment_uuid)
             verifier.install()
-        LOG.info("Starting verification of deployment: %s" % deploy)
+        LOG.info("Starting verification of deployment: %s" % deployment_uuid)
 
         verification.set_running()
         verifier.verify(set_name=set_name, regex=regex)

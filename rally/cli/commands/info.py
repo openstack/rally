@@ -54,7 +54,7 @@ from rally.benchmark import sla
 from rally.cli import cliutils
 from rally.common.plugin import discover
 from rally.common import utils
-from rally import deploy
+from rally.deploy import engine
 from rally.deploy.serverprovider import provider
 from rally import exceptions
 
@@ -173,7 +173,7 @@ class InfoCommands(object):
 
     def DeploymentEngines(self):
         """Get information about deploy engines available in Rally."""
-        engines = self._get_descriptions(deploy.EngineFactory)
+        engines = self._get_descriptions(engine.EngineFactory)
         info = (self._make_header("Rally - Deployment engines") +
                 "\n\n"
                 "Rally is an OpenStack benchmarking system. Before starting "
@@ -264,7 +264,7 @@ class InfoCommands(object):
         scenario_methods = list(set(s.split(".")[1] for s in scenarios))
         sla_info = [cls.get_name() for cls in sla.SLA.get_all()]
         deploy_engines = [cls.get_name() for cls in
-                          deploy.EngineFactory.get_all()]
+                          engine.EngineFactory.get_all()]
         server_providers = [cls.get_name() for cls in
                             provider.ProviderFactory.get_all()]
 
@@ -341,7 +341,7 @@ class InfoCommands(object):
 
     def _get_deploy_engine_info(self, query):
         try:
-            deploy_engine = deploy.EngineFactory.get(query)
+            deploy_engine = engine.EngineFactory.get(query)
             header = "%s (deploy engine)" % deploy_engine.get_name()
             info = self._make_header(header)
             info += "\n\n"
