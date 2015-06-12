@@ -15,12 +15,9 @@
 
 import jsonschema
 
-from rally.deploy import serverprovider
+from rally.deploy.serverprovider import provider
 from rally.deploy.serverprovider.providers import existing
 from tests.unit import test
-
-
-ProviderFactory = serverprovider.ProviderFactory
 
 
 class ExistingServersTestCase(test.TestCase):
@@ -31,9 +28,9 @@ class ExistingServersTestCase(test.TestCase):
                                        {"user": "user", "host": "host2"}]}
 
     def test_create_servers(self):
-        provider = serverprovider.ProviderFactory.get_provider(self.config,
-                                                               None)
-        credentials = provider.create_servers()
+        _provider = provider.ProviderFactory.get_provider(self.config,
+                                                          None)
+        credentials = _provider.create_servers()
         self.assertEqual(["host1", "host2"], [s.host for s in credentials])
         self.assertEqual(["user", "user"], [s.user for s in credentials])
 

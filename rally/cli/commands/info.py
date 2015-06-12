@@ -52,9 +52,10 @@ from __future__ import print_function
 from rally.benchmark.scenarios import base as scenario_base
 from rally.benchmark import sla
 from rally.cli import cliutils
+from rally.common.plugin import discover
 from rally.common import utils
 from rally import deploy
-from rally.deploy import serverprovider
+from rally.deploy.serverprovider import provider
 from rally import exceptions
 
 
@@ -205,7 +206,7 @@ class InfoCommands(object):
 
     def ServerProviders(self):
         """Get information about server providers available in Rally."""
-        providers = self._get_descriptions(serverprovider.ProviderFactory)
+        providers = self._get_descriptions(provider.ProviderFactory)
         info = (self._make_header("Rally - Server providers") +
                 "\n\n"
                 "Rally is an OpenStack benchmarking system. Before starting "
@@ -238,7 +239,7 @@ class InfoCommands(object):
 
     def _get_descriptions(self, base_cls, subclass_filter=None):
         descriptions = []
-        subclasses = utils.itersubclasses(base_cls)
+        subclasses = discover.itersubclasses(base_cls)
         if subclass_filter:
             subclasses = filter(subclass_filter, subclasses)
         for entity in subclasses:
@@ -265,7 +266,7 @@ class InfoCommands(object):
         deploy_engines = [cls.get_name() for cls in
                           deploy.EngineFactory.get_all()]
         server_providers = [cls.get_name() for cls in
-                            serverprovider.ProviderFactory.get_all()]
+                            provider.ProviderFactory.get_all()]
 
         candidates = (scenarios + scenario_groups + scenario_methods +
                       sla_info + deploy_engines + server_providers)
@@ -351,7 +352,7 @@ class InfoCommands(object):
 
     def _get_server_provider_info(self, query):
         try:
-            server_provider = serverprovider.ProviderFactory.get(query)
+            server_provider = provider.ProviderFactory.get(query)
             header = "%s (server provider)" % server_provider.get_name()
             info = self._make_header(header)
             info += "\n\n"

@@ -20,7 +20,7 @@ import yaml
 
 from rally import api
 from rally.benchmark import engine
-import rally.common.utils as rutils
+from rally.common.plugin import discover
 from tests.unit import test
 
 
@@ -31,7 +31,7 @@ class RallyJobsTestCase(test.TestCase):
     @mock.patch("rally.benchmark.engine.BenchmarkEngine"
                 "._validate_config_semantic")
     def test_schema_is_valid(self, mock_validate):
-        rutils.load_plugins(os.path.join(self.rally_jobs_path, "plugins"))
+        discover.load_plugins(os.path.join(self.rally_jobs_path, "plugins"))
 
         for filename in ["rally.yaml", "rally-neutron.yaml",
                          "rally-zaqar.yaml", "rally-designate.yaml"]:

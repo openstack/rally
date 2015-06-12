@@ -18,6 +18,7 @@ import time
 from rally.common import broker
 from rally.common.i18n import _
 from rally.common import log as logging
+from rally.common.plugin import discover
 from rally.common import utils as rutils
 from rally import osclients
 from rally.plugins.openstack.context.cleanup import base
@@ -196,7 +197,7 @@ def list_resource_names(admin_required=None):
                            True -> returns only admin ResourceManagers
                            False -> returns only non admin ResourceManagers
     """
-    res_mgrs = rutils.itersubclasses(base.ResourceManager)
+    res_mgrs = discover.itersubclasses(base.ResourceManager)
     if admin_required is not None:
         res_mgrs = filter(lambda cls: cls._admin_required == admin_required,
                           res_mgrs)
@@ -221,7 +222,7 @@ def find_resource_managers(names=None, admin_required=None):
     names = set(names or [])
 
     resource_managers = []
-    for manager in rutils.itersubclasses(base.ResourceManager):
+    for manager in discover.itersubclasses(base.ResourceManager):
         if admin_required is not None:
             if admin_required != manager._admin_required:
                 continue

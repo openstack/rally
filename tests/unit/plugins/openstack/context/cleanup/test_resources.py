@@ -17,7 +17,7 @@ from boto import exception as boto_exception
 import mock
 from neutronclient.common import exceptions as neutron_exceptions
 
-from rally.common import utils
+from rally.common.plugin import discover
 from rally.plugins.openstack.context.cleanup import base
 from rally.plugins.openstack.context.cleanup import resources
 from rally.plugins.openstack.scenarios.keystone import utils as keystone_utils
@@ -30,7 +30,7 @@ class AllResourceManagerTestCase(test.TestCase):
 
     def test_res_manager_special_field(self):
 
-        for res_mgr in utils.itersubclasses(base.ResourceManager):
+        for res_mgr in discover.itersubclasses(base.ResourceManager):
             manager_name = "%s.%s" % (res_mgr.__module__, res_mgr.__name__)
 
             fields = filter(lambda x: not x.startswith("__"), dir(res_mgr))

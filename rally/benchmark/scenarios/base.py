@@ -22,6 +22,7 @@ import time
 from rally.benchmark import functional
 from rally.common import costilius
 from rally.common import log as logging
+from rally.common.plugin import discover
 from rally.common import utils
 from rally import consts
 from rally import exceptions
@@ -72,7 +73,7 @@ class Scenario(functional.FunctionalMixin):
     @staticmethod
     def get_by_name(name):
         """Returns Scenario class by name."""
-        for scenario in utils.itersubclasses(Scenario):
+        for scenario in discover.itersubclasses(Scenario):
             if name == scenario.__name__:
                 return scenario
         raise exceptions.NoSuchScenario(name=name)
@@ -97,7 +98,7 @@ class Scenario(functional.FunctionalMixin):
             if Scenario.is_scenario(scenario_cls, scenario_name):
                 return getattr(scenario_cls, scenario_name)
         else:
-            for scenario_cls in utils.itersubclasses(Scenario):
+            for scenario_cls in discover.itersubclasses(Scenario):
                 if Scenario.is_scenario(scenario_cls, name):
                     return getattr(scenario_cls, name)
         raise exceptions.NoSuchScenario(name=name)
@@ -112,7 +113,7 @@ class Scenario(functional.FunctionalMixin):
         :param scenario_cls: the base class for searching scenarios in
         :returns: List of strings
         """
-        scenario_classes = (list(utils.itersubclasses(scenario_cls)) +
+        scenario_classes = (list(discover.itersubclasses(scenario_cls)) +
                             [scenario_cls])
         benchmark_scenarios = [
             ["%s.%s" % (scenario.__name__, func)

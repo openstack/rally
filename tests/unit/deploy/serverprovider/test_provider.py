@@ -18,12 +18,9 @@ import mock
 import six
 
 from rally.common import sshutils
-from rally.deploy import serverprovider
+from rally.deploy.serverprovider import provider
 from rally import exceptions
 from tests.unit import test
-
-
-ProviderFactory = serverprovider.ProviderFactory
 
 
 class ProviderMixIn(object):
@@ -34,7 +31,7 @@ class ProviderMixIn(object):
         pass
 
 
-class ProviderA(ProviderMixIn, ProviderFactory):
+class ProviderA(ProviderMixIn, provider.ProviderFactory):
     """Fake server provider.
 
     Used for tests.
@@ -42,7 +39,7 @@ class ProviderA(ProviderMixIn, ProviderFactory):
     pass
 
 
-class ProviderB(ProviderMixIn, ProviderFactory):
+class ProviderB(ProviderMixIn, provider.ProviderFactory):
     """Fake server provider.
 
     Used for tests.
@@ -63,18 +60,18 @@ FAKE_PROVIDERS = [ProviderA, ProviderB, ProviderC]
 
 class ProviderTestCase(test.TestCase):
 
-    @mock.patch.object(ProviderFactory, "validate")
+    @mock.patch.object(provider.ProviderFactory, "validate")
     def test_init(self, fake_validate):
         ProviderA(None, None)
         fake_validate.assert_called_once_with()
 
     def test_get_provider_not_found(self):
         self.assertRaises(exceptions.PluginNotFound,
-                          ProviderFactory.get_provider,
+                          provider.ProviderFactory.get_provider,
                           {"type": "fail"}, None)
 
     def test_vm_prvoider_factory_is_abstract(self):
-        self.assertRaises(TypeError, ProviderFactory)
+        self.assertRaises(TypeError, provider.ProviderFactory)
 
 
 class ServerTestCase(test.TestCase):
@@ -84,15 +81,15 @@ class ServerTestCase(test.TestCase):
         self.keys = ["host", "user", "key", "password"]
 
     def test_init_server_dto(self):
-        server = serverprovider.Server(*self.vals)
+        server = provider.Server(*self.vals)
         for k, v in six.iteritems(dict(zip(self.keys, self.vals))):
             self.assertEqual(getattr(server, k), v)
         self.assertIsInstance(server.ssh, sshutils.SSH)
 
     def test_credentials(self):
-        server_one = serverprovider.Server(*self.vals)
+        server_one = provider.Server(*self.vals)
         creds = server_one.get_credentials()
-        server_two = serverprovider.Server.from_credentials(creds)
+        server_two = provider.Server.from_credentials(creds)
         for k in self.keys:
             self.assertEqual(getattr(server_one, k), getattr(server_two, k))
 
@@ -101,8 +98,8 @@ class ResourceManagerTestCase(test.TestCase):
     def setUp(self):
         super(ResourceManagerTestCase, self).setUp()
         self.deployment = mock.Mock()
-        self.resources = serverprovider.ResourceManager(self.deployment,
-                                                        "provider")
+        self.resources = provider.ResourceManager(self.deployment,
+                                                  "provider")
 
     def test_create(self):
         self.resources.create("info", type="type")

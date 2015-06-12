@@ -275,7 +275,7 @@ class ResourceManagerTestCase(test.TestCase):
         mock_iter.assert_called_once_with(base.ResourceManager)
         mock_iter.reset_mock()
 
-    @mock.patch("%s.rutils.itersubclasses" % BASE)
+    @mock.patch("%s.discover.itersubclasses" % BASE)
     def test_list_resource_names(self, mock_iter):
         mock_iter.return_value = [
             self._get_res_mock(_service="fake", _resource="1",
@@ -292,7 +292,7 @@ class ResourceManagerTestCase(test.TestCase):
         self._list_res_names_helper(["fake", "other", "fake.2", "other.2"],
                                     False, mock_iter)
 
-    @mock.patch("%s.rutils.itersubclasses" % BASE)
+    @mock.patch("%s.discover.itersubclasses" % BASE)
     def test_find_resource_managers(self, mock_iter):
         mock_iter.return_value = [
             self._get_res_mock(_service="fake", _resource="1", _order=1,
