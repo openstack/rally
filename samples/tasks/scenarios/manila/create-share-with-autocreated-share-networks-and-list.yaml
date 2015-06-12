@@ -1,0 +1,51 @@
+{% set use_security_services = use_security_services or False %}
+---
+  ManilaShares.create_and_list_share:
+    -
+      args:
+        share_proto: "nfs"
+        size: 1
+        min_sleep: 1
+        max_sleep: 2
+      runner:
+        type: "constant"
+        times: 2
+        concurrency: 2
+      context:
+        quotas:
+          manila:
+            shares: -1
+            gigabytes: -1
+            share_networks: -1
+        users:
+          tenants: 2
+          users_per_tenant: 1
+          user_choice_method: "round_robin"
+        network:
+          networks_per_tenant: 1
+          start_cidr: "99.0.0.0/24"
+        manila_share_networks:
+          use_share_networks: True
+        {% if use_security_services %}
+        manila_security_services:
+          security_services: [
+            {"security_service_type": "ldap",
+             "server": "LDAP server address",
+             "user": "User that will be used",
+             "password": "Password for specified user"},
+            {"security_service_type": "kerberos",
+             "dns_ip": "IP address of DNS service to be used",
+             "server": "Kerberos server address",
+             "domain": "Kerberos realm",
+             "user": "User that will be used",
+             "password": "Password for specified user"},
+            {"security_service_type": "active_directory",
+             "dns_ip": "IP address of DNS service to be used",
+             "domain": "Domain from 'Active Directory'",
+             "user": "User from 'Active Directory'",
+             "password": "password for specified user"},
+          ]
+        {% endif %}
+      sla:
+        failure_rate:
+          max: 0

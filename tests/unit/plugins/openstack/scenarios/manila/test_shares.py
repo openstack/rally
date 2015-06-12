@@ -191,3 +191,21 @@ class ManilaSharesTestCase(test.ScenarioTestCase):
         scenario._add_security_service_to_share_network.assert_has_calls([
             mock.call(scenario._create_share_network.return_value,
                       scenario._create_security_service.return_value)])
+
+    @ddt.data(
+        {"share_proto": "nfs", "size": 3, "detailed": True},
+        {"share_proto": "cifs", "size": 4, "detailed": False,
+         "share_network": "foo", "share_type": "bar"},
+    )
+    def test_create_and_list_share(self, params):
+        scenario = shares.CreateAndListShare()
+        scenario._create_share = mock.MagicMock()
+        scenario.sleep_between = mock.MagicMock()
+        scenario._list_shares = mock.MagicMock()
+
+        scenario.run(min_sleep=3, max_sleep=4, **params)
+
+        detailed = params.pop("detailed")
+        scenario._create_share.assert_called_once_with(**params)
+        scenario.sleep_between.assert_called_once_with(3, 4)
+        scenario._list_shares.assert_called_once_with(detailed=detailed)
