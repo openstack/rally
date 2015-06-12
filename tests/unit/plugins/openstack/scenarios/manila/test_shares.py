@@ -148,3 +148,37 @@ class ManilaSharesTestCase(test.TestCase):
 
         scenario._list_share_servers.assert_called_once_with(
             search_opts=search_opts)
+
+    @ddt.data(
+        {"security_service_type": "fake_type"},
+        {"name": "foo_name",
+         "security_service_type": "fake_type",
+         "dns_ip": "fake_dns_ip",
+         "server": "fake_server",
+         "domain": "fake_domain",
+         "user": "fake_user",
+         "password": "fake_password",
+         "description": "fake_description"},
+    )
+    def test_create_security_service_and_delete(self, params):
+        fake_ss = mock.MagicMock()
+        scenario = shares.ManilaShares()
+        scenario._create_security_service = mock.MagicMock(
+            return_value=fake_ss)
+        scenario._delete_security_service = mock.MagicMock()
+        expected_params = {
+            "security_service_type": params.get("security_service_type"),
+            "dns_ip": params.get("dns_ip"),
+            "server": params.get("server"),
+            "domain": params.get("domain"),
+            "user": params.get("user"),
+            "password": params.get("password"),
+            "name": params.get("name"),
+            "description": params.get("description"),
+        }
+
+        scenario.create_security_service_and_delete(**params)
+
+        scenario._create_security_service.assert_called_once_with(
+            **expected_params)
+        scenario._delete_security_service.assert_called_once_with(fake_ss)
