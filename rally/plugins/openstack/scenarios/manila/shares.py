@@ -166,3 +166,19 @@ class ManilaShares(utils.ManilaScenario):
             description=description,
         )
         self._delete_security_service(security_service)
+
+    @validation.required_services(consts.Service.MANILA)
+    @validation.required_openstack(users=True)
+    @base.scenario(context={"cleanup": ["manila"]})
+    def attach_security_service_to_share_network(self,
+                                                 security_service_type="ldap"):
+        """Attaches security service to share network.
+
+        :param security_service_type: type of security service to use.
+            Should be one of following: 'ldap', 'kerberos' or
+            'active_directory'.
+        """
+        sn = self._create_share_network()
+        ss = self._create_security_service(
+            security_service_type=security_service_type)
+        self._add_security_service_to_share_network(sn, ss)

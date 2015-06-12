@@ -217,3 +217,17 @@ class ManilaScenario(base.Scenario):
             update_resource=utils.get_from_manager(),
             timeout=CONF.benchmark.manila_share_delete_timeout,
             check_interval=CONF.benchmark.manila_share_delete_poll_interval)
+
+    @base.atomic_action_timer("manila.add_security_service_to_share_network")
+    def _add_security_service_to_share_network(self, share_network,
+                                               security_service):
+        """Associate given security service with a share network.
+
+        :param share_network: ID or instance of :class:`ShareNetwork`.
+        :param security_service: ID or instance of :class:`SecurityService`.
+        :returns: instance of :class:`ShareNetwork`.
+        """
+        share_network = self.clients(
+            "manila").share_networks.add_security_service(
+                share_network, security_service)
+        return share_network
