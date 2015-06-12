@@ -76,6 +76,10 @@ class RoleGeneratorTestCase(test.TestCase):
     @mock.patch("rally.plugins.openstack.context.roles.osclients")
     def test_remove_role(self, mock_osclients):
         role = mock.MagicMock()
+        fc = fakes.FakeClients()
+        mock_osclients.Clients.return_value = fc
+        self.create_default_roles_and_patch_add_remove_functions(fc)
+
         ctx = roles.RoleGenerator(self.context)
         ctx.context["users"] = [{"id": "u1", "tenant_id": "t1"},
                                 {"id": "u2", "tenant_id": "t2"}]

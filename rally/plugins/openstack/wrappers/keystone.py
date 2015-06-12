@@ -94,6 +94,14 @@ class KeystoneWrapper(object):
         """List all roles."""
         return map(KeystoneWrapper._wrap_role, self.client.roles.list())
 
+    @abc.abstractmethod
+    def add_role(self, role_id, user_id, project_id):
+        """Assign role to user."""
+
+    @abc.abstractmethod
+    def remove_role(self, role_id, user_id, project_id):
+        """Remove role from user."""
+
     @staticmethod
     def _wrap_service(service):
         return Service(id=service.id, name=service.name)
@@ -142,6 +150,12 @@ class KeystoneV2Wrapper(KeystoneWrapper):
     def list_projects(self):
         return map(KeystoneV2Wrapper._wrap_v2_tenant,
                    self.client.tenants.list())
+
+    def add_role(self, user_id, role_id, project_id):
+        self.client.roles.add_user_role(user_id, role_id, tenant=project_id)
+
+    def remove_role(self, user_id, role_id, project_id):
+        self.client.roles.remove_user_role(user_id, role_id, tenant=project_id)
 
 
 class KeystoneV3Wrapper(KeystoneWrapper):
@@ -203,6 +217,12 @@ class KeystoneV3Wrapper(KeystoneWrapper):
     def list_projects(self):
         return map(KeystoneV3Wrapper._wrap_v3_project,
                    self.client.projects.list())
+
+    def add_role(self, role_id, user_id, project_id):
+        self.client.roles.grant(role_id, user=user_id, project=project_id)
+
+    def remove_role(self, role_id, user_id, project_id):
+        self.client.roles.revoke(role_id, user=user_id, project=project_id)
 
 
 def wrap(client):
