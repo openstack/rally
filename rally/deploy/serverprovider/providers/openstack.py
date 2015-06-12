@@ -220,10 +220,8 @@ class OpenStackProvider(provider.ProviderFactory):
             try:
                 self.nova.servers.delete(resource["info"]["id"])
             except novaclient.exceptions.NotFound:
-                LOG.warning(
-                    "Nova Instance: %(id)s not found,"
-                    " so not deleting." % dict(id=resource["info"]["id"])
-                )
+                LOG.warning("Nova instance %s not found, so not deleting." %
+                            resource["info"]["id"])
             try:
                 self.resources.delete(resource.id)
             except exceptions.ResourceNotFound:
@@ -240,10 +238,8 @@ class OpenStackProvider(provider.ProviderFactory):
             try:
                 self.nova.keypairs.delete(resource["info"]["id"])
             except novaclient.exceptions.NotFound:
-                LOG.warning(
-                    "Nova keypair: %(id)s not found,"
-                    " so not deleting." % dict(id=resource["info"]["id"])
-                )
+                LOG.warning("Nova keypair %s not found, so not deleting." %
+                            resource["info"]["id"])
             try:
                 self.resources.delete(resource.id)
             except exceptions.ResourceNotFound:

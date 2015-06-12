@@ -10,6 +10,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import tokenize
+
+import six
+
 from tests.hacking import checks
 from tests.unit import test
 
@@ -260,3 +264,45 @@ class HackingTestCase(test.TestCase):
         ]
         self._assert_good_samples(checks.check_no_constructor_data_struct,
                                   good_struct)
+
+    def test_check_dict_formatting_in_string(self):
+        bad = [
+            "\"%(a)s\" % d",
+            "\"Split across \"\n\"multiple lines: %(a)f\" % d",
+            "\"%(a)X split across \"\n\"multiple lines\" % d",
+            "\"%(a)-5.2f: Split %(\"\n\"a)#Lu stupidly\" % d",
+            "\"Comment between \"  # wtf\n\"split lines: %(a) -6.2f\" % d",
+            "\"Two strings\" + \" added: %(a)-6.2f\" % d",
+            "\"half legit (%(a)s %(b)s)\" % d + \" half bogus: %(a)s\" % d",
+            "(\"Parenthesized: %(a)s\") % d",
+            "(\"Parenthesized \"\n\"concatenation: %(a)s\") % d",
+            "(\"Parenthesized \" + \"addition: %(a)s\") % d",
+            "\"Complete %s\" % (\"foolisness: %(a)s%(a)s\" % d)",
+            "\"Modulus %(a)s\" % {\"a\": (5 % 3)}"
+        ]
+        for sample in bad:
+            sample = "print(%s)" % sample
+            tokens = tokenize.generate_tokens(
+                six.moves.StringIO(sample).readline)
+            self.assertEqual(
+                1,
+                len(list(checks.check_dict_formatting_in_string(sample,
+                                                                tokens))))
+
+        sample = "print(\"%(a)05.2lF\" % d + \" added: %(a)s\" % d)"
+        tokens = tokenize.generate_tokens(six.moves.StringIO(sample).readline)
+        self.assertEqual(
+            2,
+            len(list(checks.check_dict_formatting_in_string(sample, tokens))))
+
+        good = [
+            "\"This one is okay: %(a)s %(b)s\" % d",
+            "\"So is %(a)s\"\n\"this one: %(b)s\" % d"
+        ]
+        for sample in good:
+            sample = "print(%s)" % sample
+            tokens = tokenize.generate_tokens(
+                six.moves.StringIO(sample).readline)
+            self.assertEqual(
+                [],
+                list(checks.check_dict_formatting_in_string(sample, tokens)))

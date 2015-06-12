@@ -98,8 +98,7 @@ class AllowSSH(context.Context):
             self.config)
         use_sg, msg = net_wrapper.supports_security_group()
         if not use_sg:
-            LOG.info(_("Security group context is disabled: %(message)s")
-                     % {"message": msg})
+            LOG.info(_("Security group context is disabled: %s") % msg)
             return
 
         secgroup_name = "%s_%s" % (SSH_GROUP_NAME,

@@ -46,8 +46,8 @@ class VirshProviderTestCase(test.TestCase):
         mock_subp.check_output.return_value = "10.0.0.1"
         mock_ipaddress.return_value = "10.0.0.2"
         server = self.provider.create_vm("name")
-        script_path = "%(virsh_path)s/virsh/get_domain_ip.sh" % dict(
-            virsh_path=os.path.split(virsh.__file__)[0])
+        script_path = ("%s/virsh/get_domain_ip.sh" %
+                       os.path.split(virsh.__file__)[0])
         mock_subp.assert_has_calls([
             mock.call.check_call("virt-clone --connect=qemu+ssh://user@host/"
                                  "system -o prefix -n name --auto-clone",
