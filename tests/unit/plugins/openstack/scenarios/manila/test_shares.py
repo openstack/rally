@@ -132,3 +132,19 @@ class ManilaSharesTestCase(test.TestCase):
             **expected_create_params)
         scenario._list_share_networks.assert_called_once_with(
             **expected_list_params)
+
+    @ddt.data(
+        {},
+        {"search_opts": None},
+        {"search_opts": {}},
+        {"search_opts": {"foo": "bar"}},
+    )
+    def test_list_share_servers(self, search_opts):
+        scenario = shares.ManilaShares()
+        scenario.context = {"admin": {"endpoint": "fake_endpoint"}}
+        scenario._list_share_servers = mock.MagicMock()
+
+        scenario.list_share_servers(search_opts=search_opts)
+
+        scenario._list_share_servers.assert_called_once_with(
+            search_opts=search_opts)

@@ -160,3 +160,15 @@ class ManilaScenario(base.Scenario):
         share_networks = self.clients("manila").share_networks.list(
             detailed=detailed, search_opts=search_opts)
         return share_networks
+
+    @base.atomic_action_timer("manila.list_share_servers")
+    def _list_share_servers(self, search_opts=None):
+        """List share servers. Admin only.
+
+        :param search_opts: set of key-value pairs to filter share servers by.
+            Example: {"share_network": "share_network_name_or_id"}
+        :returns: list of instances of :class:`ShareServer`
+        """
+        share_servers = self.admin_clients("manila").share_servers.list(
+            search_opts=search_opts)
+        return share_servers

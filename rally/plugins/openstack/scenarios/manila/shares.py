@@ -121,3 +121,16 @@ class ManilaShares(utils.ManilaScenario):
             detailed=detailed,
             search_opts=search_opts,
         )
+
+    @validation.required_services(consts.Service.MANILA)
+    @validation.required_openstack(admin=True)
+    @base.scenario()
+    def list_share_servers(self, search_opts=None):
+        """Lists share servers.
+
+        Requires admin creds.
+
+        :param search_opts: container of following search opts:
+            "host", "status", "share_network" and "project_id".
+        """
+        self._list_share_servers(search_opts=search_opts)
