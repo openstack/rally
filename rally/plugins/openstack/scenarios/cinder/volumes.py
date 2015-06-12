@@ -301,17 +301,6 @@ class CinderVolumes(utils.CinderScenario,
         :param kwargs: Optional parameters used during volume
                        snapshot creation.
         """
-        if "min_size" in kwargs or "max_size" in kwargs:
-            import warnings
-            warnings.warn("'min_size' and 'max_size' arguments "
-                          "are deprecated. You should use 'size', with "
-                          "keys 'min' and 'max' instead.")
-        if "volume_size" in kwargs:
-            import warnings
-            warnings.warn("'volume_size' argument is deprecated. You should "
-                          "use 'size' instead.")
-            size = kwargs["volume_size"]
-
         if size is None:
             size = {"min": 1, "max": 5}
         selected_type = None
@@ -362,12 +351,6 @@ class CinderVolumes(utils.CinderScenario,
         :param kwargs: Optional parameters used during volume
                        snapshot creation.
         """
-        if "volume_size" in kwargs:
-            import warnings
-            warnings.warn("'volume_size' argument is deprecated. You should "
-                          "use 'size' instead.")
-            size = kwargs["volume_size"]
-
         if size is None:
             size = {"min": 1, "max": 5}
         if nested_level is None:

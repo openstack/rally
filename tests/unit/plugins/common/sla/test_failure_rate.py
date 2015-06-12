@@ -37,25 +37,6 @@ class SLAPluginTestCase(test.TestCase):
                           {"test_criterion": 42.0})
 
 
-class FailureRateDeprecatedTestCase(test.TestCase):
-
-    def test_result(self):
-        sla1 = failure_rate.FailureRateDeprecated(75.0)
-        sla2 = failure_rate.FailureRateDeprecated(25.0)
-        # 50% failure rate
-        for sla in [sla1, sla2]:
-            sla.add_iteration({"error": ["error"]})
-            sla.add_iteration({"error": []})
-        self.assertTrue(sla1.result()["success"])   # 50% < 75.0%
-        self.assertFalse(sla2.result()["success"])  # 50% > 25.0%
-        self.assertEqual("Passed", sla1.status())
-        self.assertEqual("Failed", sla2.status())
-
-    def test_result_no_iterations(self):
-        sla = failure_rate.FailureRateDeprecated(10.0)
-        self.assertTrue(sla.result()["success"])
-
-
 class FailureRateTestCase(test.TestCase):
 
     def test_config_schema(self):

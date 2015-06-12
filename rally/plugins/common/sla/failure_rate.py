@@ -24,30 +24,6 @@ from rally.common.i18n import _
 from rally import consts
 
 
-@sla.configure(name="max_failure_percent")
-class FailureRateDeprecated(sla.SLA):
-    """[Deprecated] Failure rate in percents."""
-    CONFIG_SCHEMA = {"type": "number", "minimum": 0.0, "maximum": 100.0}
-
-    def __init__(self, criterion_value):
-        super(FailureRateDeprecated, self).__init__(criterion_value)
-        self.errors = 0
-        self.total = 0
-        self.error_rate = 0.0
-
-    def add_iteration(self, iteration):
-        self.total += 1
-        if iteration["error"]:
-            self.errors += 1
-        self.error_rate = self.errors * 100.0 / self.total
-        self.success = self.error_rate <= self.criterion_value
-        return self.success
-
-    def details(self):
-        return (_("Maximum failure rate %s%% <= %s%% - %s") %
-                (self.criterion_value, self.error_rate, self.status()))
-
-
 @sla.configure(name="failure_rate")
 class FailureRate(sla.SLA):
     """Failure rate minimum and maximum in percents."""

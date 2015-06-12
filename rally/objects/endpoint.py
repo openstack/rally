@@ -21,7 +21,7 @@ class Endpoint(object):
     def __init__(self, auth_url, username, password, tenant_name=None,
                  permission=consts.EndpointPermission.USER,
                  region_name=None, endpoint_type=consts.EndpointType.PUBLIC,
-                 admin_port=None, domain_name=None, endpoint=None,
+                 domain_name=None, endpoint=None,
                  user_domain_name="Default", admin_domain_name="Default",
                  project_domain_name="Default",
                  https_insecure=None, https_cacert=None):
@@ -39,10 +39,6 @@ class Endpoint(object):
         self.endpoint = endpoint
         self.insecure = https_insecure
         self.cacert = https_cacert
-        if admin_port:
-            import warnings
-            warnings.warn("'admin_port' argument is deprecated and will "
-                          "be ignored.")
 
     def to_dict(self, include_permission=False):
         dct = {"auth_url": self.auth_url, "username": self.username,

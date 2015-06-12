@@ -46,9 +46,6 @@ class ShowCommands(object):
 
         return endpoints + deployment.get("users", [])
 
-    @cliutils.deprecated_args(
-        "--deploy-id", dest="deployment", type=str,
-        required=False, help="UUID of the deployment.")
     @cliutils.args("--deployment", dest="deployment", type=str,
                    required=False, help="UUID or name of a deployment")
     @envutils.with_default_deployment(cli_arg_name="deployment")
@@ -81,9 +78,6 @@ class ShowCommands(object):
                                 formatters=formatters,
                                 mixed_case_fields=mixed_case_fields)
 
-    @cliutils.deprecated_args(
-        "--deploy-id", dest="deployment", type=str,
-        required=False, help="UUID of the deployment.")
     @cliutils.args("--deployment", dest="deployment", type=str,
                    required=False, help="UUID or name of a deployment")
     @envutils.with_default_deployment(cli_arg_name="deployment")
@@ -115,9 +109,6 @@ class ShowCommands(object):
                                 formatters=formatters,
                                 mixed_case_fields=mixed_case_fields)
 
-    @cliutils.deprecated_args(
-        "--deploy-id", dest="deployment", type=str,
-        required=False, help="UUID of the deployment.")
     @cliutils.args("--deployment", dest="deployment", type=str,
                    required=False, help="UUID or name of a deployment")
     @envutils.with_default_deployment(cli_arg_name="deployment")
@@ -141,9 +132,6 @@ class ShowCommands(object):
                                 fields=headers,
                                 mixed_case_fields=mixed_case_fields)
 
-    @cliutils.deprecated_args(
-        "--deploy-id", dest="deployment", type=str,
-        required=False, help="UUID of the deployment.")
     @cliutils.args("--deployment", dest="deployment", type=str,
                    required=False, help="UUID or name of a deployment")
     @envutils.with_default_deployment(cli_arg_name="deployment")
@@ -168,9 +156,6 @@ class ShowCommands(object):
                 fields=headers,
                 mixed_case_fields=mixed_case_fields)
 
-    @cliutils.deprecated_args(
-        "--deploy-id", dest="deployment", type=str,
-        required=False, help="UUID of the deployment.")
     @cliutils.args("--deployment", dest="deployment", type=str,
                    required=False, help="UUID or name of a deployment")
     @envutils.with_default_deployment(cli_arg_name="deployment")

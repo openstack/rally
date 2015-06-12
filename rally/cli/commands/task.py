@@ -120,9 +120,6 @@ class TaskCommands(object):
                       file=sys.stderr)
                 raise FailedToLoadTask()
 
-    @cliutils.deprecated_args(
-        "--deploy-id", dest="deployment", type=str,
-        required=False, help="UUID of the deployment.")
     @cliutils.args("--deployment", type=str, dest="deployment",
                    required=False, help="UUID or name of the deployment")
     @cliutils.args("--task", "--filename",
@@ -163,9 +160,6 @@ class TaskCommands(object):
             print(e)
             return(1)
 
-    @cliutils.deprecated_args(
-        "--deploy-id", dest="deployment", type=str,
-        required=False, help="UUID of the deployment.")
     @cliutils.args("--deployment", type=str, dest="deployment",
                    required=False, help="UUID or name of the deployment")
     @cliutils.args("--task", "--filename", help="Path to the input task file")
@@ -522,9 +516,6 @@ class TaskCommands(object):
     @cliutils.args("--junit", dest="out_format",
                    action="store_const", const="junit",
                    help="Generate the report in the JUnit format.")
-    @cliutils.deprecated_args(
-        "--uuid", dest="tasks", nargs="+",
-        help="uuids of tasks or json files with task results")
     @envutils.default_from_global("tasks", envutils.ENV_TASK, "--uuid")
     @cliutils.suppress_warnings
     def report(self, tasks=None, out=None, open_it=False, out_format="html"):
