@@ -391,6 +391,56 @@ class NeutronScenarioTestCase(test.ClientsTestCase):
                        {"allocation_pools": []},
                        "10.10.10.0/24")] * subnets_per_network)
 
+    def test_create_v1_pool_explicit(self):
+        neutron_scenario = utils.NeutronScenario()
+        lb_method = "LEAST_CONNECTIONS"
+        subnet = "fake-id"
+        pool = mock.Mock()
+        self.clients("neutron").create_pool.return_value = pool
+        # Explicit options
+        pool_data = {"lb_method": lb_method, "name": "explicit-name"}
+        args = {"lb_method": "ROUND_ROBIN", "protocol": "HTTP",
+                "name": "random_name", "subnet_id": subnet}
+        args.update(pool_data)
+        expected_pool_data = {"pool": args}
+        pool = neutron_scenario._create_v1_pool(
+            subnet_id=subnet, **pool_data)
+        self.clients("neutron").create_pool.assert_called_once_with(
+            expected_pool_data)
+        self._test_atomic_action_timer(
+            neutron_scenario.atomic_actions(), "neutron.create_pool")
+
+    @mock.patch(NEUTRON_UTILS + "NeutronScenario._generate_random_name")
+    def test_create_v1_pool_default(self, mock_random_name):
+        neutron_scenario = utils.NeutronScenario()
+        random_name = "random_name"
+        subnet = "fake-id"
+        pool = mock.Mock()
+        self.clients("neutron").create_pool.return_value = pool
+        mock_random_name.return_value = random_name
+        # Random pool name
+        pool_data = {}
+        args = {"lb_method": "ROUND_ROBIN", "protocol": "HTTP",
+                "name": "random_name", "subnet_id": subnet}
+        args.update(pool_data)
+        expected_pool_data = {"pool": args}
+        pool = neutron_scenario._create_v1_pool(
+            subnet_id=subnet, **pool_data)
+        self.clients("neutron").create_pool.assert_called_once_with(
+            expected_pool_data)
+        self._test_atomic_action_timer(
+            neutron_scenario.atomic_actions(), "neutron.create_pool")
+
+    def test_list_v1_pools(self):
+        scenario = utils.NeutronScenario()
+        pools_list = []
+        pools_dict = {"pools": pools_list}
+        self.clients("neutron").list_pools.return_value = pools_dict
+        return_pools_dict = scenario._list_v1_pools()
+        self.assertEqual(pools_dict, return_pools_dict)
+        self._test_atomic_action_timer(scenario.atomic_actions(),
+                                       "neutron.list_pools")
+
 
 class NeutronScenarioFunctionalTestCase(test.FakeClientsTestCase):
 

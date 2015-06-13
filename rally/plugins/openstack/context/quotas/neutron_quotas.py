@@ -52,6 +52,10 @@ class NeutronQuotas(object):
             "security_group_rule": {
                 "type": "integer",
                 "minimum": -1
+            },
+            "pool": {
+                "type": "integer",
+                "minimum": -1
             }
         }
     }

@@ -28,6 +28,9 @@ class NeutronScenario(base.Scenario):
     RESOURCE_NAME_PREFIX = "rally_net_"
     RESOURCE_NAME_LENGTH = 16
     SUBNET_IP_VERSION = 4
+    # TODO(rkiran): modify in case LBaaS-v2 requires
+    LB_METHOD = "ROUND_ROBIN"
+    LB_PROTOCOL = "HTTP"
 
     @base.atomic_action_timer("neutron.create_network")
     def _create_network(self, network_create_args):
@@ -287,3 +290,22 @@ class NeutronScenario(base.Scenario):
         """
         self.clients("neutron").remove_interface_router(
             router["id"], {"subnet_id": subnet["id"]})
+
+    @base.atomic_action_timer("neutron.create_pool")
+    def _create_v1_pool(self, subnet_id, **pool_create_args):
+        """Create pool(v1)
+
+        :parm subnet_id: str, neutron subnet-id
+        :parm pool_create_args: dict, POST /lb/pools request options
+        :returns: obj, neutron lb pool
+        """
+        args = {"lb_method": self.LB_METHOD, "protocol": self.LB_PROTOCOL,
+                "name": self._generate_random_name("rally_pool_"),
+                "subnet_id": subnet_id}
+        args.update(pool_create_args)
+        return self.clients("neutron").create_pool({"pool": args})
+
+    @base.atomic_action_timer("neutron.list_pools")
+    def _list_v1_pools(self, **kwargs):
+        """Return user lb pool list(v1)."""
+        return self.clients("neutron").list_pools()
