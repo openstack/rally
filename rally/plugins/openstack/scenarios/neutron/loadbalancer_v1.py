@@ -36,3 +36,26 @@ class NeutronLoadbalancerV1(utils.NeutronScenario):
             for subnet_id in net["subnets"]:
                 self._create_v1_pool(subnet_id, **pool_create_args)
         self._list_v1_pools()
+
+    @validation.restricted_parameters("subnet_id", subdict="pool_create_args")
+    @validation.required_services(consts.Service.NEUTRON)
+    @validation.required_openstack(users=True)
+    @validation.required_contexts("network")
+    @base.scenario(context={"cleanup": ["neutron"]})
+    def create_and_delete_pools(self, pool_create_args=None):
+        """Create pools(v1) and delete pools(v1).
+
+        Measure the "neutron lb-pool-create" and "neutron lb-pool-delete"
+        command performance. The scenario creates a pool for every subnet
+        and then deletes those pools.
+
+        :param pool_create_args: dict, POST /lb/pools request options
+        """
+        pools = []
+        pool_create_args = pool_create_args or {}
+        for net in self.context.get("tenant", {}).get("networks", []):
+            for subnet_id in net["subnets"]:
+                pools.append(self._create_v1_pool(subnet_id=subnet_id,
+                             **pool_create_args))
+        for pool in pools:
+            self._delete_v1_pool(pool["pool"])
