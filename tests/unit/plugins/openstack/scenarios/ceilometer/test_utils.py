@@ -12,11 +12,12 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import copy
+
 import mock
 from oslotest import mockpatch
 
 from rally.plugins.openstack.scenarios.ceilometer import utils
-from tests.unit import fakes
 from tests.unit import test
 
 BM_UTILS = "rally.benchmark.utils"
@@ -27,8 +28,6 @@ class CeilometerScenarioTestCase(test.ClientsTestCase):
     def setUp(self):
         super(CeilometerScenarioTestCase, self).setUp()
         self.scenario = utils.CeilometerScenario()
-        self.scenario.clients = mock.MagicMock(
-            return_value=fakes.FakeCeilometerClient())
         self.res_is = mockpatch.Patch(BM_UTILS + ".resource_is")
         self.get_fm = mockpatch.Patch(BM_UTILS + ".get_from_manager")
         self.wait_for = mockpatch.Patch(CEILOMETER_UTILS +
@@ -38,59 +37,76 @@ class CeilometerScenarioTestCase(test.ClientsTestCase):
         self.useFixture(self.get_fm)
         self.gfm = self.get_fm.mock
 
+    def test__list_alarms_by_id(self):
+        self.assertEqual(self.clients("ceilometer").alarms.get.return_value,
+                         self.scenario._list_alarms("alarm-id"))
+        self.clients("ceilometer").alarms.get.assert_called_once_with(
+            "alarm-id")
+        self._test_atomic_action_timer(self.scenario.atomic_actions(),
+                                       "ceilometer.list_alarms")
+
     def test__list_alarms(self):
-        alarm1_id = "fake_alarm1_id"
-        alarm2_id = "fake_alarm2_id"
-        alarm1 = self.scenario._create_alarm("fake_alarm1", 100,
-                                             {"alarm_id": alarm1_id})
-        alarm2 = self.scenario._create_alarm("fake_alarm2", 100,
-                                             {"alarm_id": alarm2_id})
-
-        result_by_id = self.scenario._list_alarms(alarm1_id)
-        self.assertEqual([alarm1], result_by_id)
-
-        result_no_args = self.scenario._list_alarms()
-        self.assertEqual(set(result_no_args), set([alarm1, alarm2]))
+        self.assertEqual(self.clients("ceilometer").alarms.list.return_value,
+                         self.scenario._list_alarms())
+        self.clients("ceilometer").alarms.list.assert_called_once_with()
+        self._test_atomic_action_timer(self.scenario.atomic_actions(),
+                                       "ceilometer.list_alarms")
 
     def test__create_alarm(self):
-        """Test _create_alarm returns alarm."""
-        fake_alarm_dict = {"alarm_id": "fake-alarm-id"}
-        created_alarm = self.scenario._create_alarm("fake-meter-name", 100,
-                                                    fake_alarm_dict)
-
-        self.assertEqual(created_alarm.alarm_id, "fake-alarm-id")
+        alarm_dict = {"alarm_id": "fake-alarm-id"}
+        orig_alarm_dict = copy.copy(alarm_dict)
+        self.scenario._generate_random_name = mock.Mock()
+        self.assertEqual(self.scenario._create_alarm("fake-meter-name", 100,
+                                                     alarm_dict),
+                         self.clients("ceilometer").alarms.create.return_value)
+        self.clients("ceilometer").alarms.create.assert_called_once_with(
+            meter_name="fake-meter-name",
+            threshold=100,
+            description="Test Alarm",
+            alarm_id="fake-alarm-id",
+            name=self.scenario._generate_random_name.return_value)
+        # ensure that _create_alarm() doesn't modify the alarm dict as
+        # a side-effect
+        self.assertDictEqual(alarm_dict, orig_alarm_dict)
+        self._test_atomic_action_timer(self.scenario.atomic_actions(),
+                                       "ceilometer.create_alarm")
 
     def test__delete_alarms(self):
-        """Test if call to alarms.delete is made to ensure alarm is deleted."""
-        # pre-populate alarm for this test scenario
-        fake_alarm_dict = {"alarm_id": "fake-alarm-id"}
-        fake_alarm = self.scenario._create_alarm("fake-meter-name", 100,
-                                                 fake_alarm_dict)
+        self.scenario._delete_alarm("alarm-id")
+        self.clients("ceilometer").alarms.delete.assert_called_once_with(
+            "alarm-id")
+        self._test_atomic_action_timer(self.scenario.atomic_actions(),
+                                       "ceilometer.delete_alarm")
 
-        self.scenario._delete_alarm(fake_alarm.alarm_id)
-        self.assertEqual(fake_alarm.status, "DELETED")
-
-    def test__update_alarms(self):
-        """Test if call to alarms.update is made to ensure alarm is updated."""
-        # pre-populate alarm for this test scenario
-        fake_alarm_dict = {"alarm_id": "fake-alarm-id"}
-        fake_alarm = self.scenario._create_alarm("fake-meter-name", 100,
-                                                 fake_alarm_dict)
-
-        fake_alarm_dict_diff = {"description": "Changed Test Description"}
-        self.scenario._update_alarm(fake_alarm.alarm_id, fake_alarm_dict_diff)
-        self.assertEqual(fake_alarm.description, "Changed Test Description")
+    def test__update_alarm(self):
+        alarm_diff = {"description": "Changed Test Description"}
+        orig_alarm_diff = copy.copy(alarm_diff)
+        self.scenario._update_alarm("alarm-id", alarm_diff)
+        self.clients("ceilometer").alarms.update.assert_called_once_with(
+            "alarm-id", **alarm_diff)
+        # ensure that _create_alarm() doesn't modify the alarm dict as
+        # a side-effect
+        self.assertDictEqual(alarm_diff, orig_alarm_diff)
+        self._test_atomic_action_timer(self.scenario.atomic_actions(),
+                                       "ceilometer.update_alarm")
 
     def test__get_alarm_history(self):
-        fake_history = self.scenario._get_alarm_history("fake-alarm")
-        self.assertEqual(fake_history, ["fake-alarm-history"])
+        self.assertEqual(
+            self.scenario._get_alarm_history("alarm-id"),
+            self.clients("ceilometer").alarms.get_history.return_value)
+        self.clients("ceilometer").alarms.get_history.assert_called_once_with(
+            "alarm-id")
+        self._test_atomic_action_timer(self.scenario.atomic_actions(),
+                                       "ceilometer.get_alarm_history")
 
     def test__get_alarm_state(self):
-        fake_alarm_dict = {"alarm_id": "alarm-id", "state": "alarm-state"}
-        fake_alarm = self.scenario._create_alarm("fake-meter-name", 100,
-                                                 fake_alarm_dict)
-        fake_state = self.scenario._get_alarm_state(fake_alarm.alarm_id)
-        self.assertEqual(fake_state, "alarm-state")
+        self.assertEqual(
+            self.scenario._get_alarm_state("alarm-id"),
+            self.clients("ceilometer").alarms.get_state.return_value)
+        self.clients("ceilometer").alarms.get_state.assert_called_once_with(
+            "alarm-id")
+        self._test_atomic_action_timer(self.scenario.atomic_actions(),
+                                       "ceilometer.get_alarm_state")
 
     def test__set_alarm_state(self):
         alarm = mock.Mock()
@@ -107,63 +123,117 @@ class CeilometerScenarioTestCase(test.ClientsTestCase):
                                        "ceilometer.set_alarm_state")
 
     def test__list_meters(self):
-        """Test _list_meters."""
-        fake_meters = self.scenario._list_meters()
-        self.assertEqual(fake_meters, ["fake-meter"])
+        self.assertEqual(self.scenario._list_meters(),
+                         self.clients("ceilometer").meters.list.return_value)
+        self.clients("ceilometer").meters.list.assert_called_once_with()
+        self._test_atomic_action_timer(self.scenario.atomic_actions(),
+                                       "ceilometer.list_meters")
 
     def test__list_resources(self):
-        """Test _list_resources."""
-        fake_resources = self.scenario._list_resources()
-        self.assertEqual(fake_resources, ["fake-resource"])
+        self.assertEqual(
+            self.scenario._list_resources(),
+            self.clients("ceilometer").resources.list.return_value)
+        self.clients("ceilometer").resources.list.assert_called_once_with()
+        self._test_atomic_action_timer(self.scenario.atomic_actions(),
+                                       "ceilometer.list_resources")
 
     def test__list_samples(self):
-        """Test _list_samples."""
-        fake_samples = self.scenario._list_samples()
-        self.assertEqual(fake_samples, ["fake-samples"])
+        self.assertEqual(
+            self.scenario._list_samples(),
+            self.clients("ceilometer").samples.list.return_value)
+        self.clients("ceilometer").samples.list.assert_called_once_with()
+        self._test_atomic_action_timer(self.scenario.atomic_actions(),
+                                       "ceilometer.list_samples")
 
     def test__get_resource(self):
-        fake_resource_info = self.scenario._get_resource("fake-resource-id")
-        self.assertEqual(fake_resource_info, ["fake-resource-info"])
+        self.assertEqual(self.scenario._get_resource("fake-resource-id"),
+                         self.clients("ceilometer").resources.get.return_value)
+        self.clients("ceilometer").resources.get.assert_called_once_with(
+            "fake-resource-id")
+        self._test_atomic_action_timer(self.scenario.atomic_actions(),
+                                       "ceilometer.get_resource")
 
     def test__get_stats(self):
-        """Test _get_stats function."""
-        fake_statistics = self.scenario._get_stats("fake-meter")
-        self.assertEqual(fake_statistics, ["fake-meter-statistics"])
+        self.assertEqual(
+            self.scenario._get_stats("fake-meter"),
+            self.clients("ceilometer").statistics.list.return_value)
+        self.clients("ceilometer").statistics.list.assert_called_once_with(
+            "fake-meter")
+        self._test_atomic_action_timer(self.scenario.atomic_actions(),
+                                       "ceilometer.get_stats")
 
     def test__create_meter(self):
-        """Test _create_meter returns meter."""
-        self.scenario._generate_random_name = mock.MagicMock(
-            return_value="fake-counter-name")
-        created_meter = self.scenario._create_meter()
-        self.assertEqual(created_meter.counter_name, "fake-counter-name")
+        self.scenario._generate_random_name = mock.Mock()
+        self.assertEqual(
+            self.scenario._create_meter(fakearg="fakearg"),
+            self.clients("ceilometer").samples.create.return_value[0])
+        self.clients("ceilometer").samples.create.assert_called_once_with(
+            counter_name=self.scenario._generate_random_name.return_value,
+            fakearg="fakearg")
+        self._test_atomic_action_timer(self.scenario.atomic_actions(),
+                                       "ceilometer.create_meter")
 
     def test__query_alarms(self):
-        expected_result = ["fake-query-result"]
-        query_result = self.scenario._query_alarms("fake-filter",
-                                                   "fake-orderby-attribute",
-                                                   10)
-        self.assertEqual(query_result, expected_result)
+        self.assertEqual(
+            self.scenario._query_alarms("fake-filter", "fake-orderby", 10),
+            self.clients("ceilometer").query_alarms.query.return_value)
+        self.clients("ceilometer").query_alarms.query.assert_called_once_with(
+            "fake-filter", "fake-orderby", 10)
+        self._test_atomic_action_timer(self.scenario.atomic_actions(),
+                                       "ceilometer.query_alarms")
 
     def test__query_alarm_history(self):
-        expected_result = ["fake-query-result"]
-        query_result = self.scenario._query_alarm_history(
-            "fake-filter", "fake-orderby-attribute", 10)
-        self.assertEqual(query_result, expected_result)
+        self.assertEqual(
+            self.scenario._query_alarm_history(
+                "fake-filter", "fake-orderby", 10),
+            self.clients("ceilometer").query_alarm_history.query.return_value)
+        self.clients(
+            "ceilometer").query_alarm_history.query.assert_called_once_with(
+                "fake-filter", "fake-orderby", 10)
+        self._test_atomic_action_timer(self.scenario.atomic_actions(),
+                                       "ceilometer.query_alarm_history")
 
     def test__query_samples(self):
-        expected_result = ["fake-query-result"]
-        query_result = self.scenario._query_samples("fake-filter",
-                                                    "fake-orderby-attribute",
-                                                    10)
-        self.assertEqual(query_result, expected_result)
+        self.assertEqual(
+            self.scenario._query_samples("fake-filter", "fake-orderby", 10),
+            self.clients("ceilometer").query_samples.query.return_value)
+        self.clients("ceilometer").query_samples.query.assert_called_once_with(
+            "fake-filter", "fake-orderby", 10)
+        self._test_atomic_action_timer(self.scenario.atomic_actions(),
+                                       "ceilometer.query_samples")
+
+    def test__create_sample_no_resource_id(self):
+        self.scenario._generate_random_name = mock.Mock()
+        created_sample = self.scenario._create_sample("test-counter-name",
+                                                      "test-counter-type",
+                                                      "test-counter-unit",
+                                                      "test-counter-volume")
+        self.assertEqual(
+            created_sample,
+            self.clients("ceilometer").samples.create.return_value)
+        self.clients("ceilometer").samples.create.assert_called_once_with(
+            counter_name="test-counter-name",
+            counter_type="test-counter-type",
+            counter_unit="test-counter-unit",
+            counter_volume="test-counter-volume",
+            resource_id=self.scenario._generate_random_name.return_value)
+        self._test_atomic_action_timer(self.scenario.atomic_actions(),
+                                       "ceilometer.create_sample")
 
     def test__create_sample(self):
-        """Test _create_sample returns sample."""
-        self.scenario._generate_random_name = mock.MagicMock(
-            return_value="test-counter-name")
         created_sample = self.scenario._create_sample("test-counter-name",
-                                                      "fake-counter-type",
-                                                      "fake-counter-unit",
-                                                      "fake-counter-volume",
-                                                      "fake-resource-id")
-        self.assertEqual(created_sample[0].counter_name, "test-counter-name")
+                                                      "test-counter-type",
+                                                      "test-counter-unit",
+                                                      "test-counter-volume",
+                                                      "test-resource-id")
+        self.assertEqual(
+            created_sample,
+            self.clients("ceilometer").samples.create.return_value)
+        self.clients("ceilometer").samples.create.assert_called_once_with(
+            counter_name="test-counter-name",
+            counter_type="test-counter-type",
+            counter_unit="test-counter-unit",
+            counter_volume="test-counter-volume",
+            resource_id="test-resource-id")
+        self._test_atomic_action_timer(self.scenario.atomic_actions(),
+                                       "ceilometer.create_sample")
