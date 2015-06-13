@@ -1190,25 +1190,25 @@ class FakeNeutronClient(object):
         self.__subnets[subnet_id] = subnet
         return {"subnet": subnet}
 
-    def update_network(self, network_id, data):
-        if network_id not in self.__networks:
+    def update_resource(self, resource_id, resource_dict, data):
+        if resource_id not in resource_dict:
             raise neutron_exceptions.NeutronClientException
-        self.__networks[network_id].update(data)
+        self.resource_list[resource_id].update(data)
+
+    def update_network(self, network_id, data):
+        self.update_resource(network_id, self.__networks, data)
+
+    def update_pool(self, pool_id, data):
+        self.update_resource(pool_id, self.__pools, data)
 
     def update_subnet(self, subnet_id, data):
-        if subnet_id not in self.__subnets:
-            raise neutron_exceptions.NeutronClientException
-        self.__subnets[subnet_id].update(data)
+        self.update_resource(subnet_id, self.__subnets, data)
 
     def update_port(self, port_id, data):
-        if port_id not in self.__ports:
-            raise neutron_exceptions.NeutronClientException
-        self.__ports[port_id].update(data)
+        self.update_resource(port_id, self.__ports, data)
 
     def update_router(self, router_id, data):
-        if router_id not in self.__routers:
-            raise neutron_exceptions.NeutronClientException
-        self.__routers[router_id].update(data)
+        self.update_resource(router_id, self.__routers, data)
 
     def delete_network(self, network_id):
         if network_id not in self.__networks:

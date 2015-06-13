@@ -317,3 +317,24 @@ class NeutronScenario(base.Scenario):
         :param pool: Pool object
         """
         self.clients("neutron").delete_pool(pool["id"])
+
+    @base.atomic_action_timer("neutron.update_pool")
+    def _update_v1_pool(self, pool, **pool_update_args):
+        """Update pool.
+
+        This atomic function updates pool name by
+        appending the existing name and admin state with pool_update_args.
+
+        :param pool: Pool object
+        :param pool_update_args: dict, POST /lb/pools update options
+        :returns: updated neutron pool dict
+        """
+        suffix = pool_update_args.get("name", None)
+        body = {
+            "pool": {
+                "name": pool["pool"]["name"] + suffix if suffix is not None
+                else self._generate_random_name("_"),
+                "admin_state_up": pool_update_args.get("admin_state_up", True)
+            }
+        }
+        return self.clients("neutron").update_pool(pool["pool"]["id"], body)

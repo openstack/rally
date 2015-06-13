@@ -441,6 +441,26 @@ class NeutronScenarioTestCase(test.ClientsTestCase):
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "neutron.delete_pool")
 
+    def test_update_pool(self):
+        scenario = utils.NeutronScenario()
+        expected_pool = {
+            "pool": {
+                "name": "pool-name_updated",
+                "admin_state_up": False
+            }
+        }
+        self.clients("neutron").update_pool.return_value = expected_pool
+
+        pool = {"pool": {"name": "pool-name", "id": "pool-id"}}
+        pool_update_args = {"name": "_updated", "admin_state_up": False}
+
+        result_pool = scenario._update_v1_pool(pool, **pool_update_args)
+        self.assertEqual(result_pool, expected_pool)
+        self.clients("neutron").update_pool.assert_called_once_with(
+            pool["pool"]["id"], expected_pool)
+        self._test_atomic_action_timer(scenario.atomic_actions(),
+                                       "neutron.update_pool")
+
     def test_list_v1_pools(self):
         scenario = utils.NeutronScenario()
         pools_list = []
