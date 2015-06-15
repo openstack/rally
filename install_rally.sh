@@ -299,7 +299,7 @@ install_required_sw () {
         fi
     else
         # MacOSX maybe?
-        warn "Cannot determine what package manager this Linux distribution has, so I cannot check if requisite software is installed. I'm proceeding anyway, but you may run into errors later."
+        echo "Cannot determine what package manager this Linux distribution has, so I cannot check if requisite software is installed. I'm proceeding anyway, but you may run into errors later."
     fi
     if ! have_command wget && ! have_command curl; then
         missing="$missing wget"
@@ -365,7 +365,7 @@ likely to fail!
 __EOF__
             if ask_yn "Proceed with installation anyway?"
             then
-                warn "Proceeding with installation at your request... keep fingers crossed!"
+                echo "Proceeding with installation at your request... keep fingers crossed!"
             else
                 die $EX_UNAVAILABLE "missing software prerequisites" <<__EOF__
 Please ask your system administrator to install the missing packages,
