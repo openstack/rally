@@ -1,4 +1,6 @@
 {% set image_name = "^cirros.*uec$" %}
+{% set smoke = 1 %}
+
 ---
   NeutronNetworks.create_and_list_networks:
     -
@@ -6,7 +8,7 @@
         network_create_args:
       runner:
         type: "constant"
-        times: 40
+        times: {{smoke or 40}}
         concurrency: 20
       context:
         users:
@@ -28,7 +30,7 @@
         subnets_per_network: 2
       runner:
         type: "constant"
-        times: 15
+        times: {{smoke or 20 }}
         concurrency: 10
       context:
         users:
@@ -52,7 +54,7 @@
         router_create_args:
       runner:
         type: "constant"
-        times: 15
+        times: {{smoke or 15}}
         concurrency: 5
       context:
         users:
@@ -75,7 +77,7 @@
         ports_per_network: 4
       runner:
         type: "constant"
-        times: 15
+        times: {{smoke or 15}}
         concurrency: 5
       context:
         users:
@@ -97,7 +99,7 @@
         pool_create_args: {}
       runner:
         type: "constant"
-        times: 20
+        times: {{smoke or 20}}
         concurrency: 10
       context:
         users:
@@ -122,7 +124,7 @@
             name: "_updated"
       runner:
         type: "constant"
-        times: 20
+        times: {{smoke or 20}}
         concurrency: 10
       context:
         users:
@@ -147,7 +149,7 @@
             name: "_subnet_updated"
       runner:
         type: "constant"
-        times: 20
+        times: {{smoke or 20}}
         concurrency: 10
       context:
         users:
@@ -174,7 +176,7 @@
             name: "_router_updated"
       runner:
         type: "constant"
-        times: 15
+        times: {{smoke or 15}}
         concurrency: 5
       context:
         users:
@@ -202,7 +204,7 @@
             name: "_port_updated"
       runner:
         type: "constant"
-        times: 20
+        times: {{smoke or 20}}
         concurrency: 10
       context:
         users:
@@ -222,7 +224,7 @@
         network_create_args: {}
       runner:
         type: "constant"
-        times: 20
+        times: {{smoke or 20}}
         concurrency: 10
       context:
         users:
@@ -245,7 +247,7 @@
         subnets_per_network: 2
       runner:
         type: "constant"
-        times: 20
+        times: {{smoke or 20}}
         concurrency: 10
       context:
         users:
@@ -269,7 +271,7 @@
         router_create_args: {}
       runner:
         type: "constant"
-        times: 15
+        times: {{smoke or 15}}
         concurrency: 5
       context:
         users:
@@ -292,7 +294,7 @@
         ports_per_network: 10
       runner:
         type: "constant"
-        times: 8
+        times: {{smoke or 8}}
         concurrency: 4
       context:
         users:
@@ -312,7 +314,7 @@
         max_quota: 1024
       runner:
         type: "constant"
-        times: 10
+        times: {{smoke or 10}}
         concurrency: 2
       context:
         users:
@@ -335,8 +337,8 @@
         concurrency: 1
       context:
         users:
-          tenants: 3
-          users_per_tenant: 2
+          tenants: 1
+          users_per_tenant: 1
       sla:
         failure_rate:
           max: 0
@@ -354,8 +356,8 @@
         concurrency: 1
       context:
         users:
-          tenants: 3
-          users_per_tenant: 2
+          tenants: 2
+          users_per_tenant: 1
         network:
           start_cidr: "10.2.0.0/24"
           networks_per_tenant: 2
@@ -370,7 +372,7 @@
         rules_per_security_group: 5
       runner:
         type: "constant"
-        times: 4
+        times: {{smoke or 4}}
         concurrency: 4
       context:
         users:
@@ -391,11 +393,11 @@
         rules_per_security_group: 5
       runner:
         type: "constant"
-        times: 2
-        concurrency: 1
+        times: {{smoke or 4}}
+        concurrency: 4
       context:
         users:
-          tenants: 3
+          tenants: 2
           users_per_tenant: 2
         quotas:
           neutron:
@@ -417,10 +419,10 @@
         username: "cirros"
       runner:
         type: "constant"
-        times: 4
+        times: {{smoke or 4}}
         concurrency: 2
       context:
         users:
-          tenants: 3
+          tenants: 2
           users_per_tenant: 2
         network: {}
