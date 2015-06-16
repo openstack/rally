@@ -21,6 +21,7 @@ with contracted values such as maximum error rate or minimum response time.
 
 from rally.benchmark import sla
 from rally.common.i18n import _
+from rally.common import streaming_algorithms
 
 
 @sla.configure(name="max_avg_duration")
@@ -31,15 +32,13 @@ class MaxAverageDuration(sla.SLA):
 
     def __init__(self, criterion_value):
         super(MaxAverageDuration, self).__init__(criterion_value)
-        self.total_duration = 0.0
-        self.iterations = 0
         self.avg = 0.0
+        self.avg_comp = streaming_algorithms.MeanStreamingComputation()
 
     def add_iteration(self, iteration):
         if not iteration.get("error"):
-            self.total_duration += iteration["duration"]
-            self.iterations += 1
-        self.avg = self.total_duration / self.iterations
+            self.avg_comp.add(iteration["duration"])
+            self.avg = self.avg_comp.result()
         self.success = self.avg <= self.criterion_value
         return self.success
 
