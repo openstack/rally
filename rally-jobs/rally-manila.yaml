@@ -1,4 +1,22 @@
 ---
+  Dummy.dummy:
+    -
+      runner:
+        type: "constant"
+        times: 1
+        concurrency: 1
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+        quotas:
+          manila:
+            shares: -1
+            gigabytes: -1
+            snapshots: -1
+            snapshot_gigabytes: -1
+            share_networks: -1
+
   ManilaShares.list_shares:
     -
       args:
