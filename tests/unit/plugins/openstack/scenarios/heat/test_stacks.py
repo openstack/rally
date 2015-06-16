@@ -143,6 +143,25 @@ class HeatStacksTestCase(test.ScenarioTestCase):
             self.default_environment)
         mock__delete_stack.assert_called_once_with(fake_stack)
 
+    def test_create_stack_and_scale(self):
+        heat_scenario = stacks.HeatStacks()
+        stack = mock.Mock()
+        heat_scenario._create_stack = mock.Mock(return_value=stack)
+        heat_scenario._scale_stack = mock.Mock()
+
+        heat_scenario.create_stack_and_scale(
+            self.default_template, "key", -1,
+            parameters=self.default_parameters,
+            files=self.default_files,
+            environment=self.default_environment)
+        heat_scenario._create_stack.assert_called_once_with(
+            self.default_template,
+            self.default_parameters,
+            self.default_files,
+            self.default_environment)
+        heat_scenario._scale_stack.assert_called_once_with(
+            stack, "key", -1)
+
     @mock.patch(HEAT_STACKS + "._delete_stack")
     @mock.patch(HEAT_STACKS + "._resume_stack")
     @mock.patch(HEAT_STACKS + "._suspend_stack")

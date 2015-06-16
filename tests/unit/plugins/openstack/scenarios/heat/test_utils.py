@@ -191,6 +191,60 @@ class HeatScenarioTestCase(test.ScenarioTestCase):
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "heat.restore_stack")
 
+    def test__count_instances(self):
+        self.clients("heat").resources.list.return_value = [
+            mock.Mock(resource_type="OS::Nova::Server"),
+            mock.Mock(resource_type="OS::Nova::Server"),
+            mock.Mock(resource_type="OS::Heat::AutoScalingGroup")]
+        scenario = utils.HeatScenario()
+        self.assertEqual(scenario._count_instances(self.stack), 2)
+        self.clients("heat").resources.list.assert_called_once_with(
+            self.stack.id,
+            nested_depth=1)
+
+    def test__scale_stack(self):
+        scenario = utils.HeatScenario()
+        scenario._count_instances = mock.Mock(side_effect=[3, 3, 2])
+        scenario._stack_webhook = mock.Mock()
+
+        scenario._scale_stack(self.stack, "test_output_key", -1)
+
+        scenario._stack_webhook.assert_called_once_with(self.stack,
+                                                        "test_output_key")
+        self.mock_wait_for.mock.assert_called_once_with(
+            self.stack,
+            is_ready=mock.ANY,
+            update_resource=self.mock_get_from_manager.mock.return_value,
+            timeout=CONF.benchmark.heat_stack_scale_timeout,
+            check_interval=CONF.benchmark.heat_stack_scale_poll_interval)
+        self.mock_get_from_manager.mock.assert_called_once_with(
+            ["UPDATE_FAILED"])
+
+        self._test_atomic_action_timer(scenario.atomic_actions(),
+                                       "heat.scale_with_test_output_key")
+
+    @mock.patch("requests.post")
+    def test_stack_webhook(self, mock_post):
+        scenario = utils.HeatScenario()
+        stack = mock.Mock(outputs=[
+            {"output_key": "output1", "output_value": "url1"},
+            {"output_key": "output2", "output_value": "url2"}])
+
+        scenario._stack_webhook(stack, "output1")
+        mock_post.assert_called_with("url1")
+        self._test_atomic_action_timer(scenario.atomic_actions(),
+                                       "heat.output1_webhook")
+
+    @mock.patch("requests.post")
+    def test_stack_webhook_invalid_output_key(self, mock_post):
+        scenario = utils.HeatScenario()
+        stack = mock.Mock()
+        stack.outputs = [{"output_key": "output1", "output_value": "url1"},
+                         {"output_key": "output2", "output_value": "url2"}]
+
+        self.assertRaises(exceptions.InvalidConfigException,
+                          scenario._stack_webhook, stack, "bogus")
+
 
 class HeatScenarioNegativeTestCase(test.ScenarioTestCase):
     patch_benchmark_utils = False
