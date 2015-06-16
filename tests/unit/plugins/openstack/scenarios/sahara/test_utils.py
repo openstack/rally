@@ -246,7 +246,7 @@ class SaharaUtilsTestCase(test.ClientsTestCase):
         self.clients("sahara").clusters.get.return_value = mock.MagicMock(
             status="error")
 
-        self.assertRaises(exceptions.SaharaClusterFailure,
+        self.assertRaises(exceptions.GetResourceErrorStatus,
                           scenario._launch_cluster,
                           plugin_name="test_plugin",
                           hadoop_version="test_version",
