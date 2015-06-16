@@ -203,15 +203,17 @@ class WaitForTestCase(test.TestCase):
 
     def test_wait_for_with_updater(self):
         loaded_resource = utils.wait_for(self.resource,
-                                         self.fake_checker_delayed,
-                                         self.fake_updater,
-                                         1, self.load_secs / 3)
+                                         is_ready=self.fake_checker_delayed,
+                                         update_resource=self.fake_updater,
+                                         timeout=1,
+                                         check_interval=self.load_secs / 3)
         self.assertEqual(loaded_resource, self.resource)
 
     def test_wait_for_no_updater(self):
         loaded_resource = utils.wait_for(self.resource,
-                                         self.fake_checker_delayed,
-                                         None, 1, self.load_secs / 3)
+                                         is_ready=self.fake_checker_delayed,
+                                         update_resource=None, timeout=1,
+                                         check_interval=self.load_secs / 3)
         self.assertEqual(loaded_resource, self.resource)
 
     def test_wait_for_timeout_failure(self):
@@ -222,9 +224,9 @@ class WaitForTestCase(test.TestCase):
         is_ready = utils.resource_is("fake_new_status")
         exc = self.assertRaises(
             exceptions.TimeoutException, utils.wait_for,
-            self.resource, is_ready,
-            self.fake_updater, self.load_secs,
-            self.load_secs / 3)
+            self.resource, is_ready=is_ready,
+            update_resource=self.fake_updater, timeout=self.load_secs,
+            check_interval=self.load_secs / 3)
 
         self.assertEqual(exc.kwargs["resource_name"], "fake_name")
         self.assertEqual(exc.kwargs["resource_id"], "fake_id")
@@ -398,3 +400,61 @@ class ActionBuilderTestCase(test.TestCase):
         for i in range(3):
             mock_calls.append(mock.call("two", "three", c=3, d=4))
         mock_action_two.assert_has_calls(mock_calls)
+
+
+class WaitForStatusTestCase(test.TestCase):
+
+    def test_wrong_ready_statuses_type(self):
+        self.assertRaises(ValueError,
+                          utils.wait_for, {}, ready_statuses="abc")
+
+    def test_wrong_failure_statuses_type(self):
+        self.assertRaises(ValueError,
+                          utils.wait_for, {}, ready_statuses=["abc"],
+                          failure_statuses="abc")
+
+    def test_no_ready_statuses(self):
+        self.assertRaises(ValueError,
+                          utils.wait_for, {}, ready_statuses=[])
+
+    def test_no_update(self):
+        self.assertRaises(ValueError,
+                          utils.wait_for, {}, ready_statuses=["ready"])
+
+    @mock.patch("rally.benchmark.utils.time.sleep")
+    def test_exit_instantly(self, mock_sleep):
+        res = {"status": "ready"}
+        upd = mock.MagicMock(return_value=res)
+
+        utils.wait_for(resource=res, ready_statuses=["ready"],
+                       update_resource=upd)
+
+        upd.assert_called_once_with(res)
+        self.assertFalse(mock_sleep.called)
+
+    @mock.patch("rally.benchmark.utils.time.sleep")
+    @mock.patch("rally.benchmark.utils.time.time", return_value=1)
+    def test_wait_successful(self, mock_time, mock_sleep):
+        res = {"status": "not_ready"}
+        upd = mock.MagicMock(side_effect=[{"status": "not_ready"},
+                                          {"status": "not_ready_yet"},
+                                          {"status": "still_not_ready"},
+                                          {"status": "almost_ready"},
+                                          {"status": "ready"}])
+        utils.wait_for(resource=res, ready_statuses=["ready"],
+                       update_resource=upd)
+        upd.assert_has_calls([mock.call({"status": "not_ready"}),
+                              mock.call({"status": "not_ready"}),
+                              mock.call({"status": "not_ready_yet"}),
+                              mock.call({"status": "still_not_ready"}),
+                              mock.call({"status": "almost_ready"})])
+
+    @mock.patch("rally.benchmark.utils.time.sleep")
+    @mock.patch("rally.benchmark.utils.time.time", return_value=1)
+    def test_wait_failure(self, mock_time, mock_sleep):
+        res = {"status": "not_ready"}
+        upd = mock.MagicMock(side_effect=[{"status": "not_ready"},
+                                          {"status": "fail"}])
+        self.assertRaises(exceptions.GetResourceErrorStatus, utils.wait_for,
+                          resource=res, ready_statuses=["ready"],
+                          failure_statuses=["fail"], update_resource=upd)
