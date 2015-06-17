@@ -13,8 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-"""Test for Rally utils."""
-
 from __future__ import print_function
 import string
 import sys
@@ -108,31 +106,6 @@ class TimerTestCase(test.TestCase):
         self.assertEqual(timer.error[0], type(Exception()))
 
 
-class IterSubclassesTestCase(test.TestCase):
-
-    def test_itersubclasses(self):
-        class A(object):
-            pass
-
-        class B(A):
-            pass
-
-        class C(A):
-            pass
-
-        class D(C):
-            pass
-
-        self.assertEqual([B, C, D], list(utils.itersubclasses(A)))
-
-
-class ImportModulesTestCase(test.TestCase):
-    def test_try_append_module_into_sys_modules(self):
-        modules = {}
-        utils.try_append_module("rally.common.version", modules)
-        self.assertIn("rally.common.version", modules)
-
-
 class LogTestCase(test.TestCase):
 
     def test_log_task_wrapper(self):
@@ -198,70 +171,6 @@ class LogTestCase(test.TestCase):
         self.assertEqual(some_method(2, 2, z=3), 7)
         mock_log.assert_called_once_with(
             "Deprecated test (args `z' deprecated in Rally v0.0.1)")
-
-
-class LoadExtraModulesTestCase(test.TestCase):
-
-    @mock.patch("rally.common.utils.os.path.isdir", return_value=True)
-    @mock.patch("rally.common.utils.imp.load_module")
-    @mock.patch("rally.common.utils.imp.find_module",
-                return_value=(mock.MagicMock(), None, None))
-    @mock.patch("rally.common.utils.os.walk", return_value=[
-        ("/somewhere", ("/subdir", ), ("plugin1.py", )),
-        ("/somewhere/subdir", ("/subsubdir", ), ("plugin2.py",
-                                                 "withoutextension")),
-        ("/somewhere/subdir/subsubdir", [], ("plugin3.py", ))])
-    @mock.patch("rally.common.utils.os.path.isdir", return_value=True)
-    def test_load_plugins_from_dir_successful(self, mock_exists,
-                                              mock_oswalk, mock_find_module,
-                                              mock_load_module, mock_isdir):
-        test_path = "/somewhere"
-        utils.load_plugins(test_path)
-        expected = [
-            mock.call("plugin1", ["/somewhere"]),
-            mock.call("plugin2", ["/somewhere/subdir"]),
-            mock.call("plugin3", ["/somewhere/subdir/subsubdir"])
-        ]
-        self.assertEqual(expected, mock_find_module.mock_calls)
-        self.assertEqual(3, len(mock_load_module.mock_calls))
-
-    @mock.patch("rally.common.utils.os.path.isfile", return_value=True)
-    @mock.patch("rally.common.utils.imp.load_source")
-    def test_load_plugins_from_file_successful(self, mock_load_source,
-                                               mock_isfile):
-        utils.load_plugins("/somewhere/plugin.py")
-        expected = [mock.call("plugin", "/somewhere/plugin.py")]
-        self.assertEqual(expected, mock_load_source.mock_calls)
-
-    @mock.patch("rally.common.utils.os")
-    def test_load_plugins_from_nonexisting_and_empty_dir(self, mock_os):
-        # test no fails for nonexisting directory
-        mock_os.path.isdir.return_value = False
-        utils.load_plugins("/somewhere")
-        # test no fails for empty directory
-        mock_os.path.isdir.return_value = True
-        mock_os.walk.return_value = []
-        utils.load_plugins("/somewhere")
-
-    @mock.patch("rally.common.utils.os.path.isfile", return_value=True)
-    def test_load_plugins_from_file_fails(self, mock_isfile):
-        utils.load_plugins("/somwhere/plugin.py")
-
-    @mock.patch("rally.common.utils.os.path.isfile", return_value=False)
-    def test_load_plugins_from_nonexisting_file(self, mock_isfile):
-        # test no fails for nonexisting file
-        utils.load_plugins("/somewhere/plugin.py")
-
-    @mock.patch("rally.common.utils.imp.load_module", side_effect=Exception())
-    @mock.patch("rally.common.utils.imp.find_module")
-    @mock.patch("rally.common.utils.os.path", return_value=True)
-    @mock.patch("rally.common.utils.os.walk",
-                return_value=[("/etc/.rally/plugins", [], ("load_it.py", ))])
-    def test_load_plugins_fails(self, mock_oswalk, mock_ospath,
-                                mock_load_module, mock_find_module):
-        # test no fails if module is broken
-        # TODO(olkonami): check exception is handled correct
-        utils.load_plugins("/somwhere")
 
 
 def module_level_method():

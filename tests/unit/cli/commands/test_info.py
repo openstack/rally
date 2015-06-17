@@ -20,7 +20,7 @@ from rally.benchmark import sla
 from rally.cli.commands import info
 from rally import deploy
 from rally.deploy.engines import existing as existing_cloud
-from rally.deploy import serverprovider
+from rally.deploy.serverprovider import provider
 from rally.deploy.serverprovider.providers import existing as existing_servers
 from rally import exceptions
 from rally.plugins.common.scenarios.dummy import dummy
@@ -31,8 +31,9 @@ from tests.unit import test
 SCENARIO = "rally.cli.commands.info.scenario_base.Scenario"
 SLA = "rally.cli.commands.info.sla.SLA"
 ENGINE = "rally.cli.commands.info.deploy.EngineFactory"
-PROVIDER = "rally.cli.commands.info.serverprovider.ProviderFactory"
+PROVIDER = "rally.cli.commands.info.provider.ProviderFactory"
 UTILS = "rally.cli.commands.info.utils"
+DISCOVER = "rally.cli.commands.info.discover"
 COMMANDS = "rally.cli.commands.info.InfoCommands"
 
 
@@ -101,29 +102,29 @@ class InfoCommandsTestCase(test.TestCase):
         mock_ServerProviders.assert_called_once_with()
         self.assertIsNone(status)
 
-    @mock.patch(UTILS + ".itersubclasses", return_value=[dummy.Dummy])
+    @mock.patch(DISCOVER + ".itersubclasses", return_value=[dummy.Dummy])
     def test_BenchmarkScenarios(self, mock_itersubclasses):
         status = self.info.BenchmarkScenarios()
         mock_itersubclasses.assert_called_with(scenario_base.Scenario)
         self.assertIsNone(status)
 
-    @mock.patch(UTILS + ".itersubclasses",
+    @mock.patch(DISCOVER + ".itersubclasses",
                 return_value=[failure_rate.FailureRate])
     def test_SLA(self, mock_itersubclasses):
         status = self.info.SLA()
         mock_itersubclasses.assert_called_with(sla.SLA)
         self.assertIsNone(status)
 
-    @mock.patch(UTILS + ".itersubclasses",
+    @mock.patch(DISCOVER + ".itersubclasses",
                 return_value=[existing_cloud.ExistingCloud])
     def test_DeploymentEngines(self, mock_itersubclasses):
         status = self.info.DeploymentEngines()
         mock_itersubclasses.assert_called_with(deploy.EngineFactory)
         self.assertIsNone(status)
 
-    @mock.patch(UTILS + ".itersubclasses",
+    @mock.patch(DISCOVER + ".itersubclasses",
                 return_value=[existing_servers.ExistingServers])
     def test_ServerProviders(self, mock_itersubclasses):
         status = self.info.ServerProviders()
-        mock_itersubclasses.assert_called_with(serverprovider.ProviderFactory)
+        mock_itersubclasses.assert_called_with(provider.ProviderFactory)
         self.assertIsNone(status)

@@ -14,7 +14,8 @@
 #    under the License.
 
 from rally.deploy.engine import *  # noqa
-from rally.common import utils
+from rally.common.plugin import discover
 
 
-utils.import_modules_from_package("rally.deploy.engines")
+discover.import_modules_from_package("rally.deploy.engines")
+discover.import_modules_from_package("rally.deploy.serverprovider")

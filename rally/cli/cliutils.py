@@ -30,6 +30,7 @@ import six
 
 from rally.common.i18n import _
 from rally.common import log as logging
+from rally.common.plugin import discover
 from rally.common import utils
 from rally.common import version
 from rally import exceptions
@@ -518,11 +519,11 @@ def run(argv, categories):
         return(1)
 
     try:
-        utils.load_plugins("/opt/rally/plugins/")
-        utils.load_plugins(os.path.expanduser("~/.rally/plugins/"))
-        utils.import_modules_from_package("rally.plugins")
+        discover.load_plugins("/opt/rally/plugins/")
+        discover.load_plugins(os.path.expanduser("~/.rally/plugins/"))
+        discover.import_modules_from_package("rally.plugins")
         for path in CONF.plugin_paths or []:
-            utils.load_plugins(path)
+            discover.load_plugins(path)
 
         validate_deprecated_args(argv, fn)
 

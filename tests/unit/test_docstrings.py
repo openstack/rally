@@ -15,9 +15,10 @@
 
 from rally.benchmark.scenarios import base
 from rally.benchmark import sla
+from rally.common.plugin import discover
 from rally.common import utils
 from rally import deploy
-from rally.deploy import serverprovider
+from rally.deploy.serverprovider import provider
 from tests.unit import test
 
 
@@ -41,7 +42,7 @@ class DocstringsTestCase(test.TestCase):
 
     def test_all_scenarios_have_docstrings(self):
         ignored_params = ["self", "scenario_obj"]
-        for scenario_group in utils.itersubclasses(base.Scenario):
+        for scenario_group in discover.itersubclasses(base.Scenario):
             if scenario_group.__module__.startswith("tests."):
                 continue
 
@@ -75,7 +76,7 @@ class DocstringsTestCase(test.TestCase):
                                            "param": param})
 
     def test_all_scenario_groups_have_docstrings(self):
-        for scenario_group in utils.itersubclasses(base.Scenario):
+        for scenario_group in discover.itersubclasses(base.Scenario):
             self._assert_class_has_docstrings(scenario_group,
                                               long_description=False)
 
@@ -84,9 +85,9 @@ class DocstringsTestCase(test.TestCase):
             self._assert_class_has_docstrings(deploy_engine)
 
     def test_all_server_providers_have_docstrings(self):
-        for provider in serverprovider.ProviderFactory.get_all():
-            self._assert_class_has_docstrings(provider)
+        for _provider in provider.ProviderFactory.get_all():
+            self._assert_class_has_docstrings(_provider)
 
     def test_all_SLA_have_docstrings(self):
-        for s in utils.itersubclasses(sla.SLA):
+        for s in discover.itersubclasses(sla.SLA):
             self._assert_class_has_docstrings(s, long_description=False)

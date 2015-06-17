@@ -13,8 +13,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from rally.common.plugin import discover
 from rally.common.plugin import meta
-from rally.common import utils
 from rally import exceptions
 
 
@@ -184,7 +184,7 @@ class Plugin(meta.MetaMixin):
         """
         plugins = []
 
-        for p in utils.itersubclasses(cls):
+        for p in discover.itersubclasses(cls):
             if issubclass(p, Plugin) and p._meta_is_inited(raise_exc=False):
                 if not namespace or namespace == p.get_namespace():
                     plugins.append(getattr(p, "func_ref", p))

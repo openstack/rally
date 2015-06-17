@@ -14,21 +14,17 @@
 #    under the License.
 
 import functools
-import imp
 import inspect
 import multiprocessing
-import os
 import random
 import re
 import string
 import sys
 import time
 
-from oslo_utils import importutils
 from six import moves
 from sphinx.util import docstrings
 
-import rally
 from rally.common.i18n import _
 from rally.common import log as logging
 from rally import exceptions
@@ -139,46 +135,6 @@ class RAMInt(object):
             self.__int.value = 0
 
 
-def itersubclasses(cls, _seen=None):
-    """Generator over all subclasses of a given class in depth first order."""
-
-    if not isinstance(cls, type):
-        raise TypeError(_("itersubclasses must be called with "
-                          "new-style classes, not %.100r") % cls)
-    _seen = _seen or set()
-    try:
-        subs = cls.__subclasses__()
-    except TypeError:   # fails only when cls is type
-        subs = cls.__subclasses__(cls)
-    for sub in subs:
-        if sub not in _seen:
-            _seen.add(sub)
-            yield sub
-            for sub in itersubclasses(sub, _seen):
-                yield sub
-
-
-def try_append_module(name, modules):
-    if name not in modules:
-        modules[name] = importutils.import_module(name)
-
-
-def import_modules_from_package(package):
-    """Import modules from package and append into sys.modules
-
-    :param: package - Full package name. For example: rally.deploy.engines
-    """
-    path = [os.path.dirname(rally.__file__), ".."] + package.split(".")
-    path = os.path.join(*path)
-    for root, dirs, files in os.walk(path):
-        for filename in files:
-            if filename.startswith("__") or not filename.endswith(".py"):
-                continue
-            new_package = ".".join(root.split(os.sep)).split("....")[1]
-            module_name = "%s.%s" % (new_package, filename[:-3])
-            try_append_module(module_name, sys.modules)
-
-
 def _log_wrapper(obj, log_function, msg, **kw):
     """A logging wrapper for any method of a class.
 
@@ -272,48 +228,6 @@ def log_deprecated_args(message, rally_version, deprecated_args,
             return result
         return wrapper
     return decorator
-
-
-def load_plugins(dir_or_file):
-    if os.path.isdir(dir_or_file):
-        directory = dir_or_file
-        LOG.info("Loading plugins from directories %s/*" % directory)
-
-        to_load = []
-        for root, dirs, files in os.walk(directory):
-            to_load.extend((plugin[:-3], root)
-                           for plugin in files if plugin.endswith(".py"))
-        for plugin, directory in to_load:
-            if directory not in sys.path:
-                sys.path.append(directory)
-
-            fullpath = os.path.join(directory, plugin)
-            try:
-                fp, pathname, descr = imp.find_module(plugin, [directory])
-                imp.load_module(plugin, fp, pathname, descr)
-                fp.close()
-                LOG.info("\t Loaded module with plugins: %s.py" % fullpath)
-            except Exception as e:
-                LOG.warning(
-                    "\t Failed to load module with plugins %(path)s.py: %(e)s"
-                    % {"path": fullpath, "e": e})
-                if logging.is_debug():
-                    LOG.exception(e)
-    elif os.path.isfile(dir_or_file):
-        plugin_file = dir_or_file
-        LOG.info("Loading plugins from file %s" % plugin_file)
-        if plugin_file not in sys.path:
-            sys.path.append(plugin_file)
-        try:
-            plugin_name = os.path.splitext(plugin_file.split("/")[-1])[0]
-            imp.load_source(plugin_name, plugin_file)
-            LOG.info("\t Loaded module with plugins: %s.py" % plugin_name)
-        except Exception as e:
-            LOG.warning(
-                "\t Failed to load module with plugins %(path)s: %(e)s"
-                % {"path": plugin_file, "e": e})
-            if logging.is_debug():
-                LOG.exception(e)
 
 
 def get_method_class(func):
