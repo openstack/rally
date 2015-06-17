@@ -352,6 +352,20 @@ class VerificationAPITestCase(BaseDeploymentTestCase):
         self.tempest.verify.assert_called_once_with(set_name="smoke",
                                                     regex=None)
 
+    @mock.patch("rally.common.objects.Deployment.get")
+    @mock.patch("rally.api.objects.Verification")
+    @mock.patch("rally.verification.tempest.tempest.Tempest")
+    def test_import_file(self, mock_tempest, mock_verification,
+                         mock_deployment_get):
+        mock_deployment_get.return_value = {"uuid": self.deployment_uuid}
+
+        mock_tempest.return_value = self.tempest
+        self.tempest.is_installed.return_value = True
+        api.Verification.import_file(self.deployment_uuid, "smoke", "log_file")
+
+        self.tempest.import_file.assert_called_once_with(
+            set_name="smoke", log_file="log_file")
+
     @mock.patch("rally.api.objects.Deployment.get")
     @mock.patch("rally.api.tempest.Tempest")
     def test_install_tempest(self, mock_tempest, mock_deployment_get):
