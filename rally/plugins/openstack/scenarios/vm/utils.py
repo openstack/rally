@@ -17,6 +17,7 @@ import subprocess
 import sys
 
 import netaddr
+from oslo_config import cfg
 import six
 
 from rally.common.i18n import _
@@ -31,6 +32,17 @@ LOG = logging.getLogger(__name__)
 
 ICMP_UP_STATUS = "ICMP UP"
 ICMP_DOWN_STATUS = "ICMP DOWN"
+
+VM_BENCHMARK_OPTS = [
+    cfg.FloatOpt("vm_ping_poll_interval", default=1.0,
+                 help="Interval between checks when waiting for a VM to "
+                 "become pingable"),
+    cfg.FloatOpt("vm_ping_timeout", default=120.0,
+                 help="Time to wait for a VM to become pingable")]
+
+CONF = cfg.CONF
+benchmark_group = cfg.OptGroup(name="benchmark", title="benchmark options")
+CONF.register_opts(VM_BENCHMARK_OPTS, group=benchmark_group)
 
 
 class VMScenario(base.Scenario):
@@ -131,9 +143,9 @@ class VMScenario(base.Scenario):
         server_ip = netaddr.IPAddress(server_ip)
         utils.wait_for(
             server_ip,
-            is_ready=utils.resource_is(ICMP_UP_STATUS,
-                                       self._ping_ip_address),
-            timeout=120
+            is_ready=utils.resource_is(ICMP_UP_STATUS, self._ping_ip_address),
+            timeout=CONF.benchmark.vm_ping_timeout,
+            check_interval=CONF.benchmark.vm_ping_poll_interval
         )
 
     def _run_command(self, server_ip, port, username, password, command,

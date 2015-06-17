@@ -18,11 +18,13 @@ import subprocess
 
 import mock
 import netaddr
+from oslo_config import cfg
 
 from rally.plugins.openstack.scenarios.vm import utils
 from tests.unit import test
 
 VMTASKS_UTILS = "rally.plugins.openstack.scenarios.vm.utils"
+CONF = cfg.CONF
 
 
 class VMScenarioTestCase(test.ScenarioTestCase):
@@ -92,7 +94,8 @@ class VMScenarioTestCase(test.ScenarioTestCase):
         self.mock_wait_for.mock.assert_called_once_with(
             netaddr.IPAddress("1.2.3.4"),
             is_ready=self.mock_resource_is.mock.return_value,
-            timeout=120)
+            timeout=CONF.benchmark.vm_ping_timeout,
+            check_interval=CONF.benchmark.vm_ping_poll_interval)
         self.mock_resource_is.mock.assert_called_once_with(
             "ICMP UP", vm_scenario._ping_ip_address)
 
