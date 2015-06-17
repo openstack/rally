@@ -309,3 +309,11 @@ class NeutronScenario(base.Scenario):
     def _list_v1_pools(self, **kwargs):
         """Return user lb pool list(v1)."""
         return self.clients("neutron").list_pools()
+
+    @base.atomic_action_timer("neutron.delete_pool")
+    def _delete_v1_pool(self, pool):
+        """Delete neutron pool.
+
+        :param pool: Pool object
+        """
+        self.clients("neutron").delete_pool(pool["id"])

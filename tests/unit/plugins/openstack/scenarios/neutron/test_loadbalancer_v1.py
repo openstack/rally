@@ -25,7 +25,7 @@ class NeutronLoadbalancerv1TestCase(test.TestCase):
                        "networks": [{"id": "fake_net",
                                      "subnets": ["fake_subnet"]}]}}
 
-    def _validate_scenario(self, pool_create_args):
+    def _validate_create_and_list_pools_scenario(self, pool_create_args):
         neutron_scenario = loadbalancer_v1.NeutronLoadbalancerV1(
             self._get_context())
         neutron_scenario._create_v1_pool = mock.Mock()
@@ -38,8 +38,37 @@ class NeutronLoadbalancerv1TestCase(test.TestCase):
                     subnet_id, **pool_create_args)
         neutron_scenario._list_v1_pools.assert_called_once_with()
 
+    def _validate_create_and_delete_pools_scenario(self, pool_create_args):
+        neutron_scenario = loadbalancer_v1.NeutronLoadbalancerV1(
+            self._get_context())
+        pool = {
+            "pool": {
+                "id": "pool-id"
+            }
+        }
+        neutron_scenario._create_v1_pool = mock.Mock(return_value=pool)
+        neutron_scenario._delete_v1_pool = mock.Mock()
+        neutron_scenario.create_and_delete_pools(
+            pool_create_args=pool_create_args)
+        pools = []
+        for net in self._get_context()["tenant"]["networks"]:
+            for subnet_id in net["subnets"]:
+                self.assertEqual([mock.call(subnet_id=subnet_id,
+                                  **pool_create_args)],
+                                 neutron_scenario._create_v1_pool.mock_calls)
+        for pool in pools:
+            self.assertEqual(1, neutron_scenario._delete_v1_pool.call_count)
+
     def test_create_and_list_pools_default(self):
-        self._validate_scenario(pool_create_args={})
+        self._validate_create_and_list_pools_scenario(pool_create_args={})
 
     def test_create_and_list_pools_explicit(self):
-        self._validate_scenario(pool_create_args={"name": "given-name"})
+        self._validate_create_and_list_pools_scenario(
+            pool_create_args={"name": "given-name"})
+
+    def test_create_and_delete_pools_default(self):
+        self._validate_create_and_delete_pools_scenario(pool_create_args={})
+
+    def test_create_and_delete_pools_explicit(self):
+        self._validate_create_and_delete_pools_scenario(
+            pool_create_args={"name": "given-name"})

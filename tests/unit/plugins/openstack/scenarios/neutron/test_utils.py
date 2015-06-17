@@ -431,6 +431,16 @@ class NeutronScenarioTestCase(test.ClientsTestCase):
         self._test_atomic_action_timer(
             neutron_scenario.atomic_actions(), "neutron.create_pool")
 
+    def test_delete_v1_pool(self):
+        scenario = utils.NeutronScenario()
+
+        pool = {"pool": {"id": "fake-id"}}
+        scenario._delete_v1_pool(pool["pool"])
+        self.clients("neutron").delete_pool.assert_called_once_with(
+            pool["pool"]["id"])
+        self._test_atomic_action_timer(scenario.atomic_actions(),
+                                       "neutron.delete_pool")
+
     def test_list_v1_pools(self):
         scenario = utils.NeutronScenario()
         pools_list = []
