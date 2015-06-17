@@ -394,14 +394,11 @@ class NeutronWrapperTestCase(test.TestCase):
 
         wrap.get_network = mock.Mock(
             return_value={"id": "foo_net", "external": True})
-        self.assertRaises(network.NetworkWrapperException,
-                          wrap.create_floating_ip, tenant_id="foo_tenant",
-                          int_network="int_net")
         wrap.create_floating_ip(tenant_id="foo_tenant", ext_network="ext_net")
 
         wrap.get_network = mock.Mock(
             return_value={"id": "foo_net", "external": False})
-        wrap.create_floating_ip(tenant_id="foo_tenant", int_network="int_net")
+        wrap.create_floating_ip(tenant_id="foo_tenant")
 
         self.assertRaises(network.NetworkWrapperException,
                           wrap.create_floating_ip, tenant_id="foo_tenant",

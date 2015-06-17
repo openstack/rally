@@ -101,7 +101,7 @@ class VMScenario(base.Scenario):
         fixed_ip = server.addresses[internal_network][0]["addr"]
 
         fip = network_wrapper.wrap(self.clients).create_floating_ip(
-            ext_network=floating_network, int_network=internal_network,
+            ext_network=floating_network,
             tenant_id=server.tenant_id, fixed_ip=fixed_ip)
 
         self._associate_floating_ip(server, fip["ip"], fixed_address=fixed_ip)

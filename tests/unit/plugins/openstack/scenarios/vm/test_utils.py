@@ -280,7 +280,7 @@ class VMScenarioTestCase(test.TestCase):
 
         mock_wrap.assert_called_once_with(scenario.clients)
         netwrap.create_floating_ip.assert_called_once_with(
-            ext_network="bar_network", int_network="foo_net",
+            ext_network="bar_network",
             tenant_id="foo_tenant", fixed_ip="foo_ip")
 
         scenario._associate_floating_ip.assert_called_once_with(
