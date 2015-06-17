@@ -122,6 +122,51 @@ class CeilometerScenarioTestCase(test.ClientsTestCase):
         self._test_atomic_action_timer(self.scenario.atomic_actions(),
                                        "ceilometer.set_alarm_state")
 
+    def test__list_events(self):
+        self.assertEqual(
+            self.scenario._list_events(),
+            self.admin_clients("ceilometer").events.list.return_value
+        )
+        self._test_atomic_action_timer(self.scenario.atomic_actions(),
+                                       "ceilometer.list_events")
+
+    def test__get_events(self):
+        self.assertEqual(
+            self.scenario._get_event(event_id="fake_id"),
+            self.admin_clients("ceilometer").events.get.return_value
+        )
+        self._test_atomic_action_timer(self.scenario.atomic_actions(),
+                                       "ceilometer.get_event")
+
+    def test__list_event_types(self):
+        self.assertEqual(
+            self.scenario._list_event_types(),
+            self.admin_clients("ceilometer").event_types.list.return_value
+        )
+        self._test_atomic_action_timer(self.scenario.atomic_actions(),
+                                       "ceilometer.list_event_types")
+
+    def test__list_event_traits(self):
+        self.assertEqual(
+            self.scenario._list_event_traits(
+                event_type="fake_event_type", trait_name="fake_trait_name"),
+            self.admin_clients("ceilometer").traits.list.return_value
+        )
+        self._test_atomic_action_timer(self.scenario.atomic_actions(),
+                                       "ceilometer.list_event_traits")
+
+    def test__list_event_trait_descriptions(self):
+        self.assertEqual(
+            self.scenario._list_event_trait_descriptions(
+                event_type="fake_event_type"
+            ),
+            self.admin_clients("ceilometer").trait_descriptions.list.
+            return_value
+        )
+        self._test_atomic_action_timer(
+            self.scenario.atomic_actions(),
+            "ceilometer.list_event_trait_descriptions")
+
     def test__list_meters(self):
         self.assertEqual(self.scenario._list_meters(),
                          self.clients("ceilometer").meters.list.return_value)

@@ -1,0 +1,17 @@
+{
+    "CeilometerEvents.create_user_and_list_events": [
+        {
+            "runner": {
+                "type": "constant",
+                "times": 10,
+                "concurrency": 10
+            },
+            "context": {
+                "users": {
+                    "tenants": 2,
+                    "users_per_tenant": 2
+                }
+            }
+        }
+    ]
+}

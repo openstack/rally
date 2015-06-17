@@ -117,6 +117,55 @@ class CeilometerScenario(base.Scenario):
                                     .get_from_manager(),
                                     timeout=timeout, check_interval=1)
 
+    @base.atomic_action_timer("ceilometer.list_events")
+    def _list_events(self):
+        """Get list of user's events.
+
+        It fetches all events.
+        :returns: list of events
+        """
+        return self.admin_clients("ceilometer").events.list()
+
+    @base.atomic_action_timer("ceilometer.get_event")
+    def _get_event(self, event_id):
+        """Get event with specific id.
+
+        Get event matching event_id.
+
+        :param event_id: specifies id of the event
+        :returns: event
+        """
+        return self.admin_clients("ceilometer").events.get(event_id)
+
+    @base.atomic_action_timer("ceilometer.list_event_types")
+    def _list_event_types(self):
+        """Get list of all event types.
+
+        :returns: list of event types
+        """
+        return self.admin_clients("ceilometer").event_types.list()
+
+    @base.atomic_action_timer("ceilometer.list_event_traits")
+    def _list_event_traits(self, event_type, trait_name):
+        """Get list of event traits.
+
+        :param event_type: specifies the type of event
+        :param trait_name: specifies trait name
+        :returns: list of event traits
+        """
+        return self.admin_clients("ceilometer").traits.list(event_type,
+                                                            trait_name)
+
+    @base.atomic_action_timer("ceilometer.list_event_trait_descriptions")
+    def _list_event_trait_descriptions(self, event_type):
+        """Get list of event trait descriptions.
+
+        :param event_type: specifies the type of event
+        :returns: list of event trait descriptions
+        """
+        return self.admin_clients("ceilometer").trait_descriptions.list(
+            event_type)
+
     @base.atomic_action_timer("ceilometer.list_meters")
     def _list_meters(self):
         """Get list of user's meters."""
