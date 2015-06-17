@@ -44,12 +44,6 @@ benchmark_group = cfg.OptGroup(name="benchmark",
 CONF.register_opts(EC2_BENCHMARK_OPTS, group=benchmark_group)
 
 
-def ec2_resource_is(status):
-    """Check status for EC2."""
-
-    return lambda resource: resource.state.upper() == status.upper()
-
-
 class EC2Scenario(base.Scenario):
     """Base class for EC2 scenarios with basic atomic actions."""
 
@@ -74,7 +68,7 @@ class EC2Scenario(base.Scenario):
         time.sleep(CONF.benchmark.ec2_server_boot_prepoll_delay)
         server = utils.wait_for(
             server,
-            is_ready=ec2_resource_is("RUNNING"),
+            is_ready=utils.resource_is("RUNNING"),
             update_resource=self._update_resource,
             timeout=CONF.benchmark.ec2_server_boot_timeout,
             check_interval=CONF.benchmark.ec2_server_boot_poll_interval
