@@ -25,7 +25,7 @@ SAHARA_JOB = "rally.plugins.openstack.scenarios.sahara.jobs.SaharaJob"
 SAHARA_UTILS = "rally.plugins.openstack.scenarios.sahara.utils"
 
 
-class SaharaJobTestCase(test.ClientsTestCase):
+class SaharaJobTestCase(test.ScenarioTestCase):
 
     def setUp(self):
         super(SaharaJobTestCase, self).setUp()

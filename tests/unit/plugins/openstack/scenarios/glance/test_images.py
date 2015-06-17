@@ -71,12 +71,11 @@ class GlanceImagesTestCase(test.TestCase):
         mock__create_image.return_value = fake_image
         mock__boot_servers.return_value = fake_servers
         kwargs = {"fakearg": "f"}
-        with mock.patch("rally.plugins.openstack.scenarios."
-                        "glance.utils.time.sleep"):
-            glance_scenario.create_image_and_boot_instances("cf", "url",
-                                                            "df", "fid",
-                                                            5, **kwargs)
-            mock__create_image.assert_called_once_with(
-                "cf", "url", "df")
-            mock__boot_servers.assert_called_once_with(
-                "image-id-0", "fid", 5, **kwargs)
+
+        glance_scenario.create_image_and_boot_instances("cf", "url",
+                                                        "df", "fid",
+                                                        5, **kwargs)
+        mock__create_image.assert_called_once_with(
+            "cf", "url", "df")
+        mock__boot_servers.assert_called_once_with(
+            "image-id-0", "fid", 5, **kwargs)

@@ -25,7 +25,7 @@ NOVA_SERVERS_MODULE = "rally.plugins.openstack.scenarios.nova.servers"
 NOVA_SERVERS = NOVA_SERVERS_MODULE + ".NovaServers"
 
 
-class NovaServersTestCase(test.ClientsTestCase):
+class NovaServersTestCase(test.ScenarioTestCase):
 
     def test_boot_rescue_unrescue(self):
         actions = [{"rescue_unrescue": 5}]

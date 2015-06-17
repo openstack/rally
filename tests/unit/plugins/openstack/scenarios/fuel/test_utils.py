@@ -77,7 +77,7 @@ class FuelClientTestCase(test.TestCase):
                              client.task)
 
 
-class FuelScenarioTestCase(test.ClientsTestCase):
+class FuelScenarioTestCase(test.ScenarioTestCase):
 
     def test__list_environments(self):
         scenario = utils.FuelScenario()

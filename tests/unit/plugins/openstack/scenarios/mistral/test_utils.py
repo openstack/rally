@@ -19,7 +19,7 @@ from tests.unit import test
 MISTRAL_UTILS = "rally.plugins.openstack.scenarios.mistral.utils"
 
 
-class MistralScenarioTestCase(test.ClientsTestCase):
+class MistralScenarioTestCase(test.ScenarioTestCase):
 
     def test_list_workbooks(self):
         scenario = utils.MistralScenario()

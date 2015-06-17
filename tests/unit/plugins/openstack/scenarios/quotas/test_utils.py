@@ -20,7 +20,7 @@ from rally.plugins.openstack.scenarios.quotas import utils
 from tests.unit import test
 
 
-class QuotasScenarioTestCase(test.ClientsTestCase):
+class QuotasScenarioTestCase(test.ScenarioTestCase):
 
     def test__update_quotas(self):
         tenant_id = "fake_tenant"

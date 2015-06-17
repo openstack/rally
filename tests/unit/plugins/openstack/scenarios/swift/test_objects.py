@@ -19,7 +19,7 @@ from rally.plugins.openstack.scenarios.swift import objects
 from tests.unit import test
 
 
-class SwiftObjectsTestCase(test.ClientsTestCase):
+class SwiftObjectsTestCase(test.ScenarioTestCase):
 
     def test_create_container_and_object_then_list_objects(self):
         scenario = objects.SwiftObjects()

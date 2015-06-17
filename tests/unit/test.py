@@ -18,6 +18,7 @@ import os
 import mock
 from oslo_config import fixture
 from oslotest import base
+from oslotest import mockpatch
 
 from rally import db
 from tests.unit import fakes
@@ -58,8 +59,10 @@ class DBTestCase(TestCase):
         self.useFixture(DatabaseFixture())
 
 
-class ClientsTestCase(TestCase):
+class ScenarioTestCase(TestCase):
     """Base class for Scenario tests using mocked self.clients."""
+    benchmark_utils = "rally.task.utils"
+    patch_benchmark_utils = True
 
     def client_factory(self, client_type, version=None, admin=False):
         """Create a new client object."""
@@ -91,7 +94,24 @@ class ClientsTestCase(TestCase):
         return key in self._clients
 
     def setUp(self):
-        super(ClientsTestCase, self).setUp()
+        super(ScenarioTestCase, self).setUp()
+        if self.patch_benchmark_utils:
+            self.mock_resource_is = mockpatch.Patch(
+                self.benchmark_utils + ".resource_is")
+            self.mock_get_from_manager = mockpatch.Patch(
+                self.benchmark_utils + ".get_from_manager")
+            self.mock_wait_for = mockpatch.Patch(
+                self.benchmark_utils + ".wait_for")
+            self.mock_wait_for_delete = mockpatch.Patch(
+                self.benchmark_utils + ".wait_for_delete")
+            self.useFixture(self.mock_resource_is)
+            self.useFixture(self.mock_get_from_manager)
+            self.useFixture(self.mock_wait_for)
+            self.useFixture(self.mock_wait_for_delete)
+
+        self.mock_sleep = mockpatch.Patch("time.sleep")
+        self.useFixture(self.mock_sleep)
+
         self._clients = {}
         self._client_mocks = [
             mock.patch("rally.task.scenarios.base.Scenario.clients",
@@ -105,15 +125,15 @@ class ClientsTestCase(TestCase):
     def tearDown(self):
         for patcher in self._client_mocks:
             patcher.stop()
-        super(ClientsTestCase, self).tearDown()
+        super(ScenarioTestCase, self).tearDown()
 
 
-class FakeClientsTestCase(ClientsTestCase):
+class FakeClientsScenarioTestCase(ScenarioTestCase):
     """Base class for Scenario tests using fake (not mocked) self.clients."""
 
     def client_factory(self, client_type, version=None, admin=False):
         return getattr(self._fake_clients, client_type)()
 
     def setUp(self):
-        super(FakeClientsTestCase, self).setUp()
+        super(FakeClientsScenarioTestCase, self).setUp()
         self._fake_clients = fakes.FakeClients()

@@ -28,7 +28,15 @@ CONF = cfg.CONF
 SAHARA_UTILS = "rally.plugins.openstack.scenarios.sahara.utils"
 
 
-class SaharaScenarioTestCase(test.ClientsTestCase):
+class SaharaScenarioTestCase(test.ScenarioTestCase):
+    # NOTE(stpierre): the Sahara utils generally do funny stuff with
+    # wait_for() calls -- frequently the the is_ready and
+    # update_resource arguments are functions defined in the Sahara
+    # utils themselves instead of the more standard resource_is() and
+    # get_from_manager() calls. As a result, the tests below do more
+    # integrated/functional testing of wait_for() calls, and we can't
+    # just mock out wait_for and friends the way we usually do.
+    patch_benchmark_utils = False
 
     def setUp(self):
         super(SaharaScenarioTestCase, self).setUp()

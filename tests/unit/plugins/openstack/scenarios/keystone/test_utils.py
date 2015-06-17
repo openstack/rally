@@ -45,7 +45,7 @@ class KeystoneUtilsTestCase(test.TestCase):
             self.assertEqual(utils.is_temporary(resource), is_valid)
 
 
-class KeystoneScenarioTestCase(test.ClientsTestCase):
+class KeystoneScenarioTestCase(test.ScenarioTestCase):
 
     @mock.patch(UTILS + "uuid.uuid4", return_value="pwd")
     @mock.patch("rally.common.utils.generate_random_name",

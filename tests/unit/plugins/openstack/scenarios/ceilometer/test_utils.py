@@ -15,27 +15,17 @@
 import copy
 
 import mock
-from oslotest import mockpatch
 
 from rally.plugins.openstack.scenarios.ceilometer import utils
 from tests.unit import test
 
-BM_UTILS = "rally.task.utils"
 CEILOMETER_UTILS = "rally.plugins.openstack.scenarios.ceilometer.utils"
 
 
-class CeilometerScenarioTestCase(test.ClientsTestCase):
+class CeilometerScenarioTestCase(test.ScenarioTestCase):
     def setUp(self):
         super(CeilometerScenarioTestCase, self).setUp()
         self.scenario = utils.CeilometerScenario()
-        self.res_is = mockpatch.Patch(BM_UTILS + ".resource_is")
-        self.get_fm = mockpatch.Patch(BM_UTILS + ".get_from_manager")
-        self.wait_for = mockpatch.Patch(CEILOMETER_UTILS +
-                                        ".bench_utils.wait_for")
-        self.useFixture(self.wait_for)
-        self.useFixture(self.res_is)
-        self.useFixture(self.get_fm)
-        self.gfm = self.get_fm.mock
 
     def test__list_alarms_by_id(self):
         self.assertEqual(self.clients("ceilometer").alarms.get.return_value,
@@ -112,13 +102,14 @@ class CeilometerScenarioTestCase(test.ClientsTestCase):
         alarm = mock.Mock()
         self.clients("ceilometer").alarms.create.return_value = alarm
         return_alarm = self.scenario._set_alarm_state(alarm, "ok", 100)
-        self.wait_for.mock.assert_called_once_with(
+        self.mock_wait_for.mock.assert_called_once_with(
             alarm,
-            is_ready=self.res_is.mock(),
-            update_resource=self.gfm(),
+            is_ready=self.mock_resource_is.mock.return_value,
+            update_resource=self.mock_get_from_manager.mock.return_value,
             timeout=100, check_interval=1)
-        self.res_is.mock.assert_has_calls([mock.call("ok")])
-        self.assertEqual(self.wait_for.mock(), return_alarm)
+        self.mock_resource_is.mock.assert_called_once_with("ok")
+        self.mock_get_from_manager.mock.assert_called_once_with()
+        self.assertEqual(self.mock_wait_for.mock.return_value, return_alarm)
         self._test_atomic_action_timer(self.scenario.atomic_actions(),
                                        "ceilometer.set_alarm_state")
 

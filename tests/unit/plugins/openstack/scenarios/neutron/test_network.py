@@ -22,7 +22,7 @@ NEUTRON_NETWORKS = ("rally.plugins.openstack.scenarios.neutron.network"
                     ".NeutronNetworks")
 
 
-class NeutronNetworksTestCase(test.ClientsTestCase):
+class NeutronNetworksTestCase(test.ScenarioTestCase):
 
     @mock.patch(NEUTRON_NETWORKS + "._list_networks")
     @mock.patch(NEUTRON_NETWORKS + "._create_network")

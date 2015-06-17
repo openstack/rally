@@ -22,7 +22,7 @@ from tests.unit import test
 NEUTRON_UTILS = "rally.plugins.openstack.scenarios.neutron.utils."
 
 
-class NeutronScenarioTestCase(test.ClientsTestCase):
+class NeutronScenarioTestCase(test.ScenarioTestCase):
 
     def setUp(self):
         super(NeutronScenarioTestCase, self).setUp()
@@ -469,7 +469,7 @@ class NeutronScenarioTestCase(test.ClientsTestCase):
                                        "neutron.list_pools")
 
 
-class NeutronScenarioFunctionalTestCase(test.FakeClientsTestCase):
+class NeutronScenarioFunctionalTestCase(test.FakeClientsScenarioTestCase):
 
     @mock.patch(NEUTRON_UTILS + "network_wrapper.generate_cidr")
     def test_functional_create_network_and_subnets(self, mock_generate_cidr):
