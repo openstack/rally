@@ -18,7 +18,7 @@
 import mock
 
 from rally import consts
-from rally import deploy
+from rally.deploy import engine
 from rally import exceptions
 from tests.unit import test
 
@@ -55,8 +55,8 @@ class FakeDeployment(object):
         pass
 
 
-@deploy.configure(name="FakeEngine")
-class FakeEngine(deploy.EngineFactory):
+@engine.configure(name="FakeEngine")
+class FakeEngine(engine.EngineFactory):
     """Fake deployment engine.
 
     Used for tests.
@@ -89,7 +89,7 @@ class EngineFactoryTestCase(test.TestCase):
     def test_get_engine_not_found(self):
         deployment = make_fake_deployment()
         self.assertRaises(exceptions.PluginNotFound,
-                          deploy.EngineFactory.get_engine,
+                          engine.EngineFactory.get_engine,
                           "non_existing_engine", deployment)
         self.assertEqual(consts.DeployStatus.DEPLOY_FAILED,
                          deployment["status"])
@@ -204,9 +204,9 @@ class EngineFactoryTestCase(test.TestCase):
 
     def test_get_engine(self):
         deployment = make_fake_deployment()
-        engine_inst = deploy.EngineFactory.get_engine("FakeEngine",
+        engine_inst = engine.EngineFactory.get_engine("FakeEngine",
                                                       deployment)
         self.assertIsInstance(engine_inst, FakeEngine)
 
     def test_engine_factory_is_abstract(self):
-        self.assertRaises(TypeError, deploy.EngineFactory)
+        self.assertRaises(TypeError, engine.EngineFactory)

@@ -18,7 +18,7 @@
 import jsonschema
 
 from rally import consts
-from rally import deploy
+from rally.deploy import engine as deploy_engine
 from rally.deploy.engines import existing
 from tests.unit import test
 
@@ -70,6 +70,6 @@ class TestExistingCloud(test.TestCase):
 
     def test_is_in_factory(self):
         name = self.deployment["config"]["type"]
-        engine = deploy.EngineFactory.get_engine(name,
-                                                 self.deployment)
+        engine = deploy_engine.EngineFactory.get_engine(name,
+                                                        self.deployment)
         self.assertIsInstance(engine, existing.ExistingCloud)
