@@ -24,6 +24,24 @@ from tests.unit import test
 class ManilaSharesTestCase(test.TestCase):
 
     @ddt.data(
+        {"share_proto": "nfs", "size": 3},
+        {"share_proto": "cifs", "size": 4,
+         "share_network": "foo", "share_type": "bar"},
+    )
+    def test_create_and_delete_share(self, params):
+        fake_share = mock.MagicMock()
+        scenario = shares.ManilaShares()
+        scenario._create_share = mock.MagicMock(return_value=fake_share)
+        scenario.sleep_between = mock.MagicMock()
+        scenario._delete_share = mock.MagicMock()
+
+        scenario.create_and_delete_share(min_sleep=3, max_sleep=4, **params)
+
+        scenario._create_share.assert_called_once_with(**params)
+        scenario.sleep_between.assert_called_once_with(3, 4)
+        scenario._delete_share.assert_called_once_with(fake_share)
+
+    @ddt.data(
         {},
         {"detailed": True},
         {"detailed": False},

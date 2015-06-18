@@ -22,6 +22,7 @@ from rally.plugins.openstack.scenarios.cinder import utils as cinder_utils
 from rally.plugins.openstack.scenarios.ec2 import utils as ec2_utils
 from rally.plugins.openstack.scenarios.glance import utils as glance_utils
 from rally.plugins.openstack.scenarios.heat import utils as heat_utils
+from rally.plugins.openstack.scenarios.manila import utils as manila_utils
 from rally.plugins.openstack.scenarios.nova import utils as nova_utils
 from rally.plugins.openstack.scenarios.sahara import utils as sahara_utils
 from rally.verification.tempest import config as tempest_conf
@@ -37,6 +38,7 @@ def list_opts():
          itertools.chain(cinder_utils.CINDER_BENCHMARK_OPTS,
                          glance_utils.GLANCE_BENCHMARK_OPTS,
                          heat_utils.HEAT_BENCHMARK_OPTS,
+                         manila_utils.MANILA_BENCHMARK_OPTS,
                          nova_utils.NOVA_BENCHMARK_OPTS,
                          sahara_utils.SAHARA_TIMEOUT_OPTS,
                          ec2_utils.EC2_BENCHMARK_OPTS)),

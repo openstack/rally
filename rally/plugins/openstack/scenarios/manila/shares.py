@@ -22,6 +22,32 @@ from rally.plugins.openstack.scenarios.manila import utils
 class ManilaShares(utils.ManilaScenario):
     """Benchmark scenarios for Manila shares."""
 
+    @validation.validate_share_proto()
+    @validation.required_services(consts.Service.MANILA)
+    @validation.required_openstack(users=True)
+    @base.scenario(context={"cleanup": ["manila"]})
+    def create_and_delete_share(self, share_proto, size=1, min_sleep=0,
+                                max_sleep=0, **kwargs):
+        """Create and delete a share.
+
+        Optional 'min_sleep' and 'max_sleep' parameters allow the scenario
+        to simulate a pause between share creation and deletion
+        (of random duration from [min_sleep, max_sleep]).
+
+        :param share_proto: share protocol, valid values are NFS, CIFS,
+            GlusterFS and HDFS
+        :param size: share size in GB, should be greater than 0
+        :param min_sleep: minimum sleep time in seconds (non-negative)
+        :param max_sleep: maximum sleep time in seconds (non-negative)
+        :param kwargs: optional args to create a share
+        """
+        share = self._create_share(
+            share_proto=share_proto,
+            size=size,
+            **kwargs)
+        self.sleep_between(min_sleep, max_sleep)
+        self._delete_share(share)
+
     @validation.required_services(consts.Service.MANILA)
     @validation.required_openstack(users=True)
     @base.scenario()

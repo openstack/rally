@@ -19,15 +19,51 @@ import mock
 from rally.plugins.openstack.scenarios.manila import utils
 from tests.unit import test
 
-MANILA_UTILS = "rally.plugins.openstack.scenarios.manila.utils.ManilaScenario."
+BM_UTILS = "rally.benchmark.utils."
 
 
 @ddt.ddt
-class ManilaScenarioTestCase(test.TestCase):
+class ManilaScenarioTestCase(test.ClientsTestCase):
 
     def setUp(self):
         super(ManilaScenarioTestCase, self).setUp()
         self.scenario = utils.ManilaScenario()
+
+    @mock.patch("time.sleep")
+    @mock.patch(BM_UTILS + "wait_for")
+    @mock.patch(BM_UTILS + "get_from_manager")
+    @mock.patch(BM_UTILS + "resource_is")
+    def test__create_share(self, mock_resource_is, mock_get_from_manager,
+                           mock_wait_for, mock_sleep):
+        fake_name = "fake_name"
+        fake_share = mock.Mock()
+        self.clients("manila").shares.create.return_value = fake_share
+        self.scenario._generate_random_name = mock.Mock(return_value=fake_name)
+
+        self.scenario._create_share("nfs")
+
+        self.clients("manila").shares.create.assert_called_once_with(
+            "nfs", 1, name=fake_name)
+
+        mock_wait_for.assert_called_once_with(
+            fake_share, is_ready=mock.ANY, update_resource=mock.ANY,
+            timeout=300, check_interval=3)
+        mock_resource_is.assert_called_once_with("available")
+        mock_get_from_manager.assert_called_once_with()
+        self.assertTrue(mock_sleep.called)
+
+    @mock.patch(BM_UTILS + "get_from_manager")
+    @mock.patch(BM_UTILS + "wait_for_delete")
+    def test__delete_share(self, mock_wait_for_delete, mock_get_from_manager):
+        fake_share = mock.MagicMock()
+
+        self.scenario._delete_share(fake_share)
+
+        fake_share.delete.assert_called_once_with()
+        mock_get_from_manager.assert_called_once_with(("error_deleting", ))
+        mock_wait_for_delete.assert_called_once_with(
+            fake_share, update_resource=mock.ANY, timeout=180,
+            check_interval=2)
 
     @ddt.data(
         {},
@@ -35,14 +71,13 @@ class ManilaScenarioTestCase(test.TestCase):
         {"detailed": True, "search_opts": {"name": "foo_sn"}},
         {"search_opts": {"project_id": "fake_project"}},
     )
-    @mock.patch(MANILA_UTILS + "clients")
-    def test__list_shares(self, params, mock_clients):
+    def test__list_shares(self, params):
         fake_shares = ["foo", "bar"]
-        mock_clients.return_value.shares.list.return_value = fake_shares
+        self.clients("manila").shares.list.return_value = fake_shares
 
         result = self.scenario._list_shares(**params)
 
         self.assertEqual(fake_shares, result)
-        mock_clients.return_value.shares.list.assert_called_once_with(
+        self.clients("manila").shares.list.assert_called_once_with(
             detailed=params.get("detailed", True),
             search_opts=params.get("search_opts", None))

@@ -1,0 +1,29 @@
+{
+    "ManilaShares.create_and_delete_share": [
+        {
+            "args": {
+                "share_proto": "nfs",
+                "size": 1,
+                "min_sleep": 1,
+                "max_sleep": 2
+            },
+            "runner": {
+                "type": "constant",
+                "times": 2,
+                "concurrency": 2
+            },
+            "context": {
+                "quotas": {
+                    "manila": {
+                        "shares": -1,
+                        "gigabytes": -1
+                    }
+                },
+                "users": {
+                    "tenants": 2,
+                    "users_per_tenant": 1
+                }
+            }
+        }
+    ]
+}
