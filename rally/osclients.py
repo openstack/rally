@@ -283,7 +283,7 @@ class Clients(object):
         return client
 
     @cached
-    def ironic(self, version="1.0"):
+    def ironic(self, version="1"):
         """Return Ironic client."""
         from ironicclient import client as ironic
         kc = self.keystone()

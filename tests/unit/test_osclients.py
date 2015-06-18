@@ -344,7 +344,7 @@ class OSClientsTestCase(test.TestCase):
                 "insecure": self.endpoint.insecure,
                 "cacert": self.endpoint.cacert
             }
-            mock_ironic.client.get_client.assert_called_once_with("1.0", **kw)
+            mock_ironic.client.get_client.assert_called_once_with("1", **kw)
             self.assertEqual(fake_ironic, self.clients.cache["ironic"])
 
     def test_sahara(self):
