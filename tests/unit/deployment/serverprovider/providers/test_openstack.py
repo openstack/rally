@@ -169,6 +169,7 @@ class OpenStackProviderTestCase(test.TestCase):
         provider.get_nics = mock.Mock(return_value="fake_nics")
         provider.create_keypair = mock.Mock(return_value=(fake_keypair,
                                                           "fake_path"))
+        mock_utils.wait_for = lambda x, **kw: x
         mock_server.return_value = fake_server = mock.Mock()
         provider.nova.servers.create.return_value = fake_instance = mock.Mock()
         fake_instance.accessIPv4 = None

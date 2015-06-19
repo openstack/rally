@@ -214,12 +214,13 @@ class OpenStackProvider(provider.ProviderFactory):
             "check_interval": 5
         }
 
+        servers = []
         for os_server in os_servers:
-            utils.wait_for(os_server, **kwargs)
-        servers = [provider.Server(host=_get_address(s),
-                                   user="root",
-                                   key=public_key_path)
-                   for s in os_servers]
+            os_server = utils.wait_for(os_server, **kwargs)
+            server = provider.Server(host=_get_address(os_server),
+                                     user="root",
+                                     key=public_key_path)
+            servers.append(server)
         for s in servers:
             s.ssh.wait(timeout=120, interval=5)
 
