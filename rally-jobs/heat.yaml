@@ -46,6 +46,24 @@
         failure_rate:
           max: 0
 
+    -
+      args:
+        template_path: "/home/jenkins/.rally/extra/resource_group_server_with_volume.yaml.template"
+        parameters:
+           num_instances: 2
+        files: ["/home/jenkins/.rally/extra/server_with_volume.yaml.template"]
+      runner:
+        type: "constant"
+        times: 2
+        concurrency: 2
+      context:
+        users:
+          tenants: 2
+          users_per_tenant: 1
+      sla:
+        failure_rate:
+          max: 0
+
   HeatStacks.create_check_delete_stack:
     -
       args:
