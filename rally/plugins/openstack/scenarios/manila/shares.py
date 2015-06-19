@@ -60,3 +60,29 @@ class ManilaShares(utils.ManilaScenario):
             "name", "host", "share_type", etc.
         """
         self._list_shares(detailed=detailed, search_opts=search_opts)
+
+    @validation.required_services(consts.Service.MANILA)
+    @validation.required_openstack(users=True)
+    @base.scenario(context={"cleanup": ["manila"]})
+    def create_share_network_and_delete(self,
+                                        neutron_net_id=None,
+                                        neutron_subnet_id=None,
+                                        nova_net_id=None,
+                                        name=None,
+                                        description=None):
+        """Creates share network and then deletes.
+
+        :param neutron_net_id: ID of Neutron network
+        :param neutron_subnet_id: ID of Neutron subnet
+        :param nova_net_id: ID of Nova network
+        :param name: share network name
+        :param description: share network description
+        """
+        share_network = self._create_share_network(
+            neutron_net_id=neutron_net_id,
+            neutron_subnet_id=neutron_subnet_id,
+            nova_net_id=nova_net_id,
+            name=name,
+            description=description,
+        )
+        self._delete_share_network(share_network)

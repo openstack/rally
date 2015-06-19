@@ -111,3 +111,38 @@ class ManilaScenario(base.Scenario):
         """
         return self.clients("manila").shares.list(
             detailed=detailed, search_opts=search_opts)
+
+    @base.atomic_action_timer("manila.create_share_network")
+    def _create_share_network(self, neutron_net_id=None,
+                              neutron_subnet_id=None,
+                              nova_net_id=None, name=None, description=None):
+        """Create share network.
+
+        :param neutron_net_id: ID of Neutron network
+        :param neutron_subnet_id: ID of Neutron subnet
+        :param nova_net_id: ID of Nova network
+        :param name: share network name
+        :param description: share network description
+        :returns: instance of :class:`ShareNetwork`
+        """
+        name = name or self._generate_random_name()
+        share_network = self.clients("manila").share_networks.create(
+            neutron_net_id=neutron_net_id,
+            neutron_subnet_id=neutron_subnet_id,
+            nova_net_id=nova_net_id,
+            name=name,
+            description=description)
+        return share_network
+
+    @base.atomic_action_timer("manila.delete_share_network")
+    def _delete_share_network(self, share_network):
+        """Delete share network.
+
+        :param share_network: instance of :class:`ShareNetwork`.
+        """
+        share_network.delete()
+        bench_utils.wait_for_delete(
+            share_network,
+            update_resource=bench_utils.get_from_manager(),
+            timeout=CONF.benchmark.manila_share_delete_timeout,
+            check_interval=CONF.benchmark.manila_share_delete_poll_interval)

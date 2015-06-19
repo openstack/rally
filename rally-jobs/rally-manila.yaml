@@ -32,3 +32,22 @@
       sla:
         failure_rate:
           max: 0
+
+  ManilaShares.create_share_network_and_delete:
+    -
+      args:
+        name: "rally"
+      runner:
+        type: "constant"
+        times: 10
+        concurrency: 10
+      context:
+        quotas:
+          manila:
+            share_networks: -1
+        users:
+          tenants: 2
+          users_per_tenant: 1
+      sla:
+        failure_rate:
+          max: 0
