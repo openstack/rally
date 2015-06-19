@@ -69,6 +69,7 @@ class OpenStackProvider(provider.ProviderFactory):
             "password": {"type": "string"},
             "tenant": {"type": "string"},
             "auth_url": {"type": "string"},
+            "region": {"type": "string"},
             "flavor_id": {"type": "string"},
             "image": {
                 "type": "object",
@@ -105,7 +106,8 @@ class OpenStackProvider(provider.ProviderFactory):
     def __init__(self, deployment, config):
         super(OpenStackProvider, self).__init__(deployment, config)
         user_endpoint = objects.Endpoint(config["auth_url"], config["user"],
-                                         config["password"], config["tenant"])
+                                         config["password"], config["tenant"],
+                                         region_name=config.get("region"))
         clients = osclients.Clients(user_endpoint)
         self.nova = clients.nova()
         try:

@@ -5,6 +5,7 @@
         "deployment_name": "Rally sample deployment",
         "user": "admin",
         "tenant": "admin",
+        "region": "RegionOne",
         "flavor_id": "2",
         "nics": [{"net-id": "97936015-128a-42f1-a3f2-1868ceeeeb6f"}],
         "password": "admin",
