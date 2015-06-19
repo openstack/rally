@@ -13,16 +13,18 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from oslo_utils import encodeutils
-from six.moves import configparser
-
+import copy
 import inspect
 import json
 import os
-import pwd
 import shutil
 import subprocess
 import tempfile
+
+
+from oslo_utils import encodeutils
+from six.moves import configparser
+
 
 TEST_ENV = {
     "OS_USERNAME": "admin",
@@ -71,14 +73,15 @@ class Rally(object):
     """
 
     def __init__(self, fake=False):
-        # NOTE(sskripnick): we shoud change home dir to avoid races
-        # and do not touch any user files in ~/.rally
-        os.environ["HOME"] = pwd.getpwuid(os.getuid()).pw_dir
         if not os.path.exists(DEPLOYMENT_FILE):
             subprocess.call("rally deployment config > %s" % DEPLOYMENT_FILE,
                             shell=True)
+
+        # NOTE(sskripnick): we should change home dir to avoid races
+        # and do not touch any user files in ~/.rally
         self.tmp_dir = tempfile.mkdtemp()
-        os.environ["HOME"] = self.tmp_dir
+        self.env = copy.deepcopy(os.environ)
+        self.env["HOME"] = self.tmp_dir
 
         if "RCI_KEEP_DB" not in os.environ:
             config_filename = os.path.join(self.tmp_dir, "conf")
@@ -90,10 +93,10 @@ class Rally(object):
                 config.write(conf)
             self.args = ["rally", "--config-file", config_filename]
             subprocess.call(["rally-manage", "--config-file", config_filename,
-                             "db", "recreate"])
+                             "db", "recreate"], env=self.env)
         else:
             self.args = ["rally"]
-            subprocess.call(["rally-manage", "db", "recreate"])
+            subprocess.call(["rally-manage", "db", "recreate"], env=self.env)
 
         self.reports_root = os.environ.get("REPORTS_ROOT",
                                            "rally-cli-output-files")
@@ -169,7 +172,7 @@ class Rally(object):
             cmd = cmd.split(" ")
         try:
             output = encodeutils.safe_decode(subprocess.check_output(
-                self.args + cmd, stderr=subprocess.STDOUT))
+                self.args + cmd, stderr=subprocess.STDOUT, env=self.env))
 
             if write_report:
                 if not report_path:
@@ -185,3 +188,13 @@ class Rally(object):
             return output
         except subprocess.CalledProcessError as e:
             raise RallyCliError(e.returncode, e.output)
+
+
+def get_global(global_key, env):
+    home_dir = env.get("HOME")
+    with open("%s/.rally/globals" % home_dir) as f:
+        for line in f.readlines():
+            if line.startswith("%s=" % global_key):
+                key, value = line.split("=")
+                return value.rstrip()
+    return ""

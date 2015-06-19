@@ -17,9 +17,6 @@ import json
 import re
 import unittest
 
-import mock
-
-from rally.cli import envutils
 from tests.functional import utils
 
 
@@ -30,15 +27,15 @@ class DeploymentTestCase(unittest.TestCase):
         self.rally = utils.Rally()
 
     def test_create_fromenv_list_show(self):
-        with mock.patch.dict("os.environ", utils.TEST_ENV):
-            self.rally("deployment create --name t_create_env --fromenv")
+        self.rally.env.update(utils.TEST_ENV)
+        self.rally("deployment create --name t_create_env --fromenv")
         self.assertIn("t_create_env", self.rally("deployment list"))
         self.assertIn(utils.TEST_ENV["OS_AUTH_URL"],
                       self.rally("deployment show"))
 
     def test_create_fromfile(self):
-        with mock.patch.dict("os.environ", utils.TEST_ENV):
-            self.rally("deployment create --name t_create_env --fromenv")
+        self.rally.env.update(utils.TEST_ENV)
+        self.rally("deployment create --name t_create_env --fromenv")
         with open("/tmp/.tmp.deployment", "w") as f:
             f.write(self.rally("deployment config"))
         self.rally("deployment create --name t_create_file "
@@ -46,8 +43,8 @@ class DeploymentTestCase(unittest.TestCase):
         self.assertIn("t_create_file", self.rally("deployment list"))
 
     def test_config(self):
-        with mock.patch.dict("os.environ", utils.TEST_ENV):
-            self.rally("deployment create --name t_create_env --fromenv")
+        self.rally.env.update(utils.TEST_ENV)
+        self.rally("deployment create --name t_create_env --fromenv")
         config = json.loads(self.rally("deployment config"))
         self.assertEqual(utils.TEST_ENV["OS_USERNAME"],
                          config["admin"]["username"])
@@ -59,8 +56,8 @@ class DeploymentTestCase(unittest.TestCase):
                          config["auth_url"])
 
     def test_destroy(self):
-        with mock.patch.dict("os.environ", utils.TEST_ENV):
-            self.rally("deployment create --name t_create_env --fromenv")
+        self.rally.env.update(utils.TEST_ENV)
+        self.rally("deployment create --name t_create_env --fromenv")
         self.assertIn("t_create_env", self.rally("deployment list"))
         self.rally("deployment destroy")
         self.assertNotIn("t_create_env", self.rally("deployment list"))
@@ -69,24 +66,25 @@ class DeploymentTestCase(unittest.TestCase):
         self.assertTrue(self.rally("deployment check"))
 
     def test_check_fail(self):
-        with mock.patch.dict("os.environ", utils.TEST_ENV):
-            self.rally("deployment create --name t_create_env --fromenv")
+        self.rally.env.update(utils.TEST_ENV)
+        self.rally("deployment create --name t_create_env --fromenv")
         self.assertRaises(utils.RallyCliError, self.rally,
                           ("deployment check"))
 
     def test_recreate(self):
-        with mock.patch.dict("os.environ", utils.TEST_ENV):
-            self.rally("deployment create --name t_create_env --fromenv")
+        self.rally.env.update(utils.TEST_ENV)
+        self.rally("deployment create --name t_create_env --fromenv")
         self.rally("deployment recreate --deployment t_create_env")
         self.assertIn("t_create_env", self.rally("deployment list"))
 
     def test_use(self):
-        with mock.patch.dict("os.environ", utils.TEST_ENV):
-            output = self.rally(
-                "deployment create --name t_create_env1 --fromenv")
-            uuid = re.search(r"Using deployment: (?P<uuid>[0-9a-f\-]{36})",
-                             output).group("uuid")
-            self.rally("deployment create --name t_create_env2 --fromenv")
-            self.rally("deployment use --deployment %s" % uuid)
-            current_deployment = envutils.get_global("RALLY_DEPLOYMENT")
-            self.assertEqual(uuid, current_deployment)
+        self.rally.env.update(utils.TEST_ENV)
+        output = self.rally(
+            "deployment create --name t_create_env1 --fromenv")
+        uuid = re.search(r"Using deployment: (?P<uuid>[0-9a-f\-]{36})",
+                         output).group("uuid")
+        self.rally("deployment create --name t_create_env2 --fromenv")
+        self.rally("deployment use --deployment %s" % uuid)
+        current_deployment = utils.get_global("RALLY_DEPLOYMENT",
+                                              self.rally.env)
+        self.assertEqual(uuid, current_deployment)
