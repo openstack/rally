@@ -183,7 +183,7 @@ class OpenStackProviderTestCase(test.TestCase):
         fake_server.ssh.wait.assert_called_once_with(interval=5, timeout=120)
         provider.nova.servers.create.assert_called_once_with(
             "rally-dep-1-0", "fake_image_uuid", "22", userdata="fake_userdata",
-            nics="fake_nics", key_name="fake_key_name")
+            nics="fake_nics", key_name="fake_key_name", config_drive=False)
 
     @mock.patch(MOD_NAME + ".osclients")
     def test_get_image_found_by_checksum(self, mock_osclients):
