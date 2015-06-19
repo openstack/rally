@@ -223,7 +223,7 @@ class CinderScenario(base.Scenario):
             image,
             is_ready=bench_utils.resource_is("active"),
             update_resource=bench_utils.get_from_manager(),
-            timeout=CONF.benchmark.glance_image_create_prepoll_delay,
+            timeout=CONF.benchmark.glance_image_create_timeout,
             check_interval=CONF.benchmark.glance_image_create_poll_interval
         )
 
