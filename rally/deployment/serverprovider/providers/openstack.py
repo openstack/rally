@@ -166,11 +166,6 @@ class OpenStackProvider(provider.ProviderFactory):
 
     def get_userdata(self):
         userdata = self.config["image"].get("userdata", None)
-        if userdata is not None:
-            return userdata
-        userdata = self.config["image"].get("userdata_file", None)
-        if userdata is not None:
-            userdata = open(userdata, "r")
         return userdata
 
     def create_keypair(self):
