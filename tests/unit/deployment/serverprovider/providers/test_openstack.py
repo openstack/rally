@@ -171,8 +171,9 @@ class OpenStackProviderTestCase(test.TestCase):
                                                           "fake_path"))
         mock_server.return_value = fake_server = mock.Mock()
         provider.nova.servers.create.return_value = fake_instance = mock.Mock()
-        fake_instance.addresses.values = mock.Mock(
-            return_value=[[{"addr": "1.2.3.4"}]])
+        fake_instance.accessIPv4 = None
+        fake_instance.accessIPv6 = None
+        fake_instance.addresses = {"private": [{"addr": "1.2.3.4"}]}
 
         servers = provider.create_servers()
 
