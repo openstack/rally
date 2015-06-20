@@ -131,3 +131,20 @@ class ManilaScenarioTestCase(test.ClientsTestCase):
         self.clients("manila").share_networks.list.assert_called_once_with(
             detailed=params.get("detailed", True),
             search_opts=params.get("search_opts", None))
+
+    @ddt.data(
+        {},
+        {"search_opts": None},
+        {"search_opts": {"project_id": "fake_project"}},
+    )
+    def test__list_share_servers(self, params):
+        fake_share_servers = ["foo", "bar"]
+        self.admin_clients("manila").share_servers.list.return_value = (
+            fake_share_servers)
+
+        result = self.scenario._list_share_servers(**params)
+
+        self.assertEqual(fake_share_servers, result)
+        self.admin_clients(
+            "manila").share_servers.list.assert_called_once_with(
+                search_opts=params.get("search_opts", None))

@@ -1,0 +1,14 @@
+{
+    "ManilaShares.list_share_servers": [
+        {
+            "args": {
+                "search_opts": {}
+            },
+            "runner": {
+                "type": "constant",
+                "times": 10,
+                "concurrency": 10
+            }
+        }
+    ]
+}

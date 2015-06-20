@@ -73,3 +73,15 @@
       sla:
         failure_rate:
           max: 0
+
+  ManilaShares.list_share_servers:
+    -
+      args:
+        search_opts: {}
+      runner:
+        type: "constant"
+        times: 10
+        concurrency: 10
+      sla:
+        failure_rate:
+          max: 0
