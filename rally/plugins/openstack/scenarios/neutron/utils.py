@@ -368,3 +368,11 @@ class NeutronScenario(scenario.OpenStackScenario):
     def _list_v1_vips(self, **kwargs):
         """Return user lb vip list(v1)."""
         return self.clients("neutron").list_vips(**kwargs)
+
+    @atomic.action_timer("neutron.delete_vip")
+    def _delete_v1_vip(self, vip):
+        """Delete neutron vip.
+
+        :param vip: neutron Virtual IP object
+        """
+        self.clients("neutron").delete_vip(vip["id"])

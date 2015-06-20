@@ -1,0 +1,22 @@
+---
+  NeutronLoadbalancerV1.create_and_delete_vips:
+    -
+      args:
+        vip_create_args: {}
+      runner:
+        type: "constant"
+        times: 100
+        concurrency: 10
+      context:
+        users:
+          tenants: 5
+          users_per_tenant: 1
+        network: {}
+        lbaas:
+          pool: {}
+        quotas:
+          neutron:
+            network: -1
+            subnet: -1
+            pool: -1
+            vip: -1
