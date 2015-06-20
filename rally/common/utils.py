@@ -20,6 +20,7 @@ import random
 import re
 import string
 import sys
+import textwrap
 import time
 
 from six import moves
@@ -278,6 +279,12 @@ def format_docstring(docstring):
         return ""
 
 
+PARAM_OR_RETURNS_REGEX = re.compile(":(?:param|returns)")
+RETURNS_REGEX = re.compile(":returns: (?P<doc>.*)", re.S)
+PARAM_REGEX = re.compile(":param (?P<name>[\*\w]+): (?P<doc>.*?)"
+                         "(?:(?=:param)|(?=:return)|\Z)", re.S)
+
+
 def parse_docstring(docstring):
     """Parse the docstring into its components.
 
@@ -290,71 +297,55 @@ def parse_docstring(docstring):
               }
     """
 
-    if docstring:
-        lines = docstrings.prepare_docstring(docstring)
-        lines = [line for line in lines if line]
-    else:
-        lines = []
+    short_description = long_description = returns = None
+    params = []
 
-    if lines:
+    if docstring:
+        docstring = format_docstring(docstring)
+
+        lines = docstring.split("\n", 1)
         short_description = lines[0]
 
-        param_start = first_index(lines, lambda l: l.startswith(":param"))
-        returns_start = first_index(lines, lambda l: l.startswith(":returns"))
-        if param_start or returns_start:
-            description_end = param_start or returns_start
-            long_description = "\n".join(lines[1:description_end])
-        else:
-            long_description = "\n".join(lines[1:])
+        if len(lines) > 1:
+            long_description = lines[1].strip()
 
-        if not long_description:
-            long_description = None
+            params_returns_desc = None
 
-        param_lines = []
-        if param_start:
-            current_line = lines[param_start]
-            current_line_index = param_start + 1
-            while current_line_index < (returns_start or len(lines)):
-                if lines[current_line_index].startswith(":param"):
-                    param_lines.append(current_line)
-                    current_line = lines[current_line_index]
-                else:
-                    continuation_line = lines[current_line_index].strip()
-                    current_line += " " + continuation_line
-                current_line_index += 1
-            param_lines.append(current_line)
-        params = []
-        param_regex = re.compile("^:param (?P<name>\w+): (?P<doc>.*)$")
-        for param_line in param_lines:
-            match = param_regex.match(param_line)
+            match = PARAM_OR_RETURNS_REGEX.search(long_description)
             if match:
-                params.append({
-                    "name": match.group("name"),
-                    "doc": match.group("doc")
-                })
+                long_desc_end = match.start()
+                params_returns_desc = long_description[long_desc_end:].strip()
+                long_description = long_description[:long_desc_end].rstrip()
 
-        returns = None
-        if returns_start:
-            returns_line = " ".join([l.strip() for l in lines[returns_start:]])
-            returns_regex = re.compile("^:returns: (?P<doc>.*)$")
-            match = returns_regex.match(returns_line)
-            if match:
-                returns = match.group("doc")
+            if not long_description:
+                long_description = None
 
-        return {
-            "short_description": short_description,
-            "long_description": long_description,
-            "params": params,
-            "returns": returns
-        }
+            if params_returns_desc:
+                def reindent(string, indent="\t"):
+                    if "\n" not in string:
+                        return string
+                    first, rest = string.split("\n", 1)
+                    return "\n".join(
+                        [first, textwrap.dedent(rest)]).replace(
+                            "\n", "\n" + indent).rstrip()
 
-    else:
-        return {
-            "short_description": None,
-            "long_description": None,
-            "params": [],
-            "returns": None
-        }
+                params = [
+                    {
+                        "name": name,
+                        "doc": reindent(doc)
+                    } for name, doc in PARAM_REGEX.findall(params_returns_desc)
+                ]
+
+                match = RETURNS_REGEX.search(params_returns_desc)
+                if match:
+                    returns = reindent(match.group("doc"))
+
+    return {
+        "short_description": short_description,
+        "long_description": long_description,
+        "params": params,
+        "returns": returns
+    }
 
 
 def distance(s1, s2):
