@@ -1,0 +1,19 @@
+---
+  ManilaShares.create_share_network_and_list:
+    -
+      args:
+        name: "rally"
+        detailed: True
+        search_opts:
+          name: "rally"
+      runner:
+        type: "constant"
+        times: 10
+        concurrency: 10
+      context:
+        quotas:
+          manila:
+            share_networks: -1
+        users:
+          tenants: 2
+          users_per_tenant: 1

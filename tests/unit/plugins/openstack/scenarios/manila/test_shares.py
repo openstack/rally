@@ -95,3 +95,40 @@ class ManilaSharesTestCase(test.TestCase):
         scenario._create_share_network.assert_called_once_with(
             **expected_params)
         scenario._delete_share_network.assert_called_once_with(fake_sn)
+
+    @ddt.data(
+        {},
+        {"name": "foo_name"},
+        {"description": "foo_description"},
+        {"neutron_net_id": "foo_neutron_net_id"},
+        {"neutron_subnet_id": "foo_neutron_subnet_id"},
+        {"nova_net_id": "foo_nova_net_id"},
+        {"name": "foo_name",
+         "description": "foo_description",
+         "neutron_net_id": "foo_neutron_net_id",
+         "neutron_subnet_id": "foo_neutron_subnet_id",
+         "nova_net_id": "foo_nova_net_id"},
+    )
+    def test_create_share_network_and_list(self, params):
+        scenario = shares.ManilaShares()
+        scenario._create_share_network = mock.MagicMock()
+        scenario._list_share_networks = mock.MagicMock()
+        expected_create_params = {
+            "name": params.get("name"),
+            "description": params.get("description"),
+            "neutron_net_id": params.get("neutron_net_id"),
+            "neutron_subnet_id": params.get("neutron_subnet_id"),
+            "nova_net_id": params.get("nova_net_id"),
+        }
+        expected_list_params = {
+            "detailed": params.get("detailed", True),
+            "search_opts": params.get("search_opts"),
+        }
+        expected_create_params.update(params)
+
+        scenario.create_share_network_and_list(**params)
+
+        scenario._create_share_network.assert_called_once_with(
+            **expected_create_params)
+        scenario._list_share_networks.assert_called_once_with(
+            **expected_list_params)

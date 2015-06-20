@@ -113,3 +113,21 @@ class ManilaScenarioTestCase(test.ClientsTestCase):
         mock_get_from_manager.assert_called_once_with()
         mock_wait_for_delete.assert_called_once_with(
             fake_sn, update_resource=mock.ANY, timeout=180, check_interval=2)
+
+    @ddt.data(
+        {"detailed": True, "search_opts": {"name": "foo_sn"}},
+        {"detailed": False, "search_opts": None},
+        {},
+        {"search_opts": {"project_id": "fake_project"}},
+    )
+    def test__list_share_networks(self, params):
+        fake_share_networks = ["foo", "bar"]
+        self.clients("manila").share_networks.list.return_value = (
+            fake_share_networks)
+
+        result = self.scenario._list_share_networks(**params)
+
+        self.assertEqual(fake_share_networks, result)
+        self.clients("manila").share_networks.list.assert_called_once_with(
+            detailed=params.get("detailed", True),
+            search_opts=params.get("search_opts", None))

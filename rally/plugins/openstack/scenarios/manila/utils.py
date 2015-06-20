@@ -146,3 +146,17 @@ class ManilaScenario(base.Scenario):
             update_resource=bench_utils.get_from_manager(),
             timeout=CONF.benchmark.manila_share_delete_timeout,
             check_interval=CONF.benchmark.manila_share_delete_poll_interval)
+
+    @base.atomic_action_timer("manila.list_share_networks")
+    def _list_share_networks(self, detailed=True, search_opts=None):
+        """List share networks.
+
+        :param detailed: defines either to return detailed list of
+            objects or not.
+        :param search_opts: container of search opts such as
+            "project_id" and "name".
+        :returns: list of instances of :class:`ShareNetwork`
+        """
+        share_networks = self.clients("manila").share_networks.list(
+            detailed=detailed, search_opts=search_opts)
+        return share_networks
