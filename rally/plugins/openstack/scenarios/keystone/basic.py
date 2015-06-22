@@ -128,15 +128,30 @@ class KeystoneBasic(kutils.KeystoneScenario):
 
     @validation.required_openstack(admin=True)
     @base.scenario(context={"admin_cleanup": ["keystone"]})
-    def get_entities(self):
-        """Get instance of a tenant, user, role and service by id's."""
+    def get_entities(self, service_name="keystone"):
+        """Get instance of a tenant, user, role and service by id's.
+
+        An ephemeral tenant, user, and role are each created. By
+        default, fetches the 'keystone' service. This can be
+        overridden (for instance, to get the 'Identity Service'
+        service on older OpenStack), or None can be passed explicitly
+        to service_name to create a new service and then query it by
+        ID.
+
+        :param service_name: The name of the service to get by ID; or
+                             None, to create an ephemeral service and
+                             get it by ID.
+        """
         tenant = self._tenant_create(name_length=5)
         user = self._user_create(name_length=10)
         role = self._role_create()
         self._get_tenant(tenant.id)
         self._get_user(user.id)
         self._get_role(role.id)
-        service = self._get_service_by_name("keystone")
+        if service_name is None:
+            service = self._service_create()
+        else:
+            service = self._get_service_by_name(service_name)
         self._get_service(service.id)
 
     @validation.required_openstack(admin=True)

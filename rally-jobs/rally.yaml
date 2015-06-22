@@ -44,6 +44,26 @@
       sla:
         failure_rate:
           max: 0
+    -
+      args:
+        service_name: null
+      runner:
+        type: "constant"
+        times: 20
+        concurrency: 10
+      sla:
+        failure_rate:
+          max: 0
+    -
+      args:
+        service_name: "nova"
+      runner:
+        type: "constant"
+        times: 20
+        concurrency: 10
+      sla:
+        failure_rate:
+          max: 0
 
   KeystoneBasic.add_and_remove_user_role:
     -
