@@ -320,12 +320,11 @@ class NeutronWrapper(NetworkWrapper):
             kwargs["name"] = utils.generate_random_name("rally_port_")
         return self.client.create_port({"port": kwargs})["port"]
 
-    def create_floating_ip(self, ext_network=None, int_network=None,
+    def create_floating_ip(self, ext_network=None,
                            tenant_id=None, port_id=None, **kwargs):
         """Create Neutron floating IP.
 
         :param ext_network: floating network name or dict
-        :param int_network: fixed network name or dict
         :param tenant_id str tenant id
         :param port_id: str port id
         :param **kwargs: for compatibility, not used here
@@ -351,18 +350,10 @@ class NeutronWrapper(NetworkWrapper):
                     "no external networks found")
             net_id = ext_networks[0]["id"]
 
-        if not port_id:
-            if type(int_network) is dict:
-                port_id = self.create_port(int_network["id"])["id"]
-            elif int_network:
-                int_net = self.get_network(name=int_network)
-                if int_net["external"]:
-                    raise NetworkWrapperException("Network is external: %s"
-                                                  % int_network)
-                port_id = self.create_port(int_net["id"])["id"]
         kwargs = {"floatingip": {"floating_network_id": net_id},
-                  "tenant_id": tenant_id,
-                  "port_id": port_id}
+                  "tenant_id": tenant_id}
+        if port_id:
+            kwargs["port_id"] = port_id
 
         fip = self.client.create_floatingip(kwargs)["floatingip"]
         return {"id": fip["id"], "ip": fip["floating_ip_address"]}
