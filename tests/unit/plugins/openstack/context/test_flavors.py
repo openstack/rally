@@ -49,9 +49,9 @@ class FlavorsGeneratorTestCase(test.TestCase):
         }
 
     @mock.patch("%s.flavors.osclients.Clients" % CTX)
-    def test_setup(self, mock_osclients):
+    def test_setup(self, mock_clients):
         # Setup and mock
-        mock_create = mock_osclients().nova().flavors.create
+        mock_create = mock_clients().nova().flavors.create
         mock_create().to_dict.return_value = {"flavor_key": "flavor_value"}
 
         # Run
@@ -62,7 +62,7 @@ class FlavorsGeneratorTestCase(test.TestCase):
         self.assertEqual(flavors_ctx.context["flavors"],
                          {"flavor_name": {"flavor_key": "flavor_value"}})
 
-        mock_osclients.assert_called_with(self.context["admin"]["endpoint"])
+        mock_clients.assert_called_with(self.context["admin"]["endpoint"])
 
         mock_create.assert_called_with(
             name="flavor_name", ram=2048, vcpus=3,
@@ -71,12 +71,12 @@ class FlavorsGeneratorTestCase(test.TestCase):
         mock_create().to_dict.assert_called_with()
 
     @mock.patch("%s.flavors.osclients.Clients" % CTX)
-    def test_setup_failexists(self, mock_osclients):
+    def test_setup_failexists(self, mock_clients):
         # Setup and mock
         new_context = copy.deepcopy(self.context)
         new_context["flavors"] = {}
 
-        mock_flavor_create = mock_osclients().nova().flavors.create
+        mock_flavor_create = mock_clients().nova().flavors.create
 
         exception = nova_exceptions.Conflict("conflict")
         mock_flavor_create.side_effect = exception
@@ -88,14 +88,14 @@ class FlavorsGeneratorTestCase(test.TestCase):
         # Assertions
         self.assertEqual(new_context, flavors_ctx.context)
 
-        mock_osclients.assert_called_with(self.context["admin"]["endpoint"])
+        mock_clients.assert_called_with(self.context["admin"]["endpoint"])
 
         mock_flavor_create.assert_called_once_with(
             name="flavor_name", ram=2048, vcpus=3,
             disk=10, ephemeral=3, swap=5)
 
     @mock.patch("%s.flavors.osclients.Clients" % CTX)
-    def test_cleanup(self, mock_osclients):
+    def test_cleanup(self, mock_clients):
         # Setup and mock
         real_context = {
             "flavors": {
@@ -115,7 +115,7 @@ class FlavorsGeneratorTestCase(test.TestCase):
         flavors_ctx.cleanup()
 
         # Assertions
-        mock_osclients.assert_called_with(real_context["admin"]["endpoint"])
+        mock_clients.assert_called_with(real_context["admin"]["endpoint"])
 
-        mock_flavors_delete = mock_osclients().nova().flavors.delete
+        mock_flavors_delete = mock_clients().nova().flavors.delete
         mock_flavors_delete.assert_called_with("flavor_name")

@@ -25,31 +25,33 @@ MISTRAL_WBS = ("rally.plugins.openstack.scenarios."
 class MistralWorkbooksTestCase(test.TestCase):
 
     @mock.patch(MISTRAL_WBS + "._list_workbooks")
-    def test_list_workbooks(self, mock_list):
+    def test_list_workbooks(self, mock__list_workbooks):
         mistral_scenario = workbooks.MistralWorkbooks()
         mistral_scenario.list_workbooks()
-        mock_list.assert_called_once_with()
+        mock__list_workbooks.assert_called_once_with()
 
     @mock.patch(MISTRAL_WBS + "._create_workbook")
-    def test_create_workbook(self, mock_create):
+    def test_create_workbook(self, mock__create_workbook):
         mistral_scenario = workbooks.MistralWorkbooks()
         definition = "---\nversion: \"2.0\"\nname: wb"
         fake_wb = mock.MagicMock()
         fake_wb.name = "wb"
-        mock_create.return_value = fake_wb
+        mock__create_workbook.return_value = fake_wb
         mistral_scenario.create_workbook(definition)
 
-        self.assertEqual(1, mock_create.called)
+        self.assertEqual(1, mock__create_workbook.called)
 
     @mock.patch(MISTRAL_WBS + "._delete_workbook")
     @mock.patch(MISTRAL_WBS + "._create_workbook")
-    def test_create_delete_workbook(self, mock_create, mock_delete):
+    def test_create_delete_workbook(self,
+                                    mock__create_workbook,
+                                    mock__delete_workbook):
         mistral_scenario = workbooks.MistralWorkbooks()
         definition = "---\nversion: \"2.0\"\nname: wb"
         fake_wb = mock.MagicMock()
         fake_wb.name = "wb"
-        mock_create.return_value = fake_wb
+        mock__create_workbook.return_value = fake_wb
         mistral_scenario.create_workbook(definition, do_delete=True)
 
-        self.assertEqual(1, mock_create.called)
-        mock_delete.assert_called_once_with(fake_wb.name)
+        self.assertEqual(1, mock__create_workbook.called)
+        mock__delete_workbook.assert_called_once_with(fake_wb.name)

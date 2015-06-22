@@ -45,21 +45,24 @@ class NovaNetworkWrapperTestCase(test.TestCase):
         service.client.networks.list.assert_called_once_with()
 
     @mock.patch("rally.plugins.openstack.wrappers.network.generate_cidr")
-    def test__generate_cidr(self, mock_cidr):
+    def test__generate_cidr(self, mock_generate_cidr):
         skip_cidrs = [5, 7]
         cidrs = iter(range(7))
-        mock_cidr.side_effect = lambda start_cidr: start_cidr + next(cidrs)
+        mock_generate_cidr.side_effect = (
+            lambda start_cidr: start_cidr + next(cidrs)
+        )
         service = self.get_wrapper(*skip_cidrs, start_cidr=3)
         self.assertEqual(service._generate_cidr(), 3)
         self.assertEqual(service._generate_cidr(), 4)
         self.assertEqual(service._generate_cidr(), 6)  # 5 is skipped
         self.assertEqual(service._generate_cidr(), 8)  # 7 is skipped
         self.assertEqual(service._generate_cidr(), 9)
-        self.assertEqual(mock_cidr.mock_calls, [mock.call(start_cidr=3)] * 7)
+        self.assertEqual(mock_generate_cidr.mock_calls,
+                         [mock.call(start_cidr=3)] * 7)
 
     @mock.patch("rally.common.utils.generate_random_name",
                 return_value="foo_name")
-    def test_create_network(self, mock_name):
+    def test_create_network(self, mock_generate_random_name):
         service = self.get_wrapper()
         service.client.networks.create.side_effect = (
             lambda **kwargs: self.Net(id="foo_id", **kwargs))
@@ -71,7 +74,7 @@ class NovaNetworkWrapperTestCase(test.TestCase):
                                "status": "ACTIVE",
                                "external": False,
                                "tenant_id": "foo_tenant"})
-        mock_name.assert_called_once_with("rally_net_")
+        mock_generate_random_name.assert_called_once_with("rally_net_")
         service._generate_cidr.assert_called_once_with()
         service.client.networks.create.assert_called_once_with(
             tenant_id="foo_tenant", cidr="foo_cidr", label="foo_name")
@@ -152,16 +155,19 @@ class NeutronWrapperTestCase(test.TestCase):
         self.assertEqual(network.NeutronWrapper.SUBNET_IP_VERSION, 4)
 
     @mock.patch("rally.plugins.openstack.wrappers.network.generate_cidr")
-    def test__generate_cidr(self, mock_cidr):
+    def test__generate_cidr(self, mock_generate_cidr):
         cidrs = iter(range(5))
-        mock_cidr.side_effect = lambda start_cidr: start_cidr + next(cidrs)
+        mock_generate_cidr.side_effect = (
+            lambda start_cidr: start_cidr + next(cidrs)
+        )
         service = self.get_wrapper(start_cidr=3)
         self.assertEqual(service._generate_cidr(), 3)
         self.assertEqual(service._generate_cidr(), 4)
         self.assertEqual(service._generate_cidr(), 5)
         self.assertEqual(service._generate_cidr(), 6)
         self.assertEqual(service._generate_cidr(), 7)
-        self.assertEqual(mock_cidr.mock_calls, [mock.call(start_cidr=3)] * 5)
+        self.assertEqual(mock_generate_cidr.mock_calls,
+                         [mock.call(start_cidr=3)] * 5)
 
     def test_external_networks(self):
         wrap = self.get_wrapper()
@@ -205,15 +211,15 @@ class NeutronWrapperTestCase(test.TestCase):
                           name="foo_name")
 
     @mock.patch("rally.common.utils.generate_random_name")
-    def test_create_network(self, mock_name):
-        mock_name.return_value = "foo_name"
+    def test_create_network(self, mock_generate_random_name):
+        mock_generate_random_name.return_value = "foo_name"
         service = self.get_wrapper()
         service.client.create_network.return_value = {
             "network": {"id": "foo_id",
                         "name": "foo_name",
                         "status": "foo_status"}}
         net = service.create_network("foo_tenant")
-        mock_name.assert_called_once_with("rally_net_")
+        mock_generate_random_name.assert_called_once_with("rally_net_")
         service.client.create_network.assert_called_once_with({
             "network": {"tenant_id": "foo_tenant", "name": "foo_name"}})
         self.assertEqual(net, {"id": "foo_id",
@@ -225,9 +231,9 @@ class NeutronWrapperTestCase(test.TestCase):
                                "subnets": []})
 
     @mock.patch("rally.common.utils.generate_random_name")
-    def test_create_network_with_subnets(self, mock_name):
+    def test_create_network_with_subnets(self, mock_generate_random_name):
         subnets_num = 4
-        mock_name.return_value = "foo_name"
+        mock_generate_random_name.return_value = "foo_name"
         service = self.get_wrapper()
         subnets_cidrs = iter(range(subnets_num))
         subnets_ids = iter(range(subnets_num))
@@ -263,8 +269,8 @@ class NeutronWrapperTestCase(test.TestCase):
              for i in range(subnets_num)])
 
     @mock.patch("rally.common.utils.generate_random_name")
-    def test_create_network_with_router(self, mock_name):
-        mock_name.return_value = "foo_name"
+    def test_create_network_with_router(self, mock_generate_random_name):
+        mock_generate_random_name.return_value = "foo_name"
         service = self.get_wrapper()
         service.create_router = mock.Mock(return_value={"id": "foo_router"})
         service.client.create_network.return_value = {
@@ -283,9 +289,10 @@ class NeutronWrapperTestCase(test.TestCase):
                                                       tenant_id="foo_tenant")
 
     @mock.patch("rally.common.utils.generate_random_name")
-    def test_create_network_with_router_and_subnets(self, mock_name):
+    def test_create_network_with_router_and_subnets(self,
+                                                    mock_generate_random_name):
         subnets_num = 4
-        mock_name.return_value = "foo_name"
+        mock_generate_random_name.return_value = "foo_name"
         service = self.get_wrapper()
         service._generate_cidr = mock.Mock(return_value="foo_cidr")
         service.create_router = mock.Mock(return_value={"id": "foo_router"})
@@ -375,7 +382,7 @@ class NeutronWrapperTestCase(test.TestCase):
         service.client.list_networks.assert_called_once_with()
 
     @mock.patch(SVC + "NeutronWrapper.external_networks")
-    def test_create_floating_ip(self, mock_ext_networks):
+    def test_create_floating_ip(self, mock_neutron_wrapper_external_networks):
         wrap = self.get_wrapper()
         wrap.create_port = mock.Mock(return_value={"id": "port_id"})
         wrap.client.create_floatingip = mock.Mock(
@@ -384,11 +391,13 @@ class NeutronWrapperTestCase(test.TestCase):
 
         self.assertRaises(ValueError, wrap.create_floating_ip)
 
-        mock_ext_networks.__get__ = lambda *args: []
+        mock_neutron_wrapper_external_networks.__get__ = lambda *args: []
         self.assertRaises(network.NetworkWrapperException,
                           wrap.create_floating_ip, tenant_id="foo_tenant")
 
-        mock_ext_networks.__get__ = lambda *args: [{"id": "ext_id"}]
+        mock_neutron_wrapper_external_networks.__get__ = (
+            lambda *args: [{"id": "ext_id"}]
+        )
         fip = wrap.create_floating_ip(tenant_id="foo_tenant")
         self.assertEqual(fip, {"id": "fip_id", "ip": "fip_ip"})
 
@@ -416,11 +425,14 @@ class NeutronWrapperTestCase(test.TestCase):
 
     @mock.patch(SVC + "NeutronWrapper.external_networks")
     @mock.patch("rally.common.utils.generate_random_name")
-    def test_create_router(self, mock_random, mock_ext_networks):
+    def test_create_router(self, mock_generate_random_name,
+                           mock_neutron_wrapper_external_networks):
         wrap = self.get_wrapper()
-        mock_random.return_value = "random_name"
+        mock_generate_random_name.return_value = "random_name"
         wrap.client.create_router.return_value = {"router": "foo_router"}
-        mock_ext_networks.__get__ = lambda *args: [{"id": "ext_id"}]
+        mock_neutron_wrapper_external_networks.__get__ = (
+            lambda *args: [{"id": "ext_id"}]
+        )
 
         router = wrap.create_router(name="foo_name")
         wrap.client.create_router.assert_called_once_with(
@@ -436,9 +448,9 @@ class NeutronWrapperTestCase(test.TestCase):
                         "foo": "bar"}})
 
     @mock.patch("rally.common.utils.generate_random_name")
-    def test_create_port(self, mock_random):
+    def test_create_port(self, mock_generate_random_name):
         wrap = self.get_wrapper()
-        mock_random.return_value = "random_name"
+        mock_generate_random_name.return_value = "random_name"
         wrap.client.create_port.return_value = {"port": "foo_port"}
 
         port = wrap.create_port("foo_net", name="foo_name")

@@ -52,7 +52,7 @@ class VMScenarioTestCase(test.TestCase):
         mock_open.assert_called_once_with("foobar", "rb")
 
     @mock.patch("%s.six.moves.StringIO" % VMTASKS_UTILS)
-    def test__run_command_over_ssh_script_inline(self, mock_stringio):
+    def test__run_command_over_ssh_script_inline(self, mock_string_io):
         mock_ssh = mock.MagicMock()
         vm_scenario = utils.VMScenario()
         vm_scenario._run_command_over_ssh(
@@ -64,8 +64,8 @@ class VMScenarioTestCase(test.TestCase):
         )
         mock_ssh.execute.assert_called_once_with(
             ["interpreter", "interpreter_arg"],
-            stdin=mock_stringio.return_value)
-        mock_stringio.assert_called_once_with("foobar")
+            stdin=mock_string_io.return_value)
+        mock_string_io.assert_called_once_with("foobar")
 
     def test__run_command_over_ssh_remote_path(self):
         mock_ssh = mock.MagicMock()
@@ -95,102 +95,93 @@ class VMScenarioTestCase(test.TestCase):
     @mock.patch(VMTASKS_UTILS + ".bench_utils.resource_is")
     @mock.patch(VMTASKS_UTILS + ".VMScenario._ping_ip_address",
                 return_value=True)
-    def test__wait_for_ping(self, mock__ping, mock_resource_is):
+    def test__wait_for_ping(self, mock_vm_scenario__ping_ip_address,
+                            mock_resource_is):
         vm_scenario = utils.VMScenario()
         vm_scenario._wait_for_ping(netaddr.IPAddress("1.2.3.4"))
         self.wait_for.mock.assert_called_once_with(
             netaddr.IPAddress("1.2.3.4"),
             is_ready=mock_resource_is.return_value,
             timeout=120)
-        mock_resource_is.assert_called_once_with("ICMP UP", mock__ping)
+        mock_resource_is.assert_called_once_with(
+            "ICMP UP", mock_vm_scenario__ping_ip_address)
 
     @mock.patch(VMTASKS_UTILS + ".VMScenario._run_command_over_ssh")
     @mock.patch("rally.common.sshutils.SSH")
-    def test__run_command(self, mock_ssh_class, mock_run_command_over_ssh):
-        mock_ssh_instance = mock.MagicMock()
-        mock_ssh_class.return_value = mock_ssh_instance
-
+    def test__run_command(self, mock_sshutils_ssh,
+                          mock_vm_scenario__run_command_over_ssh):
         vm_scenario = utils.VMScenario()
         vm_scenario.context = {"user": {"keypair": {"private": "ssh"}}}
         vm_scenario._run_command("1.2.3.4", 22, "username", "password",
                                  command={"script_file": "foo",
                                           "interpreter": "bar"})
 
-        mock_ssh_class.assert_called_once_with("username", "1.2.3.4", port=22,
-                                               pkey="ssh",
-                                               password="password")
-        mock_ssh_instance.wait.assert_called_once_with()
-        mock_run_command_over_ssh.assert_called_once_with(
-            mock_ssh_instance,
+        mock_sshutils_ssh.assert_called_once_with(
+            "username", "1.2.3.4", port=22, pkey="ssh", password="password")
+        mock_sshutils_ssh.return_value.wait.assert_called_once_with()
+        mock_vm_scenario__run_command_over_ssh.assert_called_once_with(
+            mock_sshutils_ssh.return_value,
             {"script_file": "foo", "interpreter": "bar"})
 
     @mock.patch(VMTASKS_UTILS + ".sys")
     @mock.patch("subprocess.Popen")
-    def test__ping_ip_address_linux(self, mock_subprocess, mock_sys):
-        ping_process = mock.MagicMock()
-        ping_process.returncode = 0
-        mock_subprocess.return_value = ping_process
+    def test__ping_ip_address_linux(self, mock_popen, mock_sys):
+        mock_popen.return_value.returncode = 0
         mock_sys.platform = "linux2"
 
         vm_scenario = utils.VMScenario()
         host_ip = netaddr.IPAddress("1.2.3.4")
         self.assertTrue(vm_scenario._ping_ip_address(host_ip))
 
-        mock_subprocess.assert_called_once_with(
+        mock_popen.assert_called_once_with(
             ["ping", "-c1", "-w1", str(host_ip)],
             stderr=subprocess.PIPE, stdout=subprocess.PIPE)
-        ping_process.wait.assert_called_once_with()
+        mock_popen.return_value.wait.assert_called_once_with()
 
     @mock.patch(VMTASKS_UTILS + ".sys")
     @mock.patch("subprocess.Popen")
-    def test__ping_ip_address_linux_ipv6(self, mock_subprocess, mock_sys):
-        ping_process = mock.MagicMock()
-        ping_process.returncode = 0
-        mock_subprocess.return_value = ping_process
+    def test__ping_ip_address_linux_ipv6(self, mock_popen, mock_sys):
+        mock_popen.return_value.returncode = 0
         mock_sys.platform = "linux2"
 
         vm_scenario = utils.VMScenario()
         host_ip = netaddr.IPAddress("1ce:c01d:bee2:15:a5:900d:a5:11fe")
         self.assertTrue(vm_scenario._ping_ip_address(host_ip))
 
-        mock_subprocess.assert_called_once_with(
+        mock_popen.assert_called_once_with(
             ["ping6", "-c1", "-w1", str(host_ip)],
             stderr=subprocess.PIPE, stdout=subprocess.PIPE)
-        ping_process.wait.assert_called_once_with()
+        mock_popen.return_value.wait.assert_called_once_with()
 
     @mock.patch(VMTASKS_UTILS + ".sys")
     @mock.patch("subprocess.Popen")
-    def test__ping_ip_address_other_os(self, mock_subprocess, mock_sys):
-        ping_process = mock.MagicMock()
-        ping_process.returncode = 0
-        mock_subprocess.return_value = ping_process
+    def test__ping_ip_address_other_os(self, mock_popen, mock_sys):
+        mock_popen.return_value.returncode = 0
         mock_sys.platform = "freebsd10"
 
         vm_scenario = utils.VMScenario()
         host_ip = netaddr.IPAddress("1.2.3.4")
         self.assertTrue(vm_scenario._ping_ip_address(host_ip))
 
-        mock_subprocess.assert_called_once_with(
+        mock_popen.assert_called_once_with(
             ["ping", "-c1", str(host_ip)],
             stderr=subprocess.PIPE, stdout=subprocess.PIPE)
-        ping_process.wait.assert_called_once_with()
+        mock_popen.return_value.wait.assert_called_once_with()
 
     @mock.patch(VMTASKS_UTILS + ".sys")
     @mock.patch("subprocess.Popen")
-    def test__ping_ip_address_other_os_ipv6(self, mock_subprocess, mock_sys):
-        ping_process = mock.MagicMock()
-        ping_process.returncode = 0
-        mock_subprocess.return_value = ping_process
+    def test__ping_ip_address_other_os_ipv6(self, mock_popen, mock_sys):
+        mock_popen.return_value.returncode = 0
         mock_sys.platform = "freebsd10"
 
         vm_scenario = utils.VMScenario()
         host_ip = netaddr.IPAddress("1ce:c01d:bee2:15:a5:900d:a5:11fe")
         self.assertTrue(vm_scenario._ping_ip_address(host_ip))
 
-        mock_subprocess.assert_called_once_with(
+        mock_popen.assert_called_once_with(
             ["ping6", "-c1", str(host_ip)],
             stderr=subprocess.PIPE, stdout=subprocess.PIPE)
-        ping_process.wait.assert_called_once_with()
+        mock_popen.return_value.wait.assert_called_once_with()
 
     def get_scenario(self):
         server = mock.Mock(

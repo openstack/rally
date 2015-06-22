@@ -27,17 +27,15 @@ class ModuleTestCase(test.TestCase):
 
     @mock.patch(UTILS + "six")
     @mock.patch(UTILS + "FuelClient", return_value="fuel_client")
-    def test_fuel(self, mock_fuelclient, mock_six):
+    def test_fuel(self, mock_fuel_client, mock_six):
         mock_six.moves.urllib.parse.urlparse().hostname = "foo_host"
         clients_ins = mock.Mock(endpoint=mock.Mock(username="foo_user",
                                                    password="foo_pass"))
 
         client = utils.fuel(clients_ins)
-        mock_fuelclient.assert_called_once_with(version="v1",
-                                                server_address="foo_host",
-                                                server_port=8000,
-                                                username="foo_user",
-                                                password="foo_pass")
+        mock_fuel_client.assert_called_once_with(
+            version="v1", server_address="foo_host", server_port=8000,
+            username="foo_user", password="foo_pass")
         self.assertEqual("fuel_client", client)
 
     def test_fuel_is_registered(self):

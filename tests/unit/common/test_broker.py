@@ -69,14 +69,14 @@ class BrokerTestCase(test.TestCase):
         self.assertEqual(0, len(queue))
 
     @mock.patch("rally.common.broker.LOG")
-    def test__consumer_indexerror(self, m_log):
+    def test__consumer_indexerror(self, mock_log):
         consume = mock.Mock()
         consume.side_effect = IndexError()
         queue = collections.deque([1, 2, 3])
         is_published = mock.Mock()
         is_published.isSet.side_effect = [False, False, True]
         broker._consumer(consume, queue, is_published)
-        self.assertTrue(m_log.warning.called)
+        self.assertTrue(mock_log.warning.called)
         self.assertFalse(queue)
         expected = [mock.call({}, 1), mock.call({}, 2), mock.call({}, 3)]
         self.assertEqual(expected, consume.mock_calls)

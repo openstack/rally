@@ -336,7 +336,7 @@ class PreprocessTestCase(test.TestCase):
 
     @mock.patch("rally.benchmark.types.base.Scenario.meta")
     @mock.patch("rally.benchmark.types.osclients")
-    def test_preprocess(self, mock_osclients, mock_meta):
+    def test_preprocess(self, mock_osclients, mock_scenario_meta):
         cls = "some_class"
         method_name = "method_name"
         context = {
@@ -352,11 +352,11 @@ class PreprocessTestCase(test.TestCase):
             def transform(cls, clients, resource_config):
                 return resource_config * 2
 
-        mock_meta.return_value = {"a": Preprocessor}
+        mock_scenario_meta.return_value = {"a": Preprocessor}
         result = types.preprocess(cls, method_name, context, args)
-        mock_meta.assert_called_once_with(cls, default={},
-                                          method_name=method_name,
-                                          attr_name="preprocessors")
+        mock_scenario_meta.assert_called_once_with(
+            cls, default={}, method_name=method_name,
+            attr_name="preprocessors")
         mock_osclients.Clients.assert_called_once_with(
             context["admin"]["endpoint"])
         self.assertEqual({"a": 20, "b": 20}, result)

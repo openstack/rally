@@ -28,10 +28,10 @@ CONF = cfg.CONF
 SAHARA_UTILS = "rally.plugins.openstack.scenarios.sahara.utils"
 
 
-class SaharaUtilsTestCase(test.ClientsTestCase):
+class SaharaScenarioTestCase(test.ClientsTestCase):
 
     def setUp(self):
-        super(SaharaUtilsTestCase, self).setUp()
+        super(SaharaScenarioTestCase, self).setUp()
 
         CONF.set_override("cluster_check_interval", 0, "benchmark")
         CONF.set_override("job_check_interval", 0, "benchmark")
@@ -50,8 +50,10 @@ class SaharaUtilsTestCase(test.ClientsTestCase):
     @mock.patch(SAHARA_UTILS + ".SaharaScenario._generate_random_name",
                 return_value="random_name")
     @mock.patch(SAHARA_UTILS + ".sahara_consts")
-    def test_create_node_group_templates(self, mock_constants,
-                                         mock_random_name):
+    def test_create_node_group_templates(
+            self, mock_sahara_consts,
+            mock__generate_random_name):
+
         scenario = utils.SaharaScenario()
         mock_processes = {
             "test_plugin": {
@@ -62,7 +64,7 @@ class SaharaUtilsTestCase(test.ClientsTestCase):
             }
         }
 
-        mock_constants.NODE_PROCESSES = mock_processes
+        mock_sahara_consts.NODE_PROCESSES = mock_processes
 
         scenario._create_master_node_group_template(
             flavor_id="test_flavor",
@@ -114,7 +116,8 @@ class SaharaUtilsTestCase(test.ClientsTestCase):
     @mock.patch(SAHARA_UTILS + ".SaharaScenario._generate_random_name",
                 return_value="random_name")
     @mock.patch(SAHARA_UTILS + ".sahara_consts")
-    def test_launch_cluster(self, mock_constants, mock_random_name):
+    def test_launch_cluster(self, mock_sahara_consts,
+                            mock__generate_random_name):
 
         context = {
             "tenant": {
@@ -177,8 +180,8 @@ class SaharaUtilsTestCase(test.ClientsTestCase):
             }
         ]
 
-        mock_constants.NODE_PROCESSES = mock_processes
-        mock_constants.REPLICATION_CONFIGS = mock_configs
+        mock_sahara_consts.NODE_PROCESSES = mock_processes
+        mock_sahara_consts.REPLICATION_CONFIGS = mock_configs
 
         self.clients("sahara").clusters.create.return_value = mock.MagicMock(
             id="test_cluster_id")
@@ -217,7 +220,9 @@ class SaharaUtilsTestCase(test.ClientsTestCase):
     @mock.patch(SAHARA_UTILS + ".SaharaScenario._generate_random_name",
                 return_value="random_name")
     @mock.patch(SAHARA_UTILS + ".sahara_consts")
-    def test_launch_cluster_error(self, mock_constants, mock_random_name):
+    def test_launch_cluster_error(self, mock_sahara_consts,
+                                  mock__generate_random_name):
+
         scenario = utils.SaharaScenario(clients=mock.MagicMock())
         mock_processes = {
             "test_plugin": {
@@ -237,8 +242,8 @@ class SaharaUtilsTestCase(test.ClientsTestCase):
             }
         }
 
-        mock_constants.NODE_PROCESSES = mock_processes
-        mock_constants.REPLICATION_CONFIGS = mock_configs
+        mock_sahara_consts.NODE_PROCESSES = mock_processes
+        mock_sahara_consts.REPLICATION_CONFIGS = mock_configs
 
         self.clients("sahara").clusters.create.return_value = mock.MagicMock(
             id="test_cluster_id")
@@ -303,7 +308,7 @@ class SaharaUtilsTestCase(test.ClientsTestCase):
 
     @mock.patch(SAHARA_UTILS + ".SaharaScenario._generate_random_name",
                 return_value="42")
-    def test_create_output_ds(self, mock_random_name):
+    def test_create_output_ds(self, mock__generate_random_name):
         ctxt = {
             "sahara_output_conf": {
                 "output_type": "hdfs",
@@ -323,7 +328,7 @@ class SaharaUtilsTestCase(test.ClientsTestCase):
 
     @mock.patch(SAHARA_UTILS + ".SaharaScenario._generate_random_name",
                 return_value="42")
-    def test_create_output_ds_swift(self, mock_random_name):
+    def test_create_output_ds_swift(self, mock__generate_random_name):
         ctxt = {
             "sahara_output_conf": {
                 "output_type": "swift",

@@ -30,7 +30,8 @@ class RallyJobsTestCase(test.TestCase):
 
     @mock.patch("rally.benchmark.engine.BenchmarkEngine"
                 "._validate_config_semantic")
-    def test_schema_is_valid(self, mock_validate):
+    def test_schema_is_valid(
+            self, mock_benchmark_engine__validate_config_semantic):
         discover.load_plugins(os.path.join(self.rally_jobs_path, "plugins"))
 
         for filename in ["rally.yaml", "rally-neutron.yaml",

@@ -28,13 +28,13 @@ PLOT = "rally.benchmark.processing.plot."
 class PlotTestCase(test.TestCase):
     @mock.patch(PLOT + "ui_utils")
     @mock.patch(PLOT + "_process_results")
-    def test_plot(self, mock_proc_results, mock_utils):
+    def test_plot(self, mock__process_results, mock_ui_utils):
         mock_render = mock.Mock(return_value="plot_html")
-        mock_utils.get_template = mock.Mock(
+        mock_ui_utils.get_template = mock.Mock(
             return_value=mock.Mock(render=mock_render))
         task_data = [{"name": "a"}, {"name": "b"}]
         task_source = "JSON"
-        mock_proc_results.return_value = (task_source, task_data)
+        mock__process_results.return_value = (task_source, task_data)
 
         result = plot.plot(["abc"])
 
@@ -43,15 +43,17 @@ class PlotTestCase(test.TestCase):
             data=json.dumps(task_data),
             source=json.dumps(task_source)
         )
-        mock_utils.get_template.assert_called_once_with("task/report.mako")
+        mock_ui_utils.get_template.assert_called_once_with("task/report.mako")
 
     @mock.patch(PLOT + "json.dumps")
     @mock.patch(PLOT + "_prepare_data")
     @mock.patch(PLOT + "_process_atomic")
     @mock.patch(PLOT + "_get_atomic_action_durations")
     @mock.patch(PLOT + "_process_main_duration")
-    def test__process_results(self, mock_main_duration, mock_get_atomic,
-                              mock_atomic, mock_prepare, mock_dumps):
+    def test__process_results(
+            self, mock__process_main_duration,
+            mock__get_atomic_action_durations, mock__process_atomic,
+            mock__prepare_data, mock_dumps):
         sla = [{"success": True}]
         result = ["iter_1", "iter_2"]
         iterations = len(result)
@@ -73,15 +75,15 @@ class PlotTestCase(test.TestCase):
                       "Success",
                       "Count"]
         atomic_durations = [["atomic_1"], ["atomic_2"]]
-        mock_prepare.side_effect = lambda i: {"errors": "errors_list",
-                                              "output": [],
-                                              "output_errors": [],
-                                              "sla": i["sla"],
-                                              "load_duration": 1234.5,
-                                              "full_duration": 6789.1}
-        mock_main_duration.return_value = "main_duration"
-        mock_get_atomic.return_value = atomic_durations
-        mock_atomic.return_value = "main_atomic"
+        mock__prepare_data.side_effect = lambda i: {"errors": "errors_list",
+                                                    "output": [],
+                                                    "output_errors": [],
+                                                    "sla": i["sla"],
+                                                    "load_duration": 1234.5,
+                                                    "full_duration": 6789.1}
+        mock__process_main_duration.return_value = "main_duration"
+        mock__get_atomic_action_durations.return_value = atomic_durations
+        mock__process_atomic.return_value = "main_atomic"
         mock_dumps.return_value = "JSON"
 
         source, scenarios = plot._process_results(results)
@@ -105,8 +107,8 @@ class PlotTestCase(test.TestCase):
                 "met": met,
                 "name": name,
                 "config": config,
-                "iterations": mock_main_duration.return_value,
-                "atomic": mock_atomic.return_value,
+                "iterations": mock__process_main_duration.return_value,
+                "atomic": mock__process_atomic.return_value,
                 "table_cols": table_cols,
                 "table_rows": atomic_durations,
                 "errors": "errors_list",

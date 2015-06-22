@@ -71,7 +71,7 @@ class NetworkTestCase(test.TestCase):
 
     @mock.patch("rally.osclients.Clients")
     @mock.patch(NET + "wrap")
-    def test_cleanup(self, mock_wrap, mock_osclients):
+    def test_cleanup(self, mock_wrap, mock_clients):
         net_context = network_context.Network(self.get_context())
         net_context.cleanup()
         mock_wrap().delete_network.assert_has_calls(

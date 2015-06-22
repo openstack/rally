@@ -50,12 +50,12 @@ class SecGroupContextTestCase(test.TestCase):
         }
 
     @mock.patch("rally.plugins.openstack.context.secgroup.osclients.Clients")
-    def test__prepare_open_secgroup(self, mock_osclients):
+    def test__prepare_open_secgroup(self, mock_clients):
         fake_nova = fakes.FakeNovaClient()
         self.assertEqual(len(fake_nova.security_groups.list()), 1)
         mock_cl = mock.MagicMock()
         mock_cl.nova.return_value = fake_nova
-        mock_osclients.return_value = mock_cl
+        mock_clients.return_value = mock_cl
 
         ret = secgroup._prepare_open_secgroup("endpoint", self.secgroup_name)
         self.assertEqual(self.secgroup_name, ret["name"])
@@ -70,14 +70,14 @@ class SecGroupContextTestCase(test.TestCase):
         self.assertEqual(2, len(fake_nova.security_groups.list()))
 
     @mock.patch("rally.plugins.openstack.context.secgroup.osclients.Clients")
-    def test__prepare_open_secgroup_rules(self, mock_osclients):
+    def test__prepare_open_secgroup_rules(self, mock_clients):
         fake_nova = fakes.FakeNovaClient()
 
         # NOTE(hughsaunders) Default security group is precreated
         self.assertEqual(1, len(fake_nova.security_groups.list()))
         mock_cl = mock.MagicMock()
         mock_cl.nova.return_value = fake_nova
-        mock_osclients.return_value = mock_cl
+        mock_clients.return_value = mock_cl
 
         secgroup._prepare_open_secgroup("endpoint", self.secgroup_name)
 
@@ -95,16 +95,16 @@ class SecGroupContextTestCase(test.TestCase):
                 "secgroup._prepare_open_secgroup")
     @mock.patch("rally.plugins.openstack.wrappers.network.wrap")
     def test_secgroup_setup_cleanup_with_secgroup_supported(
-            self, mock_network_wrap, mock_prepare_open_secgroup,
-            mock_osclients):
+            self, mock_network_wrap, mock__prepare_open_secgroup,
+            mock_clients):
         mock_network_wrapper = mock.MagicMock()
         mock_network_wrapper.supports_security_group.return_value = (
             True, "")
         mock_network_wrap.return_value = mock_network_wrapper
-        mock_prepare_open_secgroup.return_value = {
+        mock__prepare_open_secgroup.return_value = {
             "name": "secgroup",
             "id": "secgroup_id"}
-        mock_osclients.return_value = mock.MagicMock()
+        mock_clients.return_value = mock.MagicMock()
 
         secgrp_ctx = secgroup.AllowSSH(self.ctx_without_secgroup)
         secgrp_ctx.setup()
@@ -119,27 +119,26 @@ class SecGroupContextTestCase(test.TestCase):
                 mock.call().nova().security_groups.get("secgroup_id"),
                 mock.call().nova().security_groups.get().delete()
             ],
-            mock_osclients.mock_calls)
+            mock_clients.mock_calls)
 
         mock_network_wrap.assert_called_once_with(
-            mock_osclients.return_value, {})
+            mock_clients.return_value, {})
 
     @mock.patch("rally.plugins.openstack.context.secgroup.osclients.Clients")
     @mock.patch("rally.plugins.openstack.wrappers.network.wrap")
-    def test_secgroup_setup_with_secgroup_unsupported(self,
-                                                      mock_network_wrap,
-                                                      mock_osclients):
+    def test_secgroup_setup_with_secgroup_unsupported(
+            self, mock_network_wrap, mock_clients):
         mock_network_wrapper = mock.MagicMock()
         mock_network_wrapper.supports_security_group.return_value = (
             False, "Not supported")
         mock_network_wrap.return_value = mock_network_wrapper
-        mock_osclients.return_value = mock.MagicMock()
+        mock_clients.return_value = mock.MagicMock()
 
         secgrp_ctx = secgroup.AllowSSH(dict(self.ctx_without_secgroup))
         secgrp_ctx.setup()
         self.assertEqual(self.ctx_without_secgroup, secgrp_ctx.context)
 
-        mock_osclients.assert_called_once_with("admin_endpoint")
+        mock_clients.assert_called_once_with("admin_endpoint")
 
         mock_network_wrap.assert_called_once_with(
-            mock_osclients.return_value, {})
+            mock_clients.return_value, {})

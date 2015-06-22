@@ -85,12 +85,12 @@ class UserGeneratorTestCase(test.TestCase):
     @mock.patch("rally.plugins.openstack.context.users.network")
     @mock.patch("rally.benchmark.utils.check_service_status",
                 return_value=False)
-    def test__remove_default_security_group(self, mock_check_service_status,
-                                            mock_netwrap,
-                                            mock_iterate_per_tenants):
+    def test__remove_default_security_group(
+            self, mock_check_service_status, mock_network,
+            mock_iterate_per_tenants):
         net_wrapper = mock.Mock(SERVICE_IMPL=consts.Service.NEUTRON)
         net_wrapper.supports_security_group.return_value = (True, None)
-        mock_netwrap.wrap.return_value = net_wrapper
+        mock_network.wrap.return_value = net_wrapper
 
         user_generator = users.UserGenerator(self.context)
 
@@ -107,7 +107,7 @@ class UserGeneratorTestCase(test.TestCase):
 
         user_generator._remove_default_security_group()
 
-        mock_netwrap.wrap.assert_called_once_with(admin_clients)
+        mock_network.wrap.assert_called_once_with(admin_clients)
 
         mock_iterate_per_tenants.assert_called_once_with(
             user_generator.context["users"])

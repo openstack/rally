@@ -34,7 +34,8 @@ class TaskSampleTestCase(test.TestCase):
 
     @mock.patch("rally.benchmark.engine.BenchmarkEngine"
                 "._validate_config_semantic")
-    def test_schema_is_valid(self, mock_semantic):
+    def test_schema_is_valid(self,
+            mock_benchmark_engine__validate_config_semantic):
         scenarios = set()
 
         for dirname, dirnames, filenames in os.walk(self.samples_path):

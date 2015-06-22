@@ -28,24 +28,24 @@ MOD_NAME = "rally.deploy.serverprovider.providers.lxc."
 class HelperFunctionsTestCase(test.TestCase):
 
     @mock.patch(MOD_NAME + "open", create=True, return_value="fake_script")
-    def test__get_script(self, m_open):
+    def test__get_script(self, mock_open):
         script = lxc._get_script("script.sh")
         self.assertEqual("fake_script", script)
-        path = m_open.mock_calls[0][1][0]
-        mode = m_open.mock_calls[0][1][1]
+        path = mock_open.mock_calls[0][1][0]
+        mode = mock_open.mock_calls[0][1][1]
         self.assertTrue(path.endswith("rally/deploy/serverprovider/providers"
                                       "/lxc/script.sh"))
         self.assertEqual("rb", mode)
 
     @mock.patch(MOD_NAME + "_get_script", return_value="fake_script")
     @mock.patch(MOD_NAME + "moves.StringIO")
-    def test__get_script_from_template(self, m_sio, m_gs):
-        m_gs.return_value = fake_script = mock.Mock()
+    def test__get_script_from_template(self, mock_string_io, mock__get_script):
+        mock__get_script.return_value = fake_script = mock.Mock()
         fake_script.read.return_value = "fake_data {k1} {k2}"
-        m_sio.return_value = "fake_formatted_script"
+        mock_string_io.return_value = "fake_formatted_script"
         script = lxc._get_script_from_template("fake_tpl", k1="v1", k2="v2")
         self.assertEqual("fake_formatted_script", script)
-        m_sio.assert_called_once_with("fake_data v1 v2")
+        mock_string_io.assert_called_once_with("fake_data v1 v2")
 
 
 class LxcHostTestCase(test.TestCase):
@@ -62,9 +62,9 @@ class LxcHostTestCase(test.TestCase):
         self.host = lxc.LxcHost(self.server, sample_config)
 
     @mock.patch(MOD_NAME + "provider.Server")
-    def test__get_updated_server(self, m_Server):
+    def test__get_updated_server(self, mock_server):
         server = self.host._get_updated_server(host="4.4.4.4")
-        new_server = m_Server.from_credentials({"host": "4.4.4.4"})
+        new_server = mock_server.from_credentials({"host": "4.4.4.4"})
         self.assertEqual(new_server, server)
 
     def test_backingstore_btrfs(self):
@@ -81,8 +81,8 @@ class LxcHostTestCase(test.TestCase):
 
     @mock.patch(MOD_NAME + "moves.StringIO")
     @mock.patch(MOD_NAME + "_get_script", return_value="fake_script")
-    def test_prepare(self, m_gs, m_sio):
-        m_sio.return_value = fake_conf = mock.Mock()
+    def test_prepare(self, mock__get_script, mock_string_io):
+        mock_string_io.return_value = fake_conf = mock.Mock()
         self.host.create_local_tunnels = mock.Mock()
         self.host.create_remote_tunnels = mock.Mock()
 
@@ -107,23 +107,25 @@ class LxcHostTestCase(test.TestCase):
 
     @mock.patch(MOD_NAME + "os.unlink")
     @mock.patch(MOD_NAME + "_get_script_from_template")
-    def test_create_local_tunnels(self, m_gs, m_unlink):
-        m_gs.side_effect = ["s1", "s2"]
+    def test_create_local_tunnels(self, mock__get_script_from_template,
+                                  mock_unlink):
+        mock__get_script_from_template.side_effect = ["s1", "s2"]
         self.host.create_local_tunnels()
-        gs_calls = [
+        getscript_calls = [
             mock.call("tunnel-local.sh", local="fake_server_ip",
                       net=netaddr.IPNetwork("10.1.1.0/24"), remote="1.1.1.1"),
             mock.call("tunnel-local.sh", local="fake_server_ip",
                       net=netaddr.IPNetwork("10.1.1.0/24"), remote="2.2.2.2"),
         ]
-        self.assertEqual(gs_calls, m_gs.mock_calls)
+        self.assertEqual(
+            getscript_calls, mock__get_script_from_template.mock_calls)
         self.assertEqual([mock.call("/bin/sh", stdin="s1"),
                           mock.call("/bin/sh", stdin="s2")],
                          self.server.ssh.run.mock_calls)
 
     @mock.patch(MOD_NAME + "_get_script_from_template")
-    def test_create_remote_tunnels(self, m_get_script):
-        m_get_script.side_effect = ["s1", "s2"]
+    def test_create_remote_tunnels(self, mock__get_script_from_template):
+        mock__get_script_from_template.side_effect = ["s1", "s2"]
         fake_server = mock.Mock()
         self.host._get_updated_server = mock.Mock(return_value=fake_server)
         self.host.create_remote_tunnels()
@@ -144,7 +146,7 @@ class LxcHostTestCase(test.TestCase):
                          self.server.ssh.execute.mock_calls)
 
     @mock.patch(MOD_NAME + "time.sleep")
-    def test_get_ip(self, m_sleep):
+    def test_get_ip(self, mock_sleep):
         s1 = "link/ether fe:54:00:d3:f5:98 brd ff:ff:ff:ff:ff:ff"
         s2 = s1 + "\n   inet 10.20.0.1/24 scope global br1"
         self.host.server.ssh.execute.side_effect = [(0, s1, ""), (0, s2, "")]
@@ -192,9 +194,9 @@ class LxcHostTestCase(test.TestCase):
 
     @mock.patch(MOD_NAME + "os.path.join")
     @mock.patch(MOD_NAME + "_get_script")
-    def test_configure_container(self, m_gs, m_join):
-        m_gs.return_value = "fake_script"
-        m_join.return_value = "fake_path"
+    def test_configure_container(self, mock__get_script, mock_join):
+        mock__get_script.return_value = "fake_script"
+        mock_join.return_value = "fake_path"
         self.server.ssh.execute.return_value = 0, "", ""
         self.host.configure_container("name")
         self.server.ssh.run.assert_called_once_with(
@@ -241,13 +243,13 @@ class LxcHostTestCase(test.TestCase):
         fake_server.ssh.wait.assert_called_once_with(timeout=300)
 
     @mock.patch(MOD_NAME + "LxcHost.get_server_object")
-    def test_get_server_objects(self, m_gso):
-        m_gso.side_effect = ["s1", "s2"]
+    def test_get_server_objects(self, mock_get_server_object):
+        mock_get_server_object.side_effect = ["s1", "s2"]
         self.host.containers = ["c1", "c2"]
         retval = list(self.host.get_server_objects(wait="wait"))
         self.assertEqual(["s1", "s2"], retval)
         self.assertEqual([mock.call("c1", "wait"), mock.call("c2", "wait")],
-                         m_gso.mock_calls)
+                         mock_get_server_object.mock_calls)
 
 
 class LxcProviderTestCase(test.TestCase):
@@ -292,7 +294,8 @@ class LxcProviderTestCase(test.TestCase):
 
     @mock.patch(MOD_NAME + "LxcHost")
     @mock.patch(MOD_NAME + "provider.ProviderFactory.get_provider")
-    def test_create_servers(self, m_get_provider, m_lxchost):
+    def test_create_servers(self, mock_provider_factory_get_provider,
+                            mock_lxc_host):
         fake_provider = mock.Mock()
         fake_provider.create_servers.return_value = ["server1", "server2"]
         fake_hosts = []
@@ -307,8 +310,8 @@ class LxcProviderTestCase(test.TestCase):
             fake_host.server.get_credentials.return_value = {"ip": "f%d" % i}
             fake_host.get_server_objects.return_value = fake_host_sos
             fake_hosts.append(fake_host)
-        m_lxchost.side_effect = fake_hosts
-        m_get_provider.return_value = fake_provider
+        mock_lxc_host.side_effect = fake_hosts
+        mock_provider_factory_get_provider.return_value = fake_provider
 
         fake_info = [
             {"host": {"ip": "f1"},
@@ -363,15 +366,16 @@ class LxcProviderTestCase(test.TestCase):
 
     @mock.patch(MOD_NAME + "LxcHost")
     @mock.patch(MOD_NAME + "provider.Server.from_credentials")
-    def test_destroy_servers(self, m_fc, m_lxchost):
+    def test_destroy_servers(self, mock_server_from_credentials,
+                             mock_lxc_host):
         fake_resource = {"info": {"config": "fake_config",
                                   "host": "fake_credentials",
                                   "forwarded_ports": [1, 2],
                                   "container_names": ["n1", "n2"]}}
         fake_resource["id"] = "fake_res_id"
         fake_host = mock.Mock()
-        m_fc.return_value = "fake_server"
-        m_lxchost.return_value = fake_host
+        mock_server_from_credentials.return_value = "fake_server"
+        mock_lxc_host.return_value = fake_host
         self.provider.resources = mock.Mock()
         self.provider.resources.get_all.return_value = [fake_resource]
 
@@ -379,7 +383,7 @@ class LxcProviderTestCase(test.TestCase):
             ghp.return_value = fake_host_provider = mock.Mock()
             self.provider.destroy_servers()
 
-        m_lxchost.assert_called_once_with("fake_server", "fake_config")
+        mock_lxc_host.assert_called_once_with("fake_server", "fake_config")
         host_calls = [mock.call.destroy_containers(),
                       mock.call.destroy_ports([1, 2]),
                       mock.call.delete_tunnels()]

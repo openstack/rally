@@ -49,7 +49,7 @@ class VolumeGeneratorTestCase(test.TestCase):
     @mock.patch("%s.cinder.utils.CinderScenario._create_volume" % SCN,
                 return_value=fakes.FakeVolume(id="uuid"))
     @mock.patch("%s.volumes.osclients" % CTX)
-    def test_setup(self, mock_osclients, mock_volume_create):
+    def test_setup(self, mock_osclients, mock_cinder_scenario__create_volume):
         fc = fakes.FakeClients()
         mock_osclients.Clients.return_value = fc
 

@@ -24,14 +24,14 @@ BASIC = BASE + "basic.ZaqarBasic."
 class ZaqarBasicTestCase(test.TestCase):
 
     @mock.patch(BASIC + "_generate_random_name", return_value="fizbit")
-    def test_create_queue(self, mock_gen_name):
+    def test_create_queue(self, mock__generate_random_name):
         scenario = basic.ZaqarBasic()
         scenario._queue_create = mock.MagicMock()
         scenario.create_queue(name_length=10)
         scenario._queue_create.assert_called_once_with(name_length=10)
 
     @mock.patch(BASIC + "_generate_random_name", return_value="kitkat")
-    def test_producer_consumer(self, mock_gen_name):
+    def test_producer_consumer(self, mock__generate_random_name):
         scenario = basic.ZaqarBasic()
         messages = [{"body": {"id": idx}, "ttl": 360} for idx
                     in range(20)]

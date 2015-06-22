@@ -48,8 +48,8 @@ class KeyPairContextTestCase(test.TestCase):
         }
 
     @mock.patch("%s.keypair.Keypair._generate_keypair" % CTX)
-    def test_keypair_setup(self, mock_generate):
-        mock_generate.side_effect = [
+    def test_keypair_setup(self, mock_keypair__generate_keypair):
+        mock_keypair__generate_keypair.side_effect = [
             {"id": "key_id", "key": "key", "name": self.keypair_name},
             {"id": "key_id", "key": "key", "name": self.keypair_name},
         ]
@@ -60,7 +60,7 @@ class KeyPairContextTestCase(test.TestCase):
 
         self.assertEqual(
             [mock.call("endpoint")] * 2,
-            mock_generate.mock_calls)
+            mock_keypair__generate_keypair.mock_calls)
 
     @mock.patch("%s.keypair.resource_manager.cleanup" % CTX)
     def test_keypair_cleanup(self, mock_cleanup):
@@ -70,8 +70,8 @@ class KeyPairContextTestCase(test.TestCase):
                                              users=self.ctx_with_keys["users"])
 
     @mock.patch("rally.osclients.Clients")
-    def test_keypair_generate(self, mock_osclients):
-        mock_keypairs = mock_osclients.return_value.nova.return_value.keypairs
+    def test_keypair_generate(self, mock_clients):
+        mock_keypairs = mock_clients.return_value.nova.return_value.keypairs
         mock_keypair = mock_keypairs.create.return_value
         mock_keypair.public_key = "public_key"
         mock_keypair.private_key = "private_key"
@@ -86,7 +86,7 @@ class KeyPairContextTestCase(test.TestCase):
             "public": "public_key"
         }, key)
 
-        mock_osclients.assert_has_calls([
+        mock_clients.assert_has_calls([
             mock.call().nova().keypairs.delete("rally_ssh_key_foo_task_id"),
             mock.call().nova().keypairs.create("rally_ssh_key_foo_task_id"),
         ])

@@ -19,7 +19,7 @@ from tests.unit import test
 
 class DummyTestCase(test.TestCase):
 
-    @mock.patch("rally.plugins.common.scenarios.dummy.dummy.time")
+    @mock.patch("rally.plugins.common.scenarios.dummy.dummy.time.sleep")
     def test_dummy(self, mock_sleep):
         scenario = dummy.Dummy()
         scenario.sleep_between = mock.MagicMock()
@@ -27,16 +27,16 @@ class DummyTestCase(test.TestCase):
         self.assertFalse(mock_sleep.sleep.called)
 
         scenario.dummy(sleep=10)
-        mock_sleep.sleep.assert_called_once_with(10)
+        mock_sleep.assert_called_once_with(10)
 
-    @mock.patch("rally.plugins.common.scenarios.dummy.dummy.time")
+    @mock.patch("rally.plugins.common.scenarios.dummy.dummy.time.sleep")
     def test_dummy_exception(self, mock_sleep):
         scenario = dummy.Dummy()
 
         size_of_message = 5
         self.assertRaises(dummy.DummyScenarioException,
                           scenario.dummy_exception, size_of_message, sleep=10)
-        mock_sleep.sleep.assert_called_once_with(10)
+        mock_sleep.assert_called_once_with(10)
 
     def test_dummy_exception_probability(self):
         scenario = dummy.Dummy()

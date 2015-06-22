@@ -96,36 +96,38 @@ class EngineFactoryTestCase(test.TestCase):
 
     @mock.patch.object(FakeDeployment, "set_completed")
     @mock.patch.object(FakeDeployment, "set_started")
-    def test_make_deploy(self, mock_set_started, mock_set_completed):
+    def test_make_deploy(self, mock_fake_deployment_set_started,
+                         mock_fake_deployment_set_completed):
         deployment = make_fake_deployment()
         engine = FakeEngine(deployment)
         endpoint = engine.make_deploy()
         self.assertEqual(engine, endpoint)
         self.assertTrue(endpoint.deployed)
         self.assertFalse(endpoint.cleanuped)
-        mock_set_started.assert_called_once_with()
-        mock_set_completed.assert_called_once_with()
+        mock_fake_deployment_set_completed.assert_called_once_with()
+        mock_fake_deployment_set_started.assert_called_once_with()
 
     @mock.patch.object(FakeDeployment, "set_started")
     @mock.patch.object(FakeEngine, "deploy")
-    def test_make_deploy_failed(self, mock_deploy, mock_set_started):
+    def test_make_deploy_failed(self, mock_fake_engine_deploy,
+                                mock_fake_deployment_set_started):
         class DeployFailed(Exception):
             pass
 
         deployment = make_fake_deployment()
         engine = FakeEngine(deployment)
-        mock_deploy.side_effect = DeployFailed()
+        mock_fake_engine_deploy.side_effect = DeployFailed()
         self.assertRaises(DeployFailed, engine.make_deploy)
-        mock_set_started.assert_called_once_with()
+        mock_fake_deployment_set_started.assert_called_once_with()
 
     @mock.patch.object(FakeDeployment, "update_status")
-    def test_make_cleanup(self, mock_update_status):
+    def test_make_cleanup(self, mock_fake_deployment_update_status):
         deployment = make_fake_deployment()
         engine = FakeEngine(deployment)
         engine.make_cleanup()
         self.assertTrue(engine.cleanuped)
         self.assertFalse(engine.deployed)
-        mock_update_status.assert_has_calls([
+        mock_fake_deployment_update_status.assert_has_calls([
             mock.call(consts.DeployStatus.CLEANUP_STARTED),
             mock.call(consts.DeployStatus.CLEANUP_FINISHED),
         ])
@@ -133,26 +135,27 @@ class EngineFactoryTestCase(test.TestCase):
 
     @mock.patch.object(FakeDeployment, "update_status")
     @mock.patch.object(FakeEngine, "cleanup")
-    def test_make_cleanup_failed(self, mock_cleanup, mock_update_status):
+    def test_make_cleanup_failed(self, mock_fake_engine_cleanup,
+                                 mock_fake_deployment_update_status):
         class CleanUpFailed(Exception):
             pass
 
         deployment = make_fake_deployment()
         engine = FakeEngine(deployment)
-        mock_cleanup.side_effect = CleanUpFailed()
+        mock_fake_engine_cleanup.side_effect = CleanUpFailed()
         self.assertRaises(CleanUpFailed, engine.make_cleanup)
-        mock_update_status.assert_has_calls([
+        mock_fake_deployment_update_status.assert_has_calls([
             mock.call(consts.DeployStatus.CLEANUP_STARTED),
         ])
         self.assertFalse(engine.cleanuped)
 
     @mock.patch.object(FakeDeployment, "update_status")
-    def test_with_statement(self, mock_update_status):
+    def test_with_statement(self, mock_fake_deployment_update_status):
         deployment = make_fake_deployment()
         engine = FakeEngine(deployment)
         with engine as deployer:
             self.assertEqual(engine, deployer)
-        self.assertFalse(mock_update_status.called)
+        self.assertFalse(mock_fake_deployment_update_status.called)
         self.assertFalse(engine.cleanuped)
         self.assertFalse(engine.deployed)
 
@@ -178,7 +181,7 @@ class EngineFactoryTestCase(test.TestCase):
 
     @mock.patch.object(FakeDeployment, "update_status")
     def _assert_changed_status_on_error(self, initial, final,
-                                        mock_update_status):
+                                        mock_fake_deployment_update_status):
         # NOTE(akscram): The assertRaises of testtools can't be used as
         #                a context manager in python26:
         #                   with self.assertRaises(SomeError):
@@ -198,7 +201,7 @@ class EngineFactoryTestCase(test.TestCase):
         deployment = make_fake_deployment(status=initial)
         engine = FakeEngine(deployment)
         self.assertRaises(SomeError, context_with_error, SomeError(), engine)
-        mock_update_status.assert_called_once_with(final)
+        mock_fake_deployment_update_status.assert_called_once_with(final)
         self.assertFalse(engine.cleanuped)
         self.assertFalse(engine.deployed)
 

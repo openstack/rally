@@ -39,14 +39,16 @@ class TempestContextTestCase(test.TestCase):
     @mock.patch(TEMPEST + ".Tempest.is_configured", return_value=True)
     @mock.patch(TEMPEST + ".Tempest.install")
     @mock.patch(TEMPEST + ".Tempest.is_installed", return_value=True)
-    def test_setup(self, mock_is_install, mock_install, mock_is_cfg, mock_cfg,
-                   mock_mkdir):
+    def test_setup(
+            self, mock_tempest_is_installed, mock_tempest_install,
+            mock_tempest_is_configured, mock_tempest_generate_config_file,
+            mock_mkdir):
         benchmark = tempest.Tempest(self.context)
 
         benchmark.setup()
 
-        self.assertEqual(0, mock_install.call_count)
-        self.assertEqual(0, mock_cfg.call_count)
+        self.assertEqual(0, mock_tempest_install.call_count)
+        self.assertEqual(0, mock_tempest_generate_config_file.call_count)
         self.assertEqual("/dev/null", benchmark.verifier.log_file_raw)
 
     @mock.patch(CONTEXT + ".os.mkdir")
@@ -54,43 +56,50 @@ class TempestContextTestCase(test.TestCase):
     @mock.patch(TEMPEST + ".Tempest.is_installed", return_value=False)
     @mock.patch(TEMPEST + ".Tempest.install")
     def test_setup_failure_on_tempest_installation(
-            self, mock_install, mock_is_installed, mock_is_cfg, mock_mkdir):
-        mock_install.side_effect = tempest_verifier.TempestSetupFailure()
+            self, mock_tempest_install, mock_tempest_is_installed,
+            mock_tempest_is_configured, mock_mkdir):
+        mock_tempest_install.side_effect = (
+            tempest_verifier.TempestSetupFailure()
+        )
 
         benchmark = tempest.Tempest(self.context)
 
         self.assertRaises(exceptions.BenchmarkSetupFailure, benchmark.setup)
-        self.assertEqual(0, mock_is_cfg.call_count)
+        self.assertEqual(0, mock_tempest_is_configured.call_count)
 
     @mock.patch(CONTEXT + ".os.mkdir")
     @mock.patch(TEMPEST + ".Tempest.is_configured", return_value=False)
     @mock.patch(TEMPEST + ".Tempest.is_installed", return_value=True)
     @mock.patch(TEMPEST + ".Tempest.generate_config_file")
     def test_setup_failure_on_tempest_configuration(
-            self, mock_gen, mock_is_installed, mock_is_cfg, mock_mkdir):
-        mock_gen.side_effect = config.TempestConfigCreationFailure()
+            self, mock_tempest_generate_config_file, mock_tempest_is_installed,
+            mock_tempest_is_configured, mock_mkdir):
+        mock_tempest_generate_config_file.side_effect = (
+            config.TempestConfigCreationFailure()
+        )
 
         benchmark = tempest.Tempest(self.context)
 
         self.assertRaises(exceptions.BenchmarkSetupFailure, benchmark.setup)
-        self.assertEqual(1, mock_is_cfg.call_count)
+        self.assertEqual(1, mock_tempest_is_configured.call_count)
 
     @mock.patch(CONTEXT + ".os.mkdir")
     @mock.patch(TEMPEST + ".Tempest.is_configured", return_value=False)
     @mock.patch(TEMPEST + ".Tempest.is_installed", return_value=True)
     @mock.patch(TEMPEST + ".Tempest.generate_config_file")
     def test_setup_with_no_configuration(
-            self, mock_gen, mock_is_installed, mock_is_cfg, mock_mkdir):
+            self, mock_tempest_generate_config_file, mock_tempest_is_installed,
+            mock_tempest_is_configured, mock_mkdir):
 
         benchmark = tempest.Tempest(self.context)
         benchmark.setup()
-        self.assertEqual(1, mock_is_installed.call_count)
+        self.assertEqual(1, mock_tempest_is_installed.call_count)
         self.assertEqual("/dev/null", benchmark.verifier.log_file_raw)
-        self.assertEqual(1, mock_gen.call_count)
+        self.assertEqual(1, mock_tempest_generate_config_file.call_count)
 
     @mock.patch(CONTEXT + ".os.path.exists", return_value=True)
     @mock.patch(CONTEXT + ".shutil")
-    def test_cleanup(self, mock_shutil, mock_os_path_exists):
+    def test_cleanup(self, mock_shutil, mock_exists):
         benchmark = tempest.Tempest(self.context)
         benchmark.verifier = mock.MagicMock()
         benchmark.results_dir = "/tmp/path"

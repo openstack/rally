@@ -30,33 +30,37 @@ class SaharaNodeGroupTemplatesTestCase(test.TestCase):
                 return_value=object())
     @mock.patch(SAHARA_NGTS + "._create_worker_node_group_template",
                 return_value=object)
-    def test_create_and_list_node_group_templates(self, mock_create_worker,
-                                                  mock_create_master,
-                                                  mock_list):
+    def test_create_and_list_node_group_templates(
+            self,
+            mock__create_worker_node_group_template,
+            mock__create_master_node_group_template,
+            mock__list_node_group_templates):
 
         ngts_scenario = ngts.SaharaNodeGroupTemplates()
         ngts_scenario.create_and_list_node_group_templates("test_flavor",
                                                            "test_plugin",
                                                            "test_version")
 
-        mock_create_master.assert_called_once_with(
+        mock__create_master_node_group_template.assert_called_once_with(
             flavor_id="test_flavor",
             plugin_name="test_plugin",
             hadoop_version="test_version")
-        mock_create_worker.assert_called_once_with(
+        mock__create_worker_node_group_template.assert_called_once_with(
             flavor_id="test_flavor",
             plugin_name="test_plugin",
             hadoop_version="test_version")
-        mock_list.assert_called_once_with()
+        mock__list_node_group_templates.assert_called_once_with()
 
     @mock.patch(SAHARA_NGTS + "._delete_node_group_template")
     @mock.patch(SAHARA_NGTS + "._create_master_node_group_template",
                 return_value=mock.MagicMock(id=1))
     @mock.patch(SAHARA_NGTS + "._create_worker_node_group_template",
                 return_value=mock.MagicMock(id=2))
-    def test_create_delete_node_group_templates(self, mock_create_worker,
-                                                mock_create_master,
-                                                mock_delete):
+    def test_create_delete_node_group_templates(
+            self,
+            mock__create_worker_node_group_template,
+            mock__create_master_node_group_template,
+            mock__delete_node_group_template):
 
         ngts_scenario = ngts.SaharaNodeGroupTemplates()
         ngts_scenario.create_delete_node_group_templates(
@@ -64,15 +68,15 @@ class SaharaNodeGroupTemplatesTestCase(test.TestCase):
             "test_plugin",
             "test_version")
 
-        mock_create_master.assert_called_once_with(
+        mock__create_master_node_group_template.assert_called_once_with(
             flavor_id="test_flavor",
             plugin_name="test_plugin",
             hadoop_version="test_version")
-        mock_create_worker.assert_called_once_with(
+        mock__create_worker_node_group_template.assert_called_once_with(
             flavor_id="test_flavor",
             plugin_name="test_plugin",
             hadoop_version="test_version")
 
-        mock_delete.assert_has_calls(calls=[
-            mock.call(mock_create_master.return_value),
-            mock.call(mock_create_worker.return_value)])
+        mock__delete_node_group_template.assert_has_calls(calls=[
+            mock.call(mock__create_master_node_group_template.return_value),
+            mock.call(mock__create_worker_node_group_template.return_value)])

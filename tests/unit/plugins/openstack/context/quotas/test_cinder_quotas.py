@@ -22,8 +22,8 @@ class CinderQuotasTestCase(test.TestCase):
 
     @mock.patch("rally.plugins.openstack.context."
                 "quotas.quotas.osclients.Clients")
-    def test_update(self, client_mock):
-        cinder_quo = cinder_quotas.CinderQuotas(client_mock)
+    def test_update(self, mock_clients):
+        cinder_quo = cinder_quotas.CinderQuotas(mock_clients)
         tenant_id = mock.MagicMock()
         quotas_values = {
             "volumes": 10,
@@ -31,13 +31,13 @@ class CinderQuotasTestCase(test.TestCase):
             "gigabytes": 1000
         }
         cinder_quo.update(tenant_id, **quotas_values)
-        client_mock.cinder().quotas.update.assert_called_once_with(
+        mock_clients.cinder().quotas.update.assert_called_once_with(
             tenant_id, **quotas_values)
 
     @mock.patch("rally.plugins.openstack.context."
                 "quotas.quotas.osclients.Clients")
-    def test_delete(self, client_mock):
-        cinder_quo = cinder_quotas.CinderQuotas(client_mock)
+    def test_delete(self, mock_clients):
+        cinder_quo = cinder_quotas.CinderQuotas(mock_clients)
         tenant_id = mock.MagicMock()
         cinder_quo.delete(tenant_id)
-        client_mock.cinder().quotas.delete.assert_called_once_with(tenant_id)
+        mock_clients.cinder().quotas.delete.assert_called_once_with(tenant_id)

@@ -33,11 +33,11 @@ class SSHTestCase(test.TestCase):
         self.ssh = sshutils.SSH("root", "example.net")
 
     @mock.patch("rally.common.sshutils.SSH._get_pkey")
-    def test_construct(self, m_pkey):
-        m_pkey.return_value = "pkey"
+    def test_construct(self, mock_ssh__get_pkey):
+        mock_ssh__get_pkey.return_value = "pkey"
         ssh = sshutils.SSH("root", "example.net", port=33, pkey="key",
                            key_filename="kf", password="secret")
-        m_pkey.assert_called_once_with("key")
+        mock_ssh__get_pkey.assert_called_once_with("key")
         self.assertEqual("root", ssh.user)
         self.assertEqual("example.net", ssh.host)
         self.assertEqual(33, ssh.port)
@@ -54,49 +54,49 @@ class SSHTestCase(test.TestCase):
         self.assertIsNone(self.ssh.password)
 
     @mock.patch("rally.common.sshutils.paramiko")
-    def test__get_pkey_invalid(self, m_paramiko):
-        m_paramiko.SSHException = FakeParamikoException
-        rsa = m_paramiko.rsakey.RSAKey
-        dss = m_paramiko.dsskey.DSSKey
-        rsa.from_private_key.side_effect = m_paramiko.SSHException
-        dss.from_private_key.side_effect = m_paramiko.SSHException
+    def test__get_pkey_invalid(self, mock_paramiko):
+        mock_paramiko.SSHException = FakeParamikoException
+        rsa = mock_paramiko.rsakey.RSAKey
+        dss = mock_paramiko.dsskey.DSSKey
+        rsa.from_private_key.side_effect = mock_paramiko.SSHException
+        dss.from_private_key.side_effect = mock_paramiko.SSHException
         self.assertRaises(sshutils.SSHError, self.ssh._get_pkey, "key")
 
-    @mock.patch("rally.common.sshutils.six.moves")
+    @mock.patch("rally.common.sshutils.six.moves.StringIO")
     @mock.patch("rally.common.sshutils.paramiko")
-    def test__get_pkey_dss(self, m_paramiko, m_stringio):
-        m_paramiko.SSHException = FakeParamikoException
-        m_stringio.StringIO.return_value = "string_key"
-        m_paramiko.dsskey.DSSKey.from_private_key.return_value = "dss_key"
-        rsa = m_paramiko.rsakey.RSAKey
-        rsa.from_private_key.side_effect = m_paramiko.SSHException
+    def test__get_pkey_dss(self, mock_paramiko, mock_string_io):
+        mock_paramiko.SSHException = FakeParamikoException
+        mock_string_io.return_value = "string_key"
+        mock_paramiko.dsskey.DSSKey.from_private_key.return_value = "dss_key"
+        rsa = mock_paramiko.rsakey.RSAKey
+        rsa.from_private_key.side_effect = mock_paramiko.SSHException
         key = self.ssh._get_pkey("key")
-        dss_calls = m_paramiko.dsskey.DSSKey.from_private_key.mock_calls
+        dss_calls = mock_paramiko.dsskey.DSSKey.from_private_key.mock_calls
         self.assertEqual([mock.call("string_key")], dss_calls)
         self.assertEqual(key, "dss_key")
-        m_stringio.StringIO.assert_called_once_with("key")
+        mock_string_io.assert_called_once_with("key")
 
-    @mock.patch("rally.common.sshutils.six.moves")
+    @mock.patch("rally.common.sshutils.six.moves.StringIO")
     @mock.patch("rally.common.sshutils.paramiko")
-    def test__get_pkey_rsa(self, m_paramiko, m_stringio):
-        m_paramiko.SSHException = FakeParamikoException
-        m_stringio.StringIO.return_value = "string_key"
-        m_paramiko.rsakey.RSAKey.from_private_key.return_value = "rsa_key"
-        dss = m_paramiko.dsskey.DSSKey
-        dss.from_private_key.side_effect = m_paramiko.SSHException
+    def test__get_pkey_rsa(self, mock_paramiko, mock_string_io):
+        mock_paramiko.SSHException = FakeParamikoException
+        mock_string_io.return_value = "string_key"
+        mock_paramiko.rsakey.RSAKey.from_private_key.return_value = "rsa_key"
+        dss = mock_paramiko.dsskey.DSSKey
+        dss.from_private_key.side_effect = mock_paramiko.SSHException
         key = self.ssh._get_pkey("key")
-        rsa_calls = m_paramiko.rsakey.RSAKey.from_private_key.mock_calls
+        rsa_calls = mock_paramiko.rsakey.RSAKey.from_private_key.mock_calls
         self.assertEqual([mock.call("string_key")], rsa_calls)
         self.assertEqual(key, "rsa_key")
-        m_stringio.StringIO.assert_called_once_with("key")
+        mock_string_io.assert_called_once_with("key")
 
     @mock.patch("rally.common.sshutils.SSH._get_pkey")
     @mock.patch("rally.common.sshutils.paramiko")
-    def test__get_client(self, m_paramiko, m_pkey):
-        m_pkey.return_value = "key"
+    def test__get_client(self, mock_paramiko, mock_ssh__get_pkey):
+        mock_ssh__get_pkey.return_value = "key"
         fake_client = mock.Mock()
-        m_paramiko.SSHClient.return_value = fake_client
-        m_paramiko.AutoAddPolicy.return_value = "autoadd"
+        mock_paramiko.SSHClient.return_value = fake_client
+        mock_paramiko.AutoAddPolicy.return_value = "autoadd"
 
         ssh = sshutils.SSH("admin", "example.net", pkey="key")
         client = ssh._get_client()
@@ -116,26 +116,25 @@ class SSHTestCase(test.TestCase):
         m_client.close.assert_called_once_with()
         self.assertFalse(self.ssh._client)
 
-    @mock.patch("rally.common.sshutils.six.moves")
-    def test_execute(self, m_stringio):
-        m_stringio.StringIO.side_effect = stdio = [mock.Mock(), mock.Mock()]
+    @mock.patch("rally.common.sshutils.six.moves.StringIO")
+    def test_execute(self, mock_string_io):
+        mock_string_io.side_effect = stdio = [mock.Mock(), mock.Mock()]
         stdio[0].read.return_value = "stdout fake data"
         stdio[1].read.return_value = "stderr fake data"
-        with mock.patch.object(self.ssh, "run", return_value=0) as m_run:
+        with mock.patch.object(self.ssh, "run", return_value=0) as mock_run:
             status, stdout, stderr = self.ssh.execute("cmd",
                                                       stdin="fake_stdin",
                                                       timeout=43)
-        m_run.assert_called_once_with("cmd", stdin="fake_stdin",
-                                      stdout=stdio[0],
-                                      stderr=stdio[1], timeout=43,
-                                      raise_on_error=False)
+        mock_run.assert_called_once_with(
+            "cmd", stdin="fake_stdin", stdout=stdio[0],
+            stderr=stdio[1], timeout=43, raise_on_error=False)
         self.assertEqual(0, status)
         self.assertEqual("stdout fake data", stdout)
         self.assertEqual("stderr fake data", stderr)
 
     @mock.patch("rally.common.sshutils.time")
-    def test_wait_timeout(self, m_time):
-        m_time.time.side_effect = [1, 50, 150]
+    def test_wait_timeout(self, mock_time):
+        mock_time.time.side_effect = [1, 50, 150]
         self.ssh.execute = mock.Mock(side_effect=[sshutils.SSHError,
                                                   sshutils.SSHError,
                                                   0])
@@ -143,8 +142,8 @@ class SSHTestCase(test.TestCase):
         self.assertEqual([mock.call("uname")] * 2, self.ssh.execute.mock_calls)
 
     @mock.patch("rally.common.sshutils.time")
-    def test_wait(self, m_time):
-        m_time.time.side_effect = [1, 50, 100]
+    def test_wait(self, mock_time):
+        mock_time.time.side_effect = [1, 50, 100]
         self.ssh.execute = mock.Mock(side_effect=[sshutils.SSHError,
                                                   sshutils.SSHError,
                                                   0])
@@ -178,8 +177,8 @@ class SSHRunTestCase(test.TestCase):
         self.ssh._get_client = mock.Mock(return_value=self.fake_client)
 
     @mock.patch("rally.common.sshutils.select")
-    def test_execute(self, m_select):
-        m_select.select.return_value = ([], [], [])
+    def test_execute(self, mock_select):
+        mock_select.select.return_value = ([], [], [])
         self.fake_session.recv_ready.side_effect = [1, 0, 0]
         self.fake_session.recv_stderr_ready.side_effect = [1, 0]
         self.fake_session.recv.return_value = "ok"
@@ -190,8 +189,8 @@ class SSHRunTestCase(test.TestCase):
         self.fake_session.exec_command.assert_called_once_with("cmd")
 
     @mock.patch("rally.common.sshutils.select")
-    def test_execute_args(self, m_select):
-        m_select.select.return_value = ([], [], [])
+    def test_execute_args(self, mock_select):
+        mock_select.select.return_value = ([], [], [])
         self.fake_session.recv_ready.side_effect = [1, 0, 0]
         self.fake_session.recv_stderr_ready.side_effect = [1, 0]
         self.fake_session.recv.return_value = "ok"
@@ -205,20 +204,20 @@ class SSHRunTestCase(test.TestCase):
             "cmd arg1 'arg2 with space'")
 
     @mock.patch("rally.common.sshutils.select")
-    def test_run(self, m_select):
-        m_select.select.return_value = ([], [], [])
+    def test_run(self, mock_select):
+        mock_select.select.return_value = ([], [], [])
         self.assertEqual(0, self.ssh.run("cmd"))
 
     @mock.patch("rally.common.sshutils.select")
-    def test_run_nonzero_status(self, m_select):
-        m_select.select.return_value = ([], [], [])
+    def test_run_nonzero_status(self, mock_select):
+        mock_select.select.return_value = ([], [], [])
         self.fake_session.recv_exit_status.return_value = 1
         self.assertRaises(sshutils.SSHError, self.ssh.run, "cmd")
         self.assertEqual(1, self.ssh.run("cmd", raise_on_error=False))
 
     @mock.patch("rally.common.sshutils.select")
-    def test_run_stdout(self, m_select):
-        m_select.select.return_value = ([], [], [])
+    def test_run_stdout(self, mock_select):
+        mock_select.select.return_value = ([], [], [])
         self.fake_session.recv_ready.side_effect = [True, True, False]
         self.fake_session.recv.side_effect = ["ok1", "ok2"]
         stdout = mock.Mock()
@@ -227,8 +226,8 @@ class SSHRunTestCase(test.TestCase):
                          stdout.write.mock_calls)
 
     @mock.patch("rally.common.sshutils.select")
-    def test_run_stderr(self, m_select):
-        m_select.select.return_value = ([], [], [])
+    def test_run_stderr(self, mock_select):
+        mock_select.select.return_value = ([], [], [])
         self.fake_session.recv_stderr_ready.side_effect = [True, False]
         self.fake_session.recv_stderr.return_value = "error"
         stderr = mock.Mock()
@@ -236,13 +235,13 @@ class SSHRunTestCase(test.TestCase):
         stderr.write.assert_called_once_with("error")
 
     @mock.patch("rally.common.sshutils.select")
-    def test_run_stdin(self, m_select):
+    def test_run_stdin(self, mock_select):
         """Test run method with stdin.
 
         Third send call was called with "e2" because only 3 bytes was sent
         by second call. So remainig 2 bytes of "line2" was sent by third call.
         """
-        m_select.select.return_value = ([], [], [])
+        mock_select.select.return_value = ([], [], [])
         self.fake_session.exit_status_ready.side_effect = [0, 0, 0, True]
         self.fake_session.send_ready.return_value = True
         self.fake_session.send.side_effect = [5, 3, 2]
@@ -259,16 +258,16 @@ class SSHRunTestCase(test.TestCase):
         self.assertEqual(send_calls, self.fake_session.send.mock_calls)
 
     @mock.patch("rally.common.sshutils.select")
-    def test_run_select_error(self, m_select):
+    def test_run_select_error(self, mock_select):
         self.fake_session.exit_status_ready.return_value = False
-        m_select.select.return_value = ([], [], [True])
+        mock_select.select.return_value = ([], [], [True])
         self.assertRaises(sshutils.SSHError, self.ssh.run, "cmd")
 
     @mock.patch("rally.common.sshutils.time")
     @mock.patch("rally.common.sshutils.select")
-    def test_run_timemout(self, m_select, m_time):
-        m_time.time.side_effect = [1, 3700]
-        m_select.select.return_value = ([], [], [])
+    def test_run_timemout(self, mock_select, mock_time):
+        mock_time.time.side_effect = [1, 3700]
+        mock_select.select.return_value = ([], [], [])
         self.fake_session.exit_status_ready.return_value = False
         self.assertRaises(sshutils.SSHTimeout, self.ssh.run, "cmd")
 

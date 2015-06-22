@@ -35,8 +35,8 @@ class TempestLogWrappersTestCase(test.TestCase):
         self.scenario._add_atomic_actions = mock.MagicMock()
 
     @mock.patch(TS + ".utils.tempfile")
-    def test_launch_without_specified_log_file(self, mock_tmp):
-        mock_tmp.NamedTemporaryFile().name = "tmp_file"
+    def test_launch_without_specified_log_file(self, mock_tempfile):
+        mock_tempfile.NamedTemporaryFile().name = "tmp_file"
         target_func = mock.MagicMock()
         target_func.__name__ = "target_func"
         func = utils.tempest_log_wrapper(target_func)
@@ -47,7 +47,7 @@ class TempestLogWrappersTestCase(test.TestCase):
                                             log_file="/tmp/dir/tmp_file")
 
     @mock.patch(TS + ".utils.tempfile")
-    def test_launch_with_specified_log_file(self, mock_tmp):
+    def test_launch_with_specified_log_file(self, mock_tempfile):
         target_func = mock.MagicMock()
         target_func.__name__ = "target_func"
         func = utils.tempest_log_wrapper(target_func)
@@ -56,4 +56,4 @@ class TempestLogWrappersTestCase(test.TestCase):
 
         target_func.assert_called_once_with(self.scenario,
                                             log_file="log_file")
-        self.assertEqual(0, mock_tmp.NamedTemporaryFile.call_count)
+        self.assertEqual(0, mock_tempfile.NamedTemporaryFile.call_count)

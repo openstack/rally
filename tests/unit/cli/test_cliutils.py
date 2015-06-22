@@ -158,7 +158,7 @@ class CliUtilsTestCase(test.TestCase):
 
     @mock.patch("rally.cli.cliutils.CONF", config_file=None,
                 side_effect=cfg.ConfigFilesNotFoundError("config_file"))
-    def test_run_fails(self, mock_cmd_cliutils_conf):
+    def test_run_fails(self, mock_cliutils_conf):
         ret = cliutils.run(["rally", "show", "flavors"], self.categories)
         self.assertEqual(ret, 2)
 

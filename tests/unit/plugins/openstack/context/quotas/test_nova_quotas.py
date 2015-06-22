@@ -22,8 +22,8 @@ class NovaQuotasTestCase(test.TestCase):
 
     @mock.patch("rally.plugins.openstack.context."
                 "quotas.quotas.osclients.Clients")
-    def test_update(self, client_mock):
-        nova_quotas = quotas.NovaQuotas(client_mock)
+    def test_update(self, mock_clients):
+        nova_quotas = quotas.NovaQuotas(mock_clients)
         tenant_id = mock.MagicMock()
         quotas_values = {
             "instances": 10,
@@ -40,13 +40,13 @@ class NovaQuotasTestCase(test.TestCase):
             "security_group_rules": 50
         }
         nova_quotas.update(tenant_id, **quotas_values)
-        client_mock.nova().quotas.update.assert_called_once_with(
+        mock_clients.nova().quotas.update.assert_called_once_with(
             tenant_id, **quotas_values)
 
     @mock.patch("rally.plugins.openstack.context."
                 "quotas.quotas.osclients.Clients")
-    def test_delete(self, client_mock):
-        nova_quotas = quotas.NovaQuotas(client_mock)
+    def test_delete(self, mock_clients):
+        nova_quotas = quotas.NovaQuotas(mock_clients)
         tenant_id = mock.MagicMock()
         nova_quotas.delete(tenant_id)
-        client_mock.nova().quotas.delete.assert_called_once_with(tenant_id)
+        mock_clients.nova().quotas.delete.assert_called_once_with(tenant_id)

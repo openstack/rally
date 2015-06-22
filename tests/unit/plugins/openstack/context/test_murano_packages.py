@@ -65,9 +65,9 @@ class MuranoGeneratorTestCase(test.TestCase):
         }
 
     @mock.patch("rally.plugins.openstack.context.murano_packages.osclients")
-    def test_setup(self, mock_clients):
+    def test_setup(self, mock_osclients):
         mock_app = mock.MagicMock(id="fake_app_id")
-        (mock_clients.Clients().murano().
+        (mock_osclients.Clients().murano().
             packages.create.return_value) = mock_app
 
         murano_ctx = murano_packages.PackageGenerator(self._get_context())
@@ -80,9 +80,9 @@ class MuranoGeneratorTestCase(test.TestCase):
 
     @mock.patch("rally.plugins.openstack.context.murano_packages.osclients")
     @mock.patch("%s.images.resource_manager.cleanup" % CTX)
-    def test_cleanup(self, mock_cleanup, mock_clients):
+    def test_cleanup(self, mock_cleanup, mock_osclients):
         mock_app = mock.Mock(id="fake_app_id")
-        (mock_clients.Clients().murano().
+        (mock_osclients.Clients().murano().
             packages.create.return_value) = mock_app
 
         murano_ctx = murano_packages.PackageGenerator(self._get_context())

@@ -48,7 +48,7 @@ class TestStackGenerator(test.TestCase):
     @mock.patch("%s.heat.utils.HeatScenario._create_stack" % SCN,
                 return_value=fakes.FakeStack(id="uuid"))
     @mock.patch("%s.stacks.osclients" % CTX)
-    def test_setup(self, mock_osclients, mock_stack_create):
+    def test_setup(self, mock_osclients, mock_heat_scenario__create_stack):
         tenants_count = 2
         users_per_tenant = 5
         stacks_per_tenant = 1
@@ -83,7 +83,7 @@ class TestStackGenerator(test.TestCase):
         stack_ctx = stacks.StackGenerator(context)
         stack_ctx.setup()
         self.assertEqual(tenants_count * stacks_per_tenant,
-                         mock_stack_create.call_count)
+                         mock_heat_scenario__create_stack.call_count)
         # check that stack ids have been saved in context
         for ten_id in context["tenants"].keys():
             self.assertEqual(stacks_per_tenant,

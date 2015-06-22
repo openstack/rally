@@ -55,8 +55,8 @@ class DevstackEngineTestCase(test.TestCase):
         self.assertEqual(self.engine.localrc["ADMIN_PASSWORD"], "secret")
 
     @mock.patch("rally.deploy.engines.devstack.open", create=True)
-    def test_prepare_server(self, m_open):
-        m_open.return_value = "fake_file"
+    def test_prepare_server(self, mock_open):
+        mock_open.return_value = "fake_file"
         server = mock.Mock()
         server.password = "secret"
         self.engine.prepare_server(server)
@@ -65,31 +65,33 @@ class DevstackEngineTestCase(test.TestCase):
             mock.call("chpasswd", stdin="rally:secret"),
         ]
         self.assertEqual(calls, server.ssh.run.mock_calls)
-        filename = m_open.mock_calls[0][1][0]
+        filename = mock_open.mock_calls[0][1][0]
         self.assertTrue(filename.endswith("rally/deploy/engines/"
                                           "devstack/install.sh"))
-        self.assertEqual([mock.call(filename, "rb")], m_open.mock_calls)
+        self.assertEqual([mock.call(filename, "rb")], mock_open.mock_calls)
 
     @mock.patch("rally.deploy.engine.EngineFactory.get_provider")
     @mock.patch("rally.deploy.engines.devstack.get_updated_server")
     @mock.patch("rally.deploy.engines.devstack.get_script")
     @mock.patch("rally.deploy.serverprovider.provider.Server")
     @mock.patch("rally.deploy.engines.devstack.objects.Endpoint")
-    def test_deploy(self, m_endpoint, m_server, m_gs, m_gus, m_gp):
-        m_gp.return_value = fake_provider = mock.Mock()
-        server = mock.Mock()
-        server.host = "host"
-        m_endpoint.return_value = "fake_endpoint"
-        m_gus.return_value = ds_server = mock.Mock()
-        m_gs.return_value = "fake_script"
+    def test_deploy(self, mock_endpoint, mock_server, mock_get_script,
+                    mock_get_updated_server, mock_engine_factory_get_provider):
+        mock_engine_factory_get_provider.return_value = fake_provider = (
+            mock.Mock()
+        )
+        server = mock.Mock(host="host")
+        mock_endpoint.return_value = "fake_endpoint"
+        mock_get_updated_server.return_value = ds_server = mock.Mock()
+        mock_get_script.return_value = "fake_script"
         server.get_credentials.return_value = "fake_credentials"
         fake_provider.create_servers.return_value = [server]
-        with mock.patch.object(self.engine, "deployment") as m_d:
+        with mock.patch.object(self.engine, "deployment") as mock_deployment:
             endpoints = self.engine.deploy()
         self.assertEqual({"admin": "fake_endpoint"}, endpoints)
-        m_endpoint.assert_called_once_with("http://host:5000/v2.0/", "admin",
-                                           "secret", "admin", "admin")
-        m_d.add_resource.assert_called_once_with(
+        mock_endpoint.assert_called_once_with(
+            "http://host:5000/v2.0/", "admin", "secret", "admin", "admin")
+        mock_deployment.add_resource.assert_called_once_with(
             info="fake_credentials",
             provider_name="DevstackEngine",
             type="credentials")

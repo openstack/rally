@@ -92,13 +92,13 @@ class HtmlOutputTestCase(test.TestCase):
     @mock.patch(BASE + ".json2html.ui_utils.get_template")
     @mock.patch(BASE + ".json2html.HtmlOutput._generate_report",
                 return_value="report_data")
-    def test_create_report(self, mock_generate, mock_get):
+    def test_create_report(
+            self, mock_html_output__generate_report, mock_get_template):
         obj = json2html.HtmlOutput(self.results)
-        mock_render = mock.Mock(return_value="html_report")
-        mock_get().render = mock_render
-        mock_get.reset_mock()
+        mock_get_template.return_value.render.return_value = "html_report"
 
         html_report = obj.create_report()
         self.assertEqual(html_report, "html_report")
-        mock_get.assert_called_once_with("verification/report.mako")
-        mock_render.assert_called_once_with(report="report_data")
+        mock_get_template.assert_called_once_with("verification/report.mako")
+        mock_get_template.return_value.render.assert_called_once_with(
+            report="report_data")
