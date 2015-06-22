@@ -1,0 +1,21 @@
+---
+  NeutronLoadbalancerV1.create_and_update_vips:
+    -
+      args:
+        vip_create_args: {}
+        vip_update_args: {}
+      runner:
+        type: "constant"
+        times: 100
+        concurrency: 10
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+        network: {}
+        quotas:
+          neutron:
+            network: -1
+            subnet: -1
+            pool: -1
+            vip: -1
