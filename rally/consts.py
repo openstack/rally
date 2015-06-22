@@ -137,7 +137,7 @@ class _ServiceType(utils.ImmutableMixin, utils.EnumMixin):
             self.COMPUTEV21: _Service.NOVAV21,
             self.COMPUTEV3: _Service.NOVAV3,
             self.VOLUME: _Service.CINDER,
-            self.VOLUMEV2: _Service.CINDER,
+            self.VOLUMEV2: _Service.CINDERV2,
             self.SHARE: _Service.MANILA,
             self.EC2: _Service.EC2,
             self.IMAGE: _Service.GLANCE,
