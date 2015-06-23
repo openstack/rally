@@ -15,6 +15,7 @@
 
 import math
 
+from rally.common import costilius
 from rally.common.i18n import _
 from rally import exceptions
 
@@ -86,7 +87,8 @@ def get_atomic_actions_data(raw_data):
         # find first non-error result to get atomic actions names
         if not row["error"] and "atomic_actions" in row:
             atomic_actions = row["atomic_actions"].keys()
-    actions_data = {}
+            break
+    actions_data = costilius.OrderedDict()
     for atomic_action in atomic_actions:
         actions_data[atomic_action] = [
             r["atomic_actions"][atomic_action]
