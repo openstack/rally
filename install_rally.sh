@@ -753,6 +753,9 @@ __EOF__
 else
     setup_rally_configuration "$SOURCEDIR"
     ln -s /usr/local/etc/bash_completion.d/rally.bash_completion /etc/bash_completion.d/ 2> /dev/null || true
+    if [ "$DBTYPE" = 'sqlite' ]; then
+        chmod -R go+w ${RALLY_DATABASE_DIR}
+    fi
 
     cat <<__EOF__
 ==============================
