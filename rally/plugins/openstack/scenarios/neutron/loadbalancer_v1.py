@@ -19,7 +19,8 @@ from rally.plugins.openstack.scenarios.neutron import utils
 class NeutronLoadbalancerV1(utils.NeutronScenario):
     """Benchmark scenarios for Neutron Loadbalancer v1."""
 
-    @validation.restricted_parameters("subnet_id", subdict="pool_create_args")
+    @validation.restricted_parameters("subnet_id",
+                                      subdict="pool_create_args")
     @validation.required_services(consts.Service.NEUTRON)
     @validation.required_openstack(users=True)
     @validation.required_contexts("network")
@@ -37,7 +38,8 @@ class NeutronLoadbalancerV1(utils.NeutronScenario):
                 self._create_v1_pool(subnet_id, **pool_create_args)
         self._list_v1_pools()
 
-    @validation.restricted_parameters("subnet_id", subdict="pool_create_args")
+    @validation.restricted_parameters("subnet_id",
+                                      subdict="pool_create_args")
     @validation.required_services(consts.Service.NEUTRON)
     @validation.required_openstack(users=True)
     @validation.required_contexts("network")
@@ -60,7 +62,8 @@ class NeutronLoadbalancerV1(utils.NeutronScenario):
         for pool in pools:
             self._delete_v1_pool(pool["pool"])
 
-    @validation.restricted_parameters("subnet_id", subdict="pool_create_args")
+    @validation.restricted_parameters("subnet_id",
+                                      subdict="pool_create_args")
     @validation.required_services(consts.Service.NEUTRON)
     @validation.required_openstack(users=True)
     @validation.required_contexts("network")

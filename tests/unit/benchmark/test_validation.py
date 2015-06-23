@@ -768,25 +768,31 @@ class ValidatorsTestCase(test.TestCase):
 
     def test_restricted_parameters(self):
         validator = self._unwrap_validator(
-            validation.restricted_parameters, "param_name")
+            validation.restricted_parameters, ["param_name"])
         result = validator({"args": {}}, None, None)
         self.assertTrue(result.is_valid, result.msg)
 
     def test_restricted_parameters_negative(self):
         validator = self._unwrap_validator(
-            validation.restricted_parameters, "param_name")
+            validation.restricted_parameters, ["param_name"])
         result = validator({"args": {"param_name": "value"}}, None, None)
         self.assertFalse(result.is_valid, result.msg)
 
     def test_restricted_parameters_in_dict(self):
         validator = self._unwrap_validator(
-            validation.restricted_parameters, "param_name", "subdict")
+            validation.restricted_parameters, ["param_name"], "subdict")
         result = validator({"args": {"subdict": {}}}, None, None)
         self.assertTrue(result.is_valid, result.msg)
 
     def test_restricted_parameters_in_dict_negative(self):
         validator = self._unwrap_validator(
-            validation.restricted_parameters, "param_name", "subdict")
+            validation.restricted_parameters, ["param_name"], "subdict")
         result = validator({"args": {"subdict":
                            {"param_name": "value"}}}, None, None)
         self.assertFalse(result.is_valid, result.msg)
+
+    def test_restricted_parameters_string_param_names(self):
+        validator = self._unwrap_validator(
+            validation.restricted_parameters, "param_name")
+        result = validator({"args": {}}, None, None)
+        self.assertTrue(result.is_valid, result.msg)
