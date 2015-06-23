@@ -22,6 +22,13 @@ Source of documentation. Latest version of documentation_.
 .. _documentation: http://rally.readthedocs.org/
 
 
+specs
+~~~~~~
+
+Specs are detailed description of proposed changes in project.
+Usually they answer on what, why, how to change in project and who is going to work on change.
+
+
 user_stories
 ~~~~~~~~~~~~
 
