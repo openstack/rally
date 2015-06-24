@@ -460,6 +460,7 @@ setup_rally_configuration () {
 short_opts='d:vfsyhD:p:'
 long_opts='target:,verbose,overwrite,system,yes,dbtype:,python:,db-user:,db-password:,db-host:,db-name:,help'
 
+set +e
 if [ "x$(getopt -T)" = 'x' ]; then
     # GNU getopt
     args=$(getopt --name "$PROG" --shell sh -l "$long_opts" -o "$short_opts" -- "$@")
@@ -472,10 +473,11 @@ else
     # old-style getopt, use compatibility syntax
     args=$(getopt "$short_opts" "$@")
     if [ $? -ne 0 ]; then
-        abort 1 "Type '$PROG --help' to get usage information."
+        abort 1 "Type '$PROG -h' to get usage information."
     fi
     eval set -- "$args"
 fi
+set -e
 
 # Command line parsing
 while true
