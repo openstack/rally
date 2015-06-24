@@ -765,7 +765,6 @@
         failure_rate:
           max: 0
 
-
   Authenticate.keystone:
     -
       runner:

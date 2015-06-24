@@ -177,3 +177,30 @@ class HeatStacks(utils.HeatScenario):
                 self, "heat.list_events_of_%s_stacks" % len(stacks)):
             for stack in stacks:
                 self.clients("heat").events.list(stack.id)
+
+    @types.set(template_path=types.FileType, files=types.FileTypeDict)
+    @validation.required_services(consts.Service.HEAT)
+    @validation.required_openstack(users=True)
+    @base.scenario(context={"cleanup": ["heat"]})
+    def create_snapshot_restore_delete_stack(self, template_path,
+                                             parameters=None, files=None,
+                                             environment=None):
+        """Create, snapshot-restore and then delete a stack.
+
+        Measure performance of the following commands:
+        heat stack-create
+        heat stack-snapshot
+        heat stack-restore
+        heat stack-delete
+
+        :param template_path: path to stack template file
+        :param parameters: parameters to use in heat template
+        :param files: files used in template
+        :param environment: stack environment definition
+        """
+
+        stack = self._create_stack(
+            template_path, parameters, files, environment)
+        snapshot = self._snapshot_stack(stack)
+        self._restore_stack(stack, snapshot["id"])
+        self._delete_stack(stack)

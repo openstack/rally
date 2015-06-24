@@ -161,6 +161,36 @@ class HeatScenarioTestCase(test.ClientsTestCase):
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "heat.resume_stack")
 
+    def test_snapshot_stack(self):
+        scenario = utils.HeatScenario()
+        scenario._snapshot_stack(self.stack)
+        self.clients("heat").stacks.snapshot.assert_called_once_with(
+            self.stack.id)
+        self.wait_for.mock.assert_called_once_with(
+            self.stack,
+            update_resource=self.gfm(),
+            is_ready=self.res_is.mock(),
+            check_interval=CONF.benchmark.heat_stack_snapshot_poll_interval,
+            timeout=CONF.benchmark.heat_stack_snapshot_timeout)
+        self.res_is.mock.assert_has_calls([mock.call("SNAPSHOT_COMPLETE")])
+        self._test_atomic_action_timer(scenario.atomic_actions(),
+                                       "heat.snapshot_stack")
+
+    def test_restore_stack(self):
+        scenario = utils.HeatScenario()
+        scenario._restore_stack(self.stack, "dummy_id")
+        self.clients("heat").stacks.restore.assert_called_once_with(
+            self.stack.id, "dummy_id")
+        self.wait_for.mock.assert_called_once_with(
+            self.stack,
+            update_resource=self.gfm(),
+            is_ready=self.res_is.mock(),
+            check_interval=CONF.benchmark.heat_stack_restore_poll_interval,
+            timeout=CONF.benchmark.heat_stack_restore_timeout)
+        self.res_is.mock.assert_has_calls([mock.call("RESTORE_COMPLETE")])
+        self._test_atomic_action_timer(scenario.atomic_actions(),
+                                       "heat.restore_stack")
+
 
 class HeatScenarioNegativeTestCase(test.ClientsTestCase):
     def test_failed_create_stack(self):

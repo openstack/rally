@@ -72,6 +72,22 @@ HEAT_BENCHMARK_OPTS = [
                  default=1.0,
                  help="Time interval(in sec) between checks when waiting for "
                       "stack resume."),
+    cfg.FloatOpt("heat_stack_snapshot_timeout",
+                 default=3600.0,
+                 help="Time(in sec) to wait for stack snapshot to "
+                      "be created."),
+    cfg.FloatOpt("heat_stack_snapshot_poll_interval",
+                 default=1.0,
+                 help="Time interval(in sec) between checks when waiting for "
+                      "stack snapshot to be created."),
+    cfg.FloatOpt("heat_stack_restore_timeout",
+                 default=3600.0,
+                 help="Time(in sec) to wait for stack to be restored from "
+                      "snapshot."),
+    cfg.FloatOpt("heat_stack_restore_poll_interval",
+                 default=1.0,
+                 help="Time interval(in sec) between checks when waiting for "
+                      "stack to be restored.")
 ]
 
 CONF = cfg.CONF
@@ -221,3 +237,38 @@ class HeatScenario(base.Scenario):
                 ["RESUME_FAILED"]),
             timeout=CONF.benchmark.heat_stack_resume_timeout,
             check_interval=CONF.benchmark.heat_stack_resume_poll_interval)
+
+    @base.atomic_action_timer("heat.snapshot_stack")
+    def _snapshot_stack(self, stack):
+        """Creates a snapshot for given stack.
+
+        :param stack: stack that will be used as base for snapshot
+        :returns snapshot created for given stack
+        """
+        snapshot = self.clients("heat").stacks.snapshot(
+            stack.id)
+        bench_utils.wait_for(
+            stack,
+            is_ready=bench_utils.resource_is("SNAPSHOT_COMPLETE"),
+            update_resource=bench_utils.get_from_manager(
+                ["SNAPSHOT_FAILED"]),
+            timeout=CONF.benchmark.heat_stack_snapshot_timeout,
+            check_interval=CONF.benchmark.heat_stack_snapshot_poll_interval)
+        return snapshot
+
+    @base.atomic_action_timer("heat.restore_stack")
+    def _restore_stack(self, stack, snapshot_id):
+        """Restores stack from given snapshot.
+
+        :param stack: stack that will be restored from snapshot
+        :param snapshot_id: id of given snapshot
+        """
+        self.clients("heat").stacks.restore(stack.id, snapshot_id)
+        bench_utils.wait_for(
+            stack,
+            is_ready=bench_utils.resource_is("RESTORE_COMPLETE"),
+            update_resource=bench_utils.get_from_manager(
+                ["RESTORE_FAILED"]),
+            timeout=CONF.benchmark.heat_stack_restore_timeout,
+            check_interval=CONF.benchmark.heat_stack_restore_poll_interval
+        )
