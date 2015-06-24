@@ -352,7 +352,8 @@ class TaskCommands(object):
 
             cliutils.print_list(table_rows, fields=table_cols,
                                 formatters=formatters,
-                                table_label="Response Times (sec)")
+                                table_label="Response Times (sec)",
+                                sortby_index=None)
 
             if iterations_data:
                 _print_iterations_data(raw)
