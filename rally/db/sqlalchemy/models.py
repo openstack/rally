@@ -264,8 +264,9 @@ def drop_all_objects(engine):
             tbs.append(table)
             all_fks.extend(fks)
 
-        for fkc in all_fks:
-            conn.execute(schema.DropConstraint(fkc))
+        if engine.name != "sqlite":
+            for fkc in all_fks:
+                conn.execute(schema.DropConstraint(fkc))
         for table in tbs:
             conn.execute(schema.DropTable(table))
 
