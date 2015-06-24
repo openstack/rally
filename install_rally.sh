@@ -576,8 +576,13 @@ then
     RALLY_DATABASE_DIR="$VENVDIR"/database
 fi
 
-if [ "$DBTYPE" != 'sqlite' ]
-then
+if [ "$DBTYPE" = 'sqlite' ]; then
+    if [ "${DBNAME:0:1}" = '/' ]; then
+        DBCONNSTRING="$DBTYPE:///$DBNAME"
+    else
+        DBCONNSTRING="$DBTYPE:///${RALLY_DATABASE_DIR}/${DBNAME}"
+    fi
+else
     if [ -z "$DBUSER" -o -z "$DBPASSWORD" -o -z "$DBHOST" -o -z "$DBNAME" ]
     then
         die $EX_USAGE "Missing mandatory options" <<__EOF__
@@ -595,8 +600,6 @@ __EOF__
     fi
     DBAUTH="$DBUSER:$DBPASSWORD@$DBHOST"
     DBCONNSTRING="$DBTYPE://$DBAUTH/$DBNAME"
-else
-    DBCONNSTRING="$DBTYPE:///${RALLY_DATABASE_DIR}/${DBNAME}"
 fi
 
 # check and install prerequisites
