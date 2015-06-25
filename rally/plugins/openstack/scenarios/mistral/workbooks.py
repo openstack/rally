@@ -13,11 +13,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from rally.benchmark.scenarios import base
-from rally.benchmark import types as types
-from rally.benchmark import validation
 from rally import consts
 from rally.plugins.openstack.scenarios.mistral import utils
+from rally.task.scenarios import base
+from rally.task import types
+from rally.task import validation
 
 
 class MistralWorkbooks(utils.MistralScenario):

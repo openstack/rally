@@ -19,13 +19,13 @@ import itertools
 import random
 import time
 
-from rally.benchmark import functional
 from rally.common import costilius
 from rally.common import log as logging
 from rally.common.plugin import discover
 from rally.common import utils
 from rally import consts
 from rally import exceptions
+from rally.task import functional
 
 
 LOG = logging.getLogger(__name__)

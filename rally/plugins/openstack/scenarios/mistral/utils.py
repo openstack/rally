@@ -15,7 +15,7 @@
 
 import yaml
 
-from rally.benchmark.scenarios import base
+from rally.task.scenarios import base
 
 
 class MistralScenario(base.Scenario):

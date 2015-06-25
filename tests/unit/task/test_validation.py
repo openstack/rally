@@ -21,15 +21,15 @@ import mock
 from novaclient import exceptions as nova_exc
 import six
 
-from rally.benchmark import validation
 from rally import consts
 from rally import exceptions
 import rally.osclients
+from rally.task import validation
 from rally.verification.tempest import tempest
 from tests.unit import test
 
 
-MODULE = "rally.benchmark.validation."
+MODULE = "rally.task.validation."
 
 
 class ValidationUtilsTestCase(test.TestCase):
@@ -155,7 +155,7 @@ class ValidatorsTestCase(test.TestCase):
         result = validation.check_command_dict(command)
         self.assertIsNone(result)
 
-    @mock.patch("rally.benchmark.validation._file_access_ok")
+    @mock.patch("rally.task.validation._file_access_ok")
     def test_valid_command(self, mock__file_access_ok):
         validator = self._unwrap_validator(validation.valid_command,
                                            param_name="p")
@@ -174,7 +174,7 @@ class ValidatorsTestCase(test.TestCase):
         result = validator({"args": {"p": None}}, None, None)
         self.assertFalse(result.is_valid, result.msg)
 
-    @mock.patch("rally.benchmark.validation._file_access_ok")
+    @mock.patch("rally.task.validation._file_access_ok")
     def test_valid_command_unreadable_script_file(self, mock__file_access_ok):
         mock__file_access_ok.return_value = validation.ValidationResult(False)
 
@@ -185,7 +185,7 @@ class ValidatorsTestCase(test.TestCase):
         result = validator({"args": {"p": command}}, None, None)
         self.assertFalse(result.is_valid, result.msg)
 
-    @mock.patch("rally.benchmark.validation.check_command_dict")
+    @mock.patch("rally.task.validation.check_command_dict")
     def test_valid_command_fail_check_command_dict(self,
                                                    mock_check_command_dict):
         validator = self._unwrap_validator(validation.valid_command,

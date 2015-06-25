@@ -19,7 +19,7 @@ import mock
 from rally.plugins.openstack.scenarios.manila import utils
 from tests.unit import test
 
-BM_UTILS = "rally.benchmark.utils."
+BM_UTILS = "rally.task.utils."
 
 
 @ddt.ddt

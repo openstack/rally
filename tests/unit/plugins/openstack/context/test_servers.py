@@ -23,7 +23,7 @@ from tests.unit import test
 
 CTX = "rally.plugins.openstack.context"
 SCN = "rally.plugins.openstack.scenarios"
-TYP = "rally.benchmark.types"
+TYP = "rally.task.types"
 
 
 class ServerGeneratorTestCase(test.TestCase):

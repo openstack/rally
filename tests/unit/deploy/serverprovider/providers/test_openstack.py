@@ -149,8 +149,8 @@ class OpenStackProviderTestCase(test.TestCase):
     @mock.patch("time.sleep")
     @mock.patch(MOD_NAME + ".provider.Server")
     @mock.patch(MOD_NAME + ".osclients")
-    @mock.patch(MOD_NAME + ".benchmark_utils")
-    def test_create_servers(self, mock_benchmark_utils, mock_osclients,
+    @mock.patch(MOD_NAME + ".utils")
+    def test_create_servers(self, mock_utils, mock_osclients,
                             mock_server, mock_sleep):
         fake_keypair = mock.Mock()
         fake_keypair.name = "fake_key_name"

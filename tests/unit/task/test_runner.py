@@ -19,14 +19,14 @@ import multiprocessing
 import jsonschema
 import mock
 
-from rally.benchmark import runner
-from rally.benchmark.scenarios import base as scenario_base
 from rally.plugins.common.runners import serial
+from rally.task import runner
+from rally.task.scenarios import base as scenario_base
 from tests.unit import fakes
 from tests.unit import test
 
 
-BASE = "rally.benchmark.runner."
+BASE = "rally.task.runner."
 
 
 class ScenarioHelpersTestCase(test.TestCase):

@@ -18,12 +18,12 @@ import abc
 import netaddr
 import six
 
-from rally.benchmark import utils as bench_utils
 from rally.common.i18n import _
 from rally.common import log as logging
 from rally.common import utils
 from rally import consts
 from rally import exceptions
+from rally.task import utils as task_utils
 
 from neutronclient.common import exceptions as neutron_exceptions
 from novaclient import exceptions as nova_exceptions
@@ -170,7 +170,7 @@ class NovaNetworkWrapper(NetworkWrapper):
         self.client.floating_ips.delete(fip_id)
         if not wait:
             return
-        bench_utils.wait_for_delete(
+        task_utils.wait_for_delete(
             fip_id,
             update_resource=lambda i: self._get_floating_ip(i, do_raise=True))
 

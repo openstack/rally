@@ -19,8 +19,8 @@ import mock
 import yaml
 
 from rally import api
-from rally.benchmark import engine
 from rally.common.plugin import discover
+from rally.task import engine
 from tests.unit import test
 
 
@@ -28,7 +28,7 @@ class RallyJobsTestCase(test.TestCase):
     rally_jobs_path = os.path.join(
         os.path.dirname(__file__), "..", "..", "..", "rally-jobs")
 
-    @mock.patch("rally.benchmark.engine.BenchmarkEngine"
+    @mock.patch("rally.task.engine.BenchmarkEngine"
                 "._validate_config_semantic")
     def test_schema_is_valid(
             self, mock_benchmark_engine__validate_config_semantic):

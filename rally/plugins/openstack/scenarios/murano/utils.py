@@ -17,8 +17,8 @@ import uuid
 
 from oslo_config import cfg
 
-from rally.benchmark.scenarios import base
-from rally.benchmark import utils as bench_utils
+from rally.task.scenarios import base
+from rally.task import utils
 
 CONF = cfg.CONF
 
@@ -65,9 +65,9 @@ class MuranoScenario(base.Scenario):
         :param environment: Environment instance
         """
         self.clients("murano").environments.delete(environment.id)
-        bench_utils.wait_for_delete(
+        utils.wait_for_delete(
             environment,
-            update_resource=bench_utils.get_from_manager(),
+            update_resource=utils.get_from_manager(),
             timeout=CONF.benchmark.delete_environment_timeout,
             check_interval=CONF.benchmark.delete_environment_check_interval
         )
@@ -118,9 +118,9 @@ class MuranoScenario(base.Scenario):
         """
         self.clients("murano").sessions.deploy(environment.id,
                                                session.id)
-        bench_utils.wait_for(
-            environment, is_ready=bench_utils.resource_is("READY"),
-            update_resource=bench_utils.get_from_manager(["DEPLOY FAILURE"]),
+        utils.wait_for(
+            environment, is_ready=utils.resource_is("READY"),
+            update_resource=utils.get_from_manager(["DEPLOY FAILURE"]),
             timeout=CONF.benchmark.deploy_environment_timeout,
             check_interval=CONF.benchmark.deploy_environment_check_interval
         )

@@ -13,8 +13,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from rally.benchmark.processing import utils
 from rally import exceptions
+from rally.task.processing import utils
 from tests.unit import test
 
 

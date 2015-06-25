@@ -14,8 +14,8 @@
 #    under the License.
 
 
-from rally.benchmark import sla
 from rally.common.plugin import plugin
+from rally.task import sla
 from tests.unit import test
 
 

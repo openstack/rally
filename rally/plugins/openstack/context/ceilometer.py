@@ -12,13 +12,13 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from rally.benchmark import context
 from rally.common.i18n import _
 from rally.common import log as logging
 from rally.common import utils as rutils
 from rally import consts
 from rally import osclients
 from rally.plugins.openstack.scenarios.ceilometer import utils as ceilo_utils
+from rally.task import context
 
 
 LOG = logging.getLogger(__name__)

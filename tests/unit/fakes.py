@@ -27,11 +27,11 @@ from novaclient import exceptions as nova_exceptions
 import six
 from swiftclient import exceptions as swift_exceptions
 
-from rally.benchmark import context
-from rally.benchmark.scenarios import base
 from rally.common import utils as rally_utils
 from rally import consts
 from rally import objects
+from rally.task import context
+from rally.task.scenarios import base
 
 
 def generate_uuid():

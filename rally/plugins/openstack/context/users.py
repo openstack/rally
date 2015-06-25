@@ -18,8 +18,6 @@ import uuid
 
 from oslo_config import cfg
 
-from rally.benchmark import context
-from rally.benchmark import utils
 from rally.common import broker
 from rally.common.i18n import _
 from rally.common import log as logging
@@ -30,6 +28,8 @@ from rally import objects
 from rally import osclients
 from rally.plugins.openstack.wrappers import keystone
 from rally.plugins.openstack.wrappers import network
+from rally.task import context
+from rally.task import utils
 
 LOG = logging.getLogger(__name__)
 

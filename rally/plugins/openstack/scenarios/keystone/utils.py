@@ -15,7 +15,7 @@
 
 import uuid
 
-from rally.benchmark.scenarios import base
+from rally.task.scenarios import base
 
 
 def is_temporary(resource):

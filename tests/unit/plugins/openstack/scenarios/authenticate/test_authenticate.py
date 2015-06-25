@@ -13,8 +13,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from rally.benchmark.scenarios import base
 from rally.plugins.openstack.scenarios.authenticate import authenticate
+from rally.task.scenarios import base
 from tests.unit import test
 
 

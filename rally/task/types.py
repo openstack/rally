@@ -18,9 +18,9 @@ import copy
 import operator
 import re
 
-from rally.benchmark.scenarios import base
 from rally import exceptions
 from rally import osclients
+from rally.task.scenarios import base
 
 
 def set(**kwargs):

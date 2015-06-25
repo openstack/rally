@@ -13,7 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from rally.benchmark import utils
+from rally.task import utils
 
 
 def resource(service, resource, order=0, admin_required=False,

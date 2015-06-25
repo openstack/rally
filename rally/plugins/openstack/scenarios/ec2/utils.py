@@ -16,8 +16,8 @@ import time
 
 from oslo_config import cfg
 
-from rally.benchmark.scenarios import base
-from rally.benchmark import utils as bench_utils
+from rally.task.scenarios import base
+from rally.task import utils
 
 
 EC2_BENCHMARK_OPTS = [
@@ -72,7 +72,7 @@ class EC2Scenario(base.Scenario):
         server = reservation.instances[0]
 
         time.sleep(CONF.benchmark.ec2_server_boot_prepoll_delay)
-        server = bench_utils.wait_for(
+        server = utils.wait_for(
             server,
             is_ready=ec2_resource_is("RUNNING"),
             update_resource=self._update_resource,

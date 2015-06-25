@@ -19,13 +19,13 @@ import sys
 import netaddr
 import six
 
-from rally.benchmark.scenarios import base
-from rally.benchmark import utils as bench_utils
-from rally.benchmark import validation
 from rally.common.i18n import _
 from rally.common import log as logging
 from rally.common import sshutils
 from rally.plugins.openstack.wrappers import network as network_wrapper
+from rally.task.scenarios import base
+from rally.task import utils
+from rally.task import validation
 
 LOG = logging.getLogger(__name__)
 
@@ -129,10 +129,10 @@ class VMScenario(base.Scenario):
     @base.atomic_action_timer("vm.wait_for_ping")
     def _wait_for_ping(self, server_ip):
         server_ip = netaddr.IPAddress(server_ip)
-        bench_utils.wait_for(
+        utils.wait_for(
             server_ip,
-            is_ready=bench_utils.resource_is(ICMP_UP_STATUS,
-                                             self._ping_ip_address),
+            is_ready=utils.resource_is(ICMP_UP_STATUS,
+                                       self._ping_ip_address),
             timeout=120
         )
 

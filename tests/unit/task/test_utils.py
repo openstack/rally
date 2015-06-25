@@ -18,8 +18,8 @@ import datetime
 from jsonschema import exceptions as schema_exceptions
 import mock
 
-from rally.benchmark import utils
 from rally import exceptions
+from rally.task import utils
 from tests.unit import fakes
 from tests.unit import test
 
@@ -421,7 +421,7 @@ class WaitForStatusTestCase(test.TestCase):
         self.assertRaises(ValueError,
                           utils.wait_for, {}, ready_statuses=["ready"])
 
-    @mock.patch("rally.benchmark.utils.time.sleep")
+    @mock.patch("rally.task.utils.time.sleep")
     def test_exit_instantly(self, mock_sleep):
         res = {"status": "ready"}
         upd = mock.MagicMock(return_value=res)
@@ -432,8 +432,8 @@ class WaitForStatusTestCase(test.TestCase):
         upd.assert_called_once_with(res)
         self.assertFalse(mock_sleep.called)
 
-    @mock.patch("rally.benchmark.utils.time.sleep")
-    @mock.patch("rally.benchmark.utils.time.time", return_value=1)
+    @mock.patch("rally.task.utils.time.sleep")
+    @mock.patch("rally.task.utils.time.time", return_value=1)
     def test_wait_successful(self, mock_time, mock_sleep):
         res = {"status": "not_ready"}
         upd = mock.MagicMock(side_effect=[{"status": "not_ready"},
@@ -449,8 +449,8 @@ class WaitForStatusTestCase(test.TestCase):
                               mock.call({"status": "still_not_ready"}),
                               mock.call({"status": "almost_ready"})])
 
-    @mock.patch("rally.benchmark.utils.time.sleep")
-    @mock.patch("rally.benchmark.utils.time.time", return_value=1)
+    @mock.patch("rally.task.utils.time.sleep")
+    @mock.patch("rally.task.utils.time.time", return_value=1)
     def test_wait_failure(self, mock_time, mock_sleep):
         res = {"status": "not_ready"}
         upd = mock.MagicMock(side_effect=[{"status": "not_ready"},

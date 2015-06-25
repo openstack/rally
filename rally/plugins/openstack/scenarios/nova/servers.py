@@ -15,16 +15,16 @@
 
 import jsonschema
 
-from rally.benchmark.scenarios import base
-from rally.benchmark import types as types
-from rally.benchmark import utils as bench_utils
-from rally.benchmark import validation
 from rally.common import log as logging
 from rally import consts
 from rally import exceptions as rally_exceptions
 from rally.plugins.openstack.scenarios.cinder import utils as cinder_utils
 from rally.plugins.openstack.scenarios.nova import utils
 from rally.plugins.openstack.wrappers import network as network_wrapper
+from rally.task.scenarios import base
+from rally.task import types
+from rally.task import utils as task_utils
+from rally.task import validation
 
 LOG = logging.getLogger(__name__)
 
@@ -301,7 +301,7 @@ class NovaServers(utils.NovaScenario,
     def _bind_actions(self):
         actions = ["hard_reboot", "soft_reboot", "stop_start",
                    "rescue_unrescue"]
-        action_builder = bench_utils.ActionBuilder(actions)
+        action_builder = task_utils.ActionBuilder(actions)
         action_builder.bind_action("hard_reboot", self._reboot_server)
         action_builder.bind_action("soft_reboot", self._soft_reboot_server)
         action_builder.bind_action("stop_start",

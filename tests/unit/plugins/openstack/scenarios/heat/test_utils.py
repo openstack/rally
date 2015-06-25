@@ -20,7 +20,7 @@ from rally import exceptions
 from rally.plugins.openstack.scenarios.heat import utils
 from tests.unit import test
 
-BM_UTILS = "rally.benchmark.utils"
+BM_UTILS = "rally.task.utils"
 HEAT_UTILS = "rally.plugins.openstack.scenarios.heat.utils"
 
 CONF = utils.CONF
@@ -32,9 +32,9 @@ class HeatScenarioTestCase(test.ClientsTestCase):
         self.stack = mock.Mock()
         self.res_is = mockpatch.Patch(BM_UTILS + ".resource_is")
         self.get_fm = mockpatch.Patch(BM_UTILS + ".get_from_manager")
-        self.wait_for = mockpatch.Patch(HEAT_UTILS + ".bench_utils.wait_for")
+        self.wait_for = mockpatch.Patch(HEAT_UTILS + ".utils.wait_for")
         self.wait_for_delete = mockpatch.Patch(
-            HEAT_UTILS + ".bench_utils.wait_for_delete")
+            HEAT_UTILS + ".utils.wait_for_delete")
         self.useFixture(self.wait_for)
         self.useFixture(self.wait_for_delete)
         self.useFixture(self.res_is)

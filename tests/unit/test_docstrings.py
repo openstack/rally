@@ -13,12 +13,12 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from rally.benchmark.scenarios import base
-from rally.benchmark import sla
 from rally.common.plugin import discover
 from rally.common import utils
 from rally.deploy import engine
 from rally.deploy.serverprovider import provider
+from rally.task.scenarios import base
+from rally.task import sla
 from tests.unit import test
 
 

@@ -19,10 +19,10 @@ import time
 from oslo_config import cfg
 import six
 
-from rally.benchmark.scenarios import base
-from rally.benchmark import utils as bench_utils
 from rally import exceptions
 from rally.plugins.openstack.wrappers import network as network_wrapper
+from rally.task.scenarios import base
+from rally.task import utils
 
 NOVA_BENCHMARK_OPTS = []
 option_names_and_defaults = [
@@ -136,10 +136,10 @@ class NovaScenario(base.Scenario):
             server_name, image_id, flavor_id, **kwargs)
 
         time.sleep(CONF.benchmark.nova_server_boot_prepoll_delay)
-        server = bench_utils.wait_for(
+        server = utils.wait_for(
             server,
-            is_ready=bench_utils.resource_is("ACTIVE"),
-            update_resource=bench_utils.get_from_manager(),
+            is_ready=utils.resource_is("ACTIVE"),
+            update_resource=utils.get_from_manager(),
             timeout=CONF.benchmark.nova_server_boot_timeout,
             check_interval=CONF.benchmark.nova_server_boot_poll_interval
         )
@@ -148,9 +148,9 @@ class NovaScenario(base.Scenario):
     def _do_server_reboot(self, server, reboottype):
         server.reboot(reboot_type=reboottype)
         time.sleep(CONF.benchmark.nova_server_reboot_prepoll_delay)
-        bench_utils.wait_for(
-            server, is_ready=bench_utils.resource_is("ACTIVE"),
-            update_resource=bench_utils.get_from_manager(),
+        utils.wait_for(
+            server, is_ready=utils.resource_is("ACTIVE"),
+            update_resource=utils.get_from_manager(),
             timeout=CONF.benchmark.nova_server_reboot_timeout,
             check_interval=CONF.benchmark.nova_server_reboot_poll_interval
         )
@@ -187,10 +187,10 @@ class NovaScenario(base.Scenario):
         """
         server.rebuild(image, **kwargs)
         time.sleep(CONF.benchmark.nova_server_rebuild_prepoll_delay)
-        bench_utils.wait_for(
+        utils.wait_for(
             server,
-            is_ready=bench_utils.resource_is("ACTIVE"),
-            update_resource=bench_utils.get_from_manager(),
+            is_ready=utils.resource_is("ACTIVE"),
+            update_resource=utils.get_from_manager(),
             timeout=CONF.benchmark.nova_server_rebuild_timeout,
             check_interval=CONF.benchmark.nova_server_rebuild_poll_interval
         )
@@ -205,9 +205,9 @@ class NovaScenario(base.Scenario):
         :param server: The server to start and wait to become ACTIVE.
         """
         server.start()
-        bench_utils.wait_for(
-            server, is_ready=bench_utils.resource_is("ACTIVE"),
-            update_resource=bench_utils.get_from_manager(),
+        utils.wait_for(
+            server, is_ready=utils.resource_is("ACTIVE"),
+            update_resource=utils.get_from_manager(),
             timeout=CONF.benchmark.nova_server_start_timeout,
             check_interval=CONF.benchmark.nova_server_start_poll_interval
         )
@@ -222,9 +222,9 @@ class NovaScenario(base.Scenario):
         :param server: The server to stop.
         """
         server.stop()
-        bench_utils.wait_for(
-            server, is_ready=bench_utils.resource_is("SHUTOFF"),
-            update_resource=bench_utils.get_from_manager(),
+        utils.wait_for(
+            server, is_ready=utils.resource_is("SHUTOFF"),
+            update_resource=utils.get_from_manager(),
             timeout=CONF.benchmark.nova_server_stop_timeout,
             check_interval=CONF.benchmark.nova_server_stop_poll_interval
         )
@@ -240,9 +240,9 @@ class NovaScenario(base.Scenario):
         """
         server.rescue()
         time.sleep(CONF.benchmark.nova_server_rescue_prepoll_delay)
-        bench_utils.wait_for(
-            server, is_ready=bench_utils.resource_is("RESCUE"),
-            update_resource=bench_utils.get_from_manager(),
+        utils.wait_for(
+            server, is_ready=utils.resource_is("RESCUE"),
+            update_resource=utils.get_from_manager(),
             timeout=CONF.benchmark.nova_server_rescue_timeout,
             check_interval=CONF.benchmark.nova_server_rescue_poll_interval
         )
@@ -257,9 +257,9 @@ class NovaScenario(base.Scenario):
         """
         server.unrescue()
         time.sleep(CONF.benchmark.nova_server_unrescue_prepoll_delay)
-        bench_utils.wait_for(
-            server, is_ready=bench_utils.resource_is("ACTIVE"),
-            update_resource=bench_utils.get_from_manager(),
+        utils.wait_for(
+            server, is_ready=utils.resource_is("ACTIVE"),
+            update_resource=utils.get_from_manager(),
             timeout=CONF.benchmark.nova_server_unrescue_timeout,
             check_interval=CONF.benchmark.nova_server_unrescue_poll_interval
         )
@@ -275,9 +275,9 @@ class NovaScenario(base.Scenario):
         """
         server.suspend()
         time.sleep(CONF.benchmark.nova_server_suspend_prepoll_delay)
-        bench_utils.wait_for(
-            server, is_ready=bench_utils.resource_is("SUSPENDED"),
-            update_resource=bench_utils.get_from_manager(),
+        utils.wait_for(
+            server, is_ready=utils.resource_is("SUSPENDED"),
+            update_resource=utils.get_from_manager(),
             timeout=CONF.benchmark.nova_server_suspend_timeout,
             check_interval=CONF.benchmark.nova_server_suspend_poll_interval
         )
@@ -293,9 +293,9 @@ class NovaScenario(base.Scenario):
         """
         server.resume()
         time.sleep(CONF.benchmark.nova_server_resume_prepoll_delay)
-        bench_utils.wait_for(
-            server, is_ready=bench_utils.resource_is("ACTIVE"),
-            update_resource=bench_utils.get_from_manager(),
+        utils.wait_for(
+            server, is_ready=utils.resource_is("ACTIVE"),
+            update_resource=utils.get_from_manager(),
             timeout=CONF.benchmark.nova_server_resume_timeout,
             check_interval=CONF.benchmark.nova_server_resume_poll_interval
         )
@@ -311,9 +311,9 @@ class NovaScenario(base.Scenario):
         """
         server.pause()
         time.sleep(CONF.benchmark.nova_server_pause_prepoll_delay)
-        bench_utils.wait_for(
-            server, is_ready=bench_utils.resource_is("PAUSED"),
-            update_resource=bench_utils.get_from_manager(),
+        utils.wait_for(
+            server, is_ready=utils.resource_is("PAUSED"),
+            update_resource=utils.get_from_manager(),
             timeout=CONF.benchmark.nova_server_pause_timeout,
             check_interval=CONF.benchmark.nova_server_pause_poll_interval
         )
@@ -329,9 +329,9 @@ class NovaScenario(base.Scenario):
         """
         server.unpause()
         time.sleep(CONF.benchmark.nova_server_unpause_prepoll_delay)
-        bench_utils.wait_for(
-            server, is_ready=bench_utils.resource_is("ACTIVE"),
-            update_resource=bench_utils.get_from_manager(),
+        utils.wait_for(
+            server, is_ready=utils.resource_is("ACTIVE"),
+            update_resource=utils.get_from_manager(),
             timeout=CONF.benchmark.nova_server_unpause_timeout,
             check_interval=CONF.benchmark.nova_server_unpause_poll_interval
         )
@@ -347,9 +347,9 @@ class NovaScenario(base.Scenario):
         """
         server.shelve()
         time.sleep(CONF.benchmark.nova_server_shelve_prepoll_delay)
-        bench_utils.wait_for(
-            server, is_ready=bench_utils.resource_is("SHELVED_OFFLOADED"),
-            update_resource=bench_utils.get_from_manager(),
+        utils.wait_for(
+            server, is_ready=utils.resource_is("SHELVED_OFFLOADED"),
+            update_resource=utils.get_from_manager(),
             timeout=CONF.benchmark.nova_server_shelve_timeout,
             check_interval=CONF.benchmark.nova_server_shelve_poll_interval
         )
@@ -364,9 +364,9 @@ class NovaScenario(base.Scenario):
         """
         server.unshelve()
         time.sleep(CONF.benchmark.nova_server_unshelve_prepoll_delay)
-        bench_utils.wait_for(
-            server, is_ready=bench_utils.resource_is("ACTIVE"),
-            update_resource=bench_utils.get_from_manager(),
+        utils.wait_for(
+            server, is_ready=utils.resource_is("ACTIVE"),
+            update_resource=utils.get_from_manager(),
             timeout=CONF.benchmark.nova_server_unshelve_timeout,
             check_interval=CONF.benchmark.nova_server_unshelve_poll_interval
         )
@@ -386,9 +386,9 @@ class NovaScenario(base.Scenario):
             else:
                 server.delete()
 
-            bench_utils.wait_for_delete(
+            utils.wait_for_delete(
                 server,
-                update_resource=bench_utils.get_from_manager(),
+                update_resource=utils.get_from_manager(),
                 timeout=CONF.benchmark.nova_server_delete_timeout,
                 check_interval=CONF.benchmark.nova_server_delete_poll_interval
             )
@@ -408,9 +408,9 @@ class NovaScenario(base.Scenario):
                     server.delete()
 
             for server in servers:
-                bench_utils.wait_for_delete(
+                utils.wait_for_delete(
                     server,
-                    update_resource=bench_utils.get_from_manager(),
+                    update_resource=utils.get_from_manager(),
                     timeout=CONF.benchmark.nova_server_delete_timeout,
                     check_interval=CONF.
                     benchmark.nova_server_delete_poll_interval
@@ -426,9 +426,9 @@ class NovaScenario(base.Scenario):
         """
         image.delete()
         check_interval = CONF.benchmark.nova_server_image_delete_poll_interval
-        bench_utils.wait_for_delete(
+        utils.wait_for_delete(
             image,
-            update_resource=bench_utils.get_from_manager(),
+            update_resource=utils.get_from_manager(),
             timeout=CONF.benchmark.nova_server_image_delete_timeout,
             check_interval=check_interval
         )
@@ -448,10 +448,10 @@ class NovaScenario(base.Scenario):
                                                                server.name)
         image = self.clients("nova").images.get(image_uuid)
         check_interval = CONF.benchmark.nova_server_image_create_poll_interval
-        image = bench_utils.wait_for(
+        image = utils.wait_for(
             image,
-            is_ready=bench_utils.resource_is("ACTIVE"),
-            update_resource=bench_utils.get_from_manager(),
+            is_ready=utils.resource_is("ACTIVE"),
+            update_resource=utils.get_from_manager(),
             timeout=CONF.benchmark.nova_server_image_create_timeout,
             check_interval=check_interval
         )
@@ -511,10 +511,10 @@ class NovaScenario(base.Scenario):
         servers = filter(lambda server: server.name.startswith(name_prefix),
                          self.clients("nova").servers.list())
         time.sleep(CONF.benchmark.nova_server_boot_prepoll_delay)
-        servers = [bench_utils.wait_for(
+        servers = [utils.wait_for(
             server,
-            is_ready=bench_utils.resource_is("ACTIVE"),
-            update_resource=bench_utils.
+            is_ready=utils.resource_is("ACTIVE"),
+            update_resource=utils.
             get_from_manager(),
             timeout=CONF.benchmark.nova_server_boot_timeout,
             check_interval=CONF.benchmark.nova_server_boot_poll_interval
@@ -531,10 +531,10 @@ class NovaScenario(base.Scenario):
                associated with (optional)
         """
         server.add_floating_ip(address, fixed_address=fixed_address)
-        bench_utils.wait_for(
+        utils.wait_for(
             server,
             is_ready=self.check_ip_address(address),
-            update_resource=bench_utils.get_from_manager()
+            update_resource=utils.get_from_manager()
         )
         # Update server data
         server.addresses = server.manager.get(server.id).addresses
@@ -547,10 +547,10 @@ class NovaScenario(base.Scenario):
         :param address: The ip address or FloatingIP to remove
         """
         server.remove_floating_ip(address)
-        bench_utils.wait_for(
+        utils.wait_for(
             server,
             is_ready=self.check_ip_address(address, must_exist=False),
-            update_resource=bench_utils.get_from_manager()
+            update_resource=utils.get_from_manager()
         )
         # Update server data
         server.addresses = server.manager.get(server.id).addresses
@@ -575,10 +575,10 @@ class NovaScenario(base.Scenario):
     @base.atomic_action_timer("nova.resize")
     def _resize(self, server, flavor):
         server.resize(flavor)
-        bench_utils.wait_for(
+        utils.wait_for(
             server,
-            is_ready=bench_utils.resource_is("VERIFY_RESIZE"),
-            update_resource=bench_utils.get_from_manager(),
+            is_ready=utils.resource_is("VERIFY_RESIZE"),
+            update_resource=utils.get_from_manager(),
             timeout=CONF.benchmark.nova_server_resize_timeout,
             check_interval=CONF.benchmark.nova_server_resize_poll_interval
         )
@@ -586,10 +586,10 @@ class NovaScenario(base.Scenario):
     @base.atomic_action_timer("nova.resize_confirm")
     def _resize_confirm(self, server, status="ACTIVE"):
         server.confirm_resize()
-        bench_utils.wait_for(
+        utils.wait_for(
             server,
-            is_ready=bench_utils.resource_is(status),
-            update_resource=bench_utils.get_from_manager(),
+            is_ready=utils.resource_is(status),
+            update_resource=utils.get_from_manager(),
             timeout=CONF.benchmark.nova_server_resize_confirm_timeout,
             check_interval=(
                 CONF.benchmark.nova_server_resize_confirm_poll_interval)
@@ -598,10 +598,10 @@ class NovaScenario(base.Scenario):
     @base.atomic_action_timer("nova.resize_revert")
     def _resize_revert(self, server, status="ACTIVE"):
         server.revert_resize()
-        bench_utils.wait_for(
+        utils.wait_for(
             server,
-            is_ready=bench_utils.resource_is(status),
-            update_resource=bench_utils.get_from_manager(),
+            is_ready=utils.resource_is(status),
+            update_resource=utils.get_from_manager(),
             timeout=CONF.benchmark.nova_server_resize_revert_timeout,
             check_interval=(
                 CONF.benchmark.nova_server_resize_revert_poll_interval)
@@ -614,10 +614,10 @@ class NovaScenario(base.Scenario):
         self.clients("nova").volumes.create_server_volume(server_id,
                                                           volume_id,
                                                           device)
-        bench_utils.wait_for(
+        utils.wait_for(
             volume,
-            is_ready=bench_utils.resource_is("in-use"),
-            update_resource=bench_utils.get_from_manager(),
+            is_ready=utils.resource_is("in-use"),
+            update_resource=utils.get_from_manager(),
             timeout=CONF.benchmark.nova_server_resize_revert_timeout,
             check_interval=(
                 CONF.benchmark.nova_server_resize_revert_poll_interval)
@@ -629,10 +629,10 @@ class NovaScenario(base.Scenario):
         volume_id = volume.id
         self.clients("nova").volumes.delete_server_volume(server_id,
                                                           volume_id)
-        bench_utils.wait_for(
+        utils.wait_for(
             volume,
-            is_ready=bench_utils.resource_is("available"),
-            update_resource=bench_utils.get_from_manager(),
+            is_ready=utils.resource_is("available"),
+            update_resource=utils.get_from_manager(),
             timeout=CONF.benchmark.nova_detach_volume_timeout,
             check_interval=CONF.benchmark.nova_detach_volume_poll_interval
         )
@@ -655,10 +655,10 @@ class NovaScenario(base.Scenario):
         server_admin.live_migrate(target_host,
                                   block_migration=block_migration,
                                   disk_over_commit=disk_over_commit)
-        bench_utils.wait_for(
+        utils.wait_for(
             server,
-            is_ready=bench_utils.resource_is("ACTIVE"),
-            update_resource=bench_utils.get_from_manager(),
+            is_ready=utils.resource_is("ACTIVE"),
+            update_resource=utils.get_from_manager(),
             timeout=CONF.benchmark.nova_server_live_migrate_timeout,
             check_interval=(
                 CONF.benchmark.nova_server_live_migrate_poll_interval)
@@ -705,10 +705,10 @@ class NovaScenario(base.Scenario):
         server_admin = self.admin_clients("nova").servers.get(server.id)
         host_pre_migrate = getattr(server_admin, "OS-EXT-SRV-ATTR:host")
         server_admin.migrate()
-        bench_utils.wait_for(
+        utils.wait_for(
             server,
-            is_ready=bench_utils.resource_is("VERIFY_RESIZE"),
-            update_resource=bench_utils.get_from_manager(),
+            is_ready=utils.resource_is("VERIFY_RESIZE"),
+            update_resource=utils.get_from_manager(),
             timeout=CONF.benchmark.nova_server_migrate_timeout,
             check_interval=(
                 CONF.benchmark.nova_server_migrate_poll_interval)

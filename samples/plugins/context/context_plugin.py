@@ -13,10 +13,10 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from rally.benchmark import context
 from rally.common import log as logging
 from rally import consts
 from rally import osclients
+from rally.task import context
 
 LOG = logging.getLogger(__name__)
 
@@ -28,7 +28,7 @@ class CreateFlavorContext(context.Context):
     This sample create flavor with specified options before task starts and
     delete it after task completion.
     To create your own context plugin, inherit it from
-    rally.benchmark.context.Context
+    rally.task.context.Context
     """
 
     CONFIG_SCHEMA = {

@@ -19,9 +19,9 @@ SLA (Service-level agreement) is set of details for determining compliance
 with contracted values such as maximum error rate or minimum response time.
 """
 
-from rally.benchmark import sla
 from rally.common.i18n import _
 from rally.common import streaming_algorithms
+from rally.task import sla
 
 
 @sla.configure(name="max_avg_duration")

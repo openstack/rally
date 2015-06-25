@@ -14,9 +14,9 @@
 
 import random
 
-from rally.benchmark.scenarios import base
-from rally.benchmark import validation
 from rally.plugins.openstack.scenarios.zaqar import utils as zutils
+from rally.task.scenarios import base
+from rally.task import validation
 
 
 class ZaqarBasic(zutils.ZaqarScenario):

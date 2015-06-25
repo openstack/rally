@@ -16,13 +16,13 @@
 import jsonschema
 import mock
 
-from rally.benchmark import runner
 from rally.plugins.common.runners import constant
+from rally.task import runner
 from tests.unit import fakes
 from tests.unit import test
 
 
-RUNNERS_BASE = "rally.benchmark.runner."
+RUNNERS_BASE = "rally.task.runner."
 RUNNERS = "rally.plugins.common.runners."
 
 

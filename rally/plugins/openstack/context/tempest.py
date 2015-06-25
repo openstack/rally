@@ -17,12 +17,12 @@ import os
 import shutil
 import tempfile
 
-from rally.benchmark import context
 from rally.common.i18n import _
 from rally.common import log as logging
 from rally.common import utils
 from rally import consts
 from rally import exceptions
+from rally.task import context
 from rally.verification.tempest import config
 from rally.verification.tempest import tempest
 

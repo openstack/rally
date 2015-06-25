@@ -13,13 +13,13 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from rally.benchmark.scenarios import base
-from rally.benchmark import types
-from rally.benchmark import validation
 from rally.common.i18n import _
 from rally import consts
 from rally import exceptions
 from rally.plugins.openstack.scenarios.nova import utils
+from rally.task.scenarios import base
+from rally.task import types
+from rally.task import validation
 
 
 class NovaSecurityGroupException(exceptions.RallyException):

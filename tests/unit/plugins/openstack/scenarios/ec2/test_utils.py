@@ -47,7 +47,7 @@ class EC2ScenarioTestCase(test.ClientsTestCase):
         self.res_is = mockpatch.Patch(EC2_UTILS + ".ec2_resource_is")
         self.update_res = mockpatch.Patch(
             EC2_UTILS + ".EC2Scenario._update_resource")
-        self.wait_for = mockpatch.Patch(EC2_UTILS + ".bench_utils.wait_for")
+        self.wait_for = mockpatch.Patch(EC2_UTILS + ".utils.wait_for")
         self.useFixture(self.wait_for)
         self.useFixture(self.res_is)
         self.useFixture(self.update_res)

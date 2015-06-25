@@ -12,11 +12,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from rally.benchmark.scenarios import base
-from rally.benchmark import validation
 from rally import consts
 from rally import exceptions
 from rally.plugins.openstack.scenarios.ceilometer import utils as ceiloutils
+from rally.task.scenarios import base
+from rally.task import validation
 
 
 class CeilometerResource(ceiloutils.CeilometerScenario):

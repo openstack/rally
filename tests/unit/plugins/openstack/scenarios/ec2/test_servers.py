@@ -23,7 +23,7 @@ UTILS = "rally.plugins.openstack.scenarios.ec2.utils."
 
 class EC2ServersTestCase(test.ClientsTestCase):
 
-    @mock.patch("rally.benchmark.utils.wait_for",
+    @mock.patch("rally.task.utils.wait_for",
                 return_value="running_server")
     @mock.patch(UTILS + "ec2_resource_is", return_value="foo_state")
     @mock.patch(UTILS + "time")

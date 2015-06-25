@@ -19,13 +19,13 @@ from oslo_config import cfg
 from oslo_utils import uuidutils
 from saharaclient.api import base as sahara_base
 
-from rally.benchmark.scenarios import base
-from rally.benchmark import utils as bench_utils
 from rally.common.i18n import _
 from rally.common import log as logging
 from rally import consts
 from rally import exceptions
 from rally.plugins.openstack.scenarios.sahara import consts as sahara_consts
+from rally.task.scenarios import base
+from rally.task import utils
 
 LOG = logging.getLogger(__name__)
 CONF = cfg.CONF
@@ -108,7 +108,7 @@ class SaharaScenario(base.Scenario):
         self.clients("sahara").node_group_templates.delete(node_group.id)
 
     def _wait_active(self, cluster_object):
-        bench_utils.wait_for(
+        utils.wait_for(
             resource=cluster_object, ready_statuses=["active"],
             failure_statuses=["error"], update_resource=self._update_cluster,
             timeout=CONF.benchmark.cluster_create_timeout,
@@ -392,7 +392,7 @@ class SaharaScenario(base.Scenario):
         LOG.debug("Deleting cluster `%s`" % cluster.name)
         self.clients("sahara").clusters.delete(cluster.id)
 
-        bench_utils.wait_for(
+        utils.wait_for(
             resource=cluster,
             timeout=CONF.benchmark.cluster_delete_timeout,
             check_interval=CONF.benchmark.cluster_check_interval,
@@ -458,7 +458,7 @@ class SaharaScenario(base.Scenario):
                 output_id=output_id,
                 configs=configs)
 
-            bench_utils.wait_for(
+            utils.wait_for(
                 resource=job_execution.id,
                 is_ready=self._job_execution_is_finished,
                 timeout=CONF.benchmark.job_execution_timeout,

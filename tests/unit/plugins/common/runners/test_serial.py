@@ -25,7 +25,7 @@ class SerialScenarioRunnerTestCase(test.TestCase):
     def setUp(self):
         super(SerialScenarioRunnerTestCase, self).setUp()
 
-    @mock.patch("rally.benchmark.runner._run_scenario_once")
+    @mock.patch("rally.task.runner._run_scenario_once")
     def test__run_scenario(self, mock__run_scenario_once):
         times = 5
         result = {"duration": 10, "idle_duration": 0, "error": [],

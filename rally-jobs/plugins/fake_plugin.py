@@ -17,7 +17,7 @@
 import random
 import time
 
-from rally.benchmark.scenarios import base
+from rally.task.scenarios import base
 
 # This is used to test relative import
 from test_relative_import import zzz

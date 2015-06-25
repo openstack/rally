@@ -21,8 +21,8 @@ import traceback
 
 import yaml
 
-from rally.benchmark.scenarios import base
-from rally.benchmark import engine
+from rally.task.scenarios import base
+from rally.task import engine
 from tests.unit import test
 
 
@@ -32,7 +32,7 @@ class TaskSampleTestCase(test.TestCase):
         os.pardir, os.pardir, os.pardir,
         "samples", "tasks")
 
-    @mock.patch("rally.benchmark.engine.BenchmarkEngine"
+    @mock.patch("rally.task.engine.BenchmarkEngine"
                 "._validate_config_semantic")
     def test_schema_is_valid(self,
             mock_benchmark_engine__validate_config_semantic):
