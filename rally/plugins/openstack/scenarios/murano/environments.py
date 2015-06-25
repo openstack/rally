@@ -16,14 +16,13 @@
 from rally.common import log as logging
 from rally import consts
 from rally.plugins.openstack.scenarios.murano import utils
-from rally.plugins.openstack.scenarios.vm import utils as vm_utils
 from rally.task.scenarios import base
 from rally.task import validation
 
 LOG = logging.getLogger(__name__)
 
 
-class MuranoEnvironments(utils.MuranoScenario, vm_utils.VMScenario):
+class MuranoEnvironments(utils.MuranoScenario):
     """Benchmark scenarios for Murano environments."""
     @validation.required_clients("murano")
     @validation.required_services(consts.Service.MURANO)

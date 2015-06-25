@@ -13,13 +13,16 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import os
 import zipfile
 
+from rally.common import fileutils
 from rally.common.i18n import _
 from rally.common.i18n import _LE
 from rally.common import log as logging
 from rally.common import utils
 from rally import consts
+from rally import exceptions
 from rally import osclients
 from rally.plugins.openstack.context.cleanup import manager as resource_manager
 from rally.task import context
@@ -46,18 +49,27 @@ class PackageGenerator(context.Context):
 
     @utils.log_task_wrapper(LOG.info, _("Enter context: `Murano packages`"))
     def setup(self):
-        if not zipfile.is_zipfile(self.config["app_package"]):
-            msg = (_LE("There is no zip archive by this path: %s")
-                   % self.config["app_package"])
-            raise OSError(msg)
+        is_config_app_dir = False
+        if zipfile.is_zipfile(self.config["app_package"]):
+            zip_name = self.config["app_package"]
+        elif os.path.isdir(self.config["app_package"]):
+            is_config_app_dir = True
+            zip_name = fileutils.pack_dir(self.config["app_package"])
+        else:
+            msg = (_LE("There is no zip archive or directory by this path:"
+                       " %s") % self.config["app_package"])
+            raise exceptions.ContextSetupFailure(msg=msg,
+                                                 ctx="murano_packages")
 
         for user, tenant_id in utils.iterate_per_tenants(
                 self.context["users"]):
             clients = osclients.Clients(user["endpoint"])
             self.context["tenants"][tenant_id]["packages"] = []
+            if is_config_app_dir:
+                self.context["tenants"][tenant_id]["murano_ctx"] = zip_name
             package = clients.murano().packages.create(
                 {"categories": ["Web"], "tags": ["tag"]},
-                {"file": open(self.config["app_package"])})
+                {"file": open(zip_name)})
 
             self.context["tenants"][tenant_id]["packages"].append(package)
 

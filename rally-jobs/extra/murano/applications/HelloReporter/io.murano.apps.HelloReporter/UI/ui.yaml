@@ -1,0 +1,23 @@
+Version: 2
+
+Application:
+  ?:
+    type: io.murano.apps.HelloReporter
+  name: $.appConfiguration.name
+
+Forms:
+  - appConfiguration:
+      fields:
+        - name: name
+          type: string
+          label: Application Name
+          description: >-
+            Enter a desired name for the application. Just A-Z, a-z, 0-9, dash and
+            underline are allowed
+        - name: unitNamingPattern
+          type: string
+          required: false
+          hidden: true
+          widgetMedia:
+            js: ['muranodashboard/js/support_placeholder.js']
+            css: {all: ['muranodashboard/css/support_placeholder.css']}

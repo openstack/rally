@@ -1,0 +1,25 @@
+Namespaces:
+  =: io.murano.apps
+  std: io.murano
+  sys: io.murano.system
+
+
+Name: HelloReporter
+
+Extends: std:Application
+
+Properties:
+  name:
+    Contract: $.string().notNull()
+
+Workflow:
+  initialize:
+    Body:
+      - $.environment: $.find(std:Environment).require()
+
+  deploy:
+    Body:
+      - If: not $.getAttr(deployed, false)
+        Then:
+          - $.environment.reporter.report($this, 'Starting deployment! Hello!')
+          - $.setAttr(deployed, True)

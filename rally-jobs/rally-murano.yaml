@@ -46,3 +46,21 @@
       sla:
         failure_rate:
           max: 0
+    -
+      args:
+        packages_per_env: 2
+      runner:
+        type: "constant"
+        times: 8
+        concurrency: 2
+      context:
+        users:
+          tenants: 2
+          users_per_tenant: 2
+        murano_packages:
+          app_package: "/home/jenkins/.rally/extra/murano/applications/HelloReporter/io.murano.apps.HelloReporter/"
+        roles:
+          - "admin"
+      sla:
+        failure_rate:
+          max: 0

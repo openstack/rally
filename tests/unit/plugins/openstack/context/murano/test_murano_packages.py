@@ -80,14 +80,32 @@ class MuranoGeneratorTestCase(test.TestCase):
 
     @mock.patch("%s.osclients" % CTX)
     @mock.patch("%s.resource_manager.cleanup" % CTX)
-    def test_cleanup(self, mock_cleanup, mock_osclients):
+    def test_cleanup_with_zip(self, mock_cleanup, mock_osclients):
         mock_app = mock.Mock(id="fake_app_id")
         (mock_osclients.Clients().murano().
             packages.create.return_value) = mock_app
 
         murano_ctx = murano_packages.PackageGenerator(self._get_context())
         murano_ctx.setup()
-
         murano_ctx.cleanup()
+
+        mock_cleanup.assert_called_once_with(names=["murano.packages"],
+                                             users=murano_ctx.context["users"])
+
+    @mock.patch("%s.osclients" % CTX)
+    @mock.patch("%s.resource_manager.cleanup" % CTX)
+    def test_cleanup_with_dir(self, mock_cleanup, mock_osclients):
+        mock_app = mock.Mock(id="fake_app_id")
+        (mock_osclients.Clients().murano().
+            packages.create.return_value) = mock_app
+        ctx_dict = self._get_context()
+        app_dir = ("rally-jobs/extra/murano/applications/"
+                   "HelloReporter/io.murano.apps.HelloReporter/")
+        ctx_dict["config"]["murano_packages"]["app_package"] = app_dir
+
+        murano_ctx = murano_packages.PackageGenerator(ctx_dict)
+        murano_ctx.setup()
+        murano_ctx.cleanup()
+
         mock_cleanup.assert_called_once_with(names=["murano.packages"],
                                              users=murano_ctx.context["users"])
