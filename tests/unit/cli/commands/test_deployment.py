@@ -15,6 +15,7 @@
 
 import os
 
+from keystoneclient import exceptions as keystone_exceptions
 import mock
 
 from rally.cli.commands import deployment
@@ -290,8 +291,6 @@ class DeploymentCommandsTestCase(test.TestCase):
                                             "users": [sample_endpoint]}
         self.deployment.check(deployment_id)
         mock_deployment_get.assert_called_once_with(deployment_id)
-        mock_clients_keystone.assert_called_once_with()
-        mock_clients_verified_keystone.assert_called_once_with()
 
     @mock.patch("rally.osclients.Clients.verified_keystone")
     @mock.patch("rally.cli.commands.deployment.db.deployment_get")
@@ -305,3 +304,25 @@ class DeploymentCommandsTestCase(test.TestCase):
         mock_deployment_get.return_value = {"admin": sample_endpoint}
         mock_clients_verified_keystone.services.list.return_value = []
         self.assertRaises(TypeError, self.deployment.check, deployment_id)
+
+    @mock.patch("rally.osclients.Clients.verified_keystone")
+    @mock.patch("rally.cli.commands.deployment.db.deployment_get")
+    def test_deployment_check_not_exist(self, mock_deployment_get,
+                                        mock_clients_verified_keystone):
+        deployment_id = "e87e4dca-b515-4477-888d-5f6103f13b42"
+        mock_deployment_get.side_effect = exceptions.DeploymentNotFound()
+        mock_clients_verified_keystone.services.list.return_value = []
+        self.assertEqual(self.deployment.check(deployment_id), 1)
+
+    @mock.patch("rally.osclients.Clients.services")
+    @mock.patch("rally.cli.commands.deployment.db.deployment_get")
+    def test_deployment_check_connect_failed(self, mock_deployment_get,
+                                             mock_clients_services):
+        deployment_id = "e87e4dca-b515-4477-888d-5f6103f13b42"
+        sample_endpoint = objects.Endpoint("http://192.168.1.1:5000/v2.0/",
+                                           "admin",
+                                           "adminpass").to_dict()
+        mock_deployment_get.return_value = {"admin": sample_endpoint}
+        refused = keystone_exceptions.ConnectionRefused()
+        mock_clients_services.side_effect = refused
+        self.assertEqual(self.deployment.check(deployment_id), 1)
