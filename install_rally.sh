@@ -451,7 +451,10 @@ setup_rally_configuration () {
     cp "$SRCDIR"/etc/rally/rally.conf.sample "$ETCDIR"/rally.conf
 
     [ -d "$DBDIR" ] || mkdir -p "$DBDIR"
-    sed -i "s|#connection *=.*|connection = \"$DBCONNSTRING\"|" "$ETCDIR"/rally.conf
+    local CONF_TMPFILE=$(mktemp)
+    sed "s|#connection *=.*|connection = \"$DBCONNSTRING\"|" "$ETCDIR"/rally.conf > "$CONF_TMPFILE"
+    cat "$CONF_TMPFILE" > "$ETCDIR"/rally.conf
+    rm "$CONF_TMPFILE"
     rally-manage db recreate
 }
 
