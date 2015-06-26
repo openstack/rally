@@ -666,7 +666,7 @@ BASEDIR=$(dirname "$(readlink -e "$0")")
 if [ -d "$BASEDIR"/.git ]
 then
     SOURCEDIR=$BASEDIR
-    if find . -regex '.+\.py[co]$' -delete
+    if find . -name '*.py[co]' -exec rm -f {} +
     then
         echo "Wiped python compiled files."
     else
