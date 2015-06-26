@@ -20,7 +20,7 @@ from rally import exceptions
 
 
 class DummyScenarioException(exceptions.RallyException):
-    msg_fmt = _("Dummy scenario expected exception: '%(msg)s'")
+    msg_fmt = _("Dummy scenario expected exception: '%(message)s'")
 
 
 class Dummy(base.Scenario):
