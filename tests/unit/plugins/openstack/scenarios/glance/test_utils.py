@@ -17,10 +17,7 @@ import tempfile
 import mock
 from oslotest import mockpatch
 
-from rally.benchmark import utils as butils
-from rally import exceptions as rally_exceptions
 from rally.plugins.openstack.scenarios.glance import utils
-from tests.unit import fakes
 from tests.unit import test
 
 BM_UTILS = "rally.benchmark.utils"
@@ -45,13 +42,6 @@ class GlanceScenarioTestCase(test.ClientsTestCase):
         self.gfm = self.get_fm.mock
         self.useFixture(mockpatch.Patch("time.sleep"))
         self.scenario = utils.GlanceScenario()
-
-    def test_failed_image_status(self):
-        self.get_fm.cleanUp()
-        image_manager = fakes.FakeFailedImageManager()
-        self.assertRaises(rally_exceptions.GetResourceFailure,
-                          butils.get_from_manager(),
-                          image_manager.create("fails", "url", "cf", "df"))
 
     def test_list_images(self):
         scenario = utils.GlanceScenario()

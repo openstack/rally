@@ -115,12 +115,6 @@ class FakeServer(FakeResource):
         setattr(self, "OS-EXT-STS:locked", False)
 
 
-class FakeFailedServer(FakeResource):
-
-    def __init__(self, manager=None):
-        super(FakeFailedServer, self).__init__(manager, status="ERROR")
-
-
 class FakeImage(FakeResource):
 
     def __init__(self, manager=None, id="image-id-0", min_ram=0,
@@ -134,12 +128,6 @@ class FakeImage(FakeResource):
 
 class FakeMurano(FakeResource):
     pass
-
-
-class FakeFailedImage(FakeResource):
-
-    def __init__(self, manager=None):
-        super(FakeFailedImage, self).__init__(manager, status="error")
 
 
 class FakeFloatingIP(FakeResource):
@@ -395,12 +383,6 @@ class FakeServerManager(FakeManager):
             self.resources_order.remove(resource)
 
 
-class FakeFailedServerManager(FakeServerManager):
-
-    def create(self, name, image_id, flavor_id, **kwargs):
-        return self._create(FakeFailedServer, name)
-
-
 class FakeImageManager(FakeManager):
 
     def __init__(self):
@@ -440,12 +422,6 @@ class FakePackageManager(FakeManager):
         package = self._cache(package_class(self))
         package.name = package_arch.keys()[0]
         return package
-
-
-class FakeFailedImageManager(FakeImageManager):
-
-    def create(self, name, copy_from, container_format, disk_format):
-        return self._create(FakeFailedImage, name)
 
 
 class FakeFloatingIPsManager(FakeManager):
@@ -948,11 +924,8 @@ class FakeServiceCatalog(object):
 
 class FakeGlanceClient(object):
 
-    def __init__(self, failed_image_manager=False):
-        if failed_image_manager:
-            self.images = FakeFailedImageManager()
-        else:
-            self.images = FakeImageManager()
+    def __init__(self):
+        self.images = FakeImageManager()
 
 
 class FakeMuranoClient(object):
@@ -976,10 +949,7 @@ class FakeNovaClient(object):
 
     def __init__(self, failed_server_manager=False):
         self.images = FakeImageManager()
-        if failed_server_manager:
-            self.servers = FakeFailedServerManager(self.images)
-        else:
-            self.servers = FakeServerManager(self.images)
+        self.servers = FakeServerManager(self.images)
         self.floating_ips = FakeFloatingIPsManager()
         self.floating_ip_pools = FakeFloatingIPPoolsManager()
         self.networks = FakeNetworkManager()

@@ -17,7 +17,6 @@ import mock
 from oslo_config import cfg
 from oslotest import mockpatch
 
-from rally.benchmark import utils as butils
 from rally import exceptions as rally_exceptions
 from rally.plugins.openstack.scenarios.nova import utils
 from tests.unit import fakes
@@ -49,13 +48,6 @@ class NovaScenarioTestCase(test.ClientsTestCase):
         self.useFixture(self.get_fm)
         self.gfm = self.get_fm.mock
         self.useFixture(mockpatch.Patch("time.sleep"))
-
-    def test_failed_server_status(self):
-        self.get_fm.cleanUp()
-        server_manager = fakes.FakeFailedServerManager()
-        self.assertRaises(rally_exceptions.GetResourceFailure,
-                          butils.get_from_manager(),
-                          server_manager.create("fails", "1", "2"))
 
     def _test_assert_called_once_with(self, mock, resource,
                                       chk_interval, time_out, **kwargs):
