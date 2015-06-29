@@ -13,14 +13,14 @@
 
 import os
 
-import mako.template
-
 __description__ = "List differences between two verification runs"
 __title__ = "Verification Comparison"
 __version__ = "0.1"
 
 
 def create_report(results):
+    import mako.template
+
     template_kw = {
         "heading": {
             "title": __title__,

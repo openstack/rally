@@ -50,24 +50,33 @@ CONF = cfg.CONF
 db_options.set_defaults(CONF, connection="sqlite:////tmp/rally.sqlite",
                         sqlite_db="rally.sqlite")
 
-_BACKEND_MAPPING = {"sqlalchemy": "rally.db.sqlalchemy.api"}
 
-IMPL = db_api.DBAPI.from_config(CONF, backend_mapping=_BACKEND_MAPPING)
+IMPL = None
+
+
+def get_impl():
+    global IMPL
+
+    if not IMPL:
+        _BACKEND_MAPPING = {"sqlalchemy": "rally.db.sqlalchemy.api"}
+        IMPL = db_api.DBAPI.from_config(CONF, backend_mapping=_BACKEND_MAPPING)
+
+    return IMPL
 
 
 def db_cleanup():
     """Recreate engine."""
-    IMPL.db_cleanup()
+    get_impl().db_cleanup()
 
 
 def db_create():
     """Initialize DB. This method will drop existing database."""
-    IMPL.db_create()
+    get_impl().db_create()
 
 
 def db_drop():
     """Drop DB. This method drop existing database."""
-    IMPL.db_drop()
+    get_impl().db_drop()
 
 
 def task_get(uuid):
@@ -77,12 +86,12 @@ def task_get(uuid):
     :raises: :class:`rally.exceptions.TaskNotFound` if the task does not exist.
     :returns: task dict with data on the task.
     """
-    return IMPL.task_get(uuid)
+    return get_impl().task_get(uuid)
 
 
 def task_get_detailed_last():
     """Returns the most recently created task."""
-    return IMPL.task_get_detailed_last()
+    return get_impl().task_get_detailed_last()
 
 
 def task_get_detailed(uuid):
@@ -91,7 +100,7 @@ def task_get_detailed(uuid):
     :param uuid: UUID of the task.
     :returns: task dict with data on the task and its results.
     """
-    return IMPL.task_get_detailed(uuid)
+    return get_impl().task_get_detailed(uuid)
 
 
 def task_create(values):
@@ -100,7 +109,7 @@ def task_create(values):
     :param values: dict with record values.
     :returns: task dict with data on the task.
     """
-    return IMPL.task_create(values)
+    return get_impl().task_create(values)
 
 
 def task_update(uuid, values):
@@ -111,7 +120,7 @@ def task_update(uuid, values):
     :raises: :class:`rally.exceptions.TaskNotFound` if the task does not exist.
     :returns: new updated task dict with data on the task.
     """
-    return IMPL.task_update(uuid, values)
+    return get_impl().task_update(uuid, values)
 
 
 def task_list(status=None, deployment=None):
@@ -124,7 +133,7 @@ def task_list(status=None, deployment=None):
                       returned.
     :returns: A list of dicts with data on the tasks.
     """
-    return IMPL.task_list(status=status, deployment=deployment)
+    return get_impl().task_list(status=status, deployment=deployment)
 
 
 def task_delete(uuid, status=None):
@@ -139,7 +148,7 @@ def task_delete(uuid, status=None):
     :raises: :class:`rally.exceptions.TaskInvalidStatus` if the status
              of the task does not equal to the status argument.
     """
-    return IMPL.task_delete(uuid, status=status)
+    return get_impl().task_delete(uuid, status=status)
 
 
 def task_result_get_all_by_uuid(task_uuid):
@@ -148,7 +157,7 @@ def task_result_get_all_by_uuid(task_uuid):
     :param task_uuid: string with UUID of Task instance.
     :returns: list instances of TaskResult.
     """
-    return IMPL.task_result_get_all_by_uuid(task_uuid)
+    return get_impl().task_result_get_all_by_uuid(task_uuid)
 
 
 def task_result_create(task_uuid, key, data):
@@ -159,7 +168,7 @@ def task_result_create(task_uuid, key, data):
     :param data: data expected to update in task result.
     :returns: TaskResult instance appended.
     """
-    return IMPL.task_result_create(task_uuid, key, data)
+    return get_impl().task_result_create(task_uuid, key, data)
 
 
 def deployment_create(values):
@@ -168,7 +177,7 @@ def deployment_create(values):
     :param values: dict with record values on the deployment.
     :returns: a dict with data on the deployment.
     """
-    return IMPL.deployment_create(values)
+    return get_impl().deployment_create(values)
 
 
 def deployment_delete(uuid):
@@ -180,7 +189,7 @@ def deployment_delete(uuid):
     :raises: :class:`rally.exceptions.DeploymentIsBusy` if the resource is
              not enough.
     """
-    return IMPL.deployment_delete(uuid)
+    return get_impl().deployment_delete(uuid)
 
 
 def deployment_get(deployment):
@@ -191,7 +200,7 @@ def deployment_get(deployment):
              does not exist.
     :returns: a dict with data on the deployment.
     """
-    return IMPL.deployment_get(deployment)
+    return get_impl().deployment_get(deployment)
 
 
 def deployment_update(uuid, values):
@@ -203,7 +212,7 @@ def deployment_update(uuid, values):
              does not exist.
     :returns: a dict with data on the deployment.
     """
-    return IMPL.deployment_update(uuid, values)
+    return get_impl().deployment_update(uuid, values)
 
 
 def deployment_list(status=None, parent_uuid=None, name=None):
@@ -215,8 +224,8 @@ def deployment_list(status=None, parent_uuid=None, name=None):
     :param name: Name of deployment
     :returns: a list of dicts with data on the deployments.
     """
-    return IMPL.deployment_list(status=status, parent_uuid=parent_uuid,
-                                name=name)
+    return get_impl().deployment_list(status=status, parent_uuid=parent_uuid,
+                                      name=name)
 
 
 def resource_create(values):
@@ -225,7 +234,7 @@ def resource_create(values):
     :param values: a dict with data on the resource.
     :returns: a dict with updated data on the resource.
     """
-    return IMPL.resource_create(values)
+    return get_impl().resource_create(values)
 
 
 def resource_get_all(deployment_uuid, provider_name=None, type=None):
@@ -237,9 +246,9 @@ def resource_get_all(deployment_uuid, provider_name=None, type=None):
     :param type: filter by type, if is None, then return all types
     :returns: a list of dicts with data on a resource
     """
-    return IMPL.resource_get_all(deployment_uuid,
-                                 provider_name=provider_name,
-                                 type=type)
+    return get_impl().resource_get_all(deployment_uuid,
+                                       provider_name=provider_name,
+                                       type=type)
 
 
 def resource_delete(id):
@@ -249,7 +258,7 @@ def resource_delete(id):
     :raises: :class:`rally.exceptions.ResourceNotFound` if the resource
              does not exist.
     """
-    return IMPL.resource_delete(id)
+    return get_impl().resource_delete(id)
 
 
 def verification_create(deployment_uuid):
@@ -258,7 +267,7 @@ def verification_create(deployment_uuid):
     :param deployment_uuid: UUID of the deployment.
     :returns: a dict with verification data.
     """
-    return IMPL.verification_create(deployment_uuid)
+    return get_impl().verification_create(deployment_uuid)
 
 
 def verification_get(verification_uuid):
@@ -269,7 +278,7 @@ def verification_get(verification_uuid):
              does not exist.
     :returns: a dict with verification data.
     """
-    return IMPL.verification_get(verification_uuid)
+    return get_impl().verification_get(verification_uuid)
 
 
 def verification_delete(verification_uuid):
@@ -279,7 +288,7 @@ def verification_delete(verification_uuid):
     :raises: :class:`rally.exceptions.NotFoundException` if verification
              does not exist.
     """
-    return IMPL.verification_delete(verification_uuid)
+    return get_impl().verification_delete(verification_uuid)
 
 
 def verification_update(uuid, values):
@@ -291,7 +300,7 @@ def verification_update(uuid, values):
              does not exist.
     :returns: new updated task dict with data on the task.
     """
-    return IMPL.verification_update(uuid, values)
+    return get_impl().verification_update(uuid, values)
 
 
 def verification_list(status=None):
@@ -300,7 +309,7 @@ def verification_list(status=None):
     :param status: Verification status to filter the returned list on.
     :returns: A list of dicts with data on the verifications.
     """
-    return IMPL.verification_list(status=status)
+    return get_impl().verification_list(status=status)
 
 
 def verification_result_get(verification_uuid):
@@ -309,7 +318,7 @@ def verification_result_get(verification_uuid):
     :param verification_uuid: string with UUID of Verification instance.
     :returns: dict instance of VerificationResult.
     """
-    return IMPL.verification_result_get(verification_uuid)
+    return get_impl().verification_result_get(verification_uuid)
 
 
 def verification_result_create(verification_uuid, values):
@@ -319,7 +328,7 @@ def verification_result_create(verification_uuid, values):
     :param values: dict with record values.
     :returns: TaskResult instance appended.
     """
-    return IMPL.verification_result_create(verification_uuid, values)
+    return get_impl().verification_result_create(verification_uuid, values)
 
 
 def register_worker(values):
@@ -333,7 +342,7 @@ def register_worker(values):
     :returns: A worker.
     :raises: WorkerAlreadyRegistered
     """
-    return IMPL.register_worker(values)
+    return get_impl().register_worker(values)
 
 
 def get_worker(hostname):
@@ -343,7 +352,7 @@ def get_worker(hostname):
     :returns: A worker.
     :raises: WorkerNotFound
     """
-    return IMPL.get_worker(hostname)
+    return get_impl().get_worker(hostname)
 
 
 def unregister_worker(hostname):
@@ -352,7 +361,7 @@ def unregister_worker(hostname):
     :param hostname: The hostname of the worker service.
     :raises: WorkerNotFound
     """
-    IMPL.unregister_worker(hostname)
+    get_impl().unregister_worker(hostname)
 
 
 def update_worker(hostname):
@@ -361,4 +370,4 @@ def update_worker(hostname):
     :param hostname: The hostname of this worker service.
     :raises: WorkerNotFound
     """
-    IMPL.update_worker(hostname)
+    get_impl().update_worker(hostname)
