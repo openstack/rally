@@ -608,16 +608,25 @@ def volume_type_exists(config, clients, deployment, param_name):
 
 
 @validator
-def restricted_parameters(config, clients, deployment, param_name,
+def restricted_parameters(config, clients, deployment, param_names,
                           subdict=None):
-    """Validates that parameter is not set.
+    """Validates that parameters is not set.
 
-    :param subdict: sub-dict of "config" to search for param_name. if
-    not defined - will search in "config"
+    :param param_names: parameter or parameters list to be validated.
+    :param subdict: sub-dict of "config" to search for param_names. if
+                    not defined - will search in "config"
     """
-    args = config.get("args", {})
-    a_dict, a_key = (args, subdict) if subdict else (config, "args")
-    if param_name in a_dict.get(a_key, {}):
-        return ValidationResult(
-            False, _("You can't specify parameter '%(param)s' in '%(a_dict)s'")
-            % {"param": param_name, "a_dict": subdict if subdict else "args"})
+    if not isinstance(param_names, (list, tuple)):
+        param_names = [param_names]
+
+    restricted_params = []
+    for param_name in param_names:
+        args = config.get("args", {})
+        a_dict, a_key = (args, subdict) if subdict else (config, "args")
+        if param_name in a_dict.get(a_key, {}):
+            restricted_params.append(param_name)
+    if restricted_params:
+        msg = (_("You can't specify parameters '%(params)s' in '%(a_dict)s'")
+               % {"params": ", ".join(restricted_params),
+                  "a_dict": subdict if subdict else "args"})
+        return ValidationResult(False, msg)
