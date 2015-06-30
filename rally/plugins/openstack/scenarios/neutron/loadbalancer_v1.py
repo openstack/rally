@@ -32,6 +32,7 @@ class NeutronLoadbalancerV1(utils.NeutronScenario):
 
         :param pool_create_args: dict, POST /lb/pools request options
         """
+        pool_create_args = pool_create_args or {}
         for net in self.context.get("tenant", {}).get("networks", []):
             for subnet_id in net["subnets"]:
                 self._create_v1_pool(subnet_id, **pool_create_args)
