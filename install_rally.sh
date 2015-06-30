@@ -247,11 +247,7 @@ which_missing_packages () {
 
 # Download command
 download() {
-    if have_command wget; then
-        wget -nv $VERBOSE --no-check-certificate -O "$@";
-    elif have_command curl; then
-        curl $VERBOSE --insecure -L -s -o "$@";
-    fi
+    wget -nv $VERBOSE --no-check-certificate -O "$@";
 }
 
 download_from_pypi () {
@@ -272,7 +268,7 @@ install_required_sw () {
     local missing pkg_manager
     if have_command apt-get; then
         # Debian/Ubuntu
-        missing=$(which_missing_packages build-essential libssl-dev libffi-dev python-dev libxml2-dev libxslt1-dev libpq-dev git)
+        missing=$(which_missing_packages build-essential libssl-dev libffi-dev python-dev libxml2-dev libxslt1-dev libpq-dev git wget)
 
         if [ "$ASKCONFIRMATION" -eq 0 ]; then
             pkg_manager="apt-get install --yes"
@@ -281,7 +277,7 @@ install_required_sw () {
         fi
     elif have_command yum; then
         # RHEL/CentOS
-        missing=$(which_missing_packages gcc libffi-devel python-devel openssl-devel gmp-devel libxml2-devel libxslt-devel postgresql-devel git)
+        missing=$(which_missing_packages gcc libffi-devel python-devel openssl-devel gmp-devel libxml2-devel libxslt-devel postgresql-devel git wget)
 
         if [ "$ASKCONFIRMATION" -eq 0 ]; then
             pkg_manager="yum install -y"
@@ -290,7 +286,7 @@ install_required_sw () {
         fi
     elif have_command zypper; then
         # SuSE
-        missing=$(which_missing_packages gcc libffi48-devel python-devel openssl-devel gmp-devel libxml2-devel libxslt-devel postgresql93-devel git)
+        missing=$(which_missing_packages gcc libffi48-devel python-devel openssl-devel gmp-devel libxml2-devel libxslt-devel postgresql93-devel git wget)
 
         if [ "$ASKCONFIRMATION" -eq 0 ]; then
             pkg_manager="zypper -n --no-gpg-checks --non-interactive install --auto-agree-with-licenses"
@@ -301,10 +297,6 @@ install_required_sw () {
         # MacOSX maybe?
         echo "Cannot determine what package manager this Linux distribution has, so I cannot check if requisite software is installed. I'm proceeding anyway, but you may run into errors later."
     fi
-    if ! have_command wget && ! have_command curl; then
-        missing="$missing wget"
-    fi
-
     if ! have_command pip; then
         missing="$missing python-pip"
     fi
