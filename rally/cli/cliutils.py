@@ -545,8 +545,20 @@ def run(argv, categories):
 
 def _generate_bash_completion_script():
     from rally.cli import main
-    bash_data = """
-#!/bin/bash
+    bash_data = """#!/bin/bash
+
+# Standalone _filedir() alternative.
+# This exempts from dependence of bash completion routines
+function _rally_filedir()
+{
+    test "${1}" \\
+        && COMPREPLY=( \\
+            $(compgen -f -- "${cur}" | grep -E "${1}") \\
+            $(compgen -o plusdirs -- "${cur}") ) \\
+        || COMPREPLY=( \\
+            $(compgen -o plusdirs -f -- "${cur}") \\
+            $(compgen -d -- "${cur}") )
+}
 
 _rally()
 {
@@ -554,7 +566,6 @@ _rally()
     declare -A OPTS
 
 %(data)s
-
     for OPT in ${!OPTS[*]} ; do
         CMD=${OPT%%%%_*}
         CMDSUB=${OPT#*_}
@@ -567,25 +578,22 @@ _rally()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
 
-    if [[ $cur =~ (\.|\~|\/).* ]] ; then
-        _filedir
+    if [[ $cur =~ ^(\.|\~|\/) ]] || [[ $prev =~ ^--out(|put-file)$ ]] ; then
+        _rally_filedir
+    elif [[ $prev =~ ^--(task|filename)$ ]] ; then
+        _rally_filedir "\\.json|\\.yaml|\\.yml"
     elif [ $COMP_CWORD == "1" ] ; then
         COMPREPLY=($(compgen -W "$COMMANDS" -- ${cur}))
     elif [ $COMP_CWORD == "2" ] ; then
         COMPREPLY=($(compgen -W "${SUBCOMMANDS[${prev}]}" -- ${cur}))
     else
-        if [ $prev == "--filename" ] ; then
-            _filedir "@(json|ya?ml)"
-        elif [ $prev == "--output-file" ] || [ $prev == "--out" ]; then
-            _filedir
-        else
-            COMMAND="${COMP_WORDS[1]}_${COMP_WORDS[2]}"
-            COMPREPLY=($(compgen -W "${OPTS[$COMMAND]}" -- ${cur}))
-        fi
+        COMMAND="${COMP_WORDS[1]}_${COMP_WORDS[2]}"
+        COMPREPLY=($(compgen -W "${OPTS[$COMMAND]}" -- ${cur}))
     fi
     return 0
 }
-complete -F _rally rally
+
+complete -o filenames -F _rally rally
 """
     completion = []
     for category, cmds in main.categories.items():
