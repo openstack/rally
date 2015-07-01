@@ -25,4 +25,5 @@ Rally Specific Commandments
 * [N341] - Ensure that we are importing oslo_xyz packages instead of deprecated oslo.xyz ones
 * [N350] - Ensure that single quotes are not used
 * [N351] - Ensure that data structs (i.e Lists and Dicts) are declared literally rather than using constructors
-* [N353] - Ensure that string formatting only uses a mapping if multiple mapping keys are used.
+* [N352] - Ensure that string formatting only uses a mapping if multiple mapping keys are used.
+* [N353] - Ensure that unicode() function is not uset because of absence in py3
