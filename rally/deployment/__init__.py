@@ -13,9 +13,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from rally.deploy.engine import *  # noqa
+from rally.deployment.engine import *  # noqa
 from rally.common.plugin import discover
 
 
-discover.import_modules_from_package("rally.deploy.engines")
-discover.import_modules_from_package("rally.deploy.serverprovider")
+discover.import_modules_from_package("rally.deployment.engines")
+discover.import_modules_from_package("rally.deployment.serverprovider")

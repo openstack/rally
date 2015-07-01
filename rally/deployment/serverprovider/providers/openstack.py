@@ -20,7 +20,7 @@ import novaclient.exceptions
 
 from rally.common.i18n import _
 from rally.common import log as logging
-from rally.deploy.serverprovider import provider
+from rally.deployment.serverprovider import provider
 from rally import exceptions
 from rally import objects
 from rally import osclients

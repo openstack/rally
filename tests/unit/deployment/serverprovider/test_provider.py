@@ -18,7 +18,7 @@ import mock
 import six
 
 from rally.common import sshutils
-from rally.deploy.serverprovider import provider
+from rally.deployment.serverprovider import provider
 from rally import exceptions
 from tests.unit import test
 

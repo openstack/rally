@@ -15,8 +15,8 @@
 
 from rally.common.i18n import _
 from rally import consts
-from rally.deploy import engine
-from rally.deploy.fuel import fuelclient
+from rally.deployment import engine
+from rally.deployment.fuel import fuelclient
 from rally import exceptions
 from rally import objects
 

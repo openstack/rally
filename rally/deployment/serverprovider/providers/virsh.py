@@ -20,7 +20,7 @@ import uuid
 
 import netaddr
 
-from rally.deploy.serverprovider import provider
+from rally.deployment.serverprovider import provider
 
 
 @provider.configure(name="VirshProvider")

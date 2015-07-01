@@ -20,7 +20,7 @@ from six.moves.urllib import parse
 import rally
 from rally import consts
 from rally import db
-from rally.deploy import engine
+from rally.deployment import engine
 from rally import objects
 
 

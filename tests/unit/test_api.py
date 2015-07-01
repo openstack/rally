@@ -199,7 +199,7 @@ class BaseDeploymentTestCase(test.TestCase):
 class DeploymentAPITestCase(BaseDeploymentTestCase):
     @mock.patch("rally.objects.deploy.db.deployment_update")
     @mock.patch("rally.objects.deploy.db.deployment_create")
-    @mock.patch("rally.deploy.engine.EngineFactory.validate")
+    @mock.patch("rally.deployment.engine.EngineFactory.validate")
     def test_create(self, mock_engine_factory_validate,
                     mock_deployment_create, mock_deployment_update):
         mock_deployment_create.return_value = self.deployment
@@ -216,7 +216,7 @@ class DeploymentAPITestCase(BaseDeploymentTestCase):
 
     @mock.patch("rally.objects.deploy.db.deployment_update")
     @mock.patch("rally.objects.deploy.db.deployment_create")
-    @mock.patch("rally.deploy.engine.EngineFactory.validate",
+    @mock.patch("rally.deployment.engine.EngineFactory.validate",
                 side_effect=jsonschema.ValidationError("ValidationError"))
     def test_create_validation_error(
             self, mock_engine_factory_validate, mock_deployment_create,

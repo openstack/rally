@@ -18,8 +18,8 @@
 import jsonschema
 
 from rally import consts
-from rally.deploy import engine as deploy_engine
-from rally.deploy.engines import existing
+from rally.deployment import engine as deploy_engine
+from rally.deployment.engines import existing
 from tests.unit import test
 
 

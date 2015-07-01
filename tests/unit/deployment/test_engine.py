@@ -18,7 +18,7 @@
 import mock
 
 from rally import consts
-from rally.deploy import engine
+from rally.deployment import engine
 from rally import exceptions
 from tests.unit import test
 

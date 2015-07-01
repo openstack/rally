@@ -103,7 +103,7 @@ class ProviderFactory(plugin.Plugin):
     It's a base class with self-discovery of subclasses. Each subclass
     has to implement create_servers() and destroy_servers() methods.
     By default, each server provider located as a submodule of the package
-    rally.deploy.serverprovider.providers is auto-discovered.
+    rally.deployment.serverprovider.providers is auto-discovered.
 
     Each provider supervises its own resources using a ResourceManager.
 

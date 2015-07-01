@@ -17,7 +17,7 @@ import copy
 
 import mock
 
-from rally.deploy.fuel import fuelclient
+from rally.deployment.fuel import fuelclient
 from tests.unit import test
 
 
@@ -153,7 +153,7 @@ class FuelClusterTestCase(test.TestCase):
                            "key": "new_val",
                            "key2": "val2"}]})
 
-    @mock.patch("rally.deploy.fuel.fuelclient.time.sleep")
+    @mock.patch("rally.deployment.fuel.fuelclient.time.sleep")
     def test_deploy(self, mock_sleep):
         call1 = {"progress": 50}
         call2 = {"progress": 100}
@@ -189,7 +189,7 @@ class FuelClusterTestCase(test.TestCase):
             "clusters/42/network_configuration/nova_network", {"key": "val"})
         self.cluster.verify_network.assert_called_once_with({"key": "val"})
 
-    @mock.patch("rally.deploy.fuel.fuelclient.time.sleep")
+    @mock.patch("rally.deployment.fuel.fuelclient.time.sleep")
     def test_verify_network(self, mock_sleep):
         call1 = {"progress": 50}
         call2 = {"progress": 100, "message": ""}
@@ -206,7 +206,7 @@ class FuelClusterTestCase(test.TestCase):
         self.assertEqual([mock.call(42), mock.call(42)],
                          self.client.get_task.mock_calls)
 
-    @mock.patch("rally.deploy.fuel.fuelclient.time.sleep")
+    @mock.patch("rally.deployment.fuel.fuelclient.time.sleep")
     def test_verify_network_fail(self, mock_sleep):
         self.client.put.return_value = {"id": 42}
         self.client.get_task.return_value = {"progress": 100,
@@ -244,7 +244,7 @@ class FuelClientTestCase(test.TestCase):
         super(FuelClientTestCase, self).setUp()
         self.client = fuelclient.FuelClient("http://10.20.0.2:8000/api/v1/")
 
-    @mock.patch("rally.deploy.fuel.fuelclient.requests")
+    @mock.patch("rally.deployment.fuel.fuelclient.requests")
     def test__request_non_json(self, mock_requests):
         reply = mock.Mock()
         reply.status_code = 200
@@ -256,7 +256,7 @@ class FuelClientTestCase(test.TestCase):
 
         self.assertEqual(retval, reply)
 
-    @mock.patch("rally.deploy.fuel.fuelclient.requests")
+    @mock.patch("rally.deployment.fuel.fuelclient.requests")
     def test__request_non_2xx(self, mock_requests):
         reply = mock.Mock()
         reply.status_code = 300
@@ -267,7 +267,7 @@ class FuelClientTestCase(test.TestCase):
                           self.client._request, "method", "url",
                           data={"key": "value"})
 
-    @mock.patch("rally.deploy.fuel.fuelclient.requests")
+    @mock.patch("rally.deployment.fuel.fuelclient.requests")
     def test__request(self, mock_requests):
         reply = mock.Mock()
         reply.status_code = 202

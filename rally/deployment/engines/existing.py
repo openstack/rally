@@ -14,7 +14,7 @@
 #    under the License.
 
 from rally import consts
-from rally.deploy import engine
+from rally.deployment import engine
 from rally import objects
 
 

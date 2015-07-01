@@ -16,10 +16,11 @@
 import mock
 
 from rally.cli.commands import info
-from rally.deploy import engine
-from rally.deploy.engines import existing as existing_cloud
-from rally.deploy.serverprovider import provider
-from rally.deploy.serverprovider.providers import existing as existing_servers
+from rally.deployment import engine
+from rally.deployment.engines import existing as existing_cloud
+from rally.deployment.serverprovider import provider
+from rally.deployment.serverprovider.providers import (
+    existing as existing_servers)
 from rally import exceptions
 from rally.plugins.common.scenarios.dummy import dummy
 from rally.plugins.common.sla import failure_rate

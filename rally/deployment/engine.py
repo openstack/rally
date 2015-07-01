@@ -23,7 +23,7 @@ from rally.common import log as logging
 from rally.common.plugin import plugin
 from rally.common import utils
 from rally import consts
-from rally.deploy.serverprovider import provider
+from rally.deployment.serverprovider import provider
 from rally import exceptions
 
 
@@ -45,7 +45,7 @@ class EngineFactory(plugin.Plugin):
 
     It's a base class with self-discovery of subclasses. Each subclass
     has to implement deploy() and cleanup() methods. By default, each engine
-    located as a submodule of the package rally.deploy.engines is
+    located as a submodule of the package rally.deployment.engines is
     auto-discovered.
 
     Example of usage with a simple engine:

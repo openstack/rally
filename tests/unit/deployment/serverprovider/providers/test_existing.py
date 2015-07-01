@@ -15,8 +15,8 @@
 
 import jsonschema
 
-from rally.deploy.serverprovider import provider
-from rally.deploy.serverprovider.providers import existing
+from rally.deployment.serverprovider import provider
+from rally.deployment.serverprovider.providers import existing
 from tests.unit import test
 
 

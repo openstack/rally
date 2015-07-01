@@ -16,7 +16,7 @@
 import jsonschema
 import mock
 
-from rally.deploy.engines import devstack
+from rally.deployment.engines import devstack
 from tests.unit import test
 
 
@@ -54,7 +54,7 @@ class DevstackEngineTestCase(test.TestCase):
     def test_construct(self):
         self.assertEqual(self.engine.localrc["ADMIN_PASSWORD"], "secret")
 
-    @mock.patch("rally.deploy.engines.devstack.open", create=True)
+    @mock.patch("rally.deployment.engines.devstack.open", create=True)
     def test_prepare_server(self, mock_open):
         mock_open.return_value = "fake_file"
         server = mock.Mock()
@@ -66,15 +66,15 @@ class DevstackEngineTestCase(test.TestCase):
         ]
         self.assertEqual(calls, server.ssh.run.mock_calls)
         filename = mock_open.mock_calls[0][1][0]
-        self.assertTrue(filename.endswith("rally/deploy/engines/"
+        self.assertTrue(filename.endswith("rally/deployment/engines/"
                                           "devstack/install.sh"))
         self.assertEqual([mock.call(filename, "rb")], mock_open.mock_calls)
 
-    @mock.patch("rally.deploy.engine.EngineFactory.get_provider")
-    @mock.patch("rally.deploy.engines.devstack.get_updated_server")
-    @mock.patch("rally.deploy.engines.devstack.get_script")
-    @mock.patch("rally.deploy.serverprovider.provider.Server")
-    @mock.patch("rally.deploy.engines.devstack.objects.Endpoint")
+    @mock.patch("rally.deployment.engine.EngineFactory.get_provider")
+    @mock.patch("rally.deployment.engines.devstack.get_updated_server")
+    @mock.patch("rally.deployment.engines.devstack.get_script")
+    @mock.patch("rally.deployment.serverprovider.provider.Server")
+    @mock.patch("rally.deployment.engines.devstack.objects.Endpoint")
     def test_deploy(self, mock_endpoint, mock_server, mock_get_script,
                     mock_get_updated_server, mock_engine_factory_get_provider):
         mock_engine_factory_get_provider.return_value = fake_provider = (

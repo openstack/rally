@@ -15,11 +15,11 @@
 
 import mock
 
-from rally.deploy import engine
+from rally.deployment import engine
 from rally import objects
 from tests.unit import test
 
-MOD = "rally.deploy.engines.lxc."
+MOD = "rally.deployment.engines.lxc."
 
 
 class LxcEngineTestCase(test.TestCase):

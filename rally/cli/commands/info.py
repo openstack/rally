@@ -52,8 +52,8 @@ from __future__ import print_function
 from rally.cli import cliutils
 from rally.common.plugin import discover
 from rally.common import utils
-from rally.deploy import engine
-from rally.deploy.serverprovider import provider
+from rally.deployment import engine
+from rally.deployment.serverprovider import provider
 from rally import exceptions
 from rally.task.scenarios import base as scenario_base
 from rally.task import sla

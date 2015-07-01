@@ -17,11 +17,11 @@
 import mock
 
 from rally import consts
-from rally.deploy import engine
+from rally.deployment import engine
 from tests.unit import fakes
 from tests.unit import test
 
-MOD = "rally.deploy.engines.multihost."
+MOD = "rally.deployment.engines.multihost."
 
 
 class MultihostEngineTestCase(test.TestCase):

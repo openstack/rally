@@ -14,7 +14,7 @@
 #    under the License.
 
 from rally import consts
-from rally.deploy.engines import fuel
+from rally.deployment.engines import fuel
 from rally import exceptions
 from tests.unit import fakes
 from tests.unit import test
@@ -83,8 +83,8 @@ class FuelEngineTestCase(test.TestCase):
         engine.client.get_releases = mock.Mock(return_value=fake_releases)
         self.assertEqual(42, engine._get_release_id())
 
-    @mock.patch("rally.deploy.fuel.fuelclient.FuelClient")
-    @mock.patch("rally.deploy.fuel.fuelclient.FuelCluster")
+    @mock.patch("rally.deployment.fuel.fuelclient.FuelClient")
+    @mock.patch("rally.deployment.fuel.fuelclient.FuelCluster")
     def test_deploy(self, mock_fuel_cluster, mock_fuel_client):
         attributes = {"editable": {"access": {"user": {"value": "user"},
                                               "password": {"value": "pw"},
@@ -129,8 +129,8 @@ class FuelEngineTestCase(test.TestCase):
         self.assertEqual(expected_cluster_calls, cluster.mock_calls)
         self.assertEqual([mock.call.get_nodes()], client.mock_calls)
 
-    @mock.patch("rally.deploy.fuel.fuelclient.FuelClient")
-    @mock.patch("rally.deploy.engines.fuel.objects.Deployment")
+    @mock.patch("rally.deployment.fuel.fuelclient.FuelClient")
+    @mock.patch("rally.deployment.engines.fuel.objects.Deployment")
     def test_cleanup(self, mock_deployment, mock_fuel_client):
         fake_resources = [{"id": 41, "info": {"id": 42}}]
         self.deployment.get_resources = mock.Mock(return_value=fake_resources)

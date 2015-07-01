@@ -24,7 +24,7 @@ import jsonschema
 from rally.common.i18n import _
 from rally.common import log as logging
 from rally import consts
-from rally.deploy import engine as deploy_engine
+from rally.deployment import engine as deploy_engine
 from rally import exceptions
 from rally import objects
 from rally.task import engine

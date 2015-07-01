@@ -17,12 +17,12 @@ import jsonschema
 import mock
 import netaddr
 
-from rally.deploy.serverprovider.providers import lxc
+from rally.deployment.serverprovider.providers import lxc
 from rally import exceptions
 from tests.unit import test
 
 
-MOD_NAME = "rally.deploy.serverprovider.providers.lxc."
+MOD_NAME = "rally.deployment.serverprovider.providers.lxc."
 
 
 class HelperFunctionsTestCase(test.TestCase):
@@ -33,8 +33,8 @@ class HelperFunctionsTestCase(test.TestCase):
         self.assertEqual("fake_script", script)
         path = mock_open.mock_calls[0][1][0]
         mode = mock_open.mock_calls[0][1][1]
-        self.assertTrue(path.endswith("rally/deploy/serverprovider/providers"
-                                      "/lxc/script.sh"))
+        self.assertTrue(path.endswith(
+            "rally/deployment/serverprovider/providers/lxc/script.sh"))
         self.assertEqual("rb", mode)
 
     @mock.patch(MOD_NAME + "_get_script", return_value="fake_script")
