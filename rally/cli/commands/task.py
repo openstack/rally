@@ -532,6 +532,7 @@ class TaskCommands(object):
         tasks = isinstance(tasks, list) and tasks or [tasks]
 
         results = []
+        message = []
         processed_names = {}
         for task_file_or_uuid in tasks:
             if os.path.exists(os.path.expanduser(task_file_or_uuid)):
@@ -585,14 +586,15 @@ class TaskCommands(object):
         elif out_format == "junit":
             test_suite = junit.JUnit("Rally test suite")
             for result in results:
-                if (isinstance(result["sla"], list) and
-                   not all([sla["success"] for sla in result["sla"]])):
+                if isinstance(result["sla"], list):
+                    message = ",".join([sla["detail"] for sla in
+                                        result["sla"] if not sla["success"]])
+                if message:
                     outcome = junit.JUnit.FAILURE
                 else:
                     outcome = junit.JUnit.SUCCESS
                 test_suite.add_test(result["key"]["name"],
-                                    result["full_duration"],
-                                    outcome=outcome)
+                                    result["full_duration"], outcome, message)
             with open(output_file, "w+") as f:
                 f.write(test_suite.to_xml())
         else:
