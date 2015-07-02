@@ -19,7 +19,7 @@ from oslotest import mockpatch
 from rally.plugins.openstack.scenarios.murano import utils
 from tests.unit import test
 
-BM_UTILS = "rally.benchmark.utils"
+BM_UTILS = "rally.task.utils"
 MRN_UTILS = "rally.plugins.openstack.scenarios.murano.utils"
 
 
@@ -29,9 +29,9 @@ class MuranoScenarioTestCase(test.ClientsTestCase):
         super(MuranoScenarioTestCase, self).setUp()
         self.res_is = mockpatch.Patch(BM_UTILS + ".resource_is")
         self.get_fm = mockpatch.Patch(BM_UTILS + ".get_from_manager")
-        self.wait_for = mockpatch.Patch(MRN_UTILS + ".bench_utils.wait_for")
+        self.wait_for = mockpatch.Patch(MRN_UTILS + ".utils.wait_for")
         self.wait_for_delete = mockpatch.Patch(
-            MRN_UTILS + ".bench_utils.wait_for_delete")
+            MRN_UTILS + ".utils.wait_for_delete")
         self.useFixture(self.wait_for)
         self.useFixture(self.wait_for_delete)
         self.useFixture(self.res_is)

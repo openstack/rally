@@ -17,8 +17,8 @@ import sys
 
 import testtools
 
-from rally.benchmark import functional
 from rally import exceptions
+from rally.task import functional
 from tests.unit import test
 
 

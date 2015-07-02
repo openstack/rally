@@ -94,9 +94,9 @@ class ClientsTestCase(TestCase):
         super(ClientsTestCase, self).setUp()
         self._clients = {}
         self._client_mocks = [
-            mock.patch("rally.benchmark.scenarios.base.Scenario.clients",
+            mock.patch("rally.task.scenarios.base.Scenario.clients",
                        mock.Mock(side_effect=self.clients)),
-            mock.patch("rally.benchmark.scenarios.base.Scenario.admin_clients",
+            mock.patch("rally.task.scenarios.base.Scenario.admin_clients",
                        mock.Mock(side_effect=self.admin_clients))
         ]
         for patcher in self._client_mocks:

@@ -19,9 +19,9 @@ from rally.plugins.openstack.context.sahara import sahara_image
 from tests.unit import test
 
 
-BASE_CTX = "rally.benchmark.context"
+BASE_CTX = "rally.task.context"
 CTX = "rally.plugins.openstack.context.sahara.sahara_image"
-BASE_SCN = "rally.benchmark.scenarios"
+BASE_SCN = "rally.task.scenarios"
 SCN = "rally.plugins.openstack.scenarios"
 
 

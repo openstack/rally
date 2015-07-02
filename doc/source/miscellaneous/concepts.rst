@@ -79,14 +79,14 @@ Note that inside each scenario configuration, the benchmark scenario is actually
 Developer's view
 ^^^^^^^^^^^^^^^^
 
-From the developer's perspective, a benchmark scenario is a method marked by a **@scenario** decorator and placed in a class that inherits from the base `Scenario <https://github.com/openstack/rally/blob/master/rally/benchmark/scenarios/base.py#L40>`_ class and located in some subpackage of `rally.benchmark.scenarios <https://github.com/openstack/rally/tree/master/rally/benchmark/scenarios>`_. There may be arbitrary many benchmark scenarios in a scenario class; each of them should be referenced to (in the task configuration file) as *ScenarioClassName.method_name*.
+From the developer's perspective, a benchmark scenario is a method marked by a **@scenario** decorator and placed in a class that inherits from the base `Scenario <https://github.com/openstack/rally/blob/master/rally/benchmark/scenarios/base.py#L40>`_ class and located in some subpackage of `rally.task.scenarios <https://github.com/openstack/rally/tree/master/rally/benchmark/scenarios>`_. There may be arbitrary many benchmark scenarios in a scenario class; each of them should be referenced to (in the task configuration file) as *ScenarioClassName.method_name*.
 
 In a toy example below, we define a scenario class *MyScenario* with one benchmark scenario *MyScenario.scenario*. This benchmark scenario tests the performance of a sequence of 2 actions, implemented via private methods in the same class. Both methods are marked with the **@atomic_action_timer** decorator. This allows Rally to handle those actions in a special way and, after benchmarks complete, show runtime statistics not only for the whole scenarios, but for separate actions as well.
 
 ::
 
-    from rally.benchmark.scenarios import base
-    from rally.benchmark import utils
+    from rally.task.scenarios import base
+    from rally.task import utils
 
 
     class MyScenario(base.Scenario):
@@ -171,7 +171,7 @@ It is possible to extend Rally with new Scenario Runner types, if needed. Basica
 
 .. parsed-literal::
 
-    from rally.benchmark import runner
+    from rally.task import runner
     from rally import consts
 
     class MyScenarioRunner(runner.ScenarioRunner):
@@ -267,7 +267,7 @@ From the developer's view, contexts management is implemented via **Context clas
 
 .. parsed-literal::
 
-    from rally.benchmark import context
+    from rally.task import context
     from rally import consts
 
     @context.context(name="your_context", *# Corresponds to the context field name in task configuration files*
@@ -320,4 +320,4 @@ Consequently, the algorithm of initiating the contexts can be roughly seen as fo
 The *hidden* attribute defines whether the context should be a *hidden* one. **Hidden contexts** cannot be configured by end-users through the task configuration file as shown above, but should be specified by a benchmark scenario developer through a special *@base.scenario(context={...})* decorator. Hidden contexts are typically needed to satisfy some specific benchmark scenario-specific needs, which don't require the end-user's attention. For example, the hidden **"cleanup" context** (:mod:`rally.plugins.openstack.context.cleanup.context`) is used to make generic cleanup after running benchmark. So user can't change
 it configuration via task and break his cloud.
 
-If you want to dive deeper, also see the context manager (:mod:`rally.benchmark.context`) class that actually implements the algorithm described above.
+If you want to dive deeper, also see the context manager (:mod:`rally.task.context`) class that actually implements the algorithm described above.

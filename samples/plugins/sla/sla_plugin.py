@@ -13,9 +13,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from rally.benchmark import sla
 from rally.common.i18n import _
 from rally.common.plugin import plugin
+from rally.task import sla
 
 
 @plugin.configure(name="max_duration_range")

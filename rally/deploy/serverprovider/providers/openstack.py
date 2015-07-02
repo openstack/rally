@@ -18,13 +18,13 @@ import time
 
 import novaclient.exceptions
 
-from rally.benchmark import utils as benchmark_utils
 from rally.common.i18n import _
 from rally.common import log as logging
 from rally.deploy.serverprovider import provider
 from rally import exceptions
 from rally import objects
 from rally import osclients
+from rally.task import utils
 
 
 LOG = logging.getLogger(__name__)
@@ -196,14 +196,14 @@ class OpenStackProvider(provider.ProviderFactory):
             self.resources.create({"id": server.id}, type=SERVER_TYPE)
 
         kwargs = {
-            "is_ready": benchmark_utils.resource_is("ACTIVE"),
-            "update_resource": benchmark_utils.get_from_manager(),
+            "is_ready": utils.resource_is("ACTIVE"),
+            "update_resource": utils.get_from_manager(),
             "timeout": 120,
             "check_interval": 5
         }
 
         for os_server in os_servers:
-            benchmark_utils.wait_for(os_server, **kwargs)
+            utils.wait_for(os_server, **kwargs)
         servers = [provider.Server(host=s.addresses.values()[0][0]["addr"],
                                    user="root",
                                    key=public_key_path)

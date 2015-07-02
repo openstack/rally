@@ -18,9 +18,9 @@ import time
 
 from oslo_config import cfg
 
-from rally.benchmark.scenarios import base
-from rally.benchmark import utils as bench_utils
 from rally import exceptions
+from rally.task.scenarios import base
+from rally.task import utils as bench_utils
 
 CINDER_BENCHMARK_OPTS = [
     cfg.FloatOpt("cinder_volume_create_prepoll_delay",

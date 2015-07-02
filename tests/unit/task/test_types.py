@@ -15,8 +15,8 @@
 
 import mock
 
-from rally.benchmark import types
 from rally import exceptions
+from rally.task import types
 from tests.unit import fakes
 from tests.unit import test
 
@@ -334,8 +334,8 @@ class NeutronNetworkResourceTypeTestCase(test.TestCase):
 
 class PreprocessTestCase(test.TestCase):
 
-    @mock.patch("rally.benchmark.types.base.Scenario.meta")
-    @mock.patch("rally.benchmark.types.osclients")
+    @mock.patch("rally.task.types.base.Scenario.meta")
+    @mock.patch("rally.task.types.osclients")
     def test_preprocess(self, mock_osclients, mock_scenario_meta):
         cls = "some_class"
         method_name = "method_name"
@@ -364,7 +364,7 @@ class PreprocessTestCase(test.TestCase):
 
 class FileTypeTestCase(test.TestCase):
 
-    @mock.patch("rally.benchmark.types.open",
+    @mock.patch("rally.task.types.open",
                 side_effect=mock.mock_open(read_data="file_context"),
                 create=True)
     def test_transform_by_path(self, mock_open):
@@ -373,7 +373,7 @@ class FileTypeTestCase(test.TestCase):
             clients=None, resource_config=resource_config)
         self.assertEqual(file_context, "file_context")
 
-    @mock.patch("rally.benchmark.types.open",
+    @mock.patch("rally.task.types.open",
                 side_effect=IOError, create=True)
     def test_transform_by_path_no_match(self, mock_open):
         resource_config = "nonexistant.yaml"
@@ -385,7 +385,7 @@ class FileTypeTestCase(test.TestCase):
 
 class FileTypeDictTestCase(test.TestCase):
 
-    @mock.patch("rally.benchmark.types.open",
+    @mock.patch("rally.task.types.open",
                 side_effect=mock.mock_open(read_data="file_context"),
                 create=True)
     def test_transform_by_path(self, mock_open):
@@ -395,7 +395,7 @@ class FileTypeDictTestCase(test.TestCase):
             resource_config=resource_config)
         self.assertEqual(file_context, {"file.yaml": "file_context"})
 
-    @mock.patch("rally.benchmark.types.open",
+    @mock.patch("rally.task.types.open",
                 side_effect=IOError, create=True)
     def test_transform_by_path_no_match(self, mock_open):
         resource_config = ["nonexistant.yaml"]

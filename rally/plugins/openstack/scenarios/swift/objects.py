@@ -15,10 +15,10 @@
 
 import tempfile
 
-from rally.benchmark.scenarios import base
-from rally.benchmark import validation
 from rally import consts
 from rally.plugins.openstack.scenarios.swift import utils
+from rally.task.scenarios import base
+from rally.task import validation
 
 
 class SwiftObjects(utils.SwiftScenario):

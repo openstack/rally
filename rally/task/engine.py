@@ -21,10 +21,6 @@ import traceback
 import jsonschema
 import six
 
-from rally.benchmark import context
-from rally.benchmark import runner
-from rally.benchmark.scenarios import base as base_scenario
-from rally.benchmark import sla
 from rally.common.i18n import _
 from rally.common import log as logging
 from rally.common import utils as rutils
@@ -34,6 +30,10 @@ from rally import objects
 from rally import osclients
 from rally.plugins.openstack.context import existing_users as existingusers_ctx
 from rally.plugins.openstack.context import users as users_ctx
+from rally.task import context
+from rally.task import runner
+from rally.task.scenarios import base as base_scenario
+from rally.task import sla
 
 
 LOG = logging.getLogger(__name__)

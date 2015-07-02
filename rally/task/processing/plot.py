@@ -18,8 +18,8 @@ import json
 
 import six
 
-from rally.benchmark.processing.charts import histogram as histo
-from rally.benchmark.processing import utils
+from rally.task.processing.charts import histogram as histo
+from rally.task.processing import utils
 from rally.ui import utils as ui_utils
 
 

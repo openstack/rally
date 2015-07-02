@@ -15,7 +15,7 @@
 
 import random
 
-from rally.benchmark.scenarios import base
+from rally.task.scenarios import base
 
 
 class QuotasScenario(base.Scenario):

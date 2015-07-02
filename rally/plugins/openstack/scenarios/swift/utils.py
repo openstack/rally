@@ -13,7 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from rally.benchmark.scenarios import base
+from rally.task.scenarios import base
 
 
 class SwiftScenario(base.Scenario):

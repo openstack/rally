@@ -12,8 +12,8 @@
 
 import requests
 
-from rally.benchmark.scenarios import base
 from rally.common.i18n import _
+from rally.task.scenarios import base
 
 
 class RequestScenario(base.Scenario):

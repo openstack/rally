@@ -19,10 +19,10 @@ import sys
 import mock
 import testtools
 
-from rally.benchmark.processing import plot
+from rally.task.processing import plot
 from tests.unit import test
 
-PLOT = "rally.benchmark.processing.plot."
+PLOT = "rally.task.processing.plot."
 
 
 class PlotTestCase(test.TestCase):
@@ -307,7 +307,7 @@ class PlotTestCase(test.TestCase):
             ]
         }, output)
 
-    @mock.patch("rally.benchmark.processing.utils.compress")
+    @mock.patch("rally.task.processing.utils.compress")
     def test__prepare_data(self, mock_compress):
 
         mock_compress.side_effect = lambda i, **kv: i

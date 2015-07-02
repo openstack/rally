@@ -17,8 +17,8 @@ import os
 
 import six
 
-from rally.benchmark.scenarios import base
 from rally import osclients
+from rally.task.scenarios import base
 
 
 class FuelClient(object):

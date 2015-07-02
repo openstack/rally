@@ -13,7 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from rally.benchmark import context
 from rally.common.i18n import _
 from rally.common import log as logging
 from rally.common import utils
@@ -24,6 +23,7 @@ from rally.plugins.openstack.context.quotas import designate_quotas
 from rally.plugins.openstack.context.quotas import manila_quotas
 from rally.plugins.openstack.context.quotas import neutron_quotas
 from rally.plugins.openstack.context.quotas import nova_quotas
+from rally.task import context
 
 
 LOG = logging.getLogger(__name__)

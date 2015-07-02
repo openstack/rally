@@ -17,8 +17,6 @@ import abc
 
 import six
 
-from rally.benchmark import context
-from rally.benchmark import types
 from rally.common import broker
 from rally.common.i18n import _
 from rally.common import log as logging
@@ -27,6 +25,8 @@ from rally import consts
 from rally import osclients
 from rally.plugins.openstack.scenarios.nova import utils as nova_utils
 from rally.plugins.openstack.scenarios.vm import vmtasks
+from rally.task import context
+from rally.task import types
 
 LOG = logging.getLogger(__name__)
 

@@ -18,7 +18,7 @@ import mock
 from rally.plugins.openstack.scenarios.murano import environments
 from tests.unit import test
 
-CTX = "rally.benchmark.context"
+CTX = "rally.task.context"
 MURANO_SCENARIO = ("rally.plugins.openstack.scenarios.murano."
                    "environments.MuranoEnvironments")
 

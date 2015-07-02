@@ -17,8 +17,8 @@ import time
 
 from oslo_config import cfg
 
-from rally.benchmark.scenarios import base
-from rally.benchmark import utils as bench_utils
+from rally.task.scenarios import base
+from rally.task import utils
 
 
 HEAT_BENCHMARK_OPTS = [
@@ -133,10 +133,10 @@ class HeatScenario(base.Scenario):
 
         time.sleep(CONF.benchmark.heat_stack_create_prepoll_delay)
 
-        stack = bench_utils.wait_for(
+        stack = utils.wait_for(
             stack,
-            is_ready=bench_utils.resource_is("CREATE_COMPLETE"),
-            update_resource=bench_utils.get_from_manager(["CREATE_FAILED"]),
+            is_ready=utils.resource_is("CREATE_COMPLETE"),
+            update_resource=utils.get_from_manager(["CREATE_FAILED"]),
             timeout=CONF.benchmark.heat_stack_create_timeout,
             check_interval=CONF.benchmark.heat_stack_create_poll_interval)
 
@@ -167,10 +167,10 @@ class HeatScenario(base.Scenario):
         self.clients("heat").stacks.update(stack.id, **kw)
 
         time.sleep(CONF.benchmark.heat_stack_update_prepoll_delay)
-        stack = bench_utils.wait_for(
+        stack = utils.wait_for(
             stack,
-            is_ready=bench_utils.resource_is("UPDATE_COMPLETE"),
-            update_resource=bench_utils.get_from_manager(["UPDATE_FAILED"]),
+            is_ready=utils.resource_is("UPDATE_COMPLETE"),
+            update_resource=utils.get_from_manager(["UPDATE_FAILED"]),
             timeout=CONF.benchmark.heat_stack_update_timeout,
             check_interval=CONF.benchmark.heat_stack_update_poll_interval)
         return stack
@@ -184,10 +184,10 @@ class HeatScenario(base.Scenario):
         :param stack: stack that needs to be checked
         """
         self.clients("heat").actions.check(stack.id)
-        bench_utils.wait_for(
+        utils.wait_for(
             stack,
-            is_ready=bench_utils.resource_is("CHECK_COMPLETE"),
-            update_resource=bench_utils.get_from_manager(["CHECK_FAILED"]),
+            is_ready=utils.resource_is("CHECK_COMPLETE"),
+            update_resource=utils.get_from_manager(["CHECK_FAILED"]),
             timeout=CONF.benchmark.heat_stack_check_timeout,
             check_interval=CONF.benchmark.heat_stack_check_poll_interval)
 
@@ -200,9 +200,9 @@ class HeatScenario(base.Scenario):
         :param stack: stack object
         """
         stack.delete()
-        bench_utils.wait_for_delete(
+        utils.wait_for_delete(
             stack,
-            update_resource=bench_utils.get_from_manager(),
+            update_resource=utils.get_from_manager(),
             timeout=CONF.benchmark.heat_stack_delete_timeout,
             check_interval=CONF.benchmark.heat_stack_delete_poll_interval)
 
@@ -214,10 +214,10 @@ class HeatScenario(base.Scenario):
         """
 
         self.clients("heat").actions.suspend(stack.id)
-        bench_utils.wait_for(
+        utils.wait_for(
             stack,
-            is_ready=bench_utils.resource_is("SUSPEND_COMPLETE"),
-            update_resource=bench_utils.get_from_manager(
+            is_ready=utils.resource_is("SUSPEND_COMPLETE"),
+            update_resource=utils.get_from_manager(
                 ["SUSPEND_FAILED"]),
             timeout=CONF.benchmark.heat_stack_suspend_timeout,
             check_interval=CONF.benchmark.heat_stack_suspend_poll_interval)
@@ -230,10 +230,10 @@ class HeatScenario(base.Scenario):
         """
 
         self.clients("heat").actions.resume(stack.id)
-        bench_utils.wait_for(
+        utils.wait_for(
             stack,
-            is_ready=bench_utils.resource_is("RESUME_COMPLETE"),
-            update_resource=bench_utils.get_from_manager(
+            is_ready=utils.resource_is("RESUME_COMPLETE"),
+            update_resource=utils.get_from_manager(
                 ["RESUME_FAILED"]),
             timeout=CONF.benchmark.heat_stack_resume_timeout,
             check_interval=CONF.benchmark.heat_stack_resume_poll_interval)
@@ -247,10 +247,10 @@ class HeatScenario(base.Scenario):
         """
         snapshot = self.clients("heat").stacks.snapshot(
             stack.id)
-        bench_utils.wait_for(
+        utils.wait_for(
             stack,
-            is_ready=bench_utils.resource_is("SNAPSHOT_COMPLETE"),
-            update_resource=bench_utils.get_from_manager(
+            is_ready=utils.resource_is("SNAPSHOT_COMPLETE"),
+            update_resource=utils.get_from_manager(
                 ["SNAPSHOT_FAILED"]),
             timeout=CONF.benchmark.heat_stack_snapshot_timeout,
             check_interval=CONF.benchmark.heat_stack_snapshot_poll_interval)
@@ -264,10 +264,10 @@ class HeatScenario(base.Scenario):
         :param snapshot_id: id of given snapshot
         """
         self.clients("heat").stacks.restore(stack.id, snapshot_id)
-        bench_utils.wait_for(
+        utils.wait_for(
             stack,
-            is_ready=bench_utils.resource_is("RESTORE_COMPLETE"),
-            update_resource=bench_utils.get_from_manager(
+            is_ready=utils.resource_is("RESTORE_COMPLETE"),
+            update_resource=utils.get_from_manager(
                 ["RESTORE_FAILED"]),
             timeout=CONF.benchmark.heat_stack_restore_timeout,
             check_interval=CONF.benchmark.heat_stack_restore_poll_interval

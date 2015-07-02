@@ -21,9 +21,9 @@ import copy
 import jsonschema
 import mock
 
-from rally.benchmark import engine
 from rally import consts
 from rally import exceptions
+from rally.task import engine
 from tests.unit import fakes
 from tests.unit import test
 
@@ -37,7 +37,7 @@ class BenchmarkEngineTestCase(test.TestCase):
         self.assertEqual(eng.config, config)
         self.assertEqual(eng.task, task)
 
-    @mock.patch("rally.benchmark.engine.jsonschema.validate")
+    @mock.patch("rally.task.engine.jsonschema.validate")
     def test_validate(self, mock_validate):
         config = mock.MagicMock()
         eng = engine.BenchmarkEngine(config, mock.MagicMock())
@@ -66,7 +66,7 @@ class BenchmarkEngineTestCase(test.TestCase):
                           eng.validate)
         self.assertTrue(task.set_failed.called)
 
-    @mock.patch("rally.benchmark.engine.jsonschema.validate")
+    @mock.patch("rally.task.engine.jsonschema.validate")
     def test_validate__wrong_scenarios_name(self, mock_validate):
         task = mock.MagicMock()
         eng = engine.BenchmarkEngine(mock.MagicMock(), task)
@@ -76,7 +76,7 @@ class BenchmarkEngineTestCase(test.TestCase):
         self.assertRaises(exceptions.InvalidTaskException, eng.validate)
         self.assertTrue(task.set_failed.called)
 
-    @mock.patch("rally.benchmark.engine.jsonschema.validate")
+    @mock.patch("rally.task.engine.jsonschema.validate")
     def test_validate__wrong_syntax(self, mock_validate):
         task = mock.MagicMock()
         eng = engine.BenchmarkEngine(mock.MagicMock(), task)
@@ -87,7 +87,7 @@ class BenchmarkEngineTestCase(test.TestCase):
         self.assertRaises(exceptions.InvalidTaskException, eng.validate)
         self.assertTrue(task.set_failed.called)
 
-    @mock.patch("rally.benchmark.engine.jsonschema.validate")
+    @mock.patch("rally.task.engine.jsonschema.validate")
     def test_validate__wrong_semantic(self, mock_validate):
         task = mock.MagicMock()
         eng = engine.BenchmarkEngine(mock.MagicMock(), task)
@@ -99,7 +99,7 @@ class BenchmarkEngineTestCase(test.TestCase):
         self.assertRaises(exceptions.InvalidTaskException, eng.validate)
         self.assertTrue(task.set_failed.called)
 
-    @mock.patch("rally.benchmark.engine.base_scenario.Scenario")
+    @mock.patch("rally.task.engine.base_scenario.Scenario")
     def test__validate_config_scenarios_name(self, mock_scenario):
         config = {
             "a": [],
@@ -109,7 +109,7 @@ class BenchmarkEngineTestCase(test.TestCase):
         eng = engine.BenchmarkEngine(config, mock.MagicMock())
         eng._validate_config_scenarios_name(config)
 
-    @mock.patch("rally.benchmark.engine.base_scenario.Scenario")
+    @mock.patch("rally.task.engine.base_scenario.Scenario")
     def test__validate_config_scenarios_name_non_exsisting(self,
                                                            mock_scenario):
         config = {
@@ -123,8 +123,8 @@ class BenchmarkEngineTestCase(test.TestCase):
         self.assertRaises(exceptions.NotFoundScenarios,
                           eng._validate_config_scenarios_name, config)
 
-    @mock.patch("rally.benchmark.engine.runner.ScenarioRunner.validate")
-    @mock.patch("rally.benchmark.engine.context.ContextManager.validate")
+    @mock.patch("rally.task.engine.runner.ScenarioRunner.validate")
+    @mock.patch("rally.task.engine.context.ContextManager.validate")
     def test__validate_config_syntax(
             self, mock_context_manager_validate,
             mock_scenario_runner_validate):
@@ -137,8 +137,8 @@ class BenchmarkEngineTestCase(test.TestCase):
             [mock.call("a", non_hidden=True), mock.call({}, non_hidden=True)],
             any_order=True)
 
-    @mock.patch("rally.benchmark.engine.runner.ScenarioRunner")
-    @mock.patch("rally.benchmark.engine.context.ContextManager.validate")
+    @mock.patch("rally.task.engine.runner.ScenarioRunner")
+    @mock.patch("rally.task.engine.context.ContextManager.validate")
     def test__validate_config_syntax__wrong_runner(
             self, mock_context_manager_validate, mock_scenario_runner):
         config = {"sca": [{"context": "a"}], "scb": [{"runner": "b"}]}
@@ -149,8 +149,8 @@ class BenchmarkEngineTestCase(test.TestCase):
         self.assertRaises(exceptions.InvalidBenchmarkConfig,
                           eng._validate_config_syntax, config)
 
-    @mock.patch("rally.benchmark.engine.runner.ScenarioRunner.validate")
-    @mock.patch("rally.benchmark.engine.context.ContextManager")
+    @mock.patch("rally.task.engine.runner.ScenarioRunner.validate")
+    @mock.patch("rally.task.engine.context.ContextManager")
     def test__validate_config_syntax__wrong_context(
             self, mock_context_manager, mock_scenario_runner_validate):
         config = {"sca": [{"context": "a"}], "scb": [{"runner": "b"}]}
@@ -161,7 +161,7 @@ class BenchmarkEngineTestCase(test.TestCase):
         self.assertRaises(exceptions.InvalidBenchmarkConfig,
                           eng._validate_config_syntax, config)
 
-    @mock.patch("rally.benchmark.engine.base_scenario.Scenario.validate")
+    @mock.patch("rally.task.engine.base_scenario.Scenario.validate")
     def test__validate_config_semantic_helper(self, mock_scenario_validate):
         deployment = mock.MagicMock()
         eng = engine.BenchmarkEngine(mock.MagicMock(), mock.MagicMock())
@@ -171,7 +171,7 @@ class BenchmarkEngineTestCase(test.TestCase):
             "name", {"args": "args"}, admin="admin", users=["user"],
             deployment=deployment)
 
-    @mock.patch("rally.benchmark.engine.base_scenario.Scenario.validate",
+    @mock.patch("rally.task.engine.base_scenario.Scenario.validate",
                 side_effect=exceptions.InvalidScenarioArgument)
     def test__validate_config_semanitc_helper_invalid_arg(
             self, mock_scenario_validate):
@@ -181,7 +181,7 @@ class BenchmarkEngineTestCase(test.TestCase):
                           eng._validate_config_semantic_helper, "a", "u", "n",
                           "p", mock.MagicMock(), {})
 
-    @mock.patch("rally.benchmark.engine.existingusers_ctx.ExistingUsers")
+    @mock.patch("rally.task.engine.existingusers_ctx.ExistingUsers")
     def test_get_user_ctx_for_validation_existing_users(
             self, mock_existing_users):
 
@@ -198,11 +198,11 @@ class BenchmarkEngineTestCase(test.TestCase):
 
         self.assertEqual(mock_existing_users.return_value, result)
 
-    @mock.patch("rally.benchmark.engine.osclients.Clients")
-    @mock.patch("rally.benchmark.engine.users_ctx")
-    @mock.patch("rally.benchmark.engine.BenchmarkEngine"
+    @mock.patch("rally.task.engine.osclients.Clients")
+    @mock.patch("rally.task.engine.users_ctx")
+    @mock.patch("rally.task.engine.BenchmarkEngine"
                 "._validate_config_semantic_helper")
-    @mock.patch("rally.benchmark.engine.objects.Deployment.get",
+    @mock.patch("rally.task.engine.objects.Deployment.get",
                 return_value="FakeDeployment")
     def test__validate_config_semantic(
             self, mock_deployment_get,
@@ -240,11 +240,11 @@ class BenchmarkEngineTestCase(test.TestCase):
         mock__validate_config_semantic_helper.assert_has_calls(
             expected_calls, any_order=True)
 
-    @mock.patch("rally.benchmark.engine.BenchmarkEngine.consume_results")
-    @mock.patch("rally.benchmark.engine.context.ContextManager.cleanup")
-    @mock.patch("rally.benchmark.engine.context.ContextManager.setup")
-    @mock.patch("rally.benchmark.engine.base_scenario.Scenario")
-    @mock.patch("rally.benchmark.engine.runner.ScenarioRunner")
+    @mock.patch("rally.task.engine.BenchmarkEngine.consume_results")
+    @mock.patch("rally.task.engine.context.ContextManager.cleanup")
+    @mock.patch("rally.task.engine.context.ContextManager.setup")
+    @mock.patch("rally.task.engine.base_scenario.Scenario")
+    @mock.patch("rally.task.engine.runner.ScenarioRunner")
     def test_run__update_status(
             self, mock_scenario_runner, mock_scenario,
             mock_context_manager_setup, mock_context_manager_cleanup,
@@ -257,11 +257,11 @@ class BenchmarkEngineTestCase(test.TestCase):
             mock.call(consts.TaskStatus.FINISHED)
         ])
 
-    @mock.patch("rally.benchmark.engine.BenchmarkEngine.consume_results")
-    @mock.patch("rally.benchmark.engine.base_scenario.Scenario")
-    @mock.patch("rally.benchmark.engine.runner.ScenarioRunner")
-    @mock.patch("rally.benchmark.engine.context.ContextManager.cleanup")
-    @mock.patch("rally.benchmark.engine.context.ContextManager.setup")
+    @mock.patch("rally.task.engine.BenchmarkEngine.consume_results")
+    @mock.patch("rally.task.engine.base_scenario.Scenario")
+    @mock.patch("rally.task.engine.runner.ScenarioRunner")
+    @mock.patch("rally.task.engine.context.ContextManager.cleanup")
+    @mock.patch("rally.task.engine.context.ContextManager.setup")
     def test_run__config_has_args(
             self, mock_context_manager_setup, mock_context_manager_cleanup,
             mock_scenario_runner, mock_scenario,
@@ -274,11 +274,11 @@ class BenchmarkEngineTestCase(test.TestCase):
         eng = engine.BenchmarkEngine(config, task)
         eng.run()
 
-    @mock.patch("rally.benchmark.engine.BenchmarkEngine.consume_results")
-    @mock.patch("rally.benchmark.engine.base_scenario.Scenario")
-    @mock.patch("rally.benchmark.engine.runner.ScenarioRunner")
-    @mock.patch("rally.benchmark.engine.context.ContextManager.cleanup")
-    @mock.patch("rally.benchmark.engine.context.ContextManager.setup")
+    @mock.patch("rally.task.engine.BenchmarkEngine.consume_results")
+    @mock.patch("rally.task.engine.base_scenario.Scenario")
+    @mock.patch("rally.task.engine.runner.ScenarioRunner")
+    @mock.patch("rally.task.engine.context.ContextManager.cleanup")
+    @mock.patch("rally.task.engine.context.ContextManager.setup")
     def test_run__config_has_runner(
             self, mock_context_manager_setup, mock_context_manager_cleanup,
             mock_scenario_runner, mock_scenario, mock_consume_results):
@@ -290,11 +290,11 @@ class BenchmarkEngineTestCase(test.TestCase):
         eng = engine.BenchmarkEngine(config, task)
         eng.run()
 
-    @mock.patch("rally.benchmark.engine.BenchmarkEngine.consume_results")
-    @mock.patch("rally.benchmark.engine.base_scenario.Scenario")
-    @mock.patch("rally.benchmark.engine.runner.ScenarioRunner")
-    @mock.patch("rally.benchmark.engine.context.ContextManager.cleanup")
-    @mock.patch("rally.benchmark.engine.context.ContextManager.setup")
+    @mock.patch("rally.task.engine.BenchmarkEngine.consume_results")
+    @mock.patch("rally.task.engine.base_scenario.Scenario")
+    @mock.patch("rally.task.engine.runner.ScenarioRunner")
+    @mock.patch("rally.task.engine.context.ContextManager.cleanup")
+    @mock.patch("rally.task.engine.context.ContextManager.setup")
     def test_run__config_has_context(
             self, mock_context_manager_setup, mock_context_manager_cleanup,
             mock_scenario_runner, mock_scenario, mock_consume_results):
@@ -306,12 +306,12 @@ class BenchmarkEngineTestCase(test.TestCase):
         eng = engine.BenchmarkEngine(config, task)
         eng.run()
 
-    @mock.patch("rally.benchmark.engine.LOG")
-    @mock.patch("rally.benchmark.engine.BenchmarkEngine.consume_results")
-    @mock.patch("rally.benchmark.engine.base_scenario.Scenario")
-    @mock.patch("rally.benchmark.engine.runner.ScenarioRunner")
-    @mock.patch("rally.benchmark.engine.context.ContextManager.cleanup")
-    @mock.patch("rally.benchmark.engine.context.ContextManager.setup")
+    @mock.patch("rally.task.engine.LOG")
+    @mock.patch("rally.task.engine.BenchmarkEngine.consume_results")
+    @mock.patch("rally.task.engine.base_scenario.Scenario")
+    @mock.patch("rally.task.engine.runner.ScenarioRunner")
+    @mock.patch("rally.task.engine.context.ContextManager.cleanup")
+    @mock.patch("rally.task.engine.context.ContextManager.setup")
     def test_run_exception_is_logged(
             self, mock_context_manager_setup, mock_context_manager_cleanup,
             mock_scenario_runner, mock_scenario, mock_consume_results,
@@ -329,7 +329,7 @@ class BenchmarkEngineTestCase(test.TestCase):
 
         self.assertEqual(2, mock_log.exception.call_count)
 
-    @mock.patch("rally.benchmark.engine.base_scenario.Scenario.meta")
+    @mock.patch("rally.task.engine.base_scenario.Scenario.meta")
     def test__prepare_context(self, mock_scenario_meta):
         default_context = {"a": 1, "b": 2}
         mock_scenario_meta.return_value = default_context
@@ -354,7 +354,7 @@ class BenchmarkEngineTestCase(test.TestCase):
         self.assertEqual(result, expected_result)
         mock_scenario_meta.assert_called_once_with(name, "context")
 
-    @mock.patch("rally.benchmark.engine.base_scenario.Scenario.meta")
+    @mock.patch("rally.task.engine.base_scenario.Scenario.meta")
     def test__prepare_context_with_existing_users(self, mock_scenario_meta):
         mock_scenario_meta.return_value = {}
         task = mock.MagicMock()
@@ -378,7 +378,7 @@ class BenchmarkEngineTestCase(test.TestCase):
         self.assertEqual(result, expected_result)
         mock_scenario_meta.assert_called_once_with(name, "context")
 
-    @mock.patch("rally.benchmark.sla.SLAChecker")
+    @mock.patch("rally.task.sla.SLAChecker")
     def test_consume_results(self, mock_sla_checker):
         mock_sla_instance = mock.MagicMock()
         mock_sla_checker.return_value = mock_sla_instance
@@ -400,7 +400,7 @@ class BenchmarkEngineTestCase(test.TestCase):
         self.assertEqual(expected_iteration_calls,
                          mock_sla_instance.add_iteration.mock_calls)
 
-    @mock.patch("rally.benchmark.sla.SLAChecker")
+    @mock.patch("rally.task.sla.SLAChecker")
     def test_consume_results_sla_failure_abort(self, mock_sla_checker):
         mock_sla_instance = mock.MagicMock()
         mock_sla_checker.return_value = mock_sla_instance
@@ -422,7 +422,7 @@ class BenchmarkEngineTestCase(test.TestCase):
         mock_sla_checker.assert_called_once_with({"fake": 2})
         self.assertTrue(runner.abort.called)
 
-    @mock.patch("rally.benchmark.sla.SLAChecker")
+    @mock.patch("rally.task.sla.SLAChecker")
     def test_consume_results_sla_failure_continue(self, mock_sla_checker):
         mock_sla_instance = mock.MagicMock()
         mock_sla_checker.return_value = mock_sla_instance

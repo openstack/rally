@@ -41,7 +41,7 @@ Inherit a class for your plugin from the base *Scenario* class and implement a s
 
 .. code-block:: none
 
-    from rally.benchmark.scenarios import base
+    from rally.task.scenarios import base
 
 
     class ScenarioPlugin(base.Scenario):
@@ -111,7 +111,7 @@ Inherit a class for your plugin from the base *Context* class. Then, implement t
 
 .. code-block:: none
 
-    from rally.benchmark import context
+    from rally.task import context
     from rally.common import log as logging
     from rally import consts
     from rally import osclients
@@ -125,7 +125,7 @@ Inherit a class for your plugin from the base *Context* class. Then, implement t
         delete it after task completion.
 
         To create your own context plugin, inherit it from
-        rally.benchmark.context.Context
+        rally.task.context.Context
         """
 
         CONFIG_SCHEMA = {
@@ -235,7 +235,7 @@ Inherit a class for your plugin from the base *SLA* class and implement its API 
 
 .. code-block:: none
 
-    from rally.benchmark import sla
+    from rally.task import sla
     from rally.common.i18n import _
 
     @sla.configure(name="max_duration_range")
@@ -322,7 +322,7 @@ Inherit a class for your plugin from the base *ScenarioRunner* class and impleme
 
     import random
 
-    from rally.benchmark import runner
+    from rally.task import runner
     from rally import consts
 
 

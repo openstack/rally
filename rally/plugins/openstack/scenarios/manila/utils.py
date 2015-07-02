@@ -17,8 +17,8 @@ import time
 
 from oslo_config import cfg
 
-from rally.benchmark.scenarios import base
-from rally.benchmark import utils as bench_utils
+from rally.task.scenarios import base
+from rally.task import utils
 
 
 MANILA_BENCHMARK_OPTS = [
@@ -77,10 +77,10 @@ class ManilaScenario(base.Scenario):
         share = self.clients("manila").shares.create(
             share_proto, size, **kwargs)
         time.sleep(CONF.benchmark.manila_share_create_prepoll_delay)
-        share = bench_utils.wait_for(
+        share = utils.wait_for(
             share,
-            is_ready=bench_utils.resource_is("available"),
-            update_resource=bench_utils.get_from_manager(),
+            is_ready=utils.resource_is("available"),
+            update_resource=utils.get_from_manager(),
             timeout=CONF.benchmark.manila_share_create_timeout,
             check_interval=CONF.benchmark.manila_share_create_poll_interval,
         )
@@ -94,9 +94,9 @@ class ManilaScenario(base.Scenario):
         """
         share.delete()
         error_statuses = ("error_deleting", )
-        bench_utils.wait_for_delete(
+        utils.wait_for_delete(
             share,
-            update_resource=bench_utils.get_from_manager(error_statuses),
+            update_resource=utils.get_from_manager(error_statuses),
             timeout=CONF.benchmark.manila_share_delete_timeout,
             check_interval=CONF.benchmark.manila_share_delete_poll_interval)
 
@@ -141,9 +141,9 @@ class ManilaScenario(base.Scenario):
         :param share_network: instance of :class:`ShareNetwork`.
         """
         share_network.delete()
-        bench_utils.wait_for_delete(
+        utils.wait_for_delete(
             share_network,
-            update_resource=bench_utils.get_from_manager(),
+            update_resource=utils.get_from_manager(),
             timeout=CONF.benchmark.manila_share_delete_timeout,
             check_interval=CONF.benchmark.manila_share_delete_poll_interval)
 

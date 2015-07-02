@@ -26,8 +26,6 @@ from oslo_utils import uuidutils
 import yaml
 
 from rally import api
-from rally.benchmark.processing import plot
-from rally.benchmark.processing import utils
 from rally.cli import cliutils
 from rally.cli import envutils
 from rally.common import fileutils
@@ -39,6 +37,8 @@ from rally import consts
 from rally import db
 from rally import exceptions
 from rally import objects
+from rally.task.processing import plot
+from rally.task.processing import utils
 
 
 class FailedToLoadTask(exceptions.RallyException):

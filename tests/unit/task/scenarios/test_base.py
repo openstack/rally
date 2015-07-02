@@ -18,12 +18,12 @@ import traceback
 import mock
 import six
 
-from rally.benchmark import context
-from rally.benchmark.scenarios import base
-from rally.benchmark import validation
 from rally import consts
 from rally import exceptions
 from rally.plugins.common.scenarios.dummy import dummy
+from rally.task import context
+from rally.task.scenarios import base
+from rally.task import validation
 from tests.unit import fakes
 from tests.unit import test
 
@@ -97,7 +97,7 @@ class ScenarioTestCase(test.TestCase):
                           base.Scenario._validate_helper,
                           validators, clients, args, "fake_uuid")
 
-    @mock.patch("rally.benchmark.scenarios.base.Scenario.get_by_name")
+    @mock.patch("rally.task.scenarios.base.Scenario.get_by_name")
     def test_validate__no_validators(self, mock_scenario_get_by_name):
 
         class FakeScenario(fakes.FakeScenario):
@@ -111,8 +111,8 @@ class ScenarioTestCase(test.TestCase):
 
         mock_scenario_get_by_name.assert_called_once_with("FakeScenario")
 
-    @mock.patch("rally.benchmark.scenarios.base.Scenario._validate_helper")
-    @mock.patch("rally.benchmark.scenarios.base.Scenario.get_by_name")
+    @mock.patch("rally.task.scenarios.base.Scenario._validate_helper")
+    @mock.patch("rally.task.scenarios.base.Scenario.get_by_name")
     def test_validate__admin_validators(self, mock_scenario_get_by_name,
                                         mock_scenario__validate_helper):
 
@@ -134,8 +134,8 @@ class ScenarioTestCase(test.TestCase):
         mock_scenario__validate_helper.assert_called_once_with(
             validators, "admin", args, deployment)
 
-    @mock.patch("rally.benchmark.scenarios.base.Scenario._validate_helper")
-    @mock.patch("rally.benchmark.scenarios.base.Scenario.get_by_name")
+    @mock.patch("rally.task.scenarios.base.Scenario._validate_helper")
+    @mock.patch("rally.task.scenarios.base.Scenario.get_by_name")
     def test_validate_user_validators(self, mock_scenario_get_by_name,
                                       mock_scenario__validate_helper):
 
@@ -236,8 +236,8 @@ class ScenarioTestCase(test.TestCase):
         scenario.sleep_between(0.004, 0.004)
         self.assertEqual(scenario.idle_duration(), 0.005)
 
-    @mock.patch("rally.benchmark.scenarios.base.time.sleep")
-    @mock.patch("rally.benchmark.scenarios.base.random.uniform")
+    @mock.patch("rally.task.scenarios.base.time.sleep")
+    @mock.patch("rally.task.scenarios.base.random.uniform")
     def test_sleep_between_internal(self, mock_uniform, mock_sleep):
         scenario = base.Scenario()
 

@@ -31,7 +31,7 @@ class VMScenarioTestCase(test.TestCase):
     def setUp(self):
         super(VMScenarioTestCase, self).setUp()
         self.wait_for = mockpatch.Patch(VMTASKS_UTILS +
-                                        ".bench_utils.wait_for")
+                                        ".utils.wait_for")
         self.useFixture(self.wait_for)
 
     @mock.patch("%s.open" % VMTASKS_UTILS,
@@ -92,7 +92,7 @@ class VMScenarioTestCase(test.TestCase):
         vm_scenario._wait_for_ssh(ssh)
         ssh.wait.assert_called_once_with()
 
-    @mock.patch(VMTASKS_UTILS + ".bench_utils.resource_is")
+    @mock.patch(VMTASKS_UTILS + ".utils.resource_is")
     @mock.patch(VMTASKS_UTILS + ".VMScenario._ping_ip_address",
                 return_value=True)
     def test__wait_for_ping(self, mock_vm_scenario__ping_ip_address,

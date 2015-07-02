@@ -15,8 +15,6 @@
 
 from oslo_config import cfg
 
-from rally.benchmark import context
-from rally.benchmark import utils as bench_utils
 from rally.common.i18n import _
 from rally.common import log as logging
 from rally.common import utils as rutils
@@ -25,6 +23,8 @@ from rally import exceptions
 from rally import osclients
 from rally.plugins.openstack.context.cleanup import manager as resource_manager
 from rally.plugins.openstack.scenarios.sahara import utils
+from rally.task import context
+from rally.task import utils as bench_utils
 
 
 CONF = cfg.CONF

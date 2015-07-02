@@ -13,9 +13,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from rally.benchmark import context
 from rally import consts
 from rally import exceptions
+from rally.task import context
 
 
 @context.context(name="dummy_context", order=750)

@@ -17,8 +17,8 @@
 
 import mock
 
-from rally.benchmark import context
 from rally.plugins.openstack.context.vm import custom_image
+from rally.task import context
 from tests.unit import test
 
 

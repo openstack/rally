@@ -13,10 +13,10 @@
 import random
 import time
 
-from rally.benchmark.scenarios import base
-from rally.benchmark import validation
 from rally.common.i18n import _
 from rally import exceptions
+from rally.task.scenarios import base
+from rally.task import validation
 
 
 class DummyScenarioException(exceptions.RallyException):

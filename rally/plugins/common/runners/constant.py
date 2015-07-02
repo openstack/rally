@@ -18,11 +18,11 @@ import multiprocessing
 import threading
 import time
 
-from rally.benchmark import runner
-from rally.benchmark import utils as butils
 from rally.common import log as logging
 from rally.common import utils
 from rally import consts
+from rally.task import runner
+from rally.task import utils as butils
 
 LOG = logging.getLogger(__name__)
 

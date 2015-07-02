@@ -83,7 +83,7 @@ class UserGeneratorTestCase(test.TestCase):
 
     @mock.patch("rally.common.utils.iterate_per_tenants")
     @mock.patch("rally.plugins.openstack.context.users.network")
-    @mock.patch("rally.benchmark.utils.check_service_status",
+    @mock.patch("rally.task.utils.check_service_status",
                 return_value=False)
     def test__remove_default_security_group(
             self, mock_check_service_status, mock_network,
@@ -128,7 +128,7 @@ class UserGeneratorTestCase(test.TestCase):
         nova_admin.delete_security_group.assert_has_calls(expected_deletes,
                                                           any_order=True)
 
-    @mock.patch("rally.benchmark.utils.check_service_status",
+    @mock.patch("rally.task.utils.check_service_status",
                 return_value=True)
     def test__remove_associated_networks(self, mock_check_service_status):
         def fake_get_network(req_network):
@@ -153,7 +153,7 @@ class UserGeneratorTestCase(test.TestCase):
                                                           "nova-network")
         nova_admin.networks.disassociate.assert_called_once_with(networks[0])
 
-    @mock.patch("rally.benchmark.utils.check_service_status",
+    @mock.patch("rally.task.utils.check_service_status",
                 return_value=True)
     def test__remove_associated_networks_failure(self,
                                                  mock_check_service_status):

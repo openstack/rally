@@ -13,8 +13,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from rally.benchmark import runner
 from rally import consts
+from rally.task import runner
 
 
 @runner.configure(name="serial")

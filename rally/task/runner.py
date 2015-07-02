@@ -22,14 +22,14 @@ import time
 import jsonschema
 import six
 
-from rally.benchmark.scenarios import base as scenario_base
-from rally.benchmark import types
-from rally.benchmark import utils
 from rally.common import log as logging
 from rally.common.plugin import plugin
 from rally.common import utils as rutils
 from rally import consts
 from rally import osclients
+from rally.task.scenarios import base as scenario_base
+from rally.task import types
+from rally.task import utils
 
 
 LOG = logging.getLogger(__name__)

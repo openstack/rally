@@ -17,8 +17,8 @@
 import jsonschema
 import mock
 
-from rally.benchmark import context
 from rally import exceptions
+from rally.task import context
 from tests.unit import fakes
 from tests.unit import test
 
@@ -123,7 +123,7 @@ class BaseContextTestCase(test.TestCase):
 
 class ContextManagerTestCase(test.TestCase):
 
-    @mock.patch("rally.benchmark.context.Context.get")
+    @mock.patch("rally.task.context.Context.get")
     def test_validate(self, mock_context_get):
         config = {
             "ctx1": mock.MagicMock(),
@@ -137,7 +137,7 @@ class ContextManagerTestCase(test.TestCase):
                 mock.call().validate(config[ctx], non_hidden=False),
             ])
 
-    @mock.patch("rally.benchmark.context.Context.get")
+    @mock.patch("rally.task.context.Context.get")
     def test_validate_non_hidden(self, mock_context_get):
         config = {
             "ctx1": mock.MagicMock(),
@@ -158,7 +158,7 @@ class ContextManagerTestCase(test.TestCase):
         self.assertRaises(exceptions.PluginNotFound,
                           context.ContextManager.validate, config)
 
-    @mock.patch("rally.benchmark.context.Context.get")
+    @mock.patch("rally.task.context.Context.get")
     def test_setup(self, mock_context_get):
         mock_context = mock.MagicMock()
         mock_context.return_value = mock.MagicMock(__lt__=lambda x, y: True)
@@ -177,7 +177,7 @@ class ContextManagerTestCase(test.TestCase):
         mock_context.return_value.assert_has_calls(
             [mock.call.setup(), mock.call.setup()], any_order=True)
 
-    @mock.patch("rally.benchmark.context.Context.get")
+    @mock.patch("rally.task.context.Context.get")
     def test_cleanup(self, mock_context_get):
         mock_context = mock.MagicMock()
         mock_context.return_value = mock.MagicMock(__lt__=lambda x, y: True)
@@ -193,7 +193,7 @@ class ContextManagerTestCase(test.TestCase):
         mock_context.return_value.assert_has_calls(
             [mock.call.cleanup(), mock.call.cleanup()], any_order=True)
 
-    @mock.patch("rally.benchmark.context.Context.get")
+    @mock.patch("rally.task.context.Context.get")
     def test_cleanup_exception(self, mock_context_get):
         mock_context = mock.MagicMock()
         mock_context.return_value = mock.MagicMock(__lt__=lambda x, y: True)
@@ -210,8 +210,8 @@ class ContextManagerTestCase(test.TestCase):
         mock_context.return_value.assert_has_calls(
             [mock.call.cleanup(), mock.call.cleanup()], any_order=True)
 
-    @mock.patch("rally.benchmark.context.ContextManager.cleanup")
-    @mock.patch("rally.benchmark.context.ContextManager.setup")
+    @mock.patch("rally.task.context.ContextManager.cleanup")
+    @mock.patch("rally.task.context.ContextManager.setup")
     def test_with_statement(
             self, mock_context_manager_setup, mock_context_manager_cleanup):
         with context.ContextManager(mock.MagicMock()):
@@ -221,8 +221,8 @@ class ContextManagerTestCase(test.TestCase):
         self.assertFalse(mock_context_manager_setup.called)
         mock_context_manager_cleanup.assert_called_once_with()
 
-    @mock.patch("rally.benchmark.context.ContextManager.cleanup")
-    @mock.patch("rally.benchmark.context.ContextManager.setup")
+    @mock.patch("rally.task.context.ContextManager.cleanup")
+    @mock.patch("rally.task.context.ContextManager.setup")
     def test_with_statement_excpetion_during_setup(
             self, mock_context_manager_setup, mock_context_manager_cleanup):
         mock_context_manager_setup.side_effect = Exception("abcdef")

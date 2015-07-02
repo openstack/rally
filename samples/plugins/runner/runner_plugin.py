@@ -15,9 +15,9 @@
 
 import random
 
-from rally.benchmark import runner
 from rally.common.plugin import plugin
 from rally import consts
+from rally.task import runner
 
 
 @plugin.configure(name="random_times")

@@ -22,7 +22,7 @@ from rally.plugins.openstack.scenarios.cinder import utils
 from tests.unit import fakes
 from tests.unit import test
 
-BM_UTILS = "rally.benchmark.utils"
+BM_UTILS = "rally.task.utils"
 CINDER_UTILS = "rally.plugins.openstack.scenarios.cinder.utils"
 
 

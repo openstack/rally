@@ -21,13 +21,13 @@ import jinja2
 import jinja2.meta
 import jsonschema
 
-from rally.benchmark import engine
 from rally.common.i18n import _
 from rally.common import log as logging
 from rally import consts
 from rally.deploy import engine as deploy_engine
 from rally import exceptions
 from rally import objects
+from rally.task import engine
 from rally.verification.tempest import tempest
 
 LOG = logging.getLogger(__name__)

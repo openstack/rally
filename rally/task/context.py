@@ -18,10 +18,10 @@ import abc
 import jsonschema
 import six
 
-from rally.benchmark import functional
 from rally.common import log as logging
 from rally.common.plugin import plugin
 from rally import exceptions
+from rally.task import functional
 
 LOG = logging.getLogger(__name__)
 
