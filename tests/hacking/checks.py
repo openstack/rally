@@ -427,6 +427,18 @@ def check_dict_formatting_in_string(logical_line, tokens):
                 current_string = ""
 
 
+@skip_ignored_lines
+def check_using_unicode(logical_line, filename):
+    """Check crosspython unicode usage
+
+    N353
+    """
+
+    if re.search(r"\bunicode\(", logical_line):
+        yield (0, "N353 'unicode' function is absent in python3. Please "
+                  "use 'six.text_type' instead.")
+
+
 def factory(register):
     register(check_assert_methods_from_mock)
     register(check_import_of_logging)
@@ -442,3 +454,4 @@ def factory(register):
     register(check_quotes)
     register(check_no_constructor_data_struct)
     register(check_dict_formatting_in_string)
+    register(check_using_unicode)

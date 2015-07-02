@@ -306,3 +306,15 @@ class HackingTestCase(test.TestCase):
             self.assertEqual(
                 [],
                 list(checks.check_dict_formatting_in_string(sample, tokens)))
+
+    def test_check_using_unicode(self):
+
+        checkres = checks.check_using_unicode("text = unicode('sometext')",
+                                              "fakefile")
+        self.assertIsNotNone(next(checkres))
+        self.assertEqual([], list(checkres))
+
+        checkres = checks.check_using_unicode(
+            "text = process(unicode('sometext'))", "fakefile")
+        self.assertIsNotNone(next(checkres))
+        self.assertEqual([], list(checkres))

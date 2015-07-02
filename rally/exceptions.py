@@ -17,6 +17,7 @@
 import sys
 
 from oslo_config import cfg
+import six
 
 from rally.common.i18n import _
 from rally.common import log as logging
@@ -76,7 +77,7 @@ class RallyException(Exception):
         if self.__class__.__name__.endswith("_Remote"):
             return self.args[0]
         else:
-            return unicode(self)
+            return six.text_type(self)
 
 
 class ImmutableException(RallyException):
