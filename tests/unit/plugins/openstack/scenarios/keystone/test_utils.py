@@ -278,3 +278,37 @@ class KeystoneScenarioTestCase(test.ClientsTestCase):
         scenario._list_services = mock.Mock(return_value=[svc_foo, svc_bar])
         self.assertEqual(scenario._get_service_by_name(svc_bar.name), svc_bar)
         self.assertIsNone(scenario._get_service_by_name("spam"))
+
+    @mock.patch(UTILS + "KeystoneScenario.clients")
+    def test_create_ec2credentials(self, mock_clients):
+        scenario = utils.KeystoneScenario()
+        creds = mock.Mock()
+        mock_clients("keystone").ec2.create.return_value = creds
+        create_creds = scenario._create_ec2credentials("user_id",
+                                                       "tenant_id")
+        self.assertEqual(create_creds, creds)
+        mock_clients("keystone").ec2.create.assert_called_once_with(
+            "user_id", "tenant_id")
+        self._test_atomic_action_timer(scenario.atomic_actions(),
+                                       "keystone.create_ec2creds")
+
+    @mock.patch(UTILS + "KeystoneScenario.clients")
+    def test_list_ec2credentials(self, mock_clients):
+        scenario = utils.KeystoneScenario()
+        creds_list = mock.Mock()
+        mock_clients("keystone").ec2.list.return_value = creds_list
+        list_creds = scenario._list_ec2credentials("user_id")
+        self.assertEqual(list_creds, creds_list)
+        mock_clients("keystone").ec2.list.assert_called_once_with("user_id")
+        self._test_atomic_action_timer(scenario.atomic_actions(),
+                                       "keystone.list_ec2creds")
+
+    @mock.patch(UTILS + "KeystoneScenario.clients")
+    def test_delete_ec2credentials(self, mock_clients):
+        scenario = utils.KeystoneScenario()
+        mock_clients("keystone").ec2.delete = mock.MagicMock()
+        scenario._delete_ec2credential("user_id", "access")
+        mock_clients("keystone").ec2.delete.assert_called_once_with("user_id",
+                                                                    "access")
+        self._test_atomic_action_timer(scenario.atomic_actions(),
+                                       "keystone.delete_ec2creds")

@@ -206,3 +206,19 @@ class KeystoneBasic(kutils.KeystoneScenario):
         """
         self._service_create(name, service_type, description)
         self._list_services()
+
+    @validation.required_openstack(users=True)
+    @base.scenario(context={"admin_cleanup": ["keystone"]})
+    def create_and_list_ec2credentials(self):
+        """Create and List all keystone ec2-credentials."""
+        self._create_ec2credentials(self.context["user"]["id"],
+                                    self.context["tenant"]["id"])
+        self._list_ec2credentials(self.context["user"]["id"])
+
+    @validation.required_openstack(users=True)
+    @base.scenario(context={"admin_cleanup": ["keystone"]})
+    def create_and_delete_ec2credential(self):
+        """Create and delete keystone ec2-credential."""
+        creds = self._create_ec2credentials(self.context["user"]["id"],
+                                            self.context["tenant"]["id"])
+        self._delete_ec2credential(self.context["user"]["id"], creds.access)
