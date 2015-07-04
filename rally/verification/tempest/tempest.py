@@ -20,16 +20,16 @@ import subprocess
 import sys
 import tempfile
 
-from oslo_serialization import jsonutils
 from oslo_utils import encodeutils
 
 from rally.common import costilius
 from rally.common.i18n import _
+from rally.common.io import subunit_v2
 from rally.common import log as logging
 from rally import consts
 from rally import exceptions
 from rally.verification.tempest import config
-from rally.verification.tempest import subunit2json
+
 
 TEMPEST_SOURCE = "https://git.openstack.org/openstack/tempest"
 
@@ -378,19 +378,18 @@ class Tempest(object):
         """Parse subunit raw log file."""
         log_file_raw = log_file or self.log_file_raw
         if os.path.isfile(log_file_raw):
-            data = jsonutils.loads(subunit2json.main(log_file_raw))
-            return data["total"], data["test_cases"]
+            return subunit_v2.parse_results_file(log_file_raw)
         else:
             LOG.error("JSON-log file not found.")
-            return None, None
+            return None
 
     @logging.log_verification_wrapper(
         LOG.info, _("Saving verification results."))
     def _save_results(self, log_file=None):
-        total, test_cases = self.parse_results(log_file)
-        if total and test_cases and self.verification:
-            self.verification.finish_verification(total=total,
-                                                  test_cases=test_cases)
+        results = self.parse_results(log_file)
+        if results and self.verification:
+            self.verification.finish_verification(total=results.total,
+                                                  test_cases=results.tests)
         else:
             self.verification.set_failed()
 

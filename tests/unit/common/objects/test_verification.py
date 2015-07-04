@@ -27,8 +27,10 @@ class VerificationTestCase(test.TestCase):
             "id": 777,
             "uuid": "test_uuid",
             "failures": 0, "tests": 2, "errors": 0, "time": "0.54",
+            "expected_failures": 0,
             "details": {
                 "failures": 0, "tests": 2, "errors": 0, "time": "0.54",
+                "expected_failures": 0,
                 "test_cases": [
                     {"classname": "foo.Test",
                      "name": "foo_test[gate,negative]",
@@ -87,6 +89,8 @@ class VerificationTestCase(test.TestCase):
 
         expected_values = {"status": "finished"}
         expected_values.update(fake_results["total"])
+        # expected_failures should be merged with failures
+        expected_values.pop("expected_failures")
         mock_verification_update.assert_called_with(
             self.db_obj["uuid"], expected_values)
 

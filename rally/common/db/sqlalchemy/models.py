@@ -207,6 +207,8 @@ class Verification(BASE, RallyBase):
     set_name = sa.Column(sa.String(20))
 
     tests = sa.Column(sa.Integer, default=0)
+    # TODO(andreykurilin): remove this variable, when rally will support db
+    #   migrations. Reason: It is not used anywhere :)
     errors = sa.Column(sa.Integer, default=0)
     failures = sa.Column(sa.Integer, default=0)
     time = sa.Column(sa.Float, default=0.0)

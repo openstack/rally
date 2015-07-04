@@ -179,7 +179,7 @@ class VerifyCommands(object):
         """
 
         try:
-            results = db.verification_result_get(verification_uuid)["data"]
+            results = objects.Verification.get(verification_uuid).get_results()
         except exceptions.NotFoundException as e:
             print(six.text_type(e))
             return 1
@@ -218,8 +218,8 @@ class VerifyCommands(object):
             return 1
 
         try:
-            verification = db.verification_get(verification_uuid)
-            tests = db.verification_result_get(verification_uuid)
+            verification = objects.Verification.get(verification_uuid)
+            tests = verification.get_results()
         except exceptions.NotFoundException as e:
             print(six.text_type(e))
             return 1
@@ -233,21 +233,19 @@ class VerifyCommands(object):
         fields = ["name", "time", "status"]
 
         values = [objects.Verification(test)
-                  for test in six.itervalues(tests.data["test_cases"])]
+                  for test in six.itervalues(tests["test_cases"])]
         cliutils.print_list(values, fields, sortby_index=sortby_index)
 
         if detailed:
-            for test in six.itervalues(tests.data["test_cases"]):
-                if test["status"] == "FAIL":
+            for test in six.itervalues(tests["test_cases"]):
+                if test["status"] == "fail":
                     header = cliutils.make_header(
                         "FAIL: %(name)s\n"
-                        "Time: %(time)s\n"
-                        "Type: %(type)s" % {"name": test["name"],
-                                            "time": test["time"],
-                                            "type": test["failure"]["type"]})
+                        "Time: %(time)s" % {"name": test["name"],
+                                            "time": test["time"]})
                     formatted_test = "%(header)s%(log)s\n" % {
                         "header": header,
-                        "log": test["failure"]["log"]}
+                        "log": test["traceback"]}
                     print (formatted_test)
 
     @cliutils.args("--uuid", dest="verification_uuid", type=str,
@@ -294,9 +292,9 @@ class VerifyCommands(object):
         """
 
         try:
-            results1 = db.verification_result_get(uuid1)["data"]["test_cases"]
-            results2 = db.verification_result_get(uuid2)["data"]["test_cases"]
-            _diff = diff.Diff(results1, results2, threshold)
+            res_1 = objects.Verification.get(uuid1).get_results()["test_cases"]
+            res_2 = objects.Verification.get(uuid2).get_results()["test_cases"]
+            _diff = diff.Diff(res_1, res_2, threshold)
         except exceptions.NotFoundException as e:
             print(six.text_type(e))
             return 1
@@ -331,7 +329,7 @@ class VerifyCommands(object):
         :param verification: a UUID of verification
         """
         print("Verification UUID: %s" % verification)
-        db.verification_get(verification)
+        objects.Verification.get(verification)
         fileutils.update_globals_file("RALLY_VERIFICATION", verification)
 
     @cliutils.args("--deployment", dest="deployment", type=str,

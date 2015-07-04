@@ -42,11 +42,9 @@ class Diff(object):
 
         Typical test case json schema:
             "test_case_key": {
-                "failure": {
-                    "log": ""
-                },
+                "traceback": "", # exists only for "fail" status
+                "reason": "",    # exists only for "skip" status
                 "name": "",
-                "output": "",
                 "status": "",
                 "time": 0.0
             }
@@ -69,15 +67,15 @@ class Diff(object):
         return diffs
 
     def _diff_values(self, name, result1, result2):
-        fields = ["status", "time", "output"]
+        fields = ["status", "time", "traceback", "reason"]
         diffs = []
         for field in fields:
-            val1 = result1[field]
-            val2 = result2[field]
+            val1 = result1.get(field, 0)
+            val2 = result2.get(field, 0)
             if val1 != val2:
                 if field == "time":
-                    max_ = max(val1, val2)
-                    min_ = min(val1, val2)
+                    max_ = max(float(val1), float(val2))
+                    min_ = min(float(val1), float(val2))
                     time_threshold = ((max_ - min_) / (min_ or 1)) * 100
                     if time_threshold < self.threshold:
                         continue

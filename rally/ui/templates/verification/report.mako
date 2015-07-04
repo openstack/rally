@@ -15,11 +15,16 @@
 
     .nav { margin: 15px 0 }
     .nav span { padding:1px 15px; margin:0 2px 0 0; cursor:pointer; background:#f3f3f3;
-                color:#666; font-size:11px; border:2px #ddd solid; border-radius:10px }
+                color: black; font-size:12px; border:2px #ddd solid; border-radius:10px }
     .nav span.active { background:#cfe3ff; border-color:#ace; color:#369 }
 
     table td { padding:4px 8px; word-wrap:break-word; word-break:break-all }
     table.stat { width:auto; margin:0 0 15px }
+    td.not_break_column {word-break:keep-all}
+
+    .status-success, .status-success td { color:green }
+    .status-uxsuccess, .status-uxsuccess td { color:orange }
+    .status-xfail, .status-xfail td { color:#CCCC00}
 </%block>
 
 <%block name="css_content_wrap">
@@ -46,28 +51,34 @@
       <thead>
         <tr>
           <th>Total
-          <th>Pass
-          <th>Fail
-          <th>Error
-          <th>Skip
+          <th>Total time
+          <th>Success
+          <th>Fails
+          <th>Unexpected Success
+          <th>Expected Fails
+          <th>Skipped
         </tr>
       </thead>
       <tbody>
         <tr>
           <td>${report['total']}
-          <td>${report['passed']}
-          <td>${report['failed']}
-          <td>${report['errors']}
+          <td>${report['time']}
+          <td>${report['success']}
+          <td>${report['failures']}
+          <td>${report['unexpected_success']}
+          <td>${report['expected_failures']}
           <td>${report['skipped']}
         </tr>
       </tbody>
     </table>
 
     <div class="nav">
-      <span data-navselector=".test-row">ALL</span>
-      <span data-navselector=".status-fail">FAILED</span>
-      <span data-navselector=".status-skip">SKIPPED</span>
-      <span data-navselector=".status-pass">PASSED</span>
+      <span data-navselector=".test-row">all</span>
+      <span data-navselector=".status-success">success</span>
+      <span data-navselector=".status-fail">failed</span>
+      <span data-navselector=".status-uxsuccess">uxsuccess</span>
+      <span data-navselector=".status-xfail">xfailed</span>
+      <span data-navselector=".status-skip">skipped</span>
     </div>
 
     <table id="tests">
@@ -81,9 +92,9 @@
       <tbody>
       % for test in report['tests']:
         <tr id="${test['id']}" class="test-row status-${test['status']}">
-          <td>${test['status']}
-          <td>${test['time']}
-          <td colspan="5">${test['desc']}
+          <td class="not_break_column">${test['status']}
+          <td class="not_break_column">${test['time']}
+          <td colspan="5">${test['name']}
         </tr>
         % if 'output' in test:
         <tr class="test-details-row">
@@ -110,7 +121,7 @@
           $navs.click(function(){
               var $this = $(this);
               $navs.removeClass("active").filter($this).addClass("active");
-              $("#tests tbody tr").hide().filter($this.attr("data-navselector")).show()
+              $("#tests tbody tr").hide().filter($this.attr("data-navselector")).show();
             }).first().click()
         }($(".nav [data-navselector]")));
       })

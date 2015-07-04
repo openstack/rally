@@ -23,71 +23,53 @@ class HtmlOutputTestCase(test.TestCase):
     results = {
         "time": 22,
         "tests": 4,
-        "errors": 1,
         "success": 1,
         "skipped": 1,
         "failures": 1,
+        "expected_failures": 0,
+        "unexpected_success": 0,
         "test_cases": {
             "tp": {"name": "tp",
-                   "status": "OK",
-                   "output": "tp_ok",
+                   "status": "success",
                    "time": 2},
             "ts": {"name": "ts",
-                   "status": "SKIP",
-                   "output": "ts_skip",
+                   "status": "skip",
+                   "reason": "ts_skip",
                    "time": 4},
             "tf": {"name": "tf",
-                   "status": "FAIL",
-                   "output": "tf_fail",
+                   "status": "fail",
                    "time": 6,
-                   "failure": {"type": "tf", "log": "fail_log"}},
-            "te": {"name": "te",
-                   "time": 2,
-                   "status": "ERROR",
-                   "output": "te_error",
-                   "failure": {"type": "te", "log": "error+log"}}}}
-
-    def test__init(self):
-        obj = json2html.HtmlOutput(self.results)
-        self.assertEqual(obj.num_passed, self.results["success"])
-        self.assertEqual(obj.num_failed, self.results["failures"])
-        self.assertEqual(obj.num_skipped, self.results["skipped"])
-        self.assertEqual(obj.num_errors, self.results["errors"])
-        self.assertEqual(obj.num_total, self.results["tests"])
-        self.assertEqual(obj.results, self.results["test_cases"])
+                   "traceback": "fail_log"}}}
 
     def test__generate_report(self):
 
         obj = json2html.HtmlOutput(self.results)
         expected_report = {
-            "errors": 1,
-            "failed": 1,
-            "passed": 1,
+            "failures": 1,
+            "success": 1,
             "skipped": 1,
+            "expected_failures": 0,
+            "unexpected_success": 0,
             "total": 4,
-            "tests": [{"desc": "te",
+            "time": 22,
+            "tests": [{"name": "tf",
                        "id": 0,
-                       "output": "te_errorerror+log",
-                       "status": "error",
-                       "time": 2},
-                      {"desc": "tf",
-                       "id": 1,
-                       "output": "tf_failfail_log",
+                       "output": "fail_log",
                        "status": "fail",
                        "time": 6},
-                      {"desc": "tp",
-                       "id": 2,
-                       "output": "tp_ok",
-                       "status": "pass",
+                      {"name": "tp",
+                       "id": 1,
+                       "output": "",
+                       "status": "success",
                        "time": 2},
-                      {"desc": "ts",
-                       "id": 3,
+                      {"name": "ts",
+                       "id": 2,
                        "output": "ts_skip",
                        "status": "skip",
                        "time": 4}]}
 
         report = obj._generate_report()
-        self.assertEqual(report, expected_report)
+        self.assertEqual(expected_report, report)
 
     @mock.patch(BASE + ".json2html.ui_utils.get_template")
     @mock.patch(BASE + ".json2html.HtmlOutput._generate_report",
