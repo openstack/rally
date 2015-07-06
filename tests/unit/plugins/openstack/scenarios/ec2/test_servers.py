@@ -18,28 +18,11 @@ from rally.plugins.openstack.scenarios.ec2 import servers
 from tests.unit import test
 
 
-UTILS = "rally.plugins.openstack.scenarios.ec2.utils."
-
-
 class EC2ServersTestCase(test.ScenarioTestCase):
 
-    @mock.patch(UTILS + "ec2_resource_is", return_value="foo_state")
-    @mock.patch(UTILS + "CONF")
-    def test_boot_server(self, mock_conf, mock_ec2_resource_is):
-        mock_conf.benchmark.ec2_server_boot_prepoll_delay = "foo_delay"
-        mock_conf.benchmark.ec2_server_boot_timeout = "foo_timeout"
-        mock_conf.benchmark.ec2_server_boot_poll_interval = "foo_interval"
-
+    def test_boot_server(self):
         scenario = servers.EC2Servers()
-        scenario._update_resource = "foo_update"
-        mock_instances = mock.Mock(instances=["foo_inst"])
-        self.clients("ec2").run_instances.return_value = mock_instances
-        server = scenario._boot_server("foo_image", "foo_flavor", foo="bar")
-
-        self.mock_wait_for.mock.assert_called_once_with(
-            "foo_inst", is_ready="foo_state",
-            update_resource="foo_update",
-            timeout="foo_timeout",
-            check_interval="foo_interval")
-        self.mock_sleep.mock.assert_called_once_with("foo_delay")
-        self.assertEqual(server, self.mock_wait_for.mock.return_value)
+        scenario._boot_server = mock.Mock()
+        scenario.boot_server("foo_image", "foo_flavor", foo="bar")
+        scenario._boot_server.assert_called_once_with(
+            "foo_image", "foo_flavor", foo="bar")
