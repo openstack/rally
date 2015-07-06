@@ -18,7 +18,6 @@ import subprocess
 
 import mock
 import netaddr
-from oslotest import mockpatch
 
 from rally.plugins.openstack.scenarios.vm import utils
 from tests.unit import test
@@ -26,13 +25,7 @@ from tests.unit import test
 VMTASKS_UTILS = "rally.plugins.openstack.scenarios.vm.utils"
 
 
-class VMScenarioTestCase(test.TestCase):
-
-    def setUp(self):
-        super(VMScenarioTestCase, self).setUp()
-        self.wait_for = mockpatch.Patch(VMTASKS_UTILS +
-                                        ".utils.wait_for")
-        self.useFixture(self.wait_for)
+class VMScenarioTestCase(test.ScenarioTestCase):
 
     @mock.patch("%s.open" % VMTASKS_UTILS,
                 side_effect=mock.mock_open(), create=True)
@@ -92,19 +85,16 @@ class VMScenarioTestCase(test.TestCase):
         vm_scenario._wait_for_ssh(ssh)
         ssh.wait.assert_called_once_with()
 
-    @mock.patch(VMTASKS_UTILS + ".utils.resource_is")
-    @mock.patch(VMTASKS_UTILS + ".VMScenario._ping_ip_address",
-                return_value=True)
-    def test__wait_for_ping(self, mock_vm_scenario__ping_ip_address,
-                            mock_resource_is):
+    def test__wait_for_ping(self):
         vm_scenario = utils.VMScenario()
+        vm_scenario._ping_ip_address = mock.Mock(return_value=True)
         vm_scenario._wait_for_ping(netaddr.IPAddress("1.2.3.4"))
-        self.wait_for.mock.assert_called_once_with(
+        self.mock_wait_for.mock.assert_called_once_with(
             netaddr.IPAddress("1.2.3.4"),
-            is_ready=mock_resource_is.return_value,
+            is_ready=self.mock_resource_is.mock.return_value,
             timeout=120)
-        mock_resource_is.assert_called_once_with(
-            "ICMP UP", mock_vm_scenario__ping_ip_address)
+        self.mock_resource_is.mock.assert_called_once_with(
+            "ICMP UP", vm_scenario._ping_ip_address)
 
     @mock.patch(VMTASKS_UTILS + ".VMScenario._run_command_over_ssh")
     @mock.patch("rally.common.sshutils.SSH")

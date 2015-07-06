@@ -21,7 +21,7 @@ from tests.unit import test
 HEAT_STACKS = "rally.plugins.openstack.scenarios.heat.stacks.HeatStacks"
 
 
-class HeatStacksTestCase(test.ClientsTestCase):
+class HeatStacksTestCase(test.ScenarioTestCase):
 
     def setUp(self):
         super(HeatStacksTestCase, self).setUp()

@@ -19,7 +19,7 @@ from rally.plugins.openstack.scenarios.quotas import quotas
 from tests.unit import test
 
 
-class QuotasTestCase(test.ClientsTestCase):
+class QuotasTestCase(test.ScenarioTestCase):
 
     def setUp(self):
         super(QuotasTestCase, self).setUp()

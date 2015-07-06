@@ -22,7 +22,7 @@ from tests.unit import test
 DESIGNATE_UTILS = "rally.plugins.openstack.scenarios.designate.utils."
 
 
-class DesignateScenarioTestCase(test.ClientsTestCase):
+class DesignateScenarioTestCase(test.ScenarioTestCase):
 
     def setUp(self):
         super(DesignateScenarioTestCase, self).setUp()

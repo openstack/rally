@@ -15,32 +15,20 @@
 
 import mock
 from oslo_config import cfg
-from oslotest import mockpatch
 
 from rally import exceptions
 from rally.plugins.openstack.scenarios.cinder import utils
 from tests.unit import fakes
 from tests.unit import test
 
-BM_UTILS = "rally.task.utils"
 CINDER_UTILS = "rally.plugins.openstack.scenarios.cinder.utils"
+CONF = cfg.CONF
 
 
-class CinderScenarioTestCase(test.ClientsTestCase):
+class CinderScenarioTestCase(test.ScenarioTestCase):
 
     def setUp(self):
         super(CinderScenarioTestCase, self).setUp()
-        self.res_is = mockpatch.Patch(BM_UTILS + ".resource_is")
-        self.get_fm = mockpatch.Patch(BM_UTILS + ".get_from_manager")
-        self.wait_for = mockpatch.Patch(CINDER_UTILS + ".bench_utils.wait_for")
-        self.wait_for_delete = mockpatch.Patch(
-            CINDER_UTILS + ".bench_utils.wait_for_delete")
-        self.useFixture(self.wait_for)
-        self.useFixture(self.wait_for_delete)
-        self.useFixture(self.res_is)
-        self.useFixture(self.get_fm)
-        self.gfm = self.get_fm.mock
-        self.useFixture(mockpatch.Patch("time.sleep"))
         self.scenario = utils.CinderScenario()
 
     def test__list_volumes(self):
@@ -101,23 +89,22 @@ class CinderScenarioTestCase(test.ClientsTestCase):
                           volume, keys, deletes=2, delete_size=3)
 
     def test__create_volume(self):
-        CONF = cfg.CONF
         return_volume = self.scenario._create_volume(1)
-        self.wait_for.mock.assert_called_once_with(
+        self.mock_wait_for.mock.assert_called_once_with(
             self.clients("cinder").volumes.create.return_value,
-            is_ready=self.res_is.mock(),
-            update_resource=self.gfm(),
+            is_ready=self.mock_resource_is.mock.return_value,
+            update_resource=self.mock_get_from_manager.mock.return_value,
             timeout=CONF.benchmark.cinder_volume_create_timeout,
             check_interval=CONF.benchmark.cinder_volume_create_poll_interval
         )
-        self.res_is.mock.assert_has_calls([mock.call("available")])
-        self.assertEqual(self.wait_for.mock(), return_volume)
+        self.mock_resource_is.mock.assert_called_once_with("available")
+        self.mock_get_from_manager.mock.assert_called_once_with()
+        self.assertEqual(self.mock_wait_for.mock.return_value, return_volume)
         self._test_atomic_action_timer(self.scenario.atomic_actions(),
                                        "cinder.create_volume")
 
     @mock.patch("rally.plugins.openstack.scenarios.cinder.utils.random")
     def test__create_volume_with_size_range(self, mock_random):
-        CONF = cfg.CONF
         mock_random.randint.return_value = 3
 
         return_volume = self.scenario._create_volume(
@@ -127,15 +114,16 @@ class CinderScenarioTestCase(test.ClientsTestCase):
         self.clients("cinder").volumes.create.assert_called_once_with(
             3, display_name="TestVolume")
 
-        self.wait_for.mock.assert_called_once_with(
+        self.mock_wait_for.mock.assert_called_once_with(
             self.clients("cinder").volumes.create.return_value,
-            is_ready=self.res_is.mock(),
-            update_resource=self.gfm(),
+            is_ready=self.mock_resource_is.mock.return_value,
+            update_resource=self.mock_get_from_manager.mock.return_value,
             timeout=CONF.benchmark.cinder_volume_create_timeout,
             check_interval=CONF.benchmark.cinder_volume_create_poll_interval
         )
-        self.res_is.mock.assert_has_calls([mock.call("available")])
-        self.assertEqual(self.wait_for.mock(), return_volume)
+        self.mock_resource_is.mock.assert_called_once_with("available")
+        self.mock_get_from_manager.mock.assert_called_once_with()
+        self.assertEqual(self.mock_wait_for.mock.return_value, return_volume)
         self._test_atomic_action_timer(self.scenario.atomic_actions(),
                                        "cinder.create_volume")
 
@@ -143,18 +131,18 @@ class CinderScenarioTestCase(test.ClientsTestCase):
         cinder = mock.Mock()
         self.scenario._delete_volume(cinder)
         cinder.delete.assert_called_once_with()
-        self.wait_for_delete.mock.assert_called_once_with(
+        self.mock_wait_for_delete.mock.assert_called_once_with(
             cinder,
-            update_resource=self.gfm(),
+            update_resource=self.mock_get_from_manager.mock.return_value,
             timeout=cfg.CONF.benchmark.cinder_volume_create_timeout,
             check_interval=cfg.CONF.benchmark
             .cinder_volume_create_poll_interval)
+        self.mock_get_from_manager.mock.assert_called_once_with()
         self._test_atomic_action_timer(self.scenario.atomic_actions(),
                                        "cinder.delete_volume")
 
     @mock.patch("rally.plugins.openstack.scenarios.cinder.utils.random")
     def test__extend_volume_with_size_range(self, mock_random):
-        CONF = cfg.CONF
         volume = mock.Mock()
         mock_random.randint.return_value = 3
         self.clients("cinder").volumes.extend.return_value = volume
@@ -162,30 +150,31 @@ class CinderScenarioTestCase(test.ClientsTestCase):
         self.scenario._extend_volume(volume, new_size={"min": 1, "max": 5})
 
         volume.extend.assert_called_once_with(volume, 3)
-        self.wait_for.mock.assert_called_once_with(
+        self.mock_wait_for.mock.assert_called_once_with(
             volume,
-            is_ready=self.res_is.mock(),
-            update_resource=self.gfm(),
+            is_ready=self.mock_resource_is.mock.return_value,
+            update_resource=self.mock_get_from_manager.mock.return_value,
             timeout=CONF.benchmark.cinder_volume_create_timeout,
             check_interval=CONF.benchmark.cinder_volume_create_poll_interval
         )
-        self.res_is.mock.assert_has_calls([mock.call("available")])
+        self.mock_resource_is.mock.assert_called_once_with("available")
+        self.mock_get_from_manager.mock.assert_called_once_with()
         self._test_atomic_action_timer(self.scenario.atomic_actions(),
                                        "cinder.extend_volume")
 
     def test__extend_volume(self):
-        CONF = cfg.CONF
         volume = mock.Mock()
         self.clients("cinder").volumes.extend.return_value = volume
         self.scenario._extend_volume(volume, 2)
-        self.wait_for.mock.assert_called_once_with(
+        self.mock_wait_for.mock.assert_called_once_with(
             volume,
-            is_ready=self.res_is.mock(),
-            update_resource=self.gfm(),
+            is_ready=self.mock_resource_is.mock.return_value,
+            update_resource=self.mock_get_from_manager.mock.return_value,
             timeout=CONF.benchmark.cinder_volume_create_timeout,
             check_interval=CONF.benchmark.cinder_volume_create_poll_interval
         )
-        self.res_is.mock.assert_has_calls([mock.call("available")])
+        self.mock_resource_is.mock.assert_called_once_with("available")
+        self.mock_get_from_manager.mock.assert_called_once_with()
         self._test_atomic_action_timer(self.scenario.atomic_actions(),
                                        "cinder.extend_volume")
 
@@ -202,21 +191,41 @@ class CinderScenarioTestCase(test.ClientsTestCase):
 
         volume.upload_to_image.assert_called_once_with(False, "test_vol",
                                                        "container", "disk")
-        self.assertTrue(self.wait_for.mock.called)
-        self.assertEqual(2, self.wait_for.mock.call_count)
+        self.mock_wait_for.mock.assert_has_calls([
+            mock.call(
+                volume,
+                is_ready=self.mock_resource_is.mock.return_value,
+                update_resource=self.mock_get_from_manager.mock.return_value,
+                timeout=CONF.benchmark.cinder_volume_create_timeout,
+                check_interval=CONF.benchmark.
+                cinder_volume_create_poll_interval),
+            mock.call(
+                self.clients("glance").images.get.return_value,
+                is_ready=self.mock_resource_is.mock.return_value,
+                update_resource=self.mock_get_from_manager.mock.return_value,
+                timeout=CONF.benchmark.glance_image_create_timeout,
+                check_interval=CONF.benchmark.
+                glance_image_create_poll_interval)
+        ])
+        self.mock_get_from_manager.mock.assert_has_calls([mock.call(),
+                                                          mock.call()])
+        self.mock_resource_is.mock.assert_has_calls([mock.call("available"),
+                                                     mock.call("active")])
+        self.clients("glance").images.get.assert_called_once_with(1)
 
     def test__create_snapshot(self):
         return_snapshot = self.scenario._create_snapshot("uuid", False)
 
-        self.wait_for.mock.assert_called_once_with(
+        self.mock_wait_for.mock.assert_called_once_with(
             self.clients("cinder").volume_snapshots.create.return_value,
-            is_ready=self.res_is.mock(),
-            update_resource=self.gfm(),
+            is_ready=self.mock_resource_is.mock.return_value,
+            update_resource=self.mock_get_from_manager.mock.return_value,
             timeout=cfg.CONF.benchmark.cinder_volume_create_timeout,
             check_interval=cfg.CONF.benchmark
             .cinder_volume_create_poll_interval)
-        self.res_is.mock.assert_has_calls([mock.call("available")])
-        self.assertEqual(self.wait_for.mock(), return_snapshot)
+        self.mock_resource_is.mock.assert_called_once_with("available")
+        self.mock_get_from_manager.mock.assert_called_once_with()
+        self.assertEqual(self.mock_wait_for.mock.return_value, return_snapshot)
         self._test_atomic_action_timer(self.scenario.atomic_actions(),
                                        "cinder.create_snapshot")
 
@@ -224,27 +233,29 @@ class CinderScenarioTestCase(test.ClientsTestCase):
         snapshot = mock.Mock()
         self.scenario._delete_snapshot(snapshot)
         snapshot.delete.assert_called_once_with()
-        self.wait_for_delete.mock.assert_called_once_with(
+        self.mock_wait_for_delete.mock.assert_called_once_with(
             snapshot,
-            update_resource=self.gfm(),
+            update_resource=self.mock_get_from_manager.mock.return_value,
             timeout=cfg.CONF.benchmark.cinder_volume_create_timeout,
             check_interval=cfg.CONF.benchmark
             .cinder_volume_create_poll_interval)
+        self.mock_get_from_manager.mock.assert_called_once_with()
         self._test_atomic_action_timer(self.scenario.atomic_actions(),
                                        "cinder.delete_snapshot")
 
     def test__create_backup(self):
         return_backup = self.scenario._create_backup("uuid")
 
-        self.wait_for.mock.assert_called_once_with(
+        self.mock_wait_for.mock.assert_called_once_with(
             self.clients("cinder").backups.create.return_value,
-            is_ready=self.res_is.mock(),
-            update_resource=self.gfm(),
+            is_ready=self.mock_resource_is.mock.return_value,
+            update_resource=self.mock_get_from_manager.mock.return_value,
             timeout=cfg.CONF.benchmark.cinder_volume_create_timeout,
             check_interval=cfg.CONF.benchmark
             .cinder_volume_create_poll_interval)
-        self.res_is.mock.assert_has_calls([mock.call("available")])
-        self.assertEqual(self.wait_for.mock(), return_backup)
+        self.mock_resource_is.mock.assert_called_once_with("available")
+        self.mock_get_from_manager.mock.assert_called_once_with()
+        self.assertEqual(self.mock_wait_for.mock.return_value, return_backup)
         self._test_atomic_action_timer(self.scenario.atomic_actions(),
                                        "cinder.create_backup")
 
@@ -252,12 +263,13 @@ class CinderScenarioTestCase(test.ClientsTestCase):
         backup = mock.Mock()
         self.scenario._delete_backup(backup)
         backup.delete.assert_called_once_with()
-        self.wait_for_delete.mock.assert_called_once_with(
+        self.mock_wait_for_delete.mock.assert_called_once_with(
             backup,
-            update_resource=self.gfm(),
+            update_resource=self.mock_get_from_manager.mock.return_value,
             timeout=cfg.CONF.benchmark.cinder_volume_create_timeout,
             check_interval=cfg.CONF.benchmark
             .cinder_volume_create_poll_interval)
+        self.mock_get_from_manager.mock.assert_called_once_with()
         self._test_atomic_action_timer(self.scenario.atomic_actions(),
                                        "cinder.delete_backup")
 
@@ -269,15 +281,16 @@ class CinderScenarioTestCase(test.ClientsTestCase):
 
         return_restore = self.scenario._restore_backup(backup.id, None)
 
-        self.wait_for.mock.assert_called_once_with(
+        self.mock_wait_for.mock.assert_called_once_with(
             restore,
-            is_ready=self.res_is.mock(),
-            update_resource=self.gfm(),
+            is_ready=self.mock_resource_is.mock.return_value,
+            update_resource=self.mock_get_from_manager.mock.return_value,
             timeout=cfg.CONF.benchmark.cinder_volume_create_timeout,
             check_interval=cfg.CONF.benchmark
             .cinder_volume_create_poll_interval)
-        self.res_is.mock.assert_has_calls([mock.call("available")])
-        self.assertEqual(self.wait_for.mock(), return_restore)
+        self.mock_resource_is.mock.assert_called_once_with("available")
+        self.mock_get_from_manager.mock.assert_called_once_with()
+        self.assertEqual(self.mock_wait_for.mock.return_value, return_restore)
         self._test_atomic_action_timer(self.scenario.atomic_actions(),
                                        "cinder.restore_backup")
 

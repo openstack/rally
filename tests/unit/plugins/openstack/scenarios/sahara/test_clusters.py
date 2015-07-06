@@ -23,7 +23,7 @@ SAHARA_CLUSTERS = ("rally.plugins.openstack.scenarios.sahara.clusters"
 SAHARA_UTILS = "rally.plugins.openstack.scenarios.sahara.utils"
 
 
-class SaharaClustersTestCase(test.ClientsTestCase):
+class SaharaClustersTestCase(test.ScenarioTestCase):
 
     @mock.patch(SAHARA_CLUSTERS + "._delete_cluster")
     @mock.patch(SAHARA_CLUSTERS + "._launch_cluster",

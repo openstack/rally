@@ -22,7 +22,7 @@ AUTHENTICATE_MODULE = (
     "rally.plugins.openstack.scenarios.authenticate.authenticate")
 
 
-class AuthenticateTestCase(test.ClientsTestCase):
+class AuthenticateTestCase(test.ScenarioTestCase):
 
     def test_keystone(self):
         scenario = authenticate.Authenticate()

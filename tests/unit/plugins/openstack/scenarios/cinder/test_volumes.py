@@ -26,7 +26,7 @@ class fake_type(object):
     name = "fake"
 
 
-class CinderServersTestCase(test.ClientsTestCase):
+class CinderServersTestCase(test.ScenarioTestCase):
 
     def test_create_and_list_volume(self):
         scenario = volumes.CinderVolumes()

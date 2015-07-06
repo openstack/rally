@@ -38,37 +38,29 @@ class EC2UtilsTestCase(test.TestCase):
         resource.update.assert_called_once_with()
 
 
-class EC2ScenarioTestCase(test.ClientsTestCase):
+class EC2ScenarioTestCase(test.ScenarioTestCase):
 
     def setUp(self):
         super(EC2ScenarioTestCase, self).setUp()
         self.server = mock.MagicMock()
         self.reservation = mock.MagicMock(instances=[self.server])
-        self.res_is = mockpatch.Patch(EC2_UTILS + ".ec2_resource_is")
-        self.update_res = mockpatch.Patch(
+        self.mock_resource_is = mockpatch.Patch(EC2_UTILS + ".ec2_resource_is")
+        self.mock_update_resource = mockpatch.Patch(
             EC2_UTILS + ".EC2Scenario._update_resource")
-        self.wait_for = mockpatch.Patch(EC2_UTILS + ".utils.wait_for")
-        self.useFixture(self.wait_for)
-        self.useFixture(self.res_is)
-        self.useFixture(self.update_res)
-        self.useFixture(mockpatch.Patch("time.sleep"))
-
-    def _test_atomic_action_timer(self, atomic_actions, name):
-        action_duration = atomic_actions.get(name)
-        self.assertIsNotNone(action_duration)
-        self.assertIsInstance(action_duration, float)
+        self.useFixture(self.mock_resource_is)
+        self.useFixture(self.mock_update_resource)
 
     def test__boot_server(self):
         self.clients("ec2").run_instances.return_value = self.reservation
         ec2_scenario = utils.EC2Scenario(context={})
         return_server = ec2_scenario._boot_server("image", "flavor")
-        expected = mock.call(
-            self.server, is_ready=self.res_is.mock(),
-            update_resource=self.update_res.mock,
+        self.mock_wait_for.mock.assert_called_once_with(
+            self.server,
+            is_ready=self.mock_resource_is.mock.return_value,
+            update_resource=self.mock_update_resource.mock,
             check_interval=CONF.benchmark.ec2_server_boot_poll_interval,
             timeout=CONF.benchmark.ec2_server_boot_timeout)
-        self.assertEqual([expected], self.wait_for.mock.mock_calls)
-        self.res_is.mock.assert_has_calls([mock.call("RUNNING")])
-        self.assertEqual(self.wait_for.mock(), return_server)
+        self.mock_resource_is.mock.assert_called_once_with("RUNNING")
+        self.assertEqual(self.mock_wait_for.mock.return_value, return_server)
         self._test_atomic_action_timer(ec2_scenario.atomic_actions(),
                                        "ec2.boot_server")

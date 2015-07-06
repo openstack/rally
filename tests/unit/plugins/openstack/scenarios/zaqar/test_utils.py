@@ -21,7 +21,7 @@ from tests.unit import test
 UTILS = "rally.plugins.openstack.scenarios.zaqar.utils."
 
 
-class ZaqarScenarioTestCase(test.ClientsTestCase):
+class ZaqarScenarioTestCase(test.ScenarioTestCase):
 
     @mock.patch(UTILS + "ZaqarScenario._generate_random_name",
                 return_value="kitkat")

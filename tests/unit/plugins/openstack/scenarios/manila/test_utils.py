@@ -23,7 +23,7 @@ BM_UTILS = "rally.task.utils."
 
 
 @ddt.ddt
-class ManilaScenarioTestCase(test.ClientsTestCase):
+class ManilaScenarioTestCase(test.ScenarioTestCase):
 
     def setUp(self):
         super(ManilaScenarioTestCase, self).setUp()

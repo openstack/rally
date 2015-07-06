@@ -21,7 +21,7 @@ from tests.unit import test
 SWIFT_UTILS = "rally.plugins.openstack.scenarios.swift.utils"
 
 
-class SwiftScenarioTestCase(test.ClientsTestCase):
+class SwiftScenarioTestCase(test.ScenarioTestCase):
 
     def test__list_containers(self):
         headers_dict = mock.MagicMock()

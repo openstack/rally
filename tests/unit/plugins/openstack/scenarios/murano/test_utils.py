@@ -14,30 +14,16 @@
 #    under the License.
 
 import mock
-from oslotest import mockpatch
+from oslo_config import cfg
 
 from rally.plugins.openstack.scenarios.murano import utils
 from tests.unit import test
 
-BM_UTILS = "rally.task.utils"
 MRN_UTILS = "rally.plugins.openstack.scenarios.murano.utils"
+CONF = cfg.CONF
 
 
-class MuranoScenarioTestCase(test.ClientsTestCase):
-
-    def setUp(self):
-        super(MuranoScenarioTestCase, self).setUp()
-        self.res_is = mockpatch.Patch(BM_UTILS + ".resource_is")
-        self.get_fm = mockpatch.Patch(BM_UTILS + ".get_from_manager")
-        self.wait_for = mockpatch.Patch(MRN_UTILS + ".utils.wait_for")
-        self.wait_for_delete = mockpatch.Patch(
-            MRN_UTILS + ".utils.wait_for_delete")
-        self.useFixture(self.wait_for)
-        self.useFixture(self.wait_for_delete)
-        self.useFixture(self.res_is)
-        self.useFixture(self.get_fm)
-        self.gfm = self.get_fm.mock
-        self.useFixture(mockpatch.Patch("time.sleep"))
+class MuranoScenarioTestCase(test.ScenarioTestCase):
 
     def test_list_environments(self):
         self.clients("murano").environments.list.return_value = []
@@ -66,11 +52,12 @@ class MuranoScenarioTestCase(test.ClientsTestCase):
             environment.id
         )
 
-        self.wait_for_delete.mock.assert_called_once_with(
+        self.mock_wait_for_delete.mock.assert_called_once_with(
             environment,
-            update_resource=self.gfm(),
-            timeout=180,
-            check_interval=2)
+            update_resource=self.mock_get_from_manager.mock.return_value,
+            timeout=CONF.benchmark.delete_environment_timeout,
+            check_interval=CONF.benchmark.delete_environment_check_interval)
+        self.mock_get_from_manager.mock.assert_called_once_with()
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "murano.delete_environment")
 
@@ -107,11 +94,14 @@ class MuranoScenarioTestCase(test.ClientsTestCase):
             environment.id, session.id
         )
 
-        self.wait_for.mock.assert_called_once_with(
+        self.mock_wait_for.mock.assert_called_once_with(
             environment,
-            update_resource=self.gfm(),
-            is_ready=self.res_is.mock(),
-            check_interval=5.0,
-            timeout=1200.0)
+            update_resource=self.mock_get_from_manager.mock.return_value,
+            is_ready=self.mock_resource_is.mock.return_value,
+            check_interval=CONF.benchmark.deploy_environment_check_interval,
+            timeout=CONF.benchmark.deploy_environment_timeout)
+        self.mock_get_from_manager.mock.assert_called_once_with(
+            ["DEPLOY FAILURE"])
+        self.mock_resource_is.mock.assert_called_once_with("READY")
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "murano.deploy_environment")

@@ -21,15 +21,11 @@ from tests.unit import test
 UTILS = "rally.plugins.openstack.scenarios.ec2.utils."
 
 
-class EC2ServersTestCase(test.ClientsTestCase):
+class EC2ServersTestCase(test.ScenarioTestCase):
 
-    @mock.patch("rally.task.utils.wait_for",
-                return_value="running_server")
     @mock.patch(UTILS + "ec2_resource_is", return_value="foo_state")
-    @mock.patch(UTILS + "time")
     @mock.patch(UTILS + "CONF")
-    def test_boot_server(self, mock_conf, mock_time, mock_ec2_resource_is,
-                         mock_wait_for):
+    def test_boot_server(self, mock_conf, mock_ec2_resource_is):
         mock_conf.benchmark.ec2_server_boot_prepoll_delay = "foo_delay"
         mock_conf.benchmark.ec2_server_boot_timeout = "foo_timeout"
         mock_conf.benchmark.ec2_server_boot_poll_interval = "foo_interval"
@@ -40,9 +36,10 @@ class EC2ServersTestCase(test.ClientsTestCase):
         self.clients("ec2").run_instances.return_value = mock_instances
         server = scenario._boot_server("foo_image", "foo_flavor", foo="bar")
 
-        mock_wait_for.assert_called_once_with("foo_inst", is_ready="foo_state",
-                                              update_resource="foo_update",
-                                              timeout="foo_timeout",
-                                              check_interval="foo_interval")
-        mock_time.sleep.assert_called_once_with("foo_delay")
-        self.assertEqual(server, "running_server")
+        self.mock_wait_for.mock.assert_called_once_with(
+            "foo_inst", is_ready="foo_state",
+            update_resource="foo_update",
+            timeout="foo_timeout",
+            check_interval="foo_interval")
+        self.mock_sleep.mock.assert_called_once_with("foo_delay")
+        self.assertEqual(server, self.mock_wait_for.mock.return_value)
