@@ -85,6 +85,11 @@ class InfoTestCase(unittest.TestCase):
             self.assertIn("NovaServers.boot_and_delete_server", e.output)
             self.assertIn("NovaServers.snapshot_server", e.output)
 
+    def test_find_displays_args(self):
+        output = self.rally("info find Dummy.dummy")
+        self.assertIn("sleep: idle time of method (in seconds). [Default: 0]",
+                      output)
+
     def test_list(self):
         output = self.rally("info list")
         self.assertIn("Benchmark scenario groups:", output)
