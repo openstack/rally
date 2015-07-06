@@ -22,6 +22,7 @@ import os
 import sys
 
 import jsonschema
+from keystoneclient import exceptions as keystone_exceptions
 import yaml
 
 from rally import api
@@ -225,24 +226,34 @@ class DeploymentCommands(object):
         headers = ["services", "type", "status"]
         table_rows = []
         try:
-            deployment = db.deployment_get(deployment)
-            admin = deployment.get("admin")
-            clients = osclients.Clients(objects.Endpoint(**admin))
-            client = clients.verified_keystone()
-            for service in client.services.list():
-                data = [service.name, service.type, "Available"]
-                table_rows.append(utils.Struct(**dict(zip(headers, data))))
-            users = deployment.get("users")
+            deployment = api.Deployment.get(deployment)
+
+        except exceptions.DeploymentNotFound:
+            print(_("Deployment %s is not found.") % deployment)
+            return(1)
+
+        try:
+            services = api.Deployment.service_list(deployment)
+            users = deployment["users"]
             for endpoint_dict in users:
                 osclients.Clients(objects.Endpoint(**endpoint_dict)).keystone()
-            print(_("keystone endpoints are valid and following"
-                  " services are available:"))
+
+        except keystone_exceptions.ConnectionRefused:
+            print(_("Unable to connect %s.") % deployment["admin"]["auth_url"])
+            return(1)
+
         except exceptions.InvalidArgumentsException:
             data = ["keystone", "identity", "Error"]
             table_rows.append(utils.Struct(**dict(zip(headers, data))))
             print(_("Authentication Issues: %s.")
                   % sys.exc_info()[1])
             return(1)
+
+        for serv_type, serv in services.items():
+            data = [serv, serv_type, "Available"]
+            table_rows.append(utils.Struct(**dict(zip(headers, data))))
+        print(_("keystone endpoints are valid and following"
+              " services are available:"))
         cliutils.print_list(table_rows, headers)
 
     def _update_openrc_deployment_file(self, deployment, endpoint):

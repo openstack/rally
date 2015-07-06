@@ -260,6 +260,14 @@ class DeploymentAPITestCase(BaseDeploymentTestCase):
             mock.call(self.deployment_uuid, self.endpoints)
         ])
 
+    @mock.patch("rally.objects.deploy.db.deployment_get")
+    def test_get(self, mock_deployment_get):
+        deployment_id = "aaaa-bbbb-cccc-dddd"
+        mock_deployment_get.return_value = self.deployment
+        ret = api.Deployment.get(deployment_id)
+        for key in self.deployment:
+            self.assertEqual(ret[key], self.deployment[key])
+
 
 class VerificationAPITestCase(BaseDeploymentTestCase):
     def setUp(self):

@@ -27,6 +27,7 @@ from rally import consts
 from rally.deployment import engine as deploy_engine
 from rally import exceptions
 from rally import objects
+from rally import osclients
 from rally.task import engine
 from rally.verification.tempest import tempest
 
@@ -98,6 +99,26 @@ class Deployment(object):
             deployer.make_cleanup()
             endpoints = deployer.make_deploy()
             deployment.update_endpoints(endpoints)
+
+    @classmethod
+    def get(cls, deployment):
+        """Get the deployment.
+
+        :param deployment: UUID or name of the deployment
+        :returns: Deployment instance
+        """
+        return objects.Deployment.get(deployment)
+
+    @classmethod
+    def service_list(cls, deployment):
+        """Get the services list.
+
+        :param deployment: UUID or name of the deployment
+        :returns: Service list
+        """
+        # TODO(kun): put this work into objects.Deployment
+        clients = osclients.Clients(objects.Endpoint(**deployment["admin"]))
+        return clients.services()
 
 
 class Task(object):
