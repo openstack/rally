@@ -394,18 +394,12 @@ install_virtualenv () {
     DESTDIR=$1
 
     if [ -n "$VIRTUAL_ENV" ]; then
-        cat <<__EOF__
-$RED
-ERROR
-=====
-
-A virtual environment seems to be already *active*. This will cause
+        die $EX_SOFTWARE "Virtualenv already active" <<__EOF__
+A virtual environment seems to be already active. This will cause
 this script to FAIL.
 
 Run 'deactivate', then run this script again.
-$NO_COLOR
 __EOF__
-        exit $EX_SOFTWARE
     fi
 
     # Use the latest virtualenv that can use `.tar.gz` files
