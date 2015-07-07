@@ -20,16 +20,18 @@ from tests.unit import test
 class JUnitTestCase(test.TestCase):
     def test_basic_testsuite(self):
         j = junit.JUnit("test")
-        j.add_test("Foo.Bar", 3.14)
-        j.add_test("Foo.Baz", 13.37, outcome=junit.JUnit.FAILURE)
+        j.add_test("Foo.Bar", 3.14, outcome=junit.JUnit.SUCCESS)
+        j.add_test("Foo.Baz", 13.37, outcome=junit.JUnit.FAILURE,
+                   message="fail_message")
         j.add_test("Eggs.Spam", 42.00, outcome=junit.JUnit.ERROR)
 
         expected = """
 <testsuite errors="1" failures="1" name="test" tests="3" time="58.51">
 <testcase classname="Foo" name="Bar" time="3.14" />
-<testcase classname="Foo" name="Baz" time="13.37" />
-<testcase classname="Eggs" name="Spam" time="42.00" />
-</testsuite>"""
+<testcase classname="Foo" name="Baz" time="13.37">
+<failure message="fail_message" /></testcase>
+<testcase classname="Eggs" name="Spam" time="42.00">
+<error message="" /></testcase></testsuite>"""
         self.assertEqual(expected.replace("\n", ""), j.to_xml())
 
     def test_empty_testsuite(self):

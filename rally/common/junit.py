@@ -17,9 +17,9 @@ import xml.etree.ElementTree as ET
 
 
 class JUnit(object):
-    SUCCESS = 0
-    FAILURE = 1
-    ERROR = 2
+    SUCCESS = "success"
+    FAILURE = "failure"
+    ERROR = "error"
 
     def __init__(self, test_suite_name):
         self.test_suite_name = test_suite_name
@@ -29,12 +29,14 @@ class JUnit(object):
         self.n_errors = 0
         self.total_time = 0.0
 
-    def add_test(self, test_name, time, outcome=SUCCESS):
+    def add_test(self, test_name, time, outcome=SUCCESS, message=""):
         class_name, name = test_name.split(".", 1)
         self.test_cases.append({
             "classname": class_name,
             "name": name,
             "time": str("%.2f" % time),
+            "outcome": outcome,
+            "message": message
         })
 
         if outcome == JUnit.FAILURE:
@@ -56,5 +58,11 @@ class JUnit(object):
             "errors": str(self.n_errors),
         })
         for test_case in self.test_cases:
-            xml.append(ET.Element("testcase", test_case))
+            outcome = test_case.pop("outcome")
+            message = test_case.pop("message")
+            if outcome in [JUnit.FAILURE, JUnit.ERROR]:
+                sub = ET.SubElement(xml, "testcase", test_case)
+                sub.append(ET.Element(outcome, {"message": message}))
+            else:
+                xml.append(ET.Element("testcase", test_case))
         return ET.tostring(xml, encoding="utf-8").decode("utf-8")
