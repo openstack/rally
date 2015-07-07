@@ -14,12 +14,13 @@
 #    under the License.
 
 from rally import consts
+from rally.plugins.openstack import scenario
 from rally.plugins.openstack.scenarios.tempest import utils
 from rally.task.scenarios import base
 from rally.task import validation
 
 
-class TempestScenario(base.Scenario):
+class TempestScenario(scenario.OpenStackScenario):
     """Benchmark scenarios that launch Tempest tests."""
 
     @validation.tempest_tests_exists()

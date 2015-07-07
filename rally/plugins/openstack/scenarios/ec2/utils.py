@@ -16,6 +16,7 @@ import time
 
 from oslo_config import cfg
 
+from rally.plugins.openstack import scenario
 from rally.task.scenarios import base
 from rally.task import utils
 
@@ -44,7 +45,7 @@ benchmark_group = cfg.OptGroup(name="benchmark",
 CONF.register_opts(EC2_BENCHMARK_OPTS, group=benchmark_group)
 
 
-class EC2Scenario(base.Scenario):
+class EC2Scenario(scenario.OpenStackScenario):
     """Base class for EC2 scenarios with basic atomic actions."""
 
     RESOURCE_NAME_PREFIX = "rally_ec2server_"

@@ -15,6 +15,7 @@
 
 import uuid
 
+from rally.plugins.openstack import scenario
 from rally.task.scenarios import base
 
 
@@ -22,7 +23,7 @@ def is_temporary(resource):
     return resource.name.startswith(KeystoneScenario.RESOURCE_NAME_PREFIX)
 
 
-class KeystoneScenario(base.Scenario):
+class KeystoneScenario(scenario.OpenStackScenario):
     """Base class for Keystone scenarios with basic atomic actions."""
 
     RESOURCE_NAME_PREFIX = "rally_keystone_"

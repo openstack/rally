@@ -12,10 +12,11 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from rally.plugins.openstack import scenario
 from rally.task.scenarios import base
 
 
-class ZaqarScenario(base.Scenario):
+class ZaqarScenario(scenario.OpenStackScenario):
     """Base class for Zaqar scenarios with basic atomic actions."""
 
     @base.atomic_action_timer("zaqar.create_queue")

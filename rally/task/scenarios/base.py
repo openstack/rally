@@ -25,7 +25,6 @@ from rally.common.plugin import discover
 from rally.common import utils
 from rally import consts
 from rally import exceptions
-from rally import osclients
 from rally.task import functional
 
 
@@ -59,16 +58,6 @@ class Scenario(functional.FunctionalMixin):
 
     def __init__(self, context=None):
         self.context = context
-
-        # TODO(boris-42): This is going to be inside OpenStackScenario subclass
-        #                 so Rally framework won't depend on OpenStack stuff
-        if context:
-            if "admin" in context:
-                self._admin_clients = osclients.Clients(
-                    context["admin"]["endpoint"])
-            if "user" in context:
-                self._clients = osclients.Clients(context["user"]["endpoint"])
-
         self._idle_duration = 0
         self._atomic_actions = costilius.OrderedDict()
 
@@ -197,33 +186,6 @@ class Scenario(functional.FunctionalMixin):
         except Exception:
             return False
         return Scenario.meta(cls, "is_scenario", method_name, default=False)
-
-    def clients(self, client_type, version=None):
-        """Returns a python openstack client of the requested type.
-
-        The client will be that for one of the temporary non-administrator
-        users created before the benchmark launch.
-
-        :param client_type: Client type ("nova"/"glance" etc.)
-        :param version: client version ("1"/"2" etc.)
-
-        :returns: Standard python OpenStack client instance
-        """
-        client = getattr(self._clients, client_type)
-
-        return client(version) if version is not None else client()
-
-    def admin_clients(self, client_type, version=None):
-        """Returns a python admin openstack client of the requested type.
-
-        :param client_type: Client type ("nova"/"glance" etc.)
-        :param version: client version ("1"/"2" etc.)
-
-        :returns: Python openstack client object
-        """
-        client = getattr(self._admin_clients, client_type)
-
-        return client(version) if version is not None else client()
 
     def sleep_between(self, min_sleep, max_sleep):
         """Performs a time.sleep() call for a random amount of seconds.

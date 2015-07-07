@@ -18,6 +18,7 @@ import os
 import six
 
 from rally import osclients
+from rally.plugins.openstack import scenario
 from rally.task.scenarios import base
 
 
@@ -55,7 +56,7 @@ def fuel(instance):
                       password=instance.endpoint.password)
 
 
-class FuelScenario(base.Scenario):
+class FuelScenario(scenario.OpenStackScenario):
     """Base class for Fuel scenarios."""
 
     @base.atomic_action_timer("fuel.list_environments")

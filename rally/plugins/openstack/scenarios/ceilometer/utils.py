@@ -12,11 +12,12 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from rally.plugins.openstack import scenario
 from rally.task.scenarios import base
 from rally.task import utils as bench_utils
 
 
-class CeilometerScenario(base.Scenario):
+class CeilometerScenario(scenario.OpenStackScenario):
     """Base class for Ceilometer scenarios with basic atomic actions."""
 
     RESOURCE_NAME_PREFIX = "rally_ceilometer_"

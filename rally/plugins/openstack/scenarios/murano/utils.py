@@ -17,6 +17,7 @@ import uuid
 
 from oslo_config import cfg
 
+from rally.plugins.openstack import scenario
 from rally.task.scenarios import base
 from rally.task import utils
 
@@ -37,7 +38,7 @@ benchmark_group = cfg.OptGroup(name="benchmark", title="benchmark options")
 CONF.register_opts(MURANO_TIMEOUT_OPTS, group=benchmark_group)
 
 
-class MuranoScenario(base.Scenario):
+class MuranoScenario(scenario.OpenStackScenario):
     """Base class for Murano scenarios with basic atomic actions."""
 
     @base.atomic_action_timer("murano.list_environments")

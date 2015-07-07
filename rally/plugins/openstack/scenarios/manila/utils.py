@@ -17,6 +17,7 @@ import time
 
 from oslo_config import cfg
 
+from rally.plugins.openstack import scenario
 from rally.task.scenarios import base
 from rally.task import utils
 
@@ -52,7 +53,7 @@ benchmark_group = cfg.OptGroup(name="benchmark", title="benchmark options")
 CONF.register_opts(MANILA_BENCHMARK_OPTS, group=benchmark_group)
 
 
-class ManilaScenario(base.Scenario):
+class ManilaScenario(scenario.OpenStackScenario):
     """Base class for Manila scenarios with basic atomic actions."""
 
     @base.atomic_action_timer("manila.create_share")

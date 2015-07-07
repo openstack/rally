@@ -61,6 +61,9 @@ class DBTestCase(TestCase):
         self.useFixture(DatabaseFixture())
 
 
+# TODO(boris-42): This should be moved to test.plugins.test module
+#                 or similar
+
 class ScenarioTestCase(TestCase):
     """Base class for Scenario tests using mocked self.clients."""
     benchmark_utils = "rally.task.utils"
@@ -115,11 +118,14 @@ class ScenarioTestCase(TestCase):
         self.useFixture(self.mock_sleep)
 
         self._clients = {}
+        base_path = "rally.plugins.openstack"
         self._client_mocks = [
-            mock.patch("rally.task.scenarios.base.Scenario.clients",
-                       mock.Mock(side_effect=self.clients)),
-            mock.patch("rally.task.scenarios.base.Scenario.admin_clients",
-                       mock.Mock(side_effect=self.admin_clients))
+            mock.patch(
+                "%s.scenario.OpenStackScenario.clients" % base_path,
+                mock.Mock(side_effect=self.clients)),
+            mock.patch(
+                "%s.scenario.OpenStackScenario.admin_clients" % base_path,
+                mock.Mock(side_effect=self.admin_clients))
         ]
         for patcher in self._client_mocks:
             patcher.start()

@@ -12,11 +12,12 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from rally.plugins.openstack import scenario
 from rally.task.scenarios import base
 from rally.task import validation
 
 
-class Authenticate(base.Scenario):
+class Authenticate(scenario.OpenStackScenario):
     """Benchmark scenarios for the authentication mechanism.
 
     Benchmark scenarios for different types of OpenStack clients like Keystone,

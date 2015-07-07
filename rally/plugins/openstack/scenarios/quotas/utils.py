@@ -15,10 +15,11 @@
 
 import random
 
+from rally.plugins.openstack import scenario
 from rally.task.scenarios import base
 
 
-class QuotasScenario(base.Scenario):
+class QuotasScenario(scenario.OpenStackScenario):
     """Base class for quotas scenarios with basic atomic actions."""
 
     @base.atomic_action_timer("quotas.update_quotas")

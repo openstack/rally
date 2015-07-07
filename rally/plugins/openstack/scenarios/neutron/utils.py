@@ -16,13 +16,14 @@
 from oslo_utils import uuidutils as uid
 
 from rally.common import log as logging
+from rally.plugins.openstack import scenario
 from rally.plugins.openstack.wrappers import network as network_wrapper
 from rally.task.scenarios import base
 
 LOG = logging.getLogger(__name__)
 
 
-class NeutronScenario(base.Scenario):
+class NeutronScenario(scenario.OpenStackScenario):
     """Base class for Neutron scenarios with basic atomic actions."""
 
     RESOURCE_NAME_PREFIX = "rally_net_"

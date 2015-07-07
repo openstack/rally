@@ -18,6 +18,7 @@ import time
 
 from oslo_config import cfg
 
+from rally.plugins.openstack import scenario
 from rally.task.scenarios import base
 from rally.task import utils
 
@@ -49,7 +50,7 @@ benchmark_group = cfg.OptGroup(name="benchmark", title="benchmark options")
 CONF.register_opts(GLANCE_BENCHMARK_OPTS, group=benchmark_group)
 
 
-class GlanceScenario(base.Scenario):
+class GlanceScenario(scenario.OpenStackScenario):
     """Base class for Glance scenarios with basic atomic actions."""
 
     @base.atomic_action_timer("glance.list_images")

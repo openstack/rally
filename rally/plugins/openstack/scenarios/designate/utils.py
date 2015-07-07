@@ -14,10 +14,11 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from rally.plugins.openstack import scenario
 from rally.task.scenarios import base
 
 
-class DesignateScenario(base.Scenario):
+class DesignateScenario(scenario.OpenStackScenario):
     """Base class for Designate scenarios with basic atomic actions."""
 
     RESOURCE_NAME_PREFIX = "rally_"

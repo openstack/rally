@@ -20,6 +20,7 @@ import requests
 
 from rally.common import log as logging
 from rally import exceptions
+from rally.plugins.openstack import scenario
 from rally.task.scenarios import base
 from rally.task import utils
 
@@ -106,7 +107,7 @@ benchmark_group = cfg.OptGroup(name="benchmark", title="benchmark options")
 CONF.register_opts(HEAT_BENCHMARK_OPTS, group=benchmark_group)
 
 
-class HeatScenario(base.Scenario):
+class HeatScenario(scenario.OpenStackScenario):
     """Base class for Heat scenarios with basic atomic actions."""
 
     @base.atomic_action_timer("heat.list_stacks")

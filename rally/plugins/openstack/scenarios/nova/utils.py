@@ -20,6 +20,7 @@ from oslo_config import cfg
 import six
 
 from rally import exceptions
+from rally.plugins.openstack import scenario
 from rally.plugins.openstack.wrappers import network as network_wrapper
 from rally.task.scenarios import base
 from rally.task import utils
@@ -87,7 +88,7 @@ CONF.register_group(benchmark_group)
 CONF.register_opts(NOVA_BENCHMARK_OPTS, group=benchmark_group)
 
 
-class NovaScenario(base.Scenario):
+class NovaScenario(scenario.OpenStackScenario):
     """Base class for Nova scenarios with basic atomic actions."""
 
     @base.atomic_action_timer("nova.list_servers")
