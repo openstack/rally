@@ -22,6 +22,12 @@ ASKCONFIRMATION=1
 OVERWRITEDIR="ask"
 USEVIRTUALENV="yes"
 
+# ansi colors for formatting heredoc
+ESC=$(printf "\e")
+GREEN="$ESC[0;32m"
+NO_COLOR="$ESC[0;0m"
+RED="$ESC[0;31m"
+
 PYTHON2="$(which python || true)"
 PYTHON3="$(which python3 || true)"
 PYTHON=${PYTHON2:-$PYTHON3}
@@ -67,7 +73,7 @@ EX_PROTOCOL=76
 abort () {
   local rc="$1"
   shift
-  (echo -n "$PROG: ERROR: ";
+  (echo -en "$RED$PROG: ERROR: $NO_COLOR";
       if [ $# -gt 0 ]; then echo "$@"; else cat; fi) 1>&2
   exit "$rc"
 }
@@ -83,10 +89,10 @@ die () {
   header="$2"
   shift 2
   cat 1>&2 <<__EOF__
-==========================================================
+$RED==========================================================
 $PROG: ERROR: $header
 ==========================================================
-
+$NO_COLOR
 __EOF__
   if [ $# -gt 0 ]; then
       # print remaining arguments one per line
@@ -103,8 +109,8 @@ If the above does not help you resolve the issue, please contact the
 Rally team by sending an email to the OpenStack mailing list
 openstack-dev@lists.openstack.org. Include the full output of this
 script to help us identifying the problem.
-
-Aborting installation!
+$RED
+Aborting installation!$NO_COLOR
 __EOF__
   exit "$rc"
 }
@@ -149,26 +155,26 @@ Usage: $PROG [options]
 This script will install Rally in your system.
 
 Options:
-  -h, --help             Print this help text
-  -v, --verbose          Verbose mode
-  -s, --system           Install system-wide.
-  -d, --target DIRECTORY Install Rally virtual environment into DIRECTORY.
+$GREEN  -h, --help            $NO_COLOR Print this help text
+$GREEN  -v, --verbose         $NO_COLOR Verbose mode
+$GREEN  -s, --system          $NO_COLOR Install system-wide.
+$GREEN  -d, --target DIRECTORY$NO_COLOR Install Rally virtual environment into DIRECTORY.
                          (Default: $HOME/rally if not root).
-  -f, --overwrite        Remove target directory if it already exists.
-  -y, --yes              Do not ask for confirmation: assume a 'yes' reply
+$GREEN  -f, --overwrite       $NO_COLOR Remove target directory if it already exists.
+$GREEN  -y, --yes             $NO_COLOR Do not ask for confirmation: assume a 'yes' reply
                          to every question.
-  -D, --dbtype TYPE      Select the database type. TYPE can be one of
+$GREEN  -D, --dbtype TYPE     $NO_COLOR Select the database type. TYPE can be one of
                          'sqlite', 'mysql', 'postgres'.
                          Default: sqlite
-  --db-user USER         Database user to use. Only used when --dbtype
+$GREEN  --db-user USER        $NO_COLOR Database user to use. Only used when --dbtype
                          is either 'mysql' or 'postgres'.
-  --db-password PASSWORD Password of the database user. Only used when
+$GREEN  --db-password PASSWORD$NO_COLOR Password of the database user. Only used when
                          --dbtype is either 'mysql' or 'postgres'.
-  --db-host HOST         Database host. Only used when --dbtype is
+$GREEN  --db-host HOST        $NO_COLOR Database host. Only used when --dbtype is
                          either 'mysql' or 'postgres'
-  --db-name NAME         Name of the database. Only used when --dbtype is
+$GREEN  --db-name NAME        $NO_COLOR Name of the database. Only used when --dbtype is
                          either 'mysql' or 'postgres'
-  -p, --python EXE       The python interpreter to use. Default: $PYTHON
+$GREEN  -p, --python EXE      $NO_COLOR The python interpreter to use. Default: $PYTHON
 
 __EOF__
 }
@@ -304,8 +310,8 @@ install_required_sw () {
     if [ -n "$missing" ]; then
         cat <<__EOF__
 The following software packages need to be installed
-in order for Rally to work: $missing
-
+in order for Rally to work:$GREEN $missing
+$NO_COLOR
 __EOF__
 
         # If we are root
@@ -313,9 +319,9 @@ __EOF__
             cat <<__EOF__
 In order to install the required software you would need to run as
 'root' the following command:
-
+$GREEN
     $pkg_manager $missing
-
+$NO_COLOR
 __EOF__
             # ask if we have to install it
             if ask_yn "Do you want me to install these packages for you?"; then
@@ -363,9 +369,9 @@ __EOF__
 Please ask your system administrator to install the missing packages,
 or, if you have root access, you can do that by running the following
 command from the 'root' account:
-
+$GREEN
     $pkg_manager $missing
-
+$NO_COLOR
 __EOF__
             fi
         fi
@@ -389,7 +395,7 @@ install_virtualenv () {
 
     if [ -n "$VIRTUAL_ENV" ]; then
         cat <<__EOF__
-
+$RED
 ERROR
 =====
 
@@ -397,7 +403,7 @@ A virtual environment seems to be already *active*. This will cause
 this script to FAIL.
 
 Run 'deactivate', then run this script again.
-
+$NO_COLOR
 __EOF__
         exit $EX_SOFTWARE
     fi
@@ -552,8 +558,8 @@ if running_as_root; then
 else
     if [ "$USEVIRTUALENV" == 'no' ]; then
         die $EX_USAGE "Insufficient privileges" <<__EOF__
-Root permissions required in order to install system-wide.
-As non-root user you may only install in virtualenv.
+$REDRoot permissions required in order to install system-wide.
+As non-root user you may only install in virtualenv.$NO_COLOR
 __EOF__
     fi
     if [ -z "$VENVDIR" ]; then
@@ -583,11 +589,11 @@ to specify the database name, host, and username and password of a
 valid user with write access to the database.
 
 Please, re-run the script with valid values for the options:
-
+$GREEN
     --db-host
     --db-name
     --db-user
-    --db-password
+    --db-password$NO_COLOR
 __EOF__
     fi
     DBAUTH="$DBUSER:$DBPASSWORD@$DBHOST"
@@ -728,10 +734,10 @@ then
 __EOF__
 
     cat <<__EOF__
-==============================
+$GREEN==============================
 Installation of Rally is done!
 ==============================
-
+$NO_COLOR
 In order to work with Rally you have to enable the virtual environment
 with the command:
 
@@ -742,10 +748,10 @@ using Rally, but just once per session.
 
 Information about your Rally installation:
 
-  * Method: virtualenv
-  * Virtual Environment at: $VENVDIR
-  * Database at: $RALLY_DATABASE_DIR
-  * Configuration file at: $RALLY_CONFIGURATION_DIR
+  * Method:$GREEN virtualenv$NO_COLOR
+  * Virtual Environment at:$GREEN $VENVDIR$NO_COLOR
+  * Database at:$GREEN $RALLY_DATABASE_DIR$NO_COLOR
+  * Configuration file at:$GREEN $RALLY_CONFIGURATION_DIR$NO_COLOR
 
 __EOF__
     setup_rally_configuration "$SOURCEDIR"
@@ -757,16 +763,16 @@ else
     fi
 
     cat <<__EOF__
-==============================
+$GREEN==============================
 Installation of Rally is done!
 ==============================
-
+$NO_COLOR
 Rally is now installed in your system. Information about your Rally
 installation:
 
-  * Method: system
-  * Database at: $RALLY_DATABASE_DIR
-  * Configuration file at: $RALLY_CONFIGURATION_DIR
+  * Method:$GREEN system$NO_COLOR
+  * Database at:$GREEN $RALLY_DATABASE_DIR$NO_COLOR
+  * Configuration file at:$GREEN $RALLY_CONFIGURATION_DIR$NO_COLOR
 
 __EOF__
 fi
