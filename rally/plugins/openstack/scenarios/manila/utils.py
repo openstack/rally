@@ -172,3 +172,48 @@ class ManilaScenario(base.Scenario):
         share_servers = self.admin_clients("manila").share_servers.list(
             search_opts=search_opts)
         return share_servers
+
+    @base.atomic_action_timer("manila.create_security_service")
+    def _create_security_service(self, security_service_type, dns_ip=None,
+                                 server=None, domain=None, user=None,
+                                 password=None, name=None, description=None):
+        """Create security service.
+
+        'Security service' is data container in Manila that stores info
+        about auth services 'Active Directory', 'Kerberos' and catalog
+        service 'LDAP' that should be used for shares.
+
+        :param security_service_type: security service type, permitted values
+            are 'ldap', 'kerberos' or 'active_directory'.
+        :param dns_ip: dns ip address used inside tenant's network
+        :param server: security service server ip address or hostname
+        :param domain: security service domain
+        :param user: security identifier used by tenant
+        :param password: password used by user
+        :param name: security service name
+        :param description: security service description
+        :returns: instance of :class:`SecurityService`
+        """
+        security_service = self.clients("manila").security_services.create(
+            type=security_service_type,
+            dns_ip=dns_ip,
+            server=server,
+            domain=domain,
+            user=user,
+            password=password,
+            name=name,
+            description=description)
+        return security_service
+
+    @base.atomic_action_timer("manila.delete_security_service")
+    def _delete_security_service(self, security_service):
+        """Delete security service.
+
+        :param security_service: instance of :class:`SecurityService`.
+        """
+        security_service.delete()
+        utils.wait_for_delete(
+            security_service,
+            update_resource=utils.get_from_manager(),
+            timeout=CONF.benchmark.manila_share_delete_timeout,
+            check_interval=CONF.benchmark.manila_share_delete_poll_interval)

@@ -148,3 +148,40 @@ class ManilaScenarioTestCase(test.ScenarioTestCase):
         self.admin_clients(
             "manila").share_servers.list.assert_called_once_with(
                 search_opts=params.get("search_opts", None))
+
+    @ddt.data("ldap", "kerberos", "active_directory")
+    def test__create_security_service(self, ss_type):
+        fake_ss = mock.Mock()
+        self.clients("manila").security_services.create.return_value = fake_ss
+        data = {
+            "security_service_type": ss_type,
+            "dns_ip": "fake_dns_ip",
+            "server": "fake_server",
+            "domain": "fake_domain",
+            "user": "fake_user",
+            "password": "fake_password",
+            "name": "fake_name",
+            "description": "fake_description",
+        }
+        expected = dict(data)
+        expected["type"] = expected.pop("security_service_type")
+
+        result = self.scenario._create_security_service(**data)
+
+        self.assertEqual(fake_ss, result)
+        self.clients(
+            "manila").security_services.create.assert_called_once_with(
+                **expected)
+
+    @mock.patch(BM_UTILS + "get_from_manager")
+    @mock.patch(BM_UTILS + "wait_for_delete")
+    def test__delete_security_service(self, mock_wait_for_delete,
+                                      mock_get_from_manager):
+        fake_ss = mock.MagicMock()
+
+        self.scenario._delete_security_service(fake_ss)
+
+        fake_ss.delete.assert_called_once_with()
+        mock_get_from_manager.assert_called_once_with()
+        mock_wait_for_delete.assert_called_once_with(
+            fake_ss, update_resource=mock.ANY, timeout=180, check_interval=2)
