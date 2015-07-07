@@ -57,6 +57,7 @@ from rally.common import utils
 from rally.deployment import engine
 from rally.deployment.serverprovider import provider
 from rally import exceptions
+from rally import plugins
 from rally.task.scenarios import base as scenario_base
 from rally.task import sla
 
@@ -79,6 +80,7 @@ class InfoCommands(object):
     """
 
     @cliutils.args("--query", dest="query", type=str, help="Search query.")
+    @plugins.ensure_plugins_are_loaded
     def find(self, query):
         """Search for an entity that matches the query and print info about it.
 
@@ -100,6 +102,7 @@ class InfoCommands(object):
                           "\n\t".join(substitutions))
                 return 1
 
+    @plugins.ensure_plugins_are_loaded
     def list(self):
         """List main entities in Rally for which rally info find works.
 
@@ -110,6 +113,7 @@ class InfoCommands(object):
         self.DeploymentEngines()
         self.ServerProviders()
 
+    @plugins.ensure_plugins_are_loaded
     def BenchmarkScenarios(self):
         """Get information about benchmark scenarios available in Rally."""
         def scenarios_filter(scenario_cls):
@@ -142,6 +146,7 @@ class InfoCommands(object):
                 "  $ rally info find <ScenarioGroupName>\n\n")
         print(info)
 
+    @plugins.ensure_plugins_are_loaded
     def SLA(self):
         """Get information about SLA available in Rally."""
         sla_descrs = self._get_descriptions(sla.SLA)
@@ -173,6 +178,7 @@ class InfoCommands(object):
                 "  $ rally info find <sla_check_name>\n")
         print(info)
 
+    @plugins.ensure_plugins_are_loaded
     def DeploymentEngines(self):
         """Get information about deploy engines available in Rally."""
         engines = self._get_descriptions(engine.EngineFactory)
@@ -206,6 +212,7 @@ class InfoCommands(object):
                 "  $ rally info find <DeploymentEngineName>\n")
         print(info)
 
+    @plugins.ensure_plugins_are_loaded
     def ServerProviders(self):
         """Get information about server providers available in Rally."""
         providers = self._get_descriptions(provider.ProviderFactory)

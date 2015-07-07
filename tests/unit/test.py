@@ -21,6 +21,7 @@ from oslotest import base
 from oslotest import mockpatch
 
 from rally import db
+from rally import plugins
 from tests.unit import fakes
 
 
@@ -41,6 +42,7 @@ class TestCase(base.BaseTestCase):
     def setUp(self):
         super(TestCase, self).setUp()
         self.addCleanup(mock.patch.stopall)
+        plugins.load()
 
     def _test_atomic_action_timer(self, atomic_actions, name):
         action_duration = atomic_actions.get(name)

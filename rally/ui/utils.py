@@ -15,39 +15,38 @@
 
 from __future__ import print_function
 import os.path
+import re
 import sys
-
-import mako.exceptions
-import mako.lookup
-import mako.template
-
-
-templates_dir = os.path.join(os.path.dirname(__file__), "templates")
-
-lookup_dirs = [templates_dir,
-               os.path.abspath(os.path.join(templates_dir, "..", "..", ".."))]
-
-lookup = mako.lookup.TemplateLookup(directories=lookup_dirs)
 
 
 def get_template(template_path):
+    import mako.lookup
+
+    templates_dir = os.path.join(os.path.dirname(__file__), "templates")
+
+    lookup_dirs = [
+        templates_dir,
+        os.path.abspath(os.path.join(templates_dir, "..", "..", ".."))
+    ]
+
+    lookup = mako.lookup.TemplateLookup(directories=lookup_dirs)
+
     return lookup.get_template(template_path)
 
 
 def main(*args):
-    if len(args) < 2 or args[0] != "render":
-        exit("Usage: \n\t"
-             "utils.py render <lookup/path/to/template.mako> "
-             "<key-1>=<value-1> <key-2>=<value-2>\n"
-             "where key-1,value-1 and key-2,value-2 are key pairs of template")
-    try:
-        render_kwargs = dict([arg.split("=") for arg in args[2:]])
+    if (len(args) < 2 or args[0] != "render"
+       or not all(re.match("^[^=]+=[^=]+$", arg) for arg in args[2:])):
+        raise ValueError(
+            "Usage: \n\t"
+            "utils.py render <lookup/path/to/template.mako> "
+            "<key-1>=<value-1> <key-2>=<value-2>\n\n\t"
+            "Where key-1,value-1 and key-2,value-2 are key pairs of template"
+        )
 
-        print(get_template(sys.argv[2]).render(**render_kwargs))
-    except mako.exceptions.TopLevelLookupException as e:
-        exit(e)
+    render_kwargs = dict([arg.split("=") for arg in args[2:]])
+    print(get_template(args[1]).render(**render_kwargs))
 
 
 if __name__ == "__main__":
-    args = sys.argv[1:]
-    main(*args)
+    main(*sys.argv[1:])

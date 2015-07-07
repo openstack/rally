@@ -37,6 +37,7 @@ from rally import consts
 from rally import db
 from rally import exceptions
 from rally import objects
+from rally import plugins
 from rally.task.processing import plot
 from rally.task.processing import utils
 
@@ -132,6 +133,7 @@ class TaskCommands(object):
                         "json/yaml). These args are used to render input "
                         "task that is jinja2 template.")
     @envutils.with_default_deployment(cli_arg_name="deployment")
+    @plugins.ensure_plugins_are_loaded
     def validate(self, task, deployment=None, task_args=None,
                  task_args_file=None):
         """Validate a task configuration file.
@@ -178,6 +180,7 @@ class TaskCommands(object):
                    help="Abort the execution of a benchmark scenario when"
                         "any SLA check for it fails")
     @envutils.with_default_deployment(cli_arg_name="deployment")
+    @plugins.ensure_plugins_are_loaded
     def start(self, task, deployment=None, task_args=None, task_args_file=None,
               tag=None, do_use=False, abort_on_sla_failure=False):
         """Start benchmark task.

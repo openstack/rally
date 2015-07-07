@@ -519,9 +519,6 @@ def run(argv, categories):
         return(1)
 
     try:
-        discover.load_plugins("/opt/rally/plugins/")
-        discover.load_plugins(os.path.expanduser("~/.rally/plugins/"))
-        discover.import_modules_from_package("rally.plugins")
         for path in CONF.plugin_paths or []:
             discover.load_plugins(path)
 

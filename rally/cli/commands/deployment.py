@@ -35,6 +35,7 @@ from rally import db
 from rally import exceptions
 from rally import objects
 from rally import osclients
+from rally import plugins
 
 
 class DeploymentCommands(object):
@@ -50,6 +51,7 @@ class DeploymentCommands(object):
     @cliutils.args("--no-use", action="store_false", dest="do_use",
                    help="Don\'t set new deployment as default for"
                         " future operations")
+    @plugins.ensure_plugins_are_loaded
     def create(self, name, fromenv=False, filename=None, do_use=False):
         """Create new deployment.
 
@@ -131,6 +133,7 @@ class DeploymentCommands(object):
     @cliutils.args("--deployment", dest="deployment", type=str,
                    required=False, help="UUID or name of a deployment.")
     @envutils.with_default_deployment()
+    @plugins.ensure_plugins_are_loaded
     def recreate(self, deployment=None):
         """Destroy and create an existing deployment.
 
@@ -144,6 +147,7 @@ class DeploymentCommands(object):
     @cliutils.args("--deployment", dest="deployment", type=str,
                    required=False, help="UUID or name of a deployment.")
     @envutils.with_default_deployment()
+    @plugins.ensure_plugins_are_loaded
     def destroy(self, deployment=None):
         """Destroy existing deployment.
 

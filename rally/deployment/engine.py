@@ -101,7 +101,7 @@ class EngineFactory(plugin.Plugin):
                         "does not exist.") %
                       {"uuid": deployment["uuid"], "name": name})
             deployment.update_status(consts.DeployStatus.DEPLOY_FAILED)
-            raise exceptions.PluginNotFound(engine_name=name)
+            raise exceptions.PluginNotFound(name=name)
 
     @abc.abstractmethod
     def deploy(self):
