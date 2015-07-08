@@ -77,6 +77,9 @@ class SeekAndDestroy(object):
             "resource": resource._resource
         }
 
+        LOG.debug("Deleting %(service)s %(resource)s object %(uuid)s" %
+                  msg_kw)
+
         try:
             rutils.retry(resource._max_attempts, resource.delete)
         except Exception as e:
@@ -272,4 +275,7 @@ def cleanup(names=None, admin_required=None, admin=None, users=None):
                   }
     """
     for manager in find_resource_managers(names, admin_required):
+        LOG.debug("Cleaning up %(service)s %(resource)s objects" %
+                  {"service": manager._service,
+                   "resource": manager._resource})
         SeekAndDestroy(manager, admin, users).exterminate()

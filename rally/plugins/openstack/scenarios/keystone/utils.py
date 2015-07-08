@@ -63,7 +63,7 @@ class KeystoneScenario(base.Scenario):
         return self.admin_clients("keystone").tenants.create(name, **kwargs)
 
     @base.atomic_action_timer("keystone.create_service")
-    def _service_create(self, name=None, service_type="rally_test_type",
+    def _service_create(self, service_type="rally_test_type",
                         description=None):
         """Creates keystone service with random name.
 
@@ -72,12 +72,11 @@ class KeystoneScenario(base.Scenario):
         :param description: description of the service
         :returns: keystone service instance
         """
-        name = name or self._generate_random_name(prefix="rally_test_service_")
         description = description or self._generate_random_name(
             prefix="rally_test_service_description_")
-        return self.admin_clients("keystone").services.create(name,
-                                                              service_type,
-                                                              description)
+        return self.admin_clients("keystone").services.create(
+            self._generate_random_name(),
+            service_type, description)
 
     @base.atomic_action_timer("keystone.create_users")
     def _users_create(self, tenant, users_per_tenant, name_length=10):
