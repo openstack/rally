@@ -13,10 +13,17 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import os
+import shutil
+import tempfile
 import uuid
+import zipfile
 
 from oslo_config import cfg
+import yaml
 
+from rally.common import fileutils
+from rally.common import utils as common_utils
 from rally.plugins.openstack import scenario
 from rally.task import atomic
 from rally.task import utils
@@ -31,7 +38,7 @@ MURANO_TIMEOUT_OPTS = [
     cfg.IntOpt("delete_environment_check_interval", default=2,
                help="Delete environment check interval in seconds"),
     cfg.IntOpt("deploy_environment_check_interval", default=5,
-               help="Deploy environment check interval in seconds")
+               help="Deploy environment check interval in seconds"),
 ]
 
 benchmark_group = cfg.OptGroup(name="benchmark", title="benchmark options")
@@ -125,3 +132,149 @@ class MuranoScenario(scenario.OpenStackScenario):
             timeout=CONF.benchmark.deploy_environment_timeout,
             check_interval=CONF.benchmark.deploy_environment_check_interval
         )
+
+    @atomic.action_timer("murano.list_packages")
+    def _list_packages(self, include_disabled=False):
+        """Returns packages list.
+
+        :param include_disabled: if "True" then disabled packages will be
+                                 included in a the result.
+                                 Default value is False.
+        :returns: list of imported packages
+        """
+        return self.clients("murano").packages.list(
+            include_disabled=include_disabled)
+
+    @atomic.action_timer("murano.import_package")
+    def _import_package(self, package):
+        """Import package to the Murano.
+
+        :param package: path to zip archive with Murano application
+        :returns: imported package
+        """
+
+        package = self.clients("murano").packages.create(
+            {}, {"file": open(package)}
+        )
+
+        return package
+
+    @atomic.action_timer("murano.delete_package")
+    def _delete_package(self, package):
+        """Delete specified package.
+
+        :param package: package that will be deleted
+        """
+
+        self.clients("murano").packages.delete(package.id)
+
+    @atomic.action_timer("murano.update_package")
+    def _update_package(self, package, body, operation="replace"):
+        """Update specified package.
+
+        :param package: package that will be updated
+        :param body: dict object that defines what package property will be
+                     updated, e.g {"tags": ["tag"]} or {"enabled": "true"}
+        :param operation: string object that defines the way of how package
+                          property will be updated, allowed operations are
+                          "add", "replace" or "delete".
+                          Default value is "replace".
+        :returns: updated package
+        """
+
+        return self.clients("murano").packages.update(
+            package.id, body, operation)
+
+    @atomic.action_timer("murano.filter_applications")
+    def _filter_applications(self, filter_query):
+        """Filter list of uploaded application by specified criteria.
+
+        :param filter_query: dict that contains filter criteria, it
+                             will be passed as **kwargs to filter method
+                             e.g. {"category": "Web"}
+        :returns: filtered list of packages
+        """
+
+        return self.clients("murano").packages.filter(**filter_query)
+
+    def _zip_package(self, package_path):
+        """Call _prepare_package method that returns path to zip archive."""
+        return MuranoPackageManager()._prepare_package(package_path)
+
+
+class MuranoPackageManager(object):
+
+    @staticmethod
+    def _read_from_file(filename):
+        with open(filename, "r") as f:
+            read_data = f.read()
+        return yaml.safe_load(read_data)
+
+    @staticmethod
+    def _write_to_file(data, filename):
+        with open(filename, "w") as f:
+            yaml.safe_dump(data, f)
+
+    def _change_app_fullname(self, app_dir):
+        """Change application full name.
+
+        To avoid name conflict error during package import (when user
+        tries to import a few packages into the same tenant) need to change the
+        application name. For doing this need to replace following parts
+        in manifest.yaml
+        from
+            ...
+            FullName: app.name
+            ...
+            Classes:
+              app.name: app_class.yaml
+        to:
+            ...
+            FullName: <new_name>
+            ...
+            Classes:
+              <new_name>: app_class.yaml
+
+        :param app_dir: path to directory with Murano application context
+        """
+
+        new_fullname = common_utils.generate_random_name("app.")
+
+        manifest_file = os.path.join(app_dir, "manifest.yaml")
+        manifest = self._read_from_file(manifest_file)
+
+        class_file_name = manifest["Classes"][manifest["FullName"]]
+
+        # update manifest.yaml file
+        del manifest["Classes"][manifest["FullName"]]
+        manifest["FullName"] = new_fullname
+        manifest["Classes"][new_fullname] = class_file_name
+        self._write_to_file(manifest, manifest_file)
+
+    def _prepare_package(self, package_path):
+        """Check whether the package path is path to zip archive or not.
+
+        If package_path is not a path to zip archive but path to Murano
+        application folder, than method prepares zip archive with Murano
+        application. It copies directory with Murano app files to temporary
+        folder, changes manifest.yaml and class file (to avoid '409 Conflict'
+        errors in Murano) and prepares zip package.
+
+        :param package_path: path to zip archive or directory with package
+                             components
+        :returns: path to zip archive with Murano application
+        """
+
+        if not zipfile.is_zipfile(package_path):
+            tmp_dir = tempfile.mkdtemp()
+            pkg_dir = os.path.join(tmp_dir, "package/")
+            try:
+                shutil.copytree(package_path, pkg_dir)
+
+                self._change_app_fullname(pkg_dir)
+                package_path = fileutils.pack_dir(pkg_dir)
+
+            finally:
+                shutil.rmtree(tmp_dir)
+
+        return package_path

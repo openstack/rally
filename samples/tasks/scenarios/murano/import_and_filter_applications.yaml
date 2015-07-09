@@ -1,0 +1,14 @@
+---
+  MuranoPackages.import_and_filter_applications:
+    -
+      args:
+        package: "rally-jobs/extra/murano/applications/HelloReporter/io.murano.apps.HelloReporter/"
+        filter_query: {"category" : "Web"}
+      runner:
+        type: "constant"
+        times: 5
+        concurrency: 2
+      context:
+        users:
+          tenants: 2
+          users_per_tenant: 1

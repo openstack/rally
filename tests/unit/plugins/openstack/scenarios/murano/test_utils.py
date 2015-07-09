@@ -105,3 +105,129 @@ class MuranoScenarioTestCase(test.ScenarioTestCase):
         self.mock_resource_is.mock.assert_called_once_with("READY")
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "murano.deploy_environment")
+
+    @mock.patch(MRN_UTILS + ".open",
+                side_effect=mock.mock_open(read_data="Key: value"),
+                create=True)
+    def test_read_from_file(self, mock_open):
+        utility = utils.MuranoPackageManager()
+        data = utility._read_from_file("filename")
+        expected_data = {"Key": "value"}
+        self.assertEqual(expected_data, data)
+
+    @mock.patch(MRN_UTILS + ".MuranoPackageManager._read_from_file")
+    @mock.patch(MRN_UTILS + ".MuranoPackageManager._write_to_file")
+    def test_change_app_fullname(
+            self, mock_murano_package_manager__write_to_file,
+            mock_murano_package_manager__read_from_file):
+        manifest = {"FullName": "app.name_abc",
+                    "Classes": {"app.name_abc": "app_class.yaml"}}
+        mock_murano_package_manager__read_from_file.side_effect = (
+            [manifest])
+        utility = utils.MuranoPackageManager()
+        utility._change_app_fullname("tmp/tmpfile/")
+        mock_murano_package_manager__read_from_file.assert_has_calls(
+            [mock.call("tmp/tmpfile/manifest.yaml")]
+        )
+        mock_murano_package_manager__write_to_file.assert_has_calls(
+            [mock.call(manifest, "tmp/tmpfile/manifest.yaml")]
+        )
+
+    @mock.patch("zipfile.is_zipfile")
+    @mock.patch("tempfile.mkdtemp")
+    @mock.patch("shutil.copytree")
+    @mock.patch(MRN_UTILS + ".MuranoPackageManager._change_app_fullname")
+    @mock.patch("rally.common.fileutils.pack_dir")
+    @mock.patch("shutil.rmtree")
+    def test_prepare_zip_if_not_zip(
+            self, mock_shutil_rmtree, mock_pack_dir,
+            mock_murano_package_manager__change_app_fullname,
+            mock_shutil_copytree, mock_tempfile_mkdtemp,
+            mock_zipfile_is_zipfile):
+        utility = utils.MuranoPackageManager()
+        package_path = "tmp/tmpfile"
+
+        mock_zipfile_is_zipfile.return_value = False
+        mock_tempfile_mkdtemp.return_value = "tmp/tmpfile"
+        mock_pack_dir.return_value = "tmp/tmpzipfile"
+
+        zip_file = utility._prepare_package(package_path)
+
+        self.assertEqual("tmp/tmpzipfile", zip_file)
+        mock_tempfile_mkdtemp.assert_called_once_with()
+        mock_shutil_copytree.assert_called_once_with(
+            "tmp/tmpfile",
+            "tmp/tmpfile/package/"
+        )
+        (mock_murano_package_manager__change_app_fullname.
+            assert_called_once_with("tmp/tmpfile/package/"))
+        mock_shutil_rmtree.assert_called_once_with("tmp/tmpfile")
+
+    @mock.patch("zipfile.is_zipfile")
+    def test_prepare_zip_if_zip(self, mock_zipfile_is_zipfile):
+        utility = utils.MuranoPackageManager()
+        package_path = "tmp/tmpfile.zip"
+        mock_zipfile_is_zipfile.return_value = True
+        zip_file = utility._prepare_package(package_path)
+        self.assertEqual("tmp/tmpfile.zip", zip_file)
+
+    def test_list_packages(self):
+        scenario = utils.MuranoScenario()
+        self.assertEqual(self.clients("murano").packages.list.return_value,
+                         scenario._list_packages())
+        self._test_atomic_action_timer(scenario.atomic_actions(),
+                                       "murano.list_packages")
+
+    @mock.patch(MRN_UTILS + ".open", create=True)
+    def test_import_package(self, mock_open):
+        self.clients("murano").packages.create.return_value = (
+            "created_foo_package"
+        )
+        scenario = utils.MuranoScenario()
+        mock_open.return_value = "opened_foo_package.zip"
+        imp_package = scenario._import_package("foo_package.zip")
+        self.assertEqual("created_foo_package", imp_package)
+        self.clients("murano").packages.create.assert_called_once_with(
+            {}, {"file": "opened_foo_package.zip"})
+        mock_open.assert_called_once_with("foo_package.zip")
+        self._test_atomic_action_timer(scenario.atomic_actions(),
+                                       "murano.import_package")
+
+    def test_delete_package(self):
+        package = mock.Mock(id="package_id")
+        scenario = utils.MuranoScenario()
+        scenario._delete_package(package)
+        self.clients("murano").packages.delete.assert_called_once_with(
+            "package_id"
+        )
+        self._test_atomic_action_timer(scenario.atomic_actions(),
+                                       "murano.delete_package")
+
+    def test_update_package(self):
+        package = mock.Mock(id="package_id")
+        self.clients("murano").packages.update.return_value = "updated_package"
+        scenario = utils.MuranoScenario()
+        upd_package = scenario._update_package(
+            package, {"tags": ["tag"]}, "add"
+        )
+        self.assertEqual("updated_package", upd_package)
+        self.clients("murano").packages.update.assert_called_once_with(
+            "package_id",
+            {"tags": ["tag"]},
+            "add"
+        )
+        self._test_atomic_action_timer(scenario.atomic_actions(),
+                                       "murano.update_package")
+
+    def test_filter_packages(self):
+        self.clients("murano").packages.filter.return_value = []
+        scenario = utils.MuranoScenario()
+        return_apps_list = scenario._filter_applications(
+            {"category": "Web"}
+        )
+        self.assertEqual([], return_apps_list)
+        self.clients("murano").packages.filter.assert_called_once_with(
+            category="Web"
+        )
+        self._test_atomic_action_timer(scenario.atomic_actions(),
+                                       "murano.filter_applications")
