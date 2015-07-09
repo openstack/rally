@@ -25,6 +25,7 @@ def _process_scenario(data, pos):
     main_area = charts.MainStackedAreaChart(data["info"])
     main_hist = charts.MainHistogramChart(data["info"])
     main_stat = charts.MainStatsTable(data["info"])
+    load_profile = charts.LoadProfileChart(data["info"])
     atomic_pie = charts.AtomicAvgChart(data["info"])
     atomic_area = charts.AtomicStackedAreaChart(data["info"])
     atomic_hist = charts.AtomicHistogramChart(data["info"])
@@ -41,7 +42,7 @@ def _process_scenario(data, pos):
         if itr["scenario_output"]["errors"]:
             output_errors.append((idx, itr["scenario_output"]["errors"]))
 
-        for chart in (main_area, main_hist, main_stat,
+        for chart in (main_area, main_hist, main_stat, load_profile,
                       atomic_pie, atomic_area, atomic_hist, output_area):
             chart.add_iteration(itr)
 
@@ -61,6 +62,7 @@ def _process_scenario(data, pos):
                                  - len(errors))),
                     ("errors", len(errors))],
             "histogram": main_hist.render()[0]},
+        "load_profile": load_profile.render(),
         "atomic": {"histogram": atomic_hist.render(),
                    "iter": atomic_area.render(),
                    "pie": atomic_pie.render()},
