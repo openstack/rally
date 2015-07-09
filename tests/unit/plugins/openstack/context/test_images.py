@@ -111,7 +111,7 @@ class ImageGeneratorTestCase(test.TestCase):
 
         new_context = copy.deepcopy(real_context)
         for id in new_context["tenants"].keys():
-            new_context["tenants"][id].setdefault("images", list())
+            new_context["tenants"][id].setdefault("images", [])
             for j in range(images_per_tenant):
                 new_context["tenants"][id]["images"].append("uuid")
 
@@ -133,7 +133,7 @@ class ImageGeneratorTestCase(test.TestCase):
             for i in range(users_per_tenant):
                 users.append({"id": i, "tenant_id": id_,
                               "endpoint": "endpoint"})
-            tenants[id_].setdefault("images", list())
+            tenants[id_].setdefault("images", [])
             for j in range(images_per_tenant):
                 tenants[id_]["images"].append("uuid")
 

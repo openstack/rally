@@ -99,8 +99,8 @@ class CeilometerSampleGeneratorTestCase(test.TestCase):
 
         new_context = copy.deepcopy(real_context)
         for id_ in tenants.keys():
-            new_context["tenants"][id_].setdefault("samples", list())
-            new_context["tenants"][id_].setdefault("resources", list())
+            new_context["tenants"][id_].setdefault("samples", [])
+            new_context["tenants"][id_].setdefault("resources", [])
             for i in range(resources_per_tenant):
                 for j in range(samples_per_resource):
                     new_context["tenants"][id_]["samples"].append(

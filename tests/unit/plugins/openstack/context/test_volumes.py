@@ -86,7 +86,7 @@ class VolumeGeneratorTestCase(test.TestCase):
 
         new_context = copy.deepcopy(real_context)
         for id in tenants.keys():
-            new_context["tenants"][id].setdefault("volumes", list())
+            new_context["tenants"][id].setdefault("volumes", [])
             for i in range(volumes_per_tenant):
                 new_context["tenants"][id]["volumes"].append({"id": "uuid"})
 
@@ -108,7 +108,7 @@ class VolumeGeneratorTestCase(test.TestCase):
             for i in range(users_per_tenant):
                 users.append({"id": i, "tenant_id": id,
                               "endpoint": "endpoint"})
-            tenants[id].setdefault("volumes", list())
+            tenants[id].setdefault("volumes", [])
             for j in range(volumes_per_tenant):
                 tenants[id]["volumes"].append({"id": "uuid"})
 
