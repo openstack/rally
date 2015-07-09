@@ -16,10 +16,14 @@
 import time
 
 from oslo_config import cfg
+import requests
 
+from rally.common import log as logging
+from rally import exceptions
 from rally.task.scenarios import base
 from rally.task import utils
 
+LOG = logging.getLogger(__name__)
 
 HEAT_BENCHMARK_OPTS = [
     cfg.FloatOpt("heat_stack_create_prepoll_delay",
@@ -87,7 +91,14 @@ HEAT_BENCHMARK_OPTS = [
     cfg.FloatOpt("heat_stack_restore_poll_interval",
                  default=1.0,
                  help="Time interval(in sec) between checks when waiting for "
-                      "stack to be restored.")
+                      "stack to be restored."),
+    cfg.FloatOpt("heat_stack_scale_timeout",
+                 default=3600.0,
+                 help="Time (in sec) to wait for stack to scale up or down."),
+    cfg.FloatOpt("heat_stack_scale_poll_interval",
+                 default=1.0,
+                 help="Time interval (in sec) between checks when waiting for "
+                      "a stack to scale up or down."),
 ]
 
 CONF = cfg.CONF
@@ -272,3 +283,62 @@ class HeatScenario(base.Scenario):
             timeout=CONF.benchmark.heat_stack_restore_timeout,
             check_interval=CONF.benchmark.heat_stack_restore_poll_interval
         )
+
+    def _count_instances(self, stack):
+        """Count instances in a Heat stack.
+
+        :param stack: stack to count instances in.
+        """
+        return len([
+            r for r in self.clients("heat").resources.list(stack.id,
+                                                           nested_depth=1)
+            if r.resource_type == "OS::Nova::Server"])
+
+    def _scale_stack(self, stack, output_key, delta):
+        """Scale a stack up or down.
+
+        Calls the webhook given in the output value identified by
+        'output_key', and waits for the stack size to change by
+        'delta'.
+
+        :param stack: stack to scale up or down
+        :param output_key: The name of the output to get the URL from
+        :param delta: The expected change in number of instances in
+                      the stack (signed int)
+        """
+        num_instances = self._count_instances(stack)
+        expected_instances = num_instances + delta
+        LOG.debug("Scaling stack %s from %s to %s instances with %s" %
+                  (stack.id, num_instances, expected_instances, output_key))
+        with base.AtomicAction(self, "heat.scale_with_%s" % output_key):
+            self._stack_webhook(stack, output_key)
+            utils.wait_for(
+                stack,
+                is_ready=lambda s: (
+                    self._count_instances(s) == expected_instances),
+                update_resource=utils.get_from_manager(
+                    ["UPDATE_FAILED"]),
+                timeout=CONF.benchmark.heat_stack_scale_timeout,
+                check_interval=CONF.benchmark.heat_stack_scale_poll_interval)
+
+    def _stack_webhook(self, stack, output_key):
+        """POST to the URL given in the output value identified by output_key.
+
+        This can be used to scale stacks up and down, for instance.
+
+        :param stack: stack to call a webhook on
+        :param output_key: The name of the output to get the URL from
+        :raises: InvalidConfigException if the output key is not found
+        """
+        url = None
+        for output in stack.outputs:
+            if output["output_key"] == output_key:
+                url = output["output_value"]
+                break
+        else:
+            raise exceptions.InvalidConfigException(
+                "No output key %(key)s found in stack %(id)s" %
+                {"key": output_key, "id": stack.id})
+
+        with base.AtomicAction(self, "heat.%s_webhook" % output_key):
+            requests.post(url).raise_for_status()

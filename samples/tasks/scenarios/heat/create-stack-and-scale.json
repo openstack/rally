@@ -1,0 +1,22 @@
+{
+  "HeatStacks.create_stack_and_scale": [
+    {
+      "args": {
+        "template_path": "templates/autoscaling_group.yaml.template",
+        "output_key": "scaling_url",
+        "delta": 1
+      },
+      "runner": {
+        "type": "constant",
+        "concurrency": 2,
+        "times": 3
+      },
+      "context": {
+        "users": {
+          "users_per_tenant": 1,
+          "tenants": 2
+        }
+      }
+    }
+  ]
+}

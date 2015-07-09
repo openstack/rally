@@ -242,3 +242,41 @@
       sla:
         failure_rate:
           max: 0
+
+  HeatStacks.create_stack_and_scale:
+    -
+      args:
+        template_path: "/home/jenkins/.rally/extra/autoscaling_group.yaml.template"
+        output_key: "scaling_url"
+        delta: 1
+        parameters:
+          scaling_adjustment: 1
+      runner:
+        type: "constant"
+        times: 2
+        concurrency: 1
+      context:
+        users:
+          tenants: 2
+          users_per_tenant: 1
+      sla:
+        failure_rate:
+          max: 0
+    -
+      args:
+        template_path: "/home/jenkins/.rally/extra/autoscaling_group.yaml.template"
+        output_key: "scaling_url"
+        delta: -1
+        parameters:
+          scaling_adjustment: -1
+      runner:
+        type: "constant"
+        times: 2
+        concurrency: 2
+      context:
+        users:
+          tenants: 2
+          users_per_tenant: 1
+      sla:
+        failure_rate:
+          max: 0

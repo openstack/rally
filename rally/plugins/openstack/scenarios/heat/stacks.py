@@ -144,6 +144,43 @@ class HeatStacks(utils.HeatScenario):
     @validation.required_services(consts.Service.HEAT)
     @validation.required_openstack(users=True)
     @base.scenario(context={"cleanup": ["heat"]})
+    def create_stack_and_scale(self, template_path, output_key, delta,
+                               parameters=None, files=None,
+                               environment=None):
+        """Create an autoscaling stack and invoke a scaling policy.
+
+        Measure the performance of autoscaling webhooks.
+
+        :param template_path: path to template file that includes an
+                              OS::Heat::AutoScalingGroup resource
+        :param output_key: the stack output key that corresponds to
+                           the scaling webhook
+        :param delta: the number of instances the stack is expected to
+                      change by.
+        :param parameters: parameters to use in heat template
+        :param files: files used in template (dict of file name to
+                      file path)
+        :param environment: stack environment definition (dict)
+        """
+        # TODO(stpierre): Kilo Heat is *much* better than Juno for the
+        # requirements of this scenario, so once Juno goes out of
+        # support we should update this scenario to suck less. Namely:
+        #
+        # * Kilo Heat can supply alarm_url attributes without needing
+        #   an output key, so instead of getting the output key from
+        #   the user, just get the name of the ScalingPolicy to apply.
+        # * Kilo Heat changes the status of a stack while scaling it,
+        #   so _scale_stack() can check for the stack to have changed
+        #   size and for it to be in UPDATE_COMPLETE state, so the
+        #   user no longer needs to specify the expected delta.
+        stack = self._create_stack(template_path, parameters, files,
+                                   environment)
+        self._scale_stack(stack, output_key, delta)
+
+    @types.set(template_path=types.FileType, files=types.FileTypeDict)
+    @validation.required_services(consts.Service.HEAT)
+    @validation.required_openstack(users=True)
+    @base.scenario(context={"cleanup": ["heat"]})
     def create_suspend_resume_delete_stack(self, template_path,
                                            parameters=None, files=None,
                                            environment=None):
