@@ -24,7 +24,9 @@ CONF = cfg.CONF
 CTX = "rally.plugins.openstack.context.sahara"
 
 
-class SaharaClusterTestCase(test.TestCase):
+class SaharaClusterTestCase(test.ScenarioTestCase):
+
+    patch_benchmark_utils = False
 
     def setUp(self):
         super(SaharaClusterTestCase, self).setUp()
@@ -42,7 +44,7 @@ class SaharaClusterTestCase(test.TestCase):
             for j in range(self.users_per_tenant):
                 self.users_key.append({"id": "%s_%s" % (str(i), str(j)),
                                        "tenant_id": str(i),
-                                       "endpoint": "endpoint"})
+                                       "endpoint": mock.MagicMock()})
 
         CONF.set_override("cluster_check_interval", 0, "benchmark")
 
@@ -52,7 +54,7 @@ class SaharaClusterTestCase(test.TestCase):
             "config": {
                 "users": {
                     "tenants": self.tenants_num,
-                    "users_per_tenant": self.users_per_tenant,
+                    "users_per_tenant": self.users_per_tenant
                 },
                 "sahara_cluster": {
                     "flavor_id": "test_flavor",
@@ -70,12 +72,8 @@ class SaharaClusterTestCase(test.TestCase):
     @mock.patch("%s.sahara_cluster.resource_manager.cleanup" % CTX)
     @mock.patch("%s.sahara_cluster.utils.SaharaScenario._launch_cluster" % CTX,
                 return_value=mock.MagicMock(id=42))
-    @mock.patch("%s.sahara_cluster.osclients" % CTX)
-    def test_setup_and_cleanup(
-            self, mock_osclients, mock_sahara_scenario__launch_cluster,
-            mock_cleanup):
-
-        mock_sahara = mock_osclients.Clients(mock.MagicMock()).sahara()
+    def test_setup_and_cleanup(self, mock_sahara_scenario__launch_cluster,
+                               mock_cleanup):
 
         ctx = self.context_without_cluster_keys
         sahara_ctx = sahara_cluster.SaharaCluster(ctx)
@@ -100,7 +98,7 @@ class SaharaClusterTestCase(test.TestCase):
                 wait_active=False
             ))
 
-        mock_sahara.clusters.get.side_effect = [
+        self.clients("sahara").clusters.get.side_effect = [
             mock.MagicMock(status="not-active"),
             mock.MagicMock(status="active")]
         sahara_ctx.setup()
@@ -113,11 +111,8 @@ class SaharaClusterTestCase(test.TestCase):
 
     @mock.patch("%s.sahara_cluster.utils.SaharaScenario._launch_cluster" % CTX,
                 return_value=mock.MagicMock(id=42))
-    @mock.patch("%s.sahara_cluster.osclients" % CTX)
-    def test_setup_and_cleanup_error(
-            self, mock_osclients, mock_sahara_scenario__launch_cluster):
-
-        mock_sahara = mock_osclients.Clients(mock.MagicMock()).sahara()
+    def test_setup_and_cleanup_error(self,
+                                     mock_sahara_scenario__launch_cluster):
 
         ctx = self.context_without_cluster_keys
         sahara_ctx = sahara_cluster.SaharaCluster(ctx)
@@ -141,8 +136,9 @@ class SaharaClusterTestCase(test.TestCase):
                 wait_active=False
             ))
 
-        mock_sahara.clusters.get.side_effect = [
+        self.clients("sahara").clusters.get.side_effect = [
             mock.MagicMock(status="not-active"),
-            mock.MagicMock(status="error")]
+            mock.MagicMock(status="error")
+        ]
 
         self.assertRaises(exceptions.SaharaClusterFailure, sahara_ctx.setup)

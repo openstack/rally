@@ -20,7 +20,11 @@ class NeutronLoadbalancerv1TestCase(test.TestCase):
 
     def _get_context(self):
         return {
-            "user": {"id": "fake_user", "tenant_id": "fake_tenant"},
+            "user": {
+                "id": "fake_user",
+                "tenant_id": "fake_tenant",
+                "endpoint": mock.MagicMock()
+            },
             "tenant": {"id": "fake_tenant",
                        "networks": [{"id": "fake_net",
                                      "subnets": ["fake_subnet"]}]}}

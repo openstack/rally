@@ -17,7 +17,6 @@ from rally.common.i18n import _
 from rally.common import log as logging
 from rally.common import utils as rutils
 from rally import consts
-from rally import osclients
 from rally.plugins.openstack.context.cleanup import manager as resource_manager
 from rally.plugins.openstack.scenarios.heat import utils as heat_utils
 from rally.task import context
@@ -77,8 +76,7 @@ class StackGenerator(context.Context):
             self.config["resources_per_stack"])
         for user, tenant_id in rutils.iterate_per_tenants(
                 self.context["users"]):
-            heat_scenario = heat_utils.HeatScenario(
-                clients=osclients.Clients(user["endpoint"]))
+            heat_scenario = heat_utils.HeatScenario({"user": user})
             self.context["tenants"][tenant_id]["stacks"] = []
             for i in range(self.config["stacks_per_tenant"]):
                 stack = heat_scenario._create_stack(template)

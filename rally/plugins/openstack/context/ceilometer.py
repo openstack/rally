@@ -16,7 +16,6 @@ from rally.common.i18n import _
 from rally.common import log as logging
 from rally.common import utils as rutils
 from rally import consts
-from rally import osclients
 from rally.plugins.openstack.scenarios.ceilometer import utils as ceilo_utils
 from rally.task import context
 
@@ -70,26 +69,20 @@ class CeilometerSampleGenerator(context.Context):
         counter_type = self.config["counter_type"]
         counter_unit = self.config["counter_unit"]
         counter_volume = self.config["counter_volume"]
-        resources_per_tenant = self.config["resources_per_tenant"]
-        samples_per_resource = self.config["samples_per_resource"]
         for user, tenant_id in rutils.iterate_per_tenants(
                 self.context["users"]):
             self.context["tenants"][tenant_id]["samples"] = []
             self.context["tenants"][tenant_id]["resources"] = []
-            clients = osclients.Clients(user["endpoint"])
-            scenario = ceilo_utils.CeilometerScenario(
-                clients=clients)
-            for i in range(resources_per_tenant):
-                for j in range(samples_per_resource):
-                    try:
-                        sample = scenario._create_sample(counter_name,
-                                                         counter_type,
-                                                         counter_unit,
-                                                         counter_volume)
-                        self.context["tenants"][tenant_id]["samples"].append(
-                            sample[0].to_dict())
-                    except Exception as err:
-                        LOG.error("Creating a sample failed: %s" % err)
+            scenario = ceilo_utils.CeilometerScenario({"user": user})
+            for i in range(self.config["resources_per_tenant"]):
+                for j in range(self.config["samples_per_resource"]):
+                    sample = scenario._create_sample(counter_name,
+                                                     counter_type,
+                                                     counter_unit,
+                                                     counter_volume)
+                    self.context["tenants"][tenant_id]["samples"].append(
+                        sample[0].to_dict())
+
                 self.context["tenants"][tenant_id]["resources"].append(
                     sample[0].resource_id)
 

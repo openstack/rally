@@ -20,9 +20,8 @@ from tests.unit import test
 
 class CinderQuotasTestCase(test.TestCase):
 
-    @mock.patch("rally.plugins.openstack.context."
-                "quotas.quotas.osclients.Clients")
-    def test_update(self, mock_clients):
+    def test_update(self):
+        mock_clients = mock.MagicMock()
         cinder_quo = cinder_quotas.CinderQuotas(mock_clients)
         tenant_id = mock.MagicMock()
         quotas_values = {
@@ -34,9 +33,8 @@ class CinderQuotasTestCase(test.TestCase):
         mock_clients.cinder().quotas.update.assert_called_once_with(
             tenant_id, **quotas_values)
 
-    @mock.patch("rally.plugins.openstack.context."
-                "quotas.quotas.osclients.Clients")
-    def test_delete(self, mock_clients):
+    def test_delete(self):
+        mock_clients = mock.MagicMock()
         cinder_quo = cinder_quotas.CinderQuotas(mock_clients)
         tenant_id = mock.MagicMock()
         cinder_quo.delete(tenant_id)

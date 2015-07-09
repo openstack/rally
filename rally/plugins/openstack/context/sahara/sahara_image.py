@@ -64,19 +64,16 @@ class SaharaImage(context.Context):
 
     def _create_image(self, hadoop_version, image_url, plugin_name, user,
                       user_name):
-        clients = osclients.Clients(user["endpoint"])
-        scenario = glance_utils.GlanceScenario(clients=clients)
+        scenario = glance_utils.GlanceScenario({"user": user})
         image_name = rutils.generate_random_name(prefix="rally_sahara_image_")
         image = scenario._create_image(name=image_name,
                                        container_format="bare",
                                        image_location=image_url,
                                        disk_format="qcow2")
-        clients.sahara().images.update_image(image_id=image.id,
-                                             user_name=user_name,
-                                             desc="")
-        clients.sahara().images.update_tags(image_id=image.id,
-                                            new_tags=[plugin_name,
-                                                      hadoop_version])
+        scenario.clients("sahara").images.update_image(
+            image_id=image.id, user_name=user_name, desc="")
+        scenario.clients("sahara").images.update_tags(
+            image_id=image.id, new_tags=[plugin_name, hadoop_version])
         return image.id
 
     @rutils.log_task_wrapper(LOG.info, _("Enter context: `Sahara Image`"))

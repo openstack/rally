@@ -16,7 +16,6 @@ from rally.common.i18n import _
 from rally.common import log as logging
 from rally.common import utils as rutils
 from rally import consts
-from rally import osclients
 from rally.plugins.openstack.context.cleanup import manager as resource_manager
 from rally.plugins.openstack.scenarios.glance import utils as glance_utils
 from rally.task import context
@@ -78,9 +77,7 @@ class ImageGenerator(context.Context):
         for user, tenant_id in rutils.iterate_per_tenants(
                 self.context["users"]):
             current_images = []
-            clients = osclients.Clients(user["endpoint"])
-            glance_scenario = glance_utils.GlanceScenario(
-                clients=clients)
+            glance_scenario = glance_utils.GlanceScenario({"user": user})
             for i in range(images_per_tenant):
                 if image_name and i > 0:
                     cur_name = image_name + str(i)

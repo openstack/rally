@@ -109,7 +109,10 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
     def test__boot_server_with_ssh(self, mock__generate_random_name):
         self.clients("nova").servers.create.return_value = self.server
         nova_scenario = utils.NovaScenario(context={
-            "user": {"secgroup": {"name": "test"}}}
+            "user": {
+                "secgroup": {"name": "test"},
+                "endpoint": mock.MagicMock()
+            }}
         )
         return_server = nova_scenario._boot_server("image_id", "flavor_id")
         self.mock_wait_for.mock.assert_called_once_with(
@@ -132,8 +135,11 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
     def test__boot_server_with_sec_group(self, mock__generate_random_name):
         self.clients("nova").servers.create.return_value = self.server
         nova_scenario = utils.NovaScenario(context={
-            "user": {"secgroup": {"name": "new"}}}
-        )
+            "user": {
+                "secgroup": {"name": "new"},
+                "endpoint": mock.MagicMock()
+            }
+        })
         return_server = nova_scenario._boot_server(
             "image_id", "flavor_id",
             security_groups=["test"])
@@ -158,7 +164,10 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
                                                  mock__generate_random_name):
         self.clients("nova").servers.create.return_value = self.server
         nova_scenario = utils.NovaScenario(context={
-            "user": {"secgroup": {"name": "test1"}}}
+            "user": {
+                "secgroup": {"name": "test1"},
+                "endpoint": mock.MagicMock()
+            }}
         )
         return_server = nova_scenario._boot_server(
             "image_id", "flavor_id",

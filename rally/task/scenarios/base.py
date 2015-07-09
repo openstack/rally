@@ -25,6 +25,7 @@ from rally.common.plugin import discover
 from rally.common import utils
 from rally import consts
 from rally import exceptions
+from rally import osclients
 from rally.task import functional
 
 
@@ -56,10 +57,18 @@ class Scenario(functional.FunctionalMixin):
     RESOURCE_NAME_PREFIX = "rally_"
     RESOURCE_NAME_LENGTH = 10
 
-    def __init__(self, context=None, admin_clients=None, clients=None):
+    def __init__(self, context=None):
         self.context = context
-        self._admin_clients = admin_clients
-        self._clients = clients
+
+        # TODO(boris-42): This is going to be inside OpenStackScenario subclass
+        #                 so Rally framework won't depend on OpenStack stuff
+        if context:
+            if "admin" in context:
+                self._admin_clients = osclients.Clients(
+                    context["admin"]["endpoint"])
+            if "user" in context:
+                self._clients = osclients.Clients(context["user"]["endpoint"])
+
         self._idle_duration = 0
         self._atomic_actions = costilius.OrderedDict()
 

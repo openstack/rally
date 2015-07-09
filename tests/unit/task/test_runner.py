@@ -79,10 +79,7 @@ class ScenarioHelpersTestCase(test.TestCase):
         self.assertEqual(expected_context,
                          runner._get_scenario_context(context))
 
-    @mock.patch(BASE + "osclients")
-    def test_run_scenario_once_internal_logic(self, mock_osclients):
-        mock_osclients.Clients.return_value = "cl"
-
+    def test_run_scenario_once_internal_logic(self):
         context = runner._get_scenario_context(
             fakes.FakeUserContext({}).context)
         scenario_cls = mock.MagicMock()
@@ -90,7 +87,7 @@ class ScenarioHelpersTestCase(test.TestCase):
         runner._run_scenario_once(args)
 
         expected_calls = [
-            mock.call(context=context, admin_clients="cl", clients="cl"),
+            mock.call(context=context),
             mock.call().test(),
             mock.call().idle_duration(),
             mock.call().idle_duration(),
@@ -99,9 +96,7 @@ class ScenarioHelpersTestCase(test.TestCase):
         scenario_cls.assert_has_calls(expected_calls, any_order=True)
 
     @mock.patch(BASE + "rutils.Timer", side_effect=fakes.FakeTimer)
-    @mock.patch(BASE + "osclients")
-    def test_run_scenario_once_without_scenario_output(self, mock_osclients,
-                                                       mock_timer):
+    def test_run_scenario_once_without_scenario_output(self, mock_timer):
         context = runner._get_scenario_context(
             fakes.FakeUserContext({}).context)
         args = (1, fakes.FakeScenario, "do_it", context, {})
@@ -118,9 +113,7 @@ class ScenarioHelpersTestCase(test.TestCase):
         self.assertEqual(expected_result, result)
 
     @mock.patch(BASE + "rutils.Timer", side_effect=fakes.FakeTimer)
-    @mock.patch(BASE + "osclients")
-    def test_run_scenario_once_with_scenario_output(self, mock_osclients,
-                                                    mock_timer):
+    def test_run_scenario_once_with_scenario_output(self, mock_timer):
         context = runner._get_scenario_context(
             fakes.FakeUserContext({}).context)
         args = (1, fakes.FakeScenario, "with_output", context, {})
@@ -137,8 +130,7 @@ class ScenarioHelpersTestCase(test.TestCase):
         self.assertEqual(expected_result, result)
 
     @mock.patch(BASE + "rutils.Timer", side_effect=fakes.FakeTimer)
-    @mock.patch(BASE + "osclients")
-    def test_run_scenario_once_exception(self, mock_osclients, mock_timer):
+    def test_run_scenario_once_exception(self, mock_timer):
         context = runner._get_scenario_context(
             fakes.FakeUserContext({}).context)
         args = (1, fakes.FakeScenario, "something_went_wrong", context, {})
