@@ -58,6 +58,15 @@ class EnumMixinTestCase(test.TestCase):
 
         self.assertEqual(set(list(Foo())), set([10, 20, "2000"]))
 
+    def test_with_underscore(self):
+
+        class Foo(utils.EnumMixin):
+            a = 10
+            b = 20
+            _CC = "2000"
+
+        self.assertEqual(set(list(Foo())), set([10, 20]))
+
 
 class StdIOCaptureTestCase(test.TestCase):
 
