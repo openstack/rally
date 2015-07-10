@@ -209,7 +209,9 @@ class LxcEngineTestCase(test.TestCase):
                               mock.call.destroy_ports([(1, 2), (3, 4)]),
                               mock.call.delete_tunnels()], host.mock_calls)
 
-        for res in fake_resources:
-            mock_deployment.assert_has_calls(mock.call.delete_resource(res.id))
+        delete_calls = [mock.call.delete_resource(r.id)
+                        for r in fake_resources]
+        self.assertEqual(delete_calls,
+                         mock_deployment.delete_resource.call_args_list)
 
         fake_provider.destroy_servers.assert_called_once_with()

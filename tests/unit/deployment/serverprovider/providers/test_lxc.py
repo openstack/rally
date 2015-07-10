@@ -97,8 +97,7 @@ class LxcHostTestCase(test.TestCase):
             mock.call("LXC_BRIDGE=\"lxcbr0\"\n"),
             mock.call("USE_LXC_BRIDGE=\"true\"\n")
         ]
-        for call in write_calls:
-            fake_conf.write.assert_has_calls(call)
+        fake_conf.write.assert_has_calls(write_calls, any_order=True)
         ssh_calls = [mock.call.run("cat > /tmp/.lxc_default", stdin=fake_conf),
                      mock.call.run("/bin/sh", stdin="fake_script")]
         self.assertEqual(ssh_calls, self.server.ssh.mock_calls)
