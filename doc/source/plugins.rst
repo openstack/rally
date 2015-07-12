@@ -231,7 +231,7 @@ Let's create as a plugin an SLA (success criterion) which checks whether the ran
 Creation
 ^^^^^^^^
 
-Inherit a class for your plugin from the base *SLA* class and implement its API (the *check()* method):
+Inherit a class for your plugin from the base *SLA* class and implement its API (the *add_iteration(iteration)*, the *details()* method):
 
 .. code-block:: none
 
