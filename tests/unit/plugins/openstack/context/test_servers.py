@@ -104,7 +104,7 @@ class ServerGeneratorTestCase(test.TestCase):
 
         new_context = copy.deepcopy(real_context)
         for id in new_context["tenants"]:
-            new_context["tenants"][id].setdefault("servers", list())
+            new_context["tenants"][id].setdefault("servers", [])
             for i in range(servers_per_tenant):
                 new_context["tenants"][id]["servers"].append("uuid")
 
@@ -126,7 +126,7 @@ class ServerGeneratorTestCase(test.TestCase):
             for i in range(users_per_tenant):
                 users.append({"id": i, "tenant_id": id,
                               "endpoint": "endpoint"})
-            tenants[id].setdefault("servers", list())
+            tenants[id].setdefault("servers", [])
             for j in range(servers_per_tenant):
                 tenants[id]["servers"].append("uuid")
 

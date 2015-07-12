@@ -58,7 +58,7 @@ class VolumeGenerator(context.Context):
 
         for user, tenant_id in rutils.iterate_per_tenants(
                 self.context["users"]):
-            self.context["tenants"][tenant_id].setdefault("volumes", list())
+            self.context["tenants"][tenant_id].setdefault("volumes", [])
             clients = osclients.Clients(user["endpoint"])
             cinder_util = cinder_utils.CinderScenario(clients=clients)
             for i in range(volumes_per_tenant):

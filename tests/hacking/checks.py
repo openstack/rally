@@ -47,9 +47,9 @@ re_assert_equal_in_end_with_true_or_false = re.compile(
 re_assert_equal_in_start_with_true_or_false = re.compile(
     r"assertEqual\((True|False), (\w|[][.'\"])+( not)? in (\w|[][.'\", ])+\)")
 re_no_construct_dict = re.compile(
-    r"=\sdict\(\)")
+    r"\sdict\(\)")
 re_no_construct_list = re.compile(
-    r"=\slist\(\)")
+    r"\slist\(\)")
 re_str_format = re.compile(r"""
 %            # start of specifier
 \(([^)]+)\)  # mapping key, in group 1
@@ -57,7 +57,8 @@ re_str_format = re.compile(r"""
 (?:-?\d*)?   # optional minimum field width
 (?:\.\d*)?   # optional precision
 [hLl]?       # optional length modifier
-[A-z%]       # conversion modifier""", re.X)
+[A-z%]       # conversion modifier
+""", re.X)
 
 
 def skip_ignored_lines(func):
