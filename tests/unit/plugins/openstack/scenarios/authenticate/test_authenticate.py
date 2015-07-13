@@ -54,7 +54,7 @@ class AuthenticateTestCase(test.ScenarioTestCase):
         scenario = authenticate.Authenticate()
         with base.AtomicAction(scenario, "authenticate.validate_neutron"):
             scenario.validate_neutron(5)
-        self.assertEqual(self.clients("neutron").get_auth_info.call_count, 5)
+        self.assertEqual(self.clients("neutron").list_networks.call_count, 5)
 
     def test_validate_heat(self):
         scenario = authenticate.Authenticate()
