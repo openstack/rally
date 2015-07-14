@@ -476,6 +476,16 @@ class NeutronScenarioTestCase(test.ScenarioTestCase):
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "neutron.list_pools")
 
+    def test_list_v1_vips(self):
+        scenario = utils.NeutronScenario()
+        vips_list = []
+        vips_dict = {"vips": vips_list}
+        self.clients("neutron").list_vips.return_value = vips_dict
+        return_vips_dict = scenario._list_v1_vips()
+        self.assertEqual(vips_dict, return_vips_dict)
+        self._test_atomic_action_timer(scenario.atomic_actions(),
+                                       "neutron.list_vips")
+
 
 class NeutronScenarioFunctionalTestCase(test.FakeClientsScenarioTestCase):
 
@@ -572,3 +582,29 @@ class NeutronLoadbalancerScenarioTestCase(test.ScenarioTestCase):
         if atomic_action:
             self._test_atomic_action_timer(
                 neutron_scenario.atomic_actions(), "neutron.create_pool")
+
+    @ddt.data(
+        {},
+        {"vip_create_args": {}},
+        {"vip_create_args": {"name": "given-name"}},
+    )
+    @ddt.unpack
+    def test__create_v1_vip(self, vip_create_args=None):
+        neutron_scenario = utils.NeutronScenario()
+        vip = {"vip": {"id": "vip-id"}}
+        pool = {"pool": {"id": "pool-id", "subnet_id": "subnet-id"}}
+        vip_create_args = vip_create_args or {}
+        if vip_create_args.get("name") is None:
+            neutron_scenario._generate_random_name = mock.Mock(
+                return_value="random_name")
+        self.clients("neutron").create_vip.return_value = vip
+        args = {"protocol_port": 80, "protocol": "HTTP", "name": "random_name",
+                "subnet_id": pool["pool"]["subnet_id"],
+                "pool_id": pool["pool"]["id"]}
+        args.update(vip_create_args)
+        expected_vip_data = {"vip": args}
+        resultant_vip = neutron_scenario._create_v1_vip(
+            pool, **vip_create_args)
+        self.assertEqual(resultant_vip, vip)
+        self.clients("neutron").create_vip.assert_called_once_with(
+            expected_vip_data)

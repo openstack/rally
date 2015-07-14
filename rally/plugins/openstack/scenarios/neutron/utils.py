@@ -31,6 +31,7 @@ class NeutronScenario(scenario.OpenStackScenario):
     # TODO(rkiran): modify in case LBaaS-v2 requires
     LB_METHOD = "ROUND_ROBIN"
     LB_PROTOCOL = "HTTP"
+    LB_PROTOCOL_PORT = 80
 
     def _warn_about_deprecated_name_kwarg(self, resource, kwargs):
         """Warn about use of a deprecated 'name' kwarg and replace it.
@@ -347,3 +348,23 @@ class NeutronScenario(scenario.OpenStackScenario):
         self._warn_about_deprecated_name_kwarg(pool, pool_update_args)
         body = {"pool": pool_update_args}
         return self.clients("neutron").update_pool(pool["pool"]["id"], body)
+
+    def _create_v1_vip(self, pool, **vip_create_args):
+        """Create VIP(v1)
+
+        :parm pool: dict, neutron lb-pool
+        :parm vip_create_args: dict, POST /lb/vips request options
+        :returns: dict, neutron lb vip
+        """
+        args = {"protocol": self.LB_PROTOCOL,
+                "protocol_port": self.LB_PROTOCOL_PORT,
+                "name": self._generate_random_name("rally_vip_"),
+                "pool_id": pool["pool"]["id"],
+                "subnet_id": pool["pool"]["subnet_id"]}
+        args.update(vip_create_args)
+        return self.clients("neutron").create_vip({"vip": args})
+
+    @atomic.action_timer("neutron.list_vips")
+    def _list_v1_vips(self, **kwargs):
+        """Return user lb vip list(v1)."""
+        return self.clients("neutron").list_vips(**kwargs)
