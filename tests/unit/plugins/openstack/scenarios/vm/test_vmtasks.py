@@ -15,6 +15,8 @@
 
 import mock
 
+from rally.common import log
+from rally.common import utils
 from rally import exceptions
 from rally.plugins.openstack.scenarios.vm import vmtasks
 from tests.unit import test
@@ -36,9 +38,41 @@ class VMTasksTestCase(test.TestCase):
             return_value=(0, "\"foo_out\"", "foo_err"))
 
     def test_boot_runcommand_delete(self):
+        with log.LogCatcher(utils.LOG) as catcher:
+            self.scenario.boot_runcommand_delete(
+                "foo_image", "foo_flavor",
+                script="foo_script", interpreter="foo_interpreter",
+                username="foo_username",
+                password="foo_password",
+                use_floating_ip="use_fip",
+                floating_network="ext_network",
+                force_delete="foo_force",
+                volume_args={"size": 16},
+                foo_arg="foo_value")
+
+        catcher.assertInLogs(
+            "Use `command' argument instead (args `script', `interpreter' "
+            "deprecated in Rally v0.0.5)")
+
+        self.scenario._create_volume.assert_called_once_with(
+            16, imageRef=None)
+        self.scenario._boot_server_with_fip.assert_called_once_with(
+            "foo_image", "foo_flavor", use_floating_ip="use_fip",
+            floating_network="ext_network", key_name="keypair_name",
+            block_device_mapping={"vdrally": "foo_volume:::1"},
+            foo_arg="foo_value")
+
+        self.scenario._run_command.assert_called_once_with(
+            "foo_ip", 22, "foo_username", "foo_password",
+            command={"script_file": "foo_script",
+                     "interpreter": "foo_interpreter"})
+        self.scenario._delete_server_with_fip.assert_called_once_with(
+            "foo_server", self.ip, force_delete="foo_force")
+
+    def test_boot_runcommand_delete_command(self):
         self.scenario.boot_runcommand_delete(
             "foo_image", "foo_flavor",
-            script="foo_script", interpreter="foo_interpreter",
+            command={"remote_path": "foo"},
             username="foo_username",
             password="foo_password",
             use_floating_ip="use_fip",
@@ -57,8 +91,7 @@ class VMTasksTestCase(test.TestCase):
 
         self.scenario._run_command.assert_called_once_with(
             "foo_ip", 22, "foo_username", "foo_password",
-            command={"script_file": "foo_script",
-                     "interpreter": "foo_interpreter"})
+            command={"remote_path": "foo"})
         self.scenario._delete_server_with_fip.assert_called_once_with(
             "foo_server", self.ip, force_delete="foo_force")
 

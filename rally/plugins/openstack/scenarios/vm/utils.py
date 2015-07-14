@@ -47,7 +47,8 @@ class VMScenario(base.Scenario):
 
         :param ssh: A SSHClient instance.
         :param command: Dictionary specifying command to execute.
-            See `validation.valid_command' docstring for details.
+            See `rally info find VMTasks.boot_runcommand_delete' parameter
+            `command' docstring for explanation.
 
         :returns: tuple (exit_status, stdout, stderr)
         """
@@ -150,7 +151,8 @@ class VMScenario(base.Scenario):
         :param username: str. ssh username for server
         :param password: Password for SSH authentication
         :param command: Dictionary specifying command to execute.
-                See `valiation.valid_command' docstring for explanation.
+            See `rally info find VMTasks.boot_runcommand_delete' parameter
+            `command' docstring for explanation.
         :param pkey: key for SSH authentication
 
         :returns: tuple (exit_status, stdout, stderr)

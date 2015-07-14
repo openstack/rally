@@ -189,42 +189,8 @@ def check_command_dict(command):
 def valid_command(config, clients, deployment, param_name, required=True):
     """Checks that parameter is a proper command-specifying dictionary.
 
-    Ensure that the command dictionary either specifies remote command path
-    via `remote_path' (optionally copied from a local file specified by
-    `local_path`), an inline script via `script_inline' or a local script
-    file path using `script_file'. `script_file' and `local_path' are checked
-    to be accessible like in `file_exists' validator.
-
-    The `script_inline' and `script_file' both require an `interpreter' value
-    to specify the interpreter script should be run with.
-
-    Note that `interpreter' and `remote_path' can be an array specifying
-    environment variables and args.
-
-    Examples::
-
-        # Run a `local_script.pl' file sending it to a remote Perl interpreter
-        command = {
-            "script_file": "local_script.pl",
-            "interpreter": "/usr/bin/perl"
-        }
-
-        # Run an inline script sending it to a remote interpreter
-        command = {
-            "script_inline": "echo 'Hello, World!'",
-            "interpreter": "/bin/sh"
-        }
-
-        # Run a remote command
-        command = {
-            "remote_path": "/bin/false"
-        }
-
-        # Run an inline script sending it to a remote interpreter
-        command = {
-            "script_inline": "echo \"Hello, ${NAME:-World}\"",
-            "interpreter": ["NAME=Earth", "/bin/sh"]
-        }
+    Ensure that the command dictionary is a proper command-specifying
+    dictionary described in `vmtasks.VMTasks.boot_runcommand_delete' docstring.
 
     :param param_name: Name of parameter to validate
     :param required: Boolean indicating that the command dictionary is required

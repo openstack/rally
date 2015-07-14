@@ -599,8 +599,20 @@
           name: {{image_name}}
         floating_network: "public"
         use_floatingip: true
-        script: "/home/jenkins/.rally/extra/instance_dd_test.sh"
-        interpreter: "/bin/sh"
+        command:
+          script_inline: |
+            time_seconds(){ (time -p $1 ) 2>&1 |awk '/real/{print $2}'; }
+            file=/tmp/test.img
+            c=100 #100M
+            write_seq=$(time_seconds "dd if=/dev/zero of=$file bs=1M count=$c")
+            read_seq=$(time_seconds "dd if=$file of=/dev/null bs=1M count=$c")
+            [ -f $file ] && rm $file
+
+            echo "{
+                \"write_seq\": $write_seq,
+                \"read_seq\": $read_seq
+                }"
+          interpreter: "/bin/sh"
         username: "cirros"
       runner:
         type: "constant"
@@ -623,8 +635,9 @@
         volume_args:
             size: 2
         use_floatingip: true
-        script: "/home/jenkins/.rally/extra/instance_dd_test.sh"
-        interpreter: "/bin/sh"
+        command:
+          script_file: "/home/jenkins/.rally/extra/instance_dd_test.sh"
+          interpreter: "/bin/sh"
         username: "cirros"
       runner:
         type: "constant"
@@ -645,8 +658,9 @@
         image:
           name: {{image_name}}
         use_floatingip: false
-        script: "/home/jenkins/.rally/extra/instance_dd_test.sh"
-        interpreter: "/bin/sh"
+        command:
+          script_file: "/home/jenkins/.rally/extra/instance_dd_test.sh"
+          interpreter: "/bin/sh"
         username: "cirros"
       runner:
         type: "constant"
