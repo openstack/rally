@@ -93,7 +93,7 @@ class Authenticate(base.Scenario):
         neutron_client = self.clients("neutron")
         for i in range(repetitions):
             with base.AtomicAction(self, "authenticate.validate_neutron"):
-                neutron_client.get_auth_info()
+                neutron_client.list_networks()
 
     @validation.number("repetitions", minval=1)
     @validation.required_openstack(users=True)
