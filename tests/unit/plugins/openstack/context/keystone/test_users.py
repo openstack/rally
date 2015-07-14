@@ -65,7 +65,7 @@ class UserGeneratorTestCase(test.TestCase):
     @mock.patch("%s.network.wrap" % CTX)
     def test__remove_default_security_group_neutron_no_sg(self, mock_wrap):
         net_wrapper = mock.Mock(SERVICE_IMPL=consts.Service.NEUTRON)
-        net_wrapper.supports_security_group.return_value = (False, None)
+        net_wrapper.supports_extension.return_value = (False, None)
         mock_wrap.return_value = net_wrapper
 
         user_generator = users.UserGenerator(self.context)
@@ -80,7 +80,8 @@ class UserGeneratorTestCase(test.TestCase):
         user_generator._remove_default_security_group()
 
         mock_wrap.assert_called_once_with(admin_clients)
-        net_wrapper.supports_security_group.assert_called_once_with()
+        net_wrapper.supports_extension.assert_called_once_with(
+            "security-group")
 
     @mock.patch("rally.common.utils.iterate_per_tenants")
     @mock.patch("%s.network" % CTX)
@@ -90,7 +91,7 @@ class UserGeneratorTestCase(test.TestCase):
             self, mock_check_service_status, mock_network,
             mock_iterate_per_tenants):
         net_wrapper = mock.Mock(SERVICE_IMPL=consts.Service.NEUTRON)
-        net_wrapper.supports_security_group.return_value = (True, None)
+        net_wrapper.supports_extension.return_value = (True, None)
         mock_network.wrap.return_value = net_wrapper
 
         user_generator = users.UserGenerator(self.context)

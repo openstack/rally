@@ -142,9 +142,10 @@ class NovaNetworkWrapperTestCase(test.TestCase):
             [mock.call("fip_id", do_raise=True)] * 4,
             wrap._get_floating_ip.mock_calls)
 
-    def test_supports_secgroup(self):
+    def test_supports_extension(self):
         wrap = self.get_wrapper()
-        self.assertTrue(wrap.supports_security_group()[0])
+        self.assertFalse(wrap.supports_extension("extension")[0])
+        self.assertTrue(wrap.supports_extension("security-group")[0])
 
 
 class NeutronWrapperTestCase(test.TestCase):
@@ -209,6 +210,24 @@ class NeutronWrapperTestCase(test.TestCase):
         wrap.client.list_networks.return_value = {"networks": []}
         self.assertRaises(network.NetworkWrapperException, wrap.get_network,
                           name="foo_name")
+
+    @mock.patch("rally.common.utils.generate_random_name")
+    def test_create_v1_pool(self, mock_generate_random_name):
+        mock_generate_random_name.return_value = "foo_name"
+        subnet = "subnet_id"
+        service = self.get_wrapper()
+        expected_pool = {"pool": {
+            "id": "pool_id",
+            "name": "foo_name",
+            "subnet_id": subnet}}
+        service.client.create_pool.return_value = expected_pool
+        resultant_pool = service.create_v1_pool(subnet)
+        service.client.create_pool.assert_called_once_with({
+            "pool": {"lb_method": "ROUND_ROBIN",
+                     "subnet_id": subnet,
+                     "protocol": "HTTP",
+                     "name": "foo_name"}})
+        self.assertEqual(resultant_pool, expected_pool)
 
     @mock.patch("rally.common.utils.generate_random_name")
     def test_create_network(self, mock_generate_random_name):
@@ -345,6 +364,12 @@ class NeutronWrapperTestCase(test.TestCase):
         self.assertEqual(service.client.delete_subnet.mock_calls, [])
         service.client.delete_network.assert_called_once_with("foo_id")
 
+    def test_delete_v1_pool(self):
+        service = self.get_wrapper()
+        pool = {"pool": {"id": "pool-id"}}
+        service.delete_v1_pool(pool["pool"]["id"])
+        service.client.delete_pool.called_once_with([mock.call("pool-id")])
+
     def test_delete_network_with_dhcp_and_router_and_ports_and_subnets(self):
         service = self.get_wrapper()
         agents = ["foo_agent", "bar_agent"]
@@ -356,7 +381,8 @@ class NeutronWrapperTestCase(test.TestCase):
             {"ports": [{"id": port_id} for port_id in ports]})
         service.client.delete_network.return_value = "foo_deleted"
         result = service.delete_network(
-            {"id": "foo_id", "router_id": "foo_router", "subnets": subnets})
+            {"id": "foo_id", "router_id": "foo_router", "subnets": subnets,
+             "lb_pools": []})
         self.assertEqual(result, "foo_deleted")
         self.assertEqual(
             service.client.remove_network_from_dhcp_agent.mock_calls,
@@ -460,18 +486,18 @@ class NeutronWrapperTestCase(test.TestCase):
             {"port": {"network_id": "foo_net",
                       "name": "random_name", "foo": "bar"}})
 
-    def test_supports_security_group(self):
+    def test_supports_extension(self):
         wrap = self.get_wrapper()
         wrap.client.list_extensions.return_value = (
-            {"extensions": [{"alias": "security-group"}]})
-        self.assertTrue(wrap.supports_security_group()[0])
+            {"extensions": [{"alias": "extension"}]})
+        self.assertTrue(wrap.supports_extension("extension")[0])
 
         wrap.client.list_extensions.return_value = (
-            {"extensions": [{"alias": "dummy-group"}]})
-        self.assertFalse(wrap.supports_security_group()[0])
+            {"extensions": [{"alias": "extension"}]})
+        self.assertFalse(wrap.supports_extension("dummy-group")[0])
 
         wrap.client.list_extensions.return_value = {}
-        self.assertFalse(wrap.supports_security_group()[0])
+        self.assertFalse(wrap.supports_extension("extension")[0])
 
 
 class FunctionsTestCase(test.TestCase):

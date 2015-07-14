@@ -111,7 +111,8 @@ class UserGenerator(context.Context):
         if consts.Service.NEUTRON not in clients.services().values():
             return
 
-        use_sg, msg = network.wrap(clients).supports_security_group()
+        use_sg, msg = network.wrap(clients).supports_extension(
+            "security-group")
         if not use_sg:
             LOG.debug("Security group context is disabled: %s" % msg)
             return

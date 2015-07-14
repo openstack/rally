@@ -106,6 +106,9 @@
           tenants: 1
           users_per_tenant: 1
         network: {}
+        lbaas:
+          pool: {}
+          lbaas_version: 1
         quotas:
           neutron:
             network: -1
