@@ -20,7 +20,6 @@ from rally.common import log as logging
 from rally.common import utils as rutils
 from rally import consts
 from rally import exceptions
-from rally import osclients
 from rally.plugins.openstack.context.cleanup import manager as resource_manager
 from rally.plugins.openstack.scenarios.sahara import utils
 from rally.task import context
@@ -97,36 +96,40 @@ class SaharaCluster(context.Context):
 
         for user, tenant_id in rutils.iterate_per_tenants(
                 self.context["users"]):
-            clients = osclients.Clients(user["endpoint"])
 
             image_id = self.context["tenants"][tenant_id]["sahara_image"]
 
             floating_ip_pool = self.config.get("floating_ip_pool")
 
-            temporary_context = {"tenant": self.context["tenants"][tenant_id]}
-            cluster = utils.SaharaScenario(
-                context=temporary_context, clients=clients)._launch_cluster(
-                    plugin_name=self.config["plugin_name"],
-                    hadoop_version=self.config["hadoop_version"],
-                    flavor_id=self.config["flavor_id"],
-                    workers_count=self.config["workers_count"],
-                    image_id=image_id,
-                    floating_ip_pool=floating_ip_pool,
-                    volumes_per_node=self.config.get("volumes_per_node"),
-                    volumes_size=self.config.get("volumes_size", 1),
-                    auto_security_group=self.config.get("auto_security_group",
-                                                        True),
-                    security_groups=self.config.get("security_groups"),
-                    node_configs=self.config.get("node_configs"),
-                    cluster_configs=self.config.get("cluster_configs"),
-                    enable_anti_affinity=self.config.get(
-                        "enable_anti_affinity", False),
-                    wait_active=False)
+            temporary_context = {
+                "user": user,
+                "tenant": self.context["tenants"][tenant_id]
+            }
+            scenario = utils.SaharaScenario(context=temporary_context)
+
+            cluster = scenario._launch_cluster(
+                plugin_name=self.config["plugin_name"],
+                hadoop_version=self.config["hadoop_version"],
+                flavor_id=self.config["flavor_id"],
+                workers_count=self.config["workers_count"],
+                image_id=image_id,
+                floating_ip_pool=floating_ip_pool,
+                volumes_per_node=self.config.get("volumes_per_node"),
+                volumes_size=self.config.get("volumes_size", 1),
+                auto_security_group=self.config.get("auto_security_group",
+                                                    True),
+                security_groups=self.config.get("security_groups"),
+                node_configs=self.config.get("node_configs"),
+                cluster_configs=self.config.get("cluster_configs"),
+                enable_anti_affinity=self.config.get("enable_anti_affinity",
+                                                     False),
+                wait_active=False
+            )
 
             self.context["tenants"][tenant_id]["sahara_cluster"] = cluster.id
 
             # Need to save the client instance to poll for active status
-            wait_dict[cluster] = clients.sahara()
+            wait_dict[cluster] = scenario.clients("sahara")
 
         bench_utils.wait_for(
             resource=wait_dict,

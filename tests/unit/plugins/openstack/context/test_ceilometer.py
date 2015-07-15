@@ -18,7 +18,6 @@ import copy
 import mock
 
 from rally.plugins.openstack.context import ceilometer
-from tests.unit import fakes
 from tests.unit import test
 
 CTX = "rally.plugins.openstack.context"
@@ -29,8 +28,8 @@ class CeilometerSampleGeneratorTestCase(test.TestCase):
 
     def _gen_tenants(self, count):
         tenants = {}
-        for id in range(count):
-            tenants[str(id)] = dict(name=str(id))
+        for id_ in range(count):
+            tenants[str(id_)] = {"name": str(id_)}
         return tenants
 
     def _gen_context(self, tenants_count, users_per_tenant,
@@ -40,7 +39,7 @@ class CeilometerSampleGeneratorTestCase(test.TestCase):
         for id_ in tenants.keys():
             for i in range(users_per_tenant):
                 users.append({"id": i, "tenant_id": id_,
-                              "endpoint": "endpoint"})
+                              "endpoint": mock.MagicMock()})
         context = {
             "config": {
                 "users": {
@@ -83,19 +82,25 @@ class CeilometerSampleGeneratorTestCase(test.TestCase):
         inst = ceilometer.CeilometerSampleGenerator(context)
         self.assertEqual(inst.config, context["config"]["ceilometer"])
 
-    @mock.patch("%s.ceilometer.osclients" % CTX)
-    def test_setup(self, mock_osclients):
-        fc = fakes.FakeClients()
-        mock_osclients.Clients.return_value = fc
-
+    @mock.patch("%s.ceilometer.ceilo_utils.CeilometerScenario._create_sample"
+                % CTX)
+    def test_setup(self, mock_ceilometer_scenario__create_sample):
         tenants_count = 2
-        users_per_tenant = 5
-        resources_per_tenant = 5
-        samples_per_resource = 5
+        users_per_tenant = 2
+        resources_per_tenant = 2
+        samples_per_resource = 2
 
         tenants, real_context = self._gen_context(
             tenants_count, users_per_tenant,
             resources_per_tenant, samples_per_resource)
+
+        sample = {
+            "counter_name": "fake-counter-name",
+            "counter_type": "fake-counter-type",
+            "counter_unit": "fake-counter-unit",
+            "counter_volume": 100,
+            "resource_id": "fake-resource-id"
+        }
 
         new_context = copy.deepcopy(real_context)
         for id_ in tenants.keys():
@@ -103,21 +108,18 @@ class CeilometerSampleGeneratorTestCase(test.TestCase):
             new_context["tenants"][id_].setdefault("resources", [])
             for i in range(resources_per_tenant):
                 for j in range(samples_per_resource):
-                    new_context["tenants"][id_]["samples"].append(
-                        {"counter_name": "fake-counter-name",
-                         "counter_type": "fake-counter-type",
-                         "counter_unit": "fake-counter-unit",
-                         "counter_volume": 100,
-                         "resource_id": "fake-resource-id"})
+                    new_context["tenants"][id_]["samples"].append(sample)
                 new_context["tenants"][id_]["resources"].append(
-                    "fake-resource-id")
+                    sample["resource_id"])
+
+        mock_ceilometer_scenario__create_sample.return_value = [
+            mock.MagicMock(to_dict=lambda: sample, **sample)]
 
         ceilometer_ctx = ceilometer.CeilometerSampleGenerator(real_context)
         ceilometer_ctx.setup()
         self.assertEqual(new_context, ceilometer_ctx.context)
 
-    @mock.patch("%s.ceilometer.osclients" % CTX)
-    def test_cleanup(self, mock_osclients):
+    def test_cleanup(self):
         tenants, context = self._gen_context(2, 5, 3, 3)
         ceilometer_ctx = ceilometer.CeilometerSampleGenerator(context)
         ceilometer_ctx.cleanup()

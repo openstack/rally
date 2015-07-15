@@ -138,10 +138,11 @@ class SaharaScenarioTestCase(test.ScenarioTestCase):
             }
         }
 
-        clients = mock.Mock(services=mock.Mock(
-            return_value={"neutron": consts.Service.NEUTRON}))
-        scenario = utils.SaharaScenario(context=context,
-                                        clients=clients)
+        self.clients("services").values.return_value = [
+            consts.Service.NEUTRON
+        ]
+
+        scenario = utils.SaharaScenario(context=context)
 
         mock_processes = {
             "test_plugin": {
@@ -231,7 +232,7 @@ class SaharaScenarioTestCase(test.ScenarioTestCase):
     def test_launch_cluster_error(self, mock_sahara_consts,
                                   mock__generate_random_name):
 
-        scenario = utils.SaharaScenario(clients=mock.MagicMock())
+        scenario = utils.SaharaScenario()
         mock_processes = {
             "test_plugin": {
                 "test_version": {

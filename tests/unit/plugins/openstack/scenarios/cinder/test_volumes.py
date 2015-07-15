@@ -28,6 +28,13 @@ class fake_type(object):
 
 class CinderServersTestCase(test.ScenarioTestCase):
 
+    def _get_context(self):
+        return {"user": {"tenant_id": "fake",
+                         "endpoint": mock.MagicMock()},
+                "tenant": {"id": "fake", "name": "fake",
+                           "volumes": [{"id": "uuid"}],
+                           "servers": [1]}}
+
     def test_create_and_list_volume(self):
         scenario = volumes.CinderVolumes()
         scenario._create_volume = mock.MagicMock()
@@ -66,10 +73,7 @@ class CinderServersTestCase(test.ScenarioTestCase):
         scenario._create_volume.assert_called_once_with(1, fakearg="f")
 
     def test_create_volume_and_modify_metadata(self):
-        scenario = volumes.CinderVolumes(
-            context={"user": {"tenant_id": "fake"},
-                     "tenant": {"id": "fake", "name": "fake",
-                                "volumes": [{"id": "uuid"}]}})
+        scenario = volumes.CinderVolumes(self._get_context())
         scenario._set_metadata = mock.Mock()
         scenario._delete_metadata = mock.Mock()
 
@@ -130,10 +134,7 @@ class CinderServersTestCase(test.ScenarioTestCase):
     def test_create_from_volume_and_delete_volume(self):
         fake_volume = mock.MagicMock()
         vol_size = 1
-        scenario = volumes.CinderVolumes(
-            context={"user": {"tenant_id": "fake"},
-                     "tenant": {"id": "fake", "name": "fake",
-                                "volumes": [{"id": "uuid"}]}})
+        scenario = volumes.CinderVolumes(self._get_context())
         scenario._create_volume = mock.MagicMock(return_value=fake_volume)
         scenario._delete_volume = mock.MagicMock()
 
@@ -143,10 +144,7 @@ class CinderServersTestCase(test.ScenarioTestCase):
 
     def test_create_and_delete_snapshot(self):
         fake_snapshot = mock.MagicMock()
-        scenario = volumes.CinderVolumes(
-            context={"user": {"tenant_id": "fake"},
-                     "tenant": {"id": "fake", "name": "fake",
-                                "volumes": [{"id": "uuid"}]}})
+        scenario = volumes.CinderVolumes(self._get_context())
 
         scenario._create_snapshot = mock.MagicMock(return_value=fake_snapshot)
         scenario.sleep_between = mock.MagicMock()
@@ -161,10 +159,7 @@ class CinderServersTestCase(test.ScenarioTestCase):
 
     def test_create_and_list_snapshots(self):
         fake_snapshot = mock.MagicMock()
-        scenario = volumes.CinderVolumes(
-            context={"user": {"tenant_id": "fake"},
-                     "tenant": {"id": "fake", "name": "fake",
-                                "volumes": [{"id": "uuid"}]}})
+        scenario = volumes.CinderVolumes(self._get_context())
 
         scenario._create_snapshot = mock.MagicMock(return_value=fake_snapshot)
         scenario._list_snapshots = mock.MagicMock()
@@ -233,12 +228,7 @@ class CinderServersTestCase(test.ScenarioTestCase):
         fake_volume = mock.MagicMock()
         fake_snapshot = mock.MagicMock()
         fake_server = mock.MagicMock()
-
-        context = {"user": {"tenant_id": "fake"},
-                   "users": [{"tenant_id": "fake", "users_per_tenant": 1}],
-                   "tenant": {"id": "fake", "name": "fake", "servers": [1]}}
-
-        scenario = volumes.CinderVolumes(context)
+        scenario = volumes.CinderVolumes(self._get_context())
 
         scenario._attach_volume = mock.MagicMock()
         scenario._detach_volume = mock.MagicMock()
@@ -268,11 +258,8 @@ class CinderServersTestCase(test.ScenarioTestCase):
         fake_volume = mock.MagicMock()
         fake_snapshot = mock.MagicMock()
         fake_server = mock.MagicMock()
-        context = {"user": {"tenant_id": "fake"},
-                   "users": [{"tenant_id": "fake", "users_per_tenant": 1}],
-                   "tenant": {"id": "fake", "name": "fake", "servers": [1]}}
 
-        scenario = volumes.CinderVolumes(context)
+        scenario = volumes.CinderVolumes(self._get_context())
 
         scenario._attach_volume = mock.MagicMock()
         scenario._detach_volume = mock.MagicMock()
@@ -308,12 +295,8 @@ class CinderServersTestCase(test.ScenarioTestCase):
     def test_create_nested_snapshots_and_attach_volume(self):
         fake_volume = mock.MagicMock()
         fake_snapshot = mock.MagicMock()
-        fake_server = mock.MagicMock()
-        scenario = volumes.CinderVolumes(
-            context={"user": {"tenant_id": "fake"},
-                     "users": [{"tenant_id": "fake", "users_per_tenant": 1}],
-                     "tenant": {"id": "fake", "name": "fake",
-                                "servers": [fake_server.uuid]}})
+
+        scenario = volumes.CinderVolumes(context=self._get_context())
 
         scenario._attach_volume = mock.MagicMock()
         scenario._detach_volume = mock.MagicMock()
@@ -338,13 +321,8 @@ class CinderServersTestCase(test.ScenarioTestCase):
         fake_volume2 = mock.MagicMock()
         fake_snapshot1 = mock.MagicMock()
         fake_snapshot2 = mock.MagicMock()
-        fake_server = mock.MagicMock()
 
-        scenario = volumes.CinderVolumes(
-            context={"user": {"tenant_id": "fake"},
-                     "users": [{"tenant_id": "fake", "users_per_tenant": 1}],
-                     "tenant": {"id": "fake", "name": "fake",
-                                "servers": [fake_server.uuid]}})
+        scenario = volumes.CinderVolumes(self._get_context())
 
         scenario._attach_volume = mock.MagicMock()
         scenario._detach_volume = mock.MagicMock()
@@ -373,11 +351,7 @@ class CinderServersTestCase(test.ScenarioTestCase):
         fake_snapshot = mock.MagicMock()
         fake_server = mock.MagicMock()
 
-        scenario = volumes.CinderVolumes(
-            context={"user": {"tenant_id": "fake"},
-                     "users": [{"tenant_id": "fake", "users_per_tenant": 1}],
-                     "tenant": {"id": "fake", "name": "fake",
-                                "servers": [fake_server.uuid]}})
+        scenario = volumes.CinderVolumes(self._get_context())
 
         scenario.get_random_server = mock.MagicMock(return_value=fake_server)
         scenario._attach_volume = mock.MagicMock()

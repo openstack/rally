@@ -24,7 +24,10 @@ class QuotasTestCase(test.ScenarioTestCase):
     def setUp(self):
         super(QuotasTestCase, self).setUp()
         self.context = {
-            "user": {"tenant_id": "fake"},
+            "user": {
+                "tenant_id": "fake",
+                "endpoint": mock.MagicMock()
+            },
             "tenant": {"id": "fake"}
         }
 

@@ -252,20 +252,6 @@ class ScenarioTestCase(test.TestCase):
         scenario = base.Scenario(context=ctx)
         self.assertEqual(ctx, scenario.context)
 
-    def test_clients(self):
-        clients = fakes.FakeClients()
-
-        scenario = base.Scenario(clients=clients)
-        self.assertEqual(clients.nova(), scenario.clients("nova"))
-        self.assertEqual(clients.glance(), scenario.clients("glance"))
-
-    def test_admin_clients(self):
-        clients = fakes.FakeClients()
-
-        scenario = base.Scenario(admin_clients=clients)
-        self.assertEqual(clients.nova(), scenario.admin_clients("nova"))
-        self.assertEqual(clients.glance(), scenario.admin_clients("glance"))
-
     def test_scenario_context_are_valid(self):
         scenarios = base.Scenario.list_benchmark_scenarios()
 

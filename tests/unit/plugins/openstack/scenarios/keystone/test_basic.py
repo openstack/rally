@@ -27,7 +27,10 @@ class KeystoneBasicTestCase(test.TestCase):
     @staticmethod
     def _get_context():
         return {
-            "user": {"id": "fake_user_id"},
+            "user": {
+                "id": "fake_user_id",
+                "endpoint": mock.MagicMock()
+            },
             "tenant": {"id": "fake_tenant_id"}
         }
 

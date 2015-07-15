@@ -26,12 +26,12 @@ SCN = "rally.plugins.openstack.scenarios"
 TYP = "rally.task.types"
 
 
-class ServerGeneratorTestCase(test.TestCase):
+class ServerGeneratorTestCase(test.ScenarioTestCase):
 
     def _gen_tenants(self, count):
         tenants = {}
-        for id in range(count):
-            tenants[str(id)] = dict(name=str(id))
+        for id_ in range(count):
+            tenants[str(id_)] = {"name": str(id_)}
         return tenants
 
     def test_init(self):
@@ -75,7 +75,7 @@ class ServerGeneratorTestCase(test.TestCase):
         for id in tenants.keys():
             for i in range(users_per_tenant):
                 users.append({"id": i, "tenant_id": id,
-                              "endpoint": "endpoint"})
+                              "endpoint": mock.MagicMock()})
 
         real_context = {
             "config": {
@@ -103,10 +103,10 @@ class ServerGeneratorTestCase(test.TestCase):
         }
 
         new_context = copy.deepcopy(real_context)
-        for id in new_context["tenants"]:
-            new_context["tenants"][id].setdefault("servers", [])
+        for id_ in new_context["tenants"]:
+            new_context["tenants"][id_].setdefault("servers", [])
             for i in range(servers_per_tenant):
-                new_context["tenants"][id]["servers"].append("uuid")
+                new_context["tenants"][id_]["servers"].append("uuid")
 
         servers_ctx = servers.ServerGenerator(real_context)
         servers_ctx.setup()
@@ -122,13 +122,13 @@ class ServerGeneratorTestCase(test.TestCase):
 
         tenants = self._gen_tenants(tenants_count)
         users = []
-        for id in tenants.keys():
+        for id_ in tenants.keys():
             for i in range(users_per_tenant):
-                users.append({"id": i, "tenant_id": id,
+                users.append({"id": i, "tenant_id": id_,
                               "endpoint": "endpoint"})
-            tenants[id].setdefault("servers", [])
+            tenants[id_].setdefault("servers", [])
             for j in range(servers_per_tenant):
-                tenants[id]["servers"].append("uuid")
+                tenants[id_]["servers"].append("uuid")
 
         context = {
             "config": {

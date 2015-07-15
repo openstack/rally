@@ -23,7 +23,7 @@ CTX = "rally.plugins.openstack.context"
 SCN = "rally.plugins.openstack.scenarios"
 
 
-class TestStackGenerator(test.TestCase):
+class TestStackGenerator(test.ScenarioTestCase):
 
     def _gen_tenants(self, count):
         tenants = {}
@@ -47,21 +47,17 @@ class TestStackGenerator(test.TestCase):
 
     @mock.patch("%s.heat.utils.HeatScenario._create_stack" % SCN,
                 return_value=fakes.FakeStack(id="uuid"))
-    @mock.patch("%s.stacks.osclients" % CTX)
-    def test_setup(self, mock_osclients, mock_heat_scenario__create_stack):
+    def test_setup(self, mock_heat_scenario__create_stack):
         tenants_count = 2
         users_per_tenant = 5
         stacks_per_tenant = 1
-
-        fc = fakes.FakeClients()
-        mock_osclients.Clients.return_value = fc
 
         tenants = self._gen_tenants(tenants_count)
         users = []
         for ten_id in tenants:
             for i in range(users_per_tenant):
                 users.append({"id": i, "tenant_id": ten_id,
-                              "endpoint": "endpoint"})
+                              "endpoint": mock.MagicMock()})
 
         context = {
             "config": {

@@ -82,8 +82,7 @@ class ServerGenerator(context.Context):
                 self.context["users"]):
             LOG.debug("Booting servers for user tenant %s "
                       % (user["tenant_id"]))
-            clients = osclients.Clients(user["endpoint"])
-            nova_scenario = nova_utils.NovaScenario(clients=clients)
+            nova_scenario = nova_utils.NovaScenario({"user": user})
 
             LOG.debug("Calling _boot_servers with image_id=%(image_id)s "
                       "flavor_id=%(flavor_id)s "

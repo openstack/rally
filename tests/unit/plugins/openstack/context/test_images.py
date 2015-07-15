@@ -26,12 +26,12 @@ CTX = "rally.plugins.openstack.context"
 SCN = "rally.plugins.openstack.scenarios"
 
 
-class ImageGeneratorTestCase(test.TestCase):
+class ImageGeneratorTestCase(test.ScenarioTestCase):
 
     def _gen_tenants(self, count):
         tenants = {}
         for id_ in range(count):
-            tenants[str(id_)] = dict(name=str(id_))
+            tenants[str(id_)] = {"name": str(id_)}
         return tenants
 
     @mock.patch("%s.images.context.Context.__init__" % CTX)
@@ -67,22 +67,18 @@ class ImageGeneratorTestCase(test.TestCase):
 
     @mock.patch("%s.glance.utils.GlanceScenario._create_image" % SCN,
                 return_value=fakes.FakeImage(id="uuid"))
-    @mock.patch("%s.images.osclients" % CTX)
-    def test_setup(self, mock_osclients, mock_glance_scenario__create_image):
+    def test_setup(self, mock_glance_scenario__create_image):
 
         tenants_count = 2
         users_per_tenant = 5
         images_per_tenant = 5
-
-        fc = fakes.FakeClients()
-        mock_osclients.Clients.return_value = fc
 
         tenants = self._gen_tenants(tenants_count)
         users = []
         for id in tenants:
             for i in range(users_per_tenant):
                 users.append({"id": i, "tenant_id": id,
-                              "endpoint": "endpoint"})
+                              "endpoint": mock.MagicMock()})
 
         real_context = {
             "config": {
@@ -119,9 +115,8 @@ class ImageGeneratorTestCase(test.TestCase):
         images_ctx.setup()
         self.assertEqual(new_context, real_context)
 
-    @mock.patch("%s.images.osclients" % CTX)
     @mock.patch("%s.images.resource_manager.cleanup" % CTX)
-    def test_cleanup(self, mock_cleanup, mock_osclients):
+    def test_cleanup(self, mock_cleanup):
 
         tenants_count = 2
         users_per_tenant = 5
