@@ -10,12 +10,14 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import ddt
 import mock
 
 from rally.plugins.openstack.scenarios.neutron import loadbalancer_v1
 from tests.unit import test
 
 
+@ddt.ddt
 class NeutronLoadbalancerv1TestCase(test.TestCase):
 
     def _get_context(self):
@@ -29,7 +31,14 @@ class NeutronLoadbalancerv1TestCase(test.TestCase):
                        "networks": [{"id": "fake_net",
                                      "subnets": ["fake_subnet"]}]}}
 
-    def _validate_create_and_list_pools_scenario(self, pool_create_args=None):
+    @ddt.data(
+        {},
+        {"pool_create_args": None},
+        {"pool_create_args": {}},
+        {"pool_create_args": {"name": "given-name"}},
+    )
+    @ddt.unpack
+    def test_create_and_list_pools(self, pool_create_args=None):
         neutron_scenario = loadbalancer_v1.NeutronLoadbalancerV1(
             self._get_context())
         pool_data = pool_create_args or {}
@@ -43,8 +52,14 @@ class NeutronLoadbalancerv1TestCase(test.TestCase):
                     subnet_id, **pool_data)
         neutron_scenario._list_v1_pools.assert_called_once_with()
 
-    def _validate_create_and_delete_pools_scenario(self,
-                                                   pool_create_args=None):
+    @ddt.data(
+        {},
+        {"pool_create_args": None},
+        {"pool_create_args": {}},
+        {"pool_create_args": {"name": "given-name"}},
+    )
+    @ddt.unpack
+    def test_create_and_delete_pools(self, pool_create_args=None):
         neutron_scenario = loadbalancer_v1.NeutronLoadbalancerV1(
             self._get_context())
         pool = {
@@ -66,8 +81,25 @@ class NeutronLoadbalancerv1TestCase(test.TestCase):
         for pool in pools:
             self.assertEqual(1, neutron_scenario._delete_v1_pool.call_count)
 
-    def _validate_create_and_update_pools_scenario(self,
-                                                   pool_create_args=None):
+    @ddt.data(
+        {},
+        {"pool_create_args": None},
+        {"pool_create_args": {}},
+        {"pool_create_args": {"name": "given-name"}},
+        {"pool_update_args": None},
+        {"pool_update_args": {}},
+        {"pool_update_args": {"name": "updated-name"}},
+        {"pool_create_args": None, "pool_update_args": None},
+        {"pool_create_args": {"name": "given-name"},
+         "pool_update_args": {"name": "updated-name"}},
+        {"pool_create_args": None,
+         "pool_update_args": {"name": "updated-name"}},
+        {"pool_create_args": None, "pool_update_args": {}},
+        {"pool_create_args": {}, "pool_update_args": None},
+    )
+    @ddt.unpack
+    def test_create_and_update_pools(self, pool_create_args=None,
+                                     pool_update_args=None):
         neutron_scenario = loadbalancer_v1.NeutronLoadbalancerV1(
             self._get_context())
         pool = {
@@ -83,7 +115,8 @@ class NeutronLoadbalancerv1TestCase(test.TestCase):
             }
         }
         pool_data = pool_create_args or {}
-        pool_update_args = {"name": "_updated", "admin_state_up": True}
+        pool_update_args = pool_update_args or {}
+        pool_update_args.update({"name": "_updated", "admin_state_up": True})
         neutron_scenario._create_v1_pool = mock.Mock(return_value=pool)
         neutron_scenario._update_v1_pool = mock.Mock(
             return_value=updated_pool)
@@ -100,33 +133,3 @@ class NeutronLoadbalancerv1TestCase(test.TestCase):
             neutron_scenario._update_v1_pool.assert_called_once_with(
                 neutron_scenario._create_v1_pool.return_value,
                 **pool_update_args)
-
-    def test_create_and_list_pools_default(self):
-        self._validate_create_and_list_pools_scenario(pool_create_args={})
-
-    def test_create_and_list_pools_None(self):
-        self._validate_create_and_list_pools_scenario()
-
-    def test_create_and_list_pools_explicit(self):
-        self._validate_create_and_list_pools_scenario(
-            pool_create_args={"name": "given-name"})
-
-    def test_create_and_delete_pools_default(self):
-        self._validate_create_and_delete_pools_scenario(pool_create_args={})
-
-    def test_create_and_delete_pools_None(self):
-        self._validate_create_and_delete_pools_scenario()
-
-    def test_create_and_delete_pools_explicit(self):
-        self._validate_create_and_delete_pools_scenario(
-            pool_create_args={"name": "given-name"})
-
-    def test_create_and_update_pools_default(self):
-        self._validate_create_and_update_pools_scenario(pool_create_args={})
-
-    def test_create_and_update_pools_None(self):
-        self._validate_create_and_update_pools_scenario()
-
-    def test_create_and_update_pools_explicit(self):
-        self._validate_create_and_update_pools_scenario(
-            pool_create_args={"name": "given-name"})
