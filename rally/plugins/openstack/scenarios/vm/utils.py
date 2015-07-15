@@ -22,6 +22,7 @@ import six
 from rally.common.i18n import _
 from rally.common import log as logging
 from rally.common import sshutils
+from rally.plugins.openstack import scenario
 from rally.plugins.openstack.wrappers import network as network_wrapper
 from rally.task.scenarios import base
 from rally.task import utils
@@ -33,7 +34,7 @@ ICMP_UP_STATUS = "ICMP UP"
 ICMP_DOWN_STATUS = "ICMP DOWN"
 
 
-class VMScenario(base.Scenario):
+class VMScenario(scenario.OpenStackScenario):
     """Base class for VM scenarios with basic atomic actions.
 
     VM scenarios are scenarios executed inside some launched VM instance.

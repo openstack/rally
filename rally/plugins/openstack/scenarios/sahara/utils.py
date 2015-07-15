@@ -23,6 +23,7 @@ from rally.common.i18n import _
 from rally.common import log as logging
 from rally import consts
 from rally import exceptions
+from rally.plugins.openstack import scenario
 from rally.plugins.openstack.scenarios.sahara import consts as sahara_consts
 from rally.task.scenarios import base
 from rally.task import utils
@@ -47,7 +48,7 @@ benchmark_group = cfg.OptGroup(name="benchmark", title="benchmark options")
 CONF.register_opts(SAHARA_TIMEOUT_OPTS, group=benchmark_group)
 
 
-class SaharaScenario(base.Scenario):
+class SaharaScenario(scenario.OpenStackScenario):
     """Base class for Sahara scenarios with basic atomic actions."""
 
     RESOURCE_NAME_LENGTH = 20

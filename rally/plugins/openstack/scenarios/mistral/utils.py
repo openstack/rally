@@ -15,10 +15,11 @@
 
 import yaml
 
+from rally.plugins.openstack import scenario
 from rally.task.scenarios import base
 
 
-class MistralScenario(base.Scenario):
+class MistralScenario(scenario.OpenStackScenario):
     """Base class for Mistral scenarios with basic atomic actions."""
 
     @base.atomic_action_timer("mistral.list_workbooks")

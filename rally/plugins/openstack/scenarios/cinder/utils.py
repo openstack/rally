@@ -19,6 +19,7 @@ import time
 from oslo_config import cfg
 
 from rally import exceptions
+from rally.plugins.openstack import scenario
 from rally.task.scenarios import base
 from rally.task import utils as bench_utils
 
@@ -48,7 +49,7 @@ benchmark_group = cfg.OptGroup(name="benchmark", title="benchmark options")
 CONF.register_opts(CINDER_BENCHMARK_OPTS, group=benchmark_group)
 
 
-class CinderScenario(base.Scenario):
+class CinderScenario(scenario.OpenStackScenario):
     """Base class for Cinder scenarios with basic atomic actions."""
 
     RESOURCE_NAME_PREFIX = "rally_volume_"

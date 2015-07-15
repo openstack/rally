@@ -13,10 +13,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from rally.plugins.openstack import scenario
 from rally.task.scenarios import base
 
 
-class SwiftScenario(base.Scenario):
+class SwiftScenario(scenario.OpenStackScenario):
     """Base class for Swift scenarios with basic atomic actions."""
 
     @base.atomic_action_timer("swift.list_containers")
