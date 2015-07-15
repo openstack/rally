@@ -49,14 +49,15 @@ class Network(context.Context):
         "networks_per_tenant": 1
     }
 
-    def __init__(self, ctx):
-        super(Network, self).__init__(ctx)
-        self.net_wrapper = network_wrapper.wrap(
-            osclients.Clients(ctx["admin"]["endpoint"]),
-            self.config)
-
     @utils.log_task_wrapper(LOG.info, _("Enter context: `network`"))
     def setup(self):
+        # NOTE(rkiran): Some clients are not thread-safe. Thus during
+        #               multithreading/multiprocessing, it is likely the
+        #               sockets are left open. This problem is eliminated by
+        #               creating a connection in setup and cleanup seperately.
+        net_wrapper = network_wrapper.wrap(
+            osclients.Clients(self.context["admin"]["endpoint"]),
+            self.config)
         for user, tenant_id in (utils.iterate_per_tenants(
                 self.context.get("users", []))):
             self.context["tenants"][tenant_id]["networks"] = []
@@ -64,17 +65,20 @@ class Network(context.Context):
                 # NOTE(amaretskiy): add_router and subnets_num take effect
                 #                   for Neutron only.
                 # NOTE(amaretskiy): Do we need neutron subnets_num > 1 ?
-                network = self.net_wrapper.create_network(tenant_id,
-                                                          add_router=True,
-                                                          subnets_num=1)
+                network = net_wrapper.create_network(tenant_id,
+                                                     add_router=True,
+                                                     subnets_num=1)
                 self.context["tenants"][tenant_id]["networks"].append(network)
 
     @utils.log_task_wrapper(LOG.info, _("Exit context: `network`"))
     def cleanup(self):
+        net_wrapper = network_wrapper.wrap(
+            osclients.Clients(self.context["admin"]["endpoint"]),
+            self.config)
         for tenant_id, tenant_ctx in six.iteritems(self.context["tenants"]):
             for network in tenant_ctx.get("networks", []):
                 with logging.ExceptionLogger(
                         LOG,
                         _("Failed to delete network for tenant %s")
                         % tenant_id):
-                    self.net_wrapper.delete_network(network)
+                    net_wrapper.delete_network(network)
