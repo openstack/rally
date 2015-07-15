@@ -72,9 +72,9 @@ class ServerGeneratorTestCase(test.ScenarioTestCase):
 
         tenants = self._gen_tenants(tenants_count)
         users = []
-        for id in tenants.keys():
+        for id_ in tenants.keys():
             for i in range(users_per_tenant):
-                users.append({"id": i, "tenant_id": id,
+                users.append({"id": i, "tenant_id": id_,
                               "endpoint": mock.MagicMock()})
 
         real_context = {

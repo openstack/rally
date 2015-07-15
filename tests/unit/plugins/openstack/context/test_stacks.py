@@ -27,8 +27,8 @@ class TestStackGenerator(test.ScenarioTestCase):
 
     def _gen_tenants(self, count):
         tenants = {}
-        for id in range(count):
-            tenants[str(id)] = dict(name=str(id))
+        for id_ in range(count):
+            tenants[str(id_)] = dict(name=str(id_))
         return tenants
 
     def test_init(self):
