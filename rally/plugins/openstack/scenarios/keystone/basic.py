@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from rally.common import utils
 from rally.plugins.openstack.scenarios.keystone import utils as kutils
 from rally.task.scenarios import base
 from rally.task import validation
@@ -155,16 +156,18 @@ class KeystoneBasic(kutils.KeystoneScenario):
         self._get_service(service.id)
 
     @validation.required_openstack(admin=True)
+    @utils.log_deprecated_args(
+        "The 'name' argument to create_and_delete_service will be ignored",
+        "0.0.5", ["name"])
     @base.scenario(context={"admin_cleanup": ["keystone"]})
     def create_and_delete_service(self, name=None, service_type=None,
                                   description=None):
         """Create and delete service.
 
-        :param name: name of the service
         :param service_type: type of the service
         :param description: description of the service
         """
-        service = self._service_create(name, service_type, description)
+        service = self._service_create(service_type, description)
         self._delete_service(service.id)
 
     @validation.number("name_length", minval=10)
@@ -195,16 +198,18 @@ class KeystoneBasic(kutils.KeystoneScenario):
         self._update_user_password(user.id, password)
 
     @validation.required_openstack(admin=True)
+    @utils.log_deprecated_args(
+        "The 'name' argument to create_and_list_services will be ignored",
+        "0.0.5", ["name"])
     @base.scenario(context={"admin_cleanup": ["keystone"]})
     def create_and_list_services(self, name=None, service_type=None,
                                  description=None):
         """Create and list services.
 
-        :param name: name of the service
         :param service_type: type of the service
         :param description: description of the service
         """
-        self._service_create(name, service_type, description)
+        self._service_create(service_type, description)
         self._list_services()
 
     @validation.required_openstack(users=True)

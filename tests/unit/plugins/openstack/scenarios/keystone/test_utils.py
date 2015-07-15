@@ -142,21 +142,21 @@ class KeystoneScenarioTestCase(test.ScenarioTestCase):
                                        "keystone.create_tenant")
 
     def test_service_create(self):
-        name = "abc"
-        service_type = name + "_service_type"
-        description = name + "_description"
+        service_type = "service_type"
+        description = "_description"
 
         scenario = utils.KeystoneScenario()
+        scenario._generate_random_name = mock.Mock()
 
-        result = scenario._service_create(name=name,
-                                          service_type=service_type,
+        result = scenario._service_create(service_type=service_type,
                                           description=description)
 
         self.assertEqual(
             self.admin_clients("keystone").services.create.return_value,
             result)
         self.admin_clients("keystone").services.create.assert_called_once_with(
-            name, service_type, description)
+            scenario._generate_random_name.return_value,
+            service_type, description)
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "keystone.create_service")
 
