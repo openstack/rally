@@ -23,6 +23,28 @@
         failure_rate:
           max: 0
 
+  KeystoneBasic.create_user_set_enabled_and_delete:
+    -
+      args:
+        enabled: true
+      runner:
+        type: "constant"
+        times: 10
+        concurrency: 10
+      sla:
+        failure_rate:
+          max: 0
+    -
+      args:
+        enabled: false
+      runner:
+        type: "constant"
+        times: 10
+        concurrency: 10
+      sla:
+        failure_rate:
+          max: 0
+
   KeystoneBasic.create_and_list_tenants:
     -
       args:

@@ -1,0 +1,24 @@
+{
+  "KeystoneBasic.create_user_set_enabled_and_delete": [
+    {
+      "args": {
+        "enabled": true
+      },
+      "runner": {
+        "type": "constant",
+        "concurrency": 10,
+        "times": 100
+      }
+    },
+    {
+      "args": {
+        "enabled": false
+      },
+      "runner": {
+        "type": "constant",
+        "concurrency": 10,
+        "times": 100
+      }
+    }
+  ]
+}

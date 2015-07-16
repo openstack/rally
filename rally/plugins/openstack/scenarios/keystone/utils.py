@@ -46,6 +46,16 @@ class KeystoneScenario(scenario.OpenStackScenario):
         return self.admin_clients("keystone").users.create(
             name, password=password, email=email, **kwargs)
 
+    @base.atomic_action_timer("keystone.update_user_enabled")
+    def _update_user_enabled(self, user, enabled):
+        """Enable or disable a user.
+
+        :param user: The user to enable or disable
+        :param enabled: Boolean indicating if the user should be
+                        enabled (True) or disabled (False)
+        """
+        self.admin_clients("keystone").users.update_enabled(user, enabled)
+
     def _resource_delete(self, resource):
         """"Delete keystone resource."""
         r = "keystone.delete_%s" % resource.__class__.__name__.lower()

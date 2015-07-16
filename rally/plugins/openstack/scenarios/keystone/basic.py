@@ -47,6 +47,20 @@ class KeystoneBasic(kutils.KeystoneScenario):
         user = self._user_create(name_length=name_length, **kwargs)
         self._resource_delete(user)
 
+    @validation.required_openstack(admin=True)
+    @base.scenario(context={"admin_cleanup": ["keystone"]})
+    def create_user_set_enabled_and_delete(self, enabled=True, **kwargs):
+        """Create a keystone user, enable or disable it, and delete it.
+
+        :param enabled: Initial state of user 'enabled' flag. The user
+                        will be created with 'enabled' set to this
+                        value, and then it will be toggled.
+        :param kwargs: Other optional parameters to create user.
+        """
+        user = self._user_create(enabled=enabled, **kwargs)
+        self._update_user_enabled(user, not enabled)
+        self._resource_delete(user)
+
     @validation.number("name_length", minval=10)
     @validation.required_openstack(admin=True)
     @base.scenario(context={"admin_cleanup": ["keystone"]})

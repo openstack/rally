@@ -58,6 +58,21 @@ class KeystoneBasicTestCase(test.TestCase):
                                                       enabled=True)
         scenario._resource_delete.assert_called_once_with(create_result)
 
+    def test_create_user_set_enabled_and_delete(self):
+        scenario = basic.KeystoneBasic()
+        scenario._user_create = mock.Mock()
+        scenario._update_user_enabled = mock.Mock()
+        scenario._resource_delete = mock.Mock()
+
+        scenario.create_user_set_enabled_and_delete(enabled=True,
+                                                    email="abcd")
+        scenario._user_create.assert_called_once_with(email="abcd",
+                                                      enabled=True)
+        scenario._update_user_enabled.assert_called_once_with(
+            scenario._user_create.return_value, False)
+        scenario._resource_delete.assert_called_once_with(
+            scenario._user_create.return_value)
+
     @mock.patch("rally.common.utils.generate_random_name")
     def test_create_tenant(self, mock_generate_random_name):
         scenario = basic.KeystoneBasic()
