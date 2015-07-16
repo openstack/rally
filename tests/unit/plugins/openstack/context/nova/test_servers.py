@@ -17,11 +17,11 @@ import copy
 
 import mock
 
-from rally.plugins.openstack.context import servers
+from rally.plugins.openstack.context.nova import servers
 from tests.unit import fakes
 from tests.unit import test
 
-CTX = "rally.plugins.openstack.context"
+CTX = "rally.plugins.openstack.context.nova"
 SCN = "rally.plugins.openstack.scenarios"
 TYP = "rally.task.types"
 

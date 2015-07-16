@@ -28,8 +28,8 @@ from rally import consts
 from rally import exceptions
 from rally import objects
 from rally import osclients
-from rally.plugins.openstack.context import existing_users as existingusers_ctx
-from rally.plugins.openstack.context import users as users_ctx
+from rally.plugins.openstack.context.keystone import existing_users
+from rally.plugins.openstack.context.keystone import users as users_ctx
 from rally.task import context
 from rally.task import runner
 from rally.task.scenarios import base as base_scenario
@@ -157,7 +157,7 @@ class BenchmarkEngine(object):
     def _get_user_ctx_for_validation(self, ctx):
         if self.existing_users:
             ctx["config"] = {"existing_users": self.existing_users}
-            user_context = existingusers_ctx.ExistingUsers(ctx)
+            user_context = existing_users.ExistingUsers(ctx)
         else:
             user_context = users_ctx.UserGenerator(ctx)
 

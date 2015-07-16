@@ -16,13 +16,13 @@
 import mock
 
 from rally import exceptions
-from rally.plugins.openstack.context import tempest
+from rally.plugins.openstack.context.not_for_production import tempest
 from rally.verification.tempest import config
 from rally.verification.tempest import tempest as tempest_verifier
 from tests.unit import test
 
 
-CONTEXT = "rally.plugins.openstack.context.tempest"
+CONTEXT = "rally.plugins.openstack.context.not_for_production.tempest"
 TEMPEST = "rally.verification.tempest.tempest"
 
 

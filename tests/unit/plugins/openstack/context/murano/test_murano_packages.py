@@ -15,10 +15,10 @@
 
 import mock
 
-from rally.plugins.openstack.context import murano_packages
+from rally.plugins.openstack.context.murano import murano_packages
 from tests.unit import test
 
-CTX = "rally.plugins.openstack.context"
+CTX = "rally.plugins.openstack.context.murano.murano_packages"
 
 
 class MuranoGeneratorTestCase(test.TestCase):
@@ -64,7 +64,7 @@ class MuranoGeneratorTestCase(test.TestCase):
             }
         }
 
-    @mock.patch("rally.plugins.openstack.context.murano_packages.osclients")
+    @mock.patch("%s.osclients" % CTX)
     def test_setup(self, mock_osclients):
         mock_app = mock.MagicMock(id="fake_app_id")
         (mock_osclients.Clients().murano().
@@ -78,8 +78,8 @@ class MuranoGeneratorTestCase(test.TestCase):
         self.assertEqual([mock_app],
                          murano_ctx.context["tenants"][tenant_id]["packages"])
 
-    @mock.patch("rally.plugins.openstack.context.murano_packages.osclients")
-    @mock.patch("%s.images.resource_manager.cleanup" % CTX)
+    @mock.patch("%s.osclients" % CTX)
+    @mock.patch("%s.resource_manager.cleanup" % CTX)
     def test_cleanup(self, mock_cleanup, mock_osclients):
         mock_app = mock.Mock(id="fake_app_id")
         (mock_osclients.Clients().murano().

@@ -18,8 +18,10 @@ import mock
 from rally import consts
 from rally import exceptions
 from rally import objects
-from rally.plugins.openstack.context import users
+from rally.plugins.openstack.context.keystone import users
 from tests.unit import test
+
+CTX = "rally.plugins.openstack.context.keystone.users"
 
 
 class UserGeneratorTestCase(test.TestCase):
@@ -45,15 +47,14 @@ class UserGeneratorTestCase(test.TestCase):
 
     def setUp(self):
         super(UserGeneratorTestCase, self).setUp()
-        self.osclients_patcher = mock.patch(
-            "rally.plugins.openstack.context.users.osclients")
+        self.osclients_patcher = mock.patch("%s.osclients" % CTX)
         self.osclients = self.osclients_patcher.start()
 
     def tearDown(self):
         self.osclients_patcher.stop()
         super(UserGeneratorTestCase, self).tearDown()
 
-    @mock.patch("rally.plugins.openstack.context.users.network.wrap")
+    @mock.patch("%s.network.wrap" % CTX)
     def test__remove_default_security_group_not_needed(self, mock_wrap):
         services = {"compute": consts.Service.NOVA}
         self.osclients.Clients().services.return_value = services
@@ -61,7 +62,7 @@ class UserGeneratorTestCase(test.TestCase):
         user_generator._remove_default_security_group()
         self.assertFalse(mock_wrap.called)
 
-    @mock.patch("rally.plugins.openstack.context.users.network.wrap")
+    @mock.patch("%s.network.wrap" % CTX)
     def test__remove_default_security_group_neutron_no_sg(self, mock_wrap):
         net_wrapper = mock.Mock(SERVICE_IMPL=consts.Service.NEUTRON)
         net_wrapper.supports_security_group.return_value = (False, None)
@@ -82,7 +83,7 @@ class UserGeneratorTestCase(test.TestCase):
         net_wrapper.supports_security_group.assert_called_once_with()
 
     @mock.patch("rally.common.utils.iterate_per_tenants")
-    @mock.patch("rally.plugins.openstack.context.users.network")
+    @mock.patch("%s.network" % CTX)
     @mock.patch("rally.task.utils.check_service_status",
                 return_value=False)
     def test__remove_default_security_group(
@@ -180,8 +181,8 @@ class UserGeneratorTestCase(test.TestCase):
                                                           "nova-network")
         nova_admin.networks.disassociate.assert_called_once_with(networks[0])
 
-    @mock.patch("rally.plugins.openstack.context.users.broker.time.sleep")
-    @mock.patch("rally.plugins.openstack.context.users.keystone")
+    @mock.patch("%s.broker.time.sleep" % CTX)
+    @mock.patch("%s.keystone" % CTX)
     def test__create_tenants(self, mock_keystone, mock_sleep):
         user_generator = users.UserGenerator(self.context)
         user_generator.config["tenants"] = 1
@@ -190,8 +191,8 @@ class UserGeneratorTestCase(test.TestCase):
         id, tenant = tenants.popitem()
         self.assertIn("name", tenant)
 
-    @mock.patch("rally.plugins.openstack.context.users.broker.time.sleep")
-    @mock.patch("rally.plugins.openstack.context.users.keystone")
+    @mock.patch("%s.broker.time.sleep" % CTX)
+    @mock.patch("%s.keystone" % CTX)
     def test__create_users(self, mock_keystone, mock_sleep):
         user_generator = users.UserGenerator(self.context)
         user_generator.context["tenants"] = {"t1": dict(id="t1", name="t1"),
@@ -203,7 +204,7 @@ class UserGeneratorTestCase(test.TestCase):
             self.assertIn("id", user)
             self.assertIn("endpoint", user)
 
-    @mock.patch("rally.plugins.openstack.context.users.keystone")
+    @mock.patch("%s.keystone" % CTX)
     def test__delete_tenants(self, mock_keystone):
         user_generator = users.UserGenerator(self.context)
         user_generator.context["tenants"] = {"t1": dict(id="t1", name="t1"),
@@ -211,7 +212,7 @@ class UserGeneratorTestCase(test.TestCase):
         user_generator._delete_tenants()
         self.assertEqual(len(user_generator.context["tenants"]), 0)
 
-    @mock.patch("rally.plugins.openstack.context.users.keystone")
+    @mock.patch("%s.keystone" % CTX)
     def test__delete_tenants_failure(self, mock_keystone):
         wrapped_keystone = mock_keystone.wrap.return_value
         wrapped_keystone.delete_project.side_effect = Exception()
@@ -221,7 +222,7 @@ class UserGeneratorTestCase(test.TestCase):
         user_generator._delete_tenants()
         self.assertEqual(len(user_generator.context["tenants"]), 0)
 
-    @mock.patch("rally.plugins.openstack.context.users.keystone")
+    @mock.patch("%s.keystone" % CTX)
     def test__delete_users(self, mock_keystone):
         user_generator = users.UserGenerator(self.context)
         user1 = mock.MagicMock()
@@ -230,7 +231,7 @@ class UserGeneratorTestCase(test.TestCase):
         user_generator._delete_users()
         self.assertEqual(len(user_generator.context["users"]), 0)
 
-    @mock.patch("rally.plugins.openstack.context.users.keystone")
+    @mock.patch("%s.keystone" % CTX)
     def test__delete_users_failure(self, mock_keystone):
         wrapped_keystone = mock_keystone.wrap.return_value
         wrapped_keystone.delete_user.side_effect = Exception()
@@ -241,7 +242,7 @@ class UserGeneratorTestCase(test.TestCase):
         user_generator._delete_users()
         self.assertEqual(len(user_generator.context["users"]), 0)
 
-    @mock.patch("rally.plugins.openstack.context.users.keystone")
+    @mock.patch("%s.keystone" % CTX)
     def test_setup_and_cleanup(self, mock_keystone):
         wrapped_keystone = mock.MagicMock()
         mock_keystone.wrap.return_value = wrapped_keystone
@@ -258,7 +259,7 @@ class UserGeneratorTestCase(test.TestCase):
         self.assertEqual(len(ctx.context["users"]), 0)
         self.assertEqual(len(ctx.context["tenants"]), 0)
 
-    @mock.patch("rally.plugins.openstack.context.users.keystone")
+    @mock.patch("%s.keystone" % CTX)
     def test_setup_and_cleanup_failure(self, mock_keystone):
         wrapped_keystone = mock_keystone.wrap.return_value
         wrapped_keystone.create_user.side_effect = Exception()
@@ -268,7 +269,7 @@ class UserGeneratorTestCase(test.TestCase):
         # Ensure that tenants get deleted anyway
         self.assertEqual(len(ctx.context["tenants"]), 0)
 
-    @mock.patch("rally.plugins.openstack.context.users.keystone")
+    @mock.patch("%s.keystone" % CTX)
     def test_users_and_tenants_in_context(self, mock_keystone):
         wrapped_keystone = mock.MagicMock()
         mock_keystone.wrap.return_value = wrapped_keystone
@@ -313,7 +314,7 @@ class UserGeneratorTestCase(test.TestCase):
                 self.assertEqual(user["id"], orig_user.id)
                 self.assertEqual(user["tenant_id"], tenant_id)
 
-    @mock.patch("rally.plugins.openstack.context.users.keystone")
+    @mock.patch("%s.keystone" % CTX)
     def test_users_contains_correct_endpoint_type(self, mock_keystone):
         endpoint = objects.Endpoint("foo_url", "foo", "foo_pass",
                                     endpoint_type=consts.EndpointType.INTERNAL)
@@ -335,7 +336,7 @@ class UserGeneratorTestCase(test.TestCase):
         for user in users_:
             self.assertEqual("internal", user["endpoint"].endpoint_type)
 
-    @mock.patch("rally.plugins.openstack.context.users.keystone")
+    @mock.patch("%s.keystone" % CTX)
     def test_users_contains_default_endpoint_type(self, mock_keystone):
         endpoint = objects.Endpoint("foo_url", "foo", "foo_pass")
         config = {

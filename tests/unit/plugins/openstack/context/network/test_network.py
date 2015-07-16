@@ -16,7 +16,7 @@
 import mock
 import netaddr
 
-from rally.plugins.openstack.context import network as network_context
+from rally.plugins.openstack.context.network import networks as network_context
 from tests.unit import test
 
 NET = "rally.plugins.openstack.wrappers.network."
@@ -49,7 +49,7 @@ class NetworkTestCase(test.TestCase):
         self.assertEqual(context.config["start_cidr"], "foo_cidr")
 
     @mock.patch(NET + "wrap")
-    @mock.patch("rally.plugins.openstack.context.network.utils")
+    @mock.patch("rally.plugins.openstack.context.network.networks.utils")
     @mock.patch("rally.osclients.Clients")
     def test_setup(self, mock_clients, mock_utils, mock_wrap):
         mock_utils.iterate_per_tenants.return_value = [

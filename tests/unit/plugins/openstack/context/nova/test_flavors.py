@@ -18,10 +18,10 @@ import copy
 import mock
 from novaclient import exceptions as nova_exceptions
 
-from rally.plugins.openstack.context import flavors
+from rally.plugins.openstack.context.nova import flavors
 from tests.unit import test
 
-CTX = "rally.plugins.openstack.context"
+CTX = "rally.plugins.openstack.context.nova"
 
 
 class FlavorsGeneratorTestCase(test.TestCase):

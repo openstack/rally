@@ -17,11 +17,10 @@ import copy
 
 import mock
 
-from rally.plugins.openstack.context import ceilometer
+from rally.plugins.openstack.context.ceilometer import samples
 from tests.unit import test
 
-CTX = "rally.plugins.openstack.context"
-SCN = "rally.task.scenarios"
+CTX = "rally.plugins.openstack.context.ceilometer"
 
 
 class CeilometerSampleGeneratorTestCase(test.TestCase):
@@ -79,10 +78,10 @@ class CeilometerSampleGeneratorTestCase(test.TestCase):
             }
         }
 
-        inst = ceilometer.CeilometerSampleGenerator(context)
+        inst = samples.CeilometerSampleGenerator(context)
         self.assertEqual(inst.config, context["config"]["ceilometer"])
 
-    @mock.patch("%s.ceilometer.ceilo_utils.CeilometerScenario._create_sample"
+    @mock.patch("%s.samples.ceilo_utils.CeilometerScenario._create_sample"
                 % CTX)
     def test_setup(self, mock_ceilometer_scenario__create_sample):
         tenants_count = 2
@@ -115,11 +114,11 @@ class CeilometerSampleGeneratorTestCase(test.TestCase):
         mock_ceilometer_scenario__create_sample.return_value = [
             mock.MagicMock(to_dict=lambda: sample, **sample)]
 
-        ceilometer_ctx = ceilometer.CeilometerSampleGenerator(real_context)
+        ceilometer_ctx = samples.CeilometerSampleGenerator(real_context)
         ceilometer_ctx.setup()
         self.assertEqual(new_context, ceilometer_ctx.context)
 
     def test_cleanup(self):
         tenants, context = self._gen_context(2, 5, 3, 3)
-        ceilometer_ctx = ceilometer.CeilometerSampleGenerator(context)
+        ceilometer_ctx = samples.CeilometerSampleGenerator(context)
         ceilometer_ctx.cleanup()

@@ -18,12 +18,12 @@ import copy
 import jsonschema
 import mock
 
-from rally.plugins.openstack.context import images
+from rally.plugins.openstack.context.glance import images
 from tests.unit import fakes
 from tests.unit import test
 
-CTX = "rally.plugins.openstack.context"
-SCN = "rally.plugins.openstack.scenarios"
+CTX = "rally.plugins.openstack.context.glance"
+SCN = "rally.plugins.openstack.scenarios.glance"
 
 
 class ImageGeneratorTestCase(test.ScenarioTestCase):
@@ -65,7 +65,7 @@ class ImageGeneratorTestCase(test.ScenarioTestCase):
         self.assertRaises(jsonschema.ValidationError,
                           images.ImageGenerator.validate, context)
 
-    @mock.patch("%s.glance.utils.GlanceScenario._create_image" % SCN,
+    @mock.patch("%s.utils.GlanceScenario._create_image" % SCN,
                 return_value=fakes.FakeImage(id="uuid"))
     def test_setup(self, mock_glance_scenario__create_image):
 
