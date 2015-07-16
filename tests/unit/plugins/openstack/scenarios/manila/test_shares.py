@@ -182,3 +182,21 @@ class ManilaSharesTestCase(test.TestCase):
         scenario._create_security_service.assert_called_once_with(
             **expected_params)
         scenario._delete_security_service.assert_called_once_with(fake_ss)
+
+    @ddt.data("ldap", "kerberos", "active_directory")
+    def test_attach_security_service_to_share_network(self,
+                                                      security_service_type):
+        scenario = shares.ManilaShares()
+        scenario._create_share_network = mock.MagicMock()
+        scenario._create_security_service = mock.MagicMock()
+        scenario._add_security_service_to_share_network = mock.MagicMock()
+
+        scenario.attach_security_service_to_share_network(
+            security_service_type=security_service_type)
+
+        scenario._create_share_network.assert_called_once_with()
+        scenario._create_security_service.assert_called_once_with(
+            security_service_type=security_service_type)
+        scenario._add_security_service_to_share_network.assert_has_calls([
+            mock.call(scenario._create_share_network.return_value,
+                      scenario._create_security_service.return_value)])

@@ -267,6 +267,12 @@ class ManilaShareNetwork(base.ResourceManager):
     pass
 
 
+@base.resource("manila", "security_services", order=next(_manila_order),
+               tenant_resource=True)
+class ManilaSecurityService(base.ResourceManager):
+    pass
+
+
 # GLANCE
 
 @base.resource("glance", "images", order=500, tenant_resource=True)

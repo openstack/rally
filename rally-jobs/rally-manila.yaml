@@ -110,3 +110,24 @@
         failure_rate:
           max: 0
   {% endfor %}
+
+  ManilaShares.attach_security_service_to_share_network:
+  {% for s in ("ldap", "kerberos", "active_directory") %}
+    -
+      args:
+        security_service_type: {{s}}
+      runner:
+        type: "constant"
+        times: 10
+        concurrency: 10
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+        quotas:
+          manila:
+            share_networks: -1
+      sla:
+        failure_rate:
+          max: 0
+  {% endfor %}

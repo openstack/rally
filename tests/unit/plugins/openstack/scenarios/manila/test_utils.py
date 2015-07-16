@@ -185,3 +185,18 @@ class ManilaScenarioTestCase(test.ScenarioTestCase):
         mock_get_from_manager.assert_called_once_with()
         mock_wait_for_delete.assert_called_once_with(
             fake_ss, update_resource=mock.ANY, timeout=180, check_interval=2)
+
+    def test__add_security_service_to_share_network(self):
+        fake_sn = mock.MagicMock()
+        fake_ss = mock.MagicMock()
+
+        result = self.scenario._add_security_service_to_share_network(
+            share_network=fake_sn, security_service=fake_ss)
+
+        self.assertEqual(
+            self.clients(
+                "manila").share_networks.add_security_service.return_value,
+            result)
+        self.clients(
+            "manila").share_networks.add_security_service.assert_has_calls([
+                mock.call(fake_sn, fake_ss)])
