@@ -75,9 +75,9 @@ class ImageGeneratorTestCase(test.ScenarioTestCase):
 
         tenants = self._gen_tenants(tenants_count)
         users = []
-        for id in tenants:
+        for id_ in tenants:
             for i in range(users_per_tenant):
-                users.append({"id": i, "tenant_id": id,
+                users.append({"id": i, "tenant_id": id_,
                               "endpoint": mock.MagicMock()})
 
         real_context = {
@@ -106,10 +106,10 @@ class ImageGeneratorTestCase(test.ScenarioTestCase):
         }
 
         new_context = copy.deepcopy(real_context)
-        for id in new_context["tenants"].keys():
-            new_context["tenants"][id].setdefault("images", [])
+        for id_ in new_context["tenants"].keys():
+            new_context["tenants"][id_].setdefault("images", [])
             for j in range(images_per_tenant):
-                new_context["tenants"][id]["images"].append("uuid")
+                new_context["tenants"][id_]["images"].append("uuid")
 
         images_ctx = images.ImageGenerator(real_context)
         images_ctx.setup()
