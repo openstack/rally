@@ -73,17 +73,22 @@ class VMTasks(nova_utils.NovaScenario, vm_utils.VMScenario,
         :param interpreter: DEPRECATED. Use `command' instead. server's
             interpreter to run the script
         :param command: Command-specifying dictionary that either specifies
-            remote command path via `remote_path', an inline script via
+            remote command path via `remote_path' (can be uploaded from a
+            local file specified by `local_path`), an inline script via
             `script_inline' or a local script file path using `script_file'.
-            The `script_file' is checked to be accessible by the `file_exists'
-            validator.
+            Both `script_file' and `local_path' are checked to be accessible
+            by the `file_exists' validator code.
 
             The `script_inline' and `script_file' both require an `interpreter'
             value to specify the interpreter script should be run with.
 
             Note that any of `interpreter' and `remote_path' can be an array
             prefixed with environment variables and suffixed with args for
-            the `interpreter' command.
+            the `interpreter' command. `remote_path's last component must be
+            a path to a command to execute (also upload destination if a
+            `local_path' is given). Uploading an interpreter is possible
+            but requires that `remote_path' and `interpreter' path do match.
+
 
             Examples::
 
@@ -105,11 +110,33 @@ class VMTasks(nova_utils.NovaScenario, vm_utils.VMScenario,
                     "remote_path": "/bin/false"
                 }
 
+                # Copy a local command and run it
+                command = {
+                    "remote_path": "/usr/local/bin/fio",
+                    "local_path": "/home/foobar/myfiodir/bin/fio"
+                }
+
+                # Copy a local command and run it with environment variable
+                command = {
+                    "remote_path": ["HOME=/root", "/usr/local/bin/fio"],
+                    "local_path": "/home/foobar/myfiodir/bin/fio"
+                }
+
                 # Run an inline script sending it to a remote interpreter
                 command = {
                     "script_inline": "echo \"Hello, ${NAME:-World}\"",
                     "interpreter": ["NAME=Earth", "/bin/sh"]
                 }
+
+                # Run an inline script sending it to a uploaded remote
+                # interpreter
+                command = {
+                    "script_inline": "echo \"Hello, ${NAME:-World}\"",
+                    "interpreter": ["NAME=Earth", "/tmp/sh"],
+                    "remote_path": "/tmp/sh",
+                    "local_path": "/home/user/work/cve/sh-1.0/bin/sh"
+                }
+
 
         :param volume_args: volume args for booting server from volume
         :param floating_network: external network name, for floating ip

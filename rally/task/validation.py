@@ -132,15 +132,15 @@ def number(config, clients, deployment, param_name, minval=None, maxval=None,
             % {"name": param_name, "val": val, "type": num_func.__name__})
 
 
-def _file_access_ok(file_name, mode, param_name, required=True):
-    if not file_name:
+def _file_access_ok(filename, mode, param_name, required=True):
+    if not filename:
         return ValidationResult(not required,
                                 "Parameter %s required" % param_name)
-    if not os.access(file_name, mode):
+    if not os.access(filename, mode):
         return ValidationResult(
-            False, "Could not open %(file_name)s with mode %(mode)s "
+            False, "Could not open %(filename)s with mode %(mode)s "
             "for parameter %(param_name)s"
-            % {"file_name": file_name, "mode": mode, "param_name": param_name})
+            % {"filename": filename, "mode": mode, "param_name": param_name})
     return ValidationResult(True)
 
 
@@ -173,16 +173,29 @@ def check_command_dict(command):
     # NOTE(pboldin): Here we check for the values not for presence of the keys
     # due to template-driven configuration generation that can leave keys
     # defined but values empty.
-    if len([1 for k in ("remote_path", "script_file", "script_inline")
-           if command.get(k)]) != 1:
+    if command.get("interpreter"):
+        # An interpreter is given, check if exactly one way to specify
+        # script body is used: file or inline
+        if not (bool(command.get("script_file")) ^
+                bool(command.get("script_inline"))):
+            raise ValueError(
+                "Exactly one of script_inline or script_file with interpreter"
+                " is expected: %r" % command)
+        # User tries to upload a shell? Make sure it is same as interpreter
+        interpreter = command.get("interpreter")
+        interpreter = (interpreter[-1]
+                       if isinstance(interpreter, (tuple, list))
+                       else interpreter)
+        if (command.get("local_path") and
+           command.get("remote_path") != interpreter):
+            raise ValueError(
+                "When uploading an interpreter its path should be as well"
+                " specified as the `remote_path' string: %r" % command)
+    elif not command.get("remote_path"):
+        # No interpreter and no remote command to execute is given
         raise ValueError(
-            "Exactly one of script_inline, script_file or remote_path"
-            " is expected: %r" % command)
-    if ((command.get("script_file") or command.get("script_inline")) and
-       "interpreter" not in command):
-        raise ValueError(
-            "An `interpreter' is required for both script_file and"
-            " script_inline: %r" % command)
+            "Supplied dict specifies no command to execute,"
+            " either interpreter or remote_path is required: %r" % command)
 
 
 @validator
@@ -207,9 +220,13 @@ def valid_command(config, clients, deployment, param_name, required=True):
     except ValueError as e:
         return ValidationResult(False, str(e))
 
-    if command.get("script_file"):
-        return _file_access_ok(command["script_file"], os.R_OK,
-                               param_name + ".script_file", True)
+    for key in "script_file", "local_path":
+        if command.get(key):
+            return _file_access_ok(
+                filename=command[key],
+                mode=os.R_OK,
+                param_name=param_name + "." + key,
+                required=True)
 
     return ValidationResult(True)
 
