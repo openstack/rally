@@ -20,7 +20,7 @@ from rally.task.scenarios import base
 class OpenStackScenario(base.Scenario):
     """Base class for all OpenStack scenarios."""
 
-    def __init__(self, context=None):
+    def __init__(self, context=None, admin_clients=None, clients=None):
         super(OpenStackScenario, self).__init__(context)
         if context:
             if "admin" in context:
@@ -28,6 +28,18 @@ class OpenStackScenario(base.Scenario):
                     context["admin"]["endpoint"])
             if "user" in context:
                 self._clients = osclients.Clients(context["user"]["endpoint"])
+        if admin_clients:
+            if hasattr(self, "_admin_clients"):
+                raise ValueError(
+                    "Only one of context[\"admin\"] or admin_clients"
+                    " must be supplied")
+            self._admin_clients = admin_clients
+        if clients:
+            if hasattr(self, "_clients"):
+                raise ValueError(
+                    "Only one of context[\"user\"] or clients"
+                    " must be supplied")
+            self._clients = clients
 
     def clients(self, client_type, version=None):
         """Returns a python openstack client of the requested type.
