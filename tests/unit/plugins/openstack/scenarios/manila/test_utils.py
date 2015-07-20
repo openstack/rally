@@ -29,12 +29,7 @@ class ManilaScenarioTestCase(test.ScenarioTestCase):
         super(ManilaScenarioTestCase, self).setUp()
         self.scenario = utils.ManilaScenario()
 
-    @mock.patch("time.sleep")
-    @mock.patch(BM_UTILS + "wait_for")
-    @mock.patch(BM_UTILS + "get_from_manager")
-    @mock.patch(BM_UTILS + "resource_is")
-    def test__create_share(self, mock_resource_is, mock_get_from_manager,
-                           mock_wait_for, mock_sleep):
+    def test__create_share(self):
         fake_name = "fake_name"
         fake_share = mock.Mock()
         self.clients("manila").shares.create.return_value = fake_share
@@ -45,25 +40,27 @@ class ManilaScenarioTestCase(test.ScenarioTestCase):
         self.clients("manila").shares.create.assert_called_once_with(
             "nfs", 1, name=fake_name)
 
-        mock_wait_for.assert_called_once_with(
-            fake_share, is_ready=mock.ANY, update_resource=mock.ANY,
+        self.mock_wait_for.mock.assert_called_once_with(
+            fake_share,
+            is_ready=self.mock_resource_is.mock.return_value,
+            update_resource=self.mock_get_from_manager.mock.return_value,
             timeout=300, check_interval=3)
-        mock_resource_is.assert_called_once_with("available")
-        mock_get_from_manager.assert_called_once_with()
-        self.assertTrue(mock_sleep.called)
+        self.mock_resource_is.mock.assert_called_once_with("available")
+        self.mock_get_from_manager.mock.assert_called_once_with()
 
-    @mock.patch(BM_UTILS + "get_from_manager")
     @mock.patch(BM_UTILS + "wait_for_delete")
-    def test__delete_share(self, mock_wait_for_delete, mock_get_from_manager):
+    def test__delete_share(self, mock_wait_for_delete):
         fake_share = mock.MagicMock()
 
         self.scenario._delete_share(fake_share)
 
         fake_share.delete.assert_called_once_with()
-        mock_get_from_manager.assert_called_once_with(("error_deleting", ))
         mock_wait_for_delete.assert_called_once_with(
-            fake_share, update_resource=mock.ANY, timeout=180,
-            check_interval=2)
+            fake_share,
+            update_resource=self.mock_get_from_manager.mock.return_value,
+            timeout=180, check_interval=2)
+        self.mock_get_from_manager.mock.assert_called_once_with(
+            ("error_deleting", ))
 
     @ddt.data(
         {},
@@ -101,18 +98,18 @@ class ManilaScenarioTestCase(test.ScenarioTestCase):
         self.clients("manila").share_networks.create.assert_called_once_with(
             **data)
 
-    @mock.patch(BM_UTILS + "get_from_manager")
     @mock.patch(BM_UTILS + "wait_for_delete")
-    def test__delete_share_network(self, mock_wait_for_delete,
-                                   mock_get_from_manager):
+    def test__delete_share_network(self, mock_wait_for_delete):
         fake_sn = mock.MagicMock()
 
         self.scenario._delete_share_network(fake_sn)
 
         fake_sn.delete.assert_called_once_with()
-        mock_get_from_manager.assert_called_once_with()
         mock_wait_for_delete.assert_called_once_with(
-            fake_sn, update_resource=mock.ANY, timeout=180, check_interval=2)
+            fake_sn,
+            update_resource=self.mock_get_from_manager.mock.return_value,
+            timeout=180, check_interval=2)
+        self.mock_get_from_manager.mock.assert_called_once_with()
 
     @ddt.data(
         {"detailed": True, "search_opts": {"name": "foo_sn"}},
@@ -173,18 +170,18 @@ class ManilaScenarioTestCase(test.ScenarioTestCase):
             "manila").security_services.create.assert_called_once_with(
                 **expected)
 
-    @mock.patch(BM_UTILS + "get_from_manager")
     @mock.patch(BM_UTILS + "wait_for_delete")
-    def test__delete_security_service(self, mock_wait_for_delete,
-                                      mock_get_from_manager):
+    def test__delete_security_service(self, mock_wait_for_delete):
         fake_ss = mock.MagicMock()
 
         self.scenario._delete_security_service(fake_ss)
 
         fake_ss.delete.assert_called_once_with()
-        mock_get_from_manager.assert_called_once_with()
         mock_wait_for_delete.assert_called_once_with(
-            fake_ss, update_resource=mock.ANY, timeout=180, check_interval=2)
+            fake_ss,
+            update_resource=self.mock_get_from_manager.mock.return_value,
+            timeout=180, check_interval=2)
+        self.mock_get_from_manager.mock.assert_called_once_with()
 
     def test__add_security_service_to_share_network(self):
         fake_sn = mock.MagicMock()
