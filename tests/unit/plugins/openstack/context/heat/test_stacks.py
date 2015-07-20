@@ -15,7 +15,7 @@
 
 import mock
 
-from rally.plugins.openstack.context import stacks
+from rally.plugins.openstack.context.heat import stacks
 from tests.unit import fakes
 from tests.unit import test
 
@@ -85,7 +85,7 @@ class TestStackGenerator(test.ScenarioTestCase):
             self.assertEqual(stacks_per_tenant,
                              len(context["tenants"][ten_id]["stacks"]))
 
-    @mock.patch("%s.stacks.resource_manager.cleanup" % CTX)
+    @mock.patch("%s.heat.stacks.resource_manager.cleanup" % CTX)
     def test_cleanup(self, mock_cleanup):
         context = {
             "task": mock.MagicMock(),

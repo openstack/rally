@@ -17,7 +17,7 @@ import itertools
 from rally.common import log
 from rally import exceptions
 from rally import osclients
-from rally.plugins.openstack.context import users
+from rally.plugins.openstack.context.keystone import users
 from rally.plugins.openstack.scenarios.cinder import utils as cinder_utils
 from rally.plugins.openstack.scenarios.ec2 import utils as ec2_utils
 from rally.plugins.openstack.scenarios.glance import utils as glance_utils

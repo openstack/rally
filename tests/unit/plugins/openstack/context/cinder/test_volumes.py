@@ -17,7 +17,7 @@ import copy
 
 import mock
 
-from rally.plugins.openstack.context import volumes
+from rally.plugins.openstack.context.cinder import volumes
 from tests.unit import fakes
 from tests.unit import test
 
@@ -90,7 +90,7 @@ class VolumeGeneratorTestCase(test.ScenarioTestCase):
         volumes_ctx.setup()
         self.assertEqual(new_context, real_context)
 
-    @mock.patch("%s.volumes.resource_manager.cleanup" % CTX)
+    @mock.patch("%s.cinder.volumes.resource_manager.cleanup" % CTX)
     def test_cleanup(self, mock_cleanup):
 
         tenants_count = 2

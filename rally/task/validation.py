@@ -27,7 +27,7 @@ from rally import consts
 from rally import exceptions
 from rally import objects
 from rally import osclients
-from rally.plugins.openstack.context import flavors as flavors_ctx
+from rally.plugins.openstack.context.nova import flavors as flavors_ctx
 from rally.task import types
 from rally.verification.tempest import tempest
 

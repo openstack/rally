@@ -14,16 +14,16 @@
 
 import mock
 
-from rally.plugins.openstack.context import existing_users
+from rally.plugins.openstack.context.keystone import existing_users
 from tests.unit import test
+
+CTX = "rally.plugins.openstack.context"
 
 
 class ExistingUserTestCase(test.TestCase):
 
-    @mock.patch("rally.plugins.openstack.context."
-                "existing_users.osclients.Clients")
-    @mock.patch("rally.plugins.openstack.context."
-                "existing_users.objects.Endpoint")
+    @mock.patch("%s.keystone.existing_users.osclients.Clients" % CTX)
+    @mock.patch("%s.keystone.existing_users.objects.Endpoint" % CTX)
     def test_setup(self, mock_endpoint, mock_clients):
         user1 = mock.MagicMock(tenant_id="1")
         user2 = mock.MagicMock(tenant_id="1")

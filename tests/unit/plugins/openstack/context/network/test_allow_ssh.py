@@ -15,18 +15,21 @@
 
 import mock
 
-from rally.plugins.openstack.context import secgroup
+from rally.plugins.openstack.context.network import allow_ssh
 from tests.unit import fakes
 from tests.unit import test
 
 
-class SecGroupContextTestCase(test.TestCase):
+CTX = "rally.plugins.openstack.context.network.allow_ssh"
+
+
+class AllowSSHContextTestCase(test.TestCase):
 
     def setUp(self):
-        super(SecGroupContextTestCase, self).setUp()
+        super(AllowSSHContextTestCase, self).setUp()
         self.users = 2
         task = {"uuid": "foo_task_id"}
-        self.secgroup_name = secgroup.SSH_GROUP_NAME + "_foo"
+        self.secgroup_name = allow_ssh.SSH_GROUP_NAME + "_foo"
         self.ctx_with_secgroup = {
             "users": [
                 {
@@ -49,7 +52,7 @@ class SecGroupContextTestCase(test.TestCase):
             "task": task
         }
 
-    @mock.patch("rally.plugins.openstack.context.secgroup.osclients.Clients")
+    @mock.patch("%s.osclients.Clients" % CTX)
     def test__prepare_open_secgroup(self, mock_clients):
         fake_nova = fakes.FakeNovaClient()
         self.assertEqual(len(fake_nova.security_groups.list()), 1)
@@ -57,7 +60,7 @@ class SecGroupContextTestCase(test.TestCase):
         mock_cl.nova.return_value = fake_nova
         mock_clients.return_value = mock_cl
 
-        ret = secgroup._prepare_open_secgroup("endpoint", self.secgroup_name)
+        ret = allow_ssh._prepare_open_secgroup("endpoint", self.secgroup_name)
         self.assertEqual(self.secgroup_name, ret["name"])
 
         self.assertEqual(2, len(fake_nova.security_groups.list()))
@@ -66,10 +69,10 @@ class SecGroupContextTestCase(test.TestCase):
             [sg.name for sg in fake_nova.security_groups.list()])
 
         # run prep again, check that another security group is not created
-        secgroup._prepare_open_secgroup("endpoint", self.secgroup_name)
+        allow_ssh._prepare_open_secgroup("endpoint", self.secgroup_name)
         self.assertEqual(2, len(fake_nova.security_groups.list()))
 
-    @mock.patch("rally.plugins.openstack.context.secgroup.osclients.Clients")
+    @mock.patch("%s.osclients.Clients" % CTX)
     def test__prepare_open_secgroup_rules(self, mock_clients):
         fake_nova = fakes.FakeNovaClient()
 
@@ -79,20 +82,19 @@ class SecGroupContextTestCase(test.TestCase):
         mock_cl.nova.return_value = fake_nova
         mock_clients.return_value = mock_cl
 
-        secgroup._prepare_open_secgroup("endpoint", self.secgroup_name)
+        allow_ssh._prepare_open_secgroup("endpoint", self.secgroup_name)
 
         self.assertEqual(2, len(fake_nova.security_groups.list()))
         rally_open = fake_nova.security_groups.find(self.secgroup_name)
         self.assertEqual(3, len(rally_open.rules))
 
         # run prep again, check that extra rules are not created
-        secgroup._prepare_open_secgroup("endpoint", self.secgroup_name)
+        allow_ssh._prepare_open_secgroup("endpoint", self.secgroup_name)
         rally_open = fake_nova.security_groups.find(self.secgroup_name)
         self.assertEqual(3, len(rally_open.rules))
 
-    @mock.patch("rally.plugins.openstack.context.secgroup.osclients.Clients")
-    @mock.patch("rally.plugins.openstack.context."
-                "secgroup._prepare_open_secgroup")
+    @mock.patch("%s.osclients.Clients" % CTX)
+    @mock.patch("%s._prepare_open_secgroup" % CTX)
     @mock.patch("rally.plugins.openstack.wrappers.network.wrap")
     def test_secgroup_setup_cleanup_with_secgroup_supported(
             self, mock_network_wrap, mock__prepare_open_secgroup,
@@ -106,7 +108,7 @@ class SecGroupContextTestCase(test.TestCase):
             "id": "secgroup_id"}
         mock_clients.return_value = mock.MagicMock()
 
-        secgrp_ctx = secgroup.AllowSSH(self.ctx_without_secgroup)
+        secgrp_ctx = allow_ssh.AllowSSH(self.ctx_without_secgroup)
         secgrp_ctx.setup()
         self.assertEqual(self.ctx_with_secgroup, secgrp_ctx.context)
         secgrp_ctx.cleanup()
@@ -124,7 +126,7 @@ class SecGroupContextTestCase(test.TestCase):
         mock_network_wrap.assert_called_once_with(
             mock_clients.return_value, {})
 
-    @mock.patch("rally.plugins.openstack.context.secgroup.osclients.Clients")
+    @mock.patch("%s.osclients.Clients" % CTX)
     @mock.patch("rally.plugins.openstack.wrappers.network.wrap")
     def test_secgroup_setup_with_secgroup_unsupported(
             self, mock_network_wrap, mock_clients):
@@ -134,7 +136,7 @@ class SecGroupContextTestCase(test.TestCase):
         mock_network_wrap.return_value = mock_network_wrapper
         mock_clients.return_value = mock.MagicMock()
 
-        secgrp_ctx = secgroup.AllowSSH(dict(self.ctx_without_secgroup))
+        secgrp_ctx = allow_ssh.AllowSSH(dict(self.ctx_without_secgroup))
         secgrp_ctx.setup()
         self.assertEqual(self.ctx_without_secgroup, secgrp_ctx.context)
 

@@ -16,9 +16,11 @@
 import mock
 
 from rally import exceptions
-from rally.plugins.openstack.context import roles
+from rally.plugins.openstack.context.keystone import roles
 from tests.unit import fakes
 from tests.unit import test
+
+CTX = "rally.plugins.openstack.context.keystone.roles"
 
 
 class RoleGeneratorTestCase(test.TestCase):
@@ -43,7 +45,7 @@ class RoleGeneratorTestCase(test.TestCase):
             "task": mock.MagicMock()
         }
 
-    @mock.patch("rally.plugins.openstack.context.roles.osclients")
+    @mock.patch("%s.osclients" % CTX)
     def test_add_role(self, mock_osclients):
         fc = fakes.FakeClients()
         mock_osclients.Clients.return_value = fc
@@ -58,7 +60,7 @@ class RoleGeneratorTestCase(test.TestCase):
         expected = {"id": "r1", "name": "test_role1"}
         self.assertEqual(expected, result)
 
-    @mock.patch("rally.plugins.openstack.context.roles.osclients")
+    @mock.patch("%s.osclients" % CTX)
     def test_add_role_which_does_not_exist(self, mock_osclients):
         fc = fakes.FakeClients()
         mock_osclients.Clients.return_value = fc
@@ -73,7 +75,7 @@ class RoleGeneratorTestCase(test.TestCase):
         expected = "There is no role with name `unknown_role`."
         self.assertEqual(expected, str(ex))
 
-    @mock.patch("rally.plugins.openstack.context.roles.osclients")
+    @mock.patch("%s.osclients" % CTX)
     def test_remove_role(self, mock_osclients):
         role = mock.MagicMock()
         fc = fakes.FakeClients()
@@ -91,7 +93,7 @@ class RoleGeneratorTestCase(test.TestCase):
         mock_keystone = mock_osclients.Clients().keystone()
         mock_keystone.roles.remove_user_role.assert_has_calls(calls)
 
-    @mock.patch("rally.plugins.openstack.context.roles.osclients")
+    @mock.patch("%s.osclients" % CTX)
     def test_setup_and_cleanup(self, mock_osclients):
         fc = fakes.FakeClients()
         mock_osclients.Clients.return_value = fc

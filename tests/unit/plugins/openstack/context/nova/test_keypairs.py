@@ -15,10 +15,10 @@
 
 import mock
 
-from rally.plugins.openstack.context import keypair
+from rally.plugins.openstack.context.nova import keypairs
 from tests.unit import test
 
-CTX = "rally.plugins.openstack.context"
+CTX = "rally.plugins.openstack.context.nova"
 
 
 class KeyPairContextTestCase(test.TestCase):
@@ -26,7 +26,7 @@ class KeyPairContextTestCase(test.TestCase):
     def setUp(self):
         super(KeyPairContextTestCase, self).setUp()
         self.users = 2
-        self.keypair_name = keypair.Keypair.KEYPAIR_NAME + "_foo_task_id"
+        self.keypair_name = keypairs.Keypair.KEYPAIR_NAME + "_foo_task_id"
 
         task = {"uuid": "foo_task_id"}
         self.ctx_with_keys = {
@@ -47,14 +47,14 @@ class KeyPairContextTestCase(test.TestCase):
             "task": task
         }
 
-    @mock.patch("%s.keypair.Keypair._generate_keypair" % CTX)
+    @mock.patch("%s.keypairs.Keypair._generate_keypair" % CTX)
     def test_keypair_setup(self, mock_keypair__generate_keypair):
         mock_keypair__generate_keypair.side_effect = [
             {"id": "key_id", "key": "key", "name": self.keypair_name},
             {"id": "key_id", "key": "key", "name": self.keypair_name},
         ]
 
-        keypair_ctx = keypair.Keypair(self.ctx_without_keys)
+        keypair_ctx = keypairs.Keypair(self.ctx_without_keys)
         keypair_ctx.setup()
         self.assertEqual(self.ctx_with_keys, keypair_ctx.context)
 
@@ -62,9 +62,9 @@ class KeyPairContextTestCase(test.TestCase):
             [mock.call("endpoint")] * 2,
             mock_keypair__generate_keypair.mock_calls)
 
-    @mock.patch("%s.keypair.resource_manager.cleanup" % CTX)
+    @mock.patch("%s.keypairs.resource_manager.cleanup" % CTX)
     def test_keypair_cleanup(self, mock_cleanup):
-        keypair_ctx = keypair.Keypair(self.ctx_with_keys)
+        keypair_ctx = keypairs.Keypair(self.ctx_with_keys)
         keypair_ctx.cleanup()
         mock_cleanup.assert_called_once_with(names=["nova.keypairs"],
                                              users=self.ctx_with_keys["users"])
@@ -76,7 +76,7 @@ class KeyPairContextTestCase(test.TestCase):
         mock_keypair.public_key = "public_key"
         mock_keypair.private_key = "private_key"
         mock_keypair.id = "key_id"
-        keypair_ctx = keypair.Keypair(self.ctx_without_keys)
+        keypair_ctx = keypairs.Keypair(self.ctx_without_keys)
         key = keypair_ctx._generate_keypair("endpoint")
 
         self.assertEqual({
