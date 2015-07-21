@@ -14,9 +14,11 @@
 #    under the License.
 
 import collections
+import random
 import uuid
 
 from oslo_config import cfg
+import six
 
 from rally.common import broker
 from rally.common.i18n import _
@@ -52,8 +54,28 @@ CONF.register_opts(USER_CONTEXT_OPTS,
                                       title="benchmark context options"))
 
 
+class UserContextMixin(object):
+
+    def map_for_scenario(self, context_obj):
+        """Pass only context of one user and related to it tenant to scenario.
+
+        We are choosing on each iteration one user
+
+        """
+        scenario_ctx = {}
+        for key, value in six.iteritems(context_obj):
+            if key not in ["users", "tenants"]:
+                scenario_ctx[key] = value
+
+        user = random.choice(context_obj["users"])
+        tenant = context_obj["tenants"][user["tenant_id"]]
+        scenario_ctx["user"], scenario_ctx["tenant"] = user, tenant
+
+        return scenario_ctx
+
+
 @context.configure(name="users", order=100)
-class UserGenerator(context.Context):
+class UserGenerator(UserContextMixin, context.Context):
     """Context class for generating temporary users/tenants for benchmarks."""
 
     CONFIG_SCHEMA = {
@@ -95,14 +117,7 @@ class UserGenerator(context.Context):
 
     def __init__(self, context):
         super(UserGenerator, self).__init__(context)
-        self.context["users"] = []
-        self.context["tenants"] = {}
         self.endpoint = self.context["admin"]["endpoint"]
-        # NOTE(boris-42): I think this is the best place for adding logic when
-        #                 we are using pre created users or temporary. So we
-        #                 should rename this class s/UserGenerator/UserContext/
-        #                 and change a bit logic of populating lists of users
-        #                 and tenants
 
     def _remove_default_security_group(self):
         """Delete default security group for tenants."""
@@ -254,6 +269,9 @@ class UserGenerator(context.Context):
     @rutils.log_task_wrapper(LOG.info, _("Enter context: `users`"))
     def setup(self):
         """Create tenants and users, using the broker pattern."""
+        self.context["users"] = []
+        self.context["tenants"] = {}
+
         threads = self.config["resource_management_workers"]
 
         LOG.debug("Creating %(tenants)d tenants using %(threads)s threads" %

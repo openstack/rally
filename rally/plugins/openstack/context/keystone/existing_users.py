@@ -18,6 +18,7 @@ from rally.common import log as logging
 from rally.common import objects
 from rally.common import utils as rutils
 from rally import osclients
+from rally.plugins.openstack.context.keystone import users
 from rally.task import context
 
 
@@ -27,8 +28,9 @@ LOG = logging.getLogger(__name__)
 # NOTE(boris-42): This context should be hidden for now and used only by
 #                 benchmark engine.  In future during various refactoring of
 #                 validation system and rally CI testing we will make it public
+
 @context.configure(name="existing_users", order=99, hidden=True)
-class ExistingUsers(context.Context):
+class ExistingUsers(users.UserContextMixin, context.Context):
     """This context supports using existing users in Rally.
 
        It uses information about deployment to properly
@@ -42,13 +44,11 @@ class ExistingUsers(context.Context):
     #                 this is used only by benchmark engine
     CONFIG_SCHEMA = {}
 
-    def __init__(self, ctx):
-        super(ExistingUsers, self).__init__(ctx)
+    @rutils.log_task_wrapper(LOG.info, _("Enter context: `existing_users`"))
+    def setup(self):
         self.context["users"] = []
         self.context["tenants"] = {}
 
-    @rutils.log_task_wrapper(LOG.info, _("Enter context: `existing_users`"))
-    def setup(self):
         for user in self.config:
             user_endpoint = objects.Endpoint(**user)
             user_kclient = osclients.Clients(user_endpoint).keystone()

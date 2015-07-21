@@ -86,17 +86,14 @@ class SaharaEDP(context.Context):
                      "output_type", "output_url_prefix"]
     }
 
-    def __init__(self, ctx):
-        super(SaharaEDP, self).__init__(ctx)
+    @rutils.log_task_wrapper(LOG.info, _("Enter context: `Sahara EDP`"))
+    def setup(self):
         self.context["sahara_output_conf"] = {
             "output_type": self.config["output_type"],
             "output_url_prefix": self.config["output_url_prefix"]
         }
         self.context["sahara_mains"] = {}
         self.context["sahara_libs"] = {}
-
-    @rutils.log_task_wrapper(LOG.info, _("Enter context: `Sahara EDP`"))
-    def setup(self):
 
         input_type = self.config["input_type"]
         input_url = self.config["input_url"]

@@ -22,9 +22,6 @@ from tests.unit import test
 
 class SerialScenarioRunnerTestCase(test.TestCase):
 
-    def setUp(self):
-        super(SerialScenarioRunnerTestCase, self).setUp()
-
     @mock.patch("rally.task.runner._run_scenario_once")
     def test__run_scenario(self, mock__run_scenario_once):
         times = 5
@@ -36,7 +33,7 @@ class SerialScenarioRunnerTestCase(test.TestCase):
         runner = serial.SerialScenarioRunner(mock.MagicMock(),
                                              {"times": times})
         runner._run_scenario(fakes.FakeScenario, "do_it",
-                             fakes.FakeUserContext({}).context, {})
+                             fakes.FakeContext().context, {})
         self.assertEqual(len(runner.result_queue), times)
         results = list(runner.result_queue)
         self.assertEqual(results, expected_results)
@@ -46,7 +43,7 @@ class SerialScenarioRunnerTestCase(test.TestCase):
                                              {"times": 5})
         runner.abort()
         runner._run_scenario(fakes.FakeScenario, "do_it",
-                             fakes.FakeUserContext({}).context, {})
+                             fakes.FakeContext().context, {})
         self.assertEqual(len(runner.result_queue), 0)
 
     def test_abort(self):

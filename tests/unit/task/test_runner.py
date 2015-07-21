@@ -29,7 +29,7 @@ from tests.unit import test
 BASE = "rally.task.runner."
 
 
-class ScenarioHelpersTestCase(test.TestCase):
+class ScenarioRunnerHelpersTestCase(test.TestCase):
 
     @mock.patch(BASE + "utils.format_exc")
     def test_format_result_on_timeout(self, mock_format_exc):
@@ -47,47 +47,27 @@ class ScenarioHelpersTestCase(test.TestCase):
                          expected)
         mock_format_exc.assert_called_once_with(mock_exc)
 
-    @mock.patch(BASE + "random.choice", side_effect=lambda x: x[1])
-    def test_get_scenario_context(self, mock_choice):
+    @mock.patch(BASE + "context.ContextManager")
+    def test_get_scenario_context(self, mock_context_manager):
+        mock_context_obj = mock.MagicMock()
+        mock_map_for_scenario = (
+            mock_context_manager.return_value.map_for_scenario)
 
-        users = []
-        tenants = {}
+        self.assertEqual(mock_map_for_scenario.return_value,
+                         runner._get_scenario_context(mock_context_obj))
 
-        for i in range(2):
-            tenants[str(i)] = dict(name=str(i))
-            for j in range(3):
-                users.append({"id": "%s_%s" % (i, j),
-                              "tenant_id": str(i), "endpoint": "endpoint"})
-
-        context = {
-            "admin": mock.MagicMock(),
-            "users": users,
-            "tenants": tenants,
-            "some_random_key": {
-                "nested": mock.MagicMock(),
-                "one_more": 10
-            }
-        }
-        chosen_tenant = context["tenants"][context["users"][1]["tenant_id"]]
-        expected_context = {
-            "admin": context["admin"],
-            "user": context["users"][1],
-            "tenant": chosen_tenant,
-            "some_random_key": context["some_random_key"]
-        }
-
-        self.assertEqual(expected_context,
-                         runner._get_scenario_context(context))
+        mock_context_manager.assert_called_once_with(mock_context_obj)
+        mock_map_for_scenario.assert_called_once_with()
 
     def test_run_scenario_once_internal_logic(self):
         context = runner._get_scenario_context(
-            fakes.FakeUserContext({}).context)
+            fakes.FakeContext({}).context)
         scenario_cls = mock.MagicMock()
         args = (2, scenario_cls, "test", context, {})
         runner._run_scenario_once(args)
 
         expected_calls = [
-            mock.call(context=context),
+            mock.call(context),
             mock.call().test(),
             mock.call().idle_duration(),
             mock.call().idle_duration(),
@@ -97,9 +77,7 @@ class ScenarioHelpersTestCase(test.TestCase):
 
     @mock.patch(BASE + "rutils.Timer", side_effect=fakes.FakeTimer)
     def test_run_scenario_once_without_scenario_output(self, mock_timer):
-        context = runner._get_scenario_context(
-            fakes.FakeUserContext({}).context)
-        args = (1, fakes.FakeScenario, "do_it", context, {})
+        args = (1, fakes.FakeScenario, "do_it", mock.MagicMock(), {})
         result = runner._run_scenario_once(args)
 
         expected_result = {
@@ -114,9 +92,7 @@ class ScenarioHelpersTestCase(test.TestCase):
 
     @mock.patch(BASE + "rutils.Timer", side_effect=fakes.FakeTimer)
     def test_run_scenario_once_with_scenario_output(self, mock_timer):
-        context = runner._get_scenario_context(
-            fakes.FakeUserContext({}).context)
-        args = (1, fakes.FakeScenario, "with_output", context, {})
+        args = (1, fakes.FakeScenario, "with_output", mock.MagicMock(), {})
         result = runner._run_scenario_once(args)
 
         expected_result = {
@@ -131,9 +107,8 @@ class ScenarioHelpersTestCase(test.TestCase):
 
     @mock.patch(BASE + "rutils.Timer", side_effect=fakes.FakeTimer)
     def test_run_scenario_once_exception(self, mock_timer):
-        context = runner._get_scenario_context(
-            fakes.FakeUserContext({}).context)
-        args = (1, fakes.FakeScenario, "something_went_wrong", context, {})
+        args = (1, fakes.FakeScenario, "something_went_wrong",
+                mock.MagicMock(), {})
         result = runner._run_scenario_once(args)
         expected_error = result.pop("error")
         expected_result = {

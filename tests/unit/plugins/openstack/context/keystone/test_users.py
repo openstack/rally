@@ -24,6 +24,42 @@ from tests.unit import test
 CTX = "rally.plugins.openstack.context.keystone.users"
 
 
+class UserContextMixinTestCase(test.TestCase):
+
+    @mock.patch("%s.random.choice" % CTX, side_effect=lambda x: x[1])
+    def test_map_for_scenario(self, mock_choice):
+        users_ = []
+        tenants = {}
+
+        for i in range(2):
+            tenants[str(i)] = {"name": str(i)}
+            for j in range(3):
+                users_.append({"id": "%s_%s" % (i, j),
+                              "tenant_id": str(i), "endpoint": "endpoint"})
+
+        context = {
+            "admin": mock.MagicMock(),
+            "users": users_,
+            "tenants": tenants,
+            "some_random_key": {
+                "nested": mock.MagicMock(),
+                "one_more": 10
+            }
+        }
+        chosen_tenant = context["tenants"][context["users"][1]["tenant_id"]]
+        expected_context = {
+            "admin": context["admin"],
+            "user": context["users"][1],
+            "tenant": chosen_tenant,
+            "some_random_key": context["some_random_key"]
+        }
+
+        self.assertEqual(
+            expected_context,
+            users.UserContextMixin().map_for_scenario(context)
+        )
+
+
 class UserGeneratorTestCase(test.TestCase):
 
     tenants_num = 1
@@ -42,6 +78,7 @@ class UserGeneratorTestCase(test.TestCase):
                 }
             },
             "admin": {"endpoint": mock.MagicMock()},
+            "users": [],
             "task": {"uuid": "task_id"}
         }
 
@@ -53,6 +90,10 @@ class UserGeneratorTestCase(test.TestCase):
     def tearDown(self):
         self.osclients_patcher.stop()
         super(UserGeneratorTestCase, self).tearDown()
+
+    def test_is_user_context_mixin_subclass(self):
+        self.assertTrue(
+            issubclass(users.UserGenerator, users.UserContextMixin))
 
     @mock.patch("%s.network.wrap" % CTX)
     def test__remove_default_security_group_not_needed(self, mock_wrap):
@@ -148,8 +189,8 @@ class UserGeneratorTestCase(test.TestCase):
         nova_admin.networks.list.return_value = networks
         nova_admin.networks.get = fake_get_network
         user_generator = users.UserGenerator(self.context)
-        user_generator.context["tenants"] = {"t1": dict(id="t1", name="t1"),
-                                             "t2": dict(id="t2", name="t2")}
+        user_generator.context["tenants"] = {"t1": {"id": "t1", "name": "t1"},
+                                             "t2": {"id": "t2", "name": "t2"}}
         user_generator._remove_associated_networks()
         mock_check_service_status.assert_called_once_with(mock.ANY,
                                                           "nova-network")
@@ -175,8 +216,8 @@ class UserGeneratorTestCase(test.TestCase):
         nova_admin.networks.get = fake_get_network
         nova_admin.networks.disassociate.side_effect = Exception()
         user_generator = users.UserGenerator(self.context)
-        user_generator.context["tenants"] = {"t1": dict(id="t1", name="t1"),
-                                             "t2": dict(id="t2", name="t2")}
+        user_generator.context["tenants"] = {"t1": {"id": "t1", "name": "t1"},
+                                             "t2": {"id": "t2", "name": "t2"}}
         user_generator._remove_associated_networks()
         mock_check_service_status.assert_called_once_with(mock.ANY,
                                                           "nova-network")
@@ -196,8 +237,8 @@ class UserGeneratorTestCase(test.TestCase):
     @mock.patch("%s.keystone" % CTX)
     def test__create_users(self, mock_keystone, mock_sleep):
         user_generator = users.UserGenerator(self.context)
-        user_generator.context["tenants"] = {"t1": dict(id="t1", name="t1"),
-                                             "t2": dict(id="t2", name="t2")}
+        user_generator.context["tenants"] = {"t1": {"id": "t1", "name": "t1"},
+                                             "t2": {"id": "t2", "name": "t2"}}
         user_generator.config["users_per_tenant"] = 2
         users_ = user_generator._create_users()
         self.assertEqual(4, len(users_))
@@ -208,8 +249,8 @@ class UserGeneratorTestCase(test.TestCase):
     @mock.patch("%s.keystone" % CTX)
     def test__delete_tenants(self, mock_keystone):
         user_generator = users.UserGenerator(self.context)
-        user_generator.context["tenants"] = {"t1": dict(id="t1", name="t1"),
-                                             "t2": dict(id="t2", name="t2")}
+        user_generator.context["tenants"] = {"t1": {"id": "t1", "name": "t1"},
+                                             "t2": {"id": "t2", "name": "t2"}}
         user_generator._delete_tenants()
         self.assertEqual(len(user_generator.context["tenants"]), 0)
 
@@ -218,8 +259,8 @@ class UserGeneratorTestCase(test.TestCase):
         wrapped_keystone = mock_keystone.wrap.return_value
         wrapped_keystone.delete_project.side_effect = Exception()
         user_generator = users.UserGenerator(self.context)
-        user_generator.context["tenants"] = {"t1": dict(id="t1", name="t1"),
-                                             "t2": dict(id="t2", name="t2")}
+        user_generator.context["tenants"] = {"t1": {"id": "t1", "name": "t1"},
+                                             "t2": {"id": "t2", "name": "t2"}}
         user_generator._delete_tenants()
         self.assertEqual(len(user_generator.context["tenants"]), 0)
 

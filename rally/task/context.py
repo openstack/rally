@@ -14,6 +14,7 @@
 #    under the License.
 
 import abc
+import copy
 
 import jsonschema
 import six
@@ -84,6 +85,8 @@ class Context(plugin.Plugin, functional.FunctionalMixin):
 
     @classmethod
     def validate(cls, config, non_hidden=False):
+        # TODO(boris-42): This is going to be replaced with common validation
+        #                 mechanism (generalization of scenario validation)
         if non_hidden and cls._meta_get("hidden"):
             raise exceptions.PluginNotFound(name=cls.get_name(),
                                             namespace="context")
@@ -95,11 +98,40 @@ class Context(plugin.Plugin, functional.FunctionalMixin):
 
     @abc.abstractmethod
     def setup(self):
-        """Set context of benchmark."""
+        """Prepare environment for test.
+
+        This method is executed only once before load generation.
+
+        self.config contains input arguments of this context
+        self.context contains information that will be passed to scenario
+
+        The goal of this method is to perform all operation to prepare
+        environment and store information to self.context that is required
+        by scenario.
+        """
 
     @abc.abstractmethod
     def cleanup(self):
-        """Clean context of benchmark."""
+        """Clean up environment after load generation.
+
+        This method is run once after load generation is done to cleanup
+        environment.
+
+        self.config contains input arguments of this context
+        self.context contains information that was passed to scenario
+        """
+
+    def map_for_scenario(self, context_obj):
+        """Maps global context to context that is used by scenario.
+
+        This method is run each time to create scenario context which is
+        actually just sub set of global context.
+
+        One of sample where this method is useful is users context.
+        We have set of users and tenants but each scenario should have access
+        to context of single user in single tenant.
+        """
+        return context_obj
 
     def __enter__(self):
         return self
@@ -144,6 +176,26 @@ class ContextManager(object):
             except Exception as e:
                 LOG.error("Context %s failed during cleanup." % ctx.get_name())
                 LOG.exception(e)
+
+    def map_for_scenario(self):
+        """Returns scenario's specific context from full context.
+
+        Each context class is able to map context object data as it want.
+        E.g. users context will pick one user and it's tenant for each
+        scenario run.
+
+        This method iterates over all context classes used in task
+        and performs transformation of each of them to full context, order of
+        transformation is the same as order of context creation.
+        """
+        # NOTE(boris-42): Original context_obj is read only and should not
+        #                 be modified
+        context_obj = copy.deepcopy(self.context_obj)
+
+        for ctx in self._get_sorted_context_lst():
+            context_obj = ctx.map_for_scenario(context_obj)
+
+        return context_obj
 
     def __enter__(self):
         try:

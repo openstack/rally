@@ -16,16 +16,15 @@
 import abc
 import collections
 import multiprocessing
-import random
 import time
 
 import jsonschema
-import six
 
 from rally.common import log as logging
 from rally.common.plugin import plugin
 from rally.common import utils as rutils
 from rally import consts
+from rally.task import context
 from rally.task.scenarios import base as scenario_base
 from rally.task import types
 from rally.task import utils
@@ -44,28 +43,18 @@ def format_result_on_timeout(exc, timeout):
     }
 
 
-def _get_scenario_context(context):
-    scenario_ctx = {}
-    for key, value in six.iteritems(context):
-        if key not in ["users", "tenants"]:
-            scenario_ctx[key] = value
-
-    if "users" in context:
-        user = random.choice(context["users"])
-        tenant = context["tenants"][user["tenant_id"]]
-        scenario_ctx["user"], scenario_ctx["tenant"] = user, tenant
-
-    return scenario_ctx
+def _get_scenario_context(context_obj):
+    return context.ContextManager(context_obj).map_for_scenario()
 
 
 def _run_scenario_once(args):
-    iteration, cls, method_name, context, kwargs = args
+    iteration, cls, method_name, context_obj, kwargs = args
 
     LOG.info("Task %(task)s | ITER: %(iteration)s START" %
-             {"task": context["task"]["uuid"], "iteration": iteration})
+             {"task": context_obj["task"]["uuid"], "iteration": iteration})
 
-    context["iteration"] = iteration
-    scenario = cls(context=context)
+    context_obj["iteration"] = iteration
+    scenario = cls(context_obj)
 
     error = []
     scenario_output = {"errors": "", "data": {}}
@@ -80,7 +69,7 @@ def _run_scenario_once(args):
     finally:
         status = "Error %s: %s" % tuple(error[0:2]) if error else "OK"
         LOG.info("Task %(task)s | ITER: %(iteration)s END: %(status)s" %
-                 {"task": context["task"]["uuid"], "iteration": iteration,
+                 {"task": context_obj["task"]["uuid"], "iteration": iteration,
                   "status": status})
 
         return {"duration": timer.duration() - scenario.idle_duration(),

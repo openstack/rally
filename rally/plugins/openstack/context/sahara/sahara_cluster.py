@@ -86,12 +86,10 @@ class SaharaCluster(context.Context):
                      "flavor_id"]
     }
 
-    def __init__(self, ctx):
-        super(SaharaCluster, self).__init__(ctx)
-        self.context["sahara_clusters"] = {}
-
     @rutils.log_task_wrapper(LOG.info, _("Enter context: `Sahara Cluster`"))
     def setup(self):
+        self.context["sahara_clusters"] = {}
+
         wait_dict = {}
 
         for user, tenant_id in rutils.iterate_per_tenants(

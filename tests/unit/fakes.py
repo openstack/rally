@@ -1508,6 +1508,13 @@ class FakeContext(context.Context):
         "additionalProperties": False
     }
 
+    def __init__(self, context_obj=None):
+        context_obj = context_obj or {}
+        context_obj.setdefault("config", {})
+        context_obj["config"].setdefault("fake", None)
+        context_obj.setdefault("task", mock.MagicMock())
+        super(FakeContext, self).__init__(context_obj)
+
     def setup(self):
         pass
 
@@ -1535,9 +1542,7 @@ class FakeUserContext(FakeContext):
     tenants = {"uuid": {"name": "tenant"}}
 
     def __init__(self, ctx):
-        ctx.setdefault("task", mock.MagicMock())
         super(FakeUserContext, self).__init__(ctx)
-
         self.context.setdefault("admin", FakeUserContext.admin)
         self.context.setdefault("users", [FakeUserContext.user])
         self.context.setdefault("tenants", FakeUserContext.tenants)

@@ -33,8 +33,7 @@ class ConstantScenarioRunnerTestCase(test.TestCase):
         self.config = {"times": 4, "concurrency": 2,
                        "timeout": 2, "type": "constant",
                        "max_cpu_count": 2}
-        self.context = fakes.FakeUserContext({"task":
-                                             {"uuid": "uuid"}}).context
+        self.context = fakes.FakeContext({"task": {"uuid": "uuid"}}).context
         self.args = {"a": 1}
         self.task = mock.MagicMock()
 
@@ -235,8 +234,7 @@ class ConstantForDurationScenarioRunnerTestCase(test.TestCase):
         super(ConstantForDurationScenarioRunnerTestCase, self).setUp()
         self.config = {"duration": 0, "concurrency": 2,
                        "timeout": 2, "type": "constant_for_duration"}
-        self.context = fakes.FakeUserContext({"task":
-                                             {"uuid": "uuid"}}).context
+        self.context = fakes.FakeContext({"task": {"uuid": "uuid"}}).context
         self.args = {"a": 1}
 
     def test_validate(self):
