@@ -486,6 +486,12 @@
 # Server boot poll interval (floating point value)
 #ec2_server_boot_poll_interval = 1.0
 
+# Interval between checks when waiting for a VM to become pingable
+#vm_ping_poll_interval = 1.0
+
+# Time to wait for a VM to become pingable
+#vm_ping_timeout = 120.0
+
 
 [database]
 
