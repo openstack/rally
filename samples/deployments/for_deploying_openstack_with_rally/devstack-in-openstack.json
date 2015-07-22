@@ -11,6 +11,7 @@
         "password": "admin",
         "auth_url": "http://example.net:5000/v2.0",
         "amount": 1,
+        "wait_for_cloud_init": true,
         "image": {
             "checksum": "5101b2013b31d9f2f96f64f728926054",
             "name": "Ubuntu raring(added by rally)",

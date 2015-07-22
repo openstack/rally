@@ -14,8 +14,8 @@
 #    under the License.
 
 import itertools
+import json
 import os
-import time
 
 import novaclient.exceptions
 
@@ -44,6 +44,23 @@ def _get_address(s):
                              *s.addresses.values()):
         return a["addr"]
     raise RuntimeError("No address found for %s" % s)
+
+
+def _cloud_init_success(s):
+    status, stdout, stderr = s.ssh.execute(
+        "cat /run/cloud-init/result.json")
+    if status:
+        LOG.debug("Failed to read result.json on %s: %s" %
+                  (s, stderr))
+        return False  # Not finished (or no cloud-init)
+
+    res = json.loads(stdout)
+    if res["v1"]["errors"]:
+        raise RuntimeError("cloud-init exited with errors on %s: %s" %
+                           (s, res["v1"]["errors"]))
+
+    LOG.debug("cloud-init finished with no errors")
+    return True  # Success!
 
 
 @provider.configure(name="OpenStackProvider")
@@ -84,6 +101,7 @@ class OpenStackProvider(provider.ProviderFactory):
             "region": {"type": "string"},
             "config_drive": {"type": "boolean"},
             "flavor_id": {"type": "string"},
+            "wait_for_cloud_init": {"type": "boolean", "default": False},
             "image": {
                 "type": "object",
                 "properties": {
@@ -224,8 +242,10 @@ class OpenStackProvider(provider.ProviderFactory):
         for s in servers:
             s.ssh.wait(timeout=120, interval=5)
 
-        # NOTE(eyerediskin): usually ssh is ready much earlier then cloud-init
-        time.sleep(8)
+        if self.config.get("wait_for_cloud_init", False):
+            for s in servers:
+                utils.wait_for(s, is_ready=_cloud_init_success)
+
         return servers
 
     def destroy_servers(self):
