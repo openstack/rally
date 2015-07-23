@@ -44,7 +44,7 @@ def get_updated_server(server, **kwargs):
 
 
 @engine.configure(name="DevstackEngine")
-class DevstackEngine(engine.EngineFactory):
+class DevstackEngine(engine.Engine):
     """Deploy Devstack cloud.
 
     Sample configuration:

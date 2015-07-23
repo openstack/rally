@@ -49,8 +49,8 @@ class LxcEngineTestCase(test.TestCase):
             "uuid": "test-deployment-uuid",
             "config": self.config,
         }
-        self.engine = engine.EngineFactory.get_engine("LxcEngine",
-                                                      self.deployment)
+        self.engine = engine.Engine.get_engine("LxcEngine",
+                                               self.deployment)
 
     @mock.patch(MOD + "objects")
     @mock.patch(MOD + "engine")
@@ -59,7 +59,7 @@ class LxcEngineTestCase(test.TestCase):
         fake_deployment = mock.Mock()
         fake_engine = mock.Mock()
         mock_objects.Deployment = mock.Mock(return_value=fake_deployment)
-        mock_engine.EngineFactory.get_engine = mock.Mock(
+        mock_engine.Engine.get_engine = mock.Mock(
             return_value=fake_engine)
 
         fake_host = mock.Mock()
@@ -75,7 +75,7 @@ class LxcEngineTestCase(test.TestCase):
             mock.call.stop_containers()]
         self.assertEqual(host_calls, fake_host.mock_calls)
         fake_engine.deploy.assert_called_once_with()
-        mock_engine.EngineFactory.get_engine.assert_called_once_with(
+        mock_engine.Engine.get_engine.assert_called_once_with(
             "FakeEngine", fake_deployment)
         engine_config = self.config["engine"].copy()
         engine_config["provider"] = {"credentials": [fake_credentials],

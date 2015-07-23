@@ -81,7 +81,7 @@ class DocstringsTestCase(test.TestCase):
                                               long_description=False)
 
     def test_all_deploy_engines_have_docstrings(self):
-        for deploy_engine in engine.EngineFactory.get_all():
+        for deploy_engine in engine.Engine.get_all():
             self._assert_class_has_docstrings(deploy_engine)
 
     def test_all_server_providers_have_docstrings(self):

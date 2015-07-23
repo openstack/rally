@@ -56,7 +56,7 @@ class FakeDeployment(object):
 
 
 @engine.configure(name="FakeEngine")
-class FakeEngine(engine.EngineFactory):
+class FakeEngine(engine.Engine):
     """Fake deployment engine.
 
     Used for tests.
@@ -84,12 +84,12 @@ class EngineMixIn(object):
         pass
 
 
-class EngineFactoryTestCase(test.TestCase):
+class EngineTestCase(test.TestCase):
 
     def test_get_engine_not_found(self):
         deployment = make_fake_deployment()
         self.assertRaises(exceptions.PluginNotFound,
-                          engine.EngineFactory.get_engine,
+                          engine.Engine.get_engine,
                           "non_existing_engine", deployment)
         self.assertEqual(consts.DeployStatus.DEPLOY_FAILED,
                          deployment["status"])
@@ -207,9 +207,9 @@ class EngineFactoryTestCase(test.TestCase):
 
     def test_get_engine(self):
         deployment = make_fake_deployment()
-        engine_inst = engine.EngineFactory.get_engine("FakeEngine",
-                                                      deployment)
+        engine_inst = engine.Engine.get_engine("FakeEngine",
+                                               deployment)
         self.assertIsInstance(engine_inst, FakeEngine)
 
     def test_engine_factory_is_abstract(self):
-        self.assertRaises(TypeError, engine.EngineFactory)
+        self.assertRaises(TypeError, engine.Engine)
