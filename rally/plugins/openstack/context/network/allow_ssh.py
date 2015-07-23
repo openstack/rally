@@ -85,7 +85,7 @@ def _prepare_open_secgroup(endpoint, secgroup_name):
     return rally_open.to_dict()
 
 
-@context.context(name="allow_ssh", order=320)
+@context.configure(name="allow_ssh", order=320)
 class AllowSSH(context.Context):
 
     @utils.log_task_wrapper(LOG.info, _("Enter context: `allow_ssh`"))

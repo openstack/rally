@@ -25,7 +25,7 @@ from rally.task.scenarios import base as scenario_base
 LOG = logging.getLogger(__name__)
 
 
-@context.context(name="volumes", order=420)
+@context.configure(name="volumes", order=420)
 class VolumeGenerator(context.Context):
     """Context class for adding volumes to each user for benchmarks."""
 

@@ -52,7 +52,7 @@ CONF.register_opts(USER_CONTEXT_OPTS,
                                       title="benchmark context options"))
 
 
-@context.context(name="users", order=100)
+@context.configure(name="users", order=100)
 class UserGenerator(context.Context):
     """Context class for generating temporary users/tenants for benchmarks."""
 

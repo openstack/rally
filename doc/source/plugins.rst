@@ -119,7 +119,7 @@ Inherit a class for your plugin from the base *Context* class. Then, implement t
     LOG = logging.getLogger(__name__)
 
 
-    @context.context(name="create_flavor", order=1000)
+    @context.configure(name="create_flavor", order=1000)
     class CreateFlavorContext(context.Context):
         """This sample create flavor with specified options before task starts and
         delete it after task completion.

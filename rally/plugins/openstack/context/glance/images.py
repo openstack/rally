@@ -24,7 +24,7 @@ from rally.task import context
 LOG = logging.getLogger(__name__)
 
 
-@context.context(name="images", order=410)
+@context.configure(name="images", order=410)
 class ImageGenerator(context.Context):
     """Context class for adding images to each user for benchmarks."""
 

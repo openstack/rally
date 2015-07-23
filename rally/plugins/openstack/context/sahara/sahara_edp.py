@@ -28,7 +28,7 @@ from rally.task import context
 LOG = logging.getLogger(__name__)
 
 
-@context.context(name="sahara_edp", order=442)
+@context.configure(name="sahara_edp", order=442)
 class SaharaEDP(context.Context):
     """Context class for setting up the environment for an EDP job."""
 

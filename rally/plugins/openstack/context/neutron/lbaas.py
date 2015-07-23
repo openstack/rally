@@ -24,7 +24,7 @@ from rally.task import context
 LOG = logging.getLogger(__name__)
 
 
-@context.context(name="lbaas", order=360)
+@context.configure(name="lbaas", order=360)
 class Lbaas(context.Context):
     CONFIG_SCHEMA = {
         "type": "object",

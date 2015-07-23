@@ -26,7 +26,7 @@ from rally.task import context
 LOG = logging.getLogger(__name__)
 
 
-@context.context(name="keypair", order=310)
+@context.configure(name="keypair", order=310)
 class Keypair(context.Context):
     KEYPAIR_NAME = "rally_ssh_key"
 

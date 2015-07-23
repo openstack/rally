@@ -24,7 +24,7 @@ from rally.task import context
 LOG = logging.getLogger(__name__)
 
 
-@context.context(name="stacks", order=435)
+@context.configure(name="stacks", order=435)
 class StackGenerator(context.Context):
     """Context class for create temporary stacks with resources.
 

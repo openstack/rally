@@ -1494,7 +1494,7 @@ class FakeTimer(rally_utils.Timer):
         return 0
 
 
-@context.context(name="fake", order=1)
+@context.configure(name="fake", order=1)
 class FakeContext(context.Context):
 
     CONFIG_SCHEMA = {
@@ -1515,12 +1515,12 @@ class FakeContext(context.Context):
         pass
 
 
-@context.context(name="fake_hidden_context", order=1, hidden=True)
+@context.configure(name="fake_hidden_context", order=1, hidden=True)
 class FakeHiddenContext(FakeContext):
     pass
 
 
-@context.context(name="fake_user_context", order=1)
+@context.configure(name="fake_user_context", order=1)
 class FakeUserContext(FakeContext):
 
     admin = {

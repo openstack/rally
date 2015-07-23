@@ -270,9 +270,9 @@ From the developer's view, contexts management is implemented via **Context clas
     from rally.task import context
     from rally import consts
 
-    @context.context(name="your_context", *# Corresponds to the context field name in task configuration files*
-                     order=100500,        *# a number specifying the priority with which the context should be set up*
-                     hidden=False)        *# True if the context cannot be configured through the input task file*
+    @context.configure(name="your_context", *# Corresponds to the context field name in task configuration files*
+                       order=100500,        *# a number specifying the priority with which the context should be set up*
+                       hidden=False)        *# True if the context cannot be configured through the input task file*
     class YourContext(context.Context):
         *"""Yet another context class."""*
 

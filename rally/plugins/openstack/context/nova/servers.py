@@ -26,7 +26,7 @@ from rally.task import types
 LOG = logging.getLogger(__name__)
 
 
-@context.context(name="servers", order=430)
+@context.configure(name="servers", order=430)
 class ServerGenerator(context.Context):
     """Context class for adding temporary servers for benchmarks.
 

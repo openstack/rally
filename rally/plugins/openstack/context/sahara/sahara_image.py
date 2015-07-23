@@ -26,7 +26,7 @@ from rally.task import context
 LOG = logging.getLogger(__name__)
 
 
-@context.context(name="sahara_image", order=440)
+@context.configure(name="sahara_image", order=440)
 class SaharaImage(context.Context):
     """Context class for adding and tagging Sahara images."""
 

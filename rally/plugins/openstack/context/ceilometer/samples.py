@@ -23,7 +23,7 @@ from rally.task import context
 LOG = logging.getLogger(__name__)
 
 
-@context.context(name="ceilometer", order=450)
+@context.configure(name="ceilometer", order=450)
 class CeilometerSampleGenerator(context.Context):
     """Context for creating samples and collecting resources for benchmarks."""
 

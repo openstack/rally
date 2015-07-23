@@ -26,10 +26,10 @@ from rally.task import functional
 LOG = logging.getLogger(__name__)
 
 
-def context(name, order, hidden=False):
+def configure(name, order, hidden=False):
     """Context class wrapper.
 
-    Each context class has to be wrapped by context() wrapper. It
+    Each context class has to be wrapped by configure() wrapper. It
     sets essential configuration of context classes. Actually this wrapper just
     adds attributes to the class.
 
@@ -49,7 +49,7 @@ def context(name, order, hidden=False):
     return wrapper
 
 
-@context(name="base_context", order=0, hidden=True)
+@configure(name="base_context", order=0, hidden=True)
 class Context(plugin.Plugin, functional.FunctionalMixin):
     """This class is a factory for context classes.
 

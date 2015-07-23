@@ -32,7 +32,7 @@ LOG = logging.getLogger(__name__)
 
 
 @six.add_metaclass(abc.ABCMeta)
-@context.context(name="custom_image", order=500, hidden=True)
+@context.configure(name="custom_image", order=500, hidden=True)
 class BaseCustomImageGenerator(context.Context):
     """Base class for the contexts providing customized image with.
 

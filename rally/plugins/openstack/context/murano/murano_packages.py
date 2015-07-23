@@ -28,7 +28,7 @@ from rally.task import context
 LOG = logging.getLogger(__name__)
 
 
-@context.context(name="murano_packages", order=401)
+@context.configure(name="murano_packages", order=401)
 class PackageGenerator(context.Context):
     """Context class for uploading applications for murano."""
 

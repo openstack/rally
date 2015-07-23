@@ -25,7 +25,7 @@ from tests.unit import test
 BASE = "rally.plugins.openstack.context.vm.custom_image"
 
 
-@context.context(name="test_custom_image", order=500)
+@context.configure(name="test_custom_image", order=500)
 class TestImageGenerator(custom_image.BaseCustomImageGenerator):
     def _customize_image(self, *args):
         pass

@@ -30,7 +30,7 @@ CONF = cfg.CONF
 LOG = logging.getLogger(__name__)
 
 
-@context.context(name="sahara_cluster", order=441)
+@context.configure(name="sahara_cluster", order=441)
 class SaharaCluster(context.Context):
     """Context class for setting up the Cluster an EDP job."""
 

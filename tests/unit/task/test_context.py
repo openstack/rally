@@ -63,7 +63,7 @@ class BaseContextTestCase(test.TestCase):
 
     def test_setup_is_abstract(self):
 
-        @context.context("test_abstract_setup", 0)
+        @context.configure("test_abstract_setup", 0)
         class A(context.Context):
 
             def cleanup(self):
@@ -73,7 +73,7 @@ class BaseContextTestCase(test.TestCase):
 
     def test_cleanup_is_abstract(self):
 
-        @context.context("test_abstract_cleanup", 0)
+        @context.configure("test_abstract_cleanup", 0)
         class A(context.Context):
 
             def setup(self):
@@ -96,7 +96,7 @@ class BaseContextTestCase(test.TestCase):
 
     def test_lt(self):
 
-        @context.context(name="lt", order=fakes.FakeContext.get_order() - 1)
+        @context.configure(name="lt", order=fakes.FakeContext.get_order() - 1)
         class FakeLowerContext(fakes.FakeContext):
             pass
 
@@ -107,7 +107,7 @@ class BaseContextTestCase(test.TestCase):
 
     def test_gt(self):
 
-        @context.context(name="f", order=fakes.FakeContext.get_order() + 1)
+        @context.configure(name="f", order=fakes.FakeContext.get_order() + 1)
         class FakeBiggerContext(fakes.FakeContext):
             pass
 
@@ -118,7 +118,8 @@ class BaseContextTestCase(test.TestCase):
 
     def test_eq(self):
 
-        @context.context(name="fake2", order=fakes.FakeContext.get_order() + 1)
+        @context.configure(name="fake2",
+                           order=fakes.FakeContext.get_order() + 1)
         class FakeOtherContext(fakes.FakeContext):
             pass
 

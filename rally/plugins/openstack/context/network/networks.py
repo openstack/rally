@@ -27,7 +27,7 @@ from rally.task import context
 LOG = logging.getLogger(__name__)
 
 
-@context.context(name="network", order=350)
+@context.configure(name="network", order=350)
 class Network(context.Context):
     CONFIG_SCHEMA = {
         "type": "object",

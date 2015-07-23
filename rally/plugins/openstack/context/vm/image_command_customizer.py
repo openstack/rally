@@ -21,7 +21,7 @@ from rally.plugins.openstack.scenarios.vm import utils as vm_utils
 import rally.task.context as context
 
 
-@context.context(name="image_command_customizer", order=501)
+@context.configure(name="image_command_customizer", order=501)
 class ImageCommandCustomizerContext(custom_image.BaseCustomImageGenerator):
     """Context class for generating image customized by a command execution.
 

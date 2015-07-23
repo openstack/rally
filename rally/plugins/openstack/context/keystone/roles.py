@@ -25,7 +25,7 @@ from rally.task import context
 LOG = logging.getLogger(__name__)
 
 
-@context.context(name="roles", order=330)
+@context.configure(name="roles", order=330)
 class RoleGenerator(context.Context):
     """Context class for adding temporary roles for benchmarks."""
 

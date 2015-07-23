@@ -18,7 +18,7 @@ from rally import exceptions
 from rally.task import context
 
 
-@context.context(name="dummy_context", order=750)
+@context.configure(name="dummy_context", order=750)
 class DummyContext(context.Context):
     """Dummy context."""
     CONFIG_SCHEMA = {

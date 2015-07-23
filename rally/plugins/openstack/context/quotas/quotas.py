@@ -29,7 +29,7 @@ from rally.task import context
 LOG = logging.getLogger(__name__)
 
 
-@context.context(name="quotas", order=300)
+@context.configure(name="quotas", order=300)
 class Quotas(context.Context):
     """Context class for updating benchmarks' tenants quotas."""
 

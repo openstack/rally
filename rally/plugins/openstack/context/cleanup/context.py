@@ -47,7 +47,7 @@ class CleanupMixin(object):
 
 
 # NOTE(amaretskiy): Set order to run this just before UserCleanup
-@context.context(name="admin_cleanup", order=(sys.maxsize - 1), hidden=True)
+@context.configure(name="admin_cleanup", order=(sys.maxsize - 1), hidden=True)
 class AdminCleanup(CleanupMixin, context.Context):
     """Context class for admin resources cleanup."""
 
@@ -72,7 +72,7 @@ class AdminCleanup(CleanupMixin, context.Context):
 
 
 # NOTE(amaretskiy): Set maximum order to run this last
-@context.context(name="cleanup", order=sys.maxsize, hidden=True)
+@context.configure(name="cleanup", order=sys.maxsize, hidden=True)
 class UserCleanup(CleanupMixin, context.Context):
     """Context class for user resources cleanup."""
 

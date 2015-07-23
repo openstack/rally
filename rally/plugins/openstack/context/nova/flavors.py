@@ -25,7 +25,7 @@ from rally.task import context
 LOG = logging.getLogger(__name__)
 
 
-@context.context(name="flavors", order=340)
+@context.configure(name="flavors", order=340)
 class FlavorsGenerator(context.Context):
     """Context creates a list of flavors."""
 

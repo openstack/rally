@@ -29,7 +29,7 @@ from rally.verification.tempest import tempest
 LOG = logging.getLogger(__name__)
 
 
-@context.context(name="tempest", order=666)
+@context.configure(name="tempest", order=666)
 class Tempest(context.Context):
     CONFIG_SCHEMA = {
         "type": "object",
