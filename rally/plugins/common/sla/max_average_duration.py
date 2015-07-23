@@ -33,7 +33,7 @@ class MaxAverageDuration(sla.SLA):
     def __init__(self, criterion_value):
         super(MaxAverageDuration, self).__init__(criterion_value)
         self.avg = 0.0
-        self.avg_comp = streaming_algorithms.MeanStreamingComputation()
+        self.avg_comp = streaming_algorithms.MeanComputation()
 
     def add_iteration(self, iteration):
         if not iteration.get("error"):

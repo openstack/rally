@@ -52,8 +52,8 @@ class Outliers(sla.SLA):
         self.iterations = 0
         self.outliers = 0
         self.threshold = None
-        self.mean_comp = streaming_algorithms.MeanStreamingComputation()
-        self.std_comp = streaming_algorithms.StdDevStreamingComputation()
+        self.mean_comp = streaming_algorithms.MeanComputation()
+        self.std_comp = streaming_algorithms.StdDevComputation()
 
     def add_iteration(self, iteration):
         if not iteration.get("error"):
