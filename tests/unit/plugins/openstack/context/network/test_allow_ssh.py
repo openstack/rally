@@ -100,7 +100,7 @@ class AllowSSHContextTestCase(test.TestCase):
             self, mock_network_wrap, mock__prepare_open_secgroup,
             mock_clients):
         mock_network_wrapper = mock.MagicMock()
-        mock_network_wrapper.supports_security_group.return_value = (
+        mock_network_wrapper.supports_extension.return_value = (
             True, "")
         mock_network_wrap.return_value = mock_network_wrapper
         mock__prepare_open_secgroup.return_value = {
@@ -131,7 +131,7 @@ class AllowSSHContextTestCase(test.TestCase):
     def test_secgroup_setup_with_secgroup_unsupported(
             self, mock_network_wrap, mock_clients):
         mock_network_wrapper = mock.MagicMock()
-        mock_network_wrapper.supports_security_group.return_value = (
+        mock_network_wrapper.supports_extension.return_value = (
             False, "Not supported")
         mock_network_wrap.return_value = mock_network_wrapper
         mock_clients.return_value = mock.MagicMock()

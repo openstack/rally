@@ -95,8 +95,8 @@ class NetworkWrapper(object):
         """Delete floating IP."""
 
     @abc.abstractmethod
-    def supports_security_group(self):
-        """Checks whether security group is supported."""
+    def supports_extension(self):
+        """Checks whether a network extension is supported."""
 
 
 class NovaNetworkWrapper(NetworkWrapper):
@@ -174,18 +174,25 @@ class NovaNetworkWrapper(NetworkWrapper):
             fip_id,
             update_resource=lambda i: self._get_floating_ip(i, do_raise=True))
 
-    def supports_security_group(self):
-        """Check whether security group is supported
+    def supports_extension(self, extension):
+        """Check whether a Nova-network extension is supported
 
-        :return: result tuple. Always (True, "") for nova-network.
+        :param extension: str Nova network extension
+        :returns: result tuple. Always (True, "") for secgroups in nova-network
         :rtype: (bool, string)
         """
-        return True, ""
+        # TODO(rkiran): Add other extensions whenever necessary
+        if extension == "security-group":
+            return True, ""
+
+        return False, _("Nova driver does not support %s") % (extension)
 
 
 class NeutronWrapper(NetworkWrapper):
     SERVICE_IMPL = consts.Service.NEUTRON
     SUBNET_IP_VERSION = 4
+    LB_METHOD = "ROUND_ROBIN"
+    LB_PROTOCOL = "HTTP"
 
     @property
     def external_networks(self):
@@ -226,6 +233,23 @@ class NeutronWrapper(NetworkWrapper):
                 kwargs["external_gateway_info"] = {
                     "network_id": net["id"], "enable_snat": True}
         return self.client.create_router({"router": kwargs})["router"]
+
+    def create_v1_pool(self, subnet_id, **kwargs):
+        """Create LB Pool (v1).
+
+        :param subnet_id: str, neutron subnet-id
+        :param **kwargs: extra options
+        :returns: neutron lb-pool dict
+        """
+        pool_args = {
+            "pool": {
+                "name": utils.generate_random_name("rally_pool_"),
+                "subnet_id": subnet_id,
+                "lb_method": kwargs.get("lb_method", self.LB_METHOD),
+                "protocol": kwargs.get("protocol", self.LB_PROTOCOL)
+            }
+        }
+        return self.client.create_pool(pool_args)
 
     def _generate_cidr(self):
         # TODO(amaretskiy): Generate CIDRs unique for network, not cluster
@@ -279,6 +303,13 @@ class NeutronWrapper(NetworkWrapper):
                 "external": network.get("router:external", False),
                 "router_id": router and router["id"] or None,
                 "tenant_id": tenant_id}
+
+    def delete_v1_pool(self, pool_id):
+        """Delete LB Pool (v1)
+
+        :param pool_id: str, Lb-Pool-id
+        """
+        self.client.delete_pool(pool_id)
 
     def delete_network(self, network):
         net_dhcps = self.client.list_dhcp_agent_hosting_networks(
@@ -366,19 +397,18 @@ class NeutronWrapper(NetworkWrapper):
         """
         self.client.delete_floatingip(fip_id)
 
-    def supports_security_group(self):
-        """Check whether security group is supported
+    def supports_extension(self, extension):
+        """Check whether a neutron extension is supported
 
+        :param extension: str, neutron extension
         :return: result tuple
         :rtype: (bool, string)
         """
         extensions = self.client.list_extensions().get("extensions", [])
-        use_sg = any(ext.get("alias") == "security-group"
-                     for ext in extensions)
-        if use_sg:
+        if any(ext.get("alias") == extension for ext in extensions):
             return True, ""
 
-        return False, _("neutron driver does not support security groups")
+        return False, _("Neutron driver does not support %s") % (extension)
 
 
 def wrap(clients, config=None):
