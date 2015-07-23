@@ -55,6 +55,12 @@ class BaseContextTestCase(test.TestCase):
         self.assertRaises(jsonschema.ValidationError,
                           fakes.FakeContext.validate, {"nonexisting": 2})
 
+    def test_validate__hidden(self):
+        fakes.FakeHiddenContext.validate({"test": 2})
+        self.assertRaises(exceptions.PluginNotFound,
+                          fakes.FakeHiddenContext.validate,
+                          {"test": 2}, non_hidden=True)
+
     def test_setup_is_abstract(self):
 
         @context.context("test_abstract_setup", 0)
