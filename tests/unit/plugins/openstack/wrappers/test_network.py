@@ -30,6 +30,8 @@ class NovaNetworkWrapperTestCase(test.TestCase):
 
     class Net(object):
         def __init__(self, **kwargs):
+            if "tenant_id" in kwargs:
+                kwargs["project_id"] = kwargs.pop("tenant_id")
             self.__dict__.update(kwargs)
 
     def get_wrapper(self, *skip_cidrs, **kwargs):
@@ -88,9 +90,18 @@ class NovaNetworkWrapperTestCase(test.TestCase):
 
     def test_list_networks(self):
         service = self.get_wrapper()
-        service.client.networks.list.return_value = "foo_list"
         service.client.networks.list.reset_mock()
-        self.assertEqual(service.list_networks(), "foo_list")
+        service.client.networks.list.return_value = [
+            self.Net(id="foo_id", project_id="foo_tenant", cidr="foo_cidr",
+                     label="foo_label"),
+            self.Net(id="bar_id", project_id="bar_tenant", cidr="bar_cidr",
+                     label="bar_label")]
+        expected = [
+            {"id": "foo_id", "cidr": "foo_cidr", "name": "foo_label",
+             "status": "ACTIVE", "external": False, "tenant_id": "foo_tenant"},
+            {"id": "bar_id", "cidr": "bar_cidr", "name": "bar_label",
+             "status": "ACTIVE", "external": False, "tenant_id": "bar_tenant"}]
+        self.assertEqual(expected, service.list_networks())
         service.client.networks.list.assert_called_once_with()
 
     def test__get_floating_ip(self):
