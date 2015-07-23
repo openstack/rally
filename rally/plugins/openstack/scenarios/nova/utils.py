@@ -102,11 +102,8 @@ class NovaScenario(scenario.OpenStackScenario):
         nets = [net["id"]
                 for net in ctxt.get("tenant", {}).get("networks", [])]
         if nets:
-            # NOTE(amaretskiy): Balance servers among networks:
-            #     divmod(iteration % tenants_num, nets_num)[1]
-            net_idx = divmod(
-                (ctxt["iteration"] % ctxt["config"]["users"]["tenants"]),
-                len(nets))[1]
+            # NOTE(amaretskiy): Balance servers among networks.
+            net_idx = self.context["iteration"] % len(nets)
             return [{"net-id": nets[net_idx]}]
 
     @atomic.action_timer("nova.boot_server")

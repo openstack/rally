@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import ddt
 import mock
 from oslo_config import cfg
 
@@ -26,6 +27,7 @@ NOVA_UTILS = "rally.plugins.openstack.scenarios.nova.utils"
 CONF = cfg.CONF
 
 
+@ddt.ddt
 class NovaScenarioTestCase(test.ScenarioTestCase):
 
     def setUp(self):
@@ -49,8 +51,7 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
     def test__pick_random_nic(self):
         context = {"tenant": {"networks": [{"id": "net_id_1"},
                                            {"id": "net_id_2"}]},
-                   "iteration": 0,
-                   "config": {"users": {"tenants": 2}}}
+                   "iteration": 0}
         nova_scenario = utils.NovaScenario(context=context)
         nic1 = nova_scenario._pick_random_nic()
         self.assertEqual(nic1, [{"net-id": "net_id_1"}])
@@ -67,41 +68,33 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
         # balance again, get net 1
         self.assertEqual(nic3, [{"net-id": "net_id_1"}])
 
-    @mock.patch(NOVA_UTILS + ".NovaScenario._generate_random_name",
-                return_value="foo_server_name")
-    def test__boot_server(self, mock__generate_random_name):
+    @ddt.data(
+        {},
+        {"kwargs": {"auto_assign_nic": True}},
+        {"kwargs": {"auto_assign_nic": True, "nics": [{"net-id": "baz_id"}]}},
+        {"context": {"user": {"secgroup": {"name": "test"}}}},
+        {"context": {"user": {"secgroup": {"name": "new"}}},
+         "kwargs": {"security_groups": ["test"]}},
+        {"context": {"user": {"secgroup": {"name": "test1"}}},
+         "kwargs": {"security_groups": ["test1"]}},
+    )
+    @ddt.unpack
+    def test__boot_server(self, context=None, kwargs=None):
         self.clients("nova").servers.create.return_value = self.server
-        nova_scenario = utils.NovaScenario(context={})
-        return_server = nova_scenario._boot_server("image_id",
-                                                   "flavor_id")
-        self.mock_wait_for.mock.assert_called_once_with(
-            self.server,
-            is_ready=self.mock_resource_is.mock.return_value,
-            update_resource=self.mock_get_from_manager.mock.return_value,
-            check_interval=CONF.benchmark.nova_server_boot_poll_interval,
-            timeout=CONF.benchmark.nova_server_boot_timeout)
-        self.mock_resource_is.mock.assert_called_once_with("ACTIVE")
-        self.mock_get_from_manager.mock.assert_called_once_with()
-        self.assertEqual(self.mock_wait_for.mock.return_value, return_server)
-        self.clients("nova").servers.create.assert_called_once_with(
-            "foo_server_name", "image_id", "flavor_id")
-        self._test_atomic_action_timer(nova_scenario.atomic_actions(),
-                                       "nova.boot_server")
 
-    @mock.patch(NOVA_UTILS + ".NovaScenario._generate_random_name",
-                return_value="foo_server_name")
-    def test__boot_server_with_network(self, mock__generate_random_name):
-        self.clients("nova").servers.create.return_value = self.server
-        networks = [{"id": "foo_id", "external": False},
-                    {"id": "bar_id", "external": False}]
-        self.clients("nova").networks.list.return_value = networks
-        nova_scenario = utils.NovaScenario(context={
-            "iteration": 3,
-            "config": {"users": {"tenants": 2}},
-            "tenant": {"networks": networks}})
-        return_server = nova_scenario._boot_server("image_id",
-                                                   "flavor_id",
-                                                   auto_assign_nic=True)
+        if context is None:
+            context = {}
+        context.setdefault("user", {}).setdefault("endpoint", mock.MagicMock())
+        context.setdefault("config", {})
+
+        nova_scenario = utils.NovaScenario(context=context)
+        nova_scenario._generate_random_name = mock.Mock()
+        nova_scenario._pick_random_nic = mock.Mock()
+        if kwargs is None:
+            kwargs = {}
+        kwargs["fakearg"] = "fakearg"
+        return_server = nova_scenario._boot_server("image_id", "flavor_id",
+                                                   **kwargs)
         self.mock_wait_for.mock.assert_called_once_with(
             self.server,
             is_ready=self.mock_resource_is.mock.return_value,
@@ -110,10 +103,26 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
             timeout=CONF.benchmark.nova_server_boot_timeout)
         self.mock_resource_is.mock.assert_called_once_with("ACTIVE")
         self.mock_get_from_manager.mock.assert_called_once_with()
-        self.clients("nova").servers.create.assert_called_once_with(
-            "foo_server_name", "image_id", "flavor_id",
-            nics=[{"net-id": "bar_id"}])
         self.assertEqual(self.mock_wait_for.mock.return_value, return_server)
+
+        expected_kwargs = {"fakearg": "fakearg"}
+        if "nics" in kwargs:
+            expected_kwargs["nics"] = kwargs["nics"]
+        elif "auto_assign_nic" in kwargs:
+            expected_kwargs["nics"] = (nova_scenario._pick_random_nic.
+                                       return_value)
+
+        expected_secgroups = set()
+        if "security_groups" in kwargs:
+            expected_secgroups.update(kwargs["security_groups"])
+        if "secgroup" in context["user"]:
+            expected_secgroups.add(context["user"]["secgroup"]["name"])
+        if expected_secgroups:
+            expected_kwargs["security_groups"] = list(expected_secgroups)
+
+        self.clients("nova").servers.create.assert_called_once_with(
+            nova_scenario._generate_random_name.return_value,
+            "image_id", "flavor_id", **expected_kwargs)
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.boot_server")
 
@@ -124,89 +133,6 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
         self.assertRaises(TypeError, nova_scenario._boot_server,
                           "image_id", "flavor_id",
                           auto_assign_nic=True)
-
-    @mock.patch(NOVA_UTILS + ".NovaScenario._generate_random_name",
-                return_value="foo_server_name")
-    def test__boot_server_with_ssh(self, mock__generate_random_name):
-        self.clients("nova").servers.create.return_value = self.server
-        nova_scenario = utils.NovaScenario(context={
-            "user": {
-                "secgroup": {"name": "test"},
-                "endpoint": mock.MagicMock()
-            }}
-        )
-        return_server = nova_scenario._boot_server("image_id", "flavor_id")
-        self.mock_wait_for.mock.assert_called_once_with(
-            self.server,
-            is_ready=self.mock_resource_is.mock.return_value,
-            update_resource=self.mock_get_from_manager.mock.return_value,
-            check_interval=CONF.benchmark.nova_server_boot_poll_interval,
-            timeout=CONF.benchmark.nova_server_boot_timeout)
-        self.mock_resource_is.mock.assert_called_once_with("ACTIVE")
-        self.mock_get_from_manager.mock.assert_called_once_with()
-        self.assertEqual(self.mock_wait_for.mock.return_value, return_server)
-        self.clients("nova").servers.create.assert_called_once_with(
-            "foo_server_name", "image_id", "flavor_id",
-            security_groups=["test"])
-        self._test_atomic_action_timer(nova_scenario.atomic_actions(),
-                                       "nova.boot_server")
-
-    @mock.patch(NOVA_UTILS + ".NovaScenario._generate_random_name",
-                return_value="foo_server_name")
-    def test__boot_server_with_sec_group(self, mock__generate_random_name):
-        self.clients("nova").servers.create.return_value = self.server
-        nova_scenario = utils.NovaScenario(context={
-            "user": {
-                "secgroup": {"name": "new"},
-                "endpoint": mock.MagicMock()
-            }
-        })
-        return_server = nova_scenario._boot_server(
-            "image_id", "flavor_id",
-            security_groups=["test"])
-        self.mock_wait_for.mock.assert_called_once_with(
-            self.server,
-            is_ready=self.mock_resource_is.mock.return_value,
-            update_resource=self.mock_get_from_manager.mock.return_value,
-            check_interval=CONF.benchmark.nova_server_boot_poll_interval,
-            timeout=CONF.benchmark.nova_server_boot_timeout)
-        self.mock_resource_is.mock.assert_called_once_with("ACTIVE")
-        self.mock_get_from_manager.mock.assert_called_once_with()
-        self.assertEqual(self.mock_wait_for.mock.return_value, return_server)
-        self.clients("nova").servers.create.assert_called_once_with(
-            "foo_server_name", "image_id", "flavor_id",
-            security_groups=["test", "new"])
-        self._test_atomic_action_timer(nova_scenario.atomic_actions(),
-                                       "nova.boot_server")
-
-    @mock.patch(NOVA_UTILS + ".NovaScenario._generate_random_name",
-                return_value="foo_server_name")
-    def test__boot_server_with_similar_sec_group(self,
-                                                 mock__generate_random_name):
-        self.clients("nova").servers.create.return_value = self.server
-        nova_scenario = utils.NovaScenario(context={
-            "user": {
-                "secgroup": {"name": "test1"},
-                "endpoint": mock.MagicMock()
-            }}
-        )
-        return_server = nova_scenario._boot_server(
-            "image_id", "flavor_id",
-            security_groups=["test1"])
-        self.mock_wait_for.mock.assert_called_once_with(
-            self.server,
-            is_ready=self.mock_resource_is.mock.return_value,
-            update_resource=self.mock_get_from_manager.mock.return_value,
-            check_interval=CONF.benchmark.nova_server_boot_poll_interval,
-            timeout=CONF.benchmark.nova_server_boot_timeout)
-        self.mock_resource_is.mock.assert_called_once_with("ACTIVE")
-        self.mock_get_from_manager.mock.assert_called_once_with()
-        self.assertEqual(self.mock_wait_for.mock.return_value, return_server)
-        self.clients("nova").servers.create.assert_called_once_with(
-            "foo_server_name", "image_id", "flavor_id",
-            security_groups=["test1"])
-        self._test_atomic_action_timer(nova_scenario.atomic_actions(),
-                                       "nova.boot_server")
 
     def test__suspend_server(self):
         nova_scenario = utils.NovaScenario()
