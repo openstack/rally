@@ -154,7 +154,7 @@ Inherit a class for your plugin from the base *Context* class. Then, implement t
         def setup(self):
             """This method is called before the task start"""
             try:
-                # use rally.osclients to get nessesary client instance
+                # use rally.osclients to get necessary client instance
                 nova = osclients.Clients(self.context["admin"]["endpoint"]).nova()
                 # and than do what you need with this client
                 self.context["flavor"] = nova.flavors.create(

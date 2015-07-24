@@ -148,7 +148,7 @@ Bug fixes
 
 * Fix heat stacks cleanup by deleting them only 1 time per tenant (get rid of "stack not found" errors in logs).
 
-* Fix the wrong behaviour of 'rally task detailed --iterations-data' (it lacked the iteration info before).
+* Fix the wrong behavior of 'rally task detailed --iterations-data' (it lacked the iteration info before).
 
 * Fix security groups cleanup: a security group called "default", created automatically by Neutron, did not get deleted for each tenant.
 
@@ -175,6 +175,6 @@ Documentation
 * Various fixes
 
     * Remove obsolete *.rst* files (*deploy_engines.rst* / *server_providers.rst* / ...)
-    * Restructure the docs files to make them easier to natigate through
+    * Restructure the docs files to make them easier to navigate through
     * Move the chapter on task templates to the 4th step in the tutorial
     * Update the information about meetings (new release meeting & time changes)

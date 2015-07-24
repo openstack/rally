@@ -104,7 +104,7 @@ Useful links
 - `Bugs <https://bugs.launchpad.net/rally>`_
 - `Patches on review <https://review.openstack.org/#/q/status:open+rally,n,z>`_
 - `Meeting logs <http://eavesdrop.openstack.org/meetings/rally/2015/>`_ (server: **irc.freenode.net**, channel: **#openstack-meeting**)
-- `Relase meeting logs <http://eavesdrop.openstack.org/meetings/rallyrelease/2015/>`_ (server: **irc.freenode.net**, channel: **#openstack-rally**)
+- `Release meeting logs <http://eavesdrop.openstack.org/meetings/rallyrelease/2015/>`_ (server: **irc.freenode.net**, channel: **#openstack-rally**)
 - `IRC logs <http://irclog.perlgeek.de/openstack-rally>`_ (server: **irc.freenode.net**, channel: **#openstack-rally**)
 
 
