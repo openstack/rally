@@ -323,6 +323,15 @@ class CinderScenario(scenario.OpenStackScenario):
             check_interval=CONF.benchmark.cinder_volume_create_poll_interval
         )
 
+    @base.atomic_action_timer("cinder.list_backups")
+    def _list_backups(self, detailed=True):
+        """Return user volume backups list.
+
+        :param detailed: True if detailed information about backup
+                         should be listed
+        """
+        return self.clients("cinder").backups.list(detailed)
+
     def get_random_server(self):
         server_id = random.choice(self.context["tenant"]["servers"])
         return self.clients("nova").servers.get(server_id)

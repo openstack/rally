@@ -408,15 +408,15 @@ class CinderServersTestCase(test.ScenarioTestCase):
         self.assertFalse(scenario._delete_volume.called)
         self.assertFalse(scenario._delete_backup.called)
 
-    def _get_scenario(self, fake_volume, fake_backup, fake_restore):
+    def _get_scenario(self, fake_volume, fake_backup, fake_restore=None):
         scenario = volumes.CinderVolumes()
 
         scenario._create_volume = mock.MagicMock(return_value=fake_volume)
         scenario._create_backup = mock.MagicMock(return_value=fake_backup)
         scenario._restore_backup = mock.MagicMock(return_value=fake_restore)
+        scenario._list_backups = mock.MagicMock()
         scenario._delete_volume = mock.MagicMock()
         scenario._delete_backup = mock.MagicMock()
-
         return scenario
 
     def test_create_and_restore_volume_backup(self):
@@ -446,5 +446,35 @@ class CinderServersTestCase(test.ScenarioTestCase):
         scenario._create_volume.assert_called_once_with(1, **volume_kwargs)
         scenario._create_backup.assert_called_once_with(fake_volume.id)
         scenario._restore_backup.assert_called_once_with(fake_backup.id)
+        self.assertFalse(scenario._delete_volume.called)
+        self.assertFalse(scenario._delete_backup.called)
+
+    def test_create_and_list_volume_backups(self):
+        fake_volume = mock.MagicMock()
+        fake_backup = mock.MagicMock()
+        scenario = self._get_scenario(fake_volume, fake_backup)
+
+        volume_kwargs = {"some_var": "zaq"}
+        scenario.create_and_list_volume_backups(
+            1, detailed=True, do_delete=True,
+            create_volume_kwargs=volume_kwargs)
+        scenario._create_volume.assert_called_once_with(1, **volume_kwargs)
+        scenario._create_backup.assert_called_once_with(fake_volume.id)
+        scenario._list_backups.assert_called_once_with(True)
+        scenario._delete_volume.assert_called_once_with(fake_volume)
+        scenario._delete_backup.assert_called_once_with(fake_backup)
+
+    def test_create_and_list_volume_backups_no_delete(self):
+        fake_volume = mock.MagicMock()
+        fake_backup = mock.MagicMock()
+        scenario = self._get_scenario(fake_volume, fake_backup)
+
+        volume_kwargs = {"some_var": "zaq"}
+        scenario.create_and_list_volume_backups(
+            1, detailed=True, do_delete=False,
+            create_volume_kwargs=volume_kwargs)
+        scenario._create_volume.assert_called_once_with(1, **volume_kwargs)
+        scenario._create_backup.assert_called_once_with(fake_volume.id)
+        scenario._list_backups.assert_called_once_with(True)
         self.assertFalse(scenario._delete_volume.called)
         self.assertFalse(scenario._delete_backup.called)

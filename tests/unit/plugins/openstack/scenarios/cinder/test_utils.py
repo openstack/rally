@@ -294,6 +294,14 @@ class CinderScenarioTestCase(test.ScenarioTestCase):
         self._test_atomic_action_timer(self.scenario.atomic_actions(),
                                        "cinder.restore_backup")
 
+    def test__list_backups(self):
+        return_backups_list = self.scenario._list_backups()
+        self.assertEqual(
+            self.clients("cinder").backups.list.return_value,
+            return_backups_list)
+        self._test_atomic_action_timer(self.scenario.atomic_actions(),
+                                       "cinder.list_backups")
+
     def test__get_random_server(self):
         servers = [1, 2, 3]
         context = {"user": {"tenant_id": "fake"},
