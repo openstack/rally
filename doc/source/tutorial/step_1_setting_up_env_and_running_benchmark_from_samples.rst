@@ -170,7 +170,7 @@ To start a benchmark task, run the task start command (you can also add the *-v*
 
     HINTS:
     * To plot HTML graphics with this data, run:
-        rally task plot2html 6fd9a19f-5cf8-4f76-ab72-2e34bb1d4996 --out output.html
+        rally task report 6fd9a19f-5cf8-4f76-ab72-2e34bb1d4996 --out output.html
 
     * To get raw JSON output of task results, run:
         rally task results 6fd9a19f-5cf8-4f76-ab72-2e34bb1d4996
