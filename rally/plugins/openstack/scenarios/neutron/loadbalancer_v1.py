@@ -34,9 +34,8 @@ class NeutronLoadbalancerV1(utils.NeutronScenario):
         :param pool_create_args: dict, POST /lb/pools request options
         """
         pool_create_args = pool_create_args or {}
-        for net in self.context.get("tenant", {}).get("networks", []):
-            for subnet_id in net["subnets"]:
-                self._create_v1_pool(subnet_id, **pool_create_args)
+        networks = self.context.get("tenant", {}).get("networks", [])
+        self._create_v1_pools(networks, **pool_create_args)
         self._list_v1_pools()
 
     @validation.restricted_parameters("subnet_id",
@@ -54,12 +53,9 @@ class NeutronLoadbalancerV1(utils.NeutronScenario):
 
         :param pool_create_args: dict, POST /lb/pools request options
         """
-        pools = []
         pool_create_args = pool_create_args or {}
-        for net in self.context.get("tenant", {}).get("networks", []):
-            for subnet_id in net["subnets"]:
-                pools.append(self._create_v1_pool(subnet_id=subnet_id,
-                             **pool_create_args))
+        networks = self.context.get("tenant", {}).get("networks", [])
+        pools = self._create_v1_pools(networks, **pool_create_args)
         for pool in pools:
             self._delete_v1_pool(pool["pool"])
 
@@ -80,12 +76,9 @@ class NeutronLoadbalancerV1(utils.NeutronScenario):
         :param pool_create_args: dict, POST /lb/pools request options
         :param pool_update_args: dict, POST /lb/pools update options
         """
-        pools = []
         pool_create_args = pool_create_args or {}
         pool_update_args = pool_update_args or {}
-        for net in self.context.get("tenant", {}).get("networks", []):
-            for subnet_id in net["subnets"]:
-                pools.append(self._create_v1_pool(subnet_id,
-                             **pool_create_args))
+        networks = self.context.get("tenant", {}).get("networks", [])
+        pools = self._create_v1_pools(networks, **pool_create_args)
         for pool in pools:
             self._update_v1_pool(pool, **pool_update_args)
