@@ -191,8 +191,18 @@ class Tempest(object):
             try:
                 check_output("%s ./tools/install_venv.py" % python_interpreter,
                              shell=True, cwd=self.path())
-                check_output("%s python setup.py install" % self.venv_wrapper,
-                             shell=True, cwd=self.path())
+                # NOTE(kun): Using develop mode installation is for run
+                #            multiple tempest instance. However, dependency
+                #            from tempest(os-testr) has issues here, before
+                #            https://review.openstack.org/#/c/207691/ being
+                #            merged, we have to install dependency manually and
+                #            run setup.py with -N(install package without
+                #            dependency)
+                check_output("%s pip install -r requirements.txt "
+                             "-r test-requirements.txt" %
+                             self.venv_wrapper, shell=True, cwd=self.path())
+                check_output("%s python setup.py develop -N" %
+                             self.venv_wrapper, shell=True, cwd=self.path())
             except subprocess.CalledProcessError:
                 if os.path.exists(self.path(".venv")):
                     shutil.rmtree(self.path(".venv"))
