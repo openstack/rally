@@ -23,5 +23,5 @@ would like to execute.
 Possible solution
 -----------------
 
-* Add optinal flag to rally task start command to specify one or more
+* Add optional flag to rally task start command to specify one or more
 benchmarks to execute as part of that test run.
