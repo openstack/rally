@@ -1,0 +1,18 @@
+---
+  {% for s in ("create_and_list_node", "create_and_delete_node") %}
+  IronicNodes.{{s}}:
+    -
+      args:
+        driver: "pxe_ssh"
+      runner:
+        type: "constant"
+        times: 10
+        concurrency: 2
+      context:
+        users:
+          tenants: 5
+          users_per_tenant: 1
+      sla:
+        failure_rate:
+          max: 0
+  {% endfor %}

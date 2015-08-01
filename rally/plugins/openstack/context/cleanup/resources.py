@@ -462,6 +462,19 @@ class MuranoPackages(base.ResourceManager):
                       super(MuranoPackages, self).list())
 
 
+# IRONIC
+
+_ironic_order = get_order(1300)
+
+
+@base.resource("ironic", "node", admin_required=True,
+               order=next(_ironic_order), perform_for_admin_only=True)
+class IronicNodes(base.ResourceManager):
+
+    def id(self):
+        return self.raw_resource.uuid
+
+
 # KEYSTONE
 
 _keystone_order = get_order(9000)
