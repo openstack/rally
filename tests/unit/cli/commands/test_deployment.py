@@ -252,6 +252,50 @@ class DeploymentCommandsTestCase(test.TestCase):
             mock_remove.assert_called_once_with(os.path.expanduser(
                 "~/.rally/openrc"))
 
+    @mock.patch("os.remove")
+    @mock.patch("os.symlink")
+    @mock.patch("rally.cli.commands.deployment.db.deployment_get",
+                return_value=fakes.FakeDeployment(
+                    uuid="593b683c-4b16-4b2b-a56b-e162bd60f10b"))
+    @mock.patch("os.path.exists", return_value=True)
+    @mock.patch("rally.common.fileutils.update_env_file")
+    def test_use_with_v3_auth(self, mock_update_env_file, mock_path_exists,
+                              mock_deployment_get, mock_symlink, mock_remove):
+        deployment_id = mock_deployment_get.return_value["uuid"]
+
+        mock_deployment_get.return_value["admin"] = {
+            "auth_url": "http://localhost:5000/v3",
+            "username": "fake_username",
+            "password": "fake_password",
+            "tenant_name": "fake_tenant_name",
+            "endpoint": "fake_endpoint",
+            "region_name": None,
+            "user_domain_name": "fake_user_domain",
+            "project_domain_name": "fake_project_domain"}
+
+        with mock.patch("rally.cli.commands.deployment.open", mock.mock_open(),
+                        create=True) as mock_file:
+            self.deployment.use(deployment_id)
+            self.assertEqual(2, mock_path_exists.call_count)
+            mock_update_env_file.assert_called_once_with(os.path.expanduser(
+                "~/.rally/globals"),
+                "RALLY_DEPLOYMENT", "%s\n" % deployment_id)
+            mock_file.return_value.write.assert_any_call(
+                "export OS_ENDPOINT=fake_endpoint\n")
+            mock_file.return_value.write.assert_any_call(
+                "export OS_AUTH_URL=http://localhost:5000/v3\n"
+                "export OS_USERNAME=fake_username\n"
+                "export OS_PASSWORD=fake_password\n"
+                "export OS_TENANT_NAME=fake_tenant_name\n")
+            mock_file.return_value.write.assert_any_call(
+                "export OS_USER_DOMAIN_NAME=fake_user_domain\n"
+                "export OS_PROJECT_DOMAIN_NAME=fake_project_domain\n")
+            mock_symlink.assert_called_once_with(
+                os.path.expanduser("~/.rally/openrc-%s" % deployment_id),
+                os.path.expanduser("~/.rally/openrc"))
+            mock_remove.assert_called_once_with(os.path.expanduser(
+                "~/.rally/openrc"))
+
     @mock.patch("rally.cli.commands.deployment.DeploymentCommands."
                 "_update_openrc_deployment_file")
     @mock.patch("rally.common.fileutils.update_globals_file")

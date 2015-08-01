@@ -19,10 +19,12 @@ from __future__ import print_function
 
 import json
 import os
+import re
 import sys
 
 import jsonschema
 from keystoneclient import exceptions as keystone_exceptions
+from six.moves.urllib import parse
 import yaml
 
 from rally import api
@@ -274,6 +276,12 @@ class DeploymentCommands(object):
             if endpoint.get("endpoint"):
                 env_file.write("export OS_ENDPOINT=%s\n" %
                                endpoint["endpoint"])
+            if re.match(r"^/v3/?$",
+                        parse.urlparse(endpoint["auth_url"]).path) is not None:
+                env_file.write("export OS_USER_DOMAIN_NAME=%s\n"
+                               "export OS_PROJECT_DOMAIN_NAME=%s\n" %
+                               (endpoint["user_domain_name"],
+                                endpoint["project_domain_name"]))
         expanded_path = os.path.expanduser("~/.rally/openrc")
         if os.path.exists(expanded_path):
             os.remove(expanded_path)
