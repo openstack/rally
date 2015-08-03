@@ -85,7 +85,8 @@ class Context(plugin.Plugin, functional.FunctionalMixin):
     @classmethod
     def validate(cls, config, non_hidden=False):
         if non_hidden and cls._meta_get("hidden"):
-            raise exceptions.NoSuchContext(name=cls.get_name())
+            raise exceptions.PluginNotFound(name=cls.get_name(),
+                                            namespace="context")
         jsonschema.validate(config, cls.CONFIG_SCHEMA)
 
     @classmethod

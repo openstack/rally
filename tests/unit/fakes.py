@@ -1515,6 +1515,11 @@ class FakeContext(context.Context):
         pass
 
 
+@context.context(name="fake_hidden_context", order=1, hidden=True)
+class FakeHiddenContext(FakeContext):
+    pass
+
+
 @context.context(name="fake_user_context", order=1)
 class FakeUserContext(FakeContext):
 
