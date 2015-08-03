@@ -18,16 +18,13 @@ import json
 from rally.common import utils
 from rally import consts
 from rally import exceptions
-from rally.plugins.openstack.scenarios.cinder import utils as cinder_utils
-from rally.plugins.openstack.scenarios.nova import utils as nova_utils
 from rally.plugins.openstack.scenarios.vm import utils as vm_utils
 from rally.task.scenarios import base
 from rally.task import types
 from rally.task import validation
 
 
-class VMTasks(nova_utils.NovaScenario, vm_utils.VMScenario,
-              cinder_utils.CinderScenario):
+class VMTasks(vm_utils.VMScenario):
     """Benchmark scenarios that are to be run inside VM instances."""
 
     def __init__(self, *args, **kwargs):
