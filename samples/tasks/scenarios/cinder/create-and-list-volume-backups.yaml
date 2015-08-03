@@ -5,6 +5,8 @@
         size: 1
         detailed: True
         do_delete: True
+        create_volume_kwargs: {}
+        create_backup_kwargs: {}
       runner:
         type: "constant"
         times: 2

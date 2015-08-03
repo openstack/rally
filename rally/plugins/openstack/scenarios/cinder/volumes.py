@@ -437,16 +437,22 @@ class CinderVolumes(utils.CinderScenario,
     @validation.required_services(consts.Service.CINDER)
     @validation.required_openstack(users=True)
     @base.scenario(context={"cleanup": ["cinder"]})
-    def create_volume_backup(self, size, do_delete=True, **kwargs):
+    def create_volume_backup(self, size, do_delete=True,
+                             create_volume_kwargs=None,
+                             create_backup_kwargs=None):
         """Create a volume backup.
 
         :param size: volume size in GB
         :param do_delete: if True, a volume and a volume backup will
                           be deleted after creation.
-        :param kwargs: optional args to create a volume backup
+        :param create_volume_kwargs: optional args to create a volume
+        :param create_backup_kwargs: optional args to create a volume backup
         """
-        volume = self._create_volume(size, **kwargs)
-        backup = self._create_backup(volume.id, **kwargs)
+        create_volume_kwargs = create_volume_kwargs or {}
+        create_backup_kwargs = create_backup_kwargs or {}
+
+        volume = self._create_volume(size, **create_volume_kwargs)
+        backup = self._create_backup(volume.id, **create_backup_kwargs)
 
         if do_delete:
             self._delete_volume(volume)
@@ -467,10 +473,8 @@ class CinderVolumes(utils.CinderScenario,
         :param create_volume_kwargs: optional args to create a volume
         :param create_backup_kwargs: optional args to create a volume backup
         """
-        if create_volume_kwargs is None:
-            create_volume_kwargs = {}
-        if create_backup_kwargs is None:
-            create_backup_kwargs = {}
+        create_volume_kwargs = create_volume_kwargs or {}
+        create_backup_kwargs = create_backup_kwargs or {}
 
         volume = self._create_volume(size, **create_volume_kwargs)
         backup = self._create_backup(volume.id, **create_backup_kwargs)
@@ -489,7 +493,6 @@ class CinderVolumes(utils.CinderScenario,
                                        create_volume_kwargs=None,
                                        create_backup_kwargs=None):
         """Create and then list a volume backup.
-
 
         :param size: volume size in GB
         :param detailed: True if detailed information about backup
