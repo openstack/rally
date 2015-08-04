@@ -171,29 +171,71 @@ class NeutronScenarioTestCase(test.ScenarioTestCase):
                                        "neutron.delete_subnet")
 
     @mock.patch(NEUTRON_UTILS + "NeutronScenario._generate_random_name")
-    def test_create_router(self, mock__generate_random_name):
+    def test_create_router_default(self, mock__generate_random_name):
         scenario = utils.NeutronScenario()
         router = mock.Mock()
-        explicit_name = "explicit_name"
-        random_name = "random_name"
-        mock__generate_random_name.return_value = random_name
+        mock__generate_random_name.return_value = "random_name"
         self.clients("neutron").create_router.return_value = router
 
         # Default options
         result_router = scenario._create_router({})
         self.clients("neutron").create_router.assert_called_once_with(
-            {"router": {"name": random_name}})
+            {"router": {"name": "random_name"}})
         self.assertEqual(result_router, router)
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "neutron.create_router")
 
-        self.clients("neutron").create_router.reset_mock()
+    @mock.patch(NEUTRON_UTILS + "NeutronScenario._generate_random_name")
+    def test_create_router_with_ext_gw(self, mock__generate_random_name):
+        scenario = utils.NeutronScenario()
+        router = mock.Mock()
+        external_network = [{"id": "ext-net", "router:external": True}]
+        scenario._list_networks = mock.Mock(return_value=external_network)
+        mock__generate_random_name.return_value = "random_name"
+        self.clients("neutron").create_router.return_value = router
+
+        # External_gw options
+        gw_info = {"network_id": external_network[0]["id"],
+                   "enable_snat": True}
+        router_data = {"name": "random_name", "external_gateway_info": gw_info}
+        result_router = scenario._create_router({}, external_gw=True)
+        self.clients("neutron").create_router.assert_called_once_with(
+            {"router": router_data})
+        self.assertEqual(result_router, router)
+        self._test_atomic_action_timer(scenario.atomic_actions(),
+                                       "neutron.create_router")
+
+    @mock.patch(NEUTRON_UTILS + "NeutronScenario._generate_random_name")
+    def test_create_router_with_ext_gw_but_no_ext_net(
+            self, mock__generate_random_name):
+        scenario = utils.NeutronScenario()
+        router = mock.Mock()
+        external_network = [{"id": "ext-net", "router:external": False}]
+        scenario._list_networks = mock.Mock(return_value=external_network)
+        mock__generate_random_name.return_value = "random_name"
+        self.clients("neutron").create_router.return_value = router
+
+        # External_gw options with no external networks in list_networks()
+        result_router = scenario._create_router({}, external_gw=True)
+        self.clients("neutron").create_router.assert_called_once_with(
+            {"router": {"name": "random_name"}})
+        self.assertEqual(result_router, router)
+        self._test_atomic_action_timer(scenario.atomic_actions(),
+                                       "neutron.create_router")
+
+    def test_create_router_explicit(self):
+        scenario = utils.NeutronScenario()
+        router = mock.Mock()
+        self.clients("neutron").create_router.return_value = router
 
         # Custom options
-        router_data = {"name": explicit_name, "admin_state_up": True}
+        router_data = {"name": "explicit_name", "admin_state_up": True}
         result_router = scenario._create_router(router_data)
         self.clients("neutron").create_router.assert_called_once_with(
             {"router": router_data})
+        self.assertEqual(result_router, router)
+        self._test_atomic_action_timer(scenario.atomic_actions(),
+                                       "neutron.create_router")
 
     def test_list_routers(self):
         scenario = utils.NeutronScenario()
