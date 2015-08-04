@@ -40,7 +40,7 @@ def configure(name, namespace="default"):
 #                  engines class should have own base.
 @six.add_metaclass(abc.ABCMeta)
 @configure("base_engine")
-class EngineFactory(plugin.Plugin):
+class Engine(plugin.Plugin):
     """Base class of all deployment engines.
 
     It's a base class with self-discovery of subclasses. Each subclass
@@ -51,7 +51,7 @@ class EngineFactory(plugin.Plugin):
     Example of usage with a simple engine:
 
     # Add new engine with __name__ == "A"
-    class A(EngineFactory):
+    class A(Engine):
         def __init__(self, deployment):
             # do something
 
@@ -69,7 +69,7 @@ class EngineFactory(plugin.Plugin):
     operations to a deployment. Any unhandled exceptions bring a status
     of the deployment to the inconsistent state.
 
-    with EngineFactory.get_engine("A", deployment) as deploy:
+    with Engine.get_engine("A", deployment) as deploy:
         # deploy is an instance of the A engine
         # perform all usage operations on your cloud
     """
@@ -94,7 +94,7 @@ class EngineFactory(plugin.Plugin):
     def get_engine(name, deployment):
         """Returns instance of a deploy engine with corresponding name."""
         try:
-            engine_cls = EngineFactory.get(name)
+            engine_cls = Engine.get(name)
             return engine_cls(deployment)
         except exceptions.PluginNotFound:
             LOG.error(_("Deployment %(uuid)s: Deploy engine for %(name)s "

@@ -19,7 +19,7 @@ from rally import objects
 
 
 @engine.configure(name="ExistingCloud")
-class ExistingCloud(engine.EngineFactory):
+class ExistingCloud(engine.Engine):
     """Just use an existing OpenStack deployment without deploying anything.
 
     To use ExistingCloud, you should put endpoint information to the config:

@@ -199,8 +199,8 @@ class BaseDeploymentTestCase(test.TestCase):
 class DeploymentAPITestCase(BaseDeploymentTestCase):
     @mock.patch("rally.objects.deploy.db.deployment_update")
     @mock.patch("rally.objects.deploy.db.deployment_create")
-    @mock.patch("rally.deployment.engine.EngineFactory.validate")
-    def test_create(self, mock_engine_factory_validate,
+    @mock.patch("rally.deployment.engine.Engine.validate")
+    def test_create(self, mock_engine_validate,
                     mock_deployment_create, mock_deployment_update):
         mock_deployment_create.return_value = self.deployment
         mock_deployment_update.return_value = self.deployment
@@ -209,17 +209,17 @@ class DeploymentAPITestCase(BaseDeploymentTestCase):
             "name": "fake_deployment",
             "config": self.deployment_config,
         })
-        mock_engine_factory_validate.assert_called_with()
+        mock_engine_validate.assert_called_with()
         mock_deployment_update.assert_has_calls([
             mock.call(self.deployment_uuid, self.endpoints)
         ])
 
     @mock.patch("rally.objects.deploy.db.deployment_update")
     @mock.patch("rally.objects.deploy.db.deployment_create")
-    @mock.patch("rally.deployment.engine.EngineFactory.validate",
+    @mock.patch("rally.deployment.engine.Engine.validate",
                 side_effect=jsonschema.ValidationError("ValidationError"))
     def test_create_validation_error(
-            self, mock_engine_factory_validate, mock_deployment_create,
+            self, mock_engine_validate, mock_deployment_create,
             mock_deployment_update):
         mock_deployment_create.return_value = self.deployment
         self.assertRaises(jsonschema.ValidationError,

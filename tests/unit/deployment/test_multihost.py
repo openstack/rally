@@ -49,12 +49,12 @@ class MultihostEngineTestCase(test.TestCase):
             uuid="905b2f16-6453-4b86-8ba5-6d32025fcfa6",
             config=self.config,
         )
-        self.engine = engine.EngineFactory.get_engine("MultihostEngine",
-                                                      self.deployment)
+        self.engine = engine.Engine.get_engine("MultihostEngine",
+                                               self.deployment)
 
     @mock.patch(MOD + "objects.Deployment")
-    @mock.patch(MOD + "engine.EngineFactory")
-    def test__deploy_node(self, mock_engine_factory, mock_deployment):
+    @mock.patch(MOD + "engine.Engine")
+    def test__deploy_node(self, mock_engine, mock_deployment):
         fake_endpoint = mock.Mock()
         fake_deployment = mock.Mock()
         fake_engine = mock.Mock()
@@ -63,7 +63,7 @@ class MultihostEngineTestCase(test.TestCase):
         fake_engine.make_deploy = mock.Mock(return_value=fake_endpoint)
 
         mock_deployment.return_value = fake_deployment
-        mock_engine_factory.get_engine = mock.Mock(return_value=fake_engine)
+        mock_engine.get_engine = mock.Mock(return_value=fake_engine)
 
         engine, endpoint = self.engine._deploy_node(self.config["nodes"][0])
 

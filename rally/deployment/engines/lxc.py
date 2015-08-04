@@ -37,7 +37,7 @@ def get_script_path(name):
 
 
 @engine.configure(name="LxcEngine")
-class LxcEngine(engine.EngineFactory):
+class LxcEngine(engine.Engine):
     """Deploy with other engines in lxc containers.
 
     Sample configuration:
@@ -102,8 +102,8 @@ class LxcEngine(engine.EngineFactory):
                                      "credentials": [credentials]}
         deployment = objects.Deployment(config=engine_config,
                                         parent_uuid=self.deployment["uuid"])
-        deployer = engine.EngineFactory.get_engine(engine_config["name"],
-                                                   deployment)
+        deployer = engine.Engine.get_engine(engine_config["name"],
+                                            deployment)
         deployer.deploy()
         lxc_host.stop_containers()
 

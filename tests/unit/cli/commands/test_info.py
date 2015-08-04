@@ -31,7 +31,7 @@ from tests.unit import test
 
 SCENARIO = "rally.cli.commands.info.scenario_base.Scenario"
 SLA = "rally.cli.commands.info.sla.SLA"
-ENGINE = "rally.cli.commands.info.engine.EngineFactory"
+ENGINE = "rally.cli.commands.info.engine.Engine"
 PROVIDER = "rally.cli.commands.info.provider.ProviderFactory"
 UTILS = "rally.cli.commands.info.utils"
 DISCOVER = "rally.cli.commands.info.discover"
@@ -76,10 +76,10 @@ class InfoCommandsTestCase(test.TestCase):
 
     @mock.patch(ENGINE + ".get",
                 return_value=existing_cloud.ExistingCloud)
-    def test_find_existing_cloud(self, mock_engine_factory_get):
+    def test_find_existing_cloud(self, mock_engine_get):
         query = "ExistingCloud"
         status = self.info.find(query)
-        mock_engine_factory_get.assert_called_once_with(query)
+        mock_engine_get.assert_called_once_with(query)
         self.assertIsNone(status)
 
     @mock.patch(PROVIDER + ".get",
@@ -120,7 +120,7 @@ class InfoCommandsTestCase(test.TestCase):
                 return_value=[existing_cloud.ExistingCloud])
     def test_DeploymentEngines(self, mock_itersubclasses):
         status = self.info.DeploymentEngines()
-        mock_itersubclasses.assert_called_with(engine.EngineFactory)
+        mock_itersubclasses.assert_called_with(engine.Engine)
         self.assertIsNone(status)
 
     @mock.patch(DISCOVER + ".itersubclasses",

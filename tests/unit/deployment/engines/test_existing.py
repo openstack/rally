@@ -70,6 +70,6 @@ class TestExistingCloud(test.TestCase):
 
     def test_is_in_factory(self):
         name = self.deployment["config"]["type"]
-        engine = deploy_engine.EngineFactory.get_engine(name,
-                                                        self.deployment)
+        engine = deploy_engine.Engine.get_engine(name,
+                                                 self.deployment)
         self.assertIsInstance(engine, existing.ExistingCloud)

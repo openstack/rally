@@ -25,7 +25,7 @@ from rally import objects
 
 
 @engine.configure(name="MultihostEngine")
-class MultihostEngine(engine.EngineFactory):
+class MultihostEngine(engine.Engine):
     """Deploy multihost cloud with existing engines.
 
     Sample configuration:
@@ -66,7 +66,7 @@ class MultihostEngine(engine.EngineFactory):
     def _deploy_node(self, config):
         deployment = objects.Deployment(config=config,
                                         parent_uuid=self.deployment["uuid"])
-        deployer = engine.EngineFactory.get_engine(config["type"], deployment)
+        deployer = engine.Engine.get_engine(config["type"], deployment)
         with deployer:
             endpoints = deployer.make_deploy()
         return deployer, endpoints

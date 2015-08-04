@@ -52,7 +52,7 @@ class Deployment(object):
                 LOG.exception(e)
             raise
 
-        deployer = deploy_engine.EngineFactory.get_engine(
+        deployer = deploy_engine.Engine.get_engine(
             deployment["config"]["type"], deployment)
         try:
             deployer.validate()
@@ -78,7 +78,7 @@ class Deployment(object):
         # TODO(akscram): Check that the deployment have got a status that
         #                is equal to "*->finished" or "deploy->inconsistent".
         deployment = objects.Deployment.get(deployment)
-        deployer = deploy_engine.EngineFactory.get_engine(
+        deployer = deploy_engine.Engine.get_engine(
             deployment["config"]["type"], deployment)
 
         tempest.Tempest(deployment["uuid"]).uninstall()
@@ -93,7 +93,7 @@ class Deployment(object):
         :param deployment: UUID or name of the deployment
         """
         deployment = objects.Deployment.get(deployment)
-        deployer = deploy_engine.EngineFactory.get_engine(
+        deployer = deploy_engine.Engine.get_engine(
             deployment["config"]["type"], deployment)
         with deployer:
             deployer.make_cleanup()

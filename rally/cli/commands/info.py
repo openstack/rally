@@ -181,7 +181,7 @@ class InfoCommands(object):
     @plugins.ensure_plugins_are_loaded
     def DeploymentEngines(self):
         """Get information about deploy engines available in Rally."""
-        engines = self._get_descriptions(engine.EngineFactory)
+        engines = self._get_descriptions(engine.Engine)
         info = (self._make_header("Rally - Deployment engines") +
                 "\n\n"
                 "Rally is an OpenStack benchmarking system. Before starting "
@@ -273,7 +273,7 @@ class InfoCommands(object):
         scenario_methods = list(set(s.split(".")[1] for s in scenarios))
         sla_info = [cls.get_name() for cls in sla.SLA.get_all()]
         deploy_engines = [cls.get_name() for cls in
-                          engine.EngineFactory.get_all()]
+                          engine.Engine.get_all()]
         server_providers = [cls.get_name() for cls in
                             provider.ProviderFactory.get_all()]
 
@@ -364,7 +364,7 @@ class InfoCommands(object):
 
     def _get_deploy_engine_info(self, query):
         try:
-            deploy_engine = engine.EngineFactory.get(query)
+            deploy_engine = engine.Engine.get(query)
             header = "%s (deploy engine)" % deploy_engine.get_name()
             info = self._make_header(header)
             info += "\n\n"
