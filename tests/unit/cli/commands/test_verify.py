@@ -95,27 +95,27 @@ class VerifyCommandsTestCase(test.TestCase):
         self.assertFalse(mock_verification_verify.called)
 
     @mock.patch("rally.cli.cliutils.print_list")
-    @mock.patch("rally.db.verification_list")
-    def test_list(self, mock_db_verification_list, mock_print_list):
+    @mock.patch("rally.common.db.verification_list")
+    def test_list(self, mock_common_db_verification_list, mock_print_list):
         fields = ["UUID", "Deployment UUID", "Set name", "Tests", "Failures",
                   "Created at", "Duration", "Status"]
         verifications = [{"created_at": date.datetime.now(),
                           "updated_at": date.datetime.now()}]
-        mock_db_verification_list.return_value = verifications
+        mock_common_db_verification_list.return_value = verifications
         self.verify.list()
 
         for row in verifications:
             self.assertEqual(row["updated_at"] - row["created_at"],
                              row["duration"])
 
-        mock_db_verification_list.assert_called_once_with()
+        mock_common_db_verification_list.assert_called_once_with()
         mock_print_list.assert_called_once_with(verifications, fields,
                                                 sortby_index=fields.index(
                                                     "Created at"))
 
     @mock.patch("rally.cli.cliutils.print_list")
-    @mock.patch("rally.db.verification_get")
-    @mock.patch("rally.db.verification_result_get")
+    @mock.patch("rally.common.db.verification_get")
+    @mock.patch("rally.common.db.verification_result_get")
     @mock.patch("rally.objects.Verification")
     def test_show(self, mock_objects_verification,
                   mock_verification_result_get, mock_verification_get,
@@ -147,7 +147,8 @@ class VerifyCommandsTestCase(test.TestCase):
         mock_verification_get.assert_called_once_with(verification_id)
         mock_verification_result_get.assert_called_once_with(verification_id)
 
-    @mock.patch("rally.db.verification_result_get", return_value={"data": {}})
+    @mock.patch("rally.common.db.verification_result_get",
+                return_value={"data": {}})
     @mock.patch("json.dumps")
     def test_results(self, mock_json_dumps, mock_verification_result_get):
         verification_uuid = "a0231bdf-6a4e-4daf-8ab1-ae076f75f070"
@@ -157,7 +158,7 @@ class VerifyCommandsTestCase(test.TestCase):
         mock_verification_result_get.assert_called_once_with(verification_uuid)
         mock_json_dumps.assert_called_once_with({}, sort_keys=True, indent=4)
 
-    @mock.patch("rally.db.verification_result_get")
+    @mock.patch("rally.common.db.verification_result_get")
     def test_results_verification_not_found(
             self, mock_verification_result_get):
         verification_uuid = "9044ced5-9c84-4666-8a8f-4b73a2b62acb"
@@ -172,7 +173,8 @@ class VerifyCommandsTestCase(test.TestCase):
 
     @mock.patch("rally.cli.commands.verify.open",
                 side_effect=mock.mock_open(), create=True)
-    @mock.patch("rally.db.verification_result_get", return_value={"data": {}})
+    @mock.patch("rally.common.db.verification_result_get",
+                return_value={"data": {}})
     def test_results_with_output_json_and_output_file(
             self, mock_verification_result_get, mock_open):
         mock_open.side_effect = mock.mock_open()
@@ -186,7 +188,7 @@ class VerifyCommandsTestCase(test.TestCase):
 
     @mock.patch("rally.cli.commands.verify.open",
                 side_effect=mock.mock_open(), create=True)
-    @mock.patch("rally.db.verification_result_get")
+    @mock.patch("rally.common.db.verification_result_get")
     @mock.patch("rally.verification.tempest.json2html.HtmlOutput")
     def test_results_with_output_html_and_output_file(
             self, mock_html_output, mock_verification_result_get, mock_open):
@@ -205,7 +207,7 @@ class VerifyCommandsTestCase(test.TestCase):
         mock_open.assert_called_once_with("results", "wb")
         mock_open.side_effect().write.assert_called_once_with("html_report")
 
-    @mock.patch("rally.db.verification_result_get",
+    @mock.patch("rally.common.db.verification_result_get",
                 return_value={"data": {"test_cases": {}}})
     @mock.patch("json.dumps")
     def test_compare(self, mock_json_dumps, mock_verification_result_get):
@@ -221,7 +223,7 @@ class VerifyCommandsTestCase(test.TestCase):
         mock_json_dumps.assert_called_once_with(fake_data, sort_keys=True,
                                                 indent=4)
 
-    @mock.patch("rally.db.verification_result_get",
+    @mock.patch("rally.common.db.verification_result_get",
                 side_effect=exceptions.NotFoundException())
     def test_compare_verification_not_found(self,
                                             mock_verification_result_get):
@@ -236,7 +238,7 @@ class VerifyCommandsTestCase(test.TestCase):
 
     @mock.patch("rally.cli.commands.verify.open",
                 side_effect=mock.mock_open(), create=True)
-    @mock.patch("rally.db.verification_result_get",
+    @mock.patch("rally.common.db.verification_result_get",
                 return_value={"data": {"test_cases": {}}})
     def test_compare_with_output_csv_and_output_file(
             self, mock_verification_result_get, mock_open):
@@ -256,7 +258,7 @@ class VerifyCommandsTestCase(test.TestCase):
 
     @mock.patch("rally.cli.commands.verify.open",
                 side_effect=mock.mock_open(), create=True)
-    @mock.patch("rally.db.verification_result_get",
+    @mock.patch("rally.common.db.verification_result_get",
                 return_value={"data": {"test_cases": {}}})
     def test_compare_with_output_json_and_output_file(
             self, mock_verification_result_get, mock_open):
@@ -275,7 +277,7 @@ class VerifyCommandsTestCase(test.TestCase):
 
     @mock.patch("rally.cli.commands.verify.open",
                 side_effect=mock.mock_open(), create=True)
-    @mock.patch("rally.db.verification_result_get")
+    @mock.patch("rally.common.db.verification_result_get")
     @mock.patch(("rally.verification.tempest."
                  "compare2html.create_report"), return_value="")
     def test_compare_with_output_html_and_output_file(

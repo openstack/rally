@@ -23,8 +23,8 @@ from oslo_utils import timeutils
 import sqlalchemy as sa
 from sqlalchemy.orm.exc import NoResultFound
 
+from rally.common.db.sqlalchemy import models
 from rally.common.i18n import _
-from rally.db.sqlalchemy import models
 from rally import exceptions
 
 
@@ -74,13 +74,13 @@ class Connection(object):
         """The helper method to create query.
 
         :param model: The instance of
-                      :class:`rally.db.sqlalchemy.models.RallyBase` to
+                      :class:`rally.common.db.sqlalchemy.models.RallyBase` to
                       request it.
         :param session: Reuse the session object or get new one if it is
                         None.
         :returns: The query object.
         :raises: :class:`Exception` when the model is not a sublcass of
-                 :class:`rally.db.sqlalchemy.models.RallyBase`.
+                 :class:`rally.common.db.sqlalchemy.models.RallyBase`.
         """
         session = session or get_session()
         query = session.query(model)

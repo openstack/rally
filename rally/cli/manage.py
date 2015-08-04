@@ -22,7 +22,7 @@ import sys
 from rally import api
 from rally.cli import cliutils
 from rally.cli import envutils
-from rally import db
+from rally.common import db
 
 
 class DBCommands(object):

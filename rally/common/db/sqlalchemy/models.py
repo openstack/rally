@@ -26,8 +26,8 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import schema
 from sqlalchemy import types
 
+from rally.common.db.sqlalchemy import types as sa_types
 from rally import consts
-from rally.db.sqlalchemy import types as sa_types
 
 
 BASE = declarative_base()
@@ -44,7 +44,7 @@ class RallyBase(models.ModelBase):
                            onupdate=lambda: timeutils.utcnow())
 
     def save(self, session=None):
-        from rally.db.sqlalchemy import api as sa_api
+        from rally.common.db.sqlalchemy import api as sa_api
 
         if session is None:
             session = sa_api.get_session()
@@ -234,7 +234,7 @@ class Worker(BASE, RallyBase):
 
 
 def create_db():
-    from rally.db.sqlalchemy import api as sa_api
+    from rally.common.db.sqlalchemy import api as sa_api
 
     BASE.metadata.create_all(sa_api.get_engine())
 
@@ -281,5 +281,5 @@ def drop_all_objects(engine):
 
 
 def drop_db():
-    from rally.db.sqlalchemy import api as sa_api
+    from rally.common.db.sqlalchemy import api as sa_api
     drop_all_objects(sa_api.get_engine())

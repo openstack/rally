@@ -17,8 +17,8 @@
 
 from six import moves
 
+from rally.common import db
 from rally import consts
-from rally import db
 from rally import exceptions
 from tests.unit import test
 

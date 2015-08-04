@@ -20,7 +20,7 @@ from oslo_config import fixture
 from oslotest import base
 from oslotest import mockpatch
 
-from rally import db
+from rally.common import db
 from rally import plugins
 from tests.unit import fakes
 

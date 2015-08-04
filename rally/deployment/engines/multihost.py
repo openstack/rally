@@ -18,8 +18,8 @@ import six
 from six.moves.urllib import parse
 
 import rally
+from rally.common import db
 from rally import consts
-from rally import db
 from rally.deployment import engine
 from rally import objects
 
