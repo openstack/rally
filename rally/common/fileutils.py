@@ -14,6 +14,8 @@
 #    under the License.
 
 import os
+import tempfile
+import zipfile
 
 
 def _read_env_file(path, except_env=None):
@@ -82,3 +84,34 @@ def update_globals_file(key, value):
         os.makedirs(dir)
     expanded_path = os.path.join(dir, "globals")
     update_env_file(expanded_path, key, "%s\n" % value)
+
+
+def pack_dir(source_directory, zip_name=None):
+    """Archive content of the directory into .zip
+
+    Zip content of the source folder excluding root directory
+    into zip archive. When zip_name is specified it would be used
+    as a destination for the archive otherwise method would
+    try to use temporary file as a destination for the archive.
+
+    :param source_directory: root of the newly created archive.
+        Directory is added recursively.
+    :param zip_name: destination zip file name.
+    :raises IOError: whenever there is IO issues.
+    :returns: path to the newly created zip archive either specified via
+        zip_name or a temporary one.
+    """
+
+    if not zip_name:
+        fp = tempfile.NamedTemporaryFile(delete=False)
+        zip_name = fp.name
+    zipf = zipfile.ZipFile(zip_name, mode="w")
+    try:
+        for root, dirs, files in os.walk(source_directory):
+            for f in files:
+                abspath = os.path.join(root, f)
+                relpath = os.path.relpath(abspath, source_directory)
+                zipf.write(abspath, relpath)
+    finally:
+        zipf.close()
+    return zip_name

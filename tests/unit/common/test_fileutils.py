@@ -45,3 +45,23 @@ class FileUtilsTestCase(test.TestCase):
                 "FAKE_ENV=new_value")]
             mock_file.return_value.readlines.assert_called_once_with()
             mock_file.return_value.write.assert_has_calls(calls)
+
+
+class PackDirTestCase(test.TestCase):
+
+    @mock.patch("os.walk")
+    @mock.patch("zipfile.ZipFile")
+    def test_pack_dir(self, mock_zip_file, mock_walk):
+        mock_walk.side_effect = [
+            [("foo_root", [], ["file1", "file2", "file3"])]]
+        fileutils.pack_dir("rally-jobs/extra/murano/HelloReporter",
+                           "fake_dir/package.zip")
+        mock_zip_file.assert_called_once_with("fake_dir/package.zip",
+                                              mode="w")
+        mock_walk.assert_called_once_with(
+            "rally-jobs/extra/murano/HelloReporter")
+        mock_zip_file.return_value.assert_has_calls(
+            [mock.call.write("foo_root/file1", "../../../../foo_root/file1"),
+             mock.call.write("foo_root/file2", "../../../../foo_root/file2"),
+             mock.call.write("foo_root/file3", "../../../../foo_root/file3"),
+             mock.call.close()])
