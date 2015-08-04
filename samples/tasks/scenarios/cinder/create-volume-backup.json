@@ -3,7 +3,9 @@
         {
             "args": {
                 "size": 1,
-                "do_delete": true
+                "do_delete": true,
+                "create_volume_kwargs": {},
+                "create_backup_kwargs": {}
             },
             "runner": {
                 "type": "constant",
