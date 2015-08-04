@@ -27,6 +27,8 @@ class NetworkTestCase(test.TestCase):
         return {"task": {"uuid": "foo_task"},
                 "admin": {"endpoint": "foo_admin"},
                 "config": {"network": kwargs},
+                "users": [{"id": "foo_user", "tenant_id": "foo_tenant"},
+                          {"id": "bar_user", "tenant_id": "bar_tenant"}],
                 "tenants": {"foo_tenant": {"networks": [{"id": "foo_net"}]},
                             "bar_tenant": {"networks": [{"id": "bar_net"}]}}}
 
@@ -35,16 +37,17 @@ class NetworkTestCase(test.TestCase):
 
     @mock.patch("rally.osclients.Clients")
     @mock.patch(NET + "wrap", return_value="foo_service")
-    def test__init__(self, mock_wrap, mock_clients):
+    def test__init__default(self, mock_wrap, mock_clients):
         context = network_context.Network(self.get_context())
-        self.assertEqual(context.net_wrapper, "foo_service")
         self.assertEqual(context.config["networks_per_tenant"], 1)
         self.assertEqual(context.config["start_cidr"],
                          network_context.Network.DEFAULT_CONFIG["start_cidr"])
 
+    @mock.patch("rally.osclients.Clients")
+    @mock.patch(NET + "wrap", return_value="foo_service")
+    def test__init__explicit(self, mock_wrap, mock_clients):
         context = network_context.Network(
             self.get_context(start_cidr="foo_cidr", networks_per_tenant=42))
-        self.assertEqual(context.net_wrapper, "foo_service")
         self.assertEqual(context.config["networks_per_tenant"], 42)
         self.assertEqual(context.config["start_cidr"], "foo_cidr")
 
@@ -61,6 +64,8 @@ class NetworkTestCase(test.TestCase):
         net_context = network_context.Network(
             self.get_context(networks_per_tenant=nets_per_tenant))
         net_context.setup()
+        mock_utils.iterate_per_tenants.assert_called_once_with(
+            net_context.context["users"])
         expected_networks = [["bar_tenant-net"] * nets_per_tenant,
                              ["foo_tenant-net"] * nets_per_tenant]
         actual_networks = []
