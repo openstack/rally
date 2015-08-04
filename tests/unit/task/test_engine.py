@@ -28,6 +28,10 @@ from tests.unit import fakes
 from tests.unit import test
 
 
+class TestException(exceptions.RallyException):
+    msg_fmt = "TestException"
+
+
 class BenchmarkEngineTestCase(test.TestCase):
 
     def test_init(self):
@@ -240,7 +244,7 @@ class BenchmarkEngineTestCase(test.TestCase):
         mock__validate_config_semantic_helper.assert_has_calls(
             expected_calls, any_order=True)
 
-    @mock.patch("rally.task.engine.BenchmarkEngine.consume_results")
+    @mock.patch("rally.task.engine.ResultConsumer")
     @mock.patch("rally.task.engine.context.ContextManager.cleanup")
     @mock.patch("rally.task.engine.context.ContextManager.setup")
     @mock.patch("rally.task.engine.base_scenario.Scenario")
@@ -248,7 +252,7 @@ class BenchmarkEngineTestCase(test.TestCase):
     def test_run__update_status(
             self, mock_scenario_runner, mock_scenario,
             mock_context_manager_setup, mock_context_manager_cleanup,
-            mock_consume_results):
+            mock_result_consumer):
         task = mock.MagicMock()
         eng = engine.BenchmarkEngine([], task)
         eng.run()
@@ -257,7 +261,7 @@ class BenchmarkEngineTestCase(test.TestCase):
             mock.call(consts.TaskStatus.FINISHED)
         ])
 
-    @mock.patch("rally.task.engine.BenchmarkEngine.consume_results")
+    @mock.patch("rally.task.engine.ResultConsumer")
     @mock.patch("rally.task.engine.base_scenario.Scenario")
     @mock.patch("rally.task.engine.runner.ScenarioRunner")
     @mock.patch("rally.task.engine.context.ContextManager.cleanup")
@@ -265,7 +269,7 @@ class BenchmarkEngineTestCase(test.TestCase):
     def test_run__config_has_args(
             self, mock_context_manager_setup, mock_context_manager_cleanup,
             mock_scenario_runner, mock_scenario,
-            mock_consume_results):
+            mock_result_consumer):
         config = {
             "a.benchmark": [{"args": {"a": "a", "b": 1}}],
             "b.benchmark": [{"args": {"a": 1}}]
@@ -274,14 +278,14 @@ class BenchmarkEngineTestCase(test.TestCase):
         eng = engine.BenchmarkEngine(config, task)
         eng.run()
 
-    @mock.patch("rally.task.engine.BenchmarkEngine.consume_results")
+    @mock.patch("rally.task.engine.ResultConsumer")
     @mock.patch("rally.task.engine.base_scenario.Scenario")
     @mock.patch("rally.task.engine.runner.ScenarioRunner")
     @mock.patch("rally.task.engine.context.ContextManager.cleanup")
     @mock.patch("rally.task.engine.context.ContextManager.setup")
     def test_run__config_has_runner(
             self, mock_context_manager_setup, mock_context_manager_cleanup,
-            mock_scenario_runner, mock_scenario, mock_consume_results):
+            mock_scenario_runner, mock_scenario, mock_result_consumer):
         config = {
             "a.benchmark": [{"runner": {"type": "a", "b": 1}}],
             "b.benchmark": [{"runner": {"type": "c", "a": 1}}]
@@ -290,14 +294,14 @@ class BenchmarkEngineTestCase(test.TestCase):
         eng = engine.BenchmarkEngine(config, task)
         eng.run()
 
-    @mock.patch("rally.task.engine.BenchmarkEngine.consume_results")
+    @mock.patch("rally.task.engine.ResultConsumer")
     @mock.patch("rally.task.engine.base_scenario.Scenario")
     @mock.patch("rally.task.engine.runner.ScenarioRunner")
     @mock.patch("rally.task.engine.context.ContextManager.cleanup")
     @mock.patch("rally.task.engine.context.ContextManager.setup")
     def test_run__config_has_context(
             self, mock_context_manager_setup, mock_context_manager_cleanup,
-            mock_scenario_runner, mock_scenario, mock_consume_results):
+            mock_scenario_runner, mock_scenario, mock_result_consumer):
         config = {
             "a.benchmark": [{"context": {"context_a": {"a": 1}}}],
             "b.benchmark": [{"context": {"context_b": {"b": 2}}}]
@@ -307,15 +311,15 @@ class BenchmarkEngineTestCase(test.TestCase):
         eng.run()
 
     @mock.patch("rally.task.engine.LOG")
-    @mock.patch("rally.task.engine.BenchmarkEngine.consume_results")
+    @mock.patch("rally.task.engine.ResultConsumer")
     @mock.patch("rally.task.engine.base_scenario.Scenario")
     @mock.patch("rally.task.engine.runner.ScenarioRunner")
     @mock.patch("rally.task.engine.context.ContextManager.cleanup")
     @mock.patch("rally.task.engine.context.ContextManager.setup")
     def test_run_exception_is_logged(
             self, mock_context_manager_setup, mock_context_manager_cleanup,
-            mock_scenario_runner, mock_scenario, mock_consume_results,
-            mock_log):
+            mock_scenario_runner, mock_scenario,
+            mock_result_consumer, mock_log):
 
         mock_context_manager_setup.side_effect = Exception
 
@@ -378,27 +382,24 @@ class BenchmarkEngineTestCase(test.TestCase):
         self.assertEqual(result, expected_result)
         mock_scenario_meta.assert_called_once_with(name, "context")
 
+
+class ResultConsumerTestCase(test.TestCase):
     @mock.patch("rally.task.sla.SLAChecker")
     def test_consume_results(self, mock_sla_checker):
         mock_sla_instance = mock.MagicMock()
         mock_sla_checker.return_value = mock_sla_instance
         key = {"kw": {"fake": 2}, "name": "fake", "pos": 0}
         task = mock.MagicMock()
-        config = {
-            "a.benchmark": [{"context": {"context_a": {"a": 1}}}],
-        }
         runner = mock.MagicMock()
         runner.result_queue = collections.deque([1, 2])
-        is_done = mock.MagicMock()
-        is_done.isSet.side_effect = [False, False, True]
-        eng = engine.BenchmarkEngine(config, task)
-        eng.duration = 123
-        eng.full_duration = 456
-        eng.consume_results(key, task, is_done, {}, runner)
-        mock_sla_checker.assert_called_once_with({"fake": 2})
+        with engine.ResultConsumer(
+                key, task, runner, False) as consumer_obj:
+            pass
+
         expected_iteration_calls = [mock.call(1), mock.call(2)]
         self.assertEqual(expected_iteration_calls,
                          mock_sla_instance.add_iteration.mock_calls)
+        self.assertEqual([1, 2], consumer_obj.results)
 
     @mock.patch("rally.task.sla.SLAChecker")
     def test_consume_results_sla_failure_abort(self, mock_sla_checker):
@@ -408,18 +409,12 @@ class BenchmarkEngineTestCase(test.TestCase):
                                                        False]
         key = {"kw": {"fake": 2}, "name": "fake", "pos": 0}
         task = mock.MagicMock()
-        config = {
-            "a.benchmark": [{"context": {"context_a": {"a": 1}}}],
-        }
         runner = mock.MagicMock()
         runner.result_queue = collections.deque([1, 2, 3, 4])
-        is_done = mock.MagicMock()
-        is_done.isSet.side_effect = [False, False, False, False, True]
-        eng = engine.BenchmarkEngine(config, task, abort_on_sla_failure=True)
-        eng.duration = 123
-        eng.full_duration = 456
-        eng.consume_results(key, task, is_done, {}, runner)
-        mock_sla_checker.assert_called_once_with({"fake": 2})
+
+        with engine.ResultConsumer(key, task, runner, True):
+            pass
+
         self.assertTrue(runner.abort.called)
 
     @mock.patch("rally.task.sla.SLAChecker")
@@ -430,16 +425,28 @@ class BenchmarkEngineTestCase(test.TestCase):
                                                        False]
         key = {"kw": {"fake": 2}, "name": "fake", "pos": 0}
         task = mock.MagicMock()
-        config = {
-            "a.benchmark": [{"context": {"context_a": {"a": 1}}}],
-        }
         runner = mock.MagicMock()
         runner.result_queue = collections.deque([1, 2, 3, 4])
-        is_done = mock.MagicMock()
-        is_done.isSet.side_effect = [False, False, False, False, True]
-        eng = engine.BenchmarkEngine(config, task, abort_on_sla_failure=False)
-        eng.duration = 123
-        eng.full_duration = 456
-        eng.consume_results(key, task, is_done, {}, runner)
-        mock_sla_checker.assert_called_once_with({"fake": 2})
+
+        with engine.ResultConsumer(key, task, runner, False):
+            pass
+
         self.assertEqual(0, runner.abort.call_count)
+
+    @mock.patch("rally.task.sla.SLAChecker")
+    def test_comsume_results_with_unexpected_failure(self, mock_sla_checker):
+        mock_sla_instance = mock.MagicMock()
+        mock_sla_checker.return_value = mock_sla_instance
+        key = {"kw": {"fake": 2}, "name": "fake", "pos": 0}
+        task = mock.MagicMock()
+        runner = mock.MagicMock()
+        runner.result_queue = collections.deque([1])
+        exc = TestException()
+        try:
+            with engine.ResultConsumer(key, task, runner, False):
+                raise exc
+        except TestException:
+            pass
+
+        mock_sla_instance.set_unexpected_failure.assert_has_calls(
+            [mock.call(exc)])
