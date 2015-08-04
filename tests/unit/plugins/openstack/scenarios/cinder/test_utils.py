@@ -127,6 +127,17 @@ class CinderScenarioTestCase(test.ScenarioTestCase):
         self._test_atomic_action_timer(self.scenario.atomic_actions(),
                                        "cinder.create_volume")
 
+    def test__update_volume(self):
+        fake_volume = mock.MagicMock()
+        volume_update_args = {"display_name": "_updated",
+                              "display_description": "_updated"}
+        self.scenario._update_volume(fake_volume, **volume_update_args)
+        self.clients("cinder").volumes.update.assert_called_once_with(
+            fake_volume, display_name="_updated",
+            display_description="_updated")
+        self._test_atomic_action_timer(self.scenario.atomic_actions(),
+                                       "cinder.update_volume")
+
     def test__delete_volume(self):
         cinder = mock.Mock()
         self.scenario._delete_volume(cinder)

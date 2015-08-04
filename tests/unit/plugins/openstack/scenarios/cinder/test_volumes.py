@@ -49,6 +49,18 @@ class CinderServersTestCase(test.ScenarioTestCase):
         scenario.list_volumes(True)
         scenario._list_volumes.assert_called_once_with(True)
 
+    def test_create_and_update_volume(self):
+        volume_update_args = {"dispaly_name": "_updated"}
+        scenario = volumes.CinderVolumes()
+        fake_volume = mock.MagicMock()
+        scenario._create_volume = mock.MagicMock(return_value=fake_volume)
+        scenario._update_volume = mock.MagicMock()
+        scenario.create_and_update_volume(
+            1, update_volume_kwargs=volume_update_args)
+        scenario._create_volume.assert_called_once_with(1)
+        scenario._update_volume.assert_called_once_with(fake_volume,
+                                                        **volume_update_args)
+
     def test_create_and_delete_volume(self):
         fake_volume = mock.MagicMock()
 

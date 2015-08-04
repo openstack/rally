@@ -148,6 +148,22 @@ class CinderScenario(scenario.OpenStackScenario):
         )
         return volume
 
+    @atomic.action_timer("cinder.update_volume")
+    def _update_volume(self, volume, **update_volume_args):
+        """Update name and description for this volume
+
+        This atomic function updates volume display name and description
+
+        :param volume: volume object
+        :param update_volume_args: dict, contains values to be updated.
+        """
+        kwargs = {}
+        kwargs["display_name"] = update_volume_args.get(
+            "display_name", self._generate_random_name("_"))
+        kwargs["display_description"] = update_volume_args.get(
+            "display_description", self._generate_random_name("_"))
+        self.clients("cinder").volumes.update(volume, **kwargs)
+
     @atomic.action_timer("cinder.delete_volume")
     def _delete_volume(self, volume):
         """Delete the given volume.
