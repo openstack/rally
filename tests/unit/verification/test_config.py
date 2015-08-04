@@ -54,7 +54,7 @@ class ConfigTestCase(test.TestCase):
 
     def _remove_default_section(self, items):
         # getting items from configparser by specified section name
-        # retruns also values from DEFAULT section
+        # returns also values from DEFAULT section
         defaults = (("log_file", "tempest.log"), ("debug", "True"),
                     ("use_stderr", "False"))
         return [item for item in items if item not in defaults]

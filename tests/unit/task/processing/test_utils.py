@@ -81,7 +81,7 @@ class MathTestCase(test.TestCase):
             a1, a2, b1, b2 = (a + b)
             self.assertEqual(a1, b1)
             if type(a2) is float:
-                # Float representation is defferent in Python 2.6/2.7,
+                # Float representation is different in Python 2.6/2.7,
                 # so we need to be sure that values are close to each other
                 self.assertTrue(compare_float(a2, b2))
             else:

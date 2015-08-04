@@ -102,7 +102,7 @@ class NeutronNetworksTestCase(test.ScenarioTestCase):
         mock__create_network.reset_mock()
         mock__delete_network.reset_mock()
 
-        # Explict network name is specified
+        # Explicit network name is specified
         network_create_args = {"name": "given-name"}
         neutron_scenario.create_and_delete_networks(
             network_create_args=network_create_args)

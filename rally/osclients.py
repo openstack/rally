@@ -33,7 +33,7 @@ OSCLIENTS_OPTS = [
                 help="Use SSL for all OpenStack API interfaces",
                 deprecated_for_removal=True),
     cfg.StrOpt("https_cacert", default=None,
-               help="Path to CA server cetrificate for SSL",
+               help="Path to CA server certificate for SSL",
                deprecated_for_removal=True)
 ]
 CONF.register_opts(OSCLIENTS_OPTS)

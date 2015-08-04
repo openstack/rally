@@ -106,7 +106,7 @@
 # Its value may be silently ignored in the future.
 #https_insecure = false
 
-# Path to CA server cetrificate for SSL (string value)
+# Path to CA server certificate for SSL (string value)
 # This option is deprecated for removal.
 # Its value may be silently ignored in the future.
 #https_cacert = <None>
