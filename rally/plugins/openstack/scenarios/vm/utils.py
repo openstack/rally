@@ -23,7 +23,8 @@ import six
 from rally.common.i18n import _
 from rally.common import log as logging
 from rally.common import sshutils
-from rally.plugins.openstack import scenario
+from rally.plugins.openstack.scenarios.cinder import utils as cinder_utils
+from rally.plugins.openstack.scenarios.nova import utils as nova_utils
 from rally.plugins.openstack.wrappers import network as network_wrapper
 from rally.task.scenarios import base
 from rally.task import utils
@@ -46,13 +47,15 @@ benchmark_group = cfg.OptGroup(name="benchmark", title="benchmark options")
 CONF.register_opts(VM_BENCHMARK_OPTS, group=benchmark_group)
 
 
-class VMScenario(scenario.OpenStackScenario):
+class VMScenario(nova_utils.NovaScenario, cinder_utils.CinderScenario):
     """Base class for VM scenarios with basic atomic actions.
 
     VM scenarios are scenarios executed inside some launched VM instance.
     """
 
     USER_RWX_OTHERS_RX_ACCESS_MODE = 0o755
+
+    RESOURCE_NAME_PREFIX = "rally_vm_"
 
     @base.atomic_action_timer("vm.run_command_over_ssh")
     def _run_command_over_ssh(self, ssh, command):
