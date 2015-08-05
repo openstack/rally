@@ -23,9 +23,9 @@ import requests
 from six.moves import configparser
 from six.moves.urllib import parse
 
+from rally.common import db
 from rally.common.i18n import _
 from rally.common import log as logging
-from rally import db
 from rally import exceptions
 from rally import objects
 from rally import osclients

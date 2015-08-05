@@ -16,8 +16,8 @@
 import json
 import uuid
 
+from rally.common import db
 from rally import consts
-from rally import db
 
 
 TASK_RESULT_SCHEMA = {

@@ -13,8 +13,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from rally.common import db
 from rally import consts
-from rally import db
 from rally import exceptions
 
 

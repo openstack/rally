@@ -17,8 +17,9 @@
 
 The underlying driver is loaded as a :class:`LazyPluggable`.
 
-Functions in this module are imported into the rally.db namespace. Call these
-functions from rally.db namespace, not the rally.db.api namespace.
+Functions in this module are imported into the rally.common.db namespace.
+Call these functions from rally.common.db namespace, not the
+rally.common.db.api namespace.
 
 All functions in this module return objects that implement a dictionary-like
 interface. Currently, many of these objects are sqlalchemy objects that
@@ -58,7 +59,7 @@ def get_impl():
     global IMPL
 
     if not IMPL:
-        _BACKEND_MAPPING = {"sqlalchemy": "rally.db.sqlalchemy.api"}
+        _BACKEND_MAPPING = {"sqlalchemy": "rally.common.db.sqlalchemy.api"}
         IMPL = db_api.DBAPI.from_config(CONF, backend_mapping=_BACKEND_MAPPING)
 
     return IMPL

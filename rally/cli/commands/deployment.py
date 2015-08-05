@@ -30,10 +30,10 @@ import yaml
 from rally import api
 from rally.cli import cliutils
 from rally.cli import envutils
+from rally.common import db
 from rally.common import fileutils
 from rally.common.i18n import _
 from rally.common import utils
-from rally import db
 from rally import exceptions
 from rally import objects
 from rally import osclients

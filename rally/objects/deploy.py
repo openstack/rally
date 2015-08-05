@@ -15,8 +15,8 @@
 
 import datetime
 
+from rally.common import db
 from rally import consts
-from rally import db
 
 
 class Deployment(object):
