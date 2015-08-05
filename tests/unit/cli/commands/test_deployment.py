@@ -20,9 +20,9 @@ import mock
 
 from rally.cli.commands import deployment
 from rally.cli import envutils
+from rally.common import objects
 from rally import consts
 from rally import exceptions
-from rally import objects
 from tests.unit import fakes
 from tests.unit import test
 

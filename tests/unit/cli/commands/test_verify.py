@@ -21,9 +21,9 @@ import mock
 import six
 
 from rally.cli.commands import verify
+from rally.common import objects
 from rally import consts
 from rally import exceptions
-from rally import objects
 from tests.unit import test
 
 
@@ -116,7 +116,7 @@ class VerifyCommandsTestCase(test.TestCase):
     @mock.patch("rally.cli.cliutils.print_list")
     @mock.patch("rally.common.db.verification_get")
     @mock.patch("rally.common.db.verification_result_get")
-    @mock.patch("rally.objects.Verification")
+    @mock.patch("rally.common.objects.Verification")
     def test_show(self, mock_objects_verification,
                   mock_verification_result_get, mock_verification_get,
                   mock_print_list):

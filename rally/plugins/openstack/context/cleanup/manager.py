@@ -264,13 +264,14 @@ def cleanup(names=None, admin_required=None, admin=None, users=None):
     :param admin_required: If None -> return all plugins
                            If True -> return only admin plugins
                            If False -> return only non admin plugins
-    :param admin: rally.objects.Endpoint that corresponds to OpenStack admin.
+    :param admin: rally.common.objects.Endpoint that corresponds to OpenStack
+                  admin.
     :param users: List of OpenStack users that was used during benchmarking.
                   Every user has next structure:
                   {
                     "id": <uuid1>,
                     "tenant_id": <uuid2>,
-                    "endpoint": <rally.objects.Endpoint>
+                    "endpoint": <rally.common.objects.Endpoint>
 
                   }
     """

@@ -205,17 +205,18 @@ class HackingTestCase(test.TestCase):
         self._assert_bad_samples(checks.assert_equal_in, bad_lines)
 
     def test_check_no_direct_rally_objects_import(self):
-        bad_imports = ["from rally.objects import task",
-                       "import rally.objects.task"]
+        bad_imports = ["from rally.common.objects import task",
+                       "import rally.common.objects.task"]
 
         self._assert_bad_samples(checks.check_no_direct_rally_objects_import,
                                  bad_imports)
 
-        self._assert_good_samples(checks.check_no_direct_rally_objects_import,
-                                  bad_imports,
-                                  module_file="./rally/objects/__init__.py")
+        self._assert_good_samples(
+            checks.check_no_direct_rally_objects_import,
+            bad_imports,
+            module_file="./rally/common/objects/__init__.py")
 
-        good_imports = ["from rally import objects"]
+        good_imports = ["from rally.common import objects"]
         self._assert_good_samples(checks.check_no_direct_rally_objects_import,
                                   good_imports)
 

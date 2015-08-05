@@ -21,8 +21,8 @@ from rally.cli import cliutils
 from rally.cli import envutils
 from rally.common import db
 from rally.common.i18n import _
+from rally.common import objects
 from rally.common import utils
-from rally import objects
 from rally import osclients
 
 

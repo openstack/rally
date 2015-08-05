@@ -28,7 +28,7 @@ CONF = cfg.CONF
 
 class ConfigTestCase(test.TestCase):
 
-    @mock.patch("rally.objects.deploy.db.deployment_get")
+    @mock.patch("rally.common.objects.deploy.db.deployment_get")
     @mock.patch("rally.osclients.Clients.services",
                 return_value={"test_service_type": "test_service"})
     @mock.patch("rally.osclients.Clients.verified_keystone")

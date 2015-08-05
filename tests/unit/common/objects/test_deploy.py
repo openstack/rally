@@ -18,8 +18,8 @@
 
 import mock
 
+from rally.common import objects
 from rally import consts
-from rally import objects
 from tests.unit import test
 
 
@@ -41,28 +41,28 @@ class DeploymentTestCase(test.TestCase):
             "info": {"key": "value"},
         }
 
-    @mock.patch("rally.objects.deploy.db.deployment_create")
+    @mock.patch("rally.common.objects.deploy.db.deployment_create")
     def test_init_with_create(self, mock_deployment_create):
         mock_deployment_create.return_value = self.deployment
         deploy = objects.Deployment()
         mock_deployment_create.assert_called_once_with({})
         self.assertEqual(deploy["uuid"], self.deployment["uuid"])
 
-    @mock.patch("rally.objects.deploy.db.deployment_create")
+    @mock.patch("rally.common.objects.deploy.db.deployment_create")
     def test_init_without_create(self, mock_deployment_create):
         deploy = objects.Deployment(deployment=self.deployment)
         self.assertFalse(mock_deployment_create.called)
         self.assertEqual(deploy["uuid"], self.deployment["uuid"])
 
-    @mock.patch("rally.objects.deploy.db.deployment_get")
+    @mock.patch("rally.common.objects.deploy.db.deployment_get")
     def test_get(self, mock_deployment_get):
         mock_deployment_get.return_value = self.deployment
         deploy = objects.Deployment.get(self.deployment["uuid"])
         mock_deployment_get.assert_called_once_with(self.deployment["uuid"])
         self.assertEqual(deploy["uuid"], self.deployment["uuid"])
 
-    @mock.patch("rally.objects.deploy.db.deployment_delete")
-    @mock.patch("rally.objects.deploy.db.deployment_create")
+    @mock.patch("rally.common.objects.deploy.db.deployment_delete")
+    @mock.patch("rally.common.objects.deploy.db.deployment_create")
     def test_create_and_delete(self, mock_deployment_create,
                                mock_deployment_delete):
         mock_deployment_create.return_value = self.deployment
@@ -70,13 +70,13 @@ class DeploymentTestCase(test.TestCase):
         deploy.delete()
         mock_deployment_delete.assert_called_once_with(self.deployment["uuid"])
 
-    @mock.patch("rally.objects.deploy.db.deployment_delete")
+    @mock.patch("rally.common.objects.deploy.db.deployment_delete")
     def test_delete_by_uuid(self, mock_deployment_delete):
         objects.Deployment.delete_by_uuid(self.deployment["uuid"])
         mock_deployment_delete.assert_called_once_with(self.deployment["uuid"])
 
-    @mock.patch("rally.objects.deploy.db.deployment_update")
-    @mock.patch("rally.objects.deploy.db.deployment_create")
+    @mock.patch("rally.common.objects.deploy.db.deployment_update")
+    @mock.patch("rally.common.objects.deploy.db.deployment_create")
     def test_update(self, mock_deployment_create, mock_deployment_update):
         mock_deployment_create.return_value = self.deployment
         mock_deployment_update.return_value = {"opt": "val2"}
@@ -86,7 +86,7 @@ class DeploymentTestCase(test.TestCase):
             self.deployment["uuid"], {"opt": "val2"})
         self.assertEqual(deploy["opt"], "val2")
 
-    @mock.patch("rally.objects.deploy.db.deployment_update")
+    @mock.patch("rally.common.objects.deploy.db.deployment_update")
     def test_update_status(self, mock_deployment_update):
         mock_deployment_update.return_value = self.deployment
         deploy = objects.Deployment(deployment=self.deployment)
@@ -96,7 +96,7 @@ class DeploymentTestCase(test.TestCase):
             {"status": consts.DeployStatus.DEPLOY_FAILED},
         )
 
-    @mock.patch("rally.objects.deploy.db.deployment_update")
+    @mock.patch("rally.common.objects.deploy.db.deployment_update")
     def test_update_name(self, mock_deployment_update):
         mock_deployment_update.return_value = self.deployment
         deploy = objects.Deployment(deployment=self.deployment)
@@ -106,7 +106,7 @@ class DeploymentTestCase(test.TestCase):
             {"name": "new_name"},
         )
 
-    @mock.patch("rally.objects.deploy.db.deployment_update")
+    @mock.patch("rally.common.objects.deploy.db.deployment_update")
     def test_update_config(self, mock_deployment_update):
         mock_deployment_update.return_value = self.deployment
         deploy = objects.Deployment(deployment=self.deployment)
@@ -116,7 +116,7 @@ class DeploymentTestCase(test.TestCase):
             {"config": {"opt": "val"}},
         )
 
-    @mock.patch("rally.objects.deploy.db.deployment_update")
+    @mock.patch("rally.common.objects.deploy.db.deployment_update")
     def test_update_endpoints(self, mock_deployment_update):
         mock_deployment_update.return_value = self.deployment
         deploy = objects.Deployment(deployment=self.deployment)
@@ -142,7 +142,7 @@ class DeploymentTestCase(test.TestCase):
                 "users": expected_users
             })
 
-    @mock.patch("rally.objects.deploy.db.deployment_update")
+    @mock.patch("rally.common.objects.deploy.db.deployment_update")
     def test_update_empty_endpoints(self, mock_deployment_update):
         mock_deployment_update.return_value = self.deployment
         deploy = objects.Deployment(deployment=self.deployment)
@@ -150,7 +150,7 @@ class DeploymentTestCase(test.TestCase):
         mock_deployment_update.assert_called_once_with(
             self.deployment["uuid"], {"admin": {}, "users": []})
 
-    @mock.patch("rally.objects.deploy.db.resource_create")
+    @mock.patch("rally.common.objects.deploy.db.resource_create")
     def test_add_resource(self, mock_resource_create):
         mock_resource_create.return_value = self.resource
         deploy = objects.Deployment(deployment=self.deployment)
@@ -164,12 +164,12 @@ class DeploymentTestCase(test.TestCase):
             "info": {"key": "value"},
         })
 
-    @mock.patch("rally.objects.task.db.resource_delete")
+    @mock.patch("rally.common.objects.task.db.resource_delete")
     def test_delete(self, mock_resource_delete):
         objects.Deployment.delete_resource(42)
         mock_resource_delete.assert_called_once_with(42)
 
-    @mock.patch("rally.objects.task.db.resource_get_all")
+    @mock.patch("rally.common.objects.task.db.resource_get_all")
     def test_get_resources(self, mock_resource_get_all):
         mock_resource_get_all.return_value = [self.resource]
         deploy = objects.Deployment(deployment=self.deployment)
@@ -177,8 +177,8 @@ class DeploymentTestCase(test.TestCase):
         self.assertEqual(len(resources), 1)
         self.assertEqual(resources[0]["id"], self.resource["id"])
 
-    @mock.patch("rally.objects.deploy.datetime.datetime")
-    @mock.patch("rally.objects.deploy.db.deployment_update")
+    @mock.patch("rally.common.objects.deploy.datetime.datetime")
+    @mock.patch("rally.common.objects.deploy.db.deployment_update")
     def test_update_set_started(self, mock_deployment_update, mock_datetime):
         mock_datetime.now = mock.Mock(return_value="fake_time")
         mock_deployment_update.return_value = self.deployment
@@ -190,8 +190,8 @@ class DeploymentTestCase(test.TestCase):
              "status": consts.DeployStatus.DEPLOY_STARTED}
         )
 
-    @mock.patch("rally.objects.deploy.datetime.datetime")
-    @mock.patch("rally.objects.deploy.db.deployment_update")
+    @mock.patch("rally.common.objects.deploy.datetime.datetime")
+    @mock.patch("rally.common.objects.deploy.db.deployment_update")
     def test_update_set_completed(self, mock_deployment_update, mock_datetime):
         mock_datetime.now = mock.Mock(return_value="fake_time")
         mock_deployment_update.return_value = self.deployment

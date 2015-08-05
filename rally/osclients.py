@@ -19,9 +19,9 @@ from oslo_config import cfg
 
 from rally.common.i18n import _
 from rally.common import log as logging
+from rally.common import objects
 from rally import consts
 from rally import exceptions
-from rally import objects
 
 
 CONF = cfg.CONF

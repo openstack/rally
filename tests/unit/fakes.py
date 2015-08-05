@@ -27,9 +27,9 @@ from novaclient import exceptions as nova_exceptions
 import six
 from swiftclient import exceptions as swift_exceptions
 
+from rally.common import objects
 from rally.common import utils as rally_utils
 from rally import consts
-from rally import objects
 from rally.task import context
 from rally.task.scenarios import base
 

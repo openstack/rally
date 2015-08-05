@@ -18,9 +18,9 @@ from keystoneclient import exceptions as keystone_exceptions
 import mock
 from oslo_config import cfg
 
+from rally.common import objects
 from rally import consts
 from rally import exceptions
-from rally import objects
 from rally import osclients
 from tests.unit import fakes
 from tests.unit import test

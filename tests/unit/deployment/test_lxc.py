@@ -15,8 +15,8 @@
 
 import mock
 
+from rally.common import objects
 from rally.deployment import engine
-from rally import objects
 from tests.unit import test
 
 MOD = "rally.deployment.engines.lxc."
