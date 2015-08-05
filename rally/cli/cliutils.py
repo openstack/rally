@@ -36,12 +36,25 @@ from rally.common import version
 from rally import exceptions
 
 
+CONFIG_SEARCH_PATHS = [sys.prefix + "/etc/rally", "~/.rally", "/etc/rally"]
+
+
 CONF = cfg.CONF
 LOG = logging.getLogger(__name__)
 
 
 # Some CLI-specific constants
 MARGIN = 3
+
+
+def find_config_files(path_list):
+    for path in path_list:
+        abspath = os.path.abspath(os.path.expanduser(path))
+        confname = abspath + "/rally.conf"
+        if os.path.isfile(confname):
+            return [confname]
+
+    return None
 
 
 class MissingArgs(Exception):
@@ -446,7 +459,8 @@ def run(argv, categories):
                                       help=help_msg))
 
     try:
-        CONF(argv[1:], project="rally", version=version.version_string())
+        CONF(argv[1:], project="rally", version=version.version_string(),
+             default_config_files=find_config_files(CONFIG_SEARCH_PATHS))
         logging.setup("rally")
         if not CONF.get("log_config_append"):
             # The below two lines are to disable noise from request module. The
