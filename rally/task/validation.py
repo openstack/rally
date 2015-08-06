@@ -23,9 +23,9 @@ from novaclient import exceptions as nova_exc
 import six
 
 from rally.common.i18n import _
+from rally.common import objects
 from rally import consts
 from rally import exceptions
-from rally import objects
 from rally import osclients
 from rally.plugins.openstack.context.nova import flavors as flavors_ctx
 from rally.task import types

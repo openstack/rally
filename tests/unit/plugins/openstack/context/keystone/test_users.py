@@ -15,9 +15,9 @@
 
 import mock
 
+from rally.common import objects
 from rally import consts
 from rally import exceptions
-from rally import objects
 from rally.plugins.openstack.context.keystone import users
 from tests.unit import test
 

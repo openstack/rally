@@ -27,9 +27,9 @@ from rally.cli import envutils
 from rally.common import db
 from rally.common import fileutils
 from rally.common.i18n import _
+from rally.common import objects
 from rally import consts
 from rally import exceptions
-from rally import objects
 from rally.verification.tempest import diff
 from rally.verification.tempest import json2html
 

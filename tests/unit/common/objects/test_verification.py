@@ -15,7 +15,7 @@
 
 import mock
 
-from rally import objects
+from rally.common import objects
 from tests.unit import test
 from tests.unit.verification import fakes
 
@@ -37,13 +37,13 @@ class VerificationTestCase(test.TestCase):
                      "name": "bar_test[gate,negative]",
                      "time": "0.29"}]}}
 
-    @mock.patch("rally.objects.verification.db.verification_create")
+    @mock.patch("rally.common.objects.verification.db.verification_create")
     def test_init_with_create(self, mock_verification_create):
         objects.Verification(deployment_uuid="some_deployment_uuid")
         mock_verification_create.assert_called_once_with(
             "some_deployment_uuid")
 
-    @mock.patch("rally.objects.verification.db.verification_create")
+    @mock.patch("rally.common.objects.verification.db.verification_create")
     def test_init_without_create(self, mock_verification_create):
         verification = objects.Verification(db_object=self.db_obj)
 
@@ -53,20 +53,20 @@ class VerificationTestCase(test.TestCase):
         self.assertEqual(self.db_obj["errors"], verification.errors)
         self.assertEqual(self.db_obj["time"], verification.time)
 
-    @mock.patch("rally.objects.verification.db.verification_get")
+    @mock.patch("rally.common.objects.verification.db.verification_get")
     def test_get(self, mock_verification_get):
         objects.Verification.get(self.db_obj["id"])
         mock_verification_get.assert_called_once_with(self.db_obj["id"])
 
-    @mock.patch("rally.objects.verification.db.verification_delete")
-    @mock.patch("rally.objects.verification.db.verification_create")
+    @mock.patch("rally.common.objects.verification.db.verification_delete")
+    @mock.patch("rally.common.objects.verification.db.verification_create")
     def test_create_and_delete(self, mock_verification_create,
                                mock_verification_delete):
         verification = objects.Verification(db_object=self.db_obj)
         verification.delete()
         mock_verification_delete.assert_called_once_with(self.db_obj["uuid"])
 
-    @mock.patch("rally.objects.verification.db.verification_update")
+    @mock.patch("rally.common.objects.verification.db.verification_update")
     def test_set_failed(self, mock_verification_update):
         mock_verification_update.return_value = self.db_obj
         verification = objects.Verification(db_object=self.db_obj)
@@ -74,8 +74,9 @@ class VerificationTestCase(test.TestCase):
         mock_verification_update.assert_called_once_with(
             self.db_obj["uuid"], {"status": "failed"})
 
-    @mock.patch("rally.objects.verification.db.verification_result_create")
-    @mock.patch("rally.objects.verification.db.verification_update")
+    @mock.patch(
+        ("rally.common.objects.verification.db.verification_result_create"))
+    @mock.patch("rally.common.objects.verification.db.verification_update")
     def test_finish_verification(self, mock_verification_update,
                                  mock_verification_result_create):
         verification = objects.Verification(db_object=self.db_obj)

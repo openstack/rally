@@ -261,19 +261,20 @@ def assert_equal_in(logical_line, filename):
 
 @skip_ignored_lines
 def check_no_direct_rally_objects_import(logical_line, filename):
-    """Check if rally.objects are properly imported.
+    """Check if rally.common.objects are properly imported.
 
-    If you import "from rally import objects" you are able to use objects
-    directly like objects.Task.
+    If you import "from rally.common import objects" you are able to use
+    objects directly like objects.Task.
 
     N340
     """
-    if filename == "./rally/objects/__init__.py":
+    if filename == "./rally/common/objects/__init__.py":
         return
 
-    if (logical_line.startswith("from rally.objects")
-       or logical_line.startswith("import rally.objects.")):
-        yield (0, "N340: Import objects module: `from rally import objects`. "
+    if (logical_line.startswith("from rally.common.objects")
+       or logical_line.startswith("import rally.common.objects.")):
+        yield (0, "N340: Import objects module:"
+                  "`from rally.common import objects`. "
                   "After that you can use directly objects e.g. objects.Task")
 
 

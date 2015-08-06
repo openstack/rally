@@ -103,9 +103,9 @@ class TaskAPITestCase(test.TestCase):
     def test_render_template_missing_args(self):
         self.assertRaises(TypeError, api.Task.render_template, "{{a}}")
 
-    @mock.patch("rally.objects.Deployment.get",
+    @mock.patch("rally.common.objects.Deployment.get",
                 return_value={"uuid": "b0d9cd6c-2c94-4417-a238-35c7019d0257"})
-    @mock.patch("rally.objects.Task")
+    @mock.patch("rally.common.objects.Task")
     def test_create(self, mock_task, mock_deployment_get):
         tag = "a"
         api.Task.create(mock_deployment_get.return_value["uuid"], tag)
@@ -160,14 +160,14 @@ class TaskAPITestCase(test.TestCase):
     def test_abort(self):
         self.assertRaises(NotImplementedError, api.Task.abort, self.task_uuid)
 
-    @mock.patch("rally.objects.task.db.task_delete")
+    @mock.patch("rally.common.objects.task.db.task_delete")
     def test_delete(self, mock_task_delete):
         api.Task.delete(self.task_uuid)
         mock_task_delete.assert_called_once_with(
             self.task_uuid,
             status=consts.TaskStatus.FINISHED)
 
-    @mock.patch("rally.objects.task.db.task_delete")
+    @mock.patch("rally.common.objects.task.db.task_delete")
     def test_delete_force(self, mock_task_delete):
         api.Task.delete(self.task_uuid, force=True)
         mock_task_delete.assert_called_once_with(
@@ -197,8 +197,8 @@ class BaseDeploymentTestCase(test.TestCase):
 
 
 class DeploymentAPITestCase(BaseDeploymentTestCase):
-    @mock.patch("rally.objects.deploy.db.deployment_update")
-    @mock.patch("rally.objects.deploy.db.deployment_create")
+    @mock.patch("rally.common.objects.deploy.db.deployment_update")
+    @mock.patch("rally.common.objects.deploy.db.deployment_create")
     @mock.patch("rally.deployment.engine.Engine.validate")
     def test_create(self, mock_engine_validate,
                     mock_deployment_create, mock_deployment_update):
@@ -214,8 +214,8 @@ class DeploymentAPITestCase(BaseDeploymentTestCase):
             mock.call(self.deployment_uuid, self.endpoints)
         ])
 
-    @mock.patch("rally.objects.deploy.db.deployment_update")
-    @mock.patch("rally.objects.deploy.db.deployment_create")
+    @mock.patch("rally.common.objects.deploy.db.deployment_update")
+    @mock.patch("rally.common.objects.deploy.db.deployment_create")
     @mock.patch("rally.deployment.engine.Engine.validate",
                 side_effect=jsonschema.ValidationError("ValidationError"))
     def test_create_validation_error(
@@ -230,7 +230,7 @@ class DeploymentAPITestCase(BaseDeploymentTestCase):
             {"status": consts.DeployStatus.DEPLOY_FAILED})
 
     @mock.patch("rally.api.LOG")
-    @mock.patch("rally.objects.deploy.db.deployment_create",
+    @mock.patch("rally.common.objects.deploy.db.deployment_create",
                 side_effect=exceptions.DeploymentNameExists(
                     deployment="fake_deploy"))
     def test_create_duplication_error(self, mock_deployment_create, mock_log):
@@ -238,9 +238,9 @@ class DeploymentAPITestCase(BaseDeploymentTestCase):
                           api.Deployment.create, self.deployment_config,
                           "fake_deployment")
 
-    @mock.patch("rally.objects.deploy.db.deployment_delete")
-    @mock.patch("rally.objects.deploy.db.deployment_update")
-    @mock.patch("rally.objects.deploy.db.deployment_get")
+    @mock.patch("rally.common.objects.deploy.db.deployment_delete")
+    @mock.patch("rally.common.objects.deploy.db.deployment_update")
+    @mock.patch("rally.common.objects.deploy.db.deployment_get")
     def test_destroy(self, mock_deployment_get,
                      mock_deployment_update, mock_deployment_delete):
         mock_deployment_get.return_value = self.deployment
@@ -249,8 +249,8 @@ class DeploymentAPITestCase(BaseDeploymentTestCase):
         mock_deployment_get.assert_called_once_with(self.deployment_uuid)
         mock_deployment_delete.assert_called_once_with(self.deployment_uuid)
 
-    @mock.patch("rally.objects.deploy.db.deployment_update")
-    @mock.patch("rally.objects.deploy.db.deployment_get")
+    @mock.patch("rally.common.objects.deploy.db.deployment_update")
+    @mock.patch("rally.common.objects.deploy.db.deployment_get")
     def test_recreate(self, mock_deployment_get, mock_deployment_update):
         mock_deployment_get.return_value = self.deployment
         mock_deployment_update.return_value = self.deployment
@@ -260,7 +260,7 @@ class DeploymentAPITestCase(BaseDeploymentTestCase):
             mock.call(self.deployment_uuid, self.endpoints)
         ])
 
-    @mock.patch("rally.objects.deploy.db.deployment_get")
+    @mock.patch("rally.common.objects.deploy.db.deployment_get")
     def test_get(self, mock_deployment_get):
         deployment_id = "aaaa-bbbb-cccc-dddd"
         mock_deployment_get.return_value = self.deployment
@@ -274,7 +274,7 @@ class VerificationAPITestCase(BaseDeploymentTestCase):
         super(VerificationAPITestCase, self).setUp()
         self.tempest = mock.Mock()
 
-    @mock.patch("rally.objects.Deployment.get")
+    @mock.patch("rally.common.objects.Deployment.get")
     @mock.patch("rally.api.objects.Verification")
     @mock.patch("rally.verification.tempest.tempest.Tempest")
     def test_verify(self, mock_tempest, mock_verification,

@@ -19,9 +19,9 @@ from six.moves.urllib import parse
 
 import rally
 from rally.common import db
+from rally.common import objects
 from rally import consts
 from rally.deployment import engine
-from rally import objects
 
 
 @engine.configure(name="MultihostEngine")

@@ -33,10 +33,10 @@ from rally.common import fileutils
 from rally.common.i18n import _
 from rally.common import junit
 from rally.common import log as logging
+from rally.common import objects
 from rally.common import utils as rutils
 from rally import consts
 from rally import exceptions
-from rally import objects
 from rally import plugins
 from rally.task.processing import plot
 from rally.task.processing import utils
