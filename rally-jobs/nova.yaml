@@ -484,6 +484,25 @@
         failure_rate:
           max: 0
 
+  NovaSecGroup.create_and_update_secgroups:
+    -
+      args:
+        security_group_count: 5
+      runner:
+        type: "constant"
+        times: 4
+        concurrency: 4
+      context:
+        users:
+          tenants: 3
+          users_per_tenant: 2
+        quotas:
+          nova:
+            security_groups: -1
+      sla:
+        failure_rate:
+          max: 0
+
   NovaSecGroup.create_and_list_secgroups:
     -
       args:
