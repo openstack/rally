@@ -13,8 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from oslo_utils import uuidutils as uid
-
+from rally.common.i18n import _
 from rally.common import log as logging
 from rally.plugins.openstack import scenario
 from rally.plugins.openstack.wrappers import network as network_wrapper
@@ -32,6 +31,36 @@ class NeutronScenario(scenario.OpenStackScenario):
     # TODO(rkiran): modify in case LBaaS-v2 requires
     LB_METHOD = "ROUND_ROBIN"
     LB_PROTOCOL = "HTTP"
+
+    def _warn_about_deprecated_name_kwarg(self, resource, kwargs):
+        """Warn about use of a deprecated 'name' kwarg and replace it.
+
+        Many of the functions in this class previously accepted a
+        'name' keyword argument so that the end user could explicitly
+        name their resources. That is no longer permitted, so when a
+        user includes a 'name' kwarg we warn about it, and replace it
+        with a random name.
+
+        This cannot be a decorator because _update_v1_pool() takes its
+        arguments in a different way than the other update functions
+        that this helper is used in.
+
+        :param resource: A neutron resource object dict describing the
+                         resource that the name is being set for. In
+                         particular, this must have have a single key
+                         that is the resource type, and a single value
+                         that is itself a dict including the "id" key.
+        :param kwargs: The keyword arg dict that the user supplied,
+                       which will be modified in-place.
+        :returns: None; kwargs is modified in situ.
+        """
+        if "name" in kwargs:
+            kwargs["name"] = self._generate_random_name()
+            LOG.warning(_("Cannot set name of %(type)s %(id)s explicitly; "
+                          "setting to random string %(name)s") %
+                        {"type": list(resource.keys())[0],
+                         "id": list(resource.values())[0]["id"],
+                         "name": kwargs["name"]})
 
     @base.atomic_action_timer("neutron.create_network")
     def _create_network(self, network_create_args):
@@ -51,24 +80,16 @@ class NeutronScenario(scenario.OpenStackScenario):
 
     @base.atomic_action_timer("neutron.update_network")
     def _update_network(self, network, network_update_args):
-        """Update the network name and admin state.
+        """Update the network.
 
-        This atomic function updates network name by
-        appending the existing name and admin state with network_update_args.
+        This atomic function updates the network with network_update_args.
 
         :param network: Network object
         :param network_update_args: dict, POST /v2.0/networks update options
         :returns: updated neutron network dict
         """
-        suffix = network_update_args.get(
-            "name", self._generate_random_name("_"))
-        admin_state_up = network_update_args.get("admin_state_up", True)
-        body = {
-            "network": {
-                "name": network["network"]["name"] + suffix,
-                "admin_state_up": admin_state_up
-            }
-        }
+        self._warn_about_deprecated_name_kwarg(network, network_update_args)
+        body = {"network": network_update_args}
         return self.clients("neutron").update_network(
             network["network"]["id"], body)
 
@@ -110,24 +131,16 @@ class NeutronScenario(scenario.OpenStackScenario):
 
     @base.atomic_action_timer("neutron.update_subnet")
     def _update_subnet(self, subnet, subnet_update_args):
-        """Update the neutron subnet name and DHCP status.
+        """Update the neutron subnet.
 
-        This atomic function updates subnet name by
-        appending the existing name and DHCP status with subnet_update_args.
+        This atomic function updates the subnet with subnet_update_args.
 
         :param subnet: Subnet object
         :param subnet_update_args: dict, PUT /v2.0/subnets update options
         :returns: updated neutron subnet dict
         """
-        suffix = subnet_update_args.get(
-            "name", self._generate_random_name("_"))
-        enable_dhcp = subnet_update_args.get("enable_dhcp", True)
-        body = {
-            "subnet": {
-                "name": subnet["subnet"]["name"] + suffix,
-                "enable_dhcp": enable_dhcp
-            }
-        }
+        self._warn_about_deprecated_name_kwarg(subnet, subnet_update_args)
+        body = {"subnet": subnet_update_args}
         return self.clients("neutron").update_subnet(
             subnet["subnet"]["id"], body)
 
@@ -176,24 +189,16 @@ class NeutronScenario(scenario.OpenStackScenario):
 
     @base.atomic_action_timer("neutron.update_router")
     def _update_router(self, router, router_update_args):
-        """Update the neutron router name and admin state.
+        """Update the neutron router.
 
-        This atomic function updates router name by
-        appending the existing name and admin state with router_update_args.
+        This atomic function updates the router with router_update_args.
 
         :param router: dict, neutron router
         :param router_update_args: dict, PUT /v2.0/routers update options
         :returns: updated neutron router dict
         """
-        suffix = router_update_args.get(
-            "name", self._generate_random_name("_"))
-        admin_state = router_update_args.get("admin_state_up", True)
-        body = {
-            "router": {
-                "name": router["router"]["name"] + suffix,
-                "admin_state_up": admin_state
-            }
-        }
+        self._warn_about_deprecated_name_kwarg(router, router_update_args)
+        body = {"router": router_update_args}
         return self.clients("neutron").update_router(
             router["router"]["id"], body)
 
@@ -217,29 +222,16 @@ class NeutronScenario(scenario.OpenStackScenario):
 
     @base.atomic_action_timer("neutron.update_port")
     def _update_port(self, port, port_update_args):
-        """Update the neutron port name, admin state, device id and owner.
+        """Update the neutron port.
 
-        This atomic function updates port name by
-        appending the existing name, admin state, device id and
-        device owner with port_update_args.
+        This atomic function updates port with port_update_args.
 
         :param port: dict, neutron port
         :param port_update_args: dict, PUT /v2.0/ports update options
         :returns: updated neutron port dict
         """
-        suffix = port_update_args.get(
-            "name", self._generate_random_name("_"))
-        admin_state = port_update_args.get("admin_state_up", True)
-        device_owner = port_update_args.get("device_owner", "compute:nova")
-        device_id = port_update_args.get("device_id", uid.generate_uuid())
-        body = {
-            "port": {
-                "name": port["port"]["name"] + suffix,
-                "admin_state_up": admin_state,
-                "device_id": device_id,
-                "device_owner": device_owner
-            }
-        }
+        self._warn_about_deprecated_name_kwarg(port, port_update_args)
+        body = {"port": port_update_args}
         return self.clients("neutron").update_port(port["port"]["id"], body)
 
     @base.atomic_action_timer("neutron.delete_port")
@@ -323,19 +315,12 @@ class NeutronScenario(scenario.OpenStackScenario):
     def _update_v1_pool(self, pool, **pool_update_args):
         """Update pool.
 
-        This atomic function updates pool name by
-        appending the existing name and admin state with pool_update_args.
+        This atomic function updates the pool with pool_update_args.
 
         :param pool: Pool object
         :param pool_update_args: dict, POST /lb/pools update options
         :returns: updated neutron pool dict
         """
-        suffix = pool_update_args.get("name", None)
-        body = {
-            "pool": {
-                "name": pool["pool"]["name"] + suffix if suffix is not None
-                else self._generate_random_name("_"),
-                "admin_state_up": pool_update_args.get("admin_state_up", True)
-            }
-        }
+        self._warn_about_deprecated_name_kwarg(pool, pool_update_args)
+        body = {"pool": pool_update_args}
         return self.clients("neutron").update_pool(pool["pool"]["id"], body)
