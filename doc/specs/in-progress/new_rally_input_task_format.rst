@@ -125,7 +125,7 @@ New format JSON schema:
                 "items": {"type": "string"}
             },
 
-            "tasks": {
+            "subtasks": {
                 "type": "array",
                 "items": {
                     "type": "object",
