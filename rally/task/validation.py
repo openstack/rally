@@ -459,7 +459,7 @@ def tempest_set_exists(config, clients, deployment):
 
 @validator
 def required_parameters(config, clients, deployment, *required_params):
-    """Validtor for checking required parameters are specified.
+    """Validator for checking required parameters are specified.
 
     :param *required_params: list of required parameters
     """

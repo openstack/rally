@@ -104,7 +104,7 @@ class SeekAndDestroy(object):
                         % (resource.__module__, type(resource).__name__))
                     LOG.exception(e)
 
-                    # NOTE(boris-42): Avoid LOG spaming in case of bad
+                    # NOTE(boris-42): Avoid LOG spamming in case of bad
                     #                 is_deleted() method
                     failures_count += 1
                     if failures_count > resource._max_attempts:

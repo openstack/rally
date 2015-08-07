@@ -22,7 +22,7 @@ show_diff () {
     diff -U 0 $1 $2 | sed 1,2d
 }
 
-# Stash uncommited changes, checkout master and save coverage report
+# Stash uncommitted changes, checkout master and save coverage report
 uncommited=$(git status --porcelain | grep -v "^??")
 [[ -n $uncommited ]] && git stash > /dev/null
 git checkout HEAD^
@@ -32,7 +32,7 @@ find . -type f -name "*.pyc" -delete && python setup.py testr --coverage --testr
 coverage report > $baseline_report
 baseline_missing=$(awk 'END { print $3 }' $baseline_report)
 
-# Checkout back and unstash uncommited changes (if any)
+# Checkout back and unstash uncommitted changes (if any)
 git checkout -
 [[ -n $uncommited ]] && git stash pop > /dev/null
 
