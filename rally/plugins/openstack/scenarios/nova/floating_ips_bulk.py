@@ -24,7 +24,7 @@ class NovaFloatingIpsBulk(utils.NovaScenario):
 
     @validation.restricted_parameters("pool")
     @validation.required_parameters("start_cidr")
-    @validation.required_services(consts.Service.NOVA)
+    @validation.required_services(consts.Service.NOVA, consts.Service.NOVA_NET)
     @validation.required_openstack(admin=True)
     @base.scenario(context={"admin_cleanup": ["nova"]})
     def create_and_list_floating_ips_bulk(self, start_cidr, **kwargs):
@@ -41,7 +41,7 @@ class NovaFloatingIpsBulk(utils.NovaScenario):
 
     @validation.restricted_parameters("pool")
     @validation.required_parameters("start_cidr")
-    @validation.required_services(consts.Service.NOVA)
+    @validation.required_services(consts.Service.NOVA, consts.Service.NOVA_NET)
     @validation.required_openstack(admin=True)
     @base.scenario(context={"admin_cleanup": ["nova"]})
     def create_and_delete_floating_ips_bulk(self, start_cidr, **kwargs):
