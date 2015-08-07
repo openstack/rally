@@ -284,19 +284,42 @@ class NeutronScenario(scenario.OpenStackScenario):
         self.clients("neutron").remove_interface_router(
             router["id"], {"subnet_id": subnet["id"]})
 
-    @base.atomic_action_timer("neutron.create_pool")
-    def _create_v1_pool(self, subnet_id, **pool_create_args):
-        """Create pool(v1)
+    def _create_lb_pool(self, subnet_id, atomic_action=True,
+                        **pool_create_args):
+        """Create LB pool(v1)
 
-        :parm subnet_id: str, neutron subnet-id
-        :parm pool_create_args: dict, POST /lb/pools request options
-        :returns: obj, neutron lb pool
+        :param subnet_id: str, neutron subnet-id
+        :param pool_create_args: dict, POST /lb/pools request options
+        :param atomic_action: True if this is an atomic action
+        :returns: dict, neutron lb pool
         """
-        args = {"lb_method": self.LB_METHOD, "protocol": self.LB_PROTOCOL,
+        args = {"lb_method": self.LB_METHOD,
+                "protocol": self.LB_PROTOCOL,
                 "name": self._generate_random_name("rally_pool_"),
                 "subnet_id": subnet_id}
         args.update(pool_create_args)
+        if atomic_action:
+            with base.AtomicAction(self, "neutron.create_pool"):
+                return self.clients("neutron").create_pool({"pool": args})
         return self.clients("neutron").create_pool({"pool": args})
+
+    def _create_v1_pools(self, networks, **pool_create_args):
+        """Create LB pools(v1)
+
+        :param networks: list, neutron networks
+        :param pool_create_args: dict, POST /lb/pools request options
+        :returns: list, neutron lb pools
+        """
+        subnets = []
+        pools = []
+        for net in networks:
+            subnets.extend(net.get("subnets", []))
+        with base.AtomicAction(self, "neutron.create_%s_pools" %
+                               len(subnets)):
+            for subnet_id in subnets:
+                pools.append(self._create_lb_pool(
+                    subnet_id, atomic_action=False, **pool_create_args))
+        return pools
 
     @base.atomic_action_timer("neutron.list_pools")
     def _list_v1_pools(self, **kwargs):

@@ -42,14 +42,13 @@ class NeutronLoadbalancerv1TestCase(test.TestCase):
         neutron_scenario = loadbalancer_v1.NeutronLoadbalancerV1(
             self._get_context())
         pool_data = pool_create_args or {}
-        neutron_scenario._create_v1_pool = mock.Mock()
+        networks = self._get_context()["tenant"]["networks"]
+        neutron_scenario._create_v1_pools = mock.Mock()
         neutron_scenario._list_v1_pools = mock.Mock()
         neutron_scenario.create_and_list_pools(
             pool_create_args=pool_create_args)
-        for net in self._get_context()["tenant"]["networks"]:
-            for subnet_id in net["subnets"]:
-                neutron_scenario._create_v1_pool.assert_called_once_with(
-                    subnet_id, **pool_data)
+        neutron_scenario._create_v1_pools.assert_called_once_with(
+            networks, **pool_data)
         neutron_scenario._list_v1_pools.assert_called_once_with()
 
     @ddt.data(
@@ -62,22 +61,19 @@ class NeutronLoadbalancerv1TestCase(test.TestCase):
     def test_create_and_delete_pools(self, pool_create_args=None):
         neutron_scenario = loadbalancer_v1.NeutronLoadbalancerV1(
             self._get_context())
-        pool = {
+        pools = [{
             "pool": {
                 "id": "pool-id"
             }
-        }
+        }]
         pool_data = pool_create_args or {}
-        neutron_scenario._create_v1_pool = mock.Mock(return_value=pool)
+        networks = self._get_context()["tenant"]["networks"]
+        neutron_scenario._create_v1_pools = mock.Mock(return_value=pools)
         neutron_scenario._delete_v1_pool = mock.Mock()
         neutron_scenario.create_and_delete_pools(
             pool_create_args=pool_create_args)
-        pools = []
-        for net in self._get_context()["tenant"]["networks"]:
-            for subnet_id in net["subnets"]:
-                self.assertEqual([mock.call(subnet_id=subnet_id,
-                                  **pool_data)],
-                                 neutron_scenario._create_v1_pool.mock_calls)
+        self.assertEqual([mock.call(networks, **pool_data)],
+                         neutron_scenario._create_v1_pools.mock_calls)
         for pool in pools:
             self.assertEqual(1, neutron_scenario._delete_v1_pool.call_count)
 
@@ -102,11 +98,11 @@ class NeutronLoadbalancerv1TestCase(test.TestCase):
                                      pool_update_args=None):
         neutron_scenario = loadbalancer_v1.NeutronLoadbalancerV1(
             self._get_context())
-        pool = {
+        pools = [{
             "pool": {
                 "id": "pool-id"
             }
-        }
+        }]
         updated_pool = {
             "pool": {
                 "id": "pool-id",
@@ -117,19 +113,15 @@ class NeutronLoadbalancerv1TestCase(test.TestCase):
         pool_data = pool_create_args or {}
         pool_update_args = pool_update_args or {}
         pool_update_args.update({"name": "_updated", "admin_state_up": True})
-        neutron_scenario._create_v1_pool = mock.Mock(return_value=pool)
+        neutron_scenario._create_v1_pools = mock.Mock(return_value=pools)
         neutron_scenario._update_v1_pool = mock.Mock(
             return_value=updated_pool)
+        networks = self._get_context()["tenant"]["networks"]
         neutron_scenario.create_and_update_pools(
             pool_create_args=pool_data,
             pool_update_args=pool_update_args)
-        pools = []
-        for net in self._get_context()["tenant"]["networks"]:
-            for subnet_id in net["subnets"]:
-                pools.append(
-                    neutron_scenario._create_v1_pool.assert_called_once_with(
-                        subnet_id, **pool_data))
+        self.assertEqual([mock.call(networks, **pool_data)],
+                         neutron_scenario._create_v1_pools.mock_calls)
         for pool in pools:
             neutron_scenario._update_v1_pool.assert_called_once_with(
-                neutron_scenario._create_v1_pool.return_value,
-                **pool_update_args)
+                pool, **pool_update_args)

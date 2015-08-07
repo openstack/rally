@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import ddt
 import mock
 
 from rally.plugins.openstack.scenarios.neutron import utils
@@ -430,46 +431,6 @@ class NeutronScenarioTestCase(test.ScenarioTestCase):
                        {"allocation_pools": []},
                        "10.10.10.0/24")] * subnets_per_network)
 
-    def test_create_v1_pool_explicit(self):
-        neutron_scenario = utils.NeutronScenario()
-        lb_method = "LEAST_CONNECTIONS"
-        subnet = "fake-id"
-        pool = mock.Mock()
-        self.clients("neutron").create_pool.return_value = pool
-        # Explicit options
-        pool_data = {"lb_method": lb_method, "name": "explicit-name"}
-        args = {"lb_method": "ROUND_ROBIN", "protocol": "HTTP",
-                "name": "random_name", "subnet_id": subnet}
-        args.update(pool_data)
-        expected_pool_data = {"pool": args}
-        pool = neutron_scenario._create_v1_pool(
-            subnet_id=subnet, **pool_data)
-        self.clients("neutron").create_pool.assert_called_once_with(
-            expected_pool_data)
-        self._test_atomic_action_timer(
-            neutron_scenario.atomic_actions(), "neutron.create_pool")
-
-    @mock.patch(NEUTRON_UTILS + "NeutronScenario._generate_random_name")
-    def test_create_v1_pool_default(self, mock__generate_random_name):
-        neutron_scenario = utils.NeutronScenario()
-        random_name = "random_name"
-        subnet = "fake-id"
-        pool = mock.Mock()
-        self.clients("neutron").create_pool.return_value = pool
-        mock__generate_random_name.return_value = random_name
-        # Random pool name
-        pool_data = {}
-        args = {"lb_method": "ROUND_ROBIN", "protocol": "HTTP",
-                "name": "random_name", "subnet_id": subnet}
-        args.update(pool_data)
-        expected_pool_data = {"pool": args}
-        pool = neutron_scenario._create_v1_pool(
-            subnet_id=subnet, **pool_data)
-        self.clients("neutron").create_pool.assert_called_once_with(
-            expected_pool_data)
-        self._test_atomic_action_timer(
-            neutron_scenario.atomic_actions(), "neutron.create_pool")
-
     def test_delete_v1_pool(self):
         scenario = utils.NeutronScenario()
 
@@ -539,3 +500,75 @@ class NeutronScenarioFunctionalTestCase(test.FakeClientsScenarioTestCase):
         # This checks both data (cidrs seem to be enough) and subnets number
         result_cidrs = sorted([s["subnet"]["cidr"] for s in subnets])
         self.assertEqual(cidrs, result_cidrs)
+
+
+@ddt.ddt
+class NeutronLoadbalancerScenarioTestCase(test.ScenarioTestCase):
+
+    def setUp(self):
+        super(NeutronLoadbalancerScenarioTestCase, self).setUp()
+        self.network = mock.Mock()
+
+    @ddt.data(
+        {"networks": [{"subnets": "subnet-id"}]},
+        {"pool_create_args": None, "networks": [{"subnets": ["subnet-id"]}]},
+        {"pool_create_args": {}, "networks": [{"subnets": ["subnet-id"]}]},
+        {"pool_create_args": {"name": "given-name"},
+            "networks": [{"subnets": ["subnet-id"]}]},
+    )
+    @ddt.unpack
+    def test__create_v1_pools(self, networks, pool_create_args=None):
+        neutron_scenario = utils.NeutronScenario()
+        pool_create_args = pool_create_args or {}
+        pool = {"pool": {"id": "pool-id"}}
+        neutron_scenario._create_lb_pool = mock.Mock(return_value=pool)
+        resultant_pools = neutron_scenario._create_v1_pools(
+            networks=networks, **pool_create_args)
+        if networks:
+            subnets = []
+            [subnets.extend(net["subnets"]) for net in networks]
+            neutron_scenario._create_lb_pool.assert_has_calls(
+                [mock.call(subnet, atomic_action=False,
+                           **pool_create_args) for subnet in subnets])
+            self.assertEqual(resultant_pools, [pool] * len(subnets))
+            self._test_atomic_action_timer(
+                neutron_scenario.atomic_actions(),
+                "neutron.create_%s_pools" % len(subnets))
+
+    @ddt.data(
+        {"subnet_id": "foo-id"},
+        {"pool_create_args": None, "subnet_id": "foo-id"},
+        {"pool_create_args": {}, "subnet_id": "foo-id"},
+        {"pool_create_args": {"name": "given-name"},
+         "subnet_id": "foo-id"},
+        {"subnet_id": "foo-id", "atomic_action": False},
+        {"pool_create_args": None, "subnet_id": "foo-id",
+         "atomic_action": False},
+        {"pool_create_args": {}, "subnet_id": "foo-id",
+         "atomic_action": False},
+        {"pool_create_args": {"name": "given-name"},
+         "subnet_id": "foo-id", "atomic_action": False},
+    )
+    @ddt.unpack
+    def test__create_lb_pool(self, subnet_id=None, atomic_action=True,
+                             pool_create_args=None):
+        neutron_scenario = utils.NeutronScenario()
+        pool = {"pool": {"id": "pool-id"}}
+        pool_create_args = pool_create_args or {}
+        if pool_create_args.get("name") is None:
+            neutron_scenario._generate_random_name = mock.Mock(
+                return_value="random_name")
+        self.clients("neutron").create_pool.return_value = pool
+        args = {"lb_method": "ROUND_ROBIN", "protocol": "HTTP",
+                "name": "random_name", "subnet_id": subnet_id}
+        args.update(pool_create_args)
+        expected_pool_data = {"pool": args}
+        resultant_pool = neutron_scenario._create_lb_pool(
+            subnet_id=subnet_id, atomic_action=atomic_action,
+            **pool_create_args)
+        self.assertEqual(resultant_pool, pool)
+        self.clients("neutron").create_pool.assert_called_once_with(
+            expected_pool_data)
+        if atomic_action:
+            self._test_atomic_action_timer(
+                neutron_scenario.atomic_actions(), "neutron.create_pool")
