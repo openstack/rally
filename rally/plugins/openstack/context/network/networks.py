@@ -39,6 +39,14 @@ class Network(context.Context):
             "networks_per_tenant": {
                 "type": "integer",
                 "minimum": 1
+            },
+            "subnets_per_network": {
+                "type": "integer",
+                "minimum": 1
+            },
+            "network_create_args": {
+                "type": "object",
+                "additionalProperties": True
             }
         },
         "additionalProperties": False
@@ -46,7 +54,9 @@ class Network(context.Context):
 
     DEFAULT_CONFIG = {
         "start_cidr": "10.2.0.0/24",
-        "networks_per_tenant": 1
+        "networks_per_tenant": 1,
+        "subnets_per_network": 1,
+        "network_create_args": {}
     }
 
     @utils.log_task_wrapper(LOG.info, _("Enter context: `network`"))
@@ -64,10 +74,11 @@ class Network(context.Context):
             for i in range(self.config["networks_per_tenant"]):
                 # NOTE(amaretskiy): add_router and subnets_num take effect
                 #                   for Neutron only.
-                # NOTE(amaretskiy): Do we need neutron subnets_num > 1 ?
-                network = net_wrapper.create_network(tenant_id,
-                                                     add_router=True,
-                                                     subnets_num=1)
+                network = net_wrapper.create_network(
+                    tenant_id,
+                    add_router=True,
+                    subnets_num=self.config["subnets_per_network"],
+                    network_create_args=self.config["network_create_args"])
                 self.context["tenants"][tenant_id]["networks"].append(network)
 
     @utils.log_task_wrapper(LOG.info, _("Exit context: `network`"))

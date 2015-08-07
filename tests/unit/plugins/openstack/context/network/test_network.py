@@ -47,9 +47,12 @@ class NetworkTestCase(test.TestCase):
     @mock.patch(NET + "wrap", return_value="foo_service")
     def test__init__explicit(self, mock_wrap, mock_clients):
         context = network_context.Network(
-            self.get_context(start_cidr="foo_cidr", networks_per_tenant=42))
+            self.get_context(start_cidr="foo_cidr", networks_per_tenant=42,
+                             network_create_args={"fakearg": "fake"}))
         self.assertEqual(context.config["networks_per_tenant"], 42)
         self.assertEqual(context.config["start_cidr"], "foo_cidr")
+        self.assertDictEqual(context.config["network_create_args"],
+                             {"fakearg": "fake"})
 
     @mock.patch(NET + "wrap")
     @mock.patch("rally.plugins.openstack.context.network.networks.utils")
@@ -59,20 +62,30 @@ class NetworkTestCase(test.TestCase):
             ("foo_user", "foo_tenant"),
             ("bar_user", "bar_tenant")]
         mock_create = mock.Mock(side_effect=lambda t, **kw: t + "-net")
+        mock_utils.generate_random_name = mock.Mock()
         mock_wrap.return_value = mock.Mock(create_network=mock_create)
         nets_per_tenant = 2
         net_context = network_context.Network(
-            self.get_context(networks_per_tenant=nets_per_tenant))
+            self.get_context(networks_per_tenant=nets_per_tenant,
+                             network_create_args={"fakearg": "fake"}))
+
         net_context.setup()
+
+        create_calls = [
+            mock.call(tenant, add_router=True,
+                      subnets_num=1, network_create_args={"fakearg": "fake"})
+            for user, tenant in mock_utils.iterate_per_tenants.return_value]
+        mock_create.assert_has_calls(create_calls)
+
         mock_utils.iterate_per_tenants.assert_called_once_with(
             net_context.context["users"])
-        expected_networks = [["bar_tenant-net"] * nets_per_tenant,
-                             ["foo_tenant-net"] * nets_per_tenant]
+        expected_networks = ["bar_tenant-net",
+                             "foo_tenant-net"] * nets_per_tenant
         actual_networks = []
-        for tenant_id, tenant_ctx in (
-                sorted(net_context.context["tenants"].items())):
-            actual_networks.append(tenant_ctx["networks"])
-        self.assertEqual(expected_networks, actual_networks)
+        for tenant_id, tenant_ctx in net_context.context["tenants"].items():
+            actual_networks.extend(tenant_ctx["networks"])
+        self.assertSequenceEqual(sorted(expected_networks),
+                                 sorted(actual_networks))
 
     @mock.patch("rally.osclients.Clients")
     @mock.patch(NET + "wrap")

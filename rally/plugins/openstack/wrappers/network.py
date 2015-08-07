@@ -131,13 +131,20 @@ class NovaNetworkWrapper(NetworkWrapper):
         """Create network.
 
         :param tenant_id: str, tenant ID
-        :param **kwargs: for compatibility, not used here
+        :param **kwargs: Additional keyword arguments. Only
+                         ``network_create_args`` is honored; other
+                         arguments are accepted for compatibility, but
+                         are not used here. ``network_create_args``
+                         can be used to provide additional arbitrary
+                         network creation arguments.
         :returns: dict, network data
         """
         cidr = self._generate_cidr()
         label = utils.generate_random_name("rally_net_")
+        network_create_args = kwargs.get("network_create_args", {})
         network = self.client.networks.create(
-            project_id=tenant_id, cidr=cidr, label=label)
+            project_id=tenant_id, cidr=cidr, label=label,
+            **network_create_args)
         return self._marshal_network_object(network)
 
     def delete_network(self, network):
@@ -271,16 +278,25 @@ class NeutronWrapper(NetworkWrapper):
     def create_network(self, tenant_id, **kwargs):
         """Create network.
 
+        The following keyword arguments are accepted:
+
+        * add_router: Create an external router and add an interface to each
+                      subnet created. Default: False
+        * subnets_num: Number of subnets to create per network. Default: 0
+        * dns_nameservers: Nameservers for each subnet. Default:
+                           8.8.8.8, 8.8.4.4
+        * network_create_args: Additional network creation arguments.
+
         :param tenant_id: str, tenant ID
-        :param **kwargs: extra options
+        :param kwargs: Additional options, left open-ended for compatbilitiy.
+                       See above for recognized keyword args.
         :returns: dict, network data
         """
-        network_args = {
-            "network": {
-                "tenant_id": tenant_id,
-                "name": utils.generate_random_name("rally_net_")
-            }
-        }
+        network_args = {"network": kwargs.get("network_create_args", {})}
+        network_args["network"].update({
+            "tenant_id": tenant_id,
+            "name": utils.generate_random_name("rally_net_")
+        })
         network = self.client.create_network(network_args)["network"]
 
         router = None
