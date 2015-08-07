@@ -14,6 +14,7 @@
                 "concurrency": 10
             },
             "context": {
+                "network": {},
                 "users": {
                     "tenants": 3,
                     "users_per_tenant": 3

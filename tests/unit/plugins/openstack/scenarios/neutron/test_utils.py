@@ -24,6 +24,7 @@ from tests.unit import test
 NEUTRON_UTILS = "rally.plugins.openstack.scenarios.neutron.utils."
 
 
+@ddt.ddt
 class NeutronScenarioTestCase(test.ScenarioTestCase):
 
     def setUp(self):
@@ -420,6 +421,67 @@ class NeutronScenarioTestCase(test.ScenarioTestCase):
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "neutron.create_port")
 
+    @ddt.data(
+        {},
+        {"network_create_args": {"fakearg": "fake"}},
+        {"context": {"tenant": {"networks":
+                                [mock.MagicMock(), mock.MagicMock()]}}},
+        {"network_create_args": {"fakearg": "fake"},
+         "context": {"tenant": {"networks":
+                                [mock.MagicMock(), mock.MagicMock()]}}})
+    @ddt.unpack
+    @mock.patch("random.choice", side_effect=lambda l: l[0])
+    def test_get_or_create_network(self, mock_random_choice,
+                                   network_create_args=None, context=None):
+        if context is None:
+            context = {"tenant": {}}
+        scenario = utils.NeutronScenario(context=context)
+        scenario._create_network = mock.Mock()
+
+        network = scenario._get_or_create_network(network_create_args)
+
+        if "networks" in context["tenant"]:
+            self.assertEqual(network, context["tenant"]["networks"][0])
+            self.assertFalse(scenario._create_network.called)
+        else:
+            self.assertEqual(network, scenario._create_network.return_value)
+            scenario._create_network.assert_called_once_with(
+                network_create_args or {})
+
+    @ddt.data(
+        {},
+        {"subnets": [mock.Mock(), mock.Mock()]},
+        {"subnets": [mock.Mock(), mock.Mock()],
+         "subnet_create_args": {"fakearg": "fake"},
+         "subnet_cidr_start": "cidr",
+         "subnets_per_network": 5},
+        {"subnet_create_args": {"fakearg": "fake"},
+         "subnet_cidr_start": "cidr",
+         "subnets_per_network": 5})
+    @ddt.unpack
+    def test_get_or_create_subnets(self, subnets=None,
+                                   subnet_create_args=None,
+                                   subnet_cidr_start=None,
+                                   subnets_per_network=1):
+        subnets = subnets or []
+        network = mock.MagicMock(get=mock.Mock(return_value=subnets))
+        scenario = utils.NeutronScenario()
+        scenario._create_subnets = mock.Mock()
+
+        actual = scenario._get_or_create_subnets(network,
+                                                 subnet_create_args,
+                                                 subnet_cidr_start,
+                                                 subnets_per_network)
+
+        if subnets:
+            self.assertItemsEqual(actual, subnets)
+            self.assertFalse(scenario._create_subnets.called)
+        else:
+            self.assertEqual(actual, scenario._create_subnets.return_value)
+            scenario._create_subnets.assert_called_once_with(
+                network, subnet_create_args, subnet_cidr_start,
+                subnets_per_network)
+
     @mock.patch(NEUTRON_UTILS + "NeutronScenario._create_subnet",
                 return_value={
                     "subnet": {
@@ -488,6 +550,58 @@ class NeutronScenarioTestCase(test.ScenarioTestCase):
             fip["floatingip"]["id"])
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "neutron.delete_floating_ip")
+
+    @ddt.data(
+        {},
+        {"router_create_args": {"admin_state_up": False}},
+        {"network_create_args": {"router:external": True},
+         "subnet_create_args": {"allocation_pools": []},
+         "subnet_cidr_start": "default_cidr",
+         "subnets_per_network": 3,
+         "router_create_args": {"admin_state_up": False}})
+    @ddt.unpack
+    def test_create_network_structure(self, network_create_args=None,
+                                      subnet_create_args=None,
+                                      subnet_cidr_start=None,
+                                      subnets_per_network=None,
+                                      router_create_args=None):
+        network = mock.MagicMock()
+
+        router_create_args = router_create_args or {}
+
+        subnets = []
+        routers = []
+        router_create_calls = []
+        for i in range(subnets_per_network or 1):
+            subnets.append(mock.MagicMock())
+            routers.append(mock.MagicMock())
+            router_create_calls.append(mock.call(router_create_args))
+
+        scenario = utils.NeutronScenario()
+        scenario._get_or_create_network = mock.Mock(return_value=network)
+        scenario._get_or_create_subnets = mock.Mock(return_value=subnets)
+        scenario._create_router = mock.Mock(side_effect=routers)
+        scenario._add_interface_router = mock.Mock()
+
+        actual = scenario._create_network_structure(network_create_args,
+                                                    subnet_create_args,
+                                                    subnet_cidr_start,
+                                                    subnets_per_network,
+                                                    router_create_args)
+        self.assertEqual(actual, (network, subnets, routers))
+        scenario._get_or_create_network.assert_called_once_with(
+            network_create_args)
+        scenario._get_or_create_subnets.assert_called_once_with(
+            network,
+            subnet_create_args,
+            subnet_cidr_start,
+            subnets_per_network)
+        scenario._create_router.assert_has_calls(router_create_calls)
+
+        add_iface_calls = [mock.call(subnets[i]["subnet"],
+                                     routers[i]["router"])
+                           for i in range(subnets_per_network or 1)]
+        scenario._add_interface_router.assert_has_calls(add_iface_calls)
 
     def test_delete_v1_pool(self):
         scenario = utils.NeutronScenario(context=self.context)
