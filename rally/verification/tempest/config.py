@@ -36,10 +36,10 @@ LOG = logging.getLogger(__name__)
 
 IMAGE_OPTS = [
     cfg.StrOpt("cirros_version",
-               default="0.3.2",
+               default="0.3.4",
                help="Version of cirros image"),
     cfg.StrOpt("cirros_image",
-               default="cirros-0.3.2-x86_64-disk.img",
+               default="cirros-0.3.4-x86_64-disk.img",
                help="Cirros image name"),
     cfg.StrOpt("cirros_base_url",
                default="http://download.cirros-cloud.net",

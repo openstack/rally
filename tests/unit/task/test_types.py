@@ -127,14 +127,14 @@ class ImageResourceTypeTestCase(test.TestCase):
     def setUp(self):
         super(ImageResourceTypeTestCase, self).setUp()
         self.clients = fakes.FakeClients()
-        image1 = fakes.FakeResource(name="cirros-0.3.1-uec", id="100")
+        image1 = fakes.FakeResource(name="cirros-0.3.4-uec", id="100")
         self.clients.glance().images._cache(image1)
-        image2 = fakes.FakeResource(name="cirros-0.3.1-uec-ramdisk", id="101")
+        image2 = fakes.FakeResource(name="cirros-0.3.4-uec-ramdisk", id="101")
         self.clients.glance().images._cache(image2)
-        image3 = fakes.FakeResource(name="cirros-0.3.1-uec-ramdisk-copy",
+        image3 = fakes.FakeResource(name="cirros-0.3.4-uec-ramdisk-copy",
                                     id="102")
         self.clients.glance().images._cache(image3)
-        image4 = fakes.FakeResource(name="cirros-0.3.1-uec-ramdisk-copy",
+        image4 = fakes.FakeResource(name="cirros-0.3.4-uec-ramdisk-copy",
                                     id="103")
         self.clients.glance().images._cache(image4)
 
@@ -145,19 +145,19 @@ class ImageResourceTypeTestCase(test.TestCase):
         self.assertEqual(image_id, "100")
 
     def test_transform_by_name(self):
-        resource_config = {"name": "^cirros-0.3.1-uec$"}
+        resource_config = {"name": "^cirros-0.3.4-uec$"}
         image_id = types.ImageResourceType.transform(
             clients=self.clients, resource_config=resource_config)
         self.assertEqual(image_id, "100")
 
     def test_transform_by_name_no_match(self):
-        resource_config = {"name": "cirros-0.3.1-uec-boot"}
+        resource_config = {"name": "cirros-0.3.4-uec-boot"}
         self.assertRaises(exceptions.InvalidScenarioArgument,
                           types.ImageResourceType.transform, self.clients,
                           resource_config)
 
     def test_transform_by_name_match_multiple(self):
-        resource_config = {"name": "cirros-0.3.1-uec-ramdisk-copy"}
+        resource_config = {"name": "cirros-0.3.4-uec-ramdisk-copy"}
         self.assertRaises(exceptions.InvalidScenarioArgument,
                           types.ImageResourceType.transform, self.clients,
                           resource_config)
@@ -186,30 +186,30 @@ class EC2ImageResourceTypeTestCase(test.TestCase):
     def setUp(self):
         super(EC2ImageResourceTypeTestCase, self).setUp()
         self.clients = fakes.FakeClients()
-        image1 = fakes.FakeResource(name="cirros-0.3.1-uec", id="100")
+        image1 = fakes.FakeResource(name="cirros-0.3.4-uec", id="100")
         self.clients.glance().images._cache(image1)
-        image2 = fakes.FakeResource(name="cirros-0.3.1-uec-ramdisk", id="102")
+        image2 = fakes.FakeResource(name="cirros-0.3.4-uec-ramdisk", id="102")
         self.clients.glance().images._cache(image2)
-        image3 = fakes.FakeResource(name="cirros-0.3.1-uec-ramdisk-copy",
+        image3 = fakes.FakeResource(name="cirros-0.3.4-uec-ramdisk-copy",
                                     id="102")
         self.clients.glance().images._cache(image3)
-        image4 = fakes.FakeResource(name="cirros-0.3.1-uec-ramdisk-copy",
+        image4 = fakes.FakeResource(name="cirros-0.3.4-uec-ramdisk-copy",
                                     id="103")
         self.clients.glance().images._cache(image4)
 
-        ec2_image1 = fakes.FakeResource(name="cirros-0.3.1-uec", id="200")
-        ec2_image2 = fakes.FakeResource(name="cirros-0.3.1-uec-ramdisk",
+        ec2_image1 = fakes.FakeResource(name="cirros-0.3.4-uec", id="200")
+        ec2_image2 = fakes.FakeResource(name="cirros-0.3.4-uec-ramdisk",
                                         id="201")
-        ec2_image3 = fakes.FakeResource(name="cirros-0.3.1-uec-ramdisk-copy",
+        ec2_image3 = fakes.FakeResource(name="cirros-0.3.4-uec-ramdisk-copy",
                                         id="202")
-        ec2_image4 = fakes.FakeResource(name="cirros-0.3.1-uec-ramdisk-copy",
+        ec2_image4 = fakes.FakeResource(name="cirros-0.3.4-uec-ramdisk-copy",
                                         id="203")
 
         self.clients.ec2().get_all_images = mock.Mock(
             return_value=[ec2_image1, ec2_image2, ec2_image3, ec2_image4])
 
     def test_transform_by_name(self):
-        resource_config = {"name": "^cirros-0.3.1-uec$"}
+        resource_config = {"name": "^cirros-0.3.4-uec$"}
         ec2_image_id = types.EC2ImageResourceType.transform(
             clients=self.clients, resource_config=resource_config)
         self.assertEqual(ec2_image_id, "200")
@@ -233,13 +233,13 @@ class EC2ImageResourceTypeTestCase(test.TestCase):
                           resource_config)
 
     def test_transform_by_name_no_match(self):
-        resource_config = {"name": "cirros-0.3.1-uec-boot"}
+        resource_config = {"name": "cirros-0.3.4-uec-boot"}
         self.assertRaises(exceptions.InvalidScenarioArgument,
                           types.EC2ImageResourceType.transform, self.clients,
                           resource_config)
 
     def test_transform_by_name_match_multiple(self):
-        resource_config = {"name": "cirros-0.3.1-uec-ramdisk-copy"}
+        resource_config = {"name": "cirros-0.3.4-uec-ramdisk-copy"}
         self.assertRaises(exceptions.InvalidScenarioArgument,
                           types.EC2ImageResourceType.transform, self.clients,
                           resource_config)

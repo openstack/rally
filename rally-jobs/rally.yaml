@@ -930,7 +930,7 @@
   GlanceImages.create_and_delete_image:
     -
       args:
-        image_location: "http://download.cirros-cloud.net/0.3.2/cirros-0.3.2-x86_64-disk.img"
+        image_location: "http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-disk.img"
         container_format: "bare"
         disk_format: "qcow2"
       runner:
@@ -966,7 +966,7 @@
   GlanceImages.create_image_and_boot_instances:
     -
       args:
-        image_location: "http://download.cirros-cloud.net/0.3.2/cirros-0.3.2-x86_64-disk.img"
+        image_location: "http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-disk.img"
         container_format: "bare"
         disk_format: "qcow2"
         flavor:

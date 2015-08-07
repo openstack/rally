@@ -187,7 +187,7 @@ Note that the Rally input task above uses *regular expressions* to specify the i
    |                 UUID                 |          Name         |  Size (B) |
    +--------------------------------------+-----------------------+-----------+
    | 8dfd6098-0c26-4cb5-8e77-1ecb2db0b8ae |  CentOS 6.5 (x86_64)  | 344457216 |
-   | 2b8d119e-9461-48fc-885b-1477abe2edc5 | CirrOS 0.3.1 (x86_64) |  13147648 |
+   | 2b8d119e-9461-48fc-885b-1477abe2edc5 | CirrOS 0.3.4 (x86_64) |  13287936 |
    +--------------------------------------+-----------------------+-----------+
 
    $ rally show flavors
