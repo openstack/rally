@@ -476,7 +476,16 @@ def required_services(config, clients, deployment, *required_services):
 
     :param *required_services: list of services names
     """
-    available_services = clients.services().values()
+    available_services = list(clients.services().values())
+
+    if consts.Service.NOVA_NET in required_services:
+        nova = osclients.Clients(
+            objects.Endpoint(**deployment["admin"])).nova()
+        for service in nova.services.list():
+            if (service.binary == consts.Service.NOVA_NET and
+                    service.status == "enabled"):
+                available_services.append(consts.Service.NOVA_NET)
+
     for service in required_services:
         if service not in consts.Service:
             return ValidationResult(False, _("Unknown service: %s") % service)

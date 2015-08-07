@@ -798,3 +798,22 @@ class NovaScenario(scenario.OpenStackScenario):
         :param server: Server to unlock
         """
         server.unlock()
+
+    @base.atomic_action_timer("nova.create_network")
+    def _create_network(self, ip_range, **kwargs):
+        """Create nova network.
+
+        :param ip_range: IP range in CIDR notation to create
+        """
+        net_label = self._generate_random_name(prefix="rally_novanet")
+        ip_range = network_wrapper.generate_cidr(start_cidr=ip_range)
+        return self.admin_clients("nova").networks.create(
+            label=net_label, cidr=ip_range, **kwargs)
+
+    @base.atomic_action_timer("nova.delete_network")
+    def _delete_network(self, net_id):
+        """Delete nova network.
+
+        :param net_id: The nova-network ID to delete
+        """
+        return self.admin_clients("nova").networks.delete(net_id)

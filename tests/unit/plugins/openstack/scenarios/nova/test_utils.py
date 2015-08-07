@@ -796,3 +796,33 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
         server.unlock.assert_called_once_with()
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.unlock_server")
+
+    def test__delete_network(self):
+        fake_netlabel = "test1"
+        nova_scenario = utils.NovaScenario()
+        nova_scenario._delete_network(fake_netlabel)
+        self.admin_clients("nova").networks.delete.assert_called_once_with(
+            fake_netlabel)
+        self._test_atomic_action_timer(nova_scenario.atomic_actions(),
+                                       "nova.delete_network")
+
+    @mock.patch(NOVA_UTILS + ".network_wrapper.generate_cidr")
+    def test__create_network(self, mock_generate_cidr):
+        fake_cidr = "10.2.0.0/24"
+        fake_net = mock.MagicMock()
+        fake_net.cidr = fake_cidr
+        self.admin_clients("nova").networks.create.return_value = (fake_net)
+
+        nova_scenario = utils.NovaScenario()
+        nova_scenario._generate_random_name = mock.Mock(
+            return_value="rally_novanet_fake")
+
+        return_netlabel = nova_scenario._create_network(fake_cidr,
+                                                        fakearg="fakearg")
+        mock_generate_cidr.assert_called_once_with(start_cidr=fake_cidr)
+        self.admin_clients("nova").networks.create.assert_called_once_with(
+            label="rally_novanet_fake", cidr=mock_generate_cidr.return_value,
+            fakearg="fakearg")
+        self.assertEqual(return_netlabel, fake_net)
+        self._test_atomic_action_timer(nova_scenario.atomic_actions(),
+                                       "nova.create_network")

@@ -98,6 +98,15 @@ class NovaFloatingIpsBulk(SynchronizedDeletion, base.ResourceManager):
                 if floating_ip.pool.startswith("rally_fip_pool_")]
 
 
+@base.resource("nova", "networks", order=next(_nova_order),
+               admin_required=True)
+class NovaNetworks(SynchronizedDeletion, base.ResourceManager):
+
+    def list(self):
+        return [net for net in self._manager().list()
+                if net.label.startswith("rally_novanet")]
+
+
 # EC2
 
 _ec2_order = get_order(250)

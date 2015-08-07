@@ -616,18 +616,34 @@ class ValidatorsTestCase(test.TestCase):
         result = validator({"args": {"a": 1, "c": 3}}, None, None)
         self.assertFalse(result.is_valid, result.msg)
 
-    def test_required_service(self):
+    @mock.patch("rally.common.objects.Endpoint")
+    def test_required_service(self, mock_endpoint):
+        validator = self._unwrap_validator(validation.required_services,
+                                           consts.Service.KEYSTONE,
+                                           consts.Service.NOVA,
+                                           consts.Service.NOVA_NET)
+        clients = mock.MagicMock()
+        clients.services().values.return_value = [consts.Service.KEYSTONE,
+                                                  consts.Service.NOVA,
+                                                  consts.Service.NOVA_NET]
+
+        fake_service = mock.Mock(binary="nova-network", status="enabled")
+
+        with mock.patch("rally.osclients.Clients") as clients_cls:
+            nova_client = clients_cls.return_value.nova.return_value
+            nova_client.services.list.return_value = [fake_service]
+            result = validator({}, clients, {"admin": {"info": "admin"}})
+            clients_cls.assert_called_once_with(mock_endpoint.return_value)
+            mock_endpoint.assert_called_once_with(info="admin")
+        self.assertTrue(result.is_valid, result.msg)
+
         validator = self._unwrap_validator(validation.required_services,
                                            consts.Service.KEYSTONE,
                                            consts.Service.NOVA)
-        clients = mock.MagicMock()
-        clients.services().values.return_value = [
-            consts.Service.KEYSTONE, consts.Service.NOVA]
-        result = validator({}, clients, None)
-        self.assertTrue(result.is_valid, result.msg)
-
         clients.services().values.return_value = [consts.Service.KEYSTONE]
-        result = validator({}, clients, None)
+        with mock.patch("rally.osclients.Clients") as clients_cls:
+            result = validator({}, clients, None)
+            self.assertFalse(clients_cls.called)
         self.assertFalse(result.is_valid, result.msg)
 
     def test_required_service_wrong_service(self):
