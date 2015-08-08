@@ -1,3 +1,4 @@
+{% set flavor_name = flavor_name or "m1.tiny" %}
 ---
   NovaServers.boot_and_delete_multiple_servers:
     -
@@ -5,7 +6,7 @@
         image:
           name: "^cirros.*uec$"
         flavor:
-          name: "m1.tiny"
+          name: "{{flavor_name}}"
         count: 5
       runner:
         type: "constant"

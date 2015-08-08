@@ -1,3 +1,4 @@
+{% set flavor_name = flavor_name or "m1.tiny" %}
 {
     "NovaServers.list_servers": [
         {
@@ -16,7 +17,7 @@
                 },
                 "servers": {
                     "flavor": {
-                        "name": "m1.tiny"
+                        "name": "{{flavor_name}}"
                     },
                     "image": {
                         "name": "^cirros.*uec$"

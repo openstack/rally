@@ -1,3 +1,4 @@
+{% set flavor_name = flavor_name or "m1.tiny" %}
 ---
   NovaServers.list_servers:
     -
@@ -13,7 +14,7 @@
           users_per_tenant: 1
         servers:
           flavor:
-              name: "m1.tiny"
+              name: "{{flavor_name}}"
           image:
               name: "^cirros.*uec$"
           servers_per_tenant: 2

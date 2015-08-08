@@ -29,7 +29,7 @@ We assume that you have a :ref:`Rally installation <tutorial_step_0_installation
 Registering an OpenStack deployment in Rally
 --------------------------------------------
 
-First, you have to provide Rally with an Openstack deployment it is going to benchmark. This should be done either through `OpenRC files <http://docs.openstack.org/user-guide/content/cli_openrc.html>`_ or through deployment `configuration files <https://github.com/openstack/rally/tree/master/samples/deployments>`_. In case you already have an *OpenRC*, it is extremely simple to register a deployment with the *deployment create* command:
+First, you have to provide Rally with an OpenStack deployment it is going to benchmark. This should be done either through `OpenRC files <http://docs.openstack.org/user-guide/content/cli_openrc.html>`_ or through deployment `configuration files <https://github.com/openstack/rally/tree/master/samples/deployments>`_. In case you already have an *OpenRC*, it is extremely simple to register a deployment with the *deployment create* command:
 
 .. code-block:: none
 
@@ -94,7 +94,7 @@ Now that we have a working and registered deployment, we can start benchmarking 
             {
                 "args": {
                     "flavor": {
-                        "name": "m1.nano"
+                        "name": "m1.tiny"
                     },
                     "image": {
                         "name": "^cirros.*uec$"
@@ -148,7 +148,7 @@ To start a benchmark task, run the task start command (you can also add the *-v*
     test scenario NovaServers.boot_and_delete_server
     args position 0
     args values:
-    {u'args': {u'flavor': {u'name': u'm1.nano'},
+    {u'args': {u'flavor': {u'name': u'm1.tiny'},
                u'force_delete': False,
                u'image': {u'name': u'^cirros.*uec$'}},
      u'context': {u'users': {u'project_domain': u'default',

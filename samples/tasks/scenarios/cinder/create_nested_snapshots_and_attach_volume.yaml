@@ -1,3 +1,4 @@
+{% set flavor_name = flavor_name or "m1.tiny" %}
 ---
   CinderVolumes.create_nested_snapshots_and_attach_volume:
     -
@@ -20,5 +21,5 @@
           image:
             name: "^cirros.*uec$"
           flavor:
-            name: "m1.tiny"
+            name: "{{flavor_name}}"
           servers_per_tenant: 2

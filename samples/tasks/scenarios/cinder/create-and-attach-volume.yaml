@@ -1,3 +1,4 @@
+{% set flavor_name = flavor_name or "m1.tiny" %}
 ---
   CinderVolumes.create_and_attach_volume:
     -
@@ -6,7 +7,7 @@
           image:
             name: "^cirros.*uec$"
           flavor:
-            name: "m1.tiny"
+            name: "{{flavor_name}}"
       runner:
         type: "constant"
         times: 5
@@ -21,7 +22,7 @@
           min: 1
           max: 5
         flavor:
-            name: "m1.tiny"
+            name: "{{flavor_name}}"
         image:
             name: "^cirros.*uec$"
       runner:

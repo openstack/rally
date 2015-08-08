@@ -58,7 +58,7 @@ As an example, let's edit our configuration file from :ref:`step 1 <tutorial_ste
             {
                 "args": {
                     "flavor": {
-                        "name": "m1.nano"
+                        "name": "m1.tiny"
                     },
                     "image": {
                         "name": "^cirros.*uec$"
@@ -136,7 +136,7 @@ Note that the HTML reports you can generate by typing **rally task report --out=
 Multiple configurations of the same scenario
 --------------------------------------------
 
-Yet another thing you can do in Rally is to launch **the same benchmark scenario multiple times with different configurations**. That's why our configuration file stores a list for the key *"NovaServers.boot_and_delete_server"*: you can just append a different configuration of this benchmark scenario to this list to get it. Let's say, you want to run the **boot_and_delete_server** scenario twice: first using the *"m1.nano"* flavor and then using the *"m1.tiny"* flavor:
+Yet another thing you can do in Rally is to launch **the same benchmark scenario multiple times with different configurations**. That's why our configuration file stores a list for the key *"NovaServers.boot_and_delete_server"*: you can just append a different configuration of this benchmark scenario to this list to get it. Let's say, you want to run the **boot_and_delete_server** scenario twice: first using the *"m1.tiny"* flavor and then using the *"m1.tiny"* flavor:
 
 *multiple-configurations.json*
 
@@ -147,7 +147,7 @@ Yet another thing you can do in Rally is to launch **the same benchmark scenario
             {
                 "args": {
                     "flavor": {
-                        "name": "m1.nano"
+                        "name": "m1.tiny"
                     },
                     "image": {
                         "name": "^cirros.*uec$"
@@ -160,7 +160,7 @@ Yet another thing you can do in Rally is to launch **the same benchmark scenario
             {
                 "args": {
                     "flavor": {
-                        "name": "m1.tiny"
+                        "name": "m1.small"
                     },
                     "image": {
                         "name": "^cirros.*uec$"

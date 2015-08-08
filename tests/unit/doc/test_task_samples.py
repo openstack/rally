@@ -21,6 +21,7 @@ import traceback
 
 import yaml
 
+from rally import api
 from rally.task import scenario
 from rally.task import engine
 from tests.unit import test
@@ -49,7 +50,8 @@ class TaskSampleTestCase(test.TestCase):
 
                 with open(full_path) as task_file:
                     try:
-                        task_config = yaml.safe_load(task_file.read())
+                        task_config = yaml.safe_load(api.Task.render_template
+                                                     (task_file.read()))
                         eng = engine.BenchmarkEngine(task_config,
                                                      mock.MagicMock())
                         eng.validate()
@@ -77,7 +79,7 @@ class TaskSampleTestCase(test.TestCase):
                 full_path = os.path.join(dirname, filename)
                 with open(full_path) as task_file:
                     try:
-                        json.load(task_file)
+                        json.loads(api.Task.render_template(task_file.read()))
                     except Exception:
                         print(traceback.format_exc())
                         self.fail("Invalid JSON file: %s" % full_path)
@@ -117,11 +119,11 @@ class TaskSampleTestCase(test.TestCase):
 
                 if os.path.exists(yaml_path) and os.path.exists(json_path):
                     with open(json_path) as json_file:
-                        with open(yaml_path) as yaml_file:
-                            json_config = yaml.safe_load(json_file.read())
-                            yaml_config = yaml.safe_load(yaml_file.read())
-                            self.assertEqual(
-                                json_config,
-                                yaml_config,
-                                "Sample task configs are not equal:\n%s\n%s" %
-                                (yaml_path, json_path))
+                        json_config = yaml.safe_load(api.Task.render_template
+                                                     (json_file.read()))
+                    with open(yaml_path) as yaml_file:
+                        yaml_config = yaml.safe_load(api.Task.render_template
+                                                     (yaml_file.read()))
+                    self.assertEqual(json_config, yaml_config,
+                                     "Sample task configs are not equal:"
+                                     "\n%s\n%s" % (yaml_path, json_path))

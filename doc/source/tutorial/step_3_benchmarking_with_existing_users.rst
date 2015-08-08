@@ -128,7 +128,7 @@ After you have registered a deployment with existing users, don't forget to remo
             {
                 "args": {
                     "flavor": {
-                        "name": "m1.nano"
+                        "name": "m1.tiny"
                     },
                     "image": {
                         "name": "^cirros.*uec$"

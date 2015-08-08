@@ -1,3 +1,4 @@
+{% set flavor_name = flavor_name or "m1.tiny" %}
 ---
   GlanceImages.create_image_and_boot_instances:
     -
@@ -6,7 +7,7 @@
         container_format: "bare"
         disk_format: "qcow2"
         flavor:
-            name: "m1.tiny"
+            name: "{{flavor_name}}"
         number_instances: 2
       runner:
         type: "constant"

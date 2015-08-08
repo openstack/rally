@@ -1,3 +1,4 @@
+{% set flavor_name = flavor_name or "m1.tiny" %}
 {
   "NovaServers.boot_and_associate_floating_ip": [
     {
@@ -8,7 +9,7 @@
       },
       "args": {
         "flavor": {
-          "name": "m1.tiny"
+          "name": "{{flavor_name}}"
         },
         "image": {
           "name": "^cirros.*uec$"
