@@ -41,10 +41,11 @@ class BaseContextTestCase(test.TestCase):
 
     def test_init_empty_context(self):
         ctx0 = {
-            "task": mock.MagicMock()
+            "task": mock.MagicMock(),
+            "config": {"fake": "test"}
         }
         ctx = fakes.FakeContext(ctx0)
-        self.assertEqual(ctx.config, {})
+        self.assertEqual(ctx.config, ctx0["config"]["fake"])
         self.assertEqual(ctx.task, ctx0["task"])
         self.assertEqual(ctx.context, ctx0)
 

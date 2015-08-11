@@ -58,10 +58,6 @@ class SaharaImage(context.Context):
         "additionalProperties": False
     }
 
-    def __init__(self, ctx):
-        super(SaharaImage, self).__init__(ctx)
-        self.context["sahara_images"] = {}
-
     def _create_image(self, hadoop_version, image_url, plugin_name, user,
                       user_name):
         scenario = glance_utils.GlanceScenario({"user": user})
@@ -78,9 +74,10 @@ class SaharaImage(context.Context):
 
     @rutils.log_task_wrapper(LOG.info, _("Enter context: `Sahara Image`"))
     def setup(self):
+        self.context["sahara_images"] = {}
+
         # The user may want to use the existing image. In this case he should
         # make sure that the image is public and has all required metadata.
-
         image_uuid = self.config.get("image_uuid")
 
         self.context["need_sahara_image_cleanup"] = not image_uuid

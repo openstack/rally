@@ -40,7 +40,6 @@ class RoleGenerator(context.Context):
 
     def __init__(self, ctx):
         super(RoleGenerator, self).__init__(ctx)
-        self.context["roles"] = []
         self.endpoint = self.context["admin"]["endpoint"]
 
     def _add_role(self, admin_endpoint, context_role):
@@ -83,9 +82,8 @@ class RoleGenerator(context.Context):
     @rutils.log_task_wrapper(LOG.info, _("Enter context: `roles`"))
     def setup(self):
         """Add roles to all users."""
-        for name in self.config:
-            role = self._add_role(self.endpoint, name)
-            self.context["roles"].append(role)
+        self.context["roles"] = [self._add_role(self.endpoint, name)
+                                 for name in self.config]
 
     @rutils.log_task_wrapper(LOG.info, _("Exit context: `roles`"))
     def cleanup(self):

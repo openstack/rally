@@ -63,9 +63,6 @@ class ImageGenerator(context.Context):
         "additionalProperties": False
     }
 
-    def __init__(self, ctx):
-        super(ImageGenerator, self).__init__(ctx)
-
     @rutils.log_task_wrapper(LOG.info, _("Enter context: `Images`"))
     def setup(self):
         image_url = self.config["image_url"]

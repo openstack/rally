@@ -34,25 +34,6 @@ class ImageGeneratorTestCase(test.ScenarioTestCase):
             tenants[str(id_)] = {"name": str(id_)}
         return tenants
 
-    @mock.patch("%s.images.context.Context.__init__" % CTX)
-    def test_init(self, mock_context___init__):
-        context = {}
-        context["task"] = mock.MagicMock()
-        context["config"] = {
-            "images": {
-                "image_url": "mock_url",
-                "image_type": "qcow2",
-                "image_container": "bare",
-                "images_per_tenant": 4,
-                "image_name": "some_name",
-                "min_ram": 128,
-                "min_disk": 1,
-            }
-        }
-
-        images.ImageGenerator(context)
-        mock_context___init__.assert_called_once_with(context)
-
     def test_init_validation(self):
         context = {}
         context["task"] = mock.MagicMock()
