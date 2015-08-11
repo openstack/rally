@@ -34,7 +34,8 @@ PYTHON=${PYTHON2:-$PYTHON3}
 BASE_PIP_URL=${BASE_PIP_URL:-"https://pypi.python.org/simple"}
 VIRTUALENV_191_URL="https://raw.github.com/pypa/virtualenv/1.9.1/virtualenv.py"
 
-RALLY_GIT_URL=https://github.com/openstack/rally
+RALLY_GIT_URL="https://github.com/openstack/rally"
+RALLY_GIT_BRANCH="master"
 RALLY_CONFIGURATION_DIR=/etc/rally
 RALLY_DATABASE_DIR=/var/lib/rally/database
 DBTYPE=sqlite
@@ -160,7 +161,15 @@ $GREEN  -v, --verbose         $NO_COLOR Verbose mode
 $GREEN  -s, --system          $NO_COLOR Install system-wide.
 $GREEN  -d, --target DIRECTORY$NO_COLOR Install Rally virtual environment into DIRECTORY.
                          (Default: $HOME/rally if not root).
-$GREEN  -f, --overwrite       $NO_COLOR Remove target directory if it already exists.
+$GREEN  --url                 $NO_COLOR Git repository public URL to download Rally from.
+                         This is useful when you have only installation script and want to install Rally
+                         from custom repository.
+                         (Default: https://github.com/openstack/rally).
+                         (Ignored when you are already in git repository).
+$GREEN  --branch              $NO_COLOR Git branch name name or git tag (Rally release) to install.
+                         (Default: latest - master).
+                         (Ignored when you are already in git repository).
+$GREEN  -f, --overwrite       $NO_COLOR Remove target directory if it already exist.
 $GREEN  -y, --yes             $NO_COLOR Do not ask for confirmation: assume a 'yes' reply
                          to every question.
 $GREEN  -D, --dbtype TYPE     $NO_COLOR Select the database type. TYPE can be one of
@@ -175,6 +184,9 @@ $GREEN  --db-host HOST        $NO_COLOR Database host. Only used when --dbtype i
 $GREEN  --db-name NAME        $NO_COLOR Name of the database. Only used when --dbtype is
                          either 'mysql' or 'postgres'
 $GREEN  -p, --python EXE      $NO_COLOR The python interpreter to use. Default: $PYTHON
+$GREEN  --develop             $NO_COLOR Install Rally with editable source code try.
+                         (Default: false)
+$GREEN  --no-color            $NO_COLOR Disable output coloring.
 
 __EOF__
 }
@@ -449,8 +461,8 @@ setup_rally_configuration () {
 
 
 ### Main program ###
-short_opts='d:vfsyhD:p:'
-long_opts='target:,verbose,overwrite,system,yes,dbtype:,python:,db-user:,db-password:,db-host:,db-name:,help'
+short_opts='d:vsyfhD:p:'
+long_opts='target:,verbose,overwrite,system,yes,dbtype:,python:,db-user:,db-password:,db-host:,db-name:,help,url:,branch:,develop,no-color'
 
 set +e
 if [ "x$(getopt -T)" = 'x' ]; then
@@ -496,6 +508,14 @@ do
             ASKCONFIRMATION=0
             OVERWRITEDIR=yes
             ;;
+        --url)
+            shift
+            RALLY_GIT_URL=$1
+            ;;
+        --branch)
+            shift
+            RALLY_GIT_BRANCH=$1
+            ;;
         -D|--dbtype)
             shift
             DBTYPE=$1
@@ -526,6 +546,14 @@ do
         -p|--python)
             shift
             PYTHON=$1
+            ;;
+        --develop)
+            DEVELOPMENT_MODE=true
+            ;;
+        --no-color)
+            RED=""
+            GREEN=""
+            NO_COLOR=""
             ;;
         --)
             shift
@@ -564,7 +592,7 @@ fi
 # Fix RALLY_DATABASE_DIR if virtualenv is used
 if [ "$USEVIRTUALENV" = 'yes' ]
 then
-    RALLY_CONFIGURATION_DIR=~/.rally
+    RALLY_CONFIGURATION_DIR=$VENVDIR/etc/rally
     RALLY_DATABASE_DIR="$VENVDIR"/database
 fi
 
@@ -613,6 +641,9 @@ if [ "$USEVIRTUALENV" = 'yes' ]; then
             then
                 echo "*Not* overwriting destination directory '$VENVDIR'."
                 OVERWRITEDIR=no
+            else
+                echo "Removing directory $VENVDIR as requested."
+                rm $VERBOSE -rf "$VENVDIR"
             fi
         elif [ $OVERWRITEDIR = 'no' ]
         then
@@ -628,7 +659,7 @@ if [ "$USEVIRTUALENV" = 'yes' ]; then
       overwrite the $VENVDIR directory, or
 
     * specify a different path by running this script again adding the
-      option "--target" followed by a non-existent directory.
+      option: "--target" followed by a non-existent directory.
 __EOF__
         elif [ $OVERWRITEDIR = 'yes' ]; then
             echo "Removing directory $VENVDIR as requested."
@@ -658,12 +689,28 @@ BASEDIR=$(dirname "$(readlink -e "$0")")
 if [ -d "$BASEDIR"/.git ]
 then
     SOURCEDIR=$BASEDIR
+    pushd $BASEDIR > /dev/null
     if find . -name '*.py[co]' -exec rm -f {} +
     then
         echo "Wiped python compiled files."
     else
         echo "Warning! Unable to wipe python compiled files"
     fi
+
+    if [ "$USEVIRTUALENV" = 'yes' ]
+    then
+        if [ "$VENVDIR/src" != "$BASEDIR" ]
+        then
+            SOURCEDIR="$VENVDIR"/src
+            if [ -d $SOURCEDIR ]
+            then
+                rm -rf $SOURCEDIR
+            fi
+            mkdir $SOURCEDIR
+            cp -r . $SOURCEDIR/
+        fi
+    fi
+    popd > /dev/null
 else
     if [ "$USEVIRTUALENV" = 'yes' ]
     then
@@ -685,13 +732,13 @@ else
             if ! ask_yn "Do you want to wipe the source directory '$SOURCEDIR'?"
             then
                 echo "*Not* overwriting destination directory '$SOURCEDIR'."
+            else
+                rm -rf $SOURCEDIR
+                if [ -d "$SOURCEDIR"/.git ]
+                then
+                    abort $EX_CANTCREAT "Unable to wipe source directory $SOURCEDIR"
+                fi
             fi
-        fi
-        if [ -d "$SOURCEDIR"/.git ]
-        then
-            echo "Assuming $SOURCEDIR already contains the Rally git repository."
-        else
-            abort $EX_CANTCREAT "Unable to download git repository"
         fi
     fi
 
@@ -699,7 +746,11 @@ else
     then
         echo "Downloading Rally from subversion repository $RALLY_GIT_URL ..."
         CURRENT_ACTION="downloading-src"
-        git clone "$RALLY_GIT_URL" "$SOURCEDIR"
+        git clone "$RALLY_GIT_URL" -b "$RALLY_GIT_BRANCH" "$SOURCEDIR"
+        if ! [ -d $SOURCEDIR/.git ]
+            then
+            abort $EX_CANTCREAT "Unable to download git repository"
+        fi
         CURRENT_ACTION="src-downloaded"
     fi
 fi
@@ -715,7 +766,13 @@ pip install -i $BASE_PIP_URL pbr 'tox<=1.6.1'
 # Uninstall possible previous version
 pip uninstall -y rally || true
 # Install rally
-pip install -i $BASE_PIP_URL .
+if [ $DEVELOPMENT_MODE ]
+then
+    pip install -i $BASE_PIP_URL -e .
+else
+    pip install -i $BASE_PIP_URL .
+fi
+
 cd "$ORIG_WD"
 
 # Post-installation
@@ -726,6 +783,24 @@ then
 
 . "$VENVDIR/etc/bash_completion.d/rally.bash_completion"
 __EOF__
+
+    setup_rally_configuration "$SOURCEDIR"
+
+    if ! [ $DEVELOPMENT_MODE ]
+    then
+        SAMPLESDIR=$VENVDIR/samples
+        mkdir -p $SAMPLESDIR
+        cp -r $SOURCEDIR/samples/* $SAMPLESDIR/
+        if [ "$BASEDR" != "$SOURCEDIR" ]
+        then
+            rm -rf $SOURCEDIR
+            echo "Source directory is removed."
+        else
+            echo "Unabled to remove source directory, becaus this script was started from it."
+        fi
+    else
+        SAMPLESDIR=$SOURCEDIR/samples
+    fi
 
     cat <<__EOF__
 $GREEN==============================
@@ -746,11 +821,28 @@ Information about your Rally installation:
   * Virtual Environment at:$GREEN $VENVDIR$NO_COLOR
   * Database at:$GREEN $RALLY_DATABASE_DIR$NO_COLOR
   * Configuration file at:$GREEN $RALLY_CONFIGURATION_DIR$NO_COLOR
+  * Samples at:$GREEN $SAMPLESDIR$NO_COLOR
 
 __EOF__
-    setup_rally_configuration "$SOURCEDIR"
 else
     setup_rally_configuration "$SOURCEDIR"
+
+    if ! [ $DEVELOPMENT_MODE ]
+    then
+        SAMPLESDIR=/usr/share/rally/samples
+        mkdir -p $SAMPLESDIR
+        cp -r $SOURCEDIR/samples/* $SAMPLESDIR/
+        if [ "$BASEDIR" != "$SOURCEDIR" ]
+        then
+            rm -rf $SOURCEDIR
+            echo "Source directory is removed."
+        else
+            echo "Unabled to remove source directory, because this script was started from it."
+
+        fi
+    else
+        SAMPLESDIR=$SOURCEDIR/samples
+    fi
     ln -s /usr/local/etc/bash_completion.d/rally.bash_completion /etc/bash_completion.d/ 2> /dev/null || true
     if [ "$DBTYPE" = 'sqlite' ]; then
         chmod -R go+w ${RALLY_DATABASE_DIR}
@@ -767,6 +859,6 @@ installation:
   * Method:$GREEN system$NO_COLOR
   * Database at:$GREEN $RALLY_DATABASE_DIR$NO_COLOR
   * Configuration file at:$GREEN $RALLY_CONFIGURATION_DIR$NO_COLOR
-
+  * Samples at:$GREEN $SAMPLESDIR$NO_COLOR
 __EOF__
 fi
