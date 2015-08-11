@@ -9,6 +9,6 @@
         "password": "pa55word",
         "tenant_name": "demo"
     },
-    "https_insecure": False,
-    "https_cacert": "",
+    "https_insecure": false,
+    "https_cacert": ""
 }
