@@ -72,6 +72,66 @@ CONFIG_SCHEMA = {
 }
 
 
+class ResultConsumer(object):
+    """ResultConsumer class stores results from ScenarioRunner, checks SLA."""
+
+    def __init__(self, key, task, runner, abort_on_sla_failure):
+        """ResultConsumer constructor.
+
+        :param key: Scenario identifier
+        :param task: Task to run
+        :param runner: ScenarioRunner instance that produces results to be
+                       consumed
+        :param abort_on_sla_failure: True if the execution should be stopped
+                                     when some SLA check fails
+        """
+
+        self.key = key
+        self.task = task
+        self.runner = runner
+        self.sla_checker = sla.SLAChecker(key["kw"])
+        self.abort_on_sla_failure = abort_on_sla_failure
+        self.is_done = threading.Event()
+        self.unexpected_failure = {}
+        self.results = []
+        self.thread = threading.Thread(
+            target=self._consume_results
+        )
+
+    def __enter__(self):
+        self.thread.start()
+        self.start = time.time()
+        return self
+
+    def _consume_results(self):
+        while True:
+            if self.runner.result_queue:
+                result = self.runner.result_queue.popleft()
+                self.results.append(result)
+                success = self.sla_checker.add_iteration(result)
+                if self.abort_on_sla_failure and not success:
+                    self.sla_checker.set_aborted()
+                    self.runner.abort()
+            elif self.is_done.isSet():
+                break
+            else:
+                time.sleep(0.1)
+
+    def __exit__(self, exc_type, exc_value, exc_traceback):
+        self.finish = time.time()
+        self.is_done.set()
+        self.thread.join()
+
+        if exc_type:
+            self.sla_checker.set_unexpected_failure(exc_value)
+
+        self.task.append_results(self.key, {
+            "raw": self.results,
+            "load_duration": self.runner.run_duration,
+            "full_duration": self.finish - self.start,
+            "sla": self.sla_checker.results()})
+
+
 class BenchmarkEngine(object):
     """The Benchmark engine class is used to execute benchmark scenarios.
 
@@ -238,65 +298,15 @@ class BenchmarkEngine(object):
                 LOG.info("Running benchmark with key: \n%s"
                          % json.dumps(key, indent=2))
                 runner_obj = self._get_runner(kw)
-                is_done = threading.Event()
-                unexpected_failure = {}
-                consumer = threading.Thread(
-                    target=self.consume_results,
-                    args=(key, self.task, is_done, unexpected_failure,
-                          runner_obj))
-                consumer.start()
                 context_obj = self._prepare_context(kw.get("context", {}),
                                                     name, self.admin)
-                self.duration = 0
-                self.full_duration = 0
                 try:
-                    with rutils.Timer() as timer:
+                    with ResultConsumer(key, self.task, runner_obj,
+                                        self.abort_on_sla_failure):
                         with context.ContextManager(context_obj):
-                            self.duration = runner_obj.run(
+                            runner_obj.run(
                                 name, context_obj, kw.get("args", {}))
                 except Exception as e:
                     LOG.exception(e)
-                    unexpected_failure["exc"] = e
-                finally:
-                    self.full_duration = timer.duration()
-                    is_done.set()
-                    consumer.join()
+
         self.task.update_status(consts.TaskStatus.FINISHED)
-
-    def consume_results(self, key, task, is_done, unexpected_failure,
-                        runner_obj):
-        """Consume scenario runner results from queue and send them to db.
-
-        Has to be run from different thread simultaneously with the runner.run
-        method.
-
-        :param key: Scenario identifier
-        :param task: Running task
-        :param is_done: Event which is set from the runner thread after the
-                        runner finishes it's work.
-        :param unexpected_failure: Dictionary object with information about
-                                   unexpected exception.
-        :param runner_obj: ScenarioRunner object that was used to run a task
-        """
-        results = []
-        sla_checker = sla.SLAChecker(key["kw"])
-        while True:
-            if runner_obj.result_queue:
-                result = runner_obj.result_queue.popleft()
-                results.append(result)
-                success = sla_checker.add_iteration(result)
-                if self.abort_on_sla_failure and not success:
-                    sla_checker.set_aborted()
-                    runner_obj.abort()
-            elif is_done.isSet():
-                break
-            else:
-                time.sleep(0.1)
-
-            if unexpected_failure.get("exc"):
-                sla_checker.set_unexpected_failure(unexpected_failure["exc"])
-
-        task.append_results(key, {"raw": results,
-                                  "load_duration": self.duration,
-                                  "full_duration": self.full_duration,
-                                  "sla": sla_checker.results()})

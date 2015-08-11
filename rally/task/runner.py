@@ -187,6 +187,7 @@ class ScenarioRunner(plugin.Plugin):
         self.config = config
         self.result_queue = collections.deque()
         self.aborted = multiprocessing.Event()
+        self.run_duration = 0
 
     @staticmethod
     def validate(config):
@@ -219,7 +220,8 @@ class ScenarioRunner(plugin.Plugin):
 
         with rutils.Timer() as timer:
             self._run_scenario(cls, method_name, context, args)
-        return timer.duration()
+        self.run_duration = timer.duration()
+        return self.run_duration
 
     def abort(self):
         """Abort the execution of further benchmark scenario iterations."""
