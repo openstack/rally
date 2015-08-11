@@ -127,49 +127,50 @@ Finally, run DevStack as usually:
 Rally & Docker
 --------------
 
-First you need to install docker. Installing docker in ubuntu may be done by following:
+First you need to install Docker; Docker supplies `installation
+instructions for various OSes
+<https://docs.docker.com/installation/>`_.
 
-.. code-block:: none
+You can either use the official Rally Docker image, or build your own
+from the Rally source. To do that, cd to the root directory of the
+Rally git repository and run:
 
-    $ sudo apt-get update
-    $ sudo apt-get install docker.io
-    $ sudo usermod -a -G docker `id -u -n` # add yourself to docker group
+.. code-block:: bash
 
-NOTE: re-login is required to apply users groups changes and actually use docker.
-
-Pull docker image with rally:
-
-.. code-block:: none
-
-   $ docker pull rallyforge/rally
-
-Or you may want to build rally image from source:
-
-.. code-block:: none
-
-    # first cd to rally source root dir
     docker build -t myrally .
 
-Since rally stores local settings in user's home dir and the database in /var/lib/rally/database,
-you may want to keep this directories outside of container. This may be done by the following steps:
+If you build your own Docker image, substitute ``myrally`` for
+``rallyforge/rally`` in the commands below.
 
-.. code-block:: none
+The Rally Docker image is configured to store local settings and the
+database in the user's home directory. For persistence of these data,
+you may want to keep this directory outside of the container. This may
+be done by the following steps:
 
-   cd
-   mkdir rally_home
-   sudo chown 65500 rally_home
-   docker run -t -i -v ~/rally_home:/home/rally rallyforge/rally
+.. code-block:: bash
 
-You may want to save last command as an alias:
+   sudo mkdir /var/lib/rally_container
+   sudo chown 65500 rally_db
+   docker run -it -v /var/lib/rally_container:/home/rally rallyforge/rally
 
-.. code-block:: none
+.. note::
 
-   echo 'alias dock_rally="docker run -t -i -v ~/rally_home:/home/rally rallyforge/rally"' >> ~/.bashrc
+   In order for the volume to be accessible by the Rally user
+   (uid: 65500) inside the container, it must be accessible by UID
+   65500 *outside* the container as well, which is why it is created
+   in ``/var/lib/rally``. Creating it in your home directory is only
+   likely to work if your home directory has excessively open
+   permissions (e.g., ``0755``), which is not recommended.
 
-After executing ``dock_rally`` alias, or ``docker run`` you got bash running inside container with
-rally installed. You may do anything with rally, but you need to create db first:
+You may want to save the last command as an alias:
 
-.. code-block:: none
+.. code-block:: bash
+
+   echo 'alias dock_rally="docker run -it -v /var/lib/rally_container:/home/rally rallyforge/rally"' >> ~/.bashrc
+
+After executing ``dock_rally``, or ``docker run ...``, you will have
+bash running inside the container with Rally installed. You may do
+anything with Rally, but you need to create the database first::
 
    user@box:~/rally$ dock_rally
    rally@1cc98e0b5941:~$ rally-manage db recreate
@@ -178,15 +179,17 @@ rally installed. You may do anything with rally, but you need to create db first
    rally deployment create
    rally@1cc98e0b5941:~$
 
-In case you have SELinux enabled and rally fails to create database, try
-executing the following commands to put SELinux into Permissive Mode on the host machine.
+In case you have SELinux enabled and Rally fails to create the
+database, try executing the following commands to put SELinux into
+Permissive Mode on the host machine
 
-.. code-block:: none
+.. code-block:: bash
 
-   $ sed -i 's/SELINUX=enforcing/SELINUX=permissive/' /etc/selinux/config
-   $ setenforce permissive
+   sed -i 's/SELINUX=enforcing/SELINUX=permissive/' /etc/selinux/config
+   setenforce permissive
 
-Rally currently has no SELinux policy, which is why it must be run in Permissive mode
-for certain configurations. If you can help create an SELinux policy for Rally, please contribute!
+Rally currently has no SELinux policy, which is why it must be run in
+Permissive mode for certain configurations. If you can help create an
+SELinux policy for Rally, please contribute!
 
 More about docker: `https://www.docker.com/ <https://www.docker.com/>`_
