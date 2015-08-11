@@ -324,7 +324,7 @@ class NeutronScenario(scenario.OpenStackScenario):
     @base.atomic_action_timer("neutron.list_pools")
     def _list_v1_pools(self, **kwargs):
         """Return user lb pool list(v1)."""
-        return self.clients("neutron").list_pools()
+        return self.clients("neutron").list_pools(**kwargs)
 
     @base.atomic_action_timer("neutron.delete_pool")
     def _delete_v1_pool(self, pool):
