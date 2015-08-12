@@ -46,7 +46,9 @@ SAHARA_BENCHMARK_OPTS = [
                help="A timeout in seconds for a Job Execution to complete"),
     cfg.IntOpt("sahara_job_check_interval", default=5,
                deprecated_name="job_check_interval",
-               help="Job Execution status polling interval in seconds")
+               help="Job Execution status polling interval in seconds"),
+    cfg.IntOpt("sahara_workers_per_proxy", default=20,
+               help="Amount of workers one proxy should serve to.")
 ]
 
 benchmark_group = cfg.OptGroup(name="benchmark", title="benchmark options")
@@ -160,7 +162,8 @@ class SaharaScenario(scenario.OpenStackScenario):
                          "instances to be unreachable.")
                 return None
 
-    def _setup_floating_ip_pool(self, node_groups, floating_ip_pool):
+    def _setup_floating_ip_pool(self, node_groups, floating_ip_pool,
+                                enable_proxy):
         if consts.Service.NEUTRON in self.clients("services").values():
             LOG.debug("Neutron detected as networking backend.")
             floating_ip_pool_value = self._setup_neutron_floating_ip_pool(
@@ -173,8 +176,18 @@ class SaharaScenario(scenario.OpenStackScenario):
         if floating_ip_pool_value:
             LOG.debug("Using floating ip pool %s." % floating_ip_pool_value)
             # If the pool is set by any means assign it to all node groups.
-            for ng in node_groups:
-                ng["floating_ip_pool"] = floating_ip_pool_value
+            # If the proxy node feature is enabled, Master Node Group and
+            # Proxy Workers should have a floating ip pool set up
+
+            if enable_proxy:
+                proxy_groups = [x for x in node_groups
+                                if x["name"] in ("master-ng", "proxy-ng")]
+                for ng in proxy_groups:
+                    ng["is_proxy_gateway"] = True
+                    ng["floating_ip_pool"] = floating_ip_pool_value
+            else:
+                for ng in node_groups:
+                    ng["floating_ip_pool"] = floating_ip_pool_value
 
         return node_groups
 
@@ -230,6 +243,7 @@ class SaharaScenario(scenario.OpenStackScenario):
                         volumes_size=None, auto_security_group=None,
                         security_groups=None, node_configs=None,
                         cluster_configs=None, enable_anti_affinity=False,
+                        enable_proxy=False,
                         wait_active=True):
         """Create a cluster and wait until it becomes Active.
 
@@ -261,9 +275,18 @@ class SaharaScenario(scenario.OpenStackScenario):
                                 Cluster
         :param enable_anti_affinity: If set to true the vms will be scheduled
                                      one per compute node.
+        :param enable_proxy: Use Master Node of a Cluster as a Proxy node and
+                             do not assign floating ips to workers.
         :param wait_active: Wait until a Cluster gets int "Active" state
         :returns: created cluster
         """
+
+        if enable_proxy:
+            proxies_count = int(
+                workers_count / CONF.benchmark.sahara_workers_per_proxy)
+        else:
+            proxies_count = 0
+
         node_groups = [
             {
                 "name": "master-ng",
@@ -276,9 +299,18 @@ class SaharaScenario(scenario.OpenStackScenario):
                 "flavor_id": flavor_id,
                 "node_processes": sahara_consts.NODE_PROCESSES[plugin_name]
                 [hadoop_version]["worker"],
-                "count": workers_count
+                "count": workers_count - proxies_count
             }
         ]
+
+        if proxies_count:
+            node_groups.append({
+                "name": "proxy-ng",
+                "flavor_id": flavor_id,
+                "node_processes": sahara_consts.NODE_PROCESSES[plugin_name]
+                [hadoop_version]["worker"],
+                "count": proxies_count
+            })
 
         if "manager" in (sahara_consts.NODE_PROCESSES[plugin_name]
                          [hadoop_version]):
@@ -294,7 +326,8 @@ class SaharaScenario(scenario.OpenStackScenario):
             })
 
         node_groups = self._setup_floating_ip_pool(node_groups,
-                                                   floating_ip_pool)
+                                                   floating_ip_pool,
+                                                   enable_proxy)
 
         neutron_net_id = self._get_neutron_net_id()
 

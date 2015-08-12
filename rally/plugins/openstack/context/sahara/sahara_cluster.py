@@ -79,6 +79,9 @@ class SaharaCluster(context.Context):
             },
             "enable_anti_affinity": {
                 "type": "boolean"
+            },
+            "enable_proxy": {
+                "type": "boolean"
             }
         },
         "additionalProperties": False,
@@ -121,6 +124,7 @@ class SaharaCluster(context.Context):
                 cluster_configs=self.config.get("cluster_configs"),
                 enable_anti_affinity=self.config.get("enable_anti_affinity",
                                                      False),
+                enable_proxy=self.config.get("enable_proxy", False),
                 wait_active=False
             )
 
