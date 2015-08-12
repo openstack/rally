@@ -16,6 +16,7 @@
 import abc
 import copy
 import operator
+import os.path
 import re
 
 from rally import exceptions
@@ -343,7 +344,7 @@ class FileType(ResourceType):
 
     @classmethod
     def transform(cls, clients, resource_config):
-        """Returns content of the file by its path.
+        """Return content of the file by its path.
 
         :param clients: openstack admin client handles
         :param resource_config: path to file
@@ -351,7 +352,7 @@ class FileType(ResourceType):
         :returns: content of the file
         """
 
-        with open(resource_config, "r") as f:
+        with open(os.path.expanduser(resource_config), "r") as f:
             return f.read()
 
 
@@ -359,16 +360,17 @@ class FileTypeDict(ResourceType):
 
     @classmethod
     def transform(cls, clients, resource_config):
-        """Returns the dictionary of items with file path and file content.
+        """Return the dictionary of items with file path and file content.
 
         :param clients: openstack admin client handles
         :param resource_config: list of file paths
 
-        :return: dictionary {file_path: file_content, ...}
+        :returns: dictionary {file_path: file_content, ...}
         """
 
         file_type_dict = {}
         for file_path in resource_config:
+            file_path = os.path.expanduser(file_path)
             with open(file_path, "r") as f:
                 file_type_dict[file_path] = f.read()
 
