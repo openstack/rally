@@ -51,7 +51,6 @@ def _worker_process(queue, iteration_gen, timeout, rps, times,
     """
 
     pool = collections.deque()
-    start = time.time()
     sleep = 1.0 / rps
 
     runner._log_worker_info(times=times, rps=rps, timeout=timeout,
@@ -59,6 +58,8 @@ def _worker_process(queue, iteration_gen, timeout, rps, times,
 
     time.sleep(
         (sleep * info["processes_counter"]) / info["processes_to_start"])
+
+    start = time.time()
 
     i = 0
     while i < times and not aborted.is_set():
