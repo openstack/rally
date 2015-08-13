@@ -48,6 +48,11 @@ CONF.register_opts(EC2_BENCHMARK_OPTS, group=benchmark_group)
 class EC2Scenario(scenario.OpenStackScenario):
     """Base class for EC2 scenarios with basic atomic actions."""
 
+    @base.atomic_action_timer("ec2.list_servers")
+    def _list_servers(self):
+        """Returns user servers list."""
+        return self.clients("ec2").get_only_instances()
+
     @base.atomic_action_timer("ec2.boot_servers")
     def _boot_servers(self, image_id, flavor_name,
                       instance_num=1, **kwargs):

@@ -26,6 +26,17 @@ LOG = logging.getLogger(__name__)
 class EC2Servers(utils.EC2Scenario):
     """Benchmark scenarios for servers using EC2."""
 
+    @validation.required_services(consts.Service.EC2)
+    @validation.required_openstack(users=True)
+    @base.scenario(context={"cleanup": ["ec2"]})
+    def list_servers(self):
+        """List all servers.
+
+        This simple scenario tests the EC2 API list function by listing
+        all the servers.
+        """
+        self._list_servers()
+
     @types.set(image=types.EC2ImageResourceType,
                flavor=types.EC2FlavorResourceType)
     @validation.image_valid_on_flavor("flavor", "image")

@@ -35,6 +35,26 @@
         failure_rate:
           max: 0
 
+  EC2Servers.list_servers:
+    -
+      runner:
+        type: "constant"
+        times: 3
+        concurrency: 3
+      context:
+        users:
+          tenants: 3
+          users_per_tenant: 1
+        ec2_servers:
+          flavor:
+            name: "m1.tiny"
+          image:
+            name: {{image_name}}
+          servers_per_tenant: 2
+      sla:
+        failure_rate:
+          max: 0
+
   Quotas.nova_update_and_delete:
     -
       args:
