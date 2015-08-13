@@ -317,6 +317,9 @@ class UserGeneratorTestCase(test.TestCase):
         mock_keystone.wrap.return_value = wrapped_keystone
         task = {"uuid": "abcdef"}
 
+        endpoint = objects.Endpoint("foo_url", "foo", "foo_pass",
+                                    https_insecure=True,
+                                    https_cacert="cacert")
         config = {
             "config": {
                 "users": {
@@ -325,10 +328,11 @@ class UserGeneratorTestCase(test.TestCase):
                     "resource_management_workers": 1
                 }
             },
-            "admin": {"endpoint": mock.MagicMock()},
+            "admin": {"endpoint": endpoint},
             "task": task
         }
 
+        endpoint_dict = endpoint.to_dict(False)
         user_list = [mock.MagicMock(id="id_%d" % i)
                      for i in range(self.users_num)]
         wrapped_keystone.create_user.side_effect = user_list
@@ -346,6 +350,17 @@ class UserGeneratorTestCase(test.TestCase):
             for user in ctx.context["users"]:
                 self.assertEqual(set(["id", "endpoint", "tenant_id"]),
                                  set(user.keys()))
+
+                user_endpoint_dict = user["endpoint"].to_dict(False)
+
+                excluded_keys = ["auth_url", "username", "password",
+                                 "tenant_name", "region_name",
+                                 "project_domain_name",
+                                 "admin_domain_name",
+                                 "user_domain_name"]
+                for key in (set(endpoint_dict.keys()) - set(excluded_keys)):
+                    self.assertEqual(endpoint_dict[key],
+                                     user_endpoint_dict[key])
 
             tenants_ids = []
             for t in ctx.context["tenants"].keys():
