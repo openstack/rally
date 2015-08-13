@@ -70,40 +70,18 @@ class ChartTestCase(test.TestCase):
             chart._fix_atomic_actions({"atomic_actions": {"a": 5, "b": 6}}))
 
 
-class StackedAreaChartTestCase(test.TestCase):
-
-    class StackedAreaChart(charts.StackedAreaChart):
-        def _map_iteration_values(self, iteration):
-            return iteration["foo"].items()
-
-    def test_add_iteration_and_render(self):
-        self.assertRaises(TypeError, charts.StackedAreaChart,
-                          {"iterations_count": 42})
-        chart = self.StackedAreaChart({"iterations_count": 42})
-        self.assertIsInstance(chart, charts.Chart)
-        [chart.add_iteration({"foo": x}) for x in ({"a": 1.3, "b": 4.3},
-                                                   {"a": 2.4, "b": 5.4},
-                                                   {"a": 3.5, "b": 7.7})]
-        self.assertEqual([{"key": "a",
-                           "values": [[1, 1.3], [2, 2.4], [3, 3.5]]},
-                          {"key": "b",
-                           "values": [[1, 4.3], [2, 5.4], [3, 7.7]]}],
-                         sorted(chart.render(), key=lambda x: x["key"]))
-
-
 class MainStackedAreaChartTestCase(test.TestCase):
 
     def test_add_iteration_and_render(self):
         chart = charts.MainStackedAreaChart({"iterations_count": 3}, 10)
-        self.assertIsInstance(chart, charts.StackedAreaChart)
+        self.assertIsInstance(chart, charts.Chart)
         [chart.add_iteration(itr) for itr in (
             {"duration": 1.1, "idle_duration": 2.2, "error": None},
             {"error": True, "duration": 1.1, "idle_duration": 0.5},
             {"duration": 1.3, "idle_duration": 3.4, "error": None})]
-        expected = [
-            {"key": "duration", "values": [[1, 1.1], [2, 0], [3, 1.3]]},
-            {"key": "idle_duration", "values": [[1, 2.2], [2, 0], [3, 3.4]]},
-            {"key": "failed_duration", "values": [[1, 0], [2, 1.6], [3, 0]]}]
+        expected = [("duration", [[1, 1.1], [2, 0], [3, 1.3]]),
+                    ("idle_duration", [[1, 2.2], [2, 0], [3, 3.4]]),
+                    ("failed_duration", [[1, 0], [2, 1.6], [3, 0]])]
         self.assertEqual(expected, chart.render())
 
 
@@ -116,17 +94,14 @@ class AtomicStackedAreaChartTestCase(test.TestCase):
              "error": True, "duration": 40, "idle_duration": 2},
             {"atomic_actions": {"bar": 1.2},
              "error": True, "duration": 5.5, "idle_duration": 2.5})
-        expected = [
-            {"key": "bar", "values": [[1, 0], [2, 1.2], [3, 1.2]]},
-            {"key": "failed_duration", "values": [[1, 0], [2, 39.7],
-                                                  [3, 6.8]]},
-            {"key": "foo", "values": [[1, 1.1], [2, 1.1], [3, 0]]}]
+        expected = [("bar", [[1, 0], [2, 1.2], [3, 1.2]]),
+                    ("failed_duration", [[1, 0], [2, 39.7], [3, 6.8]]),
+                    ("foo", [[1, 1.1], [2, 1.1], [3, 0]])]
         chart = charts.AtomicStackedAreaChart(
             {"iterations_count": 3, "atomic": {"foo": {}, "bar": {}}}, 10)
-        self.assertIsInstance(chart, charts.StackedAreaChart)
+        self.assertIsInstance(chart, charts.Chart)
         [chart.add_iteration(iteration) for iteration in iterations]
-        self.assertEqual(expected,
-                         sorted(chart.render(), key=lambda x: x["key"]))
+        self.assertEqual(expected, sorted(chart.render()))
 
 
 class OutputStackedAreaChartTestCase(test.TestCase):
@@ -134,13 +109,12 @@ class OutputStackedAreaChartTestCase(test.TestCase):
     def test_add_iteration_and_render(self):
         chart = charts.OutputStackedAreaChart(
             {"iterations_count": 3, "output_names": ["foo", "bar"]}, 10)
-        self.assertIsInstance(chart, charts.StackedAreaChart)
+        self.assertIsInstance(chart, charts.Chart)
         [chart.add_iteration({"scenario_output": {"data": x}})
          for x in ({"foo": 1.1, "bar": 1.2}, {"foo": 1.3}, {"bar": 1.4})]
-        expected = [{"key": "bar", "values": [[1, 1.2], [2, 0], [3, 1.4]]},
-                    {"key": "foo", "values": [[1, 1.1], [2, 1.3], [3, 0]]}]
-        self.assertEqual(expected,
-                         sorted(chart.render(), key=lambda x: x["key"]))
+        expected = [("bar", [[1, 1.2], [2, 0], [3, 1.4]]),
+                    ("foo", [[1, 1.1], [2, 1.3], [3, 0]])]
+        self.assertEqual(expected, sorted(chart.render()))
 
 
 class AvgChartTestCase(test.TestCase):
@@ -156,9 +130,7 @@ class AvgChartTestCase(test.TestCase):
         [chart.add_iteration({"foo": x}) for x in ({"a": 1.3, "b": 4.3},
                                                    {"a": 2.4, "b": 5.4},
                                                    {"a": 3.5, "b": 7.7})]
-        self.assertEqual([{"key": "a", "values": 2.4},
-                          {"key": "b", "values": 5.8}],
-                         sorted(chart.render(), key=lambda x: x["key"]))
+        self.assertEqual([("a", 2.4), ("b", 5.8)], sorted(chart.render()))
 
 
 class AtomicAvgChartTestCase(test.TestCase):
@@ -169,9 +141,7 @@ class AtomicAvgChartTestCase(test.TestCase):
         self.assertIsInstance(chart, charts.AvgChart)
         [chart.add_iteration({"atomic_actions": costilius.OrderedDict(a)})
          for a in ([("foo", 2), ("bar", 5)], [("foo", 4)], [("bar", 7)])]
-        self.assertEqual([{"key": "bar", "values": 4.0},
-                          {"key": "foo", "values": 2.0}],
-                         sorted(chart.render(), key=lambda x: x["key"]))
+        self.assertEqual([("bar", 4.0), ("foo", 2.0)], sorted(chart.render()))
 
 
 @ddt.ddt

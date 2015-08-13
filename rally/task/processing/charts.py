@@ -74,15 +74,7 @@ class Chart(object):
         """Get values for processing, from given iteration."""
 
 
-class StackedAreaChart(Chart):
-    """Abstract class for generic stacked area."""
-
-    def render(self):
-        return [{"key": k, "values": v}
-                for k, v in super(StackedAreaChart, self).render()]
-
-
-class MainStackedAreaChart(StackedAreaChart):
+class MainStackedAreaChart(Chart):
 
     def _map_iteration_values(self, iteration):
         if iteration["error"]:
@@ -94,7 +86,7 @@ class MainStackedAreaChart(StackedAreaChart):
                 ("failed_duration", 0)]
 
 
-class AtomicStackedAreaChart(StackedAreaChart):
+class AtomicStackedAreaChart(Chart):
 
     def _map_iteration_values(self, iteration):
         iteration = self._fix_atomic_actions(iteration)
@@ -109,7 +101,7 @@ class AtomicStackedAreaChart(StackedAreaChart):
         return atomics
 
 
-class OutputStackedAreaChart(StackedAreaChart):
+class OutputStackedAreaChart(Chart):
 
     def _map_iteration_values(self, iteration):
         return [(name, iteration["scenario_output"]["data"].get(name, 0))
@@ -126,8 +118,7 @@ class AvgChart(Chart):
             self._data[name].add(value or 0)
 
     def render(self):
-        return [{"key": k, "values": v.result()}
-                for k, v in self._data.items()]
+        return [(k, v.result()) for k, v in self._data.items()]
 
 
 class AtomicAvgChart(AvgChart):
