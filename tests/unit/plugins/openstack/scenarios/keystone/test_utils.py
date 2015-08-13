@@ -285,6 +285,24 @@ class KeystoneScenarioTestCase(test.ScenarioTestCase):
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "keystone.update_user_password")
 
+    @mock.patch("rally.plugins.openstack.scenario.OpenStackScenario."
+                "admin_clients")
+    def test_update_user_password_v3(self,
+                                     mock_open_stack_scenario_admin_clients):
+        password = "pswd"
+        user = mock.MagicMock()
+        scenario = utils.KeystoneScenario()
+
+        type(mock_open_stack_scenario_admin_clients.return_value).version = (
+            mock.PropertyMock(return_value="v3"))
+        scenario._update_user_password(password=password, user_id=user.id)
+
+        mock_open_stack_scenario_admin_clients(
+            "keystone").users.update.assert_called_once_with(
+            user.id, password=password)
+        self._test_atomic_action_timer(scenario.atomic_actions(),
+                                       "keystone.update_user_password")
+
     def test_get_service_by_name(self):
         scenario = utils.KeystoneScenario()
         svc_foo, svc_bar = mock.Mock(), mock.Mock()

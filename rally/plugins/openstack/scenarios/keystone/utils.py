@@ -226,8 +226,11 @@ class KeystoneScenario(scenario.OpenStackScenario):
         :param user_id: id of the user
         :param password: new password
         """
-        self.admin_clients("keystone").users.update_password(user_id,
-                                                             password)
+        admin_clients = self.admin_clients("keystone")
+        if admin_clients.version in ["v3"]:
+            admin_clients.users.update(user_id, password=password)
+        else:
+            admin_clients.users.update_password(user_id, password)
 
     @base.atomic_action_timer("keystone.create_ec2creds")
     def _create_ec2credentials(self, user_id, tenant_id):
