@@ -362,6 +362,30 @@ class PreprocessTestCase(test.TestCase):
         self.assertEqual({"a": 20, "b": 20}, result)
 
 
+class FilePathOrUrlTypeTestCase(test.TestCase):
+
+    @mock.patch("rally.task.types.os.path.isfile")
+    @mock.patch("rally.task.types.requests")
+    def test_transform_file(self, mock_requests, mock_isfile):
+        mock_isfile.return_value = True
+        path = types.FilePathOrUrlType.transform(None, "fake_path")
+        self.assertEqual("fake_path", path)
+        mock_isfile.return_value = False
+        mock_requests.head.return_value = mock.Mock(status_code=500)
+        self.assertRaises(exceptions.InvalidScenarioArgument,
+                          types.FilePathOrUrlType.transform,
+                          None, "fake_path")
+        mock_requests.head.assert_called_once_with("fake_path")
+
+    @mock.patch("rally.task.types.os.path.isfile")
+    @mock.patch("rally.task.types.requests")
+    def test_transform_url(self, mock_requests, mock_isfile):
+        mock_isfile.return_value = False
+        mock_requests.head.return_value = mock.Mock(status_code=200)
+        path = types.FilePathOrUrlType.transform(None, "fake_url")
+        self.assertEqual("fake_url", path)
+
+
 class FileTypeTestCase(test.TestCase):
 
     @mock.patch("rally.task.types.open",
