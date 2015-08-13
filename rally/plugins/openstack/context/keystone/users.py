@@ -223,7 +223,9 @@ class UserGenerator(UserContextMixin, context.Context):
                 self.context["tenants"][tenant_id]["name"],
                 consts.EndpointPermission.USER, client.region_name,
                 project_domain_name=project_dom, user_domain_name=user_dom,
-                endpoint_type=self.endpoint.endpoint_type)
+                endpoint_type=self.endpoint.endpoint_type,
+                https_insecure=self.endpoint.insecure,
+                https_cacert=self.endpoint.cacert)
             users.append({"id": user.id,
                           "endpoint": user_endpoint,
                           "tenant_id": tenant_id})
