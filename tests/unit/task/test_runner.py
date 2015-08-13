@@ -21,7 +21,7 @@ import mock
 
 from rally.plugins.common.runners import serial
 from rally.task import runner
-from rally.task.scenarios import base as scenario_base
+from rally.task import scenario
 from tests.unit import fakes
 from tests.unit import test
 
@@ -186,7 +186,7 @@ class ScenarioRunnerTestCase(test.TestCase):
         self.assertEqual(list(runner_obj.result_queue), [])
 
         cls_name, method_name = scenario_name.split(".", 1)
-        cls = scenario_base.Scenario.get_by_name(cls_name)
+        cls = scenario.Scenario.get_by_name(cls_name)
 
         expected_config_kwargs = {"image": 1, "flavor": 1}
         runner_obj._run_scenario.assert_called_once_with(

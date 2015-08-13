@@ -15,7 +15,7 @@
 # under the License.
 
 from rally.plugins.openstack import scenario
-from rally.task.scenarios import base
+from rally.task import atomic
 
 
 class DesignateScenario(scenario.OpenStackScenario):
@@ -23,7 +23,7 @@ class DesignateScenario(scenario.OpenStackScenario):
 
     RESOURCE_NAME_PREFIX = "rally_"
 
-    @base.atomic_action_timer("designate.create_domain")
+    @atomic.action_timer("designate.create_domain")
     def _create_domain(self, domain=None):
         """Create domain.
 
@@ -36,12 +36,12 @@ class DesignateScenario(scenario.OpenStackScenario):
         domain.setdefault("name", "%s.name." % self._generate_random_name())
         return self.clients("designate").domains.create(domain)
 
-    @base.atomic_action_timer("designate.list_domains")
+    @atomic.action_timer("designate.list_domains")
     def _list_domains(self):
         """Return user domain list."""
         return self.clients("designate").domains.list()
 
-    @base.atomic_action_timer("designate.delete_domain")
+    @atomic.action_timer("designate.delete_domain")
     def _delete_domain(self, domain_id):
         """Delete designate zone.
 
@@ -67,12 +67,12 @@ class DesignateScenario(scenario.OpenStackScenario):
         client = self.clients("designate")
 
         if atomic_action:
-            with base.AtomicAction(self, "designate.create_record"):
+            with atomic.ActionTimer(self, "designate.create_record"):
                 return client.records.create(domain["id"], record)
 
         return client.records.create(domain["id"], record)
 
-    @base.atomic_action_timer("designate.list_records")
+    @atomic.action_timer("designate.list_records")
     def _list_records(self, domain_id):
         """List domain records.
 
@@ -92,12 +92,12 @@ class DesignateScenario(scenario.OpenStackScenario):
         client = self.clients("designate")
 
         if atomic_action:
-            with base.AtomicAction(self, "designate.delete_record"):
+            with atomic.ActionTimer(self, "designate.delete_record"):
                 client.records.delete(domain_id, record_id)
         else:
             client.records.delete(domain_id, record_id)
 
-    @base.atomic_action_timer("designate.create_server")
+    @atomic.action_timer("designate.create_server")
     def _create_server(self, server=None):
         """Create server.
 
@@ -109,12 +109,12 @@ class DesignateScenario(scenario.OpenStackScenario):
         server.setdefault("name", "name.%s." % self._generate_random_name())
         return self.admin_clients("designate").servers.create(server)
 
-    @base.atomic_action_timer("designate.list_servers")
+    @atomic.action_timer("designate.list_servers")
     def _list_servers(self):
         """Return user server list."""
         return self.admin_clients("designate").servers.list()
 
-    @base.atomic_action_timer("designate.delete_server")
+    @atomic.action_timer("designate.delete_server")
     def _delete_server(self, server_id):
         """Delete Server.
 

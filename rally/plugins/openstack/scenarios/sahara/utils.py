@@ -25,7 +25,7 @@ from rally import consts
 from rally import exceptions
 from rally.plugins.openstack import scenario
 from rally.plugins.openstack.scenarios.sahara import consts as sahara_consts
-from rally.task.scenarios import base
+from rally.task import atomic
 from rally.task import utils
 
 LOG = logging.getLogger(__name__)
@@ -53,12 +53,12 @@ class SaharaScenario(scenario.OpenStackScenario):
 
     RESOURCE_NAME_LENGTH = 20
 
-    @base.atomic_action_timer("sahara.list_node_group_templates")
+    @atomic.action_timer("sahara.list_node_group_templates")
     def _list_node_group_templates(self):
         """Return user Node Group Templates list."""
         return self.clients("sahara").node_group_templates.list()
 
-    @base.atomic_action_timer("sahara.create_master_node_group_template")
+    @atomic.action_timer("sahara.create_master_node_group_template")
     def _create_master_node_group_template(self, flavor_id, plugin_name,
                                            hadoop_version):
         """Create a master Node Group Template with a random name.
@@ -79,7 +79,7 @@ class SaharaScenario(scenario.OpenStackScenario):
             node_processes=sahara_consts.NODE_PROCESSES[plugin_name]
             [hadoop_version]["master"])
 
-    @base.atomic_action_timer("sahara.create_worker_node_group_template")
+    @atomic.action_timer("sahara.create_worker_node_group_template")
     def _create_worker_node_group_template(self, flavor_id, plugin_name,
                                            hadoop_version):
         """Create a worker Node Group Template with a random name.
@@ -100,7 +100,7 @@ class SaharaScenario(scenario.OpenStackScenario):
             node_processes=sahara_consts.NODE_PROCESSES[plugin_name]
             [hadoop_version]["worker"])
 
-    @base.atomic_action_timer("sahara.delete_node_group_template")
+    @atomic.action_timer("sahara.delete_node_group_template")
     def _delete_node_group_template(self, node_group):
         """Delete a Node Group Template by id.
 
@@ -218,7 +218,7 @@ class SaharaScenario(scenario.OpenStackScenario):
         }
         return replication_config
 
-    @base.atomic_action_timer("sahara.launch_cluster")
+    @atomic.action_timer("sahara.launch_cluster")
     def _launch_cluster(self, plugin_name, hadoop_version, flavor_id,
                         image_id, workers_count, floating_ip_pool=None,
                         volumes_per_node=None,
@@ -363,7 +363,7 @@ class SaharaScenario(scenario.OpenStackScenario):
 
         self._wait_active(cluster)
 
-    @base.atomic_action_timer("sahara.scale_up")
+    @atomic.action_timer("sahara.scale_up")
     def _scale_cluster_up(self, cluster, delta):
         """Add a given number of worker nodes to the cluster.
 
@@ -373,7 +373,7 @@ class SaharaScenario(scenario.OpenStackScenario):
         """
         self._scale_cluster(cluster, delta)
 
-    @base.atomic_action_timer("sahara.scale_down")
+    @atomic.action_timer("sahara.scale_down")
     def _scale_cluster_down(self, cluster, delta):
         """Remove a given number of worker nodes from the cluster.
 
@@ -383,7 +383,7 @@ class SaharaScenario(scenario.OpenStackScenario):
         """
         self._scale_cluster(cluster, delta)
 
-    @base.atomic_action_timer("sahara.delete_cluster")
+    @atomic.action_timer("sahara.delete_cluster")
     def _delete_cluster(self, cluster):
         """Delete cluster.
 
@@ -450,7 +450,7 @@ class SaharaScenario(scenario.OpenStackScenario):
         :param job_idx: The index of a job in a sequence
 
         """
-        @base.atomic_action_timer("sahara.job_execution_%s" % job_idx)
+        @atomic.action_timer("sahara.job_execution_%s" % job_idx)
         def run(self):
             job_execution = self.clients("sahara").job_executions.create(
                 job_id=job_id,

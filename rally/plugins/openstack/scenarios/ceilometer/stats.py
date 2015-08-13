@@ -13,8 +13,8 @@
 #    under the License.
 
 from rally import consts
+from rally.plugins.openstack import scenario
 from rally.plugins.openstack.scenarios.ceilometer import utils
-from rally.task.scenarios import base
 from rally.task import validation
 
 
@@ -23,7 +23,7 @@ class CeilometerStats(utils.CeilometerScenario):
 
     @validation.required_services(consts.Service.CEILOMETER)
     @validation.required_openstack(users=True)
-    @base.scenario(context={"cleanup": ["ceilometer"]})
+    @scenario.configure(context={"cleanup": ["ceilometer"]})
     def create_meter_and_get_stats(self, **kwargs):
         """Create a meter and fetch its statistics.
 

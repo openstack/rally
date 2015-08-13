@@ -16,7 +16,6 @@
 from rally import consts
 from rally.plugins.openstack import scenario
 from rally.plugins.openstack.scenarios.tempest import utils
-from rally.task.scenarios import base
 from rally.task import validation
 
 
@@ -25,7 +24,7 @@ class TempestScenario(scenario.OpenStackScenario):
 
     @validation.tempest_tests_exists()
     @validation.required_openstack(admin=True)
-    @base.scenario(context={"tempest": {}})
+    @scenario.configure(context={"tempest": {}})
     @utils.tempest_log_wrapper
     def single_test(self, test_name, log_file, tempest_conf=None):
         """Launch a single Tempest test by its name.
@@ -42,7 +41,7 @@ class TempestScenario(scenario.OpenStackScenario):
                                      tempest_conf=tempest_conf)
 
     @validation.required_openstack(admin=True)
-    @base.scenario(context={"tempest": {}})
+    @scenario.configure(context={"tempest": {}})
     @utils.tempest_log_wrapper
     def all(self, log_file, tempest_conf=None):
         """Launch all discovered Tempest tests by their names.
@@ -56,7 +55,7 @@ class TempestScenario(scenario.OpenStackScenario):
 
     @validation.tempest_set_exists()
     @validation.required_openstack(admin=True)
-    @base.scenario(context={"tempest": {}})
+    @scenario.configure(context={"tempest": {}})
     @utils.tempest_log_wrapper
     def set(self, set_name, log_file, tempest_conf=None):
         """Launch all Tempest tests from a given set.
@@ -78,7 +77,7 @@ class TempestScenario(scenario.OpenStackScenario):
 
     @validation.tempest_tests_exists()
     @validation.required_openstack(admin=True)
-    @base.scenario(context={"tempest": {}})
+    @scenario.configure(context={"tempest": {}})
     @utils.tempest_log_wrapper
     def list_of_tests(self, test_names, log_file, tempest_conf=None):
         """Launch all Tempest tests from a given list of their names.
@@ -92,7 +91,7 @@ class TempestScenario(scenario.OpenStackScenario):
                                      tempest_conf=tempest_conf)
 
     @validation.required_openstack(admin=True)
-    @base.scenario(context={"tempest": {}})
+    @scenario.configure(context={"tempest": {}})
     @utils.tempest_log_wrapper
     def specific_regex(self, regex, log_file, tempest_conf=None):
         """Launch Tempest tests whose names match a given regular expression.

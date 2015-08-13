@@ -14,13 +14,13 @@
 #    under the License.
 
 from rally.plugins.openstack import scenario
-from rally.task.scenarios import base
+from rally.task import atomic
 
 
 class SwiftScenario(scenario.OpenStackScenario):
     """Base class for Swift scenarios with basic atomic actions."""
 
-    @base.atomic_action_timer("swift.list_containers")
+    @atomic.action_timer("swift.list_containers")
     def _list_containers(self, full_listing=True, **kwargs):
         """Return list of containers.
 
@@ -53,7 +53,7 @@ class SwiftScenario(scenario.OpenStackScenario):
                 prefix="rally_container_")
 
         if atomic_action:
-            with base.AtomicAction(self, "swift.create_container"):
+            with atomic.ActionTimer(self, "swift.create_container"):
                 self.clients("swift").put_container(container_name, **kwargs)
         else:
             self.clients("swift").put_container(container_name, **kwargs)
@@ -68,7 +68,7 @@ class SwiftScenario(scenario.OpenStackScenario):
         :param kwargs: dict, other optional parameters to delete_container
         """
         if atomic_action:
-            with base.AtomicAction(self, "swift.delete_container"):
+            with atomic.ActionTimer(self, "swift.delete_container"):
                 self.clients("swift").delete_container(container_name,
                                                        **kwargs)
         else:
@@ -88,7 +88,7 @@ class SwiftScenario(scenario.OpenStackScenario):
         :returns: tuple, (dict of response headers, a list of objects)
         """
         if atomic_action:
-            with base.AtomicAction(self, "swift.list_objects"):
+            with atomic.ActionTimer(self, "swift.list_objects"):
                 return self.clients("swift").get_container(
                     container_name, full_listing=full_listing,
                     **kwargs)
@@ -114,7 +114,7 @@ class SwiftScenario(scenario.OpenStackScenario):
             object_name = self._generate_random_name(prefix="rally_object_")
 
         if atomic_action:
-            with base.AtomicAction(self, "swift.upload_object"):
+            with atomic.ActionTimer(self, "swift.upload_object"):
                 return (self.clients("swift").put_object(container_name,
                                                          object_name, content,
                                                          **kwargs),
@@ -138,7 +138,7 @@ class SwiftScenario(scenario.OpenStackScenario):
         :returns: tuple, (dict of response headers, the object's contents)
         """
         if atomic_action:
-            with base.AtomicAction(self, "swift.download_object"):
+            with atomic.ActionTimer(self, "swift.download_object"):
                 return self.clients("swift").get_object(container_name,
                                                         object_name, **kwargs)
 
@@ -156,7 +156,7 @@ class SwiftScenario(scenario.OpenStackScenario):
         :param kwargs: dict, other optional parameters to delete_object
         """
         if atomic_action:
-            with base.AtomicAction(self, "swift.delete_object"):
+            with atomic.ActionTimer(self, "swift.delete_object"):
                 self.clients("swift").delete_object(container_name,
                                                     object_name, **kwargs)
         else:

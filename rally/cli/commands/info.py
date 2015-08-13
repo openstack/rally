@@ -58,7 +58,7 @@ from rally.deployment import engine
 from rally.deployment.serverprovider import provider
 from rally import exceptions
 from rally import plugins
-from rally.task.scenarios import base as scenario_base
+from rally.task import scenario
 from rally.task import sla
 
 
@@ -117,10 +117,9 @@ class InfoCommands(object):
     def BenchmarkScenarios(self):
         """Get information about benchmark scenarios available in Rally."""
         def scenarios_filter(scenario_cls):
-            return any(scenario_base.Scenario.is_scenario(scenario_cls, m)
+            return any(scenario.Scenario.is_scenario(scenario_cls, m)
                        for m in dir(scenario_cls))
-        scenarios = self._get_descriptions(scenario_base.Scenario,
-                                           scenarios_filter)
+        scenarios = self._get_descriptions(scenario.Scenario, scenarios_filter)
         info = (self._make_header("Rally - Benchmark scenarios") +
                 "\n\n"
                 "Benchmark scenarios are what Rally actually uses to test "
@@ -268,7 +267,7 @@ class InfoCommands(object):
 
     def _find_substitution(self, query):
         max_distance = min(3, len(query) / 4)
-        scenarios = scenario_base.Scenario.list_benchmark_scenarios()
+        scenarios = scenario.Scenario.list_benchmark_scenarios()
         scenario_groups = list(set(s.split(".")[0] for s in scenarios))
         scenario_methods = list(set(s.split(".")[1] for s in scenarios))
         sla_info = [cls.get_name() for cls in sla.SLA.get_all()]
@@ -289,8 +288,8 @@ class InfoCommands(object):
 
     def _get_scenario_group_info(self, query):
         try:
-            scenario_group = scenario_base.Scenario.get_by_name(query)
-            if not any(scenario_base.Scenario.is_scenario(scenario_group, m)
+            scenario_group = scenario.Scenario.get_by_name(query)
+            if not any(scenario.Scenario.is_scenario(scenario_group, m)
                        for m in dir(scenario_group)):
                 return None
             info = self._make_header("%s (benchmark scenario group)" %
@@ -302,8 +301,8 @@ class InfoCommands(object):
             for scenario_name in scenarios:
                 cls, method_name = scenario_name.split(".")
                 if hasattr(scenario_group, method_name):
-                    scenario = getattr(scenario_group, method_name)
-                    doc = utils.parse_docstring(scenario.__doc__)
+                    scenario_inst = getattr(scenario_group, method_name)
+                    doc = utils.parse_docstring(scenario_inst.__doc__)
                     descr = doc["short_description"] or ""
                     descriptions.append((scenario_name, descr))
             info += self._compose_table("Benchmark scenarios", descriptions)
@@ -313,22 +312,22 @@ class InfoCommands(object):
 
     def _get_scenario_info(self, query):
         try:
-            scenario = scenario_base.Scenario.get_scenario_by_name(query)
-            scenario_group_name = utils.get_method_class(scenario).get_name()
+            scenario_inst = scenario.Scenario.get_scenario_by_name(query)
+            scenario_gr_name = utils.get_method_class(scenario_inst).get_name()
             header = ("%(scenario_group)s.%(scenario_name)s "
                       "(benchmark scenario)" %
-                      {"scenario_group": scenario_group_name,
-                       "scenario_name": scenario.__name__})
+                      {"scenario_group": scenario_gr_name,
+                       "scenario_name": scenario_inst.__name__})
             info = self._make_header(header)
             info += "\n\n"
-            doc = utils.parse_docstring(scenario.__doc__)
+            doc = utils.parse_docstring(scenario_inst.__doc__)
             if not doc["short_description"]:
                 return None
             info += doc["short_description"] + "\n\n"
             if doc["long_description"]:
                 info += doc["long_description"] + "\n\n"
             if doc["params"]:
-                args = inspect.getargspec(scenario)
+                args = inspect.getargspec(scenario_inst)
                 if args.defaults:
                     default_values = dict(zip(args.args[-len(args.defaults):],
                                               args.defaults))

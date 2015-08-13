@@ -18,8 +18,8 @@ import json
 from rally.common import utils
 from rally import consts
 from rally import exceptions
+from rally.plugins.openstack import scenario
 from rally.plugins.openstack.scenarios.vm import utils as vm_utils
-from rally.task.scenarios import base
 from rally.task import types
 from rally.task import validation
 
@@ -42,8 +42,8 @@ class VMTasks(vm_utils.VMScenario):
     @validation.external_network_exists("floating_network")
     @validation.required_services(consts.Service.NOVA, consts.Service.CINDER)
     @validation.required_openstack(users=True)
-    @base.scenario(context={"cleanup": ["nova", "cinder"],
-                            "keypair": {}, "allow_ssh": {}})
+    @scenario.configure(context={"cleanup": ["nova", "cinder"],
+                                 "keypair": {}, "allow_ssh": {}})
     def boot_runcommand_delete(self, image, flavor,
                                username,
                                password=None,

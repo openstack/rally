@@ -25,7 +25,7 @@ from rally.common.plugin import plugin
 from rally.common import utils as rutils
 from rally import consts
 from rally.task import context
-from rally.task.scenarios import base as scenario_base
+from rally.task import scenario
 from rally.task import types
 from rally.task import utils
 
@@ -54,13 +54,13 @@ def _run_scenario_once(args):
              {"task": context_obj["task"]["uuid"], "iteration": iteration})
 
     context_obj["iteration"] = iteration
-    scenario = cls(context_obj)
+    scenario_inst = cls(context_obj)
 
     error = []
     scenario_output = {"errors": "", "data": {}}
     try:
         with rutils.Timer() as timer:
-            scenario_output = getattr(scenario,
+            scenario_output = getattr(scenario_inst,
                                       method_name)(**kwargs) or scenario_output
     except Exception as e:
         error = utils.format_exc(e)
@@ -72,12 +72,12 @@ def _run_scenario_once(args):
                  {"task": context_obj["task"]["uuid"], "iteration": iteration,
                   "status": status})
 
-        return {"duration": timer.duration() - scenario.idle_duration(),
+        return {"duration": timer.duration() - scenario_inst.idle_duration(),
                 "timestamp": timer.timestamp(),
-                "idle_duration": scenario.idle_duration(),
+                "idle_duration": scenario_inst.idle_duration(),
                 "error": error,
                 "scenario_output": scenario_output,
-                "atomic_actions": scenario.atomic_actions()}
+                "atomic_actions": scenario_inst.atomic_actions()}
 
 
 def _worker_thread(queue, args):
@@ -200,7 +200,7 @@ class ScenarioRunner(plugin.Plugin):
 
     def run(self, name, context, args):
         cls_name, method_name = name.split(".", 1)
-        cls = scenario_base.Scenario.get_by_name(cls_name)
+        cls = scenario.Scenario.get_by_name(cls_name)
 
         self.aborted.clear()
 

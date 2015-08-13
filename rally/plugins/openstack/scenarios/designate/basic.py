@@ -15,8 +15,9 @@
 # under the License.
 
 from rally import consts
+from rally.plugins.openstack import scenario
 from rally.plugins.openstack.scenarios.designate import utils
-from rally.task.scenarios import base
+from rally.task import atomic
 from rally.task import validation
 
 
@@ -25,7 +26,7 @@ class DesignateBasic(utils.DesignateScenario):
 
     @validation.required_services(consts.Service.DESIGNATE)
     @validation.required_openstack(users=True)
-    @base.scenario(context={"cleanup": ["designate"]})
+    @scenario.configure(context={"cleanup": ["designate"]})
     def create_and_list_domains(self):
         """Create a domain and list all domains.
 
@@ -42,7 +43,7 @@ class DesignateBasic(utils.DesignateScenario):
 
     @validation.required_services(consts.Service.DESIGNATE)
     @validation.required_openstack(users=True)
-    @base.scenario(context={"cleanup": ["designate"]})
+    @scenario.configure(context={"cleanup": ["designate"]})
     def list_domains(self):
         """List Designate domains.
 
@@ -58,7 +59,7 @@ class DesignateBasic(utils.DesignateScenario):
 
     @validation.required_services(consts.Service.DESIGNATE)
     @validation.required_openstack(users=True)
-    @base.scenario(context={"cleanup": ["designate"]})
+    @scenario.configure(context={"cleanup": ["designate"]})
     def create_and_delete_domain(self):
         """Add and then delete a domain.
 
@@ -70,7 +71,7 @@ class DesignateBasic(utils.DesignateScenario):
 
     @validation.required_services(consts.Service.DESIGNATE)
     @validation.required_openstack(users=True)
-    @base.scenario(context={"cleanup": ["designate"]})
+    @scenario.configure(context={"cleanup": ["designate"]})
     def create_and_delete_records(self, records_per_domain=5):
         """Add and then delete records.
 
@@ -84,20 +85,20 @@ class DesignateBasic(utils.DesignateScenario):
         records = []
 
         key = "designate.create_%s_records" % records_per_domain
-        with base.AtomicAction(self, key):
+        with atomic.ActionTimer(self, key):
             for i in range(records_per_domain):
                 record = self._create_record(domain, atomic_action=False)
                 records.append(record)
 
         key = "designate.delete_%s_records" % records_per_domain
-        with base.AtomicAction(self, key):
+        with atomic.ActionTimer(self, key):
             for record in records:
                 self._delete_record(
                     domain["id"], record["id"], atomic_action=False)
 
     @validation.required_services(consts.Service.DESIGNATE)
     @validation.required_openstack(users=True)
-    @base.scenario(context={"cleanup": ["designate"]})
+    @scenario.configure(context={"cleanup": ["designate"]})
     def list_records(self, domain_id):
         """List Designate records.
 
@@ -115,7 +116,7 @@ class DesignateBasic(utils.DesignateScenario):
 
     @validation.required_services(consts.Service.DESIGNATE)
     @validation.required_openstack(users=True)
-    @base.scenario(context={"cleanup": ["designate"]})
+    @scenario.configure(context={"cleanup": ["designate"]})
     def create_and_list_records(self, records_per_domain=5):
         """Add and then list records.
 
@@ -130,7 +131,7 @@ class DesignateBasic(utils.DesignateScenario):
         domain = self._create_domain()
 
         key = "designate.create_%s_records" % records_per_domain
-        with base.AtomicAction(self, key):
+        with atomic.ActionTimer(self, key):
             for i in range(records_per_domain):
                 self._create_record(domain, atomic_action=False)
 
@@ -138,7 +139,7 @@ class DesignateBasic(utils.DesignateScenario):
 
     @validation.required_services(consts.Service.DESIGNATE)
     @validation.required_openstack(admin=True)
-    @base.scenario(context={"cleanup": ["designate"]})
+    @scenario.configure(context={"cleanup": ["designate"]})
     def create_and_list_servers(self):
         """Create a Designate server and list all servers.
 
@@ -153,7 +154,7 @@ class DesignateBasic(utils.DesignateScenario):
 
     @validation.required_services(consts.Service.DESIGNATE)
     @validation.required_openstack(admin=True)
-    @base.scenario(context={"cleanup": ["designate"]})
+    @scenario.configure(context={"cleanup": ["designate"]})
     def create_and_delete_server(self):
         """Add and then delete a server.
 
@@ -165,7 +166,7 @@ class DesignateBasic(utils.DesignateScenario):
 
     @validation.required_services(consts.Service.DESIGNATE)
     @validation.required_openstack(admin=True)
-    @base.scenario(context={"cleanup": ["designate"]})
+    @scenario.configure(context={"cleanup": ["designate"]})
     def list_servers(self):
         """List Designate servers.
 

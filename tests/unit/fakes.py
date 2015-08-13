@@ -31,7 +31,7 @@ from rally.common import objects
 from rally.common import utils as rally_utils
 from rally import consts
 from rally.task import context
-from rally.task.scenarios import base
+from rally.task import scenario
 
 
 def generate_uuid():
@@ -1464,7 +1464,7 @@ class FakeRunner(object):
     }
 
 
-class FakeScenario(base.Scenario):
+class FakeScenario(scenario.Scenario):
 
     def idle_time(self):
         return 0

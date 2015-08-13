@@ -14,7 +14,7 @@
 #    under the License.
 
 from rally.plugins.openstack.scenarios.authenticate import authenticate
-from rally.task.scenarios import base
+from rally.task import atomic
 from tests.unit import test
 
 
@@ -25,40 +25,45 @@ AUTHENTICATE_MODULE = (
 class AuthenticateTestCase(test.ScenarioTestCase):
 
     def test_keystone(self):
-        scenario = authenticate.Authenticate()
-        scenario.keystone()
+        scenario_inst = authenticate.Authenticate()
+        scenario_inst.keystone()
         self.assertTrue(self.client_created("keystone"))
 
     def test_validate_glance(self):
-        scenario = authenticate.Authenticate()
+        scenario_inst = authenticate.Authenticate()
         image_name = "__intentionally_non_existent_image___"
-        with base.AtomicAction(scenario, "authenticate.validate_glance"):
-            scenario.validate_glance(5)
+        with atomic.ActionTimer(scenario_inst,
+                                "authenticate.validate_glance"):
+            scenario_inst.validate_glance(5)
         self.clients("glance").images.list.assert_called_with(name=image_name)
         self.assertEqual(self.clients("glance").images.list.call_count, 5)
 
     def test_validate_nova(self):
-        scenario = authenticate.Authenticate()
-        with base.AtomicAction(scenario, "authenticate.validate_nova"):
-            scenario.validate_nova(5)
+        scenario_inst = authenticate.Authenticate()
+        with atomic.ActionTimer(scenario_inst,
+                                "authenticate.validate_nova"):
+            scenario_inst.validate_nova(5)
         self.assertEqual(self.clients("nova").flavors.list.call_count, 5)
 
     def test_validate_cinder(self):
-        scenario = authenticate.Authenticate()
-        with base.AtomicAction(scenario, "authenticate.validate_cinder"):
-            scenario.validate_cinder(5)
+        scenario_inst = authenticate.Authenticate()
+        with atomic.ActionTimer(scenario_inst,
+                                "authenticate.validate_cinder"):
+            scenario_inst.validate_cinder(5)
         self.assertEqual(self.clients("cinder").volume_types.list.call_count,
                          5)
 
     def test_validate_neutron(self):
-        scenario = authenticate.Authenticate()
-        with base.AtomicAction(scenario, "authenticate.validate_neutron"):
-            scenario.validate_neutron(5)
+        scenario_inst = authenticate.Authenticate()
+        with atomic.ActionTimer(scenario_inst,
+                                "authenticate.validate_neutron"):
+            scenario_inst.validate_neutron(5)
         self.assertEqual(self.clients("neutron").list_networks.call_count, 5)
 
     def test_validate_heat(self):
-        scenario = authenticate.Authenticate()
-        with base.AtomicAction(scenario, "authenticate.validate_heat"):
-            scenario.validate_heat(5)
+        scenario_inst = authenticate.Authenticate()
+        with atomic.ActionTimer(scenario_inst,
+                                "authenticate.validate_heat"):
+            scenario_inst.validate_heat(5)
         self.clients("heat").stacks.list.assert_called_with(limit=0)
         self.assertEqual(self.clients("heat").stacks.list.call_count, 5)

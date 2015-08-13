@@ -21,7 +21,7 @@ import re
 
 from rally import exceptions
 from rally import osclients
-from rally.task.scenarios import base
+from rally.task import scenario
 
 
 def set(**kwargs):
@@ -50,8 +50,9 @@ def preprocess(cls, method_name, context, args):
                              and resource configuration
 
     """
-    preprocessors = base.Scenario.meta(cls, method_name=method_name,
-                                       attr_name="preprocessors", default={})
+    preprocessors = scenario.Scenario.meta(cls, method_name=method_name,
+                                           attr_name="preprocessors",
+                                           default={})
     clients = osclients.Clients(context["admin"]["endpoint"])
     processed_args = copy.deepcopy(args)
 

@@ -20,7 +20,7 @@ from oslo_config import cfg
 
 from rally import exceptions
 from rally.plugins.openstack import scenario
-from rally.task.scenarios import base
+from rally.task import atomic
 from rally.task import utils as bench_utils
 
 CINDER_BENCHMARK_OPTS = [
@@ -54,13 +54,13 @@ class CinderScenario(scenario.OpenStackScenario):
 
     RESOURCE_NAME_PREFIX = "rally_volume_"
 
-    @base.atomic_action_timer("cinder.list_volumes")
+    @atomic.action_timer("cinder.list_volumes")
     def _list_volumes(self, detailed=True):
         """Returns user volumes list."""
 
         return self.clients("cinder").volumes.list(detailed)
 
-    @base.atomic_action_timer("cinder.list_snapshots")
+    @atomic.action_timer("cinder.list_snapshots")
     def _list_snapshots(self, detailed=True):
         """Returns user snapshots list."""
 
@@ -75,7 +75,7 @@ class CinderScenario(scenario.OpenStackScenario):
         :returns: A list of keys that were set
         """
         key = "cinder.set_%s_metadatas_%s_times" % (set_size, sets)
-        with base.AtomicAction(self, key):
+        with atomic.ActionTimer(self, key):
             keys = []
             for i in range(sets):
                 metadata = {}
@@ -110,12 +110,12 @@ class CinderScenario(scenario.OpenStackScenario):
         random.shuffle(keys)
         action_name = "cinder.delete_%s_metadatas_%s_times" % (delete_size,
                                                                deletes)
-        with base.AtomicAction(self, action_name):
+        with atomic.ActionTimer(self, action_name):
             for i in range(deletes):
                 to_del = keys[i * delete_size:(i + 1) * delete_size]
                 self.clients("cinder").volumes.delete_metadata(volume, to_del)
 
-    @base.atomic_action_timer("cinder.create_volume")
+    @atomic.action_timer("cinder.create_volume")
     def _create_volume(self, size, **kwargs):
         """Create one volume.
 
@@ -148,7 +148,7 @@ class CinderScenario(scenario.OpenStackScenario):
         )
         return volume
 
-    @base.atomic_action_timer("cinder.delete_volume")
+    @atomic.action_timer("cinder.delete_volume")
     def _delete_volume(self, volume):
         """Delete the given volume.
 
@@ -164,7 +164,7 @@ class CinderScenario(scenario.OpenStackScenario):
             check_interval=CONF.benchmark.cinder_volume_delete_poll_interval
         )
 
-    @base.atomic_action_timer("cinder.extend_volume")
+    @atomic.action_timer("cinder.extend_volume")
     def _extend_volume(self, volume, new_size):
         """Extend the given volume.
 
@@ -190,7 +190,7 @@ class CinderScenario(scenario.OpenStackScenario):
             check_interval=CONF.benchmark.cinder_volume_create_poll_interval
         )
 
-    @base.atomic_action_timer("cinder.upload_volume_to_image")
+    @atomic.action_timer("cinder.upload_volume_to_image")
     def _upload_volume_to_image(self, volume, force=False,
                                 container_format="bare", disk_format="raw"):
         """Upload the given volume to image.
@@ -230,7 +230,7 @@ class CinderScenario(scenario.OpenStackScenario):
 
         return image
 
-    @base.atomic_action_timer("cinder.create_snapshot")
+    @atomic.action_timer("cinder.create_snapshot")
     def _create_snapshot(self, volume_id, force=False, **kwargs):
         """Create one snapshot.
 
@@ -258,7 +258,7 @@ class CinderScenario(scenario.OpenStackScenario):
         )
         return snapshot
 
-    @base.atomic_action_timer("cinder.delete_snapshot")
+    @atomic.action_timer("cinder.delete_snapshot")
     def _delete_snapshot(self, snapshot):
         """Delete the given snapshot.
 
@@ -274,7 +274,7 @@ class CinderScenario(scenario.OpenStackScenario):
             check_interval=CONF.benchmark.cinder_volume_delete_poll_interval
         )
 
-    @base.atomic_action_timer("cinder.create_backup")
+    @atomic.action_timer("cinder.create_backup")
     def _create_backup(self, volume_id, **kwargs):
         """Create a volume backup of the given volume.
 
@@ -290,7 +290,7 @@ class CinderScenario(scenario.OpenStackScenario):
             check_interval=CONF.benchmark.cinder_volume_create_poll_interval
         )
 
-    @base.atomic_action_timer("cinder.delete_backup")
+    @atomic.action_timer("cinder.delete_backup")
     def _delete_backup(self, backup):
         """Delete the given backup.
 
@@ -306,7 +306,7 @@ class CinderScenario(scenario.OpenStackScenario):
             check_interval=CONF.benchmark.cinder_volume_delete_poll_interval
         )
 
-    @base.atomic_action_timer("cinder.restore_backup")
+    @atomic.action_timer("cinder.restore_backup")
     def _restore_backup(self, backup_id, volume_id=None):
         """Restore the given backup.
 
@@ -323,7 +323,7 @@ class CinderScenario(scenario.OpenStackScenario):
             check_interval=CONF.benchmark.cinder_volume_create_poll_interval
         )
 
-    @base.atomic_action_timer("cinder.list_backups")
+    @atomic.action_timer("cinder.list_backups")
     def _list_backups(self, detailed=True):
         """Return user volume backups list.
 

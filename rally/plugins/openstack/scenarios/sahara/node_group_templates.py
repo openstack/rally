@@ -14,8 +14,8 @@
 #    under the License.
 
 from rally import consts
+from rally.plugins.openstack import scenario
 from rally.plugins.openstack.scenarios.sahara import utils
-from rally.task.scenarios import base
 from rally.task import types
 from rally.task import validation
 
@@ -27,7 +27,7 @@ class SaharaNodeGroupTemplates(utils.SaharaScenario):
     @validation.flavor_exists("flavor")
     @validation.required_services(consts.Service.SAHARA)
     @validation.required_openstack(users=True)
-    @base.scenario(context={"cleanup": ["sahara"]})
+    @scenario.configure(context={"cleanup": ["sahara"]})
     def create_and_list_node_group_templates(self, flavor,
                                              plugin_name="vanilla",
                                              hadoop_version="1.2.1"):
@@ -62,7 +62,7 @@ class SaharaNodeGroupTemplates(utils.SaharaScenario):
     @validation.flavor_exists("flavor")
     @validation.required_services(consts.Service.SAHARA)
     @validation.required_openstack(users=True)
-    @base.scenario(context={"cleanup": ["sahara"]})
+    @scenario.configure(context={"cleanup": ["sahara"]})
     def create_delete_node_group_templates(self, flavor,
                                            plugin_name="vanilla",
                                            hadoop_version="1.2.1"):

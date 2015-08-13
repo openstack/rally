@@ -31,7 +31,7 @@ from rally.task import functional
 LOG = logging.getLogger(__name__)
 
 
-def scenario(context=None):
+def configure(context=None):
     """Make from plain python method benchmark.
 
        It sets 2 attributes to function:

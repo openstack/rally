@@ -14,9 +14,9 @@
 #    under the License.
 
 from rally import consts
+from rally.plugins.openstack import scenario
 from rally.plugins.openstack.scenarios.glance import utils
 from rally.plugins.openstack.scenarios.nova import utils as nova_utils
-from rally.task.scenarios import base
 from rally.task import types
 from rally.task import validation
 
@@ -29,7 +29,7 @@ class GlanceImages(utils.GlanceScenario, nova_utils.NovaScenario):
 
     @validation.required_services(consts.Service.GLANCE)
     @validation.required_openstack(users=True)
-    @base.scenario(context={"cleanup": ["glance"]})
+    @scenario.configure(context={"cleanup": ["glance"]})
     def create_and_list_image(self, container_format,
                               image_location, disk_format, **kwargs):
         """Add an image and then list all images.
@@ -57,7 +57,7 @@ class GlanceImages(utils.GlanceScenario, nova_utils.NovaScenario):
 
     @validation.required_services(consts.Service.GLANCE)
     @validation.required_openstack(users=True)
-    @base.scenario(context={"cleanup": ["glance"]})
+    @scenario.configure(context={"cleanup": ["glance"]})
     def list_images(self):
         """List all images.
 
@@ -73,7 +73,7 @@ class GlanceImages(utils.GlanceScenario, nova_utils.NovaScenario):
 
     @validation.required_services(consts.Service.GLANCE)
     @validation.required_openstack(users=True)
-    @base.scenario(context={"cleanup": ["glance"]})
+    @scenario.configure(context={"cleanup": ["glance"]})
     def create_and_delete_image(self, container_format,
                                 image_location, disk_format, **kwargs):
         """Add and then delete an image.
@@ -95,7 +95,7 @@ class GlanceImages(utils.GlanceScenario, nova_utils.NovaScenario):
     @validation.flavor_exists("flavor")
     @validation.required_services(consts.Service.GLANCE, consts.Service.NOVA)
     @validation.required_openstack(users=True)
-    @base.scenario(context={"cleanup": ["glance", "nova"]})
+    @scenario.configure(context={"cleanup": ["glance", "nova"]})
     def create_image_and_boot_instances(self, container_format,
                                         image_location, disk_format,
                                         flavor, number_instances,

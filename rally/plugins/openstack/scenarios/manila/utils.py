@@ -18,7 +18,7 @@ import time
 from oslo_config import cfg
 
 from rally.plugins.openstack import scenario
-from rally.task.scenarios import base
+from rally.task import atomic
 from rally.task import utils
 
 
@@ -56,7 +56,7 @@ CONF.register_opts(MANILA_BENCHMARK_OPTS, group=benchmark_group)
 class ManilaScenario(scenario.OpenStackScenario):
     """Base class for Manila scenarios with basic atomic actions."""
 
-    @base.atomic_action_timer("manila.create_share")
+    @atomic.action_timer("manila.create_share")
     def _create_share(self, share_proto, size=1, **kwargs):
         """Create a share.
 
@@ -87,7 +87,7 @@ class ManilaScenario(scenario.OpenStackScenario):
         )
         return share
 
-    @base.atomic_action_timer("manila.delete_share")
+    @atomic.action_timer("manila.delete_share")
     def _delete_share(self, share):
         """Delete the given share.
 
@@ -101,7 +101,7 @@ class ManilaScenario(scenario.OpenStackScenario):
             timeout=CONF.benchmark.manila_share_delete_timeout,
             check_interval=CONF.benchmark.manila_share_delete_poll_interval)
 
-    @base.atomic_action_timer("manila.list_shares")
+    @atomic.action_timer("manila.list_shares")
     def _list_shares(self, detailed=True, search_opts=None):
         """Returns user shares list.
 
@@ -113,7 +113,7 @@ class ManilaScenario(scenario.OpenStackScenario):
         return self.clients("manila").shares.list(
             detailed=detailed, search_opts=search_opts)
 
-    @base.atomic_action_timer("manila.create_share_network")
+    @atomic.action_timer("manila.create_share_network")
     def _create_share_network(self, neutron_net_id=None,
                               neutron_subnet_id=None,
                               nova_net_id=None, name=None, description=None):
@@ -135,7 +135,7 @@ class ManilaScenario(scenario.OpenStackScenario):
             description=description)
         return share_network
 
-    @base.atomic_action_timer("manila.delete_share_network")
+    @atomic.action_timer("manila.delete_share_network")
     def _delete_share_network(self, share_network):
         """Delete share network.
 
@@ -148,7 +148,7 @@ class ManilaScenario(scenario.OpenStackScenario):
             timeout=CONF.benchmark.manila_share_delete_timeout,
             check_interval=CONF.benchmark.manila_share_delete_poll_interval)
 
-    @base.atomic_action_timer("manila.list_share_networks")
+    @atomic.action_timer("manila.list_share_networks")
     def _list_share_networks(self, detailed=True, search_opts=None):
         """List share networks.
 
@@ -162,7 +162,7 @@ class ManilaScenario(scenario.OpenStackScenario):
             detailed=detailed, search_opts=search_opts)
         return share_networks
 
-    @base.atomic_action_timer("manila.list_share_servers")
+    @atomic.action_timer("manila.list_share_servers")
     def _list_share_servers(self, search_opts=None):
         """List share servers. Admin only.
 
@@ -174,7 +174,7 @@ class ManilaScenario(scenario.OpenStackScenario):
             search_opts=search_opts)
         return share_servers
 
-    @base.atomic_action_timer("manila.create_security_service")
+    @atomic.action_timer("manila.create_security_service")
     def _create_security_service(self, security_service_type, dns_ip=None,
                                  server=None, domain=None, user=None,
                                  password=None, name=None, description=None):
@@ -206,7 +206,7 @@ class ManilaScenario(scenario.OpenStackScenario):
             description=description)
         return security_service
 
-    @base.atomic_action_timer("manila.delete_security_service")
+    @atomic.action_timer("manila.delete_security_service")
     def _delete_security_service(self, security_service):
         """Delete security service.
 
@@ -219,7 +219,7 @@ class ManilaScenario(scenario.OpenStackScenario):
             timeout=CONF.benchmark.manila_share_delete_timeout,
             check_interval=CONF.benchmark.manila_share_delete_poll_interval)
 
-    @base.atomic_action_timer("manila.add_security_service_to_share_network")
+    @atomic.action_timer("manila.add_security_service_to_share_network")
     def _add_security_service_to_share_network(self, share_network,
                                                security_service):
         """Associate given security service with a share network.

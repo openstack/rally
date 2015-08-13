@@ -14,8 +14,8 @@
 
 from rally.common import log as logging
 from rally import consts
+from rally.plugins.openstack import scenario
 from rally.plugins.openstack.scenarios.ec2 import utils
-from rally.task.scenarios import base
 from rally.task import types
 from rally.task import validation
 
@@ -28,7 +28,7 @@ class EC2Servers(utils.EC2Scenario):
 
     @validation.required_services(consts.Service.EC2)
     @validation.required_openstack(users=True)
-    @base.scenario(context={"cleanup": ["ec2"]})
+    @scenario.configure(context={"cleanup": ["ec2"]})
     def list_servers(self):
         """List all servers.
 
@@ -42,7 +42,7 @@ class EC2Servers(utils.EC2Scenario):
     @validation.image_valid_on_flavor("flavor", "image")
     @validation.required_services(consts.Service.EC2)
     @validation.required_openstack(users=True)
-    @base.scenario(context={"cleanup": ["ec2"]})
+    @scenario.configure(context={"cleanup": ["ec2"]})
     def boot_server(self, image, flavor, **kwargs):
         """Boot a server.
 

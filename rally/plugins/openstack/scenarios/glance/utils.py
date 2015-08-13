@@ -19,7 +19,7 @@ import time
 from oslo_config import cfg
 
 from rally.plugins.openstack import scenario
-from rally.task.scenarios import base
+from rally.task import atomic
 from rally.task import utils
 
 
@@ -53,12 +53,12 @@ CONF.register_opts(GLANCE_BENCHMARK_OPTS, group=benchmark_group)
 class GlanceScenario(scenario.OpenStackScenario):
     """Base class for Glance scenarios with basic atomic actions."""
 
-    @base.atomic_action_timer("glance.list_images")
+    @atomic.action_timer("glance.list_images")
     def _list_images(self):
         """Returns user images list."""
         return list(self.clients("glance").images.list())
 
-    @base.atomic_action_timer("glance.create_image")
+    @atomic.action_timer("glance.create_image")
     def _create_image(self, container_format, image_location, disk_format,
                       name=None, prefix=None, length=None, **kwargs):
         """Create a new image.
@@ -110,7 +110,7 @@ class GlanceScenario(scenario.OpenStackScenario):
 
         return image
 
-    @base.atomic_action_timer("glance.delete_image")
+    @atomic.action_timer("glance.delete_image")
     def _delete_image(self, image):
         """Deletes given image.
 

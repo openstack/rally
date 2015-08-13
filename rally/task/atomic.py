@@ -1,3 +1,4 @@
+# Copyright 2015: Mirantis Inc.
 # All Rights Reserved.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -12,17 +13,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from rally.plugins.openstack import scenario
-from rally.plugins.openstack.scenarios.fuel import utils
-from rally.task import validation
 
+from rally.task import scenario
 
-class FuelEnvironments(utils.FuelScenario):
-    """Benchmark scenarios for Fuel environments."""
-
-    @validation.required_clients("fuel", admin=True)
-    @validation.required_openstack(admin=True)
-    @scenario.configure()
-    def list_environments(self):
-        """List Fuel environments."""
-        self._list_environments()
+# TODO(boris-42): In future we will move code from scenario to atomic action
+#                 to simplify migration to new code we will make just links for
+#                 now
+ActionTimer = scenario.AtomicAction
+action_timer = scenario.atomic_action_timer

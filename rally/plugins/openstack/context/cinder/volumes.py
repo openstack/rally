@@ -19,7 +19,7 @@ from rally import consts
 from rally.plugins.openstack.context.cleanup import manager as resource_manager
 from rally.plugins.openstack.scenarios.cinder import utils as cinder_utils
 from rally.task import context
-from rally.task.scenarios import base as scenario_base
+from rally.task import scenario
 
 
 LOG = logging.getLogger(__name__)
@@ -60,7 +60,7 @@ class VolumeGenerator(context.Context):
             self.context["tenants"][tenant_id].setdefault("volumes", [])
             cinder_util = cinder_utils.CinderScenario({"user": user})
             for i in range(volumes_per_tenant):
-                rnd_name = scenario_base.Scenario._generate_random_name(
+                rnd_name = scenario.Scenario._generate_random_name(
                     prefix="ctx_rally_volume_")
                 vol = cinder_util._create_volume(size, display_name=rnd_name)
                 self.context["tenants"][tenant_id]["volumes"].append(vol._info)

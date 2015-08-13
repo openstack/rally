@@ -18,7 +18,7 @@ import uuid
 from oslo_config import cfg
 
 from rally.plugins.openstack import scenario
-from rally.task.scenarios import base
+from rally.task import atomic
 from rally.task import utils
 
 CONF = cfg.CONF
@@ -41,12 +41,12 @@ CONF.register_opts(MURANO_TIMEOUT_OPTS, group=benchmark_group)
 class MuranoScenario(scenario.OpenStackScenario):
     """Base class for Murano scenarios with basic atomic actions."""
 
-    @base.atomic_action_timer("murano.list_environments")
+    @atomic.action_timer("murano.list_environments")
     def _list_environments(self):
         """Return environments list."""
         return self.clients("murano").environments.list()
 
-    @base.atomic_action_timer("murano.create_environment")
+    @atomic.action_timer("murano.create_environment")
     def _create_environment(self, env_name=None):
         """Create environment.
 
@@ -57,7 +57,7 @@ class MuranoScenario(scenario.OpenStackScenario):
         env_name = env_name or self._generate_random_name()
         return self.clients("murano").environments.create({"name": env_name})
 
-    @base.atomic_action_timer("murano.delete_environment")
+    @atomic.action_timer("murano.delete_environment")
     def _delete_environment(self, environment):
         """Delete given environment.
 
@@ -73,7 +73,7 @@ class MuranoScenario(scenario.OpenStackScenario):
             check_interval=CONF.benchmark.delete_environment_check_interval
         )
 
-    @base.atomic_action_timer("murano.create_session")
+    @atomic.action_timer("murano.create_session")
     def _create_session(self, environment_id):
         """Create session for environment with specific id
 
@@ -101,7 +101,7 @@ class MuranoScenario(scenario.OpenStackScenario):
                 "name": self._generate_random_name("rally_")}
 
         if atomic_action:
-            with base.AtomicAction(self, "murano.create_service"):
+            with atomic.ActionTimer(self, "murano.create_service"):
                 return self.clients("murano").services.post(
                     environment_id=environment.id, path="/", data=data,
                     session_id=session.id)
@@ -110,7 +110,7 @@ class MuranoScenario(scenario.OpenStackScenario):
                 environment_id=environment.id, path="/", data=data,
                 session_id=session.id)
 
-    @base.atomic_action_timer("murano.deploy_environment")
+    @atomic.action_timer("murano.deploy_environment")
     def _deploy_environment(self, environment, session):
         """Deploy environment.
 

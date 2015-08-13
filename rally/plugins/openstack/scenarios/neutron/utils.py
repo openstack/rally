@@ -17,7 +17,7 @@ from rally.common.i18n import _
 from rally.common import log as logging
 from rally.plugins.openstack import scenario
 from rally.plugins.openstack.wrappers import network as network_wrapper
-from rally.task.scenarios import base
+from rally.task import atomic
 
 LOG = logging.getLogger(__name__)
 
@@ -62,7 +62,7 @@ class NeutronScenario(scenario.OpenStackScenario):
                          "id": list(resource.values())[0]["id"],
                          "name": kwargs["name"]})
 
-    @base.atomic_action_timer("neutron.create_network")
+    @atomic.action_timer("neutron.create_network")
     def _create_network(self, network_create_args):
         """Create neutron network.
 
@@ -73,12 +73,12 @@ class NeutronScenario(scenario.OpenStackScenario):
         return self.clients("neutron").create_network(
             {"network": network_create_args})
 
-    @base.atomic_action_timer("neutron.list_networks")
+    @atomic.action_timer("neutron.list_networks")
     def _list_networks(self):
         """Return user networks list."""
         return self.clients("neutron").list_networks()["networks"]
 
-    @base.atomic_action_timer("neutron.update_network")
+    @atomic.action_timer("neutron.update_network")
     def _update_network(self, network, network_update_args):
         """Update the network.
 
@@ -93,7 +93,7 @@ class NeutronScenario(scenario.OpenStackScenario):
         return self.clients("neutron").update_network(
             network["network"]["id"], body)
 
-    @base.atomic_action_timer("neutron.delete_network")
+    @atomic.action_timer("neutron.delete_network")
     def _delete_network(self, network):
         """Delete neutron network.
 
@@ -101,7 +101,7 @@ class NeutronScenario(scenario.OpenStackScenario):
         """
         self.clients("neutron").delete_network(network["id"])
 
-    @base.atomic_action_timer("neutron.create_subnet")
+    @atomic.action_timer("neutron.create_subnet")
     def _create_subnet(self, network, subnet_create_args, start_cidr=None):
         """Create neutron subnet.
 
@@ -124,12 +124,12 @@ class NeutronScenario(scenario.OpenStackScenario):
         return self.clients("neutron").create_subnet(
             {"subnet": subnet_create_args})
 
-    @base.atomic_action_timer("neutron.list_subnets")
+    @atomic.action_timer("neutron.list_subnets")
     def _list_subnets(self):
         """Returns user subnetworks list."""
         return self.clients("neutron").list_subnets()["subnets"]
 
-    @base.atomic_action_timer("neutron.update_subnet")
+    @atomic.action_timer("neutron.update_subnet")
     def _update_subnet(self, subnet, subnet_update_args):
         """Update the neutron subnet.
 
@@ -144,7 +144,7 @@ class NeutronScenario(scenario.OpenStackScenario):
         return self.clients("neutron").update_subnet(
             subnet["subnet"]["id"], body)
 
-    @base.atomic_action_timer("neutron.delete_subnet")
+    @atomic.action_timer("neutron.delete_subnet")
     def _delete_subnet(self, subnet):
         """Delete neutron subnet
 
@@ -152,7 +152,7 @@ class NeutronScenario(scenario.OpenStackScenario):
         """
         self.clients("neutron").delete_subnet(subnet["subnet"]["id"])
 
-    @base.atomic_action_timer("neutron.create_router")
+    @atomic.action_timer("neutron.create_router")
     def _create_router(self, router_create_args, external_gw=False):
         """Create neutron router.
 
@@ -174,12 +174,12 @@ class NeutronScenario(scenario.OpenStackScenario):
         return self.clients("neutron").create_router(
             {"router": router_create_args})
 
-    @base.atomic_action_timer("neutron.list_routers")
+    @atomic.action_timer("neutron.list_routers")
     def _list_routers(self):
         """Returns user routers list."""
         return self.clients("neutron").list_routers()["routers"]
 
-    @base.atomic_action_timer("neutron.delete_router")
+    @atomic.action_timer("neutron.delete_router")
     def _delete_router(self, router):
         """Delete neutron router
 
@@ -187,7 +187,7 @@ class NeutronScenario(scenario.OpenStackScenario):
         """
         self.clients("neutron").delete_router(router["router"]["id"])
 
-    @base.atomic_action_timer("neutron.update_router")
+    @atomic.action_timer("neutron.update_router")
     def _update_router(self, router, router_update_args):
         """Update the neutron router.
 
@@ -202,7 +202,7 @@ class NeutronScenario(scenario.OpenStackScenario):
         return self.clients("neutron").update_router(
             router["router"]["id"], body)
 
-    @base.atomic_action_timer("neutron.create_port")
+    @atomic.action_timer("neutron.create_port")
     def _create_port(self, network, port_create_args):
         """Create neutron port.
 
@@ -215,12 +215,12 @@ class NeutronScenario(scenario.OpenStackScenario):
             "name", self._generate_random_name("rally_port_"))
         return self.clients("neutron").create_port({"port": port_create_args})
 
-    @base.atomic_action_timer("neutron.list_ports")
+    @atomic.action_timer("neutron.list_ports")
     def _list_ports(self):
         """Return user ports list."""
         return self.clients("neutron").list_ports()["ports"]
 
-    @base.atomic_action_timer("neutron.update_port")
+    @atomic.action_timer("neutron.update_port")
     def _update_port(self, port, port_update_args):
         """Update the neutron port.
 
@@ -234,7 +234,7 @@ class NeutronScenario(scenario.OpenStackScenario):
         body = {"port": port_update_args}
         return self.clients("neutron").update_port(port["port"]["id"], body)
 
-    @base.atomic_action_timer("neutron.delete_port")
+    @atomic.action_timer("neutron.delete_port")
     def _delete_port(self, port):
         """Delete neutron port.
 
@@ -264,7 +264,7 @@ class NeutronScenario(scenario.OpenStackScenario):
             subnets.append(subnet)
         return network, subnets
 
-    @base.atomic_action_timer("neutron.add_interface_router")
+    @atomic.action_timer("neutron.add_interface_router")
     def _add_interface_router(self, subnet, router):
         """Connect subnet to router.
 
@@ -274,7 +274,7 @@ class NeutronScenario(scenario.OpenStackScenario):
         self.clients("neutron").add_interface_router(
             router["id"], {"subnet_id": subnet["id"]})
 
-    @base.atomic_action_timer("neutron.remove_interface_router")
+    @atomic.action_timer("neutron.remove_interface_router")
     def _remove_interface_router(self, subnet, router):
         """Remove subnet from router
 
@@ -299,7 +299,7 @@ class NeutronScenario(scenario.OpenStackScenario):
                 "subnet_id": subnet_id}
         args.update(pool_create_args)
         if atomic_action:
-            with base.AtomicAction(self, "neutron.create_pool"):
+            with atomic.ActionTimer(self, "neutron.create_pool"):
                 return self.clients("neutron").create_pool({"pool": args})
         return self.clients("neutron").create_pool({"pool": args})
 
@@ -314,19 +314,19 @@ class NeutronScenario(scenario.OpenStackScenario):
         pools = []
         for net in networks:
             subnets.extend(net.get("subnets", []))
-        with base.AtomicAction(self, "neutron.create_%s_pools" %
-                               len(subnets)):
+        with atomic.ActionTimer(self, "neutron.create_%s_pools" %
+                                len(subnets)):
             for subnet_id in subnets:
                 pools.append(self._create_lb_pool(
                     subnet_id, atomic_action=False, **pool_create_args))
         return pools
 
-    @base.atomic_action_timer("neutron.list_pools")
+    @atomic.action_timer("neutron.list_pools")
     def _list_v1_pools(self, **kwargs):
         """Return user lb pool list(v1)."""
         return self.clients("neutron").list_pools(**kwargs)
 
-    @base.atomic_action_timer("neutron.delete_pool")
+    @atomic.action_timer("neutron.delete_pool")
     def _delete_v1_pool(self, pool):
         """Delete neutron pool.
 
@@ -334,7 +334,7 @@ class NeutronScenario(scenario.OpenStackScenario):
         """
         self.clients("neutron").delete_pool(pool["id"])
 
-    @base.atomic_action_timer("neutron.update_pool")
+    @atomic.action_timer("neutron.update_pool")
     def _update_v1_pool(self, pool, **pool_update_args):
         """Update pool.
 

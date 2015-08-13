@@ -13,8 +13,8 @@
 #    under the License.
 
 from rally import consts
+from rally.plugins.openstack import scenario
 from rally.plugins.openstack.scenarios.ceilometer import utils as ceiloutils
-from rally.task.scenarios import base
 from rally.task import validation
 
 
@@ -23,7 +23,7 @@ class CeilometerAlarms(ceiloutils.CeilometerScenario):
 
     @validation.required_services(consts.Service.CEILOMETER)
     @validation.required_openstack(users=True)
-    @base.scenario(context={"cleanup": ["ceilometer"]})
+    @scenario.configure(context={"cleanup": ["ceilometer"]})
     def create_alarm(self, meter_name, threshold, **kwargs):
         """Create an alarm.
 
@@ -40,7 +40,7 @@ class CeilometerAlarms(ceiloutils.CeilometerScenario):
 
     @validation.required_services(consts.Service.CEILOMETER)
     @validation.required_openstack(users=True)
-    @base.scenario()
+    @scenario.configure()
     def list_alarms(self):
         """Fetch all alarms.
 
@@ -50,7 +50,7 @@ class CeilometerAlarms(ceiloutils.CeilometerScenario):
 
     @validation.required_services(consts.Service.CEILOMETER)
     @validation.required_openstack(users=True)
-    @base.scenario(context={"cleanup": ["ceilometer"]})
+    @scenario.configure(context={"cleanup": ["ceilometer"]})
     def create_and_list_alarm(self, meter_name, threshold, **kwargs):
         """Create and get the newly created alarm.
 
@@ -70,7 +70,7 @@ class CeilometerAlarms(ceiloutils.CeilometerScenario):
 
     @validation.required_services(consts.Service.CEILOMETER)
     @validation.required_openstack(users=True)
-    @base.scenario(context={"cleanup": ["ceilometer"]})
+    @scenario.configure(context={"cleanup": ["ceilometer"]})
     def create_and_update_alarm(self, meter_name, threshold, **kwargs):
         """Create and update the newly created alarm.
 
@@ -90,7 +90,7 @@ class CeilometerAlarms(ceiloutils.CeilometerScenario):
 
     @validation.required_services(consts.Service.CEILOMETER)
     @validation.required_openstack(users=True)
-    @base.scenario(context={"cleanup": ["ceilometer"]})
+    @scenario.configure(context={"cleanup": ["ceilometer"]})
     def create_and_delete_alarm(self, meter_name, threshold, **kwargs):
         """Create and delete the newly created alarm.
 
@@ -109,7 +109,7 @@ class CeilometerAlarms(ceiloutils.CeilometerScenario):
 
     @validation.required_services(consts.Service.CEILOMETER)
     @validation.required_openstack(users=True)
-    @base.scenario(context={"cleanup": ["ceilometer"]})
+    @scenario.configure(context={"cleanup": ["ceilometer"]})
     def create_alarm_and_get_history(self, meter_name, threshold, state,
                                      timeout=60, **kwargs):
         """Create an alarm, get and set the state and get the alarm history.

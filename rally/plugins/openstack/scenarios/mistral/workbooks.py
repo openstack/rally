@@ -14,8 +14,8 @@
 #    under the License.
 
 from rally import consts
+from rally.plugins.openstack import scenario
 from rally.plugins.openstack.scenarios.mistral import utils
-from rally.task.scenarios import base
 from rally.task import types
 from rally.task import validation
 
@@ -26,7 +26,7 @@ class MistralWorkbooks(utils.MistralScenario):
     @validation.required_clients("mistral")
     @validation.required_openstack(users=True)
     @validation.required_services(consts.Service.MISTRAL)
-    @base.scenario()
+    @scenario.configure()
     def list_workbooks(self):
         """Scenario test mistral workbook-list command.
 
@@ -41,7 +41,7 @@ class MistralWorkbooks(utils.MistralScenario):
     @validation.required_clients("mistral")
     @validation.required_openstack(users=True)
     @validation.required_services(consts.Service.MISTRAL)
-    @base.scenario(context={"cleanup": ["mistral"]})
+    @scenario.configure(context={"cleanup": ["mistral"]})
     def create_workbook(self, definition, do_delete=False):
         """Scenario tests workbook creation and deletion.
 

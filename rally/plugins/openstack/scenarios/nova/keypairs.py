@@ -14,8 +14,8 @@
 #    under the License.
 
 from rally import consts
+from rally.plugins.openstack import scenario
 from rally.plugins.openstack.scenarios.nova import utils
-from rally.task.scenarios import base
 from rally.task import types
 from rally.task import validation
 
@@ -25,7 +25,7 @@ class NovaKeypair(utils.NovaScenario):
 
     @validation.required_services(consts.Service.NOVA)
     @validation.required_openstack(users=True)
-    @base.scenario(context={"cleanup": ["nova"]})
+    @scenario.configure(context={"cleanup": ["nova"]})
     def create_and_list_keypairs(self, **kwargs):
         """Create a keypair with random name and list keypairs.
 
@@ -39,7 +39,7 @@ class NovaKeypair(utils.NovaScenario):
 
     @validation.required_services(consts.Service.NOVA)
     @validation.required_openstack(users=True)
-    @base.scenario(context={"cleanup": ["nova"]})
+    @scenario.configure(context={"cleanup": ["nova"]})
     def create_and_delete_keypair(self, **kwargs):
         """Create a keypair with random name and delete keypair.
 
@@ -56,7 +56,7 @@ class NovaKeypair(utils.NovaScenario):
     @validation.image_valid_on_flavor("flavor", "image")
     @validation.required_services(consts.Service.NOVA)
     @validation.required_openstack(users=True)
-    @base.scenario(context={"cleanup": ["nova"]})
+    @scenario.configure(context={"cleanup": ["nova"]})
     def boot_and_delete_server_with_keypair(self, image, flavor,
                                             **kwargs):
         """Boot and delete server with keypair.

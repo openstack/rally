@@ -14,8 +14,8 @@
 #    under the License.
 
 from rally.common import utils
+from rally.plugins.openstack import scenario
 from rally.plugins.openstack.scenarios.keystone import utils as kutils
-from rally.task.scenarios import base
 from rally.task import validation
 
 
@@ -24,7 +24,7 @@ class KeystoneBasic(kutils.KeystoneScenario):
 
     @validation.number("name_length", minval=10)
     @validation.required_openstack(admin=True)
-    @base.scenario(context={"admin_cleanup": ["keystone"]})
+    @scenario.configure(context={"admin_cleanup": ["keystone"]})
     def create_user(self, name_length=10, **kwargs):
         """Create a keystone user with random name.
 
@@ -36,7 +36,7 @@ class KeystoneBasic(kutils.KeystoneScenario):
 
     @validation.number("name_length", minval=10)
     @validation.required_openstack(admin=True)
-    @base.scenario(context={"admin_cleanup": ["keystone"]})
+    @scenario.configure(context={"admin_cleanup": ["keystone"]})
     def create_delete_user(self, name_length=10, **kwargs):
         """Create a keystone user with random name and then delete it.
 
@@ -48,7 +48,7 @@ class KeystoneBasic(kutils.KeystoneScenario):
         self._resource_delete(user)
 
     @validation.required_openstack(admin=True)
-    @base.scenario(context={"admin_cleanup": ["keystone"]})
+    @scenario.configure(context={"admin_cleanup": ["keystone"]})
     def create_user_set_enabled_and_delete(self, enabled=True, **kwargs):
         """Create a keystone user, enable or disable it, and delete it.
 
@@ -63,7 +63,7 @@ class KeystoneBasic(kutils.KeystoneScenario):
 
     @validation.number("name_length", minval=10)
     @validation.required_openstack(admin=True)
-    @base.scenario(context={"admin_cleanup": ["keystone"]})
+    @scenario.configure(context={"admin_cleanup": ["keystone"]})
     def create_tenant(self, name_length=10, **kwargs):
         """Create a keystone tenant with random name.
 
@@ -75,7 +75,7 @@ class KeystoneBasic(kutils.KeystoneScenario):
     @validation.number("name_length", minval=10)
     @validation.number("users_per_tenant", minval=1)
     @validation.required_openstack(admin=True)
-    @base.scenario(context={"admin_cleanup": ["keystone"]})
+    @scenario.configure(context={"admin_cleanup": ["keystone"]})
     def create_tenant_with_users(self, users_per_tenant, name_length=10,
                                  **kwargs):
         """Create a keystone tenant and several users belonging to it.
@@ -91,7 +91,7 @@ class KeystoneBasic(kutils.KeystoneScenario):
 
     @validation.number("name_length", minval=10)
     @validation.required_openstack(admin=True)
-    @base.scenario(context={"admin_cleanup": ["keystone"]})
+    @scenario.configure(context={"admin_cleanup": ["keystone"]})
     def create_and_list_users(self, name_length=10, **kwargs):
         """Create a keystone user with random name and list all users.
 
@@ -104,7 +104,7 @@ class KeystoneBasic(kutils.KeystoneScenario):
 
     @validation.number("name_length", minval=10)
     @validation.required_openstack(admin=True)
-    @base.scenario(context={"admin_cleanup": ["keystone"]})
+    @scenario.configure(context={"admin_cleanup": ["keystone"]})
     def create_and_list_tenants(self, name_length=10, **kwargs):
         """Create a keystone tenant with random name and list all tenants.
 
@@ -115,7 +115,7 @@ class KeystoneBasic(kutils.KeystoneScenario):
         self._list_tenants()
 
     @validation.required_openstack(admin=True, users=True)
-    @base.scenario(context={"admin_cleanup": ["keystone"]})
+    @scenario.configure(context={"admin_cleanup": ["keystone"]})
     def add_and_remove_user_role(self):
         """Create a user role add to a user and disassociate."""
         tenant_id = self.context["tenant"]["id"]
@@ -125,14 +125,14 @@ class KeystoneBasic(kutils.KeystoneScenario):
         self._role_remove(user_id, role, tenant_id)
 
     @validation.required_openstack(admin=True)
-    @base.scenario(context={"admin_cleanup": ["keystone"]})
+    @scenario.configure(context={"admin_cleanup": ["keystone"]})
     def create_and_delete_role(self):
         """Create a user role and delete it."""
         role = self._role_create()
         self._resource_delete(role)
 
     @validation.required_openstack(admin=True, users=True)
-    @base.scenario(context={"admin_cleanup": ["keystone"]})
+    @scenario.configure(context={"admin_cleanup": ["keystone"]})
     def create_add_and_list_user_roles(self):
         """Create user role, add it and list user roles for given user."""
         tenant_id = self.context["tenant"]["id"]
@@ -142,7 +142,7 @@ class KeystoneBasic(kutils.KeystoneScenario):
         self._list_roles_for_user(user_id, tenant_id)
 
     @validation.required_openstack(admin=True)
-    @base.scenario(context={"admin_cleanup": ["keystone"]})
+    @scenario.configure(context={"admin_cleanup": ["keystone"]})
     def get_entities(self, service_name="keystone"):
         """Get instance of a tenant, user, role and service by id's.
 
@@ -173,7 +173,7 @@ class KeystoneBasic(kutils.KeystoneScenario):
     @utils.log_deprecated_args(
         "The 'name' argument to create_and_delete_service will be ignored",
         "0.0.5", ["name"])
-    @base.scenario(context={"admin_cleanup": ["keystone"]})
+    @scenario.configure(context={"admin_cleanup": ["keystone"]})
     def create_and_delete_service(self, name=None, service_type=None,
                                   description=None):
         """Create and delete service.
@@ -186,7 +186,7 @@ class KeystoneBasic(kutils.KeystoneScenario):
 
     @validation.number("name_length", minval=10)
     @validation.required_openstack(admin=True)
-    @base.scenario(context={"admin_cleanup": ["keystone"]})
+    @scenario.configure(context={"admin_cleanup": ["keystone"]})
     def create_update_and_delete_tenant(self, name_length=10, **kwargs):
         """Create, update and delete tenant.
 
@@ -200,7 +200,7 @@ class KeystoneBasic(kutils.KeystoneScenario):
     @validation.number("password_length", minval=10)
     @validation.number("name_length", minval=10)
     @validation.required_openstack(admin=True)
-    @base.scenario(context={"admin_cleanup": ["keystone"]})
+    @scenario.configure(context={"admin_cleanup": ["keystone"]})
     def create_user_update_password(self, name_length=10, password_length=10):
         """Create user and update password for that user.
 
@@ -215,7 +215,7 @@ class KeystoneBasic(kutils.KeystoneScenario):
     @utils.log_deprecated_args(
         "The 'name' argument to create_and_list_services will be ignored",
         "0.0.5", ["name"])
-    @base.scenario(context={"admin_cleanup": ["keystone"]})
+    @scenario.configure(context={"admin_cleanup": ["keystone"]})
     def create_and_list_services(self, name=None, service_type=None,
                                  description=None):
         """Create and list services.
@@ -227,7 +227,7 @@ class KeystoneBasic(kutils.KeystoneScenario):
         self._list_services()
 
     @validation.required_openstack(users=True)
-    @base.scenario(context={"admin_cleanup": ["keystone"]})
+    @scenario.configure(context={"admin_cleanup": ["keystone"]})
     def create_and_list_ec2credentials(self):
         """Create and List all keystone ec2-credentials."""
         self._create_ec2credentials(self.context["user"]["id"],
@@ -235,7 +235,7 @@ class KeystoneBasic(kutils.KeystoneScenario):
         self._list_ec2credentials(self.context["user"]["id"])
 
     @validation.required_openstack(users=True)
-    @base.scenario(context={"admin_cleanup": ["keystone"]})
+    @scenario.configure(context={"admin_cleanup": ["keystone"]})
     def create_and_delete_ec2credential(self):
         """Create and delete keystone ec2-credential."""
         creds = self._create_ec2credentials(self.context["user"]["id"],

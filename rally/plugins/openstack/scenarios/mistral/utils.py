@@ -16,18 +16,18 @@
 import yaml
 
 from rally.plugins.openstack import scenario
-from rally.task.scenarios import base
+from rally.task import atomic
 
 
 class MistralScenario(scenario.OpenStackScenario):
     """Base class for Mistral scenarios with basic atomic actions."""
 
-    @base.atomic_action_timer("mistral.list_workbooks")
+    @atomic.action_timer("mistral.list_workbooks")
     def _list_workbooks(self):
         """Gets list of existing workbooks."""
         return self.clients("mistral").workbooks.list()
 
-    @base.atomic_action_timer("mistral.create_workbook")
+    @atomic.action_timer("mistral.create_workbook")
     def _create_workbook(self, definition):
         """Create a new workbook.
 
@@ -41,7 +41,7 @@ class MistralScenario(scenario.OpenStackScenario):
 
         return self.clients("mistral").workbooks.create(definition)
 
-    @base.atomic_action_timer("mistral.delete_workbook")
+    @atomic.action_timer("mistral.delete_workbook")
     def _delete_workbook(self, wb_name):
         """Delete the given workbook.
 

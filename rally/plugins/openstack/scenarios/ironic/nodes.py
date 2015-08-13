@@ -14,8 +14,8 @@
 #    under the License.
 
 from rally import consts
+from rally.plugins.openstack import scenario
 from rally.plugins.openstack.scenarios.ironic import utils
-from rally.task.scenarios import base
 from rally.task import validation
 
 
@@ -25,7 +25,7 @@ class IronicNodes(utils.IronicScenario):
     @validation.required_parameters("driver")
     @validation.required_services(consts.Service.IRONIC)
     @validation.required_openstack(admin=True)
-    @base.scenario(context={"admin_cleanup": ["ironic"]})
+    @scenario.configure(context={"admin_cleanup": ["ironic"]})
     def create_and_list_node(
             self, associated=None, maintenance=None,
             marker=None, limit=None, detail=False, sort_key=None,
@@ -68,7 +68,7 @@ class IronicNodes(utils.IronicScenario):
     @validation.required_parameters("driver")
     @validation.required_services(consts.Service.IRONIC)
     @validation.required_openstack(admin=True)
-    @base.scenario(context={"admin_cleanup": ["ironic"]})
+    @scenario.configure(context={"admin_cleanup": ["ironic"]})
     def create_and_delete_node(self, **kwargs):
         """Create and delete node.
 

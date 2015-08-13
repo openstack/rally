@@ -16,13 +16,13 @@
 import random
 
 from rally.plugins.openstack import scenario
-from rally.task.scenarios import base
+from rally.task import atomic
 
 
 class QuotasScenario(scenario.OpenStackScenario):
     """Base class for quotas scenarios with basic atomic actions."""
 
-    @base.atomic_action_timer("quotas.update_quotas")
+    @atomic.action_timer("quotas.update_quotas")
     def _update_quotas(self, component, tenant_id, max_quota=1024,
                        quota_update_fn=None):
         """Updates quotas.
@@ -42,7 +42,7 @@ class QuotasScenario(scenario.OpenStackScenario):
             return quota_update_fn(tenant_id, **quotas)
         return self.admin_clients(component).quotas.update(tenant_id, **quotas)
 
-    @base.atomic_action_timer("quotas.delete_quotas")
+    @atomic.action_timer("quotas.delete_quotas")
     def _delete_quotas(self, component, tenant_id):
         """Delete quotas.
 

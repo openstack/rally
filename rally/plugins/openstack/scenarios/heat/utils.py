@@ -21,7 +21,7 @@ import requests
 from rally.common import log as logging
 from rally import exceptions
 from rally.plugins.openstack import scenario
-from rally.task.scenarios import base
+from rally.task import atomic
 from rally.task import utils
 
 LOG = logging.getLogger(__name__)
@@ -110,13 +110,13 @@ CONF.register_opts(HEAT_BENCHMARK_OPTS, group=benchmark_group)
 class HeatScenario(scenario.OpenStackScenario):
     """Base class for Heat scenarios with basic atomic actions."""
 
-    @base.atomic_action_timer("heat.list_stacks")
+    @atomic.action_timer("heat.list_stacks")
     def _list_stacks(self):
         """Return user stack list."""
 
         return list(self.clients("heat").stacks.list())
 
-    @base.atomic_action_timer("heat.create_stack")
+    @atomic.action_timer("heat.create_stack")
     def _create_stack(self, template, parameters=None,
                       files=None, environment=None):
         """Create a new stack.
@@ -154,7 +154,7 @@ class HeatScenario(scenario.OpenStackScenario):
 
         return stack
 
-    @base.atomic_action_timer("heat.update_stack")
+    @atomic.action_timer("heat.update_stack")
     def _update_stack(self, stack, template, parameters=None,
                       files=None, environment=None):
         """Update an existing stack
@@ -187,7 +187,7 @@ class HeatScenario(scenario.OpenStackScenario):
             check_interval=CONF.benchmark.heat_stack_update_poll_interval)
         return stack
 
-    @base.atomic_action_timer("heat.check_stack")
+    @atomic.action_timer("heat.check_stack")
     def _check_stack(self, stack):
         """Check given stack.
 
@@ -203,7 +203,7 @@ class HeatScenario(scenario.OpenStackScenario):
             timeout=CONF.benchmark.heat_stack_check_timeout,
             check_interval=CONF.benchmark.heat_stack_check_poll_interval)
 
-    @base.atomic_action_timer("heat.delete_stack")
+    @atomic.action_timer("heat.delete_stack")
     def _delete_stack(self, stack):
         """Delete given stack.
 
@@ -218,7 +218,7 @@ class HeatScenario(scenario.OpenStackScenario):
             timeout=CONF.benchmark.heat_stack_delete_timeout,
             check_interval=CONF.benchmark.heat_stack_delete_poll_interval)
 
-    @base.atomic_action_timer("heat.suspend_stack")
+    @atomic.action_timer("heat.suspend_stack")
     def _suspend_stack(self, stack):
         """Suspend given stack.
 
@@ -234,7 +234,7 @@ class HeatScenario(scenario.OpenStackScenario):
             timeout=CONF.benchmark.heat_stack_suspend_timeout,
             check_interval=CONF.benchmark.heat_stack_suspend_poll_interval)
 
-    @base.atomic_action_timer("heat.resume_stack")
+    @atomic.action_timer("heat.resume_stack")
     def _resume_stack(self, stack):
         """Resume given stack.
 
@@ -250,7 +250,7 @@ class HeatScenario(scenario.OpenStackScenario):
             timeout=CONF.benchmark.heat_stack_resume_timeout,
             check_interval=CONF.benchmark.heat_stack_resume_poll_interval)
 
-    @base.atomic_action_timer("heat.snapshot_stack")
+    @atomic.action_timer("heat.snapshot_stack")
     def _snapshot_stack(self, stack):
         """Creates a snapshot for given stack.
 
@@ -268,7 +268,7 @@ class HeatScenario(scenario.OpenStackScenario):
             check_interval=CONF.benchmark.heat_stack_snapshot_poll_interval)
         return snapshot
 
-    @base.atomic_action_timer("heat.restore_stack")
+    @atomic.action_timer("heat.restore_stack")
     def _restore_stack(self, stack, snapshot_id):
         """Restores stack from given snapshot.
 
@@ -311,7 +311,7 @@ class HeatScenario(scenario.OpenStackScenario):
         expected_instances = num_instances + delta
         LOG.debug("Scaling stack %s from %s to %s instances with %s" %
                   (stack.id, num_instances, expected_instances, output_key))
-        with base.AtomicAction(self, "heat.scale_with_%s" % output_key):
+        with atomic.ActionTimer(self, "heat.scale_with_%s" % output_key):
             self._stack_webhook(stack, output_key)
             utils.wait_for(
                 stack,
@@ -341,5 +341,5 @@ class HeatScenario(scenario.OpenStackScenario):
                 "No output key %(key)s found in stack %(id)s" %
                 {"key": output_key, "id": stack.id})
 
-        with base.AtomicAction(self, "heat.%s_webhook" % output_key):
+        with atomic.ActionTimer(self, "heat.%s_webhook" % output_key):
             requests.post(url).raise_for_status()

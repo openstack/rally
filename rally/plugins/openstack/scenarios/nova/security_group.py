@@ -16,8 +16,9 @@
 from rally.common.i18n import _
 from rally import consts
 from rally import exceptions
+from rally.plugins.openstack import scenario
 from rally.plugins.openstack.scenarios.nova import utils
-from rally.task.scenarios import base
+from rally.task import atomic
 from rally.task import types
 from rally.task import validation
 
@@ -35,7 +36,7 @@ class NovaSecGroup(utils.NovaScenario):
                                     "rules_per_security_group")
     @validation.required_services(consts.Service.NOVA)
     @validation.required_openstack(users=True)
-    @base.scenario(context={"cleanup": ["nova"]})
+    @scenario.configure(context={"cleanup": ["nova"]})
     def create_and_delete_secgroups(self, security_group_count,
                                     rules_per_security_group):
         """Create and delete security groups.
@@ -59,7 +60,7 @@ class NovaSecGroup(utils.NovaScenario):
                                     "rules_per_security_group")
     @validation.required_services(consts.Service.NOVA)
     @validation.required_openstack(users=True)
-    @base.scenario(context={"cleanup": ["nova"]})
+    @scenario.configure(context={"cleanup": ["nova"]})
     def create_and_list_secgroups(self, security_group_count,
                                   rules_per_security_group):
         """Create and list security groups.
@@ -86,7 +87,7 @@ class NovaSecGroup(utils.NovaScenario):
     @validation.required_contexts("network")
     @validation.required_services(consts.Service.NOVA)
     @validation.required_openstack(users=True)
-    @base.scenario(context={"cleanup": ["nova"]})
+    @scenario.configure(context={"cleanup": ["nova"]})
     def boot_and_delete_server_with_secgroups(self, image, flavor,
                                               security_group_count,
                                               rules_per_security_group,
@@ -120,7 +121,7 @@ class NovaSecGroup(utils.NovaScenario):
                                    **kwargs)
 
         action_name = "nova.get_attached_security_groups"
-        with base.AtomicAction(self, action_name):
+        with atomic.ActionTimer(self, action_name):
             attached_security_groups = server.list_security_group()
 
         self._delete_server(server)

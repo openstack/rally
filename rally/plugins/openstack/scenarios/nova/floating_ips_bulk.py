@@ -14,8 +14,8 @@
 #    under the License.
 
 from rally import consts
+from rally.plugins.openstack import scenario
 from rally.plugins.openstack.scenarios.nova import utils
-from rally.task.scenarios import base
 from rally.task import validation
 
 
@@ -26,7 +26,7 @@ class NovaFloatingIpsBulk(utils.NovaScenario):
     @validation.required_parameters("start_cidr")
     @validation.required_services(consts.Service.NOVA, consts.Service.NOVA_NET)
     @validation.required_openstack(admin=True)
-    @base.scenario(context={"admin_cleanup": ["nova"]})
+    @scenario.configure(context={"admin_cleanup": ["nova"]})
     def create_and_list_floating_ips_bulk(self, start_cidr, **kwargs):
         """Create nova floating IP by range and list it.
 
@@ -43,7 +43,7 @@ class NovaFloatingIpsBulk(utils.NovaScenario):
     @validation.required_parameters("start_cidr")
     @validation.required_services(consts.Service.NOVA, consts.Service.NOVA_NET)
     @validation.required_openstack(admin=True)
-    @base.scenario(context={"admin_cleanup": ["nova"]})
+    @scenario.configure(context={"admin_cleanup": ["nova"]})
     def create_and_delete_floating_ips_bulk(self, start_cidr, **kwargs):
         """Create nova floating IP by range and delete it.
 
