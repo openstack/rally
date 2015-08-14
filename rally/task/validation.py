@@ -174,13 +174,13 @@ def check_command_dict(command):
     # due to template-driven configuration generation that can leave keys
     # defined but values empty.
     if command.get("interpreter"):
-        # An interpreter is given, check if exactly one way to specify
-        # script body is used: file or inline
-        if not (bool(command.get("script_file")) ^
-                bool(command.get("script_inline"))):
-            raise ValueError(
-                "Exactly one of script_inline or script_file with interpreter"
-                " is expected: %r" % command)
+        script_file = command.get("script_file")
+        if script_file:
+            command["script_file"] = os.path.expanduser(script_file)
+            if "script_inline" in command:
+                raise ValueError(
+                    "Exactly one of script_inline or script_file with "
+                    "interpreter is expected: %r" % command)
         # User tries to upload a shell? Make sure it is same as interpreter
         interpreter = command.get("interpreter")
         interpreter = (interpreter[-1]
