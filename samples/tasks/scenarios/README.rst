@@ -1,7 +1,7 @@
 Scenarios Configuration Samples
 ===============================
 
-This directory contains task scenarios conficuration samples.
+This directory contains task scenarios configuration samples.
 To successfully start this samples you may need to substitute some values
 from "args" section to actual values for your deployment.
 
