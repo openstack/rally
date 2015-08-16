@@ -13,9 +13,9 @@
 #    under the License.
 
 from rally import consts
+from rally.plugins.openstack import scenario
 from rally.plugins.openstack.scenarios.ceilometer import utils as cutils
 from rally.plugins.openstack.scenarios.keystone import utils as kutils
-from rally.task.scenarios import base
 from rally.task import validation
 
 
@@ -29,8 +29,8 @@ class CeilometerTraits(cutils.CeilometerScenario, kutils.KeystoneScenario):
     @validation.required_services(consts.Service.CEILOMETER,
                                   consts.Service.KEYSTONE)
     @validation.required_openstack(admin=True)
-    @base.scenario(context={"admin_cleanup": ["keystone"],
-                            "cleanup": ["ceilometer"]})
+    @scenario.configure(context={"admin_cleanup": ["keystone"],
+                                 "cleanup": ["ceilometer"]})
     def create_user_and_list_traits(self):
         """Fetch all events traits.
 
@@ -47,8 +47,8 @@ class CeilometerTraits(cutils.CeilometerScenario, kutils.KeystoneScenario):
     @validation.required_services(consts.Service.CEILOMETER,
                                   consts.Service.KEYSTONE)
     @validation.required_openstack(admin=True)
-    @base.scenario(context={"admin_cleanup": ["keystone"],
-                            "cleanup": ["ceilometer"]})
+    @scenario.configure(context={"admin_cleanup": ["keystone"],
+                                 "cleanup": ["ceilometer"]})
     def create_user_and_list_trait_descriptions(self):
         """Fetch all trait descriptions.
 

@@ -11,8 +11,8 @@
 #    under the License.
 
 from rally import consts
+from rally.plugins.openstack import scenario
 from rally.plugins.openstack.scenarios.neutron import utils
-from rally.task.scenarios import base
 from rally.task import validation
 
 
@@ -24,7 +24,7 @@ class NeutronLoadbalancerV1(utils.NeutronScenario):
     @validation.required_services(consts.Service.NEUTRON)
     @validation.required_openstack(users=True)
     @validation.required_contexts("network")
-    @base.scenario(context={"cleanup": ["neutron"]})
+    @scenario.configure(context={"cleanup": ["neutron"]})
     def create_and_list_pools(self, pool_create_args=None):
         """Create a pool(v1) and then list pools(v1).
 
@@ -43,7 +43,7 @@ class NeutronLoadbalancerV1(utils.NeutronScenario):
     @validation.required_services(consts.Service.NEUTRON)
     @validation.required_openstack(users=True)
     @validation.required_contexts("network")
-    @base.scenario(context={"cleanup": ["neutron"]})
+    @scenario.configure(context={"cleanup": ["neutron"]})
     def create_and_delete_pools(self, pool_create_args=None):
         """Create pools(v1) and delete pools(v1).
 
@@ -64,7 +64,7 @@ class NeutronLoadbalancerV1(utils.NeutronScenario):
     @validation.required_services(consts.Service.NEUTRON)
     @validation.required_openstack(users=True)
     @validation.required_contexts("network")
-    @base.scenario(context={"cleanup": ["neutron"]})
+    @scenario.configure(context={"cleanup": ["neutron"]})
     def create_and_update_pools(self, pool_update_args=None,
                                 pool_create_args=None):
         """Create pools(v1) and update pools(v1).

@@ -15,8 +15,8 @@
 
 from rally.common import log as logging
 from rally import consts
+from rally.plugins.openstack import scenario
 from rally.plugins.openstack.scenarios.sahara import utils
-from rally.task.scenarios import base
 from rally.task import types
 from rally.task import validation
 
@@ -34,7 +34,7 @@ class SaharaClusters(utils.SaharaScenario):
     @validation.number("workers_count", minval=1, integer_only=True)
     @validation.required_services(consts.Service.SAHARA)
     @validation.required_openstack(users=True)
-    @base.scenario(context={"cleanup": ["sahara"]})
+    @scenario.configure(context={"cleanup": ["sahara"]})
     def create_and_delete_cluster(self, flavor, workers_count, plugin_name,
                                   hadoop_version, floating_ip_pool=None,
                                   volumes_per_node=None,
@@ -102,7 +102,7 @@ class SaharaClusters(utils.SaharaScenario):
     @validation.required_services(consts.Service.SAHARA)
     @validation.required_contexts("users", "sahara_image")
     @validation.number("workers_count", minval=1, integer_only=True)
-    @base.scenario(context={"cleanup": ["sahara"]})
+    @scenario.configure(context={"cleanup": ["sahara"]})
     def create_scale_delete_cluster(self, flavor, workers_count, plugin_name,
                                     hadoop_version, deltas,
                                     floating_ip_pool=None,

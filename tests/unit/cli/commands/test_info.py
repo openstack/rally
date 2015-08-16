@@ -24,12 +24,12 @@ from rally.deployment.serverprovider.providers import (
 from rally import exceptions
 from rally.plugins.common.scenarios.dummy import dummy
 from rally.plugins.common.sla import failure_rate
-from rally.task.scenarios import base as scenario_base
+from rally.task import scenario
 from rally.task import sla
 from tests.unit import test
 
 
-SCENARIO = "rally.cli.commands.info.scenario_base.Scenario"
+SCENARIO = "rally.cli.commands.info.scenario.Scenario"
 SLA = "rally.cli.commands.info.sla.SLA"
 ENGINE = "rally.cli.commands.info.engine.Engine"
 PROVIDER = "rally.cli.commands.info.provider.ProviderFactory"
@@ -106,7 +106,7 @@ class InfoCommandsTestCase(test.TestCase):
     @mock.patch(DISCOVER + ".itersubclasses", return_value=[dummy.Dummy])
     def test_BenchmarkScenarios(self, mock_itersubclasses):
         status = self.info.BenchmarkScenarios()
-        mock_itersubclasses.assert_called_with(scenario_base.Scenario)
+        mock_itersubclasses.assert_called_with(scenario.Scenario)
         self.assertIsNone(status)
 
     @mock.patch(DISCOVER + ".itersubclasses",

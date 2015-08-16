@@ -32,7 +32,7 @@ from rally.plugins.openstack.context.keystone import existing_users
 from rally.plugins.openstack.context.keystone import users as users_ctx
 from rally.task import context
 from rally.task import runner
-from rally.task.scenarios import base as base_scenario
+from rally.task import scenario
 from rally.task import sla
 
 
@@ -179,7 +179,7 @@ class BenchmarkEngine(object):
     @rutils.log_task_wrapper(LOG.info,
                              _("Task validation of scenarios names."))
     def _validate_config_scenarios_name(self, config):
-        available = set(base_scenario.Scenario.list_benchmark_scenarios())
+        available = set(scenario.Scenario.list_benchmark_scenarios())
         specified = set(six.iterkeys(config))
 
         if not specified.issubset(available):
@@ -188,7 +188,7 @@ class BenchmarkEngine(object):
 
     @rutils.log_task_wrapper(LOG.info, _("Task validation of syntax."))
     def _validate_config_syntax(self, config):
-        for scenario, values in six.iteritems(config):
+        for scenario_name, values in six.iteritems(config):
             for pos, kw in enumerate(values):
                 try:
                     runner.ScenarioRunner.validate(kw.get("runner", {}))
@@ -198,7 +198,7 @@ class BenchmarkEngine(object):
                 except (exceptions.RallyException,
                         jsonschema.ValidationError) as e:
                     raise exceptions.InvalidBenchmarkConfig(
-                        name=scenario,
+                        name=scenario_name,
                         pos=pos, config=kw,
                         reason=six.text_type(e)
                     )
@@ -206,9 +206,8 @@ class BenchmarkEngine(object):
     def _validate_config_semantic_helper(self, admin, user, name, pos,
                                          deployment, kwargs):
         try:
-            base_scenario.Scenario.validate(name, kwargs, admin=admin,
-                                            users=[user],
-                                            deployment=deployment)
+            scenario.Scenario.validate(name, kwargs, admin=admin,
+                                       users=[user], deployment=deployment)
         except exceptions.InvalidScenarioArgument as e:
             kw = {"name": name, "pos": pos,
                   "config": kwargs, "reason": six.text_type(e)}
@@ -266,7 +265,7 @@ class BenchmarkEngine(object):
         return runner.ScenarioRunner.get(cfg["type"])(self.task, cfg)
 
     def _prepare_context(self, ctx, name, endpoint):
-        scenario_context = base_scenario.Scenario.meta(name, "context")
+        scenario_context = scenario.Scenario.meta(name, "context")
         if self.existing_users and "users" not in ctx:
             scenario_context.setdefault("existing_users", self.existing_users)
         elif "users" not in ctx:

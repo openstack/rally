@@ -13,7 +13,7 @@
 #    under the License.
 
 from rally.plugins.openstack import scenario
-from rally.task.scenarios import base
+from rally.task import atomic
 from rally.task import utils as bench_utils
 
 
@@ -36,7 +36,7 @@ class CeilometerScenario(scenario.OpenStackScenario):
         alarm.update(kwargs)
         return alarm
 
-    @base.atomic_action_timer("ceilometer.list_alarms")
+    @atomic.action_timer("ceilometer.list_alarms")
     def _list_alarms(self, alarm_id=None):
         """List alarms.
 
@@ -51,7 +51,7 @@ class CeilometerScenario(scenario.OpenStackScenario):
         else:
             return self.clients("ceilometer").alarms.list()
 
-    @base.atomic_action_timer("ceilometer.create_alarm")
+    @atomic.action_timer("ceilometer.create_alarm")
     def _create_alarm(self, meter_name, threshold, kwargs):
         """Create an alarm.
 
@@ -66,7 +66,7 @@ class CeilometerScenario(scenario.OpenStackScenario):
         alarm = self.clients("ceilometer").alarms.create(**alarm_dict)
         return alarm
 
-    @base.atomic_action_timer("ceilometer.delete_alarm")
+    @atomic.action_timer("ceilometer.delete_alarm")
     def _delete_alarm(self, alarm_id):
         """Delete an alarm.
 
@@ -74,7 +74,7 @@ class CeilometerScenario(scenario.OpenStackScenario):
         """
         self.clients("ceilometer").alarms.delete(alarm_id)
 
-    @base.atomic_action_timer("ceilometer.update_alarm")
+    @atomic.action_timer("ceilometer.update_alarm")
     def _update_alarm(self, alarm_id, alarm_dict_delta):
         """Update an alarm.
 
@@ -83,7 +83,7 @@ class CeilometerScenario(scenario.OpenStackScenario):
         """
         self.clients("ceilometer").alarms.update(alarm_id, **alarm_dict_delta)
 
-    @base.atomic_action_timer("ceilometer.get_alarm_history")
+    @atomic.action_timer("ceilometer.get_alarm_history")
     def _get_alarm_history(self, alarm_id):
         """Assemble the alarm history requested.
 
@@ -92,7 +92,7 @@ class CeilometerScenario(scenario.OpenStackScenario):
         """
         return self.clients("ceilometer").alarms.get_history(alarm_id)
 
-    @base.atomic_action_timer("ceilometer.get_alarm_state")
+    @atomic.action_timer("ceilometer.get_alarm_state")
     def _get_alarm_state(self, alarm_id):
         """Get the state of the alarm.
 
@@ -101,7 +101,7 @@ class CeilometerScenario(scenario.OpenStackScenario):
         """
         return self.clients("ceilometer").alarms.get_state(alarm_id)
 
-    @base.atomic_action_timer("ceilometer.set_alarm_state")
+    @atomic.action_timer("ceilometer.set_alarm_state")
     def _set_alarm_state(self, alarm, state, timeout):
         """Set the state of the alarm.
 
@@ -118,7 +118,7 @@ class CeilometerScenario(scenario.OpenStackScenario):
                                     .get_from_manager(),
                                     timeout=timeout, check_interval=1)
 
-    @base.atomic_action_timer("ceilometer.list_events")
+    @atomic.action_timer("ceilometer.list_events")
     def _list_events(self):
         """Get list of user's events.
 
@@ -127,7 +127,7 @@ class CeilometerScenario(scenario.OpenStackScenario):
         """
         return self.admin_clients("ceilometer").events.list()
 
-    @base.atomic_action_timer("ceilometer.get_event")
+    @atomic.action_timer("ceilometer.get_event")
     def _get_event(self, event_id):
         """Get event with specific id.
 
@@ -138,7 +138,7 @@ class CeilometerScenario(scenario.OpenStackScenario):
         """
         return self.admin_clients("ceilometer").events.get(event_id)
 
-    @base.atomic_action_timer("ceilometer.list_event_types")
+    @atomic.action_timer("ceilometer.list_event_types")
     def _list_event_types(self):
         """Get list of all event types.
 
@@ -146,7 +146,7 @@ class CeilometerScenario(scenario.OpenStackScenario):
         """
         return self.admin_clients("ceilometer").event_types.list()
 
-    @base.atomic_action_timer("ceilometer.list_event_traits")
+    @atomic.action_timer("ceilometer.list_event_traits")
     def _list_event_traits(self, event_type, trait_name):
         """Get list of event traits.
 
@@ -157,7 +157,7 @@ class CeilometerScenario(scenario.OpenStackScenario):
         return self.admin_clients("ceilometer").traits.list(event_type,
                                                             trait_name)
 
-    @base.atomic_action_timer("ceilometer.list_event_trait_descriptions")
+    @atomic.action_timer("ceilometer.list_event_trait_descriptions")
     def _list_event_trait_descriptions(self, event_type):
         """Get list of event trait descriptions.
 
@@ -167,12 +167,12 @@ class CeilometerScenario(scenario.OpenStackScenario):
         return self.admin_clients("ceilometer").trait_descriptions.list(
             event_type)
 
-    @base.atomic_action_timer("ceilometer.list_meters")
+    @atomic.action_timer("ceilometer.list_meters")
     def _list_meters(self):
         """Get list of user's meters."""
         return self.clients("ceilometer").meters.list()
 
-    @base.atomic_action_timer("ceilometer.list_resources")
+    @atomic.action_timer("ceilometer.list_resources")
     def _list_resources(self):
         """List all resources.
 
@@ -180,7 +180,7 @@ class CeilometerScenario(scenario.OpenStackScenario):
         """
         return self.clients("ceilometer").resources.list()
 
-    @base.atomic_action_timer("ceilometer.list_samples")
+    @atomic.action_timer("ceilometer.list_samples")
     def _list_samples(self):
         """List all Samples.
 
@@ -188,12 +188,12 @@ class CeilometerScenario(scenario.OpenStackScenario):
         """
         return self.clients("ceilometer").samples.list()
 
-    @base.atomic_action_timer("ceilometer.get_resource")
+    @atomic.action_timer("ceilometer.get_resource")
     def _get_resource(self, resource_id):
         """Retrieve details about one resource."""
         return self.clients("ceilometer").resources.get(resource_id)
 
-    @base.atomic_action_timer("ceilometer.get_stats")
+    @atomic.action_timer("ceilometer.get_stats")
     def _get_stats(self, meter_name):
         """Get stats for a specific meter.
 
@@ -201,7 +201,7 @@ class CeilometerScenario(scenario.OpenStackScenario):
         """
         return self.clients("ceilometer").statistics.list(meter_name)
 
-    @base.atomic_action_timer("ceilometer.create_meter")
+    @atomic.action_timer("ceilometer.create_meter")
     def _create_meter(self, **kwargs):
         """Create a new meter.
 
@@ -214,7 +214,7 @@ class CeilometerScenario(scenario.OpenStackScenario):
             counter_name=name, **kwargs)
         return samples[0]
 
-    @base.atomic_action_timer("ceilometer.query_alarms")
+    @atomic.action_timer("ceilometer.query_alarms")
     def _query_alarms(self, filter, orderby, limit):
         """Query alarms with specific parameters.
 
@@ -229,7 +229,7 @@ class CeilometerScenario(scenario.OpenStackScenario):
         return self.clients("ceilometer").query_alarms.query(
             filter, orderby, limit)
 
-    @base.atomic_action_timer("ceilometer.query_alarm_history")
+    @atomic.action_timer("ceilometer.query_alarm_history")
     def _query_alarm_history(self, filter, orderby, limit):
         """Query history of an alarm.
 
@@ -244,7 +244,7 @@ class CeilometerScenario(scenario.OpenStackScenario):
         return self.clients("ceilometer").query_alarm_history.query(
             filter, orderby, limit)
 
-    @base.atomic_action_timer("ceilometer.create_sample")
+    @atomic.action_timer("ceilometer.create_sample")
     def _create_sample(self, counter_name, counter_type, counter_unit,
                        counter_volume, resource_id=None, **kwargs):
         """Create a Sample with specified parameters.
@@ -266,7 +266,7 @@ class CeilometerScenario(scenario.OpenStackScenario):
                            prefix="rally_resource_")})
         return self.clients("ceilometer").samples.create(**kwargs)
 
-    @base.atomic_action_timer("ceilometer.query_samples")
+    @atomic.action_timer("ceilometer.query_samples")
     def _query_samples(self, filter, orderby, limit):
         """Query samples with specified parameters.
 

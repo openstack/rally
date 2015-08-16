@@ -20,7 +20,7 @@ from oslo_config import cfg
 
 from rally.common import utils
 from rally.plugins.openstack import scenario
-from rally.task.scenarios import base
+from rally.task import atomic
 
 
 IRONIC_BENCHMARK_OPTS = [
@@ -38,7 +38,7 @@ CONF.register_opts(IRONIC_BENCHMARK_OPTS, group=benchmark_group)
 class IronicScenario(scenario.OpenStackScenario):
     """Base class for Ironic scenarios with basic atomic actions."""
 
-    @base.atomic_action_timer("ironic.create_node")
+    @atomic.action_timer("ironic.create_node")
     def _create_node(self, **kwargs):
         """Create node immediately.
 
@@ -58,7 +58,7 @@ class IronicScenario(scenario.OpenStackScenario):
 
         return self.admin_clients("ironic").node.create(**kwargs)
 
-    @base.atomic_action_timer("ironic.list_nodes")
+    @atomic.action_timer("ironic.list_nodes")
     def _list_nodes(self, associated=None, maintenance=None, marker=None,
                     limit=None, detail=False, sort_key=None, sort_dir=None):
         """Return list of nodes.
@@ -93,7 +93,7 @@ class IronicScenario(scenario.OpenStackScenario):
             associated=associated, maintenance=maintenance, marker=marker,
             limit=limit, detail=detail, sort_key=sort_key, sort_dir=sort_dir)
 
-    @base.atomic_action_timer("ironic.delete_node")
+    @atomic.action_timer("ironic.delete_node")
     def _delete_node(self, node_id):
         """Delete the node with specific id.
 

@@ -15,7 +15,8 @@ import time
 
 from rally.common.i18n import _
 from rally import exceptions
-from rally.task.scenarios import base
+from rally.task import atomic
+from rally.task import scenario
 from rally.task import validation
 
 
@@ -23,10 +24,10 @@ class DummyScenarioException(exceptions.RallyException):
     msg_fmt = _("Dummy scenario expected exception: '%(message)s'")
 
 
-class Dummy(base.Scenario):
+class Dummy(scenario.Scenario):
     """Dummy benchmarks for testing Rally benchmark engine at scale."""
 
-    @base.scenario()
+    @scenario.configure()
     def dummy(self, sleep=0):
         """Do nothing and sleep for the given number of seconds (0 by default).
 
@@ -41,7 +42,7 @@ class Dummy(base.Scenario):
 
     @validation.number("size_of_message",
                        minval=1, integer_only=True, nullable=True)
-    @base.scenario()
+    @scenario.configure()
     def dummy_exception(self, size_of_message=1, sleep=0):
         """Throw an exception.
 
@@ -60,7 +61,7 @@ class Dummy(base.Scenario):
 
     @validation.number("exception_probability",
                        minval=0, maxval=1, integer_only=False, nullable=True)
-    @base.scenario()
+    @scenario.configure()
     def dummy_exception_probability(self, exception_probability=0.5):
         """Throw an exception with given probability.
 
@@ -79,7 +80,7 @@ class Dummy(base.Scenario):
                 % exception_probability
             )
 
-    @base.scenario()
+    @scenario.configure()
     def dummy_with_scenario_output(self):
         """Return a dummy scenario output.
 
@@ -93,7 +94,7 @@ class Dummy(base.Scenario):
         err = ""
         return {"data": out, "errors": err}
 
-    @base.atomic_action_timer("dummy_fail_test")
+    @atomic.action_timer("dummy_fail_test")
     def _random_fail_emitter(self, exception_probability):
         """Throw an exception with given probability.
 
@@ -102,7 +103,7 @@ class Dummy(base.Scenario):
         if random.random() < exception_probability:
             raise KeyError("Dummy test exception")
 
-    @base.scenario()
+    @scenario.configure()
     def dummy_random_fail_in_atomic(self, exception_probability=0.5):
         """Randomly throw exceptions in atomic actions.
 

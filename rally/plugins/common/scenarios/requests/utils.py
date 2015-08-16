@@ -13,13 +13,14 @@
 import requests
 
 from rally.common.i18n import _
-from rally.task.scenarios import base
+from rally.task import atomic
+from rally.task import scenario
 
 
-class RequestScenario(base.Scenario):
+class RequestScenario(scenario.Scenario):
     """Base class for Request scenarios with basic atomic actions."""
 
-    @base.atomic_action_timer("requests.check_request")
+    @atomic.action_timer("requests.check_request")
     def _check_request(self, url, method, status_code, **kwargs):
         """Compare request status code with specified code
 

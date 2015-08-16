@@ -13,13 +13,13 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from rally.task.scenarios import base
+from rally.task import scenario
 
 
-class FakeScenarioPlugin1(base.Scenario):
+class FakeScenarioPlugin1(scenario.Scenario):
     """Sample fake plugin."""
 
-    @base.scenario()
+    @scenario.configure()
     def list(self):
         """Fake scenario."""
         pass

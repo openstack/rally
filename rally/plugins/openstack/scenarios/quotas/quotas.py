@@ -14,8 +14,8 @@
 #    under the License.
 
 from rally import consts
+from rally.plugins.openstack import scenario
 from rally.plugins.openstack.scenarios.quotas import utils
-from rally.task.scenarios import base
 from rally.task import validation
 
 
@@ -24,7 +24,7 @@ class Quotas(utils.QuotasScenario):
 
     @validation.required_services(consts.Service.NOVA)
     @validation.required_openstack(admin=True, users=True)
-    @base.scenario(context={"admin_cleanup": ["nova.quotas"]})
+    @scenario.configure(context={"admin_cleanup": ["nova.quotas"]})
     def nova_update(self, max_quota=1024):
         """Update quotas for Nova.
 
@@ -35,7 +35,7 @@ class Quotas(utils.QuotasScenario):
 
     @validation.required_services(consts.Service.NOVA)
     @validation.required_openstack(admin=True, users=True)
-    @base.scenario(context={"admin_cleanup": ["nova.quotas"]})
+    @scenario.configure(context={"admin_cleanup": ["nova.quotas"]})
     def nova_update_and_delete(self, max_quota=1024):
         """Update and delete quotas for Nova.
 
@@ -48,7 +48,7 @@ class Quotas(utils.QuotasScenario):
 
     @validation.required_services(consts.Service.CINDER)
     @validation.required_openstack(admin=True, users=True)
-    @base.scenario(context={"admin_cleanup": ["cinder.quotas"]})
+    @scenario.configure(context={"admin_cleanup": ["cinder.quotas"]})
     def cinder_update(self, max_quota=1024):
         """Update quotas for Cinder.
 
@@ -59,7 +59,7 @@ class Quotas(utils.QuotasScenario):
 
     @validation.required_services(consts.Service.CINDER)
     @validation.required_openstack(admin=True, users=True)
-    @base.scenario(context={"admin_cleanup": ["cinder.quotas"]})
+    @scenario.configure(context={"admin_cleanup": ["cinder.quotas"]})
     def cinder_update_and_delete(self, max_quota=1024):
         """Update and Delete quotas for Cinder.
 
@@ -71,7 +71,7 @@ class Quotas(utils.QuotasScenario):
 
     @validation.required_services(consts.Service.NEUTRON)
     @validation.required_openstack(admin=True, users=True)
-    @base.scenario(context={"admin_cleanup": ["neutron.quota"]})
+    @scenario.configure(context={"admin_cleanup": ["neutron.quota"]})
     def neutron_update(self, max_quota=1024):
         """Update quotas for neutron.
 

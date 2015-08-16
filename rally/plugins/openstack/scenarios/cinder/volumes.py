@@ -18,10 +18,10 @@ import random
 from rally.common import log as logging
 from rally import consts
 from rally import exceptions
+from rally.plugins.openstack import scenario
 from rally.plugins.openstack.scenarios.cinder import utils
 from rally.plugins.openstack.scenarios.glance import utils as glance_utils
 from rally.plugins.openstack.scenarios.nova import utils as nova_utils
-from rally.task.scenarios import base
 from rally.task import types
 from rally.task import validation
 
@@ -37,7 +37,7 @@ class CinderVolumes(utils.CinderScenario,
     @validation.image_exists("image", nullable=True)
     @validation.required_services(consts.Service.CINDER)
     @validation.required_openstack(users=True)
-    @base.scenario(context={"cleanup": ["cinder"]})
+    @scenario.configure(context={"cleanup": ["cinder"]})
     def create_and_list_volume(self, size, detailed=True,
                                image=None, **kwargs):
         """Create a volume and list all volumes.
@@ -67,7 +67,7 @@ class CinderVolumes(utils.CinderScenario,
 
     @validation.required_services(consts.Service.CINDER)
     @validation.required_openstack(users=True)
-    @base.scenario(context={"cleanup": ["cinder"]})
+    @scenario.configure(context={"cleanup": ["cinder"]})
     def list_volumes(self, detailed=True):
         """List all volumes.
 
@@ -84,7 +84,7 @@ class CinderVolumes(utils.CinderScenario,
     @validation.image_exists("image", nullable=True)
     @validation.required_services(consts.Service.CINDER)
     @validation.required_openstack(users=True)
-    @base.scenario(context={"cleanup": ["cinder"]})
+    @scenario.configure(context={"cleanup": ["cinder"]})
     def create_and_delete_volume(self, size, image=None,
                                  min_sleep=0, max_sleep=0,
                                  **kwargs):
@@ -117,7 +117,7 @@ class CinderVolumes(utils.CinderScenario,
     @validation.image_exists("image", nullable=True)
     @validation.required_services(consts.Service.CINDER)
     @validation.required_openstack(users=True)
-    @base.scenario(context={"cleanup": ["cinder"]})
+    @scenario.configure(context={"cleanup": ["cinder"]})
     def create_volume(self, size, image=None, **kwargs):
         """Create a volume.
 
@@ -139,7 +139,7 @@ class CinderVolumes(utils.CinderScenario,
     @validation.required_services(consts.Service.CINDER)
     @validation.required_openstack(users=True)
     @validation.required_contexts("volumes")
-    @base.scenario(context={"cleanup": ["cinder"]})
+    @scenario.configure(context={"cleanup": ["cinder"]})
     def modify_volume_metadata(self, sets=10, set_size=3,
                                deletes=5, delete_size=3):
         """Modify a volume's metadata.
@@ -168,7 +168,7 @@ class CinderVolumes(utils.CinderScenario,
 
     @validation.required_services(consts.Service.CINDER)
     @validation.required_openstack(users=True)
-    @base.scenario(context={"cleanup": ["cinder"]})
+    @scenario.configure(context={"cleanup": ["cinder"]})
     def create_and_extend_volume(self, size, new_size, min_sleep=0,
                                  max_sleep=0, **kwargs):
         """Create and extend a volume and then delete it.
@@ -198,7 +198,7 @@ class CinderVolumes(utils.CinderScenario,
     @validation.required_services(consts.Service.CINDER)
     @validation.required_contexts("volumes")
     @validation.required_openstack(users=True)
-    @base.scenario(context={"cleanup": ["cinder"]})
+    @scenario.configure(context={"cleanup": ["cinder"]})
     def create_from_volume_and_delete_volume(self, size, min_sleep=0,
                                              max_sleep=0, **kwargs):
         """Create volume from volume and then delete it.
@@ -228,7 +228,7 @@ class CinderVolumes(utils.CinderScenario,
     @validation.required_services(consts.Service.CINDER)
     @validation.required_contexts("volumes")
     @validation.required_openstack(users=True)
-    @base.scenario(context={"cleanup": ["cinder"]})
+    @scenario.configure(context={"cleanup": ["cinder"]})
     def create_and_delete_snapshot(self, force=False, min_sleep=0,
                                    max_sleep=0, **kwargs):
         """Create and then delete a volume-snapshot.
@@ -255,7 +255,7 @@ class CinderVolumes(utils.CinderScenario,
     @validation.image_valid_on_flavor("flavor", "image")
     @validation.required_services(consts.Service.NOVA, consts.Service.CINDER)
     @validation.required_openstack(users=True)
-    @base.scenario(context={"cleanup": ["cinder", "nova"]})
+    @scenario.configure(context={"cleanup": ["cinder", "nova"]})
     def create_and_attach_volume(self, size, image, flavor, **kwargs):
         """Create a VM and attach a volume to it.
 
@@ -283,7 +283,7 @@ class CinderVolumes(utils.CinderScenario,
     @validation.volume_type_exists("volume_type")
     @validation.required_services(consts.Service.NOVA, consts.Service.CINDER)
     @validation.required_openstack(users=True)
-    @base.scenario(context={"cleanup": ["cinder", "nova"]})
+    @scenario.configure(context={"cleanup": ["cinder", "nova"]})
     def create_snapshot_and_attach_volume(self, volume_type=False,
                                           size=None, **kwargs):
 
@@ -325,7 +325,7 @@ class CinderVolumes(utils.CinderScenario,
 
     @validation.required_services(consts.Service.NOVA, consts.Service.CINDER)
     @validation.required_openstack(users=True)
-    @base.scenario(context={"cleanup": ["cinder", "nova"]})
+    @scenario.configure(context={"cleanup": ["cinder", "nova"]})
     def create_nested_snapshots_and_attach_volume(self,
                                                   size=None,
                                                   nested_level=None,
@@ -388,7 +388,7 @@ class CinderVolumes(utils.CinderScenario,
     @validation.required_services(consts.Service.CINDER)
     @validation.required_contexts("volumes")
     @validation.required_openstack(users=True)
-    @base.scenario(context={"cleanup": ["cinder"]})
+    @scenario.configure(context={"cleanup": ["cinder"]})
     def create_and_list_snapshots(self, force=False, detailed=True, **kwargs):
         """Create and then list a volume-snapshot.
 
@@ -406,7 +406,7 @@ class CinderVolumes(utils.CinderScenario,
     @validation.required_services(consts.Service.CINDER, consts.Service.GLANCE)
     @validation.required_openstack(users=True)
     @validation.required_parameters("size")
-    @base.scenario(context={"cleanup": ["cinder", "glance"]})
+    @scenario.configure(context={"cleanup": ["cinder", "glance"]})
     def create_and_upload_volume_to_image(self, size, force=False,
                                           container_format="bare",
                                           disk_format="raw",
@@ -436,7 +436,7 @@ class CinderVolumes(utils.CinderScenario,
     @validation.required_cinder_services("cinder-backup")
     @validation.required_services(consts.Service.CINDER)
     @validation.required_openstack(users=True)
-    @base.scenario(context={"cleanup": ["cinder"]})
+    @scenario.configure(context={"cleanup": ["cinder"]})
     def create_volume_backup(self, size, do_delete=True,
                              create_volume_kwargs=None,
                              create_backup_kwargs=None):
@@ -461,7 +461,7 @@ class CinderVolumes(utils.CinderScenario,
     @validation.required_cinder_services("cinder-backup")
     @validation.required_services(consts.Service.CINDER)
     @validation.required_openstack(users=True)
-    @base.scenario(context={"cleanup": ["cinder"]})
+    @scenario.configure(context={"cleanup": ["cinder"]})
     def create_and_restore_volume_backup(self, size, do_delete=True,
                                          create_volume_kwargs=None,
                                          create_backup_kwargs=None):
@@ -487,7 +487,7 @@ class CinderVolumes(utils.CinderScenario,
     @validation.required_cinder_services("cinder-backup")
     @validation.required_services(consts.Service.CINDER)
     @validation.required_openstack(users=True)
-    @base.scenario(context={"cleanup": ["cinder"]})
+    @scenario.configure(context={"cleanup": ["cinder"]})
     def create_and_list_volume_backups(self, size, detailed=True,
                                        do_delete=True,
                                        create_volume_kwargs=None,

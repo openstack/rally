@@ -13,13 +13,13 @@
 import random
 
 from rally.plugins.common.scenarios.requests import utils
-from rally.task.scenarios import base
+from rally.task import scenario
 
 
 class HttpRequests(utils.RequestScenario):
     """Benchmark scenarios for HTTP requests."""
 
-    @base.scenario()
+    @scenario.configure()
     def check_request(self, url, method, status_code, **kwargs):
         """Standard way to benchmark web services.
 
@@ -34,7 +34,7 @@ class HttpRequests(utils.RequestScenario):
 
         self._check_request(url, method, status_code, **kwargs)
 
-    @base.scenario()
+    @scenario.configure()
     def check_random_request(self, requests, status_code):
         """Benchmark the list of requests
 

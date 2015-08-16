@@ -41,13 +41,14 @@ Inherit a class for your plugin from the base *Scenario* class and implement a s
 
 .. code-block:: none
 
-    from rally.task.scenarios import base
+    from rally.task import atomic
+    from rally.task import scenario
 
 
-    class ScenarioPlugin(base.Scenario):
+    class ScenarioPlugin(scenario.Scenario):
         """Sample plugin which lists flavors."""
 
-        @base.atomic_action_timer("list_flavors")
+        @atomic.action_timer("list_flavors")
         def _list_flavors(self):
             """Sample of usage clients - list flavors
 
@@ -55,12 +56,12 @@ Inherit a class for your plugin from the base *Scenario* class and implement a s
             initialized on scenario instance creation"""
             self.clients("nova").flavors.list()
 
-        @base.atomic_action_timer("list_flavors_as_admin")
+        @atomic.action_timer("list_flavors_as_admin")
         def _list_flavors_as_admin(self):
             """The same with admin clients"""
             self.admin_clients("nova").flavors.list()
 
-        @base.scenario()
+        @scenario.configure()
         def list_flavors(self):
             """List flavors."""
             self._list_flavors()

@@ -17,24 +17,25 @@
 import random
 import time
 
-from rally.task.scenarios import base
+from rally.task import atomic
+from rally.task import scenario
 
 # This is used to test relative import
 from test_relative_import import zzz
 
 
-class FakePlugin(base.Scenario):
+class FakePlugin(scenario.Scenario):
     """Fake plugin with a scenario."""
 
-    @base.atomic_action_timer("test1")
+    @atomic.action_timer("test1")
     def _test1(self, factor):
         time.sleep(random.random() * 0.1)
 
-    @base.atomic_action_timer("test2")
+    @atomic.action_timer("test2")
     def _test2(self, factor):
         time.sleep(random.random() * factor)
 
-    @base.scenario()
+    @scenario.configure()
     def testplugin(self, factor=1):
         """Fake scenario.
 

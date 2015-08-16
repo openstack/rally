@@ -16,7 +16,7 @@
 import uuid
 
 from rally.plugins.openstack import scenario
-from rally.task.scenarios import base
+from rally.task import atomic
 
 
 def is_temporary(resource):
@@ -28,7 +28,7 @@ class KeystoneScenario(scenario.OpenStackScenario):
 
     RESOURCE_NAME_PREFIX = "rally_keystone_"
 
-    @base.atomic_action_timer("keystone.create_user")
+    @atomic.action_timer("keystone.create_user")
     def _user_create(self, name_length=10, email=None, **kwargs):
         """Creates keystone user with random name.
 
@@ -46,7 +46,7 @@ class KeystoneScenario(scenario.OpenStackScenario):
         return self.admin_clients("keystone").users.create(
             name, password=password, email=email, **kwargs)
 
-    @base.atomic_action_timer("keystone.update_user_enabled")
+    @atomic.action_timer("keystone.update_user_enabled")
     def _update_user_enabled(self, user, enabled):
         """Enable or disable a user.
 
@@ -59,10 +59,10 @@ class KeystoneScenario(scenario.OpenStackScenario):
     def _resource_delete(self, resource):
         """"Delete keystone resource."""
         r = "keystone.delete_%s" % resource.__class__.__name__.lower()
-        with base.AtomicAction(self, r):
+        with atomic.ActionTimer(self, r):
             resource.delete()
 
-    @base.atomic_action_timer("keystone.create_tenant")
+    @atomic.action_timer("keystone.create_tenant")
     def _tenant_create(self, name_length=10, **kwargs):
         """Creates keystone tenant with random name.
 
@@ -73,7 +73,7 @@ class KeystoneScenario(scenario.OpenStackScenario):
         name = self._generate_random_name(length=name_length)
         return self.admin_clients("keystone").tenants.create(name, **kwargs)
 
-    @base.atomic_action_timer("keystone.create_service")
+    @atomic.action_timer("keystone.create_service")
     def _service_create(self, service_type="rally_test_type",
                         description=None):
         """Creates keystone service with random name.
@@ -89,7 +89,7 @@ class KeystoneScenario(scenario.OpenStackScenario):
             self._generate_random_name(),
             service_type, description)
 
-    @base.atomic_action_timer("keystone.create_users")
+    @atomic.action_timer("keystone.create_users")
     def _users_create(self, tenant, users_per_tenant, name_length=10):
         """Adds users to a tenant.
 
@@ -104,7 +104,7 @@ class KeystoneScenario(scenario.OpenStackScenario):
             self.admin_clients("keystone").users.create(
                 name, password=password, email=email, tenant_id=tenant.id)
 
-    @base.atomic_action_timer("keystone.create_role")
+    @atomic.action_timer("keystone.create_role")
     def _role_create(self, name_length=5):
         """Creates keystone user role with random name.
 
@@ -115,22 +115,22 @@ class KeystoneScenario(scenario.OpenStackScenario):
             self._generate_random_name(length=name_length))
         return role
 
-    @base.atomic_action_timer("keystone.list_users")
+    @atomic.action_timer("keystone.list_users")
     def _list_users(self):
         """List users."""
         return self.admin_clients("keystone").users.list()
 
-    @base.atomic_action_timer("keystone.list_tenants")
+    @atomic.action_timer("keystone.list_tenants")
     def _list_tenants(self):
         """List tenants."""
         return self.admin_clients("keystone").tenants.list()
 
-    @base.atomic_action_timer("keystone.service_list")
+    @atomic.action_timer("keystone.service_list")
     def _list_services(self):
         """List services."""
         return self.admin_clients("keystone").services.list()
 
-    @base.atomic_action_timer("keystone.list_roles")
+    @atomic.action_timer("keystone.list_roles")
     def _list_roles_for_user(self, user, tenant):
         """List user roles.
 
@@ -140,7 +140,7 @@ class KeystoneScenario(scenario.OpenStackScenario):
         return self.admin_clients("keystone").roles.roles_for_user(
             user, tenant)
 
-    @base.atomic_action_timer("keystone.add_role")
+    @atomic.action_timer("keystone.add_role")
     def _role_add(self, user, role, tenant):
         """Add role to a given user on a tenant.
 
@@ -150,7 +150,7 @@ class KeystoneScenario(scenario.OpenStackScenario):
         """
         self.admin_clients("keystone").roles.add_user_role(user, role, tenant)
 
-    @base.atomic_action_timer("keystone.remove_role")
+    @atomic.action_timer("keystone.remove_role")
     def _role_remove(self, user, role, tenant):
         """Dissociate user with role.
 
@@ -161,7 +161,7 @@ class KeystoneScenario(scenario.OpenStackScenario):
         self.admin_clients("keystone").roles.remove_user_role(user,
                                                               role, tenant)
 
-    @base.atomic_action_timer("keystone.get_tenant")
+    @atomic.action_timer("keystone.get_tenant")
     def _get_tenant(self, tenant_id):
         """Get given tenant.
 
@@ -169,7 +169,7 @@ class KeystoneScenario(scenario.OpenStackScenario):
         """
         return self.admin_clients("keystone").tenants.get(tenant_id)
 
-    @base.atomic_action_timer("keystone.get_user")
+    @atomic.action_timer("keystone.get_user")
     def _get_user(self, user_id):
         """Get given user.
 
@@ -177,7 +177,7 @@ class KeystoneScenario(scenario.OpenStackScenario):
         """
         return self.admin_clients("keystone").users.get(user_id)
 
-    @base.atomic_action_timer("keystone.get_role")
+    @atomic.action_timer("keystone.get_role")
     def _get_role(self, role_id):
         """Get given user role.
 
@@ -185,7 +185,7 @@ class KeystoneScenario(scenario.OpenStackScenario):
         """
         return self.admin_clients("keystone").roles.get(role_id)
 
-    @base.atomic_action_timer("keystone.get_service")
+    @atomic.action_timer("keystone.get_service")
     def _get_service(self, service_id):
         """Get service with given service id.
 
@@ -198,7 +198,7 @@ class KeystoneScenario(scenario.OpenStackScenario):
             if i.name == name:
                 return i
 
-    @base.atomic_action_timer("keystone.delete_service")
+    @atomic.action_timer("keystone.delete_service")
     def _delete_service(self, service_id):
         """Delete service.
 
@@ -206,7 +206,7 @@ class KeystoneScenario(scenario.OpenStackScenario):
         """
         self.admin_clients("keystone").services.delete(service_id)
 
-    @base.atomic_action_timer("keystone.update_tenant")
+    @atomic.action_timer("keystone.update_tenant")
     def _update_tenant(self, tenant, name=None, description=None):
         """Update tenant name and description.
 
@@ -219,7 +219,7 @@ class KeystoneScenario(scenario.OpenStackScenario):
         self.admin_clients("keystone").tenants.update(tenant.id,
                                                       name, description)
 
-    @base.atomic_action_timer("keystone.update_user_password")
+    @atomic.action_timer("keystone.update_user_password")
     def _update_user_password(self, user_id, password):
         """Update user password.
 
@@ -232,7 +232,7 @@ class KeystoneScenario(scenario.OpenStackScenario):
         else:
             admin_clients.users.update_password(user_id, password)
 
-    @base.atomic_action_timer("keystone.create_ec2creds")
+    @atomic.action_timer("keystone.create_ec2creds")
     def _create_ec2credentials(self, user_id, tenant_id):
         """Create ec2credentials.
 
@@ -243,7 +243,7 @@ class KeystoneScenario(scenario.OpenStackScenario):
         """
         return self.clients("keystone").ec2.create(user_id, tenant_id)
 
-    @base.atomic_action_timer("keystone.list_ec2creds")
+    @atomic.action_timer("keystone.list_ec2creds")
     def _list_ec2credentials(self, user_id):
         """List of access/secret pairs for a user_id.
 
@@ -253,7 +253,7 @@ class KeystoneScenario(scenario.OpenStackScenario):
         """
         return self.clients("keystone").ec2.list(user_id)
 
-    @base.atomic_action_timer("keystone.delete_ec2creds")
+    @atomic.action_timer("keystone.delete_ec2creds")
     def _delete_ec2credential(self, user_id, access):
         """Delete ec2credential.
 

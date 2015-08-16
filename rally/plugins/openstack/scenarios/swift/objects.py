@@ -16,8 +16,9 @@
 import tempfile
 
 from rally import consts
+from rally.plugins.openstack import scenario
 from rally.plugins.openstack.scenarios.swift import utils
-from rally.task.scenarios import base
+from rally.task import atomic
 from rally.task import validation
 
 
@@ -26,7 +27,7 @@ class SwiftObjects(utils.SwiftScenario):
 
     @validation.required_services(consts.Service.SWIFT)
     @validation.required_openstack(users=True)
-    @base.scenario(context={"cleanup": ["swift"]})
+    @scenario.configure(context={"cleanup": ["swift"]})
     def create_container_and_object_then_list_objects(
             self, objects_per_container=1,
             object_size=1024, **kwargs):
@@ -45,7 +46,7 @@ class SwiftObjects(utils.SwiftScenario):
             # set dummy file to specified object size
             dummy_file.truncate(object_size)
             container_name = self._create_container(**kwargs)
-            with base.AtomicAction(self, "swift.create_%s" % key_suffix):
+            with atomic.ActionTimer(self, "swift.create_%s" % key_suffix):
                 for i in range(objects_per_container):
                     dummy_file.seek(0)
                     self._upload_object(container_name, dummy_file,
@@ -54,7 +55,7 @@ class SwiftObjects(utils.SwiftScenario):
 
     @validation.required_services(consts.Service.SWIFT)
     @validation.required_openstack(users=True)
-    @base.scenario(context={"cleanup": ["swift"]})
+    @scenario.configure(context={"cleanup": ["swift"]})
     def create_container_and_object_then_delete_all(
             self, objects_per_container=1,
             object_size=1024, **kwargs):
@@ -74,7 +75,7 @@ class SwiftObjects(utils.SwiftScenario):
             # set dummy file to specified object size
             dummy_file.truncate(object_size)
             container_name = self._create_container(**kwargs)
-            with base.AtomicAction(self, "swift.create_%s" % key_suffix):
+            with atomic.ActionTimer(self, "swift.create_%s" % key_suffix):
                 for i in range(objects_per_container):
                     dummy_file.seek(0)
                     object_name = self._upload_object(container_name,
@@ -82,7 +83,7 @@ class SwiftObjects(utils.SwiftScenario):
                                                       atomic_action=False)[1]
                     objects_list.append(object_name)
 
-        with base.AtomicAction(self, "swift.delete_%s" % key_suffix):
+        with atomic.ActionTimer(self, "swift.delete_%s" % key_suffix):
             for object_name in objects_list:
                 self._delete_object(container_name, object_name,
                                     atomic_action=False)
@@ -90,7 +91,7 @@ class SwiftObjects(utils.SwiftScenario):
 
     @validation.required_services(consts.Service.SWIFT)
     @validation.required_openstack(users=True)
-    @base.scenario(context={"cleanup": ["swift"]})
+    @scenario.configure(context={"cleanup": ["swift"]})
     def create_container_and_object_then_download_object(
             self, objects_per_container=1,
             object_size=1024, **kwargs):
@@ -110,7 +111,7 @@ class SwiftObjects(utils.SwiftScenario):
             # set dummy file to specified object size
             dummy_file.truncate(object_size)
             container_name = self._create_container(**kwargs)
-            with base.AtomicAction(self, "swift.create_%s" % key_suffix):
+            with atomic.ActionTimer(self, "swift.create_%s" % key_suffix):
                 for i in range(objects_per_container):
                     dummy_file.seek(0)
                     object_name = self._upload_object(container_name,
@@ -118,7 +119,7 @@ class SwiftObjects(utils.SwiftScenario):
                                                       atomic_action=False)[1]
                     objects_list.append(object_name)
 
-        with base.AtomicAction(self, "swift.download_%s" % key_suffix):
+        with atomic.ActionTimer(self, "swift.download_%s" % key_suffix):
             for object_name in objects_list:
                 self._download_object(container_name, object_name,
                                       atomic_action=False)

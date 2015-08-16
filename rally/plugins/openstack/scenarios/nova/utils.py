@@ -22,7 +22,7 @@ import six
 from rally import exceptions
 from rally.plugins.openstack import scenario
 from rally.plugins.openstack.wrappers import network as network_wrapper
-from rally.task.scenarios import base
+from rally.task import atomic
 from rally.task import utils
 
 NOVA_BENCHMARK_OPTS = []
@@ -91,12 +91,12 @@ CONF.register_opts(NOVA_BENCHMARK_OPTS, group=benchmark_group)
 class NovaScenario(scenario.OpenStackScenario):
     """Base class for Nova scenarios with basic atomic actions."""
 
-    @base.atomic_action_timer("nova.list_servers")
+    @atomic.action_timer("nova.list_servers")
     def _list_servers(self, detailed=True):
         """Returns user servers list."""
         return self.clients("nova").servers.list(detailed)
 
-    @base.atomic_action_timer("nova.boot_server")
+    @atomic.action_timer("nova.boot_server")
     def _boot_server(self, image_id, flavor_id,
                      auto_assign_nic=False, name=None, **kwargs):
         """Boot a server.
@@ -156,7 +156,7 @@ class NovaScenario(scenario.OpenStackScenario):
             check_interval=CONF.benchmark.nova_server_reboot_poll_interval
         )
 
-    @base.atomic_action_timer("nova.soft_reboot_server")
+    @atomic.action_timer("nova.soft_reboot_server")
     def _soft_reboot_server(self, server):
         """Reboot a server with soft reboot.
 
@@ -167,7 +167,7 @@ class NovaScenario(scenario.OpenStackScenario):
         """
         self._do_server_reboot(server, "SOFT")
 
-    @base.atomic_action_timer("nova.reboot_server")
+    @atomic.action_timer("nova.reboot_server")
     def _reboot_server(self, server):
         """Reboot a server with hard reboot.
 
@@ -178,7 +178,7 @@ class NovaScenario(scenario.OpenStackScenario):
         """
         self._do_server_reboot(server, "HARD")
 
-    @base.atomic_action_timer("nova.rebuild_server")
+    @atomic.action_timer("nova.rebuild_server")
     def _rebuild_server(self, server, image, **kwargs):
         """Rebuild a server with a new image.
 
@@ -196,7 +196,7 @@ class NovaScenario(scenario.OpenStackScenario):
             check_interval=CONF.benchmark.nova_server_rebuild_poll_interval
         )
 
-    @base.atomic_action_timer("nova.start_server")
+    @atomic.action_timer("nova.start_server")
     def _start_server(self, server):
         """Start the given server.
 
@@ -213,7 +213,7 @@ class NovaScenario(scenario.OpenStackScenario):
             check_interval=CONF.benchmark.nova_server_start_poll_interval
         )
 
-    @base.atomic_action_timer("nova.stop_server")
+    @atomic.action_timer("nova.stop_server")
     def _stop_server(self, server):
         """Stop the given server.
 
@@ -230,7 +230,7 @@ class NovaScenario(scenario.OpenStackScenario):
             check_interval=CONF.benchmark.nova_server_stop_poll_interval
         )
 
-    @base.atomic_action_timer("nova.rescue_server")
+    @atomic.action_timer("nova.rescue_server")
     def _rescue_server(self, server):
         """Rescue the given server.
 
@@ -248,7 +248,7 @@ class NovaScenario(scenario.OpenStackScenario):
             check_interval=CONF.benchmark.nova_server_rescue_poll_interval
         )
 
-    @base.atomic_action_timer("nova.unrescue_server")
+    @atomic.action_timer("nova.unrescue_server")
     def _unrescue_server(self, server):
         """Unrescue the given server.
 
@@ -265,7 +265,7 @@ class NovaScenario(scenario.OpenStackScenario):
             check_interval=CONF.benchmark.nova_server_unrescue_poll_interval
         )
 
-    @base.atomic_action_timer("nova.suspend_server")
+    @atomic.action_timer("nova.suspend_server")
     def _suspend_server(self, server):
         """Suspends the given server.
 
@@ -283,7 +283,7 @@ class NovaScenario(scenario.OpenStackScenario):
             check_interval=CONF.benchmark.nova_server_suspend_poll_interval
         )
 
-    @base.atomic_action_timer("nova.resume_server")
+    @atomic.action_timer("nova.resume_server")
     def _resume_server(self, server):
         """Resumes the suspended server.
 
@@ -301,7 +301,7 @@ class NovaScenario(scenario.OpenStackScenario):
             check_interval=CONF.benchmark.nova_server_resume_poll_interval
         )
 
-    @base.atomic_action_timer("nova.pause_server")
+    @atomic.action_timer("nova.pause_server")
     def _pause_server(self, server):
         """Pause the live server.
 
@@ -319,7 +319,7 @@ class NovaScenario(scenario.OpenStackScenario):
             check_interval=CONF.benchmark.nova_server_pause_poll_interval
         )
 
-    @base.atomic_action_timer("nova.unpause_server")
+    @atomic.action_timer("nova.unpause_server")
     def _unpause_server(self, server):
         """Unpause the paused server.
 
@@ -337,7 +337,7 @@ class NovaScenario(scenario.OpenStackScenario):
             check_interval=CONF.benchmark.nova_server_unpause_poll_interval
         )
 
-    @base.atomic_action_timer("nova.shelve_server")
+    @atomic.action_timer("nova.shelve_server")
     def _shelve_server(self, server):
         """Shelve the given server.
 
@@ -355,7 +355,7 @@ class NovaScenario(scenario.OpenStackScenario):
             check_interval=CONF.benchmark.nova_server_shelve_poll_interval
         )
 
-    @base.atomic_action_timer("nova.unshelve_server")
+    @atomic.action_timer("nova.unshelve_server")
     def _unshelve_server(self, server):
         """Unshelve the given server.
 
@@ -381,7 +381,7 @@ class NovaScenario(scenario.OpenStackScenario):
         :param force: If True, force_delete will be used instead of delete.
         """
         atomic_name = ("nova.%sdelete_server") % (force and "force_" or "")
-        with base.AtomicAction(self, atomic_name):
+        with atomic.ActionTimer(self, atomic_name):
             if force:
                 server.force_delete()
             else:
@@ -401,7 +401,7 @@ class NovaScenario(scenario.OpenStackScenario):
         :param force: If True, force_delete will be used instead of delete.
         """
         atomic_name = ("nova.%sdelete_servers") % (force and "force_" or "")
-        with base.AtomicAction(self, atomic_name):
+        with atomic.ActionTimer(self, atomic_name):
             for server in servers:
                 if force:
                     server.force_delete()
@@ -417,7 +417,7 @@ class NovaScenario(scenario.OpenStackScenario):
                     benchmark.nova_server_delete_poll_interval
                 )
 
-    @base.atomic_action_timer("nova.delete_image")
+    @atomic.action_timer("nova.delete_image")
     def _delete_image(self, image):
         """Delete the given image.
 
@@ -434,7 +434,7 @@ class NovaScenario(scenario.OpenStackScenario):
             check_interval=check_interval
         )
 
-    @base.atomic_action_timer("nova.create_image")
+    @atomic.action_timer("nova.create_image")
     def _create_image(self, server):
         """Create an image from the given server
 
@@ -458,7 +458,7 @@ class NovaScenario(scenario.OpenStackScenario):
         )
         return image
 
-    @base.atomic_action_timer("nova.create_keypair")
+    @atomic.action_timer("nova.create_keypair")
     def _create_keypair(self, **kwargs):
         """Create a keypair
 
@@ -468,12 +468,12 @@ class NovaScenario(scenario.OpenStackScenario):
         keypair = self.clients("nova").keypairs.create(keypair_name, **kwargs)
         return keypair.name
 
-    @base.atomic_action_timer("nova.list_keypairs")
+    @atomic.action_timer("nova.list_keypairs")
     def _list_keypairs(self):
         """Return user keypairs list."""
         return self.clients("nova").keypairs.list()
 
-    @base.atomic_action_timer("nova.delete_keypair")
+    @atomic.action_timer("nova.delete_keypair")
     def _delete_keypair(self, keypair_name):
         """Delete keypair
 
@@ -481,7 +481,7 @@ class NovaScenario(scenario.OpenStackScenario):
         """
         self.clients("nova").keypairs.delete(keypair_name)
 
-    @base.atomic_action_timer("nova.boot_servers")
+    @atomic.action_timer("nova.boot_servers")
     def _boot_servers(self, image_id, flavor_id, requests, name_prefix=None,
                       instances_amount=1, **kwargs):
         """Boot multiple servers.
@@ -522,7 +522,7 @@ class NovaScenario(scenario.OpenStackScenario):
         ) for server in servers]
         return servers
 
-    @base.atomic_action_timer("nova.associate_floating_ip")
+    @atomic.action_timer("nova.associate_floating_ip")
     def _associate_floating_ip(self, server, address, fixed_address=None):
         """Add floating IP to an instance
 
@@ -540,7 +540,7 @@ class NovaScenario(scenario.OpenStackScenario):
         # Update server data
         server.addresses = server.manager.get(server.id).addresses
 
-    @base.atomic_action_timer("nova.dissociate_floating_ip")
+    @atomic.action_timer("nova.dissociate_floating_ip")
     def _dissociate_floating_ip(self, server, address):
         """Remove floating IP from an instance
 
@@ -568,12 +568,12 @@ class NovaScenario(scenario.OpenStackScenario):
             return not must_exist
         return _check_addr
 
-    @base.atomic_action_timer("nova.list_networks")
+    @atomic.action_timer("nova.list_networks")
     def _list_networks(self):
         """Return user networks list."""
         return self.clients("nova").networks.list()
 
-    @base.atomic_action_timer("nova.resize")
+    @atomic.action_timer("nova.resize")
     def _resize(self, server, flavor):
         server.resize(flavor)
         utils.wait_for(
@@ -584,7 +584,7 @@ class NovaScenario(scenario.OpenStackScenario):
             check_interval=CONF.benchmark.nova_server_resize_poll_interval
         )
 
-    @base.atomic_action_timer("nova.resize_confirm")
+    @atomic.action_timer("nova.resize_confirm")
     def _resize_confirm(self, server, status="ACTIVE"):
         server.confirm_resize()
         utils.wait_for(
@@ -596,7 +596,7 @@ class NovaScenario(scenario.OpenStackScenario):
                 CONF.benchmark.nova_server_resize_confirm_poll_interval)
         )
 
-    @base.atomic_action_timer("nova.resize_revert")
+    @atomic.action_timer("nova.resize_revert")
     def _resize_revert(self, server, status="ACTIVE"):
         server.revert_resize()
         utils.wait_for(
@@ -608,7 +608,7 @@ class NovaScenario(scenario.OpenStackScenario):
                 CONF.benchmark.nova_server_resize_revert_poll_interval)
         )
 
-    @base.atomic_action_timer("nova.attach_volume")
+    @atomic.action_timer("nova.attach_volume")
     def _attach_volume(self, server, volume, device=None):
         server_id = server.id
         volume_id = volume.id
@@ -624,7 +624,7 @@ class NovaScenario(scenario.OpenStackScenario):
                 CONF.benchmark.nova_server_resize_revert_poll_interval)
         )
 
-    @base.atomic_action_timer("nova.detach_volume")
+    @atomic.action_timer("nova.detach_volume")
     def _detach_volume(self, server, volume):
         server_id = server.id
         volume_id = volume.id
@@ -638,7 +638,7 @@ class NovaScenario(scenario.OpenStackScenario):
             check_interval=CONF.benchmark.nova_detach_volume_poll_interval
         )
 
-    @base.atomic_action_timer("nova.live_migrate")
+    @atomic.action_timer("nova.live_migrate")
     def _live_migrate(self, server, target_host, block_migration=False,
                       disk_over_commit=False, skip_host_check=False):
         """Run live migration of the given server.
@@ -671,7 +671,7 @@ class NovaScenario(scenario.OpenStackScenario):
                 "Migration complete but instance did not change host: %s" %
                 host_pre_migrate)
 
-    @base.atomic_action_timer("nova.find_host_to_migrate")
+    @atomic.action_timer("nova.find_host_to_migrate")
     def _find_host_to_migrate(self, server):
         """Find a compute node for live migration.
 
@@ -695,7 +695,7 @@ class NovaScenario(scenario.OpenStackScenario):
             raise exceptions.InvalidHostException(
                 "No valid host found to migrate")
 
-    @base.atomic_action_timer("nova.migrate")
+    @atomic.action_timer("nova.migrate")
     def _migrate(self, server, skip_host_check=False):
         """Run migration of the given server.
 
@@ -724,8 +724,8 @@ class NovaScenario(scenario.OpenStackScenario):
 
     def _create_security_groups(self, security_group_count):
         security_groups = []
-        with base.AtomicAction(self, "nova.create_%s_security_groups" %
-                               security_group_count):
+        with atomic.ActionTimer(self, "nova.create_%s_security_groups" %
+                                security_group_count):
             for i in range(security_group_count):
                 sg_name = self._generate_random_name()
                 sg = self.clients("nova").security_groups.create(sg_name,
@@ -739,7 +739,7 @@ class NovaScenario(scenario.OpenStackScenario):
                                          ip_protocol="tcp", cidr="0.0.0.0/0"):
         action_name = ("nova.create_%s_rules" % (rules_per_security_group *
                                                  len(security_groups)))
-        with base.AtomicAction(self, action_name):
+        with atomic.ActionTimer(self, action_name):
             for i in range(len(security_groups)):
                 for j in range(rules_per_security_group):
                         self.clients("nova").security_group_rules.create(
@@ -750,22 +750,22 @@ class NovaScenario(scenario.OpenStackScenario):
                             cidr=cidr)
 
     def _delete_security_groups(self, security_group):
-        with base.AtomicAction(self, "nova.delete_%s_security_groups" %
-                               len(security_group)):
+        with atomic.ActionTimer(self, "nova.delete_%s_security_groups" %
+                                len(security_group)):
             for sg in security_group:
                 self.clients("nova").security_groups.delete(sg.id)
 
     def _list_security_groups(self):
         """Return security groups list."""
-        with base.AtomicAction(self, "nova.list_security_groups"):
+        with atomic.ActionTimer(self, "nova.list_security_groups"):
             return self.clients("nova").security_groups.list()
 
-    @base.atomic_action_timer("nova.list_floating_ips_bulk")
+    @atomic.action_timer("nova.list_floating_ips_bulk")
     def _list_floating_ips_bulk(self):
         """List all floating IPs."""
         return self.admin_clients("nova").floating_ips_bulk.list()
 
-    @base.atomic_action_timer("nova.create_floating_ips_bulk")
+    @atomic.action_timer("nova.create_floating_ips_bulk")
     def _create_floating_ips_bulk(self, ip_range, **kwargs):
         """Create floating IPs by range."""
         ip_range = network_wrapper.generate_cidr(start_cidr=ip_range)
@@ -773,17 +773,17 @@ class NovaScenario(scenario.OpenStackScenario):
         return self.admin_clients("nova").floating_ips_bulk.create(
             ip_range=ip_range, pool=pool_name, **kwargs)
 
-    @base.atomic_action_timer("nova.delete_floating_ips_bulk")
+    @atomic.action_timer("nova.delete_floating_ips_bulk")
     def _delete_floating_ips_bulk(self, ip_range):
         """Delete floating IPs by range."""
         return self.admin_clients("nova").floating_ips_bulk.delete(ip_range)
 
-    @base.atomic_action_timer("nova.list_hypervisors")
+    @atomic.action_timer("nova.list_hypervisors")
     def _list_hypervisors(self, detailed=True):
         """List hypervisors."""
         return self.admin_clients("nova").hypervisors.list(detailed)
 
-    @base.atomic_action_timer("nova.lock_server")
+    @atomic.action_timer("nova.lock_server")
     def _lock_server(self, server):
         """Lock the given server.
 
@@ -791,7 +791,7 @@ class NovaScenario(scenario.OpenStackScenario):
         """
         server.lock()
 
-    @base.atomic_action_timer("nova.unlock_server")
+    @atomic.action_timer("nova.unlock_server")
     def _unlock_server(self, server):
         """Unlock the given server.
 
@@ -799,7 +799,7 @@ class NovaScenario(scenario.OpenStackScenario):
         """
         server.unlock()
 
-    @base.atomic_action_timer("nova.create_network")
+    @atomic.action_timer("nova.create_network")
     def _create_network(self, ip_range, **kwargs):
         """Create nova network.
 
@@ -810,7 +810,7 @@ class NovaScenario(scenario.OpenStackScenario):
         return self.admin_clients("nova").networks.create(
             label=net_label, cidr=ip_range, **kwargs)
 
-    @base.atomic_action_timer("nova.delete_network")
+    @atomic.action_timer("nova.delete_network")
     def _delete_network(self, net_id):
         """Delete nova network.
 

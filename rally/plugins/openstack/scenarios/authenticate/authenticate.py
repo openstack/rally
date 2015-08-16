@@ -13,7 +13,7 @@
 #    under the License.
 
 from rally.plugins.openstack import scenario
-from rally.task.scenarios import base
+from rally.task import atomic
 from rally.task import validation
 
 
@@ -25,14 +25,14 @@ class Authenticate(scenario.OpenStackScenario):
     """
 
     @validation.required_openstack(users=True)
-    @base.scenario()
+    @scenario.configure()
     def keystone(self):
         """Check Keystone Client."""
         self.clients("keystone")
 
     @validation.number("repetitions", minval=1)
     @validation.required_openstack(users=True)
-    @base.scenario()
+    @scenario.configure()
     def validate_glance(self, repetitions):
         """Check Glance Client to ensure validation of token.
 
@@ -45,12 +45,12 @@ class Authenticate(scenario.OpenStackScenario):
         glance_client = self.clients("glance")
         image_name = "__intentionally_non_existent_image___"
         for i in range(repetitions):
-            with base.AtomicAction(self, "authenticate.validate_glance"):
+            with atomic.ActionTimer(self, "authenticate.validate_glance"):
                 list(glance_client.images.list(name=image_name))
 
     @validation.number("repetitions", minval=1)
     @validation.required_openstack(users=True)
-    @base.scenario()
+    @scenario.configure()
     def validate_nova(self, repetitions):
         """Check Nova Client to ensure validation of token.
 
@@ -61,12 +61,12 @@ class Authenticate(scenario.OpenStackScenario):
         """
         nova_client = self.clients("nova")
         for i in range(repetitions):
-            with base.AtomicAction(self, "authenticate.validate_nova"):
+            with atomic.ActionTimer(self, "authenticate.validate_nova"):
                 nova_client.flavors.list()
 
     @validation.number("repetitions", minval=1)
     @validation.required_openstack(users=True)
-    @base.scenario()
+    @scenario.configure()
     def validate_cinder(self, repetitions):
         """Check Cinder Client to ensure validation of token.
 
@@ -77,12 +77,12 @@ class Authenticate(scenario.OpenStackScenario):
         """
         cinder_client = self.clients("cinder")
         for i in range(repetitions):
-            with base.AtomicAction(self, "authenticate.validate_cinder"):
+            with atomic.ActionTimer(self, "authenticate.validate_cinder"):
                 cinder_client.volume_types.list()
 
     @validation.number("repetitions", minval=1)
     @validation.required_openstack(users=True)
-    @base.scenario()
+    @scenario.configure()
     def validate_neutron(self, repetitions):
         """Check Neutron Client to ensure validation of token.
 
@@ -93,12 +93,12 @@ class Authenticate(scenario.OpenStackScenario):
         """
         neutron_client = self.clients("neutron")
         for i in range(repetitions):
-            with base.AtomicAction(self, "authenticate.validate_neutron"):
+            with atomic.ActionTimer(self, "authenticate.validate_neutron"):
                 neutron_client.list_networks()
 
     @validation.number("repetitions", minval=1)
     @validation.required_openstack(users=True)
-    @base.scenario()
+    @scenario.configure()
     def validate_heat(self, repetitions):
         """Check Heat Client to ensure validation of token.
 
@@ -109,5 +109,5 @@ class Authenticate(scenario.OpenStackScenario):
         """
         heat_client = self.clients("heat")
         for i in range(repetitions):
-            with base.AtomicAction(self, "authenticate.validate_heat"):
+            with atomic.ActionTimer(self, "authenticate.validate_heat"):
                 list(heat_client.stacks.list(limit=0))

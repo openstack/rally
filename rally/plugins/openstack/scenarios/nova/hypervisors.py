@@ -15,8 +15,8 @@
 
 from rally.common import log as logging
 from rally import consts
+from rally.plugins.openstack import scenario
 from rally.plugins.openstack.scenarios.nova import utils
-from rally.task.scenarios import base
 from rally.task import validation
 
 
@@ -28,7 +28,7 @@ class NovaHypervisors(utils.NovaScenario):
 
     @validation.required_services(consts.Service.NOVA)
     @validation.required_openstack(admin=True)
-    @base.scenario()
+    @scenario.configure()
     def list_hypervisors(self, detailed=True):
         """List hypervisors.
 

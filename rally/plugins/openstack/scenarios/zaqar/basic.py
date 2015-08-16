@@ -14,8 +14,8 @@
 
 import random
 
+from rally.plugins.openstack import scenario
 from rally.plugins.openstack.scenarios.zaqar import utils as zutils
-from rally.task.scenarios import base
 from rally.task import validation
 
 
@@ -23,7 +23,7 @@ class ZaqarBasic(zutils.ZaqarScenario):
     """Benchmark scenarios for Zaqar."""
 
     @validation.number("name_length", minval=10)
-    @base.scenario(context={"cleanup": ["zaqar"]})
+    @scenario.configure(context={"cleanup": ["zaqar"]})
     def create_queue(self, name_length=10, **kwargs):
         """Create a Zaqar queue with a random name.
 
@@ -34,7 +34,7 @@ class ZaqarBasic(zutils.ZaqarScenario):
         self._queue_create(name_length=name_length, **kwargs)
 
     @validation.number("name_length", minval=10)
-    @base.scenario(context={"cleanup": ["zaqar"]})
+    @scenario.configure(context={"cleanup": ["zaqar"]})
     def producer_consumer(self, name_length=10,
                           min_msg_count=50, max_msg_count=200, **kwargs):
         """Serial message producer/consumer.

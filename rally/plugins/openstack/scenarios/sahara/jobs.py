@@ -15,8 +15,8 @@
 
 from rally.common import log as logging
 from rally import consts
+from rally.plugins.openstack import scenario
 from rally.plugins.openstack.scenarios.sahara import utils
-from rally.task.scenarios import base
 from rally.task import validation
 
 LOG = logging.getLogger(__name__)
@@ -28,7 +28,7 @@ class SaharaJob(utils.SaharaScenario):
     @validation.required_services(consts.Service.SAHARA)
     @validation.required_contexts("users", "sahara_image", "sahara_edp",
                                   "sahara_cluster")
-    @base.scenario(context={"cleanup": ["sahara"]})
+    @scenario.configure(context={"cleanup": ["sahara"]})
     def create_launch_job(self, job_type, configs, job_idx=0):
         """Create and execute a Sahara EDP Job.
 
@@ -71,7 +71,7 @@ class SaharaJob(utils.SaharaScenario):
     @validation.required_services(consts.Service.SAHARA)
     @validation.required_contexts("users", "sahara_image", "sahara_edp",
                                   "sahara_cluster")
-    @base.scenario(context={"cleanup": ["sahara"]})
+    @scenario.configure(context={"cleanup": ["sahara"]})
     def create_launch_job_sequence(self, jobs):
         """Create and execute a sequence of the Sahara EDP Jobs.
 
@@ -88,7 +88,7 @@ class SaharaJob(utils.SaharaScenario):
     @validation.required_services(consts.Service.SAHARA)
     @validation.required_contexts("users", "sahara_image", "sahara_edp",
                                   "sahara_cluster")
-    @base.scenario(context={"cleanup": ["sahara"]})
+    @scenario.configure(context={"cleanup": ["sahara"]})
     def create_launch_job_sequence_with_scaling(self, jobs, deltas):
         """Create and execute Sahara EDP Jobs on a scaling Cluster.
 

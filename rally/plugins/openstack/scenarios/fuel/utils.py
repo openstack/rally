@@ -19,7 +19,7 @@ import six
 
 from rally import osclients
 from rally.plugins.openstack import scenario
-from rally.task.scenarios import base
+from rally.task import atomic
 
 
 class FuelClient(object):
@@ -59,7 +59,7 @@ def fuel(instance):
 class FuelScenario(scenario.OpenStackScenario):
     """Base class for Fuel scenarios."""
 
-    @base.atomic_action_timer("fuel.list_environments")
+    @atomic.action_timer("fuel.list_environments")
     def _list_environments(self):
         """List Fuel environments."""
         return self.admin_clients("fuel").environment.get_all()

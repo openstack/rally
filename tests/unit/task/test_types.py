@@ -334,7 +334,7 @@ class NeutronNetworkResourceTypeTestCase(test.TestCase):
 
 class PreprocessTestCase(test.TestCase):
 
-    @mock.patch("rally.task.types.base.Scenario.meta")
+    @mock.patch("rally.task.types.scenario.Scenario.meta")
     @mock.patch("rally.task.types.osclients")
     def test_preprocess(self, mock_osclients, mock_scenario_meta):
         cls = "some_class"

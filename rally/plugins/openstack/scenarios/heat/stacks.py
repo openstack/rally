@@ -14,8 +14,9 @@
 #    under the License.
 
 from rally import consts
+from rally.plugins.openstack import scenario
 from rally.plugins.openstack.scenarios.heat import utils
-from rally.task.scenarios import base
+from rally.task import atomic
 from rally.task import types
 from rally.task import validation
 
@@ -29,7 +30,7 @@ class HeatStacks(utils.HeatScenario):
     @types.set(template_path=types.FileType, files=types.FileTypeDict)
     @validation.required_services(consts.Service.HEAT)
     @validation.required_openstack(users=True)
-    @base.scenario(context={"cleanup": ["heat"]})
+    @scenario.configure(context={"cleanup": ["heat"]})
     def create_and_list_stack(self, template_path, parameters=None,
                               files=None, environment=None):
         """Add a stack and then list all stacks.
@@ -47,12 +48,12 @@ class HeatStacks(utils.HeatScenario):
 
     @validation.required_services(consts.Service.HEAT)
     @validation.required_openstack(users=True)
-    @base.scenario()
+    @scenario.configure()
     def list_stacks_and_resources(self):
         """List all resources from tenant stacks."""
 
         stacks = self._list_stacks()
-        with base.AtomicAction(
+        with atomic.ActionTimer(
                 self, "heat.list_resources_of_%s_stacks" % len(stacks)):
             for stack in stacks:
                 self.clients("heat").resources.list(stack.id)
@@ -60,7 +61,7 @@ class HeatStacks(utils.HeatScenario):
     @types.set(template_path=types.FileType, files=types.FileTypeDict)
     @validation.required_services(consts.Service.HEAT)
     @validation.required_openstack(users=True)
-    @base.scenario(context={"cleanup": ["heat"]})
+    @scenario.configure(context={"cleanup": ["heat"]})
     def create_and_delete_stack(self, template_path, parameters=None,
                                 files=None, environment=None):
         """Add and then delete a stack.
@@ -81,7 +82,7 @@ class HeatStacks(utils.HeatScenario):
     @types.set(template_path=types.FileType, files=types.FileTypeDict)
     @validation.required_services(consts.Service.HEAT)
     @validation.required_openstack(users=True)
-    @base.scenario(context={"cleanup": ["heat"]})
+    @scenario.configure(context={"cleanup": ["heat"]})
     def create_check_delete_stack(self, template_path, parameters=None,
                                   files=None, environment=None):
         """Create, check and delete a stack.
@@ -108,7 +109,7 @@ class HeatStacks(utils.HeatScenario):
                updated_files=types.FileTypeDict)
     @validation.required_services(consts.Service.HEAT)
     @validation.required_openstack(users=True)
-    @base.scenario(context={"cleanup": ["heat"]})
+    @scenario.configure(context={"cleanup": ["heat"]})
     def create_update_delete_stack(self, template_path,
                                    updated_template_path,
                                    parameters=None, updated_parameters=None,
@@ -143,7 +144,7 @@ class HeatStacks(utils.HeatScenario):
     @types.set(template_path=types.FileType, files=types.FileTypeDict)
     @validation.required_services(consts.Service.HEAT)
     @validation.required_openstack(users=True)
-    @base.scenario(context={"cleanup": ["heat"]})
+    @scenario.configure(context={"cleanup": ["heat"]})
     def create_stack_and_scale(self, template_path, output_key, delta,
                                parameters=None, files=None,
                                environment=None):
@@ -180,7 +181,7 @@ class HeatStacks(utils.HeatScenario):
     @types.set(template_path=types.FileType, files=types.FileTypeDict)
     @validation.required_services(consts.Service.HEAT)
     @validation.required_openstack(users=True)
-    @base.scenario(context={"cleanup": ["heat"]})
+    @scenario.configure(context={"cleanup": ["heat"]})
     def create_suspend_resume_delete_stack(self, template_path,
                                            parameters=None, files=None,
                                            environment=None):
@@ -205,12 +206,12 @@ class HeatStacks(utils.HeatScenario):
 
     @validation.required_services(consts.Service.HEAT)
     @validation.required_openstack(users=True)
-    @base.scenario()
+    @scenario.configure()
     def list_stacks_and_events(self):
         """List events from tenant stacks."""
 
         stacks = self._list_stacks()
-        with base.AtomicAction(
+        with atomic.ActionTimer(
                 self, "heat.list_events_of_%s_stacks" % len(stacks)):
             for stack in stacks:
                 self.clients("heat").events.list(stack.id)
@@ -218,7 +219,7 @@ class HeatStacks(utils.HeatScenario):
     @types.set(template_path=types.FileType, files=types.FileTypeDict)
     @validation.required_services(consts.Service.HEAT)
     @validation.required_openstack(users=True)
-    @base.scenario(context={"cleanup": ["heat"]})
+    @scenario.configure(context={"cleanup": ["heat"]})
     def create_snapshot_restore_delete_stack(self, template_path,
                                              parameters=None, files=None,
                                              environment=None):

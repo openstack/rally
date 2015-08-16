@@ -26,7 +26,7 @@ from rally.common import sshutils
 from rally.plugins.openstack.scenarios.cinder import utils as cinder_utils
 from rally.plugins.openstack.scenarios.nova import utils as nova_utils
 from rally.plugins.openstack.wrappers import network as network_wrapper
-from rally.task.scenarios import base
+from rally.task import atomic
 from rally.task import utils
 from rally.task import validation
 
@@ -57,7 +57,7 @@ class VMScenario(nova_utils.NovaScenario, cinder_utils.CinderScenario):
 
     RESOURCE_NAME_PREFIX = "rally_vm_"
 
-    @base.atomic_action_timer("vm.run_command_over_ssh")
+    @atomic.action_timer("vm.run_command_over_ssh")
     def _run_command_over_ssh(self, ssh, command):
         """Run command inside an instance.
 
@@ -127,7 +127,7 @@ class VMScenario(nova_utils.NovaScenario, cinder_utils.CinderScenario):
                         "id": fip.get("id"),
                         "is_floating": use_floating_ip}
 
-    @base.atomic_action_timer("vm.attach_floating_ip")
+    @atomic.action_timer("vm.attach_floating_ip")
     def _attach_floating_ip(self, server, floating_network):
         internal_network = list(server.networks)[0]
         fixed_ip = server.addresses[internal_network][0]["addr"]
@@ -140,7 +140,7 @@ class VMScenario(nova_utils.NovaScenario, cinder_utils.CinderScenario):
 
         return fip
 
-    @base.atomic_action_timer("vm.delete_floating_ip")
+    @atomic.action_timer("vm.delete_floating_ip")
     def _delete_floating_ip(self, server, fip):
         with logging.ExceptionLogger(
                 LOG, _("Unable to delete IP: %s") % fip["ip"]):
@@ -154,11 +154,11 @@ class VMScenario(nova_utils.NovaScenario, cinder_utils.CinderScenario):
             self._delete_floating_ip(server, fip)
         return self._delete_server(server, force=force_delete)
 
-    @base.atomic_action_timer("vm.wait_for_ssh")
+    @atomic.action_timer("vm.wait_for_ssh")
     def _wait_for_ssh(self, ssh):
         ssh.wait()
 
-    @base.atomic_action_timer("vm.wait_for_ping")
+    @atomic.action_timer("vm.wait_for_ping")
     def _wait_for_ping(self, server_ip):
         server_ip = netaddr.IPAddress(server_ip)
         utils.wait_for(

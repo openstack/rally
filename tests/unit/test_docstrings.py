@@ -17,7 +17,7 @@ from rally.common.plugin import discover
 from rally.common import utils
 from rally.deployment import engine
 from rally.deployment.serverprovider import provider
-from rally.task.scenarios import base
+from rally.task import scenario
 from rally.task import sla
 from tests.unit import test
 
@@ -42,18 +42,18 @@ class DocstringsTestCase(test.TestCase):
 
     def test_all_scenarios_have_docstrings(self):
         ignored_params = ["self", "scenario_obj"]
-        for scenario_group in discover.itersubclasses(base.Scenario):
+        for scenario_group in discover.itersubclasses(scenario.Scenario):
             if scenario_group.__module__.startswith("tests."):
                 continue
 
             for method in dir(scenario_group):
-                if base.Scenario.is_scenario(scenario_group, method):
-                    scenario = getattr(scenario_group, method)
+                if scenario.Scenario.is_scenario(scenario_group, method):
+                    scenario_inst = getattr(scenario_group, method)
                     scenario_name = scenario_group.__name__ + "." + method
-                    self.assertIsNotNone(scenario.__doc__,
+                    self.assertIsNotNone(scenario_inst.__doc__,
                                          "%s doensn't have a docstring." %
                                          scenario_name)
-                    doc = utils.parse_docstring(scenario.__doc__)
+                    doc = utils.parse_docstring(scenario_inst.__doc__)
                     short_description = doc["short_description"]
                     self.assertIsNotNone(short_description,
                                          "Docstring for %s should have "
@@ -63,8 +63,8 @@ class DocstringsTestCase(test.TestCase):
                                      "One-line description for %s "
                                      "should be declarative and not start "
                                      "with 'Test(s) ...'" % scenario_name)
-                    params_count = scenario.__code__.co_argcount
-                    params = scenario.__code__.co_varnames[:params_count]
+                    params_count = scenario_inst.__code__.co_argcount
+                    params = scenario_inst.__code__.co_varnames[:params_count]
                     documented_params = [p["name"] for p in doc["params"]]
                     for param in params:
                         if param not in ignored_params:
@@ -76,7 +76,7 @@ class DocstringsTestCase(test.TestCase):
                                            "param": param})
 
     def test_all_scenario_groups_have_docstrings(self):
-        for scenario_group in discover.itersubclasses(base.Scenario):
+        for scenario_group in discover.itersubclasses(scenario.Scenario):
             self._assert_class_has_docstrings(scenario_group,
                                               long_description=False)
 

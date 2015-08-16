@@ -14,10 +14,14 @@
 #    under the License.
 
 from rally import osclients
-from rally.task.scenarios import base
+from rally.task import scenario
+
+# NOTE(boris-42): Shortcut to remove import of both rally.task.scenario and
+#                 rally.plugins.openstack.scenario
+configure = scenario.configure
 
 
-class OpenStackScenario(base.Scenario):
+class OpenStackScenario(scenario.Scenario):
     """Base class for all OpenStack scenarios."""
 
     def __init__(self, context=None, admin_clients=None, clients=None):

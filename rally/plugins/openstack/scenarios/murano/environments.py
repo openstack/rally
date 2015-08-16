@@ -15,8 +15,9 @@
 
 from rally.common import log as logging
 from rally import consts
+from rally.plugins.openstack import scenario
 from rally.plugins.openstack.scenarios.murano import utils
-from rally.task.scenarios import base
+from rally.task import atomic
 from rally.task import validation
 
 LOG = logging.getLogger(__name__)
@@ -26,7 +27,7 @@ class MuranoEnvironments(utils.MuranoScenario):
     """Benchmark scenarios for Murano environments."""
     @validation.required_clients("murano")
     @validation.required_services(consts.Service.MURANO)
-    @base.scenario(context={"cleanup": ["murano.environments"]})
+    @scenario.configure(context={"cleanup": ["murano.environments"]})
     def list_environments(self):
         """List the murano environments.
 
@@ -36,7 +37,7 @@ class MuranoEnvironments(utils.MuranoScenario):
 
     @validation.required_clients("murano")
     @validation.required_services(consts.Service.MURANO)
-    @base.scenario(context={"cleanup": ["murano.environments"]})
+    @scenario.configure(context={"cleanup": ["murano.environments"]})
     def create_and_delete_environment(self):
         """Create environment, session and delete environment."""
         environment = self._create_environment()
@@ -47,7 +48,7 @@ class MuranoEnvironments(utils.MuranoScenario):
     @validation.required_clients("murano")
     @validation.required_services(consts.Service.MURANO)
     @validation.required_contexts("murano_packages")
-    @base.scenario(context={"cleanup": ["murano"], "roles": ["admin"]})
+    @scenario.configure(context={"cleanup": ["murano"], "roles": ["admin"]})
     def create_and_deploy_environment(self, packages_per_env=1):
         """Create environment, session and deploy environment.
 
@@ -60,7 +61,7 @@ class MuranoEnvironments(utils.MuranoScenario):
         session = self._create_session(environment.id)
         package = self.context["tenant"]["packages"][0]
 
-        with base.AtomicAction(self, "murano.create_service"):
+        with atomic.ActionTimer(self, "murano.create_service"):
             for i in range(packages_per_env):
                 self._create_service(environment, session,
                                      package.fully_qualified_name,

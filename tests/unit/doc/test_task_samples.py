@@ -21,7 +21,7 @@ import traceback
 
 import yaml
 
-from rally.task.scenarios import base
+from rally.task import scenario
 from rally.task import engine
 from tests.unit import test
 
@@ -35,7 +35,7 @@ class TaskSampleTestCase(test.TestCase):
     @mock.patch("rally.task.engine.BenchmarkEngine"
                 "._validate_config_semantic")
     def test_schema_is_valid(self,
-            mock_benchmark_engine__validate_config_semantic):
+                             mock_benchmark_engine__validate_config_semantic):
         scenarios = set()
 
         for dirname, dirnames, filenames in os.walk(self.samples_path):
@@ -62,10 +62,10 @@ class TaskSampleTestCase(test.TestCase):
 
         # TODO(boris-42): We should refactor scenarios framework add "_" to
         #                 all non-benchmark methods.. Then this test will pass.
-        missing = set(base.Scenario.list_benchmark_scenarios()) - scenarios
+        missing = set(scenario.Scenario.list_benchmark_scenarios()) - scenarios
         # check missing scenario is not from plugin
-        missing = [scenario for scenario in list(missing) if
-                   base.Scenario.get_by_name(scenario.split(".")[0]).
+        missing = [s for s in list(missing)
+                   if scenario.Scenario.get_by_name(s.split(".")[0]).
                    __module__.startswith("rally")]
         self.assertEqual(missing, [],
                          "These scenarios don't have samples: %s" % missing)
