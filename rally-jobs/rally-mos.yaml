@@ -296,7 +296,7 @@
         floating_network: "net04_ext"
         use_floatingip: true
         command:
-          script_file: "/home/rally/.rally/extra/instance_dd_test.sh"
+          script_file: "~/.rally/extra/instance_dd_test.sh"
           interpreter: "/bin/sh"
         username: "cirros"
       runner:

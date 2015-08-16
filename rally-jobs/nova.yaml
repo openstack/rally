@@ -656,7 +656,7 @@
             size: 2
         use_floatingip: true
         command:
-          script_file: "/home/jenkins/.rally/extra/instance_dd_test.sh"
+          script_file: "~/.rally/extra/instance_dd_test.sh"
           interpreter: "/bin/sh"
         username: "cirros"
       runner:
@@ -679,7 +679,7 @@
           name: {{image_name}}
         use_floatingip: false
         command:
-          script_file: "/home/jenkins/.rally/extra/instance_dd_test.sh"
+          script_file: "~/.rally/extra/instance_dd_test.sh"
           interpreter: "/bin/sh"
         username: "cirros"
       runner:
