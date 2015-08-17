@@ -55,8 +55,7 @@ class TaskSampleTestCase(test.TestCase):
                         eng.validate()
                     except Exception:
                         print(traceback.format_exc())
-                        self.assertTrue(False,
-                                        "Wrong task config %s" % full_path)
+                        self.fail("Invalid task file: %s" % full_path)
                     else:
                         scenarios.update(task_config.keys())
 
@@ -77,7 +76,11 @@ class TaskSampleTestCase(test.TestCase):
                     continue
                 full_path = os.path.join(dirname, filename)
                 with open(full_path) as task_file:
-                    json.load(task_file)
+                    try:
+                        json.load(task_file)
+                    except Exception:
+                        print(traceback.format_exc())
+                        self.fail("Invalid JSON file: %s" % full_path)
 
     def test_task_config_pair_existance(self):
         inexistent_paths = []
