@@ -18,9 +18,10 @@ import copy
 import mock
 
 from rally.common import utils
-from rally import consts
+from rally import consts as rally_consts
 from rally import exceptions
-from rally.plugins.openstack.context import manila as manila_context
+from rally.plugins.openstack.context.manila import consts
+from rally.plugins.openstack.context.manila import manila_share_networks
 from tests.unit import test
 
 MANILA_UTILS_PATH = ("rally.plugins.openstack.scenarios.manila.utils."
@@ -34,7 +35,7 @@ class ManilaSampleGeneratorTestCase(test.TestCase):
             "task": mock.MagicMock(),
             "config": {
                 "existing_users": {"foo": "bar"},
-                "manila": {
+                consts.SHARE_NETWORKS_CONTEXT_NAME: {
                     "use_share_networks": True,
                     "share_networks": {
                         "tenant_1_id": ["sn_1_id", "sn_2_name"],
@@ -61,29 +62,39 @@ class ManilaSampleGeneratorTestCase(test.TestCase):
         context = {
             "task": mock.MagicMock(),
             "config": {
-                "manila": {"foo": "bar"},
+                consts.SHARE_NETWORKS_CONTEXT_NAME: {"foo": "bar"},
                 "not_manila": {"not_manila_key": "not_manila_value"},
             },
         }
 
-        inst = manila_context.Manila(context)
+        inst = manila_share_networks.ManilaShareNetworks(context)
 
-        self.assertEqual(context["config"]["manila"], inst.config)
-        self.assertIn(consts.JSON_SCHEMA, inst.CONFIG_SCHEMA.get("$schema"))
+        self.assertEqual(
+            context["config"][consts.SHARE_NETWORKS_CONTEXT_NAME],
+            inst.config)
+        self.assertIn(
+            rally_consts.JSON_SCHEMA, inst.CONFIG_SCHEMA.get("$schema"))
         self.assertEqual(False, inst.CONFIG_SCHEMA.get("additionalProperties"))
         self.assertEqual("object", inst.CONFIG_SCHEMA.get("type"))
         props = inst.CONFIG_SCHEMA.get("properties", {})
         self.assertEqual({"type": "object"}, props.get("share_networks"))
         self.assertEqual({"type": "boolean"}, props.get("use_share_networks"))
         self.assertEqual(450, inst.get_order())
-        self.assertEqual("manila", inst.get_name())
+        self.assertEqual(
+            consts.SHARE_NETWORKS_CONTEXT_NAME,
+            inst.get_name())
 
     def test_setup_share_networks_disabled(self):
         ctxt = {
             "task": mock.MagicMock(),
-            "config": {"manila": {"use_share_networks": False}},
+            "config": {
+                consts.SHARE_NETWORKS_CONTEXT_NAME: {
+                    "use_share_networks": False,
+                },
+            },
+            consts.SHARE_NETWORKS_CONTEXT_NAME: {},
         }
-        inst = manila_context.Manila(ctxt)
+        inst = manila_share_networks.ManilaShareNetworks(ctxt)
 
         expected_ctxt = copy.deepcopy(inst.context)
 
@@ -96,22 +107,29 @@ class ManilaSampleGeneratorTestCase(test.TestCase):
     def test_setup_use_existing_share_networks(
             self, mock_manila_scenario__list_share_networks, mock_clients):
         existing_sns = self.existing_sns
-        inst = manila_context.Manila(self.ctxt_use_existing)
+        inst = manila_share_networks.ManilaShareNetworks(
+            self.ctxt_use_existing)
         mock_manila_scenario__list_share_networks.return_value = (
             self.existing_sns)
         expected_ctxt = copy.deepcopy(self.ctxt_use_existing)
         expected_ctxt.update({
-            "manila_delete_share_networks": False,
+            "delete_share_networks": False,
             "tenants": {
                 "tenant_1_id": {
-                    "id": "tenant_1_id", "name": "tenant_1_name",
-                    "share_networks": [sn for sn in existing_sns[0:2]],
-                    "sn_iterator": mock.ANY,
+                    "id": "tenant_1_id",
+                    "name": "tenant_1_name",
+                    consts.SHARE_NETWORKS_CONTEXT_NAME: {
+                        "share_networks": [sn for sn in existing_sns[0:2]],
+                        "sn_iterator": mock.ANY,
+                    },
                 },
                 "tenant_2_id": {
-                    "id": "tenant_2_id", "name": "tenant_2_name",
-                    "share_networks": [sn for sn in existing_sns[2:5]],
-                    "sn_iterator": mock.ANY,
+                    "id": "tenant_2_id",
+                    "name": "tenant_2_name",
+                    consts.SHARE_NETWORKS_CONTEXT_NAME: {
+                        "share_networks": [sn for sn in existing_sns[2:5]],
+                        "sn_iterator": mock.ANY,
+                    },
                 },
             }
         })
@@ -122,22 +140,25 @@ class ManilaSampleGeneratorTestCase(test.TestCase):
         self.assertEqual(expected_ctxt["config"], inst.context.get("config"))
         self.assertEqual(expected_ctxt["users"], inst.context.get("users"))
         self.assertEqual(
-            False, inst.context.get("manila_delete_share_networks"))
+            False,
+            inst.context.get(consts.SHARE_NETWORKS_CONTEXT_NAME, {}).get(
+                "delete_share_networks"))
         self.assertEqual(expected_ctxt["tenants"], inst.context.get("tenants"))
         for i, sns in ((1, existing_sns[0:2]), (2, existing_sns[2:5])):
             self.assertIsInstance(
-                inst.context["tenants"]["tenant_%s_id" % i]["sn_iterator"],
+                inst.context["tenants"]["tenant_%s_id" % i][
+                    consts.SHARE_NETWORKS_CONTEXT_NAME]["sn_iterator"],
                 utils.RAMInt)
             for j in range(12):
                 self.assertEqual(
                     j,
                     next(inst.context["tenants"]["tenant_%s_id" % i][
-                        "sn_iterator"]))
+                        consts.SHARE_NETWORKS_CONTEXT_NAME]["sn_iterator"]))
 
     def test_setup_use_existing_share_networks_tenant_not_found(self):
         ctxt = copy.deepcopy(self.ctxt_use_existing)
         ctxt.update({"tenants": {}})
-        inst = manila_context.Manila(ctxt)
+        inst = manila_share_networks.ManilaShareNetworks(ctxt)
 
         self.assertRaises(exceptions.ContextSetupFailure, inst.setup)
 
@@ -146,8 +167,9 @@ class ManilaSampleGeneratorTestCase(test.TestCase):
     def test_setup_use_existing_share_networks_sn_not_found(
             self, mock_manila_scenario__list_share_networks, mock_clients):
         ctxt = copy.deepcopy(self.ctxt_use_existing)
-        ctxt["config"]["manila"]["share_networks"] = {"tenant_1_id": ["foo"]}
-        inst = manila_context.Manila(ctxt)
+        ctxt["config"][consts.SHARE_NETWORKS_CONTEXT_NAME][
+            "share_networks"] = {"tenant_1_id": ["foo"]}
+        inst = manila_share_networks.ManilaShareNetworks(ctxt)
         mock_manila_scenario__list_share_networks.return_value = (
             self.existing_sns)
 
@@ -155,7 +177,8 @@ class ManilaSampleGeneratorTestCase(test.TestCase):
 
     def test_setup_use_existing_share_networks_with_empty_list(self):
         ctxt = copy.deepcopy(self.ctxt_use_existing)
-        ctxt["config"]["manila"]["share_networks"] = {}
-        inst = manila_context.Manila(ctxt)
+        ctxt["config"][consts.SHARE_NETWORKS_CONTEXT_NAME][
+            "share_networks"] = {}
+        inst = manila_share_networks.ManilaShareNetworks(ctxt)
 
         self.assertRaises(exceptions.ContextSetupFailure, inst.setup)

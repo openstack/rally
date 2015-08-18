@@ -18,21 +18,24 @@ from oslo_config import cfg
 from rally.common.i18n import _
 from rally.common import log
 from rally.common import utils
-from rally import consts
+from rally import consts as rally_consts
 from rally import exceptions
+from rally.plugins.openstack.context.manila import consts
 from rally.plugins.openstack.scenarios.manila import utils as manila_utils
 from rally.task import context
 
 CONF = cfg.CONF
 LOG = log.getLogger(__name__)
 
+CONTEXT_NAME = consts.SHARE_NETWORKS_CONTEXT_NAME
 
-@context.configure(name="manila", order=450)
-class Manila(context.Context):
+
+@context.configure(name=CONTEXT_NAME, order=450)
+class ManilaShareNetworks(context.Context):
     """This context creates resources specific for Manila project."""
     CONFIG_SCHEMA = {
         "type": "object",
-        "$schema": consts.JSON_SCHEMA,
+        "$schema": rally_consts.JSON_SCHEMA,
         "properties": {
             # NOTE(vponomaryov): specifies whether manila should use
             # share networks for share creation or not.
@@ -72,7 +75,7 @@ class Manila(context.Context):
                 ctx_name=self.get_name(), msg=msg)
 
         # Set flag that says we will not delete/cleanup share networks
-        self.context["manila_delete_share_networks"] = False
+        self.context[CONTEXT_NAME]["delete_share_networks"] = False
 
         for tenant_name_or_id, share_networks in self.config[
                 "share_networks"].items():
@@ -91,7 +94,9 @@ class Manila(context.Context):
                         "existing tenants.") % tenant_name_or_id
                 raise exceptions.ContextSetupFailure(
                     ctx_name=self.get_name(), msg=msg)
-            self.context["tenants"][tenant_id]["share_networks"] = []
+            self.context["tenants"][tenant_id][CONTEXT_NAME] = {}
+            self.context["tenants"][tenant_id][CONTEXT_NAME][
+                "share_networks"] = []
 
             manila_scenario = manila_utils.ManilaScenario(
                 {"user": existing_user})
@@ -111,15 +116,17 @@ class Manila(context.Context):
                         ctx_name=self.get_name(), msg=msg)
 
                 # Set share network for project
-                self.context["tenants"][tenant_id][
+                self.context["tenants"][tenant_id][CONTEXT_NAME][
                     "share_networks"].append(sn)
 
             # Add shared integer var per project that will be used as index
             # for list with share networks. It is required for balancing.
-            self.context["tenants"][tenant_id]["sn_iterator"] = utils.RAMInt()
+            self.context["tenants"][tenant_id][CONTEXT_NAME]["sn_iterator"] = (
+                utils.RAMInt())
 
-    @utils.log_task_wrapper(LOG.info, _("Enter context: `manila`"))
+    @utils.log_task_wrapper(LOG.info, _("Enter context: `%s`") % CONTEXT_NAME)
     def setup(self):
+        self.context[CONTEXT_NAME] = {}
         if not self.config["use_share_networks"]:
             return
         elif self.context["config"].get("existing_users"):
@@ -128,7 +135,7 @@ class Manila(context.Context):
             # TODO(vponomaryov): add support of autocreated resources
             pass
 
-    @utils.log_task_wrapper(LOG.info, _("Exit context: `manila`"))
+    @utils.log_task_wrapper(LOG.info, _("Exit context: `%s`") % CONTEXT_NAME)
     def cleanup(self):
         # TODO(vponomaryov): add cleanup for autocreated resources when appear.
         return

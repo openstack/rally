@@ -17,6 +17,7 @@ import time
 
 from oslo_config import cfg
 
+from rally.plugins.openstack.context.manila import consts
 from rally.plugins.openstack import scenario
 from rally.task import atomic
 from rally.task import utils
@@ -74,10 +75,12 @@ class ManilaScenario(scenario.OpenStackScenario):
         """
         if self.context:
             share_networks = self.context.get("tenant", {}).get(
-                "share_networks", [])
+                consts.SHARE_NETWORKS_CONTEXT_NAME, {}).get(
+                    "share_networks", [])
             if share_networks and not kwargs.get("share_network"):
                 index = next(self.context.get("tenant", {}).get(
-                    "sn_iterator")) % len(share_networks)
+                    consts.SHARE_NETWORKS_CONTEXT_NAME, {}).get(
+                        "sn_iterator")) % len(share_networks)
                 kwargs["share_network"] = share_networks[index]
 
         if not kwargs.get("name"):

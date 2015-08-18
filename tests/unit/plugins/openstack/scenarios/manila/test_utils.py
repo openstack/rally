@@ -16,6 +16,7 @@
 import ddt
 import mock
 
+from rally.plugins.openstack.context.manila import consts
 from rally.plugins.openstack.scenarios.manila import utils
 from tests.unit import test
 
@@ -35,17 +36,21 @@ class ManilaScenarioTestCase(test.ScenarioTestCase):
         self.clients("manila").shares.create.return_value = fake_share
         self.scenario.context = {
             "tenant": {
-                "share_networks": ["sn_1_id", "sn_2_id", ],
+                consts.SHARE_NETWORKS_CONTEXT_NAME: {
+                    "share_networks": ["sn_1_id", "sn_2_id", ],
+                }
             }
         }
-        self.scenario.context["tenant"]["sn_iterator"] = iter((0, ))
+        self.scenario.context["tenant"][consts.SHARE_NETWORKS_CONTEXT_NAME][
+            "sn_iterator"] = iter((0, ))
         self.scenario._generate_random_name = mock.Mock(return_value=fake_name)
 
         self.scenario._create_share("nfs")
 
         self.clients("manila").shares.create.assert_called_once_with(
             "nfs", 1, name=fake_name,
-            share_network=self.scenario.context["tenant"]["share_networks"][0])
+            share_network=self.scenario.context["tenant"][
+                consts.SHARE_NETWORKS_CONTEXT_NAME]["share_networks"][0])
 
         self.mock_wait_for.mock.assert_called_once_with(
             fake_share,
