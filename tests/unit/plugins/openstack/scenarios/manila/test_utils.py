@@ -33,12 +33,19 @@ class ManilaScenarioTestCase(test.ScenarioTestCase):
         fake_name = "fake_name"
         fake_share = mock.Mock()
         self.clients("manila").shares.create.return_value = fake_share
+        self.scenario.context = {
+            "tenant": {
+                "share_networks": ["sn_1_id", "sn_2_id", ],
+            }
+        }
+        self.scenario.context["tenant"]["sn_iterator"] = iter((0, ))
         self.scenario._generate_random_name = mock.Mock(return_value=fake_name)
 
         self.scenario._create_share("nfs")
 
         self.clients("manila").shares.create.assert_called_once_with(
-            "nfs", 1, name=fake_name)
+            "nfs", 1, name=fake_name,
+            share_network=self.scenario.context["tenant"]["share_networks"][0])
 
         self.mock_wait_for.mock.assert_called_once_with(
             fake_share,
