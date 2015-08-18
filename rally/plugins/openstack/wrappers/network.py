@@ -112,6 +112,21 @@ class NovaNetworkWrapper(NetworkWrapper):
             cidr = generate_cidr(start_cidr=self.start_cidr)
         return cidr
 
+    def _marshal_network_object(self, net_obj):
+        """Convert a Network object to a dict.
+
+        This helps keep return values from the NovaNetworkWrapper
+        compatible with those from NeutronWrapper.
+
+        :param net_obj: The Network object to convert to a dict
+        """
+        return {"id": net_obj.id,
+                "cidr": net_obj.cidr,
+                "name": net_obj.label,
+                "status": "ACTIVE",
+                "external": False,
+                "tenant_id": net_obj.project_id}
+
     def create_network(self, tenant_id, **kwargs):
         """Create network.
 
@@ -123,18 +138,14 @@ class NovaNetworkWrapper(NetworkWrapper):
         label = utils.generate_random_name("rally_net_")
         network = self.client.networks.create(
             tenant_id=tenant_id, cidr=cidr, label=label)
-        return {"id": network.id,
-                "cidr": network.cidr,
-                "name": network.label,
-                "status": "ACTIVE",
-                "external": False,
-                "tenant_id": tenant_id}
+        return self._marshal_network_object(network)
 
     def delete_network(self, network):
         return self.client.networks.delete(network["id"])
 
     def list_networks(self):
-        return self.client.networks.list()
+        return [self._marshal_network_object(n)
+                for n in self.client.networks.list()]
 
     def create_floating_ip(self, ext_network=None, **kwargs):
         """Allocate a floating ip from the given nova-network pool
