@@ -20,7 +20,6 @@ import six
 
 from rally import consts
 from rally import exceptions
-from rally.plugins.common.scenarios.dummy import dummy
 from rally.task import context
 from rally.task import scenario
 from rally.task import validation
@@ -28,38 +27,46 @@ from tests.unit import fakes
 from tests.unit import test
 
 
+class ScenarioConfigureTestCase(test.TestCase):
+
+    def test_configure(self):
+
+        @scenario.configure("test_configure", "testing")
+        def some_func():
+            pass
+
+        self.assertEqual("test_configure", some_func.get_name())
+        self.assertEqual("testing", some_func.get_namespace())
+        some_func.unregister()
+
+    def test_configure_default_name(self):
+
+        @scenario.configure(namespace="testing", context={"any": 42})
+        def some_func():
+            pass
+
+        self.assertIsNone(some_func._meta_get("name"))
+        self.assertEqual("testing", some_func.get_namespace())
+        self.assertEqual({"any": 42}, some_func._meta_get("default_context"))
+        some_func.unregister()
+
+    def test_configure_cls(self):
+
+        class ScenarioPluginCls(scenario.Scenario):
+
+            @scenario.configure(namespace="any", context={"any": 43})
+            def some(self):
+                pass
+
+        self.assertEqual("ScenarioPluginCls.some",
+                         ScenarioPluginCls.some.get_name())
+        self.assertEqual("any", ScenarioPluginCls.some.get_namespace())
+        self.assertEqual({"any": 43},
+                         ScenarioPluginCls.some._meta_get("default_context"))
+        ScenarioPluginCls.some.unregister()
+
+
 class ScenarioTestCase(test.TestCase):
-
-    def test_get_by_name(self):
-        self.assertEqual(dummy.Dummy, scenario.Scenario.get_by_name("Dummy"))
-
-    def test_get_by_name_not_found(self):
-        self.assertRaises(exceptions.NoSuchScenario,
-                          scenario.Scenario.get_by_name,
-                          "non existing scenario")
-
-    def test_get_scenario_by_name(self):
-        scenario_method = scenario.Scenario.get_scenario_by_name("Dummy.dummy")
-        self.assertEqual(dummy.Dummy.dummy, scenario_method)
-
-    def test_get_scenario_by_name_shortened(self):
-        scenario_method = scenario.Scenario.get_scenario_by_name("dummy")
-        self.assertEqual(dummy.Dummy.dummy, scenario_method)
-
-    def test_get_scenario_by_name_shortened_not_found(self):
-        self.assertRaises(exceptions.NoSuchScenario,
-                          scenario.Scenario.get_scenario_by_name,
-                          "dumy")
-
-    def test_get_scenario_by_name_bad_group_name(self):
-        self.assertRaises(exceptions.NoSuchScenario,
-                          scenario.Scenario.get_scenario_by_name,
-                          "Dumy.dummy")
-
-    def test_get_scenario_by_name_bad_scenario_name(self):
-        self.assertRaises(exceptions.NoSuchScenario,
-                          scenario.Scenario.get_scenario_by_name,
-                          "Dummy.dumy")
 
     def test__validate_helper(self):
         validators = [
@@ -98,120 +105,78 @@ class ScenarioTestCase(test.TestCase):
                           scenario.Scenario._validate_helper,
                           validators, clients, args, "fake_uuid")
 
-    @mock.patch("rally.task.scenario.Scenario.get_by_name")
-    def test_validate__no_validators(self, mock_scenario_get_by_name):
+    @mock.patch("rally.task.scenario.Scenario.get")
+    def test_validate__no_validators(self, mock_scenario_get):
 
-        class FakeScenario(fakes.FakeScenario):
-            pass
+        class Testing(fakes.FakeScenario):
 
-        FakeScenario.do_it = mock.MagicMock()
-        FakeScenario.do_it.validators = []
-        mock_scenario_get_by_name.return_value = FakeScenario
+            @scenario.configure()
+            def validate__no_validators(self):
+                pass
 
-        scenario.Scenario.validate("FakeScenario.do_it", {"a": 1, "b": 2})
-
-        mock_scenario_get_by_name.assert_called_once_with("FakeScenario")
+        mock_scenario_get.return_value = Testing.validate__no_validators
+        scenario.Scenario.validate("Testing.validate__no_validators",
+                                   {"a": 1, "b": 2})
+        mock_scenario_get.assert_called_once_with(
+            "Testing.validate__no_validators")
+        Testing.validate__no_validators.unregister()
 
     @mock.patch("rally.task.scenario.Scenario._validate_helper")
-    @mock.patch("rally.task.scenario.Scenario.get_by_name")
-    def test_validate__admin_validators(self, mock_scenario_get_by_name,
+    @mock.patch("rally.task.scenario.Scenario.get")
+    def test_validate__admin_validators(self, mock_scenario_get,
                                         mock_scenario__validate_helper):
 
-        class FakeScenario(fakes.FakeScenario):
-            pass
+        class Testing(fakes.FakeScenario):
 
-        FakeScenario.do_it = mock.MagicMock()
-        mock_scenario_get_by_name.return_value = FakeScenario
+            @scenario.configure(namespace="testing")
+            def validate_admin_validators(self):
+                pass
+
+        mock_scenario_get.return_value = Testing.validate_admin_validators
 
         validators = [mock.MagicMock(), mock.MagicMock()]
         for validator in validators:
             validator.permission = consts.EndpointPermission.ADMIN
 
-        FakeScenario.do_it.validators = validators
+        Testing.validate_admin_validators._meta_set(
+            "validators", validators)
         deployment = mock.MagicMock()
         args = {"a": 1, "b": 2}
-        scenario.Scenario.validate(
-            "FakeScenario.do_it", args, admin="admin", deployment=deployment)
+        scenario.Scenario.validate("Testing.validate_admin_validators",
+                                   args, admin="admin", deployment=deployment)
         mock_scenario__validate_helper.assert_called_once_with(
             validators, "admin", args, deployment)
 
+        Testing.validate_admin_validators.unregister()
+
     @mock.patch("rally.task.scenario.Scenario._validate_helper")
-    @mock.patch("rally.task.scenario.Scenario.get_by_name")
-    def test_validate_user_validators(self, mock_scenario_get_by_name,
+    @mock.patch("rally.task.scenario.Scenario.get")
+    def test_validate_user_validators(self, mock_scenario_get,
                                       mock_scenario__validate_helper):
 
-        class FakeScenario(fakes.FakeScenario):
-            pass
+        class Testing(fakes.FakeScenario):
 
-        FakeScenario.do_it = mock.MagicMock()
-        mock_scenario_get_by_name.return_value = FakeScenario
+            @scenario.configure()
+            def validate_user_validators(self):
+                pass
+
+        mock_scenario_get.return_value = Testing.validate_user_validators
 
         validators = [mock.MagicMock(), mock.MagicMock()]
         for validator in validators:
             validator.permission = consts.EndpointPermission.USER
 
-        FakeScenario.do_it.validators = validators
+        Testing.validate_user_validators._meta_set("validators", validators)
         args = {"a": 1, "b": 2}
         scenario.Scenario.validate(
-            "FakeScenario.do_it", args, users=["u1", "u2"])
+            "Testing.validate_user_validators", args, users=["u1", "u2"])
 
         mock_scenario__validate_helper.assert_has_calls([
             mock.call(validators, "u1", args, None),
             mock.call(validators, "u2", args, None)
         ])
 
-    def test_meta_string_returns_non_empty_list(self):
-
-        class MyFakeScenario(fakes.FakeScenario):
-            pass
-
-        attr_name = "preprocessors"
-        preprocessors = [mock.MagicMock(), mock.MagicMock()]
-        MyFakeScenario.do_it.__dict__[attr_name] = preprocessors
-
-        inst = MyFakeScenario()
-        self.assertEqual(inst.meta(cls="MyFakeScenario.do_it",
-                                   attr_name=attr_name), preprocessors)
-
-    def test_meta_class_returns_non_empty_list(self):
-
-        class MyFakeScenario(fakes.FakeScenario):
-            pass
-
-        attr_name = "preprocessors"
-        preprocessors = [mock.MagicMock(), mock.MagicMock()]
-        MyFakeScenario.do_it.__dict__[attr_name] = preprocessors
-
-        inst = MyFakeScenario()
-        self.assertEqual(inst.meta(cls=fakes.FakeScenario,
-                                   method_name="do_it",
-                                   attr_name=attr_name), preprocessors)
-
-    def test_meta_string_returns_empty_list(self):
-        empty_list = []
-        inst = fakes.FakeScenario()
-        self.assertEqual(inst.meta(cls="FakeScenario.do_it",
-                                   attr_name="foo", default=empty_list),
-                         empty_list)
-
-    def test_meta_class_returns_empty_list(self):
-        empty_list = []
-        inst = fakes.FakeScenario()
-        self.assertEqual(inst.meta(cls=fakes.FakeScenario,
-                                   method_name="do_it", attr_name="foo",
-                                   default=empty_list),
-                         empty_list)
-
-    def test_is_scenario_success(self):
-        self.assertTrue(scenario.Scenario.is_scenario(dummy.Dummy(), "dummy"))
-
-    def test_is_scenario_not_scenario(self):
-        self.assertFalse(scenario.Scenario.is_scenario(dummy.Dummy(),
-                                                       "_random_fail_emitter"))
-
-    def test_is_scenario_non_existing(self):
-        self.assertFalse(scenario.Scenario.is_scenario(dummy.Dummy(),
-                                                       "non_existing"))
+        Testing.validate_user_validators.unregister()
 
     def test_sleep_between_invalid_args(self):
         self.assertRaises(exceptions.InvalidArgumentsException,
@@ -246,19 +211,10 @@ class ScenarioTestCase(test.TestCase):
         self.assertEqual(scenario_inst.idle_duration(),
                          mock_uniform.return_value)
 
-    def test_context(self):
-        ctx = mock.MagicMock()
-        self.assertEqual(ctx, scenario.Scenario(context=ctx).context)
-
     def test_scenario_context_are_valid(self):
-        scenarios = scenario.Scenario.list_benchmark_scenarios()
-
-        for name in scenarios:
-            cls_name, method_name = name.split(".", 1)
-            cls = scenario.Scenario.get_by_name(cls_name)
-            ctx = getattr(cls, method_name).context
+        for s in scenario.Scenario.get_all():
             try:
-                context.ContextManager.validate(ctx)
+                context.ContextManager.validate(s._meta_get("default_context"))
             except Exception:
                 print(traceback.format_exc())
                 self.assertTrue(False,

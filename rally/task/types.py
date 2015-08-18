@@ -34,17 +34,16 @@ def set(**kwargs):
     used to perform a transformation on the value of that key.
     """
     def wrapper(func):
-        func.preprocessors = getattr(func, "preprocessors", {})
-        func.preprocessors.update(kwargs)
+        func._meta_setdefault("preprocessors", {})
+        func._meta_get("preprocessors").update(kwargs)
         return func
     return wrapper
 
 
-def preprocess(cls, method_name, context, args):
+def preprocess(name, context, args):
     """Run preprocessor on scenario arguments.
 
-    :param cls: class name of benchmark scenario
-    :param method_name: name of benchmark scenario method
+    :param name: Plugin name
     :param context: dictionary object that must have admin and endpoint entries
     :param args: args section of benchmark specification in rally task file
 
@@ -52,9 +51,8 @@ def preprocess(cls, method_name, context, args):
                              and resource configuration
 
     """
-    preprocessors = scenario.Scenario.meta(cls, method_name=method_name,
-                                           attr_name="preprocessors",
-                                           default={})
+    preprocessors = scenario.Scenario.get(name)._meta_get("preprocessors",
+                                                          default={})
     clients = osclients.Clients(context["admin"]["endpoint"])
     processed_args = copy.deepcopy(args)
 

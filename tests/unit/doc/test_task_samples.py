@@ -59,13 +59,11 @@ class TaskSampleTestCase(test.TestCase):
                     else:
                         scenarios.update(task_config.keys())
 
-        # TODO(boris-42): We should refactor scenarios framework add "_" to
-        #                 all non-benchmark methods.. Then this test will pass.
-        missing = set(scenario.Scenario.list_benchmark_scenarios()) - scenarios
+        missing = set(s.get_name() for s in scenario.Scenario.get_all())
+        missing -= scenarios
         # check missing scenario is not from plugin
         missing = [s for s in list(missing)
-                   if scenario.Scenario.get_by_name(s.split(".")[0]).
-                   __module__.startswith("rally")]
+                   if scenario.Scenario.get(s).__module__.startswith("rally")]
         self.assertEqual(missing, [],
                          "These scenarios don't have samples: %s" % missing)
 

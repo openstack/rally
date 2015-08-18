@@ -32,6 +32,19 @@ class TestMetaMixinTestCase(test.TestCase):
         self.assertTrue(Meta._meta_is_inited())
         self.assertTrue(Meta._meta_is_inited(raise_exc=False))
 
+    def test_meta_clear(self):
+
+        class Meta(meta.MetaMixin):
+            pass
+
+        Meta._meta_init()
+        Meta._meta_set("aaa", 42)
+
+        meta_ref = Meta._meta
+        Meta._meta_clear()
+        self.assertRaises(AttributeError, getattr, Meta, "_meta")
+        self.assertEqual({}, meta_ref)
+
     def test_meta_set_and_get(self):
 
         class Meta(meta.MetaMixin):
@@ -62,3 +75,16 @@ class TestMetaMixinTestCase(test.TestCase):
             pass
 
         self.assertRaises(ReferenceError, Meta._meta_set, "a", 1)
+
+    def test_meta_setdefault(self):
+
+        class Meta(meta.MetaMixin):
+            pass
+
+        self.assertRaises(ReferenceError, Meta._meta_setdefault, "any", 42)
+        Meta._meta_init()
+
+        Meta._meta_setdefault("any", 42)
+        self.assertEqual(42, Meta._meta_get("any"))
+        Meta._meta_setdefault("any", 2)
+        self.assertEqual(42, Meta._meta_get("any"))

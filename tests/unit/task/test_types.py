@@ -334,11 +334,12 @@ class NeutronNetworkResourceTypeTestCase(test.TestCase):
 
 class PreprocessTestCase(test.TestCase):
 
-    @mock.patch("rally.task.types.scenario.Scenario.meta")
+    @mock.patch("rally.task.types.scenario.Scenario.get")
     @mock.patch("rally.task.types.osclients")
-    def test_preprocess(self, mock_osclients, mock_scenario_meta):
-        cls = "some_class"
-        method_name = "method_name"
+    def test_preprocess(self, mock_osclients, mock_scenario_get):
+
+        name = "some_plugin"
+
         context = {
             "a": 1,
             "b": 2,
@@ -352,11 +353,14 @@ class PreprocessTestCase(test.TestCase):
             def transform(cls, clients, resource_config):
                 return resource_config * 2
 
-        mock_scenario_meta.return_value = {"a": Preprocessor}
-        result = types.preprocess(cls, method_name, context, args)
-        mock_scenario_meta.assert_called_once_with(
-            cls, default={}, method_name=method_name,
-            attr_name="preprocessors")
+        mock_scenario_get.return_value._meta_get.return_value = {
+            "a": Preprocessor
+        }
+
+        result = types.preprocess(name, context, args)
+        mock_scenario_get.assert_called_once_with(name)
+        mock_scenario_get.return_value._meta_get.assert_called_once_with(
+            "preprocessors", default={})
         mock_osclients.Clients.assert_called_once_with(
             context["admin"]["endpoint"])
         self.assertEqual({"a": 20, "b": 20}, result)

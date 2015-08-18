@@ -62,6 +62,11 @@ class MetaMixin(object):
         cls._meta = {}
 
     @classmethod
+    def _meta_clear(cls):
+        cls._meta.clear()    # NOTE(boris-42): make sure that meta is deleted
+        delattr(cls, "_meta")
+
+    @classmethod
     def _meta_is_inited(cls, raise_exc=True):
         """Check if meta is initialized.
 
@@ -93,3 +98,9 @@ class MetaMixin(object):
         """Set value for key in meta."""
         cls._meta_is_inited()
         cls._meta[key] = value
+
+    @classmethod
+    def _meta_setdefault(cls, key, value):
+        """Set default value for key in meta."""
+        cls._meta_is_inited()
+        cls._meta.setdefault(key, value)

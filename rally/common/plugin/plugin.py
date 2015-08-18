@@ -130,7 +130,16 @@ class Plugin(meta.MetaMixin):
                           are in various namespaces.
         """
         cls._meta_init()
+        cls._set_name_and_namespace(name, namespace)
+        return cls
 
+    @classmethod
+    def unregister(cls):
+        """Removes all pluign meta information and makes it indiscoverable."""
+        cls._meta_clear()
+
+    @classmethod
+    def _set_name_and_namespace(cls, name, namespace):
         try:
             Plugin.get(name, namespace=namespace)
         except exceptions.PluginNotFound:
@@ -139,7 +148,6 @@ class Plugin(meta.MetaMixin):
         else:
             raise exceptions.PluginWithSuchNameExists(name=name,
                                                       namespace=namespace)
-        return cls
 
     @classmethod
     def _set_deprecated(cls, reason, rally_version):
@@ -172,7 +180,8 @@ class Plugin(meta.MetaMixin):
             if p.get_name() == name:
                 return p
 
-        raise exceptions.PluginNotFound(name=name, namespace=namespace)
+        raise exceptions.PluginNotFound(
+            name=name, namespace=namespace or "any of")
 
     @classmethod
     def get_all(cls, namespace=None):
