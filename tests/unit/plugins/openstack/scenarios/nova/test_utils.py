@@ -46,6 +46,27 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.list_servers")
 
+    def test__pick_random_nic(self):
+        context = {"tenant": {"networks": [{"id": "net_id_1"},
+                                           {"id": "net_id_2"}]},
+                   "iteration": 0,
+                   "config": {"users": {"tenants": 2}}}
+        nova_scenario = utils.NovaScenario(context=context)
+        nic1 = nova_scenario._pick_random_nic()
+        self.assertEqual(nic1, [{"net-id": "net_id_1"}])
+
+        context["iteration"] = 1
+        nova_scenario = utils.NovaScenario(context=context)
+        nic2 = nova_scenario._pick_random_nic()
+        # balance to net 2
+        self.assertEqual(nic2, [{"net-id": "net_id_2"}])
+
+        context["iteration"] = 2
+        nova_scenario = utils.NovaScenario(context=context)
+        nic3 = nova_scenario._pick_random_nic()
+        # balance again, get net 1
+        self.assertEqual(nic3, [{"net-id": "net_id_1"}])
+
     @mock.patch(NOVA_UTILS + ".NovaScenario._generate_random_name",
                 return_value="foo_server_name")
     def test__boot_server(self, mock__generate_random_name):

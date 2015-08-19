@@ -96,6 +96,19 @@ class NovaScenario(scenario.OpenStackScenario):
         """Returns user servers list."""
         return self.clients("nova").servers.list(detailed)
 
+    def _pick_random_nic(self):
+        """Choose one network from existing ones."""
+        ctxt = self.context
+        nets = [net["id"]
+                for net in ctxt.get("tenant", {}).get("networks", [])]
+        if nets:
+            # NOTE(amaretskiy): Balance servers among networks:
+            #     divmod(iteration % tenants_num, nets_num)[1]
+            net_idx = divmod(
+                (ctxt["iteration"] % ctxt["config"]["users"]["tenants"]),
+                len(nets))[1]
+            return [{"net-id": nets[net_idx]}]
+
     @atomic.action_timer("nova.boot_server")
     def _boot_server(self, image_id, flavor_id,
                      auto_assign_nic=False, name=None, **kwargs):
@@ -122,16 +135,9 @@ class NovaScenario(scenario.OpenStackScenario):
                 kwargs["security_groups"].append(secgroup["name"])
 
         if auto_assign_nic and not kwargs.get("nics", False):
-            nets = [net["id"] for net in
-                    self.context.get("tenant", {}).get("networks", [])]
-            if nets:
-                # NOTE(amaretskiy): Balance servers among networks:
-                #     divmod(iteration % tenants_num, nets_num)[1]
-                net_idx = divmod(
-                    (self.context["iteration"]
-                     % self.context["config"]["users"]["tenants"]),
-                    len(nets))[1]
-                kwargs["nics"] = [{"net-id": nets[net_idx]}]
+            nic = self._pick_random_nic()
+            if nic:
+                kwargs["nics"] = nic
 
         server = self.clients("nova").servers.create(
             server_name, image_id, flavor_id, **kwargs)
