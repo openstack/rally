@@ -104,6 +104,108 @@ TASK_RESULT_SCHEMA = {
 }
 
 
+TASK_EXTENDED_RESULT_SCHEMA = {
+    "type": "object",
+    "$schema": consts.JSON_SCHEMA,
+    "properties": {
+        "key": {
+            "type": "object",
+            "properties": {
+                "kw": {
+                    "type": "object"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "pos": {
+                    "type": "integer"
+                },
+            },
+            "required": ["kw", "name", "pos"]
+        },
+        "sla": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "criterion": {
+                        "type": "string"
+                    },
+                    "detail": {
+                        "type": "string"
+                    },
+                    "success": {
+                        "type": "boolean"
+                    }
+                }
+            }
+        },
+        "iterations": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "timestamp": {
+                        "type": "number"
+                    },
+                    "atomic_actions": {
+                        "type": "object"
+                    },
+                    "duration": {
+                        "type": "number"
+                    },
+                    "error": {
+                        "type": "array"
+                    },
+                    "idle_duration": {
+                        "type": "number"
+                    },
+                    "scenario_output": {
+                        "type": "object",
+                        "properties": {
+                            "data": {"type": "object"},
+                            "errors": {"type": "string"},
+                        },
+                        "required": ["data", "errors"]
+                    },
+                },
+                "required": ["atomic_actions", "duration", "error",
+                             "idle_duration", "scenario_output"]
+            },
+            "minItems": 1
+        },
+        "created_at": {
+            "anyOf": [
+                {"type": "string", "format": "date-time"},
+                {"type": "null"}
+            ]
+        },
+        "updated_at": {
+            "anyOf": [
+                {"type": "string", "format": "date-time"},
+                {"type": "null"}
+            ]
+        },
+        "info": {
+            "type": "object",
+            "properties": {
+                "atomic": {"type": "object"},
+                "output_names": {"type": "array"},
+                "iterations_count": {"type": "integer"},
+                "iterations_failed": {"type": "integer"},
+                "min_duration": {"type": "number"},
+                "max_duration": {"type": "number"},
+                "tstamp_start": {"type": "number"},
+                "full_duration": {"type": "number"},
+                "load_duration": {"type": "number"}
+            }
+        }
+    },
+    "required": ["key", "sla", "iterations", "info"],
+    "additionalProperties": False
+}
+
+
 class Task(object):
     """Represents a task object."""
 
@@ -160,6 +262,110 @@ class Task(object):
 
     def get_results(self):
         return db.task_result_get_all_by_uuid(self.task["uuid"])
+
+    @classmethod
+    def extend_results(cls, results, serializable=False):
+        """Modify and extend results with aggregated data.
+
+        This is a workaround method that tries to adapt task results
+        to schema of planned DB refactoring, so this method is expected
+        to be simplified after DB refactoring since all the data should
+        be taken as-is directly from the database.
+
+        Each scenario results have extra `info' with aggregated data,
+        and iterations data is represented by iterator - this simplifies
+        its future implementation as generator and gives ability to process
+        arbitrary number of iterations with low memory usage.
+
+        :param results: list of db.sqlalchemy.models.TaskResult
+        :param serializable: bool, whether to convert json non-serializable
+                             types (like datetime) to serializable ones
+        :returns: list of dicts, each dict represents scenario results:
+                  key - dict, scenario input data
+                  sla - list, SLA results
+                  iterations - if serializiable, then iterator with
+                               iterations data, otherwise a list
+                  created_at - if serializiable, then str datetime,
+                               otherwise absent
+                  updated_at - if serializiable, then str datetime,
+                               otherwise absent
+                  info:
+                      atomic - dict where key is one of atomic action names
+                               and value is dict {min_duration: number,
+                                                  max_duration: number}
+                      output_names - list of str output values names (if any)
+                      iterations_count - int number of iterations
+                      iterations_failed - int number of iterations with errors
+                      min_duration - float minimum iteration duration
+                      max_duration - float maximum iteration duration
+                      tstamp_start - float timestamp of the first iteration
+                      full_duration - float full scenario duration
+                      load_duration - float load scenario duration
+        """
+        extended = []
+        for scenario_result in results:
+            scenario = dict(scenario_result)
+            tstamp_start = 0
+            min_duration = 0
+            max_duration = 0
+            iterations_failed = 0
+            atomic = {}
+            output_names = set()
+
+            for itr in scenario["data"]["raw"]:
+                for atomic_name, duration in itr["atomic_actions"].items():
+                    duration = duration or 0
+                    if atomic_name not in atomic:
+                        atomic[atomic_name] = {"min_duration": duration,
+                                               "max_duration": duration}
+                    elif duration < atomic[atomic_name]["min_duration"]:
+                        atomic[atomic_name]["min_duration"] = duration
+                    elif duration > atomic[atomic_name]["max_duration"]:
+                        atomic[atomic_name]["max_duration"] = duration
+
+                output_names.update(itr["scenario_output"]["data"].keys())
+
+                if not tstamp_start or itr["timestamp"] < tstamp_start:
+                    tstamp_start = itr["timestamp"]
+
+                if itr["error"]:
+                    iterations_failed += 1
+                else:
+                    duration = itr["duration"] or 0
+                    if not min_duration or duration < min_duration:
+                        min_duration = duration
+                    if not max_duration or duration > max_duration:
+                        max_duration = duration
+
+            for k in "created_at", "updated_at":
+                if serializable:
+                    # NOTE(amaretskiy): convert datetime to str,
+                    #     because json.dumps() does not like datetime
+                    if scenario[k]:
+                        scenario[k] = scenario[k].strftime("%Y-%d-%mT%H:%M:%S")
+                else:
+                    del scenario[k]
+
+            scenario["info"] = {
+                "atomic": atomic,
+                "output_names": list(output_names),
+                "iterations_count": len(scenario["data"]["raw"]),
+                "iterations_failed": iterations_failed,
+                "min_duration": min_duration,
+                "max_duration": max_duration,
+                "tstamp_start": tstamp_start,
+                "full_duration": scenario["data"]["full_duration"],
+                "load_duration": scenario["data"]["load_duration"]}
+            if serializable:
+                scenario["iterations"] = scenario["data"]["raw"]
+            else:
+                scenario["iterations"] = iter(scenario["data"]["raw"])
+            scenario["sla"] = scenario["data"]["sla"]
+            del scenario["data"]
+            del scenario["task_uuid"]
+            del scenario["id"]
+            extended.append(scenario)
+        return extended
 
     def append_results(self, key, value):
         db.task_result_create(self.task["uuid"], key, value)
