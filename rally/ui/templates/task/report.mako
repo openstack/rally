@@ -171,13 +171,17 @@
         pie: function(selector, datum){
           var chart = nv.models.pieChart()
             .x(function(d) { return d.key })
-            .y(function(d) { return d.value })
+            .y(function(d) { return d.values })
             .showLabels(true)
             .labelType("percent")
             .donut(true)
             .donutRatio(0.25)
             .donutLabelsOutside(true);
-            this._render(selector, datum, chart)
+          var datum_ = [];
+          for (var i in datum) {
+            datum_.push({key:datum[i][0], values:datum[i][1]})
+          }
+          this._render(selector, datum_, chart)
         },
         stack: function(selector, datum){
           var chart = nv.models.stackedAreaChart()
@@ -190,9 +194,12 @@
             .showMaxMin(false)
             .tickFormat(d3.format("d"));
           chart.yAxis
-            .axisLabel("Duration (seconds)")
-            .tickFormat(d3.format(",.2f"));
-          this._render(selector, datum, chart)
+          var datum_ = [];
+          for (var i in datum) {
+            var d = {key:datum[i][0], values:datum[i][1]};
+            datum_.push(d)
+          }
+          this._render(selector, datum_, chart)
         },
         histogram: function(selector, datum){
           var chart = nv.models.multiBarChart()
@@ -312,7 +319,7 @@
           if (! $scope.histogramOptions.length && sc.iterations.histogram) {
             for (var i in sc.iterations.histogram) {
               $scope.histogramOptions.push({
-                label: sc.iterations.histogram[i].method,
+                label: sc.iterations.histogram[i].view,
                 value: i
               })
             }
@@ -546,12 +553,12 @@
           <table class="striped">
             <thead>
               <tr>
-                <th ng-repeat="i in scenario.table_cols track by $index">{{i}}
+                <th ng-repeat="i in scenario.table.cols track by $index">{{i}}
               <tr>
             </thead>
             <tbody>
               <tr ng-class="{richcolor:$last}"
-                  ng-repeat="row in scenario.table_rows track by $index">
+                  ng-repeat="row in scenario.table.rows track by $index">
                 <td ng-repeat="i in row track by $index">{{i}}
               <tr>
             </tbody>
