@@ -506,7 +506,6 @@ do
             ;;
         -y|--yes)
             ASKCONFIRMATION=0
-            OVERWRITEDIR=yes
             ;;
         --url)
             shift
