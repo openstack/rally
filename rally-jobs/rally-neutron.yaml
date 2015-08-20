@@ -475,3 +475,30 @@
           tenants: 2
           users_per_tenant: 2
         network: {}
+
+  VMTasks.boot_runcommand_delete_custom_image:
+    -
+      args:
+        command:
+          remote_path: "./dd_test.sh"
+        flavor:
+          name: "m1.tiny"
+        username: "cirros"
+      runner:
+        type: "constant"
+        times: 1
+        concurrency: 1
+      context:
+        image_command_customizer:
+          command:
+            local_path: "/home/jenkins/.rally/extra/script_benchmark.sh"
+            remote_path: "./script_benchmark.sh"
+          flavor:
+            name: "m1.tiny"
+          image:
+            name: {{image_name}}
+          username: "cirros"
+        users:
+          tenants: 1
+          users_per_tenant: 1
+        network: {}
