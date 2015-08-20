@@ -13,12 +13,27 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+
+from oslo_config import cfg
+
 from rally.task import utils
+
+
+CONF = cfg.CONF
+
+CLEANUP_OPTS = [
+    cfg.IntOpt("resource_deletion_timeout", default=600,
+               help="A timeout in seconds for deleting resources")
+]
+cleanup_group = cfg.OptGroup(name="cleanup", title="Cleanup Options")
+CONF.register_group(cleanup_group)
+CONF.register_opts(CLEANUP_OPTS, cleanup_group)
 
 
 def resource(service, resource, order=0, admin_required=False,
              perform_for_admin_only=False, tenant_resource=False,
-             max_attempts=3, timeout=600, interval=1, threads=20):
+             max_attempts=3, timeout=CONF.cleanup.resource_deletion_timeout,
+             interval=1, threads=20):
     """Decorator that overrides resource specification.
 
     Just put it on top of your resource class and specify arguments that you
