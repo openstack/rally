@@ -226,16 +226,19 @@ class NeutronWrapperTestCase(test.TestCase):
     def test_create_v1_pool(self, mock_generate_random_name):
         mock_generate_random_name.return_value = "foo_name"
         subnet = "subnet_id"
+        tenant = "foo_tenant"
         service = self.get_wrapper()
         expected_pool = {"pool": {
             "id": "pool_id",
             "name": "foo_name",
-            "subnet_id": subnet}}
+            "subnet_id": subnet,
+            "tenant_id": tenant}}
         service.client.create_pool.return_value = expected_pool
-        resultant_pool = service.create_v1_pool(subnet)
+        resultant_pool = service.create_v1_pool(tenant, subnet)
         service.client.create_pool.assert_called_once_with({
             "pool": {"lb_method": "ROUND_ROBIN",
                      "subnet_id": subnet,
+                     "tenant_id": tenant,
                      "protocol": "HTTP",
                      "name": "foo_name"}})
         self.assertEqual(resultant_pool, expected_pool)

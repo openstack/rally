@@ -245,15 +245,17 @@ class NeutronWrapper(NetworkWrapper):
                     "network_id": net["id"], "enable_snat": True}
         return self.client.create_router({"router": kwargs})["router"]
 
-    def create_v1_pool(self, subnet_id, **kwargs):
+    def create_v1_pool(self, tenant_id, subnet_id, **kwargs):
         """Create LB Pool (v1).
 
+        :param tenant_id: str, pool tenant id
         :param subnet_id: str, neutron subnet-id
         :param **kwargs: extra options
         :returns: neutron lb-pool dict
         """
         pool_args = {
             "pool": {
+                "tenant_id": tenant_id,
                 "name": utils.generate_random_name("rally_pool_"),
                 "subnet_id": subnet_id,
                 "lb_method": kwargs.get("lb_method", self.LB_METHOD),
