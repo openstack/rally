@@ -14,10 +14,10 @@
 
 import mock
 
-from rally.plugins.openstack.context import existing_network
+from rally.plugins.openstack.context.network import existing_network
 from tests.unit import test
 
-CTX = "rally.plugins.openstack.context"
+CTX = "rally.plugins.openstack.context.network"
 
 
 class ExistingNetworkTestCase(test.TestCase):
