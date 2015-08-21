@@ -17,6 +17,8 @@
 
 env
 
+sudo yum remove -y python-crypto || true
+
 sudo ./install_rally.sh --system --yes
 rally deployment list
 [ -d /etc/bash_completion.d ] && cat /etc/bash_completion.d/rally.bash_completion || true
