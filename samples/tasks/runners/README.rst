@@ -1,7 +1,7 @@
 Runners Configuration Samples
 =============================
 
-This directory contains task runners conficuration samples.
+This directory contains task runners configuration samples.
 
 Samples here are presented with methods of Dummy scenario. To see samples
 of usage other scenarios, go to `samples/tasks/scenarios
