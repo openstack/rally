@@ -19,6 +19,8 @@ import operator
 import os.path
 import re
 
+import requests
+
 from rally import exceptions
 from rally import osclients
 from rally.task import scenario
@@ -339,6 +341,32 @@ class NeutronNetworkResourceType(ResourceType):
         raise exceptions.InvalidScenarioArgument(
             "Neutron network with name '{name}' not found".format(
                 name=resource_config.get("name")))
+
+
+class FilePathOrUrlType(ResourceType):
+
+    @classmethod
+    def transform(cls, clients, resource_config):
+        """Check whether file exists or url available.
+
+        :param clients: openstack admin client handles
+        :param resource_config: path or url
+
+        :returns: url or expanded file path
+        """
+
+        path = os.path.expanduser(resource_config)
+        if os.path.isfile(path):
+            return path
+        try:
+            head = requests.head(path)
+            if head.status_code == 200:
+                return path
+            raise exceptions.InvalidScenarioArgument(
+                "Url %s unavailable (code %s)" % (path, head.status_code))
+        except Exception as ex:
+            raise exceptions.InvalidScenarioArgument(
+                "Url error %s (%s)" % (path, ex))
 
 
 class FileType(ResourceType):
