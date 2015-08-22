@@ -7,7 +7,7 @@ Use Case
 
 To benchmark many of operations like show, list, detailed you need to have
 already these resource in cloud. So it will be nice to be able to create
-benchmark environment once before benchmarking. The run some amount of
+benchmark environment once before benchmarking. So run some amount of
 benchmarks that are using it and at the end just delete all created resources
 by benchmark environment.
 

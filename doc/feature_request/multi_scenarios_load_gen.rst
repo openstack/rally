@@ -26,7 +26,7 @@ Possible solution
 -----------------
 
 * Extend Rally task benchmark configuration in such way to support passing
-  multiple benchmark scenarios in singe benchmark context
+  multiple benchmark scenarios in single benchmark context
 
 * Extend Rally task output format to support results of multiple scenarios in
   single benchmark separately.
