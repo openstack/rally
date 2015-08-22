@@ -2,7 +2,7 @@
   HeatStacks.create_and_list_stack:
     -
       args:
-        template_path: "/home/jenkins/.rally/extra/default.yaml.template"
+        template_path: "~/.rally/extra/default.yaml.template"
       runner:
         type: "constant"
         times: 6
@@ -18,7 +18,7 @@
   HeatStacks.create_and_delete_stack:
     -
       args:
-        template_path: "/home/jenkins/.rally/extra/default.yaml.template"
+        template_path: "~/.rally/extra/default.yaml.template"
       runner:
         type: "constant"
         times: 6
@@ -33,7 +33,7 @@
 
     -
       args:
-        template_path: "/home/jenkins/.rally/extra/server_with_volume.yaml.template"
+        template_path: "~/.rally/extra/server_with_volume.yaml.template"
       runner:
         type: "constant"
         times: 2
@@ -48,10 +48,10 @@
 
     -
       args:
-        template_path: "/home/jenkins/.rally/extra/resource_group_server_with_volume.yaml.template"
+        template_path: "~/.rally/extra/resource_group_server_with_volume.yaml.template"
         parameters:
            num_instances: 2
-        files: ["/home/jenkins/.rally/extra/server_with_volume.yaml.template"]
+        files: ["~/.rally/extra/server_with_volume.yaml.template"]
       runner:
         type: "constant"
         times: 2
@@ -67,7 +67,7 @@
   HeatStacks.create_check_delete_stack:
     -
       args:
-        template_path: "/home/jenkins/.rally/extra/random_strings.yaml.template"
+        template_path: "~/.rally/extra/random_strings.yaml.template"
       runner:
         type: "constant"
         times: 6
@@ -83,8 +83,8 @@
   HeatStacks.create_update_delete_stack:
     -
       args:
-        template_path: "/home/jenkins/.rally/extra/random_strings.yaml.template"
-        updated_template_path: "/home/jenkins/.rally/extra/updated_random_strings_add.yaml.template"
+        template_path: "~/.rally/extra/random_strings.yaml.template"
+        updated_template_path: "~/.rally/extra/updated_random_strings_add.yaml.template"
       runner:
         type: "constant"
         times: 6
@@ -99,8 +99,8 @@
 
     -
       args:
-        template_path: "/home/jenkins/.rally/extra/random_strings.yaml.template"
-        updated_template_path: "/home/jenkins/.rally/extra/updated_random_strings_delete.yaml.template"
+        template_path: "~/.rally/extra/random_strings.yaml.template"
+        updated_template_path: "~/.rally/extra/updated_random_strings_delete.yaml.template"
       runner:
         type: "constant"
         times: 6
@@ -115,8 +115,8 @@
 
     -
       args:
-        template_path: "/home/jenkins/.rally/extra/random_strings.yaml.template"
-        updated_template_path: "/home/jenkins/.rally/extra/updated_random_strings_replace.yaml.template"
+        template_path: "~/.rally/extra/random_strings.yaml.template"
+        updated_template_path: "~/.rally/extra/updated_random_strings_replace.yaml.template"
       runner:
         type: "constant"
         times: 6
@@ -131,8 +131,8 @@
 
     -
       args:
-        template_path: "/home/jenkins/.rally/extra/autoscaling_policy.yaml.template"
-        updated_template_path: "/home/jenkins/.rally/extra/updated_autoscaling_policy_inplace.yaml.template"
+        template_path: "~/.rally/extra/autoscaling_policy.yaml.template"
+        updated_template_path: "~/.rally/extra/updated_autoscaling_policy_inplace.yaml.template"
       runner:
         type: "constant"
         times: 6
@@ -147,8 +147,8 @@
 
     -
       args:
-        template_path: "/home/jenkins/.rally/extra/resource_group.yaml.template"
-        updated_template_path: "/home/jenkins/.rally/extra/updated_resource_group_increase.yaml.template"
+        template_path: "~/.rally/extra/resource_group.yaml.template"
+        updated_template_path: "~/.rally/extra/updated_resource_group_increase.yaml.template"
       runner:
         type: "constant"
         times: 6
@@ -163,8 +163,8 @@
 
     -
       args:
-        template_path: "/home/jenkins/.rally/extra/resource_group.yaml.template"
-        updated_template_path: "/home/jenkins/.rally/extra/updated_resource_group_reduce.yaml.template"
+        template_path: "~/.rally/extra/resource_group.yaml.template"
+        updated_template_path: "~/.rally/extra/updated_resource_group_reduce.yaml.template"
       runner:
         type: "constant"
         times: 6
@@ -197,7 +197,7 @@
   HeatStacks.create_suspend_resume_delete_stack:
     -
       args:
-        template_path: "/home/jenkins/.rally/extra/random_strings.yaml.template"
+        template_path: "~/.rally/extra/random_strings.yaml.template"
       runner:
         type: "constant"
         times: 6
@@ -230,7 +230,7 @@
   HeatStacks.create_snapshot_restore_delete_stack:
     -
       args:
-        template_path: "/home/jenkins/.rally/extra/random_strings.yaml.template"
+        template_path: "~/.rally/extra/random_strings.yaml.template"
       runner:
         type: "constant"
         times: 6
@@ -246,7 +246,7 @@
   HeatStacks.create_stack_and_scale:
     -
       args:
-        template_path: "/home/jenkins/.rally/extra/autoscaling_group.yaml.template"
+        template_path: "~/.rally/extra/autoscaling_group.yaml.template"
         output_key: "scaling_url"
         delta: 1
         parameters:
@@ -264,7 +264,7 @@
           max: 0
     -
       args:
-        template_path: "/home/jenkins/.rally/extra/autoscaling_group.yaml.template"
+        template_path: "~/.rally/extra/autoscaling_group.yaml.template"
         output_key: "scaling_url"
         delta: -1
         parameters:

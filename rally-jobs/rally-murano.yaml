@@ -40,7 +40,7 @@
           tenants: 2
           users_per_tenant: 2
         murano_packages:
-          app_package: "/home/jenkins/.rally/extra/murano/applications/HelloReporter/io.murano.apps.HelloReporter.zip"
+          app_package: "~/.rally/extra/murano/applications/HelloReporter/io.murano.apps.HelloReporter.zip"
         roles:
           - "admin"
       sla:
@@ -58,7 +58,7 @@
           tenants: 2
           users_per_tenant: 2
         murano_packages:
-          app_package: "/home/jenkins/.rally/extra/murano/applications/HelloReporter/io.murano.apps.HelloReporter/"
+          app_package: "~/.rally/extra/murano/applications/HelloReporter/io.murano.apps.HelloReporter/"
         roles:
           - "admin"
       sla:
