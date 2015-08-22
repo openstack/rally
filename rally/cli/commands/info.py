@@ -166,7 +166,7 @@ class InfoCommands(object):
                 "tasks by the 'rally task start <config_file>' command.\n"
                 "For each SLA check you would like to use, you should put "
                 "its name as a key and the\ntarget check parameter as an "
-                "assosiated value, e.g.:\n\n"
+                "associated value, e.g.:\n\n"
                 "  sla:\n"
                 "    max_seconds_per_iteration: 4\n"
                 "    failure_rate:\n"
