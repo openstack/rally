@@ -132,7 +132,7 @@ instructions for various OSes
 <https://docs.docker.com/installation/>`_.
 
 You can either use the official Rally Docker image, or build your own
-from the Rally source. To do that, cd to the root directory of the
+from the Rally source. To do that, change directory to the root directory of the
 Rally git repository and run:
 
 .. code-block:: bash
