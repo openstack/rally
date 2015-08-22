@@ -32,7 +32,7 @@ Project Technical Lead (PTL)
 | | boris-42 (irc)             |  * Release management                          |
 | | boris@pavlovic.me          |  * Community management                        |
 |                              |  * Core team management                        |
-|                              |  * Chef Architect                              |
+|                              |  * Chief Architect                              |
 +------------------------------+------------------------------------------------+
 
 | *If you would like to refactor whole Rally or have UX/community/other
