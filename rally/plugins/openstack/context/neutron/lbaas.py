@@ -68,6 +68,7 @@ class Lbaas(context.Context):
                     if self.config["lbaas_version"] == 1:
                         network.setdefault("lb_pools", []).append(
                             net_wrapper.create_v1_pool(
+                                tenant_id,
                                 subnet,
                                 **self.config["pool"]))
                     else:

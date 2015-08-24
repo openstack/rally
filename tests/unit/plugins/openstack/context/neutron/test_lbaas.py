@@ -21,8 +21,10 @@ NET = "rally.plugins.openstack.wrappers.network."
 class LbaasTestCase(test.TestCase):
     def get_context(self, **kwargs):
         foo_tenant = {"networks": [{"id": "foo_net",
+                                    "tenant_id": "foo_tenant",
                                     "subnets": ["foo_subnet"]}]}
         bar_tenant = {"networks": [{"id": "bar_net",
+                                    "tenant_id": "bar_tenant",
                                     "subnets": ["bar_subnet"]}]}
         return {"task": {"uuid": "foo_task"},
                 "admin": {"endpoint": "foo_admin"},
@@ -62,15 +64,20 @@ class LbaasTestCase(test.TestCase):
             ("foo_user", "foo_tenant"),
             ("bar_user", "bar_tenant")]
         foo_net = {"id": "foo_net",
+                   "tenant_id": "foo_tenant",
                    "subnets": ["foo_subnet"],
-                   "lb_pools": [{"pool": {"id": "foo_pool"}}]}
+                   "lb_pools": [{"pool": {"id": "foo_pool",
+                                          "tenant_id": "foo_tenant"}}]}
         bar_net = {"id": "bar_net",
+                   "tenant_id": "bar_tenant",
                    "subnets": ["bar_subnet"],
-                   "lb_pools": [{"pool": {"id": "bar_pool"}}]}
+                   "lb_pools": [{"pool": {"id": "bar_pool",
+                                          "tenant_id": "bar_tenant"}}]}
         expected_net = [bar_net, foo_net]
         mock_create = mock.Mock(
-            side_effect=lambda t,
-            **kw: {"pool": {"id": str(t.split("_")[0]) + "_pool"}})
+            side_effect=lambda t, s,
+            **kw: {"pool": {"id": str(t.split("_")[0]) + "_pool",
+                            "tenant_id": t}})
         actual_net = []
         mock_wrap.return_value = mock.Mock(create_v1_pool=mock_create)
         net_wrapper = mock_wrap(mock_clients.return_value)
