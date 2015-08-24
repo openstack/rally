@@ -21,6 +21,7 @@ from oslo_utils import strutils
 from rally.common import fileutils
 from rally import exceptions
 
+PATH_GLOBALS = "~/.rally/globals"
 ENV_DEPLOYMENT = "RALLY_DEPLOYMENT"
 ENV_TASK = "RALLY_TASK"
 ENV_VERIFIER = "RALLY_VERIFIER"
@@ -31,7 +32,7 @@ MSG_MISSING_ARG = "Missing argument: --%(arg_name)s"
 
 
 def clear_global(global_key):
-    path = os.path.expanduser("~/.rally/globals")
+    path = os.path.expanduser(PATH_GLOBALS)
     if os.path.exists(path):
         fileutils.update_env_file(path, global_key, "\n")
     if global_key in os.environ:
@@ -45,7 +46,7 @@ def clear_env():
 
 def get_global(global_key, do_raise=False):
     if global_key not in os.environ:
-        fileutils.load_env_file(os.path.expanduser("~/.rally/globals"))
+        fileutils.load_env_file(os.path.expanduser(PATH_GLOBALS))
     value = os.environ.get(global_key)
     if not value and do_raise:
         raise exceptions.InvalidArgumentsException("%s env is missing"
