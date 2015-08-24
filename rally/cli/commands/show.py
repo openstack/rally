@@ -29,7 +29,7 @@ from rally import osclients
 class ShowCommands(object):
     """Show resources.
 
-    Set of commands that allow you to view resourses, provided by OpenStack
+    Set of commands that allow you to view resources, provided by OpenStack
     cloud represented by deployment.
     """
 
