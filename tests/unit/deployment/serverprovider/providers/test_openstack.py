@@ -15,6 +15,8 @@
 
 """Tests for OpenStack VM provider."""
 
+import textwrap
+
 import jsonschema
 import mock
 from oslotest import mockpatch
@@ -153,6 +155,42 @@ class OpenStackProviderTestCase(test.TestCase):
         cfg = self._get_valid_config()
         cfg["image"] = dict(checksum="checksum")
         OSProvider(mock.MagicMock(), cfg)
+
+    def test_cloud_init_success_notready(self):
+        fake_server = mock.Mock()
+        fake_server.ssh.execute.return_value = (1, "", "")
+
+        # Not ready yet -> False
+        self.assertFalse(provider._cloud_init_success(fake_server))
+
+    def test_cloud_init_success_completed(self):
+        fake_server = mock.Mock()
+        result_json_text = textwrap.dedent("""
+        {
+          "v1": {
+            "errors": [],
+            "datasource": "DataSourceFoo"
+          }
+        }
+        """)
+        fake_server.ssh.execute.return_value = (0, result_json_text, "")
+        # Completed (with no errors) -> True
+        self.assertTrue(provider._cloud_init_success(fake_server))
+
+    def test_cloud_init_success_errors(self):
+        fake_server = mock.Mock()
+        result_json_text = textwrap.dedent("""
+        {
+          "v1": {
+            "errors": ["omg!"],
+            "datasource": "DataSourceFoo"
+          }
+        }
+        """)
+        fake_server.ssh.execute.return_value = (0, result_json_text, "")
+        # Completed with errors -> Exception
+        self.assertRaises(RuntimeError,
+                          provider._cloud_init_success, fake_server)
 
     @mock.patch("time.sleep")
     @mock.patch(MOD_NAME + ".provider.Server")
