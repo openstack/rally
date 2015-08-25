@@ -154,6 +154,12 @@ _neutron_order = get_order(300)
 class NeutronMixin(SynchronizedDeletion, base.ResourceManager):
     # Neutron has the best client ever, so we need to override everything
 
+    def supports_extension(self, extension):
+        exts = self._manager().list_extensions().get("extensions", [])
+        if any(ext.get("alias") == extension for ext in exts):
+            return True
+        return False
+
     def _manager(self):
         client = self._admin_required and self.admin or self.user
         return getattr(client, self._service)()
@@ -171,6 +177,14 @@ class NeutronMixin(SynchronizedDeletion, base.ResourceManager):
 
         return filter(lambda r: r["tenant_id"] == self.tenant_uuid,
                       list_method({"tenant_id": self.tenant_uuid})[resources])
+
+
+class NeutronLbaasV1Mixin(NeutronMixin):
+
+    def list(self):
+        if self.supports_extension("lbaas"):
+            return super(NeutronLbaasV1Mixin, self).list()
+        return []
 
 
 @base.resource("neutron", "port", order=next(_neutron_order),
@@ -202,7 +216,7 @@ class NeutronRouter(NeutronMixin):
 
 @base.resource("neutron", "pool", order=next(_neutron_order),
                tenant_resource=True)
-class NeutronV1Pool(NeutronMixin):
+class NeutronV1Pool(NeutronLbaasV1Mixin):
     pass
 
 
