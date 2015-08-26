@@ -13,15 +13,15 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import copy
 import functools
-import itertools
 import random
 import time
 
+import six
+
 from rally.common import costilius
 from rally.common import log as logging
-from rally.common.plugin import discover
+from rally.common.plugin import plugin
 from rally.common import utils
 from rally import consts
 from rally import exceptions
@@ -31,23 +31,67 @@ from rally.task import functional
 LOG = logging.getLogger(__name__)
 
 
-def configure(context=None):
-    """Make from plain python method benchmark.
+def configure(name=None, namespace="default", context=None):
+    """Make from plain python method task scenario plugin.
 
-       It sets 2 attributes to function:
-       is_scenario = True # that is used during discovering
-       func.context = context # default context for benchmark
-
-       :param context: Default benchmark context
+       :param name: Plugin name
+       :param namespace: Plugin namespace
+       :param context: Default task context that is created for this scenario.
+                       If there are custom user specified contexts this one
+                       will be updated by provided contexts.
     """
     def wrapper(func):
-        func.is_scenario = True
-        func.context = context or {}
+        plugin.from_func(Scenario)(func)
+        func._meta_init()
+        if name:
+            func._set_name_and_namespace(name, namespace)
+        else:
+            func._meta_set("namespace", namespace)
+        func._meta_set("default_context", context or {})
         return func
     return wrapper
 
 
-class Scenario(functional.FunctionalMixin):
+class ConfigurePluginMeta(type):
+    """Finish Scenario plugin configuration.
+
+    After @scenario.configure() is performed to cls.method, method.im_class is
+    pointing to FuncPlugin class instead of original cls. There is no way to
+    fix this, mostly because im_class is add to method when it's called via
+    cls, e.g. cls.method. Decorator is different case so there is no
+    information about cls. method._plugin is pointing to FuncPlugin that has
+    FuncPlugin pointer to method. What should be done is to set properly
+    FuncPluing.func_ref to the cls.method
+
+    This metaclass iterates over all cls methods and fix func_ref of FuncPlugin
+    class so func_ref will be cls.method instead of FuncPlugin.method.
+
+    Additionally this metaclass sets plugin names if they were not set explicit
+    via configure(). Default name is <cls_name>.<method_name>
+
+    As well we need to keep cls_ref inside of _meta because Python3 loves us.
+
+    Viva black magic and dirty hacks.
+    """
+    def __init__(cls, name, bases, namespaces):
+
+        super(ConfigurePluginMeta, cls).__init__(name, bases, namespaces)
+
+        for name, field in six.iteritems(namespaces):
+            if callable(field) and hasattr(field, "_plugin"):
+                field._plugin._meta_set("cls_ref", cls)
+
+                if not field._meta_get("name", None):
+                    field._set_name_and_namespace(
+                        "%s.%s" % (cls.__name__, field.__name__),
+                        field.get_namespace())
+
+                field._plugin.func_ref = getattr(
+                    cls, field._plugin.func_ref.__name__)
+
+
+@six.add_metaclass(ConfigurePluginMeta)
+class Scenario(plugin.Plugin, functional.FunctionalMixin):
     """This is base class for any benchmark scenario.
 
        You should create subclass of this class. And your test scenarios will
@@ -69,60 +113,6 @@ class Scenario(functional.FunctionalMixin):
         return utils.generate_random_name(prefix, length)
 
     @staticmethod
-    def get_by_name(name):
-        """Returns Scenario class by name."""
-        for scenario in discover.itersubclasses(Scenario):
-            if name == scenario.__name__:
-                return scenario
-        raise exceptions.NoSuchScenario(name=name)
-
-    # TODO(boris-42): Remove after switching to plugin base.
-    @classmethod
-    def get_name(cls):
-        return cls.__name__
-
-    @staticmethod
-    def get_scenario_by_name(name):
-        """Return benchmark scenario method by name.
-
-        :param name: name of the benchmark scenario being searched for (either
-                     a full name (e.g, 'NovaServers.boot_server') or just
-                     a method name (e.g., 'boot_server')
-        :returns: function object
-        """
-        if "." in name:
-            scenario_group, scenario_name = name.split(".", 1)
-            scenario_cls = Scenario.get_by_name(scenario_group)
-            if Scenario.is_scenario(scenario_cls, scenario_name):
-                return getattr(scenario_cls, scenario_name)
-        else:
-            for scenario_cls in discover.itersubclasses(Scenario):
-                if Scenario.is_scenario(scenario_cls, name):
-                    return getattr(scenario_cls, name)
-        raise exceptions.NoSuchScenario(name=name)
-
-    @classmethod
-    def list_benchmark_scenarios(scenario_cls):
-        """List all scenarios in the benchmark scenario class & its subclasses.
-
-        Returns the method names in format <Class name>.<Method name>, which
-        is used in the test config.
-
-        :param scenario_cls: the base class for searching scenarios in
-        :returns: List of strings
-        """
-        scenario_classes = (list(discover.itersubclasses(scenario_cls)) +
-                            [scenario_cls])
-        benchmark_scenarios = [
-            ["%s.%s" % (scenario.__name__, func)
-             for func in dir(scenario) if Scenario.is_scenario(scenario, func)]
-            for scenario in scenario_classes
-        ]
-        benchmark_scenarios_flattened = list(
-            itertools.chain.from_iterable(benchmark_scenarios))
-        return benchmark_scenarios_flattened
-
-    @staticmethod
     def _validate_helper(validators, clients, config, deployment):
         for validator in validators:
             try:
@@ -138,7 +128,7 @@ class Scenario(functional.FunctionalMixin):
     @classmethod
     def validate(cls, name, config, admin=None, users=None, deployment=None):
         """Semantic check of benchmark arguments."""
-        validators = cls.meta(name, "validators", default=[])
+        validators = Scenario.get(name)._meta_get("validators", default=[])
 
         if not validators:
             return
@@ -155,37 +145,6 @@ class Scenario(functional.FunctionalMixin):
         if users:
             for user in users:
                 cls._validate_helper(user_validators, user, config, deployment)
-
-    @staticmethod
-    def meta(cls, attr_name, method_name=None, default=None):
-        """Extract the named meta information out of the scenario name.
-
-        :param cls: Scenario (sub)class or string of form 'class.method'
-        :param attr_name: Name of method attribute holding meta information.
-        :param method_name: Name of method queried for meta information.
-        :param default: Value returned if no meta information is attached.
-
-        :returns: Meta value bound to method attribute or default.
-        """
-        if isinstance(cls, str):
-            cls_name, method_name = cls.split(".", 1)
-            cls = Scenario.get_by_name(cls_name)
-        method = getattr(cls, method_name)
-        return copy.deepcopy(getattr(method, attr_name, default))
-
-    @staticmethod
-    def is_scenario(cls, method_name):
-        """Check whether a given method in scenario class is a scenario.
-
-        :param cls: scenario class
-        :param method_name: method name
-        :returns: True if the method is a benchmark scenario, False otherwise
-        """
-        try:
-            getattr(cls, method_name)
-        except Exception:
-            return False
-        return Scenario.meta(cls, "is_scenario", method_name, default=False)
 
     def sleep_between(self, min_sleep, max_sleep):
         """Performs a time.sleep() call for a random amount of seconds.
@@ -276,8 +235,8 @@ class AtomicAction(utils.Timer):
                 atomic_action_iteration += 1
             return name_template % atomic_action_iteration
 
-    def __exit__(self, type, value, tb):
-        super(AtomicAction, self).__exit__(type, value, tb)
-        if type is None:
+    def __exit__(self, type_, value, tb):
+        super(AtomicAction, self).__exit__(type_, value, tb)
+        if type_ is None:
             self.scenario_instance._add_atomic_actions(self.name,
                                                        self.duration())

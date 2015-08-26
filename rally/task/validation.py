@@ -58,7 +58,6 @@ def validator(fn):
         :param kwargs: the keyword arguments of the decorator of the scenario
         ex. @my_decorator(kwarg1="kwarg1"), then kwargs = {"kwarg1": "kwarg1"}
         """
-
         @functools.wraps(fn)
         def wrap_validator(config, clients, deployment):
             # NOTE(amaretskiy): validator is successful by default
@@ -69,9 +68,9 @@ def validator(fn):
             # TODO(boris-42): remove this in future.
             wrap_validator.permission = getattr(fn, "permission",
                                                 consts.EndpointPermission.USER)
-            if not hasattr(scenario, "validators"):
-                scenario.validators = []
-            scenario.validators.append(wrap_validator)
+
+            scenario._meta_setdefault("validators", [])
+            scenario._meta_get("validators").append(wrap_validator)
             return scenario
 
         return wrap_scenario

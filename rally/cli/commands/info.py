@@ -17,7 +17,7 @@
 
 Samples:
 
-    $ rally info find create_meter_and_get_stats
+    $ rally info find CeilometerStats.create_meter_and_get_stats
     CeilometerStats.create_meter_and_get_stats (benchmark scenario).
 
     Test creating a meter and fetching its statistics.
@@ -27,20 +27,6 @@ Samples:
     Parameters:
         - name_length: length of generated (random) part of meter name
         - kwargs: contains optional arguments to create a meter
-
-    $ rally info find Authenticate
-    Authenticate (benchmark scenario group).
-
-    This class should contain authentication mechanism.
-
-    Benchmark scenarios:
-    ---------------------------------------------------------
-     Name                            Description
-    ---------------------------------------------------------
-     Authenticate.keystone
-     Authenticate.validate_cinder    Check Cinder Client ...
-     Authenticate.validate_glance    Check Glance Client ...
-     Authenticate.validate_heat      Check Heat Client ...
 
     $ rally info find some_non_existing_benchmark
 
@@ -52,7 +38,6 @@ from __future__ import print_function
 import inspect
 
 from rally.cli import cliutils
-from rally.common.plugin import discover
 from rally.common import utils
 from rally.deployment import engine
 from rally.deployment.serverprovider import provider
@@ -106,7 +91,7 @@ class InfoCommands(object):
     def list(self):
         """List main entities in Rally for which rally info find works.
 
-        Lists benchmark scenario groups, deploy engines and server providers.
+        Lists task scenario groups, deploy engines and server providers.
         """
         self.BenchmarkScenarios()
         self.SLA()
@@ -116,44 +101,29 @@ class InfoCommands(object):
     @plugins.ensure_plugins_are_loaded
     def BenchmarkScenarios(self):
         """Get information about benchmark scenarios available in Rally."""
-        def scenarios_filter(scenario_cls):
-            return any(scenario.Scenario.is_scenario(scenario_cls, m)
-                       for m in dir(scenario_cls))
-        scenarios = self._get_descriptions(scenario.Scenario, scenarios_filter)
-        info = (self._make_header("Rally - Benchmark scenarios") +
+        scenarios = self._get_descriptions(scenario.Scenario)
+        info = (self._make_header("Rally - Task scenarios") +
                 "\n\n"
-                "Benchmark scenarios are what Rally actually uses to test "
-                "the performance of an OpenStack deployment.\nEach Benchmark "
+                "Task scenarios are what Rally actually uses to test "
+                "the performance of an OpenStack deployment.\nEach Task "
                 "scenario implements a sequence of atomic operations "
                 "(server calls) to simulate\ninteresing user/operator/"
                 "client activity in some typical use case, usually that of "
                 "a specific OpenStack\nproject. Iterative execution of this "
                 "sequence produces some kind of load on the target cloud.\n"
-                "Benchmark scenarios play the role of building blocks in "
-                "benchmark task configuration files."
-                "\n\n"
-                "Scenarios in Rally are put together in groups. Each "
-                "scenario group is concentrated on some specific \nOpenStack "
-                "functionality. For example, the 'NovaServers' scenario "
-                "group contains scenarios that employ\nseveral basic "
-                "operations available in Nova."
+                "Task scenarios play the role of building blocks in "
+                "task configuration files."
                 "\n\n" +
-                self._compose_table("List of Benchmark scenario groups",
-                                    scenarios) +
-                "To get information about benchmark scenarios inside "
-                "each scenario group, run:\n"
-                "  $ rally info find <ScenarioGroupName>\n\n")
+                self._compose_table("List of Task scenarios", scenarios) +
+                "To get information about benchmark scenarios: "
+                "  $ rally info find <scenario_name>\n\n")
         print(info)
 
     @plugins.ensure_plugins_are_loaded
     def SLA(self):
         """Get information about SLA available in Rally."""
-        sla_descrs = self._get_descriptions(sla.SLA)
+        slas = self._get_descriptions(sla.SLA)
         # NOTE(msdubov): Add config option names to the "Name" column
-        for i in range(len(sla_descrs)):
-            description = sla_descrs[i]
-            sla_cls = sla.SLA.get(description[0])
-            sla_descrs[i] = (sla_cls.get_name(), description[1])
         info = (self._make_header("Rally - SLA checks "
                                   "(Service-Level Agreements)") +
                 "\n\n"
@@ -172,7 +142,7 @@ class InfoCommands(object):
                 "    failure_rate:\n"
                 "      max: 1"
                 "\n\n" +
-                self._compose_table("List of SLA checks", sla_descrs) +
+                self._compose_table("List of SLA checks", slas) +
                 "To get information about specific SLA checks, run:\n"
                 "  $ rally info find <sla_check_name>\n")
         print(info)
@@ -245,12 +215,9 @@ class InfoCommands(object):
                 "  $ rally info find <ServerProviderName>\n")
         print(info)
 
-    def _get_descriptions(self, base_cls, subclass_filter=None):
+    def _get_descriptions(self, base_cls):
         descriptions = []
-        subclasses = discover.itersubclasses(base_cls)
-        if subclass_filter:
-            subclasses = filter(subclass_filter, subclasses)
-        for entity in subclasses:
+        for entity in base_cls.get_all():
             name = entity.get_name()
             doc = utils.parse_docstring(entity.__doc__)
             description = doc["short_description"] or ""
@@ -259,65 +226,33 @@ class InfoCommands(object):
         return descriptions
 
     def _find_info(self, query):
-        return (self._get_scenario_group_info(query) or
-                self._get_scenario_info(query) or
+        return (self._get_scenario_info(query) or
                 self._get_sla_info(query) or
                 self._get_deploy_engine_info(query) or
                 self._get_server_provider_info(query))
 
     def _find_substitution(self, query):
         max_distance = min(3, len(query) / 4)
-        scenarios = scenario.Scenario.list_benchmark_scenarios()
-        scenario_groups = list(set(s.split(".")[0] for s in scenarios))
-        scenario_methods = list(set(s.split(".")[1] for s in scenarios))
+        scenarios = [s.get_name() for s in scenario.Scenario.get_all()]
         sla_info = [cls.get_name() for cls in sla.SLA.get_all()]
         deploy_engines = [cls.get_name() for cls in
                           engine.Engine.get_all()]
         server_providers = [cls.get_name() for cls in
                             provider.ProviderFactory.get_all()]
 
-        candidates = (scenarios + scenario_groups + scenario_methods +
-                      sla_info + deploy_engines + server_providers)
+        candidates = (scenarios + sla_info + deploy_engines + server_providers)
         suggestions = []
         # NOTE(msdubov): Incorrect query may either have typos or be truncated.
         for candidate in candidates:
             if ((utils.distance(query, candidate) <= max_distance or
-                 candidate.startswith(query))):
+                 query.lower() in candidate.lower())):
                 suggestions.append(candidate)
         return suggestions
 
-    def _get_scenario_group_info(self, query):
-        try:
-            scenario_group = scenario.Scenario.get_by_name(query)
-            if not any(scenario.Scenario.is_scenario(scenario_group, m)
-                       for m in dir(scenario_group)):
-                return None
-            info = self._make_header("%s (benchmark scenario group)" %
-                                     scenario_group.get_name())
-            info += "\n\n"
-            info += utils.format_docstring(scenario_group.__doc__)
-            scenarios = scenario_group.list_benchmark_scenarios()
-            descriptions = []
-            for scenario_name in scenarios:
-                cls, method_name = scenario_name.split(".")
-                if hasattr(scenario_group, method_name):
-                    scenario_inst = getattr(scenario_group, method_name)
-                    doc = utils.parse_docstring(scenario_inst.__doc__)
-                    descr = doc["short_description"] or ""
-                    descriptions.append((scenario_name, descr))
-            info += self._compose_table("Benchmark scenarios", descriptions)
-            return info
-        except exceptions.NoSuchScenario:
-            return None
-
     def _get_scenario_info(self, query):
         try:
-            scenario_inst = scenario.Scenario.get_scenario_by_name(query)
-            scenario_gr_name = utils.get_method_class(scenario_inst).get_name()
-            header = ("%(scenario_group)s.%(scenario_name)s "
-                      "(benchmark scenario)" %
-                      {"scenario_group": scenario_gr_name,
-                       "scenario_name": scenario_inst.__name__})
+            scenario_inst = scenario.Scenario.get(query)
+            header = "%s (task scenario)" % scenario_inst.get_name()
             info = self._make_header(header)
             info += "\n\n"
             doc = utils.parse_docstring(scenario_inst.__doc__)
@@ -347,7 +282,7 @@ class InfoCommands(object):
             if doc["returns"]:
                 info += "Returns: %s" % doc["returns"]
             return info
-        except exceptions.NoSuchScenario:
+        except exceptions.PluginNotFound:
             return None
 
     def _get_sla_info(self, query):

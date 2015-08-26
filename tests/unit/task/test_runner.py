@@ -186,7 +186,7 @@ class ScenarioRunnerTestCase(test.TestCase):
         self.assertEqual(list(runner_obj.result_queue), [])
 
         cls_name, method_name = scenario_name.split(".", 1)
-        cls = scenario.Scenario.get_by_name(cls_name)
+        cls = scenario.Scenario.get(scenario_name)._meta_get("cls_ref")
 
         expected_config_kwargs = {"image": 1, "flavor": 1}
         runner_obj._run_scenario.assert_called_once_with(

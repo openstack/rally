@@ -25,23 +25,13 @@ class InfoTestCase(unittest.TestCase):
         super(InfoTestCase, self).setUp()
         self.rally = utils.Rally()
 
-    def test_find_scenario_group(self):
-        output = self.rally("info find Dummy")
-        self.assertIn("(benchmark scenario group)", output)
-        self.assertIn("Dummy.dummy_exception", output)
-        self.assertIn("Dummy.dummy_random_fail_in_atomic", output)
-
-    def test_find_scenario_group_base_class(self):
-        # NOTE(msdubov): We shouldn't display info about base scenario classes
-        #                containing no end-user scenarios
-        self.assertRaises(utils.RallyCliError, self.rally,
-                          ("info find CeilometerScenario"))
-
     def test_find_scenario(self):
-        self.assertIn("(benchmark scenario)", self.rally("info find dummy"))
+        self.assertIn("(task scenario)",
+                      self.rally("info find Dummy.dummy"))
 
     def test_find_scenario_misspelling_typos(self):
-        self.assertIn("(benchmark scenario)", self.rally("info find dummi"))
+        self.assertIn("(task scenario)",
+                      self.rally("info find Dummy.dummi"))
 
     def test_find_sla(self):
         expected = "failure_rate (SLA)"
@@ -73,7 +63,7 @@ class InfoTestCase(unittest.TestCase):
 
     def test_find_misspelling_truncated(self):
         marker_string = ("NovaServers.boot_and_list_server "
-                         "(benchmark scenario)")
+                         "(task scenario)")
         self.assertIn(marker_string,
                       self.rally("info find boot_and_list"))
 
@@ -92,7 +82,6 @@ class InfoTestCase(unittest.TestCase):
 
     def test_list(self):
         output = self.rally("info list")
-        self.assertIn("Benchmark scenario groups:", output)
         self.assertIn("NovaServers", output)
         self.assertIn("SLA checks:", output)
         self.assertIn("failure_rate", output)
@@ -103,7 +92,6 @@ class InfoTestCase(unittest.TestCase):
 
     def test_BenchmarkScenarios(self):
         output = self.rally("info BenchmarkScenarios")
-        self.assertIn("Benchmark scenario groups:", output)
         self.assertIn("NovaServers", output)
         self.assertNotIn("NovaScenario", output)
 

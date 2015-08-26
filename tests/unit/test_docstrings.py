@@ -42,43 +42,31 @@ class DocstringsTestCase(test.TestCase):
 
     def test_all_scenarios_have_docstrings(self):
         ignored_params = ["self", "scenario_obj"]
-        for scenario_group in discover.itersubclasses(scenario.Scenario):
-            if scenario_group.__module__.startswith("tests."):
-                continue
-
-            for method in dir(scenario_group):
-                if scenario.Scenario.is_scenario(scenario_group, method):
-                    scenario_inst = getattr(scenario_group, method)
-                    scenario_name = scenario_group.__name__ + "." + method
-                    self.assertIsNotNone(scenario_inst.__doc__,
-                                         "%s doensn't have a docstring." %
-                                         scenario_name)
-                    doc = utils.parse_docstring(scenario_inst.__doc__)
-                    short_description = doc["short_description"]
-                    self.assertIsNotNone(short_description,
-                                         "Docstring for %s should have "
-                                         "at least a one-line description." %
-                                         scenario_name)
-                    self.assertFalse(short_description.startswith("Test"),
-                                     "One-line description for %s "
-                                     "should be declarative and not start "
-                                     "with 'Test(s) ...'" % scenario_name)
-                    params_count = scenario_inst.__code__.co_argcount
-                    params = scenario_inst.__code__.co_varnames[:params_count]
-                    documented_params = [p["name"] for p in doc["params"]]
-                    for param in params:
-                        if param not in ignored_params:
-                            self.assertIn(param, documented_params,
-                                          "Docstring for %(scenario)s should "
-                                          "describe the '%(param)s' parameter "
-                                          "in the :param <name>: clause." %
-                                          {"scenario": scenario_name,
-                                           "param": param})
-
-    def test_all_scenario_groups_have_docstrings(self):
-        for scenario_group in discover.itersubclasses(scenario.Scenario):
-            self._assert_class_has_docstrings(scenario_group,
-                                              long_description=False)
+        for scenario_inst in scenario.Scenario.get_all():
+            self.assertIsNotNone(scenario_inst.__doc__,
+                                 "%s doensn't have a docstring." %
+                                 scenario_inst.get_name())
+            doc = utils.parse_docstring(scenario_inst.__doc__)
+            short_description = doc["short_description"]
+            self.assertIsNotNone(short_description,
+                                 "Docstring for %s should have "
+                                 "at least a one-line description." %
+                                 scenario_inst.get_name())
+            self.assertFalse(short_description.startswith("Test"),
+                             "One-line description for %s "
+                             "should be declarative and not start "
+                             "with 'Test(s) ...'" % scenario_inst.get_name())
+            params_count = scenario_inst.__code__.co_argcount
+            params = scenario_inst.__code__.co_varnames[:params_count]
+            documented_params = [p["name"] for p in doc["params"]]
+            for param in params:
+                if param not in ignored_params:
+                    self.assertIn(param, documented_params,
+                                  "Docstring for %(scenario)s should "
+                                  "describe the '%(param)s' parameter "
+                                  "in the :param <name>: clause." %
+                                  {"scenario": scenario_inst.get_name(),
+                                   "param": param})
 
     def test_all_deploy_engines_have_docstrings(self):
         for deploy_engine in engine.Engine.get_all():

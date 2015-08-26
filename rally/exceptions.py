@@ -117,17 +117,13 @@ class NotFoundException(RallyException):
 
 
 class PluginNotFound(NotFoundException):
-    msg_fmt = _("There is no plugin with name: `%(name)s` in "
-                "`%(namespace)s` namespace.")
+    msg_fmt = _("There is no plugin with name: %(name)s in "
+                "%(namespace)s namespace.")
 
 
 class PluginWithSuchNameExists(RallyException):
-    msg_fmt = _("Plugin with such name: `%(name)s` already exists in "
-                "`%(namespace)s` namespace")
-
-
-class NoSuchScenario(NotFoundException):
-    msg_fmt = _("There is no benchmark scenario with name `%(name)s`.")
+    msg_fmt = _("Plugin with such name: %(name)s already exists in "
+                "%(namespace)s namespace")
 
 
 class NoSuchConfigField(NotFoundException):

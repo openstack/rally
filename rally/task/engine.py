@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import copy
 import json
 import threading
 import time
@@ -179,7 +180,7 @@ class BenchmarkEngine(object):
     @rutils.log_task_wrapper(LOG.info,
                              _("Task validation of scenarios names."))
     def _validate_config_scenarios_name(self, config):
-        available = set(scenario.Scenario.list_benchmark_scenarios())
+        available = set(s.get_name() for s in scenario.Scenario.get_all())
         specified = set(six.iterkeys(config))
 
         if not specified.issubset(available):
@@ -206,8 +207,8 @@ class BenchmarkEngine(object):
     def _validate_config_semantic_helper(self, admin, user, name, pos,
                                          deployment, kwargs):
         try:
-            scenario.Scenario.validate(name, kwargs, admin=admin,
-                                       users=[user], deployment=deployment)
+            scenario.Scenario.validate(
+                name, kwargs, admin=admin, users=[user], deployment=deployment)
         except exceptions.InvalidScenarioArgument as e:
             kw = {"name": name, "pos": pos,
                   "config": kwargs, "reason": six.text_type(e)}
@@ -265,7 +266,8 @@ class BenchmarkEngine(object):
         return runner.ScenarioRunner.get(cfg["type"])(self.task, cfg)
 
     def _prepare_context(self, ctx, name, endpoint):
-        scenario_context = scenario.Scenario.meta(name, "context")
+        scenario_context = copy.deepcopy(
+            scenario.Scenario.get(name)._meta_get("default_context"))
         if self.existing_users and "users" not in ctx:
             scenario_context.setdefault("existing_users", self.existing_users)
         elif "users" not in ctx:

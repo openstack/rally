@@ -21,6 +21,7 @@ import mock
 from novaclient import exceptions as nova_exc
 import six
 
+from rally.common.plugin import plugin
 from rally import consts
 from rally import exceptions
 import rally.osclients
@@ -34,41 +35,25 @@ MODULE = "rally.task.validation."
 
 class ValidationUtilsTestCase(test.TestCase):
 
-    def _get_scenario_validators(self, func_, scenario_, reset=True):
-        """Unwrap scenario validators created by validation.validator()."""
-        if reset:
-            if hasattr(scenario_, "validators"):
-                del scenario_.validators
-        scenario = validation.validator(func_)()(scenario_)
-        return scenario.validators
-
     def test_validator(self):
 
-        failure = validation.ValidationResult(False)
-        func = lambda *args, **kv: kv
-        scenario = lambda: None
+        @plugin.from_func()
+        def scenario():
+            pass
 
-        # Check arguments passed to validator
-        wrap = validation.validator(func)
-        wrap_args = ["foo", "bar"]
-        wrap_kwargs = {"foo": "spam"}
-        wrap_scenario = wrap(*wrap_args, **wrap_kwargs)
-        wrap_validator = wrap_scenario(scenario)
-        validators = wrap_validator.validators
-        self.assertEqual(1, len(validators))
-        validator, = validators
-        self.assertEqual(wrap_kwargs, validator(None, None, None))
-        self.assertEqual(wrap_validator, scenario)
+        scenario._meta_init()
 
-        # Default result
-        func_success = lambda *a, **kv: None
-        validator, = self._get_scenario_validators(func_success, scenario)
-        self.assertTrue(validator(None, None, None).is_valid)
+        def validator_func(config, clients, deployment, a, b, c, d):
+            return (config, clients, deployment, a, b, c, d)
 
-        # Failure result
-        func_failure = lambda *a, **kv: failure
-        validator, = self._get_scenario_validators(func_failure, scenario)
-        self.assertFalse(validator(None, None, None).is_valid)
+        validator = validation.validator(validator_func)
+
+        self.assertEqual(scenario, validator("a", "b", "c", d=1)(scenario))
+        self.assertEqual(1, len(scenario._meta_get("validators")))
+
+        self.assertEqual(
+            ("conf", "client", "deploy", "a", "b", "c", 1),
+            scenario._meta_get("validators")[0]("conf", "client", "deploy"))
 
 
 @ddt.ddt
@@ -76,11 +61,14 @@ class ValidatorsTestCase(test.TestCase):
 
     def _unwrap_validator(self, validator, *args, **kwargs):
 
-        @validator(*args, **kwargs)
+        @plugin.from_func()
         def func():
             pass
 
-        return func.validators[0]
+        func._meta_init()
+        validator(*args, **kwargs)(func)
+
+        return func._meta_get("validators")[0]
 
     def test_number_not_nullable(self):
         validator = self._unwrap_validator(validation.number, param_name="n")

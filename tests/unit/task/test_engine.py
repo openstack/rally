@@ -103,13 +103,18 @@ class BenchmarkEngineTestCase(test.TestCase):
         self.assertRaises(exceptions.InvalidTaskException, eng.validate)
         self.assertTrue(task.set_failed.called)
 
-    @mock.patch("rally.task.engine.scenario.Scenario")
-    def test__validate_config_scenarios_name(self, mock_scenario):
+    @mock.patch("rally.task.engine.scenario.Scenario.get_all")
+    def test__validate_config_scenarios_name(self, mock_scenario_get_all):
         config = {
             "a": [],
             "b": []
         }
-        mock_scenario.list_benchmark_scenarios.return_value = ["e", "b", "a"]
+
+        mock_scenario_get_all.return_value = [
+            mock.MagicMock(get_name=lambda: "e"),
+            mock.MagicMock(get_name=lambda: "b"),
+            mock.MagicMock(get_name=lambda: "a")
+        ]
         eng = engine.BenchmarkEngine(config, mock.MagicMock())
         eng._validate_config_scenarios_name(config)
 
@@ -333,10 +338,10 @@ class BenchmarkEngineTestCase(test.TestCase):
 
         self.assertEqual(2, mock_log.exception.call_count)
 
-    @mock.patch("rally.task.engine.scenario.Scenario.meta")
-    def test__prepare_context(self, mock_scenario_meta):
+    @mock.patch("rally.task.engine.scenario.Scenario.get")
+    def test__prepare_context(self, mock_scenario_get):
         default_context = {"a": 1, "b": 2}
-        mock_scenario_meta.return_value = default_context
+        mock_scenario_get.return_value._meta_get.return_value = default_context
         task = mock.MagicMock()
         name = "a.benchmark"
         context = {"b": 3, "c": 4}
@@ -356,11 +361,14 @@ class BenchmarkEngineTestCase(test.TestCase):
             "config": expected_context
         }
         self.assertEqual(result, expected_result)
-        mock_scenario_meta.assert_called_once_with(name, "context")
+        mock_scenario_get.assert_called_once_with(name)
+        mock_scenario_get.return_value._meta_get.assert_called_once_with(
+            "default_context"
+        )
 
-    @mock.patch("rally.task.engine.scenario.Scenario.meta")
-    def test__prepare_context_with_existing_users(self, mock_scenario_meta):
-        mock_scenario_meta.return_value = {}
+    @mock.patch("rally.task.engine.scenario.Scenario.get")
+    def test__prepare_context_with_existing_users(self, mock_scenario_get):
+        mock_scenario_get.return_value._meta_get.return_value = {}
         task = mock.MagicMock()
         name = "a.benchmark"
         context = {"b": 3, "c": 4}
@@ -380,7 +388,9 @@ class BenchmarkEngineTestCase(test.TestCase):
             "config": expected_context
         }
         self.assertEqual(result, expected_result)
-        mock_scenario_meta.assert_called_once_with(name, "context")
+        mock_scenario_get.assert_called_once_with(name)
+        mock_scenario_get.return_value._meta_get.assert_called_once_with(
+            "default_context")
 
 
 class ResultConsumerTestCase(test.TestCase):

@@ -116,6 +116,16 @@ class NotInitedPlugin(BasePlugin):
 
 class PluginTestCase(test.TestCase):
 
+    def test_unregister(self):
+
+        @plugin.configure(name="test_some_temp_plugin")
+        class SomeTempPlugin(BasePlugin):
+            pass
+
+        SomeTempPlugin.unregister()
+        self.assertRaises(exceptions.PluginNotFound,
+                          BasePlugin.get, "test_some_temp_plugin")
+
     def test_get(self):
         self.assertEqual(SomePlugin,
                          BasePlugin.get("test_some_plugin"))

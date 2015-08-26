@@ -16,16 +16,12 @@
 import mock
 
 from rally.cli.commands import info
-from rally.deployment import engine
 from rally.deployment.engines import existing as existing_cloud
-from rally.deployment.serverprovider import provider
 from rally.deployment.serverprovider.providers import (
     existing as existing_servers)
 from rally import exceptions
 from rally.plugins.common.scenarios.dummy import dummy
 from rally.plugins.common.sla import failure_rate
-from rally.task import scenario
-from rally.task import sla
 from tests.unit import test
 
 
@@ -43,28 +39,18 @@ class InfoCommandsTestCase(test.TestCase):
         super(InfoCommandsTestCase, self).setUp()
         self.info = info.InfoCommands()
 
-    @mock.patch(SCENARIO + ".get_by_name",
-                return_value=dummy.Dummy)
-    def test_find_dummy_scenario_group(self, mock_scenario_get_by_name):
-        query = "Dummy"
-        status = self.info.find(query)
-        mock_scenario_get_by_name.assert_called_once_with(query)
-        self.assertIsNone(status)
-
-    @mock.patch(SCENARIO + ".get_scenario_by_name",
-                return_value=dummy.Dummy.dummy)
-    def test_find_dummy_scenario(self, mock_scenario_get_scenario_by_name):
+    @mock.patch(SCENARIO + ".get", return_value=dummy.Dummy.dummy)
+    def test_find_dummy_scenario(self, mock_scenario_get):
         query = "Dummy.dummy"
         status = self.info.find(query)
-        mock_scenario_get_scenario_by_name.assert_called_once_with(query)
+        mock_scenario_get.assert_called_once_with(query)
         self.assertIsNone(status)
 
-    @mock.patch(SCENARIO + ".get_scenario_by_name",
-                side_effect=exceptions.NoSuchScenario)
-    def test_find_failure_status(self, mock_scenario_get_scenario_by_name):
+    @mock.patch(SCENARIO + ".get", side_effect=exceptions.PluginNotFound)
+    def test_find_failure_status(self, mock_scenario_get):
         query = "Dummy.non_existing"
         status = self.info.find(query)
-        mock_scenario_get_scenario_by_name.assert_called_once_with(query)
+        mock_scenario_get.assert_called_once_with(query)
         self.assertEqual(1, status)
 
     @mock.patch(SLA + ".get", return_value=failure_rate.FailureRate)
@@ -103,29 +89,28 @@ class InfoCommandsTestCase(test.TestCase):
         mock_server_providers.assert_called_once_with()
         self.assertIsNone(status)
 
-    @mock.patch(DISCOVER + ".itersubclasses", return_value=[dummy.Dummy])
-    def test_BenchmarkScenarios(self, mock_itersubclasses):
+    @mock.patch(SCENARIO + ".get_all", return_value=[dummy.Dummy.dummy])
+    def test_BenchmarkScenarios(self, mock_scenario_get_all):
         status = self.info.BenchmarkScenarios()
-        mock_itersubclasses.assert_called_with(scenario.Scenario)
+        mock_scenario_get_all.assert_called_with()
         self.assertIsNone(status)
 
-    @mock.patch(DISCOVER + ".itersubclasses",
-                return_value=[failure_rate.FailureRate])
-    def test_SLA(self, mock_itersubclasses):
+    @mock.patch(SLA + ".get_all", return_value=[failure_rate.FailureRate])
+    def test_SLA(self, mock_sla_get_all):
         status = self.info.SLA()
-        mock_itersubclasses.assert_called_with(sla.SLA)
+        mock_sla_get_all.assert_called_with()
         self.assertIsNone(status)
 
-    @mock.patch(DISCOVER + ".itersubclasses",
+    @mock.patch(ENGINE + ".get_all",
                 return_value=[existing_cloud.ExistingCloud])
-    def test_DeploymentEngines(self, mock_itersubclasses):
+    def test_DeploymentEngines(self, mock_engine_get_all):
         status = self.info.DeploymentEngines()
-        mock_itersubclasses.assert_called_with(engine.Engine)
+        mock_engine_get_all.assert_called_with()
         self.assertIsNone(status)
 
-    @mock.patch(DISCOVER + ".itersubclasses",
+    @mock.patch(PROVIDER + ".get_all",
                 return_value=[existing_servers.ExistingServers])
-    def test_ServerProviders(self, mock_itersubclasses):
+    def test_ServerProviders(self, mock_provider_factory_get_all):
         status = self.info.ServerProviders()
-        mock_itersubclasses.assert_called_with(provider.ProviderFactory)
+        mock_provider_factory_get_all.assert_called_with()
         self.assertIsNone(status)
