@@ -85,6 +85,28 @@ class CinderVolumes(utils.CinderScenario,
     @validation.required_services(consts.Service.CINDER)
     @validation.required_openstack(users=True)
     @scenario.configure(context={"cleanup": ["cinder"]})
+    def create_and_update_volume(self, size, image=None,
+                                 create_volume_kwargs=None,
+                                 update_volume_kwargs=None):
+        """Create a volume and update its name and description.
+
+        :param size: volume size (integer, in GB)
+        :param image: image to be used to create volume
+        :param create_volume_kwargs: dict, to be used to create volume
+        :param update_volume_kwargs: dict, to be used to update volume
+        """
+        create_volume_kwargs = create_volume_kwargs or {}
+        update_volume_kwargs = update_volume_kwargs or {}
+        if image:
+            create_volume_kwargs["imageRef"] = image
+        volume = self._create_volume(size, **create_volume_kwargs)
+        self._update_volume(volume, **update_volume_kwargs)
+
+    @types.set(image=types.ImageResourceType)
+    @validation.image_exists("image", nullable=True)
+    @validation.required_services(consts.Service.CINDER)
+    @validation.required_openstack(users=True)
+    @scenario.configure(context={"cleanup": ["cinder"]})
     def create_and_delete_volume(self, size, image=None,
                                  min_sleep=0, max_sleep=0,
                                  **kwargs):

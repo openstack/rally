@@ -96,6 +96,44 @@
         failure_rate:
           max: 0
 
+  CinderVolumes.create_and_update_volume:
+    -
+      args:
+        update_volume_kwargs:
+           display_name: "name_updated"
+           display_description: "desc_updated"
+        size: 1
+      runner:
+        type: "constant"
+        times: 2
+        concurrency: 2
+      context:
+        users:
+          tenants: 2
+          users_per_tenant: 2
+      sla:
+        failure_rate:
+          max: 0
+    -
+      args:
+        update_volume_kwargs:
+           display_name: "name_updated"
+           display_description: "desc_updated"
+        size: 1
+        image:
+          name: {{image_name}}
+      runner:
+        type: "constant"
+        times: 2
+        concurrency: 2
+      context:
+        users:
+          tenants: 2
+          users_per_tenant: 2
+      sla:
+        failure_rate:
+          max: 0
+
   CinderVolumes.create_and_list_volume:
     -
       args:
