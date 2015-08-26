@@ -36,7 +36,7 @@ and some dependency is missing it will ask you if you want to install
 the required packages.
 
 By default it will install Rally in a virtualenv in ``~/rally`` when
-ran as standard user, or install system wide when ran as root. You can
+run as standard user, or install system wide when run as root. You can
 install Rally in a venv by using the option ``--target``:
 
 .. code-block:: none
