@@ -13,13 +13,14 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from rally.task.scenarios import base
+from rally.plugins.openstack import scenario
+from rally.task import atomic
 
 
-class ScenarioPlugin(base.Scenario):
+class ScenarioPlugin(scenario.OpenStackScenario):
     """Sample plugin which lists flavors."""
 
-    @base.atomic_action_timer("list_flavors")
+    @atomic.action_timer("list_flavors")
     def _list_flavors(self):
         """Sample of usage clients - list flavors
 
@@ -28,12 +29,12 @@ class ScenarioPlugin(base.Scenario):
         """
         self.clients("nova").flavors.list()
 
-    @base.atomic_action_timer("list_flavors_as_admin")
+    @atomic.action_timer("list_flavors_as_admin")
     def _list_flavors_as_admin(self):
         """The same with admin clients."""
         self.admin_clients("nova").flavors.list()
 
-    @base.scenario()
+    @scenario.configure()
     def list_flavors(self):
         """List flavors."""
         self._list_flavors()
