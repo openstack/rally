@@ -255,6 +255,65 @@
         failure_rate:
           max: 0
 
+  NeutronLoadbalancerV1.create_and_list_healthmonitors:
+    -
+      args:
+        healthmonitor_create_args: {}
+      runner:
+        type: "constant"
+        times: {{smoke or 20}}
+        concurrency: {{smoke or 10}}
+      context:
+        users:
+          tenants: {{smoke or 5}}
+          users_per_tenant: {{smoke or 2}}
+        quotas:
+          neutron:
+            health_monitor: -1
+      sla:
+        failure_rate:
+          max: 0
+
+  NeutronLoadbalancerV1.create_and_delete_healthmonitors:
+    -
+      args:
+        healthmonitor_create_args: {}
+      runner:
+        type: "constant"
+        times: {{smoke or 20}}
+        concurrency: {{smoke or 10}}
+      context:
+        users:
+          tenants: {{smoke or 5}}
+          users_per_tenant: {{smoke or 2}}
+        quotas:
+          neutron:
+            health_monitor: -1
+      sla:
+        failure_rate:
+          max: 0
+
+  NeutronLoadbalancerV1.create_and_update_healthmonitors:
+    -
+      args:
+        healthmonitor_create_args: {}
+        healthmonitor_update_args:
+          admin_state_up: False
+      runner:
+        type: "constant"
+        times: {{smoke or 20}}
+        concurrency: {{smoke or 10}}
+      context:
+        users:
+          tenants: {{smoke or 5}}
+          users_per_tenant: {{smoke or 2}}
+        quotas:
+          neutron:
+            health_monitor: -1
+      sla:
+        failure_rate:
+          max: 0
+
   NeutronNetworks.create_and_update_networks:
     -
       args:

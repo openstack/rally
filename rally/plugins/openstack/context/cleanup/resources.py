@@ -224,6 +224,12 @@ class NeutronV1Vip(NeutronLbaasV1Mixin):
     pass
 
 
+@base.resource("neutron", "health_monitor", order=next(_neutron_order),
+               tenant_resource=True)
+class NeutronV1Healthmonitor(NeutronLbaasV1Mixin):
+    pass
+
+
 @base.resource("neutron", "pool", order=next(_neutron_order),
                tenant_resource=True)
 class NeutronV1Pool(NeutronLbaasV1Mixin):

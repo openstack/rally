@@ -1037,6 +1037,7 @@ class FakeNeutronClient(object):
         self.__pools = {}
         self.__vips = {}
         self.__fips = {}
+        self.__healthmonitors = {}
         self.__tenant_id = kwargs.get("tenant_id", generate_uuid())
 
         self.format = "json"
@@ -1130,6 +1131,19 @@ class FakeNeutronClient(object):
         self.__fips[fip_id] = fip
         return {"fip": fip}
 
+    def create_health_monitor(self, data):
+        healthmonitor = setup_dict(data["healthmonitor"],
+                                   required=["type", "timeout", "delay",
+                                             "max_retries"],
+                                   defaults={"admin_state_up": True})
+        healthmonitor_id = generate_uuid()
+
+        healthmonitor.update({"id": healthmonitor_id,
+                              "status": "PENDING_CREATE",
+                              "tenant_id": self.__tenant_id})
+        self.__healthmonitors[healthmonitor_id] = healthmonitor
+        return {"healthmonitor": healthmonitor}
+
     def create_port(self, data):
         port = setup_dict(data["port"],
                           required=["network_id"],
@@ -1206,6 +1220,9 @@ class FakeNeutronClient(object):
     def update_vip(self, vip_id, data):
         self.update_resource(vip_id, self.__vips, data)
 
+    def update_health_monitor(self, healthmonitor_id, data):
+        self.update_resource(healthmonitor_id, self.__healthmonitors, data)
+
     def update_subnet(self, subnet_id, data):
         self.update_resource(subnet_id, self.__subnets, data)
 
@@ -1235,6 +1252,11 @@ class FakeNeutronClient(object):
         if vip_id not in self.__vips:
             raise neutron_exceptions.NeutronClientException
         del self.__vips[vip_id]
+
+    def delete_health_monitor(self, healthmonitor_id):
+        if healthmonitor_id not in self.__healthmonitors:
+            raise neutron_exceptions.NeutronClientException
+        del self.__healthmonitors[healthmonitor_id]
         return ""
 
     def delete_floatingip(self, fip_id):
@@ -1285,6 +1307,11 @@ class FakeNeutronClient(object):
         vips = self._filter(self.__vips.values(), search_opts)
         return {"vips": vips}
 
+    def list_health_monitors(self, **search_opts):
+        healthmonitors = self._filter(
+            self.__healthmonitors.values(), search_opts)
+        return {"healthmonitors": healthmonitors}
+
     def list_ports(self, **search_opts):
         ports = self._filter(self.__ports.values(), search_opts)
         return {"ports": ports}
@@ -1321,6 +1348,22 @@ class FakeNeutronClient(object):
                                 "id": router_id}
 
         raise neutron_exceptions.NeutronClientException
+
+    def associate_health_monitor(self, pool_id, healthmonitor_id):
+        if pool_id not in self.__pools:
+            raise neutron_exceptions.NeutronClientException
+        if healthmonitor_id not in self.__healthmonitors:
+            raise neutron_exceptions.NeutronClientException
+        self.__pools[pool_id]["pool"]["healthmonitors"] = healthmonitor_id
+        return {"pool": self.__pools[pool_id]}
+
+    def disassociate_health_monitor(self, pool_id, healthmonitor_id):
+        if pool_id not in self.__pools:
+            raise neutron_exceptions.NeutronClientException
+        if healthmonitor_id not in self.__healthmonitors:
+            raise neutron_exceptions.NeutronClientException
+        del self.__pools[pool_id]["pool"]["healthmonitors"][healthmonitor_id]
+        return ""
 
 
 class FakeIronicClient(object):

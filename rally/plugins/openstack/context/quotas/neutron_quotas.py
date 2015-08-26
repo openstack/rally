@@ -60,6 +60,10 @@ class NeutronQuotas(object):
             "vip": {
                 "type": "integer",
                 "minimum": -1
+            },
+            "health_monitor": {
+                "type": "integer",
+                "minimum": -1
             }
         }
     }

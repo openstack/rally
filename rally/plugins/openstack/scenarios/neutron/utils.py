@@ -33,6 +33,10 @@ class NeutronScenario(scenario.OpenStackScenario):
     LB_METHOD = "ROUND_ROBIN"
     LB_PROTOCOL = "HTTP"
     LB_PROTOCOL_PORT = 80
+    HM_TYPE = "PING"
+    HM_MAX_RETRIES = 3
+    HM_DELAY = 20
+    HM_TIMEOUT = 10
 
     def _warn_about_deprecated_name_kwarg(self, resource, kwargs):
         """Warn about use of a deprecated 'name' kwarg and replace it.
@@ -439,3 +443,59 @@ class NeutronScenario(scenario.OpenStackScenario):
         :param: dict, floating IP object
         """
         return self.clients("neutron").delete_floatingip(floating_ip["id"])
+
+    def _create_v1_healthmonitor(self, atomic_action=True,
+                                 **healthmonitor_create_args):
+        """Create LB healthmonitor.
+
+        This atomic function creates healthmonitor with the provided
+        healthmonitor_create_args.
+
+        :param atomic_action: True if this is an atomic action
+        :param healthmonitor_create_args: dict, POST /lb/healthmonitors
+        :returns: neutron healthmonitor dict
+        """
+        args = {"type": self.HM_TYPE,
+                "delay": self.HM_DELAY,
+                "max_retries": self.HM_MAX_RETRIES,
+                "timeout": self.HM_TIMEOUT}
+        args.update(healthmonitor_create_args)
+        if atomic_action:
+            with atomic.ActionTimer(self, "neutron.create_healthmonitor"):
+                return self.clients("neutron").create_health_monitor(
+                    {"health_monitor": args})
+        return self.clients("neutron").create_health_monitor(
+            {"health_monitor": args})
+
+    @atomic.action_timer("neutron.list_healthmonitors")
+    def _list_v1_healthmonitors(self, **kwargs):
+        """List LB healthmonitors.
+
+        This atomic function lists all helthmonitors.
+
+        :param kwargs: optional parameters
+        :returns neutron lb healthmonitor list
+        """
+        return self.clients("neutron").list_health_monitors(**kwargs)
+
+    @atomic.action_timer("neutron.delete_healthmonitor")
+    def _delete_v1_healthmonitor(self, healthmonitor):
+        """Delete neutron healthmonitor.
+
+        :param healthmonitor: neutron healthmonitor dict
+        """
+        self.clients("neutron").delete_health_monitor(healthmonitor["id"])
+
+    @atomic.action_timer("neutron.update_healthmonitor")
+    def _update_v1_healthmonitor(self, healthmonitor,
+                                 **healthmonitor_update_args):
+        """Update neutron healthmonitor.
+
+        :param healthmonitor: neutron lb healthmonitor dict
+        :param healthmonitor_update_args: POST /lb/healthmonitors
+        update options
+        :returns updated neutron lb healthmonitor dict
+        """
+        body = {"health_monitor": healthmonitor_update_args}
+        return self.clients("neutron").update_health_monitor(
+            healthmonitor["health_monitor"]["id"], body)
