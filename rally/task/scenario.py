@@ -13,18 +13,18 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import functools
+
 import random
 import time
 
 import six
 
-from rally.common import costilius
 from rally.common import log as logging
 from rally.common.plugin import plugin
 from rally.common import utils
 from rally import consts
 from rally import exceptions
+from rally.task import atomic
 from rally.task import functional
 
 
@@ -91,7 +91,9 @@ class ConfigurePluginMeta(type):
 
 
 @six.add_metaclass(ConfigurePluginMeta)
-class Scenario(plugin.Plugin, functional.FunctionalMixin):
+class Scenario(plugin.Plugin,
+               atomic.ActionTimerMixin,
+               functional.FunctionalMixin):
     """This is base class for any benchmark scenario.
 
        You should create subclass of this class. And your test scenarios will
@@ -101,9 +103,9 @@ class Scenario(plugin.Plugin, functional.FunctionalMixin):
     RESOURCE_NAME_LENGTH = 10
 
     def __init__(self, context=None):
+        super(Scenario, self).__init__()
         self.context = context
         self._idle_duration = 0
-        self._atomic_actions = costilius.OrderedDict()
 
     # TODO(amaretskiy): consider about prefix part of benchmark uuid
     @classmethod
@@ -167,76 +169,3 @@ class Scenario(plugin.Plugin, functional.FunctionalMixin):
     def idle_duration(self):
         """Returns duration of all sleep_between."""
         return self._idle_duration
-
-    def _register_atomic_action(self, name):
-        """Registers an atomic action by its name."""
-        self._atomic_actions[name] = None
-
-    def _atomic_action_registered(self, name):
-        """Checks whether an atomic action has been already registered."""
-        return name in self._atomic_actions
-
-    def _add_atomic_actions(self, name, duration):
-        """Adds the duration of an atomic action by its name."""
-        self._atomic_actions[name] = duration
-
-    def atomic_actions(self):
-        """Returns the content of each atomic action."""
-        return self._atomic_actions
-
-
-def atomic_action_timer(name):
-    """Provide measure of execution time.
-
-    Decorates methods of the Scenario class.
-    This provides duration in seconds of each atomic action.
-    """
-    def wrap(func):
-        @functools.wraps(func)
-        def func_atomic_actions(self, *args, **kwargs):
-            with AtomicAction(self, name):
-                f = func(self, *args, **kwargs)
-            return f
-        return func_atomic_actions
-    return wrap
-
-
-class AtomicAction(utils.Timer):
-    """A class to measure the duration of atomic operations
-
-    This would simplify the way measure atomic operation duration
-    in certain cases. For example if we want to get the duration
-    for each operation which runs in an iteration
-    for i in range(repetitions):
-        with scenario_utils.AtomicAction(instance_of_base_scenario_subclass,
-                                         "name_of_action"):
-            self.clients(<client>).<operation>
-    """
-
-    def __init__(self, scenario_instance, name):
-        """Create a new instance of the AtomicAction.
-
-        :param scenario_instance: instance of subclass of base scenario
-        :param name: name of the ActionBuilder
-        """
-        super(AtomicAction, self).__init__()
-        self.scenario_instance = scenario_instance
-        self.name = self._get_atomic_action_name(name)
-        self.scenario_instance._register_atomic_action(self.name)
-
-    def _get_atomic_action_name(self, name):
-        if not self.scenario_instance._atomic_action_registered(name):
-            return name
-        else:
-            name_template = name + " (%i)"
-            atomic_action_iteration = 2
-            while self.scenario_instance._atomic_action_registered(
-                    name_template % atomic_action_iteration):
-                atomic_action_iteration += 1
-            return name_template % atomic_action_iteration
-
-    def __exit__(self, type_, value, tb):
-        super(AtomicAction, self).__exit__(type_, value, tb)
-        if type_ is None:
-            self.scenario_instance._add_atomic_actions(self.name,
-                                                       self.duration())

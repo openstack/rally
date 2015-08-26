@@ -271,22 +271,3 @@ class ScenarioTestCase(test.TestCase):
         self.assertEqual(
             len_by_prefix(result, scenario.Scenario.RESOURCE_NAME_PREFIX),
             range_num)
-
-
-class AtomicActionTestCase(test.TestCase):
-    def test__init__(self):
-        fake_scenario_instance = fakes.FakeScenario()
-        c = scenario.AtomicAction(fake_scenario_instance, "asdf")
-        self.assertEqual(c.scenario_instance, fake_scenario_instance)
-        self.assertEqual(c.name, "asdf")
-
-    @mock.patch("tests.unit.fakes.FakeScenario._add_atomic_actions")
-    @mock.patch("rally.common.utils.time")
-    def test__exit__(self, mock_time, mock_fake_scenario__add_atomic_actions):
-        fake_scenario_instance = fakes.FakeScenario()
-        self.start = mock_time.time()
-        with scenario.AtomicAction(fake_scenario_instance, "asdf"):
-            pass
-        duration = mock_time.time() - self.start
-        mock_fake_scenario__add_atomic_actions.assert_called_once_with(
-            "asdf", duration)
