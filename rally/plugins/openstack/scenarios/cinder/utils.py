@@ -218,9 +218,8 @@ class CinderScenario(scenario.OpenStackScenario):
                       it's attached to an instance
         :param container_format: container format of image. Acceptable
                                  formats: ami, ari, aki, bare, and ovf
-        :param: disk_format: disk format of image. Acceptable formats:
-                             ami, ari, aki, vhd, vmdk, raw, qcow2, vdi
-                             and iso
+        :param disk_format: disk format of image. Acceptable formats:
+                            ami, ari, aki, vhd, vmdk, raw, qcow2, vdi and iso
         :returns: Returns created image object
         """
         resp, img = volume.upload_to_image(force, self._generate_random_name(),

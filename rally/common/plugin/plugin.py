@@ -14,6 +14,7 @@
 #    under the License.
 
 from rally.common.plugin import discover
+from rally.common.plugin import info
 from rally.common.plugin import meta
 from rally import exceptions
 
@@ -115,7 +116,7 @@ def from_func(plugin_baseclass=None):
     return decorator
 
 
-class Plugin(meta.MetaMixin):
+class Plugin(meta.MetaMixin, info.InfoMixin):
     """Base class for all Plugins in Rally."""
 
     @classmethod

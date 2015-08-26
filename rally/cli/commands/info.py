@@ -38,6 +38,7 @@ from __future__ import print_function
 import inspect
 
 from rally.cli import cliutils
+from rally.common.plugin import info
 from rally.common import utils
 from rally.deployment import engine
 from rally.deployment.serverprovider import provider
@@ -219,7 +220,7 @@ class InfoCommands(object):
         descriptions = []
         for entity in base_cls.get_all():
             name = entity.get_name()
-            doc = utils.parse_docstring(entity.__doc__)
+            doc = info.parse_docstring(entity.__doc__)
             description = doc["short_description"] or ""
             descriptions.append((name, description))
         descriptions.sort(key=lambda d: d[0])
@@ -253,14 +254,14 @@ class InfoCommands(object):
         try:
             scenario_inst = scenario.Scenario.get(query)
             header = "%s (task scenario)" % scenario_inst.get_name()
-            info = self._make_header(header)
-            info += "\n\n"
-            doc = utils.parse_docstring(scenario_inst.__doc__)
+            result = self._make_header(header)
+            result += "\n\n"
+            doc = info.parse_docstring(scenario_inst.__doc__)
             if not doc["short_description"]:
                 return None
-            info += doc["short_description"] + "\n\n"
+            result += doc["short_description"] + "\n\n"
             if doc["long_description"]:
-                info += doc["long_description"] + "\n\n"
+                result += doc["long_description"] + "\n\n"
             if doc["params"]:
                 args = inspect.getargspec(scenario_inst)
                 if args.defaults:
@@ -268,20 +269,20 @@ class InfoCommands(object):
                                               args.defaults))
                 else:
                     default_values = {}
-                info += "Parameters:\n"
+                result += "Parameters:\n"
                 for param in doc["params"]:
-                    info += "    - %(name)s: %(doc)s" % param
+                    result += "    - %(name)s: %(doc)s" % param
 
                     name = param["name"]
                     if name in default_values:
                         if default_values[name] is not None:
-                            info += " [Default: %s]" % default_values[name]
+                            result += " [Default: %s]" % default_values[name]
                         else:
-                            info += " [optional]"
-                    info += "\n"
+                            result += " [optional]"
+                    result += "\n"
             if doc["returns"]:
-                info += "Returns: %s" % doc["returns"]
-            return info
+                result += "Returns: %s" % doc["returns"]
+            return result
         except exceptions.PluginNotFound:
             return None
 
@@ -289,10 +290,10 @@ class InfoCommands(object):
         try:
             found_sla = sla.SLA.get(query)
             header = "%s (SLA)" % found_sla.get_name()
-            info = self._make_header(header)
-            info += "\n\n"
-            info += utils.format_docstring(found_sla.__doc__) + "\n"
-            return info
+            result = self._make_header(header)
+            result += "\n\n"
+            result += info.format_docstring(found_sla.__doc__) + "\n"
+            return result
         except exceptions.PluginNotFound:
             return None
 
@@ -300,10 +301,10 @@ class InfoCommands(object):
         try:
             deploy_engine = engine.Engine.get(query)
             header = "%s (deploy engine)" % deploy_engine.get_name()
-            info = self._make_header(header)
-            info += "\n\n"
-            info += utils.format_docstring(deploy_engine.__doc__)
-            return info
+            result = self._make_header(header)
+            result += "\n\n"
+            result += info.format_docstring(deploy_engine.__doc__)
+            return result
         except exceptions.PluginNotFound:
             return None
 
@@ -311,10 +312,10 @@ class InfoCommands(object):
         try:
             server_provider = provider.ProviderFactory.get(query)
             header = "%s (server provider)" % server_provider.get_name()
-            info = self._make_header(header)
-            info += "\n\n"
-            info += utils.format_docstring(server_provider.__doc__)
-            return info
+            result = self._make_header(header)
+            result += "\n\n"
+            result += info.format_docstring(server_provider.__doc__)
+            return result
         except exceptions.PluginNotFound:
             return None
 

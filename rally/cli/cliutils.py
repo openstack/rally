@@ -31,7 +31,7 @@ import six
 from rally.common.i18n import _
 from rally.common import log as logging
 from rally.common.plugin import discover
-from rally.common import utils
+from rally.common.plugin import info
 from rally.common import version
 from rally import exceptions
 
@@ -364,7 +364,7 @@ def _compose_category_description(category):
         for item in descr_pairs:
             name = getattr(item[1], "alias", item[0])
             if item[1].__doc__:
-                doc = utils.parse_docstring(
+                doc = info.parse_docstring(
                     item[1].__doc__)["short_description"]
             else:
                 doc = ""
@@ -377,7 +377,7 @@ def _compose_category_description(category):
 def _compose_action_description(action_fn):
     description = ""
     if action_fn.__doc__:
-        parsed_doc = utils.parse_docstring(action_fn.__doc__)
+        parsed_doc = info.parse_docstring(action_fn.__doc__)
         short = parsed_doc.get("short_description")
         long = parsed_doc.get("long_description")
 

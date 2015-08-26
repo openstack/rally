@@ -370,7 +370,7 @@ class NeutronWrapper(NetworkWrapper):
         """Create Neutron floating IP.
 
         :param ext_network: floating network name or dict
-        :param tenant_id str tenant id
+        :param tenant_id: str tenant id
         :param port_id: str port id
         :param **kwargs: for compatibility, not used here
         :returns: floating IP dict
@@ -415,7 +415,7 @@ class NeutronWrapper(NetworkWrapper):
         """Check whether a neutron extension is supported
 
         :param extension: str, neutron extension
-        :return: result tuple
+        :returns: result tuple
         :rtype: (bool, string)
         """
         extensions = self.client.list_extensions().get("extensions", [])
