@@ -5,7 +5,6 @@ hacking<0.10,>=0.9.2
 
 coverage>=3.6
 ddt>=0.7.0
-discover
 mock>=1.2
 testrepository>=0.0.18
 testtools>=1.4.0
