@@ -57,7 +57,7 @@ Such configuration will mark the **NovaServers.boot_and_delete_server** benchmar
 
 Checking SLA
 ------------
-Let us show you how Rally SLA work using a simple example based on **Dummy benchmark scenarios**. These scenarios actually do not perform any OpenStack-related stuff but are very useful for testing the behavious of Rally. Let us put in a new task, *test-sla.json*, 2 scenarios -- one that does nothing and another that just throws an exception:
+Let us show you how Rally SLA work using a simple example based on **Dummy benchmark scenarios**. These scenarios actually do not perform any OpenStack-related stuff but are very useful for testing the behaviors of Rally. Let us put in a new task, *test-sla.json*, 2 scenarios -- one that does nothing and another that just throws an exception:
 
 .. code-block:: none
 
