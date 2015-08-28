@@ -113,7 +113,7 @@ class Deployment(object):
     def service_list(cls, deployment):
         """Get the services list.
 
-        :param deployment: UUID or name of the deployment
+        :param deployment: Deployment object
         :returns: Service list
         """
         # TODO(kun): put this work into objects.Deployment
