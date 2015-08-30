@@ -290,7 +290,7 @@ class DeploymentCommands(object):
     @cliutils.args("--deployment", type=str, dest="deployment",
                    help="UUID or name of the deployment")
     def use(self, deployment):
-        """Set active deployment. Alias for "rally use deployment".
+        """Set active deployment.
 
         :param deployment: UUID or name of a deployment
         """
