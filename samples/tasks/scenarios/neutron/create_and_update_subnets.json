@@ -18,8 +18,8 @@
             },
             "context": {
                 "users": {
-                    "tenants": 5,
-                    "users_per_tenant": 5
+                    "tenants": 2,
+                    "users_per_tenant": 3
                 },
                 "quotas": {
                     "neutron": {

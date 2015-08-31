@@ -9,11 +9,11 @@
       runner:
         type: "constant"
         times: {{smoke or 40}}
-        concurrency: 20
+        concurrency: {{smoke or 20}}
       context:
         users:
-          tenants: 1
-          users_per_tenant: 1
+          tenants: {{smoke or 3}}
+          users_per_tenant: {{smoke or 2}}
         quotas:
           neutron:
              network: -1
@@ -31,11 +31,11 @@
       runner:
         type: "constant"
         times: {{smoke or 20 }}
-        concurrency: 10
+        concurrency: {{smoke or 10}}
       context:
         users:
-          tenants: 1
-          users_per_tenant: 1
+          tenants: {{smoke or 3}}
+          users_per_tenant: {{smoke or 2}}
         quotas:
           neutron:
              network: -1
@@ -55,11 +55,11 @@
       runner:
         type: "constant"
         times: {{smoke or 15}}
-        concurrency: 5
+        concurrency: {{smoke or 5}}
       context:
         users:
-          tenants: 1
-          users_per_tenant: 1
+          tenants: {{smoke or 3}}
+          users_per_tenant: {{smoke or 2}}
         quotas:
           neutron:
              network: -1
@@ -78,11 +78,11 @@
       runner:
         type: "constant"
         times: {{smoke or 15}}
-        concurrency: 5
+        concurrency: {{smoke or 5}}
       context:
         users:
-          tenants: 1
-          users_per_tenant: 1
+          tenants: {{smoke or 3}}
+          users_per_tenant: {{smoke or 2}}
         quotas:
           neutron:
              network: -1
@@ -100,11 +100,11 @@
       runner:
         type: "constant"
         times: {{smoke or 20}}
-        concurrency: 10
+        concurrency: {{smoke or 10}}
       context:
         users:
-          tenants: 1
-          users_per_tenant: 1
+          tenants: {{smoke or 3}}
+          users_per_tenant: {{smoke or 2}}
         network: {}
         lbaas:
           pool: {}
@@ -125,11 +125,11 @@
       runner:
         type: "constant"
         times: {{smoke or 20}}
-        concurrency: 10
+        concurrency: {{smoke or 10}}
       context:
         users:
-          tenants: 1
-          users_per_tenant: 1
+          tenants: {{smoke or 3}}
+          users_per_tenant: {{smoke or 2}}
         network: {}
         quotas:
           neutron:
@@ -148,11 +148,11 @@
       runner:
         type: "constant"
         times: {{smoke or 20}}
-        concurrency: 10
+        concurrency: {{smoke or 10}}
       context:
         users:
-          tenants: 1
-          users_per_tenant: 1
+          tenants: {{smoke or 3}}
+          users_per_tenant: {{smoke or 2}}
         network: {}
         quotas:
           neutron:
@@ -170,7 +170,7 @@
       runner:
         type: "constant"
         times: 20
-        concurrency: 10
+        concurrency: {{smoke or 10}}
       context:
         users:
           tenants: 5
@@ -221,7 +221,7 @@
       runner:
         type: "constant"
         times: 20
-        concurrency: 10
+        concurrency: {{smoke or 10}}
       context:
         users:
           tenants: 4
@@ -247,11 +247,11 @@
       runner:
         type: "constant"
         times: {{smoke or 20}}
-        concurrency: 10
+        concurrency: {{smoke or 10}}
       context:
         users:
-          tenants: 1
-          users_per_tenant: 1
+          tenants: {{smoke or 3}}
+          users_per_tenant: {{smoke or 2}}
         quotas:
           neutron:
             network: -1
@@ -272,11 +272,11 @@
       runner:
         type: "constant"
         times: {{smoke or 20}}
-        concurrency: 10
+        concurrency: {{smoke or 10}}
       context:
         users:
-          tenants: 5
-          users_per_tenant: 5
+          tenants: {{smoke or 3}}
+          users_per_tenant: {{smoke or 2}}
         quotas:
           neutron:
             network: -1
@@ -299,11 +299,11 @@
       runner:
         type: "constant"
         times: {{smoke or 15}}
-        concurrency: 5
+        concurrency: {{smoke or 5}}
       context:
         users:
-          tenants: 1
-          users_per_tenant: 1
+          tenants: {{smoke or 3}}
+          users_per_tenant: {{smoke or 2}}
         quotas:
           neutron:
             network: -1
@@ -327,11 +327,11 @@
       runner:
         type: "constant"
         times: {{smoke or 20}}
-        concurrency: 10
+        concurrency: {{smoke or 10}}
       context:
         users:
-          tenants: 1
-          users_per_tenant: 1
+          tenants: {{smoke or 3}}
+          users_per_tenant: {{smoke or 2}}
         quotas:
           neutron:
             network: -1
@@ -347,11 +347,11 @@
       runner:
         type: "constant"
         times: {{smoke or 20}}
-        concurrency: 10
+        concurrency: {{smoke or 10}}
       context:
         users:
-          tenants: 1
-          users_per_tenant: 1
+          tenants: {{smoke or 3}}
+          users_per_tenant: {{smoke or 2}}
         quotas:
           neutron:
             network: -1
@@ -370,11 +370,11 @@
       runner:
         type: "constant"
         times: {{smoke or 20}}
-        concurrency: 10
+        concurrency: {{smoke or 10}}
       context:
         users:
-          tenants: 1
-          users_per_tenant: 1
+          tenants: {{smoke or 3}}
+          users_per_tenant: {{smoke or 2}}
         quotas:
           neutron:
             network: -1
@@ -394,11 +394,11 @@
       runner:
         type: "constant"
         times: {{smoke or 15}}
-        concurrency: 5
+        concurrency: {{smoke or 5}}
       context:
         users:
-          tenants: 1
-          users_per_tenant: 1
+          tenants: {{smoke or 3}}
+          users_per_tenant: {{smoke or 2}}
         quotas:
           neutron:
             network: -1
@@ -417,11 +417,11 @@
       runner:
         type: "constant"
         times: {{smoke or 8}}
-        concurrency: 4
+        concurrency: {{smoke or 4}}
       context:
         users:
-          tenants: 1
-          users_per_tenant: 1
+          tenants: {{smoke or 3}}
+          users_per_tenant: {{smoke or 2}}
         quotas:
           neutron:
             network: -1
@@ -437,11 +437,11 @@
       runner:
         type: "constant"
         times: {{smoke or 10}}
-        concurrency: 2
+        concurrency: {{smoke or 2}}
       context:
         users:
-          tenants: 3
-          users_per_tenant: 2
+          tenants: {{smoke or 3}}
+          users_per_tenant: {{smoke or 2}}
       sla:
         failure_rate:
           max: 0
@@ -478,7 +478,7 @@
         concurrency: 1
       context:
         users:
-          tenants: 2
+          tenants: 1
           users_per_tenant: 1
         network:
           start_cidr: "10.2.0.0/24"
@@ -495,11 +495,11 @@
       runner:
         type: "constant"
         times: {{smoke or 4}}
-        concurrency: 4
+        concurrency: {{smoke or 4}}
       context:
         users:
-          tenants: 3
-          users_per_tenant: 2
+          tenants: {{smoke or 2}}
+          users_per_tenant: {{smoke or 2}}
         quotas:
           neutron:
             security_group: -1
@@ -516,11 +516,11 @@
       runner:
         type: "constant"
         times: {{smoke or 4}}
-        concurrency: 4
+        concurrency: {{smoke or 4}}
       context:
         users:
-          tenants: 2
-          users_per_tenant: 2
+          tenants: {{smoke or 2}}
+          users_per_tenant: {{smoke or 2}}
         quotas:
           neutron:
             security_group: -1
@@ -543,11 +543,11 @@
       runner:
         type: "constant"
         times: {{smoke or 4}}
-        concurrency: 2
+        concurrency: {{smoke or 2}}
       context:
         users:
-          tenants: 2
-          users_per_tenant: 2
+          tenants: {{smoke or 2}}
+          users_per_tenant: {{smoke or 2}}
         network: {}
 
   VMTasks.boot_runcommand_delete_custom_image:
