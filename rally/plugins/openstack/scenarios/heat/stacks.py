@@ -33,7 +33,7 @@ class HeatStacks(utils.HeatScenario):
     @scenario.configure(context={"cleanup": ["heat"]})
     def create_and_list_stack(self, template_path, parameters=None,
                               files=None, environment=None):
-        """Add a stack and then list all stacks.
+        """Create a stack and then list all stacks.
 
         Measure the "heat stack-create" and "heat stack-list" commands
         performance.
@@ -64,7 +64,7 @@ class HeatStacks(utils.HeatScenario):
     @scenario.configure(context={"cleanup": ["heat"]})
     def create_and_delete_stack(self, template_path, parameters=None,
                                 files=None, environment=None):
-        """Add and then delete a stack.
+        """Create and then delete a stack.
 
         Measure the "heat stack-create" and "heat stack-delete" commands
         performance.
@@ -115,7 +115,7 @@ class HeatStacks(utils.HeatScenario):
                                    parameters=None, updated_parameters=None,
                                    files=None, updated_files=None,
                                    environment=None, updated_environment=None):
-        """Add, update and then delete a stack.
+        """Create, update and then delete a stack.
 
         Measure the "heat stack-create", "heat stack-update"
         and "heat stack-delete" commands performance.

@@ -21,7 +21,7 @@ from rally import exceptions
 
 
 def mean(values):
-    """Find the simple average of a list of values.
+    """Find the simple mean of a list of values.
 
     :parameter values: non-empty list of numbers
 
@@ -34,7 +34,7 @@ def mean(values):
 
 
 def median(values):
-    """Find the sample median of a list of values.
+    """Find the simple median of a list of values.
 
     :parameter values: non-empty list of numbers
 
@@ -149,7 +149,7 @@ def compress(data, limit=1000, merge=None, normalize=None):
 class GraphZipper(object):
 
     def __init__(self, base_size, zipped_size=1000):
-        """Init graph ziper.
+        """Init graph zipper.
 
         :param base_size: Amount of points in raw graph
         :param zip_size: Amount of points that should be in zipped graph

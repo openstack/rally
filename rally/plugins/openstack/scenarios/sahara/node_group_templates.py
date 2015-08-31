@@ -36,7 +36,7 @@ class SaharaNodeGroupTemplates(utils.SaharaScenario):
         This scenario creates two Node Group Templates with different set of
         node processes. The master Node Group Template contains Hadoop's
         management processes. The worker Node Group Template contains
-        Haddop's worker processes.
+        Hadoop's worker processes.
 
         By default the templates are created for the vanilla Hadoop
         provisioning plugin using the version 1.2.1
