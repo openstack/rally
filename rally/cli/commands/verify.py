@@ -267,7 +267,7 @@ class VerifyCommands(object):
     @cliutils.args("--verification", type=str, dest="verification",
                    required=False, help="UUID of the verification")
     def use(self, verification):
-        """Set active verification. Alias for "rally use verification"
+        """Set active verification.
 
         :param verification: a UUID of verification
         """

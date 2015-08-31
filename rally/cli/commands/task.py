@@ -668,7 +668,7 @@ class TaskCommands(object):
     @cliutils.args("--task", type=str, dest="task", required=False,
                    help="UUID of the task")
     def use(self, task):
-        """Set active task. Alias for "rally use task".
+        """Set active task.
 
         :param task: Task uuid.
         """
