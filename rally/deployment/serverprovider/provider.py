@@ -147,7 +147,7 @@ class ProviderFactory(plugin.Plugin):
     def create_servers(self, image_uuid=None, type_id=None, amount=1):
         """Create VMs with chosen image.
 
-        :param image_uuid: Indetificator of image
+        :param image_uuid: Identificator of image
         :param type_id: Vm type identificator
         :param amount: amount of required VMs
         :returns: list of Server instances.

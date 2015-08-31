@@ -32,7 +32,7 @@ class CeilometerEvents(cutils.CeilometerScenario, kutils.KeystoneScenario):
     @scenario.configure(context={"admin_cleanup": ["keystone"],
                                  "cleanup": ["ceilometer"]})
     def create_user_and_list_events(self):
-        """Fetch all events.
+        """Create user and fetch all events.
 
         This scenario creates user to store new event and
         fetches list of all events using GET /v2/events.
@@ -46,7 +46,7 @@ class CeilometerEvents(cutils.CeilometerScenario, kutils.KeystoneScenario):
     @scenario.configure(context={"admin_cleanup": ["keystone"],
                                  "cleanup": ["ceilometer"]})
     def create_user_and_list_event_types(self):
-        """Fetch all event types.
+        """Create user and fetch all event types.
 
         This scenario creates user to store new event and
         fetches list of all events types using GET /v2/event_types.
@@ -60,7 +60,7 @@ class CeilometerEvents(cutils.CeilometerScenario, kutils.KeystoneScenario):
     @scenario.configure(context={"admin_cleanup": ["keystone"],
                                  "cleanup": ["ceilometer"]})
     def create_user_and_get_event(self):
-        """Get event.
+        """Create user and gets event.
 
         This scenario creates user to store new event and
         fetches one event using GET /v2/events/<message_id>.

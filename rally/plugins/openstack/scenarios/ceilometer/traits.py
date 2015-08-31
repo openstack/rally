@@ -32,7 +32,7 @@ class CeilometerTraits(cutils.CeilometerScenario, kutils.KeystoneScenario):
     @scenario.configure(context={"admin_cleanup": ["keystone"],
                                  "cleanup": ["ceilometer"]})
     def create_user_and_list_traits(self):
-        """Fetch all events traits.
+        """Create user and fetch all event traits.
 
         This scenario creates user to store new event and
         fetches list of all traits for certain event type and
@@ -50,7 +50,7 @@ class CeilometerTraits(cutils.CeilometerScenario, kutils.KeystoneScenario):
     @scenario.configure(context={"admin_cleanup": ["keystone"],
                                  "cleanup": ["ceilometer"]})
     def create_user_and_list_trait_descriptions(self):
-        """Fetch all trait descriptions.
+        """Create user and fetch all trait descriptions.
 
         This scenario creates user to store new event and
         fetches list of all traits for certain event type using

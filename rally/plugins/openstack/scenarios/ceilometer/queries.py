@@ -81,8 +81,8 @@ class CeilometerQueries(ceiloutils.CeilometerScenario):
 
         :param counter_name: specifies name of the counter
         :param counter_type: specifies type of the counter
-        :param counter_unit: specifies name of the counter
-        :param counter_volume: specifies name of the counter
+        :param counter_unit: specifies unit of the counter
+        :param counter_volume: specifies volume of the counter
         :param resource_id: specifies resource id for the sample created
         :param filter: optional filter query dictionary
         :param orderby: optional param for specifying ordering of results
