@@ -155,7 +155,7 @@ The scenario running strategy is specified by its **type** and also by some type
 
 * **constant**, for creating a constant load by running the scenario for a fixed number of **times**, possibly in parallel (that's controlled by the *"concurrency"* parameter).
 * **constant_for_duration** that works exactly as **constant**, but runs the benchmark scenario until a specified number of seconds elapses (**"duration"** parameter).
-* **periodic**, which executes benchmark scenarios with intervals between two consecutive runs, specified in the **"period"** field in seconds.
+* **rps**, which executes benchmark scenarios with intervals between two consecutive runs, specified in the **"rps"** field in times per second.
 * **serial**, which is very useful to test new scenarios since it just runs the benchmark scenario for a fixed number of **times** in a single thread.
 
 

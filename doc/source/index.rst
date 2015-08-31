@@ -32,6 +32,7 @@ Contents
    tutorial
    user_stories
    plugins
+   plugin/plugin_reference
    contribute
    gates
    feature_requests
