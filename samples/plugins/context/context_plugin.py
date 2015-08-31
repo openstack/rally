@@ -59,7 +59,7 @@ class CreateFlavorContext(context.Context):
         try:
             # use rally.osclients to get necessary client instance
             nova = osclients.Clients(self.context["admin"]["endpoint"]).nova()
-            # and than do what you need with this client
+            # and then do what you need with this client
             self.context["flavor"] = nova.flavors.create(
                 # context settings are stored in self.config
                 name=self.config.get("flavor_name", "rally_test_flavor"),
