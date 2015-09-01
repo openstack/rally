@@ -34,7 +34,7 @@ def get_status(resource, status_attr="status"):
     """Get the status of a given resource object.
 
     The status is returned in upper case. The status is checked for the
-    standard field names with special cases for Heat and Ceilometer.
+    standard field s with special cases for Heat and Ceilometer.
 
     :param resource: The resource object or dict.
     :param status_attr: Allows to specify non-standard status fields.
@@ -119,7 +119,7 @@ def wait_for(resource, is_ready=None, ready_statuses=None,
                          ready
     :param failure_statuses: List of statuses which mean that an error has
                            occurred while waiting for the resource
-    :param status_attr: The name of the status attribute of the resource
+    :param status_attr: The  of the status attribute of the resource
     :param update_resource: Function that should take the resource object
                           and return an 'updated' resource. If set to
                           None, no result updating is performed
@@ -148,7 +148,7 @@ def wait_for(resource, is_ready=None, ready_statuses=None,
 def wait_is_ready(resource, is_ready, update_resource=None,
                   timeout=60, check_interval=1):
 
-    resource_repr = getattr(resource, "name", repr(resource))
+    resource_repr = getattr(resource, "name", repr(resource))  
     start = time.time()
 
     while True:
@@ -164,7 +164,8 @@ def wait_is_ready(resource, is_ready, update_resource=None,
                 desired_status=str(is_ready),
                 resource_name=resource_repr,
                 resource_type=resource.__class__.__name__,
-                resource_id=getattr(resource, "id", "<no id>"),
+                resource_id=getattr(resource, "uuid",
+                                    getattr(resource, "id", "no id")),
                 resource_status=get_status(resource))
 
 
