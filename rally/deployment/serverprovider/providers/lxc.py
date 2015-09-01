@@ -109,7 +109,7 @@ class LxcHost(object):
         self.create_remote_tunnels()
 
     def create_local_tunnels(self):
-        """Create tunel on lxc host side."""
+        """Create tunnel on lxc host side."""
         for tunnel_to in self.config["tunnel_to"]:
             script = _get_script_from_template("tunnel-local.sh",
                                                net=self.network,
@@ -118,7 +118,7 @@ class LxcHost(object):
             self.server.ssh.run("/bin/sh", stdin=script)
 
     def create_remote_tunnels(self):
-        """Create tunel on remote side."""
+        """Create tunnel on remote side."""
         for tunnel_to in self.config["tunnel_to"]:
             script = _get_script_from_template("tunnel-remote.sh",
                                                net=self.network,

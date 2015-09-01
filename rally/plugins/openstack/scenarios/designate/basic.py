@@ -61,7 +61,7 @@ class DesignateBasic(utils.DesignateScenario):
     @validation.required_openstack(users=True)
     @scenario.configure(context={"cleanup": ["designate"]})
     def create_and_delete_domain(self):
-        """Add and then delete a domain.
+        """Create and then delete a domain.
 
         Measure the performance of creating and deleting domains
         with different level of load.
@@ -73,7 +73,7 @@ class DesignateBasic(utils.DesignateScenario):
     @validation.required_openstack(users=True)
     @scenario.configure(context={"cleanup": ["designate"]})
     def create_and_delete_records(self, records_per_domain=5):
-        """Add and then delete records.
+        """Create and then delete records.
 
         Measure the performance of creating and deleting records
         with different level of load.
@@ -118,7 +118,7 @@ class DesignateBasic(utils.DesignateScenario):
     @validation.required_openstack(users=True)
     @scenario.configure(context={"cleanup": ["designate"]})
     def create_and_list_records(self, records_per_domain=5):
-        """Add and then list records.
+        """Create and then list records.
 
         If you have only 1 user in your context, you will
         add 1 record on every iteration. So you will have more
@@ -156,7 +156,7 @@ class DesignateBasic(utils.DesignateScenario):
     @validation.required_openstack(admin=True)
     @scenario.configure(context={"cleanup": ["designate"]})
     def create_and_delete_server(self):
-        """Add and then delete a server.
+        """Create and then delete a server.
 
         Measure the performance of creating and deleting servers
         with different level of load.

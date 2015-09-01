@@ -33,7 +33,7 @@ class GlanceImages(utils.GlanceScenario, nova_utils.NovaScenario):
     @scenario.configure(context={"cleanup": ["glance"]})
     def create_and_list_image(self, container_format,
                               image_location, disk_format, **kwargs):
-        """Add an image and then list all images.
+        """Create an image and then list all images.
 
         Measure the "glance image-list" command performance.
 
@@ -77,7 +77,7 @@ class GlanceImages(utils.GlanceScenario, nova_utils.NovaScenario):
     @scenario.configure(context={"cleanup": ["glance"]})
     def create_and_delete_image(self, container_format,
                                 image_location, disk_format, **kwargs):
-        """Add and then delete an image.
+        """Create and then delete an image.
 
         :param container_format: container format of image. Acceptable
                                  formats: ami, ari, aki, bare, and ovf
@@ -101,7 +101,7 @@ class GlanceImages(utils.GlanceScenario, nova_utils.NovaScenario):
                                         image_location, disk_format,
                                         flavor, number_instances,
                                         **kwargs):
-        """Add an image and boot several instances from it.
+        """Create an image and boot several instances from it.
 
         :param container_format: container format of image. Acceptable
                                  formats: ami, ari, aki, bare, and ovf
