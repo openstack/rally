@@ -39,7 +39,8 @@ class AllResourceManagerTestCase(test.TestCase):
                 "_admin_required", "_perform_for_admin_only",
                 "_tenant_resource", "_service", "_resource", "_order",
                 "_max_attempts", "_timeout", "_interval", "_threads",
-                "_manager", "id", "is_deleted", "delete", "list"
+                "_manager", "id", "is_deleted", "delete", "list",
+                "supports_extension"
             ])
 
             extra_opts = set(fields) - available_opts
@@ -252,6 +253,16 @@ class NeutronMixinTestCase(test.TestCase):
         neut.user = mock.MagicMock()
         self.assertEqual(neut.user.neutron.return_value, neut._manager())
 
+    @mock.patch("%s.NeutronMixin._manager" % BASE)
+    def test_supports_extension(self, mock__manager):
+        mock__manager().list_extensions.return_value = {
+            "extensions": [{"alias": "foo"}, {"alias": "bar"}]
+        }
+        neut = self.get_neutron_mixin()
+        self.assertTrue(neut.supports_extension("foo"))
+        self.assertTrue(neut.supports_extension("bar"))
+        self.assertFalse(neut.supports_extension("foobar"))
+
     def test_id(self):
         neut = self.get_neutron_mixin()
         neut.raw_resource = {"id": "test"}
@@ -281,6 +292,40 @@ class NeutronMixinTestCase(test.TestCase):
 
         neut.user.neutron().list_some_resources.assert_called_once_with(
             {"tenant_id": neut.tenant_uuid})
+
+
+class NeutronLbaasV1MixinTestCase(test.TestCase):
+
+    def get_neutron_lbaasv1_mixin(self, extensions=None):
+        if extensions is None:
+            extensions = []
+        neut = resources.NeutronLbaasV1Mixin()
+        neut._service = "neutron"
+        neut._resource = "some_resource"
+        neut._manager = mock.Mock()
+        neut._manager().list_extensions.return_value = {
+            "extensions": [{"alias": ext} for ext in extensions]
+        }
+        return neut
+
+    def test_list_lbaas_available(self):
+        neut = self.get_neutron_lbaasv1_mixin(extensions=["lbaas"])
+        neut.tenant_uuid = "user_tenant"
+
+        some_resources = [{"tenant_id": neut.tenant_uuid}, {"tenant_id": "a"}]
+        neut._manager().list_some_resources.return_value = {
+            "some_resources": some_resources
+        }
+
+        self.assertEqual([some_resources[0]], list(neut.list()))
+        neut._manager().list_some_resources.assert_called_once_with(
+            {"tenant_id": neut.tenant_uuid})
+
+    def test_list_lbaas_unavailable(self):
+        neut = self.get_neutron_lbaasv1_mixin()
+
+        self.assertEqual([], list(neut.list()))
+        self.assertFalse(neut._manager().list_some_resources.called)
 
 
 class NeutronPortTestCase(test.TestCase):
