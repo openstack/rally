@@ -84,7 +84,7 @@ class LoadExtraModulesTestCase(test.TestCase):
 
     @mock.patch("%s.os.path.isfile" % DISCOVER, return_value=True)
     def test_load_plugins_from_file_fails(self, mock_isfile):
-        discover.load_plugins("/somwhere/plugin.py")
+        discover.load_plugins("/somewhere/plugin.py")
 
     @mock.patch("%s.os.path.isfile" % DISCOVER, return_value=False)
     def test_load_plugins_from_nonexisting_file(self, mock_isfile):
@@ -100,4 +100,4 @@ class LoadExtraModulesTestCase(test.TestCase):
                                 mock_find_module, mock_load_module):
         # test no fails if module is broken
         # TODO(olkonami): check exception is handled correct
-        discover.load_plugins("/somwhere")
+        discover.load_plugins("/somewhere")
