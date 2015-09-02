@@ -416,33 +416,58 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.delete_image")
 
-    def test__boot_servers(self):
-        self.clients("nova").servers.list.return_value = [self.server,
-                                                          self.server1]
-        nova_scenario = utils.NovaScenario()
-        nova_scenario._boot_servers("image", "flavor", 2)
-        expected = [
+    @ddt.data(
+        {"requests": 1},
+        {"requests": 25},
+        {"requests": 2, "name_prefix": "foo", "instances_amount": 100,
+         "auto_assign_nic": True, "fakearg": "fake"},
+        {"auto_assign_nic": True, "nics": [{"net-id": "foo"}]},
+        {"auto_assign_nic": False, "nics": [{"net-id": "foo"}]})
+    @ddt.unpack
+    def test__boot_servers(self, image_id="image", flavor_id="flavor",
+                           requests=1, name_prefix=None, instances_amount=1,
+                           auto_assign_nic=False, **kwargs):
+        servers = [mock.Mock() for i in range(instances_amount)]
+        self.clients("nova").servers.list.return_value = servers
+        scenario = utils.NovaScenario()
+        scenario._generate_random_name = mock.Mock()
+        scenario._pick_random_nic = mock.Mock()
+
+        scenario._boot_servers(image_id, flavor_id, requests,
+                               name_prefix=name_prefix,
+                               instances_amount=instances_amount,
+                               auto_assign_nic=auto_assign_nic,
+                               **kwargs)
+
+        expected_kwargs = dict(kwargs)
+        if auto_assign_nic and "nics" not in kwargs:
+            expected_kwargs["nics"] = scenario._pick_random_nic.return_value
+
+        if name_prefix is None:
+            name_prefix = scenario._generate_random_name.return_value
+
+        create_calls = [
+            mock.call("%s_%d" % (name_prefix, i), image_id, flavor_id,
+                      min_count=instances_amount, max_count=instances_amount,
+                      **expected_kwargs)
+            for i in range(requests)]
+        self.clients("nova").servers.create.assert_has_calls(create_calls)
+
+        wait_for_calls = [
             mock.call(
-                self.server,
+                servers[i],
                 is_ready=self.mock_resource_is.mock.return_value,
                 update_resource=self.mock_get_from_manager.mock.return_value,
                 check_interval=CONF.benchmark.nova_server_boot_poll_interval,
-                timeout=CONF.benchmark.nova_server_boot_timeout
-            ),
-            mock.call(
-                self.server1,
-                is_ready=self.mock_resource_is.mock.return_value,
-                update_resource=self.mock_get_from_manager.mock.return_value,
-                check_interval=CONF.benchmark.nova_server_boot_poll_interval,
-                timeout=CONF.benchmark.nova_server_boot_timeout
-            )
-        ]
-        self.mock_wait_for.mock.assert_has_calls(expected)
-        self.mock_resource_is.mock.assert_has_calls([mock.call("ACTIVE"),
-                                                     mock.call("ACTIVE")])
-        self.mock_get_from_manager.mock.assert_has_calls([mock.call(),
-                                                          mock.call()])
-        self._test_atomic_action_timer(nova_scenario.atomic_actions(),
+                timeout=CONF.benchmark.nova_server_boot_timeout)
+            for i in range(instances_amount)]
+        self.mock_wait_for.mock.assert_has_calls(wait_for_calls)
+
+        self.mock_resource_is.mock.assert_has_calls([
+            mock.call("ACTIVE") for i in range(instances_amount)])
+        self.mock_get_from_manager.mock.assert_has_calls(
+            [mock.call() for i in range(instances_amount)])
+        self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "nova.boot_servers")
 
     def test__associate_floating_ip(self):
