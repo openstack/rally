@@ -114,11 +114,15 @@ class TempestConf(object):
                 return service["endpoints"][0]["publicURL"]
 
     def _set_default(self):
+        # Nothing to set up in this section for now
+        pass
+
+    def _set_oslo_concurrency(self, section_name="oslo_concurrency"):
         lock_path = os.path.join(self.data_path,
                                  "lock_files_%s" % self.deployment)
         if not os.path.exists(lock_path):
             os.makedirs(lock_path)
-        self.conf.set("DEFAULT", "lock_path", lock_path)
+        self.conf.set(section_name, "lock_path", lock_path)
 
     def _set_boto(self, section_name="boto"):
         self.conf.set(section_name, "ec2_url", self._get_url("ec2"))
@@ -176,12 +180,6 @@ class TempestConf(object):
         else:
             self.conf.set(section_name, "ssh_connect_method", "fixed")
 
-    def _set_compute_admin(self, section_name="compute-admin"):
-        self.conf.set(section_name, "username", self.endpoint["username"])
-        self.conf.set(section_name, "password", self.endpoint["password"])
-        self.conf.set(section_name, "tenant_name",
-                      self.endpoint["tenant_name"])
-
     def _set_identity(self, section_name="identity"):
         self.conf.set(section_name, "username", self.endpoint["username"])
         self.conf.set(section_name, "password", self.endpoint["password"])
@@ -229,10 +227,10 @@ class TempestConf(object):
                 else:
                     # TODO(akurilin): create subnet
                     LOG.warn("No subnet is found.")
-            self.conf.set(section_name, "default_network", subnet["cidr"])
+            self.conf.set(section_name, "tenant_network_cidr", subnet["cidr"])
         else:
             network = self.clients.nova().networks.list()[0]
-            self.conf.set(section_name, "default_network", network.cidr)
+            self.conf.set(section_name, "tenant_network_cidr", network.cidr)
 
     def _set_service_available(self, section_name="service_available"):
         services = ["neutron", "heat", "ceilometer", "swift",
