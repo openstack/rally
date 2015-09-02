@@ -28,7 +28,7 @@ class BenchmarkUtilsTestCase(test.TestCase):
 
     def test_wait_for_delete(self):
         def update_resource(self):
-            raise exceptions.GetResourceNotFound()
+            raise exceptions.GetResourceNotFound(resource=None)
 
         resource = mock.MagicMock()
         utils.wait_for_delete(resource, update_resource=update_resource)

@@ -319,7 +319,7 @@ class DeploymentCommandsTestCase(test.TestCase):
     def test_deployment_not_found(self, mock_deployment_get):
         deployment_id = "e87e4dca-b515-4477-888d-5f6103f13b42"
         mock_deployment_get.side_effect = exceptions.DeploymentNotFound(
-            uuid=deployment_id)
+            deployment=deployment_id)
         self.assertEqual(1, self.deployment.use(deployment_id))
 
     @mock.patch("rally.osclients.Clients.verified_keystone")
@@ -354,7 +354,8 @@ class DeploymentCommandsTestCase(test.TestCase):
     def test_deployment_check_not_exist(self, mock_deployment_get,
                                         mock_clients_verified_keystone):
         deployment_id = "e87e4dca-b515-4477-888d-5f6103f13b42"
-        mock_deployment_get.side_effect = exceptions.DeploymentNotFound()
+        mock_deployment_get.side_effect = exceptions.DeploymentNotFound(
+            deployment=deployment_id)
         mock_clients_verified_keystone.services.list.return_value = []
         self.assertEqual(self.deployment.check(deployment_id), 1)
 

@@ -201,7 +201,7 @@ class CliUtilsTestCase(test.TestCase):
         self.assertEqual(ret, 1)
 
     @mock.patch("rally.common.db.task_get",
-                side_effect=exceptions.TaskNotFound(FAKE_TASK_UUID))
+                side_effect=exceptions.TaskNotFound(uuid=FAKE_TASK_UUID))
     def test_run_task_not_found(self, mock_task_get):
         ret = cliutils.run(["rally", "task", "status", "%s" % FAKE_TASK_UUID],
                            self.categories)
