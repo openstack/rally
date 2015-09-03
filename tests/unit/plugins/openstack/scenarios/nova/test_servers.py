@@ -457,6 +457,48 @@ class NovaServersTestCase(test.ScenarioTestCase):
             scenario._delete_server.assert_called_once_with(fake_server,
                                                             force=False)
 
+    @ddt.data({"confirm": True, "do_delete": True},
+              {"confirm": False, "do_delete": True})
+    @ddt.unpack
+    def test_boot_server_from_volume_and_resize(self, confirm=False,
+                                                do_delete=False):
+        fake_server = object()
+        flavor = mock.MagicMock()
+        to_flavor = mock.MagicMock()
+        scenario = servers.NovaServers(self.context)
+        scenario._boot_server = mock.MagicMock(return_value=fake_server)
+        scenario.generate_random_name = mock.MagicMock(return_value="name")
+        scenario._resize_confirm = mock.MagicMock()
+        scenario._resize_revert = mock.MagicMock()
+        scenario._resize = mock.MagicMock()
+        scenario.sleep_between = mock.MagicMock()
+        scenario._delete_server = mock.MagicMock()
+
+        fake_volume = fakes.FakeVolumeManager().create()
+        fake_volume.id = "volume_id"
+        scenario._create_volume = mock.MagicMock(return_value=fake_volume)
+
+        volume_size = 10
+        scenario.boot_server_from_volume_and_resize(
+            "img", flavor, to_flavor, volume_size, min_sleep=10,
+            max_sleep=20, confirm=confirm, do_delete=do_delete)
+
+        scenario._create_volume.assert_called_once_with(10, imageRef="img")
+        scenario._boot_server.assert_called_once_with(
+            "img", flavor,
+            block_device_mapping={"vda": "volume_id:::1"})
+        scenario.sleep_between.assert_called_once_with(10, 20)
+        scenario._resize.assert_called_once_with(fake_server, to_flavor)
+
+        if confirm:
+            scenario._resize_confirm.assert_called_once_with(fake_server)
+        else:
+            scenario._resize_revert.assert_called_once_with(fake_server)
+
+        if do_delete:
+            scenario._delete_server.assert_called_once_with(fake_server,
+                                                            force=False)
+
     def test_boot_and_live_migrate_server(self):
         fake_server = mock.MagicMock()
 

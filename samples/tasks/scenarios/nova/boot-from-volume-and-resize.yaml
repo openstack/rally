@@ -1,0 +1,25 @@
+{% set flavor_name = flavor_name or "m1.tiny" %}
+---
+  NovaServers.boot_server_from_volume_and_resize:
+    -
+      args:
+        flavor:
+            name: "{{flavor_name}}"
+        image:
+            name: "^cirros.*uec$"
+        to_flavor:
+            name: "m1.small"
+        confirm: true
+        volume_size: 1
+        force_delete: false
+        do_delete: true
+        boot_server_kwargs: {}
+        create_volume_kwargs: {}
+      runner:
+        type: "constant"
+        times: 10
+        concurrency: 2
+      context:
+        users:
+          tenants: 3
+          users_per_tenant: 2

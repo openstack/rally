@@ -372,6 +372,33 @@
         failure_rate:
           max: 0
 
+  NovaServers.boot_server_from_volume_and_resize:
+    -
+      args:
+        flavor:
+            name: "m1.tiny"
+        image:
+            name: {{image_name}}
+        to_flavor:
+            name: "m1.small"
+        volume_size: 1
+        confirm: true
+        force_delete: false
+        do_delete: true
+        boot_server_kwargs: {}
+        create_volume_kwargs: {}
+      runner:
+        type: "constant"
+        times: 2
+        concurrency: 2
+      context:
+        users:
+          tenants: 2
+          users_per_tenant: 1
+      sla:
+        failure_rate:
+          max: 0
+
   NovaServers.boot_and_bounce_server:
     -
       args:
