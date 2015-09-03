@@ -597,10 +597,11 @@ fi
 
 if [ "$DBTYPE" = 'sqlite' ]; then
     if [ "${DBNAME:0:1}" = '/' ]; then
-        DBCONNSTRING="$DBTYPE:///$DBNAME"
+        DBFILE="$DBNAME"
     else
-        DBCONNSTRING="$DBTYPE:///${RALLY_DATABASE_DIR}/${DBNAME}"
+        DBFILE="${RALLY_DATABASE_DIR}/${DBNAME}"
     fi
+    DBCONNSTRING="sqlite:///${DBFILE}"
 else
     if [ -z "$DBUSER" -o -z "$DBPASSWORD" -o -z "$DBHOST" -o -z "$DBNAME" ]
     then
@@ -843,8 +844,8 @@ else
         SAMPLESDIR=$SOURCEDIR/samples
     fi
     ln -s /usr/local/etc/bash_completion.d/rally.bash_completion /etc/bash_completion.d/ 2> /dev/null || true
-    if [ "$DBTYPE" = 'sqlite' ]; then
-        chmod -R go+w ${RALLY_DATABASE_DIR}
+    if [ -f "${DBFILE}" ]; then
+        chmod go+w "$DBFILE"
     fi
 
     cat <<__EOF__
