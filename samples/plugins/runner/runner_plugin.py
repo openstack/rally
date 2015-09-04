@@ -24,7 +24,7 @@ from rally.task import runner
 class RandomTimesScenarioRunner(runner.ScenarioRunner):
     """Sample of scenario runner plugin.
 
-    Run scenario random number of times, which is choosen between min_times and
+    Run scenario random number of times, which is chosen between min_times and
     max_times.
     """
 

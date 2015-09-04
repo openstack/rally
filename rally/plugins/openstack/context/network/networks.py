@@ -54,7 +54,7 @@ class Network(context.Context):
         # NOTE(rkiran): Some clients are not thread-safe. Thus during
         #               multithreading/multiprocessing, it is likely the
         #               sockets are left open. This problem is eliminated by
-        #               creating a connection in setup and cleanup seperately.
+        #               creating a connection in setup and cleanup separately.
         net_wrapper = network_wrapper.wrap(
             osclients.Clients(self.context["admin"]["endpoint"]),
             self.config)
