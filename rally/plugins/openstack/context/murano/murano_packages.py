@@ -59,7 +59,7 @@ class PackageGenerator(context.Context):
             msg = (_LE("There is no zip archive or directory by this path:"
                        " %s") % self.config["app_package"])
             raise exceptions.ContextSetupFailure(msg=msg,
-                                                 ctx="murano_packages")
+                                                 ctx_name=self.get_name())
 
         for user, tenant_id in utils.iterate_per_tenants(
                 self.context["users"]):
