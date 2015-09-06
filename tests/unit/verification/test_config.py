@@ -106,21 +106,11 @@ class ConfigTestCase(test.TestCase):
                     ("build_timeout", "196"),
                     ("http_socket_timeout", "30"),
                     ("instance_type", "m1.nano"),
-                    ("ssh_user", "cirros"),
                     ("s3_materials_path",
                      os.path.join(self.conf_generator.data_path,
                                   "s3materials")))
         results = self._remove_default_section(
             self.conf_generator.conf.items("boto"))
-        self.assertEqual(sorted(expected), sorted(results))
-
-    def test__set_compute_admin(self):
-        self.conf_generator._set_compute_admin()
-        expected = [("username", self.endpoint["username"]),
-                    ("password", self.endpoint["password"]),
-                    ("tenant_name", self.endpoint["tenant_name"])]
-        results = self._remove_default_section(
-            self.conf_generator.conf.items("compute-admin"))
         self.assertEqual(sorted(expected), sorted(results))
 
     def test__set_compute_flavors(self):
@@ -217,18 +207,24 @@ class ConfigTestCase(test.TestCase):
                          self.conf_generator.conf.get("compute",
                                                       "ssh_connect_method"))
 
+    def test__set_default(self):
+        self.conf_generator._set_default()
+        expected = (("debug", "True"), ("log_file", "tempest.log"),
+                    ("use_stderr", "False"))
+        results = self.conf_generator.conf.items("DEFAULT")
+        self.assertEqual(sorted(expected), sorted(results))
+
     @mock.patch("rally.verification.tempest.config.os.path.exists",
                 return_value=False)
     @mock.patch("rally.verification.tempest.config.os.makedirs")
-    def test__set_default(self, mock_makedirs, mock_exists):
-        self.conf_generator._set_default()
+    def test__set_oslo_concurrency(self, mock_makedirs, mock_exists):
+        self.conf_generator._set_oslo_concurrency()
         lock_path = os.path.join(self.conf_generator.data_path, "lock_files_%s"
                                  % self.deployment)
         mock_makedirs.assert_called_once_with(lock_path)
-        expected = (("debug", "True"), ("log_file", "tempest.log"),
-                    ("use_stderr", "False"),
-                    ("lock_path", lock_path))
-        results = self.conf_generator.conf.items("DEFAULT")
+        expected = (("lock_path", lock_path),)
+        results = self._remove_default_section(
+            self.conf_generator.conf.items("oslo_concurrency"))
         self.assertEqual(sorted(expected), sorted(results))
 
     def test__set_identity(self):
@@ -268,9 +264,8 @@ class ConfigTestCase(test.TestCase):
                                              mock_neutron}):
             self.conf_generator.available_services = ["neutron"]
             self.conf_generator._set_network()
-            expected = (("default_network", "10.0.0.0/24"),
-                        ("tenant_networks_reachable", "false"),
-                        ("api_version", "2.0"),
+            expected = (("tenant_network_cidr", "10.0.0.0/24"),
+                        ("tenant_networks_reachable", "False"),
                         ("public_network_id", "test_id"),
                         ("public_router_id", "test_router"))
             results = self._remove_default_section(
@@ -288,8 +283,8 @@ class ConfigTestCase(test.TestCase):
         with mock.patch.dict("sys.modules", {"novaclient": mock_nova}):
             self.conf_generator._set_network()
             self.assertEqual(network,
-                             self.conf_generator.conf.get("network",
-                                                          "default_network"))
+                             self.conf_generator.conf.get(
+                                 "network", "tenant_network_cidr"))
 
     @mock.patch("rally.verification.tempest.config.requests")
     def test__set_service_available(self, mock_requests):
