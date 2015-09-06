@@ -111,11 +111,9 @@ Then, configure DevStack to run Rally:
 
 .. code-block:: none
 
-   cp rally/contrib/devstack/lib/rally devstack/lib/
-   cp rally/contrib/devstack/extras.d/70-rally.sh devstack/extras.d/
    cd devstack
    cp samples/local.conf local.conf
-   echo "enable_service rally" >> local.conf
+   echo "enable_plugin rally https://github.com/openstack/rally master" >> localrc
 
 Finally, run DevStack as usually:
 
