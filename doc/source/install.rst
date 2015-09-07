@@ -148,7 +148,7 @@ be done by the following steps:
 .. code-block:: bash
 
    sudo mkdir /var/lib/rally_container
-   sudo chown 65500 rally_db
+   sudo chown 65500 /var/lib/rally_container
    docker run -it -v /var/lib/rally_container:/home/rally rallyforge/rally
 
 .. note::
