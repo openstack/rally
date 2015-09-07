@@ -50,14 +50,15 @@ class PackageGenerator(context.Context):
     @utils.log_task_wrapper(LOG.info, _("Enter context: `Murano packages`"))
     def setup(self):
         is_config_app_dir = False
-        if zipfile.is_zipfile(self.config["app_package"]):
-            zip_name = self.config["app_package"]
-        elif os.path.isdir(self.config["app_package"]):
+        pckg_path = os.path.expanduser(self.config["app_package"])
+        if zipfile.is_zipfile(pckg_path):
+            zip_name = pckg_path
+        elif os.path.isdir(pckg_path):
             is_config_app_dir = True
-            zip_name = fileutils.pack_dir(self.config["app_package"])
+            zip_name = fileutils.pack_dir(pckg_path)
         else:
             msg = (_LE("There is no zip archive or directory by this path:"
-                       " %s") % self.config["app_package"])
+                       " %s") % pckg_path)
             raise exceptions.ContextSetupFailure(msg=msg,
                                                  ctx_name=self.get_name())
 
