@@ -33,7 +33,7 @@ Useful links
 
 * More about Rally: https://rally.readthedocs.org/en/latest/
 
-* How to add rally-gates: https://rally.readthedocs.org/en/latest/rally_gatejob.html
+* How to add rally-gates: https://rally.readthedocs.org/en/latest/gates.html
 
 * About plugins:  https://rally.readthedocs.org/en/latest/plugins.html
 
