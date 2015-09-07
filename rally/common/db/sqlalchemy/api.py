@@ -205,7 +205,7 @@ class Connection(object):
             count = (self.model_query(models.Deployment, session=session).
                      filter_by(uuid=uuid).delete(synchronize_session=False))
             if not count:
-                raise exceptions.DeploymentNotFound(uuid=uuid)
+                raise exceptions.DeploymentNotFound(deployment=uuid)
 
     def deployment_get(self, deployment):
         return self._deployment_get(deployment)

@@ -47,8 +47,9 @@
 
 # (Optional) Enables or disables syslog rfc5424 format for logging. If
 # enabled, prefixes the MSG part of the syslog message with APP-NAME
-# (RFC5424). The format without the APP-NAME is deprecated in K, and
-# will be removed in M, along with this option. (boolean value)
+# (RFC5424). The format without the APP-NAME is deprecated in Kilo,
+# and will be removed in Mitaka, along with this option. (boolean
+# value)
 # This option is deprecated for removal.
 # Its value may be silently ignored in the future.
 #use_syslog_rfc_format = true
@@ -97,9 +98,6 @@
 # Print debugging output only for Rally. Off-site components stay
 # quiet. (boolean value)
 #rally_debug = false
-
-# make exception message format errors fatal (boolean value)
-#fatal_exception_format_errors = false
 
 # HTTP timeout for any of OpenStack service in seconds (floating point
 # value)

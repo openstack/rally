@@ -46,8 +46,10 @@ class InfoCommandsTestCase(test.TestCase):
         mock_scenario_get.assert_called_once_with(query)
         self.assertIsNone(status)
 
-    @mock.patch(SCENARIO + ".get", side_effect=exceptions.PluginNotFound)
+    @mock.patch(SCENARIO + ".get")
     def test_find_failure_status(self, mock_scenario_get):
+        mock_scenario_get.side_effect = exceptions.PluginNotFound(
+            namespace="any", name="any")
         query = "Dummy.non_existing"
         status = self.info.find(query)
         mock_scenario_get.assert_called_once_with(query)

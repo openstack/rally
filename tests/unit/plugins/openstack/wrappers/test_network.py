@@ -141,7 +141,7 @@ class NovaNetworkWrapperTestCase(test.TestCase):
         def get_fip(*args, **kwargs):
             for i in fip_found:
                 return "fip_id"
-            raise exceptions.GetResourceNotFound
+            raise exceptions.GetResourceNotFound(resource="")
         wrap._get_floating_ip = mock.Mock(side_effect=get_fip)
 
         wrap.delete_floating_ip("fip_id")

@@ -15,7 +15,6 @@
 import itertools
 
 from rally.common import log
-from rally import exceptions
 from rally import osclients
 from rally.plugins.openstack.context.cleanup import base as cleanup_base
 from rally.plugins.openstack.context.keystone import users
@@ -33,7 +32,6 @@ def list_opts():
     return [
         ("DEFAULT",
          itertools.chain(log.DEBUG_OPTS,
-                         exceptions.EXC_LOG_OPTS,
                          osclients.OSCLIENTS_OPTS)),
         ("benchmark",
          itertools.chain(cinder_utils.CINDER_BENCHMARK_OPTS,
