@@ -79,7 +79,7 @@ class NovaNetworkWrapperTestCase(test.TestCase):
         mock_generate_random_name.assert_called_once_with("rally_net_")
         service._generate_cidr.assert_called_once_with()
         service.client.networks.create.assert_called_once_with(
-            tenant_id="foo_tenant", cidr="foo_cidr", label="foo_name")
+            project_id="foo_tenant", cidr="foo_cidr", label="foo_name")
 
     def test_delete_network(self):
         service = self.get_wrapper()

@@ -137,7 +137,7 @@ class NovaNetworkWrapper(NetworkWrapper):
         cidr = self._generate_cidr()
         label = utils.generate_random_name("rally_net_")
         network = self.client.networks.create(
-            tenant_id=tenant_id, cidr=cidr, label=label)
+            project_id=tenant_id, cidr=cidr, label=label)
         return self._marshal_network_object(network)
 
     def delete_network(self, network):
