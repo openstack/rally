@@ -360,17 +360,15 @@ class NeutronWrapperTestCase(test.TestCase):
                          [mock.call("foo_router", {"subnet_id": "foo_subnet"})
                           for i in range(subnets_num)])
 
-    def test_delete_network(self):
+    @mock.patch("rally.plugins.openstack.wrappers.network.NeutronWrapper"
+                ".supports_extension", return_value=(False, ""))
+    def test_delete_network(self, mock_neutron_wrapper_supports_extension):
         service = self.get_wrapper()
-        service.client.list_dhcp_agent_hosting_networks.return_value = (
-            {"agents": []})
         service.client.list_ports.return_value = {"ports": []}
         service.client.delete_network.return_value = "foo_deleted"
         result = service.delete_network({"id": "foo_id", "router_id": None,
                                          "subnets": []})
         self.assertEqual(result, "foo_deleted")
-        self.assertEqual(
-            service.client.remove_network_from_dhcp_agent.mock_calls, [])
         self.assertEqual(service.client.remove_gateway_router.mock_calls, [])
         self.assertEqual(
             service.client.remove_interface_router.mock_calls, [])
@@ -384,7 +382,11 @@ class NeutronWrapperTestCase(test.TestCase):
         service.delete_v1_pool(pool["pool"]["id"])
         service.client.delete_pool.called_once_with([mock.call("pool-id")])
 
-    def test_delete_network_with_dhcp_and_router_and_ports_and_subnets(self):
+    @mock.patch("rally.plugins.openstack.wrappers.network.NeutronWrapper"
+                ".supports_extension", return_value=(True, ""))
+    def test_delete_network_with_dhcp_and_router_and_ports_and_subnets(
+            self, mock_neutron_wrapper_supports_extension):
+
         service = self.get_wrapper()
         agents = ["foo_agent", "bar_agent"]
         subnets = ["foo_subnet", "bar_subnet"]
@@ -414,6 +416,9 @@ class NeutronWrapperTestCase(test.TestCase):
         self.assertEqual(service.client.delete_subnet.mock_calls,
                          [mock.call(subnet_id) for subnet_id in subnets])
         service.client.delete_network.assert_called_once_with("foo_id")
+
+        mock_neutron_wrapper_supports_extension.assert_called_once_with(
+            "dhcp_agent_scheduler")
 
     def test_list_networks(self):
         service = self.get_wrapper()
