@@ -135,7 +135,7 @@ def _file_access_ok(filename, mode, param_name, required=True):
     if not filename:
         return ValidationResult(not required,
                                 "Parameter %s required" % param_name)
-    if not os.access(filename, mode):
+    if not os.access(os.path.expanduser(filename), mode):
         return ValidationResult(
             False, "Could not open %(filename)s with mode %(mode)s "
             "for parameter %(param_name)s"
@@ -149,6 +149,7 @@ def file_exists(config, clients, deployment, param_name, mode=os.R_OK,
     """Validator checks parameter is proper path to file with proper mode.
 
     Ensure a file exists and can be accessed with the specified mode.
+    Note that path to file will be expanded before access checking.
 
     :param param_name: Name of parameter to validate
     :param mode: Access mode to test for. This should be one of:
