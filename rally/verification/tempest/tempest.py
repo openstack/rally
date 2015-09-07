@@ -59,7 +59,7 @@ class Tempest(object):
                                  ".rally/tempest/base")
 
     def __init__(self, deployment, verification=None, tempest_config=None,
-                 source=None):
+                 source=None, system_wide_install=False):
         self.tempest_source = source or TEMPEST_SOURCE
         self.deployment = deployment
         self._path = os.path.join(os.path.expanduser("~"),
@@ -67,10 +67,10 @@ class Tempest(object):
                                   "for-deployment-%s" % deployment)
         self.config_file = tempest_config or self.path("tempest.conf")
         self.log_file_raw = self.path("subunit.stream")
-        self.venv_wrapper = self.path("tools/with_venv.sh")
         self.verification = verification
         self._env = None
         self._base_repo = None
+        self._system_wide_install = system_wide_install
 
     def _generate_env(self):
         env = os.environ.copy()
@@ -79,6 +79,13 @@ class Tempest(object):
         env["OS_TEST_PATH"] = self.path("tempest/test_discover")
         LOG.debug("Generated environ: %s" % env)
         self._env = env
+
+    @property
+    def venv_wrapper(self):
+        if self._system_wide_install:
+            return ""
+        else:
+            return self.path("tools/with_venv.sh")
 
     @property
     def env(self):
@@ -262,7 +269,8 @@ class Tempest(object):
                     subprocess.check_call("git checkout master; "
                                           "git pull", shell=True,
                                           cwd=self.path("tempest"))
-                self._install_venv()
+                if not self._system_wide_install:
+                    self._install_venv()
                 self._initialize_testr()
             except subprocess.CalledProcessError as e:
                 self.uninstall()

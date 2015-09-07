@@ -251,13 +251,16 @@ class Task(object):
 class Verification(object):
 
     @classmethod
-    def verify(cls, deployment, set_name, regex, tempest_config):
+    def verify(cls, deployment, set_name, regex, tempest_config,
+               system_wide_install=False):
         """Start verifying.
 
         :param deployment: UUID or name of a deployment.
         :param set_name: Valid name of tempest test set.
         :param regex: Regular expression of test
         :param tempest_config: User specified Tempest config file
+        :param system_wide_install: Use virtualenv else run tests in local
+                                    environment
         :returns: Verification object
         """
 
@@ -265,7 +268,8 @@ class Verification(object):
 
         verification = objects.Verification(deployment_uuid=deployment_uuid)
         verifier = tempest.Tempest(deployment_uuid, verification=verification,
-                                   tempest_config=tempest_config)
+                                   tempest_config=tempest_config,
+                                   system_wide_install=system_wide_install)
         if not verifier.is_installed():
             print("Tempest is not installed for specified deployment.")
             print("Installing Tempest for deployment %s" % deployment_uuid)

@@ -54,15 +54,21 @@ class VerifyCommands(object):
                    help="User specified Tempest config file location")
     @cliutils.args("--no-use", action="store_false", dest="do_use",
                    help="Don't set new task as default for future operations")
+    @cliutils.args("--system-wide-install", dest="system_wide_install",
+                   help="Use virtualenv else run tests in local environment",
+                   required=False, action="store_true")
     @envutils.with_default_deployment(cli_arg_name="deployment")
     def start(self, set_name="", deployment=None, regex=None,
-              tempest_config=None, do_use=False):
+              tempest_config=None, do_use=False,
+              system_wide_install=False):
         """Start set of tests.
 
         :param set_name: Name of tempest test set
         :param deployment: UUID or name of a deployment
         :param regex: Regular expression of test
         :param tempest_config: User specified Tempest config file location
+        :param system_wide_install: Use virtualenv else run tests in
+                                    local environment
         """
 
         if regex and set_name:
@@ -77,7 +83,8 @@ class VerifyCommands(object):
                                                 list(consts.TempestTestsAPI)))
             return (1)
         verification = api.Verification.verify(deployment, set_name, regex,
-                                               tempest_config)
+                                               tempest_config,
+                                               system_wide_install)
         if do_use:
             self.use(verification["uuid"])
 

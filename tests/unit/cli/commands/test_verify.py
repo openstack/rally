@@ -60,7 +60,7 @@ class VerifyCommandsTestCase(test.TestCase):
         default_regex = None
 
         mock_verification_verify.assert_called_once_with(
-            deployment_id, default_set_name, default_regex, None)
+            deployment_id, default_set_name, default_regex, None, False)
 
     @mock.patch("rally.osclients.Clients")
     @mock.patch("rally.api.Verification.verify")
@@ -79,7 +79,7 @@ class VerifyCommandsTestCase(test.TestCase):
 
         mock_verification_verify.assert_called_once_with(
             deployment_id, default_set_name, default_regex,
-            tempest_config.name)
+            tempest_config.name, False)
         tempest_config.close()
 
     @mock.patch("rally.api.Verification.verify")

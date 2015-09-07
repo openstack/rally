@@ -53,7 +53,7 @@ _rally()
     OPTS["verify_list"]=""
     OPTS["verify_results"]="--uuid --html --json --output-file"
     OPTS["verify_show"]="--uuid --sort-by --detailed"
-    OPTS["verify_start"]="--deployment --set --regex --tempest-config --no-use"
+    OPTS["verify_start"]="--deployment --set --regex --tempest-config --no-use --system-wide-install"
     OPTS["verify_use"]="--verification"
 
     for OPT in ${!OPTS[*]} ; do
