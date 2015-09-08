@@ -777,6 +777,24 @@ class ValidatorsTestCase(test.TestCase):
         result = validator({}, clients, {"admin": {"foo": "bar"}})
         self.assertFalse(result.is_valid, result.msg)
 
+    @ddt.data(
+        {"ext_validate": "existing_extension",
+         "validation_result": True},
+        {"ext_validate": "absent_extension",
+         "validation_result": False},
+    )
+    @ddt.unpack
+    def test_required_neutron_extensions(self, ext_validate,
+                                         validation_result):
+        validator = self._unwrap_validator(
+            validation.required_neutron_extensions,
+            ext_validate)
+        clients = mock.Mock()
+        clients.neutron.return_value.list_extensions.return_value = (
+            {"extensions": [{"alias": "existing_extension"}]})
+        result = validator({}, clients, {})
+        self.assertEqual(result.is_valid, validation_result)
+
     def test_required_cinder_services(self):
         validator = self._unwrap_validator(
             validation.required_cinder_services,

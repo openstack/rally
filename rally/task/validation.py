@@ -494,6 +494,21 @@ def required_services(config, clients, deployment, *required_services):
 
 
 @validator
+def required_neutron_extensions(config, clients, deployment,
+                                *required_extensions):
+    """Validator checks if the specified Neutron extension is available
+
+    :param required_extensions: list of Neutron extensions
+    """
+    extensions = clients.neutron().list_extensions().get("extensions", [])
+    aliases = map(lambda x: x["alias"], extensions)
+    for extension in required_extensions:
+        if extension not in aliases:
+            msg = (_("Neutron extension %s is not configured") % extension)
+            return ValidationResult(False, msg)
+
+
+@validator
 def required_cinder_services(config, clients, deployment, service_name):
     """Validator checks that specified Cinder service is available.
 
