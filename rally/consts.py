@@ -17,7 +17,7 @@
 There is a lot of situation when we would like to work with Enum or consts.
 E.g. work around Tasks. We would like to use Enum in DB to store status of task
 and also in migration that creates DB and in business logic to set some status
-so to avoid copy paste or direct usage of enums values we create singltons
+so to avoid copy paste or direct usage of enums values we create singletons
 for each enum. (e.g TaskStatus)
 """
 
