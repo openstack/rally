@@ -1,0 +1,20 @@
+{
+  "NovaImages.list_images": [
+    {
+      "runner": {
+        "type": "constant",
+        "concurrency": 2,
+        "times": 10
+      },
+      "args": {
+        "detailed": true
+      },
+      "context": {
+        "users": {
+          "tenants": 3,
+          "users_per_tenant": 2
+        }
+      }
+    }
+  ]
+}

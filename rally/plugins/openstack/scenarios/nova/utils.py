@@ -461,6 +461,18 @@ class NovaScenario(scenario.OpenStackScenario):
         )
         return image
 
+    @atomic.action_timer("nova.list_images")
+    def _list_images(self, detailed=False, **kwargs):
+        """List all images.
+
+        :param detailed: True if the image listing
+                         should contain detailed information
+        :param kwargs: Optional additional arguments for image listing
+
+        :returns: Image list
+        """
+        return self.clients("nova").images.list(detailed, **kwargs)
+
     @atomic.action_timer("nova.create_keypair")
     def _create_keypair(self, **kwargs):
         """Create a keypair

@@ -778,6 +778,14 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.list_hypervisors")
 
+    def test__list_images(self):
+        nova_scenario = utils.NovaScenario()
+        nova_scenario._list_images(detailed=False, fakearg="fakearg")
+        self.clients("nova").images.list.assert_called_once_with(
+            False, fakearg="fakearg")
+        self._test_atomic_action_timer(nova_scenario.atomic_actions(),
+                                       "nova.list_images")
+
     def test__lock_server(self):
         server = mock.Mock()
         nova_scenario = utils.NovaScenario(context=self.context)
