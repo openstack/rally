@@ -578,6 +578,23 @@
         failure_rate:
           max: 0
 
+  NovaServers.boot_and_delete_multiple_servers:
+    -
+      args:
+        flavor:
+          name: "m1.tiny"
+        image:
+          name: {{image_name}}
+        count: 5
+      runner:
+        type: "constant"
+        times: 2
+        concurrency: 2
+      context:
+        users:
+          tenants: 2
+          users_per_tenant: 2
+
   NovaFloatingIpsBulk.create_and_list_floating_ips_bulk:
     -
       args:
@@ -693,4 +710,3 @@
       sla:
         failure_rate:
           max: 0
-
