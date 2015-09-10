@@ -92,6 +92,11 @@ class NovaServer(base.ResourceManager):
         super(NovaServer, self).delete()
 
 
+@base.resource("nova", "floating_ips", order=next(_nova_order))
+class NovaFloatingIPs(SynchronizedDeletion, base.ResourceManager):
+    pass
+
+
 @base.resource("nova", "keypairs", order=next(_nova_order))
 class NovaKeypair(SynchronizedDeletion, base.ResourceManager):
     pass
@@ -254,6 +259,12 @@ class NeutronSubnet(NeutronMixin):
 @base.resource("neutron", "network", order=next(_neutron_order),
                tenant_resource=True)
 class NeutronNetwork(NeutronMixin):
+    pass
+
+
+@base.resource("neutron", "floatingip", order=next(_neutron_order),
+               tenant_resource=True)
+class NeutronFloatingIP(NeutronMixin):
     pass
 
 
