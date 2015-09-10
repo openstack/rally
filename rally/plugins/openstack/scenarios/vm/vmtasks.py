@@ -55,6 +55,7 @@ class VMTasks(vm_utils.VMScenario):
                                port=22,
                                use_floating_ip=True,
                                force_delete=False,
+                               wait_for_ping=True,
                                **kwargs):
         """Boot a server, run a script that outputs JSON, delete the server.
 
@@ -140,6 +141,7 @@ class VMTasks(vm_utils.VMScenario):
         :param port: ssh port for SSH connection
         :param use_floating_ip: bool, floating or fixed IP for SSH connection
         :param force_delete: whether to use force_delete for servers
+        :param wait_for_ping: whether to check connectivity on server creation
         :param **kwargs: extra arguments for booting the server
         :returns: dictionary with keys `data' and `errors':
                   data: dict, JSON output from the script
@@ -159,6 +161,9 @@ class VMTasks(vm_utils.VMScenario):
             key_name=self.context["user"]["keypair"]["name"],
             **kwargs)
         try:
+            if wait_for_ping:
+                self._wait_for_ping(fip["ip"])
+
             code, out, err = self._run_command(
                 fip["ip"], port, username, password, command=command)
             if code:
