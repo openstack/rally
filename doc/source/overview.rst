@@ -20,6 +20,14 @@ Overview
 
 **Rally** is a **benchmarking tool** that **automates** and **unifies** multi-node OpenStack deployment, cloud verification, benchmarking & profiling. It can be used as a basic tool for an *OpenStack CI/CD system* that would continuously improve its SLA, performance and stability.
 
+Who Is Using Rally
+------------------
+
+Here's a small selection of some of the many companies using Rally:
+
+.. image:: ./images/Rally_who_is_using.png
+   :align: center
+
 Use Cases
 ---------
 
