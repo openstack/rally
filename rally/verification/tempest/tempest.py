@@ -18,6 +18,7 @@ import os
 import shutil
 import subprocess
 import sys
+import tempfile
 
 from oslo_serialization import jsonutils
 from oslo_utils import encodeutils
@@ -108,18 +109,17 @@ class Tempest(object):
                 cwd=os.path.abspath(directory))
 
     @staticmethod
-    def _move_contents_to_subdir(base, subdir):
-        """Moves contents of directory :base into its sub-directory :subdir
+    def _move_contents_to_dir(base, directory):
+        """Moves contents of directory :base into directory :directory
 
         :param base: source directory to move files from
-        :param subdir: name of subdirectory to move files to
+        :param directory: directory to move files to
         """
         for filename in os.listdir(base):
             source = os.path.join(base, filename)
-            dest = os.path.join(base, subdir)
             LOG.debug("Moving file {source} to {dest}".format(source=source,
-                                                              dest=dest))
-            shutil.move(source, os.path.join(dest, filename))
+                                                              dest=directory))
+            shutil.move(source, os.path.join(directory, filename))
 
     @property
     def base_repo(self):
@@ -144,12 +144,13 @@ class Tempest(object):
         if os.path.exists(Tempest.base_repo_dir):
             if self._is_git_repo(Tempest.base_repo_dir):
                 # this is the old dir structure and needs to be upgraded
-                directory = utils.generate_random_name("tempest_base-")
+                directory = tempfile.mkdtemp(prefix=os.path.join(
+                    Tempest.base_repo_dir, "tempest_base-"))
                 LOG.debug("Upgrading Tempest directory tree: "
                           "Moving Tempest base dir %s into subdirectory %s" %
                           (Tempest.base_repo_dir, directory))
-                self._move_contents_to_subdir(Tempest.base_repo_dir,
-                                              directory)
+                self._move_contents_to_dir(Tempest.base_repo_dir,
+                                           directory)
             if not self._base_repo:
                 # Search existing tempest bases for a matching source
                 repos = [d for d in os.listdir(Tempest.base_repo_dir)
@@ -162,10 +163,11 @@ class Tempest(object):
                 if repos:
                     # Use existing base with relevant source
                     self._base_repo = repos.pop()
+        else:
+            os.makedirs(Tempest.base_repo_dir)
         if not self._base_repo:
-            directory = utils.generate_random_name("tempest_base-")
-            self._base_repo = os.path.join(
-                os.path.abspath(Tempest.base_repo_dir), directory)
+            self._base_repo = tempfile.mkdtemp(prefix=os.path.join(
+                os.path.abspath(Tempest.base_repo_dir), "tempest_base-"))
         return self._base_repo
 
     @staticmethod
@@ -264,7 +266,7 @@ class Tempest(object):
         """Creates local Tempest repo and virtualenv for deployment."""
         if not self.is_installed():
             try:
-                if not os.path.exists(self.base_repo):
+                if not self._is_git_repo(self.base_repo):
                     self._clone()
 
                 if not os.path.exists(self.path()):
