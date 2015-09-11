@@ -15,8 +15,10 @@
 
 """Tests for db.task layer."""
 
+import datetime
 import json
 
+import jsonschema
 import mock
 
 from rally.common import objects
@@ -139,6 +141,56 @@ class TaskTestCase(test.TestCase):
             self.task["uuid"],
             {"verification_log": json.dumps({"a": "fake"})}
         )
+
+    def test_extend_results(self):
+        self.assertRaises(TypeError, objects.Task.extend_results)
+
+        now = datetime.datetime.now()
+        iterations = [
+            {"timestamp": i + 2, "error": [], "duration": i + 5,
+             "scenario_output": {"errors": "", "data": {}},
+             "error": [], "idle_duration": i,
+             "atomic_actions": {
+                 "keystone.create_user": i + 10}} for i in range(10)]
+        obsolete = [
+            {"task_uuid": "foo_uuid", "created_at": now, "updated_at": None,
+             "id": 11, "key": {"kw": {"foo": 42},
+                               "name": "Foo.bar", "pos": 0},
+             "data": {"raw": iterations, "sla": [],
+                      "full_duration": 40, "load_duration": 32}}]
+        expected = [
+            {"iterations": "foo_iterations", "sla": [],
+             "key": {"kw": {"foo": 42}, "name": "Foo.bar", "pos": 0},
+             "info": {
+                 "atomic": {"keystone.create_user": {"max_duration": 19,
+                                                     "min_duration": 10}},
+             "iterations_count": 10, "iterations_failed": 0,
+             "max_duration": 14, "min_duration": 5, "output_names": [],
+             "tstamp_start": 2, "full_duration": 40, "load_duration": 32}}]
+
+        # serializable is default
+        results = objects.Task.extend_results(obsolete)
+        self.assertIsInstance(results[0]["iterations"], type(iter([])))
+        self.assertEqual(list(results[0]["iterations"]), iterations)
+        results[0]["iterations"] = "foo_iterations"
+        self.assertEqual(results, expected)
+
+        # serializable is False
+        results = objects.Task.extend_results(obsolete, serializable=False)
+        self.assertIsInstance(results[0]["iterations"], type(iter([])))
+        self.assertEqual(list(results[0]["iterations"]), iterations)
+        results[0]["iterations"] = "foo_iterations"
+        self.assertEqual(results, expected)
+
+        # serializable is True
+        results = objects.Task.extend_results(obsolete, serializable=True)
+        self.assertEqual(list(results[0]["iterations"]), iterations)
+        expected[0]["created_at"] = now.strftime("%Y-%d-%mT%H:%M:%S")
+        expected[0]["updated_at"] = None
+        jsonschema.validate(results[0],
+                            objects.task.TASK_EXTENDED_RESULT_SCHEMA)
+        results[0]["iterations"] = "foo_iterations"
+        self.assertEqual(results, expected)
 
     @mock.patch("rally.common.objects.task.db.task_result_get_all_by_uuid",
                 return_value="foo_results")
