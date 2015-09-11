@@ -27,12 +27,8 @@ RUN ./install_rally.sh --system --verbose --yes \
   rm -rf /tmp/* && \
   apt-get -y remove \
     build-essential \
-    gcc-4.8 \
-    libffi-dev \
-    libssl-dev \
     libxml2-dev \
     libxslt1-dev \
-    python-dev \
     python3 \
   && \
   apt-get -y autoremove && \
