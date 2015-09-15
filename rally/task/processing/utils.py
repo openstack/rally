@@ -74,6 +74,8 @@ def percentile(values, percent):
     return (d0 + d1)
 
 
+# TODO(amaretskiy): This function is deprecated and should be removed
+#                   after it becomes not used by rally.cli.commands.task
 def get_atomic_actions_data(raw_data):
     """Retrieve detailed (by atomic actions & total runtime) benchmark data.
 
@@ -96,54 +98,6 @@ def get_atomic_actions_data(raw_data):
             if r["atomic_actions"].get(atomic_action) is not None]
     actions_data["total"] = [r["duration"] for r in raw_data if not r["error"]]
     return actions_data
-
-
-def compress(data, limit=1000, merge=None, normalize=None):
-    """Enumerate and reduce list of values.
-
-    :param data: data list
-    :param limit: int, max length of result list
-    :param merge: function that merges two values
-    :param normalize: function that guarantees sanity of value
-    :returns: items list [(idx1, value1), (idx2, value2) ...]
-    """
-
-    if not normalize:
-        normalize = lambda i: i and round(float(i), 2) or 0.0
-
-    if not merge:
-        merge = lambda a, b: normalize((a + normalize(b)) / 2)
-
-    if len(data) <= limit:
-        return [(idx, normalize(v)) for idx, v in enumerate(data, start=1)]
-
-    # For determining which rows should be merged we are using `factor'
-    # e.g. if we have 100 rows and should reduce it to 75 then we have
-    # factor of 0.25 and delete (merge with previous) each 4th row.
-    factor = float(limit) / len(data)
-    store = 0.0
-
-    result = []
-    first = True
-
-    for idx, value in enumerate(data, start=1):
-        store += factor
-
-        if first:
-            cur_value = normalize(value)
-            first = False
-        else:
-            cur_value = merge(cur_value, value)
-
-        if store > 1:
-            store -= 1
-            first = True
-            result.append((idx, cur_value))
-
-    if not first:
-        result.append((len(data), cur_value))
-
-    return result
 
 
 class GraphZipper(object):
