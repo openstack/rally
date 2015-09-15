@@ -78,12 +78,17 @@ class MainStackedAreaChart(Chart):
 
     def _map_iteration_values(self, iteration):
         if iteration["error"]:
-            return [("duration", 0), ("idle_duration", 0),
+            result = [("duration", 0), ("idle_duration", 0)]
+            if self._benchmark_info["iterations_failed"]:
+                result.append(
                     ("failed_duration",
-                     iteration["duration"] + iteration["idle_duration"])]
-        return [("duration", iteration["duration"]),
-                ("idle_duration", iteration["idle_duration"]),
-                ("failed_duration", 0)]
+                     iteration["duration"] + iteration["idle_duration"]))
+        else:
+            result = [("duration", iteration["duration"]),
+                      ("idle_duration", iteration["idle_duration"])]
+            if self._benchmark_info["iterations_failed"]:
+                result.append(("failed_duration", 0))
+        return result
 
 
 class AtomicStackedAreaChart(Chart):
@@ -91,13 +96,14 @@ class AtomicStackedAreaChart(Chart):
     def _map_iteration_values(self, iteration):
         iteration = self._fix_atomic_actions(iteration)
         atomics = list(iteration["atomic_actions"].items())
-        if iteration["error"]:
-            failed_duration = (
-                iteration["duration"] + iteration["idle_duration"]
-                - sum([(a[1] or 0) for a in atomics]))
-        else:
-            failed_duration = 0
-        atomics.append(("failed_duration", failed_duration))
+        if self._benchmark_info["iterations_failed"]:
+            if iteration["error"]:
+                failed_duration = (
+                    iteration["duration"] + iteration["idle_duration"]
+                    - sum([(a[1] or 0) for a in atomics]))
+            else:
+                failed_duration = 0
+            atomics.append(("failed_duration", failed_duration))
         return atomics
 
 
