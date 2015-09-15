@@ -19,6 +19,7 @@ from saharaclient.api import base as saharaclient_base
 
 from rally.common import log as logging
 from rally.plugins.openstack.context.cleanup import base
+from rally.plugins.openstack import scenario
 from rally.plugins.openstack.scenarios.keystone import utils as kutils
 from rally.plugins.openstack.wrappers import keystone as keystone_wrapper
 
@@ -534,6 +535,28 @@ class IronicNodes(base.ResourceManager):
 
     def id(self):
         return self.raw_resource.uuid
+
+
+# FUEL
+
+@base.resource("fuel", "environment", order=1400,
+               admin_required=True, perform_for_admin_only=True)
+class FuelEnvironment(base.ResourceManager):
+    """Fuel environment.
+
+    That is the only resource that can be deleted by fuelclient explicitly.
+    """
+
+    def id(self):
+        return self.raw_resource["id"]
+
+    def is_deleted(self):
+        return not self._manager().get(self.id())
+
+    def list(self):
+        return [env for env in self._manager().list()
+                if env["name"].startswith(
+                    scenario.OpenStackScenario.RESOURCE_NAME_PREFIX)]
 
 
 # KEYSTONE

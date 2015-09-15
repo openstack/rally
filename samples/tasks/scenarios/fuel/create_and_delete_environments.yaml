@@ -1,0 +1,13 @@
+---
+  FuelEnvironments.create_and_delete_environment:
+    -
+      args:
+        release_id: 1
+        network_provider: "neutron"
+        deployment_mode: "ha_compact"
+        net_segment_type: "vlan"
+        delete_retries: 5
+      runner:
+        type: "constant"
+        times: 200
+        concurrency: 10

@@ -591,3 +591,28 @@ class ManilaSecurityServiceTestCase(test.TestCase):
         self.assertEqual("security_services", ss_resource._resource)
         ss_resource._manager.return_value.delete.assert_called_once_with(
             "fake_id")
+
+
+class FuelEnvironmentTestCase(test.TestCase):
+
+    def test_id(self):
+        fres = resources.FuelEnvironment()
+        fres.raw_resource = {"id": 42, "name": "chavez"}
+        self.assertEqual(42, fres.id())
+
+    @mock.patch("%s.FuelEnvironment._manager" % BASE)
+    def test_is_deleted(self, mock__manager):
+        mock__manager.return_value.get.return_value = []
+        fres = resources.FuelEnvironment()
+        fres.id = mock.Mock()
+        self.assertTrue(fres.is_deleted())
+        mock__manager.return_value.get.return_value = ["env"]
+        self.assertFalse(fres.is_deleted())
+
+    @mock.patch("%s.FuelEnvironment._manager" % BASE)
+    def test_list(self, mock__manager):
+        envs = [{"name": "rally_one"}, {"name": "rally_two"},
+                {"name": "three"}]
+        mock__manager.return_value.list.return_value = envs
+        fres = resources.FuelEnvironment()
+        self.assertEqual(envs[:-1], fres.list())
