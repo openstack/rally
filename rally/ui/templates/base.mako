@@ -7,12 +7,13 @@
   <%block name="libs"/>
   <script type="text/javascript"><%block name="js_before"/></script>
   <style>
-    body { margin:0 0 50px; padding:0; font-size:14px; font-family:Helvetica,Arial,sans-serif }
+    body { margin:0; padding:0 0 50px; font-size:14px; font-family:Helvetica,Arial,sans-serif }
     a, a:active, a:focus, a:visited { text-decoration:none; outline:none }
-    p { margin:5px 0; padding:15px 0 0 }
+    p { margin:0; padding:5px 0 }
+    p.thesis { padding:10px 0 }
     h1 { color:#666; margin:0 0 20px; font-size:30px; font-weight:normal }
-    h2 { color:#666; margin:25px 0 20px; font-size:26px; font-weight:normal }
-    table { border-collapse:collapse; border-spacing:0; width:100%; font-size:12px }
+    h2 { color:#777; margin:20px 0 10px; font-size:25px; font-weight:normal }
+    table { border-collapse:collapse; border-spacing:0; width:100%; font-size:12px; margin:0 0 10px }
     table th { text-align:left; padding:8px; color:#000; border:2px solid #ddd; border-width:0 0 2px 0 }
     table th.sortable { cursor:pointer }
     table td { text-align:left; border-top:1px solid #ddd; padding:8px; color:#333 }
