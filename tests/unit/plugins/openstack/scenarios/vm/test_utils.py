@@ -227,7 +227,7 @@ class VMScenarioTestCase(test.ScenarioTestCase):
         scenario._attach_floating_ip = mock.Mock()
         server, ip = scenario._boot_server_with_fip(
             "foo_image", "foo_flavor", floating_network="ext_network",
-            use_floating_ip=False, wait_for_ping=True, foo_arg="foo_value")
+            use_floating_ip=False, foo_arg="foo_value")
 
         self.assertEqual(ip, {"ip": "foo_ip", "id": None,
                               "is_floating": False})
@@ -235,7 +235,6 @@ class VMScenarioTestCase(test.ScenarioTestCase):
             "foo_image", "foo_flavor",
             auto_assign_nic=True, foo_arg="foo_value")
         self.assertEqual(scenario._attach_floating_ip.mock_calls, [])
-        scenario._wait_for_ping.assert_called_once_with("foo_ip")
 
     def test__boot_server_with_fip(self):
         scenario, server = self.get_scenario()
@@ -243,7 +242,7 @@ class VMScenarioTestCase(test.ScenarioTestCase):
             return_value={"id": "foo_id", "ip": "foo_ip"})
         server, ip = scenario._boot_server_with_fip(
             "foo_image", "foo_flavor", floating_network="ext_network",
-            use_floating_ip=True, wait_for_ping=True, foo_arg="foo_value")
+            use_floating_ip=True, foo_arg="foo_value")
         self.assertEqual(ip, {"ip": "foo_ip", "id": "foo_id",
                               "is_floating": True})
 
@@ -252,7 +251,6 @@ class VMScenarioTestCase(test.ScenarioTestCase):
             auto_assign_nic=True, foo_arg="foo_value")
         scenario._attach_floating_ip.assert_called_once_with(
             server, "ext_network")
-        scenario._wait_for_ping.assert_called_once_with("foo_ip")
 
     def test__delete_server_with_fixed_ip(self):
         ip = {"ip": "foo_ip", "id": None, "is_floating": False}

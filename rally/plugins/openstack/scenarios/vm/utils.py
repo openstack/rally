@@ -100,9 +100,8 @@ class VMScenario(nova_utils.NovaScenario, cinder_utils.CinderScenario):
 
         return ssh.execute(cmd, stdin=stdin)
 
-    def _boot_server_with_fip(self, image, flavor,
-                              use_floating_ip=True, floating_network=None,
-                              wait_for_ping=True, **kwargs):
+    def _boot_server_with_fip(self, image, flavor, use_floating_ip=True,
+                              floating_network=None, **kwargs):
         """Boot server prepared for SSH actions."""
         kwargs["auto_assign_nic"] = True
         server = self._boot_server(image, flavor, **kwargs)
@@ -119,9 +118,6 @@ class VMScenario(nova_utils.NovaScenario, cinder_utils.CinderScenario):
         else:
             internal_network = list(server.networks)[0]
             fip = {"ip": server.addresses[internal_network][0]["addr"]}
-
-        if wait_for_ping:
-            self._wait_for_ping(fip["ip"])
 
         return server, {"ip": fip.get("ip"),
                         "id": fip.get("id"),
