@@ -23,13 +23,13 @@ DESIGNATE_BASIC = ("rally.plugins.openstack.scenarios.designate.basic"
                    ".DesignateBasic")
 
 
-class DesignateBasicTestCase(test.TestCase):
+class DesignateBasicTestCase(test.ScenarioTestCase):
 
     @mock.patch(DESIGNATE_BASIC + "._list_domains")
     @mock.patch(DESIGNATE_BASIC + "._create_domain")
     def test_create_and_list_domains(self, mock_designate_basic__create_domain,
                                      mock_designate_basic__list_domains):
-        scenario = basic.DesignateBasic()
+        scenario = basic.DesignateBasic(self.context)
 
         # Default options
         scenario.create_and_list_domains()
@@ -42,7 +42,7 @@ class DesignateBasicTestCase(test.TestCase):
             self, mock_designate_basic__create_domain,
             mock_designate_basic__delete_domain):
 
-        scenario = basic.DesignateBasic()
+        scenario = basic.DesignateBasic(self.context)
 
         mock_designate_basic__create_domain.return_value = {"id": "123"}
 
@@ -54,7 +54,7 @@ class DesignateBasicTestCase(test.TestCase):
 
     @mock.patch(DESIGNATE_BASIC + "._list_domains")
     def test_list_domains(self, mock_designate_basic__list_domains):
-        scenario = basic.DesignateBasic()
+        scenario = basic.DesignateBasic(self.context)
 
         # Default options
         scenario.list_domains()
@@ -67,7 +67,7 @@ class DesignateBasicTestCase(test.TestCase):
             self, mock_designate_basic__create_domain,
             mock_designate_basic__create_record,
             mock_designate_basic__list_records):
-        scenario = basic.DesignateBasic()
+        scenario = basic.DesignateBasic(self.context)
         domain = {
             "name": "zone.name",
             "email": "email@zone.name",
@@ -92,7 +92,7 @@ class DesignateBasicTestCase(test.TestCase):
             self, mock_designate_basic__create_domain,
             mock_designate_basic__create_record,
             mock_designate_basic__delete_record):
-        scenario = basic.DesignateBasic()
+        scenario = basic.DesignateBasic(self.context)
         domain = {
             "name": "zone.name",
             "email": "email@zone.name",
@@ -115,7 +115,7 @@ class DesignateBasicTestCase(test.TestCase):
 
     @mock.patch(DESIGNATE_BASIC + "._list_records")
     def test_list_records(self, mock_designate_basic__list_records):
-        scenario = basic.DesignateBasic()
+        scenario = basic.DesignateBasic(self.context)
 
         # Default options
         scenario.list_records("123")
@@ -126,7 +126,7 @@ class DesignateBasicTestCase(test.TestCase):
     def test_create_and_list_servers(
             self, mock_designate_basic__create_server,
             mock_designate_basic__list_servers):
-        scenario = basic.DesignateBasic()
+        scenario = basic.DesignateBasic(self.context)
 
         # Default options
         scenario.create_and_list_servers()
@@ -138,7 +138,7 @@ class DesignateBasicTestCase(test.TestCase):
     def test_create_and_delete_server(
             self, mock_designate_basic__create_server,
             mock_designate_basic__delete_server):
-        scenario = basic.DesignateBasic()
+        scenario = basic.DesignateBasic(self.context)
 
         mock_designate_basic__create_server.return_value = {"id": "123"}
 
@@ -150,7 +150,7 @@ class DesignateBasicTestCase(test.TestCase):
 
     @mock.patch(DESIGNATE_BASIC + "._list_servers")
     def test_list_servers(self, mock_designate_basic__list_servers):
-        scenario = basic.DesignateBasic()
+        scenario = basic.DesignateBasic(self.context)
 
         # Default options
         scenario.list_servers()

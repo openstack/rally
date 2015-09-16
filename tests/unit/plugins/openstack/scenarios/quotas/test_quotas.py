@@ -23,13 +23,13 @@ class QuotasTestCase(test.ScenarioTestCase):
 
     def setUp(self):
         super(QuotasTestCase, self).setUp()
-        self.context = {
+        self.context.update({
             "user": {
                 "tenant_id": "fake",
                 "endpoint": mock.MagicMock()
             },
             "tenant": {"id": "fake"}
-        }
+        })
 
     def test_nova_update(self):
         scenario = quotas.Quotas(self.context)

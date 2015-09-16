@@ -30,7 +30,8 @@ class TempestLogWrappersTestCase(test.TestCase):
         verifier.parse_results.return_value = ({"fake": True},
                                                {"have_results": True})
 
-        context = {"tmp_results_dir": "/tmp/dir", "verifier": verifier}
+        context = test.get_test_context()
+        context.update({"tmp_results_dir": "/tmp/dir", "verifier": verifier})
         self.scenario = tempest.TempestScenario(context)
         self.scenario._add_atomic_actions = mock.MagicMock()
 

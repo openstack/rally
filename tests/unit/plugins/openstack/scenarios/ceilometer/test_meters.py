@@ -18,9 +18,9 @@ from rally.plugins.openstack.scenarios.ceilometer import meters
 from tests.unit import test
 
 
-class CeilometerMetersTestCase(test.TestCase):
+class CeilometerMetersTestCase(test.ScenarioTestCase):
     def test_list_meters(self):
-        scenario = meters.CeilometerMeters()
+        scenario = meters.CeilometerMeters(self.context)
         scenario._list_meters = mock.MagicMock()
         scenario.list_meters()
         scenario._list_meters.assert_called_once_with()

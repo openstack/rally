@@ -26,7 +26,7 @@ class ZaqarScenarioTestCase(test.ScenarioTestCase):
     @mock.patch(UTILS + "ZaqarScenario._generate_random_name",
                 return_value="kitkat")
     def test_queue_create(self, mock__generate_random_name):
-        scenario = utils.ZaqarScenario()
+        scenario = utils.ZaqarScenario(self.context)
         result = scenario._queue_create(name_length=10)
 
         self.assertEqual(self.clients("zaqar").queue.return_value, result)
@@ -38,7 +38,7 @@ class ZaqarScenarioTestCase(test.ScenarioTestCase):
         queue = fakes.FakeQueue()
         queue.delete = mock.MagicMock()
 
-        scenario = utils.ZaqarScenario()
+        scenario = utils.ZaqarScenario(context=self.context)
         scenario._queue_delete(queue)
         queue.delete.assert_called_once_with()
         self._test_atomic_action_timer(scenario.atomic_actions(),
@@ -53,7 +53,7 @@ class ZaqarScenarioTestCase(test.ScenarioTestCase):
                     {"body": {"id": "three"}, "ttl": 140}]
         min_msg_count = max_msg_count = len(messages)
 
-        scenario = utils.ZaqarScenario()
+        scenario = utils.ZaqarScenario(context=self.context)
         scenario._messages_post(queue, messages, min_msg_count, max_msg_count)
         queue.post.assert_called_once_with(messages)
 
@@ -61,7 +61,7 @@ class ZaqarScenarioTestCase(test.ScenarioTestCase):
         queue = fakes.FakeQueue()
         queue.messages = mock.MagicMock()
 
-        scenario = utils.ZaqarScenario()
+        scenario = utils.ZaqarScenario(context=self.context)
         scenario._messages_list(queue)
         queue.messages.assert_called_once_with()
         self._test_atomic_action_timer(scenario.atomic_actions(),

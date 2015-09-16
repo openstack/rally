@@ -21,18 +21,18 @@ BASE = "rally.plugins.openstack.scenarios.zaqar."
 BASIC = BASE + "basic.ZaqarBasic."
 
 
-class ZaqarBasicTestCase(test.TestCase):
+class ZaqarBasicTestCase(test.ScenarioTestCase):
 
     @mock.patch(BASIC + "_generate_random_name", return_value="fizbit")
     def test_create_queue(self, mock__generate_random_name):
-        scenario = basic.ZaqarBasic()
+        scenario = basic.ZaqarBasic(self.context)
         scenario._queue_create = mock.MagicMock()
         scenario.create_queue(name_length=10)
         scenario._queue_create.assert_called_once_with(name_length=10)
 
     @mock.patch(BASIC + "_generate_random_name", return_value="kitkat")
     def test_producer_consumer(self, mock__generate_random_name):
-        scenario = basic.ZaqarBasic()
+        scenario = basic.ZaqarBasic(self.context)
         messages = [{"body": {"id": idx}, "ttl": 360} for idx
                     in range(20)]
         queue = mock.MagicMock()

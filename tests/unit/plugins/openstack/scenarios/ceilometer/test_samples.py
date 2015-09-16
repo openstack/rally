@@ -18,9 +18,9 @@ from rally.plugins.openstack.scenarios.ceilometer import samples
 from tests.unit import test
 
 
-class CeilometerSamplesTestCase(test.TestCase):
+class CeilometerSamplesTestCase(test.ScenarioTestCase):
     def test_list_samples(self):
-        scenario = samples.CeilometerSamples()
+        scenario = samples.CeilometerSamples(self.context)
         scenario._list_samples = mock.MagicMock()
         scenario.list_samples()
         scenario._list_samples.assert_called_once_with()

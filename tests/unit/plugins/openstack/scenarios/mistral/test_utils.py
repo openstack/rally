@@ -22,7 +22,7 @@ MISTRAL_UTILS = "rally.plugins.openstack.scenarios.mistral.utils"
 class MistralScenarioTestCase(test.ScenarioTestCase):
 
     def test_list_workbooks(self):
-        scenario = utils.MistralScenario()
+        scenario = utils.MistralScenario(context=self.context)
         return_wbs_list = scenario._list_workbooks()
         self.assertEqual(
             self.clients("mistral").workbooks.list.return_value,
@@ -32,14 +32,14 @@ class MistralScenarioTestCase(test.ScenarioTestCase):
 
     def test_create_workbook(self):
         definition = "version: \"2.0\"\nname: wb"
-        scenario = utils.MistralScenario()
+        scenario = utils.MistralScenario(context=self.context)
         self.assertEqual(scenario._create_workbook(definition),
                          self.clients("mistral").workbooks.create.return_value)
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "mistral.create_workbook")
 
     def test_delete_workbook(self):
-        scenario = utils.MistralScenario()
+        scenario = utils.MistralScenario(context=self.context)
         scenario._delete_workbook("wb_name")
         self.clients("mistral").workbooks.delete.assert_called_once_with(
             "wb_name")

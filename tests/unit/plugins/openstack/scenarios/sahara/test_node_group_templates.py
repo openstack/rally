@@ -25,6 +25,10 @@ SAHARA_NGTS = ("rally.plugins.openstack.scenarios.sahara.node_group_templates"
 
 class SaharaNodeGroupTemplatesTestCase(test.TestCase):
 
+    def setUp(self):
+        super(SaharaNodeGroupTemplatesTestCase, self).setUp()
+        self.context = test.get_test_context()
+
     @mock.patch(SAHARA_NGTS + "._list_node_group_templates")
     @mock.patch(SAHARA_NGTS + "._create_master_node_group_template",
                 return_value=object())
@@ -36,7 +40,7 @@ class SaharaNodeGroupTemplatesTestCase(test.TestCase):
             mock__create_master_node_group_template,
             mock__list_node_group_templates):
 
-        ngts_scenario = ngts.SaharaNodeGroupTemplates()
+        ngts_scenario = ngts.SaharaNodeGroupTemplates(self.context)
         ngts_scenario.create_and_list_node_group_templates("test_flavor",
                                                            "test_plugin",
                                                            "test_version")
@@ -62,7 +66,7 @@ class SaharaNodeGroupTemplatesTestCase(test.TestCase):
             mock__create_master_node_group_template,
             mock__delete_node_group_template):
 
-        ngts_scenario = ngts.SaharaNodeGroupTemplates()
+        ngts_scenario = ngts.SaharaNodeGroupTemplates(self.context)
         ngts_scenario.create_delete_node_group_templates(
             "test_flavor",
             "test_plugin",

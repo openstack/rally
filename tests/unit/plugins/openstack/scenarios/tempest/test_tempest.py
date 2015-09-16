@@ -32,8 +32,9 @@ class TempestScenarioTestCase(test.TestCase):
         self.verifier.parse_results = mock.MagicMock()
         self.verifier.parse_results.return_value = ({"fake": True},
                                                     {"have_results": True})
-        self.context = {"verifier": self.verifier,
-                        "tmp_results_dir": "/dev"}
+        self.context = test.get_test_context()
+        self.context.update({"verifier": self.verifier,
+                             "tmp_results_dir": "/dev"})
         self.scenario = tempest.TempestScenario(self.context)
         self.scenario._add_atomic_actions = mock.MagicMock()
 

@@ -48,7 +48,7 @@ class SaharaScenarioTestCase(test.ScenarioTestCase):
         ngts = []
         self.clients("sahara").node_group_templates.list.return_value = ngts
 
-        scenario = utils.SaharaScenario()
+        scenario = utils.SaharaScenario(self.context)
         return_ngts_list = scenario._list_node_group_templates()
 
         self.assertEqual(ngts, return_ngts_list)
@@ -62,7 +62,7 @@ class SaharaScenarioTestCase(test.ScenarioTestCase):
             self, mock_sahara_consts,
             mock__generate_random_name):
 
-        scenario = utils.SaharaScenario()
+        scenario = utils.SaharaScenario(self.context)
         mock_processes = {
             "test_plugin": {
                 "test_version": {
@@ -110,7 +110,7 @@ class SaharaScenarioTestCase(test.ScenarioTestCase):
             "sahara.create_worker_node_group_template")
 
     def test_delete_node_group_templates(self):
-        scenario = utils.SaharaScenario()
+        scenario = utils.SaharaScenario(self.context)
         ng = mock.MagicMock(id=42)
 
         scenario._delete_node_group_template(ng)
@@ -127,7 +127,7 @@ class SaharaScenarioTestCase(test.ScenarioTestCase):
     def test_launch_cluster(self, mock_sahara_consts,
                             mock__generate_random_name):
 
-        context = {
+        self.context.update({
             "tenant": {
                 "networks": [
                     {
@@ -136,13 +136,13 @@ class SaharaScenarioTestCase(test.ScenarioTestCase):
                     }
                 ]
             }
-        }
+        })
 
         self.clients("services").values.return_value = [
             consts.Service.NEUTRON
         ]
 
-        scenario = utils.SaharaScenario(context=context)
+        scenario = utils.SaharaScenario(context=self.context)
 
         mock_processes = {
             "test_plugin": {
@@ -232,7 +232,7 @@ class SaharaScenarioTestCase(test.ScenarioTestCase):
     def test_launch_cluster_error(self, mock_sahara_consts,
                                   mock__generate_random_name):
 
-        scenario = utils.SaharaScenario()
+        scenario = utils.SaharaScenario(self.context)
         mock_processes = {
             "test_plugin": {
                 "test_version": {
@@ -274,7 +274,7 @@ class SaharaScenarioTestCase(test.ScenarioTestCase):
                                                  "local_value"}})
 
     def test_scale_cluster(self):
-        scenario = utils.SaharaScenario()
+        scenario = utils.SaharaScenario(self.context)
         cluster = mock.MagicMock(id=42, node_groups=[{
             "name": "random_master",
             "count": 1
@@ -298,7 +298,7 @@ class SaharaScenarioTestCase(test.ScenarioTestCase):
             42, expected_scale_object)
 
     def test_delete_cluster(self):
-        scenario = utils.SaharaScenario()
+        scenario = utils.SaharaScenario(self.context)
         cluster = mock.MagicMock(id=42)
         self.clients("sahara").clusters.get.side_effect = [
             cluster, sahara_base.APIException()
@@ -318,14 +318,14 @@ class SaharaScenarioTestCase(test.ScenarioTestCase):
     @mock.patch(SAHARA_UTILS + ".SaharaScenario._generate_random_name",
                 return_value="42")
     def test_create_output_ds(self, mock__generate_random_name):
-        ctxt = {
+        self.context.update({
             "sahara_output_conf": {
                 "output_type": "hdfs",
                 "output_url_prefix": "hdfs://test_out/"
             }
-        }
+        })
 
-        scenario = utils.SaharaScenario(ctxt)
+        scenario = utils.SaharaScenario(self.context)
         scenario._create_output_ds()
 
         self.clients("sahara").data_sources.create.assert_called_once_with(
@@ -338,14 +338,14 @@ class SaharaScenarioTestCase(test.ScenarioTestCase):
     @mock.patch(SAHARA_UTILS + ".SaharaScenario._generate_random_name",
                 return_value="42")
     def test_create_output_ds_swift(self, mock__generate_random_name):
-        ctxt = {
+        self.context.update({
             "sahara_output_conf": {
                 "output_type": "swift",
                 "output_url_prefix": "swift://test_out/"
             }
-        }
+        })
 
-        scenario = utils.SaharaScenario(ctxt)
+        scenario = utils.SaharaScenario(self.context)
         self.assertRaises(exceptions.RallyException,
                           scenario._create_output_ds)
 
@@ -357,7 +357,7 @@ class SaharaScenarioTestCase(test.ScenarioTestCase):
         self.clients("sahara").job_executions.create.return_value = (
             mock.MagicMock(id="42"))
 
-        scenario = utils.SaharaScenario()
+        scenario = utils.SaharaScenario(self.context)
         scenario._run_job_execution(job_id="test_job_id",
                                     cluster_id="test_cluster_id",
                                     input_id="test_input_id",
@@ -386,7 +386,7 @@ class SaharaScenarioTestCase(test.ScenarioTestCase):
         self.clients("sahara").job_executions.create.return_value = (
             mock.MagicMock(id="42"))
 
-        scenario = utils.SaharaScenario()
+        scenario = utils.SaharaScenario(self.context)
         self.assertRaises(exceptions.RallyException,
                           scenario._run_job_execution,
                           job_id="test_job_id",

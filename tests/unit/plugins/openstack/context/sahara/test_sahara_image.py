@@ -46,7 +46,7 @@ class SaharaImageTestCase(test.ScenarioTestCase):
 
     @property
     def url_image_context(self):
-        return {
+        self.context.update({
             "config": {
                 "users": {
                     "tenants": self.tenants_num,
@@ -60,14 +60,14 @@ class SaharaImageTestCase(test.ScenarioTestCase):
                 }
             },
             "admin": {"endpoint": mock.MagicMock()},
-            "task": mock.MagicMock(),
             "users": self.users_key,
             "tenants": self.tenants
-        }
+        })
+        return self.context
 
     @property
     def existing_image_context(self):
-        return {
+        self.context.update({
             "config": {
                 "users": {
                     "tenants": self.tenants_num,
@@ -78,10 +78,10 @@ class SaharaImageTestCase(test.ScenarioTestCase):
                 }
             },
             "admin": {"endpoint": mock.MagicMock()},
-            "task": mock.MagicMock(),
             "users": self.users_key,
             "tenants": self.tenants
-        }
+        })
+        return self.context
 
     @mock.patch("%s.rutils.generate_random_name" % CTX,
                 return_value="sahara_image_42")

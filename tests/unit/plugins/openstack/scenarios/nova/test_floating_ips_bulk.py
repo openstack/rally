@@ -19,10 +19,10 @@ from rally.plugins.openstack.scenarios.nova import floating_ips_bulk
 from tests.unit import test
 
 
-class NovaFloatingIPsBulkTestCase(test.TestCase):
+class NovaFloatingIPsBulkTestCase(test.ScenarioTestCase):
 
     def test_create_and_list_floating_ips_bulk(self):
-        scenario = floating_ips_bulk.NovaFloatingIpsBulk()
+        scenario = floating_ips_bulk.NovaFloatingIpsBulk(self.context)
         scenario._create_floating_ips_bulk = mock.MagicMock()
         scenario._list_floating_ips_bulk = mock.MagicMock()
         start_cidr = "10.2.0.0/24"
@@ -34,7 +34,7 @@ class NovaFloatingIPsBulkTestCase(test.TestCase):
         scenario._list_floating_ips_bulk.assert_called_once_with()
 
     def test_create_and_delete_floating_ips_bulk(self):
-        scenario = floating_ips_bulk.NovaFloatingIpsBulk()
+        scenario = floating_ips_bulk.NovaFloatingIpsBulk(self.context)
         fake_floating_ips_bulk = mock.MagicMock()
         fake_floating_ips_bulk.ip_range = "10.2.0.0/24"
         scenario._create_floating_ips_bulk = mock.MagicMock(

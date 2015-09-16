@@ -29,14 +29,17 @@ class fake_type(object):
 class CinderServersTestCase(test.ScenarioTestCase):
 
     def _get_context(self):
-        return {"user": {"tenant_id": "fake",
-                         "endpoint": mock.MagicMock()},
-                "tenant": {"id": "fake", "name": "fake",
-                           "volumes": [{"id": "uuid"}],
-                           "servers": [1]}}
+        context = test.get_test_context()
+        context.update({
+            "user": {"tenant_id": "fake",
+                     "endpoint": mock.MagicMock()},
+            "tenant": {"id": "fake", "name": "fake",
+                       "volumes": [{"id": "uuid"}],
+                       "servers": [1]}})
+        return context
 
     def test_create_and_list_volume(self):
-        scenario = volumes.CinderVolumes()
+        scenario = volumes.CinderVolumes(self.context)
         scenario._create_volume = mock.MagicMock()
         scenario._list_volumes = mock.MagicMock()
         scenario.create_and_list_volume(1, True, fakearg="f")
@@ -44,7 +47,7 @@ class CinderServersTestCase(test.ScenarioTestCase):
         scenario._list_volumes.assert_called_once_with(True)
 
     def test_list_volumes(self):
-        scenario = volumes.CinderVolumes()
+        scenario = volumes.CinderVolumes(self.context)
         scenario._list_volumes = mock.MagicMock()
         scenario.list_volumes(True)
         scenario._list_volumes.assert_called_once_with(True)
@@ -64,7 +67,7 @@ class CinderServersTestCase(test.ScenarioTestCase):
     def test_create_and_delete_volume(self):
         fake_volume = mock.MagicMock()
 
-        scenario = volumes.CinderVolumes()
+        scenario = volumes.CinderVolumes(self.context)
         scenario._create_volume = mock.MagicMock(return_value=fake_volume)
         scenario.sleep_between = mock.MagicMock()
         scenario._delete_volume = mock.MagicMock()
@@ -78,7 +81,7 @@ class CinderServersTestCase(test.ScenarioTestCase):
 
     def test_create_volume(self):
         fake_volume = mock.MagicMock()
-        scenario = volumes.CinderVolumes()
+        scenario = volumes.CinderVolumes(self.context)
         scenario._create_volume = mock.MagicMock(return_value=fake_volume)
 
         scenario.create_volume(1, fakearg="f")
@@ -99,7 +102,7 @@ class CinderServersTestCase(test.ScenarioTestCase):
     def test_create_and_extend_volume(self):
         fake_volume = mock.MagicMock()
 
-        scenario = volumes.CinderVolumes()
+        scenario = volumes.CinderVolumes(self.context)
         scenario._create_volume = mock.MagicMock(return_value=fake_volume)
         scenario._extend_volume = mock.MagicMock(return_value=fake_volume)
         scenario.sleep_between = mock.MagicMock()
@@ -113,7 +116,7 @@ class CinderServersTestCase(test.ScenarioTestCase):
 
     def test_create_from_image_and_delete_volume(self):
         fake_volume = mock.MagicMock()
-        scenario = volumes.CinderVolumes()
+        scenario = volumes.CinderVolumes(self.context)
         scenario._create_volume = mock.MagicMock(return_value=fake_volume)
         scenario._delete_volume = mock.MagicMock()
 
@@ -125,7 +128,7 @@ class CinderServersTestCase(test.ScenarioTestCase):
 
     def test_create_volume_from_image(self):
         fake_volume = mock.MagicMock()
-        scenario = volumes.CinderVolumes()
+        scenario = volumes.CinderVolumes(self.context)
         scenario._create_volume = mock.MagicMock(return_value=fake_volume)
 
         scenario.create_volume(1, image="fake_image")
@@ -134,7 +137,7 @@ class CinderServersTestCase(test.ScenarioTestCase):
 
     def test_create_volume_from_image_and_list(self):
         fake_volume = mock.MagicMock()
-        scenario = volumes.CinderVolumes()
+        scenario = volumes.CinderVolumes(self.context)
         scenario._create_volume = mock.MagicMock(return_value=fake_volume)
         scenario._list_volumes = mock.MagicMock()
 
@@ -183,7 +186,7 @@ class CinderServersTestCase(test.ScenarioTestCase):
     def test_create_and_attach_volume(self):
         fake_volume = mock.MagicMock()
         fake_server = mock.MagicMock()
-        scenario = volumes.CinderVolumes()
+        scenario = volumes.CinderVolumes(self.context)
 
         scenario._attach_volume = mock.MagicMock()
         scenario._detach_volume = mock.MagicMock()
@@ -205,7 +208,7 @@ class CinderServersTestCase(test.ScenarioTestCase):
     def test_create_and_upload_volume_to_image(self):
         fake_volume = mock.Mock()
         fake_image = mock.Mock()
-        scenario = volumes.CinderVolumes()
+        scenario = volumes.CinderVolumes(self.context)
 
         scenario._create_volume = mock.MagicMock(return_value=fake_volume)
         scenario._upload_volume_to_image = mock.MagicMock(
@@ -413,7 +416,7 @@ class CinderServersTestCase(test.ScenarioTestCase):
         self.assertFalse(scenario._delete_backup.called)
 
     def _get_scenario(self, fake_volume, fake_backup, fake_restore=None):
-        scenario = volumes.CinderVolumes()
+        scenario = volumes.CinderVolumes(self.context)
 
         scenario._create_volume = mock.MagicMock(return_value=fake_volume)
         scenario._create_backup = mock.MagicMock(return_value=fake_backup)

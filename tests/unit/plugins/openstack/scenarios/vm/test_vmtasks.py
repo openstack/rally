@@ -22,14 +22,13 @@ from rally.plugins.openstack.scenarios.vm import vmtasks
 from tests.unit import test
 
 
-class VMTasksTestCase(test.TestCase):
+class VMTasksTestCase(test.ScenarioTestCase):
 
     def setUp(self):
         super(VMTasksTestCase, self).setUp()
-        self.scenario = vmtasks.VMTasks(
-            context={"user": {"keypair": {"name": "keypair_name"},
-                              "endpoint": mock.MagicMock()}}
-        )
+        self.context.update({"user": {"keypair": {"name": "keypair_name"},
+                                      "endpoint": mock.MagicMock()}})
+        self.scenario = vmtasks.VMTasks(context=self.context)
         self.ip = {"id": "foo_id", "ip": "foo_ip", "is_floating": True}
         self.scenario._boot_server_with_fip = mock.Mock(
             return_value=("foo_server", self.ip))

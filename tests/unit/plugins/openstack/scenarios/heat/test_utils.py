@@ -28,14 +28,14 @@ class HeatScenarioTestCase(test.ScenarioTestCase):
     def setUp(self):
         super(HeatScenarioTestCase, self).setUp()
         self.stack = mock.Mock()
-        self.scenario = utils.HeatScenario()
+        self.scenario = utils.HeatScenario(self.context)
         self.default_template = "heat_template_version: 2013-05-23"
         self.dummy_parameters = {"dummy_param": "dummy_key"}
         self.dummy_files = ["dummy_file.yaml"]
         self.dummy_environment = {"dummy_env": "dummy_env_value"}
 
     def test_list_stacks(self):
-        scenario = utils.HeatScenario()
+        scenario = utils.HeatScenario(self.context)
         return_stacks_list = scenario._list_stacks()
         self.clients("heat").stacks.list.assert_called_once_with()
         self.assertEqual(list(self.clients("heat").stacks.list.return_value),
@@ -48,11 +48,10 @@ class HeatScenarioTestCase(test.ScenarioTestCase):
             "stack": {"id": "test_id"}
         }
         self.clients("heat").stacks.get.return_value = self.stack
-        scenario = utils.HeatScenario()
-        return_stack = scenario._create_stack(self.default_template,
-                                              self.dummy_parameters,
-                                              self.dummy_files,
-                                              self.dummy_environment)
+        return_stack = self.scenario._create_stack(self.default_template,
+                                                   self.dummy_parameters,
+                                                   self.dummy_files,
+                                                   self.dummy_environment)
         args, kwargs = self.clients("heat").stacks.create.call_args
         self.assertIn(self.dummy_parameters, kwargs.values())
         self.assertIn(self.default_template, kwargs.values())
@@ -68,12 +67,12 @@ class HeatScenarioTestCase(test.ScenarioTestCase):
         self.mock_get_from_manager.mock.assert_called_once_with(
             ["CREATE_FAILED"])
         self.assertEqual(self.mock_wait_for.mock.return_value, return_stack)
-        self._test_atomic_action_timer(scenario.atomic_actions(),
+        self._test_atomic_action_timer(self.scenario.atomic_actions(),
                                        "heat.create_stack")
 
     def test_update_stack(self):
         self.clients("heat").stacks.update.return_value = None
-        scenario = utils.HeatScenario()
+        scenario = utils.HeatScenario(self.context)
         scenario._update_stack(self.stack, self.default_template,
                                self.dummy_parameters, self.dummy_files,
                                self.dummy_environment)
@@ -96,7 +95,7 @@ class HeatScenarioTestCase(test.ScenarioTestCase):
                                        "heat.update_stack")
 
     def test_check_stack(self):
-        scenario = utils.HeatScenario()
+        scenario = utils.HeatScenario(self.context)
         scenario._check_stack(self.stack)
         self.clients("heat").actions.check.assert_called_once_with(
             self.stack.id)
@@ -111,7 +110,7 @@ class HeatScenarioTestCase(test.ScenarioTestCase):
                                        "heat.check_stack")
 
     def test_delete_stack(self):
-        scenario = utils.HeatScenario()
+        scenario = utils.HeatScenario(self.context)
         scenario._delete_stack(self.stack)
         self.stack.delete.assert_called_once_with()
         self.mock_wait_for_delete.mock.assert_called_once_with(
@@ -124,7 +123,7 @@ class HeatScenarioTestCase(test.ScenarioTestCase):
                                        "heat.delete_stack")
 
     def test_suspend_stack(self):
-        scenario = utils.HeatScenario()
+        scenario = utils.HeatScenario(self.context)
         scenario._suspend_stack(self.stack)
         self.clients("heat").actions.suspend.assert_called_once_with(
             self.stack.id)
@@ -141,7 +140,7 @@ class HeatScenarioTestCase(test.ScenarioTestCase):
                                        "heat.suspend_stack")
 
     def test_resume_stack(self):
-        scenario = utils.HeatScenario()
+        scenario = utils.HeatScenario(self.context)
         scenario._resume_stack(self.stack)
         self.clients("heat").actions.resume.assert_called_once_with(
             self.stack.id)
@@ -158,7 +157,7 @@ class HeatScenarioTestCase(test.ScenarioTestCase):
                                        "heat.resume_stack")
 
     def test_snapshot_stack(self):
-        scenario = utils.HeatScenario()
+        scenario = utils.HeatScenario(self.context)
         scenario._snapshot_stack(self.stack)
         self.clients("heat").stacks.snapshot.assert_called_once_with(
             self.stack.id)
@@ -175,7 +174,7 @@ class HeatScenarioTestCase(test.ScenarioTestCase):
                                        "heat.snapshot_stack")
 
     def test_restore_stack(self):
-        scenario = utils.HeatScenario()
+        scenario = utils.HeatScenario(self.context)
         scenario._restore_stack(self.stack, "dummy_id")
         self.clients("heat").stacks.restore.assert_called_once_with(
             self.stack.id, "dummy_id")
@@ -196,14 +195,14 @@ class HeatScenarioTestCase(test.ScenarioTestCase):
             mock.Mock(resource_type="OS::Nova::Server"),
             mock.Mock(resource_type="OS::Nova::Server"),
             mock.Mock(resource_type="OS::Heat::AutoScalingGroup")]
-        scenario = utils.HeatScenario()
+        scenario = utils.HeatScenario(self.context)
         self.assertEqual(scenario._count_instances(self.stack), 2)
         self.clients("heat").resources.list.assert_called_once_with(
             self.stack.id,
             nested_depth=1)
 
     def test__scale_stack(self):
-        scenario = utils.HeatScenario()
+        scenario = utils.HeatScenario(self.context)
         scenario._count_instances = mock.Mock(side_effect=[3, 3, 2])
         scenario._stack_webhook = mock.Mock()
 
@@ -225,7 +224,7 @@ class HeatScenarioTestCase(test.ScenarioTestCase):
 
     @mock.patch("requests.post")
     def test_stack_webhook(self, mock_post):
-        scenario = utils.HeatScenario()
+        scenario = utils.HeatScenario(self.context)
         stack = mock.Mock(outputs=[
             {"output_key": "output1", "output_value": "url1"},
             {"output_key": "output2", "output_value": "url2"}])
@@ -237,7 +236,7 @@ class HeatScenarioTestCase(test.ScenarioTestCase):
 
     @mock.patch("requests.post")
     def test_stack_webhook_invalid_output_key(self, mock_post):
-        scenario = utils.HeatScenario()
+        scenario = utils.HeatScenario(self.context)
         stack = mock.Mock()
         stack.outputs = [{"output_key": "output1", "output_value": "url1"},
                          {"output_key": "output2", "output_value": "url2"}]
@@ -258,7 +257,7 @@ class HeatScenarioNegativeTestCase(test.ScenarioTestCase):
         resource.stack_status = "CREATE_FAILED"
         stack.manager.get.return_value = resource
         self.clients("heat").stacks.get.return_value = stack
-        scenario = utils.HeatScenario()
+        scenario = utils.HeatScenario(context=self.context)
         ex = self.assertRaises(exceptions.GetResourceErrorStatus,
                                scenario._create_stack, "stack_name")
         self.assertIn("has CREATE_FAILED status", str(ex))
@@ -269,7 +268,7 @@ class HeatScenarioNegativeTestCase(test.ScenarioTestCase):
         resource.stack_status = "UPDATE_FAILED"
         stack.manager.get.return_value = resource
         self.clients("heat").stacks.get.return_value = stack
-        scenario = utils.HeatScenario()
+        scenario = utils.HeatScenario(context=self.context)
         ex = self.assertRaises(exceptions.GetResourceErrorStatus,
                                scenario._update_stack, stack,
                                "heat_template_version: 2013-05-23")

@@ -22,7 +22,7 @@ from tests.unit import test
 class SwiftObjectsTestCase(test.ScenarioTestCase):
 
     def test_create_container_and_object_then_list_objects(self):
-        scenario = objects.SwiftObjects()
+        scenario = objects.SwiftObjects(self.context)
         scenario._create_container = mock.MagicMock(return_value="AA")
         scenario._upload_object = mock.MagicMock()
         scenario._list_objects = mock.MagicMock()
@@ -39,7 +39,7 @@ class SwiftObjectsTestCase(test.ScenarioTestCase):
                                        "swift.create_5_objects")
 
     def test_create_container_and_object_then_delete_all(self):
-        scenario = objects.SwiftObjects()
+        scenario = objects.SwiftObjects(self.context)
         scenario._create_container = mock.MagicMock(return_value="BB")
         scenario._upload_object = mock.MagicMock(
             side_effect=[("etaaag", "ooobj_%i" % i) for i in range(3)])
@@ -63,7 +63,7 @@ class SwiftObjectsTestCase(test.ScenarioTestCase):
                                        "swift.delete_3_objects")
 
     def test_create_container_and_object_then_download_object(self):
-        scenario = objects.SwiftObjects()
+        scenario = objects.SwiftObjects(self.context)
         scenario._create_container = mock.MagicMock(return_value="CC")
         scenario._upload_object = mock.MagicMock(
             side_effect=[("etaaaag", "obbbj_%i" % i) for i in range(2)])
@@ -87,7 +87,7 @@ class SwiftObjectsTestCase(test.ScenarioTestCase):
     def test_functional_create_container_and_object_then_list_objects(self):
         names_list = ["AA", "BB", "CC", "DD"]
 
-        scenario = objects.SwiftObjects()
+        scenario = objects.SwiftObjects(self.context)
         scenario._generate_random_name = mock.MagicMock(side_effect=names_list)
         scenario._list_objects = mock.MagicMock()
 
@@ -103,7 +103,7 @@ class SwiftObjectsTestCase(test.ScenarioTestCase):
     def test_functional_create_container_and_object_then_delete_all(self):
         names_list = ["111", "222", "333", "444", "555"]
 
-        scenario = objects.SwiftObjects()
+        scenario = objects.SwiftObjects(self.context)
         scenario._generate_random_name = mock.MagicMock(side_effect=names_list)
         scenario._delete_object = mock.MagicMock()
         scenario._delete_container = mock.MagicMock()
@@ -125,7 +125,7 @@ class SwiftObjectsTestCase(test.ScenarioTestCase):
     def test_functional_create_container_and_object_then_download_object(self):
         names_list = ["aaa", "bbb", "ccc", "ddd", "eee", "fff"]
 
-        scenario = objects.SwiftObjects()
+        scenario = objects.SwiftObjects(self.context)
         scenario._generate_random_name = mock.MagicMock(side_effect=names_list)
         scenario._download_object = mock.MagicMock()
 

@@ -32,7 +32,7 @@ class GlanceScenarioTestCase(test.ScenarioTestCase):
         self.image1 = mock.Mock()
 
     def test_list_images(self):
-        scenario = utils.GlanceScenario()
+        scenario = utils.GlanceScenario(context=self.context)
         return_images_list = scenario._list_images()
         self.clients("glance").images.list.assert_called_once_with()
         self.assertEqual(list(self.clients("glance").images.list.return_value),
@@ -43,7 +43,7 @@ class GlanceScenarioTestCase(test.ScenarioTestCase):
     def test_create_image(self):
         image_location = tempfile.NamedTemporaryFile()
         self.clients("glance").images.create.return_value = self.image
-        scenario = utils.GlanceScenario()
+        scenario = utils.GlanceScenario(context=self.context)
         return_image = scenario._create_image("container_format",
                                               image_location.name,
                                               "disk_format")
@@ -61,7 +61,7 @@ class GlanceScenarioTestCase(test.ScenarioTestCase):
 
     def test_create_image_with_location(self):
         self.clients("glance").images.create.return_value = self.image
-        scenario = utils.GlanceScenario()
+        scenario = utils.GlanceScenario(context=self.context)
         return_image = scenario._create_image("container_format",
                                               "image_location",
                                               "disk_format")
@@ -78,7 +78,7 @@ class GlanceScenarioTestCase(test.ScenarioTestCase):
                                        "glance.create_image")
 
     def test_delete_image(self):
-        scenario = utils.GlanceScenario()
+        scenario = utils.GlanceScenario(context=self.context)
         scenario._delete_image(self.image)
         self.image.delete.assert_called_once_with()
         self.mock_wait_for_delete.mock.assert_called_once_with(

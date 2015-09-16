@@ -28,7 +28,7 @@ class ManilaScenarioTestCase(test.ScenarioTestCase):
 
     def setUp(self):
         super(ManilaScenarioTestCase, self).setUp()
-        self.scenario = utils.ManilaScenario()
+        self.scenario = utils.ManilaScenario(self.context)
 
     def test__create_share(self):
         fake_name = "fake_name"

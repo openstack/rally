@@ -26,8 +26,8 @@ class ExistingNetworkTestCase(test.TestCase):
         super(ExistingNetworkTestCase, self).setUp()
 
         self.config = mock.MagicMock()
-        self.context = {
-            "task": mock.MagicMock(),
+        self.context = test.get_test_context()
+        self.context.update({
             "users": [
                 {"id": 1,
                  "tenant_id": "tenant1",
@@ -43,7 +43,7 @@ class ExistingNetworkTestCase(test.TestCase):
             "config": {
                 "existing_network": self.config
             },
-        }
+        })
 
     @mock.patch("rally.osclients.Clients")
     @mock.patch("rally.plugins.openstack.wrappers.network.wrap")

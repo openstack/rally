@@ -28,9 +28,11 @@ class AllowSSHContextTestCase(test.TestCase):
     def setUp(self):
         super(AllowSSHContextTestCase, self).setUp()
         self.users = 2
-        task = {"uuid": "foo_task_id"}
         self.secgroup_name = allow_ssh.SSH_GROUP_NAME + "_foo"
-        self.ctx_with_secgroup = {
+        self.secgroup_name = "test-secgroup"
+
+        self.ctx_with_secgroup = test.get_test_context()
+        self.ctx_with_secgroup.update({
             "users": [
                 {
                     "tenant_id": "uuid1",
@@ -40,17 +42,16 @@ class AllowSSHContextTestCase(test.TestCase):
             ] * self.users,
             "admin": {"tenant_id": "uuid2", "endpoint": "admin_endpoint"},
             "tenants": {"uuid1": {"id": "uuid1", "name": "uuid1"}},
-            "task": task
-        }
-        self.ctx_without_secgroup = {
+        })
+        self.ctx_without_secgroup = test.get_test_context()
+        self.ctx_without_secgroup.update({
             "users": [{"tenant_id": "uuid1",
                        "endpoint": "endpoint"},
                       {"tenant_id": "uuid1",
                        "endpoint": "endpoint"}],
             "admin": {"tenant_id": "uuid2", "endpoint": "admin_endpoint"},
             "tenants": {"uuid1": {"id": "uuid1", "name": "uuid1"}},
-            "task": task
-        }
+        })
 
     @mock.patch("%s.osclients.Clients" % CTX)
     def test__prepare_open_secgroup(self, mock_clients):
@@ -108,7 +109,7 @@ class AllowSSHContextTestCase(test.TestCase):
             "id": "secgroup_id"}
         mock_clients.return_value = mock.MagicMock()
 
-        secgrp_ctx = allow_ssh.AllowSSH(self.ctx_without_secgroup)
+        secgrp_ctx = allow_ssh.AllowSSH(self.ctx_with_secgroup)
         secgrp_ctx.setup()
         self.assertEqual(self.ctx_with_secgroup, secgrp_ctx.context)
         secgrp_ctx.cleanup()

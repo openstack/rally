@@ -35,7 +35,7 @@ class QuotasScenarioTestCase(test.ScenarioTestCase):
             "cores": 10,
         }
         self.admin_clients("nova").quotas.update.return_value = quotas
-        scenario = utils.QuotasScenario()
+        scenario = utils.QuotasScenario(self.context)
         scenario._generate_quota_values = mock.MagicMock(return_value=quotas)
 
         result = scenario._update_quotas("nova", tenant_id)
@@ -59,7 +59,7 @@ class QuotasScenarioTestCase(test.ScenarioTestCase):
             "cores": 10,
         }
         self.admin_clients("nova").quotas.update.return_value = quotas
-        scenario = utils.QuotasScenario()
+        scenario = utils.QuotasScenario(self.context)
         scenario._generate_quota_values = mock.MagicMock(return_value=quotas)
 
         mock_quota = mock.Mock(return_value=quotas)
@@ -73,21 +73,21 @@ class QuotasScenarioTestCase(test.ScenarioTestCase):
 
     def test__generate_quota_values_nova(self):
         max_quota = 1024
-        scenario = utils.QuotasScenario()
+        scenario = utils.QuotasScenario(self.context)
         quotas = scenario._generate_quota_values(max_quota, "nova")
         for k, v in six.iteritems(quotas):
             self.assertTrue(-1 <= v <= max_quota)
 
     def test__generate_quota_values_cinder(self):
         max_quota = 1024
-        scenario = utils.QuotasScenario()
+        scenario = utils.QuotasScenario(self.context)
         quotas = scenario._generate_quota_values(max_quota, "cinder")
         for k, v in six.iteritems(quotas):
             self.assertTrue(-1 <= v <= max_quota)
 
     def test__generate_quota_values_neutron(self):
         max_quota = 1024
-        scenario = utils.QuotasScenario()
+        scenario = utils.QuotasScenario(self.context)
         quotas = scenario._generate_quota_values(max_quota, "neutron")
         for v in six.itervalues(quotas):
             for v1 in six.itervalues(v):
@@ -96,7 +96,7 @@ class QuotasScenarioTestCase(test.ScenarioTestCase):
 
     def test__delete_quotas(self):
         tenant_id = "fake_tenant"
-        scenario = utils.QuotasScenario()
+        scenario = utils.QuotasScenario(self.context)
         scenario._delete_quotas("nova", tenant_id)
 
         self.admin_clients("nova").quotas.delete.assert_called_once_with(

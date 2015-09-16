@@ -18,10 +18,10 @@ from rally.plugins.openstack.scenarios.fuel import environments
 from tests.unit import test
 
 
-class FuelEnvironmentsTestCase(test.TestCase):
+class FuelEnvironmentsTestCase(test.ScenarioTestCase):
 
     def test_create_and_list_environments(self):
-        scenario = environments.FuelEnvironments()
+        scenario = environments.FuelEnvironments(self.context)
 
         scenario._create_environment = mock.Mock()
         scenario._list_environments = mock.Mock()

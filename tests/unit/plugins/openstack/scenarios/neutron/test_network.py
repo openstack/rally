@@ -28,7 +28,7 @@ class NeutronNetworksTestCase(test.ScenarioTestCase):
     @mock.patch(NEUTRON_NETWORKS + "._create_network")
     def test_create_and_list_networks(self, mock__create_network,
                                       mock__list_networks):
-        neutron_scenario = network.NeutronNetworks()
+        neutron_scenario = network.NeutronNetworks(self.context)
 
         # Default options
         network_create_args = {}
@@ -58,7 +58,7 @@ class NeutronNetworksTestCase(test.ScenarioTestCase):
     def test_create_and_update_networks(self,
                                         mock__create_network,
                                         mock__update_network):
-        scenario = network.NeutronNetworks()
+        scenario = network.NeutronNetworks(self.context)
 
         network_update_args = {"name": "_updated", "admin_state_up": True}
 
@@ -91,7 +91,7 @@ class NeutronNetworksTestCase(test.ScenarioTestCase):
     @mock.patch(NEUTRON_NETWORKS + "._create_network")
     def test_create_and_delete_networks(self, mock__create_network,
                                         mock__delete_network):
-        neutron_scenario = network.NeutronNetworks()
+        neutron_scenario = network.NeutronNetworks(self.context)
 
         # Default options
         network_create_args = {}
@@ -114,7 +114,7 @@ class NeutronNetworksTestCase(test.ScenarioTestCase):
     def test_create_and_list_subnets(self,
                                      mock__create_network_and_subnets,
                                      mock__list_subnets):
-        scenario = network.NeutronNetworks()
+        scenario = network.NeutronNetworks(self.context)
         subnets_per_network = 4
         subnet_cidr_start = "default_cidr"
 
@@ -147,7 +147,7 @@ class NeutronNetworksTestCase(test.ScenarioTestCase):
     def test_create_and_update_subnets(self,
                                        mock__create_network_and_subnets,
                                        mock__update_subnet):
-        scenario = network.NeutronNetworks()
+        scenario = network.NeutronNetworks(self.context)
         subnets_per_network = 1
         subnet_cidr_start = "default_cidr"
         net = {
@@ -198,7 +198,7 @@ class NeutronNetworksTestCase(test.ScenarioTestCase):
     def test_create_and_delete_subnets(self,
                                        mock__create_network_and_subnets,
                                        mock__delete_subnet):
-        scenario = network.NeutronNetworks()
+        scenario = network.NeutronNetworks(self.context)
         net = {
             "network": {
                 "id": "network-id"
@@ -248,7 +248,7 @@ class NeutronNetworksTestCase(test.ScenarioTestCase):
                                      mock__create_network_and_subnets,
                                      mock__create_router,
                                      mock__list_routers):
-        scenario = network.NeutronNetworks()
+        scenario = network.NeutronNetworks(self.context)
         subnets_per_network = 1
         subnet_cidr_start = "default_cidr"
 
@@ -325,7 +325,7 @@ class NeutronNetworksTestCase(test.ScenarioTestCase):
                                        mock__create_network_and_subnets,
                                        mock__create_router,
                                        mock__update_router):
-        scenario = network.NeutronNetworks()
+        scenario = network.NeutronNetworks(self.context)
         subnets_per_network = 1
         subnet_cidr_start = "default_cidr"
 
@@ -413,7 +413,7 @@ class NeutronNetworksTestCase(test.ScenarioTestCase):
                                        mock__create_network_and_subnets,
                                        mock__create_router,
                                        mock__delete_router):
-        scenario = network.NeutronNetworks()
+        scenario = network.NeutronNetworks(self.context)
         subnets_per_network = 1
         subnet_cidr_start = "default_cidr"
 
@@ -496,7 +496,7 @@ class NeutronNetworksTestCase(test.ScenarioTestCase):
                                    mock__create_port,
                                    mock__list_ports,
                                    mock__generate_random_name):
-        scenario = network.NeutronNetworks()
+        scenario = network.NeutronNetworks(self.context)
         mock__generate_random_name.return_value = "random-name"
         net = {"network": {"id": "fake-id"}}
         mock__create_network.return_value = net
@@ -544,7 +544,7 @@ class NeutronNetworksTestCase(test.ScenarioTestCase):
                                      mock__create_port,
                                      mock__update_port,
                                      mock__generate_random_name):
-        scenario = network.NeutronNetworks()
+        scenario = network.NeutronNetworks(self.context)
         mock__generate_random_name.return_value = "random-name"
         ports_per_network = 10
 
@@ -593,7 +593,7 @@ class NeutronNetworksTestCase(test.ScenarioTestCase):
                                      mock__create_port,
                                      mock__delete_port,
                                      mock__generate_random_name):
-        scenario = network.NeutronNetworks()
+        scenario = network.NeutronNetworks(self.context)
         mock__generate_random_name.return_value = "random-name"
         net = {"network": {"id": "fake-id"}}
         mock__create_network.return_value = net

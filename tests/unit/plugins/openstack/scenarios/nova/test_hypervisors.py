@@ -23,9 +23,9 @@ NOVA_HYPERVISORS_MODULE = "rally.plugins.openstack.scenarios.nova.hypervisors"
 NOVA_HYPERVISORS = NOVA_HYPERVISORS_MODULE + ".NovaHypervisors"
 
 
-class NovaHypervisorsTestCase(test.TestCase):
+class NovaHypervisorsTestCase(test.ScenarioTestCase):
     def test_list_hypervisors(self):
-        scenario = hypervisors.NovaHypervisors()
+        scenario = hypervisors.NovaHypervisors(self.context)
         scenario._list_hypervisors = mock.Mock()
         scenario.list_hypervisors(detailed=False)
         scenario._list_hypervisors.assert_called_once_with(False)

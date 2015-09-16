@@ -21,7 +21,7 @@ class DummyTestCase(test.TestCase):
 
     @mock.patch("rally.plugins.common.scenarios.dummy.dummy.time.sleep")
     def test_dummy(self, mock_sleep):
-        scenario = dummy.Dummy()
+        scenario = dummy.Dummy(test.get_test_context())
         scenario.sleep_between = mock.MagicMock()
         scenario.dummy()
         self.assertFalse(mock_sleep.sleep.called)
@@ -31,7 +31,7 @@ class DummyTestCase(test.TestCase):
 
     @mock.patch("rally.plugins.common.scenarios.dummy.dummy.time.sleep")
     def test_dummy_exception(self, mock_sleep):
-        scenario = dummy.Dummy()
+        scenario = dummy.Dummy(test.get_test_context())
 
         size_of_message = 5
         self.assertRaises(dummy.DummyScenarioException,
@@ -39,7 +39,7 @@ class DummyTestCase(test.TestCase):
         mock_sleep.assert_called_once_with(10)
 
     def test_dummy_exception_probability(self):
-        scenario = dummy.Dummy()
+        scenario = dummy.Dummy(test.get_test_context())
 
         # should not raise an exception as probability is 0
         for i in range(100):
@@ -52,7 +52,7 @@ class DummyTestCase(test.TestCase):
                               exception_probability=1)
 
     def test_dummy_dummy_with_scenario_output(self):
-        scenario = dummy.Dummy()
+        scenario = dummy.Dummy(test.get_test_context())
         result = scenario.dummy_with_scenario_output()
         self.assertEqual(result["errors"], "")
         # Since the data is generated in random,
@@ -60,7 +60,7 @@ class DummyTestCase(test.TestCase):
         self.assertNotEqual(result["data"], None)
 
     def test_dummy_random_fail_in_atomic(self):
-        scenario = dummy.Dummy()
+        scenario = dummy.Dummy(test.get_test_context())
 
         for i in range(10):
             scenario.dummy_random_fail_in_atomic(exception_probability=0)

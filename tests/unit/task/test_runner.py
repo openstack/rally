@@ -100,7 +100,8 @@ class ScenarioRunnerHelpersTestCase(test.TestCase):
             "timestamp": fakes.FakeTimer().timestamp(),
             "idle_duration": 0,
             "error": [],
-            "scenario_output": fakes.FakeScenario().with_output(),
+            "scenario_output": fakes.FakeScenario(
+                test.get_test_context()).with_output(),
             "atomic_actions": {}
         }
         self.assertEqual(expected_result, result)

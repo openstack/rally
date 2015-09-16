@@ -21,7 +21,8 @@ from tests.unit import test
 class NeutronLoadbalancerv1TestCase(test.TestCase):
 
     def _get_context(self):
-        return {
+        context = test.get_test_context()
+        context.update({
             "user": {
                 "id": "fake_user",
                 "tenant_id": "fake_tenant",
@@ -29,7 +30,8 @@ class NeutronLoadbalancerv1TestCase(test.TestCase):
             },
             "tenant": {"id": "fake_tenant",
                        "networks": [{"id": "fake_net",
-                                     "subnets": ["fake_subnet"]}]}}
+                                     "subnets": ["fake_subnet"]}]}})
+        return context
 
     def _get_context_pools(self):
         context = self._get_context()

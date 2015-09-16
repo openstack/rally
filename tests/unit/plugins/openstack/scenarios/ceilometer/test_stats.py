@@ -18,11 +18,11 @@ from rally.plugins.openstack.scenarios.ceilometer import stats
 from tests.unit import test
 
 
-class CeilometerStatsTestCase(test.TestCase):
+class CeilometerStatsTestCase(test.ScenarioTestCase):
     def test_create_meter_and_get_stats(self):
         fake_meter = mock.MagicMock()
         kwargs = mock.MagicMock()
-        scenario = stats.CeilometerStats()
+        scenario = stats.CeilometerStats(self.context)
         scenario._create_meter = mock.MagicMock(return_value=fake_meter)
         scenario._get_stats = mock.MagicMock()
         scenario.create_meter_and_get_stats(**kwargs)
