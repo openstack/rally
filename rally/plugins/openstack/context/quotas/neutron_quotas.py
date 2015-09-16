@@ -56,6 +56,10 @@ class NeutronQuotas(object):
             "pool": {
                 "type": "integer",
                 "minimum": -1
+            },
+            "vip": {
+                "type": "integer",
+                "minimum": -1
             }
         }
     }

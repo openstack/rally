@@ -125,3 +125,36 @@ class NeutronLoadbalancerv1TestCase(test.TestCase):
         for pool in pools:
             neutron_scenario._update_v1_pool.assert_called_once_with(
                 pool, **pool_update_args)
+
+    @ddt.data(
+        {},
+        {"vip_create_args": None},
+        {"vip_create_args": {}},
+        {"vip_create_args": {"name": "given-vip-name"}},
+        {"pool_create_args": None},
+        {"pool_create_args": {}},
+        {"pool_create_args": {"name": "given-pool-name"}},
+    )
+    @ddt.unpack
+    def test_create_and_list_vips(self, pool_create_args=None,
+                                  vip_create_args=None):
+        neutron_scenario = loadbalancer_v1.NeutronLoadbalancerV1(
+            self._get_context())
+        pools = [{
+            "pool": {
+                "id": "pool-id"
+            }
+        }]
+        vip_data = vip_create_args or {}
+        pool_data = pool_create_args or {}
+        networks = self._get_context()["tenant"]["networks"]
+        neutron_scenario._create_v1_pools = mock.Mock(return_value=pools)
+        neutron_scenario._create_v1_vip = mock.Mock()
+        neutron_scenario._list_v1_vips = mock.Mock()
+        neutron_scenario.create_and_list_vips(
+            pool_create_args=pool_create_args, vip_create_args=vip_create_args)
+        neutron_scenario._create_v1_pools.assert_called_once_with(
+            networks, **pool_data)
+        neutron_scenario._create_v1_vip.assert_has_calls(
+            [mock.call(pool, **vip_data) for pool in pools])
+        neutron_scenario._list_v1_vips.assert_called_once_with()

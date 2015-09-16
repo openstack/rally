@@ -13,6 +13,7 @@
 from rally import consts
 from rally.plugins.openstack import scenario
 from rally.plugins.openstack.scenarios.neutron import utils
+from rally.task import atomic
 from rally.task import validation
 
 
@@ -85,3 +86,30 @@ class NeutronLoadbalancerV1(utils.NeutronScenario):
         pools = self._create_v1_pools(networks, **pool_create_args)
         for pool in pools:
             self._update_v1_pool(pool, **pool_update_args)
+
+    @validation.restricted_parameters(["pool_id", "subnet_id"],
+                                      subdict="vip_create_args")
+    @validation.required_neutron_extensions("lbaas")
+    @validation.required_services(consts.Service.NEUTRON)
+    @validation.required_openstack(admin=True)
+    @validation.required_contexts("network")
+    @scenario.configure(context={"cleanup": ["neutron"]})
+    def create_and_list_vips(self, pool_create_args=None,
+                             vip_create_args=None):
+        """Create a vip(v1) and then list vips(v1).
+
+        Measure the "neutron lb-vip-create" and "neutron lb-vip-list" command
+        performance. The scenario creates a vip for every pool created and
+        then lists vips.
+
+        :param vip_create_args: dict, POST /lb/vips request options
+        :param pool_create_args: dict, POST /lb/pools request options
+        """
+        vip_create_args = vip_create_args or {}
+        pool_create_args = pool_create_args or {}
+        networks = self.context.get("tenant", {}).get("networks", [])
+        pools = self._create_v1_pools(networks, **pool_create_args)
+        with atomic.ActionTimer(self, "neutron.create_%s_vips" % len(pools)):
+            for pool in pools:
+                self._create_v1_vip(pool, **vip_create_args)
+        self._list_v1_vips()

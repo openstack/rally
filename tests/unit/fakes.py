@@ -1035,6 +1035,7 @@ class FakeNeutronClient(object):
         self.__routers = {}
         self.__ports = {}
         self.__pools = {}
+        self.__vips = {}
         self.__tenant_id = kwargs.get("tenant_id", generate_uuid())
 
         self.format = "json"
@@ -1097,6 +1098,23 @@ class FakeNeutronClient(object):
                      "tenant_id": self.__tenant_id})
         self.__pools[pool_id] = pool
         return {"pool": pool}
+
+    def create_vip(self, data):
+        vip = setup_dict(data["vip"],
+                         required=["protocol_port", "protocol", "subnet_id",
+                                   "pool_id"],
+                         defaults={"name": generate_name("vip_"),
+                                   "admin_state_up": True})
+        if (vip["subnet_id"] not in self.__subnets) or (vip["pool_id"] not in
+                                                        self.__pools):
+            raise neutron_exceptions.NeutronClientException
+        vip_id = generate_uuid()
+
+        vip.update({"id": vip_id,
+                    "status": "PENDING_CREATE",
+                    "tenant_id": self.__tenant_id})
+        self.__vips[vip_id] = vip
+        return {"vip": vip}
 
     def create_port(self, data):
         port = setup_dict(data["port"],
@@ -1233,6 +1251,10 @@ class FakeNeutronClient(object):
     def list_pools(self, **search_opts):
         pools = self._filter(self.__pools.values(), search_opts)
         return {"pools": pools}
+
+    def list_vips(self, **search_opts):
+        vips = self._filter(self.__vips.values(), search_opts)
+        return {"vips": vips}
 
     def list_ports(self, **search_opts):
         ports = self._filter(self.__ports.values(), search_opts)
