@@ -66,12 +66,13 @@ class NetworkWrapper(object):
     START_CIDR = "10.2.0.0/24"
     SERVICE_IMPL = None
 
-    def __init__(self, clients, config=None):
+    def __init__(self, clients, task, config=None):
         if hasattr(clients, self.SERVICE_IMPL):
             self.client = getattr(clients, self.SERVICE_IMPL)()
         else:
             self.client = clients(self.SERVICE_IMPL)
         self.config = config or {}
+        self.task = task
         self.start_cidr = self.config.get("start_cidr", self.START_CIDR)
 
     @abc.abstractmethod
@@ -102,8 +103,8 @@ class NetworkWrapper(object):
 class NovaNetworkWrapper(NetworkWrapper):
     SERVICE_IMPL = consts.Service.NOVA
 
-    def __init__(self, *args):
-        super(NovaNetworkWrapper, self).__init__(*args)
+    def __init__(self, *args, **kwargs):
+        super(NovaNetworkWrapper, self).__init__(*args, **kwargs)
         self.skip_cidrs = [n.cidr for n in self.client.networks.list()]
 
     def _generate_cidr(self):
@@ -441,7 +442,7 @@ class NeutronWrapper(NetworkWrapper):
         return False, _("Neutron driver does not support %s") % (extension)
 
 
-def wrap(clients, config=None):
+def wrap(clients, task, config=None):
     """Returns available network wrapper instance.
 
     :param clients: rally.osclients.Clients instance
@@ -454,5 +455,5 @@ def wrap(clients, config=None):
         services = clients("services")
 
     if consts.Service.NEUTRON in services.values():
-        return NeutronWrapper(clients, config)
-    return NovaNetworkWrapper(clients, config)
+        return NeutronWrapper(clients, task, config)
+    return NovaNetworkWrapper(clients, task, config)

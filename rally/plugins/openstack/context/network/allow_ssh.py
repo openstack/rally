@@ -96,7 +96,8 @@ class AllowSSH(context.Context):
 
         net_wrapper = network.wrap(
             osclients.Clients(admin_or_user["endpoint"]),
-            self.config)
+            self.context["task"],
+            config=self.config)
         use_sg, msg = net_wrapper.supports_extension("security-group")
         if not use_sg:
             LOG.info(_("Security group context is disabled: %s") % msg)

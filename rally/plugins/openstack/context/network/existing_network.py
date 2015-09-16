@@ -44,7 +44,8 @@ class ExistingNetwork(context.Context):
                 self.context.get("users", [])):
             net_wrapper = network_wrapper.wrap(
                 osclients.Clients(user["endpoint"]),
-                self.config)
+                self.context["task"],
+                config=self.config)
             self.context["tenants"][tenant_id]["networks"] = (
                 net_wrapper.list_networks())
 
