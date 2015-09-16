@@ -31,6 +31,12 @@ class NeutronLoadbalancerv1TestCase(test.TestCase):
                        "networks": [{"id": "fake_net",
                                      "subnets": ["fake_subnet"]}]}}
 
+    def _get_context_pools(self):
+        context = self._get_context()
+        for network in context["tenant"]["networks"]:
+            network.update({"lb_pools": [{"pool": {"id": "pool-id"}}]})
+        return context
+
     @ddt.data(
         {},
         {"pool_create_args": None},
@@ -158,3 +164,29 @@ class NeutronLoadbalancerv1TestCase(test.TestCase):
         neutron_scenario._create_v1_vip.assert_has_calls(
             [mock.call(pool, **vip_data) for pool in pools])
         neutron_scenario._list_v1_vips.assert_called_once_with()
+
+    @ddt.data(
+        {},
+        {"vip_create_args": None},
+        {"vip_create_args": {}},
+        {"vip_create_args": {"name": "given-name"}},
+    )
+    @ddt.unpack
+    def test_create_and_delete_vips(self, vip_create_args=None):
+        vip = {
+            "vip": {
+                "id": "vip-id"
+            }
+        }
+        neutron_scenario = loadbalancer_v1.NeutronLoadbalancerV1(
+            self._get_context_pools())
+        vip_data = vip_create_args or {}
+        neutron_scenario._create_v1_vip = mock.Mock(return_value=vip)
+        neutron_scenario._delete_v1_vip = mock.Mock()
+        neutron_scenario.create_and_delete_vips(
+            vip_create_args=vip_create_args)
+        for net in self._get_context_pools()["tenant"]["networks"]:
+            neutron_scenario._create_v1_vip.assert_has_calls(
+                [mock.call(pool, **vip_data) for pool in net["lb_pools"]])
+        neutron_scenario._delete_v1_vip.assert_has_calls(
+            [mock.call(vip["vip"])])

@@ -1214,6 +1214,12 @@ class FakeNeutronClient(object):
         del self.__pools[pool_id]
         return ""
 
+    def delete_vip(self, vip_id):
+        if vip_id not in self.__vips:
+            raise neutron_exceptions.NeutronClientException
+        del self.__vips[vip_id]
+        return ""
+
     def delete_port(self, port_id):
         if port_id not in self.__ports:
             raise neutron_exceptions.PortNotFoundClient

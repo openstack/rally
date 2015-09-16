@@ -486,6 +486,16 @@ class NeutronScenarioTestCase(test.ScenarioTestCase):
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "neutron.list_vips")
 
+    def test_delete_v1_vip(self):
+        scenario = utils.NeutronScenario()
+
+        vip = {"vip": {"id": "fake-id"}}
+        scenario._delete_v1_vip(vip["vip"])
+        self.clients("neutron").delete_vip.assert_called_once_with(
+            vip["vip"]["id"])
+        self._test_atomic_action_timer(scenario.atomic_actions(),
+                                       "neutron.delete_vip")
+
 
 class NeutronScenarioFunctionalTestCase(test.FakeClientsScenarioTestCase):
 
