@@ -41,7 +41,7 @@ For each patch that is uploaded for review on Gerrit, Jenkins runs it against th
 * gate-rally-install-bare-precise    : testing of test_install.sh(described above) against Ubuntu 10.04
 * gate-rally-dsvm-rally              : runs rally-gate.sh(described above) against OpenStack deployed by devstack with nova-network (It is standard dsvm job)
 * gate-rally-dsvm-neutron-rally      : runs rally-gate.sh against OpenStack deployed by devastack with neutron
-* gate-rally-dsvm-cli                : runs test_integrated.sh ( equal to tox -ecli)
+* gate-rally-dsvm-cli                : runs rally-integrated.sh ( equal to tox -ecli)
 * gate-rally-dsvm-verify(non-voting) : runs rally-verify.sh and tests Rally and Tempest integration in all possible ways
 * gate-rally-tox-self(non-voting)    : not yet used
 
