@@ -141,3 +141,34 @@ class NeutronLoadbalancerV1(utils.NeutronScenario):
                 vips.append(self._create_v1_vip(pool, **vip_create_args))
         for vip in vips:
             self._delete_v1_vip(vip["vip"])
+
+    @validation.restricted_parameters(["pool_id", "subnet_id"],
+                                      subdict="vip_create_args")
+    @validation.required_services(consts.Service.NEUTRON)
+    @validation.required_openstack(users=True)
+    @validation.required_contexts("network")
+    @scenario.configure(context={"cleanup": ["neutron"]})
+    def create_and_update_vips(self, pool_create_args=None,
+                               vip_update_args=None,
+                               vip_create_args=None):
+        """Create vips(v1) and update vips(v1).
+
+        Measure the "neutron lb-vip-create" and "neutron lb-vip-update"
+        command performance. The scenario creates a pool for every subnet
+        and then update those pools.
+
+        :param pool_create_args: dict, POST /lb/pools request options
+        :param vip_create_args: dict, POST /lb/vips request options
+        :param vip_update_args: dict, POST /lb/vips update options
+        """
+        vips = []
+        pool_create_args = pool_create_args or {}
+        vip_create_args = vip_create_args or {}
+        vip_update_args = vip_update_args or {}
+        networks = self.context.get("tenant", {}).get("networks", [])
+        pools = self._create_v1_pools(networks, **pool_create_args)
+        with atomic.ActionTimer(self, "neutron.create_%s_vips" % len(pools)):
+            for pool in pools:
+                vips.append(self._create_v1_vip(pool, **vip_create_args))
+        for vip in vips:
+            self._update_v1_vip(vip, **vip_update_args)

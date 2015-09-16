@@ -496,6 +496,27 @@ class NeutronScenarioTestCase(test.ScenarioTestCase):
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "neutron.delete_vip")
 
+    def test_update_v1_vip(self):
+        scenario = utils.NeutronScenario()
+        scenario._generate_random_name = mock.Mock(return_value="random_name")
+        expected_vip = {
+            "vip": {
+                "name": scenario._generate_random_name.return_value,
+                "admin_state_up": False
+            }
+        }
+        self.clients("neutron").update_vip.return_value = expected_vip
+
+        vip = {"vip": {"name": "vip-name", "id": "vip-id"}}
+        vip_update_args = {"name": "foo", "admin_state_up": False}
+
+        result_vip = scenario._update_v1_vip(vip, **vip_update_args)
+        self.assertEqual(result_vip, expected_vip)
+        self.clients("neutron").update_vip.assert_called_once_with(
+            vip["vip"]["id"], expected_vip)
+        self._test_atomic_action_timer(scenario.atomic_actions(),
+                                       "neutron.update_vip")
+
 
 class NeutronScenarioFunctionalTestCase(test.FakeClientsScenarioTestCase):
 

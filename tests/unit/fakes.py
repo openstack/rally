@@ -1189,6 +1189,9 @@ class FakeNeutronClient(object):
     def update_pool(self, pool_id, data):
         self.update_resource(pool_id, self.__pools, data)
 
+    def update_vip(self, vip_id, data):
+        self.update_resource(vip_id, self.__vips, data)
+
     def update_subnet(self, subnet_id, data):
         self.update_resource(subnet_id, self.__subnets, data)
 

@@ -376,3 +376,17 @@ class NeutronScenario(scenario.OpenStackScenario):
         :param vip: neutron Virtual IP object
         """
         self.clients("neutron").delete_vip(vip["id"])
+
+    @atomic.action_timer("neutron.update_vip")
+    def _update_v1_vip(self, vip, **vip_update_args):
+        """Updates vip.
+
+        This atomic function updates vip name and admin state
+
+        :param vip: Vip object
+        :param vip_update_args: dict, POST /lb/vips update options
+        :returns: updated neutron vip dict
+        """
+        self._warn_about_deprecated_name_kwarg(vip, vip_update_args)
+        body = {"vip": vip_update_args}
+        return self.clients("neutron").update_vip(vip["vip"]["id"], body)

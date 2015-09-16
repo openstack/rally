@@ -212,6 +212,31 @@
         failure_rate:
           max: 0
 
+  NeutronLoadbalancerV1.create_and_update_vips:
+    -
+      args:
+        vip_create_args: {}
+        vip_update_args: {}
+        pool_create_args: {}
+      runner:
+        type: "constant"
+        times: 20
+        concurrency: 10
+      context:
+        users:
+          tenants: 4
+          users_per_tenant: 5
+        network: {}
+        quotas:
+          neutron:
+            network: -1
+            subnet: -1
+            pool: -1
+            vip: -1
+      sla:
+        failure_rate:
+          max: 0
+
   NeutronNetworks.create_and_update_networks:
     -
       args:
