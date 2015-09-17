@@ -486,7 +486,7 @@ class NovaScenario(scenario.OpenStackScenario):
 
     @atomic.action_timer("nova.boot_servers")
     def _boot_servers(self, image_id, flavor_id, requests, name_prefix=None,
-                      instances_amount=1, **kwargs):
+                      instances_amount=1, auto_assign_nic=False, **kwargs):
         """Boot multiple servers.
 
         Returns when all the servers are actually booted and are in the
@@ -498,11 +498,19 @@ class NovaScenario(scenario.OpenStackScenario):
         :param name_prefix: The prefix to use while naming the created servers.
                             The rest of the server names will be '_<number>'
         :param instances_amount: Number of instances to boot per each request
+        :param auto_assign_nic: bool, whether or not to auto assign NICs
+        :param kwargs: other optional parameters to initialize the servers
 
         :returns: List of created server objects
         """
         if not name_prefix:
             name_prefix = self._generate_random_name()
+
+        if auto_assign_nic and not kwargs.get("nics", False):
+            nic = self._pick_random_nic()
+            if nic:
+                kwargs["nics"] = nic
+
         for i in range(requests):
             self.clients("nova").servers.create("%s_%d" % (name_prefix, i),
                                                 image_id, flavor_id,
