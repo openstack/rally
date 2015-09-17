@@ -411,7 +411,7 @@ class SaharaScenario(scenario.OpenStackScenario):
     def _create_output_ds(self):
         """Create an output Data Source based on EDP context
 
-        :return: The created Data Source
+        :returns: The created Data Source
         """
         ds_type = self.context["sahara_output_conf"]["output_type"]
         url_prefix = self.context["sahara_output_conf"]["output_url_prefix"]
@@ -502,7 +502,7 @@ class SaharaScenario(scenario.OpenStackScenario):
 
         If Nova Network is used as networking backend, None is returned.
 
-        :return: Network id for Neutron or None for Nova Networking.
+        :returns: Network id for Neutron or None for Nova Networking.
         """
 
         if consts.Service.NEUTRON not in self.clients("services").values():

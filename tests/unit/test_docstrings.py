@@ -14,7 +14,7 @@
 #    under the License.
 
 from rally.common.plugin import discover
-from rally.common import utils
+from rally.common.plugin import info
 from rally.deployment import engine
 from rally.deployment.serverprovider import provider
 from rally.task import scenario
@@ -31,7 +31,7 @@ class DocstringsTestCase(test.TestCase):
         self.assertIsNotNone(obj.__doc__,
                              "%s doesn't have a class-level docstring." %
                              obj)
-        doc = utils.parse_docstring(obj.__doc__)
+        doc = info.parse_docstring(obj.__doc__)
         self.assertIsNotNone(
             doc["short_description"],
             "Docstring for %s should have a one-line description." % obj)
@@ -46,7 +46,7 @@ class DocstringsTestCase(test.TestCase):
             self.assertIsNotNone(scenario_inst.__doc__,
                                  "%s doensn't have a docstring." %
                                  scenario_inst.get_name())
-            doc = utils.parse_docstring(scenario_inst.__doc__)
+            doc = info.parse_docstring(scenario_inst.__doc__)
             short_description = doc["short_description"]
             self.assertIsNotNone(short_description,
                                  "Docstring for %s should have "

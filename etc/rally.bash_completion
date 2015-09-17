@@ -32,6 +32,8 @@ _rally()
     OPTS["info_ServerProviders"]=""
     OPTS["info_find"]="--query"
     OPTS["info_list"]=""
+    OPTS["plugin_list"]="--name --namespace"
+    OPTS["plugin_show"]="--name --namespace"
     OPTS["show_flavors"]="--deployment"
     OPTS["show_images"]="--deployment"
     OPTS["show_keypairs"]="--deployment"

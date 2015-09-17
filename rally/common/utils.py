@@ -17,14 +17,11 @@ import functools
 import inspect
 import multiprocessing
 import random
-import re
 import string
 import sys
-import textwrap
 import time
 
 from six import moves
-from sphinx.util import docstrings
 
 from rally.common.i18n import _
 from rally.common import log as logging
@@ -265,87 +262,6 @@ def first_index(lst, predicate):
         if predicate(lst[i]):
             return i
     return None
-
-
-def format_docstring(docstring):
-    """Format the docstring to make it well-readable.
-
-    :param docstring: string.
-    :returns: formatted string.
-    """
-    if docstring:
-        return "\n".join(docstrings.prepare_docstring(docstring))
-    else:
-        return ""
-
-
-PARAM_OR_RETURNS_REGEX = re.compile(":(?:param|returns)")
-RETURNS_REGEX = re.compile(":returns: (?P<doc>.*)", re.S)
-PARAM_REGEX = re.compile(":param (?P<name>[\*\w]+): (?P<doc>.*?)"
-                         "(?:(?=:param)|(?=:return)|\Z)", re.S)
-
-
-def parse_docstring(docstring):
-    """Parse the docstring into its components.
-
-    :returns: a dictionary of form
-              {
-                  "short_description": ...,
-                  "long_description": ...,
-                  "params": [{"name": ..., "doc": ...}, ...],
-                  "returns": ...
-              }
-    """
-
-    short_description = long_description = returns = None
-    params = []
-
-    if docstring:
-        docstring = format_docstring(docstring)
-
-        lines = docstring.split("\n", 1)
-        short_description = lines[0]
-
-        if len(lines) > 1:
-            long_description = lines[1].strip()
-
-            params_returns_desc = None
-
-            match = PARAM_OR_RETURNS_REGEX.search(long_description)
-            if match:
-                long_desc_end = match.start()
-                params_returns_desc = long_description[long_desc_end:].strip()
-                long_description = long_description[:long_desc_end].rstrip()
-
-            if not long_description:
-                long_description = None
-
-            if params_returns_desc:
-                def reindent(string, indent="\t"):
-                    if "\n" not in string:
-                        return string
-                    first, rest = string.split("\n", 1)
-                    return "\n".join(
-                        [first, textwrap.dedent(rest)]).replace(
-                            "\n", "\n" + indent).rstrip()
-
-                params = [
-                    {
-                        "name": name,
-                        "doc": reindent(doc)
-                    } for name, doc in PARAM_REGEX.findall(params_returns_desc)
-                ]
-
-                match = RETURNS_REGEX.search(params_returns_desc)
-                if match:
-                    returns = reindent(match.group("doc"))
-
-    return {
-        "short_description": short_description,
-        "long_description": long_description,
-        "params": params,
-        "returns": returns
-    }
 
 
 def distance(s1, s2):

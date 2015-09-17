@@ -87,6 +87,7 @@ def _prepare_open_secgroup(endpoint, secgroup_name):
 
 @context.configure(name="allow_ssh", order=320)
 class AllowSSH(context.Context):
+    """Sets up security groups for all users to access VM via SSH."""
 
     @utils.log_task_wrapper(LOG.info, _("Enter context: `allow_ssh`"))
     def setup(self):
