@@ -59,7 +59,7 @@ class VerifyCommands(object):
                    required=False, action="store_true")
     @envutils.with_default_deployment(cli_arg_name="deployment")
     def start(self, set_name="", deployment=None, regex=None,
-              tempest_config=None, do_use=False,
+              tempest_config=None, do_use=True,
               system_wide_install=False):
         """Start set of tests.
 
@@ -67,6 +67,7 @@ class VerifyCommands(object):
         :param deployment: UUID or name of a deployment
         :param regex: Regular expression of test
         :param tempest_config: User specified Tempest config file location
+        :param do_use: Use new task as default for future operations
         :param system_wide_install: Use virtualenv else run tests in
                                     local environment
         """

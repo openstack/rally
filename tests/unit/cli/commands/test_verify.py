@@ -55,7 +55,7 @@ class VerifyCommandsTestCase(test.TestCase):
         mock_clients().nova().flavors.list.return_value = [
             self.flavor1, self.flavor2]
 
-        self.verify.start(deployment=deployment_id)
+        self.verify.start(deployment=deployment_id, do_use=False)
         default_set_name = "full"
         default_regex = None
 
@@ -73,7 +73,7 @@ class VerifyCommandsTestCase(test.TestCase):
             self.flavor1, self.flavor2]
         tempest_config = tempfile.NamedTemporaryFile()
         self.verify.start(deployment=deployment_id,
-                          tempest_config=tempest_config.name)
+                          tempest_config=tempest_config.name, do_use=False)
         default_set_name = "full"
         default_regex = None
 
@@ -88,7 +88,7 @@ class VerifyCommandsTestCase(test.TestCase):
 
         wrong_set_name = "unexpected_value"
 
-        self.verify.start(deployment_id, wrong_set_name)
+        self.verify.start(deployment_id, wrong_set_name, do_use=False)
 
         self.assertNotIn(wrong_set_name, consts.TempestTestsSets,
                          consts.TempestTestsAPI)
