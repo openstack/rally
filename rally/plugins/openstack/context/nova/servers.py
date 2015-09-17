@@ -30,7 +30,7 @@ LOG = logging.getLogger(__name__)
 class ServerGenerator(context.Context):
     """Context class for adding temporary servers for benchmarks.
 
-        Servers are added for each tenant.
+    Servers are added for each tenant.
     """
 
     CONFIG_SCHEMA = {
@@ -57,19 +57,24 @@ class ServerGenerator(context.Context):
                 "type": "integer",
                 "minimum": 1
             },
+            "auto_assign_nic": {
+                "type": "boolean",
+            }
         },
         "required": ["image", "flavor"],
         "additionalProperties": False
     }
 
     DEFAULT_CONFIG = {
-        "servers_per_tenant": 5
+        "servers_per_tenant": 5,
+        "auto_assign_nic": False
     }
 
     @rutils.log_task_wrapper(LOG.info, _("Enter context: `Servers`"))
     def setup(self):
         image = self.config["image"]
         flavor = self.config["flavor"]
+        auto_nic = self.config["auto_assign_nic"]
         servers_per_tenant = self.config["servers_per_tenant"]
 
         clients = osclients.Clients(self.context["users"][0]["endpoint"])
@@ -78,11 +83,14 @@ class ServerGenerator(context.Context):
         flavor_id = types.FlavorResourceType.transform(clients=clients,
                                                        resource_config=flavor)
 
-        for user, tenant_id in rutils.iterate_per_tenants(
-                self.context["users"]):
+        for iter_, (user, tenant_id) in enumerate(rutils.iterate_per_tenants(
+                self.context["users"])):
             LOG.debug("Booting servers for user tenant %s "
                       % (user["tenant_id"]))
-            nova_scenario = nova_utils.NovaScenario({"user": user})
+            tenant = self.context["tenants"][tenant_id]
+            nova_scenario = nova_utils.NovaScenario({"user": user,
+                                                     "tenant": tenant,
+                                                     "iteration": iter_})
 
             LOG.debug("Calling _boot_servers with image_id=%(image_id)s "
                       "flavor_id=%(flavor_id)s "
@@ -92,7 +100,8 @@ class ServerGenerator(context.Context):
                          "servers_per_tenant": servers_per_tenant})
 
             servers = nova_scenario._boot_servers(image_id, flavor_id,
-                                                  servers_per_tenant)
+                                                  requests=servers_per_tenant,
+                                                  auto_assign_nic=auto_nic)
 
             current_servers = [server.id for server in servers]
 

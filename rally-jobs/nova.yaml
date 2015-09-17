@@ -279,6 +279,8 @@
           image:
               name: {{image_name}}
           servers_per_tenant: 2
+        network:
+          networks_per_tenant: 2
       sla:
         failure_rate:
           max: 0
