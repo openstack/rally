@@ -181,7 +181,7 @@ class LoadProfileChartTestCase(test.TestCase):
                "kwargs": {"scale": 10}, "data": [
                    (12345, 4.2, False), (12347, 42, False), (12349, 10, True),
                    (12351, 5.5, False), (12353, 0.42, False)],
-               "expected": [("parallel working iterations", [
+               "expected": [("parallel iterations", [
                    [6.0, 3], [12.0, 3], [18.0, 1], [24.0, 1], [30.0, 1],
                    [36.0, 1], [42.0, 1], [48.0, 1], [54.0, 0], [63, 0]])]},
               {"count": 5, "load_duration": 63, "tstamp_start": 12345,

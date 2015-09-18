@@ -1,9 +1,9 @@
 ## -*- coding: utf-8 -*-
 <%inherit file="/base.mako"/>
 
-<%block name="html_attr"> ng-app="BenchmarkApp"</%block>
+<%block name="html_attr"> ng-app="TaskApp"</%block>
 
-<%block name="title_text">Benchmark Task Report</%block>
+<%block name="title_text">Rally Task Report</%block>
 
 <%block name="libs">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/nvd3/1.1.15-beta/nv.d3.min.css">
@@ -14,8 +14,8 @@
 
 <%block name="js_before">
     "use strict";
-    if (typeof angular === "object") { angular.module("BenchmarkApp", []).controller(
-      "BenchmarkController", ["$scope", "$location", function($scope, $location) {
+    if (typeof angular === "object") { angular.module("TaskApp", []).controller(
+      "TaskController", ["$scope", "$location", function($scope, $location) {
 
       $scope.location = {
         /* This is a junior brother of angular's $location, that allows non-`#'
@@ -232,7 +232,7 @@
 
         Charts.stack(
           "#total-stack", $scope.scenario.iterations.iter,
-          {xLabel: "Iteration number (order of scenario execution)",
+          {xLabel: "Iteration sequence number",
            controls: true,
            guide: true});
 
@@ -260,7 +260,7 @@
          Charts.stack(
            "#atomic-stack",
            $scope.scenario.atomic.iter,
-           {xLabel: "Iteration number (order of scenario execution)",
+           {xLabel: "Iteration sequence number",
             controls: true,
             guide: true});
          if ($scope.scenario.atomic.pie) {
@@ -295,7 +295,7 @@
         $scope.source = ${source};
         $scope.scenarios = ${data};
         if (! $scope.scenarios.length) {
-          return $scope.showError("Benchmark has empty scenarios data")
+          return $scope.showError("No data...")
         }
         $scope.histogramOptions = [];
         $scope.totalHistogramModel = {label:'', value:0};
@@ -410,9 +410,9 @@
     @media only screen and (min-width: 1200px) { .content-wrap { width:1180px } .content-main { width:890px } }
 </%block>
 
-<%block name="body_attr"> ng-controller="BenchmarkController"</%block>
+<%block name="body_attr"> ng-controller="TaskController"</%block>
 
-<%block name="header_text">benchmark results</%block>
+<%block name="header_text">task results</%block>
 
 <%block name="content">
     <p id="page-error" class="notify-error" style="display:none"></p>
@@ -421,7 +421,7 @@
       <div>
         <div class="navcls"
              ng-class="{active:view.is_main}"
-             ng-click="location.path('')">Benchmark overview</div>
+             ng-click="location.path('')">Task overview</div>
         <div class="navcls"
              ng-class="{active:view.is_source}"
              ng-click="location.path('source', '')">Input file</div>
@@ -446,7 +446,7 @@
     <div id="content-main" class="content-main" ng-show="scenarios.length" ng-cloak>
 
       <div ng-show="view.is_main">
-        <h1>Benchmark overview</h1>
+        <h1>Task overview</h1>
         <table class="linked compact"
                ng-init="ov_srt='ref'; ov_dir=false">
           <thead>
@@ -591,16 +591,16 @@
             </tbody>
           </table>
 
-          <h2>Charts for the Total durations</h2>
           <div class="chart">
             <svg id="total-stack"></svg>
           </div>
 
-          <h3>Iterations Load Profile</h3>
+          <h3>Load Profile</h3>
           <div class="chart" style="height:180px" ng-show="scenario.load_profile[0][1].length">
             <svg id="load-profile-stack"></svg>
           </div>
 
+          <h3>Distribution</h3>
           <div class="chart lesser top-margin">
             <svg id="total-pie"></svg>
           </div>
@@ -617,11 +617,12 @@
         <script type="text/ng-template" id="details">
           {{renderDetails()}}
 
-          <h2>Charts for each Atomic Action</h2>
+          <h2>Atomic Action Durations</h2>
           <div class="chart">
             <svg id="atomic-stack"></svg>
           </div>
 
+          <h3>Distribution</h3>
           <div class="chart lesser top-margin">
             <svg id="atomic-pie"></svg>
           </div>
@@ -645,7 +646,7 @@
         </script>
 
         <script type="text/ng-template" id="failures">
-          <h2>Benchmark failures (<ng-pluralize
+          <h2>Task failures (<ng-pluralize
             count="scenario.errors.length"
             when="{'1': '1 iteration', 'other': '{} iterations'}"></ng-pluralize> failed)
           </h2>
@@ -677,7 +678,7 @@
         </script>
 
         <script type="text/ng-template" id="task">
-          <h2>Scenario Configuration</h2>
+          <h2>Subtask Configuration</h2>
           <pre class="code">{{scenario.config}}</pre>
         </script>
       </div>

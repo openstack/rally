@@ -138,7 +138,7 @@ class AtomicAvgChart(AvgChart):
 class LoadProfileChart(Chart):
     """Chart for parallel durations."""
 
-    def __init__(self, benchmark_info, name="parallel working iterations",
+    def __init__(self, benchmark_info, name="parallel iterations",
                  scale=200):
         """Setup chart with graph name and scale.
 
