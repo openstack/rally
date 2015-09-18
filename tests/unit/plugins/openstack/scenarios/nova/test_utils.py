@@ -661,6 +661,18 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
             "nova.create_%s_rules" %
             (rules_per_security_group * len(fake_secgroups)))
 
+    def test__update_security_groups(self):
+        nova_scenario = utils.NovaScenario()
+        fake_secgroups = [fakes.FakeSecurityGroup(None, None, 1, "uuid1"),
+                          fakes.FakeSecurityGroup(None, None, 2, "uuid2")]
+        nova_scenario._update_security_groups(fake_secgroups)
+        self.assertEqual(
+            len(fake_secgroups),
+            self.clients("nova").security_groups.update.call_count)
+        self._test_atomic_action_timer(
+            nova_scenario.atomic_actions(),
+            "nova.update_%s_security_groups" % len(fake_secgroups))
+
     def test__delete_security_groups(self):
         nova_scenario = utils.NovaScenario()
 

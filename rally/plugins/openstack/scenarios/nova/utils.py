@@ -760,6 +760,20 @@ class NovaScenario(scenario.OpenStackScenario):
                             ip_protocol=ip_protocol,
                             cidr=cidr)
 
+    def _update_security_groups(self, security_groups):
+        """Update a list of security groups
+
+        :param security_groups: list, security_groups that are to be updated
+        """
+        with atomic.ActionTimer(self, "nova.update_%s_security_groups" %
+                                len(security_groups)):
+            for sec_group in security_groups:
+                sg_new_name = self._generate_random_name()
+                sg_new_desc = self._generate_random_name()
+                self.clients("nova").security_groups.update(sec_group.id,
+                                                            sg_new_name,
+                                                            sg_new_desc)
+
     def _delete_security_groups(self, security_group):
         with atomic.ActionTimer(self, "nova.delete_%s_security_groups" %
                                 len(security_group)):

@@ -79,6 +79,22 @@ class NovaSecGroup(utils.NovaScenario):
                                               rules_per_security_group)
         self._list_security_groups()
 
+    @validation.required_parameters("security_group_count")
+    @validation.required_services(consts.Service.NOVA)
+    @validation.required_openstack(users=True)
+    @scenario.configure(context={"cleanup": ["nova"]})
+    def create_and_update_secgroups(self, security_group_count):
+        """Create and update security groups.
+
+        This scenario creates 'security_group_count' security groups
+        then updates their name and description.
+
+        :param security_group_count: Number of security groups
+        """
+        security_groups = self._create_security_groups(
+            security_group_count)
+        self._update_security_groups(security_groups)
+
     @types.set(image=types.ImageResourceType,
                flavor=types.FlavorResourceType)
     @validation.image_valid_on_flavor("flavor", "image")

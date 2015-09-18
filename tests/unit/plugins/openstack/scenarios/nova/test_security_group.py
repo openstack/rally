@@ -55,6 +55,22 @@ class NovaSecurityGroupTestCase(test.TestCase):
         nova_scenario._delete_security_groups.assert_called_once_with(
             fake_secgroups)
 
+    def test_create_and_update_security_groups(self):
+        fake_secgroups = [fakes.FakeSecurityGroup(None, None, 1, "uuid1"),
+                          fakes.FakeSecurityGroup(None, None, 2, "uuid2")]
+        nova_scenario = security_group.NovaSecGroup()
+        nova_scenario._create_security_groups = mock.MagicMock(
+            return_value=fake_secgroups)
+        nova_scenario._update_security_groups = mock.MagicMock()
+        nova_scenario._generate_random_name = mock.Mock(
+            return_value="_updated")
+        security_group_count = 2
+        nova_scenario.create_and_update_secgroups(security_group_count)
+        nova_scenario._create_security_groups.assert_called_once_with(
+            security_group_count)
+        nova_scenario._update_security_groups.assert_called_once_with(
+            fake_secgroups)
+
     def test_create_and_list_secgroups(self):
         fake_secgroups = [fakes.FakeSecurityGroup(None, None, 1, "uuid1"),
                           fakes.FakeSecurityGroup(None, None, 2, "uuid2")]
