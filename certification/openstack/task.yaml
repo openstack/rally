@@ -1,7 +1,7 @@
 {%- set image_name = image_name|default("^(cirros.*uec|TestVM)$") %}
 {%- set flavor_name = flavor_name|default("m1.tiny") %}
 {%- set use_existing_users = use_existing_users|default(false) %}
-{%- set service_list = service_list|default(["authentication", "cinder"]) %}
+{%- set service_list = service_list|default(["authentication", "cinder", "keystone"]) %}
 {%- macro user_context(tenants=1,users_per_tenant=1) -%}
 {%- if use_existing_users and caller is not defined -%} {}
 {%- else %}
@@ -238,6 +238,74 @@
           {{ vm_params(image_name,flavor_name,none)|indent(2,true) }}
           servers_per_tenant: 1
         {% endcall %}
+      runner:
+        {{ runner() }}
+      sla:
+        {{ no_failures_sla() }}
+{% endif %}
+{% if "keystone" in service_list %}
+  KeystoneBasic.add_and_remove_user_role:
+    -
+      context:
+        {{ user_context() }}
+      runner:
+        {{ runner() }}
+      sla:
+        {{ no_failures_sla() }}
+
+  KeystoneBasic.create_add_and_list_user_roles:
+    -
+      context:
+        {{ user_context() }}
+      runner:
+        {{ runner() }}
+      sla:
+        {{ no_failures_sla() }}
+
+  KeystoneBasic.create_and_list_tenants:
+    -
+      args:
+        name_length: 10
+      context:
+        {{ user_context() }}
+      runner:
+        {{ runner() }}
+      sla:
+        {{ no_failures_sla() }}
+
+  KeystoneBasic.create_and_delete_role:
+    -
+      context:
+        {{ user_context() }}
+      runner:
+        {{ runner() }}
+      sla:
+        {{ no_failures_sla() }}
+
+  KeystoneBasic.create_and_delete_service:
+    -
+      context:
+        {{ user_context() }}
+      runner:
+        {{ runner() }}
+      sla:
+        {{ no_failures_sla() }}
+
+  KeystoneBasic.get_entities:
+    -
+      context:
+        {{ user_context() }}
+      runner:
+        {{ runner() }}
+      sla:
+        {{ no_failures_sla() }}
+
+  KeystoneBasic.create_update_and_delete_tenant:
+    -
+      args:
+        name_length: 10
+      context:
+        {{ user_context() }}
       runner:
         {{ runner() }}
       sla:
