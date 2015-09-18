@@ -318,3 +318,37 @@ class VerifyCommandsTestCase(test.TestCase):
             uuid=verification_id)
         self.assertRaises(exceptions.NotFoundException, self.verify.use,
                           verification_id)
+
+    @mock.patch("rally.api.Verification.configure_tempest")
+    def test_genconfig(self, mock_verification_configure_tempest):
+        deployment_id = "14377d10-ca77-4104-aba8-36edebcfc120"
+        self.verify.genconfig(deployment_id)
+        mock_verification_configure_tempest.assert_called_once_with(
+            deployment_id, None, False)
+
+    @mock.patch("rally.api.Verification.configure_tempest")
+    def test_genconfig_with_config_specified(
+            self, mock_verification_configure_tempest):
+        deployment_id = "68b501af-a553-431c-83ac-30f93a112231"
+        tempest_conf = "/tmp/tempest.conf"
+        self.verify.genconfig(deployment_id, tempest_config=tempest_conf)
+        mock_verification_configure_tempest.assert_called_once_with(
+            deployment_id, tempest_conf, False)
+
+    @mock.patch("rally.api.Verification.configure_tempest")
+    def test_genconfig_override_config(
+            self, mock_verification_configure_tempest):
+        deployment_id = "cd5b64ad-c12f-4781-a89e-95535b145a11"
+        self.verify.genconfig(deployment_id, override=True)
+        mock_verification_configure_tempest.assert_called_once_with(
+            deployment_id, None, True)
+
+    @mock.patch("rally.api.Verification.configure_tempest")
+    def test_genconfig_with_config_specified_and_override_config(
+            self, mock_verification_configure_tempest):
+        deployment_id = "89982aba-efef-48cb-8d94-ca893b4e78a6"
+        tempest_conf = "/tmp/tempest.conf"
+        self.verify.genconfig(deployment_id,
+                              tempest_config=tempest_conf, override=True)
+        mock_verification_configure_tempest.assert_called_once_with(
+            deployment_id, tempest_conf, True)

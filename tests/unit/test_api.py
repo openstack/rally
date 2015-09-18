@@ -340,3 +340,10 @@ class VerificationAPITestCase(BaseDeploymentTestCase):
         mock_copy2.assert_called_once_with(fake_conf, tmp_file)
         self.tempest.install.assert_called_once_with()
         mock_move.assert_called_once_with(tmp_file, fake_conf)
+
+    @mock.patch("rally.common.objects.Deployment.get")
+    @mock.patch("rally.verification.tempest.tempest.Tempest")
+    def test_configure_tempest(self, mock_tempest, mock_deployment_get):
+        mock_tempest.return_value = self.tempest
+        api.Verification.configure_tempest(self.deployment_uuid)
+        self.tempest.generate_config_file.assert_called_once_with(False)
