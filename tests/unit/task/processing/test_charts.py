@@ -175,6 +175,36 @@ class AtomicAvgChartTestCase(test.TestCase):
 
 
 @ddt.ddt
+class LoadProfileChartTestCase(test.TestCase):
+
+    @ddt.data({"count": 5, "load_duration": 63, "tstamp_start": 12345,
+               "kwargs": {"scale": 10}, "data": [
+                   (12345, 4.2, False), (12347, 42, False), (12349, 10, True),
+                   (12351, 5.5, False), (12353, 0.42, False)],
+               "expected": [("parallel working iterations", [
+                   [6.0, 3], [12.0, 3], [18.0, 1], [24.0, 1], [30.0, 1],
+                   [36.0, 1], [42.0, 1], [48.0, 1], [54.0, 0], [63, 0]])]},
+              {"count": 5, "load_duration": 63, "tstamp_start": 12345,
+               "kwargs": {"scale": 8, "name": "Custom text"}, "data": [
+                   (12345, 4.2, False), (12347, 42, False), (12349, 10, True),
+                   (12351, 5.5, False), (12353, 0.42, False)],
+               "expected": [("Custom text", [
+                   [8.0, 4], [16.0, 3], [24.0, 1], [32.0, 1], [40.0, 1],
+                   [48.0, 1], [56.0, 0], [63, 0]])]})
+    @ddt.unpack
+    def test_add_iteration_and_render(self, count, load_duration,
+                                      tstamp_start, kwargs, data, expected):
+        chart = charts.LoadProfileChart(
+            {"iterations_count": count,
+             "load_duration": load_duration, "tstamp_start": tstamp_start},
+            **kwargs)
+        self.assertIsInstance(chart, charts.Chart)
+        [chart.add_iteration({"timestamp": t, "duration": d, "error": e})
+         for t, d, e in data]
+        self.assertEqual(expected, chart.render())
+
+
+@ddt.ddt
 class HistogramChartTestCase(test.TestCase):
 
     class HistogramChart(charts.HistogramChart):

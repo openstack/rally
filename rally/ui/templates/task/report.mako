@@ -187,15 +187,16 @@
           var chart = nv.models.stackedAreaChart()
             .x(function(d) { return d[0] })
             .y(function(d) { return d[1] })
-            .useInteractiveGuideline(true)
-            .clipEdge(true);
+            .clipEdge(true)
+            .showControls(conf.controls)
+            .useInteractiveGuideline(conf.guide);
           chart.xAxis
             .axisLabel(conf.xLabel || "")
             .showMaxMin(false)
-            .tickFormat(d3.format("d"));
+            .tickFormat(d3.format(conf.xFormat || "d"));
           chart.yAxis
             .axisLabel(conf.yLabel || "")
-            .tickFormat(d3.format(",.3f"));
+            .tickFormat(d3.format(conf.yFormat || ",.3f"));
           var data_ = [];
           for (var i in data) {
             var d = {key:data[i][0], values:data[i][1]};
@@ -228,10 +229,21 @@
         if (! $scope.scenario) {
           return
         }
+
         Charts.stack(
           "#total-stack", $scope.scenario.iterations.iter,
           {xLabel: "Iteration number (order of scenario execution)",
-           controls: true, guide: true});
+           controls: true,
+           guide: true});
+
+        if ($scope.scenario.load_profile.length) {
+           Charts.stack(
+             "#load-profile-stack",
+             $scope.scenario.load_profile,
+             {xLabel: "Timeline (seconds)",
+              xFormat: ",.2f", yFormat: "d"})
+        }
+
         Charts.pie("#total-pie", $scope.scenario.iterations.pie);
 
         if ($scope.scenario.iterations.histogram.length) {
@@ -582,6 +594,11 @@
           <h2>Charts for the Total durations</h2>
           <div class="chart">
             <svg id="total-stack"></svg>
+          </div>
+
+          <h3>Iterations Load Profile</h3>
+          <div class="chart" style="height:180px" ng-show="scenario.load_profile[0][1].length">
+            <svg id="load-profile-stack"></svg>
           </div>
 
           <div class="chart lesser top-margin">

@@ -13,6 +13,7 @@
 #    under the License.
 
 import abc
+import bisect
 import math
 
 import six
@@ -132,6 +133,61 @@ class AtomicAvgChart(AvgChart):
     def _map_iteration_values(self, iteration):
         iteration = self._fix_atomic_actions(iteration)
         return list(iteration["atomic_actions"].items())
+
+
+class LoadProfileChart(Chart):
+    """Chart for parallel durations."""
+
+    def __init__(self, benchmark_info, name="parallel working iterations",
+                 scale=200):
+        """Setup chart with graph name and scale.
+
+        :benchmark_info:  dict, generalized info about iterations
+        :param name: str name for X axis
+        :param scale: int number of X points
+        """
+        super(LoadProfileChart, self).__init__(benchmark_info)
+        self._name = name
+        self._duration = benchmark_info["load_duration"]
+        self._tstamp_start = benchmark_info["tstamp_start"]
+
+        # NOTE(amaretskiy): Determine a chart `step' - duration between
+        #   two X points, rounded with minimal accuracy (digits after point)
+        #   to improve JavaScript drawing performance.
+        # Examples:
+        #   scale  duration       step (initial)    accuracy  step
+        #   200    30.8043010235  0.154021505117    1         0.2
+        #   200    1.25884699821  0.00629423499107  3         0.006
+        step = self._duration / float(scale)
+        accuracy = max(-int(math.floor(math.log10(step))), 0)
+        step = round(step, accuracy)
+        self._time_axis = [step * x
+                           for x in six.moves.range(1, int(scale))
+                           if (step * x) < self._duration]
+        self._time_axis.append(self._duration)
+        self._started = [0] * len(self._time_axis)
+        self._stopped = [0] * len(self._time_axis)
+
+    def _map_iteration_values(self, iteration):
+        return (iteration["timestamp"],
+                0 if iteration["error"] else iteration["duration"])
+
+    def add_iteration(self, iteration):
+        timestamp, duration = self._map_iteration_values(iteration)
+        ts_start = timestamp - self._tstamp_start
+        ts_stop = ts_start + duration
+        self._started[bisect.bisect(self._time_axis, ts_start)] += 1
+        self._stopped[bisect.bisect(self._time_axis, ts_stop)] += 1
+
+    def render(self):
+        data = []
+        running = 0
+        for ts, started, ended in zip(self._time_axis,
+                                      self._started, self._stopped):
+            running += started
+            data.append([ts, running])
+            running -= ended
+        return [(self._name, data)]
 
 
 class HistogramChart(Chart):

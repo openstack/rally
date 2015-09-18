@@ -32,6 +32,7 @@ class PlotTestCase(test.TestCase):
                 (mock_charts.MainStackedAreaChart, "main_stacked"),
                 (mock_charts.AtomicStackedAreaChart, "atomic_stacked"),
                 (mock_charts.OutputStackedAreaChart, "output_stacked"),
+                (mock_charts.LoadProfileChart, "load_profile"),
                 (mock_charts.MainHistogramChart, ["main_histogram"]),
                 (mock_charts.AtomicHistogramChart, ["atomic_histogram"]),
                 (mock_charts.AtomicAvgChart, "atomic_avg")]:
@@ -66,6 +67,7 @@ class PlotTestCase(test.TestCase):
                                "iter": "main_stacked",
                                "pie": [("success", 10), ("errors", 0)]},
                 "iterations_count": 10, "errors": [],
+                "load_profile": "load_profile",
                 "output": "output_stacked", "output_errors": [],
                 "sla": [], "sla_success": True, "table": "main_stats"})
 

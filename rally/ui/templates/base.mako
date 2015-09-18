@@ -13,6 +13,7 @@
     p.thesis { padding:10px 0 }
     h1 { color:#666; margin:0 0 20px; font-size:30px; font-weight:normal }
     h2 { color:#777; margin:20px 0 10px; font-size:25px; font-weight:normal }
+    h3 { color:#666; margin:13px 0 4px; font-size:18px; font-weight:normal }
     table { border-collapse:collapse; border-spacing:0; width:100%; font-size:12px; margin:0 0 10px }
     table th { text-align:left; padding:8px; color:#000; border:2px solid #ddd; border-width:0 0 2px 0 }
     table th.sortable { cursor:pointer }
