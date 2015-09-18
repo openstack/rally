@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import ddt
 import mock
 
 from rally.plugins.openstack.scenarios.neutron import network
@@ -22,6 +23,7 @@ NEUTRON_NETWORKS = ("rally.plugins.openstack.scenarios.neutron.network"
                     ".NeutronNetworks")
 
 
+@ddt.ddt
 class NeutronNetworksTestCase(test.ScenarioTestCase):
 
     @mock.patch(NEUTRON_NETWORKS + "._list_networks")
@@ -627,3 +629,43 @@ class NeutronNetworksTestCase(test.ScenarioTestCase):
         self.assertEqual(
             mock__delete_port.mock_calls,
             [mock.call(mock__create_port.return_value)] * ports_per_network)
+
+    @ddt.data(
+        {"floating_network": "ext-net"},
+        {"floating_network": "ext-net",
+         "floating_ip_args": {"floating_ip_address": "1.1.1.1"}},
+    )
+    @ddt.unpack
+    def test_create_and_list_floating_ips(self, floating_network=None,
+                                          floating_ip_args=None):
+        scenario = network.NeutronNetworks()
+        floating_ip_args = floating_ip_args or {}
+        scenario._create_floatingip = mock.Mock()
+        scenario._list_floating_ips = mock.Mock()
+        scenario.create_and_list_floating_ips(
+            floating_network=floating_network,
+            floating_ip_args=floating_ip_args)
+        scenario._create_floatingip.assert_called_once_with(
+            floating_network, **floating_ip_args)
+        scenario._list_floating_ips.assert_called_once_with()
+
+    @ddt.data(
+        {"floating_network": "ext-net"},
+        {"floating_network": "ext-net",
+         "floating_ip_args": {"floating_ip_address": "1.1.1.1"}},
+    )
+    @ddt.unpack
+    def test_create_and_delete_floating_ips(self, floating_network=None,
+                                            floating_ip_args=None):
+        scenario = network.NeutronNetworks()
+        floating_ip_args = floating_ip_args or {}
+        fip = {"floatingip": {"id": "floating-ip-id"}}
+        scenario._create_floatingip = mock.Mock(return_value=fip)
+        scenario._delete_floating_ip = mock.Mock()
+        scenario.create_and_delete_floating_ips(
+            floating_network=floating_network,
+            floating_ip_args=floating_ip_args)
+        scenario._create_floatingip.assert_called_once_with(
+            floating_network, **floating_ip_args)
+        scenario._delete_floating_ip.assert_called_once_with(
+            scenario._create_floatingip.return_value["floatingip"])

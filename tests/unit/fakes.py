@@ -1036,6 +1036,7 @@ class FakeNeutronClient(object):
         self.__ports = {}
         self.__pools = {}
         self.__vips = {}
+        self.__fips = {}
         self.__tenant_id = kwargs.get("tenant_id", generate_uuid())
 
         self.format = "json"
@@ -1115,6 +1116,19 @@ class FakeNeutronClient(object):
                     "tenant_id": self.__tenant_id})
         self.__vips[vip_id] = vip
         return {"vip": vip}
+
+    def create_floatingip(self, data):
+        fip = setup_dict(data["floatingip"],
+                         required=["floating_network"],
+                         defaults={"admin_state_up": True})
+        if (fip["floating_network"] not in self.__nets):
+            raise neutron_exceptions.NeutronClientException
+        fip_id = generate_uuid()
+
+        fip.update({"id": fip_id,
+                    "tenant_id": self.__tenant_id})
+        self.__fips[fip_id] = fip
+        return {"fip": fip}
 
     def create_port(self, data):
         port = setup_dict(data["port"],
@@ -1223,6 +1237,12 @@ class FakeNeutronClient(object):
         del self.__vips[vip_id]
         return ""
 
+    def delete_floatingip(self, fip_id):
+        if fip_id not in self.__fips:
+            raise neutron_exceptions.NeutronClientException
+        del self.__fips[fip_id]
+        return ""
+
     def delete_port(self, port_id):
         if port_id not in self.__ports:
             raise neutron_exceptions.PortNotFoundClient
@@ -1276,6 +1296,10 @@ class FakeNeutronClient(object):
     def list_subnets(self, **search_opts):
         subnets = self._filter(self.__subnets.values(), search_opts)
         return {"subnets": subnets}
+
+    def list_floatingips(self, **search_opts):
+        fips = self._filter(self.__fips.values(), search_opts)
+        return {"floatingips": fips}
 
     def remove_interface_router(self, router_id, data):
         subnet_id = data["subnet_id"]
