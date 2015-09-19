@@ -48,20 +48,21 @@ class ActionTimer(utils.Timer):
         """
         super(ActionTimer, self).__init__()
         self.instance = instance
-        self.name = self._get_atomic_action_name(name)
+        self.name = self._get_atomic_action_name(instance, name)
         self.instance._atomic_actions[self.name] = None
 
-    def _get_atomic_action_name(self, name):
+    @classmethod
+    def _get_atomic_action_name(cls, instance, name):
         # TODO(boris-42): It was quite bad idea to store atomic actions
         #                 inside {}. We should refactor this in 0.2.0 release
         #                 and store them inside array, that will allow us to
         #                 store atomic actions with the same name
-        if name not in self.instance._atomic_actions:
+        if name not in instance._atomic_actions:
             return name
 
         name_template = name + " (%i)"
         i = 2
-        while name_template % i in self.instance._atomic_actions:
+        while name_template % i in instance._atomic_actions:
             i += 1
         return name_template % i
 
