@@ -98,6 +98,24 @@ class TaskCommandsTestCase(test.TestCase):
         self.assertRaises(task.FailedToLoadTask,
                           self.task._load_task, "in_task")
 
+    def test_load_task_including_other_template(self):
+        other_template_path = os.path.join(
+            os.path.dirname(__file__),
+            "..", "..", "..", "..", "samples/tasks/scenarios/nova/boot.json")
+        input_task = "{%% include \"%s\" %%}" % os.path.basename(
+            other_template_path)
+        expect = self.task._load_task(other_template_path)
+
+        with mock.patch("rally.cli.commands.task.open",
+                        create=True) as mock_open:
+            mock_open.side_effect = [
+                mock.mock_open(read_data=input_task).return_value
+            ]
+            input_task_file = os.path.join(
+                os.path.dirname(other_template_path), "input_task.json")
+            actual = self.task._load_task(input_task_file)
+        self.assertEqual(expect, actual)
+
     @mock.patch("rally.cli.commands.task.TaskCommands.detailed")
     @mock.patch("rally.cli.commands.task.TaskCommands._load_task",
                 return_value={"some": "json"})

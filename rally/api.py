@@ -124,10 +124,11 @@ class Deployment(object):
 class Task(object):
 
     @classmethod
-    def render_template(cls, task_template, **kwargs):
+    def render_template(cls, task_template, template_dir="./", **kwargs):
         """Render jinja2 task template to Rally input task.
 
         :param task_template: String that contains template
+        :param template_dir: The path of directory contain template files
         :param kwargs: Dict with template arguments
         :returns: rendered template str
         """
@@ -151,7 +152,9 @@ class Task(object):
         #                 main module)
         from six.moves import builtins
 
-        ast = jinja2.Environment().parse(task_template)
+        env = jinja2.Environment(
+            loader=jinja2.FileSystemLoader(template_dir, encoding="utf8"))
+        ast = env.parse(task_template)
         required_kwargs = jinja2.meta.find_undeclared_variables(ast)
 
         missing = set(required_kwargs) - set(kwargs) - set(dir(builtins))
@@ -165,7 +168,7 @@ class Task(object):
             raise TypeError((len(real_missing) > 1 and multi_msg or single_msg)
                             % ", ".join(real_missing))
 
-        return jinja2.Template(task_template).render(**kwargs)
+        return env.from_string(task_template).render(**kwargs)
 
     @classmethod
     def create(cls, deployment, tag):
