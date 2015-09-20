@@ -88,6 +88,9 @@ class CliUtilsTestCase(test.TestCase):
         )
         self.assertEqual(expected, actual)
 
+        self.assertRaises(ValueError, cliutils.make_table_header,
+                          "Response Times (sec)", len("Response Times (sec)"))
+
     def test_pretty_float_formatter_rounding(self):
         test_table_rows = {"test_header": 6.56565}
         self.__dict__.update(**test_table_rows)
