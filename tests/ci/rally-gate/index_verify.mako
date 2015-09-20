@@ -47,7 +47,11 @@
     <h3>Details</h3>
     <span class="${install}">[${install}]</span>
     <a href="rally-verify/tempest_installation.txt.gz">Tempest installation</a>
-    <code>$ rally-manage tempest install</code>
+    <code>$ rally verify install</code>
+
+    <span class="${genconfig}">[${genconfig}]</span>
+    <a href="rally-verify/tempest_config_generation.txt.gz">Tempest config generation</a>
+    <code>$ rally verify genconfig</code>
 
     <br>First verification run
     <ol>
