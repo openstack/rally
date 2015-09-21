@@ -1,0 +1,11 @@
+---
+  service_list:
+    - authentication
+    - nova
+    - keystone
+    - cinder
+    - glance
+  use_existing_users: false
+  image_name: "^(cirros.*uec|TestVM)$"
+  flavor_name: "m1.tiny"
+  glance_image_location: ""
