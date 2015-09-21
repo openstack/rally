@@ -16,6 +16,8 @@
 import json
 import os
 import re
+import threading
+import time
 import unittest
 
 import mock
@@ -543,9 +545,88 @@ class TaskTestCase(unittest.TestCase):
         }
         self._test_start_abort_on_sla_failure(cfg, times)
 
-    # NOTE(oanufriev): Not implemented
+    def _start_task_in_new_thread(self, rally, cfg, report_file):
+        deployment_id = utils.get_global("RALLY_DEPLOYMENT", rally.env)
+        config = utils.TaskConfig(cfg)
+        cmd = (("task start --task %(task_file)s "
+                "--deployment %(deployment_id)s") %
+               {"task_file": config.filename,
+                "deployment_id": deployment_id})
+        report_path = os.path.join(
+            os.environ.get("REPORTS_ROOT", "rally-cli-output-files"),
+            "TaskTestCase", report_file)
+        task = threading.Thread(target=rally, args=(cmd, ),
+                                kwargs={"report_path": report_path})
+        task.start()
+        uuid = None
+        while not uuid:
+            if not uuid:
+                uuid = utils.get_global("RALLY_TASK", rally.env)
+                time.sleep(0.5)
+        return task, uuid
+
     def test_abort(self):
-        pass
+        RUNNER_TIMES = 10
+        cfg = {
+            "Dummy.dummy": [
+                {
+                    "args": {
+                        "sleep": 5
+                    },
+                    "runner": {
+                        "type": "serial",
+                        "times": RUNNER_TIMES
+                    }
+                }
+            ]
+        }
+        rally = utils.Rally()
+        task, uuid = self._start_task_in_new_thread(
+            rally, cfg, "test_abort-thread_with_abort.txt")
+        rally("task abort %s" % uuid)
+        task.join()
+        results = json.loads(rally("task results"))
+        iterations_completed = len(results[0]["result"])
+        # NOTE(msdubov): check that the task is really stopped before
+        #                the specified number of iterations
+        self.assertTrue(iterations_completed < RUNNER_TIMES)
+        self.assertIn("aborted", rally("task status"))
+        report = rally.gen_report_path(extension="html")
+        rally("task report --out %s" % report)
+
+    def test_abort_soft(self):
+        cfg = {
+            "Dummy.dummy": [
+                {
+                    "args": {
+                        "sleep": 2
+                    },
+                    "runner": {
+                        "type": "serial",
+                        "times": 3,
+                    }
+                },
+                {
+                    "runner": {
+                        "type": "serial",
+                        "times": 10,
+                    }
+                }
+            ]
+        }
+        rally = utils.Rally()
+        task, uuid = self._start_task_in_new_thread(
+            rally, cfg, "test_abort_soft-thread_with_soft_abort.txt")
+        rally("task abort --soft")
+        task.join()
+        results = json.loads(rally("task results"))
+        iterations_completed = len(results[0]["result"])
+        # NOTE(msdubov): check that the task is stopped after first runner
+        #                benchmark finished all its iterations
+        self.assertEqual(3, iterations_completed)
+        # NOTE(msdubov): check that the next benchmark scenario is not started
+        self.assertEqual(1, len(results))
+        self.assertIn("aborted", rally("task status"))
 
     def test_use(self):
         rally = utils.Rally()

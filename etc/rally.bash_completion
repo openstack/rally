@@ -37,7 +37,7 @@ _rally()
     OPTS["show_keypairs"]="--deployment"
     OPTS["show_networks"]="--deployment"
     OPTS["show_secgroups"]="--deployment"
-    OPTS["task_abort"]="--uuid"
+    OPTS["task_abort"]="--uuid --soft"
     OPTS["task_delete"]="--force --uuid"
     OPTS["task_detailed"]="--uuid --iterations-data"
     OPTS["task_list"]="--deployment --all-deployments --status --uuids-only"

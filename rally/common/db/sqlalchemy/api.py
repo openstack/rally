@@ -22,6 +22,7 @@ from oslo_db.sqlalchemy import session as db_session
 from oslo_utils import timeutils
 import sqlalchemy as sa
 from sqlalchemy.orm.exc import NoResultFound
+from sqlalchemy.orm import load_only as sa_loadonly
 
 from rally.common.db.sqlalchemy import models
 from rally.common.i18n import _
@@ -93,9 +94,12 @@ class Connection(object):
 
         return query
 
-    def _task_get(self, uuid, session=None):
-        task = (self.model_query(models.Task, session=session).
-                filter_by(uuid=uuid).first())
+    def _task_get(self, uuid, load_only=None, session=None):
+        pre_query = self.model_query(models.Task, session=session)
+        if load_only:
+            pre_query = pre_query.options(sa_loadonly(load_only))
+
+        task = pre_query.filter_by(uuid=uuid).first()
         if not task:
             raise exceptions.TaskNotFound(uuid=uuid)
         return task
@@ -107,6 +111,9 @@ class Connection(object):
         return (self.model_query(models.Task).
                 options(sa.orm.joinedload("results")).
                 filter_by(uuid=uuid).first())
+
+    def task_get_status(self, uuid):
+        return self._task_get(uuid, load_only="status").status
 
     def task_get_detailed_last(self):
         return (self.model_query(models.Task).
@@ -126,6 +133,22 @@ class Connection(object):
             task = self._task_get(uuid, session=session)
             task.update(values)
         return task
+
+    def task_update_status(self, uuid, statuses, status_value):
+        session = get_session()
+        query = (
+            session.query(models.Task).filter(
+                models.Task.uuid == uuid, models.Task.status.in_(
+                    statuses)).
+            update({"status": status_value}, synchronize_session=False)
+        )
+        if not query:
+            status = " or ".join(statuses)
+            msg = _("Task with uuid='%(uuid)s' and in statuses:'"
+                    "%(statuses)s' not found.'") % {"uuid": uuid,
+                                                    "statuses": status}
+            raise exceptions.RallyException(msg)
+        return query
 
     def task_list(self, status=None, deployment=None):
         query = self.model_query(models.Task)

@@ -202,8 +202,6 @@ class ScenarioRunner(plugin.Plugin):
         cls_name, method_name = name.split(".", 1)
         cls = scenario.Scenario.get(name)._meta_get("cls_ref")
 
-        self.aborted.clear()
-
         # NOTE(boris-42): processing @types decorators
         args = types.preprocess(name, context, args)
 

@@ -31,6 +31,9 @@ class TasksTestCase(test.DBTestCase):
     def _get_task(self, uuid):
         return db.task_get(uuid)
 
+    def _get_task_status(self, uuid):
+        return db.task_get_status(uuid)
+
     def _create_task(self, values=None):
         values = values or {}
         if "deployment_uuid" not in values:
@@ -40,6 +43,11 @@ class TasksTestCase(test.DBTestCase):
     def test_task_get_not_found(self):
         self.assertRaises(exceptions.TaskNotFound,
                           db.task_get, "f885f435-f6ca-4f3e-9b3e-aeb6837080f2")
+
+    def test_task_get_status_not_found(self):
+        self.assertRaises(exceptions.TaskNotFound,
+                          db.task_get_status,
+                          "f885f435-f6ca-4f3e-9b3e-aeb6837080f2")
 
     def test_task_create(self):
         task = self._create_task()
@@ -63,7 +71,13 @@ class TasksTestCase(test.DBTestCase):
     def test_task_update_not_found(self):
         self.assertRaises(exceptions.TaskNotFound,
                           db.task_update,
-                          "7ae1da26-feaa-4213-8208-76af2857a5ab", {})
+                          "fake_uuid", {})
+
+    def test_task_update_status(self):
+        self.assertRaises(exceptions.RallyException,
+                          db.task_update_status,
+                          "fake_uuid", consts.TaskStatus.RUNNING,
+                          [consts.TaskStatus.RUNNING])
 
     def test_task_update_all_stats(self):
         _uuid = self._create_task({})["uuid"]
@@ -416,6 +430,21 @@ class VerificationTestCase(test.DBTestCase):
         self.assertEqual(verification["time"], db_verification["time"])
         self.assertEqual(verification["errors"], db_verification["errors"])
         self.assertEqual(verification["failures"], db_verification["failures"])
+
+    def test_verification_get_not_found(self):
+        self.assertRaises(exceptions.NotFoundException,
+                          db.verification_get,
+                          "fake_uuid")
+
+    def test_verification_result_create_and_get(self):
+        verification = self._create_verification()
+        db_verification = db.verification_get(verification["uuid"])
+
+        ver_result1 = db.verification_result_create(
+            db_verification["uuid"], {})
+        ver_result2 = db.verification_result_get(db_verification["uuid"])
+        self.assertEqual(ver_result1["verification_uuid"],
+                         ver_result2["verification_uuid"])
 
 
 class WorkerTestCase(test.DBTestCase):

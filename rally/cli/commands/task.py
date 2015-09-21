@@ -222,13 +222,24 @@ class TaskCommands(object):
 
     @cliutils.args("--uuid", type=str, dest="task_id", help="UUID of task")
     @envutils.with_default_task_id
-    def abort(self, task_id=None):
+    @cliutils.args("--soft", action="store_true",
+                   help="Abort task after current scenario full execution")
+    def abort(self, task_id=None, soft=False):
         """Abort started benchmarking task.
 
         :param task_id: Task uuid
+        :param soft: if set to True, task should be aborted after execution of
+                     current scenario
         """
+        if soft:
+            print("INFO: please be informed that soft abort wont stop "
+                  "current running scenario, it will prevent to start "
+                  "new ones, so if you are running task with only one "
+                  "scenario - soft abort will not help at all.")
 
-        api.Task.abort(task_id)
+        api.Task.abort(task_id, soft, async=False)
+
+        print("Task %s successfully stopped." % task_id)
 
     @cliutils.args("--uuid", type=str, dest="task_id", help="UUID of task")
     @envutils.with_default_task_id

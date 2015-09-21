@@ -12,16 +12,18 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+
 import os
 import re
 import shutil
 import tempfile
+import time
 
 import jinja2
 import jinja2.meta
 import jsonschema
 
-from rally.common.i18n import _
+from rally.common.i18n import _, _LI
 from rally.common import log as logging
 from rally.common import objects
 from rally import consts
@@ -229,9 +231,39 @@ class Task(object):
             raise
 
     @classmethod
-    def abort(cls, task_uuid):
-        """Abort running task."""
-        raise NotImplementedError()
+    def abort(cls, task_uuid, soft=False, async=True):
+        """Abort running task.
+
+        :param task_uuid: The UUID of the task
+        :type task_uuid: str
+        :param soft: if set to True, task should be aborted after execution of
+                     current scenario, otherwise as soon as possible before
+                     all the scenario iterations finish [Default: False]
+        :type soft: bool
+        :param async: don't wait until task became in 'running' state
+                      [Default: False]
+        :type async: bool
+        """
+
+        if not async:
+            current_status = objects.Task.get_status(task_uuid)
+            if current_status in objects.Task.NOT_IMPLEMENTED_STAGES_FOR_ABORT:
+                LOG.info(_LI("Task status is '%s'. Should wait until it became"
+                             " 'running'") % current_status)
+                while (current_status in
+                       objects.Task.NOT_IMPLEMENTED_STAGES_FOR_ABORT):
+                    time.sleep(1)
+                    current_status = objects.Task.get_status(task_uuid)
+
+        objects.Task.get(task_uuid).abort(soft=soft)
+
+        if not async:
+            LOG.info(_LI("Waiting until the task stops."))
+            finished_stages = [consts.TaskStatus.ABORTED,
+                               consts.TaskStatus.FINISHED,
+                               consts.TaskStatus.FAILED]
+            while objects.Task.get_status(task_uuid) not in finished_stages:
+                time.sleep(1)
 
     @classmethod
     def delete(cls, task_uuid, force=False):
