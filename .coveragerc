@@ -3,4 +3,5 @@ branch = True
 source = rally
 
 [report]
+ignore_errors = True
 precision = 3
