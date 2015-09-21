@@ -263,7 +263,7 @@ class TempestInstallAndUninstallTestCase(BaseTestCase):
     @mock.patch(TEMPEST_PATH + ".tempest.subprocess.check_call")
     @mock.patch("shutil.copytree")
     @mock.patch(TEMPEST_PATH + ".tempest.Tempest._clone")
-    @mock.patch("os.path.exists", return_value=False)
+    @mock.patch(TEMPEST_PATH + ".tempest.os.path.exists", return_value=False)
     def test_install_failed(self, mock_exists, mock_tempest__clone,
                             mock_copytree, mock_check_call,
                             mock_tempest__install_venv,
