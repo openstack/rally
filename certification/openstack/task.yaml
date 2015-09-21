@@ -1,7 +1,8 @@
+{%- set glance_image_location = glance_image_location|default("https://download.cirros-cloud.net/0.3.4/cirros-0.3.4-i386-disk.img") %}
 {%- set image_name = image_name|default("^(cirros.*uec|TestVM)$") %}
 {%- set flavor_name = flavor_name|default("m1.tiny") %}
 {%- set use_existing_users = use_existing_users|default(false) %}
-{%- set service_list = service_list|default(["authentication", "cinder", "keystone", "nova"]) %}
+{%- set service_list = service_list|default(["authentication", "cinder", "keystone", "nova", "glance"]) %}
 {%- macro user_context(tenants=1,users_per_tenant=1) -%}
 {%- if use_existing_users and caller is not defined -%} {}
 {%- else %}
@@ -65,6 +66,11 @@
             network: -1
             port: -1
             subnet: -1
+{%- endmacro %}
+{%- macro glance_args(location, container="bare", type="qcow2") %}
+        image_container: {{ container }}
+        image_type: {{ type }}
+        image_location: {{ location }}
 {%- endmacro %}
 ---
 {% if "authentication" in service_list %}
@@ -530,6 +536,41 @@
     -
       args:
         max_quota: 1024
+      context:
+        {{ user_context() }}
+      runner:
+        {{ runner() }}
+      sla:
+        {{ no_failures_sla() }}
+{% endif %}
+{% if "glance" in service_list %}
+  GlanceImages.create_and_delete_image:
+    -
+      args:
+        {{ glance_args(location=glance_image_location) }}
+      context:
+        {{ user_context() }}
+      runner:
+        {{ runner() }}
+      sla:
+        {{ no_failures_sla() }}
+
+  GlanceImages.create_and_list_image:
+    -
+      args:
+        {{ glance_args(location=glance_image_location) }}
+      context:
+        {{ user_context() }}
+      runner:
+        {{ runner() }}
+      sla:
+        {{ no_failures_sla() }}
+
+  GlanceImages.list_images:
+    -
+      args:
+        {{ glance_args(location=glance_image_location) }}
+        images_per_tenant: 1
       context:
         {{ user_context() }}
       runner:
