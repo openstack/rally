@@ -218,11 +218,12 @@ class Tempest(object):
     def is_configured(self):
         return os.path.isfile(self.config_file)
 
-    def generate_config_file(self):
-        """Generate configuration file of tempest for current deployment."""
+    def generate_config_file(self, override=False):
+        """Generate configuration file of tempest for current deployment.
 
-        LOG.debug("Tempest config file: %s " % self.config_file)
-        if not self.is_configured():
+        :param override: Whether or not override existing Tempest config file
+        """
+        if not self.is_configured() or override:
             msg = _("Creation of configuration file for tempest.")
             LOG.info(_("Starting: ") + msg)
 
@@ -230,6 +231,8 @@ class Tempest(object):
             LOG.info(_("Completed: ") + msg)
         else:
             LOG.info("Tempest is already configured.")
+
+        LOG.info("Tempest config file: %s " % self.config_file)
 
     def _initialize_testr(self):
         if not os.path.isdir(self.path(".testrepository")):

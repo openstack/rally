@@ -267,6 +267,27 @@ class Verification(object):
         deployment_uuid = objects.Deployment.get(deployment)["uuid"]
 
         verification = objects.Verification(deployment_uuid=deployment_uuid)
+        verifier = cls._create_verifier(deployment_uuid, verification,
+                                        tempest_config, system_wide_install)
+        LOG.info("Starting verification of deployment: %s" % deployment_uuid)
+
+        verification.set_running()
+        verifier.verify(set_name=set_name, regex=regex)
+
+        return verification
+
+    @staticmethod
+    def _create_verifier(deployment_uuid, verification=None,
+                         tempest_config=None, system_wide_install=False):
+        """Create a Tempest object.
+
+        :param deployment_uuid: UUID or name of a deployment
+        :param verification: Verification object
+        :param tempest_config: User specified Tempest config file
+        :param system_wide_install: Use virtualenv else run tests in local
+                                    environment
+        :return: Tempest object
+        """
         verifier = tempest.Tempest(deployment_uuid, verification=verification,
                                    tempest_config=tempest_config,
                                    system_wide_install=system_wide_install)
@@ -274,12 +295,8 @@ class Verification(object):
             print("Tempest is not installed for specified deployment.")
             print("Installing Tempest for deployment %s" % deployment_uuid)
             verifier.install()
-        LOG.info("Starting verification of deployment: %s" % deployment_uuid)
 
-        verification.set_running()
-        verifier.verify(set_name=set_name, regex=regex)
-
-        return verification
+        return verifier
 
     @classmethod
     def install_tempest(cls, deployment, source=None):
@@ -326,3 +343,17 @@ class Verification(object):
         verifier.install()
         if not tempest_config:
             shutil.move(tmp_conf_path, verifier.config_file)
+
+    @classmethod
+    def configure_tempest(cls, deployment, tempest_config=None,
+                          override=False):
+        """Generate configuration file of Tempest.
+
+        :param deployment: UUID or name of a deployment
+        :param tempest_config: User specified Tempest config file location
+        :param override: Whether or not override existing Tempest config file
+        """
+        deployment_uuid = objects.Deployment.get(deployment)["uuid"]
+        verifier = cls._create_verifier(deployment_uuid,
+                                        tempest_config=tempest_config)
+        verifier.generate_config_file(override)

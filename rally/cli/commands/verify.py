@@ -281,3 +281,22 @@ class VerifyCommands(object):
         print("Verification UUID: %s" % verification)
         db.verification_get(verification)
         fileutils.update_globals_file("RALLY_VERIFICATION", verification)
+
+    @cliutils.args("--deployment", dest="deployment", type=str,
+                   required=False, help="UUID or name of a deployment")
+    @cliutils.args("--tempest-config", dest="tempest_config", type=str,
+                   required=False,
+                   help="User specified Tempest config file location")
+    @cliutils.args("--override", dest="override",
+                   help="Override existing Tempest config file",
+                   required=False, action="store_true")
+    @envutils.with_default_deployment(cli_arg_name="deployment")
+    def genconfig(self, deployment=None, tempest_config=None, override=False):
+        """Generate configuration file of Tempest.
+
+        :param deployment: UUID or name of a deployment
+        :param tempest_config: User specified Tempest config file location
+        :param override: Whether or not override existing Tempest config file
+        """
+        api.Verification.configure_tempest(deployment, tempest_config,
+                                           override)
