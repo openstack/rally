@@ -116,6 +116,7 @@ class NeutronLoadbalancerV1(utils.NeutronScenario):
 
     @validation.restricted_parameters(["pool_id", "subnet_id"],
                                       subdict="vip_create_args")
+    @validation.required_neutron_extensions("lbaas")
     @validation.required_services(consts.Service.NEUTRON)
     @validation.required_openstack(users=True)
     @validation.required_contexts("network")
@@ -144,6 +145,7 @@ class NeutronLoadbalancerV1(utils.NeutronScenario):
 
     @validation.restricted_parameters(["pool_id", "subnet_id"],
                                       subdict="vip_create_args")
+    @validation.required_neutron_extensions("lbaas")
     @validation.required_services(consts.Service.NEUTRON)
     @validation.required_openstack(users=True)
     @validation.required_contexts("network")
