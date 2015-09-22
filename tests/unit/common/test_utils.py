@@ -215,46 +215,6 @@ class RAMIntTestCase(test.TestCase):
         self.assertEqual(0, int(ri))
 
 
-class GenerateRandomTestCase(test.TestCase):
-
-    @mock.patch("rally.common.utils.random")
-    def test_generate_random_name(self, mock_random):
-        choice = "foobarspamchoicestring"
-
-        idx = iter(range(100))
-        mock_random.choice.side_effect = lambda choice: choice[next(idx)]
-        self.assertEqual(utils.generate_random_name(),
-                         string.ascii_lowercase[:16])
-
-        idx = iter(range(100))
-        mock_random.choice.side_effect = lambda choice: choice[next(idx)]
-        self.assertEqual(utils.generate_random_name(length=10),
-                         string.ascii_lowercase[:10])
-
-        idx = iter(range(100))
-        mock_random.choice.side_effect = lambda choice: choice[next(idx)]
-        self.assertEqual(utils.generate_random_name(choice=choice),
-                         choice[:16])
-
-        idx = iter(range(100))
-        mock_random.choice.side_effect = lambda choice: choice[next(idx)]
-        self.assertEqual(utils.generate_random_name(choice=choice, length=5),
-                         choice[:5])
-
-        idx = iter(range(100))
-        mock_random.choice.side_effect = lambda choice: choice[next(idx)]
-        self.assertEqual(
-            utils.generate_random_name(prefix="foo_", length=10),
-            "foo_" + string.ascii_lowercase[:10])
-
-        idx = iter(range(100))
-        mock_random.choice.side_effect = lambda choice: choice[next(idx)]
-        self.assertEqual(
-            utils.generate_random_name(prefix="foo_",
-                                       choice=choice, length=10),
-            "foo_" + choice[:10])
-
-
 @ddt.ddt
 class RandomNameTestCase(test.TestCase):
 

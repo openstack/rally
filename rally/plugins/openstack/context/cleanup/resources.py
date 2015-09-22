@@ -584,7 +584,8 @@ class FuelEnvironment(base.ResourceManager):
 
     def list(self):
         return [env for env in self._manager().list()
-                if utils.name_matches_object(env["name"], futils.FuelScenario)]
+                if utils.name_matches_object(env["name"],
+                                             futils.FuelScenario)]
 
 
 # KEYSTONE
