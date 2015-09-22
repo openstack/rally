@@ -58,15 +58,14 @@ class ExistingNetworkTestCase(test.TestCase):
         mock_network_wrap.side_effect = [net_wrappers["tenant1"],
                                          net_wrappers["tenant2"]]
 
-        existing_network.ExistingNetwork(self.context).setup()
+        context = existing_network.ExistingNetwork(self.context)
+        context.setup()
 
         mock_clients.assert_has_calls([
             mock.call(u["endpoint"]) for u in self.context["users"]])
         mock_network_wrap.assert_has_calls([
-            mock.call(mock_clients.return_value, self.context["task"],
-                      config=self.config),
-            mock.call(mock_clients.return_value, self.context["task"],
-                      config=self.config)])
+            mock.call(mock_clients.return_value, context, config=self.config),
+            mock.call(mock_clients.return_value, context, config=self.config)])
         for net_wrapper in net_wrappers.values():
             net_wrapper.list_networks.assert_called_once_with()
 

@@ -18,6 +18,7 @@ import mock
 from neutronclient.common import exceptions as neutron_exceptions
 
 from rally.common.plugin import discover
+from rally.common import utils
 from rally.plugins.openstack.context.cleanup import base
 from rally.plugins.openstack.context.cleanup import resources
 from tests.unit import test
@@ -166,19 +167,23 @@ class NovaFloatingIpsBulkTestCase(test.TestCase):
 
 class NovaNetworksTestCase(test.TestCase):
 
-    @mock.patch("%s.base.ResourceManager._manager" % BASE)
-    @mock.patch("rally.common.utils.name_matches_object")
-    def test_list(self, mock_name_matches_object,
-                  mock_resource_manager__manager):
-        network = [mock.Mock(label="a"), mock.Mock(label="rally_novanet_a"),
-                   mock.Mock(label="rally_novanet_b")]
+    @mock.patch("rally.common.plugin.discover.itersubclasses")
+    def test_list(self, mock_itersubclasses):
+        nova_nets = resources.NovaNetworks()
 
-        mock_name_matches_object.side_effect = (lambda n, o:
-                                                n.startswith("rally"))
+        networks = [mock.Mock(label="rally_abcdefgh_12345678"),
+                    mock.Mock(label="rally_12345678_abcdefgh"),
+                    mock.Mock(label="foobar")]
+        nova_nets._manager = mock.Mock()
+        nova_nets._manager.return_value.list.return_value = networks
 
-        mock_resource_manager__manager.return_value.list.return_value = network
-        self.assertEqual(network[1:], resources.NovaNetworks().list())
-        mock_resource_manager__manager().list.assert_called_once_with()
+        mock_itersubclasses.return_value = iter(
+            [utils.RandomNameGeneratorMixin])
+
+        self.assertEqual(networks[:2], nova_nets.list())
+        nova_nets._manager.return_value.list.assert_called_once_with()
+        mock_itersubclasses.assert_called_once_with(
+            utils.RandomNameGeneratorMixin)
 
 
 class EC2MixinTestCase(test.TestCase):

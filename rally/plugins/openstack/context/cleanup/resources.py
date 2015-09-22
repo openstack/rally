@@ -18,6 +18,7 @@ from neutronclient.common import exceptions as neutron_exceptions
 from saharaclient.api import base as saharaclient_base
 
 from rally.common import log as logging
+from rally.common.plugin import discover
 from rally.common import utils
 from rally.plugins.openstack.context.cleanup import base
 from rally.plugins.openstack.scenarios.fuel import utils as futils
@@ -137,10 +138,15 @@ class NovaFloatingIpsBulk(SynchronizedDeletion, base.ResourceManager):
 class NovaNetworks(SynchronizedDeletion, base.ResourceManager):
 
     def list(self):
+        # NOTE(stpierre): any plugin can create a nova network via the
+        # network wrapper, and that network's name will be created
+        # according to its owner's random name generation
+        # parameters. so we need to check if there are nova networks
+        # whose name pattern matches those of any loaded plugin that
+        # implements RandomNameGeneratorMixin
+        classes = list(discover.itersubclasses(utils.RandomNameGeneratorMixin))
         return [net for net in self._manager().list()
-                if (utils.name_matches_object(net.label,
-                                              nova_utils.NovaScenario) or
-                    net.label.startswith("rally_novanet"))]
+                if utils.name_matches_object(net.label, *classes)]
 
 
 # EC2
