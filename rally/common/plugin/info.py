@@ -24,12 +24,6 @@ PARAM_REGEX = re.compile(":param (?P<name>[\*\w]+): (?P<doc>.*?)"
                          "(?:(?=:param)|(?=:return)|(?=:raises)|\Z)", re.S)
 
 
-# TODO(boris-42): This method should be removed as it won't be used
-#                 after we remove rally info
-def format_docstring(docstring):
-    return "\n".join(docstrings.prepare_docstring(docstring))
-
-
 def reindent(string):
     return "\n".join(l.strip() for l in string.strip().split("\n"))
 

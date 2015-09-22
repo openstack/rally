@@ -24,7 +24,11 @@ Step 2. Rally input task format
 Basic input task syntax
 -----------------------
 
-Rally comes with a really great collection of :ref:`benchmark scenarios <tutorial_step_8_discovering_more_benchmark_scenarios>` and in most real-world scenarios you will use multiple scenarios to test your OpenStack cloud. Rally makes it very easy to run **different benchmarks defined in a single benchmark task**. To do so, use the following syntax:
+Rally comes with a really great collection of
+:ref:`plugins <tutorial_step_8_discovering_more_plugins>` and in most
+real-world cases you will use multiple plugins to test your OpenStack cloud.
+Rally makes it very easy to run **different test cases defined in a single task**.
+To do so, use the following syntax:
 
 .. code-block:: none
 
