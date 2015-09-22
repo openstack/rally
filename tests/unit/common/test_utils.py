@@ -18,6 +18,7 @@ import string
 import sys
 import time
 
+import ddt
 import mock
 import testtools
 
@@ -352,3 +353,112 @@ class GenerateRandomTestCase(test.TestCase):
             utils.generate_random_name(prefix="foo_",
                                        choice=choice, length=10),
             "foo_" + choice[:10])
+
+
+class RandomNameTestCase(test.TestCase):
+
+    @ddt.data(
+        {},
+        {"task_id": "fake-task"},
+        {"task_id": "fake!task",
+         "expected": "rally_blargles_dweebled"},
+        {"fmt": "XXXX-test-XXX-test",
+         "expected": "fake-test-bla-test"})
+    @ddt.unpack
+    @mock.patch("random.choice")
+    def test_generate_random_name(self, mock_choice, task_id="faketask",
+                                  expected="s_rally_faketask_blargles",
+                                  fmt="s_rally_XXXXXXXX_XXXXXXXX"):
+        class FakeNameGenerator(utils.RandomNameGeneratorMixin):
+            RESOURCE_NAME_FORMAT = fmt
+            task = {"uuid": task_id}
+
+        generator = FakeNameGenerator()
+
+        mock_choice.side_effect = iter("blarglesdweebled")
+        self.assertEqual(generator.generate_random_name(), expected)
+
+    def test_generate_random_name_bogus_name_format(self):
+        class FakeNameGenerator(utils.RandomNameGeneratorMixin):
+            RESOURCE_NAME_FORMAT = "invalid_XXX_format"
+            task = {"uuid": "fake-task-id"}
+
+        generator = FakeNameGenerator()
+        self.assertRaises(ValueError,
+                          generator.generate_random_name)
+
+    @ddt.data(
+        {"good": ("rally_abcdefgh_abcdefgh", "rally_12345678_abcdefgh",
+                  "rally_ABCdef12_ABCdef12"),
+         "bad": ("rally_abcd_efgh", "rally_abcd!efg_12345678",
+                 "rally_", "rally__", "rally_abcdefgh_",
+                 "rally_abcdefghi_12345678", "foo", "foo_abcdefgh_abcdefgh")},
+        {"fmt": "][*_XXX_XXX",
+         "chars": "abc(.*)",
+         "good": ("][*_abc_abc", "][*_abc_((("),
+         "bad": ("rally_ab_cd", "rally_ab!_abc", "rally_", "rally__",
+                 "rally_abc_", "rally_abcd_abc", "foo", "foo_abc_abc")},
+        {"fmt": "XXXX-test-XXX-test",
+         "good": ("abcd-test-abc-test",),
+         "bad": ("rally-abcdefgh-abcdefgh", "abc-test-abc-test",
+                 "abcd_test_abc_test", "abc-test-abcd-test")})
+    @ddt.unpack
+    def test_name_matches_pattern(self, good=(), bad=(),
+                                  fmt="s_rally_XXXXXXXX_XXXXXXXX",
+                                  chars=string.ascii_letters + string.digits):
+        for name in good:
+            self.assertTrue(
+                utils.name_matches_pattern(name, fmt, chars),
+                "%s unexpectedly didn't match resource_name_format" % name)
+
+        for name in bad:
+            self.assertFalse(
+                utils.name_matches_pattern(name, fmt, chars),
+                "%s unexpectedly matched resource_name_format" % name)
+
+    @mock.patch("rally.common.utils.name_matches_pattern")
+    def test_name_matches_object(self, mock_name_matches_pattern):
+        name = "foo"
+        self.assertEqual(
+            utils.name_matches_object(name,
+                                      utils.RandomNameGeneratorMixin),
+            mock_name_matches_pattern.return_value)
+        mock_name_matches_pattern.assert_called_once_with(
+            name,
+            utils. RandomNameGeneratorMixin.RESOURCE_NAME_FORMAT,
+            utils.RandomNameGeneratorMixin.RESOURCE_NAME_ALLOWED_CHARACTERS)
+
+    def test_name_matches_pattern_identity(self):
+        generator = utils.RandomNameGeneratorMixin()
+        generator.task = {"uuid": "faketask"}
+
+        self.assertTrue(utils.name_matches_pattern(
+            generator.generate_random_name(),
+            generator.RESOURCE_NAME_FORMAT,
+            generator.RESOURCE_NAME_ALLOWED_CHARACTERS))
+
+    def test_name_matches_object_identity(self):
+        generator = utils.RandomNameGeneratorMixin()
+        generator.task = {"uuid": "faketask"}
+
+        self.assertTrue(utils.name_matches_object(
+            generator.generate_random_name(), generator))
+        self.assertTrue(utils.name_matches_object(
+            generator.generate_random_name(), utils.RandomNameGeneratorMixin))
+
+    def test_consistent_task_id_part(self):
+        class FakeNameGenerator(utils.RandomNameGeneratorMixin):
+            RESOURCE_NAME_FORMAT = "XXXXXXXX_XXXXXXXX"
+
+        generator = FakeNameGenerator()
+        generator.task = {"uuid": "good-task-id"}
+
+        names = [generator.generate_random_name() for i in range(100)]
+        task_id_parts = set([n.split("_")[0] for n in names])
+        self.assertEqual(len(task_id_parts), 1)
+
+        generator.task = {"uuid": "bogus! task! id!"}
+
+        names = [generator.generate_random_name() for i in range(100)]
+        task_id_parts = set([n.split("_")[0] for n in names])
+        self.assertEqual(len(task_id_parts), 1)
