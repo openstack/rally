@@ -85,6 +85,7 @@ class ServerGeneratorTestCase(test.ScenarioTestCase):
                     "concurrent": 10,
                 },
                 "servers": {
+                    "auto_assign_nic": True,
                     "servers_per_tenant": 5,
                     "image": {
                         "name": "cirros-0.3.4-x86_64-uec",
@@ -111,6 +112,17 @@ class ServerGeneratorTestCase(test.ScenarioTestCase):
         servers_ctx = servers.ServerGenerator(real_context)
         servers_ctx.setup()
         self.assertEqual(new_context, real_context)
+        image_id = mock_image_resource_type_transform.return_value
+        flavor_id = mock_flavor_resource_type_transform.return_value
+        servers_ctx_config = real_context["config"]["servers"]
+        expected_auto_nic = servers_ctx_config.get("auto_assign_nic", False)
+        expected_requests = servers_ctx_config.get("servers_per_tenant", False)
+        called_times = len(tenants)
+        mock_calls = [mock.call(image_id, flavor_id,
+                                auto_assign_nic=expected_auto_nic,
+                                requests=expected_requests)
+                      for i in range(called_times)]
+        mock_nova_scenario__boot_servers.assert_has_calls(mock_calls)
 
     @mock.patch("%s.servers.osclients" % CTX)
     @mock.patch("%s.servers.resource_manager.cleanup" % CTX)
