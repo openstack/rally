@@ -22,73 +22,41 @@ from rally import plugins
 
 DATA = [
     {
-        "group": "Task plugins",
+        "group": "task",
         "items": [
             {
-                "name": "Scenario Runners",
+                "name": "scenario runner",
                 "base": "rally.task.runner:ScenarioRunner"
             },
             {
-                "name": "SLAs",
+                "name": "SLA",
                 "base": "rally.task.sla:SLA"
             },
             {
-                "name": "Contexts",
+                "name": "context",
                 "base": "rally.task.context:Context"
             },
             {
-                "name": "Scenarios",
+                "name": "scenario",
                 "base": "rally.task.scenario:Scenario"
             }
         ]
     },
     {
-        "group": "Deployment plugins",
+        "group": "deployment",
         "items": [
             {
-                "name": "Engines",
+                "name": "engine",
                 "base": "rally.deployment.engine:Engine"
             },
             {
-                "name": "ProviderFactory",
+                "name": "server provider",
                 "base":
                 "rally.deployment.serverprovider.provider:ProviderFactory"
             }
         ]
     }
 ]
-
-
-def make_row(data):
-    row = nodes.row()
-    for item in data:
-        node_type, text = item
-        entry = nodes.entry()
-        entry.append(node_type(text=text))
-        row.append(entry)
-
-    return row
-
-
-def make_table(data):
-    table = nodes.table()
-    table_group = nodes.tgroup()
-
-    for w in data["colwidth"]:
-        table_group.append(nodes.colspec(colwidth=w))
-
-    table_head = nodes.thead()
-    table_head.append(make_row(data["headers"]))
-    table_group.append(table_head)
-
-    table_body = nodes.tbody()
-    for row in data["rows"]:
-        table_body.append(make_row(row))
-    table_group.append(table_body)
-
-    table.append(table_group)
-
-    return table
 
 
 def _make_pretty_parameters(parameters):
@@ -117,25 +85,27 @@ def _get_plugin_info(plugin_group_item):
             description.append("RETURNS:\n%s" % info["returns"])
         description.append("MODULE:\n%s" % info["module"])
 
-        return [
-            [nodes.inline, p.get_name()],
-            [nodes.doctest_block, "\n\n".join(description)]
-        ]
+        return {
+            "name": p.get_name(),
+            "description": "\n\n".join(description)
+        }
 
-    return {
-        "headers": zip([nodes.inline] * 2,
-                       ["name", "description"]),
-        "colwidth": [1, 1],
-        "rows": map(process_plugin, plugin_base.get_all())
-    }
+    return map(process_plugin, plugin_base.get_all())
 
 
 def make_plugin_section(plugin_group):
     elements = []
 
     for item in plugin_group["items"]:
-        elements.append(nodes.rubric(text=item["name"]))
-        elements.append(make_table(_get_plugin_info(item)))
+        name = item["name"].title() if "SLA" != item["name"] else item["name"]
+        elements.append(nodes.subtitle(
+            text="%ss [%s]" % (name, plugin_group["group"])))
+
+        for p in _get_plugin_info(item):
+            elements.append(nodes.rubric(
+                text="%s [%s]" % (p["name"], item["name"])))
+
+            elements.append(nodes.doctest_block(text=p["description"]))
 
     return elements
 
@@ -145,7 +115,6 @@ class PluginReferenceDirective(rst.Directive):
     def run(self):
         content = []
         for i in range(len(DATA)):
-            content.append(nodes.subtitle(text=DATA[i]["group"]))
             content.extend(make_plugin_section(DATA[i]))
 
         return content
