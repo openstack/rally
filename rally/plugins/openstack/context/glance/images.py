@@ -74,7 +74,8 @@ class ImageGenerator(context.Context):
         for user, tenant_id in rutils.iterate_per_tenants(
                 self.context["users"]):
             current_images = []
-            glance_scenario = glance_utils.GlanceScenario({"user": user})
+            glance_scenario = glance_utils.GlanceScenario(
+                {"user": user, "task": self.context["task"]})
             for i in range(images_per_tenant):
                 if image_name and i > 0:
                     cur_name = image_name + str(i)

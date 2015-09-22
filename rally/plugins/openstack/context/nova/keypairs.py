@@ -28,11 +28,9 @@ LOG = logging.getLogger(__name__)
 
 @context.configure(name="keypair", order=310)
 class Keypair(context.Context):
-    KEYPAIR_NAME = "rally_ssh_key"
 
     def _generate_keypair(self, endpoint):
-        keypair_name = "%s_%s" % (
-            self.KEYPAIR_NAME, self.context["task"]["uuid"])
+        keypair_name = self.generate_random_name()
 
         nova_client = osclients.Clients(endpoint).nova()
 

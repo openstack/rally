@@ -133,7 +133,7 @@ class SaharaEDP(context.Context):
                 _("Swift Data Sources are not implemented yet"))
         # Todo(nkonovalov): Add swift credentials parameters and data upload
         input_ds = sahara.data_sources.create(
-            name="input_ds",
+            name=self.generate_random_name(),
             description="",
             data_source_type=input_type,
             url=input_url)

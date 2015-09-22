@@ -73,7 +73,8 @@ class CeilometerSampleGenerator(context.Context):
                 self.context["users"]):
             self.context["tenants"][tenant_id]["samples"] = []
             self.context["tenants"][tenant_id]["resources"] = []
-            scenario = ceilo_utils.CeilometerScenario({"user": user})
+            scenario = ceilo_utils.CeilometerScenario(
+                context={"user": user, "task": self.context["task"]})
             for i in range(self.config["resources_per_tenant"]):
                 for j in range(self.config["samples_per_resource"]):
                     sample = scenario._create_sample(counter_name,

@@ -60,8 +60,9 @@ class SaharaImage(context.Context):
 
     def _create_image(self, hadoop_version, image_url, plugin_name, user,
                       user_name):
-        scenario = glance_utils.GlanceScenario({"user": user})
-        image_name = rutils.generate_random_name(prefix="rally_sahara_image_")
+        scenario = glance_utils.GlanceScenario(
+            {"user": user, "task": self.context["task"]})
+        image_name = self.generate_random_name()
         image = scenario._create_image(name=image_name,
                                        container_format="bare",
                                        image_location=image_url,

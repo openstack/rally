@@ -46,7 +46,8 @@ class SwiftObjectMixin(object):
         def consume(cache, args):
             user, tenant_containers = args
             if user["id"] not in cache:
-                cache[user["id"]] = swift_utils.SwiftScenario({"user": user})
+                cache[user["id"]] = swift_utils.SwiftScenario(
+                    {"user": user, "task": context.get("task", {})})
             container_name = cache[user["id"]]._create_container()
             tenant_containers.append({"user": user,
                                       "container": container_name,
@@ -86,7 +87,7 @@ class SwiftObjectMixin(object):
                 user = container["user"]
                 if user["id"] not in cache:
                     cache[user["id"]] = swift_utils.SwiftScenario(
-                        {"user": user})
+                        {"user": user, "task": context.get("task", {})})
                 dummy_file.seek(0)
                 object_name = cache[user["id"]]._upload_object(
                     container["container"],
@@ -116,7 +117,8 @@ class SwiftObjectMixin(object):
             container, tenant_containers = args
             user = container["user"]
             if user["id"] not in cache:
-                cache[user["id"]] = swift_utils.SwiftScenario({"user": user})
+                cache[user["id"]] = swift_utils.SwiftScenario(
+                    {"user": user, "task": context.get("task", {})})
             cache[user["id"]]._delete_container(container["container"])
             tenant_containers.remove(container)
 
@@ -140,7 +142,8 @@ class SwiftObjectMixin(object):
             object_name, container = args
             user = container["user"]
             if user["id"] not in cache:
-                cache[user["id"]] = swift_utils.SwiftScenario({"user": user})
+                cache[user["id"]] = swift_utils.SwiftScenario(
+                    {"user": user, "task": context.get("task", {})})
             cache[user["id"]]._delete_object(container["container"],
                                              object_name)
             container["objects"].remove(object_name)

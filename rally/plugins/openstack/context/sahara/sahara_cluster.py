@@ -101,7 +101,8 @@ class SaharaCluster(context.Context):
 
             temporary_context = {
                 "user": user,
-                "tenant": self.context["tenants"][tenant_id]
+                "tenant": self.context["tenants"][tenant_id],
+                "task": self.context["task"]
             }
             scenario = utils.SaharaScenario(context=temporary_context)
 
