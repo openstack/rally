@@ -41,7 +41,8 @@ class SLAChecker(object):
     def __init__(self, config):
         self.config = config
         self.unexpected_failure = None
-        self.aborted = False
+        self.aborted_on_sla = False
+        self.aborted_manually = False
         self.sla_criteria = [SLA.get(name)(criterion_value)
                              for name, criterion_value
                              in config.get("sla", {}).items()]
@@ -58,18 +59,28 @@ class SLAChecker(object):
 
     def results(self):
         results = [sla.result() for sla in self.sla_criteria]
-        if self.aborted:
+        if self.aborted_on_sla:
             results.append(_format_result(
                 "aborted_on_sla", False,
                 _("Task was aborted due to SLA failure(s).")))
+
+        if self.aborted_manually:
+            results.append(_format_result(
+                "aborted_manually", False,
+                _("Task was aborted due to abort signal.")))
+
         if self.unexpected_failure:
             results.append(_format_result(
                 "something_went_wrong", False,
                 _("Unexpected error: %s") % self.unexpected_failure))
+
         return results
 
-    def set_aborted(self):
-        self.aborted = True
+    def set_aborted_on_sla(self):
+        self.aborted_on_sla = True
+
+    def set_aborted_manually(self):
+        self.aborted_manually = True
 
     def set_unexpected_failure(self, exc):
         self.unexpected_failure = exc

@@ -60,13 +60,22 @@ class SLACheckerTestCase(test.TestCase):
                            "detail": "Unexpected error: %s" % exc}],
                          sla_checker.results())
 
-    def test_set_aborted(self):
+    def test_set_aborted_on_sla(self):
         sla_checker = sla.SLAChecker({"sla": {}})
         self.assertEqual([], sla_checker.results())
-        sla_checker.set_aborted()
+        sla_checker.set_aborted_on_sla()
         self.assertEqual(
             [{"criterion": "aborted_on_sla", "success": False,
               "detail": "Task was aborted due to SLA failure(s)."}],
+            sla_checker.results())
+
+    def test_set_aborted_manually(self):
+        sla_checker = sla.SLAChecker({"sla": {}})
+        self.assertEqual([], sla_checker.results())
+        sla_checker.set_aborted_manually()
+        self.assertEqual(
+            [{"criterion": "aborted_manually", "success": False,
+              "detail": "Task was aborted due to abort signal."}],
             sla_checker.results())
 
     def test__format_result(self):

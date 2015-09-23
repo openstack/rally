@@ -90,6 +90,16 @@ def task_get(uuid):
     return get_impl().task_get(uuid)
 
 
+def task_get_status(uuid):
+    """Returns task by uuid.
+
+    :param uuid: UUID of the task.
+    :raises: :class:`rally.exceptions.TaskNotFound` if the task does not exist.
+    :returns: task dict with data on the task.
+    """
+    return get_impl().task_get_status(uuid)
+
+
 def task_get_detailed_last():
     """Returns the most recently created task."""
     return get_impl().task_get_detailed_last()
@@ -122,6 +132,21 @@ def task_update(uuid, values):
     :returns: new updated task dict with data on the task.
     """
     return get_impl().task_update(uuid, values)
+
+
+def task_update_status(task_uuid, status, allowed_statuses):
+    """Update task status with specified value.
+
+    :param task_uuid: string with UUID of Task instance.
+    :param status: new value to wrote into db instead of status.
+    :param allowed_statuses: list of expected statuses to update in db.
+    :raises: :class: 'rally.exceptions.RallyException' if task not
+             found with specified status.
+    :returns: the count of rows match as returned by the database's
+              "row count" feature
+    """
+    return get_impl().task_update_status(task_uuid, allowed_statuses,
+                                         status)
 
 
 def task_list(status=None, deployment=None):

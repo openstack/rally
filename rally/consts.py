@@ -55,6 +55,10 @@ class _TaskStatus(utils.ImmutableMixin, utils.EnumMixin):
     CLEANING_UP = "cleaning up"
     FINISHED = "finished"
     FAILED = "failed"
+    ABORTING = "aborting"
+    SOFT_ABORTING = "soft_aborting"
+    ABORTED = "aborted"
+    PAUSED = "paused"
 
 
 class _DeployStatus(utils.ImmutableMixin, utils.EnumMixin):

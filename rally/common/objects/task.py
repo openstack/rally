@@ -17,7 +17,9 @@ import json
 import uuid
 
 from rally.common import db
+from rally.common.i18n import _LE
 from rally import consts
+from rally import exceptions
 
 
 TASK_RESULT_SCHEMA = {
@@ -209,6 +211,13 @@ TASK_EXTENDED_RESULT_SCHEMA = {
 class Task(object):
     """Represents a task object."""
 
+    # NOTE(andreykurilin): The following stages doesn't contain check for
+    #   current status of task. We should add it in the future, since "abort"
+    #   cmd should work everywhere.
+    # TODO(andreykurilin): allow abort for each state.
+    NOT_IMPLEMENTED_STAGES_FOR_ABORT = [consts.TaskStatus.VERIFYING,
+                                        consts.TaskStatus.INIT]
+
     def __init__(self, task=None, fake=False, **attributes):
         """Task object init
 
@@ -239,6 +248,10 @@ class Task(object):
         return Task(db.task_get(uuid))
 
     @staticmethod
+    def get_status(uuid):
+        return db.task_get_status(uuid)
+
+    @staticmethod
     def list(status=None, deployment=None):
         return [Task(db_task) for db_task in db.task_list(status, deployment)]
 
@@ -250,8 +263,11 @@ class Task(object):
         if not self.fake:
             self.task = db.task_update(self.task["uuid"], values)
 
-    def update_status(self, status):
-        self._update({"status": status})
+    def update_status(self, status, allowed_statuses=None):
+        if allowed_statuses:
+            db.task_update_status(self.task["uuid"], status, allowed_statuses)
+        else:
+            self._update({"status": status})
 
     def update_verification_log(self, log):
         self._update({"verification_log": json.dumps(log)})
@@ -372,3 +388,25 @@ class Task(object):
 
     def delete(self, status=None):
         db.task_delete(self.task["uuid"], status=status)
+
+    def abort(self, soft=False):
+        current_status = self.get_status(self.task["uuid"])
+
+        if current_status in self.NOT_IMPLEMENTED_STAGES_FOR_ABORT:
+            raise exceptions.RallyException(
+                _LE("Failed to abort task '%(uuid)s'. It doesn't implemented "
+                    "for '%(stages)s' stages. Current task status is "
+                    "'%(status)s'.") %
+                {"uuid": self.task["uuid"], "status": current_status,
+                 "stages": ", ".join(self.NOT_IMPLEMENTED_STAGES_FOR_ABORT)})
+        elif current_status in [consts.TaskStatus.FINISHED,
+                                consts.TaskStatus.FAILED,
+                                consts.TaskStatus.ABORTED]:
+            raise exceptions.RallyException(
+                _LE("Failed to abort task '%s', since it already "
+                    "finished.") % self.task.uuid)
+
+        new_status = (consts.TaskStatus.SOFT_ABORTING
+                      if soft else consts.TaskStatus.ABORTING)
+        self.update_status(new_status, allowed_statuses=(
+            consts.TaskStatus.RUNNING, consts.TaskStatus.SOFT_ABORTING))

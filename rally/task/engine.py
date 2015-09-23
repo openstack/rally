@@ -98,9 +98,11 @@ class ResultConsumer(object):
         self.thread = threading.Thread(
             target=self._consume_results
         )
+        self.aborting_checker = threading.Thread(target=self.wait_and_abort)
 
     def __enter__(self):
         self.thread.start()
+        self.aborting_checker.start()
         self.start = time.time()
         return self
 
@@ -111,7 +113,7 @@ class ResultConsumer(object):
                 self.results.append(result)
                 success = self.sla_checker.add_iteration(result)
                 if self.abort_on_sla_failure and not success:
-                    self.sla_checker.set_aborted()
+                    self.sla_checker.set_aborted_on_sla()
                     self.runner.abort()
             elif self.is_done.isSet():
                 break
@@ -121,16 +123,50 @@ class ResultConsumer(object):
     def __exit__(self, exc_type, exc_value, exc_traceback):
         self.finish = time.time()
         self.is_done.set()
+        self.aborting_checker.join()
         self.thread.join()
 
         if exc_type:
             self.sla_checker.set_unexpected_failure(exc_value)
+
+        if objects.Task.get_status(
+                self.task["uuid"]) == consts.TaskStatus.ABORTED:
+            self.sla_checker.set_aborted_manually()
 
         self.task.append_results(self.key, {
             "raw": self.results,
             "load_duration": self.runner.run_duration,
             "full_duration": self.finish - self.start,
             "sla": self.sla_checker.results()})
+
+    @staticmethod
+    def is_task_in_aborting_status(task_uuid, check_soft=True):
+        """Checks task is in abort stages
+
+        :param task_uuid: UUID of task to check status
+        :type task_uuid: str
+        :param check_soft: check or not SOFT_ABORTING status
+        :type check_soft: bool
+        """
+        stages = [consts.TaskStatus.ABORTING, consts.TaskStatus.ABORTED]
+        if check_soft:
+            stages.append(consts.TaskStatus.SOFT_ABORTING)
+        return objects.Task.get_status(task_uuid) in stages
+
+    def wait_and_abort(self):
+        """Waits until abort signal is received and aborts runner in this case.
+
+        Has to be run from different thread simultaneously with the
+        runner.run method.
+        """
+
+        while not self.is_done.isSet():
+            if self.is_task_in_aborting_status(self.task["uuid"],
+                                               check_soft=False):
+                self.runner.abort()
+                self.task.update_status(consts.TaskStatus.ABORTED)
+                break
+            time.sleep(2.0)
 
 
 class BenchmarkEngine(object):
@@ -262,8 +298,8 @@ class BenchmarkEngine(object):
             raise exceptions.InvalidTaskException(str(e))
 
     def _get_runner(self, config):
-        cfg = config.get("runner", {"type": "serial"})
-        return runner.ScenarioRunner.get(cfg["type"])(self.task, cfg)
+        conf = config.get("runner", {"type": "serial"})
+        return runner.ScenarioRunner.get(conf["type"])(self.task, conf)
 
     def _prepare_context(self, ctx, name, endpoint):
         scenario_context = copy.deepcopy(
@@ -295,6 +331,11 @@ class BenchmarkEngine(object):
         self.task.update_status(consts.TaskStatus.RUNNING)
         for name in self.config:
             for n, kw in enumerate(self.config[name]):
+                if ResultConsumer.is_task_in_aborting_status(
+                        self.task["uuid"]):
+                    LOG.info("Received aborting signal.")
+                    self.task.update_status(consts.TaskStatus.ABORTED)
+                    return
                 key = {"name": name, "pos": n, "kw": kw}
                 LOG.info("Running benchmark with key: \n%s"
                          % json.dumps(key, indent=2))
@@ -310,4 +351,6 @@ class BenchmarkEngine(object):
                 except Exception as e:
                     LOG.exception(e)
 
-        self.task.update_status(consts.TaskStatus.FINISHED)
+        if objects.Task.get_status(
+                self.task["uuid"]) != consts.TaskStatus.ABORTED:
+            self.task.update_status(consts.TaskStatus.FINISHED)

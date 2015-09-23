@@ -17,6 +17,7 @@
 
 import os
 
+import ddt
 import jsonschema
 import mock
 
@@ -45,6 +46,7 @@ FAKE_DEPLOYMENT_CONFIG = {
 }
 
 
+@ddt.ddt
 class TaskAPITestCase(test.TestCase):
     def setUp(self):
         super(TaskAPITestCase, self).setUp()
@@ -157,8 +159,40 @@ class TaskAPITestCase(test.TestCase):
         mock_deployment_get().update_status.assert_called_once_with(
             consts.DeployStatus.DEPLOY_INCONSISTENT)
 
-    def test_abort(self):
-        self.assertRaises(NotImplementedError, api.Task.abort, self.task_uuid)
+    @ddt.data(True, False)
+    @mock.patch("rally.api.time")
+    @mock.patch("rally.api.objects.Task")
+    def test_abort_sync(self, soft, mock_task, mock_time):
+        mock_task.get_status.side_effect = (
+            consts.TaskStatus.INIT,
+            consts.TaskStatus.VERIFYING,
+            consts.TaskStatus.RUNNING,
+            consts.TaskStatus.ABORTING,
+            consts.TaskStatus.SOFT_ABORTING,
+            consts.TaskStatus.ABORTED)
+
+        some_uuid = "ca441749-0eb9-4fcc-b2f6-76d314c55404"
+
+        api.Task.abort(some_uuid, soft=soft, async=False)
+
+        mock_task.get.assert_called_once_with(some_uuid)
+        mock_task.get.return_value.abort.assert_called_once_with(soft=soft)
+        self.assertEqual([mock.call(some_uuid)] * 6,
+                         mock_task.get_status.call_args_list)
+        self.assertTrue(mock_time.sleep.called)
+
+    @ddt.data(True, False)
+    @mock.patch("rally.api.time")
+    @mock.patch("rally.api.objects.Task")
+    def test_abort_async(self, soft, mock_task, mock_time):
+        some_uuid = "133695fb-400d-4988-859c-30bfaa0488ce"
+
+        api.Task.abort(some_uuid, soft=soft, async=True)
+
+        mock_task.get.assert_called_once_with(some_uuid)
+        mock_task.get.return_value.abort.assert_called_once_with(soft=soft)
+        self.assertFalse(mock_task.get_status.called)
+        self.assertFalse(mock_time.sleep.called)
 
     @mock.patch("rally.common.objects.task.db.task_delete")
     def test_delete(self, mock_task_delete):
