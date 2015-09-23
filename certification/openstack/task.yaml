@@ -260,6 +260,17 @@
         {{ runner() }}
       sla:
         {{ no_failures_sla() }}
+
+  Quotas.cinder_update_and_delete:
+    -
+      args:
+        max_quota: 1024
+      context:
+        {{ user_context() }}
+      runner:
+        {{ runner() }}
+      sla:
+        {{ no_failures_sla() }}
 {% endif %}
 {% if "keystone" in service_list %}
   KeystoneBasic.add_and_remove_user_role:
@@ -510,6 +521,17 @@
           {{ unlimited_neutron() }}
           {{ unlimited_nova() }}
         {% endcall %}
+      runner:
+        {{ runner() }}
+      sla:
+        {{ no_failures_sla() }}
+
+  Quotas.nova_update_and_delete:
+    -
+      args:
+        max_quota: 1024
+      context:
+        {{ user_context() }}
       runner:
         {{ runner() }}
       sla:
