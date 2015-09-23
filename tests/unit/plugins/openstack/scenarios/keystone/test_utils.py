@@ -51,7 +51,7 @@ class KeystoneScenarioTestCase(test.ScenarioTestCase):
     @mock.patch("rally.common.utils.generate_random_name",
                 return_value="foobarov")
     def test_user_create(self, mock_generate_random_name, mock_uuid4):
-        scenario = utils.KeystoneScenario()
+        scenario = utils.KeystoneScenario(self.context)
         result = scenario._user_create()
 
         self.assertEqual(
@@ -67,7 +67,7 @@ class KeystoneScenarioTestCase(test.ScenarioTestCase):
     def test_update_user_enabled(self):
         user = mock.Mock()
         enabled = mock.Mock()
-        scenario = utils.KeystoneScenario()
+        scenario = utils.KeystoneScenario(self.context)
 
         scenario._update_user_enabled(user, enabled)
         self.admin_clients(
@@ -79,7 +79,7 @@ class KeystoneScenarioTestCase(test.ScenarioTestCase):
 
     @mock.patch("rally.common.utils.generate_random_name")
     def test_role_create(self, mock_generate_random_name):
-        scenario = utils.KeystoneScenario()
+        scenario = utils.KeystoneScenario(self.context)
         result = scenario._role_create()
 
         self.assertEqual(
@@ -92,7 +92,7 @@ class KeystoneScenarioTestCase(test.ScenarioTestCase):
     def test_list_roles_for_user(self):
         user = mock.MagicMock()
         tenant = mock.MagicMock()
-        scenario = utils.KeystoneScenario()
+        scenario = utils.KeystoneScenario(self.context)
 
         scenario._list_roles_for_user(user, tenant)
 
@@ -106,7 +106,7 @@ class KeystoneScenarioTestCase(test.ScenarioTestCase):
         user = mock.MagicMock()
         role = mock.MagicMock()
         tenant = mock.MagicMock()
-        scenario = utils.KeystoneScenario()
+        scenario = utils.KeystoneScenario(self.context)
 
         scenario._role_add(user=user.id, role=role.id, tenant=tenant.id)
 
@@ -121,7 +121,7 @@ class KeystoneScenarioTestCase(test.ScenarioTestCase):
         resource = fakes.FakeResource()
         resource.delete = mock.MagicMock()
 
-        scenario = utils.KeystoneScenario()
+        scenario = utils.KeystoneScenario(self.context)
         scenario._resource_delete(resource)
         resource.delete.assert_called_once_with()
         r = "keystone.delete_%s" % resource.__class__.__name__.lower()
@@ -131,7 +131,7 @@ class KeystoneScenarioTestCase(test.ScenarioTestCase):
         user = mock.MagicMock()
         role = mock.MagicMock()
         tenant = mock.MagicMock()
-        scenario = utils.KeystoneScenario()
+        scenario = utils.KeystoneScenario(self.context)
 
         scenario._role_remove(user=user, role=role, tenant=tenant)
 
@@ -144,7 +144,7 @@ class KeystoneScenarioTestCase(test.ScenarioTestCase):
 
     @mock.patch("rally.common.utils.generate_random_name")
     def test_tenant_create(self, mock_generate_random_name):
-        scenario = utils.KeystoneScenario()
+        scenario = utils.KeystoneScenario(self.context)
         result = scenario._tenant_create()
 
         self.assertEqual(
@@ -158,7 +158,7 @@ class KeystoneScenarioTestCase(test.ScenarioTestCase):
         service_type = "service_type"
         description = "_description"
 
-        scenario = utils.KeystoneScenario()
+        scenario = utils.KeystoneScenario(self.context)
         scenario._generate_random_name = mock.Mock()
 
         result = scenario._service_create(service_type=service_type,
@@ -177,7 +177,7 @@ class KeystoneScenarioTestCase(test.ScenarioTestCase):
                 return_value="foobarov")
     def test_tenant_create_with_users(self, mock_generate_random_name):
         tenant = mock.MagicMock()
-        scenario = utils.KeystoneScenario()
+        scenario = utils.KeystoneScenario(self.context)
 
         scenario._users_create(tenant, users_per_tenant=1, name_length=10)
 
@@ -188,21 +188,21 @@ class KeystoneScenarioTestCase(test.ScenarioTestCase):
                                        "keystone.create_users")
 
     def test_list_users(self):
-        scenario = utils.KeystoneScenario()
+        scenario = utils.KeystoneScenario(self.context)
         scenario._list_users()
         self.admin_clients("keystone").users.list.assert_called_once_with()
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "keystone.list_users")
 
     def test_list_tenants(self):
-        scenario = utils.KeystoneScenario()
+        scenario = utils.KeystoneScenario(self.context)
         scenario._list_tenants()
         self.admin_clients("keystone").tenants.list.assert_called_once_with()
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "keystone.list_tenants")
 
     def test_list_services(self):
-        scenario = utils.KeystoneScenario()
+        scenario = utils.KeystoneScenario(self.context)
         scenario._list_services()
 
         self.admin_clients("keystone").services.list.assert_called_once_with()
@@ -211,7 +211,7 @@ class KeystoneScenarioTestCase(test.ScenarioTestCase):
 
     def test_delete_service(self):
         service = mock.MagicMock()
-        scenario = utils.KeystoneScenario()
+        scenario = utils.KeystoneScenario(self.context)
         scenario._delete_service(service_id=service.id)
 
         self.admin_clients("keystone").services.delete.assert_called_once_with(
@@ -221,7 +221,7 @@ class KeystoneScenarioTestCase(test.ScenarioTestCase):
 
     def test_get_tenant(self):
         tenant = mock.MagicMock()
-        scenario = utils.KeystoneScenario()
+        scenario = utils.KeystoneScenario(self.context)
         scenario._get_tenant(tenant_id=tenant.id)
 
         self.admin_clients("keystone").tenants.get.assert_called_once_with(
@@ -231,7 +231,7 @@ class KeystoneScenarioTestCase(test.ScenarioTestCase):
 
     def test_get_user(self):
         user = mock.MagicMock()
-        scenario = utils.KeystoneScenario()
+        scenario = utils.KeystoneScenario(self.context)
         scenario._get_user(user_id=user.id)
 
         self.admin_clients("keystone").users.get.assert_called_once_with(
@@ -241,7 +241,7 @@ class KeystoneScenarioTestCase(test.ScenarioTestCase):
 
     def test_get_role(self):
         role = mock.MagicMock()
-        scenario = utils.KeystoneScenario()
+        scenario = utils.KeystoneScenario(self.context)
         scenario._get_role(role_id=role.id)
 
         self.admin_clients("keystone").roles.get.assert_called_once_with(
@@ -251,7 +251,7 @@ class KeystoneScenarioTestCase(test.ScenarioTestCase):
 
     def test_get_service(self):
         service = mock.MagicMock()
-        scenario = utils.KeystoneScenario()
+        scenario = utils.KeystoneScenario(self.context)
         scenario._get_service(service_id=service.id)
 
         self.admin_clients("keystone").services.get.assert_called_once_with(
@@ -263,7 +263,7 @@ class KeystoneScenarioTestCase(test.ScenarioTestCase):
         tenant = mock.MagicMock()
         description = tenant.name + "_description_updated_test"
         name = tenant.name + "test_updated_test"
-        scenario = utils.KeystoneScenario()
+        scenario = utils.KeystoneScenario(self.context)
         scenario._update_tenant(tenant=tenant, name=name,
                                 description=description)
 
@@ -275,7 +275,7 @@ class KeystoneScenarioTestCase(test.ScenarioTestCase):
     def test_update_user_password(self):
         password = "pswd"
         user = mock.MagicMock()
-        scenario = utils.KeystoneScenario()
+        scenario = utils.KeystoneScenario(self.context)
 
         scenario._update_user_password(password=password, user_id=user.id)
 
@@ -304,7 +304,7 @@ class KeystoneScenarioTestCase(test.ScenarioTestCase):
                                        "keystone.update_user_password")
 
     def test_get_service_by_name(self):
-        scenario = utils.KeystoneScenario()
+        scenario = utils.KeystoneScenario(self.context)
         svc_foo, svc_bar = mock.Mock(), mock.Mock()
         scenario._list_services = mock.Mock(return_value=[svc_foo, svc_bar])
         self.assertEqual(scenario._get_service_by_name(svc_bar.name), svc_bar)
@@ -312,7 +312,7 @@ class KeystoneScenarioTestCase(test.ScenarioTestCase):
 
     @mock.patch(UTILS + "KeystoneScenario.clients")
     def test_create_ec2credentials(self, mock_clients):
-        scenario = utils.KeystoneScenario()
+        scenario = utils.KeystoneScenario(self.context)
         creds = mock.Mock()
         mock_clients("keystone").ec2.create.return_value = creds
         create_creds = scenario._create_ec2credentials("user_id",
@@ -325,7 +325,7 @@ class KeystoneScenarioTestCase(test.ScenarioTestCase):
 
     @mock.patch(UTILS + "KeystoneScenario.clients")
     def test_list_ec2credentials(self, mock_clients):
-        scenario = utils.KeystoneScenario()
+        scenario = utils.KeystoneScenario(self.context)
         creds_list = mock.Mock()
         mock_clients("keystone").ec2.list.return_value = creds_list
         list_creds = scenario._list_ec2credentials("user_id")
@@ -336,7 +336,7 @@ class KeystoneScenarioTestCase(test.ScenarioTestCase):
 
     @mock.patch(UTILS + "KeystoneScenario.clients")
     def test_delete_ec2credentials(self, mock_clients):
-        scenario = utils.KeystoneScenario()
+        scenario = utils.KeystoneScenario(self.context)
         mock_clients("keystone").ec2.delete = mock.MagicMock()
         scenario._delete_ec2credential("user_id", "access")
         mock_clients("keystone").ec2.delete.assert_called_once_with("user_id",

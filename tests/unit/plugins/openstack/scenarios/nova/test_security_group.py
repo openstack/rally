@@ -31,13 +31,13 @@ class FakeNeutronScenario():
         pass
 
 
-class NovaSecurityGroupTestCase(test.TestCase):
+class NovaSecurityGroupTestCase(test.ScenarioTestCase):
 
     def test_create_and_delete_security_groups(self):
         fake_secgroups = [fakes.FakeSecurityGroup(None, None, 1, "uuid1"),
                           fakes.FakeSecurityGroup(None, None, 2, "uuid2")]
 
-        nova_scenario = security_group.NovaSecGroup()
+        nova_scenario = security_group.NovaSecGroup(self.context)
         nova_scenario._create_security_groups = mock.MagicMock(
             return_value=fake_secgroups)
         nova_scenario._create_rules_for_security_group = mock.MagicMock()
@@ -75,7 +75,7 @@ class NovaSecurityGroupTestCase(test.TestCase):
         fake_secgroups = [fakes.FakeSecurityGroup(None, None, 1, "uuid1"),
                           fakes.FakeSecurityGroup(None, None, 2, "uuid2")]
 
-        nova_scenario = security_group.NovaSecGroup()
+        nova_scenario = security_group.NovaSecGroup(self.context)
         nova_scenario._create_security_groups = mock.MagicMock(
             return_value=fake_secgroups)
         nova_scenario._create_rules_for_security_group = mock.MagicMock()
@@ -104,7 +104,7 @@ class NovaSecurityGroupTestCase(test.TestCase):
     def _test_boot_and_delete_server_with_secgroups(self):
         fake_server, sg_list = self._generate_fake_server_with_sg(2)
 
-        nova_scenario = security_group.NovaSecGroup()
+        nova_scenario = security_group.NovaSecGroup(self.context)
         nova_scenario._create_security_groups = mock.MagicMock(
             return_value=sg_list)
         nova_scenario._create_rules_for_security_group = mock.MagicMock()
@@ -140,7 +140,7 @@ class NovaSecurityGroupTestCase(test.TestCase):
 
         fake_server, sg_list = self._generate_fake_server_with_sg(1)
 
-        nova_scenario = security_group.NovaSecGroup()
+        nova_scenario = security_group.NovaSecGroup(self.context)
         nova_scenario._create_security_groups = mock.MagicMock(
             return_value=fake_secgroups)
         nova_scenario._create_rules_for_security_group = mock.MagicMock()

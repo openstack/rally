@@ -21,7 +21,7 @@ from tests.unit import test
 
 
 @ddt.ddt
-class ManilaSharesTestCase(test.TestCase):
+class ManilaSharesTestCase(test.ScenarioTestCase):
 
     @ddt.data(
         {"share_proto": "nfs", "size": 3},
@@ -30,7 +30,7 @@ class ManilaSharesTestCase(test.TestCase):
     )
     def test_create_and_delete_share(self, params):
         fake_share = mock.MagicMock()
-        scenario = shares.ManilaShares()
+        scenario = shares.ManilaShares(self.context)
         scenario._create_share = mock.MagicMock(return_value=fake_share)
         scenario.sleep_between = mock.MagicMock()
         scenario._delete_share = mock.MagicMock()
@@ -55,7 +55,7 @@ class ManilaSharesTestCase(test.TestCase):
     )
     @ddt.unpack
     def test_list_shares(self, detailed=True, search_opts=None):
-        scenario = shares.ManilaShares()
+        scenario = shares.ManilaShares(self.context)
         scenario._list_shares = mock.MagicMock()
 
         scenario.list_shares(detailed=detailed, search_opts=search_opts)
@@ -78,7 +78,7 @@ class ManilaSharesTestCase(test.TestCase):
     )
     def test_create_share_network_and_delete(self, params):
         fake_sn = mock.MagicMock()
-        scenario = shares.ManilaShares()
+        scenario = shares.ManilaShares(self.context)
         scenario._create_share_network = mock.MagicMock(return_value=fake_sn)
         scenario._delete_share_network = mock.MagicMock()
         expected_params = {
@@ -110,7 +110,7 @@ class ManilaSharesTestCase(test.TestCase):
          "nova_net_id": "foo_nova_net_id"},
     )
     def test_create_share_network_and_list(self, params):
-        scenario = shares.ManilaShares()
+        scenario = shares.ManilaShares(self.context)
         scenario._create_share_network = mock.MagicMock()
         scenario._list_share_networks = mock.MagicMock()
         expected_create_params = {
@@ -140,7 +140,7 @@ class ManilaSharesTestCase(test.TestCase):
         {"search_opts": {"foo": "bar"}},
     )
     def test_list_share_servers(self, search_opts):
-        scenario = shares.ManilaShares()
+        scenario = shares.ManilaShares(self.context)
         scenario.context = {"admin": {"endpoint": "fake_endpoint"}}
         scenario._list_share_servers = mock.MagicMock()
 
@@ -162,7 +162,7 @@ class ManilaSharesTestCase(test.TestCase):
     )
     def test_create_security_service_and_delete(self, params):
         fake_ss = mock.MagicMock()
-        scenario = shares.ManilaShares()
+        scenario = shares.ManilaShares(self.context)
         scenario._create_security_service = mock.MagicMock(
             return_value=fake_ss)
         scenario._delete_security_service = mock.MagicMock()
@@ -186,7 +186,7 @@ class ManilaSharesTestCase(test.TestCase):
     @ddt.data("ldap", "kerberos", "active_directory")
     def test_attach_security_service_to_share_network(self,
                                                       security_service_type):
-        scenario = shares.ManilaShares()
+        scenario = shares.ManilaShares(self.context)
         scenario._create_share_network = mock.MagicMock()
         scenario._create_security_service = mock.MagicMock()
         scenario._add_security_service_to_share_network = mock.MagicMock()

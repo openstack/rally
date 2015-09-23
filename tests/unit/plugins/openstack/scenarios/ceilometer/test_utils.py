@@ -25,7 +25,7 @@ CEILOMETER_UTILS = "rally.plugins.openstack.scenarios.ceilometer.utils"
 class CeilometerScenarioTestCase(test.ScenarioTestCase):
     def setUp(self):
         super(CeilometerScenarioTestCase, self).setUp()
-        self.scenario = utils.CeilometerScenario()
+        self.scenario = utils.CeilometerScenario(self.context)
 
     def test__list_alarms_by_id(self):
         self.assertEqual(self.clients("ceilometer").alarms.get.return_value,

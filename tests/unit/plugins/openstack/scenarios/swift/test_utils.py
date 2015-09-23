@@ -28,7 +28,7 @@ class SwiftScenarioTestCase(test.ScenarioTestCase):
         containers_list = mock.MagicMock()
         self.clients("swift").get_account.return_value = (headers_dict,
                                                           containers_list)
-        scenario = utils.SwiftScenario()
+        scenario = utils.SwiftScenario(context=self.context)
 
         self.assertEqual((headers_dict, containers_list),
                          scenario._list_containers(fargs="f"))
@@ -100,7 +100,7 @@ class SwiftScenarioTestCase(test.ScenarioTestCase):
 
     def test__delete_container(self):
         container_name = mock.MagicMock()
-        scenario = utils.SwiftScenario()
+        scenario = utils.SwiftScenario(context=self.context)
         scenario._delete_container(container_name, fargs="f")
 
         kw = {"fargs": "f"}
@@ -117,7 +117,7 @@ class SwiftScenarioTestCase(test.ScenarioTestCase):
         objects_list = mock.MagicMock()
         self.clients("swift").get_container.return_value = (headers_dict,
                                                             objects_list)
-        scenario = utils.SwiftScenario()
+        scenario = utils.SwiftScenario(context=self.context)
 
         self.assertEqual((headers_dict, objects_list),
                          scenario._list_objects(container_name, fargs="f"))
@@ -135,7 +135,7 @@ class SwiftScenarioTestCase(test.ScenarioTestCase):
         content = mock.MagicMock()
         etag = mock.MagicMock()
         self.clients("swift").put_object.return_value = etag
-        scenario = utils.SwiftScenario()
+        scenario = utils.SwiftScenario(self.context)
 
         # container + content + name + kw
         self.assertEqual((etag, object_name),
@@ -168,7 +168,7 @@ class SwiftScenarioTestCase(test.ScenarioTestCase):
         headers_dict = mock.MagicMock()
         content = mock.MagicMock()
         self.clients("swift").get_object.return_value = (headers_dict, content)
-        scenario = utils.SwiftScenario()
+        scenario = utils.SwiftScenario(context=self.context)
 
         self.assertEqual((headers_dict, content),
                          scenario._download_object(container_name, object_name,
@@ -184,7 +184,7 @@ class SwiftScenarioTestCase(test.ScenarioTestCase):
     def test__delete_object(self):
         container_name = mock.MagicMock()
         object_name = mock.MagicMock()
-        scenario = utils.SwiftScenario()
+        scenario = utils.SwiftScenario(context=self.context)
         scenario._delete_object(container_name, object_name, fargs="f")
 
         kw = {"fargs": "f"}

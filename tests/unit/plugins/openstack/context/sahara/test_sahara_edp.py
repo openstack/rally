@@ -46,7 +46,8 @@ class SaharaEDPTestCase(test.TestCase):
 
     @property
     def context_without_edp_keys(self):
-        return {
+        context = test.get_test_context()
+        context.update({
             "config": {
                 "users": {
                     "tenants": self.tenants_num,
@@ -66,10 +67,10 @@ class SaharaEDPTestCase(test.TestCase):
                 },
             },
             "admin": {"endpoint": mock.MagicMock()},
-            "task": mock.MagicMock(),
             "users": self.users_key,
             "tenants": self.tenants
-        }
+        })
+        return context
 
     @mock.patch("%s.sahara_edp.resource_manager.cleanup" % CTX)
     @mock.patch("%s.sahara_edp.requests" % CTX)

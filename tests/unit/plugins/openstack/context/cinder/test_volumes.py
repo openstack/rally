@@ -34,17 +34,17 @@ class VolumeGeneratorTestCase(test.ScenarioTestCase):
         return tenants
 
     def test_init(self):
-        context = {}
-        context["task"] = mock.MagicMock()
-        context["config"] = {
-            "volumes": {
-                "size": 1,
-                "volumes_per_tenant": 5,
+        self.context.update({
+            "config": {
+                "volumes": {
+                    "size": 1,
+                    "volumes_per_tenant": 5,
+                }
             }
-        }
+        })
 
-        inst = volumes.VolumeGenerator(context)
-        self.assertEqual(inst.config, context["config"]["volumes"])
+        inst = volumes.VolumeGenerator(self.context)
+        self.assertEqual(inst.config, self.context["config"]["volumes"])
 
     @mock.patch("%s.cinder.utils.CinderScenario._create_volume" % SCN,
                 return_value=fakes.FakeVolume(id="uuid"))
@@ -60,7 +60,7 @@ class VolumeGeneratorTestCase(test.ScenarioTestCase):
                 users.append({"id": i, "tenant_id": id_,
                               "endpoint": mock.MagicMock()})
 
-        real_context = {
+        self.context.update({
             "config": {
                 "users": {
                     "tenants": 2,
@@ -75,20 +75,19 @@ class VolumeGeneratorTestCase(test.ScenarioTestCase):
             "admin": {
                 "endpoint": mock.MagicMock()
             },
-            "task": mock.MagicMock(),
             "users": users,
             "tenants": tenants
-        }
+        })
 
-        new_context = copy.deepcopy(real_context)
+        new_context = copy.deepcopy(self.context)
         for id_ in tenants.keys():
             new_context["tenants"][id_].setdefault("volumes", [])
             for i in range(volumes_per_tenant):
                 new_context["tenants"][id_]["volumes"].append({"id": "uuid"})
 
-        volumes_ctx = volumes.VolumeGenerator(real_context)
+        volumes_ctx = volumes.VolumeGenerator(self.context)
         volumes_ctx.setup()
-        self.assertEqual(new_context, real_context)
+        self.assertEqual(new_context, self.context)
 
     @mock.patch("%s.cinder.volumes.resource_manager.cleanup" % CTX)
     def test_cleanup(self, mock_cleanup):
@@ -107,7 +106,7 @@ class VolumeGeneratorTestCase(test.ScenarioTestCase):
             for j in range(volumes_per_tenant):
                 tenants[id_]["volumes"].append({"id": "uuid"})
 
-        context = {
+        self.context.update({
             "config": {
                 "users": {
                     "tenants": 2,
@@ -122,13 +121,12 @@ class VolumeGeneratorTestCase(test.ScenarioTestCase):
             "admin": {
                 "endpoint": mock.MagicMock()
             },
-            "task": mock.MagicMock(),
             "users": users,
             "tenants": tenants
-        }
+        })
 
-        volumes_ctx = volumes.VolumeGenerator(context)
+        volumes_ctx = volumes.VolumeGenerator(self.context)
         volumes_ctx.cleanup()
 
         mock_cleanup.assert_called_once_with(names=["cinder.volumes"],
-                                             users=context["users"])
+                                             users=self.context["users"])

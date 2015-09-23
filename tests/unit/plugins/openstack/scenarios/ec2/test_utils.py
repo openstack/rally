@@ -41,7 +41,7 @@ class EC2ScenarioTestCase(test.ScenarioTestCase):
 
     def test__update_resource(self):
         resource = mock.MagicMock()
-        scenario = utils.EC2Scenario()
+        scenario = utils.EC2Scenario(self.context)
         self.assertEqual(scenario._update_resource(resource), resource)
         resource.update.assert_called_once_with()
 

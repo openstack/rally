@@ -22,7 +22,7 @@ from tests.unit import test
 GLANCE_IMAGES = "rally.plugins.openstack.scenarios.glance.images.GlanceImages"
 
 
-class GlanceImagesTestCase(test.TestCase):
+class GlanceImagesTestCase(test.ScenarioTestCase):
 
     @mock.patch(GLANCE_IMAGES + "._generate_random_name")
     @mock.patch(GLANCE_IMAGES + "._list_images")
@@ -30,7 +30,7 @@ class GlanceImagesTestCase(test.TestCase):
     def test_create_and_list_image(self, mock__create_image,
                                    mock__list_images,
                                    mock__generate_random_name):
-        glance_scenario = images.GlanceImages()
+        glance_scenario = images.GlanceImages(self.context)
         mock__generate_random_name.return_value = "test-rally-image"
         glance_scenario.create_and_list_image("cf", "url", "df",
                                               fakearg="f")
@@ -40,7 +40,7 @@ class GlanceImagesTestCase(test.TestCase):
 
     @mock.patch(GLANCE_IMAGES + "._list_images")
     def test_list_images(self, mock__list_images):
-        glance_scenario = images.GlanceImages()
+        glance_scenario = images.GlanceImages(self.context)
         glance_scenario.list_images()
         mock__list_images.assert_called_once_with()
 
@@ -50,7 +50,7 @@ class GlanceImagesTestCase(test.TestCase):
     def test_create_and_delete_image(
             self, mock__create_image, mock__delete_image,
             mock__generate_random_name):
-        glance_scenario = images.GlanceImages()
+        glance_scenario = images.GlanceImages(self.context)
         fake_image = object()
         mock__create_image.return_value = fake_image
         mock__generate_random_name.return_value = "test-rally-image"
@@ -65,7 +65,7 @@ class GlanceImagesTestCase(test.TestCase):
     @mock.patch(GLANCE_IMAGES + "._create_image")
     def test_create_image_and_boot_instances(
             self, mock__create_image, mock__boot_servers):
-        glance_scenario = images.GlanceImages()
+        glance_scenario = images.GlanceImages(self.context)
         fake_image = fakes.FakeImage()
         fake_servers = [mock.Mock() for i in range(5)]
         mock__create_image.return_value = fake_image

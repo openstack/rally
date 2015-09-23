@@ -35,16 +35,14 @@ class ImageGeneratorTestCase(test.ScenarioTestCase):
         return tenants
 
     def test_init_validation(self):
-        context = {}
-        context["task"] = mock.MagicMock()
-        context["config"] = {
+        self.context["config"] = {
             "images": {
                 "image_url": "mock_url"
             }
         }
 
         self.assertRaises(jsonschema.ValidationError,
-                          images.ImageGenerator.validate, context)
+                          images.ImageGenerator.validate, self.context)
 
     @mock.patch("%s.utils.GlanceScenario._create_image" % SCN,
                 return_value=fakes.FakeImage(id="uuid"))
@@ -61,7 +59,7 @@ class ImageGeneratorTestCase(test.ScenarioTestCase):
                 users.append({"id": i, "tenant_id": id_,
                               "endpoint": mock.MagicMock()})
 
-        real_context = {
+        self.context.update({
             "config": {
                 "users": {
                     "tenants": tenants_count,
@@ -81,20 +79,19 @@ class ImageGeneratorTestCase(test.ScenarioTestCase):
             "admin": {
                 "endpoint": mock.MagicMock()
             },
-            "task": mock.MagicMock(),
             "users": users,
             "tenants": tenants
-        }
+        })
 
-        new_context = copy.deepcopy(real_context)
+        new_context = copy.deepcopy(self.context)
         for id_ in new_context["tenants"].keys():
             new_context["tenants"][id_].setdefault("images", [])
             for j in range(images_per_tenant):
                 new_context["tenants"][id_]["images"].append("uuid")
 
-        images_ctx = images.ImageGenerator(real_context)
+        images_ctx = images.ImageGenerator(self.context)
         images_ctx.setup()
-        self.assertEqual(new_context, real_context)
+        self.assertEqual(new_context, self.context)
 
     @mock.patch("%s.images.resource_manager.cleanup" % CTX)
     def test_cleanup(self, mock_cleanup):
@@ -113,7 +110,7 @@ class ImageGeneratorTestCase(test.ScenarioTestCase):
             for j in range(images_per_tenant):
                 tenants[id_]["images"].append("uuid")
 
-        context = {
+        self.context.update({
             "config": {
                 "users": {
                     "tenants": 2,
@@ -133,12 +130,11 @@ class ImageGeneratorTestCase(test.ScenarioTestCase):
             "admin": {
                 "endpoint": mock.MagicMock()
             },
-            "task": mock.MagicMock(),
             "users": users,
             "tenants": tenants
-        }
+        })
 
-        images_ctx = images.ImageGenerator(context)
+        images_ctx = images.ImageGenerator(self.context)
         images_ctx.cleanup()
         mock_cleanup.assert_called_once_with(names=["glance.images"],
-                                             users=context["users"])
+                                             users=self.context["users"])

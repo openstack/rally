@@ -60,16 +60,18 @@ class UserContextMixinTestCase(test.TestCase):
         )
 
 
-class UserGeneratorTestCase(test.TestCase):
+class UserGeneratorTestCase(test.ScenarioTestCase):
 
     tenants_num = 1
     users_per_tenant = 5
     users_num = tenants_num * users_per_tenant
     threads = 10
 
-    @property
-    def context(self):
-        return {
+    def setUp(self):
+        super(UserGeneratorTestCase, self).setUp()
+        self.osclients_patcher = mock.patch("%s.osclients" % CTX)
+        self.osclients = self.osclients_patcher.start()
+        self.context.update({
             "config": {
                 "users": {
                     "tenants": self.tenants_num,
@@ -80,12 +82,7 @@ class UserGeneratorTestCase(test.TestCase):
             "admin": {"endpoint": mock.MagicMock()},
             "users": [],
             "task": {"uuid": "task_id"}
-        }
-
-    def setUp(self):
-        super(UserGeneratorTestCase, self).setUp()
-        self.osclients_patcher = mock.patch("%s.osclients" % CTX)
-        self.osclients = self.osclients_patcher.start()
+        })
 
     def tearDown(self):
         self.osclients_patcher.stop()
@@ -315,37 +312,32 @@ class UserGeneratorTestCase(test.TestCase):
     def test_users_and_tenants_in_context(self, mock_keystone):
         wrapped_keystone = mock.MagicMock()
         mock_keystone.wrap.return_value = wrapped_keystone
-        task = {"uuid": "abcdef"}
 
         endpoint = objects.Endpoint("foo_url", "foo", "foo_pass",
                                     https_insecure=True,
                                     https_cacert="cacert")
-        config = {
-            "config": {
-                "users": {
-                    "tenants": 1,
-                    "users_per_tenant": 2,
-                    "resource_management_workers": 1
-                }
-            },
-            "admin": {"endpoint": endpoint},
-            "task": task
-        }
+        tmp_context = dict(self.context)
+        tmp_context["config"]["users"] = {"tenants": 1,
+                                          "users_per_tenant": 2,
+                                          "resource_management_workers": 1}
+        tmp_context["admin"]["endpoint"] = endpoint
 
         endpoint_dict = endpoint.to_dict(False)
         user_list = [mock.MagicMock(id="id_%d" % i)
                      for i in range(self.users_num)]
         wrapped_keystone.create_user.side_effect = user_list
 
-        with users.UserGenerator(config) as ctx:
+        with users.UserGenerator(tmp_context) as ctx:
             ctx.setup()
 
             create_tenant_calls = []
             for i, t in enumerate(ctx.context["tenants"]):
                 pattern = users.UserGenerator.PATTERN_TENANT
                 create_tenant_calls.append(
-                    mock.call(pattern % {"task_id": task["uuid"], "iter": i},
-                              ctx.config["project_domain"]))
+                    mock.call(
+                        pattern % {"task_id": tmp_context["task"]["uuid"],
+                                   "iter": i},
+                        ctx.config["project_domain"]))
 
             for user in ctx.context["users"]:
                 self.assertEqual(set(["id", "endpoint", "tenant_id"]),

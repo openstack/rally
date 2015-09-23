@@ -27,7 +27,7 @@ class IronicScenarioTestCase(test.ScenarioTestCase):
     def test__create_node(self, mock_generate_random_name):
         mock_generate_random_name.return_value = "rally_fake_random_string"
         self.admin_clients("ironic").node.create.return_value = "fake_node"
-        scenario = utils.IronicScenario()
+        scenario = utils.IronicScenario(self.context)
         create_node = scenario._create_node(fake_param="foo")
 
         self.assertEqual("fake_node", create_node)
@@ -39,7 +39,7 @@ class IronicScenarioTestCase(test.ScenarioTestCase):
     def test__delete_node(self):
         mock_node_delete = mock.Mock()
         self.admin_clients("ironic").node.delete = mock_node_delete
-        scenario = utils.IronicScenario()
+        scenario = utils.IronicScenario(self.context)
         scenario._delete_node("fake_id")
 
         self.admin_clients("ironic").node.delete.assert_called_once_with(
@@ -49,7 +49,7 @@ class IronicScenarioTestCase(test.ScenarioTestCase):
 
     def test__list_nodes(self):
         self.admin_clients("ironic").node.list.return_value = ["fake"]
-        scenario = utils.IronicScenario()
+        scenario = utils.IronicScenario(self.context)
         fake_params = {
             "sort_dir": "foo1",
             "associated": "foo2",

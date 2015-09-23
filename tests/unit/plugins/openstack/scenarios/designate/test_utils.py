@@ -38,6 +38,7 @@ class DesignateScenarioTestCase(test.ScenarioTestCase):
         email = "root@zone.name"
 
         mock_generate_random_name.return_value = random_name
+        scenario = utils.DesignateScenario(context=self.context)
         self.clients("designate").domains.create.return_value = self.domain
 
         # Check that the defaults / randoms are used if nothing is specified
@@ -57,7 +58,7 @@ class DesignateScenarioTestCase(test.ScenarioTestCase):
         self.assertEqual(self.domain, domain)
 
     def test_list_domains(self):
-        scenario = utils.DesignateScenario()
+        scenario = utils.DesignateScenario(context=self.context)
         return_domains_list = scenario._list_domains()
         self.assertEqual(self.clients("designate").domains.list.return_value,
                          return_domains_list)
@@ -65,7 +66,7 @@ class DesignateScenarioTestCase(test.ScenarioTestCase):
                                        "designate.list_domains")
 
     def test_delete_domain(self):
-        scenario = utils.DesignateScenario()
+        scenario = utils.DesignateScenario(context=self.context)
 
         domain = scenario._create_domain()
         scenario._delete_domain(domain["id"])
@@ -81,6 +82,7 @@ class DesignateScenarioTestCase(test.ScenarioTestCase):
         random_record_name = "%s.%s" % (random_name, domain_name)
 
         mock_generate_random_name.return_value = random_name
+        scenario = utils.DesignateScenario(context=self.context)
 
         domain = {"name": domain_name, "id": "123"}
 
@@ -102,7 +104,7 @@ class DesignateScenarioTestCase(test.ScenarioTestCase):
             domain["id"], record)
 
     def test_list_records(self):
-        scenario = utils.DesignateScenario()
+        scenario = utils.DesignateScenario(context=self.context)
         return_records_list = scenario._list_records("123")
         self.assertEqual(self.clients("designate").records.list.return_value,
                          return_records_list)
@@ -110,7 +112,7 @@ class DesignateScenarioTestCase(test.ScenarioTestCase):
                                        "designate.list_records")
 
     def test_delete_record(self):
-        scenario = utils.DesignateScenario()
+        scenario = utils.DesignateScenario(context=self.context)
 
         domain_id = mock.Mock()
         record_id = mock.Mock()
@@ -127,7 +129,7 @@ class DesignateScenarioTestCase(test.ScenarioTestCase):
 
     @mock.patch("rally.common.utils.generate_random_name")
     def test_create_server(self, mock_generate_random_name):
-        scenario = utils.DesignateScenario()
+        scenario = utils.DesignateScenario(context=self.context)
 
         random_name = "foo"
         explicit_name = "bar.io."
@@ -154,7 +156,7 @@ class DesignateScenarioTestCase(test.ScenarioTestCase):
         self.assertEqual(self.server, server)
 
     def test_delete_server(self):
-        scenario = utils.DesignateScenario()
+        scenario = utils.DesignateScenario(context=self.context)
 
         scenario._delete_server("foo_id")
         self.admin_clients("designate").servers.delete.assert_called_once_with(

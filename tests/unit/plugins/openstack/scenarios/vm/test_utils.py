@@ -33,7 +33,7 @@ class VMScenarioTestCase(test.ScenarioTestCase):
                 side_effect=mock.mock_open(), create=True)
     def test__run_command_over_ssh_script_file(self, mock_open):
         mock_ssh = mock.MagicMock()
-        vm_scenario = utils.VMScenario()
+        vm_scenario = utils.VMScenario(self.context)
         vm_scenario._run_command_over_ssh(
             mock_ssh,
             {
@@ -50,7 +50,7 @@ class VMScenarioTestCase(test.ScenarioTestCase):
     @mock.patch("%s.six.moves.StringIO" % VMTASKS_UTILS)
     def test__run_command_over_ssh_script_inline(self, mock_string_io):
         mock_ssh = mock.MagicMock()
-        vm_scenario = utils.VMScenario()
+        vm_scenario = utils.VMScenario(self.context)
         vm_scenario._run_command_over_ssh(
             mock_ssh,
             {
@@ -66,7 +66,7 @@ class VMScenarioTestCase(test.ScenarioTestCase):
 
     def test__run_command_over_ssh_remote_path(self):
         mock_ssh = mock.MagicMock()
-        vm_scenario = utils.VMScenario()
+        vm_scenario = utils.VMScenario(self.context)
         vm_scenario._run_command_over_ssh(
             mock_ssh,
             {
@@ -80,7 +80,7 @@ class VMScenarioTestCase(test.ScenarioTestCase):
 
     def test__run_command_over_ssh_remote_path_copy(self):
         mock_ssh = mock.MagicMock()
-        vm_scenario = utils.VMScenario()
+        vm_scenario = utils.VMScenario(self.context)
         vm_scenario._run_command_over_ssh(
             mock_ssh,
             {
@@ -97,19 +97,19 @@ class VMScenarioTestCase(test.ScenarioTestCase):
             stdin=None)
 
     def test__run_command_over_ssh_fails(self):
-        vm_scenario = utils.VMScenario()
+        vm_scenario = utils.VMScenario(self.context)
         self.assertRaises(ValueError,
                           vm_scenario._run_command_over_ssh,
                           None, command={})
 
     def test__wait_for_ssh(self):
         ssh = mock.MagicMock()
-        vm_scenario = utils.VMScenario()
+        vm_scenario = utils.VMScenario(self.context)
         vm_scenario._wait_for_ssh(ssh)
         ssh.wait.assert_called_once_with()
 
     def test__wait_for_ping(self):
-        vm_scenario = utils.VMScenario()
+        vm_scenario = utils.VMScenario(self.context)
         vm_scenario._ping_ip_address = mock.Mock(return_value=True)
         vm_scenario._wait_for_ping(netaddr.IPAddress("1.2.3.4"))
         self.mock_wait_for.mock.assert_called_once_with(
@@ -124,7 +124,7 @@ class VMScenarioTestCase(test.ScenarioTestCase):
     @mock.patch("rally.common.sshutils.SSH")
     def test__run_command(self, mock_sshutils_ssh,
                           mock_vm_scenario__run_command_over_ssh):
-        vm_scenario = utils.VMScenario()
+        vm_scenario = utils.VMScenario(self.context)
         vm_scenario.context = {"user": {"keypair": {"private": "ssh"}}}
         vm_scenario._run_command("1.2.3.4", 22, "username", "password",
                                  command={"script_file": "foo",
@@ -143,7 +143,7 @@ class VMScenarioTestCase(test.ScenarioTestCase):
         mock_popen.return_value.returncode = 0
         mock_sys.platform = "linux2"
 
-        vm_scenario = utils.VMScenario()
+        vm_scenario = utils.VMScenario(self.context)
         host_ip = netaddr.IPAddress("1.2.3.4")
         self.assertTrue(vm_scenario._ping_ip_address(host_ip))
 
@@ -158,7 +158,7 @@ class VMScenarioTestCase(test.ScenarioTestCase):
         mock_popen.return_value.returncode = 0
         mock_sys.platform = "linux2"
 
-        vm_scenario = utils.VMScenario()
+        vm_scenario = utils.VMScenario(self.context)
         host_ip = netaddr.IPAddress("1ce:c01d:bee2:15:a5:900d:a5:11fe")
         self.assertTrue(vm_scenario._ping_ip_address(host_ip))
 
@@ -173,7 +173,7 @@ class VMScenarioTestCase(test.ScenarioTestCase):
         mock_popen.return_value.returncode = 0
         mock_sys.platform = "freebsd10"
 
-        vm_scenario = utils.VMScenario()
+        vm_scenario = utils.VMScenario(self.context)
         host_ip = netaddr.IPAddress("1.2.3.4")
         self.assertTrue(vm_scenario._ping_ip_address(host_ip))
 
@@ -188,7 +188,7 @@ class VMScenarioTestCase(test.ScenarioTestCase):
         mock_popen.return_value.returncode = 0
         mock_sys.platform = "freebsd10"
 
-        vm_scenario = utils.VMScenario()
+        vm_scenario = utils.VMScenario(self.context)
         host_ip = netaddr.IPAddress("1ce:c01d:bee2:15:a5:900d:a5:11fe")
         self.assertTrue(vm_scenario._ping_ip_address(host_ip))
 
@@ -203,7 +203,7 @@ class VMScenarioTestCase(test.ScenarioTestCase):
             addresses={"foo_net": [{"addr": "foo_ip"}]},
             tenant_id="foo_tenant"
         )
-        scenario = utils.VMScenario(context={})
+        scenario = utils.VMScenario(self.context)
 
         scenario._boot_server = mock.Mock(return_value=server)
         scenario._delete_server = mock.Mock()

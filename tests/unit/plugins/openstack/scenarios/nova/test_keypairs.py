@@ -19,10 +19,10 @@ from rally.plugins.openstack.scenarios.nova import keypairs
 from tests.unit import test
 
 
-class NovaKeypairTestCase(test.TestCase):
+class NovaKeypairTestCase(test.ScenarioTestCase):
 
     def test_create_and_list_keypairs(self):
-        scenario = keypairs.NovaKeypair()
+        scenario = keypairs.NovaKeypair(self.context)
         scenario._generate_random_name = mock.MagicMock(return_value="name")
         scenario._create_keypair = mock.MagicMock(return_value="foo_keypair")
         scenario._list_keypairs = mock.MagicMock()
@@ -33,7 +33,7 @@ class NovaKeypairTestCase(test.TestCase):
         scenario._list_keypairs.assert_called_once_with()
 
     def test_create_and_delete_keypair(self):
-        scenario = keypairs.NovaKeypair()
+        scenario = keypairs.NovaKeypair(self.context)
         scenario._generate_random_name = mock.MagicMock(return_value="name")
         scenario._create_keypair = mock.MagicMock(return_value="foo_keypair")
         scenario._delete_keypair = mock.MagicMock()
@@ -44,7 +44,7 @@ class NovaKeypairTestCase(test.TestCase):
         scenario._delete_keypair.assert_called_once_with("foo_keypair")
 
     def test_boot_and_delete_server_with_keypair(self):
-        scenario = keypairs.NovaKeypair()
+        scenario = keypairs.NovaKeypair(self.context)
         scenario._generate_random_name = mock.MagicMock(return_value="name")
         scenario._create_keypair = mock.MagicMock(return_value="foo_keypair")
         scenario._boot_server = mock.MagicMock(return_value="foo_server")

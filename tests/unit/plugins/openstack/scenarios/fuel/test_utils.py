@@ -162,7 +162,7 @@ class FuelScenarioTestCase(test.ScenarioTestCase):
     def test__list_environments(self):
         self.admin_clients("fuel").environment.list.return_value = [
             {"name": "some_name1"}, {"name": "rally_name2"}]
-        scenario = utils.FuelScenario()
+        scenario = utils.FuelScenario(self.context)
         self.assertEqual([{"name": "rally_name2"}],
                          scenario._list_environments())
         self.admin_clients("fuel").environment.list.assert_called_once_with()

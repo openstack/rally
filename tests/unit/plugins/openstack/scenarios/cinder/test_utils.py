@@ -29,7 +29,7 @@ class CinderScenarioTestCase(test.ScenarioTestCase):
 
     def setUp(self):
         super(CinderScenarioTestCase, self).setUp()
-        self.scenario = utils.CinderScenario()
+        self.scenario = utils.CinderScenario(self.context)
 
     def test__list_volumes(self):
         return_volumes_list = self.scenario._list_volumes()

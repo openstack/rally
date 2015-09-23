@@ -38,11 +38,24 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
         self.floating_ip = mock.Mock()
         self.image = mock.Mock()
         self.keypair = mock.Mock()
+        self.context["iteration"] = 3
+        self.context["config"] = {"users": {"tenants": 2}}
+
+    def _context_with_networks(self, networks):
+        retval = {"tenant": {"networks": networks}}
+        retval.update(self.context)
+        return retval
+
+    def _context_with_secgroup(self, secgroup):
+        retval = {"user": {"secgroup": secgroup,
+                           "endpoint": mock.MagicMock()}}
+        retval.update(self.context)
+        return retval
 
     def test__list_servers(self):
         servers_list = []
         self.clients("nova").servers.list.return_value = servers_list
-        nova_scenario = utils.NovaScenario()
+        nova_scenario = utils.NovaScenario(self.context)
         return_servers_list = nova_scenario._list_servers(True)
         self.assertEqual(servers_list, return_servers_list)
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
@@ -83,7 +96,7 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
         self.clients("nova").servers.create.return_value = self.server
 
         if context is None:
-            context = {}
+            context = self.context
         context.setdefault("user", {}).setdefault("endpoint", mock.MagicMock())
         context.setdefault("config", {})
 
@@ -129,13 +142,13 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
     def test__boot_server_with_network_exception(self):
         self.clients("nova").servers.create.return_value = self.server
         nova_scenario = utils.NovaScenario(
-            context={"tenant": {"networks": None}})
+            context=self._context_with_networks(None))
         self.assertRaises(TypeError, nova_scenario._boot_server,
                           "image_id", "flavor_id",
                           auto_assign_nic=True)
 
     def test__suspend_server(self):
-        nova_scenario = utils.NovaScenario()
+        nova_scenario = utils.NovaScenario(context=self.context)
         nova_scenario._suspend_server(self.server)
         self.server.suspend.assert_called_once_with()
         self.mock_wait_for.mock.assert_called_once_with(
@@ -150,7 +163,7 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
                                        "nova.suspend_server")
 
     def test__resume_server(self):
-        nova_scenario = utils.NovaScenario()
+        nova_scenario = utils.NovaScenario(context=self.context)
         nova_scenario._resume_server(self.server)
         self.server.resume.assert_called_once_with()
         self.mock_wait_for.mock.assert_called_once_with(
@@ -165,7 +178,7 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
                                        "nova.resume_server")
 
     def test__pause_server(self):
-        nova_scenario = utils.NovaScenario()
+        nova_scenario = utils.NovaScenario(context=self.context)
         nova_scenario._pause_server(self.server)
         self.server.pause.assert_called_once_with()
         self.mock_wait_for.mock.assert_called_once_with(
@@ -180,7 +193,7 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
                                        "nova.pause_server")
 
     def test__unpause_server(self):
-        nova_scenario = utils.NovaScenario()
+        nova_scenario = utils.NovaScenario(context=self.context)
         nova_scenario._unpause_server(self.server)
         self.server.unpause.assert_called_once_with()
         self.mock_wait_for.mock.assert_called_once_with(
@@ -195,7 +208,7 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
                                        "nova.unpause_server")
 
     def test__shelve_server(self):
-        nova_scenario = utils.NovaScenario()
+        nova_scenario = utils.NovaScenario(context=self.context)
         nova_scenario._shelve_server(self.server)
         self.server.shelve.assert_called_once_with()
         self.mock_wait_for.mock.assert_called_once_with(
@@ -210,7 +223,7 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
                                        "nova.shelve_server")
 
     def test__unshelve_server(self):
-        nova_scenario = utils.NovaScenario()
+        nova_scenario = utils.NovaScenario(context=self.context)
         nova_scenario._unshelve_server(self.server)
         self.server.unshelve.assert_called_once_with()
         self.mock_wait_for.mock.assert_called_once_with(
@@ -226,7 +239,7 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
 
     def test__create_image(self):
         self.clients("nova").images.get.return_value = self.image
-        nova_scenario = utils.NovaScenario()
+        nova_scenario = utils.NovaScenario(context=self.context)
         return_image = nova_scenario._create_image(self.server)
         self.mock_wait_for.mock.assert_called_once_with(
             self.image,
@@ -242,7 +255,7 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
                                        "nova.create_image")
 
     def test__default_delete_server(self):
-        nova_scenario = utils.NovaScenario()
+        nova_scenario = utils.NovaScenario(context=self.context)
         nova_scenario._delete_server(self.server)
         self.server.delete.assert_called_once_with()
         self.mock_wait_for_delete.mock.assert_called_once_with(
@@ -255,7 +268,7 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
                                        "nova.delete_server")
 
     def test__force_delete_server(self):
-        nova_scenario = utils.NovaScenario()
+        nova_scenario = utils.NovaScenario(context=self.context)
         nova_scenario._delete_server(self.server, force=True)
         self.server.force_delete.assert_called_once_with()
         self.mock_wait_for_delete.mock.assert_called_once_with(
@@ -268,7 +281,7 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
                                        "nova.force_delete_server")
 
     def test__reboot_server(self):
-        nova_scenario = utils.NovaScenario()
+        nova_scenario = utils.NovaScenario(context=self.context)
         nova_scenario._reboot_server(self.server)
         self.server.reboot.assert_called_once_with(reboot_type="HARD")
         self.mock_wait_for.mock.assert_called_once_with(
@@ -283,7 +296,7 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
                                        "nova.reboot_server")
 
     def test__soft_reboot_server(self):
-        nova_scenario = utils.NovaScenario()
+        nova_scenario = utils.NovaScenario(context=self.context)
         nova_scenario._soft_reboot_server(self.server)
         self.server.reboot.assert_called_once_with(reboot_type="SOFT")
         self.mock_wait_for.mock.assert_called_once_with(
@@ -298,7 +311,7 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
                                        "nova.soft_reboot_server")
 
     def test__rebuild_server(self):
-        nova_scenario = utils.NovaScenario()
+        nova_scenario = utils.NovaScenario(context=self.context)
         nova_scenario._rebuild_server(self.server, "img", fakearg="fakearg")
         self.server.rebuild.assert_called_once_with("img", fakearg="fakearg")
         self.mock_wait_for.mock.assert_called_once_with(
@@ -313,7 +326,7 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
                                        "nova.rebuild_server")
 
     def test__start_server(self):
-        nova_scenario = utils.NovaScenario()
+        nova_scenario = utils.NovaScenario(context=self.context)
         nova_scenario._start_server(self.server)
         self.server.start.assert_called_once_with()
         self.mock_wait_for.mock.assert_called_once_with(
@@ -328,7 +341,7 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
                                        "nova.start_server")
 
     def test__stop_server(self):
-        nova_scenario = utils.NovaScenario()
+        nova_scenario = utils.NovaScenario(context=self.context)
         nova_scenario._stop_server(self.server)
         self.server.stop.assert_called_once_with()
         self.mock_wait_for.mock.assert_called_once_with(
@@ -343,7 +356,7 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
                                        "nova.stop_server")
 
     def test__rescue_server(self):
-        nova_scenario = utils.NovaScenario()
+        nova_scenario = utils.NovaScenario(context=self.context)
         nova_scenario._rescue_server(self.server)
         self.server.rescue.assert_called_once_with()
         self.mock_wait_for.mock.assert_called_once_with(
@@ -358,7 +371,7 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
                                        "nova.rescue_server")
 
     def test__unrescue_server(self):
-        nova_scenario = utils.NovaScenario()
+        nova_scenario = utils.NovaScenario(context=self.context)
         nova_scenario._unrescue_server(self.server)
         self.server.unrescue.assert_called_once_with()
         self.mock_wait_for.mock.assert_called_once_with(
@@ -374,7 +387,7 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
 
     def _test_delete_servers(self, force=False):
         servers = [self.server, self.server1]
-        nova_scenario = utils.NovaScenario()
+        nova_scenario = utils.NovaScenario(context=self.context)
         nova_scenario._delete_servers(servers, force=force)
         check_interval = CONF.benchmark.nova_server_delete_poll_interval
         expected = []
@@ -403,7 +416,7 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
         self._test_delete_servers(force=True)
 
     def test__delete_image(self):
-        nova_scenario = utils.NovaScenario()
+        nova_scenario = utils.NovaScenario(context=self.context)
         nova_scenario._delete_image(self.image)
         self.image.delete.assert_called_once_with()
         self.mock_wait_for_delete.mock.assert_called_once_with(
@@ -429,7 +442,7 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
                            auto_assign_nic=False, **kwargs):
         servers = [mock.Mock() for i in range(instances_amount)]
         self.clients("nova").servers.list.return_value = servers
-        scenario = utils.NovaScenario()
+        scenario = utils.NovaScenario(context=self.context)
         scenario._generate_random_name = mock.Mock()
         scenario._pick_random_nic = mock.Mock()
 
@@ -471,7 +484,7 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
                                        "nova.boot_servers")
 
     def test__associate_floating_ip(self):
-        nova_scenario = utils.NovaScenario()
+        nova_scenario = utils.NovaScenario(context=self.context)
         nova_scenario._associate_floating_ip(self.server, self.floating_ip)
         self.server.add_floating_ip.assert_called_once_with(self.floating_ip,
                                                             fixed_address=None)
@@ -479,7 +492,7 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
                                        "nova.associate_floating_ip")
 
     def test__dissociate_floating_ip(self):
-        nova_scenario = utils.NovaScenario()
+        nova_scenario = utils.NovaScenario(context=self.context)
         nova_scenario._dissociate_floating_ip(self.server, self.floating_ip)
         self.server.remove_floating_ip.assert_called_once_with(
             self.floating_ip)
@@ -487,7 +500,7 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
                                        "nova.dissociate_floating_ip")
 
     def test__check_ip_address(self):
-        nova_scenario = utils.NovaScenario()
+        nova_scenario = utils.NovaScenario(context=self.context)
         fake_server = fakes.FakeServerManager().create("test_server",
                                                        "image_id_01",
                                                        "flavor_id_01")
@@ -519,41 +532,41 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
     def test__list_networks(self):
         network_list = []
         self.clients("nova").networks.list.return_value = network_list
-        nova_scenario = utils.NovaScenario()
+        nova_scenario = utils.NovaScenario(context=self.context)
         return_network_list = nova_scenario._list_networks()
         self.assertEqual(network_list, return_network_list)
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.list_networks")
 
     def test__resize(self):
-        nova_scenario = utils.NovaScenario()
+        nova_scenario = utils.NovaScenario(context=self.context)
         to_flavor = mock.Mock()
         nova_scenario._resize(self.server, to_flavor)
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.resize")
 
     def test__resize_confirm(self):
-        nova_scenario = utils.NovaScenario()
+        nova_scenario = utils.NovaScenario(context=self.context)
         nova_scenario._resize_confirm(self.server)
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.resize_confirm")
 
     def test__resize_revert(self):
-        nova_scenario = utils.NovaScenario()
+        nova_scenario = utils.NovaScenario(context=self.context)
         nova_scenario._resize_revert(self.server)
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.resize_revert")
 
     def test__attach_volume(self):
         self.clients("nova").volumes.create_server_volume.return_value = None
-        nova_scenario = utils.NovaScenario()
+        nova_scenario = utils.NovaScenario(context=self.context)
         nova_scenario._attach_volume(self.server, self.volume)
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.attach_volume")
 
     def test__detach_volume(self):
         self.clients("nova").volumes.delete_server_volume.return_value = None
-        nova_scenario = utils.NovaScenario()
+        nova_scenario = utils.NovaScenario(context=self.context)
         nova_scenario._detach_volume(self.server, self.volume)
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.detach_volume")
@@ -561,7 +574,7 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
     def test__live_migrate_server(self):
         fake_host = mock.MagicMock()
         self.admin_clients("nova").servers.get(return_value=self.server)
-        nova_scenario = utils.NovaScenario()
+        nova_scenario = utils.NovaScenario(context=self.context)
         nova_scenario._live_migrate(self.server,
                                     fake_host,
                                     block_migration=False,
@@ -597,7 +610,7 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
         ]
         setattr(fake_server, "OS-EXT-SRV-ATTR:host", "b2")
         setattr(fake_server, "OS-EXT-AZ:availability_zone", "b")
-        nova_scenario = utils.NovaScenario()
+        nova_scenario = utils.NovaScenario(context=self.context)
 
         self.assertIn(
             nova_scenario._find_host_to_migrate(fake_server), ["b1", "b3"])
@@ -606,7 +619,7 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
         fake_server = self.server
         setattr(fake_server, "OS-EXT-SRV-ATTR:host", "a1")
         self.clients("nova").servers.get(return_value=fake_server)
-        nova_scenario = utils.NovaScenario()
+        nova_scenario = utils.NovaScenario(context=self.context)
         nova_scenario._migrate(fake_server, skip_host_check=True)
 
         self.mock_wait_for.mock.assert_called_once_with(
@@ -625,7 +638,7 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
                           fake_server, skip_host_check=False)
 
     def test__create_security_groups(self):
-        nova_scenario = utils.NovaScenario()
+        nova_scenario = utils.NovaScenario(context=self.context)
         nova_scenario._generate_random_name = mock.MagicMock()
 
         security_group_count = 5
@@ -644,7 +657,7 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
             "nova.create_%s_security_groups" % security_group_count)
 
     def test__create_rules_for_security_group(self):
-        nova_scenario = utils.NovaScenario()
+        nova_scenario = utils.NovaScenario(context=self.context)
 
         fake_secgroups = [fakes.FakeSecurityGroup(None, None, 1, "uuid1"),
                           fakes.FakeSecurityGroup(None, None, 2, "uuid2")]
@@ -674,7 +687,7 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
             "nova.update_%s_security_groups" % len(fake_secgroups))
 
     def test__delete_security_groups(self):
-        nova_scenario = utils.NovaScenario()
+        nova_scenario = utils.NovaScenario(context=self.context)
 
         fake_secgroups = [fakes.FakeSecurityGroup(None, None, 1, "uuid1"),
                           fakes.FakeSecurityGroup(None, None, 2, "uuid2")]
@@ -689,7 +702,7 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
             "nova.delete_%s_security_groups" % len(fake_secgroups))
 
     def test__list_security_groups(self):
-        nova_scenario = utils.NovaScenario()
+        nova_scenario = utils.NovaScenario(context=self.context)
         nova_scenario._list_security_groups()
 
         self.clients("nova").security_groups.list.assert_called_once_with()
@@ -700,7 +713,7 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
     def test__list_keypairs(self):
         keypairs_list = ["foo_keypair"]
         self.clients("nova").keypairs.list.return_value = keypairs_list
-        nova_scenario = utils.NovaScenario()
+        nova_scenario = utils.NovaScenario(context=self.context)
         return_keypairs_list = nova_scenario._list_keypairs()
         self.assertEqual(keypairs_list, return_keypairs_list)
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
@@ -708,14 +721,14 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
 
     def test__create_keypair(self):
         self.clients("nova").keypairs.create.return_value.name = self.keypair
-        nova_scenario = utils.NovaScenario()
+        nova_scenario = utils.NovaScenario(context=self.context)
         return_keypair = nova_scenario._create_keypair()
         self.assertEqual(self.keypair, return_keypair)
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.create_keypair")
 
     def test__delete_keypair(self):
-        nova_scenario = utils.NovaScenario()
+        nova_scenario = utils.NovaScenario(context=self.context)
         nova_scenario._delete_keypair(self.keypair)
         self.clients("nova").keypairs.delete.assert_called_once_with(
             self.keypair)
@@ -726,7 +739,7 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
         floating_ips_bulk_list = ["foo_floating_ips_bulk"]
         self.admin_clients("nova").floating_ips_bulk.list.return_value = (
             floating_ips_bulk_list)
-        nova_scenario = utils.NovaScenario()
+        nova_scenario = utils.NovaScenario(context=self.context)
         return_floating_ips_bulk_list = nova_scenario._list_floating_ips_bulk()
         self.assertEqual(floating_ips_bulk_list, return_floating_ips_bulk_list)
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
@@ -741,7 +754,7 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
         fake_floating_ips_bulk.pool = fake_pool
         self.admin_clients("nova").floating_ips_bulk.create.return_value = (
             fake_floating_ips_bulk)
-        nova_scenario = utils.NovaScenario()
+        nova_scenario = utils.NovaScenario(context=self.context)
         return_iprange = nova_scenario._create_floating_ips_bulk(fake_cidr)
         mock_generate_cidr.assert_called_once_with(start_cidr=fake_cidr)
         self.assertEqual(return_iprange, fake_floating_ips_bulk)
@@ -750,7 +763,7 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
 
     def test__delete_floating_ips_bulk(self):
         fake_cidr = "10.2.0.0/24"
-        nova_scenario = utils.NovaScenario()
+        nova_scenario = utils.NovaScenario(context=self.context)
         nova_scenario._delete_floating_ips_bulk(fake_cidr)
         self.admin_clients(
             "nova").floating_ips_bulk.delete.assert_called_once_with(fake_cidr)
@@ -758,7 +771,7 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
                                        "nova.delete_floating_ips_bulk")
 
     def test__list_hypervisors(self):
-        nova_scenario = utils.NovaScenario()
+        nova_scenario = utils.NovaScenario(context=self.context)
         nova_scenario._list_hypervisors(detailed=False)
         self.admin_clients("nova").hypervisors.list.assert_called_once_with(
             False)
@@ -767,7 +780,7 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
 
     def test__lock_server(self):
         server = mock.Mock()
-        nova_scenario = utils.NovaScenario()
+        nova_scenario = utils.NovaScenario(context=self.context)
         nova_scenario._lock_server(server)
         server.lock.assert_called_once_with()
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
@@ -775,7 +788,7 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
 
     def test__unlock_server(self):
         server = mock.Mock()
-        nova_scenario = utils.NovaScenario()
+        nova_scenario = utils.NovaScenario(context=self.context)
         nova_scenario._unlock_server(server)
         server.unlock.assert_called_once_with()
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),

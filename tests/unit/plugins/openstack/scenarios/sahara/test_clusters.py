@@ -30,7 +30,7 @@ class SaharaClustersTestCase(test.ScenarioTestCase):
                 return_value=mock.MagicMock(id=42))
     def test_create_and_delete_cluster(
             self, mock__launch_cluster, mock__delete_cluster):
-        clusters_scenario = clusters.SaharaClusters()
+        clusters_scenario = clusters.SaharaClusters(self.context)
 
         clusters_scenario.context = {
             "tenant": {
@@ -71,7 +71,7 @@ class SaharaClustersTestCase(test.ScenarioTestCase):
         self.clients("sahara").clusters.get.return_value = mock.MagicMock(
             id=42, status="active"
         )
-        clusters_scenario = clusters.SaharaClusters()
+        clusters_scenario = clusters.SaharaClusters(self.context)
 
         clusters_scenario.context = {
             "tenant": {

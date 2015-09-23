@@ -18,10 +18,10 @@ from rally.plugins.openstack.scenarios.ceilometer import events
 from tests.unit import test
 
 
-class CeilometerEventsTestCase(test.TestCase):
+class CeilometerEventsTestCase(test.ScenarioTestCase):
 
     def test_list_events(self):
-        scenario = events.CeilometerEvents()
+        scenario = events.CeilometerEvents(self.context)
 
         scenario._user_create = mock.MagicMock()
         scenario._list_events = mock.MagicMock()
@@ -30,7 +30,7 @@ class CeilometerEventsTestCase(test.TestCase):
         scenario._list_events.assert_called_once_with()
 
     def test_list_event_types(self):
-        scenario = events.CeilometerEvents()
+        scenario = events.CeilometerEvents(self.context)
 
         scenario._list_event_types = mock.MagicMock()
         scenario._user_create = mock.MagicMock()
@@ -39,7 +39,7 @@ class CeilometerEventsTestCase(test.TestCase):
         scenario._list_event_types.assert_called_once_with()
 
     def test_get_event(self):
-        scenario = events.CeilometerEvents()
+        scenario = events.CeilometerEvents(self.context)
 
         scenario._user_create = mock.MagicMock()
         scenario._list_events = mock.MagicMock()

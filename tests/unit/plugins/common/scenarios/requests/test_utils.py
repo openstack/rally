@@ -22,7 +22,7 @@ class RequestsTestCase(test.TestCase):
     @mock.patch("requests.request")
     def test__check_request(self, mock_request):
         mock_request.return_value = mock.MagicMock(status_code=200)
-        scenario = utils.RequestScenario()
+        scenario = utils.RequestScenario(test.get_test_context())
         scenario._check_request(status_code=200, url="sample", method="GET")
 
         self._test_atomic_action_timer(scenario.atomic_actions(),
@@ -32,7 +32,7 @@ class RequestsTestCase(test.TestCase):
     @mock.patch("requests.request")
     def test_check_wrong_request(self, mock_request):
         mock_request.return_value = mock.MagicMock(status_code=200)
-        scenario = utils.RequestScenario()
+        scenario = utils.RequestScenario(test.get_test_context())
 
         self.assertRaises(ValueError, scenario._check_request,
                           status_code=201, url="sample", method="GET")

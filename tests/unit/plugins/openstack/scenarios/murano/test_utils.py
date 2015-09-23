@@ -27,7 +27,7 @@ class MuranoScenarioTestCase(test.ScenarioTestCase):
 
     def test_list_environments(self):
         self.clients("murano").environments.list.return_value = []
-        scenario = utils.MuranoScenario()
+        scenario = utils.MuranoScenario(context=self.context)
         return_environments_list = scenario._list_environments()
         self.assertEqual([], return_environments_list)
         self._test_atomic_action_timer(scenario.atomic_actions(),
@@ -36,7 +36,7 @@ class MuranoScenarioTestCase(test.ScenarioTestCase):
     def test_create_environments(self):
         mock_create = mock.Mock(return_value="foo_env")
         self.clients("murano").environments.create = mock_create
-        scenario = utils.MuranoScenario()
+        scenario = utils.MuranoScenario(context=self.context)
         create_env = scenario._create_environment("env_name")
         self.assertEqual("foo_env", create_env)
         mock_create.assert_called_once_with({"name": "env_name"})
@@ -46,7 +46,7 @@ class MuranoScenarioTestCase(test.ScenarioTestCase):
     def test_delete_environment(self):
         environment = mock.Mock(id="id")
         self.clients("murano").environments.delete.return_value = "ok"
-        scenario = utils.MuranoScenario()
+        scenario = utils.MuranoScenario(context=self.context)
         scenario._delete_environment(environment)
         self.clients("murano").environments.delete.assert_called_once_with(
             environment.id
@@ -63,7 +63,7 @@ class MuranoScenarioTestCase(test.ScenarioTestCase):
 
     def test_create_session(self):
         self.clients("murano").sessions.configure.return_value = "sess"
-        scenario = utils.MuranoScenario()
+        scenario = utils.MuranoScenario(context=self.context)
         create_sess = scenario._create_session("id")
         self.assertEqual("sess", create_sess)
         self._test_atomic_action_timer(scenario.atomic_actions(),
@@ -73,7 +73,7 @@ class MuranoScenarioTestCase(test.ScenarioTestCase):
         self.clients("murano").services.post.return_value = "app"
         mock_env = mock.Mock(id="ip")
         mock_sess = mock.Mock(id="ip")
-        scenario = utils.MuranoScenario()
+        scenario = utils.MuranoScenario(context=self.context)
 
         create_app = scenario._create_service(mock_env, mock_sess,
                                               "fake_full_name",
@@ -87,7 +87,7 @@ class MuranoScenarioTestCase(test.ScenarioTestCase):
         environment = mock.Mock(id="id")
         session = mock.Mock(id="id")
         self.clients("murano").sessions.deploy.return_value = "ok"
-        scenario = utils.MuranoScenario()
+        scenario = utils.MuranoScenario(context=self.context)
         scenario._deploy_environment(environment, session)
 
         self.clients("murano").sessions.deploy.assert_called_once_with(

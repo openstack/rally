@@ -23,10 +23,10 @@ MURANO_SCENARIO = ("rally.plugins.openstack.scenarios.murano."
                    "environments.MuranoEnvironments")
 
 
-class MuranoEnvironmentsTestCase(test.TestCase):
+class MuranoEnvironmentsTestCase(test.ScenarioTestCase):
 
     def _get_context(self):
-        return {
+        self.context.update({
             "tenant": {
                 "packages": [mock.MagicMock(fully_qualified_name="fake")]
             },
@@ -41,11 +41,12 @@ class MuranoEnvironmentsTestCase(test.TestCase):
                         "io.murano.apps.HelloReporter.zip")
                 }
             }
-        }
+        })
+        return self.context
 
     @mock.patch(MURANO_SCENARIO + "._list_environments")
     def test_list_environments(self, mock__list_environments):
-        scenario = environments.MuranoEnvironments()
+        scenario = environments.MuranoEnvironments(self.context)
         scenario._list_environments()
         mock__list_environments.assert_called_once_with()
 
@@ -56,7 +57,7 @@ class MuranoEnvironmentsTestCase(test.TestCase):
     def test_create_and_delete_environment(
             self, mock__generate_random_name, mock__create_environment,
             mock__delete_environment, mock__create_session):
-        scenario = environments.MuranoEnvironments()
+        scenario = environments.MuranoEnvironments(self.context)
         fake_environment = mock.Mock(id="fake_id")
         mock__create_environment.return_value = fake_environment
         mock__generate_random_name.return_value = "foo"
@@ -79,7 +80,7 @@ class MuranoEnvironmentsTestCase(test.TestCase):
         fake_session = mock.Mock(id="fake_session_id")
         mock__create_session.return_value = fake_session
 
-        scenario = environments.MuranoEnvironments()
+        scenario = environments.MuranoEnvironments(self.context)
         scenario.context = self._get_context()
         scenario.context["tenants"] = {
             "fake_tenant_id": {

@@ -14,6 +14,7 @@
 #    under the License.
 
 import os
+import uuid
 
 import mock
 from oslo_config import fixture
@@ -130,6 +131,8 @@ class ScenarioTestCase(TestCase):
         for patcher in self._client_mocks:
             patcher.start()
 
+        self.context = get_test_context()
+
     def tearDown(self):
         for patcher in self._client_mocks:
             patcher.stop()
@@ -145,3 +148,11 @@ class FakeClientsScenarioTestCase(ScenarioTestCase):
     def setUp(self):
         super(FakeClientsScenarioTestCase, self).setUp()
         self._fake_clients = fakes.FakeClients()
+
+
+def get_test_context():
+    return {
+        "task": {
+            "uuid": str(uuid.uuid4())
+        }
+    }

@@ -22,7 +22,7 @@ from tests.unit import test
 class IronicNodesTestCase(test.ScenarioTestCase):
 
     def test_create_and_list_node(self):
-        scenario = nodes.IronicNodes()
+        scenario = nodes.IronicNodes(self.context)
         scenario._create_node = mock.Mock()
         scenario._list_nodes = mock.Mock()
         fake_params = {
@@ -44,7 +44,7 @@ class IronicNodesTestCase(test.ScenarioTestCase):
 
     def test_create_and_delete_node(self):
         fake_node = mock.Mock(uuid="fake_uuid")
-        scenario = nodes.IronicNodes()
+        scenario = nodes.IronicNodes(self.context)
         scenario._create_node = mock.Mock(return_value=fake_node)
         scenario._delete_node = mock.Mock()
 

@@ -18,10 +18,10 @@ from rally.plugins.openstack.scenarios.ceilometer import traits
 from tests.unit import test
 
 
-class CeilometerTraitsTestCase(test.TestCase):
+class CeilometerTraitsTestCase(test.ScenarioTestCase):
 
     def test_list_traits(self):
-        scenario = traits.CeilometerTraits()
+        scenario = traits.CeilometerTraits(self.context)
 
         scenario._user_create = mock.MagicMock()
         scenario._list_events = mock.MagicMock()
@@ -37,7 +37,7 @@ class CeilometerTraitsTestCase(test.TestCase):
             event_type="fake_event_type", trait_name="fake_trait_name")
 
     def test_list_trait_descriptions(self):
-        scenario = traits.CeilometerTraits()
+        scenario = traits.CeilometerTraits(self.context)
 
         scenario._user_create = mock.MagicMock()
         scenario._list_events = mock.MagicMock()

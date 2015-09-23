@@ -33,7 +33,6 @@ class SaharaClusterTestCase(test.ScenarioTestCase):
         self.tenants_num = 2
         self.users_per_tenant = 2
         self.users = self.tenants_num * self.users_per_tenant
-        self.task = mock.MagicMock()
 
         self.tenants = {}
         self.users_key = []
@@ -48,9 +47,7 @@ class SaharaClusterTestCase(test.ScenarioTestCase):
 
         CONF.set_override("cluster_check_interval", 0, "benchmark")
 
-    @property
-    def context_without_cluster_keys(self):
-        return {
+        self.context.update({
             "config": {
                 "users": {
                     "tenants": self.tenants_num,
@@ -64,19 +61,16 @@ class SaharaClusterTestCase(test.ScenarioTestCase):
                 }
             },
             "admin": {"endpoint": mock.MagicMock()},
-            "task": mock.MagicMock(),
             "users": self.users_key,
             "tenants": self.tenants
-        }
+        })
 
     @mock.patch("%s.sahara_cluster.resource_manager.cleanup" % CTX)
     @mock.patch("%s.sahara_cluster.utils.SaharaScenario._launch_cluster" % CTX,
                 return_value=mock.MagicMock(id=42))
     def test_setup_and_cleanup(self, mock_sahara_scenario__launch_cluster,
                                mock_cleanup):
-
-        ctx = self.context_without_cluster_keys
-        sahara_ctx = sahara_cluster.SaharaCluster(ctx)
+        sahara_ctx = sahara_cluster.SaharaCluster(self.context)
 
         launch_cluster_calls = []
 
@@ -86,7 +80,7 @@ class SaharaClusterTestCase(test.ScenarioTestCase):
                 hadoop_version="test_version",
                 flavor_id="test_flavor",
                 workers_count=2,
-                image_id=ctx["tenants"][i]["sahara_image"],
+                image_id=self.context["tenants"][i]["sahara_image"],
                 floating_ip_pool=None,
                 volumes_per_node=None,
                 volumes_size=1,
@@ -107,15 +101,13 @@ class SaharaClusterTestCase(test.ScenarioTestCase):
             launch_cluster_calls)
         sahara_ctx.cleanup()
         mock_cleanup.assert_called_once_with(names=["sahara.clusters"],
-                                             users=ctx["users"])
+                                             users=self.context["users"])
 
     @mock.patch("%s.sahara_cluster.utils.SaharaScenario._launch_cluster" % CTX,
                 return_value=mock.MagicMock(id=42))
     def test_setup_and_cleanup_error(self,
                                      mock_sahara_scenario__launch_cluster):
-
-        ctx = self.context_without_cluster_keys
-        sahara_ctx = sahara_cluster.SaharaCluster(ctx)
+        sahara_ctx = sahara_cluster.SaharaCluster(self.context)
 
         launch_cluster_calls = []
 
@@ -125,7 +117,7 @@ class SaharaClusterTestCase(test.ScenarioTestCase):
                 hadoop_version="test_version",
                 flavor_id="test_flavor",
                 workers_count=2,
-                image_id=ctx["tenants"][i]["sahara_image"],
+                image_id=self.context["tenants"][i]["sahara_image"],
                 floating_ip_pool=None,
                 volumes_per_node=None,
                 volumes_size=1,

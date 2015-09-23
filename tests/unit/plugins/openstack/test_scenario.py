@@ -25,52 +25,45 @@ class OpenStackScenarioTestCase(test.TestCase):
         self.osclients = mockpatch.Patch(
             "rally.osclients.Clients")
         self.useFixture(self.osclients)
+        self.context = test.get_test_context()
+        self.context.update({"foo": "bar"})
 
     def test_init(self):
-        context = {"foo": "bar"}
-        scenario = base_scenario.OpenStackScenario(context)
-        self.assertEqual(context, scenario.context)
+        scenario = base_scenario.OpenStackScenario(self.context)
+        self.assertEqual(self.context, scenario.context)
 
     def test_init_admin_context(self):
-        context = {
-            "foo": "bar",
-            "admin": {"endpoint": mock.Mock()}
-        }
-        scenario = base_scenario.OpenStackScenario(context)
-        self.assertEqual(context, scenario.context)
+        self.context["admin"] = {"endpoint": mock.Mock()}
+        scenario = base_scenario.OpenStackScenario(self.context)
+        self.assertEqual(self.context, scenario.context)
         self.osclients.mock.assert_called_once_with(
-            context["admin"]["endpoint"])
+            self.context["admin"]["endpoint"])
 
         self.assertRaises(
             ValueError, base_scenario.OpenStackScenario,
-            context, admin_clients="foobar")
+            self.context, admin_clients="foobar")
 
     def test_init_admin_clients(self):
-        context = {"foo": "bar"}
         scenario = base_scenario.OpenStackScenario(
-            context, admin_clients="foobar")
-        self.assertEqual(context, scenario.context)
+            self.context, admin_clients="foobar")
+        self.assertEqual(self.context, scenario.context)
 
         self.assertEqual("foobar", scenario._admin_clients)
 
     def test_init_user_context(self):
-        context = {
-            "foo": "bar",
-            "user": {"endpoint": mock.Mock()}
-        }
-        scenario = base_scenario.OpenStackScenario(context)
-        self.assertEqual(context, scenario.context)
+        self.context["user"] = {"endpoint": mock.Mock()}
+        scenario = base_scenario.OpenStackScenario(self.context)
+        self.assertEqual(self.context, scenario.context)
         self.osclients.mock.assert_called_once_with(
-            context["user"]["endpoint"])
+            self.context["user"]["endpoint"])
 
         self.assertRaises(
             ValueError, base_scenario.OpenStackScenario,
-            context, clients="foobar")
+            self.context, clients="foobar")
 
     def test_init_user_clients(self):
-        context = {"foo": "bar"}
         scenario = base_scenario.OpenStackScenario(
-            context, clients="foobar")
-        self.assertEqual(context, scenario.context)
+            self.context, clients="foobar")
+        self.assertEqual(self.context, scenario.context)
 
         self.assertEqual("foobar", scenario._clients)

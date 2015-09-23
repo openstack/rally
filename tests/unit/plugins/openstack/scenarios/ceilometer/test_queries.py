@@ -20,9 +20,9 @@ from rally.plugins.openstack.scenarios.ceilometer import queries
 from tests.unit import test
 
 
-class CeilometerQueriesTestCase(test.TestCase):
+class CeilometerQueriesTestCase(test.ScenarioTestCase):
     def test_create_and_query_alarms(self):
-        scenario = queries.CeilometerQueries()
+        scenario = queries.CeilometerQueries(self.context)
         scenario._create_alarm = mock.MagicMock()
         scenario._query_alarms = mock.MagicMock()
 
@@ -36,7 +36,7 @@ class CeilometerQueriesTestCase(test.TestCase):
             json.dumps("fake_filter"), "fake_orderby_attribute", 10)
 
     def test_create_and_query_alarms_no_filter(self):
-        scenario = queries.CeilometerQueries()
+        scenario = queries.CeilometerQueries(self.context)
         scenario._create_alarm = mock.MagicMock()
         scenario._query_alarms = mock.MagicMock()
 
@@ -52,7 +52,7 @@ class CeilometerQueriesTestCase(test.TestCase):
     def test_create_and_query_alarm_history(self):
         fake_alarm = mock.MagicMock()
         fake_alarm.alarm_id = "fake_alarm_id"
-        scenario = queries.CeilometerQueries()
+        scenario = queries.CeilometerQueries(self.context)
         scenario._create_alarm = mock.MagicMock(return_value=fake_alarm)
         scenario._query_alarm_history = mock.MagicMock()
 
@@ -66,7 +66,7 @@ class CeilometerQueriesTestCase(test.TestCase):
             fake_filter, "fake_orderby_attribute", 10)
 
     def test_create_and_query_samples(self):
-        scenario = queries.CeilometerQueries()
+        scenario = queries.CeilometerQueries(self.context)
         scenario._create_sample = mock.MagicMock()
         scenario._query_samples = mock.MagicMock()
 
@@ -89,7 +89,7 @@ class CeilometerQueriesTestCase(test.TestCase):
             json.dumps("fake_filter"), "fake_orderby_attribute", 10)
 
     def test_create_and_query_samples_no_filter(self):
-        scenario = queries.CeilometerQueries()
+        scenario = queries.CeilometerQueries(self.context)
         scenario._create_sample = mock.MagicMock()
         scenario._query_samples = mock.MagicMock()
 

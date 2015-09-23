@@ -35,7 +35,7 @@ class HeatStacksTestCase(test.ScenarioTestCase):
     @mock.patch(HEAT_STACKS + "._create_stack")
     def test_create_and_list_stack(self, mock__create_stack, mock__list_stacks,
                                    mock__generate_random_name):
-        heat_scenario = stacks.HeatStacks()
+        heat_scenario = stacks.HeatStacks(self.context)
         mock__generate_random_name.return_value = "test-rally-stack"
         heat_scenario.create_and_list_stack(
             template_path=self.default_template,
@@ -52,7 +52,7 @@ class HeatStacksTestCase(test.ScenarioTestCase):
     def test_list_stack_and_resources(self, mock__list_stacks):
         stack = mock.Mock()
         mock__list_stacks.return_value = [stack]
-        heat_scenario = stacks.HeatStacks()
+        heat_scenario = stacks.HeatStacks(self.context)
         heat_scenario.list_stacks_and_resources()
         self.clients("heat").resources.list.assert_called_once_with(stack.id)
         self._test_atomic_action_timer(
@@ -62,7 +62,7 @@ class HeatStacksTestCase(test.ScenarioTestCase):
     def test_list_stack_and_events(self, mock__list_stacks):
         stack = mock.Mock()
         mock__list_stacks.return_value = [stack]
-        heat_scenario = stacks.HeatStacks()
+        heat_scenario = stacks.HeatStacks(self.context)
         heat_scenario.list_stacks_and_events()
         self.clients("heat").events.list.assert_called_once_with(stack.id)
         self._test_atomic_action_timer(
@@ -74,7 +74,7 @@ class HeatStacksTestCase(test.ScenarioTestCase):
     def test_create_and_delete_stack(
             self, mock__create_stack, mock__delete_stack,
             mock__generate_random_name):
-        heat_scenario = stacks.HeatStacks()
+        heat_scenario = stacks.HeatStacks(self.context)
         fake_stack = object()
         mock__create_stack.return_value = fake_stack
         mock__generate_random_name.return_value = "test-rally-stack"
@@ -97,7 +97,7 @@ class HeatStacksTestCase(test.ScenarioTestCase):
     @mock.patch(HEAT_STACKS + "._create_stack")
     def test_create_check_delete_stack(
             self, mock__create_stack, mock__check_stack, mock__delete_stack):
-        heat_scenario = stacks.HeatStacks()
+        heat_scenario = stacks.HeatStacks(self.context)
         heat_scenario.create_check_delete_stack(
             template_path=self.default_template,
             parameters=self.default_parameters,
@@ -119,7 +119,7 @@ class HeatStacksTestCase(test.ScenarioTestCase):
     def test_create_update_delete_stack(
             self, mock__create_stack, mock__update_stack, mock__delete_stack,
             mock__generate_random_name):
-        heat_scenario = stacks.HeatStacks()
+        heat_scenario = stacks.HeatStacks(self.context)
         fake_stack = object()
         mock__create_stack.return_value = fake_stack
         mock__generate_random_name.return_value = "test-rally-stack"
@@ -144,7 +144,7 @@ class HeatStacksTestCase(test.ScenarioTestCase):
         mock__delete_stack.assert_called_once_with(fake_stack)
 
     def test_create_stack_and_scale(self):
-        heat_scenario = stacks.HeatStacks()
+        heat_scenario = stacks.HeatStacks(self.context)
         stack = mock.Mock()
         heat_scenario._create_stack = mock.Mock(return_value=stack)
         heat_scenario._scale_stack = mock.Mock()
@@ -169,7 +169,7 @@ class HeatStacksTestCase(test.ScenarioTestCase):
     def test_create_suspend_resume_delete_stack(
             self, mock__create_stack, mock__suspend_stack, mock__resume_stack,
             mock__delete_stack):
-        heat_scenario = stacks.HeatStacks()
+        heat_scenario = stacks.HeatStacks(self.context)
         heat_scenario.create_suspend_resume_delete_stack(
             template_path=self.default_template,
             parameters=self.default_parameters,
@@ -198,7 +198,7 @@ class HeatStacksTestCase(test.ScenarioTestCase):
     def test_create_snapshot_restore_delete_stack(
             self, mock__create_stack, mock__snapshot_stack,
             mock__restore_stack, mock__delete_stack):
-        heat_scenario = stacks.HeatStacks()
+        heat_scenario = stacks.HeatStacks(self.context)
         mock__snapshot_stack.return_value = {"id": "dummy_id"}
         heat_scenario.create_snapshot_restore_delete_stack(
             template_path=self.default_template,

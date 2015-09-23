@@ -27,7 +27,7 @@ class EC2ServersTestCase(test.ScenarioTestCase):
         scenario._list_servers.assert_called_once_with()
 
     def test_boot_server(self):
-        scenario = servers.EC2Servers()
+        scenario = servers.EC2Servers(self.context)
         scenario._boot_servers = mock.Mock()
         scenario.boot_server("foo_image", "foo_flavor", foo="bar")
         scenario._boot_servers.assert_called_once_with(

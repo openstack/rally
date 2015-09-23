@@ -30,6 +30,7 @@ class SaharaJobTestCase(test.ScenarioTestCase):
     def setUp(self):
         super(SaharaJobTestCase, self).setUp()
 
+        self.context = test.get_test_context()
         CONF.set_override("cluster_check_interval", 0, "benchmark")
         CONF.set_override("job_check_interval", 0, "benchmark")
 
@@ -42,9 +43,7 @@ class SaharaJobTestCase(test.ScenarioTestCase):
         self.clients("sahara").jobs.create.return_value = mock.MagicMock(
             id="42")
 
-        jobs_scenario = jobs.SaharaJob()
-
-        jobs_scenario.context = {
+        self.context.update({
             "tenant": {
                 "sahara_image": "test_image",
                 "sahara_mains": ["main_42"],
@@ -52,7 +51,9 @@ class SaharaJobTestCase(test.ScenarioTestCase):
                 "sahara_cluster": "cl_42",
                 "sahara_input": "in_42"
             }
-        }
+        })
+        jobs_scenario = jobs.SaharaJob(self.context)
+
         jobs_scenario.create_launch_job(
             job_type="java",
             configs={"conf_key": "conf_val"},
@@ -87,9 +88,7 @@ class SaharaJobTestCase(test.ScenarioTestCase):
         self.clients("sahara").jobs.create.return_value = mock.MagicMock(
             id="42")
 
-        jobs_scenario = jobs.SaharaJob()
-
-        jobs_scenario.context = {
+        self.context.update({
             "tenant": {
                 "sahara_image": "test_image",
                 "sahara_mains": ["main_42"],
@@ -97,7 +96,8 @@ class SaharaJobTestCase(test.ScenarioTestCase):
                 "sahara_cluster": "cl_42",
                 "sahara_input": "in_42"
             }
-        }
+        })
+        jobs_scenario = jobs.SaharaJob(self.context)
         jobs_scenario.create_launch_job(
             job_type="pig",
             configs={"conf_key": "conf_val"},
@@ -129,9 +129,7 @@ class SaharaJobTestCase(test.ScenarioTestCase):
         self.clients("sahara").jobs.create.return_value = mock.MagicMock(
             id="42")
 
-        jobs_scenario = jobs.SaharaJob()
-
-        jobs_scenario.context = {
+        self.context.update({
             "tenant": {
                 "sahara_image": "test_image",
                 "sahara_mains": ["main_42"],
@@ -139,7 +137,8 @@ class SaharaJobTestCase(test.ScenarioTestCase):
                 "sahara_cluster": "cl_42",
                 "sahara_input": "in_42"
             }
-        }
+        })
+        jobs_scenario = jobs.SaharaJob(self.context)
         jobs_scenario.create_launch_job_sequence(
             jobs=[
                 {
@@ -190,9 +189,7 @@ class SaharaJobTestCase(test.ScenarioTestCase):
         self.clients("sahara").clusters.get.return_value = mock.MagicMock(
             id="cl_42", status="active")
 
-        jobs_scenario = jobs.SaharaJob()
-
-        jobs_scenario.context = {
+        self.context.update({
             "tenant": {
                 "sahara_image": "test_image",
                 "sahara_mains": ["main_42"],
@@ -200,7 +197,8 @@ class SaharaJobTestCase(test.ScenarioTestCase):
                 "sahara_cluster": "cl_42",
                 "sahara_input": "in_42"
             }
-        }
+        })
+        jobs_scenario = jobs.SaharaJob(self.context)
         jobs_scenario.create_launch_job_sequence_with_scaling(
             jobs=[
                 {

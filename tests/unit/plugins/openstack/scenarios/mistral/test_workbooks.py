@@ -22,17 +22,17 @@ MISTRAL_WBS = ("rally.plugins.openstack.scenarios."
                "mistral.workbooks.MistralWorkbooks")
 
 
-class MistralWorkbooksTestCase(test.TestCase):
+class MistralWorkbooksTestCase(test.ScenarioTestCase):
 
     @mock.patch(MISTRAL_WBS + "._list_workbooks")
     def test_list_workbooks(self, mock__list_workbooks):
-        mistral_scenario = workbooks.MistralWorkbooks()
+        mistral_scenario = workbooks.MistralWorkbooks(self.context)
         mistral_scenario.list_workbooks()
         mock__list_workbooks.assert_called_once_with()
 
     @mock.patch(MISTRAL_WBS + "._create_workbook")
     def test_create_workbook(self, mock__create_workbook):
-        mistral_scenario = workbooks.MistralWorkbooks()
+        mistral_scenario = workbooks.MistralWorkbooks(self.context)
         definition = "---\nversion: \"2.0\"\nname: wb"
         fake_wb = mock.MagicMock()
         fake_wb.name = "wb"
@@ -46,7 +46,7 @@ class MistralWorkbooksTestCase(test.TestCase):
     def test_create_delete_workbook(self,
                                     mock__create_workbook,
                                     mock__delete_workbook):
-        mistral_scenario = workbooks.MistralWorkbooks()
+        mistral_scenario = workbooks.MistralWorkbooks(self.context)
         definition = "---\nversion: \"2.0\"\nname: wb"
         fake_wb = mock.MagicMock()
         fake_wb.name = "wb"

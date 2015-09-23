@@ -32,18 +32,17 @@ class TestStackGenerator(test.ScenarioTestCase):
         return tenants
 
     def test_init(self):
-        context = {
-            "task": mock.MagicMock(),
+        self.context.update({
             "config": {
                 "stacks": {
                     "stacks_per_tenant": 1,
                     "resources_per_stack": 1
                 }
             }
-        }
+        })
 
-        inst = stacks.StackGenerator(context)
-        self.assertEqual(inst.config, context["config"]["stacks"])
+        inst = stacks.StackGenerator(self.context)
+        self.assertEqual(inst.config, self.context["config"]["stacks"])
 
     @mock.patch("%s.heat.utils.HeatScenario._create_stack" % SCN,
                 return_value=fakes.FakeStack(id="uuid"))
@@ -59,7 +58,7 @@ class TestStackGenerator(test.ScenarioTestCase):
                 users.append({"id": i, "tenant_id": ten_id,
                               "endpoint": mock.MagicMock()})
 
-        context = {
+        self.context.update({
             "config": {
                 "users": {
                     "tenants": tenants_count,
@@ -71,27 +70,25 @@ class TestStackGenerator(test.ScenarioTestCase):
                     "resources_per_stack": 1
                 }
             },
-            "task": mock.MagicMock(),
             "users": users,
             "tenants": tenants
-        }
+        })
 
-        stack_ctx = stacks.StackGenerator(context)
+        stack_ctx = stacks.StackGenerator(self.context)
         stack_ctx.setup()
         self.assertEqual(tenants_count * stacks_per_tenant,
                          mock_heat_scenario__create_stack.call_count)
         # check that stack ids have been saved in context
-        for ten_id in context["tenants"].keys():
+        for ten_id in self.context["tenants"].keys():
             self.assertEqual(stacks_per_tenant,
-                             len(context["tenants"][ten_id]["stacks"]))
+                             len(self.context["tenants"][ten_id]["stacks"]))
 
     @mock.patch("%s.heat.stacks.resource_manager.cleanup" % CTX)
     def test_cleanup(self, mock_cleanup):
-        context = {
-            "task": mock.MagicMock(),
+        self.context.update({
             "users": mock.MagicMock()
-        }
-        stack_ctx = stacks.StackGenerator(context)
+        })
+        stack_ctx = stacks.StackGenerator(self.context)
         stack_ctx.cleanup()
         mock_cleanup.assert_called_once_with(names=["heat.stacks"],
-                                             users=context["users"])
+                                             users=self.context["users"])
