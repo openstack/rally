@@ -1,5 +1,5 @@
 {% set image_name = "^cirros.*uec$" %}
-{% set smoke = 1 %}
+{% set smoke = 0 %}
 
 ---
   NeutronNetworks.create_and_list_networks:
