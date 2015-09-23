@@ -91,7 +91,7 @@ class NeutronLoadbalancerV1(utils.NeutronScenario):
                                       subdict="vip_create_args")
     @validation.required_neutron_extensions("lbaas")
     @validation.required_services(consts.Service.NEUTRON)
-    @validation.required_openstack(admin=True)
+    @validation.required_openstack(users=True)
     @validation.required_contexts("network")
     @scenario.configure(context={"cleanup": ["neutron"]})
     def create_and_list_vips(self, pool_create_args=None,
