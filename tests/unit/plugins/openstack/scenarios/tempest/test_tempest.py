@@ -19,7 +19,8 @@ from rally.plugins.openstack.scenarios.tempest import tempest
 from rally.verification.tempest import tempest as verifier
 from tests.unit import test
 
-VERIFIER = "rally.verification.tempest.tempest"
+TEMPEST_DIR = "rally.verification.tempest"
+VERIFIER = TEMPEST_DIR + ".tempest"
 TS = "rally.plugins.openstack.scenarios.tempest"
 
 
@@ -51,7 +52,9 @@ class TempestScenarioTestCase(test.TestCase):
 
     @mock.patch(TS + ".utils.tempfile")
     @mock.patch(VERIFIER + ".subprocess")
-    def test_single_test(self, mock_subprocess, mock_tempfile):
+    @mock.patch(TEMPEST_DIR + ".config.TempestResourcesContext")
+    def test_single_test(self, mock_tempest_resources_context,
+                         mock_subprocess, mock_tempfile):
         mock_tempfile.NamedTemporaryFile().name = "/dev/null"
         fake_test = "tempest.api.fake.test"
 
@@ -64,7 +67,9 @@ class TempestScenarioTestCase(test.TestCase):
 
     @mock.patch(TS + ".utils.tempfile")
     @mock.patch(VERIFIER + ".subprocess")
-    def test_single_test_negative(self, mock_subprocess, mock_tempfile):
+    @mock.patch(TEMPEST_DIR + ".config.TempestResourcesContext")
+    def test_single_test_negative(self, mock_tempest_resources_context,
+                                  mock_subprocess, mock_tempfile):
         mock_tempfile.NamedTemporaryFile().name = "/dev/null"
         fake_test = "tempest.api.network"
 
@@ -77,7 +82,9 @@ class TempestScenarioTestCase(test.TestCase):
 
     @mock.patch(TS + ".utils.tempfile")
     @mock.patch(VERIFIER + ".subprocess")
-    def test_single_test_without_prefix(self, mock_subprocess, mock_tempfile):
+    @mock.patch(TEMPEST_DIR + ".config.TempestResourcesContext")
+    def test_single_test_without_prefix(self, mock_tempest_resources_context,
+                                        mock_subprocess, mock_tempfile):
         mock_tempfile.NamedTemporaryFile().name = "/dev/null"
 
         self.scenario.single_test("network")
@@ -89,7 +96,9 @@ class TempestScenarioTestCase(test.TestCase):
 
     @mock.patch(TS + ".utils.tempfile")
     @mock.patch(VERIFIER + ".subprocess")
-    def test_all(self, mock_subprocess, mock_tempfile):
+    @mock.patch(TEMPEST_DIR + ".config.TempestResourcesContext")
+    def test_all(self, mock_tempest_resources_context,
+                 mock_subprocess, mock_tempfile):
         mock_tempfile.NamedTemporaryFile().name = "/dev/null"
 
         self.scenario.all()
@@ -101,7 +110,9 @@ class TempestScenarioTestCase(test.TestCase):
 
     @mock.patch(TS + ".utils.tempfile")
     @mock.patch(VERIFIER + ".subprocess")
-    def test_set_smoke(self, mock_subprocess, mock_tempfile):
+    @mock.patch(TEMPEST_DIR + ".config.TempestResourcesContext")
+    def test_set_smoke(self, mock_tempest_resources_context,
+                       mock_subprocess, mock_tempfile):
         mock_tempfile.NamedTemporaryFile().name = "/dev/null"
 
         self.scenario.set("smoke")
@@ -113,7 +124,9 @@ class TempestScenarioTestCase(test.TestCase):
 
     @mock.patch(TS + ".utils.tempfile")
     @mock.patch(VERIFIER + ".subprocess")
-    def test_set_full(self, mock_subprocess, mock_tempfile):
+    @mock.patch(TEMPEST_DIR + ".config.TempestResourcesContext")
+    def test_set_full(self, mock_tempest_resources_context,
+                      mock_subprocess, mock_tempfile):
         mock_tempfile.NamedTemporaryFile().name = "/dev/null"
 
         self.scenario.set("full")
@@ -124,7 +137,9 @@ class TempestScenarioTestCase(test.TestCase):
             env=self.verifier.env, shell=True)
 
     @mock.patch(TS + ".utils.tempfile")
-    def test_set_from_list(self, mock_tempfile):
+    @mock.patch(TEMPEST_DIR + ".config.TempestResourcesContext")
+    def test_set_from_list(self, mock_tempest_resources_context,
+                           mock_tempfile):
         mock_tempfile.NamedTemporaryFile().name = "/dev/null"
 
         fake_scenarios = ["network", "volume", "baremetal",
@@ -143,7 +158,9 @@ class TempestScenarioTestCase(test.TestCase):
 
     @mock.patch(TS + ".utils.tempfile")
     @mock.patch(VERIFIER + ".subprocess")
-    def test_set_selective(self, mock_subprocess, mock_tempfile):
+    @mock.patch(TEMPEST_DIR + ".config.TempestResourcesContext")
+    def test_set_selective(self, mock_tempest_resources_context,
+                           mock_subprocess, mock_tempfile):
         mock_tempfile.NamedTemporaryFile().name = "/dev/null"
 
         self.scenario.set("network")
@@ -155,7 +172,9 @@ class TempestScenarioTestCase(test.TestCase):
 
     @mock.patch(TS + ".utils.tempfile")
     @mock.patch(VERIFIER + ".subprocess")
-    def test_list_of_tests(self, mock_subprocess, mock_tempfile):
+    @mock.patch(TEMPEST_DIR + ".config.TempestResourcesContext")
+    def test_list_of_tests(self, mock_tempest_resources_context,
+                           mock_subprocess, mock_tempfile):
         mock_tempfile.NamedTemporaryFile().name = "/dev/null"
         fake_tests = ["tempest.fake.test1", "tempest.fake.test2"]
 
@@ -168,7 +187,9 @@ class TempestScenarioTestCase(test.TestCase):
 
     @mock.patch(TS + ".utils.tempfile")
     @mock.patch(VERIFIER + ".subprocess")
-    def test_specific_regex(self, mock_subprocess, mock_tempfile):
+    @mock.patch(TEMPEST_DIR + ".config.TempestResourcesContext")
+    def test_specific_regex(self, mock_tempest_resources_context,
+                            mock_subprocess, mock_tempfile):
         mock_tempfile.NamedTemporaryFile().name = "/dev/null"
         regex = "tempest.fake.test1"
 

@@ -229,7 +229,7 @@ class Tempest(object):
             msg = _("Creation of configuration file for tempest.")
             LOG.info(_("Starting: ") + msg)
 
-            config.TempestConf(self.deployment).generate(self.config_file)
+            config.TempestConfig(self.deployment).generate(self.config_file)
             LOG.info(_("Completed: ") + msg)
         else:
             LOG.info("Tempest is already configured.")
@@ -345,8 +345,12 @@ class Tempest(object):
                 "log_file": log_file or self.log_file_raw
             })
         LOG.debug("Test(s) started by the command: %s" % test_cmd)
-        subprocess.check_call(test_cmd, cwd=self.path(),
-                              env=self.env, shell=True)
+        # Create all resources needed for Tempest before running tests.
+        # Once tests finish, all created resources will be deleted.
+        with config.TempestResourcesContext(self.deployment, self.config_file):
+            # Run tests
+            subprocess.check_call(test_cmd, cwd=self.path(),
+                                  env=self.env, shell=True)
 
     def discover_tests(self, pattern=""):
         """Return a set of discovered tests which match given pattern."""
