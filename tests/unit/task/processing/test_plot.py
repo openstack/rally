@@ -46,8 +46,8 @@ class PlotTestCase(test.TestCase):
              "output": {"additive": [], "complete": []},
              "atomic_actions": {"foo_action": i + 10}} for i in range(10)]
         data = {"iterations": iterations, "sla": [],
-                "key": {"kw": {"runner": {"type": "constant"}},
-                        "name": "Foo.bar", "pos": 0},
+                "key": {"kw": {"runner": {"type": "constant"}}, "pos": 0,
+                        "name": "Foo.bar", "description": "Description!!"},
                 "info": {"atomic": {"foo_action": {"max_duration": 19,
                                                    "min_duration": 10}},
                          "full_duration": 40, "load_duration": 32,
@@ -60,7 +60,8 @@ class PlotTestCase(test.TestCase):
 
         result = plot._process_scenario(data, 1)
         self.assertEqual(
-            {"cls": "Foo", "met": "bar", "name": "bar [2]", "pos": "1",
+            {"cls": "Foo", "met": "bar", "pos": "1",
+             "name": "bar [2]", "description": "Description!!",
              "runner": "constant", "config": json.dumps(
                  {"Foo.bar": [{"runner": {"type": "constant"}}]},
                  indent=2),

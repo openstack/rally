@@ -372,9 +372,11 @@ class TaskEngineTestCase(test.TestCase):
         mock_subtask = mock.MagicMock()
         mock_subtask.workloads = [
             engine.Workload(
-                {"name": "a.task", "context": {"context_a": {"a": 1}}}, 0),
+                {"name": "a.task", "description": "foo",
+                 "context": {"context_a": {"a": 1}}}, 0),
             engine.Workload(
-                {"name": "b.task", "context": {"context_b": {"b": 2}}}, 1)
+                {"name": "b.task", "description": "foo",
+                 "context": {"context_b": {"b": 2}}}, 1)
         ]
         mock_task_instance.subtasks = [mock_subtask]
 
@@ -403,9 +405,12 @@ class TaskEngineTestCase(test.TestCase):
                                                                        False,
                                                                        True]
         config = {
-            "a.task": [{"runner": {"type": "a", "b": 1}}],
-            "b.task": [{"runner": {"type": "a", "b": 1}}],
-            "c.task": [{"runner": {"type": "a", "b": 1}}]
+            "a.task": [{"runner": {"type": "a", "b": 1},
+                        "description": "foo"}],
+            "b.task": [{"runner": {"type": "a", "b": 1},
+                        "description": "bar"}],
+            "c.task": [{"runner": {"type": "a", "b": 1},
+                        "description": "xxx"}]
         }
         fake_runner_cls = mock.MagicMock()
         fake_runner = mock.MagicMock()
@@ -969,6 +974,7 @@ class WorkloadTestCase(test.TestCase):
     def test_make_key(self):
         expected_key = {
             "name": "n",
+            "description": "",
             "pos": 0,
             "kw": {
                 "runner": "r",
