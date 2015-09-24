@@ -105,6 +105,19 @@ class TaskAPITestCase(test.TestCase):
     def test_render_template_missing_args(self):
         self.assertRaises(TypeError, api.Task.render_template, "{{a}}")
 
+    def test_render_template_include_other_template(self):
+        other_template_path = os.path.join(
+            os.path.dirname(__file__),
+            "..", "..", "samples/tasks/scenarios/nova/boot.json")
+        template = "{%% include \"%s\" %%}" % os.path.basename(
+            other_template_path)
+        with open(other_template_path) as f:
+            other_template = f.read()
+        expect = api.Task.render_template(other_template)
+        actual = api.Task.render_template(template,
+                                          os.path.dirname(other_template_path))
+        self.assertEqual(expect, actual)
+
     @mock.patch("rally.common.objects.Deployment.get",
                 return_value={"uuid": "b0d9cd6c-2c94-4417-a238-35c7019d0257"})
     @mock.patch("rally.common.objects.Task")

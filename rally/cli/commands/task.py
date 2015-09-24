@@ -105,7 +105,10 @@ class TaskCommands(object):
         with open(task_file) as f:
             try:
                 input_task = f.read()
-                rendered_task = api.Task.render_template(input_task, **kw)
+                task_dir = os.path.expanduser(
+                    os.path.dirname(task_file)) or "./"
+                rendered_task = api.Task.render_template(input_task,
+                                                         task_dir, **kw)
             except Exception as e:
                 print(_("Failed to render task template:\n%(task)s\n%(err)s\n")
                       % {"task": input_task, "err": e},
