@@ -3,7 +3,16 @@
 {%- set flavor_name = flavor_name|default("m1.tiny") %}
 {%- set use_existing_users = use_existing_users|default(false) %}
 {%- set service_list = service_list|default(["authentication", "cinder", "keystone", "nova", "glance"]) %}
-{%- macro user_context(tenants=1,users_per_tenant=1) -%}
+{%- set smoke = smoke|default(true) %}
+{%- set controllers_amount = controllers_amount|default(1) %}
+{%- if smoke %}
+{%- set users_amount = 1 %}
+{%- set tenants_amount = 1 %}
+{%- else %}
+{%- set users_amount = users_amount|default(1) %}
+{%- set tenants_amount = tenants_amount|default(1) %}
+{%- endif %}
+{%- macro user_context(tenants=tenants_amount,users_per_tenant=users_amount) -%}
 {%- if use_existing_users and caller is not defined -%} {}
 {%- else %}
   {%- if not use_existing_users %}
@@ -35,10 +44,25 @@
             snapshots: -1
             volumes: -1
 {%- endmacro %}
-{%- macro runner(type='constant',concurrency=1,times=1) %}
-        type: {{ type }}
+{%- macro constant_runner(concurrency=1, times=1) %}
+        type: constant
+  {%- if smoke %}
+        concurrency: 1
+        times: 1
+  {%- else %}
         concurrency: {{ concurrency }}
         times: {{ times }}
+  {%- endif %}
+{%- endmacro %}
+{%- macro rps_runner(rps=1, times=1) %}
+        type: rps
+  {%- if smoke %}
+        rps: 1
+        times: 1
+  {%- else %}
+        rps: {{ rps }}
+        times: {{ times }}
+  {%- endif %}
 {%- endmacro %}
 {%- macro no_failures_sla() %}
         failure_rate:
@@ -79,7 +103,7 @@
       context:
         {{ user_context() }}
       runner:
-        {{ runner() }}
+        {{ rps_runner() }}
       sla:
         {{ no_failures_sla() }}
 {% endif %}
@@ -94,7 +118,7 @@
           {{ unlimited_volumes() }}
         {% endcall %}
       runner:
-        {{ runner() }}
+        {{ constant_runner() }}
       sla:
         {{ no_failures_sla() }}
 
@@ -109,7 +133,7 @@
         {{ volumes() }}
         {% endcall %}
       runner:
-        {{ runner() }}
+        {{ constant_runner() }}
       sla:
         {{ no_failures_sla() }}
 
@@ -125,7 +149,7 @@
           {{ unlimited_volumes() }}
         {% endcall %}
       runner:
-        {{ runner() }}
+        {{ constant_runner() }}
       sla:
         {{ no_failures_sla() }}
     -
@@ -137,7 +161,7 @@
           {{ unlimited_volumes() }}
         {% endcall %}
       runner:
-        {{ runner() }}
+        {{ constant_runner() }}
       sla:
         {{ no_failures_sla() }}
     -
@@ -149,7 +173,7 @@
           {{ unlimited_volumes() }}
         {% endcall %}
       runner:
-        {{ runner() }}
+        {{ constant_runner() }}
       sla:
         {{ no_failures_sla() }}
 
@@ -164,7 +188,7 @@
           {{ unlimited_volumes() }}
         {% endcall %}
       runner:
-        {{ runner() }}
+        {{ constant_runner() }}
       sla:
         {{ no_failures_sla() }}
 
@@ -180,7 +204,7 @@
         {{ volumes() }}
         {% endcall %}
       runner:
-        {{ runner() }}
+        {{ constant_runner() }}
       sla:
         {{ no_failures_sla() }}
 
@@ -195,7 +219,7 @@
           {{ unlimited_volumes() }}
         {% endcall %}
       runner:
-        {{ runner() }}
+        {{ constant_runner() }}
       sla:
         {{ no_failures_sla() }}
     -
@@ -208,7 +232,7 @@
           {{ unlimited_volumes() }}
         {% endcall %}
       runner:
-        {{ runner() }}
+        {{ constant_runner() }}
       sla:
         {{ no_failures_sla() }}
 
@@ -226,7 +250,7 @@
           {{ unlimited_volumes() }}
         {% endcall %}
       runner:
-        {{ runner() }}
+        {{ constant_runner() }}
       sla:
         {{ no_failures_sla() }}
 
@@ -241,7 +265,7 @@
         {{ volumes() }}
         {% endcall %}
       runner:
-        {{ runner() }}
+        {{ constant_runner() }}
       sla:
         {{ no_failures_sla() }}
 
@@ -263,7 +287,7 @@
           servers_per_tenant: 1
         {% endcall %}
       runner:
-        {{ runner() }}
+        {{ constant_runner() }}
       sla:
         {{ no_failures_sla() }}
 
@@ -274,7 +298,7 @@
       context:
         {{ user_context() }}
       runner:
-        {{ runner() }}
+        {{ constant_runner() }}
       sla:
         {{ no_failures_sla() }}
 {% endif %}
@@ -284,7 +308,7 @@
       context:
         {{ user_context() }}
       runner:
-        {{ runner() }}
+        {{ constant_runner(15*controllers_amount,60*controllers_amount) }}
       sla:
         {{ no_failures_sla() }}
 
@@ -293,7 +317,7 @@
       context:
         {{ user_context() }}
       runner:
-        {{ runner() }}
+        {{ constant_runner(15*controllers_amount,60*controllers_amount) }}
       sla:
         {{ no_failures_sla() }}
 
@@ -304,7 +328,7 @@
       context:
         {{ user_context() }}
       runner:
-        {{ runner() }}
+        {{ constant_runner(15*controllers_amount,60*controllers_amount) }}
       sla:
         {{ no_failures_sla() }}
 
@@ -313,7 +337,7 @@
       context:
         {{ user_context() }}
       runner:
-        {{ runner() }}
+        {{ constant_runner(15*controllers_amount,60*controllers_amount) }}
       sla:
         {{ no_failures_sla() }}
 
@@ -322,7 +346,7 @@
       context:
         {{ user_context() }}
       runner:
-        {{ runner() }}
+        {{ constant_runner(15*controllers_amount,60*controllers_amount) }}
       sla:
         {{ no_failures_sla() }}
 
@@ -331,7 +355,7 @@
       context:
         {{ user_context() }}
       runner:
-        {{ runner() }}
+        {{ constant_runner(15*controllers_amount,60*controllers_amount) }}
       sla:
         {{ no_failures_sla() }}
 
@@ -342,7 +366,7 @@
       context:
         {{ user_context() }}
       runner:
-        {{ runner() }}
+        {{ constant_runner(15*controllers_amount,60*controllers_amount) }}
       sla:
         {{ no_failures_sla() }}
 {% endif %}
@@ -361,7 +385,7 @@
           {{ unlimited_nova(keypairs=true) }}
         {% endcall %}
       runner:
-        {{ runner() }}
+        {{ constant_runner() }}
       sla:
         {{ no_failures_sla() }}
 
@@ -373,7 +397,7 @@
           {{ unlimited_nova(keypairs=true) }}
         {% endcall %}
       runner:
-        {{ runner() }}
+        {{ constant_runner() }}
       sla:
         {{ no_failures_sla() }}
 
@@ -385,7 +409,7 @@
           {{ unlimited_nova(keypairs=true) }}
         {% endcall %}
       runner:
-        {{ runner() }}
+        {{ constant_runner() }}
       sla:
         {{ no_failures_sla() }}
 
@@ -412,7 +436,7 @@
           {{ unlimited_nova() }}
         {% endcall %}
       runner:
-        {{ runner() }}
+        {{ constant_runner() }}
       sla:
         {{ no_failures_sla() }}
 
@@ -430,7 +454,7 @@
           {{ unlimited_nova() }}
         {% endcall %}
       runner:
-        {{ runner() }}
+        {{ constant_runner() }}
       sla:
         {{ no_failures_sla() }}
 
@@ -449,7 +473,7 @@
           {{ unlimited_nova() }}
         {% endcall %}
       runner:
-        {{ runner() }}
+        {{ constant_runner() }}
       sla:
         {{ no_failures_sla() }}
 
@@ -471,7 +495,7 @@
           {{ unlimited_nova() }}
         {% endcall %}
       runner:
-        {{ runner() }}
+        {{ constant_runner() }}
       sla:
         {{ no_failures_sla() }}
 
@@ -491,7 +515,7 @@
           {{ unlimited_nova() }}
         {% endcall %}
       runner:
-        {{ runner() }}
+        {{ constant_runner() }}
       sla:
         {{ no_failures_sla() }}
 
@@ -510,7 +534,7 @@
           {{ unlimited_nova() }}
         {% endcall %}
       runner:
-        {{ runner() }}
+        {{ constant_runner() }}
       sla:
         {{ no_failures_sla() }}
 
@@ -528,7 +552,7 @@
           {{ unlimited_nova() }}
         {% endcall %}
       runner:
-        {{ runner() }}
+        {{ constant_runner() }}
       sla:
         {{ no_failures_sla() }}
 
@@ -539,7 +563,7 @@
       context:
         {{ user_context() }}
       runner:
-        {{ runner() }}
+        {{ constant_runner() }}
       sla:
         {{ no_failures_sla() }}
 {% endif %}
@@ -551,7 +575,7 @@
       context:
         {{ user_context() }}
       runner:
-        {{ runner() }}
+        {{ constant_runner() }}
       sla:
         {{ no_failures_sla() }}
 
@@ -562,7 +586,7 @@
       context:
         {{ user_context() }}
       runner:
-        {{ runner() }}
+        {{ constant_runner() }}
       sla:
         {{ no_failures_sla() }}
 
@@ -574,7 +598,7 @@
       context:
         {{ user_context() }}
       runner:
-        {{ runner() }}
+        {{ constant_runner() }}
       sla:
         {{ no_failures_sla() }}
 {% endif %}
