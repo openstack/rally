@@ -21,6 +21,13 @@ The OpenStack QA team mostly works on CI/CD that ensures that new patches don't 
    :alt: Rally Architecture
 
 
+Who Is Using Rally
+==================
+
+.. image:: doc/source/images/Rally_who_is_using.png
+   :alt: Who is Using Rally
+
+
 Documentation
 =============
 
