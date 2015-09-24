@@ -159,7 +159,10 @@ class LoadProfileChart(Chart):
         #   200    30.8043010235  0.154021505117    1         0.2
         #   200    1.25884699821  0.00629423499107  3         0.006
         step = self._duration / float(scale)
-        accuracy = max(-int(math.floor(math.log10(step))), 0)
+        if step == 0:
+            accuracy = 0
+        else:
+            accuracy = max(-int(math.floor(math.log10(step))), 0)
         step = round(step, accuracy)
         self._time_axis = [step * x
                            for x in six.moves.range(1, int(scale))
