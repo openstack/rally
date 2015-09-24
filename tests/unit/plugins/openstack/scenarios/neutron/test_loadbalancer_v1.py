@@ -33,12 +33,6 @@ class NeutronLoadbalancerv1TestCase(test.TestCase):
                                      "subnets": ["fake_subnet"]}]}})
         return context
 
-    def _get_context_pools(self):
-        context = self._get_context()
-        for network in context["tenant"]["networks"]:
-            network.update({"lb_pools": [{"pool": {"id": "pool-id"}}]})
-        return context
-
     @ddt.data(
         {},
         {"pool_create_args": None},
@@ -172,24 +166,38 @@ class NeutronLoadbalancerv1TestCase(test.TestCase):
         {"vip_create_args": None},
         {"vip_create_args": {}},
         {"vip_create_args": {"name": "given-name"}},
+        {"pool_create_args": None},
+        {"pool_create_args": {}},
+        {"pool_create_args": {"name": "given-pool-name"}},
     )
     @ddt.unpack
-    def test_create_and_delete_vips(self, vip_create_args=None):
+    def test_create_and_delete_vips(self, pool_create_args=None,
+                                    vip_create_args=None):
+        pools = [{
+            "pool": {
+                "id": "pool-id"
+            }
+        }]
         vip = {
             "vip": {
                 "id": "vip-id"
             }
         }
         neutron_scenario = loadbalancer_v1.NeutronLoadbalancerV1(
-            self._get_context_pools())
+            self._get_context())
         vip_data = vip_create_args or {}
+        pool_data = pool_create_args or {}
+        networks = self._get_context()["tenant"]["networks"]
+        neutron_scenario._create_v1_pools = mock.Mock(return_value=pools)
         neutron_scenario._create_v1_vip = mock.Mock(return_value=vip)
         neutron_scenario._delete_v1_vip = mock.Mock()
         neutron_scenario.create_and_delete_vips(
+            pool_create_args=pool_create_args,
             vip_create_args=vip_create_args)
-        for net in self._get_context_pools()["tenant"]["networks"]:
-            neutron_scenario._create_v1_vip.assert_has_calls(
-                [mock.call(pool, **vip_data) for pool in net["lb_pools"]])
+        neutron_scenario._create_v1_pools.assert_called_once_with(
+            networks, **pool_data)
+        neutron_scenario._create_v1_vip.assert_has_calls(
+            [mock.call(pool, **vip_data) for pool in pools])
         neutron_scenario._delete_v1_vip.assert_has_calls(
             [mock.call(vip["vip"])])
 

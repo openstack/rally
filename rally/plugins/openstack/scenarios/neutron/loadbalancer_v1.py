@@ -120,23 +120,23 @@ class NeutronLoadbalancerV1(utils.NeutronScenario):
     @validation.required_services(consts.Service.NEUTRON)
     @validation.required_openstack(users=True)
     @validation.required_contexts("network")
-    @validation.required_contexts("lbaas")
     @scenario.configure(context={"cleanup": ["neutron"]})
-    def create_and_delete_vips(self, vip_create_args=None):
+    def create_and_delete_vips(self, pool_create_args=None,
+                               vip_create_args=None):
         """Create a vip(v1) and then delete vips(v1).
 
         Measure the "neutron lb-vip-create" and "neutron lb-vip-delete"
         command performance. The scenario creates a vip for pool and
         then deletes those vips.
 
+        :param pool_create_args: dict, POST /lb/pools request options
         :param vip_create_args: dict, POST /lb/vips request options
         """
         vips = []
-        pools = []
+        pool_create_args = pool_create_args or {}
         vip_create_args = vip_create_args or {}
         networks = self.context.get("tenant", {}).get("networks", [])
-        for net in networks:
-            [pools.append(pool) for pool in net.get("lb_pools")]
+        pools = self._create_v1_pools(networks, **pool_create_args)
         with atomic.ActionTimer(self, "neutron.create_%s_vips" % len(pools)):
             for pool in pools:
                 vips.append(self._create_v1_vip(pool, **vip_create_args))
