@@ -14,11 +14,16 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import json
 import os
 import re
+import subprocess
 import traceback
 import unittest
 
+from rally import api
+from rally.common import db
+from rally import plugins
 from tests.functional import utils
 
 
@@ -34,18 +39,27 @@ class TestTaskSamples(unittest.TestCase):
         """
 
         skip_lst = ["[Ss]ervice is not available",
-                    "is not installed. To install it run"]
+                    "is not installed. To install it run",
+                    "extension.* is not configured"]
         for check_str in skip_lst:
             if re.search(check_str, validation_output) is not None:
                 return True
         return False
 
     def test_task_samples_is_valid(self):
+        plugins.load()
         rally = utils.Rally()
+        db.db_options.set_defaults(
+            db.CONF, connection="sqlite:///%s/db" % rally.tmp_dir,
+            sqlite_db="rally.sqlite")
         samples_path = os.path.join(
             os.path.dirname(__file__), os.pardir, os.pardir,
             "samples", "tasks")
         matcher = re.compile("\.json$")
+
+        if not os.path.exists(utils.DEPLOYMENT_FILE):
+            subprocess.call("rally deployment config > %s" %
+                            utils.DEPLOYMENT_FILE, shell=True)
 
         for dirname, dirnames, filenames in os.walk(samples_path):
             # NOTE(rvasilets): Skip by suggest of boris-42 because in
@@ -59,12 +73,15 @@ class TestTaskSamples(unittest.TestCase):
                 # (bug https://bugs.launchpad.net/rally/+bug/1314369)
                 if not matcher.search(filename):
                     continue
-                try:
-                    rally("task validate --task %s" % full_path)
-                except utils.RallyCliError as e:
-                    if not self._skip(e.output):
-                        raise e
-                except Exception:
-                    print(traceback.format_exc())
-                    self.assertTrue(False,
-                                    "Wrong task config %s" % full_path)
+                with open(full_path) as task_file:
+                    try:
+                        input_task = task_file.read()
+                        rendered_task = api.Task.render_template(input_task)
+                        task_config = json.loads(rendered_task)
+                        api.Task.validate("MAIN", task_config)
+                    except Exception as e:
+                        if not self._skip(e.message):
+                            print (traceback.format_exc())
+                            print ("Failed on task config %s with error." %
+                                   full_path)
+                            raise
