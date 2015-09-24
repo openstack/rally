@@ -28,7 +28,7 @@ Rally allows you to set success criteria (also called *SLA - Service-Level Agree
 
 To configure the SLA, add the *"sla"* section to the configuration of the corresponding benchmark (the check name is a key associated with its target value). You can combine different success criteria:
 
-.. code-block:: none
+.. code-block:: json
 
     {
         "NovaServers.boot_and_delete_server": [
@@ -59,7 +59,7 @@ Checking SLA
 ------------
 Let us show you how Rally SLA work using a simple example based on **Dummy benchmark scenarios**. These scenarios actually do not perform any OpenStack-related stuff but are very useful for testing the behaviors of Rally. Let us put in a new task, *test-sla.json*, 2 scenarios -- one that does nothing and another that just throws an exception:
 
-.. code-block:: none
+.. code-block:: json
 
     {
         "Dummy.dummy": [
@@ -105,14 +105,13 @@ Let us show you how Rally SLA work using a simple example based on **Dummy bench
 Note that both scenarios in these tasks have the **maximum failure rate of 0%** as their **success criterion**. We expect that the first scenario will pass this criterion while the second will fail it. Let's start the task:
 
 
-.. code-block:: none
+.. code-block:: bash
 
-   $ rally task start test-sla.json
-   ...
+   rally task start test-sla.json
 
 After the task completes, run *rally task sla_check* to check the results again the success criteria you defined in the task:
 
-.. code-block:: none
+.. code-block:: console
 
    $ rally task sla_check
    +-----------------------+-----+--------------+--------+-------------------------------------------------------------------------------------------------------+
@@ -130,9 +129,9 @@ SLA in task report
 
 SLA checks are nicely visualized in task reports. Generate one:
 
-.. code-block:: none
+.. code-block:: bash
 
-   $ rally task report --out=report_sla.html --open
+   rally task report --out=report_sla.html --open
 
 Benchmark scenarios that have passed SLA have a green check on the overview page:
 

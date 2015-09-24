@@ -37,14 +37,14 @@ How to contribute
 
 3. Tell git your details:
 
-.. code-block:: none
+.. code-block:: bash
 
     git config --global user.name "Firstname Lastname"
     git config --global user.email "your_email@youremail.com"
 
 4. Install git-review. This tool takes a lot of the pain out of remembering commands to push code up to Gerrit for review and to pull it back down to edit it. It is installed using:
 
-.. code-block:: none
+.. code-block:: bash
 
     pip install git-review
 
@@ -52,13 +52,13 @@ Several Linux distributions (notably Fedora 16 and Ubuntu 12.04) are also starti
 
 5. Grab the Rally repository:
 
-.. code-block:: none
+.. code-block:: bash
 
     git clone git@github.com:openstack/rally.git
 
 6. Checkout a new branch to hack on:
 
-.. code-block:: none
+.. code-block:: bash
 
     git checkout -b TOPIC-BRANCH
 
@@ -66,7 +66,7 @@ Several Linux distributions (notably Fedora 16 and Ubuntu 12.04) are also starti
 
 8. Run the test suite locally to make sure nothing broke, e.g. (this will run py26/py27/pep8 tests):
 
-.. code-block:: none
+.. code-block:: bash
 
     tox
 
@@ -76,7 +76,7 @@ If you extend Rally with new functionality, make sure you have also provided uni
 
 9. Commit your work using:
 
-.. code-block:: none
+.. code-block:: bash
 
     git commit -a
 
@@ -85,7 +85,7 @@ Make sure you have supplied your commit with a neat commit message, containing a
 
 10. Push the commit up for code review using:
 
-.. code-block:: none
+.. code-block:: bash
 
     git review -R
 
@@ -120,24 +120,32 @@ About Rally unit tests:
 - `Tox <https://tox.readthedocs.org/en/latest/>`_ is used to run unit tests
 
 
-To run unit tests locally::
+To run unit tests locally:
+
+.. code-block:: console
 
   $ pip install tox
   $ tox
 
-To run py26, py27 or pep8 only::
+To run py26, py27 or pep8 only:
+
+.. code-block:: console
 
   $ tox -e <name>
 
   #NOTE: <name> is one of py26, py27 or pep8
 
-To get test coverage::
+To get test coverage:
+
+.. code-block:: console
 
   $ tox -e cover
 
   #NOTE: Results will be in /cover/index.html
 
-To generate docs::
+To generate docs:
+
+.. code-block:: console
 
   $ tox -e docs
 
@@ -151,7 +159,9 @@ Functional tests
 The goal of `functional tests <https://en.wikipedia.org/wiki/Functional_testing>`_ is to check that everything works well together.
 Functional tests use Rally API only and check responses without touching internal parts.
 
-To run functional tests locally::
+To run functional tests locally:
+
+.. code-block:: console
 
   $ source openrc
   $ rally deployment create --fromenv --name testing

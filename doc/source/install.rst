@@ -24,7 +24,7 @@ Automated installation
 The easiest way to install Rally is by executing its `installation script
 <https://raw.githubusercontent.com/stackforge/rally/master/install_rally.sh>`_
 
-.. code-block:: none
+.. code-block:: bash
 
     wget -q -O- https://raw.githubusercontent.com/openstack/rally/master/install_rally.sh | bash
     # or using curl
@@ -39,14 +39,14 @@ By default it will install Rally in a virtualenv in ``~/rally`` when
 run as standard user, or install system wide when run as root. You can
 install Rally in a venv by using the option ``--target``:
 
-.. code-block:: none
+.. code-block:: bash
 
     ./install_rally.sh --target /foo/bar
 
 You can also install Rally system wide by running script as root and
 without ``--target`` option:
 
-.. code-block:: none
+.. code-block:: bash
 
     sudo ./install_rally.sh
 
@@ -54,7 +54,7 @@ without ``--target`` option:
 Run ``./install_rally.sh`` with option ``--help`` to have a list of all
 available options:
 
-.. code-block:: node
+.. code-block:: console
 
      $ ./install_rally.sh --help
      Usage: install_rally.sh [options]
@@ -92,7 +92,7 @@ install the dependencies.
 
 You also have to set up the **Rally database** after the installation is complete:
 
-.. code-block:: none
+.. code-block:: bash
 
    rally-manage db recreate
 
@@ -102,14 +102,14 @@ Rally with DevStack all-in-one installation
 
 It is also possible to install Rally with DevStack. First, clone the corresponding repositories:
 
-.. code-block:: none
+.. code-block:: bash
 
    git clone https://git.openstack.org/openstack-dev/devstack
    git clone https://github.com/openstack/rally
 
 Then, configure DevStack to run Rally:
 
-.. code-block:: none
+.. code-block:: bash
 
    cd devstack
    cp samples/local.conf local.conf
@@ -117,7 +117,7 @@ Then, configure DevStack to run Rally:
 
 Finally, run DevStack as usually:
 
-.. code-block:: none
+.. code-block:: bash
 
    ./stack.sh
 
@@ -168,7 +168,9 @@ You may want to save the last command as an alias:
 
 After executing ``dock_rally``, or ``docker run ...``, you will have
 bash running inside the container with Rally installed. You may do
-anything with Rally, but you need to create the database first::
+anything with Rally, but you need to create the database first:
+
+.. code-block:: console
 
    user@box:~/rally$ dock_rally
    rally@1cc98e0b5941:~$ rally-manage db recreate

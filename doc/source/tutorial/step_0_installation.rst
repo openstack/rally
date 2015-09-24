@@ -21,7 +21,7 @@ Step 0. Installation
 The easiest way to install Rally is by running its `installation script
 <https://raw.githubusercontent.com/openstack/rally/master/install_rally.sh>`_:
 
-.. code-block:: none
+.. code-block:: bash
 
     wget -q -O- https://raw.githubusercontent.com/openstack/rally/master/install_rally.sh | bash
     # or using curl:

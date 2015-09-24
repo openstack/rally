@@ -45,7 +45,7 @@ Results
 
 1. Concurrency = 4
 
-.. code-block:: none
+.. code-block:: json
 
     {'context': {'users': {'concurrent': 30,
                            'tenants': 12,
@@ -66,7 +66,7 @@ Results
 
 2. Concurrency = 16
 
-.. code-block:: none
+.. code-block:: json
 
     {'context': {'users': {'concurrent': 30,
                            'tenants': 12,
@@ -86,7 +86,7 @@ Results
 
 3. Concurrency = 32
 
-.. code-block:: none
+.. code-block:: json
 
     {'context': {'users': {'concurrent': 30,
                            'tenants': 12,

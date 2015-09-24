@@ -30,7 +30,7 @@ real-world cases you will use multiple plugins to test your OpenStack cloud.
 Rally makes it very easy to run **different test cases defined in a single task**.
 To do so, use the following syntax:
 
-.. code-block:: none
+.. code-block:: json
 
     {
         "<ScenarioName1>": [<benchmark_config>, <benchmark_config2>, ...]
@@ -39,7 +39,7 @@ To do so, use the following syntax:
 
 where *<benchmark_config>*, as before, is a dictionary:
 
-.. code-block:: none
+.. code-block:: json
 
     {
         "args": { <scenario-specific arguments> },
@@ -55,7 +55,7 @@ As an example, let's edit our configuration file from :ref:`step 1 <tutorial_ste
 
 *multiple-scenarios.json*
 
-.. code-block:: none
+.. code-block:: json
 
     {
         "NovaServers.boot_and_delete_server": [
@@ -98,7 +98,7 @@ As an example, let's edit our configuration file from :ref:`step 1 <tutorial_ste
 
 Now you can start this benchmark task as usually:
 
-.. code-block:: none
+.. code-block:: console
 
     $ rally task start multiple-scenarios.json
     ...
@@ -129,9 +129,9 @@ Now you can start this benchmark task as usually:
 
 Note that the HTML reports you can generate by typing **rally task report --out=report_name.html** after your benchmark task has completed will get richer as your benchmark task configuration file includes more benchmark scenarios. Let's take a look at the report overview page for a task that covers all the scenarios available in Rally:
 
-.. code-block:: none
+.. code-block:: bash
 
-   $ rally task report --out=report_multiple_scenarios.html --open
+   rally task report --out=report_multiple_scenarios.html --open
 
 .. image:: ../images/Report-Multiple-Overview.png
    :align: center
@@ -144,7 +144,7 @@ Yet another thing you can do in Rally is to launch **the same benchmark scenario
 
 *multiple-configurations.json*
 
-.. code-block:: none
+.. code-block:: json
 
     {
         "NovaServers.boot_and_delete_server": [
@@ -179,7 +179,7 @@ Yet another thing you can do in Rally is to launch **the same benchmark scenario
 
 That's it! You will get again the results for each configuration separately:
 
-.. code-block:: none
+.. code-block:: console
 
     $ rally task start --task=multiple-configurations.json
     ...
@@ -209,9 +209,9 @@ That's it! You will get again the results for each configuration separately:
 
 The HTML report will also look similar to what we have seen before:
 
-.. code-block:: none
+.. code-block:: bash
 
-   $ rally task report --out=report_multiple_configuraions.html --open
+   rally task report --out=report_multiple_configuraions.html --open
 
 .. image:: ../images/Report-Multiple-Configurations-Overview.png
    :align: center

@@ -41,7 +41,7 @@ Rally plugin CLI command is much more convenient way to learn about different
 plugins in Rally. This command allows to list plugins and show detailed
 information about them:
 
-.. code-block:: none
+.. code-block:: console
 
     $ rally plugin show create_meter_and_get_stats
 
@@ -65,7 +65,7 @@ information about them:
 
 In case if multiple found benchmarks found command list all matches elements:
 
-.. code-block:: none
+.. code-block:: console
 
     $ rally plugin show NovaKeypair
 
@@ -84,9 +84,9 @@ CLI: rally plugin list
 
 This command can be used to list filtered by name list of plugins.
 
-.. code-block:: none
+.. code-block:: console
 
-    rally plugin list --name Keystone
+    $ rally plugin list --name Keystone
 
     +--------------------------------------------------+-----------+-----------------------------------------------------------------+
     | name                                             | namespace | title                                                           |

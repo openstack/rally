@@ -26,10 +26,9 @@ Basic template syntax
 
 A nice feature of the input task format used in Rally is that it supports the **template syntax** based on `Jinja2 <https://pypi.python.org/pypi/Jinja2>`_. This turns out to be extremely useful when, say, you have a fixed structure of your task but you want to parameterize this task in some way. For example, imagine your input task file (*task.yaml*) runs a set of Nova scenarios:
 
-.. code-block:: none
+.. code-block:: yaml
 
     ---
-
       NovaServers.boot_and_delete_server:
         -
           args:
@@ -66,10 +65,9 @@ A nice feature of the input task format used in Rally is that it supports the **
 
 In all the three scenarios above, the *"^cirros.*uec$"* image is passed to the scenario as an argument (so that these scenarios use an appropriate image while booting servers). Let’s say you want to run the same set of scenarios with the same runner/context/sla, but you want to try another image while booting server to compare the performance. The most elegant solution is then to turn the image name into a template variable:
 
-.. code-block:: none
+.. code-block:: yaml
 
     ---
-
       NovaServers.boot_and_delete_server:
         -
           args:
@@ -109,23 +107,23 @@ and then pass the argument value for **{{image_name}}** when starting a task wit
 
 1. Pass the argument values directly in the command-line interface (with either a JSON or YAML dictionary):
 
-.. code-block:: none
+.. code-block:: bash
 
-    $ rally task start task.yaml --task-args '{"image_name": "^cirros.*uec$"}'
-    $ rally task start task.yaml --task-args 'image_name: "^cirros.*uec$"'
+    rally task start task.yaml --task-args '{"image_name": "^cirros.*uec$"}'
+    rally task start task.yaml --task-args 'image_name: "^cirros.*uec$"'
 
 2. Refer to a file that specifies the argument values (JSON/YAML):
 
-.. code-block:: none
+.. code-block:: bash
 
-    $ rally task start task.yaml --task-args-file args.json
-    $ rally task start task.yaml --task-args-file args.yaml
+    rally task start task.yaml --task-args-file args.json
+    rally task start task.yaml --task-args-file args.yaml
 
 where the files containing argument values should look as follows:
 
 *args.json*:
 
-.. code-block:: none
+.. code-block:: json
 
     {
         "image_name": "^cirros.*uec$"
@@ -133,15 +131,14 @@ where the files containing argument values should look as follows:
 
 *args.yaml*:
 
-.. code-block:: none
+.. code-block:: yaml
 
     ---
-
       image_name: "^cirros.*uec$"
 
 Passed in either way, these parameter values will be substituted by Rally when starting a task:
 
-.. code-block:: none
+.. code-block:: console
 
     $ rally task start task.yaml --task-args "image_name: "^cirros.*uec$""
     --------------------------------------------------------------------------------
@@ -197,7 +194,7 @@ Using the default values
 
 Note that the Jinja2 template syntax allows you to set the default values for your parameters. With default values set, your task file will work even if you don't parameterize it explicitly while starting a task. The default values should be set using the *{% set ... %}* clause (*task.yaml*):
 
-.. code-block:: none
+.. code-block:: yaml
 
     {% set image_name = image_name or "^cirros.*uec$" %}
     ---
@@ -222,7 +219,7 @@ Note that the Jinja2 template syntax allows you to set the default values for yo
 
 If you don't pass the value for *{{image_name}}* while starting a task, the default one will be used:
 
-.. code-block:: none
+.. code-block:: console
 
     $ rally task start task.yaml
     --------------------------------------------------------------------------------
@@ -259,10 +256,9 @@ Rally makes it possible to use all the power of Jinja2 template syntax, includin
 As an example, let us make up a task file that will create new users with increasing concurrency. The input task file (*task.yaml*) below uses the Jinja2 **for-endfor** construct to accomplish that:
 
 
-.. code-block:: none
+.. code-block:: yaml
 
     ---
-
       KeystoneBasic.create_user:
       {% for i in range(2, 11, 2) %}
         -
@@ -280,7 +276,7 @@ As an example, let us make up a task file that will create new users with increa
 
 In this case, you don’t need to pass any arguments via *--task-args/--task-args-file*, but as soon as you start this task, Rally will automatically unfold the for-loop for you:
 
-.. code-block:: none
+.. code-block:: console
 
     $ rally task start task.yaml
     --------------------------------------------------------------------------------

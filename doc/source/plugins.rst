@@ -70,7 +70,7 @@ Creation
 
 Inherit a class for your plugin from the base *Scenario* class and implement a scenario method inside it as usual. In our scenario, let us first list flavors as an ordinary user, and then repeat the same using admin clients:
 
-.. code-block:: none
+.. code-block:: python
 
     from rally.task import atomic
     from rally.task import scenario
@@ -104,7 +104,7 @@ Usage
 
 You can refer to your plugin scenario in the benchmark task configuration files just in the same way as to any other scenarios:
 
-.. code-block:: none
+.. code-block:: json
 
     {
         "ScenarioPlugin.list_flavors": [
@@ -135,7 +135,7 @@ Creation
 
 Inherit a class for your plugin from the base *Context* class. Then, implement the Context API: the *setup()* method that creates a flavor and the *cleanup()* method that deletes it.
 
-.. code-block:: none
+.. code-block:: python
 
     from rally.task import context
     from rally.common import log as logging
@@ -216,7 +216,7 @@ Usage
 
 You can refer to your plugin context in the benchmark task configuration files just in the same way as to any other contexts:
 
-.. code-block:: none
+.. code-block:: json
 
     {
         "Dummy.dummy": [
@@ -252,7 +252,7 @@ Creation
 
 Inherit a class for your plugin from the base *SLA* class and implement its API (the *add_iteration(iteration)*, the *details()* method):
 
-.. code-block:: none
+.. code-block:: python
 
     from rally.task import sla
     from rally.common.i18n import _
@@ -294,7 +294,7 @@ Usage
 
 You can refer to your SLA in the benchmark task configuration files just in the same way as to any other SLA:
 
-.. code-block:: none
+.. code-block:: json
 
     {
         "Dummy.dummy": [
@@ -331,7 +331,7 @@ Creation
 
 Inherit a class for your plugin from the base *ScenarioRunner* class and implement its API (the *_run_scenario()* method):
 
-.. code-block:: none
+.. code-block:: python
 
     import random
 
@@ -383,7 +383,7 @@ Usage
 
 You can refer to your scenario runner in the benchmark task configuration files just in the same way as to any other runners. Don't forget to put you runner-specific parameters to the configuration as well (*"min_times"* and *"max_times"* in our example):
 
-.. code-block:: none
+.. code-block:: json
 
     {
         "Dummy.dummy": [
