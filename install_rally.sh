@@ -759,8 +759,10 @@ install_db_connector
 
 # Install rally
 cd "$SOURCEDIR"
-# Get latest available pip
+# Get latest available pip and reset shell cache
 pip install -i $BASE_PIP_URL -U 'pip'
+hash -r
+
 # Install dependencies
 pip install -i $BASE_PIP_URL pbr 'tox<=1.6.1'
 # Uninstall possible previous version
