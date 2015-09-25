@@ -30,12 +30,34 @@ full list with detailed descriptions of all official Rally plugins.
 How plugins work
 ----------------
 
-Rally provides an opportunity to create and use a **custom benchmark scenario, runner or context** as a **plugin**:
+Rally provides an opportunity to create and use a **custom benchmark
+scenario, runner or context** as a **plugin**:
 
 .. image:: ./images/Rally-Plugins.png
    :align: center
 
-Plugins can be quickly written and used, with no need to contribute them to the actual Rally code. Just place a python module with your plugin class into the **/opt/rally/plugins** or **~/.rally/plugins** directory (or it's subdirectories), and it will be autoloaded.
+Placement
+---------
+
+Plugins can be quickly written and used, with no need to contribute
+them to the actual Rally code. Just place a python module with your
+plugin class into the ``/opt/rally/plugins`` or ``~/.rally/plugins``
+directory (or its subdirectories), and it will be
+autoloaded. Additional paths can be specified with the
+``--plugin-paths`` argument, or with the ``RALLY_PLUGIN_PATHS``
+environment variable, both of which accept comma-delimited
+lists. Both ``--plugin-paths`` and ``RALLY_PLUGIN_PATHS`` can list
+either plugin module files, or directories containing plugins. For
+instance, both of these are valid:
+
+.. code-block:: bash
+
+    rally --plugin-paths /rally/plugins ...
+    rally --plugin-paths /rally/plugins/foo.py,/rally/plugins/bar.py ...
+
+You can also use a script ``unpack_plugins_samples.sh`` from
+``samples/plugins`` which will automatically create the
+``~/.rally/plugins`` directory.
 
 
 Example: Benchmark scenario as a plugin
@@ -75,12 +97,6 @@ Inherit a class for your plugin from the base *Scenario* class and implement a s
             """List flavors."""
             self._list_flavors()
             self._list_flavors_as_admin()
-
-
-Placement
-^^^^^^^^^
-
-Put the python module with your plugin class into the **/opt/rally/plugins** or **~/.rally/plugins** directory or it's subdirectories and it will be autoloaded. You can also use a script **unpack_plugins_samples.sh** from **samples/plugins** which will automatically create the **~/.rally/plugins** directory.
 
 
 Usage
@@ -195,13 +211,6 @@ Inherit a class for your plugin from the base *Context* class. Then, implement t
                     LOG.warning(msg)
 
 
-
-Placement
-^^^^^^^^^
-
-Put the python module with your plugin class into the **/opt/rally/plugins** or **~/.rally/plugins** directory or it's subdirectories and it will be autoloaded. You can also use a script **unpack_plugins_samples.sh** from **samples/plugins** which will automatically create the **~/.rally/plugins** directory.
-
-
 Usage
 ^^^^^
 
@@ -278,12 +287,6 @@ Inherit a class for your plugin from the base *SLA* class and implement its API 
         def details(self):
             return (_("%s - Maximum allowed duration range: %.2f%% <= %.2f%%") %
                     (self.status(), self._max - self._min, self.criterion_value))
-
-
-Placement
-^^^^^^^^^
-
-Put the python module with your plugin class into the **/opt/rally/plugins** or **~/.rally/plugins** directory or it's subdirectories and it will be autoloaded. You can also use a script **unpack_plugins_samples.sh** from **samples/plugins** which will automatically create the **~/.rally/plugins** directory.
 
 
 Usage
@@ -374,14 +377,6 @@ Inherit a class for your plugin from the base *ScenarioRunner* class and impleme
                 result = runner._run_scenario_once(run_args)
                 # use self.send_result for result of each iteration
                 self._send_result(result)
-
-
-
-Placement
-^^^^^^^^^
-
-Put the python module with your plugin class into the **/opt/rally/plugins** or **~/.rally/plugins** directory or it's subdirectories and it will be autoloaded. You can also use a script **unpack_plugins_samples.sh** from **samples/plugins** which will automatically create the **~/.rally/plugins** directory.
-
 
 Usage
 ^^^^^
