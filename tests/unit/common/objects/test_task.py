@@ -56,7 +56,7 @@ class TaskTestCase(test.TestCase):
                 return_value="some_uuid")
     @mock.patch("rally.common.objects.task.db.task_create")
     def test_init_with_fake_true(self, mock_task_create, mock_uuid4):
-        task = objects.Task(fake=True)
+        task = objects.Task(temporary=True)
         self.assertFalse(mock_task_create.called)
         self.assertTrue(mock_uuid4.called)
         self.assertEqual(task["uuid"], mock_uuid4.return_value)

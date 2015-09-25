@@ -1587,5 +1587,15 @@ class FakeDeployment(dict):
 
 class FakeTask(dict):
 
+    def __init__(self, task=None, temporary=False, **kwargs):
+        self.is_temporary = temporary
+        self.task = task or kwargs
+        self.set_failed = mock.Mock()
+
+    def __getitem__(self, key):
+        if key in self:
+            return self[key]
+        return self.task[key]
+
     def to_dict(self):
         return self

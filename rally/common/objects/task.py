@@ -218,17 +218,18 @@ class Task(object):
     NOT_IMPLEMENTED_STAGES_FOR_ABORT = [consts.TaskStatus.VERIFYING,
                                         consts.TaskStatus.INIT]
 
-    def __init__(self, task=None, fake=False, **attributes):
+    def __init__(self, task=None, temporary=False, **attributes):
         """Task object init
 
         :param task: dictionary like object, that represents a task
-        :param fake: if True, will be created task object with random UUID and
-            parameters, passed in 'attributes'. Does not create database
-            record. Used for special purposes, like task config validation.
+        :param temporary: whenever this param is True the task will be created
+            with a random UUID and no database record. Used for special
+            purposes, like task config validation.
         """
 
-        self.fake = fake
-        if fake:
+        self.is_temporary = temporary
+
+        if self.is_temporary:
             self.task = task or {"uuid": str(uuid.uuid4())}
             self.task.update(attributes)
         else:
@@ -260,7 +261,7 @@ class Task(object):
         db.task_delete(uuid, status=status)
 
     def _update(self, values):
-        if not self.fake:
+        if not self.is_temporary:
             self.task = db.task_update(self.task["uuid"], values)
 
     def update_status(self, status, allowed_statuses=None):

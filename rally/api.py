@@ -188,16 +188,18 @@ class Task(object):
         return objects.Task(deployment_uuid=deployment_uuid, tag=tag)
 
     @classmethod
-    def validate(cls, deployment, config):
+    def validate(cls, deployment, config, task_instance=None):
         """Validate a task config against specified deployment.
 
         :param deployment: UUID or name of the deployment
         :param config: a dict with a task configuration
         """
         deployment = objects.Deployment.get(deployment)
-        task = objects.Task(deployment_uuid=deployment["uuid"], fake=True)
+        task = task_instance or objects.Task(
+            deployment_uuid=deployment["uuid"], temporary=True)
         benchmark_engine = engine.BenchmarkEngine(
             config, task, admin=deployment["admin"], users=deployment["users"])
+
         benchmark_engine.validate()
 
     @classmethod
@@ -216,6 +218,11 @@ class Task(object):
         """
         deployment = objects.Deployment.get(deployment)
         task = task or objects.Task(deployment_uuid=deployment["uuid"])
+
+        if task.is_temporary:
+            raise ValueError(_(
+                "Unable to run a temporary task. Please check your code."))
+
         LOG.info("Benchmark Task %s on Deployment %s" % (task["uuid"],
                                                          deployment["uuid"]))
         benchmark_engine = engine.BenchmarkEngine(
@@ -223,12 +230,7 @@ class Task(object):
             abort_on_sla_failure=abort_on_sla_failure)
 
         try:
-            benchmark_engine.validate()
             benchmark_engine.run()
-        except exceptions.InvalidTaskException:
-            # NOTE(boris-42): We don't log anything, because it's a normal
-            #                 situation when a user puts a wrong config.
-            pass
         except Exception:
             deployment.update_status(consts.DeployStatus.DEPLOY_INCONSISTENT)
             raise

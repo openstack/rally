@@ -61,7 +61,7 @@ class InvalidRunnerResult(RallyException):
 
 
 class InvalidTaskException(InvalidConfigException):
-    msg_fmt = _("This config is invalid: `%(message)s`")
+    msg_fmt = _("Task config is invalid: `%(message)s`")
 
 
 class NotFoundScenarios(InvalidTaskException):
