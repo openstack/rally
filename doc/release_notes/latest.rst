@@ -1,180 +1,510 @@
 ============
-Rally v0.0.4
+Rally v0.1.0
 ============
 
 Information
 -----------
 
-+------------------+-----------------+
-| Commits          |     **87**      |
-+------------------+-----------------+
-| Bug fixes        |     **21**      |
-+------------------+-----------------+
-| Dev cycle        |   **30 days**   |
-+------------------+-----------------+
-| Release date     | **14/May/2015** |
-+------------------+-----------------+
++------------------+-----------------------+
+| Commits          |        **355**        |
++------------------+-----------------------+
+| Bug fixes        |         **90**        |
++------------------+-----------------------+
+| Dev cycle        |      **132 days**     |
++------------------+-----------------------+
+| Release date     | **25/September/2015** |
++------------------+-----------------------+
 
 
 Details
 -------
 
-This release contains new features, new benchmark plugins, bug fixes, various code and API improvements.
+This release contains new features, new 42 plugins, 90 bug fixes,
+various code and API improvements.
 
 
 New Features & API changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
+* **Improved installation script**
 
-* Rally now can generate load with users that already exist
+  * Add parameters:
 
-  Now one can use Rally for benchmarking OpenStack clouds that are using LDAP, AD or any other read-only keystone backend where it is not possible to create any users. To do this, one should set up the "users" section of the deployment configuration of the ExistingCloud type. This feature also makes it safer to run Rally against production clouds: when run from an isolated group of users, Rally won’t affect rest of the cloud users if something goes wrong.
+    * ``--develop`` parameter to install rally in editable (develop) mode
 
-* New decorator *@osclients.Clients.register* can add new OpenStack clients at runtime
+    * ``--no-color`` to switch off output colorizing
+      useful for automated output parsing and terminals that don't
+      support colors.
 
-  It is now possible to add a new OpenStack client dynamically at runtime. The added client will be available from osclients.Clients at the module level and cached. Example:
+  * Puts rally.conf under virtualenv etc/rally/ so you can have several
+    rally installations in virtualenv
 
-.. code-block:: none
+  * Many fixes related to access of different file, like: rally.conf,
+    rally db file in case of sqlite
 
-   >>> from rally import osclients
-   >>> @osclients.Clients.register("supernova")
-   ... def another_nova_client(self):
-   ...   from novaclient import client as nova
-   ...   return nova.Client("2", auth_token=self.keystone().auth_token,
-   ...                      **self._get_auth_info(password_key="key"))
-   ...
-   >>> clients = osclients.Clients.create_from_env()
-   >>> clients.supernova().services.list()[:2]
-   [<Service: nova-conductor>, <Service: nova-cert>]
+  * Update pip before Rally installation
 
-* Assert methods now available for scenarios and contexts
+  * Fix reinstallation
 
-  There is now a new *FunctionalMixin* class that implements basic unittest assert methods. The *base.Context* and *base.Scenario* classes inherit from this mixin, so now it is possible to use *base.assertX()* methods in scenarios and contexts.
 
-* Improved installation script
+* **Separated Rally plugins & framework**
 
-  The installation script has been almost completely rewritten. After this change, it can be run from an unprivileged user, supports different database types, allows to specify a custom python binary, always asks confirmation before doing potentially dangerous actions, automatically install needed software if run as root, and also automatically cleans up the virtualenv and/or the downloaded repository if interrupted.
+  Now plugins are here:
+  https://github.com/openstack/rally/tree/master/rally/plugins
 
+  Plugins are as well separated common/* for common plugins
+  that can be use no matter what is tested and OpenStack related
+  plugins
+
+
+* **New Rally Task framework**
+
+  * All plugins has the same Plugin base:
+    rally.common.plugin.pluing.Plugin They have the same mechanisms for:
+    discovering, providing information based on docstrings, and in future
+    they will use the same deprecation/rename mechanism.
+
+  * Some of files are moved:
+
+    * rally/benchmark ->  rally/task
+
+      *This was done to unify naming of rally task command and
+      actually code that implements it.*
+
+    * rally/benchmark/sla/base.py        -> rally/task/sla.py
+
+    * rally/benchmark/context/base.py    -> rally/task/context.py
+
+    * rally/benchmark/scenarios/base.py  -> rally/task/scenario.py
+
+    * rally/benchmark/runners/base.py    -> rally/task/runner.py
+
+    * rally/benchmark/scenarios/utils.py -> rally/task/utils.py
+
+    This was done to:
+
+    * avoid doing rally.benchamrk.scenarios import base as scenario_base
+
+    * remove one level of nesting
+
+    * simplify framework structure
+
+
+  * Some of classes and methods were renamed
+
+    * Plugin configuration:
+
+      * context.context() -> context.configure()
+
+      * scenario.scenario() -> scenario.configure()
+
+      * Introduced runner.configure()
+
+      * Introduced sla.configure()
+
+      This resolves 3 problems:
+
+      * Unifies configuration of different types of plugins
+
+      * Simplifies plugin interface
+
+      * Looks nice with new modules path:
+          >>> from rally.task import scenario
+          >>> @scenario.configure()
+
+
+  * Atomic Actions were changed:
+
+    * New rally.task.atomic module
+
+      This  allow us in future to reuse atomic actions in Context plugins
+
+    * Renames:
+
+       rally.benchmark.scenarios.base.AtomicAction
+       -> rally.task.atomic.ActionTimer
+
+       rally.benchmark.scenarios.base.atomic_action()
+       -> rally.task.atomic.action_timer()
+
+  * **Context plugins decide how to map their data for scenario**
+
+    Now Context.map_for_scenario method can be override to decide
+    how to pass context object to each iteration of scenario.
+
+  * Samples of NEW vs OLD context, sla, scenario and runner plugins:
+
+    * Context
+    .. code-block:: python
+
+        # Old
+        from rally.benchmark.context import base
+
+        @base.context(name="users", order=100)
+        class YourContext(base.Context):
+
+            def setup(self):
+                # ...
+
+            def cleanup(self):
+                # ...
+
+        # New
+        from rally.task import context
+
+        @context.configure(name="users", order=100)
+        class YourContext(context.Context):
+
+            def setup(self):
+                # ...
+
+            def cleanup(self):
+                # ...
+
+            def map_for_scenario(self):
+                # Maps context object to the scenario context object
+                # like context["users"] -> context["user"] and so on.
+    ..
+
+
+    * Scenario
+    .. code-block:: python
+
+        # Old Scenario
+
+        from rally.benchmark.scenarios import base
+        from rally.benchmark import validation
+
+        class ScenarioPlugin(base.Scenario):
+
+            @base.scenario()
+            def some(self):
+                self._do_some_action()
+
+
+            @base.atomic_action_timer("some_timer")
+            def _do_some_action(self):
+                # ...
+
+        # New Scenario
+
+        from rally.task import atomic
+        from rally.task import scenario
+        from rally.task import validation
+
+        # OpenStack scenario has different base now:
+        # rally.plugins.openstack.scenario.OpenStackScenario
+        class ScenarioPlugin(scenario.Scenario):
+
+            @scenario.configure()
+            def some(self):
+                self._do_some_action()
+
+            @atomic.action_timer("some_action")
+            def _do_some_action(self):
+                # ...
+    ..
+
+    * Runner
+    .. code-block:: python
+
+        ## Old
+
+        from rally.benchmark.runners import base
+
+        class SomeRunner(base.ScenarioRunner):
+
+             __execution_type__ = "some_runner"
+
+            def _run_scenario(self, cls, method_name, context, args)
+              # Load generation
+
+            def abort(self):
+              # Method that aborts load generation
+
+        ## New
+
+        from rally.task import runner
+
+        @runner.configure(name="some_runner")
+        class SomeRunner(runner.ScenarioRunner):
+
+            def _run_scenario(self, cls, method_name, context, args)
+                # Load generation
+
+            def abort(self):
+                # Method that aborts load generation
+
+    ..
+
+    * SLA
+    .. code-block:: python
+
+        # Old
+
+        from rally.benchmark import sla
+
+        class FailureRate(sla.SLA):
+            # ...
+
+        # New
+
+        from rally.task import sla
+
+        @sla.configure(name="failure_rate")
+        class FailureRate(sla.SLA):
+            # ...
+    ..
+
+
+* **Rally Task aborted command**
+
+  Finally you can gracefully shutdown running task by calling:
+
+  .. code:: bash
+
+    rally task abort <task_uuid>
+  ..
+
+* **Rally CLI changes**
+
+  * [add] ``rally --plugin-paths`` specify the list of directories with plugins
+
+  * [add] ``rally task report --junit`` - generate a JUnit report
+    This allows users to feed reports to tools such as Jenkins.
+
+  * [add] ``rally task abort`` - aborts running Rally task
+    when run with the ``--soft`` key, the ``rally task abort`` command is
+    waiting until the currently running subtask is finished, otherwise the
+    command interrupts subtask immediately after current scenario iterations
+    are finished.
+
+  * [add] ``rally plugin show`` prints detailed information about plugin
+
+  * [add] ``rally plugin list`` prints table with rally plugin names and titles
+
+  * [add] ``rally verify genconfig`` generates tempest.conf without running it.
+
+  * [add] ``rally verify install`` install tempest for specified deployment
+
+  * [add] ``rally verify reinstall`` removes tempest for specified deployment
+
+  * [add] ``rally verify uninstall`` uninstall tempest of specified deployment
+
+  * [fix] ``rally verify start --no-use`` --no-use was always turned on
+
+  * [remove] ``rally use`` now each command has subcommand ``use``
+
+  * [remove] ``rally info``
+
+  * [remove] ``rally-manage tempest`` now it is covered by ``rally verify``
+
+
+* **New Rally task reports**
+
+  * New code is based on OOP style which is base step to make plugable Reports
+
+  * Reports are now generated for only one iteration over the resulting data
+    which resolves scalability issues when we are working with large
+    amount of iterations.
+
+  * New Load profiler plot that shows amount of iterations that are working
+    in parallel
+
+  * Failed iterations are shown as a red areas on stacked are graphic.
+
+Non backward compatible changes
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* [remove] ``rally use`` cli command
+
+* [remove] ``rally info`` cli command
+
+* [remove] ``--uuid`` parameter from  ``rally deployment <any>``
+
+* [remove ``--deploy-id`` parameter from:
+  ``rally task <any>``, ``rally verify <any>``, ``rally show <any>``
 
 Specs & Feature requests
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-* [Spec] Reorder plugins
+  [feature request] Explicitly specify existing users for scenarios
 
-  The spec describes how to split Rally framework and plugins codebase to make it simpler for newbies to understand how Rally code is organized and how it works.
+  [feature request] Improve install script and add --unistall and --version
 
-* [Feature request] Specify what benchmarks to execute in task
+  [feature request] Allows specific repos & packages in install-rally.sh
 
-  This feature request proposes to add the ability to specify benchmark(s) to be executed when the user runs the *rally task start* command. A possible solution would be to add a special flag to the *rally task start* command.
+  [feature request] Add abbility to caputre logs from tested services
 
+  [feature request] Check RPC queue perfdata
+
+  [spec] Refactoring Rally cleanup
+
+  [spec] Consistent resource names
 
 Plugins
 ~~~~~~~
 
-* **Benchmark Scenario Runners**:
+* **Scenarios**:
 
-    * Add limits for maximum Core usage to constant and rps runners
+  [new] CinderVolumes.create_volume_backup
 
-      The new 'max_cpu_usage' parameter can be used to avoid possible 100% usage of all available CPU cores by reducing the number of CPU cores available for processes started by the corresponding runner.
+  [new] CinderVolumes.create_and_restore_volume_backup
+
+  [new] KeystoneBasic.add_and_remove_user_role
+
+  [new] KeystoneBasic.create_and_delete_role
+
+  [new] KeystoneBasic.create_add_and_list_user_roles
+
+  [new] FuelEnvironments.list_environments
+
+  [new] CinderVolumes.modify_volume_metadata
+
+  [new] NovaServers.boot_and_delete_multiple_servers
+
+  [new] NeutronLoadbalancerV1.create_and_list_pool
+
+  [new] ManilaShares.list_shares
+
+  [new] CeilometerEvents.create_user_and_get_event
+
+  [new] CeilometerEvents.create_user_and_list_event_types
+
+  [new] CeilometerEvents.create_user_and_list_events
+
+  [new] CeilometerTraits.create_user_and_list_trait_descriptions
+
+  [new] CeilometerTraits.create_user_and_list_traits
+
+  [new] NeutronLoadbalancerV1.create_and_delete_pools
+
+  [new] NeutronLoadbalancerV1.create_and_update_pools
+
+  [new] ManilaShares.create_and_delete_share
+
+  [new] ManilaShares.create_share_network_and_delete
+
+  [new] ManilaShares.create_share_network_and_list
+
+  [new] HeatStacks.create_and_delete_stack
+
+  [new] ManilaShares.list_share_servers
+
+  [new] HeatStacks.create_snapshot_restore_delete_stack
+
+  [new] KeystoneBasic.create_and_delete_ec2credential
+
+  [new] KeystoneBasic.create_and_list_ec2credentials
+
+  [new] HeatStacks.create_stack_and_scale
+
+  [new] ManilaShares.create_security_service_and_delete
+
+  [new] KeystoneBasic.create_user_set_enabled_and_delete
+
+  [new] ManilaShares.attach_security_service_to_share_network
+
+  [new] IronicNodes.create_and_delete_node
+
+  [new] IronicNodes.create_and_list_node
+
+  [new] CinderVolumes.create_and_list_volume_backups
+
+  [new] NovaNetworks.create_and_list_networks
+
+  [new] NovaNetworks.create_and_delete_network
+
+  [new] EC2Servers.list_servers
+
+  [new] VMTasks.boot_runcommand_delete_custom_imagea
+
+  [new] CinderVolumes.create_and_update_volume
 
 
-* **Benchmark Scenarios**:
+* **Contexts**:
 
-    * [new] KeystoneBasic.create_update_and_delete_tenant
+  [new] ManilaQuotas
 
-    * [new] KeystoneBasic.create_user_update_password
+        Add context for setting up Manila quotas:
+        shares, gigabytes, snapshots, snapshot_gigabytes, share_networks
 
-    * [new] NovaServers.shelve_and_unshelve_server
+  [new] ManilaShareNetworks
 
-    * [new] NovaServers.boot_and_associate_floating_ip
+        Context for share networks that will be used in case of usage
+        deployment with existing users. Provided share networks via context
+        option "share_networks" will be balanced between all share creations
+        of scenarios.
 
-    * [new] NovaServers.boot_lock_unlock_and_delete
+  [new] Lbaas
 
-    * [new] NovaHypervisors.list_hypervisors
+        Context to create LBaaS-v1 resources
 
-    * [new] CeilometerSamples.list_samples
+  [new] ImageCommandCustomizerContext
 
-    * [new] CeilometerResource.get_resources_on_tenant
+        Allows image customization using side effects of a command execution.
+        E.g. one can install an application to the image and use these image
+        for 'boot_runcommand_delete' scenario afterwards.
 
-    * [new] SwiftObjects.create_container_and_object_then_delete_all
+  [new] EC2ServerGenerator
 
-    * [new] SwiftObjects.create_container_and_object_then_download_object
+        Context that creates servers using EC2 api
 
-    * [new] SwiftObjects.create_container_and_object_then_list_objects
+  [new] ExistingNetwork
 
-    * [new] MuranoEnvironments.create_and_deploy_environment
-
-    * [new] HttpRequests.check_random_request
-
-    * [new] HttpRequests.check_request
-
-    * [improved] NovaServers live migrate benchmarks
-
-        add 'min_sleep' and 'max_sleep' parameters to simulate a pause between VM booting and running live migration
-
-    * [improved] NovaServers.boot_and_live_migrate_server
-
-        add a usage sample to samples/tasks
-
-    * [improved] CinderVolumes benchmarks
-
-        support size range to be passed to the 'size' argument as a dictionary
-        *{"min": <minimum_size>, "max": <maximum_size>}*
+        This context lets you use existing networks that have already been
+        created instead of creating new networks with Rally. This is useful
+        when, for instance, you are using Neutron with a dumb router that is
+        not capable of creating new networks on the fly.
 
 
-* **Benchmark Contexts**:
+* **SLA**:
 
-    * [new] MuranoPackage
-
-      This new context can upload a package to Murano from some specified path.
-
-    * [new] CeilometerSampleGenerator
-
-      Context that can be used for creating samples and collecting resources for benchmarks in a list.
-
-
-* **Benchmark SLA**:
-
-    * [new] outliers
-
-      This new SLA checks that the number of outliers (calculated from the mean and standard deviation of the iteration durations) does not exceed some maximum value. The SLA is highly configurable: the parameters used for outliers threshold calculation can be set by the user.
+  [remove] max_failure_rate - use failure_rate instead
 
 
 Bug fixes
 ~~~~~~~~~
 
-**21 bugs were fixed, the most critical are**:
+**90 bugs were fixed, the most critical are**:
 
-* Make it possible to use relative imports for plugins that are outside of rally package.
+* Many fixes related that fixes access of rally.conf and DB files
 
-* Fix heat stacks cleanup by deleting them only 1 time per tenant (get rid of "stack not found" errors in logs).
+* Incorrect apt-get "-yes" parameter in install_rally.sh script
 
-* Fix the wrong behavior of 'rally task detailed --iterations-data' (it lacked the iteration info before).
+* Rally bash completion doesn't exist in a virtualenv
 
-* Fix security groups cleanup: a security group called "default", created automatically by Neutron, did not get deleted for each tenant.
+* Rally show networks CLI command worked only with nova networks
 
+* RPS runner was not properly generating load
 
-Other changes
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+* Check is dhcp_agent_scheduler support or not in network cleanup
 
-* Streaming algorithms that scale
+* NetworkContext doesn't work with Nova V2.1
 
-  This release introduces the common/streaming_algorithms.py module. This module is going to contain implementations of benchmark data processing algorithms that scale: these algorithms do not store exhaustive information about every single benchmark iteration duration processed. For now, the module contains implementations of algorithms for computation of mean & standard deviation.
+* Rally task input file was not able to use jinja2 include directive
 
-* Coverage job to check that new patches come with unit tests
+* Rally in docker image was not able to
 
-  Rally now has a coverage job that checks that every patch submitted for review does not decrease the number of lines covered by unit tests (at least too much). This job allows to mark most patches with no unit tests with '-1'.
+* Rally docker image didn't contain samples
 
-* Splitting the plugins code (Runners & SLA) into common/openstack plugins
-
-  According to the spec "Reorder plugins" (see above), the plugins code for runners and SLA has been moved to the *plugins/common/* directory. Only base classes now remain in the *benchmark/* directory.
+* Do not update the average duration when iteration failed
 
 
 Documentation
 ~~~~~~~~~~~~~
 
-* Various fixes
+* **Add plugin reference page**
 
-    * Remove obsolete *.rst* files (*deploy_engines.rst* / *server_providers.rst* / ...)
-    * Restructure the docs files to make them easier to navigate through
-    * Move the chapter on task templates to the 4th step in the tutorial
-    * Update the information about meetings (new release meeting & time changes)
+  :ref:`Rally Plugins Reference page <plugin_reference>` page contains a
+  full list with
+
+* **Add maintainers section on project info page**
+
+  :ref:`Rally Maintainers section <project_info>` contains information
+  about core contributors of OpenStack Rally their responsibilities and
+  contacts. This will help us to make our community more transparent and open
+  for newbies.
+
+* **Added who is using section in docs**
+
+* **Many small fixes**
