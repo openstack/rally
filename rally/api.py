@@ -346,7 +346,7 @@ class Verification(object):
 
     @classmethod
     def uninstall_tempest(cls, deployment):
-        """Removes deployment's local Tempest installation
+        """Remove deployment's local Tempest installation.
 
         :param deployment: UUID or name of the deployment
         """
@@ -356,7 +356,7 @@ class Verification(object):
 
     @classmethod
     def reinstall_tempest(cls, deployment, tempest_config=None, source=None):
-        """Uninstall Tempest and then reinstall from new source
+        """Uninstall Tempest and then reinstall from new source.
 
         :param deployment: UUID or name of the deployment
         :param tempest_config: Tempest config file. Use previous file as

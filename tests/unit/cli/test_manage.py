@@ -26,8 +26,7 @@ class CmdManageTestCase(test.TestCase):
     @mock.patch("rally.cli.manage.cliutils")
     def test_main(self, mock_cliutils):
         manage.main()
-        categories = {"db": manage.DBCommands,
-                      "tempest": manage.TempestCommands}
+        categories = {"db": manage.DBCommands}
         mock_cliutils.run.assert_called_once_with(sys.argv, categories)
 
 
@@ -42,18 +41,3 @@ class DBCommandsTestCase(test.TestCase):
         self.db_commands.recreate()
         calls = [mock.call.db_drop(), mock.call.db_create()]
         self.assertEqual(calls, mock_db.mock_calls)
-
-
-class TempestCommandsTestCase(test.TestCase):
-
-    def setUp(self):
-        super(TempestCommandsTestCase, self).setUp()
-        self.tempest_commands = manage.TempestCommands()
-        self.tempest = mock.Mock()
-
-    @mock.patch("rally.cli.manage.api")
-    def test_install(self, mock_api):
-        deployment_uuid = "deployment_uuid"
-        self.tempest_commands.install(deployment_uuid)
-        mock_api.Verification.install_tempest.assert_called_once_with(
-            deployment_uuid, None)

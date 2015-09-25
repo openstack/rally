@@ -301,3 +301,44 @@ class VerifyCommands(object):
         """
         api.Verification.configure_tempest(deployment, tempest_config,
                                            override)
+
+    @cliutils.args("--deployment", type=str, dest="deployment",
+                   required=False, help="UUID or name of a deployment")
+    @cliutils.args("--source", type=str, dest="source", required=False,
+                   help="Path/URL to repo to pull Tempest from")
+    @envutils.with_default_deployment(cli_arg_name="deployment")
+    def install(self, deployment=None, source=None):
+        """Install Tempest.
+
+        :param deployment: UUID or name of a deployment
+        :param source: Path/URL to repo to pull Tempest from
+        """
+        api.Verification.install_tempest(deployment, source)
+
+    @cliutils.args("--deployment", type=str, dest="deployment",
+                   required=False, help="UUID or name of a deployment")
+    @envutils.with_default_deployment(cli_arg_name="deployment")
+    def uninstall(self, deployment=None):
+        """Remove deployment's local Tempest installation.
+
+        :param deployment: UUID or name of a deployment
+        """
+        api.Verification.uninstall_tempest(deployment)
+
+    @cliutils.args("--deployment", type=str, dest="deployment",
+                   required=False, help="UUID or name of a deployment")
+    @cliutils.args("--tempest-config", dest="tempest_config", type=str,
+                   required=False,
+                   help="User specified Tempest config file location")
+    @cliutils.args("--source", type=str, dest="source",
+                   required=False, help="New path/URL to repo to pull Tempest "
+                                        "from. Use old source as default")
+    @envutils.with_default_deployment(cli_arg_name="deployment")
+    def reinstall(self, deployment=None, tempest_config=None, source=None):
+        """Uninstall Tempest and then reinstall from new source.
+
+        :param deployment: UUID or name of a deployment
+        :param tempest_config: User specified Tempest config file location
+        :param source: New path/URL to repo to pull Tempest from
+        """
+        api.Verification.reinstall_tempest(deployment, tempest_config, source)
