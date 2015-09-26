@@ -169,12 +169,12 @@
         vip_create_args: {}
       runner:
         type: "constant"
-        times: 20
+        times: {{smoke or 20}}
         concurrency: {{smoke or 10}}
       context:
         users:
-          tenants: 5
-          users_per_tenant: 4
+          tenants: {{smoke or 5}}
+          users_per_tenant: {{smoke or 4}}
         network: {}
         quotas:
           neutron:
@@ -192,12 +192,12 @@
         vip_create_args: {}
       runner:
         type: "constant"
-        times: 2
-        concurrency: 1
+        times: {{smoke or 20}}
+        concurrency: {{smoke or 1}}
       context:
         users:
-          tenants: 1
-          users_per_tenant: 1
+          tenants: {{smoke or 5}}
+          users_per_tenant: {{smoke or 2}}
         network: {}
         lbaas:
           pool: {}
@@ -220,12 +220,12 @@
         pool_create_args: {}
       runner:
         type: "constant"
-        times: 20
+        times: {{smoke or 20}}
         concurrency: {{smoke or 10}}
       context:
         users:
-          tenants: 4
-          users_per_tenant: 5
+          tenants: {{smoke or 5}}
+          users_per_tenant: {{smoke or 2}}
         network: {}
         quotas:
           neutron:
