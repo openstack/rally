@@ -31,10 +31,10 @@ Registering an OpenStack deployment in Rally
 
 First, you have to provide Rally with an OpenStack deployment it is going to benchmark. This should be done either through `OpenRC files <http://docs.openstack.org/user-guide/content/cli_openrc.html>`_ or through deployment `configuration files <https://github.com/openstack/rally/tree/master/samples/deployments>`_. In case you already have an *OpenRC*, it is extremely simple to register a deployment with the *deployment create* command:
 
-.. code-block:: none
+.. code-block:: console
 
    $ . openrc admin admin
-   $ rally deployment create --fromenv --name=existing 
+   $ rally deployment create --fromenv --name=existing
    +--------------------------------------+----------------------------+------------+------------------+--------+
    | uuid                                 | created_at                 | name       | status           | active |
    +--------------------------------------+----------------------------+------------+------------------+--------+
@@ -45,7 +45,7 @@ First, you have to provide Rally with an OpenStack deployment it is going to ben
 
 Alternatively, you can put the information about your cloud credentials into a JSON configuration file (let's call it `existing.json <https://github.com/openstack/rally/blob/master/samples/deployments/existing.json>`_). The *deployment create* command has a slightly different syntax in this case:
 
-.. code-block:: none
+.. code-block:: console
 
    $ rally deployment create --file=existing.json --name=existing
    +--------------------------------------+----------------------------+------------+------------------+--------+
@@ -61,7 +61,7 @@ Note the last line in the output. It says that the just created deployment is no
 
 Finally, the *deployment check* command enables you to verify that your current deployment is healthy and ready to be benchmarked:
 
-.. code-block:: none
+.. code-block:: console
 
    $ rally deployment check
    keystone endpoints are valid and following services are available:
@@ -87,7 +87,7 @@ Benchmarking
 Now that we have a working and registered deployment, we can start benchmarking it. The sequence of benchmarks to be launched by Rally should be specified in a *benchmark task configuration file* (either in *JSON* or in *YAML* format). Let's try one of the sample benchmark tasks available in `samples/tasks/scenarios <https://github.com/openstack/rally/tree/master/samples/tasks/scenarios>`_, say, the one that boots and deletes multiple servers (*samples/tasks/scenarios/nova/boot-and-delete.json*):
 
 
-.. code-block:: none
+.. code-block:: json
 
     {
         "NovaServers.boot_and_delete_server": [
@@ -119,7 +119,7 @@ Now that we have a working and registered deployment, we can start benchmarking 
 
 To start a benchmark task, run the task start command (you can also add the *-v* option to print more logging information):
 
-.. code-block:: none
+.. code-block:: console
 
     $ rally task start samples/tasks/scenarios/nova/boot-and-delete.json
     --------------------------------------------------------------------------------
@@ -180,7 +180,7 @@ To start a benchmark task, run the task start command (you can also add the *-v*
 
 Note that the Rally input task above uses *regular expressions* to specify the image and flavor name to be used for server creation, since concrete names might differ from installation to installation. If this benchmark task fails, then the reason for that might a non-existing image/flavor specified in the task. To check what images/flavors are available in the deployment you are currently benchmarking, you might use the *rally show* command:
 
-.. code-block:: none
+.. code-block:: console
 
    $ rally show images
    +--------------------------------------+-----------------------+-----------+
@@ -209,9 +209,9 @@ Report generation
 
 One of the most beautiful things in Rally is its task report generation mechanism. It enables you to create illustrative and comprehensive HTML reports based on the benchmarking data. To create and open at once such a report for the last task you have launched, call:
 
-.. code-block:: none
+.. code-block:: bash
 
-   $ rally task report --out=report1.html --open
+   rally task report --out=report1.html --open
 
 This will produce an HTML page with the overview of all the scenarios that you've included into the last benchmark task completed in Rally (in our case, this is just one scenario, and we will cover the topic of multiple scenarios in one task in :ref:`the next step of our tutorial <tutorial_step_2_input_task_format>`):
 

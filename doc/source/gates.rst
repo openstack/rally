@@ -129,7 +129,7 @@ Finally, add *gate-rally-dsvm-myscenario* to *zuul/layout.yaml*:
 
 It is also possible to arrange your input task files as templates based on jinja2. Say, you want to set the image names used throughout the *myscenario.yaml* task file as a variable parameter. Then, replace concrete image names in this file with a variable:
 
-.. parsed-literal::
+.. code-block:: yaml
 
     ...
 
@@ -149,7 +149,7 @@ It is also possible to arrange your input task files as templates based on jinja
 
 and create a file named *myscenario_args.yaml* that will define the parameter values:
 
-.. parsed-literal::
+.. code-block:: yaml
 
     ---
 

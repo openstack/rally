@@ -36,7 +36,7 @@ Registering existing users in Rally
 
 The information about existing users in your OpenStack cloud should be passed to Rally at the :ref:`deployment initialization step <tutorial_step_1_setting_up_env_and_running_benchmark_from_samples>`. You have to use the **ExistingCloud** deployment plugin that just provides Rally with credentials of an already existing cloud. The difference from the deployment configuration we've seen previously is that you should set up the *"users"* section with the credentials of already existing users. Let's call this deployment configuration file *existing_users.json*:
 
-.. code-block:: none
+.. code-block:: json
 
     {
         "type": "ExistingCloud",
@@ -64,7 +64,7 @@ The information about existing users in your OpenStack cloud should be passed to
 
 This deployment configuration requires some basic information about the OpenStack cloud like the region name, auth url. admin user credentials, and any amount of users already existing in the system. Rally will use their credentials to generate load in against this deployment as soon as we register it as usual:
 
-.. code-block:: none
+.. code-block:: console
 
     $ rally deployment create --file existings_users --name our_cloud
     +--------------------------------------+----------------------------+-----------+------------------+--------+
@@ -78,7 +78,7 @@ This deployment configuration requires some basic information about the OpenStac
 
 After that, the **rally show** command lists the resources for each user separately:
 
-.. code-block:: none
+.. code-block:: console
 
     $ rally show images
 
@@ -121,7 +121,7 @@ Running benchmark scenarios with existing users
 After you have registered a deployment with existing users, don't forget to remove the *"users"* context from your benchmark task configuration if you want to use existing users, like in the following configuration file (*boot-and-delete.json*):
 
 
-.. code-block:: none
+.. code-block:: json
 
     {
         "NovaServers.boot_and_delete_server": [
@@ -147,10 +147,9 @@ After you have registered a deployment with existing users, don't forget to remo
 
 When you start this task, it will use the existing users *"b1"* and *"b2"* instead of creating the temporary ones:
 
-.. code-block:: none
+.. code-block:: bash
 
-    $ rally task start samples/tasks/scenarios/nova/boot-and-delete.json
-    ...
+    rally task start samples/tasks/scenarios/nova/boot-and-delete.json
 
 It goes without saying that support of benchmarking with predefined users simplifies the usage of Rally for generating loads against production clouds.
 

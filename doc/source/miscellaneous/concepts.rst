@@ -32,36 +32,38 @@ User's view
 
 From the user's point of view, Rally launches different benchmark scenarios while performing some benchmark task. **Benchmark task** is essentially a set of benchmark scenarios run against some OpenStack deployment in a specific (and customizable) manner by the CLI command:
 
-**rally task start --task=<task_config.json>**
+.. code-block:: bash
+
+    rally task start --task=<task_config.json>
 
 Accordingly, the user may specify the names and parameters of benchmark scenarios to be run in **benchmark task configuration files**. A typical configuration file would have the following contents:
 
-.. parsed-literal::
+.. code-block:: json
 
     {
-        **"NovaServers.boot_server"**: [
+        "NovaServers.boot_server": [
             {
-                **"args": {**
-                    **"flavor_id": 42,**
-                    **"image_id": "73257560-c59b-4275-a1ec-ab140e5b9979"**
-                **},**
+                "args": {
+                    "flavor_id": 42,
+                    "image_id": "73257560-c59b-4275-a1ec-ab140e5b9979"
+                },
                 "runner": {"times": 3},
                 "context": {...}
             },
             {
-                **"args": {**
-                    **"flavor_id": 1,**
-                    **"image_id": "3ba2b5f6-8d8d-4bbe-9ce5-4be01d912679"**
-                **},**
+                "args": {
+                    "flavor_id": 1,
+                    "image_id": "3ba2b5f6-8d8d-4bbe-9ce5-4be01d912679"
+                },
                 "runner": {"times": 3},
                 "context": {...}
             }
         ],
-        **"CinderVolumes.create_volume"**: [
+        "CinderVolumes.create_volume": [
             {
-                 **"args": {**
-                    **"size": 42**
-                **},**
+                 "args": {
+                    "size": 42
+                },
                 "runner": {"times": 3},
                 "context": {...}
             }
@@ -83,7 +85,7 @@ From the developer's perspective, a benchmark scenario is a method marked by a *
 
 In a toy example below, we define a scenario class *MyScenario* with one benchmark scenario *MyScenario.scenario*. This benchmark scenario tests the performance of a sequence of 2 actions, implemented via private methods in the same class. Both methods are marked with the **@atomic_action_timer** decorator. This allows Rally to handle those actions in a special way and, after benchmarks complete, show runtime statistics not only for the whole scenarios, but for separate actions as well.
 
-::
+.. code-block:: python
 
     from rally.task.scenarios import base
     from rally.task import utils
@@ -121,7 +123,7 @@ User's view
 
 The user can specify which type of load on the cloud he would like to have through the **"runner"** section in the **task configuration file**:
 
-.. parsed-literal::
+.. code-block:: json
 
     {
         "NovaServers.boot_server": [
@@ -130,11 +132,11 @@ The user can specify which type of load on the cloud he would like to have throu
                     "flavor_id": 42,
                     "image_id": "73257560-c59b-4275-a1ec-ab140e5b9979"
                 },
-                **"runner": {**
-                    **"type": "constant",**
-                    **"times": 15,**
-                    **"concurrency": 2**
-                **},**
+                "runner": {
+                    "type": "constant",
+                    "times": 15,
+                    "concurrency": 2
+                },
                 "context": {
                     "users": {
                         "tenants": 1,
@@ -169,23 +171,23 @@ Developer's view
 
 It is possible to extend Rally with new Scenario Runner types, if needed. Basically, each scenario runner should be implemented as a subclass of the base `ScenarioRunner <https://github.com/openstack/rally/blob/master/rally/benchmark/runner.py#L113>`_ class and located in the `rally.plugins.common.runners package <https://github.com/openstack/rally/tree/master/rally/plugins/common/runners>`_. The interface each scenario runner class should support is fairly easy:
 
-.. parsed-literal::
+.. code-block:: python
 
     from rally.task import runner
     from rally import consts
 
     class MyScenarioRunner(runner.ScenarioRunner):
-        *"""My scenario runner."""*
+        """My scenario runner."""
 
-        *# This string is what the user will have to specify in the task*
-        *# configuration file (in "runner": {"type": ...})*
+        # This string is what the user will have to specify in the task
+        # configuration file (in "runner": {"type": ...})
 
         __execution_type__ = "my_scenario_runner"
 
 
-        *# CONFIG_SCHEMA is used to automatically validate the input*
-        *# config of the scenario runner, passed by the user in the task*
-        *# configuration file.*
+        # CONFIG_SCHEMA is used to automatically validate the input
+        # config of the scenario runner, passed by the user in the task
+        # configuration file.
 
         CONFIG_SCHEMA = {
             "type": "object",
@@ -199,12 +201,12 @@ It is possible to extend Rally with new Scenario Runner types, if needed. Basica
         }
 
         def _run_scenario(self, cls, method_name, ctx, args):
-            *"""Run the scenario 'method_name' from scenario class 'cls'
+            """Run the scenario 'method_name' from scenario class 'cls'
             with arguments 'args', given a context 'ctx'.
 
             This method should return the results dictionary wrapped in
             a runner.ScenarioRunnerResult object (not plain JSON)
-            """*
+            """
             results = ...
 
             return runner.ScenarioRunnerResult(results)
@@ -228,7 +230,7 @@ From the user's prospective, contexts in Rally are manageable via the **task con
 
 In the example below, the **"users" context** specifies that the *"NovaServers.boot_server"* scenario should be run from **1 tenant** having **3 users** in it. Bearing in mind that the default quota for the number of instances is 10 instances per tenant, it is also reasonable to extend it to, say, **20 instances** in the **"quotas" context**. Otherwise the scenario would eventually fail, since it tries to boot a server 15 times from a single tenant.
 
-.. parsed-literal::
+.. code-block:: json
 
     {
         "NovaServers.boot_server": [
@@ -242,17 +244,17 @@ In the example below, the **"users" context** specifies that the *"NovaServers.b
                     "times": 15,
                     "concurrency": 2
                 },
-                **"context": {**
-                    **"users": {**
-                        **"tenants": 1,**
-                        **"users_per_tenant": 3**
-                    **},**
-                    **"quotas": {**
-                        **"nova": {**
-                            **"instances": 20**
-                        **}**
-                    **}**
-                **}**
+                "context": {
+                    "users": {
+                        "tenants": 1,
+                        "users_per_tenant": 3
+                    },
+                    "quotas": {
+                        "nova": {
+                            "instances": 20
+                        }
+                    }
+                }
             }
         ]
     }
@@ -265,18 +267,18 @@ Developer's view
 
 From the developer's view, contexts management is implemented via **Context classes**. Each context type that can be specified in the task configuration file corresponds to a certain subclass of the base [https://github.com/openstack/rally/blob/master/rally/benchmark/context.py **Context**] class. Every context class should implement a fairly simple **interface**:
 
-.. parsed-literal::
+.. code-block:: python
 
     from rally.task import context
     from rally import consts
 
-    @context.configure(name="your_context", *# Corresponds to the context field name in task configuration files*
-                       order=100500,        *# a number specifying the priority with which the context should be set up*
-                       hidden=False)        *# True if the context cannot be configured through the input task file*
+    @context.configure(name="your_context", # Corresponds to the context field name in task configuration files
+                       order=100500,        # a number specifying the priority with which the context should be set up
+                       hidden=False)        # True if the context cannot be configured through the input task file
     class YourContext(context.Context):
-        *"""Yet another context class."""*
+        """Yet another context class."""
 
-        *# The schema of the context configuration format*
+        # The schema of the context configuration format
         CONFIG_SCHEMA = {
             "type": "object",
             "$schema": consts.JSON_SCHEMA,
@@ -289,17 +291,17 @@ From the developer's view, contexts management is implemented via **Context clas
 
         def __init__(self, context):
             super(YourContext, self).__init__(context)
-            *# Initialize the necessary stuff*
+            # Initialize the necessary stuff
 
         def setup(self):
-            *# Prepare the environment in the desired way*
+            # Prepare the environment in the desired way
 
         def cleanup(self):
-            *# Cleanup the environment properly*
+            # Cleanup the environment properly
 
 Consequently, the algorithm of initiating the contexts can be roughly seen as follows:
 
-.. parsed-literal::
+.. code-block:: python
 
     context1 = Context1(ctx)
     context2 = Context2(ctx)
@@ -309,7 +311,7 @@ Consequently, the algorithm of initiating the contexts can be roughly seen as fo
     context2.setup()
     context3.setup()
 
-    *<Run benchmark scenarios in the prepared environment>*
+    <Run benchmark scenarios in the prepared environment>
 
     context3.cleanup()
     context2.cleanup()

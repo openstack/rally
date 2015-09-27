@@ -24,7 +24,7 @@ With the **"stop on SLA failure"** feature, however, things are much better.
 
 This feature can be easily tested in real life by running one of the most important and plain benchmark scenario called *"KeystoneBasic.authenticate"*. This scenario just tries to authenticate from users that were pre-created by Rally. Rally input task looks as follows (*auth.yaml*):
 
-.. code-block:: none
+.. code-block:: yaml
 
     ---
       Authenticate.keystone:
@@ -46,7 +46,7 @@ In human-readable form this input task means: *Create 5 tenants with 10 users in
 
 Let’s run Rally task with **an argument that prescribes Rally to stop load on SLA failure**:
 
-.. code-block:: none
+.. code-block:: console
 
     $ rally task start --abort-on-sla-failure auth.yaml
 
@@ -64,16 +64,16 @@ On the resulting table there are 2 interesting things:
 
 To understand better what has happened let’s generate HTML report:
 
-.. code-block:: none
+.. code-block:: bash
 
-    $ rally task report --out auth_report.html
+    rally task report --out auth_report.html
 
 .. image:: ../images/Report-Abort-on-SLA-task-1.png
     :align: center
 
 On the chart with durations we can observe that the duration of authentication request reaches 65 seconds at the end of the load generation. **Rally stopped load at the very last moment just before the mad things happened. The reason why it runs so many attempts to authenticate is because of not enough good success criteria.** We had to run a lot of iterations to make average duration bigger than 5 seconds. Let’s chose better success criteria for this task and run it one more time.
 
-.. code-block:: none
+.. code-block:: yaml
 
     ---
       Authenticate.keystone:
@@ -100,7 +100,7 @@ Now our task is going to be successful if the following three conditions hold:
 
 Let’s run it!
 
-.. code-block:: none
+.. code-block:: console
 
     $ rally task start --abort-on-sla-failure auth.yaml
 
