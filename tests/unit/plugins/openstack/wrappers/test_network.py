@@ -69,7 +69,9 @@ class NovaNetworkWrapperTestCase(test.TestCase):
         service.client.networks.create.side_effect = (
             lambda **kwargs: self.Net(id="foo_id", **kwargs))
         service._generate_cidr = mock.Mock(return_value="foo_cidr")
-        net = service.create_network("foo_tenant", bar="spam")
+        net = service.create_network("foo_tenant",
+                                     network_create_args={"fakearg": "fake"},
+                                     bar="spam")
         self.assertEqual(net, {"id": "foo_id",
                                "name": "foo_name",
                                "cidr": "foo_cidr",
@@ -79,7 +81,8 @@ class NovaNetworkWrapperTestCase(test.TestCase):
         mock_generate_random_name.assert_called_once_with("rally_net_")
         service._generate_cidr.assert_called_once_with()
         service.client.networks.create.assert_called_once_with(
-            project_id="foo_tenant", cidr="foo_cidr", label="foo_name")
+            project_id="foo_tenant", cidr="foo_cidr", label="foo_name",
+            fakearg="fake")
 
     def test_delete_network(self):
         service = self.get_wrapper()
@@ -279,7 +282,9 @@ class NeutronWrapperTestCase(test.TestCase):
             "network": {"id": "foo_id",
                         "name": "foo_name",
                         "status": "foo_status"}}
+
         net = service.create_network("foo_tenant", subnets_num=subnets_num)
+
         service.client.create_network.assert_called_once_with({
             "network": {"tenant_id": "foo_tenant", "name": "foo_name"}})
         self.assertEqual(net, {"id": "foo_id",
