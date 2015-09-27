@@ -123,6 +123,48 @@ class BaseCustomImageContextVMTestCase(test.TestCase):
 
         self.assertEqual({"id": "image"}, custom_image)
 
+    @mock.patch("%s.vmtasks.VMTasks" % BASE)
+    @mock.patch("%s.osclients.Clients" % BASE)
+    @mock.patch("%s.types.ImageResourceType.transform" % BASE,
+                return_value="image")
+    @mock.patch("%s.types.FlavorResourceType.transform" % BASE,
+                return_value="flavor")
+    def test_create_one_image_cleanup(
+            self, mock_flavor_resource_type_transform,
+            mock_image_resource_type_transform, mock_clients, mock_vm_tasks):
+        ip = {"ip": "foo_ip", "id": "foo_id", "is_floating": True}
+        fake_server = mock.Mock()
+
+        fake_image = mock.MagicMock(
+            to_dict=mock.MagicMock(return_value={"id": "image"}))
+
+        mock_vm_scenario = mock_vm_tasks.return_value = mock.MagicMock(
+            _create_image=mock.MagicMock(return_value=fake_image),
+            _boot_server_with_fip=mock.MagicMock(
+                return_value=(fake_server, ip)),
+            _generate_random_name=mock.MagicMock(return_value="foo_name"),
+        )
+
+        generator_ctx = TestImageGenerator(self.context)
+        generator_ctx._customize_image = mock.MagicMock(
+            side_effect=ValueError())
+
+        user = {
+            "endpoint": "endpoint",
+            "keypair": {"name": "keypair_name"},
+            "secgroup": {"name": "secgroup_name"}
+        }
+
+        self.assertRaises(
+            ValueError,
+            generator_ctx.create_one_image, user, foo_arg="foo_value")
+
+        generator_ctx._customize_image.assert_called_once_with(
+            fake_server, ip, user)
+
+        mock_vm_scenario._delete_server_with_fip.assert_called_once_with(
+            fake_server, ip)
+
     @mock.patch("%s.osclients.Clients" % BASE)
     def test_make_image_public(self, mock_clients):
         fc = mock.MagicMock()

@@ -163,16 +163,17 @@ class BaseCustomImageGenerator(context.Context):
             security_groups=[user["secgroup"]["name"]],
             **kwargs)
 
-        LOG.debug("Installing benchmark on %r %s", server, fip["ip"])
-        self.customize_image(server, fip, user)
+        try:
+            LOG.debug("Installing benchmark on %r %s", server, fip["ip"])
+            self.customize_image(server, fip, user)
 
-        LOG.debug("Stopping server %r", server)
-        vm_scenario._stop_server(server)
+            LOG.debug("Stopping server %r", server)
+            vm_scenario._stop_server(server)
 
-        LOG.debug("Creating snapshot for %r", server)
-        custom_image = vm_scenario._create_image(server).to_dict()
-
-        vm_scenario._delete_server_with_fip(server, fip)
+            LOG.debug("Creating snapshot for %r", server)
+            custom_image = vm_scenario._create_image(server).to_dict()
+        finally:
+            vm_scenario._delete_server_with_fip(server, fip)
 
         return custom_image
 
