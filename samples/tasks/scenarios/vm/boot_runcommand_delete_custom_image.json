@@ -24,8 +24,8 @@
                     "image": {"name": "Fedora-x86_64-20-20140618-sda"},
                     "flavor": {"name": "m1.small"},
                     "command": {
-                        "local_path": "rally-jobs/extra/script_benchmark.sh",
-                        "remote_path": "./script_benchmark.sh"
+                        "local_path": "rally-jobs/extra/install_benchmark.sh",
+                        "remote_path": "./install_benchmark.sh"
                     },
                     "username": "root",
                     "userdata": "#cloud-config\ndisable_root: 0\nssh_pwauth: 1"

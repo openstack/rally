@@ -199,7 +199,7 @@ class VMTasks(vm_utils.VMScenario):
     def boot_runcommand_delete_custom_image(self, **kwargs):
         """Boot a server from a custom image, run a command that outputs JSON.
 
-        Example Script in rally-jobs/extra/script_benchmark.sh
+        Example Script in rally-jobs/extra/install_benchmark.sh
         """
 
         return self.boot_runcommand_delete(

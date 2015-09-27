@@ -603,8 +603,8 @@
       context:
         image_command_customizer:
           command:
-            local_path: "/home/jenkins/.rally/extra/script_benchmark.sh"
-            remote_path: "./script_benchmark.sh"
+            local_path: "/home/jenkins/.rally/extra/install_benchmark.sh"
+            remote_path: "./install_benchmark.sh"
           flavor:
             name: "m1.tiny"
           image:
