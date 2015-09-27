@@ -32,7 +32,7 @@ Project Team Lead (PTL)
 | | boris-42 (irc)             |  * Release management                          |
 | | boris@pavlovic.me          |  * Community management                        |
 |                              |  * Core team management                        |
-|                              |  * Chief Architect                              |
+|                              |  * Chief Architect                             |
 +------------------------------+------------------------------------------------+
 
 | *If you would like to refactor whole Rally or have UX/community/other
@@ -45,29 +45,41 @@ Project Core maintainers
 +------------------------------+------------------------------------------------+
 |       Contact                |             Area of interest                   |
 +------------------------------+------------------------------------------------+
+| | Alexander Maretskiy        |  * Rally reports                               |
+| | amaretskiy (irc)           |  * Front-end                                   |
+| | amaretskiy@mirantis.com    |                                                |
++------------------------------+------------------------------------------------+
 | | Andrey Kurilin             |  * Rally-Tempest Integration                   |
 | | andreykurilin (irc)        |  * Rally verify                                |
-| | akurilin@mirantis.com      |                                                |
-+------------------------------+------------------------------------------------+
-| | Sergey Skripnick           |  * Rally CI/CD                                 |
-| | redixin (irc)              |  * Rally deploy                                |
-| | sskripnick@mirantis.com    |  * Automation of everything                    |
-+------------------------------+------------------------------------------------+
-| | Mikhail Dubov              |  * Rally docs                                  |
-| | msdubov (irc)              |  * Rally info                                  |
-| | mdubov@mirantis.com        |                                                |
-+------------------------------+------------------------------------------------+
-| | Yair Fried                 |  * Rally-Tempest integration                   |
-| | yfried (irc)               |  * Rally task & benchmark                      |
-| | yfried@redhat.com          |                                                |
+| | andr.kurilin@gmail.com     |  * Nova plugins                                |
 +------------------------------+------------------------------------------------+
 | | Chris St. Pierre           |  * Rally task & benchmark                      |
 | | stpierre (irc)             |  * Bash guru ;)                                |
 | | cstpierr@cisco.com         |                                                |
 +------------------------------+------------------------------------------------+
+| | Kun Huang                  |  * Rally task & benchmark                      |
+| | kun_huang (irc)            |                                                |
+| | gareth.huang@huawei.com    |                                                |
++------------------------------+------------------------------------------------+
 | | Li Yingjun                 |  * Rally task & benchmark                      |
 | | liyingjun (irc)            |                                                |
 | | yingjun.li@kylin-cloud.com |                                                |
++------------------------------+------------------------------------------------+
+| | Pavel Boldin               |  * VM workloads                                |
+| | pboldin (irc)              |                                                |
+| | pboldin@mirantis.com       |                                                |
++------------------------------+------------------------------------------------+
+| | Roman Vasilets             |  * Rally task & benchmark                      |
+| | rvasilets (irc)            |                                                |
+| | rvasilets@mirantis.com     |                                                |
++------------------------------+------------------------------------------------+
+| | Sergey Skripnick           |  * Rally CI/CD                                 |
+| | redixin (irc)              |  * Rally deploy                                |
+| | sskripnick@mirantis.com    |  * Automation of everything                    |
++------------------------------+------------------------------------------------+
+| | Yair Fried                 |  * Rally-Tempest integration                   |
+| | yfried (irc)               |  * Rally task & benchmark                      |
+| | yfried@redhat.com          |                                                |
 +------------------------------+------------------------------------------------+
 
 | *All cores from this list are reviewing all changes that are proposed to Rally.
@@ -89,6 +101,11 @@ Plugin Core reviewers
 | | NikitaKonovalov (irc)      |                                                |
 | | nkonovalov@mirantis.com    |                                                |
 +------------------------------+------------------------------------------------+
+| | Sergey Kraynev             |  * Heat plugins                                |
+| | skraynev (irc)             |                                                |
+| | skraynev@mirantis.com      |                                                |
++------------------------------+------------------------------------------------+
+
 
 
 | *All cores from this list are responsible for their component plugins.
