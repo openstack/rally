@@ -336,6 +336,29 @@ class Verification(object):
         return verifier
 
     @classmethod
+    def import_file(cls, deployment, set_name, log_file=None):
+        """Import tempest log.
+
+        :param deployment: UUID or name of a deployment.
+        :param log_file: User specified Tempest log file name.
+        :returns: Deployment and verification objects
+        """
+
+        # TODO(aplanas): Create an external deployment if this is
+        # missing, as required in the blueprint [1].
+        # [1] https://blueprints.launchpad.net/rally/+spec/verification-import
+        deployment_uuid = objects.Deployment.get(deployment)["uuid"]
+
+        verification = objects.Verification(deployment_uuid=deployment_uuid)
+        verifier = tempest.Tempest(deployment_uuid, verification=verification)
+        LOG.info("Importing verification of deployment: %s" % deployment_uuid)
+
+        verification.set_running()
+        verifier.import_file(set_name=set_name, log_file=log_file)
+
+        return deployment, verification
+
+    @classmethod
     def install_tempest(cls, deployment, source=None):
         """Install Tempest.
 

@@ -381,8 +381,8 @@ class Tempest(object):
 
     @utils.log_verification_wrapper(
         LOG.info, _("Saving verification results."))
-    def _save_results(self):
-        total, test_cases = self.parse_results()
+    def _save_results(self, log_file=None):
+        total, test_cases = self.parse_results(log_file)
         if total and test_cases and self.verification:
             self.verification.finish_verification(total=total,
                                                   test_cases=test_cases)
@@ -392,3 +392,10 @@ class Tempest(object):
     def verify(self, set_name, regex):
         self._prepare_and_run(set_name, regex)
         self._save_results()
+
+    def import_file(self, set_name, log_file):
+        if log_file:
+            self.verification.start_verifying(set_name)
+            self._save_results(log_file)
+        else:
+            LOG.error("No import file specified.")

@@ -362,7 +362,7 @@ class TempestVerifyTestCase(BaseTestCase):
         mock_subprocess.check_call.assert_called_once_with(
             fake_call, env=mock_tempest_env, cwd=self.verifier.path(),
             shell=True)
-        mock_tempest_parse_results.assert_called_once_with()
+        mock_tempest_parse_results.assert_called_once_with(None)
 
     @mock.patch(TEMPEST_PATH + ".tempest.Tempest.parse_results",
                 return_value=(None, None))
@@ -388,7 +388,7 @@ class TempestVerifyTestCase(BaseTestCase):
         mock_subprocess.check_call.assert_called_once_with(
             fake_call, env=mock_tempest_env, cwd=self.verifier.path(),
             shell=True)
-        mock_tempest_parse_results.assert_called_once_with()
+        mock_tempest_parse_results.assert_called_once_with(None)
 
     @mock.patch(TEMPEST_PATH + ".tempest.Tempest.parse_results",
                 return_value=(None, None))
@@ -417,3 +417,13 @@ class TempestVerifyTestCase(BaseTestCase):
             shell=True)
         self.assertTrue(mock_tempest_parse_results.called)
         self.verifier.verification.set_failed.assert_called_once_with()
+
+    def test_import_file(self):
+        set_name = "identity"
+        log_file = "log_file"
+
+        self.verifier._save_results = mock.Mock()
+        self.verifier.import_file(set_name, log_file)
+        mock_start_verifying = self.verifier.verification.start_verifying
+        mock_start_verifying.assert_called_once_with(set_name)
+        self.verifier._save_results.assert_called_once_with(log_file)
