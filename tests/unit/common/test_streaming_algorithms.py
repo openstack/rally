@@ -111,6 +111,9 @@ class MaxComputationTestCase(test.TestCase):
 @ddt.ddt
 class PercentileComputationTestCase(test.TestCase):
 
+    mixed1 = [0]
+    mixed6 = [100, 100, 0, 100, 100, 100]
+    mixed5 = [0, 0, 100, 0, 0]
     mixed16 = [55.71, 83.05, 24.12, 27, 48.36, 16.36, 96.23, 6, 16.0, 88.11,
                29.52, 99.2, 79.96, 77.84, 85.45, 85.32, 7, 17.1, 3.02, 15.23]
     mixed50 = [51.63, 82.2, 52.52, .05, 66, 94.03, 78.6, 80.9, 51.89, 79, 1.4,
@@ -122,56 +125,42 @@ class PercentileComputationTestCase(test.TestCase):
     range5000 = range(5000)
 
     @ddt.data(
-        {"stream": "mixed16", "percent": 25, "expected": 16.18},
-        {"stream": "mixed16", "percent": 50, "expected": 38.94},
-        {"stream": "mixed16", "percent": 90, "expected": 92.17},
-        {"stream": "mixed50", "percent": 25, "expected": 23.1},
-        {"stream": "mixed50", "percent": 50, "expected": 51.89},
-        {"stream": "mixed50", "percent": 90, "expected": 85.265},
-        {"stream": "mixed5000", "percent": 25, "expected": 25.03},
-        {"stream": "mixed5000", "percent": 50, "expected": 51.89},
-        {"stream": "mixed5000", "percent": 90, "expected": 85.265},
-        {"stream": "range5000", "percent": 25, "expected": 1249.5},
-        {"stream": "range5000", "percent": 50, "expected": 2499.5},
-        {"stream": "range5000", "percent": 90, "expected": 4499.5})
+        {"stream": "mixed1", "percent": 0.95, "expected": 0},
+        {"stream": "mixed6", "percent": 0.5, "expected": 100},
+        {"stream": "mixed5", "percent": 0.5, "expected": 0},
+        {"stream": "mixed5", "percent": 0.999, "expected": 99.6},
+        {"stream": "mixed5", "percent": 0.001, "expected": 0},
+        {"stream": "mixed16", "percent": 0.25, "expected": 16.27},
+        {"stream": "mixed16", "percent": 0.50, "expected": 38.94},
+        {"stream": "mixed16", "percent": 0.90, "expected":
+            88.92200000000001},
+        {"stream": "mixed50", "percent": 0.25, "expected": 25.105},
+        {"stream": "mixed50", "percent": 0.50, "expected": 51.89},
+        {"stream": "mixed50", "percent": 0.90, "expected":
+            82.81300000000002},
+        {"stream": "mixed5000", "percent": 0.25, "expected":
+            35.54600000000001},
+        {"stream": "mixed5000", "percent": 0.50, "expected": 48.351},
+        {"stream": "mixed5000", "percent": 0.90, "expected":
+            66.05880000000437},
+        {"stream": "range5000", "percent": 0.25, "expected": 1249.75},
+        {"stream": "range5000", "percent": 0.50, "expected": 2499.5},
+        {"stream": "range5000", "percent": 0.90, "expected": 4499.1})
     @ddt.unpack
     def test_add_and_result(self, percent, stream, expected):
-        comp = algo.PercentileComputation(percent=percent)
+        comp = algo.PercentileComputation(percent=percent, length=len(
+            getattr(self, stream)))
         [comp.add(i) for i in getattr(self, stream)]
         self.assertEqual(expected, comp.result())
 
     def test_add_raises(self):
-        comp = algo.PercentileComputation(50)
+        comp = algo.PercentileComputation(0.50, 100)
         self.assertRaises(TypeError, comp.add)
-        self.assertRaises(TypeError, comp.add, None)
-        self.assertRaises(TypeError, comp.add, "str")
 
     def test_result_raises(self):
         self.assertRaises(TypeError, algo.PercentileComputation)
-        comp = algo.PercentileComputation(50)
+        comp = algo.PercentileComputation(0.50, 100)
         self.assertRaises(ValueError, comp.result)
-
-
-class ProgressComputationTestCase(test.TestCase):
-
-    def test___init__raises(self):
-        self.assertRaises(TypeError, algo.ProgressComputation)
-        self.assertRaises(TypeError, algo.ProgressComputation, None)
-        self.assertRaises(ValueError, algo.ProgressComputation, "str")
-
-    def test_add_and_result(self):
-        comp = algo.ProgressComputation(42)
-        self.assertEqual(0, comp.result())
-        for expected_progress in (2.38, 4.76, 7.14, 9.52, 11.9, 14.29,
-                                  16.67, 19.05, 21.43):
-            comp.add(42)
-            self.assertEqual(expected_progress, round(comp.result(), 2))
-
-    def test_add_raises(self):
-        comp = algo.ProgressComputation(42)
-        [comp.add(123) for i in range(42)]
-        self.assertRaises(RuntimeError, comp.add, None)
-        self.assertRaises(RuntimeError, comp.add, 123)
 
 
 class IncrementComputationTestCase(test.TestCase):

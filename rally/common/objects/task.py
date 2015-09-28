@@ -16,6 +16,7 @@
 import json
 import uuid
 
+from rally.common import costilius
 from rally.common import db
 from rally.common.i18n import _LE
 from rally import consts
@@ -326,7 +327,7 @@ class Task(object):
             min_duration = 0
             max_duration = 0
             iterations_failed = 0
-            atomic = {}
+            atomic = costilius.OrderedDict()
             output_names = set()
 
             for itr in scenario["data"]["raw"]:
