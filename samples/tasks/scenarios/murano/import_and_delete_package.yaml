@@ -1,0 +1,13 @@
+---
+  MuranoPackages.import_and_delete_package:
+    -
+      args:
+        package: "rally-jobs/extra/murano/applications/HelloReporter/io.murano.apps.HelloReporter/"
+      runner:
+        type: "constant"
+        times: 5
+        concurrency: 2
+      context:
+        users:
+          tenants: 2
+          users_per_tenant: 1

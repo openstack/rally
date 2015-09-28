@@ -61,6 +61,84 @@
           app_package: "~/.rally/extra/murano/applications/HelloReporter/io.murano.apps.HelloReporter/"
         roles:
           - "admin"
+
+  MuranoPackages.import_and_list_packages:
+    -
+      args:
+        package: "/home/jenkins/.rally/extra/murano/applications/HelloReporter/io.murano.apps.HelloReporter/"
+      runner:
+        type: "constant"
+        times: 10
+        concurrency: 2
+      context:
+        users:
+          tenants: 2
+          users_per_tenant: 2
+      sla:
+        failure_rate:
+          max: 0
+    -
+      args:
+        package: "/home/jenkins/.rally/extra/murano/applications/HelloReporter/io.murano.apps.HelloReporter.zip"
+      runner:
+        type: "constant"
+        times: 1
+        concurrency: 1
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+      sla:
+        failure_rate:
+          max: 0
+
+  MuranoPackages.import_and_delete_package:
+    -
+      args:
+        package: "/home/jenkins/.rally/extra/murano/applications/HelloReporter/io.murano.apps.HelloReporter/"
+      runner:
+        type: "constant"
+        times: 10
+        concurrency: 2
+      context:
+        users:
+          tenants: 2
+          users_per_tenant: 2
+      sla:
+        failure_rate:
+          max: 0
+
+  MuranoPackages.import_and_filter_applications:
+    -
+      args:
+        package: "/home/jenkins/.rally/extra/murano/applications/HelloReporter/io.murano.apps.HelloReporter/"
+        filter_query: {"category" : "Web"}
+      runner:
+        type: "constant"
+        times: 10
+        concurrency: 2
+      context:
+        users:
+          tenants: 2
+          users_per_tenant: 2
+      sla:
+        failure_rate:
+          max: 0
+
+  MuranoPackages.package_lifecycle:
+    -
+      args:
+        package: "/home/jenkins/.rally/extra/murano/applications/HelloReporter/io.murano.apps.HelloReporter/"
+        body: {"categories": ["Web"]}
+        operation: "add"
+      runner:
+        type: "constant"
+        times: 10
+        concurrency: 2
+      context:
+        users:
+          tenants: 2
+          users_per_tenant: 2
       sla:
         failure_rate:
           max: 0

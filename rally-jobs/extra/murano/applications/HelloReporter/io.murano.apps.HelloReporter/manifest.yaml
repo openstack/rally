@@ -5,6 +5,6 @@ Name: HelloReporter
 Description: |
  HelloReporter test app.
 Author: 'Mirantis, Inc'
-Tags: [App, Test, HelloWorld]
+Tags: []
 Classes:
  io.murano.apps.HelloReporter: HelloReporter.yaml
