@@ -130,7 +130,7 @@ class TaskCommands(object):
 
     def _load_and_validate_task(self, task, task_args, task_args_file,
                                 deployment, task_instance=None):
-        if not os.path.isfile(task):
+        if not os.path.exists(task) or os.path.isdir(task):
             if task_instance:
                 task_instance.set_failed(log="No such file '%s'" % task)
             raise IOError("File '%s' is not found." % task)
