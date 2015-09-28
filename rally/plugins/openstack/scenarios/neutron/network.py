@@ -329,3 +329,40 @@ class NeutronNetworks(utils.NeutronScenario):
         for i in range(ports_per_network):
             port = self._create_port(network, port_create_args or {})
             self._delete_port(port)
+
+    @validation.required_services(consts.Service.NEUTRON)
+    @validation.required_openstack(users=True)
+    @validation.external_network_exists("floating_network")
+    @scenario.configure(context={"cleanup": ["neutron"]})
+    def create_and_list_floating_ips(self, floating_network=None,
+                                     floating_ip_args=None):
+        """Create and list floating IPs.
+
+        Measure the "neutron floating-ip-create" and "neutron floating-ip-list"
+        commands performance.
+
+        :param floating_network: str, external network for floating IP creation
+        :param floating_ip_args: dict, POST /floatingips request options
+        """
+        floating_ip_args = floating_ip_args or {}
+        self._create_floatingip(floating_network, **floating_ip_args)
+        self._list_floating_ips()
+
+    @validation.required_services(consts.Service.NEUTRON)
+    @validation.required_openstack(users=True)
+    @validation.external_network_exists("floating_network")
+    @scenario.configure(context={"cleanup": ["neutron"]})
+    def create_and_delete_floating_ips(self, floating_network=None,
+                                       floating_ip_args=None):
+        """Create and delete floating IPs.
+
+        Measure the "neutron floating-ip-create" and "neutron
+        floating-ip-delete" commands performance.
+
+        :param floating_network: str, external network for floating IP creation
+        :param floating_ip_args: dict, POST /floatingips request options
+        """
+        floating_ip_args = floating_ip_args or {}
+        floating_ip = self._create_floatingip(floating_network,
+                                              **floating_ip_args)
+        self._delete_floating_ip(floating_ip["floatingip"])

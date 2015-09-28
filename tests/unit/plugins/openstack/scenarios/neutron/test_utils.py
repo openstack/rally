@@ -16,6 +16,7 @@
 import ddt
 import mock
 
+from rally import exceptions
 from rally.plugins.openstack.scenarios.neutron import utils
 from tests.unit import test
 
@@ -28,6 +29,38 @@ class NeutronScenarioTestCase(test.ScenarioTestCase):
     def setUp(self):
         super(NeutronScenarioTestCase, self).setUp()
         self.network = mock.Mock()
+
+    def test__get_network_id(self):
+        neutron_scenario = utils.NeutronScenario()
+        networks = [{"id": "foo-id", "name": "foo-network"},
+                    {"id": "bar-id", "name": "bar-network"}]
+        network_id = "foo-id"
+
+        # Valid network-name
+        network = "foo-network"
+        neutron_scenario._list_networks = mock.Mock(return_value=networks)
+        resultant_network_id = neutron_scenario._get_network_id(network)
+        self.assertEqual(network_id, resultant_network_id)
+        neutron_scenario._list_networks.assert_called_once_with(
+            atomic_action=False)
+
+        neutron_scenario._list_networks.reset_mock()
+
+        # Valid network-id
+        network = "foo-id"
+        resultant_network_id = neutron_scenario._get_network_id(network)
+        self.assertEqual(network_id, resultant_network_id)
+        neutron_scenario._list_networks.assert_called_once_with(
+            atomic_action=False)
+        neutron_scenario._list_networks.reset_mock()
+
+        # Invalid network-name
+        network = "absent-network"
+        self.assertRaises(exceptions.NotFoundException,
+                          neutron_scenario._get_network_id,
+                          network)
+        neutron_scenario._list_networks.assert_called_once_with(
+            atomic_action=False)
 
     @mock.patch(NEUTRON_UTILS + "NeutronScenario._generate_random_name")
     def test_create_network(self, mock__generate_random_name):
@@ -50,6 +83,12 @@ class NeutronScenarioTestCase(test.ScenarioTestCase):
         networks_list = []
         networks_dict = {"networks": networks_list}
         self.clients("neutron").list_networks.return_value = networks_dict
+
+        # without atomic action
+        return_networks_list = scenario._list_networks(atomic_action=False)
+        self.assertEqual(networks_list, return_networks_list)
+
+        # with atomic action
         return_networks_list = scenario._list_networks()
         self.assertEqual(networks_list, return_networks_list)
         self._test_atomic_action_timer(scenario.atomic_actions(),
@@ -431,6 +470,26 @@ class NeutronScenarioTestCase(test.ScenarioTestCase):
                        {"allocation_pools": []},
                        "10.10.10.0/24")] * subnets_per_network)
 
+    def test_list_floating_ips(self):
+        scenario = utils.NeutronScenario()
+        fips_list = [{"id": "floating-ip-id"}]
+        fips_dict = {"floatingips": fips_list}
+        self.clients("neutron").list_floatingips.return_value = fips_dict
+        self.assertEqual(scenario._list_floating_ips(),
+                         self.clients("neutron").list_floatingips.return_value)
+        self._test_atomic_action_timer(scenario.atomic_actions(),
+                                       "neutron.list_floating_ips")
+
+    def test_delete_floating_ip(self):
+        scenario = utils.NeutronScenario()
+
+        fip = {"floatingip": {"id": "fake-id"}}
+        scenario._delete_floating_ip(fip["floatingip"])
+        self.clients("neutron").delete_floatingip.assert_called_once_with(
+            fip["floatingip"]["id"])
+        self._test_atomic_action_timer(scenario.atomic_actions(),
+                                       "neutron.delete_floating_ip")
+
     def test_delete_v1_pool(self):
         scenario = utils.NeutronScenario(context=self.context)
 
@@ -639,3 +698,30 @@ class NeutronLoadbalancerScenarioTestCase(test.ScenarioTestCase):
         self.assertEqual(resultant_vip, vip)
         self.clients("neutron").create_vip.assert_called_once_with(
             expected_vip_data)
+
+    @ddt.data(
+        {},
+        {"floating_ip_args": {}},
+        {"floating_ip_args": {"floating_ip_address": "1.0.0.1"}},
+    )
+    @ddt.unpack
+    def test__create_floating_ip(self, floating_ip_args=None):
+        neutron_scenario = utils.NeutronScenario()
+        floating_network = "floating"
+        fip = {"floatingip": {"id": "fip-id"}}
+        network_id = "net-id"
+        floating_ip_args = floating_ip_args or {}
+        self.clients("neutron").create_floatingip.return_value = fip
+        mock_get_network_id = neutron_scenario._get_network_id = mock.Mock()
+        mock_get_network_id.return_value = network_id
+        args = {"floating_network_id": network_id}
+        args.update(floating_ip_args)
+        expected_fip_data = {"floatingip": args}
+        resultant_fip = neutron_scenario._create_floatingip(
+            floating_network, **floating_ip_args)
+        self.assertEqual(resultant_fip, fip)
+        self.clients("neutron").create_floatingip.assert_called_once_with(
+            expected_fip_data)
+        mock_get_network_id.assert_called_once_with(floating_network)
+        self._test_atomic_action_timer(neutron_scenario.atomic_actions(),
+                                       "neutron.create_floating_ip")
