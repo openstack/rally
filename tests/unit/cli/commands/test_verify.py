@@ -94,27 +94,28 @@ class VerifyCommandsTestCase(test.TestCase):
                          consts.TempestTestsAPI)
         self.assertFalse(mock_verification_verify.called)
 
-    @mock.patch("rally.api.Verification.import_file")
-    def test_import_file(self, mock_verification_import_file):
+    @mock.patch("rally.api.Verification.import_results")
+    def test_import_results(self, mock_verification_import_results):
         deployment_id = "fake_uuid"
-        mock_verification_import_file.return_value = (None, None)
-        self.verify.import_file(deployment=deployment_id, do_use=False)
+        mock_verification_import_results.return_value = (None, None)
+        self.verify.import_results(deployment=deployment_id, do_use=False)
         default_set_name = None
         default_log_file = None
 
-        mock_verification_import_file.assert_called_once_with(
+        mock_verification_import_results.assert_called_once_with(
             deployment_id, default_set_name, default_log_file)
 
-    @mock.patch("rally.api.Verification.import_file")
-    def test_import_file_without_defaults(self, mock_verification_import_file):
+    @mock.patch("rally.api.Verification.import_results")
+    def test_import_results_without_defaults(self,
+                                             mock_verification_import_results):
         deployment_id = "fake_uuid"
         set_name = "fake_set_name"
         log_file = "fake_log_file"
-        mock_verification_import_file.return_value = (None, None)
-        self.verify.import_file(deployment=deployment_id, set_name=set_name,
-                                log_file=log_file, do_use=False)
+        mock_verification_import_results.return_value = (None, None)
+        self.verify.import_results(deployment=deployment_id, set_name=set_name,
+                                   log_file=log_file, do_use=False)
 
-        mock_verification_import_file.assert_called_once_with(
+        mock_verification_import_results.assert_called_once_with(
             deployment_id, set_name, log_file)
 
     @mock.patch("rally.cli.cliutils.print_list")

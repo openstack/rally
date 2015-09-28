@@ -336,11 +336,11 @@ class Verification(object):
         return verifier
 
     @classmethod
-    def import_file(cls, deployment, set_name, log_file=None):
-        """Import tempest log.
+    def import_results(cls, deployment, set_name, log_file=None):
+        """Import Tempest tests results into the Rally database.
 
-        :param deployment: UUID or name of a deployment.
-        :param log_file: User specified Tempest log file name.
+        :param deployment: UUID or name of a deployment
+        :param log_file: User specified Tempest log file in subunit format
         :returns: Deployment and verification objects
         """
 
@@ -354,7 +354,7 @@ class Verification(object):
         LOG.info("Importing verification of deployment: %s" % deployment_uuid)
 
         verification.set_running()
-        verifier.import_file(set_name=set_name, log_file=log_file)
+        verifier.import_results(set_name=set_name, log_file=log_file)
 
         return deployment, verification
 

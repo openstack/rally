@@ -393,7 +393,7 @@ class Tempest(object):
         self._prepare_and_run(set_name, regex)
         self._save_results()
 
-    def import_file(self, set_name, log_file):
+    def import_results(self, set_name, log_file):
         if log_file:
             self.verification.start_verifying(set_name)
             self._save_results(log_file)
