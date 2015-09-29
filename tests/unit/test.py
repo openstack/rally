@@ -99,6 +99,18 @@ class ScenarioTestCase(TestCase):
         key = (client_type, version, admin)
         return key in self._clients
 
+    def get_client_mocks(self):
+        base_path = "rally.plugins.openstack"
+
+        return [
+            mock.patch(
+                "%s.scenario.OpenStackScenario.clients" % base_path,
+                mock.Mock(side_effect=self.clients)),
+            mock.patch(
+                "%s.scenario.OpenStackScenario.admin_clients" % base_path,
+                mock.Mock(side_effect=self.admin_clients))
+        ]
+
     def setUp(self):
         super(ScenarioTestCase, self).setUp()
         if self.patch_benchmark_utils:
@@ -122,15 +134,8 @@ class ScenarioTestCase(TestCase):
         self.useFixture(self.mock_sleep)
 
         self._clients = {}
-        base_path = "rally.plugins.openstack"
-        self._client_mocks = [
-            mock.patch(
-                "%s.scenario.OpenStackScenario.clients" % base_path,
-                mock.Mock(side_effect=self.clients)),
-            mock.patch(
-                "%s.scenario.OpenStackScenario.admin_clients" % base_path,
-                mock.Mock(side_effect=self.admin_clients))
-        ]
+        self._client_mocks = self.get_client_mocks()
+
         for patcher in self._client_mocks:
             patcher.start()
 
@@ -140,6 +145,54 @@ class ScenarioTestCase(TestCase):
         for patcher in self._client_mocks:
             patcher.stop()
         super(ScenarioTestCase, self).tearDown()
+
+
+class ContextClientAdapter(object):
+    def __init__(self, endpoint, clients):
+        self.endpoint = endpoint
+        self._clients = clients
+
+    def mock_client(self, name, version=None):
+        admin = self.endpoint.startswith("admin")
+        try:
+            client = self._clients[(name, version, admin)]
+        except KeyError:
+            raise ValueError(
+                "Client %s version %s (admin %s) is missing, "
+                "please configure" % (name, version, admin))
+        if not isinstance(client.return_value, mock.Mock):
+            return client.return_value
+        if client.side_effect is not None:
+            # NOTE(pboldin): if a client has side_effects that means the
+            # user wants some of the returned values overrided (look at
+            # the test_existing_users for instance)
+            return client()
+        return client
+
+    def __getattr__(self, name):
+        # NOTE(pboldin): __getattr__ magic is called last, after the value
+        # were looked up for in __dict__
+        return lambda version=None: self.mock_client(name, version)
+
+
+class ContextTestCase(ScenarioTestCase):
+    def setUp(self):
+        super(ContextTestCase, self).setUp()
+
+        self._adapters = {}
+
+    def context_client(self, endpoint):
+        if endpoint not in self._adapters:
+            self._adapters[endpoint] = ContextClientAdapter(
+                endpoint, self._clients)
+        return self._adapters[endpoint]
+
+    def get_client_mocks(self):
+        return [
+            mock.patch(
+                "rally.osclients.Clients",
+                mock.Mock(side_effect=self.context_client))
+        ]
 
 
 class FakeClientsScenarioTestCase(ScenarioTestCase):
