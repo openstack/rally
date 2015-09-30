@@ -575,6 +575,77 @@ class NeutronScenarioTestCase(test.ScenarioTestCase):
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "neutron.update_vip")
 
+    @mock.patch(NEUTRON_UTILS + "NeutronScenario.generate_random_name")
+    def test_create_security_group(self, mock_generate_random_name):
+        neutron_scenario = utils.NeutronScenario(self.context)
+        random_name = "random_name"
+        security_group_create_args = {"description": "Fake security group"}
+        expected_security_group = {
+            "security_group": {"id": "fake-id",
+                               "name": random_name,
+                               "description": "Fake security group"}
+        }
+        mock_generate_random_name.return_value = random_name
+        self.clients("neutron").create_security_group = mock.Mock(
+            return_value=expected_security_group)
+
+        security_group_data = {
+            "security_group":
+                {"name": "random_name",
+                 "description": "Fake security group"}
+        }
+        resultant_security_group = neutron_scenario._create_security_group(
+            **security_group_create_args)
+        self.assertEqual(expected_security_group, resultant_security_group)
+        self.clients("neutron").create_security_group.assert_called_once_with(
+            security_group_data)
+        self._test_atomic_action_timer(neutron_scenario.atomic_actions(),
+                                       "neutron.create_security_group")
+
+    def test_list_security_groups(self):
+        scenario = utils.NeutronScenario()
+        security_groups_list = [{"id": "security-group-id"}]
+        security_groups_dict = {"security_groups": security_groups_list}
+        self.clients("neutron").list_security_groups = mock.Mock(
+            return_value=security_groups_dict)
+        self.assertEqual(
+            scenario._list_security_groups(),
+            self.clients("neutron").list_security_groups.return_value)
+        self._test_atomic_action_timer(scenario.atomic_actions(),
+                                       "neutron.list_security_groups")
+
+    def test_delete_security_group(self):
+        scenario = utils.NeutronScenario()
+
+        security_group = {"security_group": {"id": "fake-id"}}
+        scenario._delete_security_group(security_group)
+        self.clients("neutron").delete_security_group.assert_called_once_with(
+            security_group["security_group"]["id"])
+        self._test_atomic_action_timer(scenario.atomic_actions(),
+                                       "neutron.delete_security_group")
+
+    def test_update_security_group(self):
+        scenario = utils.NeutronScenario()
+
+        security_group = {"security_group": {"id": "security-group-id",
+                                             "description": "Not updated"}}
+        expected_security_group = {
+            "security_group": {"id": "security-group-id",
+                               "description": "Updated"}
+        }
+        security_group_update_args = {"description": "Updated"}
+        security_group_update_data = {
+            "security_group": security_group_update_args}
+        self.clients("neutron").update_security_group = mock.Mock(
+            return_value=expected_security_group)
+        result_security_group = scenario._update_security_group(
+            security_group, **security_group_update_args)
+        self.clients("neutron").update_security_group.assert_called_once_with(
+            security_group["security_group"]["id"], security_group_update_data)
+        self.assertEqual(result_security_group, expected_security_group)
+        self._test_atomic_action_timer(scenario.atomic_actions(),
+                                       "neutron.update_security_group")
+
 
 class NeutronScenarioFunctionalTestCase(test.FakeClientsScenarioTestCase):
 

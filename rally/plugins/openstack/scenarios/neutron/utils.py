@@ -490,3 +490,45 @@ class NeutronScenario(scenario.OpenStackScenario):
         body = {"health_monitor": healthmonitor_update_args}
         return self.clients("neutron").update_health_monitor(
             healthmonitor["health_monitor"]["id"], body)
+
+    @atomic.action_timer("neutron.create_security_group")
+    def _create_security_group(self, **security_group_create_args):
+        """Create Neutron security-group.
+
+        param: security_group_create_args: dict, POST /v2.0/security-groups
+                                          request options
+        return: dict, neutron security-group
+        """
+        security_group_create_args["name"] = self.generate_random_name()
+        return self.clients("neutron").create_security_group(
+            {"security_group": security_group_create_args})
+
+    @atomic.action_timer("neutron.delete_security_group")
+    def _delete_security_group(self, security_group):
+        """Delete Neutron security group.
+
+        param: security_group: dict, neutron security_group
+        """
+        return self.clients("neutron").delete_security_group(
+            security_group["security_group"]["id"])
+
+    @atomic.action_timer("neutron.list_security_groups")
+    def _list_security_groups(self, **kwargs):
+        """Return list of Neutron security groups."""
+        return self.clients("neutron").list_security_groups(**kwargs)
+
+    @atomic.action_timer("neutron.update_security_group")
+    def _update_security_group(self, security_group,
+                               **security_group_update_args):
+        """Update Neutron security-group.
+
+        param: security_group: dict, neutron security_group
+        param: security_group_update_args: dict, POST /v2.0/security-groups
+                                           update options
+        return: dict, updated neutron security-group
+        """
+        self._warn_about_deprecated_name_kwarg(security_group,
+                                               security_group_update_args)
+        body = {"security_group": security_group_update_args}
+        return self.clients("neutron").update_security_group(
+            security_group["security_group"]["id"], body)
