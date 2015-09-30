@@ -50,7 +50,7 @@ class TestTaskSamples(unittest.TestCase):
 
     def test_task_samples_is_valid(self):
         plugins.load()
-        rally = utils.Rally()
+        rally = utils.Rally(force_new_db=True)
         db.db_options.set_defaults(
             db.CONF, connection="sqlite:///%s/db" % rally.tmp_dir,
             sqlite_db="rally.sqlite")
