@@ -27,6 +27,7 @@ from oslo_config import cfg
 from oslo_utils import encodeutils
 import prettytable
 import six
+import sqlalchemy.exc
 
 from rally.common.i18n import _
 from rally.common import log as logging
@@ -551,6 +552,14 @@ def run(argv, categories):
         if logging.is_debug():
             LOG.exception(e)
         print(e)
+        return 1
+    except sqlalchemy.exc.OperationalError as e:
+        if logging.is_debug():
+            LOG.exception(e)
+        print(e)
+        print("Looks like Rally can't connect to it's DB.")
+        print("Make a sure that connection string in rally.conf is proper:")
+        print(CONF.database.connection)
         return 1
     except Exception:
         print(_("Command failed, please check log for more info"))
