@@ -418,12 +418,12 @@ class TempestVerifyTestCase(BaseTestCase):
         self.assertTrue(mock_tempest_parse_results.called)
         self.verifier.verification.set_failed.assert_called_once_with()
 
-    def test_import_file(self):
+    def test_import_results(self):
         set_name = "identity"
         log_file = "log_file"
 
         self.verifier._save_results = mock.Mock()
-        self.verifier.import_file(set_name, log_file)
+        self.verifier.import_results(set_name, log_file)
         mock_start_verifying = self.verifier.verification.start_verifying
         mock_start_verifying.assert_called_once_with(set_name)
         self.verifier._save_results.assert_called_once_with(log_file)
