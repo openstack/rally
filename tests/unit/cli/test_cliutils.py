@@ -17,6 +17,7 @@ from keystoneclient import exceptions as keystone_exc
 import mock
 from oslo_config import cfg
 from six import moves
+import sqlalchemy.exc
 
 from rally.cli import cliutils
 from rally.cli.commands import deployment
@@ -227,6 +228,17 @@ class CliUtilsTestCase(test.TestCase):
 
         ret = cliutils.run(["rally", "failure", "failed_to_open_file"],
                            {"failure": FailuresCommands})
+        self.assertEqual(1, ret)
+
+    def test_run_sqlalchmey_operational_failure(self):
+
+        class SQLAlchemyCommands(object):
+
+            def operational_failure(self):
+                raise sqlalchemy.exc.OperationalError("Can't open DB file")
+
+        ret = cliutils.run(["rally", "failure", "operational_failure"],
+                           {"failure": SQLAlchemyCommands})
         self.assertEqual(1, ret)
 
     def test_print_list(self):
