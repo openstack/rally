@@ -89,6 +89,8 @@ class NovaNetworkWrapperTestCase(test.TestCase):
         service.client.networks.delete.return_value = "foo_deleted"
         self.assertEqual(service.delete_network({"id": "foo_id"}),
                          "foo_deleted")
+        service.client.networks.disassociate.assert_called_once_with(
+            "foo_id", disassociate_host=False, disassociate_project=True)
         service.client.networks.delete.assert_called_once_with("foo_id")
 
     def test_list_networks(self):
