@@ -13,6 +13,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import six
+
 from rally.common.i18n import _
 from rally import consts
 from rally import exceptions
@@ -145,7 +147,7 @@ class NovaSecGroup(utils.NovaScenario):
             self._delete_security_groups(security_groups)
         except Exception as e:
             if hasattr(e, "http_status") and e.http_status == 400:
-                raise NovaSecurityGroupException(e.message)
+                raise NovaSecurityGroupException(six.text_type(e))
             raise
 
         error_message = ("Expected number of attached security groups to "
