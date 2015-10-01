@@ -58,9 +58,11 @@ class VerifyCommandsTestCase(test.TestCase):
         self.verify.start(deployment=deployment_id, do_use=False)
         default_set_name = "full"
         default_regex = None
+        default_tests_file = None
 
         mock_verification_verify.assert_called_once_with(
-            deployment_id, default_set_name, default_regex, None, False)
+            deployment_id, default_set_name, default_regex,
+            default_tests_file, None, False)
 
     @mock.patch("rally.osclients.Clients")
     @mock.patch("rally.api.Verification.verify")
@@ -76,11 +78,24 @@ class VerifyCommandsTestCase(test.TestCase):
                           tempest_config=tempest_config.name, do_use=False)
         default_set_name = "full"
         default_regex = None
+        default_tests_file = None
 
         mock_verification_verify.assert_called_once_with(
             deployment_id, default_set_name, default_regex,
-            tempest_config.name, False)
+            default_tests_file, tempest_config.name, False)
         tempest_config.close()
+
+    @mock.patch("rally.api.Verification.verify")
+    @mock.patch("os.path.exists", return_value=True)
+    def test_start_with_tests_file_specified(self, mock_exists,
+                                             mock_verification_verify):
+        deployment_id = "f05645f9-b3d1-4be4-ae63-ae6ea6d89f17"
+        tests_file = "/path/to/tests/file"
+        self.verify.start(deployment=deployment_id,
+                          tests_file=tests_file, do_use=False)
+
+        mock_verification_verify.assert_called_once_with(
+            deployment_id, "", None, tests_file, None, False)
 
     @mock.patch("rally.api.Verification.verify")
     def test_start_with_wrong_set_name(self, mock_verification_verify):
