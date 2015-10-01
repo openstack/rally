@@ -137,7 +137,8 @@ class GetResourceNotFound(GetResourceFailure):
 
 
 class GetResourceErrorStatus(GetResourceFailure):
-    msg_fmt = _("Resource %(resource)s has %(status)s status.")
+    msg_fmt = _("Resource %(resource)s has %(status)s status.\n"
+                "Fault: %(fault)s")
 
 
 class ScriptError(RallyException):

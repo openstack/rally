@@ -85,8 +85,9 @@ def get_from_manager(error_statuses=None):
         if status in ("DELETED", "DELETE_COMPLETE"):
             raise exceptions.GetResourceNotFound(resource=res)
         if status in error_statuses:
-            raise exceptions.GetResourceErrorStatus(resource=res,
-                                                    status=status)
+            raise exceptions.GetResourceErrorStatus(
+                resource=res, status=status,
+                fault=getattr(res, "fault", "n/a"))
 
         return res
 
