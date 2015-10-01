@@ -243,6 +243,11 @@ class ConfigTestCase(test.TestCase):
         available_services = ("nova", "cinder", "glance", "sahara")
         self.conf_generator.available_services = available_services
         self.conf_generator._configure_service_available()
+        expected_horizon_url = "http://test"
+        expected_timeout = CONF.openstack_client_http_timeout
+        mock_requests.get.assert_called_once_with(
+            expected_horizon_url,
+            timeout=expected_timeout)
         expected = (("neutron", "False"), ("heat", "False"),
                     ("ceilometer", "False"), ("swift", "False"),
                     ("cinder", "True"), ("nova", "True"),

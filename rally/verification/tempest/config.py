@@ -223,9 +223,11 @@ class TempestConfig(object):
         horizon_url = ("http://" +
                        parse.urlparse(self.endpoint["auth_url"]).hostname)
         try:
-            horizon_req = requests.get(horizon_url)
-        except requests.RequestException:
-            LOG.debug("Horizon is unavailable!")
+            horizon_req = requests.get(
+                horizon_url,
+                timeout=CONF.openstack_client_http_timeout)
+        except requests.RequestException as e:
+            LOG.debug("Failed to connect to Horizon: %s" % e)
             horizon_availability = False
         else:
             horizon_availability = (horizon_req.status_code == 200)
