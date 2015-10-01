@@ -470,6 +470,17 @@ class Verification(object):
         if not tempest_config:
             shutil.move(tmp_conf_path, verifier.config_file)
 
+    @classmethod
+    def discover_tests(cls, deployment, pattern=""):
+        """Get a list of discovered tests.
+
+        :param deployment: UUID or name of a deployment
+        :param pattern: Test name pattern which can be used to match
+        """
+        deployment_uuid = objects.Deployment.get(deployment)["uuid"]
+        verifier = tempest.Tempest(deployment_uuid)
+        return verifier.discover_tests(pattern)
+
     @staticmethod
     def _check_tempest_tree_existence(verifier):
         if not os.path.exists(verifier.path()):
@@ -499,7 +510,7 @@ class Verification(object):
 
     @classmethod
     def show_config_info(cls, deployment):
-        """Show information about configuration file of Tempest.
+        """Get information about configuration file of Tempest.
 
         :param deployment: UUID or name of a deployment
         """

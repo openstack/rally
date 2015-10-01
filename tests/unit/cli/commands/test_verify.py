@@ -455,6 +455,13 @@ class VerifyCommandsTestCase(test.TestCase):
         mock_verification_reinstall_tempest.assert_called_once_with(
             deployment_uuid, tempest_conf, source, False)
 
+    @mock.patch("rally.api.Verification.discover_tests")
+    def test_discover(self, mock_verification_discover_tests):
+        deployment_uuid = "97725f22-1cd2-46a5-8c62-3cdc36ed6d2a"
+        self.verify.discover(deployment_uuid, "some_pattern")
+        mock_verification_discover_tests.assert_called_once_with(
+            deployment_uuid, "some_pattern")
+
     @mock.patch("rally.api.Verification.show_config_info")
     def test_showconfig(self, mock_verification_show_config_info):
         deployment_uuid = "571368f4-20dd-443c-a188-4e931cd2abe6"
