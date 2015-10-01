@@ -23,6 +23,7 @@ import webbrowser
 
 import jsonschema
 from oslo_utils import uuidutils
+import six
 import yaml
 
 from rally import api
@@ -582,10 +583,7 @@ class TaskCommands(object):
                         except jsonschema.ValidationError as e:
                             print(_("ERROR: Invalid task result format in %s")
                                   % task_file_or_uuid, file=sys.stderr)
-                            if logging.is_debug():
-                                print(e, file=sys.stderr)
-                            else:
-                                print(e.message, file=sys.stderr)
+                            print(six.text_type(e), file=sys.stderr)
                             return 1
 
             elif uuidutils.is_uuid_like(task_file_or_uuid):

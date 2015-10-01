@@ -68,7 +68,7 @@ class CreateFlavorContext(context.Context):
                 disk=self.config.get("disk", 1)).to_dict()
             LOG.debug("Flavor with id '%s'" % self.context["flavor"]["id"])
         except Exception as e:
-            msg = "Can't create flavor: %s" % e.message
+            msg = "Can't create flavor: %s" % e
             if logging.is_debug():
                 LOG.exception(msg)
             else:
@@ -81,7 +81,7 @@ class CreateFlavorContext(context.Context):
             nova.flavors.delete(self.context["flavor"]["id"])
             LOG.debug("Flavor '%s' deleted" % self.context["flavor"]["id"])
         except Exception as e:
-            msg = "Can't delete flavor: %s" % e.message
+            msg = "Can't delete flavor: %s" % e
             if logging.is_debug():
                 LOG.exception(msg)
             else:
