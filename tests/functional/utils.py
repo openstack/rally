@@ -72,7 +72,7 @@ class Rally(object):
 
     """
 
-    def __init__(self, fake=False):
+    def __init__(self, fake=False, force_new_db=False):
         if not os.path.exists(DEPLOYMENT_FILE):
             subprocess.call("rally deployment config > %s" % DEPLOYMENT_FILE,
                             shell=True)
@@ -83,7 +83,7 @@ class Rally(object):
         self.env = copy.deepcopy(os.environ)
         self.env["HOME"] = self.tmp_dir
 
-        if "RCI_KEEP_DB" not in os.environ:
+        if force_new_db or ("RCI_KEEP_DB" not in os.environ):
             config_filename = os.path.join(self.tmp_dir, "conf")
             config = configparser.RawConfigParser()
             config.add_section("database")
