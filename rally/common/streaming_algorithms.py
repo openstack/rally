@@ -14,13 +14,13 @@
 #    under the License.
 
 import abc
-import heapq
 import math
 
 import six
 
 from rally.common.i18n import _
 from rally import exceptions
+from rally.task.processing import utils
 
 
 @six.add_metaclass(abc.ABCMeta)
@@ -128,66 +128,27 @@ class MaxComputation(StreamingAlgorithm):
 class PercentileComputation(StreamingAlgorithm):
     """Compute percentile value from a stream of numbers."""
 
-    def __init__(self, percent):
+    def __init__(self, percent, length):
         """Init streaming computation.
 
-        :param percent: numeric percent (from 0.1 to 99.9)
+        :param percent: numeric percent (from 0.00..1 to 0.999..)
+        :param length: count of the measurements
         """
-        if not 0 < percent < 100:
+        if not 0 < percent < 1:
             raise ValueError("Unexpected percent: %s" % percent)
         self._percent = percent
-        self._count = 0
-        self._left = []
-        self._right = []
-        self._current_percentile = None
+
+        self._graph_zipper = utils.GraphZipper(length, 10000)
 
     def add(self, value):
-        value = self._cast_to_float(value)
-
-        if self._current_percentile and value > self._current_percentile:
-            heapq.heappush(self._right, value)
-        else:
-            heapq.heappush(self._left, -value)
-
-        self._count += 1
-        expected_left = int(self._percent * (self._count + 1) / 100)
-
-        if len(self._left) > expected_left:
-            heapq.heappush(self._right, -heapq.heappop(self._left))
-        elif len(self._left) < expected_left:
-            heapq.heappush(self._left, -heapq.heappop(self._right))
-
-        left = -self._left[0] if len(self._left) else 0
-        right = self._right[0] if len(self._right) else 0
-
-        self._current_percentile = left + (right - left) / 2.
+        self._graph_zipper.add_point(value)
 
     def result(self):
-        if self._current_percentile is None:
+        results = list(
+            map(lambda x: x[1], self._graph_zipper.get_zipped_graph()))
+        if not results:
             raise ValueError("No values have been processed")
-        return self._current_percentile
-
-
-class ProgressComputation(StreamingAlgorithm):
-    """Compute progress in percent."""
-
-    def __init__(self, base_count):
-        """Init streaming computation.
-
-        :param base_count: int number for end progress (100% reached)
-        """
-        self._base_count = int(base_count) or 1
-        self._count = 0
-
-    def add(self, *args):
-        if self._count >= self._base_count:
-            raise RuntimeError(
-                "100%% progress is already reached (count of %d)"
-                % self._base_count)
-        self._count += 1
-
-    def result(self):
-        return self._count / float(self._base_count) * 100
+        return utils.percentile(results, self._percent)
 
 
 class IncrementComputation(StreamingAlgorithm):

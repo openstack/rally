@@ -340,62 +340,96 @@ class AtomicHistogramChartTestCase(test.TestCase):
         self.assertEqual(expected, chart.render())
 
 
-class TableTestCase(test.TestCase):
-
-    class Table(charts.Table):
-        columns = ["name", "foo", "bar"]
-        foo = mock.Mock()
-        bar = mock.Mock()
-
-        def _init_columns(self):
-            return costilius.OrderedDict(
-                [("foo", self.foo), ("bar", self.bar)])
-
-        def _map_iteration_values(self, iteration):
-            return [("value_" + k, iteration[k]) for k in ["a", "b"]]
-
-        def render(self):
-            return self._data
-
-    def setUp(self, *args, **kwargs):
-        super(TableTestCase, self).setUp(*args, **kwargs)
-        self.bench_info = {"iterations_count": 42,
-                           "atomic": {"a": {}, "b": {}, "c": {}}}
-
-    def test_add_iteration_and_render(self):
-        self.assertRaises(TypeError, charts.Table, self.bench_info)
-        table = self.Table(self.bench_info)
-        self.assertEqual(costilius.OrderedDict(), table.render())
-        [table.add_iteration({"a": i, "b": 43 - i}) for i in range(1, 43)]
-        self.assertEqual(
-            costilius.OrderedDict(
-                [("value_a", costilius.OrderedDict([("foo", table.foo),
-                                                    ("bar", table.bar)])),
-                 ("value_b", costilius.OrderedDict([("foo", table.foo),
-                                                    ("bar", table.bar)]))]),
-            table.render())
+MAIN_STATS_TABLE_COLUMNS = ["Action", "Min (sec)", "Median (sec)",
+                            "90%ile (sec)", "95%ile (sec)", "Max (sec)",
+                            "Avg (sec)", "Success", "Count"]
 
 
+def generate_iteration(duration, error, *args):
+    return {
+        "atomic_actions": costilius.OrderedDict(args),
+        "duration": duration,
+        "error": error
+    }
+
+
+@ddt.ddt
 class MainStatsTableTestCase(test.TestCase):
 
-    def setUp(self, *args, **kwargs):
-        super(MainStatsTableTestCase, self).setUp(*args, **kwargs)
-        self.bench_info = {"iterations_count": 42,
-                           "atomic": {"a": {}, "b": {}, "c": {}}}
-        self.columns = [
-            "Action", "Min (sec)", "Median (sec)", "90%ile (sec)",
-            "95%ile (sec)", "Max (sec)", "Avg (sec)", "Success", "Count"]
+    @ddt.data(
+        {
+            "info": {
+                "iterations_count": 1,
+                "atomic": costilius.OrderedDict([("foo", {}), ("bar", {})])
+            },
+            "data": [
+                generate_iteration(10.0, False, ("foo", 1.0), ("bar", 2.0))
+            ],
+            "expected": {
+                "cols": MAIN_STATS_TABLE_COLUMNS,
+                "rows": [
+                    ["foo", 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, "100.0%", 1],
+                    ["bar", 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, "100.0%", 1],
+                    ["total", 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, "100.0%", 1],
+                ]
+            }
+        },
+        {
+            "info": {"iterations_count": 2, "atomic": {"foo": {}}},
+            "data": [
+                generate_iteration(10.0, True, ("foo", 1.0)),
+                generate_iteration(10.0, True, ("foo", 2.0))
+            ],
+            "expected": {
+                "cols": MAIN_STATS_TABLE_COLUMNS,
+                "rows": [
+                    ["foo", "n/a", "n/a", "n/a", "n/a", "n/a", "n/a", "0.0%",
+                     2],
+                    ["total", "n/a", "n/a", "n/a", "n/a", "n/a", "n/a", "0.0%",
+                     2],
+                ]
+            }
+        },
+        {
+            "info": {"iterations_count": 2, "atomic": {"foo": {}}},
+            "data": [
+                generate_iteration(10.0, False, ("foo", 1.0)),
+                generate_iteration(20.0, True, ("foo", 2.0))
+            ],
+            "expected": {
+                "cols": MAIN_STATS_TABLE_COLUMNS,
+                "rows": [
+                    ["foo", 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, "50.0%", 2],
+                    ["total", 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, "50.0%", 2]
+                ]
+            }
+        },
+        {
+            "info": {
+                "iterations_count": 4,
+                "atomic": costilius.OrderedDict([("foo", {}), ("bar", {})])
+            },
+            "data": [
+                generate_iteration(10.0, False, ("foo", 1.0), ("bar", 4.0)),
+                generate_iteration(20.0, False, ("foo", 2.0), ("bar", 4.0)),
+                generate_iteration(30.0, False, ("foo", 3.0), ("bar", 4.0)),
+                generate_iteration(40.0, True, ("foo", 4.0), ("bar", 4.0))
+            ],
+            "expected": {
+                "cols": MAIN_STATS_TABLE_COLUMNS,
+                "rows": [
+                    ["foo", 1.0, 2.0, 2.8, 2.9, 3.0, 2.0, "75.0%", 4],
+                    ["bar", 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, "75.0%", 4],
+                    ["total", 10.0, 20.0, 28.0, 29.0, 30.0, 20.0, "75.0%", 4]
+                ]
+            }
+        }
+    )
+    @ddt.unpack
+    def test_add_iteration_and_render(self, info, data, expected):
 
-    def test_add_iteration_and_render(self):
-        table = charts.MainStatsTable({"iterations_count": 42,
-                                       "atomic": {"foo": {}, "bar": {}}})
-        [table.add_iteration(
-            {"atomic_actions": costilius.OrderedDict([("foo", i),
-                                                      ("bar", 43 - 1)]),
-             "duration": i, "error": i % 40}) for i in range(1, 43)]
-        expected_rows = [
-            ["foo", 1.0, 21.5, 38.5, 40.5, 42.0, 21.5, "100.0%", 42.0],
-            ["bar", 42.0, 42.0, 42.0, 42.0, 42.0, 42.0, "100.0%", 42.0],
-            ["total", 0.0, 0.0, 0.0, 0.0, 40.0, 0.952, "100.0%", 42.0]]
-        self.assertEqual({"cols": self.columns, "rows": expected_rows},
-                         table.render())
+        table = charts.MainStatsTable(info)
+        for el in data:
+            table.add_iteration(el)
+
+        self.assertEqual(expected, table.render())

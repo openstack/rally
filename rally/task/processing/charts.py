@@ -14,6 +14,7 @@
 
 import abc
 import bisect
+import copy
 import math
 
 import six
@@ -270,78 +271,65 @@ class AtomicHistogramChart(HistogramChart):
         return list(iteration["atomic_actions"].items())
 
 
-@six.add_metaclass(abc.ABCMeta)
-class Table(Chart):
-    """Base class for table with processed data."""
+class MainStatsTable(Chart):
 
-    @abc.abstractmethod
-    def _init_columns(self):
-        """Initialize columns processing.
+    def _init_row(self, name, iterations_count):
 
-        :returns: OrderedDict(
-            (("str column name", <StreamingAlgorithm instance>),
-             ...))
-        """
+        def round_3(stream, no_result):
+            if no_result:
+                return "n/a"
+            return round(stream.result(), 3)
+
+        return [
+            ("Action", name),
+            ("Min (sec)", streaming.MinComputation(), round_3),
+            ("Median (sec)",
+             streaming.PercentileComputation(0.5, iterations_count), round_3),
+            ("90%ile (sec)",
+             streaming.PercentileComputation(0.9, iterations_count), round_3),
+            ("95%ile (sec)",
+             streaming.PercentileComputation(0.95, iterations_count), round_3),
+            ("Max (sec)", streaming.MaxComputation(), round_3),
+            ("Avg (sec)", streaming.MeanComputation(), round_3),
+            ("Success", streaming.MeanComputation(),
+             lambda stream, no_result: "%.1f%%" % (stream.result() * 100)),
+            ("Count", streaming.IncrementComputation(),
+             lambda x, no_result: x.result())
+        ]
+
+    def __init__(self, benchmark_info, zipped_size=1000):
+        self.rows = list(benchmark_info["atomic"].keys())
+        self.rows.append("total")
+        self.rows_index = dict((name, i) for i, name in enumerate(self.rows))
+        self.table = [self._init_row(name, benchmark_info["iterations_count"])
+                      for name in self.rows]
 
     def add_iteration(self, iteration):
-        for name, value in self._map_iteration_values(iteration):
-            if name not in self._data:
-                self._data[name] = self._init_columns()
-            for column in self._data[name]:
-                self._data[name][column].add(value or 0)
+        data = copy.copy(iteration["atomic_actions"])
+        data["total"] = iteration["duration"]
 
-    @abc.abstractmethod
-    def render(self):
-        """Generate table data ready for displaying.
-
-        :returns: {"cols": [str, ...], "rows": [[numeric, ...], ...]}
-        """
-
-
-class MainStatsTable(Table):
-
-    columns = ["Action", "Min (sec)", "Median (sec)", "90%ile (sec)",
-               "95%ile (sec)", "Max (sec)", "Avg (sec)", "Success", "Count"]
-    float_columns = ["Min (sec)", "Median (sec)", "90%ile (sec)",
-                     "95%ile (sec)", "Max (sec)", "Avg (sec)"]
-
-    def _init_columns(self):
-        return costilius.OrderedDict(
-            (("Min (sec)", streaming.MinComputation()),
-             ("Median (sec)", streaming.PercentileComputation(50)),
-             ("90%ile (sec)", streaming.PercentileComputation(90)),
-             ("95%ile (sec)", streaming.PercentileComputation(95)),
-             ("Max (sec)", streaming.MaxComputation()),
-             ("Avg (sec)", streaming.MeanComputation()),
-             ("Success", streaming.ProgressComputation(self.base_size)),
-             ("Count", streaming.IncrementComputation())))
-
-    def _map_iteration_values(self, iteration):
-        iteration = self._fix_atomic_actions(iteration)
-        values = list(iteration["atomic_actions"].items())
-        values.append(("total",
-                       0 if iteration["error"] else iteration["duration"]))
-        return values
+        for name, value in data.items():
+            index = self.rows_index[name]
+            self.table[index][-1][1].add(None)
+            if iteration["error"]:
+                self.table[index][-2][1].add(0)
+            else:
+                self.table[index][-2][1].add(1)
+                for elem in self.table[index][1:-2]:
+                    elem[1].add(value)
 
     def render(self):
         rows = []
-        total = None
 
-        for name, values in self._data.items():
-            row = [name]
-            for column_name, column in self._data[name].items():
-                if column_name == "Success":
-                    row.append("%.1f%%" % column.result())
-                else:
-                    row.append(round(column.result(), 3))
-
-            # Save `total' - it must be appended last
-            if name.lower() == "total":
-                total = row
-                continue
+        for i in range(len(self.table)):
+            row = [self.table[i][0][1]]
+            # no results if all iterations failed
+            no_result = self.table[i][-2][1].result() == 0.0
+            row.extend(x[2](x[1], no_result) for x in self.table[i][1:])
             rows.append(row)
 
-        if total:
-            rows.append(total)
+        return {"cols": list(map(lambda x: x[0], self.table[0])),
+                "rows": rows}
 
-        return {"cols": self.columns, "rows": rows}
+    def _map_iteration_values(self, iteration):
+        pass
