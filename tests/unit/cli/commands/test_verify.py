@@ -99,7 +99,7 @@ class VerifyCommandsTestCase(test.TestCase):
         deployment_id = "fake_uuid"
         mock_verification_import_results.return_value = (None, None)
         self.verify.import_results(deployment=deployment_id, do_use=False)
-        default_set_name = None
+        default_set_name = ""
         default_log_file = None
 
         mock_verification_import_results.assert_called_once_with(

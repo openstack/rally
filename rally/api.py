@@ -336,7 +336,7 @@ class Verification(object):
         return verifier
 
     @classmethod
-    def import_results(cls, deployment, set_name, log_file=None):
+    def import_results(cls, deployment, set_name="", log_file=None):
         """Import Tempest tests results into the Rally database.
 
         :param deployment: UUID or name of a deployment
