@@ -31,8 +31,8 @@ class SaharaJobTestCase(test.ScenarioTestCase):
         super(SaharaJobTestCase, self).setUp()
 
         self.context = test.get_test_context()
-        CONF.set_override("cluster_check_interval", 0, "benchmark")
-        CONF.set_override("job_check_interval", 0, "benchmark")
+        CONF.set_override("sahara_cluster_check_interval", 0, "benchmark")
+        CONF.set_override("sahara_job_check_interval", 0, "benchmark")
 
     @mock.patch("rally.common.utils.generate_random_name",
                 return_value="job_42")
