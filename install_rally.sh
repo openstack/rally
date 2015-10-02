@@ -847,7 +847,7 @@ else
     fi
     ln -s /usr/local/etc/bash_completion.d/rally.bash_completion /etc/bash_completion.d/ 2> /dev/null || true
     if [ -f "${DBFILE}" ]; then
-        chmod go+w "$DBFILE"
+        chmod 777 "$DBFILE"
     fi
 
     cat <<__EOF__
