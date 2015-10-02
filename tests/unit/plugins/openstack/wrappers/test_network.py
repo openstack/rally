@@ -38,7 +38,9 @@ class NovaNetworkWrapperTestCase(test.TestCase):
         mock_clients = mock.Mock()
         mock_clients.nova.return_value.networks.list.return_value = [
             self.Net(cidr=cidr) for cidr in skip_cidrs]
-        return network.NovaNetworkWrapper(mock_clients, kwargs)
+        return network.NovaNetworkWrapper(mock_clients,
+                                          test.get_test_context()["task"],
+                                          config=kwargs)
 
     def test__init__(self):
         skip_cidrs = ["foo_cidr", "bar_cidr"]
@@ -164,7 +166,9 @@ class NovaNetworkWrapperTestCase(test.TestCase):
 
 class NeutronWrapperTestCase(test.TestCase):
     def get_wrapper(self, *skip_cidrs, **kwargs):
-        return network.NeutronWrapper(mock.Mock(), kwargs)
+        return network.NeutronWrapper(mock.Mock(),
+                                      test.get_test_context()["task"],
+                                      config=kwargs)
 
     def test_SUBNET_IP_VERSION(self):
         self.assertEqual(network.NeutronWrapper.SUBNET_IP_VERSION, 4)
@@ -543,11 +547,17 @@ class FunctionsTestCase(test.TestCase):
     def test_wrap(self):
         mock_clients = mock.Mock()
         mock_clients.nova().networks.list.return_value = []
+        config = {"fakearg": "fake"}
+        task = {"task": "fake_task_uuid"}
 
         mock_clients.services.return_value = {"foo": consts.Service.NEUTRON}
-        self.assertIsInstance(network.wrap(mock_clients, {}),
-                              network.NeutronWrapper)
+        wrapper = network.wrap(mock_clients, task, config)
+        self.assertIsInstance(wrapper, network.NeutronWrapper)
+        self.assertEqual(wrapper.task, task)
+        self.assertEqual(wrapper.config, config)
 
         mock_clients.services.return_value = {"foo": "bar"}
-        self.assertIsInstance(network.wrap(mock_clients, {}),
-                              network.NovaNetworkWrapper)
+        wrapper = network.wrap(mock_clients, task, config)
+        self.assertIsInstance(wrapper, network.NovaNetworkWrapper)
+        self.assertEqual(wrapper.task, task)
+        self.assertEqual(wrapper.config, config)

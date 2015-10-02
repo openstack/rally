@@ -117,7 +117,7 @@ class UserGeneratorTestCase(test.ScenarioTestCase):
 
         user_generator._remove_default_security_group()
 
-        mock_wrap.assert_called_once_with(admin_clients)
+        mock_wrap.assert_called_once_with(admin_clients, self.context["task"])
         net_wrapper.supports_extension.assert_called_once_with(
             "security-group")
 
@@ -147,7 +147,8 @@ class UserGeneratorTestCase(test.ScenarioTestCase):
 
         user_generator._remove_default_security_group()
 
-        mock_network.wrap.assert_called_once_with(admin_clients)
+        mock_network.wrap.assert_called_once_with(admin_clients,
+                                                  self.context["task"])
 
         mock_iterate_per_tenants.assert_called_once_with(
             user_generator.context["users"])

@@ -641,6 +641,7 @@ class NovaServers(utils.NovaScenario,
         :param kwargs: Optional additional arguments for server creation
         """
         server = self._boot_server(image, flavor, **kwargs)
-        address = network_wrapper.wrap(self.clients).create_floating_ip(
-            tenant_id=server.tenant_id)
+        address = network_wrapper.wrap(
+            self.clients, self.context["task"]).create_floating_ip(
+                tenant_id=server.tenant_id)
         self._associate_floating_ip(server, address["ip"])

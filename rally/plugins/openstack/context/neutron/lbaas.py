@@ -53,7 +53,8 @@ class Lbaas(context.Context):
     def setup(self):
         net_wrapper = network_wrapper.wrap(
             osclients.Clients(self.context["admin"]["endpoint"]),
-            self.config)
+            self.context["task"],
+            config=self.config)
 
         use_lb, msg = net_wrapper.supports_extension("lbaas")
         if not use_lb:
@@ -80,7 +81,8 @@ class Lbaas(context.Context):
     def cleanup(self):
         net_wrapper = network_wrapper.wrap(
             osclients.Clients(self.context["admin"]["endpoint"]),
-            self.config)
+            self.context["task"],
+            config=self.config)
         for tenant_id, tenant_ctx in six.iteritems(self.context["tenants"]):
             for network in tenant_ctx.get("networks", []):
                 for pool in network.get("lb_pools", []):

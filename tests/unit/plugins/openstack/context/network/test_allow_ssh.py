@@ -125,7 +125,8 @@ class AllowSSHContextTestCase(test.TestCase):
             mock_clients.mock_calls)
 
         mock_network_wrap.assert_called_once_with(
-            mock_clients.return_value, {})
+            mock_clients.return_value, self.ctx_with_secgroup["task"],
+            config={})
 
     @mock.patch("%s.osclients.Clients" % CTX)
     @mock.patch("rally.plugins.openstack.wrappers.network.wrap")
@@ -144,4 +145,5 @@ class AllowSSHContextTestCase(test.TestCase):
         mock_clients.assert_called_once_with("admin_endpoint")
 
         mock_network_wrap.assert_called_once_with(
-            mock_clients.return_value, {})
+            mock_clients.return_value, self.ctx_without_secgroup["task"],
+            config={})

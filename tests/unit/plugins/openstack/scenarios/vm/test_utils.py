@@ -281,7 +281,8 @@ class VMScenarioTestCase(test.ScenarioTestCase):
         scenario._attach_floating_ip(
             server, floating_network="bar_network")
 
-        mock_wrap.assert_called_once_with(scenario.clients)
+        mock_wrap.assert_called_once_with(scenario.clients,
+                                          self.context["task"])
         netwrap.create_floating_ip.assert_called_once_with(
             ext_network="bar_network",
             tenant_id="foo_tenant", fixed_ip="foo_ip")
@@ -305,6 +306,7 @@ class VMScenarioTestCase(test.ScenarioTestCase):
         _check_addr.assert_called_once_with(server)
         scenario._dissociate_floating_ip.assert_called_once_with(
             server, "foo_ip")
-        mock_wrap.assert_called_once_with(scenario.clients)
+        mock_wrap.assert_called_once_with(scenario.clients,
+                                          self.context["task"])
         mock_wrap.return_value.delete_floating_ip.assert_called_once_with(
             "foo_id", wait=True)
