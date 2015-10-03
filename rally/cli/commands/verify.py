@@ -79,7 +79,7 @@ class VerifyCommands(object):
             set_name = "full"
         if set_name and set_name not in (list(consts.TempestTestsSets) +
                                          list(consts.TempestTestsAPI)):
-            print("Sorry, but there are no desired tempest test set. Please "
+            print("Sorry, but there are no desired Tempest test set. Please, "
                   "choose from: %s" % ", ".join(list(consts.TempestTestsSets) +
                                                 list(consts.TempestTestsAPI)))
             return (1)

@@ -25,18 +25,18 @@ from rally.common import utils
 
 
 class _TempestTestsAPI(utils.ImmutableMixin, utils.EnumMixin):
-    BAREMTAL = "baremetal"
+    BAREMETAL = "baremetal"
     COMPUTE = "compute"
-    DNS = "dns"
-    DATA_PROCCESING = "data_processing"
+    DATA_PROCESSING = "data_processing"
+    DATABASE = "database"
     IDENTITY = "identity"
     IMAGE = "image"
+    MESSAGING = "messaging"
     NETWORK = "network"
     OBJECT_STORAGE = "object_storage"
     ORCHESTRATION = "orchestration"
     TELEMETRY = "telemetry"
     VOLUME = "volume"
-    APPLICATION_CATALOG = "application_catalog"
 
 
 class _TempestTestsSets(utils.ImmutableMixin, utils.EnumMixin):
