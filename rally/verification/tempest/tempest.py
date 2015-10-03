@@ -398,4 +398,4 @@ class Tempest(object):
             self.verification.start_verifying(set_name)
             self._save_results(log_file)
         else:
-            LOG.error("No import file specified.")
+            LOG.error("No log file to import results was specified.")

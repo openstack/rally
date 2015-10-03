@@ -91,7 +91,7 @@ class VerifyCommands(object):
 
     @cliutils.args("--deployment", dest="deployment", type=str,
                    required=False, help="UUID or name of a deployment.")
-    @cliutils.args("--set-name", dest="set_name", type=str, required=False,
+    @cliutils.args("--set", dest="set_name", type=str, required=False,
                    help="Name of tempest test set. Available sets: %s" % ", ".
                    join(list(consts.TempestTestsSets) +
                         list(consts.TempestTestsAPI)))
@@ -103,7 +103,8 @@ class VerifyCommands(object):
                    required=False,
                    help="Don't set new task as default for future operations")
     @cliutils.alias("import")
-    def import_results(self, deployment=None, set_name=None, log_file=None,
+    @envutils.with_default_deployment(cli_arg_name="deployment")
+    def import_results(self, deployment=None, set_name="", log_file=None,
                        do_use=True):
         """Import Tempest tests results into the Rally database.
 
