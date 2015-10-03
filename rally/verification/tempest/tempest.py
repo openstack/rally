@@ -180,7 +180,8 @@ class Tempest(object):
         path_to_venv = self.path(".venv")
 
         if not os.path.isdir(path_to_venv):
-            print("No virtual environment found...Install the virtualenv.")
+            LOG.debug("No virtual environment for Tempest found.")
+            LOG.info(_("Installing the virtual environment for Tempest."))
             LOG.debug("Virtual environment directory: %s" % path_to_venv)
             required_vers = (2, 7)
             if sys.version_info[:2] != required_vers:
@@ -238,7 +239,7 @@ class Tempest(object):
 
     def _initialize_testr(self):
         if not os.path.isdir(self.path(".testrepository")):
-            print(_("Test Repository initialization."))
+            LOG.debug("Test Repository initialization.")
             try:
                 check_output("%s testr init" % self.venv_wrapper,
                              shell=True, cwd=self.path())
@@ -251,8 +252,7 @@ class Tempest(object):
         return os.path.exists(self.path(".venv"))
 
     def _clone(self):
-        print("Please wait while tempest is being cloned. "
-              "This could take a few minutes...")
+        LOG.info(_("Please, wait while Tempest is being cloned."))
         try:
             subprocess.check_call(["git", "clone",
                                    self.tempest_source,
@@ -281,10 +281,10 @@ class Tempest(object):
                 self.uninstall()
                 raise TempestSetupFailure("failed cmd: '%s'" % e.cmd)
             else:
-                print("Tempest has been successfully installed!")
+                LOG.info(_("Tempest has been successfully installed!"))
 
         else:
-            print("Tempest is already installed")
+            LOG.info(_("Tempest is already installed."))
 
     def uninstall(self):
         """Removes local Tempest repo and virtualenv for deployment
@@ -311,8 +311,8 @@ class Tempest(object):
         try:
             self.run(testr_arg)
         except subprocess.CalledProcessError:
-            print("Test set '%s' has been finished with error. "
-                  "Check log for details" % set_name)
+            LOG.info(_("Test set '%s' has been finished with errors. "
+                       "Check logs for details.") % set_name)
 
     def run(self, testr_arg=None, log_file=None, tempest_conf=None):
         """Launch tempest with given arguments
