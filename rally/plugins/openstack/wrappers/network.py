@@ -149,6 +149,9 @@ class NovaNetworkWrapper(NetworkWrapper):
         return self._marshal_network_object(network)
 
     def delete_network(self, network):
+        self.client.networks.disassociate(network["id"],
+                                          disassociate_host=False,
+                                          disassociate_project=True)
         return self.client.networks.delete(network["id"])
 
     def list_networks(self):
