@@ -153,6 +153,11 @@ class ShareNetworks(context.Context):
                     **data).to_dict()
                 self.context["tenants"][tenant_id][CONTEXT_NAME][
                     "share_networks"].append(share_network)
+                for ss in self.context["tenants"][tenant_id].get(
+                        consts.SECURITY_SERVICES_CONTEXT_NAME, {}).get(
+                            "security_services", []):
+                    manila_scenario._add_security_service_to_share_network(
+                        share_network["id"], ss["id"])
 
             if networks:
                 for network in networks:
