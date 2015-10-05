@@ -329,8 +329,10 @@ class Verification(object):
                                    tempest_config=tempest_config,
                                    system_wide_install=system_wide_install)
         if not verifier.is_installed():
-            print("Tempest is not installed for specified deployment.")
-            print("Installing Tempest for deployment %s" % deployment_uuid)
+            LOG.info(_("Tempest is not installed "
+                       "for the specified deployment."))
+            LOG.info(_("Installing Tempest "
+                       "for deployment: %s") % deployment_uuid)
             verifier.install()
 
         return verifier
