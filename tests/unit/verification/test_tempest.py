@@ -339,12 +339,14 @@ class TempestVerifyTestCase(BaseTestCase):
                 return_value=(None, None))
     @mock.patch(TEMPEST_PATH + ".tempest.Tempest.env")
     @mock.patch(TEMPEST_PATH + ".tempest.subprocess")
-    @mock.patch(TEMPEST_PATH + ".config.TempestConf")
+    @mock.patch(TEMPEST_PATH + ".config.TempestResourcesContext")
+    @mock.patch(TEMPEST_PATH + ".config.TempestConfig")
     @mock.patch(TEMPEST_PATH + ".tempest.Tempest.is_configured",
                 return_value=False)
     def test_verify_not_configured(
-            self, mock_tempest_is_configured, mock_tempest_conf,
-            mock_subprocess, mock_tempest_env, mock_tempest_parse_results):
+            self, mock_tempest_is_configured, mock_tempest_config,
+            mock_tempest_resources_context, mock_subprocess, mock_tempest_env,
+            mock_tempest_parse_results):
 
         set_name = "compute"
         fake_call = self._get_fake_call(set_name)
@@ -352,8 +354,8 @@ class TempestVerifyTestCase(BaseTestCase):
         self.verifier.verify(set_name, None)
 
         self.assertEqual(2, mock_tempest_is_configured.call_count)
-        mock_tempest_conf.assert_called_once_with(self.verifier.deployment)
-        mock_tempest_conf.return_value.generate.assert_called_once_with(
+        mock_tempest_config.assert_called_once_with(self.verifier.deployment)
+        mock_tempest_config.return_value.generate.assert_called_once_with(
             self.verifier.config_file
         )
         self.verifier.verification.start_verifying.assert_called_once_with(
@@ -368,20 +370,22 @@ class TempestVerifyTestCase(BaseTestCase):
                 return_value=(None, None))
     @mock.patch(TEMPEST_PATH + ".tempest.Tempest.env")
     @mock.patch(TEMPEST_PATH + ".tempest.subprocess")
-    @mock.patch(TEMPEST_PATH + ".config.TempestConf")
+    @mock.patch(TEMPEST_PATH + ".config.TempestResourcesContext")
+    @mock.patch(TEMPEST_PATH + ".config.TempestConfig")
     @mock.patch(TEMPEST_PATH + ".tempest.Tempest.is_configured",
                 return_value=True)
     def test_verify_when_tempest_configured(
-            self, mock_tempest_is_configured, mock_tempest_conf,
-            mock_subprocess, mock_tempest_env, mock_tempest_parse_results):
+            self, mock_tempest_is_configured, mock_tempest_config,
+            mock_tempest_resources_context, mock_subprocess, mock_tempest_env,
+            mock_tempest_parse_results):
         set_name = "identity"
         fake_call = self._get_fake_call(set_name)
 
         self.verifier.verify(set_name, None)
 
         mock_tempest_is_configured.assert_called_once_with()
-        self.assertFalse(mock_tempest_conf.called)
-        self.assertFalse(mock_tempest_conf().generate.called)
+        self.assertFalse(mock_tempest_config.called)
+        self.assertFalse(mock_tempest_config().generate.called)
         self.verifier.verification.start_verifying.assert_called_once_with(
             set_name)
 
@@ -394,12 +398,14 @@ class TempestVerifyTestCase(BaseTestCase):
                 return_value=(None, None))
     @mock.patch(TEMPEST_PATH + ".tempest.Tempest.env")
     @mock.patch(TEMPEST_PATH + ".tempest.subprocess")
-    @mock.patch(TEMPEST_PATH + ".config.TempestConf")
+    @mock.patch(TEMPEST_PATH + ".config.TempestResourcesContext")
+    @mock.patch(TEMPEST_PATH + ".config.TempestConfig")
     @mock.patch(TEMPEST_PATH + ".tempest.Tempest.is_configured",
                 return_value=True)
     def test_verify_failed_and_tempest_is_configured(
-            self, mock_tempest_is_configured, mock_tempest_conf,
-            mock_subprocess, mock_tempest_env, mock_tempest_parse_results):
+            self, mock_tempest_is_configured, mock_tempest_config,
+            mock_tempest_resources_context, mock_subprocess, mock_tempest_env,
+            mock_tempest_parse_results):
         set_name = "identity"
         fake_call = self._get_fake_call(set_name)
         mock_subprocess.side_effect = subprocess.CalledProcessError
@@ -407,8 +413,8 @@ class TempestVerifyTestCase(BaseTestCase):
         self.verifier.verify(set_name, None)
 
         mock_tempest_is_configured.assert_called_once_with()
-        self.assertFalse(mock_tempest_conf.called)
-        self.assertFalse(mock_tempest_conf().generate.called)
+        self.assertFalse(mock_tempest_config.called)
+        self.assertFalse(mock_tempest_config().generate.called)
         self.verifier.verification.start_verifying.assert_called_once_with(
             set_name)
 

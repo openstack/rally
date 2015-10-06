@@ -48,8 +48,8 @@ gzip -9 ${RESULTS_DIR}/tempest_installation.txt
 gzip -9 ${RESULTS_DIR}/tempest_config_generation.txt
 
 function do_verification {
-    OUTPUT_FILE=${RESULTS_DIR}/${1}_verification_${SET_NAME}_set.txt
-    rally --rally-debug verify start --regex tempest.api.compute.servers.test_servers > ${OUTPUT_FILE} 2>&1
+    OUTPUT_FILE=${RESULTS_DIR}/${1}_verification_${2}_set.txt
+    rally --rally-debug verify start --set ${2} > ${OUTPUT_FILE} 2>&1
     RESULTS+="v${1}=$(do_status $?) "
     gzip -9 ${OUTPUT_FILE}
     source ~/.rally/globals && VERIFICATIONS[${1}]=${RALLY_VERIFICATION}
@@ -57,24 +57,24 @@ function do_verification {
     # Check different "rally verify" commands, which displays verification results
     for OUTPUT_FORMAT in "html" "json"
     do
-        OUTPUT_FILE=${RESULTS_DIR}/${1}_verify_results.${OUTPUT_FORMAT}
+        OUTPUT_FILE=${RESULTS_DIR}/${1}_verify_results_${2}_set.${OUTPUT_FORMAT}
         rally verify results --uuid ${RALLY_VERIFICATION} --${OUTPUT_FORMAT} --output-file ${OUTPUT_FILE}
         RESULTS+="vr_${1}_${OUTPUT_FORMAT}=$(do_status $?) "
         gzip -9 ${OUTPUT_FILE}
     done
 
-    rally verify show --uuid ${RALLY_VERIFICATION} > ${RESULTS_DIR}/${1}_verify_show.txt
+    rally verify show --uuid ${RALLY_VERIFICATION} > ${RESULTS_DIR}/${1}_verify_show_${2}_set.txt
     RESULTS+="vs_${1}=$(do_status $?) "
-    gzip -9 ${RESULTS_DIR}/${1}_verify_show.txt
+    gzip -9 ${RESULTS_DIR}/${1}_verify_show_${2}_set.txt
 
-    rally verify show --uuid ${RALLY_VERIFICATION} --detailed > ${RESULTS_DIR}/${1}_verify_show_detailed.txt
+    rally verify show --uuid ${RALLY_VERIFICATION} --detailed > ${RESULTS_DIR}/${1}_verify_show_${2}_set_detailed.txt
     RESULTS+="vsd_${1}=$(do_status $?) "
-    gzip -9 ${RESULTS_DIR}/${1}_verify_show_detailed.txt
+    gzip -9 ${RESULTS_DIR}/${1}_verify_show_${2}_set_detailed.txt
 }
 
 function main {
-    do_verification 1
-    do_verification 2
+    do_verification 1 compute
+    do_verification 2 compute
 
     rally verify list > ${RESULTS_DIR}/verify_list.txt
     RESULTS+="l=$(do_status $?) "

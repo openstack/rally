@@ -43,6 +43,7 @@ def list_opts():
                          ec2_utils.EC2_BENCHMARK_OPTS)),
         ("image",
          itertools.chain(tempest_conf.IMAGE_OPTS)),
+        ("role", itertools.chain(tempest_conf.ROLE_OPTS)),
         ("users_context", itertools.chain(users.USER_CONTEXT_OPTS)),
         ("cleanup", itertools.chain(cleanup_base.CLEANUP_OPTS))
     ]

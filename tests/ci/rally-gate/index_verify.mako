@@ -62,26 +62,25 @@
         </li>
         <li>
             <span class="${vr_1_html}">[${vr_1_html}]</span>
-            <a href="rally-verify/1_verify_results.html.gz">Display raw results in HTML</a>
+            <a href="rally-verify/1_verify_results_compute_set.html.gz">Display raw results in HTML</a>
             <code>$ rally verify results --html</code>
         </li>
         <li>
             <span class="${vr_1_json}">[${vr_1_json}]</span>
-            <a href="rally-verify/1_verify_results.json.gz">Display raw results in JSON</a>
+            <a href="rally-verify/1_verify_results_compute_set.json.gz">Display raw results in JSON</a>
             <code>$ rally verify results --json</code>
         </li>
         <li>
             <span class="${vs_1}">[${vs_1}]</span>
-            <a href="rally-verify/1_verify_show.txt.gz">Display results table of the verification</a>
+            <a href="rally-verify/1_verify_show_compute_set.txt.gz">Display results table of the verification</a>
             <code>$ rally verify show</code>
         </li>
         <li>
             <span class="${vsd_1}">[${vsd_1}]</span>
-            <a href="rally-verify/1_verify_show_detailed.txt.gz">Display results table of the verification with detailed errors</a><br />
+            <a href="rally-verify/1_verify_show_compute_set_detailed.txt.gz">Display results table of the verification with detailed errors</a><br />
             <code style="display: inline">$ rally verify show --detailed</code> or <code style="display: inline">$ rally verify detailed</code>
         </li>
     </ol>
-
 
     Second verification run
     <ol>
@@ -92,22 +91,22 @@
         </li>
         <li>
             <span class="${vr_2_html}">[${vr_2_html}]</span>
-            <a href="rally-verify/2_verify_results.html.gz">Display results in HTML</a>
+            <a href="rally-verify/2_verify_results_compute_set.html.gz">Display results in HTML</a>
             <code>$ rally verify results --html</code>
         </li>
         <li>
             <span class="${vr_2_json}">[${vr_2_json}]</span>
-            <a href="rally-verify/2_verify_results.json.gz">Display results in JSON</a>
+            <a href="rally-verify/2_verify_results_compute_set.json.gz">Display results in JSON</a>
             <code>$ rally verify results --json</code>
         </li>
         <li>
             <span class="${vs_2}">[${vs_2}]</span>
-            <a href="rally-verify/2_verify_show.txt.gz">Display table results of the verification</a>
+            <a href="rally-verify/2_verify_show_compute_set.txt.gz">Display table results of the verification</a>
             <code>$ rally verify show</code>
         </li>
         <li>
             <span class="${vsd_2}">[${vsd_2}]</span>
-            <a href="rally-verify/2_verify_show_detailed.txt.gz">Display table results of the verification with detailed errors</a><br />
+            <a href="rally-verify/2_verify_show_compute_set_detailed.txt.gz">Display table results of the verification with detailed errors</a><br />
             <code style="display: inline">$ rally verify show --detailed</code> or <code style="display: inline">$ rally verify detailed</code>
         </li>
     </ol>

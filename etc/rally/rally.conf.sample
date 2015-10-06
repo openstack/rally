@@ -615,14 +615,29 @@
 # From rally
 #
 
-# Version of cirros image (string value)
-#cirros_version = 0.3.4
+# CirrOS image URL (string value)
+#cirros_img_url = http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-disk.img
 
-# Cirros image name (string value)
-#cirros_image = cirros-0.3.4-x86_64-disk.img
 
-# Cirros image base URL (string value)
-#cirros_base_url = http://download.cirros-cloud.net
+[role]
+
+#
+# From rally
+#
+
+# Role required for users to be able to create Swift containers
+# (string value)
+#swift_operator_role = Member
+
+# User role that has reseller admin (string value)
+#swift_reseller_admin_role = ResellerAdmin
+
+# Role required for users to be able to manage Heat stacks (string
+# value)
+#heat_stack_owner_role = heat_stack_owner
+
+# Role for Heat template-defined users (string value)
+#heat_stack_user_role = heat_stack_user
 
 
 [users_context]

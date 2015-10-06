@@ -23,7 +23,6 @@ from rally.common import utils
 from rally import consts
 from rally import exceptions
 from rally.task import context
-from rally.verification.tempest import config
 from rally.verification.tempest import tempest
 
 LOG = logging.getLogger(__name__)
@@ -65,7 +64,7 @@ class Tempest(context.Context):
             msg = _("Failing to install tempest.")
             LOG.error(msg)
             raise exceptions.BenchmarkSetupFailure(msg)
-        except config.TempestConfigCreationFailure:
+        except exceptions.TempestConfigCreationFailure:
             msg = _("Failing to configure tempest.")
             LOG.error(msg)
             raise exceptions.BenchmarkSetupFailure(msg)

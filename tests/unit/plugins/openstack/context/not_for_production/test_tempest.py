@@ -17,7 +17,6 @@ import mock
 
 from rally import exceptions
 from rally.plugins.openstack.context.not_for_production import tempest
-from rally.verification.tempest import config
 from rally.verification.tempest import tempest as tempest_verifier
 from tests.unit import test
 
@@ -75,7 +74,7 @@ class TempestContextTestCase(test.TestCase):
             self, mock_tempest_generate_config_file, mock_tempest_is_installed,
             mock_tempest_is_configured, mock_mkdir):
         mock_tempest_generate_config_file.side_effect = (
-            config.TempestConfigCreationFailure()
+            exceptions.TempestConfigCreationFailure()
         )
 
         benchmark = tempest.Tempest(self.context)
