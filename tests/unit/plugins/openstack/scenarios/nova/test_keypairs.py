@@ -51,12 +51,20 @@ class NovaKeypairTestCase(test.ScenarioTestCase):
         scenario._delete_server = mock.MagicMock()
         scenario._delete_keypair = mock.MagicMock()
 
-        scenario.boot_and_delete_server_with_keypair("img", 1)
+        fake_server_args = {
+            "foo": 1,
+            "bar": 2,
+        }
 
-        scenario._create_keypair.assert_called_once_with()
+        scenario.boot_and_delete_server_with_keypair(
+            "img", 1, server_kwargs=fake_server_args,
+            fake_arg1="foo", fake_arg2="bar")
+
+        scenario._create_keypair.assert_called_once_with(
+            fake_arg1="foo", fake_arg2="bar")
 
         scenario._boot_server.assert_called_once_with(
-            "img", 1, key_name="foo_keypair")
+            "img", 1, foo=1, bar=2, key_name="foo_keypair")
 
         scenario._delete_server.assert_called_once_with("foo_server")
 
