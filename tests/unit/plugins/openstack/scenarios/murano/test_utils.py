@@ -52,11 +52,12 @@ class MuranoScenarioTestCase(test.ScenarioTestCase):
             environment.id
         )
 
+        config = CONF.benchmark
         self.mock_wait_for_delete.mock.assert_called_once_with(
             environment,
             update_resource=self.mock_get_from_manager.mock.return_value,
-            timeout=CONF.benchmark.delete_environment_timeout,
-            check_interval=CONF.benchmark.delete_environment_check_interval)
+            timeout=config.murano_delete_environment_timeout,
+            check_interval=config.murano_delete_environment_check_interval)
         self.mock_get_from_manager.mock.assert_called_once_with()
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "murano.delete_environment")
@@ -94,12 +95,13 @@ class MuranoScenarioTestCase(test.ScenarioTestCase):
             environment.id, session.id
         )
 
+        config = CONF.benchmark
         self.mock_wait_for.mock.assert_called_once_with(
             environment,
             update_resource=self.mock_get_from_manager.mock.return_value,
             is_ready=self.mock_resource_is.mock.return_value,
-            check_interval=CONF.benchmark.deploy_environment_check_interval,
-            timeout=CONF.benchmark.deploy_environment_timeout)
+            check_interval=config.murano_deploy_environment_check_interval,
+            timeout=config.murano_deploy_environment_timeout)
         self.mock_get_from_manager.mock.assert_called_once_with(
             ["DEPLOY FAILURE"])
         self.mock_resource_is.mock.assert_called_once_with("READY")

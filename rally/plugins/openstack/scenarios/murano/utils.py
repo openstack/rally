@@ -30,19 +30,23 @@ from rally.task import utils
 
 CONF = cfg.CONF
 
-MURANO_TIMEOUT_OPTS = [
-    cfg.IntOpt("delete_environment_timeout", default=180,
+MURANO_BENCHMARK_OPTS = [
+    cfg.IntOpt("murano_delete_environment_timeout", default=180,
+               deprecated_name="delete_environment_timeout",
                help="A timeout in seconds for an environment delete"),
-    cfg.IntOpt("deploy_environment_timeout", default=1200,
+    cfg.IntOpt("murano_deploy_environment_timeout", default=1200,
+               deprecated_name="deploy_environment_timeout",
                help="A timeout in seconds for an environment deploy"),
-    cfg.IntOpt("delete_environment_check_interval", default=2,
+    cfg.IntOpt("murano_delete_environment_check_interval", default=2,
+               deprecated_name="delete_environment_check_interval",
                help="Delete environment check interval in seconds"),
-    cfg.IntOpt("deploy_environment_check_interval", default=5,
+    cfg.IntOpt("murano_deploy_environment_check_interval", default=5,
+               deprecated_name="deploy_environment_check_interval",
                help="Deploy environment check interval in seconds"),
 ]
 
 benchmark_group = cfg.OptGroup(name="benchmark", title="benchmark options")
-CONF.register_opts(MURANO_TIMEOUT_OPTS, group=benchmark_group)
+CONF.register_opts(MURANO_BENCHMARK_OPTS, group=benchmark_group)
 
 
 class MuranoScenario(scenario.OpenStackScenario):
@@ -73,11 +77,13 @@ class MuranoScenario(scenario.OpenStackScenario):
         :param environment: Environment instance
         """
         self.clients("murano").environments.delete(environment.id)
+
+        config = CONF.benchmark
         utils.wait_for_delete(
             environment,
             update_resource=utils.get_from_manager(),
-            timeout=CONF.benchmark.delete_environment_timeout,
-            check_interval=CONF.benchmark.delete_environment_check_interval
+            timeout=config.murano_delete_environment_timeout,
+            check_interval=config.murano_delete_environment_check_interval
         )
 
     @atomic.action_timer("murano.create_session")
@@ -126,11 +132,13 @@ class MuranoScenario(scenario.OpenStackScenario):
         """
         self.clients("murano").sessions.deploy(environment.id,
                                                session.id)
+
+        config = CONF.benchmark
         utils.wait_for(
             environment, is_ready=utils.resource_is("READY"),
             update_resource=utils.get_from_manager(["DEPLOY FAILURE"]),
-            timeout=CONF.benchmark.deploy_environment_timeout,
-            check_interval=CONF.benchmark.deploy_environment_check_interval
+            timeout=config.murano_deploy_environment_timeout,
+            check_interval=config.murano_deploy_environment_check_interval
         )
 
     @atomic.action_timer("murano.list_packages")

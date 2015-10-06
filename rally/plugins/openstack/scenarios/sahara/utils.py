@@ -31,21 +31,26 @@ from rally.task import utils
 LOG = logging.getLogger(__name__)
 CONF = cfg.CONF
 
-SAHARA_TIMEOUT_OPTS = [
-    cfg.IntOpt("cluster_create_timeout", default=1800,
+SAHARA_BENCHMARK_OPTS = [
+    cfg.IntOpt("sahara_cluster_create_timeout", default=1800,
+               deprecated_name="cluster_create_timeout",
                help="A timeout in seconds for a cluster create operation"),
-    cfg.IntOpt("cluster_delete_timeout", default=900,
+    cfg.IntOpt("sahara_cluster_delete_timeout", default=900,
+               deprecated_name="cluster_delete_timeout",
                help="A timeout in seconds for a cluster delete operation"),
-    cfg.IntOpt("cluster_check_interval", default=5,
+    cfg.IntOpt("sahara_cluster_check_interval", default=5,
+               deprecated_name="cluster_check_interval",
                help="Cluster status polling interval in seconds"),
-    cfg.IntOpt("job_execution_timeout", default=600,
+    cfg.IntOpt("sahara_job_execution_timeout", default=600,
+               deprecated_name="job_execution_timeout",
                help="A timeout in seconds for a Job Execution to complete"),
-    cfg.IntOpt("job_check_interval", default=5,
+    cfg.IntOpt("sahara_job_check_interval", default=5,
+               deprecated_name="job_check_interval",
                help="Job Execution status polling interval in seconds")
 ]
 
 benchmark_group = cfg.OptGroup(name="benchmark", title="benchmark options")
-CONF.register_opts(SAHARA_TIMEOUT_OPTS, group=benchmark_group)
+CONF.register_opts(SAHARA_BENCHMARK_OPTS, group=benchmark_group)
 
 
 class SaharaScenario(scenario.OpenStackScenario):
@@ -112,8 +117,8 @@ class SaharaScenario(scenario.OpenStackScenario):
         utils.wait_for(
             resource=cluster_object, ready_statuses=["active"],
             failure_statuses=["error"], update_resource=self._update_cluster,
-            timeout=CONF.benchmark.cluster_create_timeout,
-            check_interval=CONF.benchmark.cluster_check_interval)
+            timeout=CONF.benchmark.sahara_cluster_create_timeout,
+            check_interval=CONF.benchmark.sahara_cluster_check_interval)
 
     def _setup_neutron_floating_ip_pool(self, name_or_id):
         if name_or_id:
@@ -395,8 +400,8 @@ class SaharaScenario(scenario.OpenStackScenario):
 
         utils.wait_for(
             resource=cluster,
-            timeout=CONF.benchmark.cluster_delete_timeout,
-            check_interval=CONF.benchmark.cluster_check_interval,
+            timeout=CONF.benchmark.sahara_cluster_delete_timeout,
+            check_interval=CONF.benchmark.sahara_cluster_check_interval,
             is_ready=self._is_cluster_deleted)
 
     def _is_cluster_deleted(self, cluster):
@@ -438,8 +443,8 @@ class SaharaScenario(scenario.OpenStackScenario):
         "killed".
 
         The timeout and the polling interval may be configured through
-        "job_execution_timeout" and "job_check_interval" parameters under the
-        "benchmark" section.
+        "sahara_job_execution_timeout" and "sahara_job_check_interval"
+        parameters under the "benchmark" section.
 
         :param job_id: The Job id that will be executed
         :param cluster_id: The Cluster id which will execute the Job
@@ -462,8 +467,8 @@ class SaharaScenario(scenario.OpenStackScenario):
             utils.wait_for(
                 resource=job_execution.id,
                 is_ready=self._job_execution_is_finished,
-                timeout=CONF.benchmark.job_execution_timeout,
-                check_interval=CONF.benchmark.job_check_interval)
+                timeout=CONF.benchmark.sahara_job_execution_timeout,
+                check_interval=CONF.benchmark.sahara_job_check_interval)
 
         run(self)
 
