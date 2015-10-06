@@ -15,8 +15,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-exit 0
-
 ALLOWED_EXTRA_MISSING=4
 
 show_diff () {
@@ -32,6 +30,7 @@ git checkout HEAD^
 baseline_report=$(mktemp -t rally_coverageXXXXXXX)
 find . -type f -name "*.pyc" -delete && python setup.py testr --coverage --testr-args="$*"
 coverage report > $baseline_report
+cat $baseline_report
 baseline_missing=$(awk 'END { print $3 }' $baseline_report)
 
 # Checkout back and unstash uncommitted changes (if any)
