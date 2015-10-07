@@ -367,6 +367,57 @@ class NovaServers(utils.NovaScenario,
         self._delete_server(server, force=force_delete)
 
     @types.set(image=types.ImageResourceType,
+               flavor=types.FlavorResourceType,
+               to_flavor=types.FlavorResourceType)
+    @validation.image_valid_on_flavor("flavor", "image")
+    @validation.required_services(consts.Service.NOVA, consts.Service.CINDER)
+    @validation.required_openstack(users=True)
+    @scenario.configure(context={"cleanup": ["cinder", "nova"]})
+    def boot_server_attach_created_volume_and_resize(
+            self, image, flavor, to_flavor, volume_size, min_sleep=0,
+            max_sleep=0, force_delete=False, confirm=True, do_delete=True,
+            boot_server_kwargs=None, create_volume_kwargs=None):
+        """Create a VM from image, attach a volume to it and resize.
+
+        Simple test to create a VM and attach a volume, then resize the VM,
+        detach the volume then delete volume and VM.
+        Optional 'min_sleep' and 'max_sleep' parameters allow the scenario
+        to simulate a pause between attaching a volume and running resize
+        (of random duration from range [min_sleep, max_sleep]).
+        :param image: Glance image name to use for the VM
+        :param flavor: VM flavor name
+        :param to_flavor: flavor to be used to resize the booted instance
+        :param volume_size: volume size (in GB)
+        :param min_sleep: Minimum sleep time in seconds (non-negative)
+        :param max_sleep: Maximum sleep time in seconds (non-negative)
+        :param force_delete: True if force_delete should be used
+        :param confirm: True if need to confirm resize else revert resize
+        :param do_delete: True if resources needs to be deleted explicitly
+                        else use rally cleanup to remove resources
+        :param boot_server_kwargs: optional arguments for VM creation
+        :param create_volume_kwargs: optional arguments for volume creation
+        """
+        boot_server_kwargs = boot_server_kwargs or {}
+        create_volume_kwargs = create_volume_kwargs or {}
+
+        server = self._boot_server(image, flavor, **boot_server_kwargs)
+        volume = self._create_volume(volume_size, **create_volume_kwargs)
+
+        self._attach_volume(server, volume)
+        self.sleep_between(min_sleep, max_sleep)
+        self._resize(server, to_flavor)
+
+        if confirm:
+            self._resize_confirm(server)
+        else:
+            self._resize_revert(server)
+
+        if do_delete:
+            self._detach_volume(server, volume)
+            self._delete_volume(volume)
+            self._delete_server(server, force=force_delete)
+
+    @types.set(image=types.ImageResourceType,
                flavor=types.FlavorResourceType)
     @validation.image_valid_on_flavor("flavor", "image")
     @validation.required_services(consts.Service.NOVA)
