@@ -18,6 +18,7 @@ import os
 import mock
 from oslo_config import cfg
 import requests
+from six.moves.urllib import parse
 
 from rally import exceptions
 from rally.verification.tempest import config
@@ -27,7 +28,7 @@ from tests.unit import test
 CONF = cfg.CONF
 
 
-class ConfigTestCase(test.TestCase):
+class TempestConfigTestCase(test.TestCase):
 
     @mock.patch("rally.common.objects.deploy.db.deployment_get")
     @mock.patch("rally.osclients.Clients.services",
@@ -37,7 +38,7 @@ class ConfigTestCase(test.TestCase):
                 return_value=True)
     def setUp(self, mock_isfile, mock_clients_verified_keystone,
               mock_clients_services, mock_deployment_get):
-        super(ConfigTestCase, self).setUp()
+        super(TempestConfigTestCase, self).setUp()
 
         self.endpoint = {
             "username": "test",
@@ -52,22 +53,11 @@ class ConfigTestCase(test.TestCase):
         self.deployment = "fake_deployment"
         self.conf_generator = config.TempestConfig(self.deployment)
         self.conf_generator.clients.services = mock_clients_services
-        self.context = config.TempestResourcesContext(self.deployment,
-                                                      "/path/to/fake/conf")
-        self.context.conf.add_section("compute")
 
         keystone_patcher = mock.patch(
             "rally.osclients.Keystone._create_keystone_client")
         keystone_patcher.start()
         self.addCleanup(keystone_patcher.stop)
-
-    @staticmethod
-    def _remove_default_section(items):
-        # Getting items from config parser by specified section name
-        # returns also values from DEFAULT section
-        defaults = (("log_file", "tempest.log"), ("debug", "True"),
-                    ("use_stderr", "False"))
-        return [item for item in items if item not in defaults]
 
     @mock.patch("rally.verification.tempest.config.requests")
     @mock.patch("rally.verification.tempest.config.os.rename")
@@ -82,10 +72,24 @@ class ConfigTestCase(test.TestCase):
         mock_requests.get.assert_called_once_with(CONF.image.cirros_img_url,
                                                   stream=True)
 
+    @mock.patch("rally.verification.tempest.config.requests.get")
+    def test__download_cirros_image_connection_error(self, mock_requests_get):
+        mock_requests_get.side_effect = requests.ConnectionError()
+        self.assertRaises(exceptions.TempestConfigCreationFailure,
+                          self.conf_generator._download_cirros_image)
+
     @mock.patch("rally.verification.tempest.config.requests")
     def test__download_cirros_image_notfound(self, mock_requests):
         mock_result = mock.MagicMock()
         mock_result.status_code = 404
+        mock_requests.get.return_value = mock_result
+        self.assertRaises(exceptions.TempestConfigCreationFailure,
+                          self.conf_generator._download_cirros_image)
+
+    @mock.patch("rally.verification.tempest.config.requests")
+    def test__download_cirros_image_code_not_200_and_404(self, mock_requests):
+        mock_result = mock.MagicMock()
+        mock_result.status_code = 500
         mock_requests.get.return_value = mock_result
         self.assertRaises(exceptions.TempestConfigCreationFailure,
                           self.conf_generator._download_cirros_image)
@@ -118,9 +122,8 @@ class ConfigTestCase(test.TestCase):
                     ("s3_url", url),
                     ("http_socket_timeout", "30"),
                     ("s3_materials_path", s3_materials_path))
-        results = self._remove_default_section(
-            self.conf_generator.conf.items("boto"))
-        self.assertEqual(sorted(expected), sorted(results))
+        result = self.conf_generator.conf.items("boto")
+        self.assertIn(sorted(expected)[0], sorted(result))
 
     def test__configure_default(self):
         self.conf_generator._configure_default()
@@ -128,6 +131,13 @@ class ConfigTestCase(test.TestCase):
                     ("use_stderr", "False"))
         results = self.conf_generator.conf.items("DEFAULT")
         self.assertEqual(sorted(expected), sorted(results))
+
+    def test__configure_dashboard(self):
+        self.conf_generator._configure_dashboard()
+        url = "http://%s/" % parse.urlparse(self.endpoint["auth_url"]).hostname
+        expected = (("dashboard_url", url),)
+        result = self.conf_generator.conf.items("dashboard")
+        self.assertIn(sorted(expected)[0], sorted(result))
 
     def test__configure_identity(self):
         self.conf_generator._configure_identity()
@@ -141,52 +151,12 @@ class ConfigTestCase(test.TestCase):
             ("admin_domain_name", self.endpoint["admin_domain_name"]),
             ("uri", self.endpoint["auth_url"]),
             ("uri_v3", self.endpoint["auth_url"].replace("/v2.0/", "/v3")))
-        results = self._remove_default_section(
-            self.conf_generator.conf.items("identity"))
-        self.assertEqual(sorted(expected), sorted(results))
-
-    def test__configure_option_flavor(self):
-        mock_novaclient = mock.MagicMock()
-        mock_novaclient.flavors.create.side_effect = [
-            fakes.FakeFlavor(id="id1"), fakes.FakeFlavor(id="id2")]
-        mock_nova = mock.MagicMock()
-        mock_nova.client.Client.return_value = mock_novaclient
-        self.context.conf.set("compute", "flavor_ref", "")
-        self.context.conf.set("compute", "flavor_ref_alt", "")
-        with mock.patch.dict("sys.modules", {"novaclient": mock_nova}):
-            self.context._configure_option("flavor_ref",
-                                           mock_novaclient.flavors.create, 64)
-            self.context._configure_option("flavor_ref_alt",
-                                           mock_novaclient.flavors.create, 128)
-            self.assertEqual(mock_novaclient.flavors.create.call_count, 2)
-            expected = ("id1", "id2")
-            results = (self.context.conf.get("compute", "flavor_ref"),
-                       self.context.conf.get("compute", "flavor_ref_alt"))
-            self.assertEqual(sorted(expected), sorted(results))
-
-    @mock.patch("six.moves.builtins.open")
-    def test__configure_option_image(self, mock_open):
-        mock_glanceclient = mock.MagicMock()
-        mock_glanceclient.images.create.side_effect = [
-            fakes.FakeImage(id="id1"), fakes.FakeImage(id="id2")]
-        mock_glance = mock.MagicMock()
-        mock_glance.Client.return_value = mock_glanceclient
-        self.context.conf.set("compute", "image_ref", "")
-        self.context.conf.set("compute", "image_ref_alt", "")
-        with mock.patch.dict("sys.modules", {"glanceclient": mock_glance}):
-            self.context._configure_option("image_ref",
-                                           mock_glanceclient.images.create)
-            self.context._configure_option("image_ref_alt",
-                                           mock_glanceclient.images.create)
-            self.assertEqual(mock_glanceclient.images.create.call_count, 2)
-            expected = ("id1", "id2")
-            results = (self.context.conf.get("compute", "image_ref"),
-                       self.context.conf.get("compute", "image_ref_alt"))
-            self.assertEqual(sorted(expected), sorted(results))
+        result = self.conf_generator.conf.items("identity")
+        self.assertIn(sorted(expected)[0], sorted(result))
 
     def test__configure_network_if_neutron(self):
-        fake_neutronclient = mock.MagicMock()
-        fake_neutronclient.list_networks.return_value = {
+        mock_neutronclient = mock.MagicMock()
+        mock_neutronclient.list_networks.return_value = {
             "networks": [
                 {
                     "status": "ACTIVE",
@@ -196,15 +166,14 @@ class ConfigTestCase(test.TestCase):
             ]
         }
         mock_neutron = mock.MagicMock()
-        mock_neutron.client.Client.return_value = fake_neutronclient
+        mock_neutron.client.Client.return_value = mock_neutronclient
         with mock.patch.dict("sys.modules", {"neutronclient.neutron":
                                              mock_neutron}):
             self.conf_generator.available_services = ["neutron"]
             self.conf_generator._configure_network()
             expected = (("public_network_id", "test_id"),)
-            results = self._remove_default_section(
-                self.conf_generator.conf.items("network"))
-            self.assertEqual(sorted(expected), sorted(results))
+            result = self.conf_generator.conf.items("network")
+            self.assertIn(sorted(expected)[0], sorted(result))
 
     def test__configure_network_if_nova(self):
         self.conf_generator.available_services = ["nova"]
@@ -223,6 +192,25 @@ class ConfigTestCase(test.TestCase):
                              self.conf_generator.conf.get(
                                  "compute", "network_for_ssh"))
 
+    def test__configure_network_feature_enabled(self):
+        mock_neutronclient = mock.MagicMock()
+        mock_neutronclient.list_ext.return_value = {
+            "extensions": [
+                {"alias": "dvr"},
+                {"alias": "extra_dhcp_opt"},
+                {"alias": "extraroute"}
+            ]
+        }
+        mock_neutron = mock.MagicMock()
+        mock_neutron.client.Client.return_value = mock_neutronclient
+        with mock.patch.dict("sys.modules",
+                             {"neutronclient.neutron": mock_neutron}):
+            self.conf_generator.available_services = ["neutron"]
+            self.conf_generator._configure_network_feature_enabled()
+            expected = (("api_extensions", "dvr,extra_dhcp_opt,extraroute"),)
+            result = self.conf_generator.conf.items("network-feature-enabled")
+            self.assertIn(sorted(expected)[0], sorted(result))
+
     @mock.patch("rally.verification.tempest.config.os.path.exists",
                 return_value=False)
     @mock.patch("rally.verification.tempest.config.os.makedirs")
@@ -232,9 +220,24 @@ class ConfigTestCase(test.TestCase):
             self.conf_generator.data_dir, "lock_files_%s" % self.deployment)
         mock_makedirs.assert_called_once_with(lock_path)
         expected = (("lock_path", lock_path),)
-        results = self._remove_default_section(
-            self.conf_generator.conf.items("oslo_concurrency"))
-        self.assertEqual(sorted(expected), sorted(results))
+        result = self.conf_generator.conf.items("oslo_concurrency")
+        self.assertIn(sorted(expected)[0], sorted(result))
+
+    def test__configure_object_storage(self):
+        self.conf_generator._configure_object_storage()
+        expected = (
+            ("operator_role", CONF.role.swift_operator_role),
+            ("reseller_admin_role", CONF.role.swift_reseller_admin_role))
+        result = self.conf_generator.conf.items("object-storage")
+        self.assertIn(sorted(expected)[0], sorted(result))
+
+    def test__configure_scenario(self):
+        self.conf_generator._configure_scenario()
+        expected = (
+            ("img_dir", self.conf_generator.data_dir),
+            ("img_file", config.IMAGE_NAME))
+        result = self.conf_generator.conf.items("scenario")
+        self.assertIn(sorted(expected)[0], sorted(result))
 
     @mock.patch("rally.verification.tempest.config.requests")
     def test__configure_service_available(self, mock_requests):
@@ -254,9 +257,8 @@ class ConfigTestCase(test.TestCase):
                     ("cinder", "True"), ("nova", "True"),
                     ("glance", "True"), ("horizon", "False"),
                     ("sahara", "True"))
-        options = self._remove_default_section(
-            self.conf_generator.conf.items("service_available"))
-        self.assertEqual(sorted(expected), sorted(options))
+        result = self.conf_generator.conf.items("service_available")
+        self.assertIn(sorted(expected)[0], sorted(result))
 
     @mock.patch("rally.verification.tempest.config.requests")
     def test__configure_service_available_horizon(self, mock_requests):
@@ -290,6 +292,17 @@ class ConfigTestCase(test.TestCase):
                          self.conf_generator.conf.get("validation",
                                                       "connect_method"))
 
+    @mock.patch("rally.verification.tempest.config._write_config")
+    @mock.patch("inspect.getmembers")
+    def test_generate(self, mock_inspect_getmembers, mock__write_config):
+        configure_something_method = mock.MagicMock()
+        mock_inspect_getmembers.return_value = [("_configure_something",
+                                                 configure_something_method)]
+
+        self.conf_generator.generate("/path/to/fake/conf")
+        self.assertEqual(configure_something_method.call_count, 1)
+        self.assertEqual(mock__write_config.call_count, 1)
+
     @mock.patch("six.moves.builtins.open",
                 side_effect=mock.mock_open(), create=True)
     def test__write_config(self, mock_open):
@@ -298,3 +311,148 @@ class ConfigTestCase(test.TestCase):
         config._write_config(conf_path, conf_data)
         mock_open.assert_called_once_with(conf_path, "w+")
         conf_data.write.assert_called_once_with(mock_open.side_effect())
+
+
+class TempestResourcesContextTestCase(test.TestCase):
+
+    @mock.patch("rally.common.objects.deploy.db.deployment_get")
+    @mock.patch("rally.osclients.Clients.services",
+                return_value={"test_service_type": "test_service"})
+    @mock.patch("rally.osclients.Clients.verified_keystone")
+    def setUp(self, mock_clients_verified_keystone,
+              mock_clients_services, mock_deployment_get):
+        super(TempestResourcesContextTestCase, self).setUp()
+
+        endpoint = {
+            "username": "test",
+            "tenant_name": "test",
+            "password": "test",
+            "auth_url": "http://test/v2.0/",
+            "permission": "admin",
+            "admin_domain_name": "Default"
+        }
+        mock_deployment_get.return_value = {"admin": endpoint}
+
+        self.context = config.TempestResourcesContext("fake_deployment",
+                                                      "/fake/path/to/config")
+        self.context.clients = mock.MagicMock()
+        self.context.conf.add_section("compute")
+
+        keystone_patcher = mock.patch(
+            "rally.osclients.Keystone._create_keystone_client")
+        keystone_patcher.start()
+        self.addCleanup(keystone_patcher.stop)
+
+    @mock.patch("rally.plugins.openstack.wrappers."
+                "network.NeutronWrapper.create_network")
+    @mock.patch("six.moves.builtins.open", side_effect=mock.mock_open())
+    def test_options_configured_manually(
+            self, mock_open, mock_neutron_wrapper_create_network):
+        self.context.available_services = ["glance", "nova", "neutron"]
+
+        self.context.conf.set("compute", "image_ref", "id1")
+        self.context.conf.set("compute", "image_ref_alt", "id2")
+        self.context.conf.set("compute", "flavor_ref", "id3")
+        self.context.conf.set("compute", "flavor_ref_alt", "id4")
+        self.context.conf.set("compute", "fixed_network_name", "name1")
+
+        self.context.__enter__()
+
+        glanceclient = self.context.clients.glance()
+        novaclient = self.context.clients.nova()
+
+        self.assertEqual(glanceclient.images.create.call_count, 0)
+        self.assertEqual(novaclient.flavors.create.call_count, 0)
+        self.assertEqual(mock_neutron_wrapper_create_network.call_count, 0)
+
+    def test__create_tempest_roles(self):
+        role1 = CONF.role.swift_operator_role
+        role2 = CONF.role.swift_reseller_admin_role
+        role3 = CONF.role.heat_stack_owner_role
+        role4 = CONF.role.heat_stack_user_role
+
+        client = self.context.clients.verified_keystone()
+        client.roles.list.return_value = [fakes.FakeRole(name=role1),
+                                          fakes.FakeRole(name=role2)]
+        client.roles.create.side_effect = [fakes.FakeFlavor(name=role3),
+                                           fakes.FakeFlavor(name=role4)]
+
+        self.context._create_tempest_roles()
+        self.assertEqual(client.roles.create.call_count, 2)
+
+        created_roles = [role.name for role in self.context._created_roles]
+        self.assertIn(role3, created_roles)
+        self.assertIn(role4, created_roles)
+
+    # We can choose any option to test the '_configure_option' method. So let's
+    # configure the 'flavor_ref' option.
+    def test__configure_option(self):
+        create_method = mock.MagicMock()
+        create_method.side_effect = [fakes.FakeFlavor(id="id1")]
+
+        self.context.conf.set("compute", "flavor_ref", "")
+        self.context._configure_option("flavor_ref", create_method, 64)
+        self.assertEqual(create_method.call_count, 1)
+
+        result = self.context.conf.get("compute", "flavor_ref")
+        self.assertEqual("id1", result)
+
+    @mock.patch("six.moves.builtins.open")
+    def test__create_image(self, mock_open):
+        client = self.context.clients.glance()
+        client.images.create.side_effect = [fakes.FakeImage(id="id1")]
+
+        image = self.context._create_image()
+        self.assertEqual("id1", image.id)
+        self.assertEqual("id1", self.context._created_images[0].id)
+
+    def test__create_flavor(self):
+        client = self.context.clients.nova()
+        client.flavors.create.side_effect = [fakes.FakeFlavor(id="id1")]
+
+        flavor = self.context._create_flavor(64)
+        self.assertEqual("id1", flavor.id)
+        self.assertEqual("id1", self.context._created_flavors[0].id)
+
+    @mock.patch("rally.plugins.openstack.wrappers."
+                "network.NeutronWrapper.create_network")
+    def test__create_network_resources(
+            self, mock_neutron_wrapper_create_network):
+        mock_neutron_wrapper_create_network.side_effect = [
+            fakes.FakeNetwork(id="id1")]
+
+        network = self.context._create_network_resources()
+        self.assertEqual("id1", network.id)
+        self.assertEqual("id1", self.context._created_networks[0].id)
+
+    def test__cleanup_roles(self):
+        self.context._created_roles = [mock.MagicMock(), mock.MagicMock()]
+
+        self.context._cleanup_roles()
+        for role in self.context._created_roles:
+            self.assertEqual(role.delete.call_count, 1)
+
+    def test__cleanup_resource(self):
+        created_flavors = [mock.MagicMock(id="id1"), mock.MagicMock(id="id2")]
+        self.context.conf.set("compute", "flavor_ref", "id1")
+        self.context.conf.set("compute", "flavor_ref_alt", "id2")
+
+        self.context._cleanup_resource("flavor", created_flavors)
+        for flavor in self.context._created_flavors:
+            self.assertEqual(flavor.delete.call_count, 1)
+
+        self.assertEqual("", self.context.conf.get("compute", "flavor_ref"))
+        self.assertEqual("", self.context.conf.get("compute",
+                                                   "flavor_ref_alt"))
+
+    @mock.patch("rally.plugins.openstack.wrappers."
+                "network.NeutronWrapper.delete_network")
+    def test__cleanup_network_resources(
+            self, mock_neutron_wrapper_delete_network):
+        self.context._created_networks = [{"name": "net-12345"}]
+        self.context.conf.set("compute", "fixed_network_name", "net-12345")
+
+        self.context._cleanup_network_resources()
+        self.assertEqual(mock_neutron_wrapper_delete_network.call_count, 1)
+        self.assertEqual("", self.context.conf.get("compute",
+                                                   "fixed_network_name"))
