@@ -67,12 +67,12 @@ python $BASE/new/rally/rally/ui/utils.py render\
     tests/ci/rally-gate/index.mako > rally-plot/extra/index.html
 cp $TASK rally-plot/task.txt
 tar -czf rally-plot/plugins.tar.gz -C $RALLY_PLUGINS_DIR .
-rally task report --out rally-plot/results.html
-gzip -9 rally-plot/results.html
 rally task results | python -m json.tool > rally-plot/results.json
 gzip -9 rally-plot/results.json
 rally task detailed > rally-plot/detailed.txt
 gzip -9 rally-plot/detailed.txt
 rally task detailed --iterations-data > rally-plot/detailed_with_iterations.txt
 gzip -9 rally-plot/detailed_with_iterations.txt
+rally task report --out rally-plot/results.html
+gzip -9 rally-plot/results.html
 rally task sla_check | tee rally-plot/sla.txt
