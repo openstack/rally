@@ -41,11 +41,15 @@ declare -a RESULTS
 rally --rally-debug verify install > ${RESULTS_DIR}/tempest_installation.txt 2>&1
 RESULTS+="install=$(do_status $?) "
 
-rally --rally-debug verify genconfig --tempest-config ${RESULTS_DIR}/tempest.conf > ${RESULTS_DIR}/tempest_config_generation.txt 2>&1
+rally --rally-debug verify genconfig > ${RESULTS_DIR}/tempest_config_generation.txt 2>&1
 RESULTS+="genconfig=$(do_status $?) "
+
+rally --rally-debug verify showconfig > ${RESULTS_DIR}/tempest_config.txt 2>&1
+RESULTS+="showconfig=$(do_status $?) "
 
 gzip -9 ${RESULTS_DIR}/tempest_installation.txt
 gzip -9 ${RESULTS_DIR}/tempest_config_generation.txt
+gzip -9 ${RESULTS_DIR}/tempest_config.txt
 
 function do_verification {
     OUTPUT_FILE=${RESULTS_DIR}/${1}_verification_${2}_set.txt

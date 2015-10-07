@@ -323,7 +323,7 @@ class Verification(object):
         :param tempest_config: User specified Tempest config file
         :param system_wide_install: Use virtualenv else run tests in local
                                     environment
-        :return: Tempest object
+        :returns: Tempest object
         """
         verifier = tempest.Tempest(deployment_uuid, verification=verification,
                                    tempest_config=tempest_config,
@@ -419,3 +419,18 @@ class Verification(object):
         verifier = cls._create_verifier(deployment_uuid,
                                         tempest_config=tempest_config)
         verifier.generate_config_file(override)
+
+    @classmethod
+    def show_config_info(cls, deployment):
+        """Show information about configuration file of Tempest.
+
+        :param deployment: UUID or name of a deployment
+        """
+        deployment_uuid = objects.Deployment.get(deployment)["uuid"]
+        verifier = cls._create_verifier(deployment_uuid)
+        if not verifier.is_configured():
+            verifier.generate_config_file()
+
+        with open(verifier.config_file, "rb") as conf:
+            return {"conf_data": conf.read(),
+                    "conf_path": verifier.config_file}

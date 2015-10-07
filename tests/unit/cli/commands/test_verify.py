@@ -434,3 +434,10 @@ class VerifyCommandsTestCase(test.TestCase):
         self.verify.reinstall(deployment_uuid, tempest_conf, source)
         mock_verification_reinstall_tempest.assert_called_once_with(
             deployment_uuid, tempest_conf, source)
+
+    @mock.patch("rally.api.Verification.show_config_info")
+    def test_showconfig(self, mock_verification_show_config_info):
+        deployment_uuid = "571368f4-20dd-443c-a188-4e931cd2abe6"
+        self.verify.showconfig(deployment_uuid)
+        mock_verification_show_config_info.assert_called_once_with(
+            deployment_uuid)

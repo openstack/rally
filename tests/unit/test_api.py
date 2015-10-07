@@ -427,3 +427,26 @@ class VerificationAPITestCase(BaseDeploymentTestCase):
         mock_tempest.return_value = self.tempest
         api.Verification.configure_tempest(self.deployment_uuid)
         self.tempest.generate_config_file.assert_called_once_with(False)
+
+    @mock.patch("six.moves.builtins.open", side_effect=mock.mock_open())
+    @mock.patch("rally.common.objects.Deployment.get")
+    @mock.patch("rally.verification.tempest.tempest.Tempest")
+    def test_show_config_info_when_tempest_configured(
+            self, mock_tempest, mock_deployment_get, mock_open):
+        self.tempest.is_configured.return_value = True
+        self.tempest.config_file = "/path/to/fake/conf"
+        mock_tempest.return_value = self.tempest
+        api.Verification.show_config_info(self.deployment_uuid)
+        mock_open.assert_called_once_with("/path/to/fake/conf", "rb")
+
+    @mock.patch("six.moves.builtins.open", side_effect=mock.mock_open())
+    @mock.patch("rally.common.objects.Deployment.get")
+    @mock.patch("rally.verification.tempest.tempest.Tempest")
+    def test_show_config_info_when_tempest_not_configured(
+            self, mock_tempest, mock_deployment_get, mock_open):
+        self.tempest.is_configured.return_value = False
+        self.tempest.config_file = "/path/to/fake/conf"
+        mock_tempest.return_value = self.tempest
+        api.Verification.show_config_info(self.deployment_uuid)
+        self.tempest.generate_config_file.assert_called_once_with()
+        mock_open.assert_called_once_with("/path/to/fake/conf", "rb")

@@ -374,3 +374,15 @@ class VerifyCommands(object):
         :param source: New path/URL to repo to pull Tempest from
         """
         api.Verification.reinstall_tempest(deployment, tempest_config, source)
+
+    @cliutils.args("--deployment", type=str, dest="deployment",
+                   required=False, help="UUID or name of a deployment")
+    @envutils.with_default_deployment(cli_arg_name="deployment")
+    def showconfig(self, deployment=None):
+        """Show configuration file of Tempest.
+
+        :param deployment: UUID or name of a deployment
+        """
+        conf_info = api.Verification.show_config_info(deployment)
+        print("Tempest config file: %s" % conf_info["conf_path"])
+        print("\n" + conf_info["conf_data"])
