@@ -383,9 +383,9 @@ class MainStatsTableTestCase(test.TestCase):
             "expected": {
                 "cols": MAIN_STATS_TABLE_COLUMNS,
                 "rows": [
-                    ["foo", "n/a", "n/a", "n/a", "n/a", "n/a", "n/a", "0.0%",
+                    ["foo", "n/a", "n/a", "n/a", "n/a", "n/a", "n/a", "n/a",
                      2],
-                    ["total", "n/a", "n/a", "n/a", "n/a", "n/a", "n/a", "0.0%",
+                    ["total", "n/a", "n/a", "n/a", "n/a", "n/a", "n/a", "n/a",
                      2],
                 ]
             }
@@ -421,6 +421,20 @@ class MainStatsTableTestCase(test.TestCase):
                     ["foo", 1.0, 2.0, 2.8, 2.9, 3.0, 2.0, "75.0%", 4],
                     ["bar", 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, "75.0%", 4],
                     ["total", 10.0, 20.0, 28.0, 29.0, 30.0, 20.0, "75.0%", 4]
+                ]
+            }
+        },
+        {
+            "info": {
+                "iterations_count": 0,
+                "atomic": costilius.OrderedDict()
+            },
+            "data": [],
+            "expected": {
+                "cols": MAIN_STATS_TABLE_COLUMNS,
+                "rows": [
+                    ["total", "n/a", "n/a", "n/a", "n/a", "n/a", "n/a", "n/a",
+                     0]
                 ]
             }
         }
