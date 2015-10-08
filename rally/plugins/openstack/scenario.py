@@ -31,11 +31,21 @@ class OpenStackScenario(scenario.Scenario):
     def __init__(self, context=None, admin_clients=None, clients=None):
         super(OpenStackScenario, self).__init__(context)
         if context:
+            api_info = {}
+            if "api_versions" in context.get("config", {}):
+                api_versions = context["config"]["api_versions"]
+                for service in api_versions:
+                    api_info[service] = {
+                        "version": api_versions[service].get("version"),
+                        "service_type": api_versions[service].get(
+                            "service_type")}
             if "admin" in context:
                 self._admin_clients = osclients.Clients(
-                    context["admin"]["endpoint"])
+                    context["admin"]["endpoint"], api_info)
             if "user" in context:
-                self._clients = osclients.Clients(context["user"]["endpoint"])
+                self._clients = osclients.Clients(context["user"]["endpoint"],
+                                                  api_info)
+
         if admin_clients:
             if hasattr(self, "_admin_clients"):
                 raise ValueError(

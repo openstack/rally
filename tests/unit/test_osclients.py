@@ -42,7 +42,7 @@ class OSClientTestCase(test.TestCase):
         class FakeClient(osclients.OSClient):
             create_client = mock.MagicMock()
 
-        fake_client = FakeClient(mock.MagicMock(), {})
+        fake_client = FakeClient(mock.MagicMock(), {}, {})
         self.assertEqual(default_service_type,
                          fake_client.choose_service_type())
         self.assertEqual("foo",
@@ -55,7 +55,8 @@ class CachedTestCase(test.TestCase):
         clients = osclients.Clients(mock.MagicMock())
         client_name = "CachedTestCase.test_cached"
         fake_client = osclients.configure(client_name)(
-            osclients.OSClient(clients.endpoint, clients.cache))
+            osclients.OSClient(clients.endpoint, clients.api_info,
+                               clients.cache))
         fake_client.create_client = mock.MagicMock()
 
         self.assertEqual({}, clients.cache)
@@ -133,7 +134,7 @@ class OSClientsTestCase(test.TestCase):
         super(OSClientsTestCase, self).setUp()
         self.endpoint = objects.Endpoint("http://auth_url", "use", "pass",
                                          "tenant")
-        self.clients = osclients.Clients(self.endpoint)
+        self.clients = osclients.Clients(self.endpoint, {})
 
         self.fake_keystone = fakes.FakeKeystoneClient()
         self.fake_keystone.auth_token = mock.MagicMock()
@@ -168,7 +169,7 @@ class OSClientsTestCase(test.TestCase):
     @mock.patch("keystoneclient.session.Session")
     def test_get_session(self, mock_session, mock_dummy_client__get_endpoint):
         # Use DummyClient since if not the abc meta kicks in
-        osc = DummyClient(self.endpoint, {})
+        osc = DummyClient(self.endpoint, {}, {})
 
         with mock.patch.object(token_endpoint, "Token") as token:
             osc._get_session()
@@ -185,7 +186,7 @@ class OSClientsTestCase(test.TestCase):
     def test_get_session_with_endpoint(
             self, mock_session, mock_dummy_client__get_endpoint):
         # Use DummyClient since if not the abc meta kicks in
-        osc = DummyClient(self.endpoint, {})
+        osc = DummyClient(self.endpoint, {}, {})
 
         fake_endpoint = mock.Mock()
         with mock.patch.object(token_endpoint, "Token") as token:
@@ -203,7 +204,7 @@ class OSClientsTestCase(test.TestCase):
     @mock.patch("keystoneclient.session.Session")
     def test_get_session_with_auth(self, mock_session):
         # Use DummyClient since if not the abc meta kicks in
-        osc = DummyClient(self.endpoint, {})
+        osc = DummyClient(self.endpoint, {}, {})
 
         fake_auth = mock.Mock()
         osc._get_session(auth=fake_auth)
@@ -471,7 +472,7 @@ class OSClientsTestCase(test.TestCase):
                 "project_name": self.endpoint.tenant_name,
                 "auth_url": self.endpoint.auth_url
             }
-            mock_sahara.client.Client.assert_called_once_with("1.1", **kw)
+            mock_sahara.client.Client.assert_called_once_with(1.1, **kw)
             self.assertEqual(fake_sahara, self.clients.cache["sahara"])
 
     def test_zaqar(self):
