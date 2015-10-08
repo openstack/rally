@@ -130,7 +130,7 @@ class NovaFloatingIpsBulk(SynchronizedDeletion, base.ResourceManager):
 
 
 @base.resource("nova", "networks", order=next(_nova_order),
-               admin_required=True)
+               admin_required=True, tenant_resource=True)
 class NovaNetworks(SynchronizedDeletion, base.ResourceManager):
 
     def list(self):
