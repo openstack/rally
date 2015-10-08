@@ -350,7 +350,7 @@ class CinderServersTestCase(test.ScenarioTestCase):
         scenario._delete_snapshot = mock.MagicMock()
 
         scenario.create_nested_snapshots_and_attach_volume(
-            nested_level={"min": 2, "max": 2})
+            nested_level=2)
 
         vol_delete_calls = [mock.call(fake_volume2), mock.call(fake_volume1)]
         snap_delete_calls = [mock.call(fake_snapshot2),
@@ -377,16 +377,16 @@ class CinderServersTestCase(test.ScenarioTestCase):
         scenario._create_snapshot = mock.MagicMock(return_value=fake_snapshot)
         scenario._delete_snapshot = mock.MagicMock()
 
-        scenario.create_nested_snapshots_and_attach_volume()
+        scenario.create_nested_snapshots_and_attach_volume(nested_level=2)
 
-        # NOTE: Two calls for random size and nested level
+        # NOTE: One call for random size
         random_call_count = mock_random.randint.call_count
-        self.assertEqual(2, random_call_count)
+        self.assertEqual(1, random_call_count)
 
         calls = scenario._create_volume.mock_calls
-        expected_calls = [mock.call(3),
-                          mock.call(3, snapshot_id=fake_snapshot.id),
-                          mock.call(3, snapshot_id=fake_snapshot.id)]
+        expected_calls = [mock.call(3)]
+        expected_calls.extend(
+            [mock.call(3, snapshot_id=fake_snapshot.id)])
         self.assertEqual(expected_calls, calls)
 
     def test_create_volume_backup(self):
