@@ -23,6 +23,7 @@ import six
 
 from rally.common.i18n import _
 from rally.common import log as logging
+from rally.common import utils
 from rally import consts
 from rally import exceptions
 
@@ -100,6 +101,7 @@ def manager_list_size(sizes):
     return _list
 
 
+@utils.log_deprecated("Deprecated, use wait_for_status instead.", "0.1.2")
 def wait_for(resource, is_ready=None, ready_statuses=None,
              failure_statuses=None, status_attr="status", update_resource=None,
              timeout=60, check_interval=1):
@@ -146,6 +148,7 @@ def wait_for(resource, is_ready=None, ready_statuses=None,
                                check_interval=check_interval)
 
 
+@utils.log_deprecated("Deprecated, use wait_for_status instead.", "0.1.2")
 def wait_is_ready(resource, is_ready, update_resource=None,
                   timeout=60, check_interval=1):
 
@@ -171,7 +174,7 @@ def wait_is_ready(resource, is_ready, update_resource=None,
 
 def wait_for_status(resource, ready_statuses, failure_statuses=None,
                     status_attr="status", update_resource=None,
-                    timeout=60, check_interval=1):
+                    timeout=60, check_interval=1, check_deletion=False):
 
     resource_repr = getattr(resource, "name", repr(resource))
     if not isinstance(ready_statuses, (set, list, tuple)):
@@ -205,7 +208,13 @@ def wait_for_status(resource, ready_statuses, failure_statuses=None,
     latest_status_update = start
 
     while True:
-        resource = update_resource(resource)
+        try:
+            resource = update_resource(resource)
+        except exceptions.GetResourceNotFound:
+            if check_deletion:
+                return
+            else:
+                raise
         status = get_status(resource, status_attr)
 
         if status != latest_status:
@@ -238,6 +247,7 @@ def wait_for_status(resource, ready_statuses, failure_statuses=None,
                 resource_status=get_status(resource))
 
 
+@utils.log_deprecated("Deprecated, use wait_for_status instead.", "0.1.2")
 def wait_for_delete(resource, update_resource=None, timeout=60,
                     check_interval=1):
     """Wait for the full deletion of resource.
