@@ -173,8 +173,10 @@ class CinderScenario(scenario.OpenStackScenario):
         :param volume: volume object
         """
         volume.delete()
-        bench_utils.wait_for_delete(
+        bench_utils.wait_for_status(
             volume,
+            ready_statuses=["deleted"],
+            check_deletion=True,
             update_resource=bench_utils.get_from_manager(),
             timeout=CONF.benchmark.cinder_volume_delete_timeout,
             check_interval=CONF.benchmark.cinder_volume_delete_poll_interval
@@ -282,8 +284,10 @@ class CinderScenario(scenario.OpenStackScenario):
         :param snapshot: snapshot object
         """
         snapshot.delete()
-        bench_utils.wait_for_delete(
+        bench_utils.wait_for_status(
             snapshot,
+            ready_statuses=["deleted"],
+            check_deletion=True,
             update_resource=bench_utils.get_from_manager(),
             timeout=CONF.benchmark.cinder_volume_delete_timeout,
             check_interval=CONF.benchmark.cinder_volume_delete_poll_interval
@@ -314,8 +318,10 @@ class CinderScenario(scenario.OpenStackScenario):
         :param backup: backup instance
         """
         backup.delete()
-        bench_utils.wait_for_delete(
+        bench_utils.wait_for_status(
             backup,
+            ready_statuses=["deleted"],
+            check_deletion=True,
             update_resource=bench_utils.get_from_manager(),
             timeout=CONF.benchmark.cinder_volume_delete_timeout,
             check_interval=CONF.benchmark.cinder_volume_delete_poll_interval

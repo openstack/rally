@@ -212,8 +212,10 @@ class HeatScenario(scenario.OpenStackScenario):
         :param stack: stack object
         """
         stack.delete()
-        utils.wait_for_delete(
+        utils.wait_for_status(
             stack,
+            ready_statuses=["deleted"],
+            check_deletion=True,
             update_resource=utils.get_from_manager(),
             timeout=CONF.benchmark.heat_stack_delete_timeout,
             check_interval=CONF.benchmark.heat_stack_delete_poll_interval)

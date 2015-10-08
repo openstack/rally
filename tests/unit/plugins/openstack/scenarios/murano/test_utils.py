@@ -53,8 +53,10 @@ class MuranoScenarioTestCase(test.ScenarioTestCase):
         )
 
         config = CONF.benchmark
-        self.mock_wait_for_delete.mock.assert_called_once_with(
+        self.mock_wait_for_status.mock.assert_called_once_with(
             environment,
+            ready_statuses=["deleted"],
+            check_deletion=True,
             update_resource=self.mock_get_from_manager.mock.return_value,
             timeout=config.murano_delete_environment_timeout,
             check_interval=config.murano_delete_environment_check_interval)

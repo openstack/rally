@@ -113,8 +113,10 @@ class HeatScenarioTestCase(test.ScenarioTestCase):
         scenario = utils.HeatScenario(self.context)
         scenario._delete_stack(self.stack)
         self.stack.delete.assert_called_once_with()
-        self.mock_wait_for_delete.mock.assert_called_once_with(
+        self.mock_wait_for_status.mock.assert_called_once_with(
             self.stack,
+            ready_statuses=["deleted"],
+            check_deletion=True,
             update_resource=self.mock_get_from_manager.mock.return_value,
             check_interval=CONF.benchmark.heat_stack_delete_poll_interval,
             timeout=CONF.benchmark.heat_stack_delete_timeout)

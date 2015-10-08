@@ -192,8 +192,10 @@ class NovaNetworkWrapper(NetworkWrapper):
         self.client.floating_ips.delete(fip_id)
         if not wait:
             return
-        task_utils.wait_for_delete(
+        task_utils.wait_for_status(
             fip_id,
+            ready_statuses=["deleted"],
+            check_deletion=True,
             update_resource=lambda i: self._get_floating_ip(i, do_raise=True))
 
     def supports_extension(self, extension):

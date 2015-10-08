@@ -142,8 +142,10 @@ class CinderScenarioTestCase(test.ScenarioTestCase):
         cinder = mock.Mock()
         self.scenario._delete_volume(cinder)
         cinder.delete.assert_called_once_with()
-        self.mock_wait_for_delete.mock.assert_called_once_with(
+        self.mock_wait_for_status.mock.assert_called_once_with(
             cinder,
+            ready_statuses=["deleted"],
+            check_deletion=True,
             update_resource=self.mock_get_from_manager.mock.return_value,
             timeout=cfg.CONF.benchmark.cinder_volume_create_timeout,
             check_interval=cfg.CONF.benchmark
@@ -244,8 +246,10 @@ class CinderScenarioTestCase(test.ScenarioTestCase):
         snapshot = mock.Mock()
         self.scenario._delete_snapshot(snapshot)
         snapshot.delete.assert_called_once_with()
-        self.mock_wait_for_delete.mock.assert_called_once_with(
+        self.mock_wait_for_status.mock.assert_called_once_with(
             snapshot,
+            ready_statuses=["deleted"],
+            check_deletion=True,
             update_resource=self.mock_get_from_manager.mock.return_value,
             timeout=cfg.CONF.benchmark.cinder_volume_create_timeout,
             check_interval=cfg.CONF.benchmark
@@ -274,8 +278,10 @@ class CinderScenarioTestCase(test.ScenarioTestCase):
         backup = mock.Mock()
         self.scenario._delete_backup(backup)
         backup.delete.assert_called_once_with()
-        self.mock_wait_for_delete.mock.assert_called_once_with(
+        self.mock_wait_for_status.mock.assert_called_once_with(
             backup,
+            ready_statuses=["deleted"],
+            check_deletion=True,
             update_resource=self.mock_get_from_manager.mock.return_value,
             timeout=cfg.CONF.benchmark.cinder_volume_create_timeout,
             check_interval=cfg.CONF.benchmark

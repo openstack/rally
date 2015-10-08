@@ -120,8 +120,10 @@ class GlanceScenario(scenario.OpenStackScenario):
         :param image: Image object
         """
         image.delete()
-        utils.wait_for_delete(
+        utils.wait_for_status(
             image,
+            ready_statuses=["deleted"],
+            check_deletion=True,
             update_resource=utils.get_from_manager(),
             timeout=CONF.benchmark.glance_image_delete_timeout,
             check_interval=CONF.benchmark.glance_image_delete_poll_interval)

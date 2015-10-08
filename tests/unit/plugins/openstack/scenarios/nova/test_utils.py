@@ -258,8 +258,10 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
         nova_scenario = utils.NovaScenario(context=self.context)
         nova_scenario._delete_server(self.server)
         self.server.delete.assert_called_once_with()
-        self.mock_wait_for_delete.mock.assert_called_once_with(
+        self.mock_wait_for_status.mock.assert_called_once_with(
             self.server,
+            ready_statuses=["deleted"],
+            check_deletion=True,
             update_resource=self.mock_get_from_manager.mock.return_value,
             check_interval=CONF.benchmark.nova_server_delete_poll_interval,
             timeout=CONF.benchmark.nova_server_delete_timeout)
@@ -271,8 +273,10 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
         nova_scenario = utils.NovaScenario(context=self.context)
         nova_scenario._delete_server(self.server, force=True)
         self.server.force_delete.assert_called_once_with()
-        self.mock_wait_for_delete.mock.assert_called_once_with(
+        self.mock_wait_for_status.mock.assert_called_once_with(
             self.server,
+            ready_statuses=["deleted"],
+            check_deletion=True,
             update_resource=self.mock_get_from_manager.mock.return_value,
             check_interval=CONF.benchmark.nova_server_delete_poll_interval,
             timeout=CONF.benchmark.nova_server_delete_timeout)
@@ -394,6 +398,8 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
         for server in servers:
             expected.append(mock.call(
                 server,
+                ready_statuses=["deleted"],
+                check_deletion=True,
                 update_resource=self.mock_get_from_manager.mock.return_value,
                 check_interval=check_interval,
                 timeout=CONF.benchmark.nova_server_delete_timeout))
@@ -404,7 +410,7 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
                 server.delete.assert_called_once_with()
                 self.assertFalse(server.force_delete.called)
 
-        self.mock_wait_for_delete.mock.assert_has_calls(expected)
+        self.mock_wait_for_status.mock.assert_has_calls(expected)
         timer_name = "nova.%sdelete_servers" % ("force_" if force else "")
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        timer_name)
@@ -419,8 +425,10 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
         nova_scenario = utils.NovaScenario(context=self.context)
         nova_scenario._delete_image(self.image)
         self.image.delete.assert_called_once_with()
-        self.mock_wait_for_delete.mock.assert_called_once_with(
+        self.mock_wait_for_status.mock.assert_called_once_with(
             self.image,
+            ready_statuses=["deleted"],
+            check_deletion=True,
             update_resource=self.mock_get_from_manager.mock.return_value,
             check_interval=CONF.benchmark.
             nova_server_image_delete_poll_interval,

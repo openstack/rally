@@ -110,10 +110,13 @@ class ScenarioTestCase(TestCase):
                 self.benchmark_utils + ".wait_for")
             self.mock_wait_for_delete = mockpatch.Patch(
                 self.benchmark_utils + ".wait_for_delete")
+            self.mock_wait_for_status = mockpatch.Patch(
+                self.benchmark_utils + ".wait_for_status")
             self.useFixture(self.mock_resource_is)
             self.useFixture(self.mock_get_from_manager)
             self.useFixture(self.mock_wait_for)
             self.useFixture(self.mock_wait_for_delete)
+            self.useFixture(self.mock_wait_for_status)
 
         self.mock_sleep = mockpatch.Patch("time.sleep")
         self.useFixture(self.mock_sleep)

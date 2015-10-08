@@ -79,8 +79,10 @@ class MuranoScenario(scenario.OpenStackScenario):
         self.clients("murano").environments.delete(environment.id)
 
         config = CONF.benchmark
-        utils.wait_for_delete(
+        utils.wait_for_status(
             environment,
+            ready_statuses=["deleted"],
+            check_deletion=True,
             update_resource=utils.get_from_manager(),
             timeout=config.murano_delete_environment_timeout,
             check_interval=config.murano_delete_environment_check_interval

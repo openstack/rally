@@ -390,8 +390,10 @@ class NovaScenario(scenario.OpenStackScenario):
             else:
                 server.delete()
 
-            utils.wait_for_delete(
+            utils.wait_for_status(
                 server,
+                ready_statuses=["deleted"],
+                check_deletion=True,
                 update_resource=utils.get_from_manager(),
                 timeout=CONF.benchmark.nova_server_delete_timeout,
                 check_interval=CONF.benchmark.nova_server_delete_poll_interval
@@ -412,8 +414,10 @@ class NovaScenario(scenario.OpenStackScenario):
                     server.delete()
 
             for server in servers:
-                utils.wait_for_delete(
+                utils.wait_for_status(
                     server,
+                    ready_statuses=["deleted"],
+                    check_deletion=True,
                     update_resource=utils.get_from_manager(),
                     timeout=CONF.benchmark.nova_server_delete_timeout,
                     check_interval=CONF.
@@ -430,8 +434,10 @@ class NovaScenario(scenario.OpenStackScenario):
         """
         image.delete()
         check_interval = CONF.benchmark.nova_server_image_delete_poll_interval
-        utils.wait_for_delete(
+        utils.wait_for_status(
             image,
+            ready_statuses=["deleted"],
+            check_deletion=True,
             update_resource=utils.get_from_manager(),
             timeout=CONF.benchmark.nova_server_image_delete_timeout,
             check_interval=check_interval

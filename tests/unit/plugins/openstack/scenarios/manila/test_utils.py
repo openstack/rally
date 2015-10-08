@@ -60,15 +60,17 @@ class ManilaScenarioTestCase(test.ScenarioTestCase):
         self.mock_resource_is.mock.assert_called_once_with("available")
         self.mock_get_from_manager.mock.assert_called_once_with()
 
-    @mock.patch(BM_UTILS + "wait_for_delete")
-    def test__delete_share(self, mock_wait_for_delete):
+    @mock.patch(BM_UTILS + "wait_for_status")
+    def test__delete_share(self, mock_wait_for_status):
         fake_share = mock.MagicMock()
 
         self.scenario._delete_share(fake_share)
 
         fake_share.delete.assert_called_once_with()
-        mock_wait_for_delete.assert_called_once_with(
+        mock_wait_for_status.assert_called_once_with(
             fake_share,
+            ready_statuses=["deleted"],
+            check_deletion=True,
             update_resource=self.mock_get_from_manager.mock.return_value,
             timeout=180, check_interval=2)
         self.mock_get_from_manager.mock.assert_called_once_with(
@@ -110,15 +112,17 @@ class ManilaScenarioTestCase(test.ScenarioTestCase):
         self.clients("manila").share_networks.create.assert_called_once_with(
             **data)
 
-    @mock.patch(BM_UTILS + "wait_for_delete")
-    def test__delete_share_network(self, mock_wait_for_delete):
+    @mock.patch(BM_UTILS + "wait_for_status")
+    def test__delete_share_network(self, mock_wait_for_status):
         fake_sn = mock.MagicMock()
 
         self.scenario._delete_share_network(fake_sn)
 
         fake_sn.delete.assert_called_once_with()
-        mock_wait_for_delete.assert_called_once_with(
+        mock_wait_for_status.assert_called_once_with(
             fake_sn,
+            ready_statuses=["deleted"],
+            check_deletion=True,
             update_resource=self.mock_get_from_manager.mock.return_value,
             timeout=180, check_interval=2)
         self.mock_get_from_manager.mock.assert_called_once_with()
@@ -182,15 +186,17 @@ class ManilaScenarioTestCase(test.ScenarioTestCase):
             "manila").security_services.create.assert_called_once_with(
                 **expected)
 
-    @mock.patch(BM_UTILS + "wait_for_delete")
-    def test__delete_security_service(self, mock_wait_for_delete):
+    @mock.patch(BM_UTILS + "wait_for_status")
+    def test__delete_security_service(self, mock_wait_for_status):
         fake_ss = mock.MagicMock()
 
         self.scenario._delete_security_service(fake_ss)
 
         fake_ss.delete.assert_called_once_with()
-        mock_wait_for_delete.assert_called_once_with(
+        mock_wait_for_status.assert_called_once_with(
             fake_ss,
+            ready_statuses=["deleted"],
+            check_deletion=True,
             update_resource=self.mock_get_from_manager.mock.return_value,
             timeout=180, check_interval=2)
         self.mock_get_from_manager.mock.assert_called_once_with()

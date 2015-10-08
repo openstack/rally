@@ -106,8 +106,10 @@ class ManilaScenario(scenario.OpenStackScenario):
         """
         share.delete()
         error_statuses = ("error_deleting", )
-        utils.wait_for_delete(
+        utils.wait_for_status(
             share,
+            ready_statuses=["deleted"],
+            check_deletion=True,
             update_resource=utils.get_from_manager(error_statuses),
             timeout=CONF.benchmark.manila_share_delete_timeout,
             check_interval=CONF.benchmark.manila_share_delete_poll_interval)
@@ -153,8 +155,10 @@ class ManilaScenario(scenario.OpenStackScenario):
         :param share_network: instance of :class:`ShareNetwork`.
         """
         share_network.delete()
-        utils.wait_for_delete(
+        utils.wait_for_status(
             share_network,
+            ready_statuses=["deleted"],
+            check_deletion=True,
             update_resource=utils.get_from_manager(),
             timeout=CONF.benchmark.manila_share_delete_timeout,
             check_interval=CONF.benchmark.manila_share_delete_poll_interval)
@@ -224,8 +228,10 @@ class ManilaScenario(scenario.OpenStackScenario):
         :param security_service: instance of :class:`SecurityService`.
         """
         security_service.delete()
-        utils.wait_for_delete(
+        utils.wait_for_status(
             security_service,
+            ready_statuses=["deleted"],
+            check_deletion=True,
             update_resource=utils.get_from_manager(),
             timeout=CONF.benchmark.manila_share_delete_timeout,
             check_interval=CONF.benchmark.manila_share_delete_poll_interval)
