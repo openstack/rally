@@ -1,0 +1,66 @@
+  KeystoneBasic.add_and_remove_user_role:
+    -
+      context:
+        {{ user_context(tenants_amount, users_amount, use_existing_users) }}
+      runner:
+        {{ constant_runner(15*controllers_amount,60*controllers_amount) }}
+      sla:
+        {{ no_failures_sla() }}
+
+  KeystoneBasic.create_add_and_list_user_roles:
+    -
+      context:
+        {{ user_context(tenants_amount, users_amount, use_existing_users) }}
+      runner:
+        {{ constant_runner(15*controllers_amount,60*controllers_amount) }}
+      sla:
+        {{ no_failures_sla() }}
+
+  KeystoneBasic.create_and_list_tenants:
+    -
+      args:
+        name_length: 10
+      context:
+        {{ user_context(tenants_amount, users_amount, use_existing_users) }}
+      runner:
+        {{ constant_runner(15*controllers_amount,60*controllers_amount) }}
+      sla:
+        {{ no_failures_sla() }}
+
+  KeystoneBasic.create_and_delete_role:
+    -
+      context:
+        {{ user_context(tenants_amount, users_amount, use_existing_users) }}
+      runner:
+        {{ constant_runner(15*controllers_amount,60*controllers_amount) }}
+      sla:
+        {{ no_failures_sla() }}
+
+  KeystoneBasic.create_and_delete_service:
+    -
+      context:
+        {{ user_context(tenants_amount, users_amount, use_existing_users) }}
+      runner:
+        {{ constant_runner(15*controllers_amount,60*controllers_amount) }}
+      sla:
+        {{ no_failures_sla() }}
+
+  KeystoneBasic.get_entities:
+    -
+      context:
+        {{ user_context(tenants_amount, users_amount, use_existing_users) }}
+      runner:
+        {{ constant_runner(15*controllers_amount,60*controllers_amount) }}
+      sla:
+        {{ no_failures_sla() }}
+
+  KeystoneBasic.create_update_and_delete_tenant:
+    -
+      args:
+        name_length: 10
+      context:
+        {{ user_context(tenants_amount, users_amount, use_existing_users) }}
+      runner:
+        {{ constant_runner(15*controllers_amount,60*controllers_amount) }}
+      sla:
+        {{ no_failures_sla() }}

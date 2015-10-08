@@ -1,0 +1,93 @@
+{%- macro user_context(tenants,users_per_tenant, use_existing_users) -%}
+{%- if use_existing_users and caller is not defined -%} {}
+{%- else %}
+  {%- if not use_existing_users %}
+        users:
+          tenants: {{ tenants }}
+          users_per_tenant: {{ users_per_tenant }}
+  {%- endif %}
+  {%- if caller is defined %}
+    {{ caller() }}
+  {%- endif %}
+{%- endif %}
+{%- endmacro %}
+
+{%- macro vm_params(image=none, flavor=none, size=none) %}
+{%- if flavor is not none %}
+        flavor:
+          name: {{ flavor }}
+{%- endif %}
+{%- if image is not none %}
+        image:
+          name: {{ image }}
+{%- endif %}
+{%- if size is not none %}
+        size: {{ size }}
+{%- endif %}
+{%- endmacro %}
+
+{%- macro unlimited_volumes() %}
+          cinder:
+            gigabytes: -1
+            snapshots: -1
+            volumes: -1
+{%- endmacro %}
+
+{%- macro constant_runner(concurrency=1, times=1) %}
+        type: constant
+  {%- if smoke %}
+        concurrency: 1
+        times: 1
+  {%- else %}
+        concurrency: {{ concurrency }}
+        times: {{ times }}
+  {%- endif %}
+{%- endmacro %}
+
+{%- macro rps_runner(rps=1, times=1) %}
+        type: rps
+  {%- if smoke %}
+        rps: 1
+        times: 1
+  {%- else %}
+        rps: {{ rps }}
+        times: {{ times }}
+  {%- endif %}
+{%- endmacro %}
+
+{%- macro no_failures_sla() %}
+        failure_rate:
+          max: 0
+{%- endmacro %}
+
+{%- macro volumes(size=1, volumes_per_tenant=1) %}
+        volumes:
+          size: {{ size }}
+          volumes_per_tenant: {{ volumes_per_tenant }}
+{%- endmacro %}
+
+{%- macro unlimited_nova(keypairs=false) %}
+          nova:
+            cores: -1
+            floating_ips: -1
+            instances: -1
+            {%- if keypairs %}
+            key_pairs: -1
+            {%- endif %}
+            ram: -1
+            security_group_rules: -1
+            security_groups: -1
+{%- endmacro %}
+
+{%- macro unlimited_neutron() %}
+          neutron:
+            network: -1
+            port: -1
+            subnet: -1
+{%- endmacro %}
+
+{%- macro glance_args(location, container="bare", type="qcow2") %}
+        image_container: {{ container }}
+        image_type: {{ type }}
+        image_location: {{ location }}
+{%- endmacro %}

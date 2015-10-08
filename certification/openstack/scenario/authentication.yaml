@@ -1,0 +1,8 @@
+  Authenticate.keystone:
+    -
+      context:
+        {{ user_context(tenants_amount, users_amount, use_existing_users) }}
+      runner:
+        {{ rps_runner() }}
+      sla:
+        {{ no_failures_sla() }}

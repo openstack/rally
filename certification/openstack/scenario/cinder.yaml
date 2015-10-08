@@ -1,0 +1,193 @@
+  CinderVolumes.create_and_attach_volume:
+    -
+      args:
+        {{ vm_params(image_name,flavor_name,1) }}
+      context:
+        {% call user_context(tenants_amount, users_amount, use_existing_users) %}
+        quotas:
+          {{ unlimited_volumes() }}
+        {% endcall %}
+      runner:
+        {{ constant_runner() }}
+      sla:
+        {{ no_failures_sla() }}
+
+  CinderVolumes.create_and_delete_snapshot:
+    -
+      args:
+        force: false
+      context:
+        {% call user_context(tenants_amount, users_amount, use_existing_users) %}
+        quotas:
+          {{ unlimited_volumes() }}
+        {{ volumes() }}
+        {% endcall %}
+      runner:
+        {{ constant_runner() }}
+      sla:
+        {{ no_failures_sla() }}
+
+  CinderVolumes.create_and_delete_volume:
+    -
+      args:
+        size:
+          max: 1
+          min: 1
+      context:
+        {% call user_context(tenants_amount, users_amount, use_existing_users) %}
+        quotas:
+          {{ unlimited_volumes() }}
+        {% endcall %}
+      runner:
+        {{ constant_runner() }}
+      sla:
+        {{ no_failures_sla() }}
+    -
+      args:
+        {{ vm_params(image_name,none,1) }}
+      context:
+        {% call user_context(tenants_amount, users_amount, use_existing_users) %}
+        quotas:
+          {{ unlimited_volumes() }}
+        {% endcall %}
+      runner:
+        {{ constant_runner() }}
+      sla:
+        {{ no_failures_sla() }}
+    -
+      args:
+        size: 1
+      context:
+        {% call user_context(tenants_amount, users_amount, use_existing_users) %}
+        quotas:
+          {{ unlimited_volumes() }}
+        {% endcall %}
+      runner:
+        {{ constant_runner() }}
+      sla:
+        {{ no_failures_sla() }}
+
+  CinderVolumes.create_and_extend_volume:
+    -
+      args:
+        new_size: 2
+        size: 1
+      context:
+        {% call user_context(tenants_amount, users_amount, use_existing_users) %}
+        quotas:
+          {{ unlimited_volumes() }}
+        {% endcall %}
+      runner:
+        {{ constant_runner() }}
+      sla:
+        {{ no_failures_sla() }}
+
+  CinderVolumes.create_and_list_snapshots:
+    -
+      args:
+        detailed: true
+        force: false
+      context:
+        {% call user_context(tenants_amount, users_amount, use_existing_users) %}
+        quotas:
+          {{ unlimited_volumes() }}
+        {{ volumes() }}
+        {% endcall %}
+      runner:
+        {{ constant_runner() }}
+      sla:
+        {{ no_failures_sla() }}
+
+  CinderVolumes.create_and_list_volume:
+    -
+      args:
+        detailed: true
+        {{ vm_params(image_name,none,1) }}
+      context:
+        {% call user_context(tenants_amount, users_amount, use_existing_users) %}
+        quotas:
+          {{ unlimited_volumes() }}
+        {% endcall %}
+      runner:
+        {{ constant_runner() }}
+      sla:
+        {{ no_failures_sla() }}
+    -
+      args:
+        detailed: true
+        size: 1
+      context:
+        {% call user_context(tenants_amount, users_amount, use_existing_users) %}
+        quotas:
+          {{ unlimited_volumes() }}
+        {% endcall %}
+      runner:
+        {{ constant_runner() }}
+      sla:
+        {{ no_failures_sla() }}
+
+  CinderVolumes.create_and_upload_volume_to_image:
+    -
+      args:
+        container_format: "bare"
+        disk_format: "raw"
+        do_delete: true
+        force: false
+        size: 1
+      context:
+        {% call user_context(tenants_amount, users_amount, use_existing_users) %}
+        quotas:
+          {{ unlimited_volumes() }}
+        {% endcall %}
+      runner:
+        {{ constant_runner() }}
+      sla:
+        {{ no_failures_sla() }}
+
+  CinderVolumes.create_from_volume_and_delete_volume:
+    -
+      args:
+        size: 1
+      context:
+        {% call user_context(tenants_amount, users_amount, use_existing_users) %}
+        quotas:
+          {{ unlimited_volumes() }}
+        {{ volumes() }}
+        {% endcall %}
+      runner:
+        {{ constant_runner() }}
+      sla:
+        {{ no_failures_sla() }}
+
+  CinderVolumes.create_nested_snapshots_and_attach_volume:
+    -
+      args:
+        nested_level:
+          max: 1
+          min: 1
+        size:
+          max: 1
+          min: 1
+      context:
+        {% call user_context(tenants_amount, users_amount, use_existing_users) %}
+        quotas:
+          {{ unlimited_volumes() }}
+        servers:
+          {{ vm_params(image_name,flavor_name,none)|indent(2,true) }}
+          servers_per_tenant: 1
+        {% endcall %}
+      runner:
+        {{ constant_runner() }}
+      sla:
+        {{ no_failures_sla() }}
+
+  Quotas.cinder_update_and_delete:
+    -
+      args:
+        max_quota: 1024
+      context:
+        {{ user_context(tenants_amount, users_amount, use_existing_users) }}
+      runner:
+        {{ constant_runner() }}
+      sla:
+        {{ no_failures_sla() }}
