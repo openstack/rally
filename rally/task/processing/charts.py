@@ -21,6 +21,7 @@ import six
 
 from rally.common import costilius
 from rally.common import streaming_algorithms as streaming
+from rally import exceptions
 from rally.task.processing import utils
 
 
@@ -292,7 +293,8 @@ class MainStatsTable(Chart):
             ("Max (sec)", streaming.MaxComputation(), round_3),
             ("Avg (sec)", streaming.MeanComputation(), round_3),
             ("Success", streaming.MeanComputation(),
-             lambda stream, no_result: "%.1f%%" % (stream.result() * 100)),
+             lambda stream, no_result:
+             "%.1f%%" % (stream.result() * 100) if not no_result else "n/a"),
             ("Count", streaming.IncrementComputation(),
              lambda x, no_result: x.result())
         ]
@@ -324,7 +326,10 @@ class MainStatsTable(Chart):
         for i in range(len(self.table)):
             row = [self.table[i][0][1]]
             # no results if all iterations failed
-            no_result = self.table[i][-2][1].result() == 0.0
+            try:
+                no_result = self.table[i][-2][1].result() == 0.0
+            except exceptions.RallyException:
+                no_result = True
             row.extend(x[2](x[1], no_result) for x in self.table[i][1:])
             rows.append(row)
 
