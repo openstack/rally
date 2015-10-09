@@ -458,3 +458,29 @@ class WaitForStatusTestCase(test.TestCase):
         self.assertRaises(exceptions.GetResourceErrorStatus, utils.wait_for,
                           resource=res, ready_statuses=["ready"],
                           failure_statuses=["fail"], update_resource=upd)
+
+    @mock.patch("rally.task.utils.time.sleep")
+    @mock.patch("rally.task.utils.time.time", return_value=1)
+    def test_wait_deletion_404(self, mock_time, mock_sleep):
+        # resource manager returns 404, wait_for_status catch and accept that
+        res = mock.MagicMock()
+        notfound = exceptions.GetResourceNotFound(resource=None)
+        upd = mock.MagicMock(side_effect=notfound)
+        ret = utils.wait_for_status(resource=res,
+                                    ready_statuses=["deleted"],
+                                    check_deletion=True,
+                                    update_resource=upd)
+        self.assertIsNone(ret)
+
+    @mock.patch("rally.task.utils.time.sleep")
+    @mock.patch("rally.task.utils.time.time", return_value=1)
+    def test_wait_deletion_deleted(self, mock_time, mock_sleep):
+        # resource manager return resouce with "deleted" status sometime,
+        # wait_for_status return the resouce instance.
+        res = {"status": "deleted"}
+        upd = mock.MagicMock(side_effect=[{"status": "deleted"}])
+        ret = utils.wait_for_status(resource=res,
+                                    ready_statuses=["deleted"],
+                                    check_deletion=True,
+                                    update_resource=upd)
+        self.assertEqual(res, ret)
