@@ -1,0 +1,195 @@
+  NovaKeypair.boot_and_delete_server_with_keypair:
+    -
+      args:
+        {{ vm_params(image_name, flavor_name) }}
+      context:
+        {% call user_context(tenants_amount, users_amount, use_existing_users) %}
+        network:
+          networks_per_tenant: 1
+          start_cidr: "100.1.0.0/25"
+        quotas:
+          {{ unlimited_neutron() }}
+          {{ unlimited_nova(keypairs=true) }}
+        {% endcall %}
+      runner:
+        {{ constant_runner() }}
+      sla:
+        {{ no_failures_sla() }}
+
+  NovaKeypair.create_and_delete_keypair:
+    -
+      context:
+        {% call user_context(tenants_amount, users_amount, use_existing_users) %}
+        quotas:
+          {{ unlimited_nova(keypairs=true) }}
+        {% endcall %}
+      runner:
+        {{ constant_runner() }}
+      sla:
+        {{ no_failures_sla() }}
+
+  NovaKeypair.create_and_list_keypairs:
+    -
+      context:
+        {% call user_context(tenants_amount, users_amount, use_existing_users) %}
+        quotas:
+          {{ unlimited_nova(keypairs=true) }}
+        {% endcall %}
+      runner:
+        {{ constant_runner() }}
+      sla:
+        {{ no_failures_sla() }}
+
+  NovaServers.boot_and_bounce_server:
+    -
+      args:
+        actions:
+          -
+            hard_reboot: 1
+          -
+            soft_reboot: 1
+          -
+            stop_start: 1
+          -
+            rescue_unrescue: 1
+        {{ vm_params(image_name, flavor_name) }}
+      context:
+        {% call user_context(tenants_amount, users_amount, use_existing_users) %}
+        network:
+          networks_per_tenant: 1
+          start_cidr: "100.1.0.0/25"
+        quotas:
+          {{ unlimited_neutron() }}
+          {{ unlimited_nova() }}
+        {% endcall %}
+      runner:
+        {{ constant_runner() }}
+      sla:
+        {{ no_failures_sla() }}
+
+  NovaServers.boot_and_delete_server:
+    -
+      args:
+        {{ vm_params(image_name, flavor_name) }}
+      context:
+        {% call user_context(tenants_amount, users_amount, use_existing_users) %}
+        network:
+          networks_per_tenant: 1
+          start_cidr: "100.1.0.0/25"
+        quotas:
+          {{ unlimited_neutron() }}
+          {{ unlimited_nova() }}
+        {% endcall %}
+      runner:
+        {{ constant_runner() }}
+      sla:
+        {{ no_failures_sla() }}
+
+  NovaServers.boot_and_list_server:
+    -
+      args:
+        detailed: true
+        {{ vm_params(image_name, flavor_name) }}
+      context:
+        {% call user_context(tenants_amount, users_amount, use_existing_users) %}
+        network:
+          networks_per_tenant: 1
+          start_cidr: "100.1.0.0/25"
+        quotas:
+          {{ unlimited_neutron() }}
+          {{ unlimited_nova() }}
+        {% endcall %}
+      runner:
+        {{ constant_runner() }}
+      sla:
+        {{ no_failures_sla() }}
+
+  NovaServers.boot_and_rebuild_server:
+    -
+      args:
+        {{ vm_params(flavor=flavor_name) }}
+        from_image:
+          name: {{ image_name }}
+        to_image:
+          name: {{ image_name }}
+      context:
+        {% call user_context(tenants_amount, users_amount, use_existing_users) %}
+        network:
+          networks_per_tenant: 1
+          start_cidr: "100.1.0.0/25"
+        quotas:
+          {{ unlimited_neutron() }}
+          {{ unlimited_nova() }}
+        {% endcall %}
+      runner:
+        {{ constant_runner() }}
+      sla:
+        {{ no_failures_sla() }}
+
+  NovaServers.boot_server_from_volume_and_delete:
+    -
+      args:
+        {{ vm_params(image_name, flavor_name) }}
+        volume_size: 5
+      context:
+        {% call user_context(tenants_amount, users_amount, use_existing_users) %}
+        network:
+          networks_per_tenant: 1
+          start_cidr: "100.1.0.0/25"
+        quotas:
+          {{ unlimited_volumes() }}
+          {{ unlimited_neutron() }}
+          {{ unlimited_nova() }}
+        {% endcall %}
+      runner:
+        {{ constant_runner() }}
+      sla:
+        {{ no_failures_sla() }}
+
+  NovaServers.pause_and_unpause_server:
+    -
+      args:
+        {{ vm_params(image_name, flavor_name) }}
+        force_delete: false
+      context:
+        {% call user_context(tenants_amount, users_amount, use_existing_users) %}
+        network:
+          networks_per_tenant: 1
+          start_cidr: "100.1.0.0/25"
+        quotas:
+          {{ unlimited_neutron() }}
+          {{ unlimited_nova() }}
+        {% endcall %}
+      runner:
+        {{ constant_runner() }}
+      sla:
+        {{ no_failures_sla() }}
+
+  NovaServers.snapshot_server:
+    -
+      args:
+        {{ vm_params(image_name, flavor_name) }}
+      context:
+        {% call user_context(tenants_amount, users_amount, use_existing_users) %}
+        network:
+          networks_per_tenant: 1
+          start_cidr: "100.1.0.0/25"
+        quotas:
+          {{ unlimited_neutron() }}
+          {{ unlimited_nova() }}
+        {% endcall %}
+      runner:
+        {{ constant_runner() }}
+      sla:
+        {{ no_failures_sla() }}
+
+  Quotas.nova_update_and_delete:
+    -
+      args:
+        max_quota: 1024
+      context:
+        {{ user_context(tenants_amount, users_amount, use_existing_users) }}
+      runner:
+        {{ constant_runner() }}
+      sla:
+        {{ no_failures_sla() }}
