@@ -101,7 +101,7 @@ def manager_list_size(sizes):
     return _list
 
 
-@utils.log_deprecated("Deprecated, use wait_for_status instead.", "0.1.2")
+@utils.log_deprecated("Use wait_for_status instead.", "0.1.2", once=True)
 def wait_for(resource, is_ready=None, ready_statuses=None,
              failure_statuses=None, status_attr="status", update_resource=None,
              timeout=60, check_interval=1):
@@ -148,7 +148,7 @@ def wait_for(resource, is_ready=None, ready_statuses=None,
                                check_interval=check_interval)
 
 
-@utils.log_deprecated("Deprecated, use wait_for_status instead.", "0.1.2")
+@utils.log_deprecated("Use wait_for_status instead.", "0.1.2", once=True)
 def wait_is_ready(resource, is_ready, update_resource=None,
                   timeout=60, check_interval=1):
 
@@ -247,7 +247,7 @@ def wait_for_status(resource, ready_statuses, failure_statuses=None,
                 resource_status=get_status(resource))
 
 
-@utils.log_deprecated("Deprecated, use wait_for_status instead.", "0.1.2")
+@utils.log_deprecated("Use wait_for_status instead.", "0.1.2", once=True)
 def wait_for_delete(resource, update_resource=None, timeout=60,
                     check_interval=1):
     """Wait for the full deletion of resource.
