@@ -190,7 +190,78 @@ class FuelScenarioTestCase(test.ScenarioTestCase):
 
     def test__delete_environment(self):
         fuel_scenario = utils.FuelScenario()
+
         fuel_scenario.admin_clients = self.admin_clients
         fuel_scenario._delete_environment(42, 33)
         tmp_mock = fuel_scenario.admin_clients("fuel")
         tmp_mock.environment.delete.assert_called_once_with(42, 33)
+
+    def test__add_nodes(self):
+        fscen = utils.FuelScenario()
+        fscen.admin_clients = mock.Mock()
+        fscen._add_node("1", ["42"], node_roles=["some_role"])
+        tmp_mock = fscen.admin_clients.return_value.environment.client
+        tmp_mock.add_nodes.assert_called_once_with("1", ["42"], ["some_role"])
+
+    def test__add_nodes_error(self):
+        fscen = utils.FuelScenario()
+        fscen.admin_clients = mock.Mock()
+        tmp_mock = fscen.admin_clients.return_value.environment.client
+        tmp_mock.add_nodes.side_effect = BaseException
+        self.assertRaises(RuntimeError, fscen._add_node, "1", "42",
+                          node_roles="some_role")
+
+    @mock.patch(UTILS + "FuelClient")
+    def test__remove_nodes(self, mock_fuel_client):
+        mock_tmp = mock_fuel_client.fuelclient_module.objects
+        mock_env = mock_tmp.environment.Environment
+        mock_env.return_value = mock.Mock()
+        fscen = utils.FuelScenario()
+        fscen._remove_node("1", "2")
+        mock_env.assert_called_once_with("1")
+        mock_env.return_value.unassign.assert_called_once_with(["2"])
+
+    @mock.patch(UTILS + "FuelClient")
+    def test__remove_nodes_error(self, mock_fuel_client):
+        mock_tmp = mock_fuel_client.fuelclient_module.objects
+        mock_env = mock_tmp.environment.Environment
+        mock_env.return_value = mock.Mock()
+        mock_env.return_value.unassign.side_effect = BaseException
+        fscen = utils.FuelScenario()
+        self.assertRaises(RuntimeError, fscen._remove_node, "1", "2")
+
+    def test__list_node_ids(self):
+        fscen = utils.FuelScenario()
+        fscen.admin_clients = mock.Mock()
+        fscen.admin_clients.return_value.node.get_all.return_value = [
+            {"id": "id1"}, {"id": "id2"}]
+        res = fscen._list_node_ids("env")
+        self.assertEqual(["id1", "id2"], res)
+        tmp_mock = fscen.admin_clients.return_value.node.get_all
+        tmp_mock.assert_called_once_with(environment_id="env")
+
+    def test__node_is_assigned(self):
+        fscen = utils.FuelScenario()
+        fscen.admin_clients = mock.Mock()
+        fscen.admin_clients.return_value.node.get_by_id.return_value = {
+            "id": "id1", "cluster": "some_id"}
+        self.assertTrue(fscen._node_is_assigned("id1"))
+        fscen.admin_clients.return_value.node.get_by_id.return_value[
+            "cluster"] = ""
+        self.assertFalse(fscen._node_is_assigned("id2"))
+
+    @mock.patch(UTILS + "FuelScenario._node_is_assigned", return_value=False)
+    @mock.patch(UTILS + "FuelScenario._list_node_ids",
+                return_value=["id1", "id2"])
+    def test__get_free_node_id(self, mock__list_node_ids,
+                               mock__node_is_assigned):
+        node_id = utils.FuelScenario()._get_free_node_id()
+        self.assertIn(node_id, mock__list_node_ids.return_value)
+
+    @mock.patch(UTILS + "FuelScenario._node_is_assigned", return_value=True)
+    @mock.patch(UTILS + "FuelScenario._list_node_ids",
+                return_value=["id1", "id2"])
+    def test__get_free_node_id_exception(self, mock__list_node_ids,
+                                         mock__node_is_assigned):
+        self.assertRaises(RuntimeError,
+                          utils.FuelScenario()._get_free_node_id)

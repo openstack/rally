@@ -602,12 +602,13 @@ class FuelEnvironmentTestCase(test.TestCase):
 
     @mock.patch("%s.FuelEnvironment._manager" % BASE)
     def test_is_deleted(self, mock__manager):
-        mock__manager.return_value.get.return_value = []
+        mock__manager.return_value.get.return_value = None
         fres = resources.FuelEnvironment()
         fres.id = mock.Mock()
         self.assertTrue(fres.is_deleted())
-        mock__manager.return_value.get.return_value = ["env"]
+        mock__manager.return_value.get.return_value = "env"
         self.assertFalse(fres.is_deleted())
+        mock__manager.return_value.get.assert_called_with(fres.id.return_value)
 
     @mock.patch("%s.FuelEnvironment._manager" % BASE)
     def test_list(self, mock__manager):
