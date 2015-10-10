@@ -16,10 +16,11 @@
 import random
 
 from rally.common import log as logging
+from rally.common import utils
 from rally import consts
 from rally import exceptions
 from rally.plugins.openstack import scenario
-from rally.plugins.openstack.scenarios.cinder import utils
+from rally.plugins.openstack.scenarios.cinder import utils as cinder_utils
 from rally.plugins.openstack.scenarios.glance import utils as glance_utils
 from rally.plugins.openstack.scenarios.nova import utils as nova_utils
 from rally.task import types
@@ -28,7 +29,7 @@ from rally.task import validation
 LOG = logging.getLogger(__name__)
 
 
-class CinderVolumes(utils.CinderScenario,
+class CinderVolumes(cinder_utils.CinderScenario,
                     nova_utils.NovaScenario,
                     glance_utils.GlanceScenario):
     """Benchmark scenarios for Cinder Volumes."""
@@ -348,6 +349,8 @@ class CinderVolumes(utils.CinderScenario,
     @validation.required_services(consts.Service.NOVA, consts.Service.CINDER)
     @validation.required_openstack(users=True)
     @scenario.configure(context={"cleanup": ["cinder", "nova"]})
+    @utils.log_deprecated_args("Use 'nested_level' as an int", "0.1.2",
+                               ["nested_level"], once=True)
     def create_nested_snapshots_and_attach_volume(self,
                                                   size=None,
                                                   nested_level=None,
@@ -364,27 +367,31 @@ class CinderVolumes(utils.CinderScenario,
                         min - minimum size volumes will be created as;
                         max - maximum size volumes will be created as.
                      default values: {"min": 1, "max": 5}
-        :param nested_level: Nested level - dictionary, contains two values:
+        :param nested_level: Nested level - dictionary or int, dictionary
+                             contains two values:
                                min - minimum number of volumes will be created
                                      from snapshot;
                                max - maximum number of volumes will be created
                                      from snapshot.
-                             default values: {"min": 5, "max": 10}
+                             due to its deprecated would be taken min value.
+                             int, means the exact nested level.
+                             default value: 1.
         :param kwargs: Optional parameters used during volume
                        snapshot creation.
         """
         if size is None:
             size = {"min": 1, "max": 5}
         if nested_level is None:
-            nested_level = {"min": 5, "max": 10}
+            nested_level = 1
+        nested_level = nested_level or 1
+        if isinstance(nested_level, dict):
+            nested_level = nested_level.get("min", 1)
 
         # NOTE: Volume size cannot be smaller than the snapshot size, so
         #       volume with specified size should be created to avoid
         #       size mismatching between volume and snapshot due random
         #       size in _create_volume method.
         size = random.randint(size["min"], size["max"])
-
-        nested_level = random.randint(nested_level["min"], nested_level["max"])
 
         source_vol = self._create_volume(size)
         nes_objs = [(self.get_random_server(), source_vol,
