@@ -178,22 +178,26 @@ def log_verification_wrapper(log_function, msg, **kw):
     return _log_wrapper("verification", log_function, msg, **kw)
 
 
-def log_deprecated(message, rally_version, log_function=None):
+def log_deprecated(message, rally_version, log_function=None, once=False):
     """A wrapper marking a certain method as deprecated.
 
     :param message: Message that describes why the method was deprecated
     :param rally_version: version of Rally when the method was deprecated
     :param log_function: Logging method to be used, e.g. LOG.info
+    :param once: Show only once (default is each)
     """
     log_function = log_function or LOG.warning
 
     def decorator(f):
         @functools.wraps(f)
         def wrapper(*args, **kwargs):
-            log_function("%(msg)s (deprecated in Rally v%(version)s)" %
-                         {"msg": message, "version": rally_version})
-            result = f(*args, **kwargs)
-            return result
+            if (not once) or (not getattr(f, "_warned_dep_method", False)):
+                log_function("'%(func)s' is deprecated in Rally v%(version)s: "
+                             "%(msg)s" % {"msg": message,
+                                          "version": rally_version,
+                                          "func": f.__name__})
+                setattr(f, "_warned_dep_method", once)
+            return f(*args, **kwargs)
         return wrapper
     return decorator
 

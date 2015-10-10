@@ -144,13 +144,13 @@ class LogTestCase(test.TestCase):
     def test_log_deprecated(self):
         mock_log = mock.MagicMock()
 
-        @utils.log_deprecated("Deprecated test", "0.0.1", mock_log)
+        @utils.log_deprecated("some alternative", "0.0.1", mock_log)
         def some_method(x, y):
             return x + y
 
         self.assertEqual(some_method(2, 2), 4)
-        mock_log.assert_called_once_with("Deprecated test "
-                                         "(deprecated in Rally v0.0.1)")
+        mock_log.assert_called_once_with("'some_method' is deprecated in "
+                                         "Rally v0.0.1: some alternative")
 
     def test_log_deprecated_args(self):
         mock_log = mock.MagicMock()
