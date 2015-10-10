@@ -22,9 +22,6 @@
 
   GlanceImages.list_images:
     -
-      args:
-        {{ glance_args(location=glance_image_location) }}
-        images_per_tenant: 1
       context:
         {{ user_context(tenants_amount, users_amount, use_existing_users) }}
       runner:
