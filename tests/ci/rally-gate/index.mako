@@ -3,6 +3,27 @@
 
 <%block name="title_text">Performance job results</%block>
 
+<%block name="js_after">
+    function checkLink (elem) {
+        var request = new XMLHttpRequest();
+            request.open('GET', elem.href, true);
+            request.onreadystatechange = function(){
+                if (request.readyState === 4){
+                    if (request.status === 404) {
+                        elem.href = elem.href + ".gz"
+                    }
+                }
+            };
+            request.send();
+    }
+
+    var elems = document.getElementsByClassName("check-gz");
+
+    for(var i=0; i<elems.length; i++){
+        checkLink(elems[i]);
+    }
+</%block>
+
 <%block name="css">
     li { margin:2px 0 }
     a, a:visited { color:#039 }
@@ -26,7 +47,7 @@
 <%block name="content">
     <h2>Logs and files</h2>
     <ul class="columns">
-      <li><a href="console.html" class="rich">Benchmarking logs</a> <code>console.html</code>
+      <li><a href="console.html" class="rich check-gz">Benchmarking logs</a> <code>console.html</code>
       <li><a href="logs/">Logs of all services</a> <code>logs/</code>
       <li><a href="rally-plot/">Rally files</a> <code>rally-plot/</code>
     </ul>
