@@ -313,7 +313,7 @@ install_required_sw () {
         fi
     else
         # MacOSX maybe?
-        echo "Cannot determine what package manager this Linux distribution has, so I cannot check if requisite software is installed. I'm proceeding anyway, but you may run into errors later."
+        echo "Cannot determine what package manager this system has, so I cannot check if requisite software is installed. I'm proceeding anyway, but you may run into errors later."
     fi
     if ! have_command pip; then
         missing="$missing python-pip"
