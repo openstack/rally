@@ -133,6 +133,9 @@ class ResultConsumer(object):
                 self.task["uuid"]) == consts.TaskStatus.ABORTED:
             self.sla_checker.set_aborted_manually()
 
+        # NOTE(boris-42): Sort in order of starting instead of order of ending
+        self.results.sort(key=lambda x: x["timestamp"])
+
         self.task.append_results(self.key, {
             "raw": self.results,
             "load_duration": self.runner.run_duration,
