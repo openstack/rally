@@ -41,6 +41,8 @@ USER rally
 ENV HOME /home/rally
 CMD ["bash", "--login"]
 
+RUN rally-manage db recreate
+
 # TODO(stpierre): Find a way to use `rally` as the
 # entrypoint. Currently this is complicated by the need to run
 # rally-manage to create the database.
