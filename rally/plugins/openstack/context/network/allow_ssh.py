@@ -25,8 +25,6 @@ from rally.task import context
 
 LOG = logging.getLogger(__name__)
 
-SSH_GROUP_NAME = "rally_ssh_open"
-
 
 def _prepare_open_secgroup(endpoint, secgroup_name):
     """Generate secgroup allowing all tcp/udp/icmp access.
@@ -103,9 +101,7 @@ class AllowSSH(context.Context):
             LOG.info(_("Security group context is disabled: %s") % msg)
             return
 
-        secgroup_name = "%s_%s" % (SSH_GROUP_NAME,
-                                   self.context["task"]["uuid"])
-
+        secgroup_name = self.generate_random_name()
         for user in self.context["users"]:
             user["secgroup"] = _prepare_open_secgroup(user["endpoint"],
                                                       secgroup_name)

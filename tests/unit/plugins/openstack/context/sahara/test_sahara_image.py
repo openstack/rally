@@ -83,25 +83,24 @@ class SaharaImageTestCase(test.ScenarioTestCase):
         })
         return self.context
 
-    @mock.patch("%s.rutils.generate_random_name" % CTX,
-                return_value="sahara_image_42")
     @mock.patch("%s.glance.utils.GlanceScenario._create_image" % SCN,
                 return_value=mock.MagicMock(id=42))
     @mock.patch("%s.resource_manager.cleanup" % CTX)
     def test_setup_and_cleanup_url_image(self, mock_cleanup,
-                                         mock_glance_scenario__create_image,
-                                         mock_generate_random_name):
+                                         mock_glance_scenario__create_image):
 
         ctx = self.url_image_context
         sahara_ctx = sahara_image.SaharaImage(ctx)
+        sahara_ctx.generate_random_name = mock.Mock()
 
         glance_calls = []
 
         for i in range(self.tenants_num):
-            glance_calls.append(mock.call(container_format="bare",
-                                          image_location="http://somewhere",
-                                          disk_format="qcow2",
-                                          name="sahara_image_42"))
+            glance_calls.append(
+                mock.call(container_format="bare",
+                          image_location="http://somewhere",
+                          disk_format="qcow2",
+                          name=sahara_ctx.generate_random_name.return_value))
 
         sahara_update_image_calls = []
         sahara_update_tags_calls = []

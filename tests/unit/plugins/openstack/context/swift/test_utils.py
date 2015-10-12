@@ -25,8 +25,8 @@ class SwiftObjectMixinTestCase(test.TestCase):
     def test__create_containers(self, mock_clients):
         tenants = 2
         containers_per_tenant = 2
-        context = {
-            "task": {"uuid": "id123"},
+        context = test.get_test_context()
+        context.update({
             "tenants": {
                 "1001": {"name": "t1_name"},
                 "1002": {"name": "t2_name"}
@@ -35,7 +35,7 @@ class SwiftObjectMixinTestCase(test.TestCase):
                 {"id": "u1", "tenant_id": "1001", "endpoint": "e1"},
                 {"id": "u2", "tenant_id": "1002", "endpoint": "e2"}
             ]
-        }
+        })
 
         mixin = utils.SwiftObjectMixin()
         containers = mixin._create_containers(context, containers_per_tenant,
@@ -45,7 +45,6 @@ class SwiftObjectMixinTestCase(test.TestCase):
         for index, container in enumerate(sorted(containers)):
             offset = int(index / containers_per_tenant) + 1
             self.assertEqual(str(1000 + offset), container[0])
-            self.assertIn("rally_container_", container[1])
 
         for index, tenant_id in enumerate(sorted(context["tenants"]), start=1):
             containers = context["tenants"][tenant_id]["containers"]
@@ -53,7 +52,6 @@ class SwiftObjectMixinTestCase(test.TestCase):
             for container in containers:
                 self.assertEqual("u%d" % index, container["user"]["id"])
                 self.assertEqual("e%d" % index, container["user"]["endpoint"])
-                self.assertIn("rally_container_", container["container"])
                 self.assertEqual(0, len(container["objects"]))
 
     @mock.patch("rally.osclients.Clients")
@@ -61,8 +59,8 @@ class SwiftObjectMixinTestCase(test.TestCase):
         tenants = 2
         containers_per_tenant = 1
         objects_per_container = 5
-        context = {
-            "task": {"uuid": "id123"},
+        context = test.get_test_context()
+        context.update({
             "tenants": {
                 "1001": {
                     "name": "t1_name",
@@ -85,7 +83,7 @@ class SwiftObjectMixinTestCase(test.TestCase):
                     ]
                 }
             }
-        }
+        })
 
         mixin = utils.SwiftObjectMixin()
         objects_list = mixin._create_objects(context, objects_per_container,
@@ -99,19 +97,16 @@ class SwiftObjectMixinTestCase(test.TestCase):
             offset = int(index / chunk) + 1
             self.assertEqual(str(1000 + offset), obj[0])
             self.assertEqual("c%d" % offset, obj[1])
-            self.assertIn("rally_object_", obj[2])
 
         for tenant_id in context["tenants"]:
             for container in context["tenants"][tenant_id]["containers"]:
                 self.assertEqual(objects_per_container,
                                  len(container["objects"]))
-                for obj in container["objects"]:
-                    self.assertIn("rally_object_", obj)
 
     @mock.patch("rally.osclients.Clients")
     def test__delete_containers(self, mock_clients):
-        context = {
-            "task": {"uuid": "id123"},
+        context = test.get_test_context()
+        context.update({
             "tenants": {
                 "1001": {
                     "name": "t1_name",
@@ -134,7 +129,7 @@ class SwiftObjectMixinTestCase(test.TestCase):
                     ]
                 }
             }
-        }
+        })
 
         mixin = utils.SwiftObjectMixin()
         mixin._delete_containers(context, 1)
@@ -150,8 +145,8 @@ class SwiftObjectMixinTestCase(test.TestCase):
 
     @mock.patch("rally.osclients.Clients")
     def test__delete_objects(self, mock_clients):
-        context = {
-            "task": {"uuid": "id123"},
+        context = test.get_test_context()
+        context.update({
             "tenants": {
                 "1001": {
                     "name": "t1_name",
@@ -174,7 +169,7 @@ class SwiftObjectMixinTestCase(test.TestCase):
                     ]
                 }
             }
-        }
+        })
 
         mixin = utils.SwiftObjectMixin()
         mixin._delete_objects(context, 1)

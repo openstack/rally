@@ -28,7 +28,6 @@ class AllowSSHContextTestCase(test.TestCase):
     def setUp(self):
         super(AllowSSHContextTestCase, self).setUp()
         self.users = 2
-        self.secgroup_name = allow_ssh.SSH_GROUP_NAME + "_foo"
         self.secgroup_name = "test-secgroup"
 
         self.ctx_with_secgroup = test.get_test_context()

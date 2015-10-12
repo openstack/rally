@@ -36,8 +36,8 @@ class BaseCustomImageContextVMTestCase(test.TestCase):
     def setUp(self):
         super(BaseCustomImageContextVMTestCase, self).setUp()
 
-        self.context = {
-            "task": mock.MagicMock(),
+        self.context = test.get_test_context()
+        self.context.update({
             "config": {
                 "test_custom_image": {
                     "image": {"name": "image"},
@@ -60,7 +60,7 @@ class BaseCustomImageContextVMTestCase(test.TestCase):
                 "tenant_id1": {},
                 "tenant_id2": {}
             }
-        }
+        })
 
     @mock.patch("%s.vmtasks.VMTasks" % BASE)
     @mock.patch("%s.osclients.Clients" % BASE)
@@ -80,12 +80,12 @@ class BaseCustomImageContextVMTestCase(test.TestCase):
         mock_vm_scenario = mock_vm_tasks.return_value = mock.MagicMock(
             _create_image=mock.MagicMock(return_value=fake_image),
             _boot_server_with_fip=mock.MagicMock(
-                return_value=(fake_server, ip)),
-            _generate_random_name=mock.MagicMock(return_value="foo_name"),
+                return_value=(fake_server, ip))
         )
 
         generator_ctx = TestImageGenerator(self.context)
         generator_ctx._customize_image = mock.MagicMock()
+        generator_ctx.generate_random_name = mock.Mock()
 
         user = {
             "endpoint": "endpoint",
@@ -107,7 +107,8 @@ class BaseCustomImageContextVMTestCase(test.TestCase):
 
         mock_vm_scenario._boot_server_with_fip.assert_called_once_with(
             image="image", flavor="flavor",
-            name="foo_name", floating_network="floating",
+            name=generator_ctx.generate_random_name.return_value,
+            floating_network="floating",
             key_name="keypair_name", security_groups=["secgroup_name"],
             userdata=None, foo_arg="foo_value")
 

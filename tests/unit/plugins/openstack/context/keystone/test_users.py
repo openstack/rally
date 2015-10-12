@@ -329,16 +329,14 @@ class UserGeneratorTestCase(test.ScenarioTestCase):
         wrapped_keystone.create_user.side_effect = user_list
 
         with users.UserGenerator(tmp_context) as ctx:
+            ctx.generate_random_name = mock.Mock()
             ctx.setup()
 
             create_tenant_calls = []
             for i, t in enumerate(ctx.context["tenants"]):
-                pattern = users.UserGenerator.PATTERN_TENANT
                 create_tenant_calls.append(
-                    mock.call(
-                        pattern % {"task_id": tmp_context["task"]["uuid"],
-                                   "iter": i},
-                        ctx.config["project_domain"]))
+                    mock.call(ctx.generate_random_name.return_value,
+                              ctx.config["project_domain"]))
 
             for user in ctx.context["users"]:
                 self.assertEqual(set(["id", "endpoint", "tenant_id"]),

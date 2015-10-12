@@ -21,6 +21,7 @@ import six
 
 from rally.common import log as logging
 from rally.common.plugin import plugin
+from rally.common import utils
 from rally import exceptions
 from rally.task import functional
 
@@ -51,7 +52,8 @@ def configure(name, order, hidden=False):
 
 
 @configure(name="base_context", order=0, hidden=True)
-class Context(plugin.Plugin, functional.FunctionalMixin):
+class Context(plugin.Plugin, functional.FunctionalMixin,
+              utils.RandomNameGeneratorMixin):
     """This class is a factory for context classes.
 
     Every context class should be a subclass of this class and implement
@@ -64,6 +66,8 @@ class Context(plugin.Plugin, functional.FunctionalMixin):
         4) Order of context creation
 
     """
+    RESOURCE_NAME_FORMAT = "c_rally_XXXXXXXX_XXXXXXXX"
+
     CONFIG_SCHEMA = {}
 
     def __init__(self, ctx):
@@ -72,7 +76,7 @@ class Context(plugin.Plugin, functional.FunctionalMixin):
             for key, value in self.DEFAULT_CONFIG.items():
                 self.config.setdefault(key, value)
         self.context = ctx
-        self.task = self.context["task"]
+        self.task = self.context.get("task", {})
 
     def __lt__(self, other):
         return self.get_order() < other.get_order()

@@ -87,6 +87,7 @@ class SaharaEDPTestCase(test.TestCase):
 
         ctx = self.context_without_edp_keys
         sahara_ctx = sahara_edp.SaharaEDP(ctx)
+        sahara_ctx.generate_random_name = mock.Mock()
 
         input_ds_crete_calls = []
         download_calls = []
@@ -95,7 +96,8 @@ class SaharaEDPTestCase(test.TestCase):
 
         for i in range(self.tenants_num):
             input_ds_crete_calls.append(mock.call(
-                name="input_ds", description="",
+                name=sahara_ctx.generate_random_name.return_value,
+                description="",
                 data_source_type="hdfs",
                 url="hdfs://test_host/"))
             download_calls.append(mock.call("http://example.com/test.jar"))

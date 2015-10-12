@@ -76,7 +76,8 @@ class StackGenerator(context.Context):
             self.config["resources_per_stack"])
         for user, tenant_id in rutils.iterate_per_tenants(
                 self.context["users"]):
-            heat_scenario = heat_utils.HeatScenario({"user": user})
+            heat_scenario = heat_utils.HeatScenario(
+                {"user": user, "task": self.context["task"]})
             self.context["tenants"][tenant_id]["stacks"] = []
             for i in range(self.config["stacks_per_tenant"]):
                 stack = heat_scenario._create_stack(template)

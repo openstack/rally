@@ -67,8 +67,7 @@ class Network(context.Context):
         #               creating a connection in setup and cleanup separately.
         net_wrapper = network_wrapper.wrap(
             osclients.Clients(self.context["admin"]["endpoint"]),
-            self.context["task"],
-            config=self.config)
+            self.task, config=self.config)
         for user, tenant_id in (utils.iterate_per_tenants(
                 self.context.get("users", []))):
             self.context["tenants"][tenant_id]["networks"] = []
@@ -86,8 +85,7 @@ class Network(context.Context):
     def cleanup(self):
         net_wrapper = network_wrapper.wrap(
             osclients.Clients(self.context["admin"]["endpoint"]),
-            self.context["task"],
-            config=self.config)
+            self.task, config=self.config)
         for tenant_id, tenant_ctx in six.iteritems(self.context["tenants"]):
             for network in tenant_ctx.get("networks", []):
                 with logging.ExceptionLogger(

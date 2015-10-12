@@ -26,7 +26,8 @@ class SwiftObjectGeneratorTestCase(test.TestCase):
     def test_setup(self, mock_clients):
         containers_per_tenant = 2
         objects_per_container = 7
-        context = {
+        context = test.get_test_context()
+        context.update({
             "config": {
                 "swift_objects": {
                     "containers_per_tenant": containers_per_tenant,
@@ -35,7 +36,6 @@ class SwiftObjectGeneratorTestCase(test.TestCase):
                     "resource_management_workers": 10
                 }
             },
-            "task": {"uuid": "id123"},
             "tenants": {
                 "t1": {"name": "t1_name"},
                 "t2": {"name": "t2_name"}
@@ -44,7 +44,7 @@ class SwiftObjectGeneratorTestCase(test.TestCase):
                 {"id": "u1", "tenant_id": "t1", "endpoint": "e1"},
                 {"id": "u2", "tenant_id": "t2", "endpoint": "e2"}
             ]
-        }
+        })
 
         objects_ctx = objects.SwiftObjectGenerator(context)
         objects_ctx.setup()
@@ -53,23 +53,20 @@ class SwiftObjectGeneratorTestCase(test.TestCase):
             containers = context["tenants"][tenant_id]["containers"]
             self.assertEqual(containers_per_tenant, len(containers))
             for container in containers:
-                self.assertIn("rally_container_", container["container"])
                 self.assertEqual(objects_per_container,
                                  len(container["objects"]))
-                for obj in container["objects"]:
-                    self.assertIn("rally_object_", obj)
 
     @mock.patch("rally.osclients.Clients")
     @mock.patch("rally.plugins.openstack.context.swift.utils."
                 "swift_utils.SwiftScenario")
     def test_cleanup(self, mock_swift_scenario, mock_clients):
-        context = {
+        context = test.get_test_context()
+        context.update({
             "config": {
                 "swift_objects": {
                     "resource_management_workers": 1
                 }
             },
-            "task": {"uuid": "id123"},
             "tenants": {
                 "t1": {
                     "name": "t1_name",
@@ -90,7 +87,7 @@ class SwiftObjectGeneratorTestCase(test.TestCase):
                     ]
                 }
             }
-        }
+        })
 
         objects_ctx = objects.SwiftObjectGenerator(context)
         objects_ctx.cleanup()
@@ -111,7 +108,8 @@ class SwiftObjectGeneratorTestCase(test.TestCase):
 
     @mock.patch("rally.osclients.Clients")
     def test_setup_failure_clients_put_container(self, mock_clients):
-        context = {
+        context = test.get_test_context()
+        context.update({
             "config": {
                 "swift_objects": {
                     "containers_per_tenant": 2,
@@ -119,7 +117,6 @@ class SwiftObjectGeneratorTestCase(test.TestCase):
                     "resource_management_workers": 5
                 }
             },
-            "task": {"uuid": "id123"},
             "tenants": {
                 "t1": {"name": "t1_name"},
                 "t2": {"name": "t2_name"}
@@ -128,7 +125,7 @@ class SwiftObjectGeneratorTestCase(test.TestCase):
                 {"id": "u1", "tenant_id": "t1", "endpoint": "e1"},
                 {"id": "u2", "tenant_id": "t2", "endpoint": "e2"}
             ]
-        }
+        })
         mock_swift = mock_clients.return_value.swift.return_value
         mock_swift.put_container.side_effect = [Exception, True,
                                                 Exception, Exception]
@@ -139,8 +136,8 @@ class SwiftObjectGeneratorTestCase(test.TestCase):
 
     @mock.patch("rally.osclients.Clients")
     def test_setup_failure_clients_put_object(self, mock_clients):
-        context = {
-            "task": {"uuid": "id123"},
+        context = test.get_test_context()
+        context.update({
             "tenants": {
                 "t1": {"name": "t1_name"},
                 "t2": {"name": "t2_name"}
@@ -149,7 +146,7 @@ class SwiftObjectGeneratorTestCase(test.TestCase):
                 {"id": "u1", "tenant_id": "t1", "endpoint": "e1"},
                 {"id": "u2", "tenant_id": "t2", "endpoint": "e2"}
             ]
-        }
+        })
         mock_swift = mock_clients.return_value.swift.return_value
         mock_swift.put_object.side_effect = [Exception, True]
         objects_ctx = objects.SwiftObjectGenerator(context)
@@ -159,8 +156,8 @@ class SwiftObjectGeneratorTestCase(test.TestCase):
 
     @mock.patch("rally.osclients.Clients")
     def test_cleanup_failure_clients_delete_container(self, mock_clients):
-        context = {
-            "task": {"uuid": "id123"},
+        context = test.get_test_context()
+        context.update({
             "tenants": {
                 "t1": {
                     "name": "t1_name",
@@ -171,7 +168,7 @@ class SwiftObjectGeneratorTestCase(test.TestCase):
                          "objects": []}] * 3
                 }
             }
-        }
+        })
         mock_swift = mock_clients.return_value.swift.return_value
         mock_swift.delete_container.side_effect = [True, True, Exception]
         objects_ctx = objects.SwiftObjectGenerator(context)
@@ -180,8 +177,8 @@ class SwiftObjectGeneratorTestCase(test.TestCase):
 
     @mock.patch("rally.osclients.Clients")
     def test_cleanup_failure_clients_delete_object(self, mock_clients):
-        context = {
-            "task": {"uuid": "id123"},
+        context = test.get_test_context()
+        context.update({
             "tenants": {
                 "t1": {
                     "name": "t1_name",
@@ -193,7 +190,7 @@ class SwiftObjectGeneratorTestCase(test.TestCase):
                     ]
                 }
             }
-        }
+        })
         mock_swift = mock_clients.return_value.swift.return_value
         mock_swift.delete_object.side_effect = [True, Exception, True]
         objects_ctx = objects.SwiftObjectGenerator(context)
