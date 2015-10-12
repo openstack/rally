@@ -10,6 +10,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import random
+
 from rally import consts
 from rally.plugins.openstack import scenario
 from rally.plugins.openstack.scenarios.neutron import utils
@@ -174,3 +176,65 @@ class NeutronLoadbalancerV1(utils.NeutronScenario):
                 vips.append(self._create_v1_vip(pool, **vip_create_args))
         for vip in vips:
             self._update_v1_vip(vip, **vip_update_args)
+
+    @validation.required_neutron_extensions("lbaas")
+    @validation.required_services(consts.Service.NEUTRON)
+    @validation.required_openstack(users=True)
+    @scenario.configure(context={"cleanup": ["neutron"]})
+    def create_and_list_healthmonitors(self, healthmonitor_create_args=None):
+        """Create healthmonitors(v1) and list healthmonitors(v1).
+
+        Measure the "neutron lb-healthmonitor-list" command performance. This
+        scenario creates healthmonitors and lists them.
+
+        :param healthmonitor_create_args: dict, POST /lb/healthmonitors request
+        options
+        """
+        healthmonitor_create_args = healthmonitor_create_args or {}
+        self._create_v1_healthmonitor(**healthmonitor_create_args)
+        self._list_v1_healthmonitors()
+
+    @validation.required_neutron_extensions("lbaas")
+    @validation.required_services(consts.Service.NEUTRON)
+    @validation.required_openstack(users=True)
+    @scenario.configure(context={"cleanup": ["neutron"]})
+    def create_and_delete_healthmonitors(self, healthmonitor_create_args=None):
+        """Create a healthmonitor(v1) and delete healthmonitors(v1).
+
+        Measure the "neutron lb-healthmonitor-create" and "neutron
+        lb-healthmonitor-delete" command performance. The scenario creates
+        healthmonitors and deletes those healthmonitors.
+
+        :param healthmonitor_create_args: dict, POST /lb/healthmonitors request
+        options
+        """
+        healthmonitor_create_args = healthmonitor_create_args or {}
+        healthmonitor = self._create_v1_healthmonitor(
+            **healthmonitor_create_args)
+        self._delete_v1_healthmonitor(healthmonitor["health_monitor"])
+
+    @validation.required_neutron_extensions("lbaas")
+    @validation.required_services(consts.Service.NEUTRON)
+    @validation.required_openstack(users=True)
+    @scenario.configure(context={"cleanup": ["neutron"]})
+    def create_and_update_healthmonitors(self,
+                                         healthmonitor_create_args=None,
+                                         healthmonitor_update_args=None):
+        """Create a healthmonitor(v1) and update healthmonitors(v1).
+
+        Measure the "neutron lb-healthmonitor-create" and "neutron
+        lb-healthmonitor-update" command performance. The scenario creates
+        healthmonitors and then updates them.
+
+        :param healthmonitor_create_args: dict, POST /lb/healthmonitors request
+        options
+        :param healthmonitor_update_args: dict, POST /lb/healthmonitors update
+        options
+        """
+        healthmonitor_create_args = healthmonitor_create_args or {}
+        healthmonitor_update_args = healthmonitor_update_args or {
+            "max_retries": random.choice(range(1, 10))}
+        healthmonitor = self._create_v1_healthmonitor(
+            **healthmonitor_create_args)
+        self._update_v1_healthmonitor(healthmonitor,
+                                      **healthmonitor_update_args)

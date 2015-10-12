@@ -725,3 +725,69 @@ class NeutronLoadbalancerScenarioTestCase(test.ScenarioTestCase):
         mock_get_network_id.assert_called_once_with(floating_network)
         self._test_atomic_action_timer(neutron_scenario.atomic_actions(),
                                        "neutron.create_floating_ip")
+
+    @ddt.data(
+        {},
+        {"healthmonitor_create_args": {}},
+        {"healthmonitor_create_args": {"type": "TCP"}},
+        {"atomic_action": False},
+        {"atomic_action": False,
+         "healthmonitor_create_args": {"type": "TCP"}},
+        {"healthmonitor_create_args": {},
+         "atomic_action": False},
+    )
+    @ddt.unpack
+    def test__create_v1_healthmonitor(self, atomic_action=True,
+                                      healthmonitor_create_args=None):
+        neutron_scenario = utils.NeutronScenario()
+        hm = {"health_monitor": {"id": "hm-id"}}
+        healthmonitor_create_args = healthmonitor_create_args or {}
+        self.clients("neutron").create_health_monitor.return_value = hm
+        args = {"type": "PING", "delay": 20,
+                "timeout": 10, "max_retries": 3}
+        args.update(healthmonitor_create_args)
+        expected_hm_data = {"health_monitor": args}
+        resultant_hm = neutron_scenario._create_v1_healthmonitor(
+            atomic_action=atomic_action,
+            **healthmonitor_create_args)
+        self.assertEqual(resultant_hm, hm)
+        self.clients("neutron").create_health_monitor.assert_called_once_with(
+            expected_hm_data)
+        if atomic_action:
+            self._test_atomic_action_timer(
+                neutron_scenario.atomic_actions(),
+                "neutron.create_healthmonitor")
+
+    def test_list_v1_healthmonitors(self):
+        scenario = utils.NeutronScenario()
+        hm_list = []
+        hm_dict = {"health_monitors": hm_list}
+        self.clients("neutron").list_health_monitors.return_value = hm_dict
+        return_hm_dict = scenario._list_v1_healthmonitors()
+        self.assertEqual(hm_dict, return_hm_dict)
+        self._test_atomic_action_timer(scenario.atomic_actions(),
+                                       "neutron.list_healthmonitors")
+
+    def test_delete_v1_healthmonitor(self):
+        scenario = utils.NeutronScenario()
+        healthmonitor = {"health_monitor": {"id": "fake-id"}}
+        scenario._delete_v1_healthmonitor(healthmonitor["health_monitor"])
+        self.clients("neutron").delete_health_monitor.assert_called_once_with(
+            healthmonitor["health_monitor"]["id"])
+        self._test_atomic_action_timer(scenario.atomic_actions(),
+                                       "neutron.delete_healthmonitor")
+
+    def test_update_healthmonitor(self):
+        scenario = utils.NeutronScenario()
+        expected_hm = {"health_monitor": {"admin_state_up": False}}
+        mock_update = self.clients("neutron").update_health_monitor
+        mock_update.return_value = expected_hm
+        hm = {"health_monitor": {"id": "pool-id"}}
+        healthmonitor_update_args = {"admin_state_up": False}
+        result_hm = scenario._update_v1_healthmonitor(
+            hm, **healthmonitor_update_args)
+        self.assertEqual(result_hm, expected_hm)
+        mock_update.assert_called_once_with(
+            hm["health_monitor"]["id"], expected_hm)
+        self._test_atomic_action_timer(scenario.atomic_actions(),
+                                       "neutron.update_healthmonitor")
