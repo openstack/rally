@@ -499,6 +499,13 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.associate_floating_ip")
 
+    def test__associate_floating_ip_with_no_atomic_action(self):
+        nova_scenario = utils.NovaScenario(context=self.context)
+        nova_scenario._associate_floating_ip(self.server, self.floating_ip,
+                                             atomic_action=False)
+        self.server.add_floating_ip.assert_called_once_with(self.floating_ip,
+                                                            fixed_address=None)
+
     def test__dissociate_floating_ip(self):
         nova_scenario = utils.NovaScenario(context=self.context)
         nova_scenario._dissociate_floating_ip(self.server, self.floating_ip)
@@ -506,6 +513,13 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
             self.floating_ip)
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.dissociate_floating_ip")
+
+    def test__dissociate_floating_ip_with_no_atomic_action(self):
+        nova_scenario = utils.NovaScenario(context=self.context)
+        nova_scenario._dissociate_floating_ip(self.server, self.floating_ip,
+                                              atomic_action=False)
+        self.server.remove_floating_ip.assert_called_once_with(
+            self.floating_ip)
 
     def test__check_ip_address(self):
         nova_scenario = utils.NovaScenario(context=self.context)

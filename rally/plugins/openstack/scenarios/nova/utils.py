@@ -551,37 +551,56 @@ class NovaScenario(scenario.OpenStackScenario):
         ) for server in servers]
         return servers
 
-    @atomic.action_timer("nova.associate_floating_ip")
-    def _associate_floating_ip(self, server, address, fixed_address=None):
+    def _associate_floating_ip(self, server, address, fixed_address=None,
+                               atomic_action=True):
         """Add floating IP to an instance
 
         :param server: The :class:`Server` to add an IP to.
         :param address: The ip address or FloatingIP to add to the instance
         :param fixed_address: The fixedIP address the FloatingIP is to be
                associated with (optional)
+        :param atomic_action: True if this is an atomic action (optional)
         """
-        server.add_floating_ip(address, fixed_address=fixed_address)
-        utils.wait_for(
-            server,
-            is_ready=self.check_ip_address(address),
-            update_resource=utils.get_from_manager()
-        )
+        if atomic_action:
+            with atomic.ActionTimer(self, "nova.associate_floating_ip"):
+                server.add_floating_ip(address, fixed_address=fixed_address)
+                utils.wait_for(
+                    server,
+                    is_ready=self.check_ip_address(address),
+                    update_resource=utils.get_from_manager()
+                )
+        else:
+            server.add_floating_ip(address, fixed_address=fixed_address)
+            utils.wait_for(
+                server,
+                is_ready=self.check_ip_address(address),
+                update_resource=utils.get_from_manager()
+            )
         # Update server data
         server.addresses = server.manager.get(server.id).addresses
 
-    @atomic.action_timer("nova.dissociate_floating_ip")
-    def _dissociate_floating_ip(self, server, address):
+    def _dissociate_floating_ip(self, server, address, atomic_action=True):
         """Remove floating IP from an instance
 
         :param server: The :class:`Server` to add an IP to.
         :param address: The ip address or FloatingIP to remove
+        :param atomic_action: True if this is an atomic action (optional)
         """
-        server.remove_floating_ip(address)
-        utils.wait_for(
-            server,
-            is_ready=self.check_ip_address(address, must_exist=False),
-            update_resource=utils.get_from_manager()
-        )
+        if atomic_action:
+            with atomic.ActionTimer(self, "nova.dissociate_floating_ip"):
+                server.remove_floating_ip(address)
+                utils.wait_for(
+                    server,
+                    is_ready=self.check_ip_address(address, must_exist=False),
+                    update_resource=utils.get_from_manager()
+                )
+        else:
+            server.remove_floating_ip(address)
+            utils.wait_for(
+                server,
+                is_ready=self.check_ip_address(address, must_exist=False),
+                update_resource=utils.get_from_manager()
+            )
         # Update server data
         server.addresses = server.manager.get(server.id).addresses
 

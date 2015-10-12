@@ -133,7 +133,8 @@ class VMScenario(nova_utils.NovaScenario, cinder_utils.CinderScenario):
             ext_network=floating_network,
             tenant_id=server.tenant_id, fixed_ip=fixed_ip)
 
-        self._associate_floating_ip(server, fip["ip"], fixed_address=fixed_ip)
+        self._associate_floating_ip(server, fip["ip"], fixed_address=fixed_ip,
+                                    atomic_action=False)
 
         return fip
 
@@ -142,7 +143,8 @@ class VMScenario(nova_utils.NovaScenario, cinder_utils.CinderScenario):
         with logging.ExceptionLogger(
                 LOG, _("Unable to delete IP: %s") % fip["ip"]):
             if self.check_ip_address(fip["ip"])(server):
-                self._dissociate_floating_ip(server, fip["ip"])
+                self._dissociate_floating_ip(server, fip["ip"],
+                                             atomic_action=False)
                 network_wrapper.wrap(
                     self.clients, self.context["task"]).delete_floating_ip(
                         fip["id"],
