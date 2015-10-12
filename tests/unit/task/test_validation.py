@@ -800,13 +800,13 @@ class ValidatorsTestCase(test.TestCase):
             validation.required_cinder_services,
             service_name=six.text_type("cinder-service"))
 
-        with mock.patch.object(rally.osclients.Clients, "cinder") as client:
+        with mock.patch.object(rally.osclients.Cinder, "create_client") as c:
             fake_service = mock.Mock(binary="cinder-service", state="up")
             cinder_client = mock.Mock()
             services = mock.Mock()
             services.list.return_value = [fake_service]
             cinder_client.services = services
-            client.return_value = cinder_client
+            c.return_value = cinder_client
 
             deployment = {"admin": {"auth_url": "fake_endpoint",
                                     "username": "username",

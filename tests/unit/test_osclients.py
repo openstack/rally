@@ -28,23 +28,27 @@ from tests.unit import test
 class CachedTestCase(test.TestCase):
 
     def test_cached(self):
-        foo_client = mock.Mock(
-            __name__="foo_client",
-            side_effect=lambda ins, *args, **kw: (args, kw))
-        ins = mock.Mock(cache={})
-        cached = osclients.cached(foo_client)
-        self.assertEqual(((), {}), cached(ins))
-        self.assertEqual({"foo_client": ((), {})}, ins.cache)
-        self.assertEqual((("foo",), {"bar": "spam"}),
-                         cached(ins, "foo", bar="spam"))
+        clients = osclients.Clients(mock.MagicMock())
+        client_name = "CachedTestCase.test_cached"
+        fake_client = osclients.configure(client_name)(
+            osclients.OSClient(clients.endpoint, clients.cache))
+        fake_client.create_client = mock.MagicMock()
+
+        self.assertEqual({}, clients.cache)
+        fake_client()
         self.assertEqual(
-            {"foo_client": ((), {}),
-             "foo_client('foo',){'bar': 'spam'}": (("foo",),
-                                                   {"bar": "spam"})},
-            ins.cache)
-        ins.cache["foo_client('foo',){'bar': 'spam'}"] = "foo_cached"
+            {client_name: fake_client.create_client.return_value},
+            clients.cache)
+        fake_client.create_client.assert_called_once_with()
+        fake_client()
+        fake_client.create_client.assert_called_once_with()
+        fake_client("2")
         self.assertEqual(
-            "foo_cached", cached(ins, "foo", bar="spam"))
+            {client_name: fake_client.create_client.return_value,
+             "%s('2',)" % client_name: fake_client.create_client.return_value},
+            clients.cache)
+        clients.clear()
+        self.assertEqual({}, clients.cache)
 
 
 class TestCreateKeystoneClient(test.TestCase):
@@ -65,7 +69,7 @@ class TestCreateKeystoneClient(test.TestCase):
         with mock.patch.dict("sys.modules",
                              {"keystoneclient": mock_keystone,
                               "keystoneclient.v2_0": mock_keystone.v2_0}):
-            client = osclients.create_keystone_client(self.kwargs)
+            client = osclients.Keystone._create_keystone_client(self.kwargs)
             mock_discover.version_data.assert_called_once_with()
             self.assertEqual(fake_keystoneclient, client)
             mock_keystone.v2_0.client.Client.assert_called_once_with(
@@ -81,7 +85,7 @@ class TestCreateKeystoneClient(test.TestCase):
         with mock.patch.dict("sys.modules",
                              {"keystoneclient": mock_keystone,
                               "keystoneclient.v3": mock_keystone.v3}):
-            client = osclients.create_keystone_client(self.kwargs)
+            client = osclients.Keystone._create_keystone_client(self.kwargs)
             mock_discover.version_data.assert_called_once_with()
             self.assertEqual(fake_keystoneclient, client)
             mock_keystone.v3.client.Client.assert_called_once_with(
@@ -94,7 +98,8 @@ class TestCreateKeystoneClient(test.TestCase):
         mock_keystone.discover.Discover.return_value = mock_discover
         with mock.patch.dict("sys.modules", {"keystoneclient": mock_keystone}):
             self.assertRaises(exceptions.RallyException,
-                              osclients.create_keystone_client, self.kwargs)
+                              osclients.Keystone._create_keystone_client,
+                              self.kwargs)
             mock_discover.version_data.assert_called_once_with()
 
 
@@ -111,7 +116,8 @@ class OSClientsTestCase(test.TestCase):
         self.service_catalog = self.fake_keystone.service_catalog
         self.service_catalog.url_for = mock.MagicMock()
 
-        keystone_patcher = mock.patch("rally.osclients.create_keystone_client")
+        keystone_patcher = mock.patch(
+            "rally.osclients.Keystone._create_keystone_client")
         self.mock_create_keystone_client = keystone_patcher.start()
         self.addCleanup(keystone_patcher.stop)
         self.mock_create_keystone_client.return_value = self.fake_keystone
@@ -145,24 +151,28 @@ class OSClientsTestCase(test.TestCase):
         self.mock_create_keystone_client.assert_called_once_with(kwargs)
         self.assertEqual(self.fake_keystone, self.clients.cache["keystone"])
 
-    @mock.patch("rally.osclients.Clients.keystone")
-    def test_verified_keystone_user_not_admin(self, mock_clients_keystone):
-        mock_clients_keystone.return_value = fakes.FakeKeystoneClient()
-        mock_clients_keystone.return_value.auth_ref.role_names = ["notadmin"]
+    @mock.patch("rally.osclients.Keystone.create_client")
+    def test_verified_keystone_user_not_admin(self,
+                                              mock_keystone_create_client):
+        # naming rule for mocks sucks
+        mock_keystone = mock_keystone_create_client
+        mock_keystone.return_value = fakes.FakeKeystoneClient()
+        mock_keystone.return_value.auth_ref.role_names = ["notadmin"]
         self.assertRaises(exceptions.InvalidAdminException,
                           self.clients.verified_keystone)
 
-    @mock.patch("rally.osclients.Clients.keystone")
-    def test_verified_keystone_unauthorized(self, mock_clients_keystone):
-        mock_clients_keystone.return_value = fakes.FakeKeystoneClient()
-        mock_clients_keystone.side_effect = keystone_exceptions.Unauthorized
+    @mock.patch("rally.osclients.Keystone.create_client")
+    def test_verified_keystone_unauthorized(self, mock_keystone_create_client):
+        mock_keystone_create_client.return_value = fakes.FakeKeystoneClient()
+        mock_keystone_create_client.side_effect = (
+            keystone_exceptions.Unauthorized)
         self.assertRaises(exceptions.InvalidEndpointsException,
                           self.clients.verified_keystone)
 
-    @mock.patch("rally.osclients.Clients.keystone")
-    def test_verified_keystone_unreachable(self, mock_clients_keystone):
-        mock_clients_keystone.return_value = fakes.FakeKeystoneClient()
-        mock_clients_keystone.side_effect = (
+    @mock.patch("rally.osclients.Keystone.create_client")
+    def test_verified_keystone_unreachable(self, mock_keystone_create_client):
+        mock_keystone_create_client.return_value = fakes.FakeKeystoneClient()
+        mock_keystone_create_client.side_effect = (
             keystone_exceptions.AuthorizationFailure
         )
         self.assertRaises(exceptions.HostUnreachableException,
@@ -515,12 +525,12 @@ class OSClientsTestCase(test.TestCase):
             mock_boto.connect_ec2_endpoint.assert_called_once_with(**kw)
             self.assertEqual(fake_ec2, self.clients.cache["ec2"])
 
-    @mock.patch("rally.osclients.Clients.keystone")
-    def test_services(self, mock_clients_keystone):
+    @mock.patch("rally.osclients.Keystone.create_client")
+    def test_services(self, mock_keystone_create_client):
         available_services = {consts.ServiceType.IDENTITY: {},
                               consts.ServiceType.COMPUTE: {},
                               "unknown_service": {}}
-        mock_clients_keystone.return_value = mock.Mock(
+        mock_keystone_create_client.return_value = mock.Mock(
             service_catalog=mock.Mock(
                 get_endpoints=lambda: available_services))
         clients = osclients.Clients(self.endpoint)
@@ -548,22 +558,23 @@ class OSClientsTestCase(test.TestCase):
             mock_murano.client.Client.assert_called_once_with("1", **kw)
             self.assertEqual(fake_murano, self.clients.cache["murano"])
 
-    @mock.patch("rally.osclients.cached")
-    def test_register(self, mock_cached):
-        client_func = mock.Mock(return_value="foo_client")
-        cached_client_func = mock.Mock(return_value="cached_foo_client")
-        mock_cached.return_value = cached_client_func
-        clients = osclients.Clients(mock.Mock())
+    def test_register(self):
+        return_value = "foo_client"
+        client_func = mock.Mock(return_value=return_value)
 
-        self.assertFalse(hasattr(clients, "foo"))
+        new_cls = osclients.Clients.register("test_register")(client_func)
+        self.addCleanup(new_cls.unregister)
 
-        func = osclients.Clients.register("foo")(client_func)
+        clients = osclients.Clients(mock.MagicMock())
 
-        mock_cached.assert_called_once_with(client_func)
-        self.assertEqual("cached_foo_client", clients.foo())
-        self.assertEqual(client_func, func)
-        self.assertEqual(cached_client_func, clients.foo)
+        self.assertTrue(issubclass(new_cls, osclients.OSClient))
+        self.assertIsInstance(clients.test_register, osclients.OSClient)
+        self.assertEqual(return_value, clients.test_register())
+        # call second time with same parameters to check that cache works
+        clients.test_register()
+        client_func.assert_called_once_with()
 
         # Call second time with same name
         self.assertRaises(ValueError,
-                          osclients.Clients.register("foo"), client_func)
+                          osclients.Clients.register("test_register"),
+                          client_func)

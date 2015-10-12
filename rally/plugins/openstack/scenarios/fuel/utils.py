@@ -104,15 +104,16 @@ class FuelClient(object):
         self.task = get_client("task", version=version)
 
 
-@osclients.Clients.register("fuel")
-def fuel(instance):
+@osclients.configure("fuel", default_version="v1")
+class Fuel(osclients.OSClient):
     """FuelClient factory for osclients.Clients."""
-    auth_url = six.moves.urllib.parse.urlparse(instance.endpoint.auth_url)
-    return FuelClient(version="v1",
-                      server_address=auth_url.hostname,
-                      server_port=8000,
-                      username=instance.endpoint.username,
-                      password=instance.endpoint.password)
+    def create_client(self, *args, **kwargs):
+        auth_url = six.moves.urllib.parse.urlparse(self.endpoint.auth_url)
+        return FuelClient(version=self.choose_version(),
+                          server_address=auth_url.hostname,
+                          server_port=8000,
+                          username=self.endpoint.username,
+                          password=self.endpoint.password)
 
 
 class FuelScenario(scenario.OpenStackScenario):

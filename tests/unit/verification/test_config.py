@@ -56,7 +56,8 @@ class ConfigTestCase(test.TestCase):
                                                       "/path/to/fake/conf")
         self.context.conf.add_section("compute")
 
-        keystone_patcher = mock.patch("rally.osclients.create_keystone_client")
+        keystone_patcher = mock.patch(
+            "rally.osclients.Keystone._create_keystone_client")
         keystone_patcher.start()
         self.addCleanup(keystone_patcher.stop)
 

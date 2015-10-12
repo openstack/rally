@@ -47,15 +47,15 @@ class ShowCommandsTestCase(test.TestCase):
     @mock.patch("rally.cli.commands.show.cliutils.print_list")
     @mock.patch("rally.cli.commands.show.cliutils.pretty_float_formatter")
     @mock.patch("rally.cli.commands.show.utils.Struct")
-    @mock.patch("rally.cli.commands.show.osclients.Clients.glance")
+    @mock.patch("rally.osclients.Glance.create_client")
     @mock.patch("rally.cli.commands.show.db.deployment_get")
-    def test_images(self, mock_deployment_get, mock_clients_glance,
+    def test_images(self, mock_deployment_get, mock_glance_create_client,
                     mock_struct, mock_pretty_float_formatter,
                     mock_print_list, mock_print):
         self.fake_glance_client.images.create("image", None, None, None)
         fake_image = list(self.fake_glance_client.images.cache.values())[0]
         fake_image.size = 1
-        mock_clients_glance.return_value = self.fake_glance_client
+        mock_glance_create_client.return_value = self.fake_glance_client
         mock_deployment_get.return_value = {
             "admin": self.admin_endpoint,
             "users": [self.user_endpoints, self.user_endpoints]
@@ -64,8 +64,8 @@ class ShowCommandsTestCase(test.TestCase):
         self.show.images(self.fake_deployment_id)
         mock_deployment_get.assert_called_once_with(self.fake_deployment_id)
 
-        mock_clients_glance.assert_has_calls([mock.call()] * 3)
-        self.assertEqual(3, mock_clients_glance.call_count)
+        mock_glance_create_client.assert_has_calls([mock.call()] * 3)
+        self.assertEqual(3, mock_glance_create_client.call_count)
 
         headers = ["UUID", "Name", "Size (B)"]
         fake_data = dict(
@@ -86,24 +86,24 @@ class ShowCommandsTestCase(test.TestCase):
     @mock.patch("rally.cli.commands.show.cliutils.print_list")
     @mock.patch("rally.cli.commands.show.cliutils.pretty_float_formatter")
     @mock.patch("rally.cli.commands.show.utils.Struct")
-    @mock.patch("rally.cli.commands.show.osclients.Clients.nova")
+    @mock.patch("rally.osclients.Nova.create_client")
     @mock.patch("rally.cli.commands.show.db.deployment_get")
-    def test_flavors(self, mock_deployment_get, mock_clients_nova,
+    def test_flavors(self, mock_deployment_get, mock_nova_create_client,
                      mock_struct, mock_pretty_float_formatter,
                      mock_print_list):
         self.fake_nova_client.flavors.create()
         fake_flavor = list(self.fake_nova_client.flavors.cache.values())[0]
         fake_flavor.id, fake_flavor.name, fake_flavor.vcpus = 1, "m1.fake", 1
         fake_flavor.ram, fake_flavor.swap, fake_flavor.disk = 1024, 128, 10
-        mock_clients_nova.return_value = self.fake_nova_client
+        mock_nova_create_client.return_value = self.fake_nova_client
         mock_deployment_get.return_value = {
             "admin": self.admin_endpoint,
             "users": [self.user_endpoints, self.user_endpoints]
         }
         self.show.flavors(self.fake_deployment_id)
         mock_deployment_get.assert_called_once_with(self.fake_deployment_id)
-        mock_clients_nova.assert_has_calls([mock.call()] * 3)
-        self.assertEqual(3, mock_clients_nova.call_count)
+        mock_nova_create_client.assert_has_calls([mock.call()] * 3)
+        self.assertEqual(3, mock_nova_create_client.call_count)
 
         headers = ["ID", "Name", "vCPUs", "RAM (MB)", "Swap (MB)", "Disk (GB)"]
         fake_data = dict(
@@ -127,23 +127,23 @@ class ShowCommandsTestCase(test.TestCase):
 
     @mock.patch("rally.cli.commands.show.cliutils.print_list")
     @mock.patch("rally.cli.commands.show.utils.Struct")
-    @mock.patch("rally.cli.commands.show.osclients.Clients.nova")
+    @mock.patch("rally.osclients.Nova.create_client")
     @mock.patch("rally.cli.commands.show.db.deployment_get")
-    def test_networks(self, mock_deployment_get, mock_clients_nova,
+    def test_networks(self, mock_deployment_get, mock_nova_create_client,
                       mock_struct, mock_print_list):
         self.fake_nova_client.networks.create(1234)
         fake_network = list(self.fake_nova_client.networks.cache.values())[0]
         fake_network.label = "fakenet"
         fake_network.cidr = "10.0.0.0/24"
-        mock_clients_nova.return_value = self.fake_nova_client
+        mock_nova_create_client.return_value = self.fake_nova_client
         mock_deployment_get.return_value = {
             "admin": self.admin_endpoint,
             "users": [self.user_endpoints, self.user_endpoints]
         }
         self.show.networks(self.fake_deployment_id)
         mock_deployment_get.assert_called_once_with(self.fake_deployment_id)
-        mock_clients_nova.assert_has_calls([mock.call()] * 3)
-        self.assertEqual(3, mock_clients_nova.call_count)
+        mock_nova_create_client.assert_has_calls([mock.call()] * 3)
+        self.assertEqual(3, mock_nova_create_client.call_count)
 
         headers = ["ID", "Label", "CIDR"]
         fake_data = dict(
@@ -161,9 +161,9 @@ class ShowCommandsTestCase(test.TestCase):
 
     @mock.patch("rally.cli.commands.show.cliutils.print_list")
     @mock.patch("rally.cli.commands.show.utils.Struct")
-    @mock.patch("rally.cli.commands.show.osclients.Clients.nova")
+    @mock.patch("rally.osclients.Nova.create_client")
     @mock.patch("rally.cli.commands.show.db.deployment_get")
-    def test_secgroups(self, mock_deployment_get, mock_clients_nova,
+    def test_secgroups(self, mock_deployment_get, mock_nova_create_client,
                        mock_struct, mock_print_list):
         self.fake_nova_client.security_groups.create("othersg")
         fake_secgroup = list(
@@ -172,15 +172,15 @@ class ShowCommandsTestCase(test.TestCase):
         fake_secgroup2 = list(
             self.fake_nova_client.security_groups.cache.values())[1]
         fake_secgroup2.id = 1
-        mock_clients_nova.return_value = self.fake_nova_client
+        mock_nova_create_client.return_value = self.fake_nova_client
         mock_deployment_get.return_value = {
             "admin": self.admin_endpoint,
             "users": [self.user_endpoints]
         }
         self.show.secgroups(self.fake_deployment_id)
         mock_deployment_get.assert_called_once_with(self.fake_deployment_id)
-        mock_clients_nova.assert_has_calls([mock.call()] * 2)
-        self.assertEqual(2, mock_clients_nova.call_count)
+        mock_nova_create_client.assert_has_calls([mock.call()] * 2)
+        self.assertEqual(2, mock_nova_create_client.call_count)
 
         headers = ["ID", "Name", "Description"]
         fake_data = [fake_secgroup.id, fake_secgroup.name, ""]
@@ -198,22 +198,22 @@ class ShowCommandsTestCase(test.TestCase):
 
     @mock.patch("rally.cli.commands.show.cliutils.print_list")
     @mock.patch("rally.cli.commands.show.utils.Struct")
-    @mock.patch("rally.cli.commands.show.osclients.Clients.nova")
+    @mock.patch("rally.osclients.Nova.create_client")
     @mock.patch("rally.cli.commands.show.db.deployment_get")
-    def test_keypairs(self, mock_deployment_get, mock_clients_nova,
+    def test_keypairs(self, mock_deployment_get, mock_nova_create_client,
                       mock_struct, mock_print_list):
         self.fake_nova_client.keypairs.create("keypair")
         fake_keypair = list(self.fake_nova_client.keypairs.cache.values())[0]
         fake_keypair.fingerprint = "84:87:58"
-        mock_clients_nova.return_value = self.fake_nova_client
+        mock_nova_create_client.return_value = self.fake_nova_client
         mock_deployment_get.return_value = {
             "admin": self.admin_endpoint,
             "users": [self.user_endpoints, self.user_endpoints]
         }
         self.show.keypairs(self.fake_deployment_id)
         mock_deployment_get.assert_called_once_with(self.fake_deployment_id)
-        mock_clients_nova.assert_has_calls([mock.call()] * 3)
-        self.assertEqual(3, mock_clients_nova.call_count)
+        mock_nova_create_client.assert_has_calls([mock.call()] * 3)
+        self.assertEqual(3, mock_nova_create_client.call_count)
 
         headers = ["Name", "Fingerprint"]
         fake_data = dict(

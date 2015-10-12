@@ -13,9 +13,7 @@
 #    under the License.
 
 import mock
-import six
 
-from rally import osclients
 from rally.plugins.openstack.scenarios.fuel import utils
 from tests.unit import test
 
@@ -29,27 +27,12 @@ class ModuleTestCase(test.TestCase):
     @mock.patch(UTILS + "FuelClient", return_value="fuel_client")
     def test_fuel(self, mock_fuel_client, mock_six):
         mock_six.moves.urllib.parse.urlparse().hostname = "foo_host"
-        clients_ins = mock.Mock(endpoint=mock.Mock(username="foo_user",
-                                                   password="foo_pass"))
-
-        client = utils.fuel(clients_ins)
+        client = utils.Fuel(mock.Mock(username="foo_user",
+                                      password="foo_pass"), {}).create_client()
         mock_fuel_client.assert_called_once_with(
             version="v1", server_address="foo_host", server_port=8000,
             username="foo_user", password="foo_pass")
         self.assertEqual("fuel_client", client)
-
-    def test_fuel_is_registered(self):
-        six.moves.reload_module(osclients)
-        self.assertFalse(hasattr(osclients.Clients, "fuel"))
-        six.moves.reload_module(utils)
-        self.assertTrue(hasattr(osclients.Clients, "fuel"))
-        # NOTE(amaretskiy): Now we can finally mock utils.FuelClient,
-        # since `reload_module' above destroys mocks
-        with mock.patch(UTILS + "FuelClient",
-                        mock.Mock(return_value="fuel_client")):
-            with mock.patch(UTILS + "six"):
-                clients = osclients.Clients(mock.Mock())
-                self.assertEqual("fuel_client", clients.fuel())
 
 
 class FuelEnvTestCase(test.TestCase):
