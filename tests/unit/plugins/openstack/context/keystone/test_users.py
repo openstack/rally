@@ -221,9 +221,8 @@ class UserGeneratorTestCase(test.ScenarioTestCase):
                                                           "nova-network")
         nova_admin.networks.disassociate.assert_called_once_with(networks[0])
 
-    @mock.patch("%s.broker.time.sleep" % CTX)
     @mock.patch("%s.keystone" % CTX)
-    def test__create_tenants(self, mock_keystone, mock_sleep):
+    def test__create_tenants(self, mock_keystone):
         user_generator = users.UserGenerator(self.context)
         user_generator.config["tenants"] = 1
         tenants = user_generator._create_tenants()
@@ -231,9 +230,8 @@ class UserGeneratorTestCase(test.ScenarioTestCase):
         id, tenant = tenants.popitem()
         self.assertIn("name", tenant)
 
-    @mock.patch("%s.broker.time.sleep" % CTX)
     @mock.patch("%s.keystone" % CTX)
-    def test__create_users(self, mock_keystone, mock_sleep):
+    def test__create_users(self, mock_keystone):
         user_generator = users.UserGenerator(self.context)
         user_generator.context["tenants"] = {"t1": {"id": "t1", "name": "t1"},
                                              "t2": {"id": "t2", "name": "t2"}}

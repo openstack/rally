@@ -15,7 +15,6 @@
 
 import collections
 import threading
-import time
 
 from rally.common.i18n import _
 from rally.common import log as logging
@@ -24,23 +23,16 @@ from rally.common import log as logging
 LOG = logging.getLogger(__name__)
 
 
-def _consumer(consume, queue, is_published):
+def _consumer(consume, queue):
     """Infinity worker that consumes tasks from queue.
-
-    This finishes it's work only in case if is_published.isSet().
 
     :param consume: method that consumes an object removed from the queue
     :param queue: deque object to popleft() objects from
-    :param is_published: threading.Event that is used to stop the consumer
-                         when the queue is empty
     """
     cache = {}
     while True:
         if not queue:
-            if is_published.isSet():
-                break
-            time.sleep(0.1)
-            continue
+            break
         else:
             try:
                 args = queue.popleft()
@@ -55,16 +47,11 @@ def _consumer(consume, queue, is_published):
                 LOG.exception(e)
 
 
-def _publisher(publish, queue, is_published):
+def _publisher(publish, queue):
     """Calls a publish method that fills queue with jobs.
-
-    After running publish method it sets is_published variable, that is used to
-    stop workers (consumers).
 
     :param publish: method that fills the queue
     :param queue: deque object to be filled by the publish() method
-    :param is_published: threading.Event that is used to stop consumers and
-                         finish task
     """
     try:
         publish(queue)
@@ -72,8 +59,6 @@ def _publisher(publish, queue, is_published):
         LOG.warning(_("Failed to publish a task to the queue: %s") % e)
         if logging.is_debug():
             LOG.exception(e)
-    finally:
-        is_published.set()
 
 
 def run(publish, consume, consumers_count=1):
@@ -89,15 +74,13 @@ def run(publish, consume, consumers_count=1):
     :param consumers_count: Number of consumers
     """
     queue = collections.deque()
-    is_published = threading.Event()
+    _publisher(publish, queue)
 
     consumers = []
     for i in range(consumers_count):
-        consumer = threading.Thread(target=_consumer,
-                                    args=(consume, queue, is_published))
+        consumer = threading.Thread(target=_consumer, args=(consume, queue))
         consumer.start()
         consumers.append(consumer)
 
-    _publisher(publish, queue, is_published)
     for consumer in consumers:
         consumer.join()
