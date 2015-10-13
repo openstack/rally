@@ -23,14 +23,15 @@ from six.moves import queue as Queue
 from rally.common import logging
 from rally.common import utils
 from rally import consts
+from rally import exceptions
 from rally.task import runner
 
 LOG = logging.getLogger(__name__)
 
 
-def _worker_process(queue, iteration_gen, timeout, rps, times,
-                    max_concurrent, context, cls, method_name,
-                    args, event_queue, aborted, info):
+def _worker_process(queue, iteration_gen, timeout, times, max_concurrent,
+                    context, cls, method_name, args, event_queue, aborted,
+                    runs_per_second, rps_cfg, processes_to_start, info):
     """Start scenario within threads.
 
     Spawn N threads per second. Each thread runs the scenario once, and appends
@@ -40,7 +41,6 @@ def _worker_process(queue, iteration_gen, timeout, rps, times,
     :param queue: queue object to append results
     :param iteration_gen: next iteration number generator
     :param timeout: operation's timeout
-    :param rps: number of scenario iterations to be run per one second
     :param times: total number of scenario iterations to be run
     :param max_concurrent: maximum worker concurrency
     :param context: scenario context object
@@ -49,10 +49,18 @@ def _worker_process(queue, iteration_gen, timeout, rps, times,
     :param args: scenario args
     :param aborted: multiprocessing.Event that aborts load generation if
                     the flag is set
+    :param runs_per_second: function that should return desired rps value
+    :param rps_cfg: rps section from task config
+    :param processes_to_start: int, number of started processes for scenario
+                               execution
     :param info: info about all processes count and counter of runned process
     """
 
     pool = collections.deque()
+    if isinstance(rps_cfg, dict):
+        rps = rps_cfg["start"]
+    else:
+        rps = rps_cfg
     sleep = 1.0 / rps
 
     runner._log_worker_info(times=times, rps=rps, timeout=timeout,
@@ -90,11 +98,14 @@ def _worker_process(queue, iteration_gen, timeout, rps, times,
         real_rps = i / time_gap if time_gap else "Infinity"
 
         LOG.debug("Worker: %s rps: %s (requested rps: %s)" %
-                  (i, real_rps, rps))
+                  (i, real_rps, runs_per_second(
+                      rps_cfg, start, processes_to_start)))
 
         # try to join latest thread(s) until it finished, or until time to
         # start new thread (if we have concurrent slots available)
-        while i / (time.time() - start) > rps or len(pool) >= max_concurrent:
+        while i / (time.time() - start) > runs_per_second(
+                rps_cfg, start, processes_to_start) or (
+                    len(pool) >= max_concurrent):
             if pool:
                 pool[0].join(0.001)
                 if not pool[0].isAlive():
@@ -135,9 +146,35 @@ class RPSScenarioRunner(runner.ScenarioRunner):
                 "minimum": 1
             },
             "rps": {
-                "type": "number",
-                "exclusiveMinimum": True,
-                "minimum": 0
+                "anyOf": [
+                    {
+                        "type": "number",
+                        "exclusiveMinimum": True,
+                        "minimum": 0
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "start": {
+                                "type": "number",
+                                "minimum": 1
+                            },
+                            "end": {
+                                "type": "number",
+                                "minimum": 1
+                            },
+                            "step": {
+                                "type": "number",
+                                "minimum": 1
+                            },
+                            "duration": {
+                                "type": "number",
+                                "minimum": 1
+                            }
+                        },
+                        "required": ["start", "end", "step"]
+                    }
+                ],
             },
             "timeout": {
                 "type": "number",
@@ -154,6 +191,16 @@ class RPSScenarioRunner(runner.ScenarioRunner):
         "required": ["type", "times", "rps"],
         "additionalProperties": False
     }
+
+    @staticmethod
+    def validate(config):
+        """Validates runner's part of task config."""
+        super(RPSScenarioRunner, RPSScenarioRunner).validate(config)
+
+        if isinstance(config["rps"], dict):
+            if config["rps"]["end"] < config["rps"]["start"]:
+                msg = "rps end value must not be less than rps start value."
+                raise exceptions.InvalidTaskException(msg)
 
     def _run_scenario(self, cls, method_name, context, args):
         """Runs the specified benchmark scenario with given arguments.
@@ -180,9 +227,20 @@ class RPSScenarioRunner(runner.ScenarioRunner):
         max_cpu_used = min(cpu_count,
                            self.config.get("max_cpu_count", cpu_count))
 
+        def runs_per_second(rps_cfg, start_timer, number_of_processes):
+            """At the given second return desired rps."""
+
+            if not isinstance(rps_cfg, dict):
+                return float(rps_cfg) / number_of_processes
+            stage_order = (time.time() - start_timer) / rps_cfg.get(
+                "duration", 1) - 1
+            rps = (float(rps_cfg["start"] + rps_cfg["step"] * stage_order) /
+                   number_of_processes)
+
+            return min(rps, float(rps_cfg["end"]))
+
         processes_to_start = min(max_cpu_used, times,
                                  self.config.get("max_concurrency", times))
-        rps_per_worker = float(self.config["rps"]) / processes_to_start
         times_per_worker, times_overhead = divmod(times, processes_to_start)
 
         # Determine concurrency per worker
@@ -192,7 +250,6 @@ class RPSScenarioRunner(runner.ScenarioRunner):
         self._log_debug_info(times=times, timeout=timeout,
                              max_cpu_used=max_cpu_used,
                              processes_to_start=processes_to_start,
-                             rps_per_worker=rps_per_worker,
                              times_per_worker=times_per_worker,
                              times_overhead=times_overhead,
                              concurrency_per_worker=concurrency_per_worker,
@@ -211,15 +268,18 @@ class RPSScenarioRunner(runner.ScenarioRunner):
             :param times_overhead: remaining number of threads to be
                                    distributed to workers
             :param concurrency_overhead: remaining number of maximum
-                                         concurrent threads to be distributed
-                                         to workers
+                                         concurrent threads to be
+                                         distributed to workers
             """
             while True:
-                yield (result_queue, iteration_gen, timeout, rps_per_worker,
-                       times_per_worker + (times_overhead and 1),
-                       concurrency_per_worker + (concurrency_overhead and 1),
-                       context, cls, method_name, args, event_queue,
-                       self.aborted)
+                yield (
+                    result_queue, iteration_gen, timeout,
+                    times_per_worker + (times_overhead and 1),
+                    concurrency_per_worker + (concurrency_overhead and 1),
+                    context, cls, method_name, args, event_queue,
+                    self.aborted, runs_per_second, self.config["rps"],
+                    processes_to_start
+                )
                 if times_overhead:
                     times_overhead -= 1
                 if concurrency_overhead:
