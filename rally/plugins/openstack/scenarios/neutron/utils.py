@@ -442,14 +442,16 @@ class NeutronScenario(scenario.OpenStackScenario):
         """
         return self.clients("neutron").delete_floatingip(floating_ip["id"])
 
-    def _create_v1_healthmonitor(self, atomic_action=True,
-                                 **healthmonitor_create_args):
+    @atomic.optional_action_timer("neutron.create_healthmonitor")
+    def _create_v1_healthmonitor(self, **healthmonitor_create_args):
         """Create LB healthmonitor.
 
         This atomic function creates healthmonitor with the provided
         healthmonitor_create_args.
 
-        :param atomic_action: True if this is an atomic action
+        :param atomic_action: True if this is an atomic action. added
+                              and handled by the
+                              optional_action_timer() decorator
         :param healthmonitor_create_args: dict, POST /lb/healthmonitors
         :returns: neutron healthmonitor dict
         """
@@ -458,10 +460,6 @@ class NeutronScenario(scenario.OpenStackScenario):
                 "max_retries": self.HM_MAX_RETRIES,
                 "timeout": self.HM_TIMEOUT}
         args.update(healthmonitor_create_args)
-        if atomic_action:
-            with atomic.ActionTimer(self, "neutron.create_healthmonitor"):
-                return self.clients("neutron").create_health_monitor(
-                    {"health_monitor": args})
         return self.clients("neutron").create_health_monitor(
             {"health_monitor": args})
 
