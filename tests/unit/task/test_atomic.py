@@ -55,3 +55,37 @@ class AtomicActionTestCase(test.TestCase):
         self.assertEqual(5, inst.some_func(2, 3))
         self.assertEqual(costilius.OrderedDict({"some": 2}),
                          inst.atomic_actions())
+
+    @mock.patch("time.time", side_effect=[1, 3, 1, 3])
+    def test_optional_action_timer_decorator(self, mock_time):
+
+        class TestAtomicTimer(atomic.ActionTimerMixin):
+
+            @atomic.optional_action_timer("some")
+            def some_func(self, a, b):
+                return a + b
+
+            @atomic.optional_action_timer("some", argument_name="foo",
+                                          default=False)
+            def other_func(self, a, b):
+                return a + b
+
+        inst = TestAtomicTimer()
+        self.assertEqual(5, inst.some_func(2, 3))
+        self.assertEqual(costilius.OrderedDict({"some": 2}),
+                         inst.atomic_actions())
+
+        inst = TestAtomicTimer()
+        self.assertEqual(5, inst.some_func(2, 3, atomic_action=False))
+        self.assertEqual(costilius.OrderedDict(),
+                         inst.atomic_actions())
+
+        inst = TestAtomicTimer()
+        self.assertEqual(5, inst.other_func(2, 3))
+        self.assertEqual(costilius.OrderedDict(),
+                         inst.atomic_actions())
+
+        inst = TestAtomicTimer()
+        self.assertEqual(5, inst.other_func(2, 3, foo=True))
+        self.assertEqual(costilius.OrderedDict({"some": 2}),
+                         inst.atomic_actions())

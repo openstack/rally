@@ -85,3 +85,34 @@ def action_timer(name):
             return f
         return func_atomic_actions
     return wrap
+
+
+def optional_action_timer(name, argument_name="atomic_action", default=True):
+    """Optionally provide measure of execution time.
+
+    Decorates methods of the Scenario class. This provides duration in
+    seconds of each atomic action. When the decorated function is
+    called, this inspects the kwarg named by ``argument_name`` and
+    optionally sets an ActionTimer around the function call.
+
+    The ``atomic_action`` keyword argument does not need to be added
+    to the function; it will be popped from the kwargs dict by the
+    wrapper.
+
+    :param name: The name of the timer
+    :param argument_name: The name of the kwarg to inspect to
+                          determine if a timer should be set.
+    :param default: Whether or not to set a timer if ``argument_name``
+                    is not present.
+    """
+    def wrap(func):
+        @functools.wraps(func)
+        def func_atomic_actions(self, *args, **kwargs):
+            if kwargs.pop(argument_name, default):
+                with ActionTimer(self, name):
+                    f = func(self, *args, **kwargs)
+            else:
+                f = func(self, *args, **kwargs)
+            return f
+        return func_atomic_actions
+    return wrap

@@ -93,16 +93,15 @@ class NeutronScenario(scenario.OpenStackScenario):
         return self.clients("neutron").create_network(
             {"network": network_create_args})
 
-    def _list_networks(self, atomic_action=True, **kwargs):
+    @atomic.optional_action_timer("neutron.list_networks")
+    def _list_networks(self, **kwargs):
         """Return user networks list.
 
-        :param atomic_action: True if this is an atomic action
+        :param atomic_action: True if this is an atomic action. added
+                              and handled by the
+                              optional_action_timer() decorator
         :param kwargs: network list options
         """
-        if atomic_action:
-            with atomic.ActionTimer(self, "neutron.list_networks"):
-                return self.clients("neutron").list_networks(
-                    **kwargs)["networks"]
         return self.clients("neutron").list_networks(**kwargs)["networks"]
 
     @atomic.action_timer("neutron.update_network")
@@ -311,13 +310,15 @@ class NeutronScenario(scenario.OpenStackScenario):
         self.clients("neutron").remove_interface_router(
             router["id"], {"subnet_id": subnet["id"]})
 
-    def _create_lb_pool(self, subnet_id, atomic_action=True,
-                        **pool_create_args):
+    @atomic.optional_action_timer("neutron.create_pool")
+    def _create_lb_pool(self, subnet_id, **pool_create_args):
         """Create LB pool(v1)
 
         :param subnet_id: str, neutron subnet-id
         :param pool_create_args: dict, POST /lb/pools request options
-        :param atomic_action: True if this is an atomic action
+        :param atomic_action: True if this is an atomic action. added
+                              and handled by the
+                              optional_action_timer() decorator
         :returns: dict, neutron lb pool
         """
         args = {"lb_method": self.LB_METHOD,
@@ -325,9 +326,6 @@ class NeutronScenario(scenario.OpenStackScenario):
                 "name": self._generate_random_name("rally_pool_"),
                 "subnet_id": subnet_id}
         args.update(pool_create_args)
-        if atomic_action:
-            with atomic.ActionTimer(self, "neutron.create_pool"):
-                return self.clients("neutron").create_pool({"pool": args})
         return self.clients("neutron").create_pool({"pool": args})
 
     def _create_v1_pools(self, networks, **pool_create_args):

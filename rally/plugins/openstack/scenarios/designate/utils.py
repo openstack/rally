@@ -49,13 +49,16 @@ class DesignateScenario(scenario.OpenStackScenario):
         """
         self.clients("designate").domains.delete(domain_id)
 
-    def _create_record(self, domain, record=None, atomic_action=True):
+    @atomic.optional_action_timer("designate.create_record")
+    def _create_record(self, domain, record=None):
         """Create a record in a domain.
 
         :param domain: domain dict
         :param record: record dict
-        :param atomic_action: True if the record creation should be tracked
-                              as an atomic action
+        :param atomic_action: True if the record creation should be
+                              tracked as an atomic action. added and
+                              handled by the optional_action_timer()
+                              decorator
         :returns: Designate record dict
         """
         record = record or {}
@@ -65,10 +68,6 @@ class DesignateScenario(scenario.OpenStackScenario):
         record.setdefault("data", "10.0.0.1")
 
         client = self.clients("designate")
-
-        if atomic_action:
-            with atomic.ActionTimer(self, "designate.create_record"):
-                return client.records.create(domain["id"], record)
 
         return client.records.create(domain["id"], record)
 
@@ -81,21 +80,18 @@ class DesignateScenario(scenario.OpenStackScenario):
         """
         return self.clients("designate").records.list(domain_id)
 
-    def _delete_record(self, domain_id, record_id, atomic_action=True):
+    @atomic.optional_action_timer("designate.delete_record")
+    def _delete_record(self, domain_id, record_id):
         """Delete a domain record.
 
         :param domain_id: domain ID
         :param record_id: record ID
-        :param atomic_action: True if the record creation should be tracked
-                              as an atomic action
+        :param atomic_action: True if the record creation should be
+                              tracked as an atomic action. added and
+                              handled by the optional_action_timer()
+                              decorator
         """
-        client = self.clients("designate")
-
-        if atomic_action:
-            with atomic.ActionTimer(self, "designate.delete_record"):
-                client.records.delete(domain_id, record_id)
-        else:
-            client.records.delete(domain_id, record_id)
+        self.clients("designate").records.delete(domain_id, record_id)
 
     @atomic.action_timer("designate.create_server")
     def _create_server(self, server=None):
