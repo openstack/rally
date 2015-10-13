@@ -476,15 +476,21 @@ class ResultConsumerTestCase(test.TestCase):
         key = {"kw": {"fake": 2}, "name": "fake", "pos": 0}
         task = mock.MagicMock()
         runner = mock.MagicMock()
-        runner.result_queue = collections.deque([1, 2])
+
+        results = [
+            {"duration": 1, "timestamp": 3},
+            {"duration": 2, "timestamp": 2}
+        ]
+
+        runner.result_queue = collections.deque(results)
         with engine.ResultConsumer(
                 key, task, runner, False) as consumer_obj:
             pass
 
-        expected_iteration_calls = [mock.call(1), mock.call(2)]
-        self.assertEqual(expected_iteration_calls,
+        self.assertEqual(list(map(mock.call, results)),
                          mock_sla_instance.add_iteration.mock_calls)
-        self.assertEqual([1, 2], consumer_obj.results)
+        self.assertEqual(sorted(results, key=lambda x: x["timestamp"]),
+                         consumer_obj.results)
 
     @mock.patch("rally.common.objects.Task.get_status")
     @mock.patch("rally.task.engine.ResultConsumer.wait_and_abort")
@@ -499,7 +505,9 @@ class ResultConsumerTestCase(test.TestCase):
         key = {"kw": {"fake": 2}, "name": "fake", "pos": 0}
         task = mock.MagicMock()
         runner = mock.MagicMock()
-        runner.result_queue = collections.deque([1, 2, 3, 4])
+
+        runner.result_queue = collections.deque(
+            [{"duration": 1, "timestamp": 1}] * 4)
 
         with engine.ResultConsumer(key, task, runner, True):
             pass
@@ -546,7 +554,8 @@ class ResultConsumerTestCase(test.TestCase):
         key = {"kw": {"fake": 2}, "name": "fake", "pos": 0}
         task = mock.MagicMock()
         runner = mock.MagicMock()
-        runner.result_queue = collections.deque([1, 2, 3, 4])
+        runner.result_queue = collections.deque(
+            [{"duration": 1, "timestamp": 4}] * 4)
 
         with engine.ResultConsumer(key, task, runner, False):
             pass
