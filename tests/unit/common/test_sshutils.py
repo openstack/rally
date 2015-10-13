@@ -181,8 +181,8 @@ class SSHRunTestCase(test.TestCase):
         mock_select.select.return_value = ([], [], [])
         self.fake_session.recv_ready.side_effect = [1, 0, 0]
         self.fake_session.recv_stderr_ready.side_effect = [1, 0]
-        self.fake_session.recv.return_value = "ok"
-        self.fake_session.recv_stderr.return_value = "error"
+        self.fake_session.recv.return_value = b"ok"
+        self.fake_session.recv_stderr.return_value = b"error"
         self.fake_session.exit_status_ready.return_value = 1
         self.fake_session.recv_exit_status.return_value = 127
         self.assertEqual((127, "ok", "error"), self.ssh.execute("cmd"))
@@ -193,8 +193,8 @@ class SSHRunTestCase(test.TestCase):
         mock_select.select.return_value = ([], [], [])
         self.fake_session.recv_ready.side_effect = [1, 0, 0]
         self.fake_session.recv_stderr_ready.side_effect = [1, 0]
-        self.fake_session.recv.return_value = "ok"
-        self.fake_session.recv_stderr.return_value = "error"
+        self.fake_session.recv.return_value = b"ok"
+        self.fake_session.recv_stderr.return_value = b"error"
         self.fake_session.exit_status_ready.return_value = 1
         self.fake_session.recv_exit_status.return_value = 127
 
@@ -219,7 +219,7 @@ class SSHRunTestCase(test.TestCase):
     def test_run_stdout(self, mock_select):
         mock_select.select.return_value = ([], [], [])
         self.fake_session.recv_ready.side_effect = [True, True, False]
-        self.fake_session.recv.side_effect = ["ok1", "ok2"]
+        self.fake_session.recv.side_effect = [b"ok1", b"ok2"]
         stdout = mock.Mock()
         self.ssh.run("cmd", stdout=stdout)
         self.assertEqual([mock.call("ok1"), mock.call("ok2")],
@@ -229,7 +229,7 @@ class SSHRunTestCase(test.TestCase):
     def test_run_stderr(self, mock_select):
         mock_select.select.return_value = ([], [], [])
         self.fake_session.recv_stderr_ready.side_effect = [True, False]
-        self.fake_session.recv_stderr.return_value = "error"
+        self.fake_session.recv_stderr.return_value = b"error"
         stderr = mock.Mock()
         self.ssh.run("cmd", stderr=stderr)
         stderr.write.assert_called_once_with("error")

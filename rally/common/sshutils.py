@@ -192,14 +192,14 @@ class SSH(object):
                 data = session.recv(4096)
                 LOG.debug("stdout: %r" % data)
                 if stdout is not None:
-                    stdout.write(data)
+                    stdout.write(data.decode("utf8"))
                 continue
 
             if session.recv_stderr_ready():
                 stderr_data = session.recv_stderr(4096)
                 LOG.debug("stderr: %r" % stderr_data)
                 if stderr is not None:
-                    stderr.write(stderr_data)
+                    stderr.write(stderr_data.decode("utf8"))
                 continue
 
             if session.send_ready():
