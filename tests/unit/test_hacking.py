@@ -319,3 +319,12 @@ class HackingTestCase(test.TestCase):
             "text = process(unicode('sometext'))", "fakefile")
         self.assertIsNotNone(next(checkres))
         self.assertEqual([], list(checkres))
+
+    def test_check_raises(self):
+        checkres = checks.check_raises(
+            "text = :raises: Exception if conditions", "fakefile")
+        self.assertIsNotNone(checkres)
+
+        checkres = checks.check_raises(
+            "text = :raises Exception: if conditions", "fakefile")
+        self.assertIsNone(checkres)

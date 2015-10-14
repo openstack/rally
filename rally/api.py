@@ -277,9 +277,9 @@ class Task(object):
         :param task_uuid: The UUID of the task.
         :param force: If set to True, then delete the task despite to the
                       status.
-        :raises: :class:`rally.exceptions.TaskInvalidStatus` when the
-                 status of the task is not FINISHED and the force argument
-                 if not True
+        :raises TaskInvalidStatus: when the status of the task is not
+                                   FINISHED and the force argument
+                                   is not True
         """
         status = None if force else consts.TaskStatus.FINISHED
         objects.Task.delete_by_uuid(task_uuid, status=status)

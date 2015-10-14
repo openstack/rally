@@ -80,7 +80,7 @@ class Connection(object):
         :param session: Reuse the session object or get new one if it is
                         None.
         :returns: The query object.
-        :raises: :class:`Exception` when the model is not a sublcass of
+        :raises Exception: when the model is not a sublcass of
                  :class:`rally.common.db.sqlalchemy.models.RallyBase`.
         """
         session = session or get_session()

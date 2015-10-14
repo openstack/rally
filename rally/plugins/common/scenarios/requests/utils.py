@@ -28,8 +28,8 @@ class RequestScenario(scenario.Scenario):
         :param url: Uniform resource locator
         :param method: Type of request method (GET | POST ..)
         :param kwargs: Optional additional request parameters
-        :raises: ValueError if return http status code
-        not equal to expected status code
+        :raises ValueError: if return http status code
+                            not equal to expected status code
         """
 
         resp = requests.request(method, url, **kwargs)
