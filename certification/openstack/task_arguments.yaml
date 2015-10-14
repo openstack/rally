@@ -2,6 +2,7 @@
   service_list:
     - authentication
     - nova
+    - neutron
     - keystone
     - cinder
     - glance

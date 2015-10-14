@@ -27,10 +27,13 @@ class TestCertificationTask(unittest.TestCase):
         rally = utils.Rally()
         full_path = os.path.join(
             os.path.dirname(__file__), os.pardir, os.pardir,
-            "certification", "openstack", "task.yaml")
+            "certification", "openstack")
+        task_path = os.path.join(full_path, "task.yaml")
+        args_path = os.path.join(full_path, "task_arguments.yaml")
 
         try:
-            rally("task validate --task %s" % full_path)
+            rally("task validate --task %s --task-args-file %s" % (task_path,
+                                                                   args_path))
         except Exception:
             print(traceback.format_exc())
             self.assertTrue(False, "Wrong task config %s" % full_path)
