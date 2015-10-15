@@ -186,8 +186,7 @@ class TempestInstallAndUninstallTestCase(BaseTestCase):
         with self.base_repo_patcher:
             self.verifier._clone()
             mock_check_call.assert_called_once_with(
-                ["git", "clone", "https://github.com/openstack/tempest",
-                 "foo-baserepo"])
+                ["git", "clone", tempest.TEMPEST_SOURCE, "foo-baserepo"])
 
     def test__no_dir(self):
         with mock.patch("os.path.isdir", return_value=False):
@@ -222,8 +221,7 @@ class TempestInstallAndUninstallTestCase(BaseTestCase):
             self.assertRaises(subprocess.CalledProcessError,
                               self.verifier._clone)
             mock_check_call.assert_called_once_with(
-                ["git", "clone", "https://github.com/openstack/tempest",
-                 "foo-baserepo"])
+                ["git", "clone", tempest.TEMPEST_SOURCE, "foo-baserepo"])
             mock_rmtree.assert_called_once_with(self.verifier.base_repo)
 
     @mock.patch(TEMPEST_PATH + ".tempest.Tempest.base_repo")

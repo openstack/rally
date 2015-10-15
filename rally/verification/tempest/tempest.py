@@ -32,7 +32,7 @@ from rally import exceptions
 from rally.verification.tempest import config
 from rally.verification.tempest import subunit2json
 
-TEMPEST_SOURCE = "https://github.com/openstack/tempest"
+TEMPEST_SOURCE = "https://git.openstack.org/openstack/tempest"
 
 LOG = logging.getLogger(__name__)
 
