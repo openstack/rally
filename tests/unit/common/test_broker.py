@@ -25,25 +25,19 @@ class BrokerTestCase(test.TestCase):
 
     def test__publisher(self):
         mock_publish = mock.MagicMock()
-        mock_is_published = mock.MagicMock()
         queue = collections.deque()
-        broker._publisher(mock_publish, queue, mock_is_published)
+        broker._publisher(mock_publish, queue)
         mock_publish.assert_called_once_with(queue)
-        mock_is_published.set.assert_called_once_with()
 
     def test__publisher_fails(self):
         mock_publish = mock.MagicMock(side_effect=Exception())
-        mock_is_published = mock.MagicMock()
         queue = collections.deque()
-        broker._publisher(mock_publish, queue, mock_is_published)
-        mock_is_published.set.assert_called_once_with()
+        broker._publisher(mock_publish, queue)
 
     def test__consumer(self):
         queue = collections.deque([1, 2, 3])
         mock_consume = mock.MagicMock()
-        mock_is_published = mock.MagicMock()
-        mock_is_published.isSet = mock.MagicMock(return_value=True)
-        broker._consumer(mock_consume, queue, mock_is_published)
+        broker._consumer(mock_consume, queue)
         self.assertEqual(3, mock_consume.call_count)
         self.assertEqual(0, len(queue))
 
@@ -55,17 +49,13 @@ class BrokerTestCase(test.TestCase):
             cache_keys_history.append(list(cache))
 
         queue = collections.deque([1, 2, 3])
-        mock_is_published = mock.MagicMock()
-        mock_is_published.isSet = mock.MagicMock(return_value=True)
-        broker._consumer(consume, queue, mock_is_published)
+        broker._consumer(consume, queue)
         self.assertEqual([[1], [1, 2], [1, 2, 3]], cache_keys_history)
 
     def test__consumer_fails(self):
         queue = collections.deque([1, 2, 3])
         mock_consume = mock.MagicMock(side_effect=Exception())
-        mock_is_published = mock.MagicMock()
-        mock_is_published.isSet = mock.MagicMock(return_value=True)
-        broker._consumer(mock_consume, queue, mock_is_published)
+        broker._consumer(mock_consume, queue)
         self.assertEqual(0, len(queue))
 
     @mock.patch("rally.common.broker.LOG")
@@ -73,9 +63,7 @@ class BrokerTestCase(test.TestCase):
         consume = mock.Mock()
         consume.side_effect = IndexError()
         queue = collections.deque([1, 2, 3])
-        is_published = mock.Mock()
-        is_published.isSet.side_effect = [False, False, True]
-        broker._consumer(consume, queue, is_published)
+        broker._consumer(consume, queue)
         self.assertTrue(mock_log.warning.called)
         self.assertFalse(queue)
         expected = [mock.call({}, 1), mock.call({}, 2), mock.call({}, 3)]
