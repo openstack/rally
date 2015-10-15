@@ -41,7 +41,8 @@ class SaharaClusters(utils.SaharaScenario):
                                   volumes_size=None, auto_security_group=None,
                                   security_groups=None, node_configs=None,
                                   cluster_configs=None,
-                                  enable_anti_affinity=False):
+                                  enable_anti_affinity=False,
+                                  enable_proxy=False):
         """Launch and delete a Sahara Cluster.
 
         This scenario launches a Hadoop cluster, waits until it becomes
@@ -74,6 +75,8 @@ class SaharaClusters(utils.SaharaScenario):
                                 Cluster
         :param enable_anti_affinity: If set to true the vms will be scheduled
                                      one per compute node.
+        :param enable_proxy: Use Master Node of a Cluster as a Proxy node and
+                             do not assign floating ips to workers.
         """
 
         image_id = self.context["tenant"]["sahara_image"]
@@ -93,7 +96,8 @@ class SaharaClusters(utils.SaharaScenario):
             security_groups=security_groups,
             node_configs=node_configs,
             cluster_configs=cluster_configs,
-            enable_anti_affinity=enable_anti_affinity)
+            enable_anti_affinity=enable_anti_affinity,
+            enable_proxy=enable_proxy)
 
         self._delete_cluster(cluster)
 
@@ -110,7 +114,8 @@ class SaharaClusters(utils.SaharaScenario):
                                     auto_security_group=None,
                                     security_groups=None, node_configs=None,
                                     cluster_configs=None,
-                                    enable_anti_affinity=False):
+                                    enable_anti_affinity=False,
+                                    enable_proxy=False):
         """Launch, scale and delete a Sahara Cluster.
 
         This scenario launches a Hadoop cluster, waits until it becomes
@@ -151,6 +156,8 @@ class SaharaClusters(utils.SaharaScenario):
                                 Cluster
         :param enable_anti_affinity: If set to true the vms will be scheduled
                                      one per compute node.
+        :param enable_proxy: Use Master Node of a Cluster as a Proxy node and
+                             do not assign floating ips to workers.
         """
 
         image_id = self.context["tenant"]["sahara_image"]
@@ -170,7 +177,8 @@ class SaharaClusters(utils.SaharaScenario):
             security_groups=security_groups,
             node_configs=node_configs,
             cluster_configs=cluster_configs,
-            enable_anti_affinity=enable_anti_affinity)
+            enable_anti_affinity=enable_anti_affinity,
+            enable_proxy=enable_proxy)
 
         for delta in deltas:
             # The Cluster is fetched every time so that its node groups have
