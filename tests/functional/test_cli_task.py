@@ -43,6 +43,63 @@ class TaskTestCase(unittest.TestCase):
             ]
         }
 
+    def _get_sample_task_config_v2(self):
+        return {
+            "version": 2,
+            "title": "Dummy task",
+            "tags": ["dummy", "functional_test"],
+            "subtasks": [
+                {
+                    "title": "first-subtask",
+                    "group": "Dummy group",
+                    "description": "The first subtask in dummy task",
+                    "tags": ["dummy", "functional_test"],
+                    "run_in_parallel": False,
+                    "scenarios": [{
+                        "name": "Dummy.dummy",
+                        "args": {
+                            "sleep": 0
+                        },
+                        "runner": {
+                            "type": "constant",
+                            "times": 10,
+                            "concurrency": 2
+                        },
+                        "context": {
+                            "users": {
+                                "tenants": 3,
+                                "users_per_tenant": 2
+                            }
+                        }
+                    }]
+                },
+                {
+                    "title": "second-subtask",
+                    "group": "Dummy group",
+                    "description": "The second subtask in dummy task",
+                    "tags": ["dummy", "functional_test"],
+                    "run_in_parallel": False,
+                    "scenarios": [{
+                        "name": "Dummy.dummy",
+                        "args": {
+                            "sleep": 1
+                        },
+                        "runner": {
+                            "type": "constant",
+                            "times": 10,
+                            "concurrency": 2
+                        },
+                        "context": {
+                            "users": {
+                                "tenants": 3,
+                                "users_per_tenant": 2
+                            }
+                        }
+                    }]
+                }
+            ]
+        }
+
     def _get_deployment_uuid(self, output):
         return re.search(
             r"Using deployment: (?P<uuid>[0-9a-f\-]{36})",
@@ -642,6 +699,19 @@ class TaskTestCase(unittest.TestCase):
         rally("task use --task %s" % uuid)
         current_task = utils.get_global("RALLY_TASK", rally.env)
         self.assertEqual(uuid, current_task)
+
+    def test_start_v2(self):
+        rally = utils.Rally()
+        deployment_id = utils.get_global("RALLY_DEPLOYMENT", rally.env)
+        cfg = self._get_sample_task_config_v2()
+        config = utils.TaskConfig(cfg)
+        output = rally(("task start --task %(task_file)s "
+                        "--deployment %(deployment_id)s") %
+                       {"task_file": config.filename,
+                        "deployment_id": deployment_id})
+        result = re.search(
+            r"(?P<task_id>[0-9a-f\-]{36}): started", output)
+        self.assertIsNotNone(result)
 
 
 class SLATestCase(unittest.TestCase):
