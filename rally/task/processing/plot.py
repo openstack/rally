@@ -94,7 +94,7 @@ def _process_tasks(tasks_results):
                                                 int(r["pos"])))
 
 
-def plot(tasks_results):
+def plot(tasks_results, include_libs=False):
     # NOTE(amaretskiy): Transform generic results into extended
     #   results, so they can be processed by charts classes
     extended_results = []
@@ -117,4 +117,5 @@ def plot(tasks_results):
 
     template = ui_utils.get_template("task/report.html")
     source, data = _process_tasks(extended_results)
-    return template.render(source=json.dumps(source), data=json.dumps(data))
+    return template.render(source=json.dumps(source), data=json.dumps(data),
+                           include_libs=include_libs)

@@ -25,8 +25,18 @@ def get_mako_template(template):
 
 def get_jinja_template(template):
     import jinja2
-    env = jinja2.Environment(loader=jinja2.PackageLoader("rally.ui",
-                                                         "templates"))
+
+    def include_raw_file(file_name):
+        try:
+            return jinja2.Markup(loader.get_source(env, file_name)[0])
+        except jinja2.TemplateNotFound:
+            # NOTE(amaretskiy): re-raise error to make its message clear
+            raise IOError("File not found: %s" % file_name)
+
+    loader = jinja2.PackageLoader("rally.ui", "templates")
+    env = jinja2.Environment(loader=loader)
+    env.globals["include_raw_file"] = include_raw_file
+
     return env.get_template(template)
 
 

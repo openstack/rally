@@ -442,20 +442,32 @@ class TaskCommandsTestCase(test.TestCase):
                 m.reset_mock()
         self.task.report(tasks=task_id, out="/tmp/%s.html" % task_id)
         mock_open.assert_called_once_with("/tmp/%s.html" % task_id, "w+")
-        mock_plot.plot.assert_called_once_with(results)
+        mock_plot.plot.assert_called_once_with(results, include_libs=False)
 
         mock_open.side_effect().write.assert_called_once_with("html_report")
         mock_task_get.assert_called_once_with(task_id)
 
+        # JUnit
         reset_mocks()
         self.task.report(tasks=task_id, out="/tmp/%s.html" % task_id,
                          out_format="junit")
         mock_open.assert_called_once_with("/tmp/%s.html" % task_id, "w+")
+        self.assertFalse(mock_plot.plot.called)
 
+        # HTML
         reset_mocks()
-        self.task.report(task_id, out="spam.html", open_it=True)
+        self.task.report(task_id, out="output.html", open_it=True,
+                         out_format="html")
         mock_webbrowser.open_new_tab.assert_called_once_with(
-            "file://realpath_spam.html")
+            "file://realpath_output.html")
+        mock_plot.plot.assert_called_once_with(results, include_libs=False)
+
+        # HTML with embedded JS/CSS
+        reset_mocks()
+        self.task.report(task_id, open_it=False, out="output.html",
+                         out_format="html_static")
+        self.assertFalse(mock_webbrowser.open_new_tab.called)
+        mock_plot.plot.assert_called_once_with(results, include_libs=True)
 
     @mock.patch("rally.cli.commands.task.jsonschema.validate",
                 return_value=None)
@@ -500,7 +512,7 @@ class TaskCommandsTestCase(test.TestCase):
                 m.reset_mock()
         self.task.report(tasks=tasks, out="/tmp/1_test.html")
         mock_open.assert_called_once_with("/tmp/1_test.html", "w+")
-        mock_plot.plot.assert_called_once_with(results)
+        mock_plot.plot.assert_called_once_with(results, include_libs=False)
 
         mock_open.side_effect().write.assert_called_once_with("html_report")
         expected_get_calls = [mock.call(task) for task in tasks]
@@ -547,7 +559,7 @@ class TaskCommandsTestCase(test.TestCase):
         expected_open_calls = [mock.call(task_file, "r"),
                                mock.call("/tmp/1_test.html", "w+")]
         mock_open.assert_has_calls(expected_open_calls, any_order=True)
-        mock_plot.plot.assert_called_once_with(results)
+        mock_plot.plot.assert_called_once_with(results, include_libs=False)
 
         mock_open.side_effect().write.assert_called_once_with("html_report")
 

@@ -568,6 +568,11 @@ class TaskCommands(object):
     @cliutils.args("--html", dest="out_format",
                    action="store_const", const="html",
                    help="Generate the report in HTML.")
+    @cliutils.args("--html-static", dest="out_format",
+                   action="store_const", const="html_static",
+                   help=("Generate the report in HTML with embedded "
+                         "JS and CSS, so it will not depend on "
+                         "the Internet availability."))
     @cliutils.args("--junit", dest="out_format",
                    action="store_const", const="junit",
                    help="Generate the report in the JUnit format.")
@@ -580,7 +585,7 @@ class TaskCommands(object):
         :param tasks: list, UUIDs od tasks or pathes files with tasks results
         :param out: str, output file name
         :param open_it: bool, whether to open output file in web browser
-        :param out_format: output format (junit or html)
+        :param out_format: output format (junit, html or html_static)
         """
 
         tasks = isinstance(tasks, list) and tasks or [tasks]
@@ -629,9 +634,10 @@ class TaskCommands(object):
 
         output_file = os.path.expanduser(out)
 
-        if out_format == "html":
+        if out_format.startswith("html"):
             with open(output_file, "w+") as f:
-                f.write(plot.plot(results))
+                f.write(plot.plot(results,
+                                  include_libs=(out_format == "html_static")))
             if open_it:
                 webbrowser.open_new_tab("file://" + os.path.realpath(out))
         elif out_format == "junit":

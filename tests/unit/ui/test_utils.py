@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import jinja2
 import mock
 
 from rally.ui import utils
@@ -30,10 +31,13 @@ class ModuleTestCase(test.TestCase):
         self.assertIsInstance(template, mako.template.Template)
 
     def test_get_jinja_template(self):
-        try:
-            import jinja2
-        except ImportError:
-            self.skip("Jinja not installed. Skipping test.")
+        template = utils.get_jinja_template("base.html")
+        self.assertIsInstance(template,
+                              jinja2.environment.Template)
+        self.assertEqual("base.html", template.name)
+        self.assertIn("include_raw_file", template.globals)
+
+    def test_get_jinja_template_raises(self):
         self.assertRaises(jinja2.exceptions.TemplateNotFound,
                           utils.get_jinja_template, "nonexistent")
 

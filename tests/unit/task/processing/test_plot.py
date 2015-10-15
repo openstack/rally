@@ -15,6 +15,7 @@
 
 import json
 
+import ddt
 import mock
 
 from rally.task.processing import plot
@@ -23,6 +24,7 @@ from tests.unit import test
 PLOT = "rally.task.processing.plot."
 
 
+@ddt.ddt
 class PlotTestCase(test.TestCase):
 
     @mock.patch(PLOT + "charts")
@@ -93,12 +95,16 @@ class PlotTestCase(test.TestCase):
              {"cls": "b_cls", "met": "dummy", "name": "1", "pos": "1"},
              {"cls": "c_cls", "met": "dummy", "name": "0", "pos": "0"}])
 
+    @ddt.data({},
+              {"include_libs": True},
+              {"include_libs": False})
+    @ddt.unpack
     @mock.patch(PLOT + "_process_tasks")
     @mock.patch(PLOT + "objects")
     @mock.patch(PLOT + "ui_utils.get_template")
     @mock.patch(PLOT + "json.dumps", side_effect=lambda s: "json_" + s)
     def test_plot(self, mock_dumps, mock_get_template, mock_objects,
-                  mock__process_tasks):
+                  mock__process_tasks, **ddt_kwargs):
         mock__process_tasks.return_value = "source", "scenarios"
         mock_get_template.return_value.render.return_value = "tasks_html"
         mock_objects.Task.extend_results.return_value = ["extended_result"]
@@ -106,7 +112,7 @@ class PlotTestCase(test.TestCase):
             {"key": "foo_key", "sla": "foo_sla", "result": "foo_result",
              "full_duration": "foo_full_duration",
              "load_duration": "foo_load_duration"}]
-        html = plot.plot(tasks_results)
+        html = plot.plot(tasks_results, **ddt_kwargs)
         self.assertEqual(html, "tasks_html")
         generic_results = [
             {"id": None, "created_at": None, "updated_at": None,
@@ -119,5 +125,11 @@ class PlotTestCase(test.TestCase):
             generic_results)
         mock_get_template.assert_called_once_with("task/report.html")
         mock__process_tasks.assert_called_once_with(["extended_result"])
-        mock_get_template.return_value.render.assert_called_once_with(
-            data="json_scenarios", source="json_source")
+        if "include_libs" in ddt_kwargs:
+            mock_get_template.return_value.render.assert_called_once_with(
+                data="json_scenarios", source="json_source",
+                include_libs=ddt_kwargs["include_libs"])
+        else:
+            mock_get_template.return_value.render.assert_called_once_with(
+                data="json_scenarios", source="json_source",
+                include_libs=False)
