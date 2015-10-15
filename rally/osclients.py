@@ -74,7 +74,7 @@ class Clients(object):
     def __init__(self, endpoint):
         self.endpoint = endpoint
         # NOTE(kun) Apply insecure/cacert settings from rally.conf if those are
-        # not set in deployment config. Remove it when invaild.
+        # not set in deployment config. Remove it when invalid.
         if self.endpoint.insecure is None:
             self.endpoint.insecure = CONF.https_insecure
         if self.endpoint.cacert is None:
