@@ -67,8 +67,7 @@ class ActionTimer(utils.Timer):
 
     def __exit__(self, type_, value, tb):
         super(ActionTimer, self).__exit__(type_, value, tb)
-        if type_ is None:
-            self.instance._atomic_actions[self.name] = self.duration()
+        self.instance._atomic_actions[self.name] = self.duration()
 
 
 def action_timer(name):
