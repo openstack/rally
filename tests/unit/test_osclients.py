@@ -33,6 +33,22 @@ class DummyClient(osclients.OSClient):
         pass
 
 
+class OSClientTestCase(test.TestCase):
+    def test_choose_service_type(self):
+        default_service_type = "default_service_type"
+
+        @osclients.configure("test_choose_service_type",
+                             default_service_type=default_service_type)
+        class FakeClient(osclients.OSClient):
+            create_client = mock.MagicMock()
+
+        fake_client = FakeClient(mock.MagicMock(), {})
+        self.assertEqual(default_service_type,
+                         fake_client.choose_service_type())
+        self.assertEqual("foo",
+                         fake_client.choose_service_type("foo"))
+
+
 class CachedTestCase(test.TestCase):
 
     def test_cached(self):
