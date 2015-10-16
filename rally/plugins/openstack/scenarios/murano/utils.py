@@ -52,14 +52,14 @@ class MuranoScenario(scenario.OpenStackScenario):
         return self.clients("murano").environments.list()
 
     @atomic.action_timer("murano.create_environment")
-    def _create_environment(self, env_name=None):
+    def _create_environment(self):
         """Create environment.
 
         :param env_name: String used to name environment
 
         :returns: Environment instance
         """
-        env_name = env_name or self._generate_random_name()
+        env_name = self.generate_random_name()
         return self.clients("murano").environments.create({"name": env_name})
 
     @atomic.action_timer("murano.delete_environment")
@@ -99,7 +99,7 @@ class MuranoScenario(scenario.OpenStackScenario):
         app_id = str(uuid.uuid4())
         data = {"?": {"id": app_id,
                       "type": full_package_name},
-                "name": self._generate_random_name("rally_")}
+                "name": self.generate_random_name()}
 
         return self.clients("murano").services.post(
             environment_id=environment.id, path="/", data=data,

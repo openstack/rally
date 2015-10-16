@@ -489,7 +489,7 @@ class NeutronNetworksTestCase(test.ScenarioTestCase):
         mock__delete_router.assert_has_calls(
             [mock.call(router)] * subnets_per_network)
 
-    @mock.patch(NEUTRON_NETWORKS + "._generate_random_name")
+    @mock.patch(NEUTRON_NETWORKS + ".generate_random_name")
     @mock.patch(NEUTRON_NETWORKS + "._list_ports")
     @mock.patch(NEUTRON_NETWORKS + "._create_port")
     @mock.patch(NEUTRON_NETWORKS + "._create_network")
@@ -497,9 +497,9 @@ class NeutronNetworksTestCase(test.ScenarioTestCase):
                                    mock__create_network,
                                    mock__create_port,
                                    mock__list_ports,
-                                   mock__generate_random_name):
+                                   mock_generate_random_name):
         scenario = network.NeutronNetworks(self.context)
-        mock__generate_random_name.return_value = "random-name"
+        mock_generate_random_name.return_value = "random-name"
         net = {"network": {"id": "fake-id"}}
         mock__create_network.return_value = net
         ports_per_network = 10
@@ -530,7 +530,7 @@ class NeutronNetworksTestCase(test.ScenarioTestCase):
             [mock.call(net, {"allocation_pools": []})] * ports_per_network)
         mock__list_ports.assert_called_once_with()
 
-    @mock.patch(NEUTRON_NETWORKS + "._generate_random_name")
+    @mock.patch(NEUTRON_NETWORKS + ".generate_random_name")
     @mock.patch(NEUTRON_NETWORKS + "._update_port")
     @mock.patch(NEUTRON_NETWORKS + "._create_port", return_value={
         "port": {
@@ -545,9 +545,9 @@ class NeutronNetworksTestCase(test.ScenarioTestCase):
                                      mock__create_network,
                                      mock__create_port,
                                      mock__update_port,
-                                     mock__generate_random_name):
+                                     mock_generate_random_name):
         scenario = network.NeutronNetworks(self.context)
-        mock__generate_random_name.return_value = "random-name"
+        mock_generate_random_name.return_value = "random-name"
         ports_per_network = 10
 
         port_update_args = {
@@ -586,7 +586,7 @@ class NeutronNetworksTestCase(test.ScenarioTestCase):
             [mock.call(mock__create_port.return_value, port_update_args)
              ] * ports_per_network)
 
-    @mock.patch(NEUTRON_NETWORKS + "._generate_random_name")
+    @mock.patch(NEUTRON_NETWORKS + ".generate_random_name")
     @mock.patch(NEUTRON_NETWORKS + "._delete_port")
     @mock.patch(NEUTRON_NETWORKS + "._create_port")
     @mock.patch(NEUTRON_NETWORKS + "._create_network")
@@ -594,9 +594,9 @@ class NeutronNetworksTestCase(test.ScenarioTestCase):
                                      mock__create_network,
                                      mock__create_port,
                                      mock__delete_port,
-                                     mock__generate_random_name):
+                                     mock_generate_random_name):
         scenario = network.NeutronNetworks(self.context)
-        mock__generate_random_name.return_value = "random-name"
+        mock_generate_random_name.return_value = "random-name"
         net = {"network": {"id": "fake-id"}}
         mock__create_network.return_value = net
         ports_per_network = 10

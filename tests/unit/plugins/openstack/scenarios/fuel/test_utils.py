@@ -160,11 +160,10 @@ class FuelClientTestCase(test.TestCase):
 class FuelScenarioTestCase(test.ScenarioTestCase):
 
     def test__list_environments(self):
-        self.admin_clients("fuel").environment.list.return_value = [
-            {"name": "some_name1"}, {"name": "rally_name2"}]
         scenario = utils.FuelScenario(self.context)
-        self.assertEqual([{"name": "rally_name2"}],
-                         scenario._list_environments())
+        self.assertEqual(
+            scenario._list_environments(),
+            self.admin_clients("fuel").environment.list.return_value)
         self.admin_clients("fuel").environment.list.assert_called_once_with()
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "fuel.list_environments")
@@ -175,17 +174,14 @@ class FuelScenarioTestCase(test.ScenarioTestCase):
         fuel_scenario = utils.FuelScenario()
         fuel_scenario.admin_clients = self.admin_clients
 
-        fuel_scenario._generate_random_name = mock.Mock(
-            return_value="random_name")
+        fuel_scenario.generate_random_name = mock.Mock()
         result = fuel_scenario._create_environment()
         self.assertEqual(
             self.admin_clients("fuel").environment.create.return_value["id"],
             result)
-        fuel_scenario._generate_random_name.assert_called_once_with(
-            prefix=fuel_scenario.RESOURCE_NAME_PREFIX)
         tmp_mck = self.admin_clients("fuel").environment.create
         tmp_mck.assert_called_once_with(
-            fuel_scenario._generate_random_name.return_value, 1, "neutron",
+            fuel_scenario.generate_random_name.return_value, 1, "neutron",
             "ha_compact", "vlan")
 
     def test__delete_environment(self):

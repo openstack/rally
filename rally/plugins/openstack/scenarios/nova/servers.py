@@ -33,9 +33,6 @@ class NovaServers(utils.NovaScenario,
                   cinder_utils.CinderScenario):
     """Benchmark scenarios for Nova servers."""
 
-    RESOURCE_NAME_PREFIX = "rally_novaserver_"
-    RESOURCE_NAME_LENGTH = 16
-
     @types.set(image=types.ImageResourceType,
                flavor=types.FlavorResourceType)
     @validation.image_valid_on_flavor("flavor", "image")
@@ -642,6 +639,6 @@ class NovaServers(utils.NovaScenario,
         """
         server = self._boot_server(image, flavor, **kwargs)
         address = network_wrapper.wrap(
-            self.clients, self.context["task"]).create_floating_ip(
+            self.clients, self.task).create_floating_ip(
                 tenant_id=server.tenant_id)
         self._associate_floating_ip(server, address["ip"])

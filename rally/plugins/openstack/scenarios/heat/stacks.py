@@ -24,9 +24,6 @@ from rally.task import validation
 class HeatStacks(utils.HeatScenario):
     """Benchmark scenarios for Heat stacks."""
 
-    RESOURCE_NAME_PREFIX = "rally_stack_"
-    RESOURCE_NAME_LENGTH = 7
-
     @types.set(template_path=types.FileType, files=types.FileTypeDict)
     @validation.required_services(consts.Service.HEAT)
     @validation.required_openstack(users=True)

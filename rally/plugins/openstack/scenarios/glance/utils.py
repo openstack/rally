@@ -60,7 +60,7 @@ class GlanceScenario(scenario.OpenStackScenario):
 
     @atomic.action_timer("glance.create_image")
     def _create_image(self, container_format, image_location, disk_format,
-                      name=None, prefix=None, length=None, **kwargs):
+                      **kwargs):
         """Create a new image.
 
         :param container_format: container format of image. Acceptable
@@ -68,18 +68,12 @@ class GlanceScenario(scenario.OpenStackScenario):
         :param image_location: image file location
         :param disk_format: disk format of image. Acceptable formats:
                             ami, ari, aki, vhd, vmdk, raw, qcow2, vdi, and iso
-        :param name: string used to name the image
-        :param prefix: prefix of generated image name if name not specified
-        ignore if name specified
-        :param length: length of autometic generated part in image name
-        ignore if name specified
         :param kwargs: optional parameters to create image
 
         :returns: image object
         """
-        name = name or self._generate_random_name(prefix, length)
         kw = {
-            "name": name,
+            "name": self.generate_random_name(),
             "container_format": container_format,
             "disk_format": disk_format,
         }

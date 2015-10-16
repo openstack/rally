@@ -101,7 +101,7 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
         context.setdefault("config", {})
 
         nova_scenario = utils.NovaScenario(context=context)
-        nova_scenario._generate_random_name = mock.Mock()
+        nova_scenario.generate_random_name = mock.Mock()
         nova_scenario._pick_random_nic = mock.Mock()
         if kwargs is None:
             kwargs = {}
@@ -134,7 +134,7 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
             expected_kwargs["security_groups"] = list(expected_secgroups)
 
         self.clients("nova").servers.create.assert_called_once_with(
-            nova_scenario._generate_random_name.return_value,
+            nova_scenario.generate_random_name.return_value,
             "image_id", "flavor_id", **expected_kwargs)
         self._test_atomic_action_timer(nova_scenario.atomic_actions(),
                                        "nova.boot_server")
@@ -440,22 +440,21 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
     @ddt.data(
         {"requests": 1},
         {"requests": 25},
-        {"requests": 2, "name_prefix": "foo", "instances_amount": 100,
-         "auto_assign_nic": True, "fakearg": "fake"},
+        {"requests": 2, "instances_amount": 100, "auto_assign_nic": True,
+         "fakearg": "fake"},
         {"auto_assign_nic": True, "nics": [{"net-id": "foo"}]},
         {"auto_assign_nic": False, "nics": [{"net-id": "foo"}]})
     @ddt.unpack
     def test__boot_servers(self, image_id="image", flavor_id="flavor",
-                           requests=1, name_prefix=None, instances_amount=1,
+                           requests=1, instances_amount=1,
                            auto_assign_nic=False, **kwargs):
         servers = [mock.Mock() for i in range(instances_amount)]
         self.clients("nova").servers.list.return_value = servers
         scenario = utils.NovaScenario(context=self.context)
-        scenario._generate_random_name = mock.Mock()
+        scenario.generate_random_name = mock.Mock()
         scenario._pick_random_nic = mock.Mock()
 
         scenario._boot_servers(image_id, flavor_id, requests,
-                               name_prefix=name_prefix,
                                instances_amount=instances_amount,
                                auto_assign_nic=auto_assign_nic,
                                **kwargs)
@@ -464,13 +463,12 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
         if auto_assign_nic and "nics" not in kwargs:
             expected_kwargs["nics"] = scenario._pick_random_nic.return_value
 
-        if name_prefix is None:
-            name_prefix = scenario._generate_random_name.return_value
-
         create_calls = [
-            mock.call("%s_%d" % (name_prefix, i), image_id, flavor_id,
-                      min_count=instances_amount, max_count=instances_amount,
-                      **expected_kwargs)
+            mock.call(
+                "%s_%d" % (scenario.generate_random_name.return_value, i),
+                image_id, flavor_id,
+                min_count=instances_amount, max_count=instances_amount,
+                **expected_kwargs)
             for i in range(requests)]
         self.clients("nova").servers.create.assert_has_calls(create_calls)
 
@@ -661,7 +659,7 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
 
     def test__create_security_groups(self):
         nova_scenario = utils.NovaScenario(context=self.context)
-        nova_scenario._generate_random_name = mock.MagicMock()
+        nova_scenario.generate_random_name = mock.MagicMock()
 
         security_group_count = 5
 
@@ -670,7 +668,7 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
 
         self.assertEqual(security_group_count, len(sec_groups))
         self.assertEqual(security_group_count,
-                         nova_scenario._generate_random_name.call_count)
+                         nova_scenario.generate_random_name.call_count)
         self.assertEqual(
             security_group_count,
             self.clients("nova").security_groups.create.call_count)
@@ -697,7 +695,7 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
             (rules_per_security_group * len(fake_secgroups)))
 
     def test__update_security_groups(self):
-        nova_scenario = utils.NovaScenario()
+        nova_scenario = utils.NovaScenario(context=self.context)
         fake_secgroups = [fakes.FakeSecurityGroup(None, None, 1, "uuid1"),
                           fakes.FakeSecurityGroup(None, None, 2, "uuid2")]
         nova_scenario._update_security_groups(fake_secgroups)
@@ -841,7 +839,7 @@ class NovaScenarioTestCase(test.ScenarioTestCase):
         self.admin_clients("nova").networks.create.return_value = (fake_net)
 
         nova_scenario = utils.NovaScenario()
-        nova_scenario._generate_random_name = mock.Mock(
+        nova_scenario.generate_random_name = mock.Mock(
             return_value="rally_novanet_fake")
 
         return_netlabel = nova_scenario._create_network(fake_cidr,

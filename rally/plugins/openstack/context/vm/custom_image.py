@@ -155,7 +155,6 @@ class BaseCustomImageGenerator(context.Context):
         vm_scenario = vmtasks.VMTasks(self.context, clients=clients)
 
         server, fip = vm_scenario._boot_server_with_fip(
-            name=self.generate_random_name(),
             image=image_id, flavor=flavor_id,
             floating_network=self.config.get("floating_network"),
             userdata=self.config.get("userdata"),

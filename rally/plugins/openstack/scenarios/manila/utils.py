@@ -84,7 +84,7 @@ class ManilaScenario(scenario.OpenStackScenario):
                 kwargs["share_network"] = share_networks[index]
 
         if not kwargs.get("name"):
-            kwargs["name"] = self._generate_random_name()
+            kwargs["name"] = self.generate_random_name()
 
         share = self.clients("manila").shares.create(
             share_proto, size, **kwargs)
@@ -129,22 +129,20 @@ class ManilaScenario(scenario.OpenStackScenario):
     @atomic.action_timer("manila.create_share_network")
     def _create_share_network(self, neutron_net_id=None,
                               neutron_subnet_id=None,
-                              nova_net_id=None, name=None, description=None):
+                              nova_net_id=None, description=None):
         """Create share network.
 
         :param neutron_net_id: ID of Neutron network
         :param neutron_subnet_id: ID of Neutron subnet
         :param nova_net_id: ID of Nova network
-        :param name: share network name
         :param description: share network description
         :returns: instance of :class:`ShareNetwork`
         """
-        name = name or self._generate_random_name()
         share_network = self.clients("manila").share_networks.create(
             neutron_net_id=neutron_net_id,
             neutron_subnet_id=neutron_subnet_id,
             nova_net_id=nova_net_id,
-            name=name,
+            name=self.generate_random_name(),
             description=description)
         return share_network
 
@@ -192,7 +190,7 @@ class ManilaScenario(scenario.OpenStackScenario):
     @atomic.action_timer("manila.create_security_service")
     def _create_security_service(self, security_service_type, dns_ip=None,
                                  server=None, domain=None, user=None,
-                                 password=None, name=None, description=None):
+                                 password=None, description=None):
         """Create security service.
 
         'Security service' is data container in Manila that stores info
@@ -206,7 +204,6 @@ class ManilaScenario(scenario.OpenStackScenario):
         :param domain: security service domain
         :param user: security identifier used by tenant
         :param password: password used by user
-        :param name: security service name
         :param description: security service description
         :returns: instance of :class:`SecurityService`
         """
@@ -217,7 +214,7 @@ class ManilaScenario(scenario.OpenStackScenario):
             domain=domain,
             user=user,
             password=password,
-            name=name,
+            name=self.generate_random_name(),
             description=description)
         return security_service
 

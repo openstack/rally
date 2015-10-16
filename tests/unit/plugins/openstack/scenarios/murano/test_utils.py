@@ -34,12 +34,16 @@ class MuranoScenarioTestCase(test.ScenarioTestCase):
                                        "murano.list_environments")
 
     def test_create_environments(self):
-        mock_create = mock.Mock(return_value="foo_env")
-        self.clients("murano").environments.create = mock_create
+        self.clients("murano").environments.create = mock.Mock()
         scenario = utils.MuranoScenario(context=self.context)
-        create_env = scenario._create_environment("env_name")
-        self.assertEqual("foo_env", create_env)
-        mock_create.assert_called_once_with({"name": "env_name"})
+        scenario.generate_random_name = mock.Mock()
+
+        create_env = scenario._create_environment()
+        self.assertEqual(
+            create_env,
+            self.clients("murano").environments.create.return_value)
+        self.clients("murano").environments.create.assert_called_once_with(
+            {"name": scenario.generate_random_name.return_value})
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "murano.create_environment")
 

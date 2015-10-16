@@ -32,8 +32,6 @@ class NovaSecurityGroupException(exceptions.RallyException):
 class NovaSecGroup(utils.NovaScenario):
     """Benchmark scenarios for Nova security groups."""
 
-    RESOURCE_NAME_PREFIX = "rally_novasecgrp_"
-
     @validation.required_parameters("security_group_count",
                                     "rules_per_security_group")
     @validation.required_services(consts.Service.NOVA)

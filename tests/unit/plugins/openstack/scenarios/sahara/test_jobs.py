@@ -34,12 +34,8 @@ class SaharaJobTestCase(test.ScenarioTestCase):
         CONF.set_override("sahara_cluster_check_interval", 0, "benchmark")
         CONF.set_override("sahara_job_check_interval", 0, "benchmark")
 
-    @mock.patch("rally.common.utils.generate_random_name",
-                return_value="job_42")
     @mock.patch(SAHARA_JOB + "._run_job_execution")
-    def test_create_launch_job_java(self, mock__run_job_execution,
-                                    mock_generate_random_name):
-
+    def test_create_launch_job_java(self, mock__run_job_execution):
         self.clients("sahara").jobs.create.return_value = mock.MagicMock(
             id="42")
 
@@ -53,6 +49,7 @@ class SaharaJobTestCase(test.ScenarioTestCase):
             }
         })
         jobs_scenario = jobs.SaharaJob(self.context)
+        jobs_scenario.generate_random_name = mock.Mock(return_value="job_42")
 
         jobs_scenario.create_launch_job(
             job_type="java",
@@ -60,7 +57,7 @@ class SaharaJobTestCase(test.ScenarioTestCase):
             job_idx=0
         )
         self.clients("sahara").jobs.create.assert_called_once_with(
-            name=mock_generate_random_name.return_value,
+            name=jobs_scenario.generate_random_name.return_value,
             type="java",
             description="",
             mains=["main_42"],
@@ -76,15 +73,11 @@ class SaharaJobTestCase(test.ScenarioTestCase):
             job_idx=0
         )
 
-    @mock.patch("rally.common.utils.generate_random_name",
-                return_value="job_42")
     @mock.patch(SAHARA_JOB + "._run_job_execution")
     @mock.patch(SAHARA_JOB + "._create_output_ds",
                 return_value=mock.MagicMock(id="out_42"))
     def test_create_launch_job_pig(self, mock__create_output_ds,
-                                   mock__run_job_execution,
-                                   mock_generate_random_name):
-
+                                   mock__run_job_execution):
         self.clients("sahara").jobs.create.return_value = mock.MagicMock(
             id="42")
 
@@ -98,13 +91,15 @@ class SaharaJobTestCase(test.ScenarioTestCase):
             }
         })
         jobs_scenario = jobs.SaharaJob(self.context)
+        jobs_scenario.generate_random_name = mock.Mock(return_value="job_42")
+
         jobs_scenario.create_launch_job(
             job_type="pig",
             configs={"conf_key": "conf_val"},
             job_idx=0
         )
         self.clients("sahara").jobs.create.assert_called_once_with(
-            name=mock_generate_random_name.return_value,
+            name=jobs_scenario.generate_random_name.return_value,
             type="pig",
             description="",
             mains=["main_42"],
@@ -120,12 +115,8 @@ class SaharaJobTestCase(test.ScenarioTestCase):
             job_idx=0
         )
 
-    @mock.patch("rally.common.utils.generate_random_name",
-                return_value="job_42")
     @mock.patch(SAHARA_JOB + "._run_job_execution")
-    def test_create_launch_job_sequence(self, mock__run_job_execution,
-                                        mock_generate_random_name):
-
+    def test_create_launch_job_sequence(self, mock__run_job_execution):
         self.clients("sahara").jobs.create.return_value = mock.MagicMock(
             id="42")
 
@@ -139,6 +130,8 @@ class SaharaJobTestCase(test.ScenarioTestCase):
             }
         })
         jobs_scenario = jobs.SaharaJob(self.context)
+        jobs_scenario.generate_random_name = mock.Mock(return_value="job_42")
+
         jobs_scenario.create_launch_job_sequence(
             jobs=[
                 {
@@ -150,7 +143,7 @@ class SaharaJobTestCase(test.ScenarioTestCase):
                 }])
 
         jobs_create_call = mock.call(
-            name=mock_generate_random_name.return_value,
+            name=jobs_scenario.generate_random_name.return_value,
             type="java",
             description="",
             mains=["main_42"],
@@ -176,14 +169,11 @@ class SaharaJobTestCase(test.ScenarioTestCase):
                 job_idx=1)]
         )
 
-    @mock.patch("rally.common.utils.generate_random_name",
-                return_value="job_42")
     @mock.patch(SAHARA_JOB + "._run_job_execution")
     @mock.patch(SAHARA_JOB + "._scale_cluster")
-    def test_create_launch_job_sequence_with_scaling(
-            self, mock__scale_cluster, mock__run_job_execution,
-            mock_generate_random_name):
-
+    def test_create_launch_job_sequence_with_scaling(self,
+                                                     mock__scale_cluster,
+                                                     mock__run_job_execution):
         self.clients("sahara").jobs.create.return_value = mock.MagicMock(
             id="42")
         self.clients("sahara").clusters.get.return_value = mock.MagicMock(
@@ -199,6 +189,8 @@ class SaharaJobTestCase(test.ScenarioTestCase):
             }
         })
         jobs_scenario = jobs.SaharaJob(self.context)
+        jobs_scenario.generate_random_name = mock.Mock(return_value="job_42")
+
         jobs_scenario.create_launch_job_sequence_with_scaling(
             jobs=[
                 {
@@ -211,7 +203,7 @@ class SaharaJobTestCase(test.ScenarioTestCase):
             deltas=[1, -1])
 
         jobs_create_call = mock.call(
-            name=mock_generate_random_name.return_value,
+            name=jobs_scenario.generate_random_name.return_value,
             type="java",
             description="",
             mains=["main_42"],

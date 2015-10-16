@@ -128,7 +128,7 @@ class HeatScenario(scenario.OpenStackScenario):
 
         :returns: object of stack
         """
-        stack_name = self._generate_random_name(prefix="rally_stack_")
+        stack_name = self.generate_random_name()
         kw = {
             "stack_name": stack_name,
             "disable_rollback": True,

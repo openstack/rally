@@ -14,42 +14,44 @@
 
 import random
 
+from rally.common import utils
 from rally.plugins.openstack import scenario
 from rally.plugins.openstack.scenarios.zaqar import utils as zutils
-from rally.task import validation
 
 
 class ZaqarBasic(zutils.ZaqarScenario):
     """Benchmark scenarios for Zaqar."""
 
-    @validation.number("name_length", minval=10)
     @scenario.configure(context={"cleanup": ["zaqar"]})
-    def create_queue(self, name_length=10, **kwargs):
+    @utils.log_deprecated_args(
+        "The 'name_length' argument to create_queue is ignored",
+        "0.1.2", ["name_length"], once=True)
+    def create_queue(self, name_length=None, **kwargs):
         """Create a Zaqar queue with a random name.
 
-        :param name_length: length of generated (random) part of name
         :param kwargs: other optional parameters to create queues like
                        "metadata"
         """
-        self._queue_create(name_length=name_length, **kwargs)
+        self._queue_create(**kwargs)
 
-    @validation.number("name_length", minval=10)
     @scenario.configure(context={"cleanup": ["zaqar"]})
-    def producer_consumer(self, name_length=10,
+    @utils.log_deprecated_args(
+        "The 'name_length' argument to producer_consumer is ignored",
+        "0.1.2", ["name_length"], once=True)
+    def producer_consumer(self, name_length=None,
                           min_msg_count=50, max_msg_count=200, **kwargs):
         """Serial message producer/consumer.
 
         Creates a Zaqar queue with random name, sends a set of messages
         and then retrieves an iterator containing those.
 
-        :param name_length: length of generated (random) part of name
         :param min_msg_count: min number of messages to be posted
         :param max_msg_count: max number of messages to be posted
         :param kwargs: other optional parameters to create queues like
                        "metadata"
         """
 
-        queue = self._queue_create(name_length=name_length, **kwargs)
+        queue = self._queue_create(**kwargs)
         msg_count = random.randint(min_msg_count, max_msg_count)
         messages = [{"body": {"id": idx}, "ttl": 360} for idx
                     in range(msg_count)]

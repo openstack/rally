@@ -1,9 +1,7 @@
 {
     "ZaqarBasic.create_queue": [
         {
-            "args": {
-                "name_length": 10
-            },
+            "args": {},
             "runner": {
                 "type": "constant",
                 "times": 100,

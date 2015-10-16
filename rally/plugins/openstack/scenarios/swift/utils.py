@@ -33,10 +33,9 @@ class SwiftScenario(scenario.OpenStackScenario):
                                                  **kwargs)
 
     @atomic.optional_action_timer("swift.create_container")
-    def _create_container(self, container_name=None, public=False, **kwargs):
-        """Create a new container with given name.
+    def _create_container(self, public=False, **kwargs):
+        """Create a new container.
 
-        :param container_name: str, name of the container to create
         :param public: bool, set container as public
         :param atomic_action: bool, enable create container to be
                               tracked as an atomic action. added and
@@ -50,9 +49,7 @@ class SwiftScenario(scenario.OpenStackScenario):
             kwargs.setdefault("headers", {})
             kwargs["headers"].setdefault("X-Container-Read", ".r:*,.rlistings")
 
-        if container_name is None:
-            container_name = self._generate_random_name(
-                prefix="rally_container_")
+        container_name = self.generate_random_name()
 
         self.clients("swift").put_container(container_name, **kwargs)
         return container_name
@@ -89,13 +86,11 @@ class SwiftScenario(scenario.OpenStackScenario):
                                                    **kwargs)
 
     @atomic.optional_action_timer("swift.upload_object")
-    def _upload_object(self, container_name, content, object_name=None,
-                       **kwargs):
+    def _upload_object(self, container_name, content, **kwargs):
         """Upload content to a given container.
 
         :param container_name: str, name of the container to upload object to
         :param content: file stream, content to upload
-        :param object_name: str, name of the object to upload
         :param atomic_action: bool, enable upload object to be tracked
                               as an atomic action. added and handled
                               by the optional_action_timer() decorator
@@ -103,8 +98,7 @@ class SwiftScenario(scenario.OpenStackScenario):
 
         :returns: tuple, (etag and object name)
         """
-        if object_name is None:
-            object_name = self._generate_random_name(prefix="rally_object_")
+        object_name = self.generate_random_name()
 
         return (self.clients("swift").put_object(container_name, object_name,
                                                  content, **kwargs),

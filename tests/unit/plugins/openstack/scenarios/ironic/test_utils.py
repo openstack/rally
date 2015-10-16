@@ -23,16 +23,16 @@ IRONIC_UTILS = "rally.plugins.openstack.scenarios.ironic.utils"
 
 class IronicScenarioTestCase(test.ScenarioTestCase):
 
-    @mock.patch("rally.common.utils.generate_random_name")
-    def test__create_node(self, mock_generate_random_name):
-        mock_generate_random_name.return_value = "rally_fake_random_string"
+    def test__create_node(self):
         self.admin_clients("ironic").node.create.return_value = "fake_node"
         scenario = utils.IronicScenario(self.context)
+        scenario.generate_random_name = mock.Mock()
+
         create_node = scenario._create_node(fake_param="foo")
 
         self.assertEqual("fake_node", create_node)
         self.admin_clients("ironic").node.create.assert_called_once_with(
-            fake_param="foo", name="rally_fake_random_string")
+            fake_param="foo", name=scenario.generate_random_name.return_value)
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "ironic.create_node")
 

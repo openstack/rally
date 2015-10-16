@@ -23,7 +23,7 @@ class NovaKeypairTestCase(test.ScenarioTestCase):
 
     def test_create_and_list_keypairs(self):
         scenario = keypairs.NovaKeypair(self.context)
-        scenario._generate_random_name = mock.MagicMock(return_value="name")
+        scenario.generate_random_name = mock.MagicMock(return_value="name")
         scenario._create_keypair = mock.MagicMock(return_value="foo_keypair")
         scenario._list_keypairs = mock.MagicMock()
 
@@ -34,7 +34,7 @@ class NovaKeypairTestCase(test.ScenarioTestCase):
 
     def test_create_and_delete_keypair(self):
         scenario = keypairs.NovaKeypair(self.context)
-        scenario._generate_random_name = mock.MagicMock(return_value="name")
+        scenario.generate_random_name = mock.MagicMock(return_value="name")
         scenario._create_keypair = mock.MagicMock(return_value="foo_keypair")
         scenario._delete_keypair = mock.MagicMock()
 
@@ -45,7 +45,7 @@ class NovaKeypairTestCase(test.ScenarioTestCase):
 
     def test_boot_and_delete_server_with_keypair(self):
         scenario = keypairs.NovaKeypair(self.context)
-        scenario._generate_random_name = mock.MagicMock(return_value="name")
+        scenario.generate_random_name = mock.MagicMock(return_value="name")
         scenario._create_keypair = mock.MagicMock(return_value="foo_keypair")
         scenario._boot_server = mock.MagicMock(return_value="foo_server")
         scenario._delete_server = mock.MagicMock()

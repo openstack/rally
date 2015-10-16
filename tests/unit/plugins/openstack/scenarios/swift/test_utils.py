@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import ddt
 import mock
 
 from rally.plugins.openstack.scenarios.swift import utils
@@ -38,62 +39,31 @@ class SwiftScenarioTestCase(test.ScenarioTestCase):
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "swift.list_containers")
 
-    def test__create_container(self):
-        container_name = mock.MagicMock()
-        scenario = utils.SwiftScenario()
+    @ddt.data(
+        {},
+        {"headers": {"X-fake-name": "fake-value"}},
+        {"public": False,
+         "headers": {"X-fake-name": "fake-value"}},
+        {"public": False})
+    @ddt.unpack
+    def test__create_container(self, public=True, kwargs=None, headers=None):
+        if kwargs is None:
+            kwargs = {"fakearg": "fake"}
+        if headers is None:
+            headers = {}
+        scenario = utils.SwiftScenario(self.context)
+        scenario.generate_random_name = mock.MagicMock()
 
-        # name + public=True + kw
-        self.assertEqual(container_name,
-                         scenario._create_container(container_name,
-                                                    public=True, fargs="f"))
-        kw = {"headers": {"X-Container-Read": ".r:*,.rlistings"}, "fargs": "f"}
+        container = scenario._create_container(public=public,
+                                               headers=headers,
+                                               **kwargs)
+        self.assertEqual(container,
+                         scenario.generate_random_name.return_value)
+        kwargs["headers"] = headers
+        kwargs["headers"]["X-Container-Read"] = ".r:*,.rlistings"
         self.clients("swift").put_container.assert_called_once_with(
-            container_name,
-            **kw)
-        # name + public=True + additional header + kw
-        self.clients("swift").put_container.reset_mock()
-        self.assertEqual(container_name,
-                         scenario._create_container(container_name,
-                                                    public=True,
-                                                    headers={"X-fake-name":
-                                                             "fake-value"},
-                                                    fargs="f"))
-        kw = {"headers": {"X-Container-Read": ".r:*,.rlistings",
-                          "X-fake-name": "fake-value"}, "fargs": "f"}
-        self.clients("swift").put_container.assert_called_once_with(
-            container_name,
-            **kw)
-        # name + public=False + additional header + kw
-        self.clients("swift").put_container.reset_mock()
-        self.assertEqual(container_name,
-                         scenario._create_container(container_name,
-                                                    public=False,
-                                                    headers={"X-fake-name":
-                                                             "fake-value"},
-                                                    fargs="f"))
-        kw = {"headers": {"X-fake-name": "fake-value"}, "fargs": "f"}
-        self.clients("swift").put_container.assert_called_once_with(
-            container_name,
-            **kw)
-        # name + kw
-        self.clients("swift").put_container.reset_mock()
-        self.assertEqual(container_name,
-                         scenario._create_container(container_name, fargs="f"))
-        kw = {"fargs": "f"}
-        self.clients("swift").put_container.assert_called_once_with(
-            container_name,
-            **kw)
-        # kw
-        scenario._generate_random_name = mock.MagicMock(
-            return_value=container_name)
-        self.clients("swift").put_container.reset_mock()
-        self.assertEqual(container_name,
-                         scenario._create_container(fargs="f"))
-        kw = {"fargs": "f"}
-        self.clients("swift").put_container.assert_called_once_with(
-            container_name,
-            **kw)
-        self.assertEqual(1, scenario._generate_random_name.call_count)
+            scenario.generate_random_name.return_value,
+            **kwargs)
 
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "swift.create_container")
@@ -131,33 +101,21 @@ class SwiftScenarioTestCase(test.ScenarioTestCase):
 
     def test__upload_object(self):
         container_name = mock.MagicMock()
-        object_name = mock.MagicMock()
         content = mock.MagicMock()
         etag = mock.MagicMock()
         self.clients("swift").put_object.return_value = etag
         scenario = utils.SwiftScenario(self.context)
+        scenario.generate_random_name = mock.MagicMock()
 
-        # container + content + name + kw
-        self.assertEqual((etag, object_name),
-                         scenario._upload_object(container_name, content,
-                                                 object_name=object_name,
-                                                 fargs="f"))
-        kw = {"fargs": "f"}
-        self.clients("swift").put_object.assert_called_once_with(
-            container_name, object_name,
-            content, **kw)
-        # container + content + kw
-        scenario._generate_random_name = mock.MagicMock(
-            return_value=object_name)
         self.clients("swift").put_object.reset_mock()
-        self.assertEqual((etag, object_name),
+        self.assertEqual((etag, scenario.generate_random_name.return_value),
                          scenario._upload_object(container_name, content,
                                                  fargs="f"))
         kw = {"fargs": "f"}
         self.clients("swift").put_object.assert_called_once_with(
-            container_name, object_name,
+            container_name, scenario.generate_random_name.return_value,
             content, **kw)
-        self.assertEqual(1, scenario._generate_random_name.call_count)
+        self.assertEqual(1, scenario.generate_random_name.call_count)
 
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "swift.upload_object")

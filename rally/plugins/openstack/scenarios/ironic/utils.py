@@ -17,8 +17,6 @@ import string
 
 from oslo_config import cfg
 
-
-from rally.common import utils
 from rally.plugins.openstack import scenario
 from rally.task import atomic
 
@@ -38,6 +36,20 @@ CONF.register_opts(IRONIC_BENCHMARK_OPTS, group=benchmark_group)
 class IronicScenario(scenario.OpenStackScenario):
     """Base class for Ironic scenarios with basic atomic actions."""
 
+    # NOTE(stpierre): Ironic has two name checkers. The new-style
+    # checker, in API v1.10+, is quite relaxed and will Just Work with
+    # the default random name pattern. (See
+    # https://bugs.launchpad.net/ironic/+bug/1434376.) The old-style
+    # checker *claims* to implement RFCs 952 and 1123, but it doesn't
+    # actually. (See https://bugs.launchpad.net/ironic/+bug/1468508
+    # for details.) The default RESOURCE_NAME_FORMAT works fine for
+    # the new-style checker, but the old-style checker only allows
+    # underscores after the first dot, for reasons that I'm sure are
+    # entirely obvious, so we have to supply a bespoke format for
+    # Ironic names.
+    RESOURCE_NAME_FORMAT = "s-rally-XXXXXXXX-XXXXXXXX"
+    RESOURCE_NAME_ALLOWED_CHARACTERS = string.ascii_lowercase + string.digits
+
     @atomic.action_timer("ironic.create_node")
     def _create_node(self, **kwargs):
         """Create node immediately.
@@ -45,17 +57,7 @@ class IronicScenario(scenario.OpenStackScenario):
         :param kwargs: optional parameters to create image
         :returns: node object
         """
-        if "name" not in kwargs:
-            # NOTE(rvasilets): can't use _generate_random_name() because
-            # ironic have specific format for node name.
-            # Check that the supplied hostname conforms to:
-            # * http://en.wikipedia.org/wiki/Hostname
-            # * http://tools.ietf.org/html/rfc952
-            # * http://tools.ietf.org/html/rfc1123
-            # or the name could be just uuid.
-            kwargs["name"] = utils.generate_random_name(
-                prefix="rally", choice=string.ascii_lowercase + string.digits)
-
+        kwargs["name"] = self.generate_random_name()
         return self.admin_clients("ironic").node.create(**kwargs)
 
     @atomic.action_timer("ironic.list_nodes")

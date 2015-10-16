@@ -62,11 +62,11 @@ class NeutronScenarioTestCase(test.ScenarioTestCase):
         neutron_scenario._list_networks.assert_called_once_with(
             atomic_action=False)
 
-    @mock.patch(NEUTRON_UTILS + "NeutronScenario._generate_random_name")
-    def test_create_network(self, mock__generate_random_name):
+    def test_create_network(self):
         neutron_scenario = utils.NeutronScenario(self.context)
         random_name = "random_name"
-        mock__generate_random_name.return_value = random_name
+        neutron_scenario.generate_random_name = mock.Mock(
+            return_value=random_name)
         self.clients("neutron").create_network.return_value = self.network
 
         network_data = {"admin_state_up": False}
@@ -96,11 +96,11 @@ class NeutronScenarioTestCase(test.ScenarioTestCase):
 
     def test_update_network(self):
         scenario = utils.NeutronScenario(context=self.context)
-        scenario._generate_random_name = mock.Mock()
+        scenario.generate_random_name = mock.Mock()
 
         expected_network = {
             "network": {
-                "name": scenario._generate_random_name.return_value,
+                "name": scenario.generate_random_name.return_value,
                 "admin_state_up": False,
                 "fakearg": "fake"
             }
@@ -128,10 +128,9 @@ class NeutronScenarioTestCase(test.ScenarioTestCase):
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "neutron.delete_network")
 
-    @mock.patch(NEUTRON_UTILS + "NeutronScenario._generate_random_name",
-                return_value="test_subnet")
-    def test_create_subnet(self, mock__generate_random_name):
+    def test_create_subnet(self):
         scenario = utils.NeutronScenario(self.context)
+        scenario.generate_random_name = mock.Mock(return_value="test_subnet")
         network_id = "fake-id"
         start_cidr = "192.168.0.0/24"
 
@@ -141,7 +140,7 @@ class NeutronScenarioTestCase(test.ScenarioTestCase):
                 "network_id": network_id,
                 "cidr": start_cidr,
                 "ip_version": scenario.SUBNET_IP_VERSION,
-                "name": mock__generate_random_name.return_value
+                "name": scenario.generate_random_name.return_value
             }
         }
 
@@ -176,10 +175,10 @@ class NeutronScenarioTestCase(test.ScenarioTestCase):
 
     def test_update_subnet(self):
         scenario = utils.NeutronScenario(context=self.context)
-        scenario._generate_random_name = mock.Mock()
+        scenario.generate_random_name = mock.Mock()
         expected_subnet = {
             "subnet": {
-                "name": scenario._generate_random_name.return_value,
+                "name": scenario.generate_random_name.return_value,
                 "enable_dhcp": False,
                 "fakearg": "fake"
             }
@@ -207,11 +206,11 @@ class NeutronScenarioTestCase(test.ScenarioTestCase):
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "neutron.delete_subnet")
 
-    @mock.patch(NEUTRON_UTILS + "NeutronScenario._generate_random_name")
-    def test_create_router_default(self, mock__generate_random_name):
+    @mock.patch(NEUTRON_UTILS + "NeutronScenario.generate_random_name")
+    def test_create_router(self, mock_generate_random_name):
         scenario = utils.NeutronScenario(self.context)
         router = mock.Mock()
-        mock__generate_random_name.return_value = "random_name"
+        mock_generate_random_name.return_value = "random_name"
         self.clients("neutron").create_router.return_value = router
 
         # Default options
@@ -222,13 +221,13 @@ class NeutronScenarioTestCase(test.ScenarioTestCase):
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "neutron.create_router")
 
-    @mock.patch(NEUTRON_UTILS + "NeutronScenario._generate_random_name")
-    def test_create_router_with_ext_gw(self, mock__generate_random_name):
+    @mock.patch(NEUTRON_UTILS + "NeutronScenario.generate_random_name")
+    def test_create_router_with_ext_gw(self, mock_generate_random_name):
         scenario = utils.NeutronScenario()
         router = mock.Mock()
         external_network = [{"id": "ext-net", "router:external": True}]
         scenario._list_networks = mock.Mock(return_value=external_network)
-        mock__generate_random_name.return_value = "random_name"
+        mock_generate_random_name.return_value = "random_name"
         self.clients("neutron").create_router.return_value = router
 
         # External_gw options
@@ -242,14 +241,14 @@ class NeutronScenarioTestCase(test.ScenarioTestCase):
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "neutron.create_router")
 
-    @mock.patch(NEUTRON_UTILS + "NeutronScenario._generate_random_name")
+    @mock.patch(NEUTRON_UTILS + "NeutronScenario.generate_random_name")
     def test_create_router_with_ext_gw_but_no_ext_net(
-            self, mock__generate_random_name):
+            self, mock_generate_random_name):
         scenario = utils.NeutronScenario()
         router = mock.Mock()
         external_network = [{"id": "ext-net", "router:external": False}]
         scenario._list_networks = mock.Mock(return_value=external_network)
-        mock__generate_random_name.return_value = "random_name"
+        mock_generate_random_name.return_value = "random_name"
         self.clients("neutron").create_router.return_value = router
 
         # External_gw options with no external networks in list_networks()
@@ -285,11 +284,11 @@ class NeutronScenarioTestCase(test.ScenarioTestCase):
 
     def test_update_router(self):
         scenario = utils.NeutronScenario(context=self.context)
-        scenario._generate_random_name = mock.Mock()
+        scenario.generate_random_name = mock.Mock()
 
         expected_router = {
             "router": {
-                "name": scenario._generate_random_name.return_value,
+                "name": scenario.generate_random_name.return_value,
                 "admin_state_up": False,
                 "fakearg": "fake"
             }
@@ -342,14 +341,14 @@ class NeutronScenarioTestCase(test.ScenarioTestCase):
 
     def test_create_port(self):
         scenario = utils.NeutronScenario(self.context)
-        scenario._generate_random_name = mock.Mock()
+        scenario.generate_random_name = mock.Mock()
 
         net_id = "network-id"
         net = {"network": {"id": net_id}}
         expected_port_args = {
             "port": {
                 "network_id": net_id,
-                "name": scenario._generate_random_name.return_value
+                "name": scenario.generate_random_name.return_value
             }
         }
 
@@ -380,11 +379,11 @@ class NeutronScenarioTestCase(test.ScenarioTestCase):
 
     def test_update_port(self):
         scenario = utils.NeutronScenario(context=self.context)
-        scenario._generate_random_name = mock.Mock()
+        scenario.generate_random_name = mock.Mock()
 
         expected_port = {
             "port": {
-                "name": scenario._generate_random_name.return_value,
+                "name": scenario.generate_random_name.return_value,
                 "admin_state_up": False,
                 "fakearg": "fake"
             }
@@ -502,11 +501,11 @@ class NeutronScenarioTestCase(test.ScenarioTestCase):
 
     def test_update_pool(self):
         scenario = utils.NeutronScenario(context=self.context)
-        scenario._generate_random_name = mock.Mock()
+        scenario.generate_random_name = mock.Mock()
 
         expected_pool = {
             "pool": {
-                "name": scenario._generate_random_name.return_value,
+                "name": scenario.generate_random_name.return_value,
                 "admin_state_up": False,
                 "fakearg": "fake"
             }
@@ -557,10 +556,10 @@ class NeutronScenarioTestCase(test.ScenarioTestCase):
 
     def test_update_v1_vip(self):
         scenario = utils.NeutronScenario()
-        scenario._generate_random_name = mock.Mock(return_value="random_name")
+        scenario.generate_random_name = mock.Mock(return_value="random_name")
         expected_vip = {
             "vip": {
-                "name": scenario._generate_random_name.return_value,
+                "name": scenario.generate_random_name.return_value,
                 "admin_state_up": False
             }
         }
@@ -656,7 +655,7 @@ class NeutronLoadbalancerScenarioTestCase(test.ScenarioTestCase):
         pool = {"pool": {"id": "pool-id"}}
         pool_create_args = pool_create_args or {}
         if pool_create_args.get("name") is None:
-            neutron_scenario._generate_random_name = mock.Mock(
+            neutron_scenario.generate_random_name = mock.Mock(
                 return_value="random_name")
         self.clients("neutron").create_pool.return_value = pool
         args = {"lb_method": "ROUND_ROBIN", "protocol": "HTTP",
@@ -680,12 +679,12 @@ class NeutronLoadbalancerScenarioTestCase(test.ScenarioTestCase):
     )
     @ddt.unpack
     def test__create_v1_vip(self, vip_create_args=None):
-        neutron_scenario = utils.NeutronScenario()
+        neutron_scenario = utils.NeutronScenario(self.context)
         vip = {"vip": {"id": "vip-id"}}
         pool = {"pool": {"id": "pool-id", "subnet_id": "subnet-id"}}
         vip_create_args = vip_create_args or {}
         if vip_create_args.get("name") is None:
-            neutron_scenario._generate_random_name = mock.Mock(
+            neutron_scenario.generate_random_name = mock.Mock(
                 return_value="random_name")
         self.clients("neutron").create_vip.return_value = vip
         args = {"protocol_port": 80, "protocol": "HTTP", "name": "random_name",

@@ -65,13 +65,11 @@ class ManilaSharesTestCase(test.ScenarioTestCase):
 
     @ddt.data(
         {},
-        {"name": "foo_name"},
         {"description": "foo_description"},
         {"neutron_net_id": "foo_neutron_net_id"},
         {"neutron_subnet_id": "foo_neutron_subnet_id"},
         {"nova_net_id": "foo_nova_net_id"},
-        {"name": "foo_name",
-         "description": "foo_description",
+        {"description": "foo_description",
          "neutron_net_id": "foo_neutron_net_id",
          "neutron_subnet_id": "foo_neutron_subnet_id",
          "nova_net_id": "foo_nova_net_id"},
@@ -82,7 +80,6 @@ class ManilaSharesTestCase(test.ScenarioTestCase):
         scenario._create_share_network = mock.MagicMock(return_value=fake_sn)
         scenario._delete_share_network = mock.MagicMock()
         expected_params = {
-            "name": None,
             "description": None,
             "neutron_net_id": None,
             "neutron_subnet_id": None,
@@ -98,13 +95,11 @@ class ManilaSharesTestCase(test.ScenarioTestCase):
 
     @ddt.data(
         {},
-        {"name": "foo_name"},
         {"description": "foo_description"},
         {"neutron_net_id": "foo_neutron_net_id"},
         {"neutron_subnet_id": "foo_neutron_subnet_id"},
         {"nova_net_id": "foo_nova_net_id"},
-        {"name": "foo_name",
-         "description": "foo_description",
+        {"description": "foo_description",
          "neutron_net_id": "foo_neutron_net_id",
          "neutron_subnet_id": "foo_neutron_subnet_id",
          "nova_net_id": "foo_nova_net_id"},
@@ -114,7 +109,6 @@ class ManilaSharesTestCase(test.ScenarioTestCase):
         scenario._create_share_network = mock.MagicMock()
         scenario._list_share_networks = mock.MagicMock()
         expected_create_params = {
-            "name": params.get("name"),
             "description": params.get("description"),
             "neutron_net_id": params.get("neutron_net_id"),
             "neutron_subnet_id": params.get("neutron_subnet_id"),
@@ -151,8 +145,7 @@ class ManilaSharesTestCase(test.ScenarioTestCase):
 
     @ddt.data(
         {"security_service_type": "fake_type"},
-        {"name": "foo_name",
-         "security_service_type": "fake_type",
+        {"security_service_type": "fake_type",
          "dns_ip": "fake_dns_ip",
          "server": "fake_server",
          "domain": "fake_domain",
@@ -173,7 +166,6 @@ class ManilaSharesTestCase(test.ScenarioTestCase):
             "domain": params.get("domain"),
             "user": params.get("user"),
             "password": params.get("password"),
-            "name": params.get("name"),
             "description": params.get("description"),
         }
 

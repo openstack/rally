@@ -21,8 +21,6 @@ from rally.task import atomic
 class DesignateScenario(scenario.OpenStackScenario):
     """Base class for Designate scenarios with basic atomic actions."""
 
-    RESOURCE_NAME_PREFIX = "rally_"
-
     @atomic.action_timer("designate.create_domain")
     def _create_domain(self, domain=None):
         """Create domain.
@@ -33,7 +31,7 @@ class DesignateScenario(scenario.OpenStackScenario):
         domain = domain or {}
 
         domain.setdefault("email", "root@random.name")
-        domain.setdefault("name", "%s.name." % self._generate_random_name())
+        domain["name"] = "%s.name." % self.generate_random_name()
         return self.clients("designate").domains.create(domain)
 
     @atomic.action_timer("designate.list_domains")
@@ -63,8 +61,8 @@ class DesignateScenario(scenario.OpenStackScenario):
         """
         record = record or {}
         record.setdefault("type", "A")
-        record.setdefault("name", "%s.%s" % (self._generate_random_name(),
-                                             domain["name"]))
+        record["name"] = "%s.%s" % (self.generate_random_name(),
+                                    domain["name"])
         record.setdefault("data", "10.0.0.1")
 
         client = self.clients("designate")
@@ -102,7 +100,7 @@ class DesignateScenario(scenario.OpenStackScenario):
         """
         server = server or {}
 
-        server.setdefault("name", "name.%s." % self._generate_random_name())
+        server["name"] = "name.%s." % self.generate_random_name()
         return self.admin_clients("designate").servers.create(server)
 
     @atomic.action_timer("designate.list_servers")

@@ -85,7 +85,6 @@ class BaseCustomImageContextVMTestCase(test.TestCase):
 
         generator_ctx = TestImageGenerator(self.context)
         generator_ctx._customize_image = mock.MagicMock()
-        generator_ctx.generate_random_name = mock.Mock()
 
         user = {
             "endpoint": "endpoint",
@@ -107,7 +106,6 @@ class BaseCustomImageContextVMTestCase(test.TestCase):
 
         mock_vm_scenario._boot_server_with_fip.assert_called_once_with(
             image="image", flavor="flavor",
-            name=generator_ctx.generate_random_name.return_value,
             floating_network="floating",
             key_name="keypair_name", security_groups=["secgroup_name"],
             userdata=None, foo_arg="foo_value")

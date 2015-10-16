@@ -52,8 +52,6 @@ CONF.register_opts(CINDER_BENCHMARK_OPTS, group=benchmark_group)
 class CinderScenario(scenario.OpenStackScenario):
     """Base class for Cinder scenarios with basic atomic actions."""
 
-    RESOURCE_NAME_PREFIX = "rally_volume_"
-
     @atomic.action_timer("cinder.list_volumes")
     def _list_volumes(self, detailed=True):
         """Returns user volumes list."""
@@ -80,9 +78,9 @@ class CinderScenario(scenario.OpenStackScenario):
             for i in range(sets):
                 metadata = {}
                 for j in range(set_size):
-                    key = self._generate_random_name()
+                    key = self.generate_random_name()
                     keys.append(key)
-                    metadata[key] = self._generate_random_name()
+                    metadata[key] = self.generate_random_name()
 
                 self.clients("cinder").volumes.set_metadata(volume, metadata)
             return keys
@@ -130,7 +128,7 @@ class CinderScenario(scenario.OpenStackScenario):
         :returns: Created volume object
         """
         kwargs["display_name"] = kwargs.get("display_name",
-                                            self._generate_random_name())
+                                            self.generate_random_name())
 
         if isinstance(size, dict):
             size = random.randint(size["min"], size["max"])
@@ -152,17 +150,15 @@ class CinderScenario(scenario.OpenStackScenario):
     def _update_volume(self, volume, **update_volume_args):
         """Update name and description for this volume
 
-        This atomic function updates volume display name and description
+        This atomic function updates volume information. The volume
+        display name is always changed, and additional update
+        arguments may also be specified.
 
         :param volume: volume object
         :param update_volume_args: dict, contains values to be updated.
         """
-        kwargs = {}
-        kwargs["display_name"] = update_volume_args.get(
-            "display_name", self._generate_random_name("_"))
-        kwargs["display_description"] = update_volume_args.get(
-            "display_description", self._generate_random_name("_"))
-        self.clients("cinder").volumes.update(volume, **kwargs)
+        update_volume_args["display_name"] = self.generate_random_name()
+        self.clients("cinder").volumes.update(volume, **update_volume_args)
 
     @atomic.action_timer("cinder.delete_volume")
     def _delete_volume(self, volume):
@@ -224,7 +220,7 @@ class CinderScenario(scenario.OpenStackScenario):
                             ami, ari, aki, vhd, vmdk, raw, qcow2, vdi and iso
         :returns: Returns created image object
         """
-        resp, img = volume.upload_to_image(force, self._generate_random_name(),
+        resp, img = volume.upload_to_image(force, self.generate_random_name(),
                                            container_format, disk_format)
         # NOTE (e0ne): upload_to_image changes volume status to uploading so
         # we need to wait until it will be available.
@@ -261,7 +257,7 @@ class CinderScenario(scenario.OpenStackScenario):
         :returns: Created snapshot object
         """
         kwargs["display_name"] = kwargs.get("display_name",
-                                            self._generate_random_name())
+                                            self.generate_random_name())
         kwargs["force"] = force
         snapshot = self.clients("cinder").volume_snapshots.create(volume_id,
                                                                   **kwargs)

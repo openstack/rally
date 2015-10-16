@@ -24,6 +24,10 @@ configure = scenario.configure
 class OpenStackScenario(scenario.Scenario):
     """Base class for all OpenStack scenarios."""
 
+    # TODO(stpierre): this is still used by some cleanup routines;
+    # remove it when they're using the new random name generator
+    RESOURCE_NAME_PREFIX = "rally_"
+
     def __init__(self, context=None, admin_clients=None, clients=None):
         super(OpenStackScenario, self).__init__(context)
         if context:

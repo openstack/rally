@@ -120,18 +120,14 @@ class FuelScenario(scenario.OpenStackScenario):
 
     @atomic.action_timer("fuel.list_environments")
     def _list_environments(self):
-        return [env for env in self.admin_clients("fuel").environment.list()
-                if env["name"].startswith(
-                    scenario.OpenStackScenario.RESOURCE_NAME_PREFIX)]
+        return self.admin_clients("fuel").environment.list()
 
     @atomic.action_timer("fuel.create_environment")
     def _create_environment(self, release_id=1,
                             network_provider="neutron",
                             deployment_mode="ha_compact",
                             net_segment_type="vlan"):
-
-        name = self._generate_random_name(
-            prefix=scenario.OpenStackScenario.RESOURCE_NAME_PREFIX)
+        name = self.generate_random_name()
         env = self.admin_clients("fuel").environment.create(
             name, release_id, network_provider, deployment_mode,
             net_segment_type)

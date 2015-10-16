@@ -26,8 +26,6 @@ LOG = logging.getLogger(__name__)
 class NeutronScenario(scenario.OpenStackScenario):
     """Base class for Neutron scenarios with basic atomic actions."""
 
-    RESOURCE_NAME_PREFIX = "rally_net_"
-    RESOURCE_NAME_LENGTH = 16
     SUBNET_IP_VERSION = 4
     # TODO(rkiran): modify in case LBaaS-v2 requires
     LB_METHOD = "ROUND_ROBIN"
@@ -61,7 +59,7 @@ class NeutronScenario(scenario.OpenStackScenario):
         :returns: None; kwargs is modified in situ.
         """
         if "name" in kwargs:
-            kwargs["name"] = self._generate_random_name()
+            kwargs["name"] = self.generate_random_name()
             LOG.warning(_("Cannot set name of %(type)s %(id)s explicitly; "
                           "setting to random string %(name)s") %
                         {"type": list(resource.keys())[0],
@@ -89,7 +87,7 @@ class NeutronScenario(scenario.OpenStackScenario):
         :param network_create_args: dict, POST /v2.0/networks request options
         :returns: neutron network dict
         """
-        network_create_args.setdefault("name", self._generate_random_name())
+        network_create_args["name"] = self.generate_random_name()
         return self.clients("neutron").create_network(
             {"network": network_create_args})
 
@@ -143,8 +141,7 @@ class NeutronScenario(scenario.OpenStackScenario):
                 network_wrapper.generate_cidr(start_cidr=start_cidr))
 
         subnet_create_args["network_id"] = network_id
-        subnet_create_args.setdefault(
-            "name", self._generate_random_name("rally_subnet_"))
+        subnet_create_args["name"] = self.generate_random_name()
         subnet_create_args.setdefault("ip_version", self.SUBNET_IP_VERSION)
 
         return self.clients("neutron").create_subnet(
@@ -185,8 +182,7 @@ class NeutronScenario(scenario.OpenStackScenario):
         :param router_create_args: POST /v2.0/routers request options
         :returns: neutron router dict
         """
-        router_create_args.setdefault(
-            "name", self._generate_random_name("rally_router_"))
+        router_create_args["name"] = self.generate_random_name()
 
         if external_gw:
             for network in self._list_networks():
@@ -237,8 +233,7 @@ class NeutronScenario(scenario.OpenStackScenario):
         :returns: neutron port dict
         """
         port_create_args["network_id"] = network["network"]["id"]
-        port_create_args.setdefault(
-            "name", self._generate_random_name("rally_port_"))
+        port_create_args["name"] = self.generate_random_name()
         return self.clients("neutron").create_port({"port": port_create_args})
 
     @atomic.action_timer("neutron.list_ports")
@@ -323,7 +318,7 @@ class NeutronScenario(scenario.OpenStackScenario):
         """
         args = {"lb_method": self.LB_METHOD,
                 "protocol": self.LB_PROTOCOL,
-                "name": self._generate_random_name("rally_pool_"),
+                "name": self.generate_random_name(),
                 "subnet_id": subnet_id}
         args.update(pool_create_args)
         return self.clients("neutron").create_pool({"pool": args})
@@ -382,7 +377,7 @@ class NeutronScenario(scenario.OpenStackScenario):
         """
         args = {"protocol": self.LB_PROTOCOL,
                 "protocol_port": self.LB_PROTOCOL_PORT,
-                "name": self._generate_random_name("rally_vip_"),
+                "name": self.generate_random_name(),
                 "pool_id": pool["pool"]["id"],
                 "subnet_id": pool["pool"]["subnet_id"]}
         args.update(vip_create_args)

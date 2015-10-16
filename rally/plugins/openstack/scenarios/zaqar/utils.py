@@ -20,15 +20,14 @@ class ZaqarScenario(scenario.OpenStackScenario):
     """Base class for Zaqar scenarios with basic atomic actions."""
 
     @atomic.action_timer("zaqar.create_queue")
-    def _queue_create(self, name_length=10, **kwargs):
+    def _queue_create(self, **kwargs):
         """Create a Zaqar queue with random name.
 
-        :param name_length: length of generated (random) part of name
         :param kwargs: other optional parameters to create queues like
                        "metadata"
         :returns: Zaqar queue instance
         """
-        name = self._generate_random_name(length=name_length)
+        name = self.generate_random_name()
         return self.clients("zaqar").queue(name, **kwargs)
 
     @atomic.action_timer("zaqar.delete_queue")

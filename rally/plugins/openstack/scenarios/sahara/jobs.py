@@ -45,7 +45,7 @@ class SaharaJob(utils.SaharaScenario):
         mains = self.context["tenant"]["sahara_mains"]
         libs = self.context["tenant"]["sahara_libs"]
 
-        name = self._generate_random_name(prefix="job_")
+        name = self.generate_random_name()
         job = self.clients("sahara").jobs.create(name=name,
                                                  type=job_type,
                                                  description="",

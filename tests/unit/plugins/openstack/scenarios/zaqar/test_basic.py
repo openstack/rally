@@ -23,15 +23,15 @@ BASIC = BASE + "basic.ZaqarBasic."
 
 class ZaqarBasicTestCase(test.ScenarioTestCase):
 
-    @mock.patch(BASIC + "_generate_random_name", return_value="fizbit")
-    def test_create_queue(self, mock__generate_random_name):
+    @mock.patch(BASIC + "generate_random_name", return_value="fizbit")
+    def test_create_queue(self, mock_generate_random_name):
         scenario = basic.ZaqarBasic(self.context)
         scenario._queue_create = mock.MagicMock()
-        scenario.create_queue(name_length=10)
-        scenario._queue_create.assert_called_once_with(name_length=10)
+        scenario.create_queue(fakearg="fake")
+        scenario._queue_create.assert_called_once_with(fakearg="fake")
 
-    @mock.patch(BASIC + "_generate_random_name", return_value="kitkat")
-    def test_producer_consumer(self, mock__generate_random_name):
+    @mock.patch(BASIC + "generate_random_name", return_value="kitkat")
+    def test_producer_consumer(self, mock_generate_random_name):
         scenario = basic.ZaqarBasic(self.context)
         messages = [{"body": {"id": idx}, "ttl": 360} for idx
                     in range(20)]
@@ -42,10 +42,10 @@ class ZaqarBasicTestCase(test.ScenarioTestCase):
         scenario._messages_list = mock.MagicMock()
         scenario._queue_delete = mock.MagicMock()
 
-        scenario.producer_consumer(name_length=10, min_msg_count=20,
-                                   max_msg_count=20)
+        scenario.producer_consumer(min_msg_count=20, max_msg_count=20,
+                                   fakearg="fake")
 
-        scenario._queue_create.assert_called_once_with(name_length=10)
+        scenario._queue_create.assert_called_once_with(fakearg="fake")
         scenario._messages_post.assert_called_once_with(queue, messages,
                                                         20, 20)
         scenario._messages_list.assert_called_once_with(queue)

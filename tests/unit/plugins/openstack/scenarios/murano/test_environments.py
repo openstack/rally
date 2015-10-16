@@ -53,14 +53,14 @@ class MuranoEnvironmentsTestCase(test.ScenarioTestCase):
     @mock.patch(MURANO_SCENARIO + "._create_session")
     @mock.patch(MURANO_SCENARIO + "._delete_environment")
     @mock.patch(MURANO_SCENARIO + "._create_environment")
-    @mock.patch(MURANO_SCENARIO + "._generate_random_name")
+    @mock.patch(MURANO_SCENARIO + ".generate_random_name")
     def test_create_and_delete_environment(
-            self, mock__generate_random_name, mock__create_environment,
+            self, mock_generate_random_name, mock__create_environment,
             mock__delete_environment, mock__create_session):
         scenario = environments.MuranoEnvironments(self.context)
         fake_environment = mock.Mock(id="fake_id")
         mock__create_environment.return_value = fake_environment
-        mock__generate_random_name.return_value = "foo"
+        mock_generate_random_name.return_value = "foo"
         scenario.create_and_delete_environment()
         mock__create_environment.assert_called_once_with()
         mock__create_session.assert_called_once_with(fake_environment.id)

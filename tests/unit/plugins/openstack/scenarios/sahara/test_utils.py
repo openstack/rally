@@ -55,12 +55,12 @@ class SaharaScenarioTestCase(test.ScenarioTestCase):
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "sahara.list_node_group_templates")
 
-    @mock.patch(SAHARA_UTILS + ".SaharaScenario._generate_random_name",
+    @mock.patch(SAHARA_UTILS + ".SaharaScenario.generate_random_name",
                 return_value="random_name")
     @mock.patch(SAHARA_UTILS + ".sahara_consts")
     def test_create_node_group_templates(
             self, mock_sahara_consts,
-            mock__generate_random_name):
+            mock_generate_random_name):
 
         scenario = utils.SaharaScenario(self.context)
         mock_processes = {
@@ -121,11 +121,11 @@ class SaharaScenarioTestCase(test.ScenarioTestCase):
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "sahara.delete_node_group_template")
 
-    @mock.patch(SAHARA_UTILS + ".SaharaScenario._generate_random_name",
+    @mock.patch(SAHARA_UTILS + ".SaharaScenario.generate_random_name",
                 return_value="random_name")
     @mock.patch(SAHARA_UTILS + ".sahara_consts")
     def test_launch_cluster(self, mock_sahara_consts,
-                            mock__generate_random_name):
+                            mock_generate_random_name):
 
         self.context.update({
             "tenant": {
@@ -226,11 +226,11 @@ class SaharaScenarioTestCase(test.ScenarioTestCase):
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "sahara.launch_cluster")
 
-    @mock.patch(SAHARA_UTILS + ".SaharaScenario._generate_random_name",
+    @mock.patch(SAHARA_UTILS + ".SaharaScenario.generate_random_name",
                 return_value="random_name")
     @mock.patch(SAHARA_UTILS + ".sahara_consts")
     def test_launch_cluster_with_proxy(self, mock_sahara_consts,
-                                       mock__generate_random_name):
+                                       mock_generate_random_name):
 
         context = {
             "tenant": {
@@ -344,11 +344,11 @@ class SaharaScenarioTestCase(test.ScenarioTestCase):
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "sahara.launch_cluster")
 
-    @mock.patch(SAHARA_UTILS + ".SaharaScenario._generate_random_name",
+    @mock.patch(SAHARA_UTILS + ".SaharaScenario.generate_random_name",
                 return_value="random_name")
     @mock.patch(SAHARA_UTILS + ".sahara_consts")
     def test_launch_cluster_error(self, mock_sahara_consts,
-                                  mock__generate_random_name):
+                                  mock_generate_random_name):
 
         scenario = utils.SaharaScenario(self.context)
         mock_processes = {
@@ -433,9 +433,9 @@ class SaharaScenarioTestCase(test.ScenarioTestCase):
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "sahara.delete_cluster")
 
-    @mock.patch(SAHARA_UTILS + ".SaharaScenario._generate_random_name",
+    @mock.patch(SAHARA_UTILS + ".SaharaScenario.generate_random_name",
                 return_value="42")
-    def test_create_output_ds(self, mock__generate_random_name):
+    def test_create_output_ds(self, mock_generate_random_name):
         self.context.update({
             "sahara_output_conf": {
                 "output_type": "hdfs",
@@ -453,9 +453,9 @@ class SaharaScenarioTestCase(test.ScenarioTestCase):
             url="hdfs://test_out/42"
         )
 
-    @mock.patch(SAHARA_UTILS + ".SaharaScenario._generate_random_name",
+    @mock.patch(SAHARA_UTILS + ".SaharaScenario.generate_random_name",
                 return_value="42")
-    def test_create_output_ds_swift(self, mock__generate_random_name):
+    def test_create_output_ds_swift(self, mock_generate_random_name):
         self.context.update({
             "sahara_output_conf": {
                 "output_type": "swift",

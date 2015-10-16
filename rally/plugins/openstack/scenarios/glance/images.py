@@ -24,9 +24,6 @@ from rally.task import validation
 class GlanceImages(utils.GlanceScenario, nova_utils.NovaScenario):
     """Benchmark scenarios for Glance images."""
 
-    RESOURCE_NAME_PREFIX = "rally_image_"
-    RESOURCE_NAME_LENGTH = 16
-
     @types.set(image_location=types.FilePathOrUrlType)
     @validation.required_services(consts.Service.GLANCE)
     @validation.required_openstack(users=True)

@@ -18,9 +18,11 @@ from neutronclient.common import exceptions as neutron_exceptions
 from saharaclient.api import base as saharaclient_base
 
 from rally.common import log as logging
+from rally.common import utils
 from rally.plugins.openstack.context.cleanup import base
-from rally.plugins.openstack import scenario
+from rally.plugins.openstack.scenarios.fuel import utils as futils
 from rally.plugins.openstack.scenarios.keystone import utils as kutils
+from rally.plugins.openstack.scenarios.nova import utils as nova_utils
 from rally.plugins.openstack.wrappers import keystone as keystone_wrapper
 
 LOG = logging.getLogger(__name__)
@@ -126,7 +128,8 @@ class NovaFloatingIpsBulk(SynchronizedDeletion, base.ResourceManager):
 
     def list(self):
         return [floating_ip for floating_ip in self._manager().list()
-                if floating_ip.pool.startswith("rally_fip_pool_")]
+                if utils.name_matches_object(floating_ip.pool,
+                                             nova_utils.NovaScenario)]
 
 
 @base.resource("nova", "networks", order=next(_nova_order),
@@ -135,7 +138,9 @@ class NovaNetworks(SynchronizedDeletion, base.ResourceManager):
 
     def list(self):
         return [net for net in self._manager().list()
-                if net.label.startswith("rally_novanet")]
+                if (utils.name_matches_object(net.label,
+                                              nova_utils.NovaScenario) or
+                    net.label.startswith("rally_novanet"))]
 
 
 # EC2
@@ -567,8 +572,7 @@ class FuelEnvironment(base.ResourceManager):
 
     def list(self):
         return [env for env in self._manager().list()
-                if env["name"].startswith(
-                    scenario.OpenStackScenario.RESOURCE_NAME_PREFIX)]
+                if utils.name_matches_object(env["name"], futils.FuelScenario)]
 
 
 # KEYSTONE

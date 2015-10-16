@@ -58,8 +58,6 @@ CONF.register_opts(SAHARA_BENCHMARK_OPTS, group=benchmark_group)
 class SaharaScenario(scenario.OpenStackScenario):
     """Base class for Sahara scenarios with basic atomic actions."""
 
-    RESOURCE_NAME_LENGTH = 20
-
     @atomic.action_timer("sahara.list_node_group_templates")
     def _list_node_group_templates(self):
         """Return user Node Group Templates list."""
@@ -76,7 +74,7 @@ class SaharaScenario(scenario.OpenStackScenario):
                                the plugin
         :returns: The created Template
         """
-        name = self._generate_random_name(prefix="master-ngt-")
+        name = self.generate_random_name()
 
         return self.clients("sahara").node_group_templates.create(
             name=name,
@@ -97,7 +95,7 @@ class SaharaScenario(scenario.OpenStackScenario):
                                the plugin
         :returns: The created Template
         """
-        name = self._generate_random_name(prefix="worker-ngt-")
+        name = self.generate_random_name()
 
         return self.clients("sahara").node_group_templates.create(
             name=name,
@@ -354,7 +352,7 @@ class SaharaScenario(scenario.OpenStackScenario):
             aa_processes = (sahara_consts.ANTI_AFFINITY_PROCESSES[plugin_name]
                             [hadoop_version])
 
-        name = self._generate_random_name(prefix="sahara-cluster-")
+        name = self.generate_random_name()
 
         cluster_object = self.clients("sahara").clusters.create(
             name=name,
@@ -458,11 +456,10 @@ class SaharaScenario(scenario.OpenStackScenario):
             raise exceptions.RallyException(
                 _("Swift Data Sources are not implemented yet"))
 
-        url = (url_prefix.rstrip("/") + "/%s" %
-               self._generate_random_name(length=10))
+        url = url_prefix.rstrip("/") + "/%s" % self.generate_random_name()
 
         return self.clients("sahara").data_sources.create(
-            name=self._generate_random_name(prefix="out_"),
+            name=self.generate_random_name(),
             description="",
             data_source_type=ds_type,
             url=url)

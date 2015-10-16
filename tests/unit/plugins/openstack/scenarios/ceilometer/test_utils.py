@@ -45,7 +45,7 @@ class CeilometerScenarioTestCase(test.ScenarioTestCase):
     def test__create_alarm(self):
         alarm_dict = {"alarm_id": "fake-alarm-id"}
         orig_alarm_dict = copy.copy(alarm_dict)
-        self.scenario._generate_random_name = mock.Mock()
+        self.scenario.generate_random_name = mock.Mock()
         self.assertEqual(self.scenario._create_alarm("fake-meter-name", 100,
                                                      alarm_dict),
                          self.clients("ceilometer").alarms.create.return_value)
@@ -54,7 +54,7 @@ class CeilometerScenarioTestCase(test.ScenarioTestCase):
             threshold=100,
             description="Test Alarm",
             alarm_id="fake-alarm-id",
-            name=self.scenario._generate_random_name.return_value)
+            name=self.scenario.generate_random_name.return_value)
         # ensure that _create_alarm() doesn't modify the alarm dict as
         # a side-effect
         self.assertDictEqual(alarm_dict, orig_alarm_dict)
@@ -199,12 +199,12 @@ class CeilometerScenarioTestCase(test.ScenarioTestCase):
                                        "ceilometer.get_stats")
 
     def test__create_meter(self):
-        self.scenario._generate_random_name = mock.Mock()
+        self.scenario.generate_random_name = mock.Mock()
         self.assertEqual(
             self.scenario._create_meter(fakearg="fakearg"),
             self.clients("ceilometer").samples.create.return_value[0])
         self.clients("ceilometer").samples.create.assert_called_once_with(
-            counter_name=self.scenario._generate_random_name.return_value,
+            counter_name=self.scenario.generate_random_name.return_value,
             fakearg="fakearg")
         self._test_atomic_action_timer(self.scenario.atomic_actions(),
                                        "ceilometer.create_meter")
@@ -239,7 +239,7 @@ class CeilometerScenarioTestCase(test.ScenarioTestCase):
                                        "ceilometer.query_samples")
 
     def test__create_sample_no_resource_id(self):
-        self.scenario._generate_random_name = mock.Mock()
+        self.scenario.generate_random_name = mock.Mock()
         created_sample = self.scenario._create_sample("test-counter-name",
                                                       "test-counter-type",
                                                       "test-counter-unit",
@@ -252,7 +252,7 @@ class CeilometerScenarioTestCase(test.ScenarioTestCase):
             counter_type="test-counter-type",
             counter_unit="test-counter-unit",
             counter_volume="test-counter-volume",
-            resource_id=self.scenario._generate_random_name.return_value)
+            resource_id=self.scenario.generate_random_name.return_value)
         self._test_atomic_action_timer(self.scenario.atomic_actions(),
                                        "ceilometer.create_sample")
 

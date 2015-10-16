@@ -32,7 +32,7 @@ class NovaServersTestCase(test.ScenarioTestCase):
         fake_server = mock.MagicMock()
         scenario = servers.NovaServers(self.context)
         scenario._boot_server = mock.MagicMock(return_value=fake_server)
-        scenario._generate_random_name = mock.MagicMock(return_value="name")
+        scenario.generate_random_name = mock.MagicMock(return_value="name")
         scenario._rescue_server = mock.MagicMock()
         scenario._unrescue_server = mock.MagicMock()
         scenario._delete_server = mock.MagicMock()
@@ -56,7 +56,7 @@ class NovaServersTestCase(test.ScenarioTestCase):
         fake_server = mock.MagicMock()
         scenario = servers.NovaServers(self.context)
         scenario._boot_server = mock.MagicMock(return_value=fake_server)
-        scenario._generate_random_name = mock.MagicMock(return_value="name")
+        scenario.generate_random_name = mock.MagicMock(return_value="name")
         scenario._start_server = mock.MagicMock()
         scenario._stop_server = mock.MagicMock()
         scenario._delete_server = mock.MagicMock()
@@ -85,7 +85,7 @@ class NovaServersTestCase(test.ScenarioTestCase):
         scenario._delete_server = mock.MagicMock()
         scenario._reboot_server = mock.MagicMock()
         scenario._stop_and_start_server = mock.MagicMock()
-        scenario._generate_random_name = mock.MagicMock(return_value="name")
+        scenario.generate_random_name = mock.MagicMock(return_value="name")
 
         scenario.boot_and_bounce_server("img", 1, actions=actions)
         scenario._boot_server.assert_called_once_with("img", 1)
@@ -158,7 +158,7 @@ class NovaServersTestCase(test.ScenarioTestCase):
         scenario._soft_reboot_server = mock.MagicMock()
         scenario._boot_server = mock.MagicMock(return_value=fake_server)
         scenario._delete_server = mock.MagicMock()
-        scenario._generate_random_name = mock.MagicMock(return_value="name")
+        scenario.generate_random_name = mock.MagicMock(return_value="name")
 
         scenario.boot_and_bounce_server("img", 1, actions=actions)
 
@@ -187,7 +187,7 @@ class NovaServersTestCase(test.ScenarioTestCase):
         fake_server = object()
 
         scenario = servers.NovaServers(self.context)
-        scenario._generate_random_name = mock.MagicMock(return_value="name")
+        scenario.generate_random_name = mock.MagicMock(return_value="name")
         scenario._boot_server = mock.MagicMock(return_value=fake_server)
         scenario._delete_server = mock.MagicMock()
         scenario.sleep_between = mock.MagicMock()
@@ -220,7 +220,7 @@ class NovaServersTestCase(test.ScenarioTestCase):
 
     def test_boot_and_list_server(self):
         scenario = servers.NovaServers(self.context)
-        scenario._generate_random_name = mock.MagicMock(return_value="name")
+        scenario.generate_random_name = mock.MagicMock(return_value="name")
         scenario._boot_server = mock.MagicMock()
         scenario._list_servers = mock.MagicMock()
 
@@ -234,7 +234,7 @@ class NovaServersTestCase(test.ScenarioTestCase):
         fake_server = object()
 
         scenario = servers.NovaServers(self.context)
-        scenario._generate_random_name = mock.MagicMock(return_value="name")
+        scenario.generate_random_name = mock.MagicMock(return_value="name")
         scenario._boot_server = mock.MagicMock(return_value=fake_server)
         scenario._suspend_server = mock.MagicMock()
         scenario._resume_server = mock.MagicMock()
@@ -254,7 +254,7 @@ class NovaServersTestCase(test.ScenarioTestCase):
         fake_server = object()
 
         scenario = servers.NovaServers(self.context)
-        scenario._generate_random_name = mock.MagicMock(return_value="name")
+        scenario.generate_random_name = mock.MagicMock(return_value="name")
         scenario._boot_server = mock.MagicMock(return_value=fake_server)
         scenario._pause_server = mock.MagicMock()
         scenario._unpause_server = mock.MagicMock()
@@ -298,7 +298,7 @@ class NovaServersTestCase(test.ScenarioTestCase):
         fake_server = object()
         scenario = servers.NovaServers(self.context)
         scenario._boot_server = mock.MagicMock(return_value=fake_server)
-        scenario._generate_random_name = mock.MagicMock(return_value="name")
+        scenario.generate_random_name = mock.MagicMock(return_value="name")
         scenario.sleep_between = mock.MagicMock()
         scenario._delete_server = mock.MagicMock()
 
@@ -324,7 +324,7 @@ class NovaServersTestCase(test.ScenarioTestCase):
         scenario = servers.NovaServers(self.context)
 
         scenario._boot_server = mock.MagicMock(return_value=fake_server)
-        scenario._generate_random_name = mock.MagicMock(return_value="name")
+        scenario.generate_random_name = mock.MagicMock(return_value="name")
 
         kwargs = {"fakearg": "f"}
         expected_kwargs = {"fakearg": "f"}
@@ -358,7 +358,7 @@ class NovaServersTestCase(test.ScenarioTestCase):
         fake_image.id = "image_id"
 
         scenario = servers.NovaServers(self.context)
-        scenario._generate_random_name = mock.MagicMock(return_value="name")
+        scenario.generate_random_name = mock.MagicMock(return_value="name")
         scenario._boot_server = mock.MagicMock(return_value=fake_server)
         scenario._create_image = mock.MagicMock(return_value=fake_image)
         scenario._delete_server = mock.MagicMock()
@@ -383,7 +383,7 @@ class NovaServersTestCase(test.ScenarioTestCase):
         to_flavor = mock.MagicMock()
 
         scenario = servers.NovaServers(self.context)
-        scenario._generate_random_name = mock.MagicMock(return_value="name")
+        scenario.generate_random_name = mock.MagicMock(return_value="name")
         scenario._boot_server = mock.MagicMock(return_value=fake_server)
         scenario._resize_confirm = mock.MagicMock()
         scenario._resize_revert = mock.MagicMock()
@@ -410,7 +410,7 @@ class NovaServersTestCase(test.ScenarioTestCase):
         fake_server = mock.MagicMock()
 
         scenario = servers.NovaServers(self.context)
-        scenario._generate_random_name = mock.MagicMock(return_value="name")
+        scenario.generate_random_name = mock.MagicMock(return_value="name")
         scenario._boot_server = mock.MagicMock(return_value=fake_server)
         scenario.sleep_between = mock.MagicMock()
         scenario._find_host_to_migrate = mock.MagicMock(
@@ -437,7 +437,7 @@ class NovaServersTestCase(test.ScenarioTestCase):
         fake_server = mock.MagicMock()
 
         scenario = servers.NovaServers(self.context)
-        scenario._generate_random_name = mock.MagicMock(return_value="name")
+        scenario.generate_random_name = mock.MagicMock(return_value="name")
         scenario._boot_server = mock.MagicMock(return_value=fake_server)
         scenario.sleep_between = mock.MagicMock()
         scenario._find_host_to_migrate = mock.MagicMock(
@@ -517,7 +517,7 @@ class NovaServersTestCase(test.ScenarioTestCase):
         fake_server = mock.MagicMock()
 
         scenario = servers.NovaServers(self.context)
-        scenario._generate_random_name = mock.MagicMock(return_value="name")
+        scenario.generate_random_name = mock.MagicMock(return_value="name")
         scenario._boot_server = mock.MagicMock(return_value=fake_server)
         scenario._stop_server = mock.MagicMock()
         scenario._migrate = mock.MagicMock()

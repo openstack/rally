@@ -128,8 +128,7 @@ class VMScenario(nova_utils.NovaScenario, cinder_utils.CinderScenario):
         internal_network = list(server.networks)[0]
         fixed_ip = server.addresses[internal_network][0]["addr"]
 
-        fip = network_wrapper.wrap(self.clients,
-                                   self.context["task"]).create_floating_ip(
+        fip = network_wrapper.wrap(self.clients, self.task).create_floating_ip(
             ext_network=floating_network,
             tenant_id=server.tenant_id, fixed_ip=fixed_ip)
 
@@ -146,7 +145,7 @@ class VMScenario(nova_utils.NovaScenario, cinder_utils.CinderScenario):
                 self._dissociate_floating_ip(server, fip["ip"],
                                              atomic_action=False)
                 network_wrapper.wrap(
-                    self.clients, self.context["task"]).delete_floating_ip(
+                    self.clients, self.task).delete_floating_ip(
                         fip["id"],
                         wait=True)
 

@@ -36,7 +36,7 @@ class MistralScenario(scenario.OpenStackScenario):
         :returns: workbook object
         """
         definition = yaml.safe_load(definition)
-        definition["name"] = self._generate_random_name(definition["name"])
+        definition["name"] = self.generate_random_name()
         definition = yaml.safe_dump(definition)
 
         return self.clients("mistral").workbooks.create(definition)

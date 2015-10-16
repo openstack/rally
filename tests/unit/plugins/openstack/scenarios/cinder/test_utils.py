@@ -131,9 +131,12 @@ class CinderScenarioTestCase(test.ScenarioTestCase):
         fake_volume = mock.MagicMock()
         volume_update_args = {"display_name": "_updated",
                               "display_description": "_updated"}
+        self.scenario.generate_random_name = mock.Mock()
+
         self.scenario._update_volume(fake_volume, **volume_update_args)
         self.clients("cinder").volumes.update.assert_called_once_with(
-            fake_volume, display_name="_updated",
+            fake_volume,
+            display_name=self.scenario.generate_random_name.return_value,
             display_description="_updated")
         self._test_atomic_action_timer(self.scenario.atomic_actions(),
                                        "cinder.update_volume")
@@ -197,7 +200,7 @@ class CinderScenarioTestCase(test.ScenarioTestCase):
         volume.upload_to_image.return_value = (None, image)
         self.clients("cinder").images.get.return_value = image
 
-        self.scenario._generate_random_name = mock.Mock(
+        self.scenario.generate_random_name = mock.Mock(
             return_value="test_vol")
         self.scenario._upload_volume_to_image(volume, False,
                                               "container", "disk")

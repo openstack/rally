@@ -100,11 +100,6 @@ class Scenario(plugin.Plugin,
        You should create subclass of this class. And your test scenarios will
        be auto discoverable and you will be able to specify it in test config.
     """
-    # NOTE(stpierre): Old random name generator parameters, to be
-    # removed in a subsequent commit
-    RESOURCE_NAME_PREFIX = "rally_"
-    RESOURCE_NAME_LENGTH = 10
-
     RESOURCE_NAME_FORMAT = "s_rally_XXXXXXXX_XXXXXXXX"
 
     def __init__(self, context=None):
@@ -112,14 +107,6 @@ class Scenario(plugin.Plugin,
         self.context = context or {}
         self.task = self.context.get("task", {})
         self._idle_duration = 0
-
-    @classmethod
-    def _generate_random_name(cls, prefix=None, length=None):
-        # NOTE(stpierre): Old random name generator function, to be
-        # removed in a subsequent commit
-        prefix = cls.RESOURCE_NAME_PREFIX if prefix is None else prefix
-        length = length or cls.RESOURCE_NAME_LENGTH
-        return utils.generate_random_name(prefix, length)
 
     @staticmethod
     def _validate_helper(validators, clients, config, deployment):

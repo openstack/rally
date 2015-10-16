@@ -109,7 +109,7 @@ class NovaSecurityGroupTestCase(test.ScenarioTestCase):
             return_value=sg_list)
         nova_scenario._create_rules_for_security_group = mock.MagicMock()
         nova_scenario._boot_server = mock.MagicMock(return_value=fake_server)
-        nova_scenario._generate_random_name = mock.MagicMock(
+        nova_scenario.generate_random_name = mock.MagicMock(
             return_value="name")
         nova_scenario._delete_server = mock.MagicMock()
         nova_scenario._delete_security_groups = mock.MagicMock()
@@ -124,7 +124,7 @@ class NovaSecurityGroupTestCase(test.ScenarioTestCase):
             fakearg="fakearg")
         nova_scenario._create_security_groups.assert_called_once_with(
             security_group_count)
-        self.assertEqual(1, nova_scenario._generate_random_name.call_count)
+        nova_scenario.generate_random_name.assert_called_once_with()
         nova_scenario._create_rules_for_security_group.assert_called_once_with(
             sg_list, rules_per_security_group)
         nova_scenario._boot_server.assert_called_once_with(
@@ -145,7 +145,7 @@ class NovaSecurityGroupTestCase(test.ScenarioTestCase):
             return_value=fake_secgroups)
         nova_scenario._create_rules_for_security_group = mock.MagicMock()
         nova_scenario._boot_server = mock.MagicMock(return_value=fake_server)
-        nova_scenario._generate_random_name = mock.MagicMock(
+        nova_scenario.generate_random_name = mock.MagicMock(
             return_value="name")
         nova_scenario._delete_server = mock.MagicMock()
         nova_scenario._delete_security_groups = mock.MagicMock()
@@ -162,7 +162,7 @@ class NovaSecurityGroupTestCase(test.ScenarioTestCase):
 
         nova_scenario._create_security_groups.assert_called_once_with(
             security_group_count)
-        self.assertEqual(1, nova_scenario._generate_random_name.call_count)
+        nova_scenario.generate_random_name.assert_called_once_with()
         nova_scenario._create_rules_for_security_group.assert_called_once_with(
             fake_secgroups, rules_per_security_group)
         nova_scenario._boot_server.assert_called_once_with(

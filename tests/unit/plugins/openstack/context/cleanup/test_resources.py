@@ -150,11 +150,15 @@ class NovaFloatingIpsBulkTestCase(test.TestCase):
         self.assertEqual(ip_range.raw_resource.address, ip_range.id())
 
     @mock.patch("%s.base.ResourceManager._manager" % BASE)
-    def test_list(self, mock_resource_manager__manager):
+    @mock.patch("rally.common.utils.name_matches_object")
+    def test_list(self, mock_name_matches_object,
+                  mock_resource_manager__manager):
         ip_range = [mock.MagicMock(), mock.MagicMock(), mock.MagicMock()]
         ip_range[0].pool = "a"
         ip_range[1].pool = "rally_fip_pool_a"
         ip_range[2].pool = "rally_fip_pool_b"
+        mock_name_matches_object.side_effect = (lambda n, o:
+                                                n.startswith("rally"))
 
         mock_resource_manager__manager().list.return_value = ip_range
         self.assertEqual(ip_range[1:], resources.NovaFloatingIpsBulk().list())
@@ -163,9 +167,14 @@ class NovaFloatingIpsBulkTestCase(test.TestCase):
 class NovaNetworksTestCase(test.TestCase):
 
     @mock.patch("%s.base.ResourceManager._manager" % BASE)
-    def test_list(self, mock_resource_manager__manager):
+    @mock.patch("rally.common.utils.name_matches_object")
+    def test_list(self, mock_name_matches_object,
+                  mock_resource_manager__manager):
         network = [mock.Mock(label="a"), mock.Mock(label="rally_novanet_a"),
                    mock.Mock(label="rally_novanet_b")]
+
+        mock_name_matches_object.side_effect = (lambda n, o:
+                                                n.startswith("rally"))
 
         mock_resource_manager__manager.return_value.list.return_value = network
         self.assertEqual(network[1:], resources.NovaNetworks().list())
@@ -611,9 +620,13 @@ class FuelEnvironmentTestCase(test.TestCase):
         mock__manager.return_value.get.assert_called_with(fres.id.return_value)
 
     @mock.patch("%s.FuelEnvironment._manager" % BASE)
-    def test_list(self, mock__manager):
+    @mock.patch("rally.common.utils.name_matches_object")
+    def test_list(self, mock_name_matches_object, mock__manager):
         envs = [{"name": "rally_one"}, {"name": "rally_two"},
                 {"name": "three"}]
         mock__manager.return_value.list.return_value = envs
+        mock_name_matches_object.side_effect = (
+            lambda n, o: n.startswith("rally_"))
+
         fres = resources.FuelEnvironment()
         self.assertEqual(envs[:-1], fres.list())

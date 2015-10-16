@@ -20,15 +20,13 @@ from rally.task import utils as bench_utils
 class CeilometerScenario(scenario.OpenStackScenario):
     """Base class for Ceilometer scenarios with basic atomic actions."""
 
-    RESOURCE_NAME_PREFIX = "rally_ceilometer_"
-
     def _get_alarm_dict(self, **kwargs):
         """Prepare and return an alarm dict for creating an alarm.
 
         :param kwargs: optional parameters to create alarm
         :returns: alarm dictionary used to create an alarm
         """
-        alarm_id = self._generate_random_name()
+        alarm_id = self.generate_random_name()
         alarm = {"alarm_id": alarm_id,
                  "name": alarm_id,
                  "description": "Test Alarm"}
@@ -205,11 +203,10 @@ class CeilometerScenario(scenario.OpenStackScenario):
     def _create_meter(self, **kwargs):
         """Create a new meter.
 
-        :param name_length: Length of meter name to be generated
         :param kwargs: Contains the optional attributes for meter creation
         :returns: Newly created meter
         """
-        name = self._generate_random_name()
+        name = self.generate_random_name()
         samples = self.clients("ceilometer").samples.create(
             counter_name=name, **kwargs)
         return samples[0]
@@ -262,8 +259,7 @@ class CeilometerScenario(scenario.OpenStackScenario):
                        "counter_unit": counter_unit,
                        "counter_volume": counter_volume,
                        "resource_id": resource_id if resource_id
-                       else self._generate_random_name(
-                           prefix="rally_resource_")})
+                       else self.generate_random_name()})
         return self.clients("ceilometer").samples.create(**kwargs)
 
     @atomic.action_timer("ceilometer.query_samples")

@@ -108,7 +108,7 @@ class NovaScenario(scenario.OpenStackScenario):
 
     @atomic.action_timer("nova.boot_server")
     def _boot_server(self, image_id, flavor_id,
-                     auto_assign_nic=False, name=None, **kwargs):
+                     auto_assign_nic=False, **kwargs):
         """Boot a server.
 
         Returns when the server is actually booted and in "ACTIVE" state.
@@ -119,11 +119,10 @@ class NovaScenario(scenario.OpenStackScenario):
         :param image_id: int, image ID for server creation
         :param flavor_id: int, flavor ID for server creation
         :param auto_assign_nic: bool, whether or not to auto assign NICs
-        :param name: str, server name
         :param kwargs: other optional parameters to initialize the server
         :returns: nova Server instance
         """
-        server_name = name or self._generate_random_name()
+        server_name = self.generate_random_name()
         secgroup = self.context.get("user", {}).get("secgroup")
         if secgroup:
             if "security_groups" not in kwargs:
@@ -485,7 +484,7 @@ class NovaScenario(scenario.OpenStackScenario):
 
         :returns: Created keypair name
         """
-        keypair_name = self._generate_random_name(prefix="rally_keypair_")
+        keypair_name = self.generate_random_name()
         keypair = self.clients("nova").keypairs.create(keypair_name, **kwargs)
         return keypair.name
 
@@ -503,8 +502,8 @@ class NovaScenario(scenario.OpenStackScenario):
         self.clients("nova").keypairs.delete(keypair_name)
 
     @atomic.action_timer("nova.boot_servers")
-    def _boot_servers(self, image_id, flavor_id, requests, name_prefix=None,
-                      instances_amount=1, auto_assign_nic=False, **kwargs):
+    def _boot_servers(self, image_id, flavor_id, requests, instances_amount=1,
+                      auto_assign_nic=False, **kwargs):
         """Boot multiple servers.
 
         Returns when all the servers are actually booted and are in the
@@ -513,22 +512,18 @@ class NovaScenario(scenario.OpenStackScenario):
         :param image_id: ID of the image to be used for server creation
         :param flavor_id: ID of the flavor to be used for server creation
         :param requests: Number of booting requests to perform
-        :param name_prefix: The prefix to use while naming the created servers.
-                            The rest of the server names will be '_<number>'
         :param instances_amount: Number of instances to boot per each request
         :param auto_assign_nic: bool, whether or not to auto assign NICs
         :param kwargs: other optional parameters to initialize the servers
 
         :returns: List of created server objects
         """
-        if not name_prefix:
-            name_prefix = self._generate_random_name()
-
         if auto_assign_nic and not kwargs.get("nics", False):
             nic = self._pick_random_nic()
             if nic:
                 kwargs["nics"] = nic
 
+        name_prefix = self.generate_random_name()
         for i in range(requests):
             self.clients("nova").servers.create("%s_%d" % (name_prefix, i),
                                                 image_id, flavor_id,
@@ -538,8 +533,8 @@ class NovaScenario(scenario.OpenStackScenario):
         # NOTE(msdubov): Nova python client returns only one server even when
         #                min_count > 1, so we have to rediscover all the
         #                created servers manually.
-        servers = filter(lambda server: server.name.startswith(name_prefix),
-                         self.clients("nova").servers.list())
+        servers = [s for s in self.clients("nova").servers.list()
+                   if s.name.startswith(name_prefix)]
         time.sleep(CONF.benchmark.nova_server_boot_prepoll_delay)
         servers = [utils.wait_for(
             server,
@@ -760,7 +755,7 @@ class NovaScenario(scenario.OpenStackScenario):
         with atomic.ActionTimer(self, "nova.create_%s_security_groups" %
                                 security_group_count):
             for i in range(security_group_count):
-                sg_name = self._generate_random_name()
+                sg_name = self.generate_random_name()
                 sg = self.clients("nova").security_groups.create(sg_name,
                                                                  sg_name)
                 security_groups.append(sg)
@@ -790,8 +785,8 @@ class NovaScenario(scenario.OpenStackScenario):
         with atomic.ActionTimer(self, "nova.update_%s_security_groups" %
                                 len(security_groups)):
             for sec_group in security_groups:
-                sg_new_name = self._generate_random_name()
-                sg_new_desc = self._generate_random_name()
+                sg_new_name = self.generate_random_name()
+                sg_new_desc = self.generate_random_name()
                 self.clients("nova").security_groups.update(sec_group.id,
                                                             sg_new_name,
                                                             sg_new_desc)
@@ -816,7 +811,7 @@ class NovaScenario(scenario.OpenStackScenario):
     def _create_floating_ips_bulk(self, ip_range, **kwargs):
         """Create floating IPs by range."""
         ip_range = network_wrapper.generate_cidr(start_cidr=ip_range)
-        pool_name = self._generate_random_name(prefix="rally_fip_pool_")
+        pool_name = self.generate_random_name()
         return self.admin_clients("nova").floating_ips_bulk.create(
             ip_range=ip_range, pool=pool_name, **kwargs)
 
@@ -852,7 +847,7 @@ class NovaScenario(scenario.OpenStackScenario):
 
         :param ip_range: IP range in CIDR notation to create
         """
-        net_label = self._generate_random_name(prefix="rally_novanet")
+        net_label = self.generate_random_name()
         ip_range = network_wrapper.generate_cidr(start_cidr=ip_range)
         return self.admin_clients("nova").networks.create(
             label=net_label, cidr=ip_range, **kwargs)
