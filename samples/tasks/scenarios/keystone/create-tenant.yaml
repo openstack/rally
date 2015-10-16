@@ -1,8 +1,7 @@
 ---
   KeystoneBasic.create_tenant:
     -
-      args:
-        name_length: 10
+      args: {}
       runner:
         type: "constant"
         times: 100

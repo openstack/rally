@@ -15,29 +15,27 @@
 
 import uuid
 
+from rally.common import utils
 from rally.plugins.openstack import scenario
 from rally.task import atomic
 
 
 def is_temporary(resource):
-    return resource.name.startswith(KeystoneScenario.RESOURCE_NAME_PREFIX)
+    return utils.name_matches_object(resource.name, KeystoneScenario)
 
 
 class KeystoneScenario(scenario.OpenStackScenario):
     """Base class for Keystone scenarios with basic atomic actions."""
 
-    RESOURCE_NAME_PREFIX = "rally_keystone_"
-
     @atomic.action_timer("keystone.create_user")
-    def _user_create(self, name_length=10, email=None, **kwargs):
+    def _user_create(self, email=None, **kwargs):
         """Creates keystone user with random name.
 
-        :param name_length: length of generated (random) part of name
         :param kwargs: Other optional parameters to create users like
                         "tenant_id", "enabled".
         :returns: keystone user instance
         """
-        name = self._generate_random_name(length=name_length)
+        name = self.generate_random_name()
         # NOTE(boris-42): password and email parameters are required by
         #                 keystone client v2.0. This should be cleanuped
         #                 when we switch to v3.
@@ -63,14 +61,13 @@ class KeystoneScenario(scenario.OpenStackScenario):
             resource.delete()
 
     @atomic.action_timer("keystone.create_tenant")
-    def _tenant_create(self, name_length=10, **kwargs):
+    def _tenant_create(self, **kwargs):
         """Creates keystone tenant with random name.
 
-        :param name_length: length of generated (random) part of name
         :param kwargs: Other optional parameters
         :returns: keystone tenant instance
         """
-        name = self._generate_random_name(length=name_length)
+        name = self.generate_random_name()
         return self.admin_clients("keystone").tenants.create(name, **kwargs)
 
     @atomic.action_timer("keystone.create_service")
@@ -78,41 +75,37 @@ class KeystoneScenario(scenario.OpenStackScenario):
                         description=None):
         """Creates keystone service with random name.
 
-        :param name: name of the service
         :param service_type: type of the service
         :param description: description of the service
         :returns: keystone service instance
         """
-        description = description or self._generate_random_name(
-            prefix="rally_test_service_description_")
+        description = description or self.generate_random_name()
         return self.admin_clients("keystone").services.create(
-            self._generate_random_name(),
+            self.generate_random_name(),
             service_type, description)
 
     @atomic.action_timer("keystone.create_users")
-    def _users_create(self, tenant, users_per_tenant, name_length=10):
+    def _users_create(self, tenant, users_per_tenant):
         """Adds users to a tenant.
 
         :param tenant: tenant object
         :param users_per_tenant: number of users in per tenant
-        :param name_length: length of generated (random) part of name for user
         """
         for i in range(users_per_tenant):
-            name = self._generate_random_name(length=name_length)
+            name = self.generate_random_name()
             password = name
-            email = (name + "@rally.me")
+            email = name + "@rally.me"
             self.admin_clients("keystone").users.create(
                 name, password=password, email=email, tenant_id=tenant.id)
 
     @atomic.action_timer("keystone.create_role")
-    def _role_create(self, name_length=5):
+    def _role_create(self):
         """Creates keystone user role with random name.
 
-        :param name_length: length of generated (random) part of role name
         :returns: keystone user role instance
         """
         role = self.admin_clients("keystone").roles.create(
-            self._generate_random_name(length=name_length))
+            self.generate_random_name())
         return role
 
     @atomic.action_timer("keystone.list_users")
@@ -207,15 +200,14 @@ class KeystoneScenario(scenario.OpenStackScenario):
         self.admin_clients("keystone").services.delete(service_id)
 
     @atomic.action_timer("keystone.update_tenant")
-    def _update_tenant(self, tenant, name=None, description=None):
+    def _update_tenant(self, tenant, description=None):
         """Update tenant name and description.
 
         :param tenant: tenant to be updated
-        :param name: tenant name to be set
         :param description: tenant description to be set
         """
-        name = name or (tenant.name + "_updated")
-        description = description or (tenant.name + "_description_updated")
+        name = self.generate_random_name()
+        description = description or self.generate_random_name()
         self.admin_clients("keystone").tenants.update(tenant.id,
                                                       name, description)
 

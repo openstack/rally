@@ -262,8 +262,7 @@ As an example, let us make up a task file that will create new users with increa
       KeystoneBasic.create_user:
       {% for i in range(2, 11, 2) %}
         -
-          args:
-            name_length: 10
+          args: {}
           runner:
             type: "constant"
             times: 10
@@ -289,8 +288,7 @@ In this case, you don’t need to pass any arguments via *--task-args/--task-arg
       KeystoneBasic.create_user:
 
         -
-          args:
-            name_length: 10
+          args: {}
           runner:
             type: "constant"
             times: 10
@@ -300,8 +298,7 @@ In this case, you don’t need to pass any arguments via *--task-args/--task-arg
               max: 0
 
         -
-          args:
-            name_length: 10
+          args: {}
           runner:
             type: "constant"
             times: 10
@@ -311,8 +308,7 @@ In this case, you don’t need to pass any arguments via *--task-args/--task-arg
               max: 0
 
         -
-          args:
-            name_length: 10
+          args: {}
           runner:
             type: "constant"
             times: 10
@@ -322,8 +318,7 @@ In this case, you don’t need to pass any arguments via *--task-args/--task-arg
               max: 0
 
         -
-          args:
-            name_length: 10
+          args: {}
           runner:
             type: "constant"
             times: 10
@@ -333,8 +328,7 @@ In this case, you don’t need to pass any arguments via *--task-args/--task-arg
               max: 0
 
         -
-          args:
-            name_length: 10
+          args: {}
           runner:
             type: "constant"
             times: 10

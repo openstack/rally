@@ -1,9 +1,7 @@
 {
     "KeystoneBasic.create_user": [
         {
-            "args": {
-                "name_length": 10
-            },
+            "args": {},
             "runner": {
                 "type": "constant",
                 "times": 100,

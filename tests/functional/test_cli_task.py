@@ -722,7 +722,7 @@ class SLATestCase(unittest.TestCase):
             "KeystoneBasic.create_and_list_users": [
                 {
                     "args": {
-                        "name_length": 10
+                        "enabled": True
                     },
                     "runner": {
                         "type": "constant",
