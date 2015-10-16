@@ -53,6 +53,10 @@
     <a href="rally-verify/tempest_config_generation.txt.gz">Tempest config generation</a>
     <code>$ rally verify genconfig</code>
 
+    <span class="${showconfig}">[${showconfig}]</span>
+    <a href="rally-verify/tempest_config.txt.gz">Tempest config</a>
+    <code>$ rally verify showconfig</code>
+
     <br>First verification run
     <ol>
         <li>

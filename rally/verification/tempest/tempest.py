@@ -222,20 +222,19 @@ class Tempest(object):
         return os.path.isfile(self.config_file)
 
     def generate_config_file(self, override=False):
-        """Generate configuration file of tempest for current deployment.
+        """Generate configuration file of Tempest for current deployment.
 
         :param override: Whether or not override existing Tempest config file
         """
         if not self.is_configured() or override:
-            msg = _("Creation of configuration file for tempest.")
-            LOG.info(_("Starting: ") + msg)
+            if not override:
+                LOG.info(_("Tempest is not configured."))
 
+            LOG.info(_("Starting: Creating configuration file for Tempest."))
             config.TempestConfig(self.deployment).generate(self.config_file)
-            LOG.info(_("Completed: ") + msg)
+            LOG.info(_("Completed: Creating configuration file for Tempest."))
         else:
             LOG.info("Tempest is already configured.")
-
-        LOG.info("Tempest config file: %s " % self.config_file)
 
     def _initialize_testr(self):
         if not os.path.isdir(self.path(".testrepository")):
@@ -332,6 +331,7 @@ class Tempest(object):
 
         if tempest_conf and os.path.isfile(tempest_conf):
             self.config_file = tempest_conf
+        LOG.info(_("Tempest config file: %s") % self.config_file)
 
         test_cmd = (
             "%(venv)s testr run --parallel --subunit %(arg)s "
