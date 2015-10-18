@@ -84,9 +84,7 @@ As an example, let's edit our configuration file from :ref:`step 1 <tutorial_ste
         ],
         "KeystoneBasic.create_delete_user": [
             {
-                "args": {
-                    "name_length": 10
-                },
+                "args": {},
                 "runner": {
                     "type": "constant",
                     "times": 10,

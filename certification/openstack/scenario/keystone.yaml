@@ -18,8 +18,6 @@
 
   KeystoneBasic.create_and_list_tenants:
     -
-      args:
-        name_length: 10
       context:
         {{ user_context(tenants_amount, users_amount, use_existing_users) }}
       runner:
@@ -56,8 +54,6 @@
 
   KeystoneBasic.create_update_and_delete_tenant:
     -
-      args:
-        name_length: 10
       context:
         {{ user_context(tenants_amount, users_amount, use_existing_users) }}
       runner:

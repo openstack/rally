@@ -36,27 +36,23 @@ class KeystoneBasicTestCase(test.ScenarioTestCase):
         })
         return context
 
-    @mock.patch("rally.common.utils.generate_random_name")
-    def test_create_user(self, mock_generate_random_name):
+    def test_create_user(self):
         scenario = basic.KeystoneBasic(self.context)
         scenario._user_create = mock.MagicMock()
-        scenario.create_user(name_length=20, password="tttt", tenant_id="id")
-        scenario._user_create.assert_called_once_with(name_length=20,
-                                                      password="tttt",
+        scenario.create_user(password="tttt", tenant_id="id")
+        scenario._user_create.assert_called_once_with(password="tttt",
                                                       tenant_id="id")
 
-    @mock.patch("rally.common.utils.generate_random_name")
-    def test_create_delete_user(self, mock_generate_random_name):
+    def test_create_delete_user(self):
         create_result = mock.MagicMock()
 
         scenario = basic.KeystoneBasic(self.context)
         scenario._user_create = mock.MagicMock(return_value=create_result)
         scenario._resource_delete = mock.MagicMock()
 
-        scenario.create_delete_user(name_length=30, email="abcd", enabled=True)
+        scenario.create_delete_user(email="abcd", enabled=True)
 
-        scenario._user_create.assert_called_once_with(name_length=30,
-                                                      email="abcd",
+        scenario._user_create.assert_called_once_with(email="abcd",
                                                       enabled=True)
         scenario._resource_delete.assert_called_once_with(create_result)
 
@@ -75,48 +71,37 @@ class KeystoneBasicTestCase(test.ScenarioTestCase):
         scenario._resource_delete.assert_called_once_with(
             scenario._user_create.return_value)
 
-    @mock.patch("rally.common.utils.generate_random_name")
-    def test_create_tenant(self, mock_generate_random_name):
+    def test_create_tenant(self):
         scenario = basic.KeystoneBasic(self.context)
         scenario._tenant_create = mock.MagicMock()
-        scenario.create_tenant(name_length=20, enabled=True)
-        scenario._tenant_create.assert_called_once_with(name_length=20,
-                                                        enabled=True)
+        scenario.create_tenant(enabled=True)
+        scenario._tenant_create.assert_called_once_with(enabled=True)
 
-    @mock.patch("rally.common.utils.generate_random_name")
-    def test_create_tenant_with_users(self, mock_generate_random_name):
+    def test_create_tenant_with_users(self):
         scenario = basic.KeystoneBasic(self.context)
         fake_tenant = mock.MagicMock()
         scenario._tenant_create = mock.MagicMock(return_value=fake_tenant)
         scenario._users_create = mock.MagicMock()
-        scenario.create_tenant_with_users(users_per_tenant=1, name_length=20,
-                                          enabled=True)
-        scenario._tenant_create.assert_called_once_with(name_length=20,
-                                                        enabled=True)
+        scenario.create_tenant_with_users(users_per_tenant=1, enabled=True)
+        scenario._tenant_create.assert_called_once_with(enabled=True)
         scenario._users_create.assert_called_once_with(fake_tenant,
-                                                       users_per_tenant=1,
-                                                       name_length=20)
+                                                       users_per_tenant=1)
 
-    @mock.patch("rally.common.utils.generate_random_name")
-    def test_create_and_list_users(self, mock_generate_random_name):
+    def test_create_and_list_users(self):
         scenario = basic.KeystoneBasic(self.context)
         scenario._user_create = mock.MagicMock()
         scenario._list_users = mock.MagicMock()
-        scenario.create_and_list_users(name_length=20, password="tttt",
-                                       tenant_id="id")
-        scenario._user_create.assert_called_once_with(name_length=20,
-                                                      password="tttt",
+        scenario.create_and_list_users(password="tttt", tenant_id="id")
+        scenario._user_create.assert_called_once_with(password="tttt",
                                                       tenant_id="id")
         scenario._list_users.assert_called_once_with()
 
-    @mock.patch("rally.common.utils.generate_random_name")
-    def test_create_and_list_tenants(self, mock_generate_random_name):
+    def test_create_and_list_tenants(self):
         scenario = basic.KeystoneBasic(self.context)
         scenario._tenant_create = mock.MagicMock()
         scenario._list_tenants = mock.MagicMock()
-        scenario.create_and_list_tenants(name_length=20, enabled=True)
-        scenario._tenant_create.assert_called_once_with(name_length=20,
-                                                        enabled=True)
+        scenario.create_and_list_tenants(enabled=True)
+        scenario._tenant_create.assert_called_once_with(enabled=True)
         scenario._list_tenants.assert_called_with()
 
     def test_assign_and_remove_user_role(self):
@@ -187,8 +172,8 @@ class KeystoneBasicTestCase(test.ScenarioTestCase):
 
         scenario.get_entities(service_name)
 
-        scenario._tenant_create.assert_called_once_with(name_length=5)
-        scenario._user_create.assert_called_once_with(name_length=10)
+        scenario._tenant_create.assert_called_once_with()
+        scenario._user_create.assert_called_once_with()
         scenario._role_create.assert_called_once_with()
 
         scenario._get_tenant.assert_called_once_with(fake_tenant.id)
@@ -240,13 +225,13 @@ class KeystoneBasicTestCase(test.ScenarioTestCase):
         fake_password = "pswd"
         fake_user = mock.MagicMock()
         scenario._user_create = mock.MagicMock(return_value=fake_user)
-        scenario._generate_random_name = mock.MagicMock(
+        scenario.generate_random_name = mock.MagicMock(
             return_value=fake_password)
         scenario._update_user_password = mock.MagicMock()
 
-        scenario.create_user_update_password(name_length=9, password_length=9)
-        scenario._generate_random_name.assert_called_once_with(length=9)
-        scenario._user_create.assert_called_once_with(name_length=9)
+        scenario.create_user_update_password()
+        scenario.generate_random_name.assert_called_once_with()
+        scenario._user_create.assert_called_once_with()
         scenario._update_user_password.assert_called_once_with(fake_user.id,
                                                                fake_password)
 

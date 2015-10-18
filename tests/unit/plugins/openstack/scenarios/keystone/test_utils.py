@@ -14,7 +14,6 @@
 #    under the License.
 
 import mock
-import six
 
 from rally.plugins.openstack.scenarios.keystone import utils
 from tests.unit import fakes
@@ -25,33 +24,21 @@ UTILS = "rally.plugins.openstack.scenarios.keystone.utils."
 
 class KeystoneUtilsTestCase(test.TestCase):
 
-    def test_RESOURCE_NAME_PREFIX(self):
-        self.assertIsInstance(utils.KeystoneScenario.RESOURCE_NAME_PREFIX,
-                              six.string_types)
-        # Prefix must be long enough to guarantee that resource
-        # to be recognized as created by rally
-        self.assertTrue(
-            len(utils.KeystoneScenario.RESOURCE_NAME_PREFIX) > 7)
-
-    def test_is_temporary(self):
-        prefix = utils.KeystoneScenario.RESOURCE_NAME_PREFIX
-        tests = [
-            (fakes.FakeResource(name=prefix + "abc"), True),
-            (fakes.FakeResource(name="another"), False),
-            (fakes.FakeResource(name=prefix[:-3] + "abc"), False)
-        ]
-
-        for resource, is_valid in tests:
-            self.assertEqual(utils.is_temporary(resource), is_valid)
+    @mock.patch("rally.common.utils.name_matches_object")
+    def test_is_temporary(self, mock_name_matches_object):
+        resource = mock.Mock()
+        self.assertEqual(utils.is_temporary(resource),
+                         mock_name_matches_object.return_value)
+        mock_name_matches_object.assert_called_once_with(
+            resource.name, utils.KeystoneScenario)
 
 
 class KeystoneScenarioTestCase(test.ScenarioTestCase):
 
-    @mock.patch(UTILS + "uuid.uuid4", return_value="pwd")
-    @mock.patch("rally.common.utils.generate_random_name",
-                return_value="foobarov")
-    def test_user_create(self, mock_generate_random_name, mock_uuid4):
+    @mock.patch("uuid.uuid4", return_value="pwd")
+    def test_user_create(self, mock_uuid4):
         scenario = utils.KeystoneScenario(self.context)
+        scenario.generate_random_name = mock.Mock(return_value="foobarov")
         result = scenario._user_create()
 
         self.assertEqual(
@@ -77,15 +64,15 @@ class KeystoneScenarioTestCase(test.ScenarioTestCase):
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "keystone.update_user_enabled")
 
-    @mock.patch("rally.common.utils.generate_random_name")
-    def test_role_create(self, mock_generate_random_name):
+    def test_role_create(self):
         scenario = utils.KeystoneScenario(self.context)
+        scenario.generate_random_name = mock.Mock()
         result = scenario._role_create()
 
         self.assertEqual(
             self.admin_clients("keystone").roles.create.return_value, result)
         self.admin_clients("keystone").roles.create.assert_called_once_with(
-            mock_generate_random_name.return_value)
+            scenario.generate_random_name.return_value)
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "keystone.create_role")
 
@@ -142,24 +129,23 @@ class KeystoneScenarioTestCase(test.ScenarioTestCase):
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "keystone.remove_role")
 
-    @mock.patch("rally.common.utils.generate_random_name")
-    def test_tenant_create(self, mock_generate_random_name):
+    def test_tenant_create(self):
         scenario = utils.KeystoneScenario(self.context)
+        scenario.generate_random_name = mock.Mock()
         result = scenario._tenant_create()
 
         self.assertEqual(
             self.admin_clients("keystone").tenants.create.return_value, result)
         self.admin_clients("keystone").tenants.create.assert_called_once_with(
-            mock_generate_random_name.return_value)
+            scenario.generate_random_name.return_value)
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "keystone.create_tenant")
 
     def test_service_create(self):
         service_type = "service_type"
-        description = "_description"
-
+        description = "description"
         scenario = utils.KeystoneScenario(self.context)
-        scenario._generate_random_name = mock.Mock()
+        scenario.generate_random_name = mock.Mock()
 
         result = scenario._service_create(service_type=service_type,
                                           description=description)
@@ -168,18 +154,17 @@ class KeystoneScenarioTestCase(test.ScenarioTestCase):
             self.admin_clients("keystone").services.create.return_value,
             result)
         self.admin_clients("keystone").services.create.assert_called_once_with(
-            scenario._generate_random_name.return_value,
+            scenario.generate_random_name.return_value,
             service_type, description)
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "keystone.create_service")
 
-    @mock.patch("rally.common.utils.generate_random_name",
-                return_value="foobarov")
-    def test_tenant_create_with_users(self, mock_generate_random_name):
+    def test_tenant_create_with_users(self):
         tenant = mock.MagicMock()
         scenario = utils.KeystoneScenario(self.context)
+        scenario.generate_random_name = mock.Mock(return_value="foobarov")
 
-        scenario._users_create(tenant, users_per_tenant=1, name_length=10)
+        scenario._users_create(tenant, users_per_tenant=1)
 
         self.admin_clients("keystone").users.create.assert_called_once_with(
             "foobarov", password="foobarov", email="foobarov@rally.me",
@@ -261,14 +246,15 @@ class KeystoneScenarioTestCase(test.ScenarioTestCase):
 
     def test_update_tenant(self):
         tenant = mock.MagicMock()
-        description = tenant.name + "_description_updated_test"
-        name = tenant.name + "test_updated_test"
+        description = "new description"
+
         scenario = utils.KeystoneScenario(self.context)
-        scenario._update_tenant(tenant=tenant, name=name,
-                                description=description)
+        scenario.generate_random_name = mock.Mock()
+        scenario._update_tenant(tenant=tenant, description=description)
 
         self.admin_clients("keystone").tenants.update.assert_called_once_with(
-            tenant.id, name, description)
+            tenant.id, scenario.generate_random_name.return_value,
+            description)
         self._test_atomic_action_timer(scenario.atomic_actions(),
                                        "keystone.update_tenant")
 
