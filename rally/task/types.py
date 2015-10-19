@@ -125,6 +125,7 @@ def preprocess(name, context, args):
     return processed_args
 
 
+@plugin.base()
 class ResourceType(plugin.Plugin):
 
     @classmethod

@@ -37,8 +37,8 @@ def configure(name, namespace="default"):
 #                  it should be called DeploymentManager
 #                  and it should just manages server providers and engines
 #                  engines class should have own base.
+@plugin.base()
 @six.add_metaclass(abc.ABCMeta)
-@configure("base_engine")
 class Engine(plugin.Plugin):
     """Base class of all deployment engines.
 

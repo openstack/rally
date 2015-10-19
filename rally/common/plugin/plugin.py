@@ -15,6 +15,7 @@
 
 import sys
 
+from rally.common.i18n import _LE
 from rally.common.plugin import discover
 from rally.common.plugin import info
 from rally.common.plugin import meta
@@ -32,6 +33,30 @@ def deprecated(reason, rally_version):
         return plugin
 
     return decorator
+
+
+def base():
+    """Mark Plugin as a base.
+
+    .. warning:: This decorator should be added the line before
+        six.add_metaclass if it is used.
+    """
+    def wrapper(cls):
+        if not issubclass(cls, Plugin):
+            raise exceptions.RallyException(_LE(
+                "Plugin's Base can be only a subclass of Plugin class."))
+
+        parent = cls._get_base()
+        if parent != Plugin:
+            raise exceptions.RallyException(_LE(
+                "'%(plugin_cls)s' can not be marked as plugin base, since it "
+                "inherits from '%(parent)s' which is also plugin base.") % {
+                "plugin_cls": cls.__name__,
+                "parent": parent.__name__})
+
+        cls.base_ref = cls
+        return cls
+    return wrapper
 
 
 def configure(name, namespace="default"):
@@ -142,9 +167,15 @@ class Plugin(meta.MetaMixin, info.InfoMixin):
         cls._meta_clear()
 
     @classmethod
+    def _get_base(cls):
+        return getattr(cls, "base_ref", Plugin)
+
+    @classmethod
     def _set_name_and_namespace(cls, name, namespace):
         try:
-            existing_plugin = Plugin.get(name, namespace=namespace)
+            existing_plugin = cls._get_base().get(name=name,
+                                                  namespace=namespace)
+
         except exceptions.PluginNotFound:
             cls._meta_set("name", name)
             cls._meta_set("namespace", namespace)
@@ -183,9 +214,25 @@ class Plugin(meta.MetaMixin, info.InfoMixin):
         :param name: Plugin's name
         :param namespace: Namespace where to search for plugins
         """
+        potential_result = []
+
         for p in cls.get_all(namespace=namespace):
             if p.get_name() == name:
-                return p
+                potential_result.append(p)
+
+        if len(potential_result) == 1:
+            return potential_result[0]
+        elif potential_result:
+            hint = _LE("Try to choose the correct Plugin base or namespace to "
+                       "search in.")
+            if namespace:
+                needle = "%s at %s namespace" % (name, namespace)
+            else:
+                needle = "%s at any of namespaces" % name
+            raise exceptions.MultipleMatchesFound(
+                needle=needle,
+                haystack=", ".join(p.get_name() for p in potential_result),
+                hint=hint)
 
         raise exceptions.PluginNotFound(
             name=name, namespace=namespace or "any of")

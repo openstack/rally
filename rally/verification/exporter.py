@@ -30,14 +30,13 @@ def configure(name, namespace="default"):
     return plugin.configure(name=name, namespace=namespace)
 
 
+@plugin.base()
 @six.add_metaclass(abc.ABCMeta)
-@configure(name="base_verify_exporter")
 class VerifyExporter(plugin.Plugin):
 
     @abc.abstractmethod
     def export(self, verification_uuid, connection_string):
-        """
-         Export results of the task to the task storage.
+        """Export results of the task to the task storage.
 
         :param verification_uuid: uuid of verification results
         :param connection_string: string used to connect

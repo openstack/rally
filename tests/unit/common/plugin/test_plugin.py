@@ -61,6 +61,50 @@ class PluginModuleTestCase(test.TestCase):
 
         self.assertEqual("get_name_class_plugin", MyPlugin.get_name())
 
+    def test_configure_different_bases(self):
+        name = "test_configure_different_bases"
+
+        @plugin.base()
+        class OneBase(plugin.Plugin):
+            pass
+
+        @plugin.base()
+        class SecondBase(plugin.Plugin):
+            pass
+
+        @plugin.configure(name, namespace=name)
+        class A(OneBase):
+            pass
+
+        @plugin.configure(name, namespace=name)
+        class B(SecondBase):
+            pass
+
+        self.assertEqual(A, OneBase.get(name))
+        self.assertEqual(B, SecondBase.get(name))
+
+    def test_get_multiple_chooses(self):
+        name = "test_get_multiple_chooses"
+
+        @plugin.base()
+        class OneBase(plugin.Plugin):
+            pass
+
+        @plugin.base()
+        class SecondBase(plugin.Plugin):
+            pass
+
+        @plugin.configure(name, namespace=name)
+        class A(OneBase):
+            pass
+
+        @plugin.configure(name, namespace=name)
+        class B(SecondBase):
+            pass
+
+        self.assertRaises(exceptions.MultipleMatchesFound, plugin.Plugin.get,
+                          name, name)
+
     def test_from_func(self):
 
         @plugin.from_func()

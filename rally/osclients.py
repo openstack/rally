@@ -66,6 +66,7 @@ def configure(name, default_version=None, default_service_type=None,
     return wrapper
 
 
+@plugin.base()
 class OSClient(plugin.Plugin):
     def __init__(self, credential, api_info, cache_obj):
         self.credential = credential

@@ -91,6 +91,7 @@ class ConfigurePluginMeta(type):
                     cls, field._plugin.func_ref.__name__)
 
 
+@plugin.base()
 @six.add_metaclass(ConfigurePluginMeta)
 class Scenario(plugin.Plugin,
                atomic.ActionTimerMixin,

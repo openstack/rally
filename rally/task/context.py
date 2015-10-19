@@ -51,7 +51,7 @@ def configure(name, order, hidden=False):
     return wrapper
 
 
-@configure(name="base_context", order=0, hidden=True)
+@plugin.base()
 class Context(plugin.Plugin, functional.FunctionalMixin,
               utils.RandomNameGeneratorMixin):
     """This class is a factory for context classes.
