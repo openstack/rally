@@ -132,7 +132,7 @@ class _ServiceType(utils.ImmutableMixin, utils.EnumMixin):
     METERING = "metering"
     S3 = "s3"
     DATABASE = "database"
-    DATA_PROCESSING = "data_processing"
+    DATA_PROCESSING = "data-processing"
     OBJECT_STORE = "object-store"
     WORKFLOW_EXECUTION = "workflowv2"
     APPLICATION_CATALOG = "application_catalog"
