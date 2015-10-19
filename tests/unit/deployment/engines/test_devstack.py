@@ -26,7 +26,7 @@ SAMPLE_CONFIG = {
         "name": "ExistingServers",
         "credentials": [{"user": "root", "host": "example.com"}],
     },
-    "localrc": {
+    "local_conf": {
         "ADMIN_PASSWORD": "secret",
     },
 }
@@ -52,7 +52,7 @@ class DevstackEngineTestCase(test.TestCase):
                           engine.validate)
 
     def test_construct(self):
-        self.assertEqual(self.engine.localrc["ADMIN_PASSWORD"], "secret")
+        self.assertEqual(self.engine.local_conf["ADMIN_PASSWORD"], "secret")
 
     @mock.patch("rally.deployment.engines.devstack.open", create=True)
     def test_prepare_server(self, mock_open):
@@ -99,9 +99,9 @@ class DevstackEngineTestCase(test.TestCase):
         cmd = "/bin/sh -e -s %s master" % repo
         server.ssh.run.assert_called_once_with(cmd, stdin="fake_script")
         ds_calls = [
-            mock.call.ssh.run("cat > ~/devstack/localrc", stdin=mock.ANY),
+            mock.call.ssh.run("cat > ~/devstack/local.conf", stdin=mock.ANY),
             mock.call.ssh.run("~/devstack/stack.sh")
         ]
         self.assertEqual(ds_calls, ds_server.mock_calls)
-        localrc = ds_server.mock_calls[0][2]["stdin"]
-        self.assertIn("ADMIN_PASSWORD=secret", localrc)
+        local_conf = ds_server.mock_calls[0][2]["stdin"]
+        self.assertIn("ADMIN_PASSWORD=secret", local_conf)
