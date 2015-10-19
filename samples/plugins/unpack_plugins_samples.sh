@@ -1,5 +1,5 @@
 #!/bin/bash
-samples_unpacked_dir="$(dirname "${BASH_SOURCE[0]}" )"
+samples_unpacked_dir=$(dirname "${BASH_SOURCE[0]}")
 dirs=( $(find "$samples_unpacked_dir" -maxdepth 1 -type d -printf '%P\n') )
 samples=~/.rally/plugins/samples
 mkdir -p "$samples"
