@@ -52,18 +52,6 @@ class MuranoScenarioTestCase(test.ScenarioTestCase):
             environment.id
         )
 
-        config = CONF.benchmark
-        self.mock_wait_for_status.mock.assert_called_once_with(
-            environment,
-            ready_statuses=["deleted"],
-            check_deletion=True,
-            update_resource=self.mock_get_from_manager.mock.return_value,
-            timeout=config.murano_delete_environment_timeout,
-            check_interval=config.murano_delete_environment_check_interval)
-        self.mock_get_from_manager.mock.assert_called_once_with()
-        self._test_atomic_action_timer(scenario.atomic_actions(),
-                                       "murano.delete_environment")
-
     def test_create_session(self):
         self.clients("murano").sessions.configure.return_value = "sess"
         scenario = utils.MuranoScenario(context=self.context)

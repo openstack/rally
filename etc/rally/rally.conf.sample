@@ -265,17 +265,9 @@
 # (floating point value)
 #manila_share_delete_poll_interval = 2.0
 
-# A timeout in seconds for an environment delete (integer value)
-# Deprecated group/name - [DEFAULT]/delete_environment_timeout
-#murano_delete_environment_timeout = 180
-
 # A timeout in seconds for an environment deploy (integer value)
 # Deprecated group/name - [DEFAULT]/deploy_environment_timeout
 #murano_deploy_environment_timeout = 1200
-
-# Delete environment check interval in seconds (integer value)
-# Deprecated group/name - [DEFAULT]/delete_environment_check_interval
-#murano_delete_environment_check_interval = 2
 
 # Deploy environment check interval in seconds (integer value)
 # Deprecated group/name - [DEFAULT]/deploy_environment_check_interval

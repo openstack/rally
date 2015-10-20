@@ -524,7 +524,7 @@ _murano_order = get_order(1200)
 
 @base.resource("murano", "environments", tenant_resource=True,
                order=next(_murano_order))
-class MuranoEnvironments(base.ResourceManager):
+class MuranoEnvironments(SynchronizedDeletion, base.ResourceManager):
     pass
 
 

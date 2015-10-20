@@ -31,15 +31,9 @@ from rally.task import utils
 CONF = cfg.CONF
 
 MURANO_BENCHMARK_OPTS = [
-    cfg.IntOpt("murano_delete_environment_timeout", default=180,
-               deprecated_name="delete_environment_timeout",
-               help="A timeout in seconds for an environment delete"),
     cfg.IntOpt("murano_deploy_environment_timeout", default=1200,
                deprecated_name="deploy_environment_timeout",
                help="A timeout in seconds for an environment deploy"),
-    cfg.IntOpt("murano_delete_environment_check_interval", default=2,
-               deprecated_name="delete_environment_check_interval",
-               help="Delete environment check interval in seconds"),
     cfg.IntOpt("murano_deploy_environment_check_interval", default=5,
                deprecated_name="deploy_environment_check_interval",
                help="Deploy environment check interval in seconds"),
@@ -77,16 +71,6 @@ class MuranoScenario(scenario.OpenStackScenario):
         :param environment: Environment instance
         """
         self.clients("murano").environments.delete(environment.id)
-
-        config = CONF.benchmark
-        utils.wait_for_status(
-            environment,
-            ready_statuses=["deleted"],
-            check_deletion=True,
-            update_resource=utils.get_from_manager(),
-            timeout=config.murano_delete_environment_timeout,
-            check_interval=config.murano_delete_environment_check_interval
-        )
 
     @atomic.action_timer("murano.create_session")
     def _create_session(self, environment_id):
