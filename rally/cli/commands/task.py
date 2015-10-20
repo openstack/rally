@@ -290,7 +290,8 @@ class TaskCommands(object):
         Prints detailed information of task.
         """
 
-        def _print_iterations_data(raw_data):
+        def _print_iterations_data(result):
+            raw_data = result["data"]["raw"]
             headers = ["iteration", "full duration"]
             float_cols = ["full duration"]
             atomic_actions = []
@@ -315,38 +316,36 @@ class TaskCommands(object):
                 if r["atomic_actions"]:
                     for action in atomic_actions:
                         dlist.append(r["atomic_actions"].get(action) or 0)
-                table_rows.append(rutils.Struct(**dict(zip(headers, dlist))))
+                table_rows.append(rutils.Struct(**dict(zip(headers,
+                                                           dlist))))
             cliutils.print_list(table_rows,
                                 fields=headers,
                                 formatters=formatters)
             print()
 
-        task = db.task_get_detailed(task_id)
-
-        if task is None:
-            print("The task %s can not be found" % task_id)
-            return(1)
-
-        print()
-        print("-" * 80)
-        print(_("Task %(task_id)s: %(status)s")
-              % {"task_id": task_id, "status": task["status"]})
-
-        if task["status"] == consts.TaskStatus.FAILED:
+        def _print_task_info(task):
+            print()
             print("-" * 80)
-            verification = yaml.safe_load(task["verification_log"])
+            print(_("Task %(task_id)s: %(status)s")
+                  % {"task_id": task_id, "status": task["status"]})
 
-            if not logging.is_debug():
-                print(verification[0])
-                print(verification[1])
-                print()
-                print(_("For more details run:\nrally -vd task detailed %s")
-                      % task["uuid"])
-            else:
-                print(yaml.safe_load(verification[2]))
-            return
+            if task["status"] == consts.TaskStatus.FAILED:
+                print("-" * 80)
+                verification = yaml.safe_load(task["verification_log"])
 
-        for result in task["results"]:
+                if not logging.is_debug():
+                    print(verification[0])
+                    print(verification[1])
+                    print()
+                    print(_("For more details run:\n"
+                            "rally -vd task detailed %s")
+                          % task["uuid"])
+                else:
+                    print(yaml.safe_load(verification[2]))
+                return False
+            return True
+
+        def _print_scenario_args(result):
             key = result["key"]
             print("-" * 80)
             print()
@@ -355,6 +354,7 @@ class TaskCommands(object):
             print("args values:")
             print(json.dumps(key["kw"], indent=2))
 
+        def _print_summrized_result(result):
             raw = result["data"]["raw"]
             table_cols = ["action", "min", "median",
                           "90%ile", "95%ile", "max",
@@ -383,19 +383,16 @@ class TaskCommands(object):
                 else:
                     data = [action, None, None, None, None, None, None,
                             "0.0%", len(raw)]
-                table_rows.append(rutils.Struct(**dict(zip(table_cols, data))))
+                table_rows.append(rutils.Struct(**dict(zip(table_cols,
+                                                           data))))
 
             cliutils.print_list(table_rows, fields=table_cols,
                                 formatters=formatters,
                                 table_label="Response Times (sec)",
                                 sortby_index=None)
 
-            if iterations_data:
-                _print_iterations_data(raw)
-
-            print(_("Load duration: %s") % result["data"]["load_duration"])
-            print(_("Full duration: %s") % result["data"]["full_duration"])
-
+        def _print_ssrs_result(result):
+            raw = result["data"]["raw"]
             # NOTE(hughsaunders): ssrs=scenario specific results
             ssrs = []
             for result in raw:
@@ -428,7 +425,8 @@ class TaskCommands(object):
                                round(utils.mean(values), 3)]
                     else:
                         row = [str(key)] + ["n/a"] * 6
-                    table_rows.append(rutils.Struct(**dict(zip(headers, row))))
+                    table_rows.append(rutils.Struct(**dict(zip(headers,
+                                                               row))))
                 print("\nScenario Specific Results\n")
                 cliutils.print_list(table_rows,
                                     fields=headers,
@@ -440,17 +438,37 @@ class TaskCommands(object):
                     if errors:
                         print(errors)
 
-        print()
-        print("HINTS:")
-        print(_("* To plot HTML graphics with this data, run:"))
-        print("\trally task report %s --out output.html" % task["uuid"])
-        print()
-        print(_("* To generate a JUnit report, run:"))
-        print("\trally task report %s --junit --out output.xml" %
-              task["uuid"])
-        print()
-        print(_("* To get raw JSON output of task results, run:"))
-        print("\trally task results %s\n" % task["uuid"])
+        def _print_hints(task):
+            print()
+            print("HINTS:")
+            print(_("* To plot HTML graphics with this data, run:"))
+            print("\trally task report %s --out output.html" % task["uuid"])
+            print()
+            print(_("* To generate a JUnit report, run:"))
+            print("\trally task report %s --junit --out output.xml" %
+                  task["uuid"])
+            print()
+            print(_("* To get raw JSON output of task results, run:"))
+            print("\trally task results %s\n" % task["uuid"])
+
+        task = db.task_get_detailed(task_id)
+
+        if task is None:
+            print("The task %s can not be found" % task_id)
+            return(1)
+
+        if _print_task_info(task):
+            for result in task["results"]:
+                _print_scenario_args(result)
+                _print_summrized_result(result)
+                if iterations_data:
+                    _print_iterations_data(result)
+                _print_ssrs_result(result)
+                print(_("Load duration: %s") %
+                      result["data"]["load_duration"])
+                print(_("Full duration: %s") %
+                      result["data"]["full_duration"])
+            _print_hints(task)
 
     @cliutils.args("--uuid", type=str, dest="task_id", help="uuid of task")
     @envutils.with_default_task_id
