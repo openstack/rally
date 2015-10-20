@@ -13,7 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-
 from keystoneclient import exceptions as keystone_exceptions
 import mock
 from oslo_config import cfg
@@ -325,6 +324,34 @@ class OSClientsTestCase(test.TestCase):
                                                                       **kw)
             self.assertEqual(fake_ceilometer,
                              self.clients.cache["ceilometer"])
+
+    def test_monasca(self):
+        fake_monasca = fakes.FakeMonascaClient()
+        mock_monasca = mock.MagicMock()
+        mock_monasca.client.Client.return_value = fake_monasca
+        self.assertNotIn("monasca", self.clients.cache)
+        with mock.patch.dict("sys.modules",
+                             {"monascaclient": mock_monasca}):
+            client = self.clients.monasca()
+            self.assertEqual(fake_monasca, client)
+            self.service_catalog.url_for.assert_called_once_with(
+                service_type="monitoring",
+                endpoint_type=consts.EndpointType.PUBLIC,
+                region_name=self.endpoint.region_name)
+            os_endpoint = self.service_catalog.url_for.return_value
+            kw = {"token": self.fake_keystone.auth_token,
+                  "timeout": cfg.CONF.openstack_client_http_timeout,
+                  "insecure": False, "cacert": None,
+                  "username": self.endpoint.username,
+                  "password": self.endpoint.password,
+                  "tenant_name": self.endpoint.tenant_name,
+                  "auth_url": self.endpoint.auth_url
+                  }
+            mock_monasca.client.Client.assert_called_once_with("2_0",
+                                                               os_endpoint,
+                                                               **kw)
+            self.assertEqual(mock_monasca.client.Client.return_value,
+                             self.clients.cache["monasca"])
 
     def test_ironic(self):
         fake_ironic = fakes.FakeIronicClient()

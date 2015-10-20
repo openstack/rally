@@ -67,3 +67,11 @@ class AuthenticateTestCase(test.ScenarioTestCase):
             scenario_inst.validate_heat(5)
         self.clients("heat").stacks.list.assert_called_with(limit=0)
         self.assertEqual(self.clients("heat").stacks.list.call_count, 5)
+
+    def test_validate_monasca(self):
+        scenario_inst = authenticate.Authenticate()
+        with atomic.ActionTimer(scenario_inst,
+                                "authenticate.validate_monasca"):
+            scenario_inst.validate_monasca(5)
+        self.clients("monasca").metrics.list.assert_called_with(limit=0)
+        self.assertEqual(self.clients("monasca").metrics.list.call_count, 5)
