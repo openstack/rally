@@ -12,4 +12,8 @@
   smoke: true
   users_amount: 1
   tenants_amount: 1
-  controllers_amount: 1
+  controllers_amount: 3
+  compute_amount: 77
+  storage_amount: 20
+  network_amount: 1
+

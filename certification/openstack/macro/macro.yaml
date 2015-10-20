@@ -33,9 +33,9 @@
             volumes: -1
 {%- endmacro %}
 
-{%- macro constant_runner(concurrency=1, times=1) %}
+{%- macro constant_runner(concurrency=1, times=1, is_smoke=True) %}
         type: constant
-  {%- if smoke %}
+  {%- if is_smoke %}
         concurrency: 1
         times: 1
   {%- else %}
@@ -44,9 +44,9 @@
   {%- endif %}
 {%- endmacro %}
 
-{%- macro rps_runner(rps=1, times=1) %}
+{%- macro rps_runner(rps=1, times=1, is_smoke=True) %}
         type: rps
-  {%- if smoke %}
+  {%- if is_smoke %}
         rps: 1
         times: 1
   {%- else %}

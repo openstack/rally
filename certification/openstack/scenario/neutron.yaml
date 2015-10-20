@@ -9,7 +9,7 @@
             network: -1
         {% endcall %}
       runner:
-        {{ constant_runner() }}
+        {{ constant_runner(concurrency=2*controllers_amount, times=8*controllers_amount, is_smoke=smoke) }}
       sla:
         {{ no_failures_sla() }}
 
@@ -27,7 +27,7 @@
             port: -1
         {% endcall %}
       runner:
-        {{ constant_runner() }}
+        {{ constant_runner(concurrency=2*controllers_amount, times=8*controllers_amount, is_smoke=smoke) }}
       sla:
         {{ no_failures_sla() }}
 
@@ -49,7 +49,7 @@
             router: -1
         {% endcall %}
       runner:
-        {{ constant_runner() }}
+        {{ constant_runner(concurrency=2*controllers_amount, times=8*controllers_amount, is_smoke=smoke) }}
       sla:
         {{ no_failures_sla() }}
 
@@ -68,7 +68,7 @@
             subnet: -1
         {% endcall %}
       runner:
-        {{ constant_runner() }}
+        {{ constant_runner(concurrency=2*controllers_amount, times=8*controllers_amount, is_smoke=smoke) }}
       sla:
         {{ no_failures_sla() }}
 
@@ -83,7 +83,7 @@
             network: -1
         {% endcall %}
       runner:
-        {{ constant_runner() }}
+        {{ constant_runner(concurrency=2*controllers_amount, times=8*controllers_amount, is_smoke=smoke) }}
       sla:
         {{ no_failures_sla() }}
 
@@ -101,7 +101,7 @@
             port: -1
         {% endcall %}
       runner:
-        {{ constant_runner() }}
+        {{ constant_runner(concurrency=2*controllers_amount, times=8*controllers_amount, is_smoke=smoke) }}
       sla:
         {{ no_failures_sla() }}
 
@@ -122,7 +122,7 @@
             router: -1
         {% endcall %}
       runner:
-        {{ constant_runner() }}
+        {{ constant_runner(concurrency=2*controllers_amount, times=8*controllers_amount, is_smoke=smoke) }}
       sla:
         {{ no_failures_sla() }}
 
@@ -141,7 +141,7 @@
             subnet: -1
         {% endcall %}
       runner:
-        {{ constant_runner() }}
+        {{ constant_runner(concurrency=2*controllers_amount, times=8*controllers_amount, is_smoke=smoke) }}
       sla:
         {{ no_failures_sla() }}
 
@@ -159,7 +159,7 @@
             network: -1
         {% endcall %}
       runner:
-        {{ constant_runner() }}
+        {{ constant_runner(concurrency=2*controllers_amount, times=8*controllers_amount, is_smoke=smoke) }}
       sla:
         {{ no_failures_sla() }}
 
@@ -182,7 +182,7 @@
             port: -1
         {% endcall %}
       runner:
-        {{ constant_runner() }}
+        {{ constant_runner(concurrency=2*controllers_amount, times=8*controllers_amount, is_smoke=smoke) }}
       sla:
         {{ no_failures_sla() }}
 
@@ -207,7 +207,7 @@
             router: -1
         {% endcall %}
       runner:
-        {{ constant_runner() }}
+        {{ constant_runner(concurrency=2*controllers_amount, times=8*controllers_amount, is_smoke=smoke) }}
       sla:
         {{ no_failures_sla() }}
 
@@ -229,7 +229,7 @@
             subnet: -1
         {% endcall %}
       runner:
-        {{ constant_runner() }}
+        {{ constant_runner(concurrency=2*controllers_amount, times=8*controllers_amount, is_smoke=smoke) }}
       sla:
         {{ no_failures_sla() }}
 
@@ -240,6 +240,6 @@
       context:
         {{ user_context(tenants_amount, users_amount, use_existing_users) }}
       runner:
-        {{ constant_runner() }}
+        {{ constant_runner(concurrency=2*controllers_amount, times=8*controllers_amount, is_smoke=smoke) }}
       sla:
         {{ no_failures_sla() }}
