@@ -204,7 +204,7 @@ def wait_for_status(resource, ready_statuses, failure_statuses=None,
 
     start = time.time()
 
-    latest_status = get_status(resource, status_attr)
+    latest_status = None
     latest_status_update = start
 
     while True:
