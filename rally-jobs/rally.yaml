@@ -495,7 +495,7 @@
           counter_unit: "instance"
           counter_volume: 1.0
           resources_per_tenant: 3
-          samples_per_resource: 3
+          samples_per_resource: 10
           timestamp_interval: 60
           metadata_list:
             -  status: "active"
@@ -506,6 +506,7 @@
                name: "fake_resource_1"
                deleted: "False"
                created_at: "2015-09-10T06:55:12.000000"
+          batch_size: 5
       sla:
         failure_rate:
           max: 0

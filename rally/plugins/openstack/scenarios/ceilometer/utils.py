@@ -28,7 +28,7 @@ class CeilometerScenario(scenario.OpenStackScenario):
     def _make_samples(self, count=1, interval=0, counter_name="cpu_util",
                       counter_type="gauge", counter_unit="%", counter_volume=1,
                       project_id=None, user_id=None, source=None,
-                      timestamp=None, metadata_list=None):
+                      timestamp=None, metadata_list=None, batch_size=None):
         """Prepare and return a list of samples.
 
         :param count: specifies number of samples in array
@@ -43,9 +43,10 @@ class CeilometerScenario(scenario.OpenStackScenario):
         :param source: specifies source for samples
         :param timestamp: specifies timestamp for samples
         :param metadata_list: specifies list of resource metadata
-        :returns: list of samples used to create samples
+        :param batch_size: specifies number of samples to store in one query
+        :returns: generator that produces lists of samples
         """
-        samples = []
+        batch_size = batch_size or count
         sample = {
             "counter_name": counter_name,
             "counter_type": counter_type,
@@ -62,9 +63,13 @@ class CeilometerScenario(scenario.OpenStackScenario):
         for k, v in six.iteritems(opt_fields):
             if v:
                 sample.update({k: v})
-        now = timestamp or datetime.datetime.utcnow()
         len_meta = len(metadata_list) if metadata_list else 0
+        now = timestamp or datetime.datetime.utcnow()
+        samples = []
         for i in six.moves.xrange(count):
+            if i and not (i % batch_size):
+                yield samples
+                samples = []
             sample_item = dict(sample)
             sample_item["timestamp"] = (
                 now - datetime.timedelta(seconds=(interval * i))
@@ -76,8 +81,7 @@ class CeilometerScenario(scenario.OpenStackScenario):
                     i * len_meta // count
                 ]
             samples.append(sample_item)
-
-        return samples
+        yield samples
 
     def _make_query_item(self, field, op="eq", value=None):
         """Create a SimpleQuery item for requests.

@@ -115,7 +115,6 @@ class CeilometerSampleGeneratorTestCase(test.TestCase):
             "counter_type": "fake-counter-type",
             "counter_unit": "fake-counter-unit",
             "counter_volume": 100,
-            "resource_id": "fake-resource-id",
             "metadata_list": [
                 {"status": "active", "name": "fake_resource",
                  "deleted": "False",
@@ -128,9 +127,10 @@ class CeilometerSampleGeneratorTestCase(test.TestCase):
         scenario.generate_random_name = mock.Mock(
             return_value="fake_resource-id")
         kwargs = copy.deepcopy(sample)
-        kwargs.pop("resource_id")
-        samples_to_create = scenario._make_samples(count=samples_per_resource,
-                                                   interval=60, **kwargs)
+        samples_to_create = list(
+            scenario._make_samples(count=samples_per_resource, interval=60,
+                                   **kwargs)
+        )[0]
         new_context = copy.deepcopy(real_context)
         for id_ in tenants.keys():
             new_context["tenants"][id_].setdefault("samples", [])
