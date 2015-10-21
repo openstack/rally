@@ -693,3 +693,46 @@ class NovaServers(utils.NovaScenario,
             self.clients, self.task).create_floating_ip(
                 tenant_id=server.tenant_id)
         self._associate_floating_ip(server, address["ip"])
+
+    @types.set(image=types.ImageResourceType,
+               flavor=types.FlavorResourceType)
+    @validation.image_valid_on_flavor("flavor", "image")
+    @validation.required_services(consts.Service.NOVA)
+    @validation.required_openstack(users=True)
+    @scenario.configure(context={"cleanup": ["nova"]})
+    def boot_and_show_server(self, image, flavor, **kwargs):
+        """Show server details.
+
+        This simple scenario tests the nova show command by retrieving
+        the server details.
+        :param image: image to be used to boot an instance
+        :param flavor: flavor to be used to boot an instance
+        :param kwargs: Optional additional arguments for server creation
+
+        :returns: Server details
+        """
+        server = self._boot_server(image, flavor, **kwargs)
+        self._show_server(server)
+
+    @types.set(image=types.ImageResourceType,
+               flavor=types.FlavorResourceType)
+    @validation.image_valid_on_flavor("flavor", "image")
+    @validation.required_services(consts.Service.NOVA)
+    @validation.required_openstack(users=True)
+    @scenario.configure(context={"cleanup": ["nova"]})
+    def boot_and_get_console_output(self, image, flavor,
+                                    length=None, **kwargs):
+        """Get text console output from server.
+
+        This simple scenario tests the nova console-log command by retrieving
+        the text console log output.
+        :param image: image to be used to boot an instance
+        :param flavor: flavor to be used to boot an instance
+        :param length: The number of tail log lines you would like to retrieve.
+                       None (default value) or -1 means unlimited length.
+        :param kwargs: Optional additional arguments for server creation
+
+        :returns: Text console log output for server
+        """
+        server = self._boot_server(image, flavor, **kwargs)
+        self._get_server_console_output(server, length)

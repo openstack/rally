@@ -621,6 +621,42 @@ class NovaServersTestCase(test.ScenarioTestCase):
         scenario._rebuild_server.assert_called_once_with(server, to_image)
         scenario._delete_server.assert_called_once_with(server)
 
+    def test_boot_and_show_server(self):
+        server = fakes.FakeServer()
+        image = fakes.FakeImage()
+        flavor = fakes.FakeFlavor()
+
+        scenario = servers.NovaServers(self.context)
+        scenario._boot_server = mock.MagicMock(return_value=server)
+        scenario._show_server = mock.MagicMock()
+
+        scenario.boot_and_show_server(image, flavor, fakearg="fakearg")
+
+        scenario._boot_server.assert_called_once_with(image, flavor,
+                                                      fakearg="fakearg")
+        scenario._show_server.assert_called_once_with(server)
+
+    @ddt.data({"length": None},
+              {"length": 10})
+    @ddt.unpack
+    def test_boot_and_get_console_server(self, length):
+        server = fakes.FakeServer()
+        image = fakes.FakeImage()
+        flavor = fakes.FakeFlavor()
+        kwargs = {"fakearg": "fakearg"}
+
+        scenario = servers.NovaServers(self.context)
+        scenario._boot_server = mock.MagicMock(return_value=server)
+        scenario._get_server_console_output = mock.MagicMock()
+
+        scenario.boot_and_get_console_output(image, flavor, length,
+                                             **kwargs)
+
+        scenario._boot_server.assert_called_once_with(image, flavor,
+                                                      **kwargs)
+        scenario._get_server_console_output.assert_called_once_with(server,
+                                                                    length)
+
     @mock.patch(NOVA_SERVERS_MODULE + ".network_wrapper.wrap")
     def test_boot_and_associate_floating_ip(self, mock_wrap):
         scenario = servers.NovaServers(self.context)

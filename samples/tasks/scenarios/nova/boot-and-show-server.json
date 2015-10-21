@@ -1,0 +1,27 @@
+{% set flavor_name = flavor_name or "m1.tiny" %}
+{% set image_name = image_name or "^cirros.*uec$" %}
+{
+    "NovaServers.boot_and_show_server": [
+        {
+            "args": {
+                "flavor": {
+                    "name": "{{flavor_name}}"
+                },
+                "image": {
+                    "name": "{{image_name}}"
+                }
+            },
+            "runner": {
+                "type": "constant",
+                "times": 1,
+                "concurrency": 1
+            },
+            "context": {
+                "users": {
+                    "tenants": 1,
+                    "users_per_tenant": 1
+                }
+            }
+        }
+    ]
+}
