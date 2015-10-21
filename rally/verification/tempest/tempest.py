@@ -294,7 +294,7 @@ class Tempest(object):
             shutil.rmtree(self.path())
 
     @utils.log_verification_wrapper(LOG.info, _("Run verification."))
-    def _prepare_and_run(self, set_name, regex):
+    def _prepare_and_run(self, set_name, regex, tests_file):
         if not self.is_configured():
             self.generate_config_file()
 
@@ -303,6 +303,8 @@ class Tempest(object):
         else:
             if set_name in consts.TempestTestsAPI:
                 testr_arg = "tempest.api.%s" % set_name
+            elif tests_file:
+                testr_arg = "--load-list %s" % os.path.abspath(tests_file)
             else:
                 testr_arg = set_name or regex
 
@@ -393,8 +395,8 @@ class Tempest(object):
         else:
             self.verification.set_failed()
 
-    def verify(self, set_name, regex):
-        self._prepare_and_run(set_name, regex)
+    def verify(self, set_name, regex, tests_file):
+        self._prepare_and_run(set_name, regex, tests_file)
         self._save_results()
 
     def import_results(self, set_name, log_file):

@@ -49,6 +49,9 @@ class VerifyCommands(object):
                         list(consts.TempestTestsAPI)))
     @cliutils.args("--regex", dest="regex", type=str, required=False,
                    help="Regular expression of test.")
+    @cliutils.args("--tests-file", dest="tests_file", type=str,
+                   help="Path to a file with a list of Tempest tests",
+                   required=False)
     @cliutils.args("--tempest-config", dest="tempest_config", type=str,
                    required=False,
                    help="User specified Tempest config file location")
@@ -59,13 +62,14 @@ class VerifyCommands(object):
                    required=False, action="store_true")
     @envutils.with_default_deployment(cli_arg_name="deployment")
     def start(self, set_name="", deployment=None, regex=None,
-              tempest_config=None, do_use=True,
+              tests_file=None, tempest_config=None, do_use=True,
               system_wide_install=False):
         """Start set of tests.
 
         :param set_name: Name of tempest test set
         :param deployment: UUID or name of a deployment
         :param regex: Regular expression of test
+        :param tests_file: Path to a file with a list of Tempest tests
         :param tempest_config: User specified Tempest config file location
         :param do_use: Use new task as default for future operations
         :param system_wide_install: Use virtualenv else run tests in
@@ -73,18 +77,33 @@ class VerifyCommands(object):
         """
 
         if regex and set_name:
-            raise exceptions.InvalidArgumentsException("set_name and regex "
-                                                       "are not compatible")
-        if not (regex or set_name):
+            raise exceptions.InvalidArgumentsException(
+                "Arguments set_name and regex are not compatible")
+
+        if tests_file and set_name:
+            raise exceptions.InvalidArgumentsException(
+                "Arguments tests_file and set_name are not compatible")
+
+        if tests_file and regex:
+            raise exceptions.InvalidArgumentsException(
+                "Arguments tests_file and regex are not compatible")
+
+        if not (regex or set_name or tests_file):
             set_name = "full"
+
         if set_name and set_name not in (list(consts.TempestTestsSets) +
                                          list(consts.TempestTestsAPI)):
             print("Sorry, but there are no desired Tempest test set. Please, "
                   "choose from: %s" % ", ".join(list(consts.TempestTestsSets) +
                                                 list(consts.TempestTestsAPI)))
             return (1)
+
+        if tests_file and not os.path.exists(tests_file):
+            print("File '%s' not found" % tests_file)
+            return (1)
+
         verification = api.Verification.verify(deployment, set_name, regex,
-                                               tempest_config,
+                                               tests_file, tempest_config,
                                                system_wide_install)
         if do_use:
             self.use(verification["uuid"])

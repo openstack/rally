@@ -323,14 +323,15 @@ class TempestInstallAndUninstallTestCase(BaseTestCase):
 
 
 class TempestVerifyTestCase(BaseTestCase):
-    def _get_fake_call(self, testr_arg):
+    def _get_fake_call(self, testr_arg, is_set=True):
         return (
-            "%(venv)s testr run --parallel --subunit tempest.api.%(testr_arg)s"
+            "%(venv)s testr run --parallel --subunit %(testr_arg)s"
             " | tee %(tempest_path)s/subunit.stream"
             " | %(venv)s subunit-2to1"
             " | %(venv)s %(tempest_path)s/tools/colorizer.py" % {
                 "venv": self.verifier.venv_wrapper,
-                "testr_arg": testr_arg,
+                "testr_arg": ("tempest.api." if is_set
+                              else "--load-list ") + testr_arg,
                 "tempest_path": self.verifier.path()})
 
     @mock.patch(TEMPEST_PATH + ".tempest.Tempest.parse_results",
@@ -349,7 +350,7 @@ class TempestVerifyTestCase(BaseTestCase):
         set_name = "compute"
         fake_call = self._get_fake_call(set_name)
 
-        self.verifier.verify(set_name, None)
+        self.verifier.verify(set_name, None, None)
 
         self.assertEqual(2, mock_tempest_is_configured.call_count)
         mock_tempest_config.assert_called_once_with(self.verifier.deployment)
@@ -379,7 +380,7 @@ class TempestVerifyTestCase(BaseTestCase):
         set_name = "identity"
         fake_call = self._get_fake_call(set_name)
 
-        self.verifier.verify(set_name, None)
+        self.verifier.verify(set_name, None, None)
 
         mock_tempest_is_configured.assert_called_once_with()
         self.assertFalse(mock_tempest_config.called)
@@ -408,7 +409,7 @@ class TempestVerifyTestCase(BaseTestCase):
         fake_call = self._get_fake_call(set_name)
         mock_subprocess.side_effect = subprocess.CalledProcessError
 
-        self.verifier.verify(set_name, None)
+        self.verifier.verify(set_name, None, None)
 
         mock_tempest_is_configured.assert_called_once_with()
         self.assertFalse(mock_tempest_config.called)
@@ -421,6 +422,27 @@ class TempestVerifyTestCase(BaseTestCase):
             shell=True)
         self.assertTrue(mock_tempest_parse_results.called)
         self.verifier.verification.set_failed.assert_called_once_with()
+
+    @mock.patch(TEMPEST_PATH + ".tempest.Tempest.parse_results",
+                return_value=(None, None))
+    @mock.patch(TEMPEST_PATH + ".tempest.Tempest.env")
+    @mock.patch(TEMPEST_PATH + ".tempest.subprocess")
+    @mock.patch(TEMPEST_PATH + ".config.TempestResourcesContext")
+    @mock.patch(TEMPEST_PATH + ".tempest.Tempest.is_configured",
+                return_value=True)
+    def test_verify_tests_file_specified(
+            self, mock_tempest_is_configured, mock_tempest_resources_context,
+            mock_subprocess, mock_tempest_env, mock_tempest_parse_results):
+        tests_file = "/path/to/tests/file"
+        fake_call = self._get_fake_call(tests_file, is_set=False)
+
+        self.verifier.verify("", None, tests_file)
+        self.verifier.verification.start_verifying.assert_called_once_with("")
+
+        mock_subprocess.check_call.assert_called_once_with(
+            fake_call, env=mock_tempest_env, cwd=self.verifier.path(),
+            shell=True)
+        mock_tempest_parse_results.assert_called_once_with(None)
 
     def test_import_results(self):
         set_name = "identity"

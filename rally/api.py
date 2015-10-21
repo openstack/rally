@@ -288,13 +288,14 @@ class Task(object):
 class Verification(object):
 
     @classmethod
-    def verify(cls, deployment, set_name, regex, tempest_config,
-               system_wide_install=False):
+    def verify(cls, deployment, set_name, regex, tests_file,
+               tempest_config, system_wide_install=False):
         """Start verifying.
 
         :param deployment: UUID or name of a deployment.
         :param set_name: Valid name of tempest test set.
         :param regex: Regular expression of test
+        :param tests_file: Path to a file with a list of Tempest tests
         :param tempest_config: User specified Tempest config file
         :param system_wide_install: Use virtualenv else run tests in local
                                     environment
@@ -309,7 +310,8 @@ class Verification(object):
         LOG.info("Starting verification of deployment: %s" % deployment_uuid)
 
         verification.set_running()
-        verifier.verify(set_name=set_name, regex=regex)
+        verifier.verify(set_name=set_name, regex=regex,
+                        tests_file=tests_file)
 
         return verification
 
