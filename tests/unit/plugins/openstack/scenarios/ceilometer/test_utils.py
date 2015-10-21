@@ -13,7 +13,9 @@
 #    under the License.
 
 import copy
+import datetime
 
+from dateutil import parser
 import mock
 
 from rally.plugins.openstack.scenarios.ceilometer import utils
@@ -30,15 +32,19 @@ class CeilometerScenarioTestCase(test.ScenarioTestCase):
     def test__make_samples(self):
         self.scenario.generate_random_name = mock.Mock(
             return_value="fake_resource")
-        result = self.scenario._make_samples(project_id="fake_project_id")
-        expected = [{"counter_name": "cpu_util",
-                     "counter_type": "gauge",
-                     "counter_unit": "%",
-                     "counter_volume": 1,
-                     "resource_id": "fake_resource",
-                     "project_id": "fake_project_id",
-                     }]
-        self.assertEqual(expected, result)
+        test_timestamp = datetime.datetime(2015, 10, 20, 14, 18, 40)
+        result = self.scenario._make_samples(count=2, interval=60,
+                                             timestamp=test_timestamp)
+        expected = {"counter_name": "cpu_util",
+                    "counter_type": "gauge",
+                    "counter_unit": "%",
+                    "counter_volume": 1,
+                    "resource_id": "fake_resource",
+                    "timestamp": test_timestamp.isoformat()}
+        self.assertEqual(expected, result[0])
+        samples_int = (parser.parse(result[0]["timestamp"]) -
+                       parser.parse(result[1]["timestamp"])).seconds
+        self.assertEqual(60, samples_int)
 
     def test__list_alarms_by_id(self):
         self.assertEqual(self.clients("ceilometer").alarms.get.return_value,
