@@ -239,10 +239,7 @@ class HistogramChartTestCase(test.TestCase):
                       "key": "bar",
                       "values": [{"x": 2.2, "y": 1}, {"x": 3.2, "y": 1},
                                  {"x": 4.2, "y": 1}],
-                      "view": "Rice Rule"},
-                     {"disabled": None, "key": "bar",
-                      "values": [{"x": 2.7, "y": 2}, {"x": 4.2, "y": 1}],
-                      "view": "One Half"}]]
+                      "view": "Rice Rule"}]]
         self.assertEqual(expected, chart.render())
 
     @ddt.data(
@@ -252,8 +249,7 @@ class HistogramChartTestCase(test.TestCase):
                       {"bins": 2, "view": "Sturges Formula",
                        "x": [2.5, 4.0], "y": [0, 0]},
                       {"bins": 3, "view": "Rice Rule",
-                       "x": [2.0, 3.0, 4.0], "y": [0, 0, 0]},
-                      {"bins": 1, "view": "One Half", "x": [4.0], "y": [0]}]},
+                       "x": [2.0, 3.0, 4.0], "y": [0, 0, 0]}]},
         {"base_size": 100, "min_value": 27, "max_value": 42,
          "expected": [
              {"bins": 10, "view": "Square Root Choice",
@@ -264,14 +260,7 @@ class HistogramChartTestCase(test.TestCase):
                     42.0], "y": [0, 0, 0, 0, 0, 0, 0, 0]},
              {"bins": 10, "view": "Rice Rule",
               "x": [28.5, 30.0, 31.5, 33.0, 34.5, 36.0, 37.5, 39.0, 40.5,
-                    42.0], "y": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
-             {"bins": 50, "view": "One Half",
-              "x": [27.3, 27.6, 27.9, 28.2, 28.5, 28.8, 29.1, 29.4, 29.7,
-                    30.0, 30.3, 30.6, 30.9, 31.2, 31.5, 31.8, 32.1, 32.4,
-                    32.7, 33.0, 33.3, 33.6, 33.9, 34.2, 34.5, 34.8, 35.1,
-                    35.4, 35.7, 36.0, 36.3, 36.6, 36.9, 37.2, 37.5, 37.8,
-                    38.1, 38.4, 38.7, 39.0, 39.3, 39.6, 39.9, 40.2, 40.5,
-                    40.8, 41.1, 41.4, 41.7, 42.0], "y": [0] * 50}]})
+                    42.0], "y": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}]})
     @ddt.unpack
     def test_views(self, base_size=None, min_value=None, max_value=None,
                    expected=None):
@@ -299,9 +288,7 @@ class MainHistogramChartTestCase(test.TestCase):
             {"disabled": None, "key": "task", "view": "Rice Rule",
              "values": [{"x": 3.666666666666667, "y": 3},
                         {"x": 5.333333333333334, "y": 0},
-                        {"x": 7.0, "y": 0}]},
-            {"disabled": None, "key": "task", "view": "One Half",
-             "values": [{"x": 4.5, "y": 3}, {"x": 7.0, "y": 0}]}]
+                        {"x": 7.0, "y": 0}]}]
         self.assertEqual([expected], chart.render())
 
 
@@ -324,9 +311,7 @@ class AtomicHistogramChartTestCase(test.TestCase):
                          {"x": 2.8, "y": 1}]},
              {"disabled": 0, "key": "foo", "view": "Rice Rule",
               "values": [{"x": 2.0, "y": 2}, {"x": 2.4, "y": 0},
-                         {"x": 2.8, "y": 1}]},
-             {"disabled": 0, "key": "foo", "view": "One Half",
-              "values": [{"x": 2.2, "y": 2}, {"x": 2.8, "y": 1}]}],
+                         {"x": 2.8, "y": 1}]}],
             [{"disabled": 1, "key": "bar", "view": "Square Root Choice",
               "values": [{"x": 4.3, "y": 2}, {"x": 5.5, "y": 1}]},
              {"disabled": 1, "key": "bar", "view": "Sturges Formula",
@@ -334,9 +319,7 @@ class AtomicHistogramChartTestCase(test.TestCase):
                          {"x": 5.5, "y": 1}]},
              {"disabled": 1, "key": "bar", "view": "Rice Rule",
               "values": [{"x": 3.9, "y": 2}, {"x": 4.7, "y": 0},
-                         {"x": 5.5, "y": 1}]},
-             {"disabled": 1, "key": "bar", "view": "One Half",
-              "values": [{"x": 4.3, "y": 2}, {"x": 5.5, "y": 1}]}]]
+                         {"x": 5.5, "y": 1}]}]]
         self.assertEqual(expected, chart.render())
 
 
