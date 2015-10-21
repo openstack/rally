@@ -2,7 +2,7 @@
     "type": "MultihostEngine",
     "controller": {
         "type": "DevstackEngine",
-        "localrc": {
+        "local_conf": {
             "ENABLED_SERVICES+": ",-n-cpu,-n-net",
             "MULTI_HOST": "1",
             "SCREEN_LOGDIR": "$DEST/logs/screen"
@@ -14,7 +14,7 @@
     "nodes": [
         {
             "type": "DevstackEngine",
-            "localrc": {"ENABLED_SERVICES": "n-cpu,n-net"},
+            "local_conf": {"ENABLED_SERVICES": "n-cpu,n-net"},
             "provider": {
                 "type": "DummyProvider",
                 "credentials": [{"host": "host-2.net",

@@ -53,7 +53,7 @@ class MultihostEngine(engine.Engine):
         "nodes": [
             {
                 "type": "DevstackEngine",
-                "localrc": {
+                "local_conf": {
                     "GLANCE_HOSTPORT": "{controller_ip}:9292",
         ...
     """

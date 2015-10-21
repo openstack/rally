@@ -1,6 +1,6 @@
 {
     "type": "DevstackEngine",
-    "localrc": {
+    "local_conf": {
         "VIRT_DRIVER": "fake"
     },
     "provider": {

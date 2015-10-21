@@ -14,14 +14,14 @@ Controller
 ::
 
     "type": "DevstackEngine",
-    "localrc": {
+    "local_conf": {
         "MULTI_HOST": "1",
         "VIRT_DRIVER": "fake",
         "ENABLED_SERVICES+": ",-n-cpu",
     },
 
 Look carefully at ENABLED_SERVICES. Such syntax is translated to 'ENABLED_SERVICES+=,-n-cpu'
-in localrc. This means 'remove n-cpu from ENABLED_SERVICES'.
+in local.conf. This means 'remove n-cpu from ENABLED_SERVICES'.
 
 Please note: VIRT_DRIVER=fake on controller node is mandatory.
 
@@ -59,7 +59,7 @@ compute instance via the devstack engine, then makes N clones using lxc-clone.
     },
     "engine": {
         "name": "DevstackEngine",
-        "localrc": {
+        "local_conf": {
             "VIRT_DRIVER": "fake",
             "DATABASE_TYPE": "mysql",
             "MYSQL_HOST": "{controller_ip}",
@@ -98,7 +98,7 @@ Here is an example of a complete configuration file, assembled from the snippets
         "type": "MultihostEngine",
         "controller": {
             "type": "DevstackEngine",
-            "localrc": {
+            "local_conf": {
                 "MULTI_HOST": "1",
                 "VIRT_DRIVER": "fake",
                 "API_RATE_LIMIT": "False",
@@ -128,7 +128,7 @@ Here is an example of a complete configuration file, assembled from the snippets
                 },
                 "engine": {
                     "name": "DevstackEngine",
-                    "localrc": {
+                    "local_conf": {
                         "VIRT_DRIVER": "fake",
                         "DATABASE_TYPE": "mysql",
                         "MYSQL_HOST": "{controller_ip}",
@@ -217,7 +217,7 @@ to controller node. So, we add the option "tunnel_to": ["192.168.1.13"]::
     },
     "engine": {
         "name": "DevstackEngine",
-        "localrc": {
+        "local_conf": {
             "VIRT_DRIVER": "fake",
             "DATABASE_TYPE": "mysql",
             "MYSQL_HOST": "{controller_ip}",
