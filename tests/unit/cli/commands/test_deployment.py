@@ -323,9 +323,10 @@ class DeploymentCommandsTestCase(test.TestCase):
         self.assertEqual(1, self.deployment.use(deployment_id))
 
     @mock.patch("rally.osclients.Clients.verified_keystone")
-    @mock.patch("rally.osclients.Clients.keystone")
+    @mock.patch("rally.osclients.Keystone.create_client")
     @mock.patch("rally.cli.commands.deployment.db.deployment_get")
-    def test_deployment_check(self, mock_deployment_get, mock_clients_keystone,
+    def test_deployment_check(self, mock_deployment_get,
+                              mock_keystone_create_client,
                               mock_clients_verified_keystone):
         deployment_id = "e87e4dca-b515-4477-888d-5f6103f13b42"
         sample_endpoint = objects.Endpoint("http://192.168.1.1:5000/v2.0/",
