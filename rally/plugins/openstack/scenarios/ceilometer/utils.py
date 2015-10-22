@@ -11,6 +11,7 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+import six
 
 from rally.plugins.openstack import scenario
 from rally.task import atomic
@@ -19,6 +20,45 @@ from rally.task import utils as bench_utils
 
 class CeilometerScenario(scenario.OpenStackScenario):
     """Base class for Ceilometer scenarios with basic atomic actions."""
+
+    def _make_samples(self, count=1, counter_name="cpu_util",
+                      counter_type="gauge", counter_unit="%", counter_volume=1,
+                      project_id=None, user_id=None, source=None,
+                      timestamp=None, resource_metadata=None):
+        """Prepare and return a list of samples.
+
+        :param count: specifies number of samples in array
+        :param counter_name: specifies name of the counter
+        :param counter_type: specifies type of the counter
+        :param counter_unit: specifies unit of the counter
+        :param counter_volume: specifies volume of the counter
+        :param project_id: specifies project id for samples
+        :param user_id: specifies user id for samples
+        :param source: specifies source for samples
+        :param timestamp: specifies timestamp for samples
+        :param resource_metadata: specifies resource metadata
+        :returns: list of samples used to create samples
+        """
+        sample = {
+            "counter_name": counter_name,
+            "counter_type": counter_type,
+            "counter_unit": counter_unit,
+            "counter_volume": counter_volume,
+            "resource_id": self.generate_random_name()
+        }
+        opt_fields = {
+            "project_id": project_id,
+            "user_id": user_id,
+            "source": source,
+            "timestamp": timestamp,
+            "resource_metadata": resource_metadata,
+        }
+        for k, v in six.iteritems(opt_fields):
+            if v:
+                sample.update({k: v})
+
+        samples = [sample] * count
+        return samples
 
     def _get_alarm_dict(self, **kwargs):
         """Prepare and return an alarm dict for creating an alarm.
@@ -261,6 +301,15 @@ class CeilometerScenario(scenario.OpenStackScenario):
                        "resource_id": resource_id if resource_id
                        else self.generate_random_name()})
         return self.clients("ceilometer").samples.create(**kwargs)
+
+    @atomic.action_timer("ceilometer.create_samples")
+    def _create_samples(self, samples):
+        """Create Samples with specified parameters.
+
+        :param samples: a list of samples to create
+        :returns: created list samples
+        """
+        return self.clients("ceilometer").samples.create_list(samples)
 
     @atomic.action_timer("ceilometer.query_samples")
     def _query_samples(self, filter, orderby, limit):
