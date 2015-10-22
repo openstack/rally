@@ -102,6 +102,26 @@ class OSClient(plugin.Plugin):
             self.endpoint, self.cache)
         return keystone(*args, **kwargs)
 
+    def _get_session(self, auth=None, endpoint=None):
+        endpoint = endpoint or self._get_endpoint()
+
+        from keystoneclient.auth import token_endpoint
+        from keystoneclient import session as ks_session
+
+        kc = self.keystone()
+        if auth is None:
+            auth = token_endpoint.Token(endpoint, kc.auth_token)
+
+        return ks_session.Session(auth=auth, verify=self.endpoint.insecure)
+
+    def _get_endpoint(self):
+        kc = self.keystone()
+        api_url = kc.service_catalog.url_for(
+            service_type=self.get_service_type(),
+            endpoint_type=self.endpoint.endpoint_type,
+            region_name=self.endpoint.region_name)
+        return api_url
+
     def _get_auth_info(self, user_key="username",
                        password_key="password",
                        auth_url_key="auth_url",
@@ -403,17 +423,14 @@ class Designate(OSClient):
     def create_client(self, version=None):
         """Return designate client."""
         from designateclient import client
-        kc = self.keystone()
-        dns_api_url = kc.service_catalog.url_for(
-            service_type=self.get_service_type(),
-            endpoint_type=self.endpoint.endpoint_type,
-            region_name=self.endpoint.region_name)
-        client = client.Client(
-            self.choose_version(version),
-            endpoint=dns_api_url,
-            token=kc.auth_token,
-            insecure=self.endpoint.insecure)
-        return client
+
+        version = self.choose_version(version)
+
+        api_url = self._get_endpoint()
+        api_url += "/v%s" % version
+
+        session = self._get_session(endpoint=api_url)
+        return client.Client(version, session=session)
 
 
 @configure("trove", default_version="1.0")

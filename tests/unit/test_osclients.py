@@ -13,6 +13,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import ddt
+from keystoneclient.auth import token_endpoint
 from keystoneclient import exceptions as keystone_exceptions
 import mock
 from oslo_config import cfg
@@ -23,6 +25,12 @@ from rally import exceptions
 from rally import osclients
 from tests.unit import fakes
 from tests.unit import test
+
+
+@osclients.configure("dummy")
+class DummyClient(osclients.OSClient):
+    def create_client(self, *args, **kwargs):
+        pass
 
 
 class CachedTestCase(test.TestCase):
@@ -139,6 +147,53 @@ class OSClientsTestCase(test.TestCase):
         self.assertEqual("foo_password", clients.endpoint.password)
         self.assertEqual("foo_tenant_name", clients.endpoint.tenant_name)
         self.assertEqual("foo_region_name", clients.endpoint.region_name)
+
+    @mock.patch.object(DummyClient, "_get_endpoint")
+    @mock.patch("keystoneclient.session.Session")
+    def test_get_session(self, mock_session, mock_dummy_client__get_endpoint):
+        # Use DummyClient since if not the abc meta kicks in
+        osc = DummyClient(self.endpoint, {})
+
+        with mock.patch.object(token_endpoint, "Token") as token:
+            osc._get_session()
+
+            token.assert_called_once_with(
+                mock_dummy_client__get_endpoint.return_value,
+                self.fake_keystone.auth_token
+            )
+            mock_session.assert_called_once_with(
+                auth=token.return_value, verify=False)
+
+    @mock.patch.object(DummyClient, "_get_endpoint")
+    @mock.patch("keystoneclient.session.Session")
+    def test_get_session_with_endpoint(
+            self, mock_session, mock_dummy_client__get_endpoint):
+        # Use DummyClient since if not the abc meta kicks in
+        osc = DummyClient(self.endpoint, {})
+
+        fake_endpoint = mock.Mock()
+        with mock.patch.object(token_endpoint, "Token") as token:
+            osc._get_session(endpoint=fake_endpoint)
+
+            self.assertFalse(mock_dummy_client__get_endpoint.called)
+
+            token.assert_called_once_with(
+                fake_endpoint,
+                self.fake_keystone.auth_token
+            )
+            mock_session.assert_called_once_with(
+                auth=token.return_value, verify=False)
+
+    @mock.patch("keystoneclient.session.Session")
+    def test_get_session_with_auth(self, mock_session):
+        # Use DummyClient since if not the abc meta kicks in
+        osc = DummyClient(self.endpoint, {})
+
+        fake_auth = mock.Mock()
+        osc._get_session(auth=fake_auth)
+
+        mock_session.assert_called_once_with(
+            auth=fake_auth, verify=False)
 
     def test_keystone(self):
         self.assertNotIn("keystone", self.clients.cache)
@@ -558,23 +613,45 @@ class OSClientsTestCase(test.TestCase):
             mock_murano.client.Client.assert_called_once_with("1", **kw)
             self.assertEqual(fake_murano, self.clients.cache["murano"])
 
-    def test_register(self):
-        return_value = "foo_client"
-        client_func = mock.Mock(return_value=return_value)
+    @mock.patch("rally.osclients.Designate._get_session")
+    @ddt.data(
+        {},
+        {"version": "2"},
+        {"version": "1"},
+        {"version": None}
+    )
+    @ddt.unpack
+    def test_designate(self, mock_designate__get_session, version=None):
+        fake_designate = fakes.FakeDesignateClient()
+        mock_designate = mock.Mock()
+        mock_designate.client.Client.return_value = fake_designate
 
-        new_cls = osclients.Clients.register("test_register")(client_func)
-        self.addCleanup(new_cls.unregister)
+        mock_designate__get_session.return_value = self.fake_keystone.session
 
-        clients = osclients.Clients(mock.MagicMock())
+        self.assertNotIn("designate", self.clients.cache)
+        with mock.patch.dict("sys.modules",
+                             {"designateclient": mock_designate}):
+            client = self.clients.designate()
+            self.assertEqual(fake_designate, client)
+            self.service_catalog.url_for.assert_called_once_with(
+                service_type="dns",
+                endpoint_type=consts.EndpointType.PUBLIC,
+                region_name=self.endpoint.region_name
+            )
 
-        self.assertTrue(issubclass(new_cls, osclients.OSClient))
-        self.assertIsInstance(clients.test_register, osclients.OSClient)
-        self.assertEqual(return_value, clients.test_register())
-        # call second time with same parameters to check that cache works
-        clients.test_register()
-        client_func.assert_called_once_with()
+            default = version or "1"
 
-        # Call second time with same name
-        self.assertRaises(ValueError,
-                          osclients.Clients.register("test_register"),
-                          client_func)
+            # Check that we append /v<version>
+            url = self.service_catalog.url_for.return_value
+            url.__iadd__.assert_called_once_with("/v%s" % default)
+
+            mock_designate__get_session.assert_called_once_with(
+                endpoint=url.__iadd__.return_value)
+
+            mock_designate.client.Client.assert_called_once_with(
+                default, session=self.fake_keystone.session)
+
+            key = "designate"
+            if version is not None:
+                key += "%s" % {"version": version}
+            self.assertEqual(fake_designate, self.clients.cache[key])
