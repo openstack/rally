@@ -13,6 +13,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import ddt
+import mock
 
 from rally.common.plugin import plugin
 from rally.task import sla
@@ -27,10 +29,14 @@ class TestCriterion(sla.SLA):
         self.success = self.criterion_value == iteration
         return self.success
 
+    def merge(self, other):
+        raise NotImplementedError()
+
     def details(self):
         return "detail"
 
 
+@ddt.ddt
 class SLACheckerTestCase(test.TestCase):
 
     def test_add_iteration_and_results(self):
@@ -86,3 +92,78 @@ class SLACheckerTestCase(test.TestCase):
                           "success": success,
                           "detail": detail},
                          sla._format_result(name, success, detail))
+
+    def test__validate_config_positive(self):
+        sla_checker = sla.SLAChecker({"sla": {}})
+        another_sla_checker = sla.SLAChecker({"sla": {}})
+        sla_checker._validate_config(another_sla_checker)
+
+    def test__validate_config_negative(self):
+        sla_checker = sla.SLAChecker({"sla": {}})
+        another_sla_checker = sla.SLAChecker({"sla": {"test_criterion": 42}})
+        self.assertRaises(TypeError, sla_checker._validate_config,
+                          another_sla_checker)
+
+    def test__validate_sla_types(self):
+        sla_checker = sla.SLAChecker({"sla": {}})
+        mock_sla1 = mock.MagicMock()
+        mock_sla2 = mock.MagicMock()
+        sla_checker.sla_criteria = [mock_sla1, mock_sla2]
+
+        another_sla_checker = sla.SLAChecker({"sla": {}})
+        mock_sla3 = mock.MagicMock()
+        mock_sla4 = mock.MagicMock()
+        another_sla_checker.sla_criteria = [mock_sla3, mock_sla4]
+
+        sla_checker._validate_sla_types(another_sla_checker)
+
+        mock_sla1.assert_has_calls([
+            mock.call.validate_type(mock_sla3)
+        ])
+
+        mock_sla1.validate_type.assert_called_once_with(mock_sla3)
+        mock_sla2.validate_type.assert_called_once_with(mock_sla4)
+
+    @ddt.data({"merge_result1": True, "merge_result2": True,
+               "result": True},
+              {"merge_result1": True, "merge_result2": False,
+               "result": False},
+              {"merge_result1": False, "merge_result2": False,
+               "result": False})
+    @ddt.unpack
+    def test_merge(self, merge_result1, merge_result2, result):
+        sla_checker = sla.SLAChecker({"sla": {}})
+        mock_sla1 = mock.MagicMock()
+        mock_sla2 = mock.MagicMock()
+        sla_checker.sla_criteria = [mock_sla1, mock_sla2]
+
+        mock_sla1.merge.return_value = merge_result1
+        mock_sla2.merge.return_value = merge_result2
+
+        another_sla_checker = sla.SLAChecker({"sla": {}})
+        mock_sla3 = mock.MagicMock()
+        mock_sla4 = mock.MagicMock()
+        another_sla_checker.sla_criteria = [mock_sla3, mock_sla4]
+
+        sla_checker._validate_config = mock.MagicMock()
+        sla_checker._validate_sla_types = mock.MagicMock()
+
+        self.assertEqual(result, sla_checker.merge(another_sla_checker))
+        mock_sla1.merge.assert_called_once_with(mock_sla3)
+        mock_sla2.merge.assert_called_once_with(mock_sla4)
+
+
+class SLATestCase(test.TestCase):
+    def test_validate_type_positive(self):
+        sla1 = TestCriterion(0)
+        sla2 = TestCriterion(0)
+        sla1.validate_type(sla2)
+
+    def test_validate_type_negative(self):
+        sla1 = TestCriterion(0)
+
+        class AnotherTestCriterion(TestCriterion):
+            pass
+
+        sla2 = AnotherTestCriterion(0)
+        self.assertRaises(TypeError, sla1.validate_type, sla2)

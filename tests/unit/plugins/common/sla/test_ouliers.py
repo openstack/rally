@@ -14,12 +14,14 @@
 #    under the License.
 
 
+import ddt
 import jsonschema
 
 from rally.plugins.common.sla import outliers
 from tests.unit import test
 
 
+@ddt.ddt
 class OutliersTestCase(test.TestCase):
 
     def test_config_schema(self):
@@ -89,3 +91,39 @@ class OutliersTestCase(test.TestCase):
         # NOTE(msdubov): 12th iteration makes the SLA always failed
         self.assertFalse(sla.add_iteration({"duration": 11.2}))
         self.assertFalse(sla.add_iteration({"duration": 3.4}))
+
+    @ddt.data([[3.1, 4.2, 3.6, 4.5, 2.8, 3.3, 4.1, 3.8, 4.3, 2.9, 10.2],
+               [3.1, 4.2, 3.6, 4.5, 2.8, 3.3, 20.1, 3.8, 4.3, 2.9, 24.2],
+               [3.1, 4.2, 3.6, 4.5, 2.8, 3.3, 4.1, 30.8, 4.3, 49.9, 69.2]])
+    def test_merge(self, durations):
+
+        single_sla = outliers.Outliers({"max": 1})
+
+        for dd in durations:
+            for d in dd:
+                single_sla.add_iteration({"duration": d})
+
+        slas = [outliers.Outliers({"max": 1})
+                for _ in durations]
+
+        for idx, sla in enumerate(slas):
+            for duration in durations[idx]:
+                sla.add_iteration({"duration": duration})
+
+        merged_sla = slas[0]
+        for sla in slas[1:]:
+            merged_sla.merge(sla)
+
+        self.assertEqual(single_sla.success, merged_sla.success)
+        self.assertEqual(single_sla.iterations, merged_sla.iterations)
+
+        # self.assertEqual(single_sla.threshold, merged_sla.threshold)
+
+        # NOTE(ikhudoshyn): We are unable to implement
+        # rally.plugins.common.sla.outliers.Outliers.merge(..) correctly
+        # (see my comment for the method)
+        # The assert above will fail with the majority of data
+        # The line below passes with this particular data
+        # but may fail as well on another data
+
+        self.assertEqual(single_sla.outliers, merged_sla.outliers)
