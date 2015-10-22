@@ -215,9 +215,7 @@ class HistogramChart(Chart):
                 ("Sturges Formula",
                  int(math.ceil(math.log(self.base_size, 2) + 1))),
                 ("Rice Rule",
-                 int(math.ceil(2 * self.base_size ** (1.0 / 3)))),
-                ("One Half",
-                 int(math.ceil(self.base_size / 2.0)))]:
+                 int(math.ceil(2 * self.base_size ** (1.0 / 3))))]:
             bin_width = float(max_value - min_value) / bins
             x_axis = [min_value + (bin_width * x) for x in range(1, bins + 1)]
             views.append({"view": view, "bins": bins,
