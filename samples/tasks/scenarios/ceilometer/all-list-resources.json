@@ -1,5 +1,5 @@
 {
-    "CeilometerMeters.list_matched_meters": [
+    "CeilometerResource.list_resources": [
         {
             "runner": {
                 "type": "constant",
@@ -28,14 +28,10 @@
                 }
             },
             "args": {
-                "filter_by_user_id": true,
-                "filter_by_project_id": true,
-                "filter_by_resource_id": true,
-                "limit": 50,
+                "limit":50,
                 "metadata_query": {"status": "terminated"}
             }
         }
     ]
 }
-
 

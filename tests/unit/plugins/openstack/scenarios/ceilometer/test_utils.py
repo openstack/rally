@@ -18,6 +18,7 @@ import datetime
 from dateutil import parser
 import mock
 
+from rally import exceptions
 from rally.plugins.openstack.scenarios.ceilometer import utils
 from tests.unit import test
 
@@ -45,6 +46,29 @@ class CeilometerScenarioTestCase(test.ScenarioTestCase):
         samples_int = (parser.parse(result[0]["timestamp"]) -
                        parser.parse(result[1]["timestamp"])).seconds
         self.assertEqual(60, samples_int)
+
+    def test__make_timestamp_query(self):
+        start_time = "2015-09-09T00:00:00"
+        end_time = "2015-09-10T00:00:00"
+        expected_start = [
+            {"field": "timestamp", "value": "2015-09-09T00:00:00",
+             "op": ">="}]
+        expected_end = [
+            {"field": "timestamp", "value": "2015-09-10T00:00:00",
+             "op": "<="}
+        ]
+
+        actual = self.scenario._make_timestamp_query(start_time, end_time)
+        self.assertEqual(expected_start + expected_end, actual)
+        self.assertRaises(exceptions.InvalidArgumentsException,
+                          self.scenario._make_timestamp_query,
+                          end_time, start_time)
+        self.assertEqual(
+            expected_start,
+            self.scenario._make_timestamp_query(start_time=start_time))
+        self.assertEqual(
+            expected_end,
+            self.scenario._make_timestamp_query(end_time=end_time))
 
     def test__list_alarms_by_id(self):
         self.assertEqual(self.clients("ceilometer").alarms.get.return_value,
@@ -180,7 +204,8 @@ class CeilometerScenarioTestCase(test.ScenarioTestCase):
     def test__list_meters(self):
         self.assertEqual(self.scenario._list_meters(),
                          self.clients("ceilometer").meters.list.return_value)
-        self.clients("ceilometer").meters.list.assert_called_once_with()
+        self.clients("ceilometer").meters.list.assert_called_once_with(
+            q=None, limit=None)
         self._test_atomic_action_timer(self.scenario.atomic_actions(),
                                        "ceilometer.list_meters")
 
@@ -188,7 +213,8 @@ class CeilometerScenarioTestCase(test.ScenarioTestCase):
         self.assertEqual(
             self.scenario._list_resources(),
             self.clients("ceilometer").resources.list.return_value)
-        self.clients("ceilometer").resources.list.assert_called_once_with()
+        self.clients("ceilometer").resources.list.assert_called_once_with(
+            q=None, limit=None)
         self._test_atomic_action_timer(self.scenario.atomic_actions(),
                                        "ceilometer.list_resources")
 
@@ -292,3 +318,39 @@ class CeilometerScenarioTestCase(test.ScenarioTestCase):
             resource_id="test-resource-id")
         self._test_atomic_action_timer(self.scenario.atomic_actions(),
                                        "ceilometer.create_sample")
+
+    def test__make_general_query(self):
+        self.scenario.context = {
+            "user": {"tenant_id": "fake", "id": "fake_id"},
+            "tenant": {"id": "fake_id", "resources": ["fake_resource"]}}
+        metadata = {"fake_field": "boo"}
+        expected = [
+            {"field": "user_id", "value": "fake_id", "op": "eq"},
+            {"field": "project_id", "value": "fake_id", "op": "eq"},
+            {"field": "resource_id", "value": "fake_resource", "op": "eq"},
+            {"field": "metadata.fake_field", "value": "boo", "op": "eq"},
+        ]
+
+        actual = self.scenario._make_general_query(True, True, True, metadata)
+        self.assertEqual(expected, actual)
+
+    def test__make_query_item(self):
+        expected = {"field": "foo", "op": "eq", "value": "bar"}
+        self.assertEqual(expected,
+                         self.scenario._make_query_item("foo", value="bar"))
+
+    def test__make_profiler_key(self):
+        query = [
+            {"field": "test_field1", "op": "eq", "value": "bar"},
+            {"field": "test_field2", "op": "==", "value": None}
+        ]
+        limit = 100
+        method = "fake_method"
+        actual = self.scenario._make_profiler_key(method, query, limit)
+        self.assertEqual("fake_method:limit&test_field1&test_field2", actual)
+
+        actual = self.scenario._make_profiler_key(method, query, None)
+        self.assertEqual("fake_method:test_field1&test_field2", actual)
+
+        self.assertEqual(method,
+                         self.scenario._make_profiler_key(method, None, None))

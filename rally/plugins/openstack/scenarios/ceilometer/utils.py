@@ -11,10 +11,12 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+
 import datetime
 
 import six
 
+from rally import exceptions
 from rally.plugins.openstack import scenario
 from rally.task import atomic
 from rally.task import utils as bench_utils
@@ -76,6 +78,85 @@ class CeilometerScenario(scenario.OpenStackScenario):
             samples.append(sample_item)
 
         return samples
+
+    def _make_query_item(self, field, op="eq", value=None):
+        """Create a SimpleQuery item for requests.
+
+        :param field: filtered field
+        :param op: operator for filtering
+        :param value: matched value
+
+        :returns dict with field, op and value keys for query
+        """
+        return {"field": field, "op": op, "value": value}
+
+    def _make_general_query(self, filter_by_project_id=None,
+                            filter_by_user_id=None,
+                            filter_by_resource_id=None,
+                            metadata_query=None):
+        """Create a SimpleQuery for the list benchmarks.
+
+        :param filter_by_project_id: add a project id to query
+        :param filter_by_user_id: add a user id to query
+        :param filter_by_resource_id: add a resource id to query
+        :param metadata_query: metadata dict that will add to query
+
+        :returns SimpleQuery with specified items
+
+        """
+        query = []
+        metadata_query = metadata_query or {}
+
+        if filter_by_user_id:
+            user_id = self.context["user"]["id"]
+            query.append(self._make_query_item("user_id", "eq", user_id))
+
+        if filter_by_project_id or filter_by_resource_id:
+            project_id = self.context["tenant"]["id"]
+            if filter_by_project_id:
+                query.append(self._make_query_item("project_id", "eq",
+                                                   project_id))
+            if filter_by_resource_id:
+                resource_id = self.context["tenant"]["resources"][0]
+                query.append(self._make_query_item("resource_id", "eq",
+                                                   resource_id))
+
+        for key, value in metadata_query.items():
+            query.append(self._make_query_item("metadata.%s" % key,
+                                               value=value))
+        return query
+
+    def _make_timestamp_query(self, start_time=None, end_time=None):
+        """Create ceilometer query for timestamp range.
+
+        :param start_time: start datetime in isoformat
+        :param end_time: end datetime in isoformat
+        :returns query with timestamp range
+        """
+        query = []
+        if end_time and start_time and end_time < start_time:
+            msg = "End time should be great or equal than start time"
+            raise exceptions.InvalidArgumentsException(msg)
+        if start_time:
+            query.append(self._make_query_item("timestamp", ">=", start_time))
+        if end_time:
+            query.append(self._make_query_item("timestamp", "<=", end_time))
+        return query
+
+    def _make_profiler_key(self, method, query=None, limit=None):
+        """Create key for profiling method with query.
+
+        :param method: Original profiler tag for method
+        :param query: ceilometer query which fields will be added to key
+        :param limit: if it exists `limit` will be added to key
+        :returns profiler key that includes method and queried fields
+        """
+        query = query or []
+        limit_line = limit and "limit" or ""
+        fields_line = "&".join("%s" % a["field"] for a in query)
+        key_identifiers = "&".join(x for x in (limit_line, fields_line) if x)
+        key = ":".join(x for x in (method, key_identifiers) if x)
+        return key
 
     def _get_alarm_dict(self, **kwargs):
         """Prepare and return an alarm dict for creating an alarm.
@@ -222,19 +303,6 @@ class CeilometerScenario(scenario.OpenStackScenario):
         return self.admin_clients("ceilometer").trait_descriptions.list(
             event_type)
 
-    @atomic.action_timer("ceilometer.list_meters")
-    def _list_meters(self):
-        """Get list of user's meters."""
-        return self.clients("ceilometer").meters.list()
-
-    @atomic.action_timer("ceilometer.list_resources")
-    def _list_resources(self):
-        """List all resources.
-
-        :returns: list of all resources
-        """
-        return self.clients("ceilometer").resources.list()
-
     @atomic.action_timer("ceilometer.list_samples")
     def _list_samples(self):
         """List all Samples.
@@ -342,3 +410,31 @@ class CeilometerScenario(scenario.OpenStackScenario):
         """
         return self.clients("ceilometer").query_samples.query(
             filter, orderby, limit)
+
+    def _list_resources(self, query=None, limit=None):
+        """List all resources.
+
+        :param query: query list for Ceilometer api
+        :param limit: count of returned resources
+        :returns: list of all resources
+        """
+
+        key = self._make_profiler_key("ceilometer.list_resources", query,
+                                      limit)
+        with atomic.ActionTimer(self, key):
+            return self.clients("ceilometer").resources.list(q=query,
+                                                             limit=limit)
+
+    def _list_meters(self, query=None, limit=None):
+        """Get list of user's meters.
+
+        :param query: query list for Ceilometer api
+        :param limit: count of returned meters
+        :returns: list of all meters
+        """
+
+        key = self._make_profiler_key("ceilometer.list_meters", query,
+                                      limit)
+        with atomic.ActionTimer(self, key):
+            return self.clients("ceilometer").meters.list(q=query,
+                                                          limit=limit)
