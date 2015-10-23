@@ -406,13 +406,26 @@ class RandomNameGeneratorMixin(object):
         # subset of the task ID
         task_id_part = task_id.replace("-", "")[0:len(parts["task"])]
 
-        # NOTE(stpierre): determine if the portion of the task ID that
-        # we would use contains only characters in
-        # resource_name_allowed_characters.
-        if any(char not in self.RESOURCE_NAME_ALLOWED_CHARACTERS
-               for char in task_id_part):
-            LOG.debug("Task ID %s cannot be included in a random name because "
-                      "it includes disallowed characters" % task_id)
+        regen_task_id_part = False
+        if len(task_id_part) < len(parts["task"]):
+            LOG.debug("Task ID %(task_id)s cannot be included in a random "
+                      "name because it is too short. Format: %(format)s" %
+                      {"task_id": task_id,
+                       "format": self.RESOURCE_NAME_FORMAT})
+            regen_task_id_part = True
+        elif any(char not in self.RESOURCE_NAME_ALLOWED_CHARACTERS
+                 for char in task_id_part):
+            LOG.debug("Task ID %(task_id)s cannot be included in a random "
+                      "name because it includes disallowed characters. "
+                      "Allowed characters: %(chars)s" %
+                      {"task_id": task_id,
+                       "chars": self.RESOURCE_NAME_ALLOWED_CHARACTERS})
+            regen_task_id_part = True
+        if regen_task_id_part:
+            # NOTE(stpierre): either the task UUID is shorter than the
+            # task portion; or the portion of the task ID that we
+            # would use contains only characters in
+            # resource_name_allowed_characters.
             try:
                 # NOTE(stpierre): seed pRNG with task ID so that all random
                 # names with the same task ID have the same task ID part

@@ -361,6 +361,7 @@ class RandomNameTestCase(test.TestCase):
     @ddt.data(
         {},
         {"task_id": "fake-task"},
+        {"task_id": "2short", "expected": "s_rally_blargles_dweebled"},
         {"task_id": "fake!task",
          "expected": "s_rally_blargles_dweebled"},
         {"fmt": "XXXX-test-XXX-test",
