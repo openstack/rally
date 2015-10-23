@@ -355,13 +355,14 @@ class GenerateRandomTestCase(test.TestCase):
             "foo_" + choice[:10])
 
 
+@ddt.ddt
 class RandomNameTestCase(test.TestCase):
 
     @ddt.data(
         {},
         {"task_id": "fake-task"},
         {"task_id": "fake!task",
-         "expected": "rally_blargles_dweebled"},
+         "expected": "s_rally_blargles_dweebled"},
         {"fmt": "XXXX-test-XXX-test",
          "expected": "fake-test-bla-test"})
     @ddt.unpack
@@ -404,7 +405,7 @@ class RandomNameTestCase(test.TestCase):
                  "abcd_test_abc_test", "abc-test-abcd-test")})
     @ddt.unpack
     def test_name_matches_pattern(self, good=(), bad=(),
-                                  fmt="s_rally_XXXXXXXX_XXXXXXXX",
+                                  fmt="rally_XXXXXXXX_XXXXXXXX",
                                   chars=string.ascii_letters + string.digits):
         for name in good:
             self.assertTrue(
