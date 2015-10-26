@@ -58,6 +58,10 @@ CONF.register_opts(SAHARA_BENCHMARK_OPTS, group=benchmark_group)
 class SaharaScenario(scenario.OpenStackScenario):
     """Base class for Sahara scenarios with basic atomic actions."""
 
+    # NOTE(sskripnick): Some sahara resource names are validated as hostnames.
+    # Since underscores are not allowed in hostnames we should not use them.
+    RESOURCE_NAME_FORMAT = "rally-sahara-XXXXXX-XXXXXXXXXXXXXXXX"
+
     @atomic.action_timer("sahara.list_node_group_templates")
     def _list_node_group_templates(self):
         """Return user Node Group Templates list."""

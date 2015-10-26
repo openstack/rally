@@ -1,0 +1,41 @@
+{%- set sahara_service_type = sahara_service_type|default("data-processing") %}
+
+  SaharaNodeGroupTemplates.create_and_list_node_group_templates:
+    -
+      args:
+        flavor:
+         name: "m1.small"
+      runner:
+        type: "constant"
+        times: 1
+        concurrency: 1
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+        api_versions:
+          sahara:
+            service_type: {{sahara_service_type}}
+      sla:
+        failure_rate:
+          max: 0
+
+  SaharaNodeGroupTemplates.create_delete_node_group_templates:
+    -
+      args:
+        flavor:
+         name: "m1.small"
+      runner:
+        type: "constant"
+        times: 1
+        concurrency: 1
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+        api_versions:
+          sahara:
+            service_type: {{sahara_service_type}}
+      sla:
+        failure_rate:
+          max: 0
