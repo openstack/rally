@@ -93,8 +93,13 @@ class OSClient(plugin.Plugin):
         # zaqarclient), this method should be overridden.
         return str(version or self._meta_get("default_version"))
 
-    def get_service_type(self):
-        return self._meta_get("default_service_type")
+    def choose_service_type(self, service_type=None):
+        """Return service_type string.
+
+        Choose service type between transmitted(preferable value if exists) and
+        default.
+        """
+        return service_type or self._meta_get("default_service_type")
 
     def keystone(self, *args, **kwargs):
         """Make a call to keystone client."""
@@ -114,10 +119,10 @@ class OSClient(plugin.Plugin):
 
         return ks_session.Session(auth=auth, verify=self.endpoint.insecure)
 
-    def _get_endpoint(self):
+    def _get_endpoint(self, service_type=None):
         kc = self.keystone()
         api_url = kc.service_catalog.url_for(
-            service_type=self.get_service_type(),
+            service_type=self.choose_service_type(service_type),
             endpoint_type=self.endpoint.endpoint_type,
             region_name=self.endpoint.region_name)
         return api_url
@@ -187,12 +192,12 @@ class Keystone(OSClient):
 
 @configure("nova", default_version="2", default_service_type="compute")
 class Nova(OSClient):
-    def create_client(self, version=None):
+    def create_client(self, version=None, service_type=None):
         """Return nova client."""
         from novaclient import client as nova
         kc = self.keystone()
         compute_api_url = kc.service_catalog.url_for(
-            service_type=self.get_service_type(),
+            service_type=self.choose_service_type(service_type),
             endpoint_type=self.endpoint.endpoint_type,
             region_name=self.endpoint.region_name)
         client = nova.Client(self.choose_version(version),
@@ -208,12 +213,12 @@ class Nova(OSClient):
 
 @configure("neutron", default_version="2.0", default_service_type="network")
 class Neutron(OSClient):
-    def create_client(self, version=None):
+    def create_client(self, version=None, service_type=None):
         """Return neutron client."""
         from neutronclient.neutron import client as neutron
         kc = self.keystone()
         network_api_url = kc.service_catalog.url_for(
-            service_type=self.get_service_type(),
+            service_type=self.choose_service_type(service_type),
             endpoint_type=self.endpoint.endpoint_type,
             region_name=self.endpoint.region_name)
         client = neutron.Client(self.choose_version(version),
@@ -230,12 +235,12 @@ class Neutron(OSClient):
 
 @configure("glance", default_version="1", default_service_type="image")
 class Glance(OSClient):
-    def create_client(self, version=None):
+    def create_client(self, version=None, service_type=None):
         """Return glance client."""
         import glanceclient as glance
         kc = self.keystone()
         image_api_url = kc.service_catalog.url_for(
-            service_type=self.get_service_type(),
+            service_type=self.choose_service_type(service_type),
             endpoint_type=self.endpoint.endpoint_type,
             region_name=self.endpoint.region_name)
         client = glance.Client(self.choose_version(version),
@@ -249,12 +254,12 @@ class Glance(OSClient):
 
 @configure("heat", default_version="1", default_service_type="orchestration")
 class Heat(OSClient):
-    def create_client(self, version=None):
+    def create_client(self, version=None, service_type=None):
         """Return heat client."""
         from heatclient import client as heat
         kc = self.keystone()
         orchestration_api_url = kc.service_catalog.url_for(
-            service_type=self.get_service_type(),
+            service_type=self.choose_service_type(service_type),
             endpoint_type=self.endpoint.endpoint_type,
             region_name=self.endpoint.region_name)
         client = heat.Client(self.choose_version(version),
@@ -269,7 +274,7 @@ class Heat(OSClient):
 
 @configure("cinder", default_version="1", default_service_type="volume")
 class Cinder(OSClient):
-    def create_client(self, version=None):
+    def create_client(self, version=None, service_type=None):
         """Return cinder client."""
         from cinderclient import client as cinder
         client = cinder.Client(self.choose_version(version),
@@ -280,7 +285,7 @@ class Cinder(OSClient):
                                **self._get_auth_info(password_key="api_key"))
         kc = self.keystone()
         volume_api_url = kc.service_catalog.url_for(
-            service_type=self.get_service_type(),
+            service_type=self.choose_service_type(service_type),
             endpoint_type=self.endpoint.endpoint_type,
             region_name=self.endpoint.region_name)
         client.client.management_url = volume_api_url
@@ -290,7 +295,7 @@ class Cinder(OSClient):
 
 @configure("manila", default_version="1", default_service_type="share")
 class Manila(OSClient):
-    def create_client(self, version=None):
+    def create_client(self, version=None, service_type=None):
         """Return manila client."""
         from manilaclient import client as manila
         manila_client = manila.Client(
@@ -304,7 +309,7 @@ class Manila(OSClient):
                                   project_name_key="project_name"))
         kc = self.keystone()
         manila_client.client.management_url = kc.service_catalog.url_for(
-            service_type=self.get_service_type(),
+            service_type=self.choose_service_type(service_type),
             endpoint_type=self.endpoint.endpoint_type,
             region_name=self.endpoint.region_name)
         manila_client.client.auth_token = kc.auth_token
@@ -313,12 +318,12 @@ class Manila(OSClient):
 
 @configure("ceilometer", default_version="2", default_service_type="metering")
 class Ceilometer(OSClient):
-    def create_client(self, version=None):
+    def create_client(self, version=None, service_type=None):
         """Return ceilometer client."""
         from ceilometerclient import client as ceilometer
         kc = self.keystone()
         metering_api_url = kc.service_catalog.url_for(
-            service_type=self.get_service_type(),
+            service_type=self.choose_service_type(service_type),
             endpoint_type=self.endpoint.endpoint_type,
             region_name=self.endpoint.region_name)
         auth_token = kc.auth_token
@@ -340,12 +345,12 @@ class Ceilometer(OSClient):
 @configure("ironic", default_version="1", default_service_type="baremetal")
 class Ironic(OSClient):
 
-    def create_client(self, version=None):
+    def create_client(self, version=None, service_type=None):
         """Return Ironic client."""
         from ironicclient import client as ironic
         kc = self.keystone()
         baremetal_api_url = kc.service_catalog.url_for(
-            service_type=self.get_service_type(),
+            service_type=self.choose_service_type(service_type),
             endpoint_type=self.endpoint.endpoint_type,
             region_name=self.endpoint.region_name)
         client = ironic.get_client(self.choose_version(version),
@@ -376,12 +381,12 @@ class Zaqar(OSClient):
         # zaqarclient accepts only int or float obj as version
         return float(super(Zaqar, self).choose_version(version))
 
-    def create_client(self, version=None):
+    def create_client(self, version=None, service_type=None):
         """Return Zaqar client."""
         from zaqarclient.queues import client as zaqar
         kc = self.keystone()
         messaging_api_url = kc.service_catalog.url_for(
-            service_type=self.get_service_type(),
+            service_type=self.choose_service_type(service_type),
             endpoint_type=self.endpoint.endpoint_type,
             region_name=self.endpoint.region_name)
         conf = {"auth_opts": {"backend": "keystone", "options": {
@@ -401,12 +406,12 @@ class Zaqar(OSClient):
 @configure("murano", default_version="1",
            default_service_type="application_catalog")
 class Murano(OSClient):
-    def create_client(self, version=None):
+    def create_client(self, version=None, service_type=None):
         """Return Murano client."""
         from muranoclient import client as murano
         kc = self.keystone()
         murano_url = kc.service_catalog.url_for(
-            service_type=self.get_service_type(),
+            service_type=self.choose_service_type(service_type),
             endpoint_type=self.endpoint.endpoint_type,
             region_name=self.endpoint.region_name
         )
@@ -420,13 +425,13 @@ class Murano(OSClient):
 
 @configure("designate", default_version="1", default_service_type="dns")
 class Designate(OSClient):
-    def create_client(self, version=None):
+    def create_client(self, version=None, service_type=None):
         """Return designate client."""
         from designateclient import client
 
         version = self.choose_version(version)
 
-        api_url = self._get_endpoint()
+        api_url = self._get_endpoint(service_type)
         api_url += "/v%s" % version
 
         session = self._get_session(endpoint=api_url)
@@ -450,30 +455,31 @@ class Trove(OSClient):
 
 @configure("mistral", default_service_type="workflowv2")
 class Mistral(OSClient):
-    def create_client(self):
+    def create_client(self, service_type=None):
         """Return Mistral client."""
         from mistralclient.api import client
         kc = self.keystone()
 
         mistral_url = kc.service_catalog.url_for(
-            service_type=self.get_service_type(),
+            service_type=self.choose_service_type(service_type),
             endpoint_type=self.endpoint.endpoint_type,
             region_name=self.endpoint.region_name)
 
-        client = client.client(mistral_url=mistral_url,
-                               service_type=self.get_service_type(),
-                               auth_token=kc.auth_token)
+        client = client.client(
+            mistral_url=mistral_url,
+            service_type=self.choose_service_type(service_type),
+            auth_token=kc.auth_token)
         return client
 
 
 @configure("swift", default_service_type="object-store")
 class Swift(OSClient):
-    def create_client(self):
+    def create_client(self, service_type=None):
         """Return swift client."""
         from swiftclient import client as swift
         kc = self.keystone()
         object_api_url = kc.service_catalog.url_for(
-            service_type=self.get_service_type(),
+            service_type=self.choose_service_type(service_type),
             endpoint_type=self.endpoint.endpoint_type,
             region_name=self.endpoint.region_name)
         client = swift.Connection(retries=1,
@@ -517,12 +523,12 @@ class EC2(OSClient):
 @configure("monasca", default_version="2_0",
            default_service_type="monitoring")
 class Monasca(OSClient):
-    def create_client(self, version=None):
+    def create_client(self, version=None, service_type=None):
         """Return monasca client."""
         from monascaclient import client as monasca
         kc = self.keystone()
         monitoring_api_url = kc.service_catalog.url_for(
-            service_type=self.get_service_type(),
+            service_type=self.choose_service_type(service_type),
             endpoint_type=self.endpoint.endpoint_type,
             region_name=self.endpoint.region_name)
         auth_token = kc.auth_token
