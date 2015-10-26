@@ -396,3 +396,55 @@ class RandomNameTestCase(test.TestCase):
         names = [generator.generate_random_name() for i in range(100)]
         task_id_parts = set([n.split("_")[0] for n in names])
         self.assertEqual(len(task_id_parts), 1)
+
+
+@ddt.ddt
+class MergeTestCase(test.TestCase):
+    @ddt.data(
+        # regular data
+        {"sources": [[[1, 3, 5], [5, 7, 9, 14], [17, 21, 36, 41]],
+                     [[2, 2, 4], [9, 10], [16, 19, 23, 26, 91]],
+                     [[5], [5, 7, 11, 14, 14, 19, 23]]],
+         "expected_output": [[1, 2, 2, 3, 4, 5, 5, 5, 5, 7, 7, 9, 9, 10],
+                             [11, 14, 14, 14, 16, 17, 19, 19, 21, 23, 23],
+                             [26, 36, 41, 91]]},
+        # with one empty source
+        {"sources": [[[1, 3, 5], [5, 7, 9, 14], [17, 21, 36, 41]],
+                     [[2, 2, 4], [9, 10], [16, 19, 23, 26, 91]],
+                     [[5], [5, 7, 11, 14, 14, 19, 23]],
+                     []],
+         "expected_output": [[1, 2, 2, 3, 4, 5, 5, 5, 5, 7, 7, 9, 9, 10],
+                             [11, 14, 14, 14, 16, 17, 19, 19, 21, 23, 23],
+                             [26, 36, 41, 91]]},
+        # with one source that produces an empty list
+        {"sources": [[[1, 3, 5], [5, 7, 9, 14], [17, 21, 36, 41]],
+                     [[2, 2, 4], [9, 10], [16, 19, 23, 26, 91]],
+                     [[5], [5, 7, 11, 14, 14, 19, 23]],
+                     [[]]],
+         "expected_output": [[1, 2, 2, 3, 4, 5, 5, 5, 5, 7, 7, 9, 9, 10],
+                             [11, 14, 14, 14, 16, 17, 19, 19, 21, 23, 23],
+                             [26, 36, 41, 91]]},
+        # with empty lists appered in sources
+        {"sources": [[[1, 3, 5], [], [], [5, 7, 9, 14], [17, 21, 36, 41]],
+                     [[], [2, 2, 4], [9, 10], [16, 19, 23, 26, 91]],
+                     [[5], [5, 7, 11, 14, 14, 19, 23], []]],
+         "expected_output": [[1, 2, 2, 3, 4, 5, 5, 5, 5, 7, 7, 9, 9, 10],
+                             [11, 14, 14, 14, 16, 17, 19, 19, 21, 23, 23],
+                             [26, 36, 41, 91]]},
+        # only one source
+        {"sources": [[[1, 3, 5], [5, 7, 9, 14], [17, 21, 36, 41]]],
+         "expected_output": [[1, 3, 5, 5, 7, 9, 14, 17, 21, 36, 41]]},
+        # no sources passed in
+        {"sources": [],
+         "expected_output": []},
+        # several sources, all empty
+        {"sources": [[], [], [], []],
+         "expected_output": []}
+
+    )
+    @ddt.unpack
+    def test_merge(self, sources, expected_output):
+        in_iters = [iter(src) for src in sources]
+
+        out = list(utils.merge(10, *in_iters))
+        self.assertEqual(out, expected_output)
