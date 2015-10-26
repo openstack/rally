@@ -487,6 +487,28 @@ class Verification(object):
         verifier.install()
 
     @classmethod
+    def install_tempest_plugin(cls, deployment, source=None, version=None,
+                               system_wide=False):
+        """Install Tempest plugin.
+
+        :param deployment: UUID or name of a deployment
+        :param source: Path/URL to repo to clone Tempest plugin from
+        :param version: Branch, commit ID or tag to checkout before Tempest
+                        plugin installation
+        :param system_wide: Whether or not to install plugin in Tempest
+                            virtual env
+        """
+        deployment_uuid = objects.Deployment.get(deployment)["uuid"]
+        verifier = tempest.Tempest(deployment_uuid,
+                                   plugin_source=source,
+                                   plugin_version=version,
+                                   system_wide=system_wide)
+
+        cls._check_tempest_tree_existence(verifier)
+
+        verifier.install_plugin()
+
+    @classmethod
     def discover_tests(cls, deployment, pattern=""):
         """Get a list of discovered tests.
 

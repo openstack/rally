@@ -498,6 +498,26 @@ class VerificationAPITestCase(BaseDeploymentTestCase):
     @mock.patch("os.path.exists", return_value=True)
     @mock.patch("rally.common.objects.Deployment.get")
     @mock.patch("rally.verification.tempest.tempest.Tempest")
+    def test_install_tempest_plugin_from_url(
+            self, mock_tempest, mock_deployment_get, mock_exists):
+        mock_tempest.return_value = self.tempest
+        api.Verification.install_tempest_plugin(self.deployment_uuid,
+                                                "https://fake/plugin")
+        self.tempest.install_plugin.assert_called_once_with()
+
+    @mock.patch("os.path.exists", return_value=True)
+    @mock.patch("rally.common.objects.Deployment.get")
+    @mock.patch("rally.verification.tempest.tempest.Tempest")
+    def test_install_tempest_plugin_from_path(
+            self, mock_tempest, mock_deployment_get, mock_exists):
+        mock_tempest.return_value = self.tempest
+        api.Verification.install_tempest_plugin(self.deployment_uuid,
+                                                "/tmp/fake/plugin")
+        self.tempest.install_plugin.assert_called_once_with()
+
+    @mock.patch("os.path.exists", return_value=True)
+    @mock.patch("rally.common.objects.Deployment.get")
+    @mock.patch("rally.verification.tempest.tempest.Tempest")
     def test_discover_tests(
             self, mock_tempest, mock_deployment_get, mock_exists):
         mock_tempest.return_value = self.tempest

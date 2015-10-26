@@ -467,6 +467,34 @@ class VerifyCommands(object):
         api.Verification.reinstall_tempest(deployment, source,
                                            version, system_wide)
 
+    @cliutils.args("--deployment", type=str, dest="deployment",
+                   required=False, help="UUID or name of a deployment")
+    @cliutils.args("--source", type=str, dest="source", required=True,
+                   help="Path/URL to repo to clone Tempest plugin from")
+    @envutils.with_default_deployment(cli_arg_name="deployment")
+    @cliutils.args("--version", type=str, dest="version", required=False,
+                   help="Branch, commit ID or tag to checkout before Tempest "
+                        "plugin installation")
+    @cliutils.args("--system-wide", dest="system_wide",
+                   help="Don't install plugin in Tempest virtual env. "
+                        "Note that all Tempest plugin requirements have "
+                        "to be already installed in the local env!",
+                   required=False, action="store_true")
+    @envutils.with_default_deployment(cli_arg_name="deployment")
+    def installplugin(self, deployment=None, source=None, version=None,
+                      system_wide=False):
+        """Install Tempest plugin.
+
+        :param deployment: UUID or name of a deployment
+        :param source: Path/URL to repo to clone Tempest plugin from
+        :param version: Branch, commit ID or tag to checkout before Tempest
+                        plugin installation
+        :param system_wide: Whether or not to install plugin in Tempest
+                            virtual env
+        """
+        api.Verification.install_tempest_plugin(deployment, source,
+                                                version, system_wide)
+
     @cliutils.args("--deployment", dest="deployment", type=str, required=False,
                    metavar="<uuid>", help="UUID or name of a deployment")
     @cliutils.args("--pattern", dest="pattern", type=str,

@@ -61,6 +61,10 @@
     <a href="{{ reinstall.stdout_file }}">Tempest re-installation</a>
     <code>$ {{ reinstall.cmd }}</code>
 
+    <span class="{{ installplugin.status }}">[{{ installplugin.status }}]</span>
+    <a href="{{ installplugin.stdout_file }}">Tempest plugin installation</a>
+    <code>$ {{ installplugin.cmd }}</code>
+
     <span class="{{ genconfig.status }}">[{{ genconfig.status }}]</span>
     <a href="{{ genconfig.stdout_file }}">Tempest config generation</a>
     <code>$ {{ genconfig.cmd }}</code>

@@ -46,6 +46,8 @@ EXPECTED_FAILURES = {
     "This test fails because 'novnc' console type is unavailable."
 }
 
+TEMPEST_PLUGIN = "https://github.com/MBonell/hello-world-tempest-plugin"
+
 # NOTE(andreykurilin): this variable is used to generate output file names
 # with prefix ${CALL_COUNT}_ .
 _call_count = 0
@@ -62,10 +64,10 @@ def call_rally(cmd, print_output=False, output_type=None):
     data = {"cmd": "rally --rally-debug %s" % cmd}
     stdout_file = "{base}/{prefix}_{cmd}.txt.gz"
 
-    if "--xfails-file" in cmd:
+    if "--xfails-file" in cmd or "--source" in cmd:
         cmd_items = cmd.split()
         for num, item in enumerate(cmd_items):
-            if EXPECTED_FAILURES_FILE in item:
+            if EXPECTED_FAILURES_FILE in item or TEMPEST_PLUGIN in item:
                 cmd_items[num] = os.path.basename(item)
                 break
         cmd = " ".join(cmd_items)
@@ -233,14 +235,8 @@ def main():
 
     render_vars = {"verifications": []}
 
-    # Install Tempest
+    # Install the latest Tempest version
     render_vars["install"] = call_rally("verify install")
-
-    # Discover tests depending on Tempest suite
-    discover_cmd = "verify discover"
-    if args.mode == "light":
-        discover_cmd += " --pattern smoke"
-    render_vars["discover"] = call_rally(discover_cmd)
 
     # Get Rally deployment ID
     rally_deployment_id = subprocess.check_output(
@@ -251,10 +247,21 @@ def main():
         "cd /home/jenkins/.rally/tempest/for-deployment-%s "
         "git log --skip 1 -n 1 | awk '/commit/ {print $2}' | head -1"
         % rally_deployment_id, shell=True, stderr=subprocess.STDOUT).strip()
-    # Reinstall Tempest with providing the --version arg to the command
+    # Install the penultimate Tempest version
     render_vars["reinstall"] = call_rally(
         "verify reinstall --version %s" % tempest_commit_id)
 
+    # Install a simple Tempest plugin
+    render_vars["installplugin"] = call_rally(
+        "verify installplugin --source %s" % TEMPEST_PLUGIN)
+
+    # Discover tests depending on Tempest suite
+    discover_cmd = "verify discover"
+    if args.mode == "light":
+        discover_cmd += " --pattern smoke"
+    render_vars["discover"] = call_rally(discover_cmd)
+
+    # Generate and show Tempest config file
     render_vars["genconfig"] = call_rally("verify genconfig")
     render_vars["showconfig"] = call_rally("verify showconfig")
 
