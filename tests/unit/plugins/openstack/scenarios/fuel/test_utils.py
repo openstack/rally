@@ -27,8 +27,9 @@ class ModuleTestCase(test.TestCase):
     @mock.patch(UTILS + "FuelClient", return_value="fuel_client")
     def test_fuel(self, mock_fuel_client, mock_six):
         mock_six.moves.urllib.parse.urlparse().hostname = "foo_host"
-        client = utils.Fuel(mock.Mock(username="foo_user",
-                                      password="foo_pass"), {}).create_client()
+        client = utils.Fuel(
+            mock.Mock(username="foo_user", password="foo_pass"),
+            {}, {}).create_client()
         mock_fuel_client.assert_called_once_with(
             version="v1", server_address="foo_host", server_port=8000,
             username="foo_user", password="foo_pass")

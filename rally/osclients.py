@@ -44,7 +44,8 @@ CONF.register_opts(OSCLIENTS_OPTS)
 _NAMESPACE = "openstack"
 
 
-def configure(name, default_version=None, default_service_type=None):
+def configure(name, default_version=None, default_service_type=None,
+              supported_versions=None):
     """OpenStack client class wrapper.
 
     Each client class has to be wrapped by configure() wrapper. It
@@ -52,27 +53,36 @@ def configure(name, default_version=None, default_service_type=None):
 
     :param name: Name of the client
     :param default_version: Default version for client
-    :param default_service_type: Default service type of endpoint
+    :param default_service_type: Default service type of endpoint(If this
+        variable is not specified, validation will assume that your client
+        doesn't allow to specify service type.
+    :param supported_versions: List of supported versions(If this variable is
+        not specified, `OSClients.validate_version` method will raise an
+        exception that client doesn't support setting any versions. If this
+        logic is wrong for your client, you should override `validate_version`
+        in client object)
     """
     def wrapper(cls):
         cls = plugin.configure(name=name, namespace=_NAMESPACE)(cls)
         cls._meta_set("default_version", default_version)
         cls._meta_set("default_service_type", default_service_type)
+        cls._meta_set("supported_versions", supported_versions or [])
         return cls
 
     return wrapper
 
 
 class OSClient(plugin.Plugin):
-    def __init__(self, endpoint, cache_obj):
+    def __init__(self, endpoint, api_info, cache_obj):
         self.endpoint = endpoint
+        self.api_info = api_info
         self.cache = cache_obj
 
     def choose_version(self, version=None):
         """Return version string.
 
-        Choose version between transmitted(preferable value if present) and
-        default.
+        Choose version between transmitted(preferable value if present),
+        version from api_info(configured from a context) and default.
         """
         # NOTE(andreykurilin): The result of choose is converted to string,
         # since most of clients contain map for versioned modules, where a key
@@ -91,20 +101,53 @@ class OSClient(plugin.Plugin):
         # version is a string object.
         # For those clients which doesn't accept string value(for example
         # zaqarclient), this method should be overridden.
-        return str(version or self._meta_get("default_version"))
+        return str(version
+                   or self.api_info.get(self.get_name(), {}).get("version")
+                   or self._meta_get("default_version"))
+
+    @classmethod
+    def get_supported_versions(cls):
+        return cls._meta_get("supported_versions")
+
+    @classmethod
+    def validate_version(cls, version):
+        supported_versions = cls.get_supported_versions()
+        if supported_versions:
+            if str(version) not in supported_versions:
+                raise exceptions.ValidationError(_(
+                    "'%(vers)s' is not supported. Should be one of "
+                    "'%(supported)s'") % {"vers": version,
+                                          "supported": supported_versions})
+        else:
+            raise exceptions.RallyException(
+                _("Setting version is not supported."))
+        try:
+            float(version)
+        except ValueError:
+            raise exceptions.ValidationError(_(
+                "'%s' is invalid. Should be numeric value.") % version)
 
     def choose_service_type(self, service_type=None):
         """Return service_type string.
 
-        Choose service type between transmitted(preferable value if exists) and
-        default.
+        Choose service type between transmitted(preferable value if present),
+        service type from api_info(configured from a context) and default.
         """
-        return service_type or self._meta_get("default_service_type")
+        return (service_type
+                or self.api_info.get(self.get_name(), {}).get("service_type")
+                or self._meta_get("default_service_type"))
+
+    @classmethod
+    def is_service_type_configurable(cls):
+        """Just checks that client supports setting service type."""
+        if cls._meta_get("default_service_type") is None:
+            raise exceptions.RallyException(_(
+                "Setting service type is not supported."))
 
     def keystone(self, *args, **kwargs):
         """Make a call to keystone client."""
-        keystone = OSClient.get("keystone", namespace=_NAMESPACE)(
-            self.endpoint, self.cache)
+        keystone = OSClient.get("keystone")(self.endpoint, self.api_info,
+                                            self.cache)
         return keystone(*args, **kwargs)
 
     def _get_session(self, auth=None, endpoint=None):
@@ -154,6 +197,10 @@ class OSClient(plugin.Plugin):
             self.cache[key] = self.create_client(*args, **kwargs)
         return self.cache[key]
 
+    @classmethod
+    def get(cls, name, namespace=_NAMESPACE):
+        return super(OSClient, cls).get(name, namespace)
+
 
 @configure("keystone")
 class Keystone(OSClient):
@@ -192,6 +239,17 @@ class Keystone(OSClient):
 
 @configure("nova", default_version="2", default_service_type="compute")
 class Nova(OSClient):
+    @classmethod
+    def validate_version(cls, version):
+        from novaclient import api_versions
+        from novaclient import exceptions as nova_exc
+
+        try:
+            api_versions.get_api_version(version)
+        except nova_exc.UnsupportedVersion:
+            raise exceptions.RallyException(
+                "Version string '%s' is unsupported." % version)
+
     def create_client(self, version=None, service_type=None):
         """Return nova client."""
         from novaclient import client as nova
@@ -211,7 +269,8 @@ class Nova(OSClient):
         return client
 
 
-@configure("neutron", default_version="2.0", default_service_type="network")
+@configure("neutron", default_version="2.0", default_service_type="network",
+           supported_versions=["2.0"])
 class Neutron(OSClient):
     def create_client(self, version=None, service_type=None):
         """Return neutron client."""
@@ -233,7 +292,8 @@ class Neutron(OSClient):
         return client
 
 
-@configure("glance", default_version="1", default_service_type="image")
+@configure("glance", default_version="1", default_service_type="image",
+           supported_versions=["1", "2"])
 class Glance(OSClient):
     def create_client(self, version=None, service_type=None):
         """Return glance client."""
@@ -252,7 +312,8 @@ class Glance(OSClient):
         return client
 
 
-@configure("heat", default_version="1", default_service_type="orchestration")
+@configure("heat", default_version="1", default_service_type="orchestration",
+           supported_versions=["1"])
 class Heat(OSClient):
     def create_client(self, version=None, service_type=None):
         """Return heat client."""
@@ -272,7 +333,8 @@ class Heat(OSClient):
         return client
 
 
-@configure("cinder", default_version="1", default_service_type="volume")
+@configure("cinder", default_version="1", default_service_type="volume",
+           supported_versions=["1", "2"])
 class Cinder(OSClient):
     def create_client(self, version=None, service_type=None):
         """Return cinder client."""
@@ -293,7 +355,8 @@ class Cinder(OSClient):
         return client
 
 
-@configure("manila", default_version="1", default_service_type="share")
+@configure("manila", default_version="1", default_service_type="share",
+           supported_versions=["1", "2"])
 class Manila(OSClient):
     def create_client(self, version=None, service_type=None):
         """Return manila client."""
@@ -316,7 +379,8 @@ class Manila(OSClient):
         return manila_client
 
 
-@configure("ceilometer", default_version="2", default_service_type="metering")
+@configure("ceilometer", default_version="2", default_service_type="metering",
+           supported_versions=["1", "2"])
 class Ceilometer(OSClient):
     def create_client(self, version=None, service_type=None):
         """Return ceilometer client."""
@@ -342,7 +406,8 @@ class Ceilometer(OSClient):
         return client
 
 
-@configure("ironic", default_version="1", default_service_type="baremetal")
+@configure("ironic", default_version="1", default_service_type="baremetal",
+           supported_versions=["1"])
 class Ironic(OSClient):
 
     def create_client(self, version=None, service_type=None):
@@ -362,8 +427,19 @@ class Ironic(OSClient):
         return client
 
 
-@configure("sahara", default_version="1.1")
+@configure("sahara", default_version="1.1", supported_versions=["1.0", "1.1"])
 class Sahara(OSClient):
+    # NOTE(andreykurilin): saharaclient supports "1.0" version and doesn't
+    # support "1". `choose_version` and `validate_version` methods are written
+    # as a hack to covert 1 -> 1.0, which can simplify setting saharaclient
+    # for end-users.
+    def choose_version(self, version=None):
+        return float(super(Sahara, self).choose_version(version))
+
+    @classmethod
+    def validate_version(cls, version):
+        super(Sahara, cls).validate_version(float(version))
+
     def create_client(self, version=None):
         """Return Sahara client."""
         from saharaclient import client as sahara
@@ -375,7 +451,8 @@ class Sahara(OSClient):
         return client
 
 
-@configure("zaqar", default_version="1.1", default_service_type="messaging")
+@configure("zaqar", default_version="1.1", default_service_type="messaging",
+           supported_versions=["1", "1.1"])
 class Zaqar(OSClient):
     def choose_version(self, version=None):
         # zaqarclient accepts only int or float obj as version
@@ -404,7 +481,8 @@ class Zaqar(OSClient):
 
 
 @configure("murano", default_version="1",
-           default_service_type="application_catalog")
+           default_service_type="application_catalog",
+           supported_versions=["1"])
 class Murano(OSClient):
     def create_client(self, version=None, service_type=None):
         """Return Murano client."""
@@ -423,7 +501,8 @@ class Murano(OSClient):
         return client
 
 
-@configure("designate", default_version="1", default_service_type="dns")
+@configure("designate", default_version="1", default_service_type="dns",
+           supported_versions=["1", "2"])
 class Designate(OSClient):
     def create_client(self, version=None, service_type=None):
         """Return designate client."""
@@ -438,7 +517,7 @@ class Designate(OSClient):
         return client.Client(version, session=session)
 
 
-@configure("trove", default_version="1.0")
+@configure("trove", default_version="1.0", supported_versions=["1.0"])
 class Trove(OSClient):
     def create_client(self, version=None):
         """Returns trove client."""
@@ -521,7 +600,7 @@ class EC2(OSClient):
 
 
 @configure("monasca", default_version="2_0",
-           default_service_type="monitoring")
+           default_service_type="monitoring", supported_versions=["2_0"])
 class Monasca(OSClient):
     def create_client(self, version=None, service_type=None):
         """Return monasca client."""
@@ -546,8 +625,9 @@ class Monasca(OSClient):
 class Clients(object):
     """This class simplify and unify work with OpenStack python clients."""
 
-    def __init__(self, endpoint):
+    def __init__(self, endpoint, api_info=None):
         self.endpoint = endpoint
+        self.api_info = api_info or {}
         # NOTE(kun) Apply insecure/cacert settings from rally.conf if those are
         # not set in deployment config. Remove it when invalid.
         if self.endpoint.insecure is None:
@@ -558,8 +638,8 @@ class Clients(object):
 
     def __getattr__(self, client_name):
         """Lazy load of clients."""
-        return OSClient.get(client_name, namespace=_NAMESPACE)(
-            self.endpoint, self.cache)
+        return OSClient.get(client_name)(self.endpoint, self.api_info,
+                                         self.cache)
 
     @classmethod
     def create_from_env(cls):
@@ -642,7 +722,7 @@ class Clients(object):
         """
         def wrap(client_func):
             try:
-                OSClient.get(client_name, _NAMESPACE)
+                OSClient.get(client_name)
             except exceptions.PluginNotFound:
                 # everything is ok
                 pass
