@@ -19,6 +19,13 @@ import re
 import sys
 
 
+HELP_MESSAGE = (
+    "Usage:\n\t"
+    "utils.py render <lookup/path/to/template.mako>"
+    "[<key-1>=<value-1> <key-2>=<value-2> ...]\n\n\t"
+    "Where key-1,value-1 and key-2,value-2 are key pairs of template.")
+
+
 def get_template(template_path):
     import mako.lookup
 
@@ -30,23 +37,26 @@ def get_template(template_path):
     ]
 
     lookup = mako.lookup.TemplateLookup(directories=lookup_dirs)
-
-    return lookup.get_template(template_path)
+    try:
+        return lookup.get_template(template_path)
+    except mako.exceptions.TopLevelLookupException as e:
+        raise ValueError(e)
 
 
 def main(*args):
     if (len(args) < 2 or args[0] != "render"
        or not all(re.match("^[^=]+=[^=]+$", arg) for arg in args[2:])):
-        raise ValueError(
-            "Usage: \n\t"
-            "utils.py render <lookup/path/to/template.mako> "
-            "<key-1>=<value-1> <key-2>=<value-2>\n\n\t"
-            "Where key-1,value-1 and key-2,value-2 are key pairs of template"
-        )
+        print(HELP_MESSAGE, file=sys.stderr)
+        return 1
 
-    render_kwargs = dict([arg.split("=") for arg in args[2:]])
-    print(get_template(args[1]).render(**render_kwargs))
+    try:
+        render_kwargs = dict([arg.split("=") for arg in args[2:]])
+        print(get_template(args[1]).render(**render_kwargs))
+    except ValueError as e:
+        print(str(e), file=sys.stderr)
+        return 1
+    return 0
 
 
 if __name__ == "__main__":
-    main(*sys.argv[1:])
+    sys.exit(main(*sys.argv[1:]))
