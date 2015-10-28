@@ -80,10 +80,12 @@
 {%- endmacro %}
 
 {%- macro unlimited_neutron() %}
+{% if "neutron" in service_list %}
           neutron:
             network: -1
             port: -1
             subnet: -1
+{% endif %}
 {%- endmacro %}
 
 {%- macro glance_args(location, container="bare", type="qcow2") %}
