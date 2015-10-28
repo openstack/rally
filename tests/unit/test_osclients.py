@@ -467,6 +467,7 @@ class OSClientsTestCase(test.TestCase):
             client = self.clients.sahara()
             self.assertEqual(fake_sahara, client)
             kw = {
+                "service_type": "data-processing",
                 "username": self.endpoint.username,
                 "api_key": self.endpoint.password,
                 "project_name": self.endpoint.tenant_name,

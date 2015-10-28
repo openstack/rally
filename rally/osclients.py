@@ -427,7 +427,8 @@ class Ironic(OSClient):
         return client
 
 
-@configure("sahara", default_version="1.1", supported_versions=["1.0", "1.1"])
+@configure("sahara", default_version="1.1", supported_versions=["1.0", "1.1"],
+           default_service_type="data-processing")
 class Sahara(OSClient):
     # NOTE(andreykurilin): saharaclient supports "1.0" version and doesn't
     # support "1". `choose_version` and `validate_version` methods are written
@@ -440,13 +441,14 @@ class Sahara(OSClient):
     def validate_version(cls, version):
         super(Sahara, cls).validate_version(float(version))
 
-    def create_client(self, version=None):
+    def create_client(self, version=None, service_type=None):
         """Return Sahara client."""
         from saharaclient import client as sahara
-        client = sahara.Client(self.choose_version(version),
-                               **self._get_auth_info(
-                                   password_key="api_key",
-                                   project_name_key="project_name"))
+        client = sahara.Client(
+            self.choose_version(version),
+            service_type=self.choose_service_type(service_type),
+            **self._get_auth_info(password_key="api_key",
+                                  project_name_key="project_name"))
 
         return client
 
