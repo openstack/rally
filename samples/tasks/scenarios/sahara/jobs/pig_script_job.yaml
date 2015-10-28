@@ -17,11 +17,7 @@
           username: "ubuntu"
           plugin_name: "vanilla"
           hadoop_version: "1.2.1"
-        sahara_edp:
-          input_type: "hdfs"
-          output_type: "hdfs"
-          input_url: "/"
-          output_url_prefix: "/out_"
+        sahara_job_binaries:
           mains:
             -
               name: "example.pig"
@@ -30,6 +26,11 @@
             -
               name: "udf.jar"
               download_url: "https://github.com/openstack/sahara/blob/master/etc/edp-examples/pig-job/udf.jar?raw=true"
+        sahara_data_sources:
+          input_type: "hdfs"
+          output_type: "hdfs"
+          input_url: "/"
+          output_url_prefix: "/out_"
         sahara_cluster:
           flavor_id: "2"
           workers_count: 3

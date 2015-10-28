@@ -26,8 +26,8 @@ class SaharaJob(utils.SaharaScenario):
     """Benchmark scenarios for Sahara jobs."""
 
     @validation.required_services(consts.Service.SAHARA)
-    @validation.required_contexts("users", "sahara_image", "sahara_edp",
-                                  "sahara_cluster")
+    @validation.required_contexts("users", "sahara_image",
+                                  "sahara_job_binaries", "sahara_cluster")
     @scenario.configure(context={"cleanup": ["sahara"]})
     def create_launch_job(self, job_type, configs, job_idx=0):
         """Create and execute a Sahara EDP Job.
@@ -69,8 +69,8 @@ class SaharaJob(utils.SaharaScenario):
                                 job_idx=job_idx)
 
     @validation.required_services(consts.Service.SAHARA)
-    @validation.required_contexts("users", "sahara_image", "sahara_edp",
-                                  "sahara_cluster")
+    @validation.required_contexts("users", "sahara_image",
+                                  "sahara_job_binaries", "sahara_cluster")
     @scenario.configure(context={"cleanup": ["sahara"]})
     def create_launch_job_sequence(self, jobs):
         """Create and execute a sequence of the Sahara EDP Jobs.
@@ -86,8 +86,8 @@ class SaharaJob(utils.SaharaScenario):
             self.create_launch_job(job["job_type"], job["configs"], idx)
 
     @validation.required_services(consts.Service.SAHARA)
-    @validation.required_contexts("users", "sahara_image", "sahara_edp",
-                                  "sahara_cluster")
+    @validation.required_contexts("users", "sahara_image",
+                                  "sahara_job_binaries", "sahara_cluster")
     @scenario.configure(context={"cleanup": ["sahara"]})
     def create_launch_job_sequence_with_scaling(self, jobs, deltas):
         """Create and execute Sahara EDP Jobs on a scaling Cluster.

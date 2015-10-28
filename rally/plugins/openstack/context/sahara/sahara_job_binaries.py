@@ -28,26 +28,14 @@ from rally.task import context
 LOG = logging.getLogger(__name__)
 
 
-@context.configure(name="sahara_edp", order=442)
-class SaharaEDP(context.Context):
-    """Context class for setting up the environment for an EDP job."""
+@context.configure(name="sahara_job_binaries", order=442)
+class SaharaJobBinaries(context.Context):
+    """Context class for setting up Job Binaries for an EDP job."""
 
     CONFIG_SCHEMA = {
         "type": "object",
         "$schema": consts.JSON_SCHEMA,
         "properties": {
-            "input_type": {
-                "enum": ["swift", "hdfs"],
-            },
-            "input_url": {
-                "type": "string",
-            },
-            "output_type": {
-                "enum": ["swift", "hdfs"],
-            },
-            "output_url_prefix": {
-                "type": "string",
-            },
             "mains": {
                 "type": "array",
                 "items": {
@@ -81,24 +69,16 @@ class SaharaEDP(context.Context):
                 }
             }
         },
-        "additionalProperties": False,
-        "required": ["input_type", "input_url",
-                     "output_type", "output_url_prefix"]
+        "additionalProperties": False
     }
 
-    @rutils.log_task_wrapper(LOG.info, _("Enter context: `Sahara EDP`"))
-    def setup(self):
-        self.context["sahara_output_conf"] = {
-            "output_type": self.config["output_type"],
-            "output_url_prefix": self.config["output_url_prefix"]
-        }
-        self.context["sahara_mains"] = {}
-        self.context["sahara_libs"] = {}
+    # This cache will hold the downloaded libs content to prevent repeated
+    # downloads for each tenant
+    lib_cache = {}
 
-        input_type = self.config["input_type"]
-        input_url = self.config["input_url"]
-        mains = self.config.get("mains", [])
-        libs = self.config.get("libs", [])
+    @rutils.log_task_wrapper(LOG.info,
+                             _("Enter context: `Sahara Job Binaries`"))
+    def setup(self):
 
         for user, tenant_id in rutils.iterate_per_tenants(
                 self.context["users"]):
@@ -106,12 +86,10 @@ class SaharaEDP(context.Context):
             clients = osclients.Clients(user["endpoint"])
             sahara = clients.sahara()
 
-            self.setup_inputs(sahara, tenant_id, input_type, input_url)
-
             self.context["tenants"][tenant_id]["sahara_mains"] = []
             self.context["tenants"][tenant_id]["sahara_libs"] = []
 
-            for main in mains:
+            for main in self.config.get("mains", []):
                 self.download_and_save_lib(
                     sahara=sahara,
                     lib_type="sahara_mains",
@@ -119,7 +97,7 @@ class SaharaEDP(context.Context):
                     download_url=main["download_url"],
                     tenant_id=tenant_id)
 
-            for lib in libs:
+            for lib in self.config.get("libs", []):
                 self.download_and_save_lib(
                     sahara=sahara,
                     lib_type="sahara_libs",
@@ -142,7 +120,11 @@ class SaharaEDP(context.Context):
 
     def download_and_save_lib(self, sahara, lib_type, name, download_url,
                               tenant_id):
-        lib_data = requests.get(download_url).content
+        if download_url not in self.lib_cache:
+            lib_data = requests.get(download_url).content
+            self.lib_cache[download_url] = lib_data
+        else:
+            lib_data = self.lib_cache[download_url]
 
         job_binary_internal = sahara.job_binary_internals.create(
             name=name,
@@ -156,10 +138,10 @@ class SaharaEDP(context.Context):
 
         self.context["tenants"][tenant_id][lib_type].append(job_binary.id)
 
-    @rutils.log_task_wrapper(LOG.info, _("Exit context: `Sahara EDP`"))
+    @rutils.log_task_wrapper(LOG.info,
+                             _("Exit context: `Sahara Job Binaries`"))
     def cleanup(self):
-        resources = ["job_executions", "jobs", "job_binary_internals",
-                     "job_binaries", "data_sources"]
+        resources = ["job_binary_internals", "job_binaries"]
 
         # TODO(boris-42): Delete only resources created by this context
         resource_manager.cleanup(

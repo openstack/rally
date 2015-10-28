@@ -38,11 +38,7 @@
           username: "ubuntu"
           plugin_name: "vanilla"
           hadoop_version: "1.2.1"
-        sahara_edp:
-          input_type: "hdfs"
-          output_type: "hdfs"
-          input_url: "/"
-          output_url_prefix: "/out_"
+        sahara_job_binaries:
           libs:
             -
               name: "tests.jar"
