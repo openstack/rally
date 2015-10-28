@@ -1,0 +1,25 @@
+{
+    "NeutronSecurityGroup.create_and_delete_security_groups": [
+        {
+            "args": {
+                "security_group_create_args": {}
+            },
+            "runner": {
+                "type": "constant",
+                "times": 100,
+                "concurrency": 10
+            },
+            "context": {
+                "users": {
+                    "tenants": 3,
+                    "users_per_tenant": 3
+                },
+                "quotas": {
+                    "neutron": {
+                        "security_group": -1
+                    }
+                }
+            }
+        }
+    ]
+}

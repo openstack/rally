@@ -286,6 +286,12 @@ class NeutronFloatingIP(NeutronMixin):
     pass
 
 
+@base.resource("neutron", "security_group", order=next(_neutron_order),
+               tenant_resource=True)
+class NeutronSecurityGroup(NeutronMixin):
+    pass
+
+
 @base.resource("neutron", "quota", order=next(_neutron_order),
                admin_required=True, tenant_resource=True)
 class NeutronQuota(QuotaMixin, NeutronMixin):
