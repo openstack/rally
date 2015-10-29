@@ -135,6 +135,7 @@ class _ServiceType(utils.ImmutableMixin, utils.EnumMixin):
     S3 = "s3"
     DATABASE = "database"
     DATA_PROCESSING = "data-processing"
+    DATA_PROCESSING_MOS = "data_processing"
     OBJECT_STORE = "object-store"
     WORKFLOW_EXECUTION = "workflowv2"
     APPLICATION_CATALOG = "application_catalog"
@@ -160,6 +161,7 @@ class _ServiceType(utils.ImmutableMixin, utils.EnumMixin):
             self.S3: _Service.S3,
             self.DATABASE: _Service.TROVE,
             self.DATA_PROCESSING: _Service.SAHARA,
+            self.DATA_PROCESSING_MOS: _Service.SAHARA,
             self.OBJECT_STORE: _Service.SWIFT,
             self.WORKFLOW_EXECUTION: _Service.MISTRAL,
             self.APPLICATION_CATALOG: _Service.MURANO,
