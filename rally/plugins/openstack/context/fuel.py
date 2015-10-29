@@ -17,7 +17,6 @@ import collections
 from rally.common import broker
 from rally.common.i18n import _
 from rally.common import log as logging
-from rally.common import utils as rutils
 from rally import consts
 from rally import exceptions
 from rally.plugins.openstack.scenarios.fuel import utils as fuel_utils
@@ -101,7 +100,8 @@ class FuelEnvGenerator(base.Context):
         broker.run(publish, consume, threads)
         self.context["fuel"] = {}
 
-    @rutils.log_task_wrapper(LOG.info, _("Enter context: `fuel_environments`"))
+    @logging.log_task_wrapper(LOG.info,
+                              _("Enter context: `fuel_environments`"))
     def setup(self):
         """Create Fuel environments, using the broker pattern."""
 
@@ -122,7 +122,7 @@ class FuelEnvGenerator(base.Context):
                 msg=_("failed to create the requested"
                       " number of environments."))
 
-    @rutils.log_task_wrapper(LOG.info, _("Exit context: `fuel_environments`"))
+    @logging.log_task_wrapper(LOG.info, _("Exit context: `fuel_environments`"))
     def cleanup(self):
         """Delete environments, using the broker pattern."""
         self._delete_envs()

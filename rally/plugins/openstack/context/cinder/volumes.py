@@ -49,7 +49,7 @@ class VolumeGenerator(context.Context):
         "volumes_per_tenant": 1
     }
 
-    @rutils.log_task_wrapper(LOG.info, _("Enter context: `Volumes`"))
+    @logging.log_task_wrapper(LOG.info, _("Enter context: `Volumes`"))
     def setup(self):
         size = self.config["size"]
         volumes_per_tenant = self.config["volumes_per_tenant"]
@@ -65,7 +65,7 @@ class VolumeGenerator(context.Context):
                 vol = cinder_util._create_volume(size, display_name=rnd_name)
                 self.context["tenants"][tenant_id]["volumes"].append(vol._info)
 
-    @rutils.log_task_wrapper(LOG.info, _("Exit context: `Volumes`"))
+    @logging.log_task_wrapper(LOG.info, _("Exit context: `Volumes`"))
     def cleanup(self):
         # TODO(boris-42): Delete only resources created by this context
         resource_manager.cleanup(names=["cinder.volumes"],

@@ -63,7 +63,7 @@ class ImageGenerator(context.Context):
         "additionalProperties": False
     }
 
-    @rutils.log_task_wrapper(LOG.info, _("Enter context: `Images`"))
+    @logging.log_task_wrapper(LOG.info, _("Enter context: `Images`"))
     def setup(self):
         image_url = self.config["image_url"]
         image_type = self.config["image_type"]
@@ -92,7 +92,7 @@ class ImageGenerator(context.Context):
 
             self.context["tenants"][tenant_id]["images"] = current_images
 
-    @rutils.log_task_wrapper(LOG.info, _("Exit context: `Images`"))
+    @logging.log_task_wrapper(LOG.info, _("Exit context: `Images`"))
     def cleanup(self):
         # TODO(boris-42): Delete only resources created by this context
         resource_manager.cleanup(names=["glance.images"],

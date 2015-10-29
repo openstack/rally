@@ -63,7 +63,7 @@ class CeilometerSampleGenerator(context.Context):
         "samples_per_resource": 5
     }
 
-    @rutils.log_task_wrapper(LOG.info, _("Enter context: `Ceilometer`"))
+    @logging.log_task_wrapper(LOG.info, _("Enter context: `Ceilometer`"))
     def setup(self):
         counter_name = self.config["counter_name"]
         counter_type = self.config["counter_type"]
@@ -87,7 +87,7 @@ class CeilometerSampleGenerator(context.Context):
                 self.context["tenants"][tenant_id]["resources"].append(
                     sample[0].resource_id)
 
-    @rutils.log_task_wrapper(LOG.info, _("Exit context: `Ceilometer`"))
+    @logging.log_task_wrapper(LOG.info, _("Exit context: `Ceilometer`"))
     def cleanup(self):
         # We don't have API for removal of samples and resources
         pass

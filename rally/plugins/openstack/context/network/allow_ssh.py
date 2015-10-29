@@ -87,7 +87,7 @@ def _prepare_open_secgroup(endpoint, secgroup_name):
 class AllowSSH(context.Context):
     """Sets up security groups for all users to access VM via SSH."""
 
-    @utils.log_task_wrapper(LOG.info, _("Enter context: `allow_ssh`"))
+    @logging.log_task_wrapper(LOG.info, _("Enter context: `allow_ssh`"))
     def setup(self):
         admin_or_user = (self.context.get("admin") or
                          self.context.get("users")[0])
@@ -106,7 +106,7 @@ class AllowSSH(context.Context):
             user["secgroup"] = _prepare_open_secgroup(user["endpoint"],
                                                       secgroup_name)
 
-    @utils.log_task_wrapper(LOG.info, _("Exit context: `allow_ssh`"))
+    @logging.log_task_wrapper(LOG.info, _("Exit context: `allow_ssh`"))
     def cleanup(self):
         for user, tenant_id in utils.iterate_per_tenants(
                 self.context["users"]):

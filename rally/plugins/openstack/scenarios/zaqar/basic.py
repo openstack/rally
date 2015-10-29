@@ -14,7 +14,7 @@
 
 import random
 
-from rally.common import utils
+from rally.common import log as logging
 from rally.plugins.openstack import scenario
 from rally.plugins.openstack.scenarios.zaqar import utils as zutils
 
@@ -23,7 +23,7 @@ class ZaqarBasic(zutils.ZaqarScenario):
     """Benchmark scenarios for Zaqar."""
 
     @scenario.configure(context={"cleanup": ["zaqar"]})
-    @utils.log_deprecated_args(
+    @logging.log_deprecated_args(
         "The 'name_length' argument to create_queue is ignored",
         "0.1.2", ["name_length"], once=True)
     def create_queue(self, name_length=None, **kwargs):
@@ -35,7 +35,7 @@ class ZaqarBasic(zutils.ZaqarScenario):
         self._queue_create(**kwargs)
 
     @scenario.configure(context={"cleanup": ["zaqar"]})
-    @utils.log_deprecated_args(
+    @logging.log_deprecated_args(
         "The 'name_length' argument to producer_consumer is ignored",
         "0.1.2", ["name_length"], once=True)
     def producer_consumer(self, name_length=None,

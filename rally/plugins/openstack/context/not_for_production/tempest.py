@@ -19,7 +19,6 @@ import tempfile
 
 from rally.common.i18n import _
 from rally.common import log as logging
-from rally.common import utils
 from rally import consts
 from rally import exceptions
 from rally.task import context
@@ -48,7 +47,7 @@ class Tempest(context.Context):
                                         tempest_config=self.config.get(
                                             "tempest-config"))
 
-    @utils.log_task_wrapper(LOG.info, _("Enter context: `tempest`"))
+    @logging.log_task_wrapper(LOG.info, _("Enter context: `tempest`"))
     def setup(self):
         self.verifier.log_file_raw = "/dev/null"
         # Create temporary directory for subunit-results.
@@ -71,7 +70,7 @@ class Tempest(context.Context):
 
         self.context["verifier"] = self.verifier
 
-    @utils.log_task_wrapper(LOG.info, _("Exit context: `tempest`"))
+    @logging.log_task_wrapper(LOG.info, _("Exit context: `tempest`"))
     def cleanup(self):
         LOG.info("Built-in stress cleanup from Tempest looks like can help to "
                  "shot yourself in the foot. Sorry, but even Rally can not "

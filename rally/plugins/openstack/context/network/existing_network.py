@@ -38,7 +38,7 @@ class ExistingNetwork(context.Context):
         "additionalProperties": False
     }
 
-    @utils.log_task_wrapper(LOG.info, _("Enter context: `existing_network`"))
+    @logging.log_task_wrapper(LOG.info, _("Enter context: `existing_network`"))
     def setup(self):
         for user, tenant_id in utils.iterate_per_tenants(
                 self.context.get("users", [])):
@@ -49,6 +49,6 @@ class ExistingNetwork(context.Context):
             self.context["tenants"][tenant_id]["networks"] = (
                 net_wrapper.list_networks())
 
-    @utils.log_task_wrapper(LOG.info, _("Exit context: `existing_network`"))
+    @logging.log_task_wrapper(LOG.info, _("Exit context: `existing_network`"))
     def cleanup(self):
         """Networks were not created by Rally, so nothing to do."""

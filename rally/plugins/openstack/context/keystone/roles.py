@@ -15,7 +15,6 @@
 
 from rally.common.i18n import _
 from rally.common import log as logging
-from rally.common import utils as rutils
 from rally import consts
 from rally import exceptions
 from rally import osclients
@@ -79,13 +78,13 @@ class RoleGenerator(context.Context):
                     user_id=user["id"], role_id=role["id"],
                     project_id=user["tenant_id"])
 
-    @rutils.log_task_wrapper(LOG.info, _("Enter context: `roles`"))
+    @logging.log_task_wrapper(LOG.info, _("Enter context: `roles`"))
     def setup(self):
         """Add roles to all users."""
         self.context["roles"] = [self._add_role(self.endpoint, name)
                                  for name in self.config]
 
-    @rutils.log_task_wrapper(LOG.info, _("Exit context: `roles`"))
+    @logging.log_task_wrapper(LOG.info, _("Exit context: `roles`"))
     def cleanup(self):
         """Remove roles from users."""
         for role in self.context["roles"]:

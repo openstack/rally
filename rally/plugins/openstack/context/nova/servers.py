@@ -70,7 +70,7 @@ class ServerGenerator(context.Context):
         "auto_assign_nic": False
     }
 
-    @rutils.log_task_wrapper(LOG.info, _("Enter context: `Servers`"))
+    @logging.log_task_wrapper(LOG.info, _("Enter context: `Servers`"))
     def setup(self):
         image = self.config["image"]
         flavor = self.config["flavor"]
@@ -112,7 +112,7 @@ class ServerGenerator(context.Context):
             self.context["tenants"][tenant_id][
                 "servers"] = current_servers
 
-    @rutils.log_task_wrapper(LOG.info, _("Exit context: `Servers`"))
+    @logging.log_task_wrapper(LOG.info, _("Exit context: `Servers`"))
     def cleanup(self):
         resource_manager.cleanup(names=["nova.servers"],
                                  users=self.context.get("users", []))

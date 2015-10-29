@@ -15,7 +15,7 @@
 
 import json
 
-from rally.common import utils
+from rally.common import log as logging
 from rally import consts
 from rally import exceptions
 from rally.plugins.openstack import scenario
@@ -33,8 +33,8 @@ class VMTasks(vm_utils.VMScenario):
     @types.set(image=types.ImageResourceType,
                flavor=types.FlavorResourceType)
     @validation.image_valid_on_flavor("flavor", "image")
-    @utils.log_deprecated_args("Use `command' argument instead", "0.0.5",
-                               ("script", "interpreter"), once=True)
+    @logging.log_deprecated_args("Use `command' argument instead", "0.0.5",
+                                 ("script", "interpreter"), once=True)
     @validation.file_exists("script", required=False)
     @validation.valid_command("command", required=False)
     @validation.number("port", minval=1, maxval=65535, nullable=True,

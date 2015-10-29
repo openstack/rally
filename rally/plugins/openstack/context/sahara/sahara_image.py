@@ -73,7 +73,7 @@ class SaharaImage(context.Context):
             image_id=image.id, new_tags=[plugin_name, hadoop_version])
         return image.id
 
-    @rutils.log_task_wrapper(LOG.info, _("Enter context: `Sahara Image`"))
+    @logging.log_task_wrapper(LOG.info, _("Enter context: `Sahara Image`"))
     def setup(self):
         self.context["sahara_images"] = {}
 
@@ -111,7 +111,7 @@ class SaharaImage(context.Context):
 
                 self.context["tenants"][tenant_id]["sahara_image"] = image_id
 
-    @rutils.log_task_wrapper(LOG.info, _("Exit context: `Sahara Image`"))
+    @logging.log_task_wrapper(LOG.info, _("Exit context: `Sahara Image`"))
     def cleanup(self):
 
         # TODO(boris-42): Delete only resources created by this context

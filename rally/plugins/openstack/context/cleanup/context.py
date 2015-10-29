@@ -17,7 +17,6 @@ import sys
 
 from rally.common.i18n import _
 from rally.common import log as logging
-from rally.common import utils as rutils
 from rally import consts
 from rally import exceptions
 from rally.plugins.openstack.context.cleanup import manager
@@ -63,7 +62,7 @@ class AdminCleanup(CleanupMixin, context.Context):
                      % missing)
             raise NoSuchCleanupResources(missing)
 
-    @rutils.log_task_wrapper(LOG.info, _("admin resources cleanup"))
+    @logging.log_task_wrapper(LOG.info, _("admin resources cleanup"))
     def cleanup(self):
         manager.cleanup(names=self.config,
                         admin_required=True,
@@ -88,7 +87,7 @@ class UserCleanup(CleanupMixin, context.Context):
                      % missing)
             raise NoSuchCleanupResources(missing)
 
-    @rutils.log_task_wrapper(LOG.info, _("user resources cleanup"))
+    @logging.log_task_wrapper(LOG.info, _("user resources cleanup"))
     def cleanup(self):
         manager.cleanup(names=self.config,
                         admin_required=False,

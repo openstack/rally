@@ -15,7 +15,6 @@
 
 from rally.common.i18n import _
 from rally.common import log as logging
-from rally.common import utils
 from rally import consts
 from rally import osclients
 from rally.plugins.openstack.context.quotas import cinder_quotas
@@ -61,7 +60,7 @@ class Quotas(context.Context):
     def _service_has_quotas(self, service):
         return len(self.config.get(service, {})) > 0
 
-    @utils.log_task_wrapper(LOG.info, _("Enter context: `quotas`"))
+    @logging.log_task_wrapper(LOG.info, _("Enter context: `quotas`"))
     def setup(self):
         for tenant_id in self.context["tenants"]:
             for service in self.manager:
@@ -69,7 +68,7 @@ class Quotas(context.Context):
                     self.manager[service].update(tenant_id,
                                                  **self.config[service])
 
-    @utils.log_task_wrapper(LOG.info, _("Exit context: `quotas`"))
+    @logging.log_task_wrapper(LOG.info, _("Exit context: `quotas`"))
     def cleanup(self):
         for service in self.manager:
             if self._service_has_quotas(service):

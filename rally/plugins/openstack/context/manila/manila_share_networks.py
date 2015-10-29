@@ -124,7 +124,7 @@ class ManilaShareNetworks(context.Context):
             self.context["tenants"][tenant_id][CONTEXT_NAME]["sn_iterator"] = (
                 utils.RAMInt())
 
-    @utils.log_task_wrapper(LOG.info, _("Enter context: `%s`") % CONTEXT_NAME)
+    @log.log_task_wrapper(LOG.info, _("Enter context: `%s`") % CONTEXT_NAME)
     def setup(self):
         self.context[CONTEXT_NAME] = {}
         if not self.config["use_share_networks"]:
@@ -135,7 +135,7 @@ class ManilaShareNetworks(context.Context):
             # TODO(vponomaryov): add support of autocreated resources
             pass
 
-    @utils.log_task_wrapper(LOG.info, _("Exit context: `%s`") % CONTEXT_NAME)
+    @log.log_task_wrapper(LOG.info, _("Exit context: `%s`") % CONTEXT_NAME)
     def cleanup(self):
         # TODO(vponomaryov): add cleanup for autocreated resources when appear.
         return

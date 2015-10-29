@@ -22,7 +22,6 @@ import ddt
 import mock
 import testtools
 
-from rally.common.i18n import _
 from rally.common import utils
 from rally import exceptions
 from tests.unit import test
@@ -114,73 +113,6 @@ class TimerTestCase(test.TestCase):
             pass
         self.assertEqual(3, len(timer.error))
         self.assertEqual(timer.error[0], type(Exception()))
-
-
-class LogTestCase(test.TestCase):
-
-    def test_log_task_wrapper(self):
-        mock_log = mock.MagicMock()
-        msg = "test %(a)s %(b)s"
-
-        class TaskLog(object):
-
-            def __init__(self):
-                self.task = {"uuid": "some_uuid"}
-
-            @utils.log_task_wrapper(mock_log, msg, a=10, b=20)
-            def some_method(self, x, y):
-                return x + y
-
-        t = TaskLog()
-        self.assertEqual(t.some_method.__name__, "some_method")
-        self.assertEqual(t.some_method(2, 2), 4)
-        params = {"msg": msg % {"a": 10, "b": 20}, "uuid": t.task["uuid"]}
-        expected = [
-            mock.call(_("Task %(uuid)s | Starting:  %(msg)s") % params),
-            mock.call(_("Task %(uuid)s | Completed: %(msg)s") % params)
-        ]
-        self.assertEqual(mock_log.mock_calls, expected)
-
-    def test_log_deprecated(self):
-        mock_log = mock.MagicMock()
-
-        @utils.log_deprecated("some alternative", "0.0.1", mock_log)
-        def some_method(x, y):
-            return x + y
-
-        self.assertEqual(some_method(2, 2), 4)
-        mock_log.assert_called_once_with("'some_method' is deprecated in "
-                                         "Rally v0.0.1: some alternative")
-
-    def test_log_deprecated_args(self):
-        mock_log = mock.MagicMock()
-
-        @utils.log_deprecated_args("Deprecated test", "0.0.1", ("z",),
-                                   mock_log, once=True)
-        def some_method(x, y, z):
-            return x + y + z
-
-        self.assertEqual(some_method(2, 2, z=3), 7)
-        mock_log.assert_called_once_with(
-            "Deprecated test (args `z' deprecated in Rally v0.0.1)")
-
-        mock_log.reset_mock()
-        self.assertEqual(some_method(2, 2, z=3), 7)
-        self.assertFalse(mock_log.called)
-
-        @utils.log_deprecated_args("Deprecated test", "0.0.1", ("z",),
-                                   mock_log, once=False)
-        def some_method(x, y, z):
-            return x + y + z
-
-        self.assertEqual(some_method(2, 2, z=3), 7)
-        mock_log.assert_called_once_with(
-            "Deprecated test (args `z' deprecated in Rally v0.0.1)")
-
-        mock_log.reset_mock()
-        self.assertEqual(some_method(2, 2, z=3), 7)
-        mock_log.assert_called_once_with(
-            "Deprecated test (args `z' deprecated in Rally v0.0.1)")
 
 
 def module_level_method():

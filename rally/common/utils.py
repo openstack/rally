@@ -13,7 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import functools
 import inspect
 import multiprocessing
 import random
@@ -24,7 +23,6 @@ import time
 
 from six import moves
 
-from rally.common.i18n import _
 from rally.common import log as logging
 from rally import exceptions
 
@@ -132,105 +130,6 @@ class RAMInt(object):
     def reset(self):
         with self.__lock:
             self.__int.value = 0
-
-
-def _log_wrapper(obj, log_function, msg, **kw):
-    """A logging wrapper for any method of a class.
-
-    Class instances that use this decorator should have self.task or
-    self.deployment attribute. The wrapper produces logs messages both
-    before and after the method execution, in the following format
-    (example for tasks):
-
-    "Task <Task UUID> | Starting:  <Logging message>"
-    [Method execution...]
-    "Task <Task UUID> | Completed: <Logging message>"
-
-    :param obj: task or deployment which must be attribute of "self"
-    :param log_function: Logging method to be used, e.g. LOG.info
-    :param msg: Text message (possibly parameterized) to be put to the log
-    :param **kw: Parameters for msg
-    """
-    def decorator(f):
-        @functools.wraps(f)
-        def wrapper(self, *args, **kwargs):
-            params = {"msg": msg % kw, "obj_name": obj.title(),
-                      "uuid": getattr(self, obj)["uuid"]}
-            log_function(_("%(obj_name)s %(uuid)s | Starting:  %(msg)s") %
-                         params)
-            result = f(self, *args, **kwargs)
-            log_function(_("%(obj_name)s %(uuid)s | Completed: %(msg)s") %
-                         params)
-            return result
-        return wrapper
-    return decorator
-
-
-def log_task_wrapper(log_function, msg, **kw):
-    return _log_wrapper("task", log_function, msg, **kw)
-
-
-def log_deploy_wrapper(log_function, msg, **kw):
-    return _log_wrapper("deployment", log_function, msg, **kw)
-
-
-def log_verification_wrapper(log_function, msg, **kw):
-    return _log_wrapper("verification", log_function, msg, **kw)
-
-
-def log_deprecated(message, rally_version, log_function=None, once=False):
-    """A wrapper marking a certain method as deprecated.
-
-    :param message: Message that describes why the method was deprecated
-    :param rally_version: version of Rally when the method was deprecated
-    :param log_function: Logging method to be used, e.g. LOG.info
-    :param once: Show only once (default is each)
-    """
-    log_function = log_function or LOG.warning
-
-    def decorator(f):
-        @functools.wraps(f)
-        def wrapper(*args, **kwargs):
-            if (not once) or (not getattr(f, "_warned_dep_method", False)):
-                log_function("'%(func)s' is deprecated in Rally v%(version)s: "
-                             "%(msg)s" % {"msg": message,
-                                          "version": rally_version,
-                                          "func": f.__name__})
-                setattr(f, "_warned_dep_method", once)
-            return f(*args, **kwargs)
-        return wrapper
-    return decorator
-
-
-def log_deprecated_args(message, rally_version, deprecated_args,
-                        log_function=None, once=False):
-    """A wrapper marking certain arguments as deprecated.
-
-    :param message: Message that describes why the arguments were deprecated
-    :param rally_version: version of Rally when the arguments were deprecated
-    :param deprecated_args: List of deprecated args.
-    :param log_function: Logging method to be used, e.g. LOG.info
-    :param once: Show only once (default is each)
-    """
-    log_function = log_function or LOG.warning
-
-    def decorator(f):
-        @functools.wraps(f)
-        def wrapper(*args, **kwargs):
-            if (not once) or (not getattr(f, "_warned_dep_args", False)):
-                deprecated = ", ".join([
-                    "`%s'" % x for x in deprecated_args if x in kwargs])
-                if deprecated:
-                    log_function(
-                        "%(msg)s (args %(args)s deprecated in Rally "
-                        "v%(version)s)" %
-                        {"msg": message, "version": rally_version,
-                         "args": deprecated})
-                    setattr(f, "_warned_dep_args", once)
-            result = f(*args, **kwargs)
-            return result
-        return wrapper
-    return decorator
 
 
 def get_method_class(func):

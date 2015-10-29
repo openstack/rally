@@ -25,7 +25,6 @@ import six
 from rally.common.i18n import _
 from rally.common import log as logging
 from rally.common import objects
-from rally.common import utils as rutils
 from rally import consts
 from rally import exceptions
 from rally import osclients
@@ -185,13 +184,13 @@ class BenchmarkEngine(object):
         self.existing_users = users or []
         self.abort_on_sla_failure = abort_on_sla_failure
 
-    @rutils.log_task_wrapper(LOG.info, _("Task validation check cloud."))
+    @logging.log_task_wrapper(LOG.info, _("Task validation check cloud."))
     def _check_cloud(self):
         clients = osclients.Clients(self.admin)
         clients.verified_keystone()
 
-    @rutils.log_task_wrapper(LOG.info,
-                             _("Task validation of scenarios names."))
+    @logging.log_task_wrapper(LOG.info,
+                              _("Task validation of scenarios names."))
     def _validate_config_scenarios_name(self, config):
         available = set(s.get_name() for s in scenario.Scenario.get_all())
 
@@ -204,7 +203,7 @@ class BenchmarkEngine(object):
             names = ", ".join(specified - available)
             raise exceptions.NotFoundScenarios(names=names)
 
-    @rutils.log_task_wrapper(LOG.info, _("Task validation of syntax."))
+    @logging.log_task_wrapper(LOG.info, _("Task validation of syntax."))
     def _validate_config_syntax(self, config):
         for subtask in config.subtasks:
             for pos, scenario_obj in enumerate(subtask.scenarios):
@@ -241,7 +240,7 @@ class BenchmarkEngine(object):
 
         return user_context
 
-    @rutils.log_task_wrapper(LOG.info, _("Task validation of semantic."))
+    @logging.log_task_wrapper(LOG.info, _("Task validation of semantic."))
     def _validate_config_semantic(self, config):
         self._check_cloud()
 
@@ -266,7 +265,7 @@ class BenchmarkEngine(object):
                             admin, user, scenario_obj["name"],
                             pos, deployment, scenario_obj)
 
-    @rutils.log_task_wrapper(LOG.info, _("Task validation."))
+    @logging.log_task_wrapper(LOG.info, _("Task validation."))
     def validate(self):
         """Perform full task configuration validation."""
         self.task.update_status(consts.TaskStatus.VERIFYING)
@@ -301,7 +300,7 @@ class BenchmarkEngine(object):
 
         return context_obj
 
-    @rutils.log_task_wrapper(LOG.info, _("Benchmarking."))
+    @logging.log_task_wrapper(LOG.info, _("Benchmarking."))
     def run(self):
         """Run the benchmark according to the test configuration.
 

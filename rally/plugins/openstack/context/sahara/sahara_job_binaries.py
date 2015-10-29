@@ -76,8 +76,8 @@ class SaharaJobBinaries(context.Context):
     # downloads for each tenant
     lib_cache = {}
 
-    @rutils.log_task_wrapper(LOG.info,
-                             _("Enter context: `Sahara Job Binaries`"))
+    @logging.log_task_wrapper(LOG.info,
+                              _("Enter context: `Sahara Job Binaries`"))
     def setup(self):
 
         for user, tenant_id in rutils.iterate_per_tenants(
@@ -138,8 +138,8 @@ class SaharaJobBinaries(context.Context):
 
         self.context["tenants"][tenant_id][lib_type].append(job_binary.id)
 
-    @rutils.log_task_wrapper(LOG.info,
-                             _("Exit context: `Sahara Job Binaries`"))
+    @logging.log_task_wrapper(LOG.info,
+                              _("Exit context: `Sahara Job Binaries`"))
     def cleanup(self):
         resources = ["job_binary_internals", "job_binaries"]
 

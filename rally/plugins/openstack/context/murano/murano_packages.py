@@ -47,7 +47,7 @@ class PackageGenerator(context.Context):
         "additionalProperties": False
     }
 
-    @utils.log_task_wrapper(LOG.info, _("Enter context: `Murano packages`"))
+    @logging.log_task_wrapper(LOG.info, _("Enter context: `Murano packages`"))
     def setup(self):
         is_config_app_dir = False
         pckg_path = os.path.expanduser(self.config["app_package"])
@@ -74,7 +74,7 @@ class PackageGenerator(context.Context):
 
             self.context["tenants"][tenant_id]["packages"].append(package)
 
-    @utils.log_task_wrapper(LOG.info, _("Exit context: `Murano packages`"))
+    @logging.log_task_wrapper(LOG.info, _("Exit context: `Murano packages`"))
     def cleanup(self):
         resource_manager.cleanup(names=["murano.packages"],
                                  users=self.context.get("users", []))
