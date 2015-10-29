@@ -52,7 +52,7 @@ class Dummy(scenario.Scenario):
 
         :param size_of_message: int size of the exception message
         :param sleep: idle time of method (in seconds).
-        :raises: DummyScenarioException
+        :raises DummyScenarioException: raise exception for test
         """
         if sleep:
             time.sleep(sleep)
@@ -98,7 +98,7 @@ class Dummy(scenario.Scenario):
     def _random_fail_emitter(self, exception_probability):
         """Throw an exception with given probability.
 
-        :raises: KeyError
+        :raises KeyError: when exception_probability is bigger
         """
         if random.random() < exception_probability:
             raise KeyError("Dummy test exception")

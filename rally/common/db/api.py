@@ -84,7 +84,7 @@ def task_get(uuid):
     """Returns task by uuid.
 
     :param uuid: UUID of the task.
-    :raises: :class:`rally.exceptions.TaskNotFound` if the task does not exist.
+    :raises TaskNotFound: if the task does not exist.
     :returns: task dict with data on the task.
     """
     return get_impl().task_get(uuid)
@@ -94,7 +94,7 @@ def task_get_status(uuid):
     """Returns task by uuid.
 
     :param uuid: UUID of the task.
-    :raises: :class:`rally.exceptions.TaskNotFound` if the task does not exist.
+    :raises TaskNotFound: if the task does not exist.
     :returns: task dict with data on the task.
     """
     return get_impl().task_get_status(uuid)
@@ -128,7 +128,7 @@ def task_update(uuid, values):
 
     :param uuid: UUID of the task.
     :param values: dict with record values.
-    :raises: :class:`rally.exceptions.TaskNotFound` if the task does not exist.
+    :raises TaskNotFound: if the task does not exist.
     :returns: new updated task dict with data on the task.
     """
     return get_impl().task_update(uuid, values)
@@ -140,8 +140,7 @@ def task_update_status(task_uuid, status, allowed_statuses):
     :param task_uuid: string with UUID of Task instance.
     :param status: new value to wrote into db instead of status.
     :param allowed_statuses: list of expected statuses to update in db.
-    :raises: :class: 'rally.exceptions.RallyException' if task not
-             found with specified status.
+    :raises RallyException: if task not found with specified status.
     :returns: the count of rows match as returned by the database's
               "row count" feature
     """
@@ -170,9 +169,9 @@ def task_delete(uuid, status=None):
     statuses are equal otherwise an exception is raised.
 
     :param uuid: UUID of the task.
-    :raises: :class:`rally.exceptions.TaskNotFound` if the task does not exist.
-    :raises: :class:`rally.exceptions.TaskInvalidStatus` if the status
-             of the task does not equal to the status argument.
+    :raises TaskNotFound: if the task does not exist.
+    :raises TaskInvalidStatus: if the status of the task does not
+                               equal to the status argument.
     """
     return get_impl().task_delete(uuid, status=status)
 
@@ -210,10 +209,8 @@ def deployment_delete(uuid):
     """Delete a deployment by UUID.
 
     :param uuid: UUID of the deployment.
-    :raises: :class:`rally.exceptions.DeploymentNotFound` if the deployment
-             does not exist.
-    :raises: :class:`rally.exceptions.DeploymentIsBusy` if the resource is
-             not enough.
+    :raises DeploymentNotFound: if the deployment does not exist.
+    :raises DeploymentIsBusy: if the resource is not enough.
     """
     return get_impl().deployment_delete(uuid)
 
@@ -222,8 +219,7 @@ def deployment_get(deployment):
     """Get a deployment by UUID.
 
     :param deployment: UUID or name of the deployment.
-    :raises: :class:`rally.exceptions.DeploymentNotFound` if the deployment
-             does not exist.
+    :raises DeploymentNotFound: if the deployment does not exist.
     :returns: a dict with data on the deployment.
     """
     return get_impl().deployment_get(deployment)
@@ -234,8 +230,7 @@ def deployment_update(uuid, values):
 
     :param uuid: UUID of the deployment.
     :param values: dict with items to update.
-    :raises: :class:`rally.exceptions.DeploymentNotFound` if the deployment
-             does not exist.
+    :raises DeploymentNotFound: if the deployment does not exist.
     :returns: a dict with data on the deployment.
     """
     return get_impl().deployment_update(uuid, values)
@@ -281,8 +276,7 @@ def resource_delete(id):
     """Delete a resource.
 
     :param id: ID of a resource.
-    :raises: :class:`rally.exceptions.ResourceNotFound` if the resource
-             does not exist.
+    :raises ResourceNotFound: if the resource does not exist.
     """
     return get_impl().resource_delete(id)
 
@@ -300,8 +294,7 @@ def verification_get(verification_uuid):
     """Returns verification by UUID.
 
     :param id: UUID of the verification.
-    :raises: :class:`rally.exceptions.NotFoundException` if verification
-             does not exist.
+    :raises NotFoundException: if verification does not exist.
     :returns: a dict with verification data.
     """
     return get_impl().verification_get(verification_uuid)
@@ -311,8 +304,7 @@ def verification_delete(verification_uuid):
     """Delete verification.
 
     :param verification_uuid: UUID of the verification.
-    :raises: :class:`rally.exceptions.NotFoundException` if verification
-             does not exist.
+    :raises NotFoundException: if verification does not exist.
     """
     return get_impl().verification_delete(verification_uuid)
 
@@ -322,8 +314,7 @@ def verification_update(uuid, values):
 
     :param uuid: UUID of the verification.
     :param values: dict with record values.
-    :raises: :class:`rally.exceptions.NotFoundException` if verification
-             does not exist.
+    :raises NotFoundException: if verification does not exist.
     :returns: new updated task dict with data on the task.
     """
     return get_impl().verification_update(uuid, values)
@@ -366,7 +357,7 @@ def register_worker(values):
                                 this worker service.
                    }
     :returns: A worker.
-    :raises: WorkerAlreadyRegistered
+    :raises WorkerAlreadyRegistered: if worker already registered
     """
     return get_impl().register_worker(values)
 
@@ -376,7 +367,7 @@ def get_worker(hostname):
 
     :param hostname: The hostname of the worker service.
     :returns: A worker.
-    :raises: WorkerNotFound
+    :raises WorkerNotFound: if worker not found
     """
     return get_impl().get_worker(hostname)
 
@@ -385,7 +376,7 @@ def unregister_worker(hostname):
     """Unregister this worker with the service registry.
 
     :param hostname: The hostname of the worker service.
-    :raises: WorkerNotFound
+    :raises WorkerNotFound: if worker not found
     """
     get_impl().unregister_worker(hostname)
 
@@ -394,6 +385,6 @@ def update_worker(hostname):
     """Mark a worker as active by updating its "updated_at" property.
 
     :param hostname: The hostname of this worker service.
-    :raises: WorkerNotFound
+    :raises WorkerNotFound: if worker not found
     """
     get_impl().update_worker(hostname)

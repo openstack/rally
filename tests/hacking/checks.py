@@ -59,6 +59,8 @@ re_str_format = re.compile(r"""
 [hLl]?       # optional length modifier
 [A-z%]       # conversion modifier
 """, re.X)
+re_raises = re.compile(
+    r"\s:raise[^s] *.*$|\s:raises *:.*$|\s:raises *[^:]+$")
 
 
 def skip_ignored_lines(func):
@@ -441,6 +443,20 @@ def check_using_unicode(logical_line, filename):
                   "use 'six.text_type' instead.")
 
 
+def check_raises(physical_line, filename):
+    """Check raises usage
+
+    N354
+    """
+
+    ignored_files = ["./tests/unit/test_hacking.py",
+                     "./tests/hacking/checks.py"]
+    if filename not in ignored_files:
+        if re_raises.search(physical_line):
+            return (0, "N354 ':Please use ':raises Exception: conditions' "
+                       "in docstrings.")
+
+
 def factory(register):
     register(check_assert_methods_from_mock)
     register(check_import_of_logging)
@@ -457,3 +473,4 @@ def factory(register):
     register(check_no_constructor_data_struct)
     register(check_dict_formatting_in_string)
     register(check_using_unicode)
+    register(check_raises)

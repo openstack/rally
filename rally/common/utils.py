@@ -296,7 +296,7 @@ def retry(times, func, *args, **kwargs):
     :param args: *args that are passed to func
     :param kwargs: **kwargs that are passed to func
 
-    :raises: Raise any exception that can raise func
+    :raises Exception: Raise any exception that can raise func
     :returns: Result of func(*args, **kwargs)
     """
 

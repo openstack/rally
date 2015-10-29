@@ -68,7 +68,7 @@ def setup_dict(data, required=None, defaults=None):
     :param required: list, mandatory keys to check
     :param defaults: dict, default data
     :returns: dict, with all keys set
-    :raises: IndexError, ValueError
+    :raises IndexError, ValueError: If input data is incorrect
     """
     required = required or []
     for i in set(required) - set(data):

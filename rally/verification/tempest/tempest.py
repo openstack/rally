@@ -327,8 +327,8 @@ class Tempest(object):
         :param tempest_conf: User specified tempest.conf location
         :type tempest_conf: str
 
-        :raises: :class:`subprocess.CalledProcessError` if tests has been
-                 finished with error.
+        :raises subprocess.CalledProcessError: if tests has been finished
+                                               with error.
         """
 
         if tempest_conf and os.path.isfile(tempest_conf):

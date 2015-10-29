@@ -331,7 +331,7 @@ class HeatScenario(scenario.OpenStackScenario):
 
         :param stack: stack to call a webhook on
         :param output_key: The name of the output to get the URL from
-        :raises: InvalidConfigException if the output key is not found
+        :raises InvalidConfigException: if the output key is not found
         """
         url = None
         for output in stack.outputs:
