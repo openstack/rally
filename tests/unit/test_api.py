@@ -132,6 +132,22 @@ class TaskAPITestCase(test.TestCase):
                                           os.path.dirname(other_template_path))
         self.assertEqual(expect, actual)
 
+    def test_render_template_min(self):
+        template = "{{ min(1, 2)}}"
+        self.assertEqual("1", api.Task.render_template(template))
+
+    def test_render_template_max(self):
+        template = "{{ max(1, 2)}}"
+        self.assertEqual("2", api.Task.render_template(template))
+
+    def test_render_template_ceil(self):
+        template = "{{ ceil(2.2)}}"
+        self.assertEqual("3", api.Task.render_template(template))
+
+    def test_render_template_round(self):
+        template = "{{ round(2.2)}}"
+        self.assertEqual("2", api.Task.render_template(template))
+
     @mock.patch("rally.common.objects.Deployment.get",
                 return_value={"uuid": "b0d9cd6c-2c94-4417-a238-35c7019d0257"})
     @mock.patch("rally.common.objects.Task")

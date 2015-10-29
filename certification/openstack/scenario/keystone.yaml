@@ -3,7 +3,7 @@
       context:
         {{ user_context(tenants_amount, users_amount, use_existing_users) }}
       runner:
-        {{ constant_runner(15*controllers_amount,60*controllers_amount) }}
+        {{ constant_runner(concurrency=min(50, 7*controllers_amount),times=min(200, 67*controllers_amount), is_smoke=smoke) }}
       sla:
         {{ no_failures_sla() }}
 
@@ -12,7 +12,7 @@
       context:
         {{ user_context(tenants_amount, users_amount, use_existing_users) }}
       runner:
-        {{ constant_runner(15*controllers_amount,60*controllers_amount) }}
+        {{ constant_runner(concurrency=min(50, 7*controllers_amount),times=min(200, 67*controllers_amount), is_smoke=smoke) }}
       sla:
         {{ no_failures_sla() }}
 
@@ -21,7 +21,7 @@
       context:
         {{ user_context(tenants_amount, users_amount, use_existing_users) }}
       runner:
-        {{ constant_runner(15*controllers_amount,60*controllers_amount) }}
+        {{ constant_runner(concurrency=min(50, 2*controllers_amount),times=min(200, 10*controllers_amount), is_smoke=smoke) }}
       sla:
         {{ no_failures_sla() }}
 
@@ -30,7 +30,7 @@
       context:
         {{ user_context(tenants_amount, users_amount, use_existing_users) }}
       runner:
-        {{ constant_runner(15*controllers_amount,60*controllers_amount) }}
+        {{ constant_runner(concurrency=min(50, 7*controllers_amount),times=min(200, 67*controllers_amount), is_smoke=smoke) }}
       sla:
         {{ no_failures_sla() }}
 
@@ -39,7 +39,7 @@
       context:
         {{ user_context(tenants_amount, users_amount, use_existing_users) }}
       runner:
-        {{ constant_runner(15*controllers_amount,60*controllers_amount) }}
+        {{ constant_runner(concurrency=min(50, 7*controllers_amount),times=min(200, 67*controllers_amount), is_smoke=smoke) }}
       sla:
         {{ no_failures_sla() }}
 
@@ -48,7 +48,7 @@
       context:
         {{ user_context(tenants_amount, users_amount, use_existing_users) }}
       runner:
-        {{ constant_runner(15*controllers_amount,60*controllers_amount) }}
+        {{ constant_runner(concurrency=min(50, 3*controllers_amount),times=min(200, 67*controllers_amount), is_smoke=smoke) }}
       sla:
         {{ no_failures_sla() }}
 
@@ -57,6 +57,6 @@
       context:
         {{ user_context(tenants_amount, users_amount, use_existing_users) }}
       runner:
-        {{ constant_runner(15*controllers_amount,60*controllers_amount) }}
+        {{ constant_runner(concurrency=min(50, 7*controllers_amount),times=min(200, 67*controllers_amount), is_smoke=smoke) }}
       sla:
         {{ no_failures_sla() }}

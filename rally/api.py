@@ -156,13 +156,29 @@ class Task(object):
 
         env = jinja2.Environment(
             loader=jinja2.FileSystemLoader(template_dir, encoding="utf8"))
+        env.globals.update(cls.create_template_functions())
         ast = env.parse(task_template)
+        # NOTE(Julia Varigina):
+        # Bug in jinja2.meta.find_undeclared_variables
+        #
+        # The method shows inconsistent behavior:
+        # it does not return undeclared variables that appear
+        # in included templates only (via {%- include "some_template.yaml"-%})
+        # and in the same time is declared in jinja2.Environment.globals.
+        #
+        # This is different for undeclared variables that appear directly
+        # in task_template. The method jinja2.meta.find_undeclared_variables
+        # returns an undeclared variable that is used in task_template
+        # and is set in jinja2.Environment.globals.
+        #
+        # Despite this bug, jinja resolves values
+        # declared in jinja2.Environment.globals for both types of undeclared
+        # variables and successfully renders templates in both cases.
         required_kwargs = jinja2.meta.find_undeclared_variables(ast)
-
-        missing = set(required_kwargs) - set(kwargs) - set(dir(builtins))
+        missing = (set(required_kwargs) - set(kwargs) - set(dir(builtins)) -
+                   set(env.globals))
         real_missing = [mis for mis in missing
                         if is_really_missing(mis, task_template)]
-
         if real_missing:
             multi_msg = _("Please specify next template task arguments: %s")
             single_msg = _("Please specify template task argument: %s")
@@ -171,6 +187,25 @@ class Task(object):
                             % ", ".join(real_missing))
 
         return env.from_string(task_template).render(**kwargs)
+
+    @classmethod
+    def create_template_functions(cls):
+
+        def template_min(int1, int2):
+            return min(int1, int2)
+
+        def template_max(int1, int2):
+            return max(int1, int2)
+
+        def template_round(float1):
+            return int(round(float1))
+
+        def template_ceil(float1):
+            import math
+            return int(math.ceil(float1))
+
+        return {"min": template_min, "max": template_max,
+                "ceil": template_ceil, "round": template_round}
 
     @classmethod
     def create(cls, deployment, tag):
