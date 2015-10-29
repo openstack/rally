@@ -180,7 +180,8 @@ class OSClientsTestCase(test.TestCase):
                 self.fake_keystone.auth_token
             )
             mock_session.assert_called_once_with(
-                auth=token.return_value, verify=False)
+                auth=token.return_value, verify=False,
+                timeout=cfg.CONF.openstack_client_http_timeout)
 
     @mock.patch.object(DummyClient, "_get_endpoint")
     @mock.patch("keystoneclient.session.Session")
@@ -200,7 +201,8 @@ class OSClientsTestCase(test.TestCase):
                 self.fake_keystone.auth_token
             )
             mock_session.assert_called_once_with(
-                auth=token.return_value, verify=False)
+                auth=token.return_value, verify=False,
+                timeout=cfg.CONF.openstack_client_http_timeout)
 
     @mock.patch("keystoneclient.session.Session")
     def test_get_session_with_auth(self, mock_session):
@@ -211,7 +213,8 @@ class OSClientsTestCase(test.TestCase):
         osc._get_session(auth=fake_auth)
 
         mock_session.assert_called_once_with(
-            auth=fake_auth, verify=False)
+            auth=fake_auth, verify=False,
+            timeout=cfg.CONF.openstack_client_http_timeout)
 
     def test_keystone(self):
         self.assertNotIn("keystone", self.clients.cache)
