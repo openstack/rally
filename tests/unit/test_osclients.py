@@ -128,6 +128,7 @@ class TestCreateKeystoneClient(test.TestCase):
             mock_discover.version_data.assert_called_once_with()
 
 
+@ddt.ddt
 class OSClientsTestCase(test.TestCase):
 
     def setUp(self):
@@ -649,7 +650,10 @@ class OSClientsTestCase(test.TestCase):
         self.assertNotIn("designate", self.clients.cache)
         with mock.patch.dict("sys.modules",
                              {"designateclient": mock_designate}):
-            client = self.clients.designate()
+            if version is not None:
+                client = self.clients.designate(version=version)
+            else:
+                client = self.clients.designate()
             self.assertEqual(fake_designate, client)
             self.service_catalog.url_for.assert_called_once_with(
                 service_type="dns",

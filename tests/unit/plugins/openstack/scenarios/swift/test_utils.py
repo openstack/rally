@@ -22,6 +22,7 @@ from tests.unit import test
 SWIFT_UTILS = "rally.plugins.openstack.scenarios.swift.utils"
 
 
+@ddt.ddt
 class SwiftScenarioTestCase(test.ScenarioTestCase):
 
     def test__list_containers(self):
