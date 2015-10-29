@@ -20,23 +20,31 @@ from rally.ui import utils
 from tests.unit import test
 
 
-class PlotTestCase(test.TestCase):
+class ModuleTestCase(test.TestCase):
 
     def test_get_template(self):
         self.assertIsInstance(utils.get_template("task/report.mako"),
                               mako.template.Template)
 
+    def test_get_template_raises(self):
+        self.assertRaises(ValueError, utils.get_template, "absent_template")
+
     @mock.patch("rally.ui.utils.get_template")
     def test_main(self, mock_get_template):
-        utils.main("render", "somepath", "a=1", "b=2")
+        self.assertEqual(0, utils.main("render", "somepath", "a=1", "b=2"))
 
         mock_get_template.assert_called_once_with("somepath")
         mock_get_template.return_value.render.assert_called_once_with(
             a="1", b="2"
         )
 
-    def test_main_bad_input(self):
-        self.assertRaises(ValueError, utils.main)
-        self.assertRaises(ValueError, utils.main, "not_a_render")
-        self.assertRaises(ValueError, utils.main, "render")
-        self.assertRaises(ValueError, utils.main, "render", "path", "a 1")
+    @mock.patch("rally.ui.utils.print", create=True)
+    @mock.patch("rally.ui.utils.sys.stderr")
+    def test_main_bad_input(self, mock_stderr, mock_print):
+        self.assertTrue(utils.HELP_MESSAGE.startswith("Usage:"))
+        for args in ([], ["not_a_render"], ["render"],
+                     ["render", "expected_arg", "unexpected_arg"]):
+            self.assertEqual(1, utils.main(*args))
+            mock_print.assert_called_once_with(utils.HELP_MESSAGE,
+                                               file=mock_stderr)
+            mock_print.reset_mock()
