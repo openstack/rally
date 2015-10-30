@@ -112,7 +112,7 @@ class PlotTestCase(test.TestCase):
                       "load_duration": "foo_load_duration"}}]
         mock_objects.Task.extend_results.assert_called_once_with(
             generic_results)
-        mock_get_template.assert_called_once_with("task/report.mako")
+        mock_get_template.assert_called_once_with("task/report.html")
         mock__process_tasks.assert_called_once_with(["extended_result"])
         mock_get_template.return_value.render.assert_called_once_with(
             data="json_scenarios", source="json_source")
