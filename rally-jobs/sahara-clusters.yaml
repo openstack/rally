@@ -8,7 +8,7 @@
          name: "m1.small"
         workers_count: 1
         plugin_name: "vanilla"
-        hadoop_version: "2.6.0"
+        hadoop_version: "2.7.1"
         auto_security_group: True
       runner:
         type: "constant"
@@ -19,10 +19,10 @@
           tenants: 1
           users_per_tenant: 1
         sahara_image:
-          image_url: "http://sahara-files.mirantis.com/mos70/sahara-kilo-vanilla-2.6.0-ubuntu-14.04.qcow2"
+          image_url: "http://sahara-files.mirantis.com/images/upstream/liberty/sahara-liberty-vanilla-2.7.1-ubuntu-14.04.qcow2"
           username: "ubuntu"
           plugin_name: "vanilla"
-          hadoop_version: "2.6.0"
+          hadoop_version: "2.7.1"
         api_versions:
           sahara:
             service_type: {{sahara_service_type}}

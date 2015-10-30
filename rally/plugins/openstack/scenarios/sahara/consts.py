@@ -33,6 +33,11 @@ NODE_PROCESSES = {
             "master": ["namenode", "resourcemanager", "historyserver",
                        "oozie"],
             "worker": ["datanode", "nodemanager"]
+        },
+        "2.7.1": {
+            "master": ["namenode", "resourcemanager", "historyserver",
+                       "oozie"],
+            "worker": ["datanode", "nodemanager"]
         }
     },
     "hdp": {
@@ -74,6 +79,14 @@ NODE_PROCESSES = {
                        "HDFS_SECONDARYNAMENODE", "HIVE_METASTORE",
                        "HIVE_SERVER2"],
             "worker": ["YARN_NODEMANAGER", "HDFS_DATANODE"]
+        },
+        "5.4.0": {
+            "manager": ["CLOUDERA_MANAGER"],
+            "master": ["HDFS_NAMENODE", "YARN_RESOURCEMANAGER",
+                       "OOZIE_SERVER", "YARN_JOBHISTORY",
+                       "HDFS_SECONDARYNAMENODE", "HIVE_METASTORE",
+                       "HIVE_SERVER2"],
+            "worker": ["YARN_NODEMANAGER", "HDFS_DATANODE"]
         }
     }
 }
@@ -93,6 +106,10 @@ REPLICATION_CONFIGS = {
             "config_name": "dfs.replication"
         },
         "2.6.0": {
+            "target": "HDFS",
+            "config_name": "dfs.replication"
+        },
+        "2.7.1": {
             "target": "HDFS",
             "config_name": "dfs.replication"
         }
@@ -115,6 +132,10 @@ REPLICATION_CONFIGS = {
         "5": {
             "target": "HDFS",
             "config_name": "dfs_replication"
+        },
+        "5.4.0": {
+            "target": "HDFS",
+            "config_name": "dfs_replication"
         }
     }
 }
@@ -124,7 +145,8 @@ ANTI_AFFINITY_PROCESSES = {
         "1.2.1": ["datanode"],
         "2.3.0": ["datanode"],
         "2.4.1": ["datanode"],
-        "2.6.0": ["datanode"]
+        "2.6.0": ["datanode"],
+        "2.7.1": ["datanode"]
     },
     "hdp": {
         "1.3.2": ["DATANODE"],
@@ -132,6 +154,7 @@ ANTI_AFFINITY_PROCESSES = {
         "2.2": ["DATANODE"]
     },
     "cdh": {
-        "5": ["HDFS_DATANODE"]
+        "5": ["HDFS_DATANODE"],
+        "5.4.0": ["HDFS_DATANODE"]
     }
 }
