@@ -138,7 +138,9 @@ def check_import_of_logging(logical_line, filename):
     N310
     """
 
-    excluded_files = ["./rally/common/log.py", "./tests/unit/test_log.py"]
+    excluded_files = ["./rally/common/log.py",
+                      "./tests/unit/test_log.py",
+                      "./tests/ci/rally_verify.py"]
 
     forbidden_imports = ["from oslo_log",
                          "import oslo_log",

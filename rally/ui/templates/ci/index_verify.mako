@@ -34,102 +34,102 @@
     </ul>
 
     <h2>Job Steps and Results</h2>
-    <h3>Introduction</h3>
+    <h3>Table</h3>
     <ul>
-        <li>Install tempest</li>
-        <li>Launch two verifications ("compute" set is used)</li>
-        <li>List all verifications</li>
+        <li>Tempest Management</li>
+        <li>Launch two verifications</li>
         <li>Compare two verification results</li>
+        <li>List all verifications</li>
     </ul>
 
     Each job step has output in all supported formats.
 
-    <h3>Details</h3>
-    <span class="${install}">[${install}]</span>
-    <a href="rally-verify/tempest_installation.txt.gz">Tempest installation</a>
-    <code>$ rally verify install</code>
+    <h4>Details</h4>
+    <span class="${install['status']}">[${install['status']}]</span>
+    <a href="${install['stdout_file']}">Tempest installation</a>
+    <code>$ ${install['cmd']}</code>
 
-    <span class="${genconfig}">[${genconfig}]</span>
-    <a href="rally-verify/tempest_config_generation.txt.gz">Tempest config generation</a>
-    <code>$ rally verify genconfig</code>
+    <span class="${genconfig['status']}">[${genconfig['status']}]</span>
+    <a href="${genconfig['stdout_file']}">Tempest config generation</a>
+    <code>$ ${genconfig['cmd']}</code>
 
-    <span class="${showconfig}">[${showconfig}]</span>
-    <a href="rally-verify/tempest_config.txt.gz">Tempest config</a>
-    <code>$ rally verify showconfig</code>
+    <span class="${showconfig['status']}">[${showconfig['status']}]</span>
+    <a href="${showconfig['stdout_file']}">Tempest config</a>
+    <code>$ ${showconfig['cmd']}</code>
 
     <br>First verification run
     <ol>
         <li>
-            <span class="${v1}">[${v1}]</span>
-            <a href="rally-verify/1_verification_compute_set.txt.gz">Launch of verification</a>
-            <code>$ rally verify start --set compute</code>
+            <span class="${first_run['status']}">[${first_run['status']}]</span>
+            <a href="${first_run['stdout_file']}">Launch of verification</a>
+            <code>$ ${first_run['cmd']}</code>
         </li>
         <li>
-            <span class="${vr_1_html}">[${vr_1_html}]</span>
-            <a href="rally-verify/1_verify_results_compute_set.html.gz">Display raw results in HTML</a>
-            <code>$ rally verify results --html</code>
+            <span class="${first_run['result_in_html']['status']}">[${first_run['result_in_html']['status']}]</span>
+            <a href="${first_run['result_in_html']['output_file']}">Display raw results in HTML</a> [<a href="${first_run['result_in_html']['stdout_file']}">Output from CLI</a>]
+            <code>$ ${first_run['result_in_html']['cmd']}</code>
         </li>
         <li>
-            <span class="${vr_1_json}">[${vr_1_json}]</span>
-            <a href="rally-verify/1_verify_results_compute_set.json.gz">Display raw results in JSON</a>
-            <code>$ rally verify results --json</code>
+            <span class="${first_run['result_in_json']['status']}">[${first_run['result_in_json']['status']}]</span>
+            <a href="${first_run['result_in_json']['output_file']}">Display raw results in JSON</a> [<a href="${first_run['result_in_json']['stdout_file']}">Output from CLI</a>]
+            <code>$ ${first_run['result_in_json']['cmd']}</code>
         </li>
         <li>
-            <span class="${vs_1}">[${vs_1}]</span>
-            <a href="rally-verify/1_verify_show_compute_set.txt.gz">Display results table of the verification</a>
-            <code>$ rally verify show</code>
+            <span class="${first_run['show']['status']}">[${first_run['show']['status']}]</span>
+            <a href="${first_run['show']['stdout_file']}">Display results table of the verification</a>
+            <code>$ ${first_run['show']['cmd']}</code>
         </li>
         <li>
-            <span class="${vsd_1}">[${vsd_1}]</span>
-            <a href="rally-verify/1_verify_show_compute_set_detailed.txt.gz">Display results table of the verification with detailed errors</a><br />
-            <code style="display: inline">$ rally verify show --detailed</code> or <code style="display: inline">$ rally verify detailed</code>
+            <span class="${first_run['show_detailed']['status']}">[${first_run['show_detailed']['status']}]</span>
+            <a href="${first_run['show_detailed']['stdout_file']}">Display results table of the verification with detailed errors</a><br />
+            <code>$ ${first_run['show_detailed']['cmd']}</code>
         </li>
     </ol>
 
     Second verification run
     <ol>
         <li>
-            <span class="${v2}">[${v2}]</span>
-            <a href="rally-verify/2_verification_compute_set.txt.gz">Launch of verification</a>
-            <code>$ rally verify start --set compute</code>
+            <span class="${second_run['status']}">[${second_run['status']}]</span>
+            <a href="${second_run['stdout_file']}">Launch of verification</a>
+            <code>$ ${second_run['cmd']}</code>
         </li>
         <li>
-            <span class="${vr_2_html}">[${vr_2_html}]</span>
-            <a href="rally-verify/2_verify_results_compute_set.html.gz">Display results in HTML</a>
-            <code>$ rally verify results --html</code>
+            <span class="${second_run['result_in_html']['status']}">[${second_run['result_in_html']['status']}]</span>
+            <a href="${second_run['result_in_html']['output_file']}">Display raw results in HTML</a> [<a href="${second_run['result_in_html']['stdout_file']}">Output from CLI</a>]
+            <code>$ ${second_run['result_in_html']['cmd']}</code>
         </li>
         <li>
-            <span class="${vr_2_json}">[${vr_2_json}]</span>
-            <a href="rally-verify/2_verify_results_compute_set.json.gz">Display results in JSON</a>
-            <code>$ rally verify results --json</code>
+            <span class="${second_run['result_in_json']['status']}">[${second_run['result_in_json']['status']}]</span>
+            <a href="${second_run['result_in_json']['output_file']}">Display raw results in JSON</a> [<a href="${second_run['result_in_json']['stdout_file']}">Output from CLI</a>]
+            <code>$ ${second_run['result_in_json']['cmd']}</code>
         </li>
         <li>
-            <span class="${vs_2}">[${vs_2}]</span>
-            <a href="rally-verify/2_verify_show_compute_set.txt.gz">Display table results of the verification</a>
-            <code>$ rally verify show</code>
+            <span class="${second_run['show']['status']}">[${second_run['show']['status']}]</span>
+            <a href="${second_run['show']['stdout_file']}">Display results table of the verification</a>
+            <code>$ ${second_run['show']['cmd']}</code>
         </li>
         <li>
-            <span class="${vsd_2}">[${vsd_2}]</span>
-            <a href="rally-verify/2_verify_show_compute_set_detailed.txt.gz">Display table results of the verification with detailed errors</a><br />
-            <code style="display: inline">$ rally verify show --detailed</code> or <code style="display: inline">$ rally verify detailed</code>
+            <span class="${second_run['show_detailed']['status']}">[${second_run['show_detailed']['status']}]</span>
+            <a href="${second_run['show_detailed']['stdout_file']}">Display results table of the verification with detailed errors</a><br />
+            <code>$ ${second_run['show_detailed']['cmd']}</code>
         </li>
     </ol>
 
-    <span class="${l}">[${l}]</span>
-    <a href="rally-verify/verify_list.txt.gz">List of all verifications</a>
-    <code>$ rally verify list</code>
-
-    <span class="${c_html}">[${c_html}]</span>
-    <a href="rally-verify/compare_results.html.gz">Compare two verification and display results in HTML</a>
+    <span class="${compare['html']['status']}">[${compare['html']['status']}]</span>
+    <a href="${compare['html']['output_file']}">Compare two verifications and display results in HTML</a> [<a href="${compare['html']['stdout_file']}">Output from CLI</a>]
     <code>$ rally verify compare --uuid-1 &lt;uuid-1&gt; --uuid-2 &lt;uuid-2&gt; --html</code>
 
-    <span class="${c_json}">[${c_json}]</span>
-    <a href="rally-verify/compare_results.json.gz">Compare two verifications and display results in JSON</a>
+    <span class="${compare['json']['status']}">[${compare['json']['status']}]</span>
+    <a href="${compare['json']['output_file']}">Compare two verifications and display results in JSON</a> [<a href="${compare['json']['stdout_file']}">Output from CLI</a>]
     <code>$ rally verify compare --uuid-1 &lt;uuid-1&gt; --uuid-2 &lt;uuid-2&gt; --json</code>
 
-    <span class="${c_csv}">[${c_csv}]</span>
-    <a href="rally-verify/compare_results.csv.gz">Compare two verifications and display results in CSV</a>
+    <span class="${compare['csv']['status']}">[${compare['csv']['status']}]</span>
+    <a href="${compare['csv']['output_file']}">Compare two verifications and display results in CSV</a> [<a href="${compare['csv']['stdout_file']}">Output from CLI</a>]
     <code>$ rally verify compare --uuid-1 &lt;uuid-1&gt; --uuid-2 &lt;uuid-2&gt; --csv</code>
+
+    <span class="${list['status']}">[${list['status']}]</span>
+    <a href="${list['stdout_file']}">List of all verifications</a>
+    <code>$ ${list['cmd']}</code>
 
     <h2>About Rally</h2>
     <p>Rally is benchmarking and verification system for OpenStack:</p>
