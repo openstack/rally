@@ -11,7 +11,7 @@
 # under the License.
 """Output verification comparison results in html."""
 
-import os
+from rally.ui import utils as ui_utils
 
 __description__ = "List differences between two verification runs"
 __title__ = "Verification Comparison"
@@ -19,8 +19,6 @@ __version__ = "0.1"
 
 
 def create_report(results):
-    import mako.template
-
     template_kw = {
         "heading": {
             "title": __title__,
@@ -31,11 +29,7 @@ def create_report(results):
         "results": results
     }
 
-    template_path = os.path.join(os.path.dirname(__file__),
-                                 "report_templates",
-                                 "compare.mako")
+    template = ui_utils.get_template("verification/compare.mako")
+    output = template.render(**template_kw)
 
-    with open(template_path) as f:
-        template = mako.template.Template(f.read(), strict_undefined=True)
-        output = template.render(**template_kw)
-        return output.encode("utf8")
+    return output.encode("utf8")

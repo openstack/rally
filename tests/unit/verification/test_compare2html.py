@@ -18,7 +18,8 @@ from tests.unit import test
 
 class Compare2HtmlTestCase(test.TestCase):
 
-    def test_main(self):
+    @mock.patch("rally.ui.utils.get_template")
+    def test_main(self, mock_get_template):
         results = [{"val2": 0.0111, "field": u"time", "val1": 0.0222,
                     "type": "CHANGED", "test_name": u"test.one"},
                    {"val2": 0.111, "field": u"time", "val1": 0.222,
@@ -26,14 +27,22 @@ class Compare2HtmlTestCase(test.TestCase):
                    {"val2": 1.11, "field": u"time", "val1": 2.22,
                     "type": "CHANGED", "test_name": u"test.three"}]
 
-        fake_kw = {"heading":
-                   {"title": compare2html.__title__,
-                    "description": compare2html.__description__,
-                    "parameters": [("Difference Count", len(results))]
-                    },
-                   "generator": "compare2html %s" % compare2html.__version__,
-                   "results": results}
+        fake_template_kw = {
+            "heading": {
+                "title": compare2html.__title__,
+                "description": compare2html.__description__,
+                "parameters": [("Difference Count", len(results))]
+            },
+            "generator": "compare2html %s" % compare2html.__version__,
+            "results": results
+        }
 
-        with mock.patch("mako.template.Template") as mock_mako:
-            compare2html.create_report(results)
-            mock_mako().render.assert_called_once_with(**fake_kw)
+        template_mock = mock.MagicMock()
+        mock_get_template.return_value = template_mock
+        output_mock = mock.MagicMock()
+        template_mock.render.return_value = output_mock
+        compare2html.create_report(results)
+
+        mock_get_template.assert_called_once_with("verification/compare.mako")
+        template_mock.render.assert_called_once_with(**fake_template_kw)
+        output_mock.encode.assert_called_once_with("utf8")
