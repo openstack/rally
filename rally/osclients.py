@@ -160,7 +160,8 @@ class OSClient(plugin.Plugin):
         if auth is None:
             auth = token_endpoint.Token(endpoint, kc.auth_token)
 
-        return ks_session.Session(auth=auth, verify=self.endpoint.insecure)
+        return ks_session.Session(auth=auth, verify=self.endpoint.insecure,
+                                  timeout=CONF.openstack_client_http_timeout)
 
     def _get_endpoint(self, service_type=None):
         kc = self.keystone()
