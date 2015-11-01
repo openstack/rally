@@ -22,7 +22,6 @@ from rally.common.i18n import _
 from rally.common import log as logging
 from rally.common import objects
 from rally.common.plugin import plugin
-from rally.common import utils
 from rally import consts
 from rally import exceptions
 
@@ -696,8 +695,8 @@ class Clients(object):
         return self.cache["services_data"]
 
     @classmethod
-    @utils.log_deprecated("Use rally.osclients.configure decorator instead.",
-                          "0.1.2")
+    @logging.log_deprecated("Use rally.osclients.configure decorator instead.",
+                            "0.1.2")
     def register(cls, client_name):
         """DEPRECATED!Decorator that adds new OpenStack client dynamically.
 

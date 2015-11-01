@@ -62,7 +62,7 @@ class EC2ServerGenerator(context.Context):
         "additionalProperties": False
     }
 
-    @rutils.log_task_wrapper(LOG.info, _("Enter context: `EC2 Servers`"))
+    @logging.log_task_wrapper(LOG.info, _("Enter context: `EC2 Servers`"))
     def setup(self):
         image = self.config["image"]
         flavor = self.config["flavor"]
@@ -92,7 +92,7 @@ class EC2ServerGenerator(context.Context):
 
             self.context["tenants"][tenant_id]["ec2_servers"] = current_servers
 
-    @rutils.log_task_wrapper(LOG.info, _("Exit context: `EC2 Servers`"))
+    @logging.log_task_wrapper(LOG.info, _("Exit context: `EC2 Servers`"))
     def cleanup(self):
         resource_manager.cleanup(names=["ec2.servers"],
                                  users=self.context.get("users", []))

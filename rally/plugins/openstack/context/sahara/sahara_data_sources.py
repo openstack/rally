@@ -51,8 +51,8 @@ class SaharaDataSources(context.Context):
                      "output_type", "output_url_prefix"]
     }
 
-    @rutils.log_task_wrapper(LOG.info,
-                             _("Enter context: `Sahara Data Sources`"))
+    @logging.log_task_wrapper(LOG.info,
+                              _("Enter context: `Sahara Data Sources`"))
     def setup(self):
         self.context["sahara_output_conf"] = {
             "output_type": self.config["output_type"],
@@ -79,7 +79,7 @@ class SaharaDataSources(context.Context):
 
         self.context["tenants"][tenant_id]["sahara_input"] = input_ds.id
 
-    @rutils.log_task_wrapper(LOG.info, _("Exit context: `Sahara EDP`"))
+    @logging.log_task_wrapper(LOG.info, _("Exit context: `Sahara EDP`"))
     def cleanup(self):
         resources = ["job_executions", "jobs", "data_sources"]
 

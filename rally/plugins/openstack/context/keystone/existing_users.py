@@ -16,7 +16,6 @@
 from rally.common.i18n import _
 from rally.common import log as logging
 from rally.common import objects
-from rally.common import utils as rutils
 from rally import osclients
 from rally.plugins.openstack.context.keystone import users
 from rally.task import context
@@ -44,7 +43,7 @@ class ExistingUsers(users.UserContextMixin, context.Context):
     #                 this is used only by benchmark engine
     CONFIG_SCHEMA = {}
 
-    @rutils.log_task_wrapper(LOG.info, _("Enter context: `existing_users`"))
+    @logging.log_task_wrapper(LOG.info, _("Enter context: `existing_users`"))
     def setup(self):
         self.context["users"] = []
         self.context["tenants"] = {}
@@ -65,6 +64,6 @@ class ExistingUsers(users.UserContextMixin, context.Context):
                 "tenant_id": user_kclient.tenant_id
             })
 
-    @rutils.log_task_wrapper(LOG.info, _("Exit context: `existing_users`"))
+    @logging.log_task_wrapper(LOG.info, _("Exit context: `existing_users`"))
     def cleanup(self):
         """These users are not managed by Rally, so don't touch them."""

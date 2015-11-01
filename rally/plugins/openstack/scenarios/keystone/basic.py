@@ -13,7 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from rally.common import utils
+from rally.common import log as logging
 from rally.plugins.openstack import scenario
 from rally.plugins.openstack.scenarios.keystone import utils as kutils
 from rally.task import validation
@@ -24,7 +24,7 @@ class KeystoneBasic(kutils.KeystoneScenario):
 
     @validation.required_openstack(admin=True)
     @scenario.configure(context={"admin_cleanup": ["keystone"]})
-    @utils.log_deprecated_args(
+    @logging.log_deprecated_args(
         "The 'name_length' argument to create_user is ignored",
         "0.1.2", ["name_length"], once=True)
     def create_user(self, name_length=10, **kwargs):
@@ -37,7 +37,7 @@ class KeystoneBasic(kutils.KeystoneScenario):
 
     @validation.required_openstack(admin=True)
     @scenario.configure(context={"admin_cleanup": ["keystone"]})
-    @utils.log_deprecated_args(
+    @logging.log_deprecated_args(
         "The 'name_length' argument to create_delete_user is ignored",
         "0.1.2", ["name_length"], once=True)
     def create_delete_user(self, name_length=10, **kwargs):
@@ -65,7 +65,7 @@ class KeystoneBasic(kutils.KeystoneScenario):
 
     @validation.required_openstack(admin=True)
     @scenario.configure(context={"admin_cleanup": ["keystone"]})
-    @utils.log_deprecated_args(
+    @logging.log_deprecated_args(
         "The 'name_length' argument to create_tenant is ignored",
         "0.1.2", ["name_length"], once=True)
     def create_tenant(self, name_length=10, **kwargs):
@@ -78,7 +78,7 @@ class KeystoneBasic(kutils.KeystoneScenario):
     @validation.number("users_per_tenant", minval=1)
     @validation.required_openstack(admin=True)
     @scenario.configure(context={"admin_cleanup": ["keystone"]})
-    @utils.log_deprecated_args(
+    @logging.log_deprecated_args(
         "The 'name_length' argument to create_tenant_with_users is ignored",
         "0.1.2", ["name_length"], once=True)
     def create_tenant_with_users(self, users_per_tenant, name_length=10,
@@ -94,7 +94,7 @@ class KeystoneBasic(kutils.KeystoneScenario):
 
     @validation.required_openstack(admin=True)
     @scenario.configure(context={"admin_cleanup": ["keystone"]})
-    @utils.log_deprecated_args(
+    @logging.log_deprecated_args(
         "The 'name_length' argument to create_and_list_users is ignored",
         "0.1.2", ["name_length"], once=True)
     def create_and_list_users(self, name_length=10, **kwargs):
@@ -108,7 +108,7 @@ class KeystoneBasic(kutils.KeystoneScenario):
 
     @validation.required_openstack(admin=True)
     @scenario.configure(context={"admin_cleanup": ["keystone"]})
-    @utils.log_deprecated_args(
+    @logging.log_deprecated_args(
         "The 'name_length' argument to create_and_list_tenants is ignored",
         "0.1.2", ["name_length"], once=True)
     def create_and_list_tenants(self, name_length=10, **kwargs):
@@ -175,7 +175,7 @@ class KeystoneBasic(kutils.KeystoneScenario):
         self._get_service(service.id)
 
     @validation.required_openstack(admin=True)
-    @utils.log_deprecated_args(
+    @logging.log_deprecated_args(
         "The 'name' argument to create_and_delete_service will be ignored",
         "0.0.5", ["name"])
     @scenario.configure(context={"admin_cleanup": ["keystone"]})
@@ -191,7 +191,7 @@ class KeystoneBasic(kutils.KeystoneScenario):
 
     @validation.required_openstack(admin=True)
     @scenario.configure(context={"admin_cleanup": ["keystone"]})
-    @utils.log_deprecated_args(
+    @logging.log_deprecated_args(
         "The 'name_length' argument to create_update_and_delete_tenant is "
         "ignored", "0.1.2", ["name_length"], once=True)
     def create_update_and_delete_tenant(self, name_length=None, **kwargs):
@@ -205,7 +205,7 @@ class KeystoneBasic(kutils.KeystoneScenario):
 
     @validation.required_openstack(admin=True)
     @scenario.configure(context={"admin_cleanup": ["keystone"]})
-    @utils.log_deprecated_args(
+    @logging.log_deprecated_args(
         "The 'name_length' and 'password_length' arguments to "
         "create_user_update_password are ignored",
         "0.1.2", ["name_length", "password_length"], once=True)
@@ -217,7 +217,7 @@ class KeystoneBasic(kutils.KeystoneScenario):
         self._update_user_password(user.id, password)
 
     @validation.required_openstack(admin=True)
-    @utils.log_deprecated_args(
+    @logging.log_deprecated_args(
         "The 'name' argument to create_and_list_services will be ignored",
         "0.0.5", ["name"])
     @scenario.configure(context={"admin_cleanup": ["keystone"]})

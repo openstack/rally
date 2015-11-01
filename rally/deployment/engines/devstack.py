@@ -20,7 +20,6 @@ import six
 from rally.common.i18n import _
 from rally.common import log as logging
 from rally.common import objects
-from rally.common import utils
 from rally import consts
 from rally.deployment import engine
 from rally.deployment.serverprovider import provider
@@ -96,7 +95,7 @@ class DevstackEngine(engine.Engine):
         if "local_conf" in self.config:
             self.local_conf.update(self.config["local_conf"])
 
-    @utils.log_deploy_wrapper(LOG.info, _("Prepare server for devstack"))
+    @logging.log_deploy_wrapper(LOG.info, _("Prepare server for devstack"))
     def prepare_server(self, server):
         script_path = os.path.abspath(os.path.join(os.path.dirname(__file__),
                                                    "devstack", "install.sh"))
@@ -104,7 +103,7 @@ class DevstackEngine(engine.Engine):
         if server.password:
             server.ssh.run("chpasswd", stdin="rally:%s" % server.password)
 
-    @utils.log_deploy_wrapper(LOG.info, _("Deploy devstack"))
+    @logging.log_deploy_wrapper(LOG.info, _("Deploy devstack"))
     def deploy(self):
         self.servers = self.get_provider().create_servers()
         devstack_repo = self.config.get("devstack_repo", DEVSTACK_REPO)

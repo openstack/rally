@@ -70,7 +70,7 @@ class FlavorsGenerator(context.Context):
         }
     }
 
-    @rutils.log_task_wrapper(LOG.info, _("Enter context: `flavors`"))
+    @logging.log_task_wrapper(LOG.info, _("Enter context: `flavors`"))
     def setup(self):
         """Create list of flavors."""
         self.context["flavors"] = {}
@@ -96,7 +96,7 @@ class FlavorsGenerator(context.Context):
             self.context["flavors"][flavor_config["name"]] = flavor.to_dict()
             LOG.debug("Created flavor with id '%s'" % flavor.id)
 
-    @rutils.log_task_wrapper(LOG.info, _("Exit context: `flavors`"))
+    @logging.log_task_wrapper(LOG.info, _("Exit context: `flavors`"))
     def cleanup(self):
         """Delete created flavors."""
         clients = osclients.Clients(self.context["admin"]["endpoint"])

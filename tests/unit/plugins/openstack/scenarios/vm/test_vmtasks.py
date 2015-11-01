@@ -15,8 +15,7 @@
 
 import mock
 
-from rally.common import log
-from rally.common import utils
+from rally.common import log as logging
 from rally import exceptions
 from rally.plugins.openstack.scenarios.vm import vmtasks
 from tests.unit import test
@@ -40,7 +39,7 @@ class VMTasksTestCase(test.ScenarioTestCase):
             return_value=(0, "\"foo_out\"", "foo_err"))
 
     def test_boot_runcommand_delete(self):
-        with log.LogCatcher(utils.LOG) as catcher:
+        with logging.LogCatcher(logging.LOG) as catcher:
             self.scenario.boot_runcommand_delete(
                 "foo_image", "foo_flavor",
                 script="foo_script", interpreter="foo_interpreter",

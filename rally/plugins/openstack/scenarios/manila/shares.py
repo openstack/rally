@@ -13,7 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from rally.common import utils as rutils
+from rally.common import log as logging
 from rally import consts
 from rally.plugins.openstack import scenario
 from rally.plugins.openstack.scenarios.manila import utils
@@ -65,7 +65,7 @@ class ManilaShares(utils.ManilaScenario):
     @validation.required_services(consts.Service.MANILA)
     @validation.required_openstack(users=True)
     @scenario.configure(context={"cleanup": ["manila"]})
-    @rutils.log_deprecated_args(
+    @logging.log_deprecated_args(
         "The 'name' argument to create_and_delete_service will be ignored",
         "1.1.2", ["name"], once=True)
     def create_share_network_and_delete(self,
@@ -92,7 +92,7 @@ class ManilaShares(utils.ManilaScenario):
     @validation.required_services(consts.Service.MANILA)
     @validation.required_openstack(users=True)
     @scenario.configure(context={"cleanup": ["manila"]})
-    @rutils.log_deprecated_args(
+    @logging.log_deprecated_args(
         "The 'name' argument to create_and_delete_service will be ignored",
         "1.1.2", ["name"], once=True)
     def create_share_network_and_list(self,
@@ -141,7 +141,7 @@ class ManilaShares(utils.ManilaScenario):
     @validation.required_services(consts.Service.MANILA)
     @validation.required_openstack(users=True)
     @scenario.configure(context={"cleanup": ["manila"]})
-    @rutils.log_deprecated_args(
+    @logging.log_deprecated_args(
         "The 'name' argument to create_and_delete_service will be ignored",
         "1.1.2", ["name"], once=True)
     def create_security_service_and_delete(self, security_service_type,

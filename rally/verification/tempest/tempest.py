@@ -26,7 +26,6 @@ from oslo_utils import encodeutils
 from rally.common import costilius
 from rally.common.i18n import _
 from rally.common import log as logging
-from rally.common import utils
 from rally import consts
 from rally import exceptions
 from rally.verification.tempest import config
@@ -293,7 +292,7 @@ class Tempest(object):
         if os.path.exists(self.path()):
             shutil.rmtree(self.path())
 
-    @utils.log_verification_wrapper(LOG.info, _("Run verification."))
+    @logging.log_verification_wrapper(LOG.info, _("Run verification."))
     def _prepare_and_run(self, set_name, regex, tests_file):
         if not self.is_configured():
             self.generate_config_file()
@@ -385,7 +384,7 @@ class Tempest(object):
             LOG.error("JSON-log file not found.")
             return None, None
 
-    @utils.log_verification_wrapper(
+    @logging.log_verification_wrapper(
         LOG.info, _("Saving verification results."))
     def _save_results(self, log_file=None):
         total, test_cases = self.parse_results(log_file)

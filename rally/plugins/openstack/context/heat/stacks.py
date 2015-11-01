@@ -70,7 +70,7 @@ class StackGenerator(context.Context):
             template["resources"]["TestResource%d" % i] = rand_string
         return template
 
-    @rutils.log_task_wrapper(LOG.info, _("Enter context: `Stacks`"))
+    @logging.log_task_wrapper(LOG.info, _("Enter context: `Stacks`"))
     def setup(self):
         template = self._prepare_stack_template(
             self.config["resources_per_stack"])
@@ -83,7 +83,7 @@ class StackGenerator(context.Context):
                 stack = heat_scenario._create_stack(template)
                 self.context["tenants"][tenant_id]["stacks"].append(stack.id)
 
-    @rutils.log_task_wrapper(LOG.info, _("Exit context: `Stacks`"))
+    @logging.log_task_wrapper(LOG.info, _("Exit context: `Stacks`"))
     def cleanup(self):
         resource_manager.cleanup(names=["heat.stacks"],
                                  users=self.context.get("users", []))

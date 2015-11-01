@@ -23,7 +23,6 @@ from six import moves
 
 from rally.common.i18n import _
 from rally.common import log as logging
-from rally.common import utils
 from rally.deployment.serverprovider import provider
 from rally import exceptions
 
@@ -309,7 +308,7 @@ class LxcProvider(provider.ProviderFactory):
         return provider.ProviderFactory.get_provider(
             self.config["host_provider"], self.deployment)
 
-    @utils.log_deploy_wrapper(LOG.info, _("Create containers on host"))
+    @logging.log_deploy_wrapper(LOG.info, _("Create containers on host"))
     def create_servers(self):
         host_provider = self.get_host_provider()
         name_prefix = self.config["container_name_prefix"]
@@ -353,7 +352,7 @@ class LxcProvider(provider.ProviderFactory):
             self.resources.create(info)
         return servers
 
-    @utils.log_deploy_wrapper(LOG.info, _("Destroy host(s)"))
+    @logging.log_deploy_wrapper(LOG.info, _("Destroy host(s)"))
     def destroy_servers(self):
         for resource in self.resources.get_all():
             server = provider.Server.from_credentials(resource["info"]["host"])

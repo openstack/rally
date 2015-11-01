@@ -15,7 +15,6 @@
 
 from rally.common.i18n import _
 from rally.common import log as logging
-from rally.common import utils as rutils
 from rally import consts
 from rally import exceptions
 from rally.plugins.openstack.context.swift import utils as swift_utils
@@ -57,7 +56,7 @@ class SwiftObjectGenerator(swift_utils.SwiftObjectMixin, context.Context):
         "resource_management_workers": 30
     }
 
-    @rutils.log_task_wrapper(LOG.info, _("Enter context: `swift_objects`"))
+    @logging.log_task_wrapper(LOG.info, _("Enter context: `swift_objects`"))
     def setup(self):
         """Create containers and objects, using the broker pattern."""
         threads = self.config["resource_management_workers"]
@@ -91,7 +90,7 @@ class SwiftObjectGenerator(swift_utils.SwiftObjectMixin, context.Context):
                       "expected %(expected)s but got %(actual)s.")
                 % {"expected": objects_num, "actual": objects_count})
 
-    @rutils.log_task_wrapper(LOG.info, _("Exit context: `swift_objects`"))
+    @logging.log_task_wrapper(LOG.info, _("Exit context: `swift_objects`"))
     def cleanup(self):
         """Delete containers and objects, using the broker pattern."""
         threads = self.config["resource_management_workers"]

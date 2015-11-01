@@ -89,7 +89,7 @@ class SaharaCluster(context.Context):
                      "flavor_id"]
     }
 
-    @rutils.log_task_wrapper(LOG.info, _("Enter context: `Sahara Cluster`"))
+    @logging.log_task_wrapper(LOG.info, _("Enter context: `Sahara Cluster`"))
     def setup(self):
         self.context["sahara_clusters"] = {}
 
@@ -160,7 +160,7 @@ class SaharaCluster(context.Context):
                 return False
         return True
 
-    @rutils.log_task_wrapper(LOG.info, _("Exit context: `Sahara Cluster`"))
+    @logging.log_task_wrapper(LOG.info, _("Exit context: `Sahara Cluster`"))
     def cleanup(self):
 
         # TODO(boris-42): Delete only resources created by this context

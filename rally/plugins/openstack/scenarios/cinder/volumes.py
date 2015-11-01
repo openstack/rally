@@ -16,7 +16,6 @@
 import random
 
 from rally.common import log as logging
-from rally.common import utils
 from rally import consts
 from rally import exceptions
 from rally.plugins.openstack import scenario
@@ -349,8 +348,8 @@ class CinderVolumes(cinder_utils.CinderScenario,
     @validation.required_services(consts.Service.NOVA, consts.Service.CINDER)
     @validation.required_openstack(users=True)
     @scenario.configure(context={"cleanup": ["cinder", "nova"]})
-    @utils.log_deprecated_args("Use 'nested_level' as an int", "0.1.2",
-                               ["nested_level"], once=True)
+    @logging.log_deprecated_args("Use 'nested_level' as an int", "0.1.2",
+                                 ["nested_level"], once=True)
     def create_nested_snapshots_and_attach_volume(self,
                                                   size=None,
                                                   nested_level=None,

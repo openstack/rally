@@ -21,7 +21,6 @@ import six
 from rally.common.i18n import _
 from rally.common import log as logging
 from rally.common.plugin import plugin
-from rally.common import utils
 from rally import consts
 from rally.deployment.serverprovider import provider
 from rally import exceptions
@@ -112,15 +111,15 @@ class Engine(plugin.Plugin):
     def cleanup(self):
         """Cleanup OpenStack deployment."""
 
-    @utils.log_deploy_wrapper(LOG.info, _("OpenStack cloud deployment."))
+    @logging.log_deploy_wrapper(LOG.info, _("OpenStack cloud deployment."))
     def make_deploy(self):
         self.deployment.set_started()
         endpoints = self.deploy()
         self.deployment.set_completed()
         return endpoints
 
-    @utils.log_deploy_wrapper(LOG.info,
-                              _("Destroy cloud and free allocated resources."))
+    @logging.log_deploy_wrapper(LOG.info, _("Destroy cloud and free "
+                                "allocated resources."))
     def make_cleanup(self):
         self.deployment.update_status(consts.DeployStatus.CLEANUP_STARTED)
         self.cleanup()

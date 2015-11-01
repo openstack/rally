@@ -17,7 +17,6 @@ import novaclient.exceptions
 
 from rally.common.i18n import _
 from rally.common import log as logging
-from rally.common import utils
 from rally import osclients
 from rally.plugins.openstack.context.cleanup import manager as resource_manager
 from rally.task import context
@@ -47,12 +46,12 @@ class Keypair(context.Context):
                 "name": keypair_name,
                 "id": keypair.id}
 
-    @utils.log_task_wrapper(LOG.info, _("Enter context: `keypair`"))
+    @logging.log_task_wrapper(LOG.info, _("Enter context: `keypair`"))
     def setup(self):
         for user in self.context["users"]:
             user["keypair"] = self._generate_keypair(user["endpoint"])
 
-    @utils.log_task_wrapper(LOG.info, _("Exit context: `keypair`"))
+    @logging.log_task_wrapper(LOG.info, _("Exit context: `keypair`"))
     def cleanup(self):
         # TODO(boris-42): Delete only resources created by this context
         resource_manager.cleanup(names=["nova.keypairs"],

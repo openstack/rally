@@ -266,7 +266,7 @@ class UserGenerator(UserContextMixin, context.Context):
         broker.run(publish, consume, threads)
         self.context["users"] = []
 
-    @rutils.log_task_wrapper(LOG.info, _("Enter context: `users`"))
+    @logging.log_task_wrapper(LOG.info, _("Enter context: `users`"))
     def setup(self):
         """Create tenants and users, using the broker pattern."""
         self.context["users"] = []
@@ -293,7 +293,7 @@ class UserGenerator(UserContextMixin, context.Context):
                 ctx_name=self.get_name(),
                 msg=_("Failed to create the requested number of users."))
 
-    @rutils.log_task_wrapper(LOG.info, _("Exit context: `users`"))
+    @logging.log_task_wrapper(LOG.info, _("Exit context: `users`"))
     def cleanup(self):
         """Delete tenants and users, using the broker pattern."""
         self._remove_default_security_group()

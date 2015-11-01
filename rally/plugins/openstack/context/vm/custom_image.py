@@ -105,7 +105,7 @@ class BaseCustomImageGenerator(context.Context):
         "workers": 1
     }
 
-    @utils.log_task_wrapper(LOG.info, _("Enter context: `custom_image`"))
+    @logging.log_task_wrapper(LOG.info, _("Enter context: `custom_image`"))
     def setup(self):
         """Creates custom image(s) with preinstalled applications.
 
@@ -185,7 +185,7 @@ class BaseCustomImageGenerator(context.Context):
         admin_clients.glance().images.get(
             custom_image["id"]).update(is_public=True)
 
-    @utils.log_task_wrapper(LOG.info, _("Exit context: `custom_image`"))
+    @logging.log_task_wrapper(LOG.info, _("Exit context: `custom_image`"))
     def cleanup(self):
         """Delete created custom image(s)."""
 
@@ -225,8 +225,8 @@ class BaseCustomImageGenerator(context.Context):
                 custom_image["id"])
             nova_scenario._delete_image(custom_image)
 
-    @utils.log_task_wrapper(LOG.info,
-                            _("Custom image context: customizing"))
+    @logging.log_task_wrapper(LOG.info,
+                              _("Custom image context: customizing"))
     def customize_image(self, server, ip, user):
         return self._customize_image(server, ip, user)
 
