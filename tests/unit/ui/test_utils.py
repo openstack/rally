@@ -13,7 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import mako
 import mock
 
 from rally.ui import utils
@@ -22,29 +21,32 @@ from tests.unit import test
 
 class ModuleTestCase(test.TestCase):
 
-    def test_get_template(self):
-        self.assertIsInstance(utils.get_template("task/report.mako"),
-                              mako.template.Template)
+    def test_get_mako_template(self):
+        try:
+            import mako
+        except ImportError:
+            self.skip("No mako module. Skipping test.")
+        template = utils.get_mako_template("ci/index.mako")
+        self.assertIsInstance(template, mako.template.Template)
 
-    def test_get_template_raises(self):
-        self.assertRaises(ValueError, utils.get_template, "absent_template")
+    def test_get_jinja_template(self):
+        try:
+            import jinja2
+        except ImportError:
+            self.skip("Jinja not installed. Skipping test.")
+        self.assertRaises(jinja2.exceptions.TemplateNotFound,
+                          utils.get_jinja_template, "nonexistent")
 
-    @mock.patch("rally.ui.utils.get_template")
-    def test_main(self, mock_get_template):
-        self.assertEqual(0, utils.main("render", "somepath", "a=1", "b=2"))
+    @mock.patch("rally.ui.utils.get_mako_template")
+    def test_get_template_mako(self, mock_get_mako_template):
+        mock_get_mako_template.return_value = "fake_template"
+        template = utils.get_mako_template("template.mako")
+        self.assertEqual("fake_template", template)
+        mock_get_mako_template.assert_called_once_with("template.mako")
 
-        mock_get_template.assert_called_once_with("somepath")
-        mock_get_template.return_value.render.assert_called_once_with(
-            a="1", b="2"
-        )
-
-    @mock.patch("rally.ui.utils.print", create=True)
-    @mock.patch("rally.ui.utils.sys.stderr")
-    def test_main_bad_input(self, mock_stderr, mock_print):
-        self.assertTrue(utils.HELP_MESSAGE.startswith("Usage:"))
-        for args in ([], ["not_a_render"], ["render"],
-                     ["render", "expected_arg", "unexpected_arg"]):
-            self.assertEqual(1, utils.main(*args))
-            mock_print.assert_called_once_with(utils.HELP_MESSAGE,
-                                               file=mock_stderr)
-            mock_print.reset_mock()
+    @mock.patch("rally.ui.utils.get_jinja_template")
+    def test_get_template_jinja(self, mock_get_jinja_template):
+        mock_get_jinja_template.return_value = "fake_template"
+        template = utils.get_jinja_template("template.html")
+        self.assertEqual("fake_template", template)
+        mock_get_jinja_template.assert_called_once_with("template.html")

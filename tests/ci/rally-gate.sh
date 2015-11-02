@@ -63,8 +63,7 @@ rally show keypairs
 rally -v --rally-debug task start --task $TASK $TASK_ARGS
 
 mkdir -p rally-plot/extra
-python $BASE/new/rally/rally/ui/utils.py render\
-    tests/ci/rally-gate/index.mako > rally-plot/extra/index.html
+python $BASE/new/rally/tests/ci/render.py ci/index.mako > rally-plot/extra/index.html
 cp $TASK rally-plot/task.txt
 tar -czf rally-plot/plugins.tar.gz -C $RALLY_PLUGINS_DIR .
 rally task results | python -m json.tool > rally-plot/results.json

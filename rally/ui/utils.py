@@ -13,50 +13,24 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from __future__ import print_function
 import os.path
-import re
-import sys
 
 
-HELP_MESSAGE = (
-    "Usage:\n\t"
-    "utils.py render <lookup/path/to/template.mako>"
-    "[<key-1>=<value-1> <key-2>=<value-2> ...]\n\n\t"
-    "Where key-1,value-1 and key-2,value-2 are key pairs of template.")
-
-
-def get_template(template_path):
+def get_mako_template(template):
     import mako.lookup
-
-    templates_dir = os.path.join(os.path.dirname(__file__), "templates")
-
-    lookup_dirs = [
-        templates_dir,
-        os.path.abspath(os.path.join(templates_dir, "..", "..", ".."))
-    ]
-
-    lookup = mako.lookup.TemplateLookup(directories=lookup_dirs)
-    try:
-        return lookup.get_template(template_path)
-    except mako.exceptions.TopLevelLookupException as e:
-        raise ValueError(e)
+    dirs = os.path.join(os.path.dirname(__file__), "templates")
+    lookup = mako.lookup.TemplateLookup(directories=[dirs])
+    return lookup.get_template(template)
 
 
-def main(*args):
-    if (len(args) < 2 or args[0] != "render"
-       or not all(re.match("^[^=]+=[^=]+$", arg) for arg in args[2:])):
-        print(HELP_MESSAGE, file=sys.stderr)
-        return 1
-
-    try:
-        render_kwargs = dict([arg.split("=") for arg in args[2:]])
-        print(get_template(args[1]).render(**render_kwargs))
-    except ValueError as e:
-        print(str(e), file=sys.stderr)
-        return 1
-    return 0
+def get_jinja_template(template):
+    import jinja2
+    env = jinja2.Environment(loader=jinja2.PackageLoader("rally.ui",
+                                                         "templates"))
+    return env.get_template(template)
 
 
-if __name__ == "__main__":
-    sys.exit(main(*sys.argv[1:]))
+def get_template(template):
+    if template.endswith(".mako"):
+        return get_mako_template(template)
+    return get_jinja_template(template)

@@ -93,8 +93,8 @@ function main {
         gzip -9 ${OUTPUT_FILE}
     done
 
-    python $BASE/new/rally/rally/ui/utils.py render\
-        tests/ci/rally-gate/index_verify.mako ${RESULTS[*]}> ${RESULTS_DIR}/extra/index.html
+    python $BASE/new/rally/tests/ci/render.py ci/index_verify.mako \
+        ${RESULTS[*]}> ${RESULTS_DIR}/extra/index.html
 
     if [[ ${RESULTS[*]} == *"fail"* ]]
     then

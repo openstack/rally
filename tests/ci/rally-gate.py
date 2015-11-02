@@ -27,6 +27,8 @@ import tempfile
 
 from six.moves.urllib import parse
 
+from rally.ui import utils
+
 
 def use_keystone_v3():
     """Alter deployment to use keystone v3."""
@@ -178,11 +180,9 @@ def main():
         else:
             print("Ignoring file %s" % fname)
     print("Exit statuses: %r" % statuses)
-
-    run(["python", rally_root + "/rally/ui/utils.py", "render",
-         "tests/ci/rally-gate/index.mako"],
-        gzip=False, stdout="rally-plot/extra/index.html")
-
+    template = utils.get_template("ci/index.mako")
+    with open("rally-plot/extra/index.html", "w") as output:
+        output.write(template.render())
     return any(statuses)
 
 
